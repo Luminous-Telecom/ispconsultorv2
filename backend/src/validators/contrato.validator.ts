@@ -16,7 +16,14 @@ export const contratoCreateSchema = Joi.object({
   dia_vencimento_id: Joi.number().integer().min(1).required(),
   conta_boleto: Joi.number().integer().min(1).required(),
   data_validade_desconto: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, '').optional(),
-  modelo_documento_id: Joi.number().integer().min(1).required()
+  modelo_documento_id: Joi.number().integer().min(1).required(),
+  endereco: Joi.string().max(255).allow(null, '').optional(),
+  numero: Joi.string().max(20).allow(null, '').optional(),
+  complemento: Joi.string().max(100).allow(null, '').optional(),
+  bairro: Joi.string().max(100).allow(null, '').optional(),
+  cidade: Joi.string().max(100).allow(null, '').optional(),
+  estado: Joi.string().length(2).allow(null, '').optional(),
+  usar_endereco_cliente: Joi.boolean().default(false).optional()
 });
 
 export const contratoUpdateSchema = Joi.object({
@@ -32,6 +39,13 @@ export const contratoUpdateSchema = Joi.object({
   dia_vencimento_id: Joi.number().integer().min(1).allow(null),
   conta_boleto: Joi.number().integer().min(1).allow(null),
   data_validade_desconto: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, '').optional(),
-  modelo_documento_id: Joi.number().integer().min(1).allow(null)
+  modelo_documento_id: Joi.number().integer().min(1).allow(null),
+  endereco: Joi.string().max(255).allow(null, '').optional(),
+  numero: Joi.string().max(20).allow(null, '').optional(),
+  complemento: Joi.string().max(100).allow(null, '').optional(),
+  bairro: Joi.string().max(100).allow(null, '').optional(),
+  cidade: Joi.string().max(100).allow(null, '').optional(),
+  estado: Joi.string().length(2).allow(null, '').optional(),
+  usar_endereco_cliente: Joi.boolean().allow(null).optional()
 });
 

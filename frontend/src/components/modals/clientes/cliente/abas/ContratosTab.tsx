@@ -24,13 +24,20 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
           config={{
             columns: [
               { key: 'id', label: 'ID', sortable: true, searchable: true, render: (contrato: Contrato) => contrato.id },
+              { 
+                key: 'plano_nome', 
+                label: 'Plano', 
+                sortable: true, 
+                searchable: true,
+                render: (contrato: Contrato & { plano_nome?: string }) => contrato.plano?.nome_plano || contrato.plano_nome || '-' 
+              },
               {
                 key: 'endereco',
                 label: 'Endereço',
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
-                  <span>{contrato.cliente?.endereco || '-'}</span>
+                  <span>{contrato.endereco || '-'}</span>
                 )
               },
               {
@@ -39,7 +46,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
-                  <span>{contrato.cliente?.numero || '-'}</span>
+                  <span>{contrato.numero || '-'}</span>
                 )
               },
               {
@@ -48,7 +55,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
-                  <span>{contrato.cliente?.complemento || '-'}</span>
+                  <span>{contrato.complemento || '-'}</span>
                 )
               },
               {
@@ -57,7 +64,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
-                  <span>{contrato.cliente?.bairro || '-'}</span>
+                  <span>{contrato.bairro || '-'}</span>
                 )
               },
               {
@@ -66,7 +73,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
-                  <span>{contrato.cliente?.cidade || '-'}</span>
+                  <span>{contrato.cidade || '-'}</span>
                 )
               },
               {
@@ -75,15 +82,8 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
-                  <span>{contrato.cliente?.estado || '-'}</span>
+                  <span>{contrato.estado || '-'}</span>
                 )
-              },
-              { 
-                key: 'plano_nome', 
-                label: 'Plano', 
-                sortable: true, 
-                searchable: true,
-                render: (contrato: Contrato & { plano_nome?: string }) => contrato.plano?.nome_plano || contrato.plano_nome || '-' 
               },
               { 
                 key: 'valor_mensal', 
@@ -201,13 +201,13 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               plano_nome: contrato.plano?.nome_plano || '',
               banco_nome: contrato.bancoBoleto?.nome || '',
               plano_valor_mensal: contrato.plano?.valor_mensal || 0,
-              // Campos de endereço para ordenação
-              endereco: contrato.cliente?.endereco || '',
-              numero: contrato.cliente?.numero || '',
-              complemento: contrato.cliente?.complemento || '',
-              bairro: contrato.cliente?.bairro || '',
-              cidade: contrato.cliente?.cidade || '',
-              estado: contrato.cliente?.estado || ''
+              // Campos de endereço para ordenação (usando endereço do contrato)
+              endereco: contrato.endereco || '',
+              numero: contrato.numero || '',
+              complemento: contrato.complemento || '',
+              bairro: contrato.bairro || '',
+              cidade: contrato.cidade || '',
+              estado: contrato.estado || ''
             })),
             customFilters: (data: (Contrato & { plano_nome?: string; banco_nome?: string })[]) => {
               // Filtrar inativos se necessário (a busca e ordenação serão feitas pelo Table internamente)

@@ -144,6 +144,13 @@ export interface Contrato {
   conta_boleto?: number;
   data_validade_desconto?: string;
   modelo_documento_id?: number;
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  usar_endereco_cliente?: boolean;
   created_at: string;
   created_at_formatada?: string | null;
   updated_at?: string;

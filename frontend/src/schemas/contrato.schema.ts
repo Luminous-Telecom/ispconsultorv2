@@ -106,6 +106,54 @@ export const contratoSchema = z.object({
     .max(1000, 'Observações devem ter no máximo 1000 caracteres')
     .trim()
     .default('')
+    .optional(),
+  
+  // Endereço do contrato
+  endereco: z
+    .string()
+    .max(255, 'Endereço deve ter no máximo 255 caracteres')
+    .trim()
+    .default('')
+    .optional(),
+  
+  numero: z
+    .string()
+    .max(20, 'Número deve ter no máximo 20 caracteres')
+    .trim()
+    .default('')
+    .optional(),
+  
+  complemento: z
+    .string()
+    .max(100, 'Complemento deve ter no máximo 100 caracteres')
+    .trim()
+    .default('')
+    .optional(),
+  
+  bairro: z
+    .string()
+    .max(100, 'Bairro deve ter no máximo 100 caracteres')
+    .trim()
+    .default('')
+    .optional(),
+  
+  cidade: z
+    .string()
+    .max(100, 'Cidade deve ter no máximo 100 caracteres')
+    .trim()
+    .default('')
+    .optional(),
+  
+  estado: z
+    .string()
+    .length(2, 'Estado deve ter 2 caracteres')
+    .trim()
+    .default('')
+    .optional(),
+  
+  usar_endereco_cliente: z
+    .boolean()
+    .default(false)
     .optional()
 });
 

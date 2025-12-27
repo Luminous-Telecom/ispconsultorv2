@@ -62,7 +62,14 @@ const initialFormData: ContratoForm = {
   dia_vencimento_id: 0,
   conta_boleto: 0,
   data_validade_desconto: '',
-  modelo_documento_id: 0
+  modelo_documento_id: 0,
+  endereco: '',
+  numero: '',
+  complemento: '',
+  bairro: '',
+  cidade: '',
+  estado: '',
+  usar_endereco_cliente: false
 };
 
 // Função auxiliar para normalizar data (evitar problemas de timezone)
@@ -155,7 +162,14 @@ export const useContratoForm = ({
       dia_vencimento_id: contrato.dia_vencimento_id || 0,
       conta_boleto: contrato.conta_boleto || 0,
       data_validade_desconto: normalizeDate(contrato.data_validade_desconto),
-      modelo_documento_id: contrato.modelo_documento_id || 0
+      modelo_documento_id: contrato.modelo_documento_id || 0,
+      endereco: ensureString(contrato.endereco),
+      numero: ensureString(contrato.numero),
+      complemento: ensureString(contrato.complemento),
+      bairro: ensureString(contrato.bairro),
+      cidade: ensureString(contrato.cidade),
+      estado: ensureString(contrato.estado),
+      usar_endereco_cliente: contrato.usar_endereco_cliente || false
     } as Omit<ZodContratoFormData, 'cliente_id'>;
   }, [contrato]);
 
@@ -246,7 +260,14 @@ export const useContratoForm = ({
         dia_vencimento_id: typedData.dia_vencimento_id,
         conta_boleto: typedData.conta_boleto,
         data_validade_desconto: typedData.data_validade_desconto || undefined,
-        modelo_documento_id: typedData.modelo_documento_id
+        modelo_documento_id: typedData.modelo_documento_id,
+        endereco: typedData.endereco || undefined,
+        numero: typedData.numero || undefined,
+        complemento: typedData.complemento || undefined,
+        bairro: typedData.bairro || undefined,
+        cidade: typedData.cidade || undefined,
+        estado: typedData.estado || undefined,
+        usar_endereco_cliente: typedData.usar_endereco_cliente || false
       };
       
       updateContratoMutation.mutate(dataToSend);
@@ -265,7 +286,14 @@ export const useContratoForm = ({
         dia_vencimento_id: typedData.dia_vencimento_id,
         conta_boleto: typedData.conta_boleto,
         data_validade_desconto: typedData.data_validade_desconto || undefined,
-        modelo_documento_id: typedData.modelo_documento_id
+        modelo_documento_id: typedData.modelo_documento_id,
+        endereco: typedData.endereco || undefined,
+        numero: typedData.numero || undefined,
+        complemento: typedData.complemento || undefined,
+        bairro: typedData.bairro || undefined,
+        cidade: typedData.cidade || undefined,
+        estado: typedData.estado || undefined,
+        usar_endereco_cliente: typedData.usar_endereco_cliente || false
       };
       
       createContratoMutation.mutate(dataToSend);

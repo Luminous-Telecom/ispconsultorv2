@@ -17,6 +17,13 @@ export interface Contrato {
   conta_boleto: number | null;
   data_validade_desconto: string | null;
   modelo_documento_id: number | null;
+  endereco?: string | null;
+  numero?: string | null;
+  complemento?: string | null;
+  bairro?: string | null;
+  cidade?: string | null;
+  estado?: string | null;
+  usar_endereco_cliente?: boolean;
   created_at: string;
   updated_at: string;
   cliente?: {
@@ -55,6 +62,13 @@ export interface CreateContratoData {
   conta_boleto: number;
   data_validade_desconto?: string;
   modelo_documento_id: number;
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  usar_endereco_cliente?: boolean;
 }
 
 export interface UpdateContratoData extends Partial<CreateContratoData> {

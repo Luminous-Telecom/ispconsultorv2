@@ -11,6 +11,13 @@ export interface ContratoForm {
   conta_boleto: number;
   data_validade_desconto: string;
   modelo_documento_id: number;
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  usar_endereco_cliente?: boolean;
 }
 
 export interface TermoFormData {

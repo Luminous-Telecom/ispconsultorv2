@@ -101,13 +101,13 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         valor_plano_num: c.plano?.valor_mensal ? Number(c.plano.valor_mensal) : 0,
         desconto_num: descontoValor,
         valor_final_num: c.valor_final ? Number(c.valor_final) : 0,
-        // Campos de endereço para ordenação
-        endereco: c.cliente?.endereco || '',
-        numero: c.cliente?.numero || '',
-        complemento: c.cliente?.complemento || '',
-        bairro: c.cliente?.bairro || '',
-        cidade: c.cliente?.cidade || '',
-        estado: c.cliente?.estado || ''
+        // Campos de endereço para ordenação (usando endereço do contrato)
+        endereco: c.endereco || '',
+        numero: c.numero || '',
+        complemento: c.complemento || '',
+        bairro: c.bairro || '',
+        cidade: c.cidade || '',
+        estado: c.estado || ''
       };
     });
   }, [contratos]);
@@ -172,7 +172,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: true,
       searchable: false,
       render: (item: Contrato) => (
-        <span>{item.cliente?.endereco || '-'}</span>
+        <span>{item.endereco || '-'}</span>
       )
     },
     {
@@ -181,7 +181,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: true,
       searchable: false,
       render: (item: Contrato) => (
-        <span>{item.cliente?.numero || '-'}</span>
+        <span>{item.numero || '-'}</span>
       )
     },
     {
@@ -190,7 +190,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: true,
       searchable: false,
       render: (item: Contrato) => (
-        <span>{item.cliente?.complemento || '-'}</span>
+        <span>{item.complemento || '-'}</span>
       )
     },
     {
@@ -199,7 +199,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: true,
       searchable: false,
       render: (item: Contrato) => (
-        <span>{item.cliente?.bairro || '-'}</span>
+        <span>{item.bairro || '-'}</span>
       )
     },
     {
@@ -208,7 +208,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: true,
       searchable: false,
       render: (item: Contrato) => (
-        <span>{item.cliente?.cidade || '-'}</span>
+        <span>{item.cidade || '-'}</span>
       )
     },
     {
@@ -217,7 +217,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: true,
       searchable: false,
       render: (item: Contrato) => (
-        <span>{item.cliente?.estado || '-'}</span>
+        <span>{item.estado || '-'}</span>
       )
     },
     {

@@ -5,21 +5,7 @@ import { DocumentoSistema } from '@/services/documentoSistemaService';
 import { DiasVencimento } from '@/services/diasVencimentoService';
 import EntitySelectField from '@/components/ui/EntitySelectField';
 import FormField from '@/components/ui/FormField';
-
-interface ContratoForm {
-  plano_id: number;
-  desconto_percentual: number;
-  desconto_valor: number;
-  data_inicio: string;
-  data_fim: string;
-  status: 'ativo' | 'inativo' | 'suspenso';
-  observacoes: string;
-  isento_mensalidade: boolean;
-  dia_vencimento_id: number;
-  conta_boleto: number;
-  data_validade_desconto: string;
-  modelo_documento_id: number;
-}
+import { ContratoForm } from '../types';
 
 interface ContratoTabProps {
   formData: ContratoForm;

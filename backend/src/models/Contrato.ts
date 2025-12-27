@@ -45,6 +45,13 @@ export class Contrato extends Model<
   declare conta_boleto: number | null;
   declare data_validade_desconto: Date | null;
   declare modelo_documento_id: number | null;
+  declare endereco: string | null;
+  declare numero: string | null;
+  declare complemento: string | null;
+  declare bairro: string | null;
+  declare cidade: string | null;
+  declare estado: string | null;
+  declare usar_endereco_cliente: boolean;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -266,6 +273,42 @@ Contrato.init(
         model: 'modelo_documento',
         key: 'id'
       }
+    },
+    endereco: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'Endereço do contrato'
+    },
+    numero: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      comment: 'Número do endereço do contrato'
+    },
+    complemento: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Complemento do endereço do contrato'
+    },
+    bairro: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Bairro do endereço do contrato'
+    },
+    cidade: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Cidade do endereço do contrato'
+    },
+    estado: {
+      type: DataTypes.STRING(2),
+      allowNull: true,
+      comment: 'Estado do endereço do contrato'
+    },
+    usar_endereco_cliente: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      comment: 'Se verdadeiro, usa o endereço do cadastro do cliente'
     },
     created_at: {
       type: DataTypes.DATE,

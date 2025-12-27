@@ -8,6 +8,7 @@ import { useContratoForm } from '@/hooks/useContratoForm';
 import { useTermosContrato, useDeleteTermoContrato } from '@/hooks/useTermosContrato';
 import { TermoContrato } from '@/services/termoContratoService';
 import { TituloService } from '@/services/tituloService';
+import { ClienteService } from '@/services/clienteService';
 import { Titulo, Plano, Cliente } from '@/types';
 import ModeloTermoService from '@/services/modeloTermoService';
 import DocumentoSistemaService, { DocumentoSistema } from '@/services/documentoSistemaService';
@@ -30,6 +31,7 @@ import ModeloContratoSelectModal from '@/components/modals/parametros/ModeloCont
 import { Button } from '@/components/ui';
 import '../../contratos/ContratoModals.css';
 import ContratoTab from './abas/ContratoTab';
+import EnderecoTab from './abas/EnderecoTab';
 import TermosTab from './abas/TermosTab';
 import FinanceiroTab from './abas/FinanceiroTab';
 import FinanceiroAvulsoTab from './abas/FinanceiroAvulsoTab';
@@ -197,6 +199,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Usar dados do contrato do hook
   const contratoData = formHook.contrato;
   const isLoading = formHook.isLoadingContrato;
+
+  // Determinar o ID do cliente para buscar os dados
+  const clienteIdToFetch = isEditMode && contratoData?.cliente_id 
+    ? contratoData.cliente_id 
+    : clienteId;
+
+  // Buscar dados do cliente
+  const { data: clienteData } = useQuery({
+    queryKey: ['cliente', clienteIdToFetch],
+    queryFn: () => ClienteService.getById(clienteIdToFetch!),
+    enabled: !!clienteIdToFetch && show,
+    staleTime: 60 * 1000,
+  });
 
   // Buscar títulos/financeiros do contrato (apenas no modo edição)
   const { data: titulosData, isLoading: isLoadingTitulos, refetch: refetchTitulos } = useQuery({
@@ -1559,6 +1574,15 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             </li>
             <li className="nav-item" role="presentation">
               <button
+                className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('endereco')}
+              >
+                Endereço
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
                 className={`nav-link ${activeTab === 'termos' ? 'active' : ''}`}
                 type="button"
                 onClick={() => {
@@ -1652,6 +1676,17 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 onShowBancoModal={() => setShowBancoModal(true)}
                 onShowModeloContratoModal={() => setShowModeloContratoModal(true)}
               />
+            )}
+
+            {/* Aba Endereço */}
+            {activeTab === 'endereco' && (
+              <div className="p-3">
+                <EnderecoTab
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  clienteData={clienteData || null}
+                />
+              </div>
             )}
 
             {/* Aba Termos */}
