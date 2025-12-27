@@ -50,17 +50,6 @@ export const BANCO_TIPO = {
 export type BancoTipo = typeof BANCO_TIPO[keyof typeof BANCO_TIPO];
 
 /**
- * Tipos de Serviço de Plano
- */
-export const PLANO_TIPO_SERVICO = {
-  INTERNET: 'internet',
-  TELEFONIA: 'telefonia',
-  COMBINADO: 'combinado',
-} as const;
-
-export type PlanoTipoServico = typeof PLANO_TIPO_SERVICO[keyof typeof PLANO_TIPO_SERVICO];
-
-/**
  * Periodicidade de Plano
  */
 export const PLANO_PERIODICIDADE = {

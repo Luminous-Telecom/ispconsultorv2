@@ -45,11 +45,11 @@ export class PlanoController {
       }
 
       if (status) {
-        whereConditions.push({ status: status as 'ativo' | 'suspenso' | 'cancelado' });
+        whereConditions.push({ status: status as 'ativo' | 'inativo' });
       }
 
       if (tipo_servico) {
-        whereConditions.push({ tipo_servico: tipo_servico as 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros' });
+        whereConditions.push({ tipo_servico: tipo_servico as 'suporte' | 'infraestrutura' | 'consultoria' });
       }
 
       const where: WhereOptions<Plano> = whereConditions.length > 0
@@ -79,8 +79,7 @@ export class PlanoController {
         where,
         attributes: [
           'id', 'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',
-          'quantidade_usuarios', 'valor_mensal', 'desconto_percentual', 'desconto_valor',
-          'desconto_ativo', 'periodicidade', 'renovacao_automatica', 'data_inicio',
+          'quantidade_usuarios', 'valor_mensal', 'periodicidade', 'renovacao_automatica', 'data_inicio',
           'data_fim', 'status', 'observacoes', 'created_at', 'updated_at'
         ],
         include: [
@@ -289,32 +288,27 @@ export class PlanoController {
       
       // Filtrar apenas campos válidos para atualização
       type AllowedField = 'nome_plano' | 'descricao' | 'tipo_servico' | 'servicos_inclusos' |
-        'quantidade_usuarios' | 'valor_mensal' | 'desconto_percentual' | 'desconto_valor' |
-        'desconto_ativo' | 'periodicidade' | 'renovacao_automatica' | 'data_inicio' |
+        'quantidade_usuarios' | 'valor_mensal' | 'periodicidade' | 'renovacao_automatica' | 'data_inicio' |
         'data_fim' | 'status' | 'observacoes';
       
       const allowedFields: AllowedField[] = [
         'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',
-        'quantidade_usuarios', 'valor_mensal', 'desconto_percentual', 'desconto_valor',
-        'desconto_ativo', 'periodicidade', 'renovacao_automatica', 'data_inicio',
+        'quantidade_usuarios', 'valor_mensal', 'periodicidade', 'renovacao_automatica', 'data_inicio',
         'data_fim', 'status', 'observacoes'
       ];
       
       interface PlanoUpdateData {
         nome_plano?: string;
         descricao?: string | null;
-        tipo_servico?: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
+        tipo_servico?: 'suporte' | 'infraestrutura' | 'consultoria';
         servicos_inclusos?: string[] | null;
         quantidade_usuarios?: number | null;
         valor_mensal?: number;
-        desconto_percentual?: number | null;
-        desconto_valor?: number | null;
-        desconto_ativo?: boolean;
         periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal' | null;
         renovacao_automatica?: boolean;
         data_inicio?: Date | null;
         data_fim?: Date | null;
-        status?: 'ativo' | 'suspenso' | 'cancelado';
+        status?: 'ativo' | 'inativo';
         observacoes?: string | null;
       }
       
@@ -520,11 +514,11 @@ export class PlanoController {
       const { status } = req.body;
 
       // Validar status
-      if (!status || !['ativo', 'inativo', 'cancelado'].includes(status)) {
+      if (!status || !['ativo', 'inativo'].includes(status)) {
         res.status(400).json({
           success: false,
           error: 'Status inválido',
-          message: 'Status deve ser: ativo, inativo ou cancelado'
+          message: 'Status deve ser: ativo ou inativo'
         });
         return;
       }
@@ -544,7 +538,7 @@ export class PlanoController {
 
       res.json({
         success: true,
-        message: `Plano ${status === 'ativo' ? 'ativado' : status === 'inativo' ? 'desativado' : 'cancelado'} com sucesso!`,
+        message: `Plano ${status === 'ativo' ? 'ativado' : 'desativado'} com sucesso!`,
         data: {
           id: plano.id,
           nome_plano: plano.nome_plano,

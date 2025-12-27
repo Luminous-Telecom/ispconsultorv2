@@ -52,16 +52,13 @@ export interface Plano {
   id: number;
   nome_plano: string;
   descricao?: string;
-  tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
+  tipo_servico: 'suporte' | 'infraestrutura' | 'consultoria';
   servicos_inclusos?: string[];
   quantidade_usuarios?: number;
   valor_mensal: number;
-  desconto_percentual?: number;
-  desconto_valor?: number;
-  desconto_ativo: boolean;
   periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   renovacao_automatica: boolean;
-  status: 'ativo' | 'inativo' | 'cancelado';
+  status: 'ativo' | 'inativo';
   data_inicio?: string;
   data_fim?: string;
   observacoes?: string;

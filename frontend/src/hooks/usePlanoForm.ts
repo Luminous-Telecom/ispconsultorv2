@@ -47,12 +47,9 @@ interface UsePlanoFormReturn {
 
 const initialFormData: PlanoForm = {
   nome_plano: '',
-  tipo_servico: 'internet',
+  tipo_servico: 'suporte',
   descricao: '',
   valor_mensal: 0,
-  desconto_percentual: 0,
-  desconto_valor: 0,
-  desconto_ativo: false,
   quantidade_usuarios: 1,
   periodicidade: 'mensal',
   servicos_inclusos: [],
@@ -136,12 +133,9 @@ export const usePlanoForm = ({
     
     return {
       nome_plano: plano.nome_plano || '',
-      tipo_servico: (plano.tipo_servico || 'internet') as ZodPlanoFormData['tipo_servico'],
+      tipo_servico: (plano.tipo_servico || 'suporte') as ZodPlanoFormData['tipo_servico'],
       descricao: plano.descricao || '',
       valor_mensal: Number(plano.valor_mensal) || 0,
-      desconto_percentual: Number(plano.desconto_percentual) || 0,
-      desconto_valor: Number(plano.desconto_valor) || 0,
-      desconto_ativo: plano.desconto_ativo || false,
       quantidade_usuarios: Number(plano.quantidade_usuarios) || 1,
       periodicidade: (plano.periodicidade || 'mensal') as ZodPlanoFormData['periodicidade'],
       servicos_inclusos: Array.isArray(plano.servicos_inclusos) ? plano.servicos_inclusos : [],
@@ -235,9 +229,6 @@ export const usePlanoForm = ({
       tipo_servico: typedData.tipo_servico as PlanoForm['tipo_servico'],
       descricao: typedData.descricao || '',
       valor_mensal: typedData.valor_mensal,
-      desconto_percentual: typedData.desconto_percentual,
-      desconto_valor: typedData.desconto_valor,
-      desconto_ativo: typedData.desconto_ativo,
       quantidade_usuarios: typedData.quantidade_usuarios,
       periodicidade: typedData.periodicidade as PlanoForm['periodicidade'],
       servicos_inclusos: typedData.servicos_inclusos,

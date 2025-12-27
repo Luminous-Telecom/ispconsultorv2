@@ -1,16 +1,13 @@
 export interface PlanoForm {
   nome_plano: string;
-  tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
+  tipo_servico: 'suporte' | 'infraestrutura' | 'consultoria';
   descricao: string;
   valor_mensal: number;
-  desconto_percentual: number;
-  desconto_valor: number;
-  desconto_ativo: boolean;
   quantidade_usuarios: number;
   periodicidade: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   servicos_inclusos: string[];
   renovacao_automatica: boolean;
-  status: 'ativo' | 'inativo' | 'cancelado';
+  status: 'ativo' | 'inativo';
   data_inicio: string;
   data_fim: string;
   observacoes: string;

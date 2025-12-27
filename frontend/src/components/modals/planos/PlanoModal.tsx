@@ -3,7 +3,7 @@ import { usePlanoForm } from '@/hooks/usePlanoForm';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
-import { InformacoesBasicasTab, DescontosConfiguracoesTab, ServicosObservacoesTab } from './plano';
+import { InformacoesBasicasTab, ServicosObservacoesTab } from './plano';
 
 interface PlanoModalProps {
   show: boolean;
@@ -34,16 +34,6 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
       setActiveTab('informacoes-basicas');
     }
   }, [show]);
-
-  const servicosDisponiveis = [
-    'Internet',
-    'Telefone',
-    'TV por Assinatura',
-    'Suporte Técnico',
-    'Backup em Nuvem',
-    'Antivírus',
-    'Firewall'
-  ];
 
   // Determinar título dinamicamente
   const modalTitle = formHook.isLoadingPlano && formHook.isEditing 
@@ -89,16 +79,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                 type="button"
                 onClick={() => setActiveTab('informacoes-basicas')}
               >
-                Informações Básicas
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'descontos-configuracoes' ? 'active' : ''}`}
-                type="button"
-                onClick={() => setActiveTab('descontos-configuracoes')}
-              >
-                Descontos e Configurações
+                Plano de Venda
               </button>
             </li>
             <li className="nav-item" role="presentation">
@@ -107,7 +88,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                 type="button"
                 onClick={() => setActiveTab('servicos-observacoes')}
               >
-                Serviços e Observações
+                Observações
               </button>
             </li>
           </ul>
@@ -123,38 +104,26 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
               minHeight: 0
             }}
           >
-            {/* Aba Informações Básicas */}
+            {/* Aba Plano de Venda */}
             {activeTab === 'informacoes-basicas' && (
               <InformacoesBasicasTab
                 formData={formHook.formData}
                 errors={formHook.errors}
                 handleInputChange={formHook.handleInputChange}
                 handleServiceToggle={formHook.handleServiceToggle}
-                servicosDisponiveis={servicosDisponiveis}
+                servicosDisponiveis={[]}
                 isSubmitting={formHook.isSubmitting}
               />
             )}
 
-            {/* Aba Descontos e Configurações */}
-            {activeTab === 'descontos-configuracoes' && (
-              <DescontosConfiguracoesTab
-                formData={formHook.formData}
-                errors={formHook.errors}
-                handleInputChange={formHook.handleInputChange}
-                handleServiceToggle={formHook.handleServiceToggle}
-                servicosDisponiveis={servicosDisponiveis}
-                isSubmitting={formHook.isSubmitting}
-              />
-            )}
-
-            {/* Aba Serviços e Observações */}
+            {/* Aba Observações */}
             {activeTab === 'servicos-observacoes' && (
               <ServicosObservacoesTab
                 formData={formHook.formData}
                 errors={formHook.errors}
                 handleInputChange={formHook.handleInputChange}
                 handleServiceToggle={formHook.handleServiceToggle}
-                servicosDisponiveis={servicosDisponiveis}
+                servicosDisponiveis={[]}
                 isSubmitting={formHook.isSubmitting}
               />
             )}

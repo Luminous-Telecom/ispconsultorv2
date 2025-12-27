@@ -14,64 +14,6 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
         <div className="col-md-4">
           <div className="mb-2">
             <FormField
-              name="desconto_percentual"
-              type="number"
-              label="Desconto Percentual (%)"
-              placeholder="0.00"
-              size="sm"
-              value={formData.desconto_percentual === 0 ? '' : formData.desconto_percentual}
-              onChange={(value: FormValue) => {
-                const rawValue = typeof value === 'string' || typeof value === 'number' ? value : String(value || '');
-                const numValue = rawValue === '' || rawValue === 0 ? 0 : parseFloat(String(rawValue));
-                handleInputChange('desconto_percentual', isNaN(numValue) ? 0 : numValue);
-              }}
-              disabled={isSubmitting}
-              step={0.01}
-              min={0}
-              max={100}
-            />
-          </div>
-        </div>
-
-        <div className="col-md-4">
-          <div className="mb-2">
-            <FormField
-              name="desconto_valor"
-              type="number"
-              label="Desconto Valor (R$)"
-              placeholder="0.00"
-              size="sm"
-              value={formData.desconto_valor === 0 ? '' : formData.desconto_valor}
-              onChange={(value: FormValue) => {
-                const rawValue = typeof value === 'string' || typeof value === 'number' ? value : String(value || '');
-                const numValue = rawValue === '' || rawValue === 0 ? 0 : parseFloat(String(rawValue));
-                handleInputChange('desconto_valor', isNaN(numValue) ? 0 : numValue);
-              }}
-              disabled={isSubmitting}
-              step={0.01}
-              min={0}
-            />
-          </div>
-        </div>
-
-        <div className="col-md-4">
-          <div className="mb-2">
-            <FormField
-              name="desconto_ativo"
-              type="checkbox"
-              label="Desconto Ativo"
-              value={formData.desconto_ativo}
-              onChange={(value: FormValue) => handleInputChange('desconto_ativo', !!value)}
-              disabled={isSubmitting}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="row">
-        <div className="col-md-4">
-          <div className="mb-2">
-            <FormField
               name="periodicidade"
               type="select"
               label="Periodicidade"

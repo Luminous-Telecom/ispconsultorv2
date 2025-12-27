@@ -176,20 +176,15 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     switch (status) {
       case 'ativo': return 'bg-success';
       case 'inativo': return 'bg-warning';
-      case 'cancelado': return 'bg-danger';
       default: return 'bg-secondary';
     }
   };
 
   const getTipoServicoLabel = (tipo: string) => {
     const tipos: { [key: string]: string } = {
-      internet: 'Internet',
-      telefonia: 'Telefonia',
-      tv: 'TV',
       suporte: 'Suporte',
       infraestrutura: 'Infraestrutura',
-      consultoria: 'Consultoria',
-      outros: 'Outros'
+      consultoria: 'Consultoria'
     };
     return tipos[tipo] || tipo;
   };

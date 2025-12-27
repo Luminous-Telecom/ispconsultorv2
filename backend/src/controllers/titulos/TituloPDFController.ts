@@ -225,7 +225,7 @@ export class TituloPDFController {
       // Dados do plano
       NOME_PLANO: titulo.plano?.nome_plano || '',
       DESCRICAO_PLANO: titulo.plano?.descricao || '',
-      TIPO_SERVICO: titulo.plano?.tipo_servico || 'Internet',
+      TIPO_SERVICO: titulo.plano?.tipo_servico || '',
       QUANTIDADE_USUARIOS: titulo.plano?.quantidade_usuarios || '1',
       VALOR_PLANO: valorBoleto,
       PERIODICIDADE: 'Mensal',

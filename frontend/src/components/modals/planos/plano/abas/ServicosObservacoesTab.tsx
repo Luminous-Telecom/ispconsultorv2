@@ -6,30 +6,10 @@ import { PlanoTabProps } from '../types';
 const ServicosObservacoesTab: React.FC<PlanoTabProps> = ({
   formData,
   handleInputChange,
-  handleServiceToggle,
-  servicosDisponiveis,
   isSubmitting
 }) => {
   return (
     <>
-      <div className="mb-2">
-        <label className="form-label small">Serviços Inclusos</label>
-        <div className="row">
-          {servicosDisponiveis.map((servico) => (
-            <div key={servico} className="col-md-4 mb-2">
-              <FormField
-                name={`servico_${servico}`}
-                type="checkbox"
-                label={servico}
-                value={formData.servicos_inclusos.includes(servico)}
-                onChange={() => handleServiceToggle(servico)}
-                disabled={isSubmitting}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
       <div className="mb-2">
         <FormField
           name="observacoes"

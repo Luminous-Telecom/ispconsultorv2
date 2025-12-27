@@ -31,7 +31,7 @@ class PlanoServiceClass extends BaseService<Plano, CreatePlano, UpdatePlano, Pla
   /**
    * Alterar status do plano (desativar/ativar)
    */
-  async toggleStatus(id: number, status: 'ativo' | 'inativo' | 'cancelado'): Promise<ApiResponse<Plano>> {
+  async toggleStatus(id: number, status: 'ativo' | 'inativo'): Promise<ApiResponse<Plano>> {
     return this.customPost<Plano>(`/${id}/status`, { status });
   }
 }
@@ -116,7 +116,7 @@ export class PlanoService {
   /**
    * Alterar status do plano (desativar/ativar)
    */
-  static async toggleStatus(id: number, status: 'ativo' | 'inativo' | 'cancelado'): Promise<Plano> {
+  static async toggleStatus(id: number, status: 'ativo' | 'inativo'): Promise<Plano> {
     const response = await planoServiceInstance.toggleStatus(id, status);
     if (response.data) {
       return response.data;

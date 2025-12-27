@@ -87,7 +87,7 @@ export function processarInstrucao(instrucao: string, titulo: TituloComRelacoes)
   
   return instrucao
     .replace(/%quantidade_usuarios%/g, String(titulo.plano?.quantidade_usuarios || '1'))
-    .replace(/%tipo_servico%/g, titulo.plano?.tipo_servico || 'Internet')
+    .replace(/%tipo_servico%/g, titulo.plano?.tipo_servico || '')
     .replace(/%nome_plano%/g, titulo.plano?.nome_plano || 'Plano')
     .replace(/%valor_plano%/g, Number(titulo.plano?.valor_mensal || 0).toFixed(2).replace('.', ','))
     .replace(/%cliente_nome%/g, titulo.cliente?.razao_social || '')

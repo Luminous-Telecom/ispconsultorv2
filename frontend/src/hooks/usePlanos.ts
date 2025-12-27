@@ -105,13 +105,13 @@ export const useTogglePlanoStatus = () => {
   const { success, error } = useNotificationContext();
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: number; status: 'ativo' | 'inativo' | 'cancelado' }) => 
+    mutationFn: ({ id, status }: { id: number; status: 'ativo' | 'inativo' }) => 
       PlanoService.toggleStatus(id, status),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['planos'] });
       queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
       const statusText = data.status === 'ativo' ? 'ativado' : 
-                        data.status === 'inativo' ? 'desativado' : 'cancelado';
+                        data.status === 'inativo' ? 'desativado' : 'ativado';
       success(`Plano ${statusText} com sucesso!`);
     },
     onError: (err) => {

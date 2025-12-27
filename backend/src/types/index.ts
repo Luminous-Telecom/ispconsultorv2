@@ -61,7 +61,7 @@ export interface Plano extends BaseEntity {
   renovacao_automatica: boolean;
   data_inicio?: Date;
   data_fim?: Date;
-  status: 'ativo' | 'inativo' | 'suspenso';
+  status: 'ativo' | 'inativo';
   observacoes?: string;
   
   // Relacionamentos
@@ -128,7 +128,7 @@ export interface Contrato extends BaseEntity {
   valor_final?: number;
   data_inicio?: Date;
   data_fim?: Date;
-  status: 'ativo' | 'inativo' | 'suspenso';
+  status: 'ativo' | 'inativo';
   observacoes?: string;
   
   // Relacionamentos

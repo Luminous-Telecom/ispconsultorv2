@@ -50,13 +50,9 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
               isInvalid={!!errors.tipo_servico}
               disabled={isSubmitting}
               options={[
-                { value: 'internet', label: 'Internet' },
-                { value: 'telefonia', label: 'Telefonia' },
-                { value: 'tv', label: 'TV por Assinatura' },
                 { value: 'suporte', label: 'Suporte' },
                 { value: 'infraestrutura', label: 'Infraestrutura' },
-                { value: 'consultoria', label: 'Consultoria' },
-                { value: 'outros', label: 'Outros' }
+                { value: 'consultoria', label: 'Consultoria' }
               ]}
             />
           </div>
@@ -157,6 +153,68 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
                 const stringValue = typeof value === 'string' ? value : String(value || '');
                 handleInputChange('data_fim', stringValue);
               }}
+              disabled={isSubmitting}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="row">
+        <div className="col-md-4">
+          <div className="mb-2">
+            <FormField
+              name="periodicidade"
+              type="select"
+              label="Periodicidade"
+              size="sm"
+              value={formData.periodicidade}
+              onChange={(value: FormValue) => {
+                const stringValue = typeof value === 'string' ? value : String(value || '');
+                handleInputChange('periodicidade', stringValue as PlanoTabProps['formData']['periodicidade']);
+              }}
+              disabled={isSubmitting}
+              options={[
+                { value: 'mensal', label: 'Mensal' },
+                { value: 'trimestral', label: 'Trimestral' },
+                { value: 'semestral', label: 'Semestral' },
+                { value: 'anual', label: 'Anual' },
+                { value: 'bimestral', label: 'Bimestral' },
+                { value: 'quinzenal', label: 'Quinzenal' },
+                { value: 'semanal', label: 'Semanal' }
+              ]}
+            />
+          </div>
+        </div>
+
+        <div className="col-md-4">
+          <div className="mb-2">
+            <FormField
+              name="status"
+              type="select"
+              label="Status"
+              size="sm"
+              value={formData.status}
+              onChange={(value: FormValue) => {
+                const stringValue = typeof value === 'string' ? value : String(value || '');
+                handleInputChange('status', stringValue as PlanoTabProps['formData']['status']);
+              }}
+              disabled={isSubmitting}
+              options={[
+                { value: 'ativo', label: 'Ativo' },
+                { value: 'inativo', label: 'Inativo' }
+              ]}
+            />
+          </div>
+        </div>
+
+        <div className="col-md-4">
+          <div className="mb-2">
+            <FormField
+              name="renovacao_automatica"
+              type="checkbox"
+              label="Renovação Automática"
+              value={formData.renovacao_automatica}
+              onChange={(value: FormValue) => handleInputChange('renovacao_automatica', !!value)}
               disabled={isSubmitting}
             />
           </div>

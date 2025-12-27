@@ -18,9 +18,9 @@ export const planoSchema = z.object({
     .trim(),
   
   tipo_servico: z.string().refine(
-    (val) => ['internet', 'telefonia', 'tv', 'suporte', 'infraestrutura', 'consultoria', 'outros'].includes(val),
+    (val) => ['suporte', 'infraestrutura', 'consultoria'].includes(val),
     { message: 'Tipo de serviço inválido' }
-  ).default('internet' as const),
+  ).default('suporte' as const),
   
   descricao: z
     .string()
@@ -29,24 +29,11 @@ export const planoSchema = z.object({
     .default('')
     .optional(),
   
-  // Valores e descontos
+  // Valores
   valor_mensal: z
     .number()
     .min(0.01, 'Valor mensal deve ser maior que zero')
     .max(999999.99, 'Valor mensal muito alto'),
-  
-  desconto_percentual: z
-    .number()
-    .min(0, 'Desconto percentual não pode ser negativo')
-    .max(100, 'Desconto percentual não pode ser maior que 100')
-    .default(0),
-  
-  desconto_valor: z
-    .number()
-    .min(0, 'Desconto valor não pode ser negativo')
-    .default(0),
-  
-  desconto_ativo: z.boolean().default(false),
   
   // Configurações
   quantidade_usuarios: z
@@ -67,7 +54,7 @@ export const planoSchema = z.object({
   renovacao_automatica: z.boolean().default(true),
   
   status: z.string().refine(
-    (val) => ['ativo', 'inativo', 'cancelado'].includes(val),
+    (val) => ['ativo', 'inativo'].includes(val),
     { message: 'Status inválido' }
   ).default('ativo' as const),
   
