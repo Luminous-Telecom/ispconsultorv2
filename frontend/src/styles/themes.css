@@ -771,7 +771,7 @@ body {
 .card-header {
   background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
   border-bottom: 1px solid var(--border-color);
-  padding: 1.25rem 1.5rem;
+  padding: 0.75rem 1rem;
 }
 
 .card-header h1,
@@ -3478,7 +3478,7 @@ select:focus,
   border-radius: 16px;
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 1rem;
+  padding: 0.75rem;
   background: var(--bg-primary);
   height: 100%;
 }
@@ -3518,7 +3518,7 @@ select:focus,
 
 .chart-card {
   border-radius: 16px;
-  padding: 1rem;
+  padding: 0.75rem;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -3630,11 +3630,11 @@ select:focus,
   }
 
   .dashboard-section .card-body {
-    padding: 1.5rem;
+    padding: 0.875rem;
   }
 
   .chart-card {
-    padding: 1.25rem;
+    padding: 0.875rem;
   }
 
   .dashboard-hero-title {
@@ -3692,11 +3692,11 @@ select:focus,
   }
 
   .dashboard-section .card-body {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .chart-card {
-    padding: 0.875rem;
+    padding: 0.75rem;
     margin-bottom: 0.75rem;
   }
 
@@ -3759,7 +3759,7 @@ select:focus,
 }
 
 .dashboard-section .card-body {
-  padding: 2rem;
+  padding: 1rem;
 }
 
 [data-theme="dark"] .dashboard-section {
@@ -3796,7 +3796,7 @@ select:focus,
 
 /* Dashboard Card Body */
 .dashboard-container .card-body {
-  padding: 1rem;
+  padding: 0.75rem;
 }
 
 /* Dashboard Animations */
