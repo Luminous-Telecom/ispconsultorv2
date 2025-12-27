@@ -5,6 +5,7 @@ import { logger } from '../utils/logger';
 import { Auditoria } from '../models/Auditoria';
 import { Usuario } from '../models/Usuario';
 import { Op, WhereOptions } from 'sequelize';
+import { converterLogoParaBase64 } from './titulos/TituloHelpers';
 
 export class AuditoriaController {
   /**
@@ -710,6 +711,7 @@ export class AuditoriaController {
     const empresaEndereco = dadosEmpresa?.endereco ? 
       escapeHtml(`${dadosEmpresa.endereco}${dadosEmpresa.numero ? ', ' + dadosEmpresa.numero : ''} - ${dadosEmpresa.cidade || ''} - ${dadosEmpresa.estado || ''} - ${dadosEmpresa.cep || ''}`) : '';
     const empresaTelefone = escapeHtml(dadosEmpresa?.telefone || '');
+    const empresaLogo = dadosEmpresa?.logo ? converterLogoParaBase64(dadosEmpresa.logo) : null;
 
     const dataGeracao = new Date().toLocaleString('pt-BR');
 
@@ -726,10 +728,31 @@ export class AuditoriaController {
       margin: 0;
       padding: 10px;
     }
+    .audit-item {
+      page-break-inside: auto;
+      page-break-after: auto;
+      page-break-before: auto;
+    }
     .header {
       margin-bottom: 15px;
       border-bottom: 1px solid #333;
       padding-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+    }
+    .header-logo {
+      flex-shrink: 0;
+      max-width: 120px;
+      max-height: 80px;
+    }
+    .header-logo img {
+      max-width: 100%;
+      max-height: 80px;
+      object-fit: contain;
+    }
+    .header-content {
+      flex: 1;
     }
     .header h1 {
       margin: 0;
@@ -743,14 +766,16 @@ export class AuditoriaController {
     .data-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 8px;
+      margin-top: 0;
+      margin-bottom: 0;
       font-size: 7pt;
-      border: 1px solid #ddd;
+      border: 1px solid #666;
     }
     .data-table thead td {
-      border: 1px solid #ddd;
+      border: 1px solid #666;
       padding: 4px 6px;
-      background-color: #f0f0f0;
+      background-color: #555;
+      color: #fff;
       font-weight: bold;
     }
     .data-table tbody td {
@@ -762,9 +787,6 @@ export class AuditoriaController {
       background-color: #f9f9f9;
       width: 30%;
     }
-    .page-break {
-      page-break-after: always;
-    }
     h2 {
       font-size: 10pt;
       margin: 15px 0 10px 0;
@@ -773,12 +795,19 @@ export class AuditoriaController {
 </head>
 <body>
   <div class="header">
-    <h1>${empresaNome}</h1>
-    <div class="header-info">
-      ${empresaEmail ? `<div>Email: ${empresaEmail}</div>` : ''}
-      ${empresaEndereco ? `<div>Endereço: ${empresaEndereco}</div>` : ''}
-      ${empresaTelefone ? `<div>Telefone: ${empresaTelefone}</div>` : ''}
-      <div>Data de geração: ${dataGeracao}</div>
+    ${empresaLogo ? `
+      <div class="header-logo">
+        <img src="${empresaLogo}" alt="Logo" />
+      </div>
+    ` : ''}
+    <div class="header-content">
+      <h1>${empresaNome}</h1>
+      <div class="header-info">
+        ${empresaEmail ? `<div>Email: ${empresaEmail}</div>` : ''}
+        ${empresaEndereco ? `<div>Endereço: ${empresaEndereco}</div>` : ''}
+        ${empresaTelefone ? `<div>Telefone: ${empresaTelefone}</div>` : ''}
+        <div>Data de geração: ${dataGeracao}</div>
+      </div>
     </div>
   </div>
 
@@ -795,24 +824,27 @@ export class AuditoriaController {
       const dadosHtml = gerarCamposHtml(dadosLog);
 
     return `
-      <div style="margin-bottom: 0; font-size: 7pt; padding: 4px 6px; background-color: #f5f5f5; border: 1px solid #ddd; ${index > 0 ? 'margin-top: 0;' : ''}">
-        <strong>Forma:</strong> Sistema | 
-        <strong>Usuário:</strong> ${escapeHtml(usuarioNome)} | 
-        <strong>Operação:</strong> ${escapeHtml(acaoFormatada)} | 
-        <strong>Data:</strong> ${escapeHtml(dataFormatada)}
+      <div class="audit-item" style="margin-bottom: 0; ${index > 0 ? 'margin-top: 10px;' : ''}">
+        <table class="data-table" style="margin-bottom: 0; margin-top: 0;">
+          <thead>
+            <tr>
+              <td colspan="2" style="font-size: 7pt; padding: 4px 6px; background-color: #555; color: #fff; border: 1px solid #666; font-weight: normal;">
+                <strong>Forma:</strong> Sistema | 
+                <strong>Usuário:</strong> ${escapeHtml(usuarioNome)} | 
+                <strong>Operação:</strong> ${escapeHtml(acaoFormatada)} | 
+                <strong>Data:</strong> ${escapeHtml(dataFormatada)}
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight: bold; border-top: 1px solid #666;">Campo</td>
+              <td style="font-weight: bold; border-top: 1px solid #666;">Valor</td>
+            </tr>
+          </thead>
+          <tbody>
+            ${dadosHtml || '<tr><td colspan="2">Sem dados disponíveis</td></tr>'}
+          </tbody>
+        </table>
       </div>
-      <table class="data-table" style="margin-bottom: 0; margin-top: 0;">
-        <thead>
-          <tr style="background-color: #f0f0f0;">
-            <td style="font-weight: bold;">Campo</td>
-            <td style="font-weight: bold;">Valor</td>
-          </tr>
-        </thead>
-        <tbody>
-          ${dadosHtml || '<tr><td colspan="2">Sem dados disponíveis</td></tr>'}
-        </tbody>
-      </table>
-      ${index < logs.length - 1 ? '<div class="page-break"></div>' : ''}
     `;
     } catch (logError) {
       return `<div>Erro ao processar log ${index + 1}</div>`;
