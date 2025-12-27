@@ -23,7 +23,8 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-          config={{
+            key="cliente-contratos-tab-table"
+            config={{
             columns: [
               { key: 'id', label: 'ID', sortable: true, searchable: true, render: (contrato: Contrato) => contrato.id },
               { 

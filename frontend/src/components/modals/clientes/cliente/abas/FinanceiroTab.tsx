@@ -25,7 +25,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingBottom: isMobile ? '0' : undefined }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-          config={{
+            key="cliente-financeiro-tab-table"
+            config={{
             columns: columns as TableColumn<CarneParcela>[],
             data: sortedData,
             customFilters: (data: (CarneParcela & { plano_nome?: string; numero_titulo_str?: string; valor_str?: string; valor_pago_str?: string })[]) => {

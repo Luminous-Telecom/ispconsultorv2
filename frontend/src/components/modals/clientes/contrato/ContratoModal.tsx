@@ -74,6 +74,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       setShowCanceladosAvulsos(false);
       setPage(1);
       setLimit(10);
+      setSelectedItems([]);
+      setSelectedAvulsosItems([]);
+      setSelectedTermosItems([]);
+      setSelectedServicosAdicionaisItems([]);
     }
   }, [show, contratoId]);
   
@@ -113,6 +117,15 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [selectedAvulsosItems, setSelectedAvulsosItems] = useState<Titulo[]>([]);
   const [selectedTermosItems, setSelectedTermosItems] = useState<TermoContrato[]>([]);
   const [selectedServicosAdicionaisItems, setSelectedServicosAdicionaisItems] = useState<ContratoPlanoAdicional[]>([]);
+  
+  // Função para mudar de aba e limpar seleções
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    setSelectedItems([]);
+    setSelectedAvulsosItems([]);
+    setSelectedTermosItems([]);
+    setSelectedServicosAdicionaisItems([]);
+  };
   
   // Estado para modal de impressão
   const [showPreview, setShowPreview] = useState(false);
@@ -1559,7 +1572,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               <button
                 className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
                 type="button"
-                onClick={() => setActiveTab('contrato')}
+                onClick={() => handleTabChange('contrato')}
               >
                 Contrato
               </button>
@@ -1568,7 +1581,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               <button
                 className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
                 type="button"
-                onClick={() => setActiveTab('endereco')}
+                onClick={() => handleTabChange('endereco')}
               >
                 Endereço
               </button>
@@ -1579,7 +1592,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 type="button"
                 onClick={() => {
                   if (isEditMode) {
-                    setActiveTab('termos');
+                    handleTabChange('termos');
                   }
                 }}
                 disabled={!isEditMode}
@@ -1594,7 +1607,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 type="button"
                 onClick={() => {
                   if (isEditMode) {
-                    setActiveTab('financeiro');
+                    handleTabChange('financeiro');
                   }
                 }}
                 disabled={!isEditMode}
@@ -1609,7 +1622,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 type="button"
                 onClick={() => {
                   if (isEditMode) {
-                    setActiveTab('financeiro-avulso');
+                    handleTabChange('financeiro-avulso');
                   }
                 }}
                 disabled={!isEditMode}
@@ -1624,7 +1637,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 type="button"
                 onClick={() => {
                   if (isEditMode) {
-                    setActiveTab('servicos-adicionais');
+                    handleTabChange('servicos-adicionais');
                   }
                 }}
                 disabled={!isEditMode}

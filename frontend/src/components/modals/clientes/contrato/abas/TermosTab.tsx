@@ -42,6 +42,7 @@ const TermosTab: React.FC<TermosTabProps> = ({
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
+            key="termos-tab-table"
             config={{
               columns: columns,
               data: sortedData,

@@ -26,6 +26,11 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   const { success, error: showError } = useNotificationContext();
   const [, setSelectedItems] = useState<DocumentoUnion[]>([]);
   const auditoria = useAuditoria();
+  
+  // Limpar seleção quando mudar de tipo
+  useEffect(() => {
+    setSelectedItems([]);
+  }, [tipo]);
 
   // Função para obter o nome da entidade baseado no tipo
   const getAuditEntity = (tipo: string): string | null => {
@@ -219,6 +224,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   return (
     <>
       <Table
+        key={`documentos-table-${tipo}`}
         config={{
           columns,
           data: documentos?.data as DocumentoUnion[] || [],

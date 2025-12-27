@@ -212,6 +212,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
         {/* Tabela de arquivos */}
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
+            key="cliente-arquivos-tab-table"
             config={{ ...tableConfig, loading: isLoading }}
             onRefresh={refetch}
             onSelectionChange={setSelectedItems}

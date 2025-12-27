@@ -104,6 +104,7 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0, paddingBottom: isMobile ? '0' : undefined }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
+            key="financeiro-avulso-tab-table"
             config={{
               columns: columns,
               data: sortedData,
