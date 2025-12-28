@@ -1,10 +1,39 @@
-// Utilitários de data centralizados
+// Utilitários de data centralizados usando date-fns
 // Este arquivo contém funções de cálculo, comparação e conversão para ISO (API)
 // Tipos estritos: não retorna '-' para null, retorna valores apropriados ou lança erros
+import { 
+  format, 
+  parseISO, 
+  isValid as isValidDateFns, 
+  isFuture, 
+  isPast, 
+  differenceInDays,
+  addDays as addDaysFns,
+  addMonths as addMonthsFns,
+  startOfDay,
+  compareAsc
+} from 'date-fns';
+
+/**
+ * Converte uma data para Date object
+ */
+const toDate = (date: string | Date | null | undefined): Date | null => {
+  if (!date) return null;
+  if (date instanceof Date) return isValidDateFns(date) ? date : null;
+  if (typeof date === 'string') {
+    // Se já for string no formato YYYY-MM-DD, usa parseISO
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return parseISO(date);
+    }
+    const parsed = new Date(date);
+    return isValidDateFns(parsed) ? parsed : null;
+  }
+  return null;
+};
 
 /**
  * Converte uma data para o formato ISO (YYYY-MM-DD) usado em inputs type="date" e para API
- * Usa componentes locais para evitar problemas de timezone
+ * Usa date-fns para evitar problemas de timezone
  * @param date - Data como string, Date ou null/undefined
  * @returns String no formato YYYY-MM-DD ou string vazia se inválida
  */
@@ -17,15 +46,10 @@ export const toISODateString = (date: string | Date | null | undefined): string 
       return date;
     }
 
-    const d = typeof date === 'string' ? new Date(date) : date;
-    if (isNaN(d.getTime())) return '';
+    const d = toDate(date);
+    if (!d) return '';
     
-    // Usa getFullYear, getMonth, getDate locais para evitar conversão para UTC que muda o dia
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    
-    return `${year}-${month}-${day}`;
+    return format(d, 'yyyy-MM-dd');
   } catch {
     return '';
   }
@@ -33,7 +57,6 @@ export const toISODateString = (date: string | Date | null | undefined): string 
 
 /**
  * Converte uma data para formato ISO completo (YYYY-MM-DDTHH:mm:ss.sssZ) para API
- * Usa timezone local do navegador
  * @param date - Data como string, Date ou null/undefined
  * @returns String no formato ISO ou string vazia se inválida
  */
@@ -41,8 +64,8 @@ export const toISOString = (date: string | Date | null | undefined): string => {
   if (!date) return '';
   
   try {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    if (isNaN(d.getTime())) return '';
+    const d = toDate(date);
+    if (!d) return '';
     
     return d.toISOString();
   } catch {
@@ -55,11 +78,7 @@ export const toISOString = (date: string | Date | null | undefined): string => {
  * @returns String no formato YYYY-MM-DD
  */
 export const getTodayISO = (): string => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return format(new Date(), 'yyyy-MM-dd');
 };
 
 /**
@@ -67,9 +86,7 @@ export const getTodayISO = (): string => {
  * @returns Objeto Date com hora 00:00:00 no timezone local
  */
 export const getToday = (): Date => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
+  return startOfDay(new Date());
 };
 
 /**
@@ -81,8 +98,8 @@ export const isValidDate = (date: string | Date | null | undefined): boolean => 
   if (!date) return false;
   
   try {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return !isNaN(d.getTime());
+    const d = toDate(date);
+    return d !== null && isValidDateFns(d);
   } catch {
     return false;
   }
@@ -94,12 +111,16 @@ export const isValidDate = (date: string | Date | null | undefined): boolean => 
  * @returns true se a data for futura, false caso contrário
  */
 export const isFutureDate = (date: string | Date | null | undefined): boolean => {
-  if (!date || !isValidDate(date)) return false;
+  if (!date) return false;
   
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const today = getToday();
-  
-  return d > today;
+  try {
+    const d = toDate(date);
+    if (!d) return false;
+    
+    return isFuture(d);
+  } catch {
+    return false;
+  }
 };
 
 /**
@@ -108,12 +129,16 @@ export const isFutureDate = (date: string | Date | null | undefined): boolean =>
  * @returns true se a data for passada, false caso contrário
  */
 export const isPastDate = (date: string | Date | null | undefined): boolean => {
-  if (!date || !isValidDate(date)) return false;
+  if (!date) return false;
   
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const today = getToday();
-  
-  return d < today;
+  try {
+    const d = toDate(date);
+    if (!d) return false;
+    
+    return isPast(d);
+  } catch {
+    return false;
+  }
 };
 
 /**
@@ -124,13 +149,12 @@ export const isPastDate = (date: string | Date | null | undefined): boolean => {
  */
 export const daysDifference = (date1: string | Date, date2: string | Date): number => {
   try {
-    const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
-    const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
+    const d1 = toDate(date1);
+    const d2 = toDate(date2);
     
-    if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return 0;
+    if (!d1 || !d2) return 0;
     
-    const diffTime = d1.getTime() - d2.getTime();
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return differenceInDays(d1, d2);
   } catch {
     return 0;
   }
@@ -144,16 +168,11 @@ export const daysDifference = (date1: string | Date, date2: string | Date): numb
  */
 export const addDays = (date: string | Date, days: number): string => {
   try {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    if (isNaN(d.getTime())) return '';
+    const d = toDate(date);
+    if (!d) return '';
     
-    d.setDate(d.getDate() + days);
-    
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    
-    return `${year}-${month}-${day}`;
+    const result = addDaysFns(d, days);
+    return format(result, 'yyyy-MM-dd');
   } catch {
     return '';
   }
@@ -167,16 +186,11 @@ export const addDays = (date: string | Date, days: number): string => {
  */
 export const addMonths = (date: string | Date, months: number): string => {
   try {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    if (isNaN(d.getTime())) return '';
+    const d = toDate(date);
+    if (!d) return '';
     
-    d.setMonth(d.getMonth() + months);
-    
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    
-    return `${year}-${month}-${day}`;
+    const result = addMonthsFns(d, months);
+    return format(result, 'yyyy-MM-dd');
   } catch {
     return '';
   }
@@ -190,14 +204,12 @@ export const addMonths = (date: string | Date, months: number): string => {
  */
 export const compareDates = (date1: string | Date, date2: string | Date): number => {
   try {
-    const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
-    const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
+    const d1 = toDate(date1);
+    const d2 = toDate(date2);
     
-    if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return 0;
+    if (!d1 || !d2) return 0;
     
-    if (d1 < d2) return -1;
-    if (d1 > d2) return 1;
-    return 0;
+    return compareAsc(d1, d2);
   } catch {
     return 0;
   }
