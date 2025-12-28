@@ -4037,8 +4037,18 @@ select:focus,
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
   padding: 0;
-  z-index: 1 !important; /* Baixo o suficiente para não sobrepor nada, mas sempre visível */
+  z-index: 100000 !important;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.table-mobile-pagination > div {
+  width: 100%;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4074,11 +4084,18 @@ select:focus,
   .responsive-dialog-mobile-content .contrato-totais-resumo {
     margin-bottom: 3rem !important;
   }
+  
+  /* Adicionar padding-bottom ao conteúdo do modal para não ficar escondido atrás da paginação */
+  .responsive-dialog-mobile-content {
+    padding-bottom: 4rem !important;
+  }
 }
 
 .table-mobile-pagination .d-flex {
   display: flex;
   align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 .table-mobile-pagination .btn-sm {
@@ -4091,6 +4108,11 @@ select:focus,
   justify-content: center;
   font-size: 0.75rem;
   line-height: 1;
+  flex-shrink: 0;
+}
+
+.table-mobile-pagination .btn-sm i {
+  font-size: 0.75rem;
 }
 
 .table-mobile-pagination .small {
@@ -4099,6 +4121,10 @@ select:focus,
   line-height: 1.2;
   display: flex;
   align-items: center;
+  text-align: center;
+  flex: 1;
+  justify-content: center;
+  padding: 0 0.5rem;
 }
 
 @media (min-width: 768px) {

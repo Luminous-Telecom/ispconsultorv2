@@ -1646,9 +1646,9 @@ function Table<T extends { id: number | string }>({
       {/* Paginação fixa na parte inferior (mobile) */}
       {isMobile && (normalizedPagination || (!normalizedPagination && data.length > 0)) && (
         <div className="table-mobile-pagination">
-          <div className="d-grid align-items-center w-100" style={{ gridTemplateColumns: '1fr auto 1fr', gap: '0.5rem' }}>
+          <div className="d-flex align-items-center justify-content-between w-100" style={{ gap: '0.5rem' }}>
             {/* Botões de navegação esquerda */}
-            <div className="d-flex align-items-center gap-1 justify-content-start">
+            <div className="d-flex align-items-center gap-1">
               <button 
                 type="button"
                 className="btn btn-outline-secondary btn-sm" 
@@ -1680,7 +1680,7 @@ function Table<T extends { id: number | string }>({
             </div>
             
             {/* Informação da página */}
-            <span className="small text-muted text-center text-nowrap">
+            <span className="small text-muted text-center text-nowrap" style={{ flex: 1, textAlign: 'center' }}>
               {normalizedPagination ? (
                 `${normalizedPagination.from || 0} - ${normalizedPagination.to || 0} / ${normalizedPagination.total || 0} registros`
               ) : (
@@ -1689,7 +1689,7 @@ function Table<T extends { id: number | string }>({
             </span>
             
             {/* Botões de navegação direita */}
-            <div className="d-flex align-items-center gap-1 justify-content-end">
+            <div className="d-flex align-items-center gap-1">
               <button 
                 type="button"
                 className="btn btn-outline-secondary btn-sm" 
