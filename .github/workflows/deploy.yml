@@ -323,11 +323,102 @@ jobs:
       # Obter informações do commit atual antes de fazer checkout do repo de produção
       - name: Obter Informações do Commit
         id: commit_info
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
         run: |
+          # Obter informações do último commit
           echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "message=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
           echo "author=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
           echo "date=$(git log -1 --pretty=%ai)" >> $GITHUB_OUTPUT
+          
+          # Tentar obter o último commit do repositório de produção via API
+          GITHUB_REPO_PROD="Luminous-Telecom/backnet.prod"
+          LAST_PROD_COMMIT=""
+          
+          echo "🔍 Buscando último commit do repositório de produção..."
+          LAST_COMMIT_RESPONSE=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPO_PROD}/commits/main?per_page=1" 2>/dev/null || echo "")
+          
+          if [ -n "${LAST_COMMIT_RESPONSE}" ] && [ "${LAST_COMMIT_RESPONSE}" != "" ]; then
+            LAST_PROD_COMMIT=$(echo "${LAST_COMMIT_RESPONSE}" | node -e "
+              try {
+                const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
+                if (data && data.commit && data.commit.message) {
+                  // Extrair hash do commit original da mensagem do commit de produção
+                  const message = data.commit.message;
+                  const match = message.match(/Commit original: ([a-f0-9]+)/);
+                  if (match && match[1]) {
+                    console.log(match[1]);
+                  } else {
+                    // Se não encontrar, usar o SHA do commit de produção
+                    console.log(data.sha.substring(0, 7));
+                  }
+                }
+              } catch(e) {}
+            " 2>/dev/null || echo "")
+          fi
+          
+          # Se não conseguir obter o commit de produção, usar o commit anterior do push
+          if [ -z "${LAST_PROD_COMMIT}" ] || [ "${LAST_PROD_COMMIT}" == "" ]; then
+            PREV_COMMIT="${{ github.event.before }}"
+            if [ -z "${PREV_COMMIT}" ] || [ "${PREV_COMMIT}" == "0000000000000000000000000000000000000000" ]; then
+              PREV_COMMIT=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)
+            fi
+            LAST_PROD_COMMIT="${PREV_COMMIT}"
+            echo "⚠ Não foi possível obter último commit de produção, usando commit anterior: ${LAST_PROD_COMMIT}"
+          else
+            echo "✓ Último commit de produção encontrado: ${LAST_PROD_COMMIT}"
+          fi
+          
+          # Obter todos os commits não enviados (desde o último commit de produção até o HEAD)
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          
+          # Verificar se há commits não enviados
+          if [ "${LAST_PROD_COMMIT}" == "${CURRENT_COMMIT}" ]; then
+            echo "⚠ Nenhum commit novo para enviar"
+            FIRST_MESSAGE=$(git log -1 --pretty=%B | head -1)
+            echo "message=${FIRST_MESSAGE}" >> $GITHUB_OUTPUT
+            echo "all_messages=${FIRST_MESSAGE}" >> $GITHUB_OUTPUT
+          else
+            # Obter todos os commits não enviados
+            echo "📝 Coletando mensagens de commits não enviados..."
+            
+            # Obter lista de commits não enviados
+            COMMIT_LIST=$(git log ${LAST_PROD_COMMIT}..${CURRENT_COMMIT} --pretty=format:"%H" --reverse 2>/dev/null || echo "${CURRENT_COMMIT}")
+            
+            # Primeira mensagem (para compatibilidade)
+            FIRST_MESSAGE=$(git log -1 --pretty=%B | head -1)
+            echo "message=${FIRST_MESSAGE}" >> $GITHUB_OUTPUT
+            
+            # Coletar todas as mensagens formatadas em arquivo temporário
+            TEMP_FILE=$(mktemp)
+            COMMIT_COUNT=0
+            while IFS= read -r commit_hash; do
+              if [ -n "${commit_hash}" ]; then
+                COMMIT_COUNT=$((COMMIT_COUNT + 1))
+                SHORT_HASH=$(echo "${commit_hash}" | cut -c1-7)
+                COMMIT_MSG=$(git log -1 "${commit_hash}" --pretty=%B | sed 's/^[[:space:]]*//' | head -1)
+                echo "• [${SHORT_HASH}] ${COMMIT_MSG}" >> "${TEMP_FILE}"
+              fi
+            done <<< "${COMMIT_LIST}"
+            
+            # Se não coletou nenhum commit, usar o commit atual
+            if [ "${COMMIT_COUNT}" -eq 0 ]; then
+              SHORT_HASH=$(git rev-parse --short HEAD)
+              COMMIT_MSG=$(git log -1 --pretty=%B | head -1)
+              echo "• [${SHORT_HASH}] ${COMMIT_MSG}" > "${TEMP_FILE}"
+              COMMIT_COUNT=1
+            fi
+            
+            # Salvar todas as mensagens usando heredoc para suportar multi-linha
+            echo "all_messages<<EOF" >> $GITHUB_OUTPUT
+            cat "${TEMP_FILE}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            rm -f "${TEMP_FILE}"
+            
+            echo "✓ Coletadas mensagens de ${COMMIT_COUNT} commit(s) não enviado(s)"
+          fi
       
       - name: Checkout Repositório de Produção
         env:
@@ -637,23 +728,39 @@ jobs:
             if [ "${FORCE_COMMIT}" == "true" ] && git diff --staged --quiet; then
               echo "⚠ Build foi executado mas nenhuma mudança detectada"
               echo "⚠ Fazendo commit vazio para registrar o deploy..."
-              git commit --allow-empty -m "Deploy: ${{ steps.commit_info.outputs.hash }} - ${{ steps.commit_info.outputs.message }}
-
-            Commit original: ${{ steps.commit_info.outputs.hash }}
-            Autor: ${{ steps.commit_info.outputs.author }}
-            Data: ${{ steps.commit_info.outputs.date }}
-            Workflow: ${{ github.workflow }}
-            Run: ${{ github.run_id }}
-            Nota: Build executado mas arquivos idênticos aos existentes"
+              
+              # Preparar mensagem do commit com todas as mensagens usando arquivo temporário
+              COMMIT_MSG_FILE=$(mktemp)
+              printf "Deploy: %s - %s\n\n" "${{ steps.commit_info.outputs.hash }}" "${{ steps.commit_info.outputs.message }}" >> "${COMMIT_MSG_FILE}"
+              printf "Commits incluídos neste deploy:\n" >> "${COMMIT_MSG_FILE}"
+              printf "%s\n" "${{ steps.commit_info.outputs.all_messages }}" >> "${COMMIT_MSG_FILE}"
+              printf "\nDetalhes:\n" >> "${COMMIT_MSG_FILE}"
+              printf "- Commit original: %s\n" "${{ steps.commit_info.outputs.hash }}" >> "${COMMIT_MSG_FILE}"
+              printf "- Autor: %s\n" "${{ steps.commit_info.outputs.author }}" >> "${COMMIT_MSG_FILE}"
+              printf "- Data: %s\n" "${{ steps.commit_info.outputs.date }}" >> "${COMMIT_MSG_FILE}"
+              printf "- Workflow: %s\n" "${{ github.workflow }}" >> "${COMMIT_MSG_FILE}"
+              printf "- Run: %s\n" "${{ github.run_id }}" >> "${COMMIT_MSG_FILE}"
+              printf "- Nota: Build executado mas arquivos idênticos aos existentes\n" >> "${COMMIT_MSG_FILE}"
+              
+              git commit --allow-empty -F "${COMMIT_MSG_FILE}"
+              rm -f "${COMMIT_MSG_FILE}"
             else
               echo "✓ Mudanças detectadas, fazendo commit..."
-              git commit -m "Deploy: ${{ steps.commit_info.outputs.hash }} - ${{ steps.commit_info.outputs.message }}
-
-            Commit original: ${{ steps.commit_info.outputs.hash }}
-            Autor: ${{ steps.commit_info.outputs.author }}
-            Data: ${{ steps.commit_info.outputs.date }}
-            Workflow: ${{ github.workflow }}
-            Run: ${{ github.run_id }}"
+              
+              # Preparar mensagem do commit com todas as mensagens usando arquivo temporário
+              COMMIT_MSG_FILE=$(mktemp)
+              printf "Deploy: %s - %s\n\n" "${{ steps.commit_info.outputs.hash }}" "${{ steps.commit_info.outputs.message }}" >> "${COMMIT_MSG_FILE}"
+              printf "Commits incluídos neste deploy:\n" >> "${COMMIT_MSG_FILE}"
+              printf "%s\n" "${{ steps.commit_info.outputs.all_messages }}" >> "${COMMIT_MSG_FILE}"
+              printf "\nDetalhes:\n" >> "${COMMIT_MSG_FILE}"
+              printf "- Commit original: %s\n" "${{ steps.commit_info.outputs.hash }}" >> "${COMMIT_MSG_FILE}"
+              printf "- Autor: %s\n" "${{ steps.commit_info.outputs.author }}" >> "${COMMIT_MSG_FILE}"
+              printf "- Data: %s\n" "${{ steps.commit_info.outputs.date }}" >> "${COMMIT_MSG_FILE}"
+              printf "- Workflow: %s\n" "${{ github.workflow }}" >> "${COMMIT_MSG_FILE}"
+              printf "- Run: %s\n" "${{ github.run_id }}" >> "${COMMIT_MSG_FILE}"
+              
+              git commit -F "${COMMIT_MSG_FILE}"
+              rm -f "${COMMIT_MSG_FILE}"
             fi
             
             git remote set-url origin https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git
@@ -715,6 +822,7 @@ jobs:
           
           COMMIT_HASH=${{ steps.commit_info.outputs.hash }}
           COMMIT_MESSAGE="${{ steps.commit_info.outputs.message }}"
+          ALL_COMMITS_MESSAGES="${{ steps.commit_info.outputs.all_messages }}"
           TAG_NAME="v${CLEAN_VERSION}"
           
           # Criar tag no repositório de produção
@@ -723,13 +831,17 @@ jobs:
           git push origin "${TAG_NAME}" 2>/dev/null || echo "Tag já existe no remoto"
           
           # Criar release usando API do GitHub no repositório de produção
-          RELEASE_BODY="${COMMIT_MESSAGE}
-
-          **Detalhes:**
-          - Commit: ${COMMIT_HASH}
-          - Autor: ${{ steps.commit_info.outputs.author }}
-          - Data: ${{ steps.commit_info.outputs.date }}
-          - Workflow: ${{ github.workflow }}"
+          RELEASE_BODY_FILE=$(mktemp)
+          printf "%s\n\n" "${COMMIT_MESSAGE}" >> "${RELEASE_BODY_FILE}"
+          printf "**Commits incluídos neste deploy:**\n" >> "${RELEASE_BODY_FILE}"
+          printf "%s\n\n" "${ALL_COMMITS_MESSAGES}" >> "${RELEASE_BODY_FILE}"
+          printf "**Detalhes:**\n" >> "${RELEASE_BODY_FILE}"
+          printf "- Commit: %s\n" "${COMMIT_HASH}" >> "${RELEASE_BODY_FILE}"
+          printf "- Autor: %s\n" "${{ steps.commit_info.outputs.author }}" >> "${RELEASE_BODY_FILE}"
+          printf "- Data: %s\n" "${{ steps.commit_info.outputs.date }}" >> "${RELEASE_BODY_FILE}"
+          printf "- Workflow: %s\n" "${{ github.workflow }}" >> "${RELEASE_BODY_FILE}"
+          RELEASE_BODY=$(cat "${RELEASE_BODY_FILE}")
+          rm -f "${RELEASE_BODY_FILE}"
           
           echo "=== Criando release ${TAG_NAME} no repositório Luminous-Telecom/backnet.prod ==="
           
