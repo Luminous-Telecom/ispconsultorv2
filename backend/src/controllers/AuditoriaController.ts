@@ -793,7 +793,7 @@ export class AuditoriaController {
     .data-table tbody td:first-child {
       font-weight: bold;
       background-color: #f9f9f9;
-      width: 30%;
+      width: 20%;
       font-size: 7pt !important;
     }
     h2 {
