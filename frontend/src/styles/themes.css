@@ -801,25 +801,7 @@ body {
   cursor: pointer;
   font-size: 0.875rem;
   line-height: 1.25;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  transform: translate(-50%, -50%);
-}
-
-.btn:hover::before {
-  width: 300px;
-  height: 300px;
+  transition: box-shadow 0.2s ease;
 }
 
 .btn:hover {
@@ -827,7 +809,6 @@ body {
 }
 
 .btn:active {
-  transform: translateY(0);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -1328,30 +1309,13 @@ body {
   background: #e8eaed;
 }
 
-/* Linha selecionada - modo claro - Limpa */
-:root .table.table-striped tbody tr.table-active,
-:root .table tbody tr.table-active {
+/* Linha selecionada - Simplificado */
+.table tbody tr.table-active {
   background-color: #6366f1 !important;
 }
 
-:root .table.table-striped tbody tr.table-active td,
-:root .table tbody tr.table-active td,
-:root .table.table-striped tbody tr.table-active th,
-:root .table tbody tr.table-active th {
-  background-color: #6366f1 !important;
-  color: white !important;
-}
-
-/* Linha selecionada - modo escuro - Limpa */
-[data-theme="dark"] .table.table-striped tbody tr.table-active,
-[data-theme="dark"] .table tbody tr.table-active {
-  background-color: #6366f1 !important;
-}
-
-[data-theme="dark"] .table.table-striped tbody tr.table-active td,
-[data-theme="dark"] .table tbody tr.table-active td,
-[data-theme="dark"] .table.table-striped tbody tr.table-active th,
-[data-theme="dark"] .table tbody tr.table-active th {
+.table tbody tr.table-active td,
+.table tbody tr.table-active th {
   background-color: #6366f1 !important;
   color: white !important;
 }
@@ -2168,8 +2132,8 @@ body {
 
 /* Animações */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideIn {
@@ -2180,11 +2144,6 @@ body {
 @keyframes slideInRight {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 .fade-in {
@@ -2874,69 +2833,38 @@ textarea:focus {
   transform: translateY(-1px) !important;
 }
 
-/* Estilos para modo claro */
+/* Estilos para form-control nos temas - Simplificado */
 [data-theme="light"] .form-control,
-[data-theme="light"] .form-control:focus,
-[data-theme="light"] .form-control:active {
-  background-color: #ffffff;
-  color: #000000;
-  border-color: #ced4da;
-}
-
-[data-theme="light"] .form-control:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  transform: translateY(-1px);
-}
-
-[data-theme="light"] .form-control::placeholder {
-  color: #6c757d;
-}
-
 [data-theme="light"] .form-control-sm {
   background-color: #ffffff;
   color: #000000;
   border-color: #ced4da;
 }
 
-[data-theme="light"] .form-control-sm:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  transform: translateY(-1px);
+[data-theme="light"] .form-control::placeholder {
+  color: #6c757d;
 }
 
-/* Corrigir cores do campo de busca no tema escuro */
 [data-theme="dark"] .form-control,
-[data-theme="dark"] .form-control:focus,
-[data-theme="dark"] .form-control:active {
-  background-color: var(--sidebar-active);
-  color: #ffffff;
+[data-theme="dark"] .form-control-sm {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   border-color: var(--border-color);
-}
-
-[data-theme="dark"] .form-control:focus {
-  border-color: var(--btn-primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  background-color: var(--bg-tertiary);
-  transform: translateY(-1px);
 }
 
 [data-theme="dark"] .form-control::placeholder {
   color: var(--text-muted);
 }
 
-[data-theme="dark"] .form-control-sm {
-  background-color: var(--sidebar-active);
-  color: var(--text-primary);
-  border-color: var(--border-color);
+.form-control:focus,
+.form-control-sm:focus {
+  border-color: var(--btn-primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
 }
 
+[data-theme="dark"] .form-control:focus,
 [data-theme="dark"] .form-control-sm:focus {
   background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  border-color: var(--btn-primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  transform: translateY(-1px);
 }
 
 /* Estilos para Dropdown Menu */
@@ -3828,6 +3756,23 @@ select:focus,
 /* Forçar todas as bordas a usar a cor do tema */
 * {
   border-color: var(--border-color) !important;
+}
+
+/* Exceção para spinner-border do Bootstrap - precisa de border-right-color transparent */
+.spinner-border {
+  border-color: currentColor !important;
+  border-right-color: transparent !important;
+}
+
+.spinner-border.text-primary {
+  border-color: var(--btn-primary-color) !important;
+  border-right-color: transparent !important;
+}
+
+/* Exceção também para spinner-border-sm */
+.spinner-border-sm {
+  border-color: currentColor !important;
+  border-right-color: transparent !important;
 }
 
 .border-bottom {
