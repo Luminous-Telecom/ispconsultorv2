@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from '../common/DraggableModal';
 import { Button } from '@/components/ui';
+import Loading from './Loading';
 
 interface ImprimirModalProps {
   show: boolean;
@@ -68,26 +69,14 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
     >
       <div style={{ height: '80vh', width: '100%', position: 'relative' }}>
         {isGenerating || !pdfUrl ? (
-          <div className="d-flex flex-column align-items-center justify-content-center h-100">
-            <div 
-              className="spinner-border text-primary" 
-              role="status"
-            >
-              <span className="visually-hidden">Carregando documento...</span>
-            </div>
-            <p className="mt-3 mb-0 text-muted">Carregando documento...</p>
+          <div className="h-100" style={{ minHeight: 0 }}>
+            <Loading message="Carregando documento..." />
           </div>
         ) : (
           <>
             {isLoading && (
-              <div className="d-flex flex-column align-items-center justify-content-center" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1, backgroundColor: 'var(--bg-primary)', opacity: 0.95 }}>
-                <div 
-                  className="spinner-border text-primary" 
-                  role="status"
-                >
-                  <span className="visually-hidden">Carregando documento...</span>
-                </div>
-                <p className="mt-3 mb-0 text-muted">Carregando documento...</p>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1, backgroundColor: 'var(--bg-primary)', opacity: 0.95, minHeight: 0 }}>
+                <Loading message="Carregando documento..." />
               </div>
             )}
             {hasError ? (
