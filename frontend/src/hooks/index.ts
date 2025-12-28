@@ -1,7 +1,6 @@
 // Exportações centralizadas de hooks
 
 // Hooks base unificados
-export * from './usePagination';
 export * from './useFilters';
 export * from './useSearch';
 
@@ -16,11 +15,10 @@ export * from './useModelosTermo';
 
 // Hooks de UI
 export * from './useFormReset';
-export * from './useFormId';
+export { useFormPrefix } from './useFormId';
 export * from './useModalSelect';
 export * from './useListModal';
 export * from './useSelectModal';
-export * from './useConfirm';
 export * from './useEntitySelectField';
 export * from './useSelectedEntity';
 export * from './useImprimir';
