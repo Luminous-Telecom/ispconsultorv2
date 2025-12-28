@@ -29,7 +29,9 @@ const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showTableMenu, setShowTableMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const tableMenuRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   
   // Responsividade: Mobile-First
@@ -60,6 +62,22 @@ const Layout: React.FC = () => {
       };
     }
   }, [showUserMenu]);
+
+  // Fechar menu da tabela ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tableMenuRef.current && !tableMenuRef.current.contains(event.target as Node)) {
+        setShowTableMenu(false);
+      }
+    };
+
+    if (showTableMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showTableMenu]);
 
   // Fechar sidebar ao clicar fora (apenas no mobile)
   useEffect(() => {
@@ -306,58 +324,59 @@ const Layout: React.FC = () => {
               <div className="header-right">
                 {isMobile ? (
                   <>
-                    {/* Botões da tabela (busca e reload) */}
-                    {tableHeader.showSearch && (
-                      <button
-                        type="button"
-                        className="btn btn-link p-0"
-                        onClick={() => tableHeader.setShowMobileSearch(!tableHeader.showMobileSearch)}
-                        style={{
-                          color: 'var(--text-primary)',
-                          border: 'none',
-                          background: 'none',
-                          fontSize: '1.25rem',
-                          minWidth: '36px',
-                          minHeight: '36px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: '0.5rem',
-                        }}
-                      >
-                        <i className="bi bi-search"></i>
-                      </button>
+                    {/* Menu de 3 pontos da tabela (busca e reload) */}
+                    {(tableHeader.showSearch || tableHeader.showReload) && (
+                      <div className="mobile-menu-dropdown" ref={tableMenuRef}>
+                        <button
+                          className="btn btn-outline-secondary mobile-menu-btn"
+                          type="button"
+                          onClick={() => setShowTableMenu(!showTableMenu)}
+                          title="Menu de ações"
+                          aria-label="Menu de ações da tabela"
+                          aria-expanded={showTableMenu}
+                        >
+                          <span aria-hidden="true">⋮</span>
+                        </button>
+                        {showTableMenu && (
+                          <div className="dropdown-menu show mobile-dropdown-menu">
+                            {/* Ação de Busca */}
+                            {tableHeader.showSearch && (
+                              <button
+                                className="dropdown-item d-flex align-items-center gap-2"
+                                onClick={() => {
+                                  tableHeader.setShowMobileSearch(!tableHeader.showMobileSearch);
+                                  setShowTableMenu(false);
+                                }}
+                                type="button"
+                              >
+                                <i className="bi bi-search"></i>
+                                <span>Buscar</span>
+                              </button>
+                            )}
+                            
+                            {/* Ação de Reload */}
+                            {tableHeader.showReload && (
+                              <button
+                                className="dropdown-item d-flex align-items-center gap-2"
+                                onClick={() => {
+                                  if (tableHeader.onReloadClick) {
+                                    tableHeader.onReloadClick();
+                                  }
+                                  setShowTableMenu(false);
+                                }}
+                                disabled={tableHeader.loading}
+                                type="button"
+                              >
+                                <i className="bi bi-arrow-clockwise"></i>
+                                <span>Atualizar</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     )}
                     
-                    {tableHeader.showReload && (
-                      <button
-                        type="button"
-                        className="btn btn-link p-0"
-                        onClick={() => {
-                          if (tableHeader.onReloadClick) {
-                            tableHeader.onReloadClick();
-                          }
-                        }}
-                        disabled={tableHeader.loading}
-                        style={{
-                          color: 'var(--text-primary)',
-                          border: 'none',
-                          background: 'none',
-                          fontSize: '1.25rem',
-                          minWidth: '36px',
-                          minHeight: '36px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: '0.5rem',
-                          opacity: tableHeader.loading ? 0.5 : 1,
-                        }}
-                      >
-                        <i className="bi bi-arrow-clockwise"></i>
-                      </button>
-                    )}
-                    
-                    {/* Menu de 3 pontos com dropdown */}
+                    {/* Menu de 3 pontos do usuário */}
                     <div className="mobile-menu-dropdown" ref={userMenuRef}>
                       <button
                         className="btn btn-outline-secondary mobile-menu-btn"

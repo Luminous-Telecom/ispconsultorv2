@@ -1,6 +1,5 @@
 import React, { Suspense, lazy } from 'react';
 import { useModal } from '@/contexts/ModalContext';
-import { TableHeaderProvider } from '@/contexts/TableHeaderContext';
 import Loading from './Loading';
 import DraggableModal from './DraggableModal';
 
@@ -83,9 +82,7 @@ const SingleModalWrapper: React.FC = () => {
       className={modalConfig.className || ''}
     >
       <Suspense fallback={<Loading message={modalConfig.loadingMessage} />}>
-        <TableHeaderProvider>
-          <ModalComponent {...modalProps} />
-        </TableHeaderProvider>
+        <ModalComponent {...modalProps} />
       </Suspense>
     </DraggableModal>
   );

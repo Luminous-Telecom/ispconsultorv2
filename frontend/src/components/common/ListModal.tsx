@@ -48,6 +48,7 @@ function ListModal<T extends { id: number | string }>({
   const tableContent = (
     <div>
       <Table
+        title={title}
         config={{
           columns: tableColumns,
           data,
