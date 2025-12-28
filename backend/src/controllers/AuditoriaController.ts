@@ -829,33 +829,53 @@ export class AuditoriaController {
       const dataFormatada = formatDate(log.timestamp);
       const usuarioNome = log.usuario_nome || log.usuario_email || 'N/A';
       
+      // Verificar se é continuidade (mesmo entidade_id do log anterior)
+      const logAnterior = index > 0 ? logs[index - 1] : null;
+      const isContinuidade = logAnterior && 
+        logAnterior.entidade_id === log.entidade_id && 
+        logAnterior.entidade === log.entidade;
+      
       // Obter dados do log (anteriores ou novos)
       const dadosLog = log.dados_novos || log.dados_anteriores || {};
       const dadosHtml = gerarCamposHtml(dadosLog);
 
-    return `
-      <div class="audit-item" style="margin-bottom: 0; ${index > 0 ? 'margin-top: 10px;' : ''}">
-        <table class="data-table" style="margin-bottom: 0; margin-top: 0;">
-          <thead>
-            <tr>
-              <td colspan="2" style="font-size: 7pt !important; padding: 4px 6px; background-color: #555; color: #fff; border: 1px solid #666; font-weight: normal;">
-                <strong>Forma:</strong> Sistema | 
-                <strong>Usuário:</strong> ${escapeHtml(usuarioNome)} | 
-                <strong>Operação:</strong> ${escapeHtml(acaoFormatada)} | 
-                <strong>Data:</strong> ${escapeHtml(dataFormatada)}
-              </td>
-            </tr>
-            <tr>
-              <td style="font-weight: bold; border-top: 1px solid #666; font-size: 7pt !important;">Campo</td>
-              <td style="font-weight: bold; border-top: 1px solid #666; font-size: 7pt !important;">Valor</td>
-            </tr>
-          </thead>
-          <tbody>
-            ${dadosHtml || '<tr><td colspan="2">Sem dados disponíveis</td></tr>'}
-          </tbody>
-        </table>
-      </div>
-    `;
+    if (isContinuidade) {
+      // Continuidade: mostrar apenas os dados, sem cabeçalhos
+      return `
+        <div class="audit-item" style="margin-bottom: 0; margin-top: 10px;">
+          <table class="data-table" style="margin-bottom: 0; margin-top: 0;">
+            <tbody>
+              ${dadosHtml || '<tr><td colspan="2">Sem dados disponíveis</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else {
+      // Primeiro log ou mudança de entidade: mostrar cabeçalhos completos
+      return `
+        <div class="audit-item" style="margin-bottom: 0; ${index > 0 ? 'margin-top: 10px;' : ''}">
+          <table class="data-table" style="margin-bottom: 0; margin-top: 0;">
+            <thead>
+              <tr>
+                <td colspan="2" style="font-size: 7pt !important; padding: 4px 6px; background-color: #555; color: #fff; border: 1px solid #666; font-weight: normal;">
+                  <strong>Forma:</strong> Sistema | 
+                  <strong>Usuário:</strong> ${escapeHtml(usuarioNome)} | 
+                  <strong>Operação:</strong> ${escapeHtml(acaoFormatada)} | 
+                  <strong>Data:</strong> ${escapeHtml(dataFormatada)}
+                </td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; border-top: 1px solid #666; font-size: 7pt !important;">Campo</td>
+                <td style="font-weight: bold; border-top: 1px solid #666; font-size: 7pt !important;">Valor</td>
+              </tr>
+            </thead>
+            <tbody>
+              ${dadosHtml || '<tr><td colspan="2">Sem dados disponíveis</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
     } catch (logError) {
       return `<div>Erro ao processar log ${index + 1}</div>`;
     }
