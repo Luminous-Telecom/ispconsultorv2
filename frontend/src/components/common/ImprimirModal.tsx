@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from '../common/DraggableModal';
 import { Button } from '@/components/ui';
+import ModernLoader from './ModernLoader';
 
 interface ImprimirModalProps {
   show: boolean;
@@ -27,25 +28,8 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
       setHasError(false);
       setIsLoading(true);
       
-      // Adicionar listener para erros de carregamento de recursos
       const handleResourceError = (event: ErrorEvent) => {
-        // eslint-disable-next-line no-console
-        console.error('[ImprimirModal] Erro ao carregar recurso', {
-          message: event.message,
-          filename: event.filename,
-          lineno: event.lineno,
-          colno: event.colno,
-          error: event.error,
-          pdfUrl
-        });
-        
-        // Verificar se o erro é relacionado ao PDF
-        if (event.filename && event.filename.includes('cliente-arquivos')) {
-          // eslint-disable-next-line no-console
-          console.error('[ImprimirModal] Erro relacionado ao PDF do cliente-arquivos', {
-            filename: event.filename,
-            pdfUrl
-          });
+        if (event.filename && event.filename.includes('blob:')) {
           setIsLoading(false);
           setHasError(true);
         }
@@ -70,13 +54,7 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
     setHasError(false);
   };
 
-  const handleIframeError = (event: React.SyntheticEvent<HTMLIFrameElement, Event>) => {
-    // eslint-disable-next-line no-console
-    console.error('[ImprimirModal] Erro ao carregar iframe', { 
-      event, 
-      pdfUrl,
-      error: 'Erro ao carregar iframe'
-    });
+  const handleIframeError = () => {
     setIsLoading(false);
     setHasError(true);
   };
@@ -92,23 +70,13 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
       <div style={{ height: '80vh', width: '100%', position: 'relative' }}>
         {isGenerating || !pdfUrl ? (
           <div className="d-flex align-items-center justify-content-center h-100">
-            <div className="text-center">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Carregando...</span>
-              </div>
-              <p className="mt-2 text-muted">Carregando documento...</p>
-            </div>
+            <ModernLoader message="Carregando documento..." />
           </div>
         ) : (
           <>
             {isLoading && (
-              <div className="d-flex align-items-center justify-content-center" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1, background: 'rgba(255, 255, 255, 0.9)' }}>
-                <div className="text-center">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Carregando...</span>
-                  </div>
-                  <p className="mt-2 text-muted">Carregando documento...</p>
-                </div>
+              <div className="d-flex align-items-center justify-content-center" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1, background: 'rgba(255, 255, 255, 0.95)' }}>
+                <ModernLoader message="Carregando documento..." />
               </div>
             )}
             {hasError ? (
@@ -122,7 +90,6 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
                       onClick={() => {
                         setHasError(false);
                         setIsLoading(true);
-                        // Forçar recarregamento do iframe
                         const iframe = document.querySelector(`#pdf-iframe-${modalId}`) as HTMLIFrameElement;
                         if (iframe) {
                           iframe.src = pdfUrl;
