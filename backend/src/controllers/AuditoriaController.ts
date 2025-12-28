@@ -633,7 +633,6 @@ export class AuditoriaController {
     entidade: string,
     dadosEmpresa: any
   ): string {
-    // Função para escapar caracteres HTML
     const escapeHtml = (text: unknown): string => {
       if (text === null || text === undefined) {
         return '';
@@ -666,25 +665,10 @@ export class AuditoriaController {
       return acoes[acao] || acao;
     };
 
-    // Função auxiliar para formatar valor (sem truncamento para campos importantes como 'conteudo')
-    const formatarValor = (value: unknown, fieldName: string = ''): string => {
+    const formatarValor = (value: unknown): string => {
       if (value === null || value === undefined) return '';
       if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
-      
-      const str = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-      
-      // Campos importantes como 'conteudo' não devem ser truncados
-      const camposImportantes = ['conteudo', 'conteudo_adesao', 'conteudo_permanencia'];
-      if (camposImportantes.includes(fieldName)) {
-        return str; // Sem truncamento para conteúdo
-      }
-      
-      // Para outros campos, truncar apenas se for muito grande (acima de 5000 caracteres)
-      const maxLength = 5000;
-      if (str.length > maxLength) {
-        return str.substring(0, maxLength) + `... (truncado, ${str.length} caracteres total)`;
-      }
-      return str;
+      return typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
     };
 
     const camposExcluir = [
@@ -700,8 +684,8 @@ export class AuditoriaController {
         .filter(([key]) => !camposExcluir.includes(key))
         .map(([key, value]) => `
           <tr>
-            <td style="font-size: 7pt !important;">${escapeHtml(key)}</td>
-            <td style="font-size: 7pt !important;">${escapeHtml(formatarValor(value, key))}</td>
+            <td>${escapeHtml(key)}</td>
+            <td>${escapeHtml(formatarValor(value))}</td>
           </tr>
         `).join('');
     };
@@ -712,7 +696,6 @@ export class AuditoriaController {
       escapeHtml(`${dadosEmpresa.endereco}${dadosEmpresa.numero ? ', ' + dadosEmpresa.numero : ''} - ${dadosEmpresa.cidade || ''} - ${dadosEmpresa.estado || ''} - ${dadosEmpresa.cep || ''}`) : '';
     const empresaTelefone = escapeHtml(dadosEmpresa?.telefone || '');
     const empresaLogo = dadosEmpresa?.logo ? converterLogoParaBase64(dadosEmpresa.logo) : null;
-
     const dataGeracao = new Date().toLocaleString('pt-BR');
 
     return `
@@ -724,14 +707,15 @@ export class AuditoriaController {
   <style>
     body {
       font-family: Arial, sans-serif;
-      font-size: 8pt !important;
+      font-size: 10pt !important;
       margin: 0;
       padding: 10px;
+      text-size-adjust: none !important;
+      -webkit-text-size-adjust: none !important;
+      -moz-text-size-adjust: none !important;
     }
     .audit-item {
-      page-break-inside: auto;
-      page-break-after: auto;
-      page-break-before: auto;
+      margin-bottom: 10px;
     }
     .header {
       margin-bottom: 15px;
@@ -760,45 +744,58 @@ export class AuditoriaController {
       font-weight: bold;
     }
     .header-info {
-      font-size: 7pt;
+      font-size: 8pt;
       margin-top: 3px;
     }
     .data-table {
       width: 100%;
       table-layout: auto;
       border-collapse: collapse;
-      margin-top: 0;
-      margin-bottom: 0;
-      font-size: 7pt !important;
       border: 1px solid #666;
+      font-size: 8pt !important;
+    }
+    .data-table thead {
+      display: table-row-group;
+    }
+    .data-table td {
+      padding: 5px 8px;
+      font-size: 8pt !important;
+      text-size-adjust: none !important;
+      -webkit-text-size-adjust: none !important;
+      -moz-text-size-adjust: none !important;
     }
     .data-table thead td {
       border: 1px solid #666;
-      padding: 4px 6px;
       background-color: #555;
       color: #fff;
       font-weight: bold;
-      font-size: 7pt !important;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
     }
     .data-table tbody td {
       border: 1px solid #ddd;
-      padding: 4px 6px;
-      font-size: 7pt !important;
       word-wrap: break-word;
-      overflow-wrap: break-word;
       word-break: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+    }
+    .data-table td:first-child {
+      width: 1%;
+      white-space: nowrap;
+      font-weight: bold;
+    }
+    .data-table td:last-child {
+      width: auto;
     }
     .data-table tbody td:first-child {
-      font-weight: bold;
       background-color: #f9f9f9;
-      width: auto;
-      white-space: nowrap;
-      font-size: 7pt !important;
+    }
+    .data-table tbody td:last-child {
+      word-wrap: break-word;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
     }
     h2 {
-      font-size: 10pt;
+      font-size: 12pt;
       margin: 15px 0 10px 0;
     }
   </style>
@@ -828,42 +825,16 @@ export class AuditoriaController {
       const acaoFormatada = formatAcao(log.acao);
       const dataFormatada = formatDate(log.timestamp);
       const usuarioNome = log.usuario_nome || log.usuario_email || 'N/A';
-      
-      // Verificar se é continuidade (mesmo entidade_id do log anterior)
-      // Como o PDF é gerado para uma entidade específica, todos os logs após o primeiro são continuidade
-      const logAnterior = index > 0 ? logs[index - 1] : null;
-      const entidadeIdAnterior = logAnterior?.entidade_id?.toString() || logAnterior?.entidade_id || '';
-      const entidadeIdAtual = log?.entidade_id?.toString() || log?.entidade_id || '';
-      const entidadeAnterior = String(logAnterior?.entidade || '');
-      const entidadeAtual = String(log?.entidade || '');
-      
-      const isContinuidade = logAnterior && 
-        entidadeIdAnterior === entidadeIdAtual && 
-        entidadeAnterior === entidadeAtual;
-      
-      // Obter dados do log (anteriores ou novos)
       const dadosLog = log.dados_novos || log.dados_anteriores || {};
       const dadosHtml = gerarCamposHtml(dadosLog);
+      const marginTop = index > 0 ? 'margin-top: 10px;' : '';
 
-    if (isContinuidade) {
-      // Continuidade: mostrar apenas os dados, sem cabeçalhos
       return `
-        <div class="audit-item" style="margin-bottom: 0; margin-top: 10px;">
-          <table class="data-table" style="margin-bottom: 0; margin-top: 0;">
-            <tbody>
-              ${dadosHtml || '<tr><td colspan="2">Sem dados disponíveis</td></tr>'}
-            </tbody>
-          </table>
-        </div>
-      `;
-    } else {
-      // Primeiro log ou mudança de entidade: mostrar cabeçalhos completos
-      return `
-        <div class="audit-item" style="margin-bottom: 0; ${index > 0 ? 'margin-top: 10px;' : ''}">
-          <table class="data-table" style="margin-bottom: 0; margin-top: 0;">
+        <div class="audit-item" style="${marginTop}">
+          <table class="data-table">
             <thead>
               <tr>
-                <td colspan="2" style="font-size: 7pt !important; padding: 4px 6px; background-color: #555; color: #fff; border: 1px solid #666; font-weight: normal;">
+                <td colspan="2" style="font-weight: normal;">
                   <strong>Forma:</strong> Sistema | 
                   <strong>Usuário:</strong> ${escapeHtml(usuarioNome)} | 
                   <strong>Operação:</strong> ${escapeHtml(acaoFormatada)} | 
@@ -871,8 +842,8 @@ export class AuditoriaController {
                 </td>
               </tr>
               <tr>
-                <td style="font-weight: bold; border-top: 1px solid #666; font-size: 7pt !important;">Campo</td>
-                <td style="font-weight: bold; border-top: 1px solid #666; font-size: 7pt !important;">Valor</td>
+                <td style="border-top: 1px solid #666;">Campo</td>
+                <td style="border-top: 1px solid #666;">Valor</td>
               </tr>
             </thead>
             <tbody>
@@ -881,8 +852,7 @@ export class AuditoriaController {
           </table>
         </div>
       `;
-    }
-    } catch (logError) {
+    } catch {
       return `<div>Erro ao processar log ${index + 1}</div>`;
     }
   }).join('')}
