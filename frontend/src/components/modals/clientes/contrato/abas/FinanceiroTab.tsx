@@ -17,7 +17,6 @@ interface FinanceiroTabProps {
   selectedItems: Titulo[];
   setSelectedItems: (items: Titulo[]) => void;
   columns: TableColumn<Titulo>[]; 
-  isGeneratingPdf: boolean;
   onRefresh?: () => void;
   showCancelados: boolean;
   setShowCancelados: (show: boolean) => void;
@@ -36,7 +35,6 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   selectedItems: _selectedItems,
   setSelectedItems,
   columns,
-  isGeneratingPdf,
   onRefresh,
   showCancelados,
   setShowCancelados,
@@ -91,14 +89,14 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
       
       return {
         key: action.label,
-        label: action.label === 'Imprimir' && isGeneratingPdf ? 'Gerando...' : action.label,
+        label: action.label,
         variant: action.variant || 'primary',
         onClick: action.action,
         disabled: disabledFunc,
         dropdown: action.dropdown
       };
     });
-  }, [bulkActions, isGeneratingPdf]);
+  }, [bulkActions]);
 
   return (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>

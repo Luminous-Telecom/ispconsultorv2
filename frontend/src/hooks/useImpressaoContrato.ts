@@ -3,7 +3,7 @@
  * Centraliza a lógica de geração de PDFs de contratos
  */
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import DocumentoSistemaService from '../services/documentoSistemaService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { extractApiErrorMessage } from '../utils/apiErrorHelper';
@@ -14,12 +14,6 @@ interface UseImpressaoContratoParams {
    * ID do cliente (obrigatório para impressão por cliente)
    */
   clienteId?: number | null;
-  
-  /**
-   * Callback opcional para abrir o modal de preview após gerar o PDF
-   * Se não fornecido, o hook apenas gera o PDF e retorna a URL
-   */
-  onPdfGenerated?: (pdfUrl: string) => void;
 }
 
 interface UseImpressaoContratoReturn {
@@ -32,6 +26,16 @@ interface UseImpressaoContratoReturn {
    * URL do PDF gerado (null quando não há PDF)
    */
   pdfUrl: string | null;
+  
+  /**
+   * Estado para controlar visibilidade do modal
+   */
+  showModal: boolean;
+  
+  /**
+   * Função para abrir o modal
+   */
+  setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
   
   /**
    * Função para imprimir um contrato específico
@@ -53,12 +57,12 @@ interface UseImpressaoContratoReturn {
 }
 
 export const useImpressaoContrato = ({
-  clienteId,
-  onPdfGenerated
+  clienteId
 }: UseImpressaoContratoParams = {}): UseImpressaoContratoReturn => {
   const { success, error } = useNotificationContext();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   /**
    * Limpa a URL do PDF, revogando o objeto URL para liberar memória
@@ -68,19 +72,7 @@ export const useImpressaoContrato = ({
       window.URL.revokeObjectURL(pdfUrl);
       setPdfUrl(null);
     }
-  };
-
-  /**
-   * Função auxiliar para aguardar idle callback (melhora performance)
-   */
-  const waitForIdle = (): Promise<void> => {
-    return new Promise(resolve => {
-      if (window.requestIdleCallback) {
-        window.requestIdleCallback(() => resolve());
-      } else {
-        setTimeout(() => resolve(), 0);
-      }
-    });
+    setShowModal(false);
   };
 
   /**
@@ -115,17 +107,24 @@ export const useImpressaoContrato = ({
       return;
     }
     
+    // Limpar URL anterior se existir (sem fechar o modal)
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+    
+    // Abrir modal imediatamente
+    setShowModal(true);
     setIsGeneratingPdf(true);
     
     try {
-      // Aguardar idle callback para melhorar performance
-      await waitForIdle();
-      
       // Buscar modelo padrão de contrato
       const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
       
       if (!modeloContrato.success || !modeloContrato.data) {
         error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+        setShowModal(false);
+        setIsGeneratingPdf(false);
         return;
       }
       
@@ -139,22 +138,15 @@ export const useImpressaoContrato = ({
       // Criar URL do blob
       const url = window.URL.createObjectURL(pdfBlob);
       
-      // Limpar URL anterior se existir
-      limparPdfUrl();
-      
       // Atualizar estado
       setPdfUrl(url);
+      setIsGeneratingPdf(false);
       
       // Notificar sucesso
       success('Contrato gerado com sucesso!');
-      
-      // Chamar callback se fornecido
-      if (onPdfGenerated) {
-        onPdfGenerated(url);
-      }
     } catch (err) {
       await handleError(err);
-    } finally {
+      setShowModal(false);
       setIsGeneratingPdf(false);
     }
   };
@@ -170,6 +162,8 @@ export const useImpressaoContrato = ({
   return {
     isGeneratingPdf,
     pdfUrl,
+    showModal,
+    setShowModal,
     imprimirContrato,
     imprimirContratosCliente,
     limparPdfUrl

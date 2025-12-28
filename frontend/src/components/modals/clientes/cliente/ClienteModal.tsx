@@ -101,7 +101,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     createdClienteId: formHook.createdClienteId,
     parcelasData,
     contratosData: contratosHook.contratosData,
-    isGeneratingPdf: impressaoHook.isGeneratingPdf,
     onRefreshParcelas: refetchParcelas,
     onRefreshContratos: contratosHook.refetchContratos,
     onShowTituloEditModal: (tituloId: number) => {
@@ -594,6 +593,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           show={impressaoHook.showImprimirModal}
           onClose={impressaoHook.handleCloseImprimirModal}
           pdfUrl={impressaoHook.pdfUrl}
+          isGenerating={impressaoHook.isGeneratingPdf}
           title="Visualizar Documento"
           modalId="cliente-imprimir-modal"
         />
@@ -603,6 +603,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           show={auditoria.showPreview}
           onClose={auditoria.handleClosePreview}
           pdfUrl={auditoria.pdfUrl}
+          isGenerating={auditoria.isGeneratingPdf}
           title="Relatórios de logs"
           modalId="auditoria-cliente-modal"
         />

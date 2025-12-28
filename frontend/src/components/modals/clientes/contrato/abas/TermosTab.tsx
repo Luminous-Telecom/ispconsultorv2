@@ -15,7 +15,6 @@ interface TermosTabProps {
   selectedTermosItems: TermoContrato[];
   setSelectedTermosItems: (items: TermoContrato[]) => void;
   columns: TableColumn<TermoContrato>[];
-  isGeneratingPdf: boolean;
   onRefresh?: () => void;
   onAudit?: (item: TermoContrato) => void;
   auditEntity?: string;
@@ -32,7 +31,6 @@ const TermosTab: React.FC<TermosTabProps> = ({
   selectedTermosItems,
   setSelectedTermosItems,
   columns,
-  isGeneratingPdf,
   onRefresh,
   onAudit,
   auditEntity,
@@ -61,12 +59,10 @@ const TermosTab: React.FC<TermosTabProps> = ({
                 const disabledFn = action.disabled as ((selectedItems: TermoContrato[]) => boolean) | undefined;
                 return {
                   key: action.label,
-                  label: action.label === 'Imprimir' && isGeneratingPdf ? 'Gerando...' : action.label,
+                  label: action.label,
                   variant: action.variant || 'primary',
                   onClick: action.action as ((selectedItems: TermoContrato[]) => void) | undefined,
-                  disabled: action.label === 'Imprimir' 
-                    ? (isGeneratingPdf || (disabledFn ? disabledFn(selectedTermosItems) : false))
-                    : (disabledFn ? disabledFn(selectedTermosItems) : false)
+                  disabled: disabledFn ? disabledFn(selectedTermosItems) : false
                 };
               })
             }}

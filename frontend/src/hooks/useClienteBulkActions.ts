@@ -19,7 +19,6 @@ interface UseClienteBulkActionsParams {
   createdClienteId: number | null;
   parcelasData: PaginatedResponse<CarneParcela> | undefined;
   contratosData: Contrato[] | undefined;
-  isGeneratingPdf: boolean;
   onRefreshParcelas: () => void;
   onRefreshContratos: () => void;
   onShowTituloEditModal: (tituloId: number) => void;
@@ -61,7 +60,6 @@ export const useClienteBulkActions = ({
   createdClienteId,
   parcelasData: _parcelasData,
   contratosData: _contratosData,
-  isGeneratingPdf,
   onRefreshParcelas,
   onRefreshContratos,
   onShowTituloEditModal,
@@ -339,9 +337,8 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'imprimir',
-      label: isGeneratingPdf ? 'Gerando...' : 'Imprimir',
+      label: 'Imprimir',
       variant: 'primary',
-      disabled: (_selectedItems) => isGeneratingPdf,
       dropdown: [
         {
           label: 'Selecionados',
@@ -408,9 +405,9 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'imprimir',
-      label: isGeneratingPdf ? 'Gerando...' : 'Imprimir',
+      label: 'Imprimir',
       variant: 'primary',
-      disabled: (selectedItems) => selectedItems.length === 0 || isGeneratingPdf,
+      disabled: (selectedItems) => selectedItems.length === 0,
       dropdown: [
         {
           label: 'Contrato',

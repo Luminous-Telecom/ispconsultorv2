@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
+import { extractApiErrorMessage } from '@/utils/apiErrorHelper';
 import { useDeleteContrato, Contrato } from '@/hooks/useContratos';
 import { ContratoService } from '@/services/contratoService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -44,11 +44,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const auditoria = useAuditoria();
 
   // Hook para impressão de contratos
-  const impressaoHook = useImpressaoContrato({
-    onPdfGenerated: (_url) => {
-      setShowImprimirModal(true);
-    }
-  });
+  const impressaoHook = useImpressaoContrato({});
   
   // Buscar todos os contratos ativos
   const { data: contratos, isLoading, refetch } = useQuery({
@@ -66,15 +62,11 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       success('Contrato excluído com sucesso!');
       refetch();
     } catch (err: unknown) {
-      if (err instanceof Error && 'response' in err) {
-        const axiosError = err as AxiosError<{ message?: string; error?: string }>;
-        const errorMessage = axiosError.response?.data?.message || 
-                            axiosError.response?.data?.error ||
-                            'Erro ao excluir contrato';
-        error(errorMessage);
-      } else {
-        error('Erro ao excluir contrato');
-      }
+      const errorMessage = await extractApiErrorMessage(err, {
+        defaultMessage: 'Erro ao excluir contrato',
+        handleBlobResponse: false
+      });
+      error(errorMessage);
     }
   };
 
@@ -345,8 +337,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       disabled: (selectedItems: Contrato[]) => selectedItems.length === 0
     },
     {
-      label: (impressaoHook.isGeneratingPdf || isGeneratingPdfLocal) ? 'Gerando...' : 'Imprimir',
-      disabled: (selectedItems: Contrato[]) => selectedItems.length === 0 || impressaoHook.isGeneratingPdf || isGeneratingPdfLocal,
+      label: 'Imprimir',
+      disabled: (selectedItems: Contrato[]) => selectedItems.length === 0,
       dropdown: [
         {
           label: 'Contrato',
@@ -378,7 +370,16 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                 return;
               }
               
+              // Abrir modal imediatamente
+              setShowImprimirModal(true);
               setIsGeneratingPdfLocal(true);
+              
+              // Limpar URL anterior se existir
+              if (pdfUrlLocal) {
+                window.URL.revokeObjectURL(pdfUrlLocal);
+                setPdfUrlLocal(null);
+              }
+              
               try {
                 const modeloAdesao = await DocumentoSistemaService.getDefaultByType('contrato');
                 
@@ -388,6 +389,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                   
                   if (!conteudoAdesao || conteudoAdesao.trim() === '') {
                     error('Conteúdo do termo de adesão não encontrado. Verifique se o modelo possui conteúdo cadastrado.');
+                    setShowImprimirModal(false);
+                    setIsGeneratingPdfLocal(false);
                     return;
                   }
                   
@@ -398,52 +401,26 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                   );
                   
                   const url = window.URL.createObjectURL(pdfBlob);
-                  // Limpar URL anterior se existir
-                  if (pdfUrlLocal) {
-                    window.URL.revokeObjectURL(pdfUrlLocal);
-                  }
                   setPdfUrlLocal(url);
-                  setShowImprimirModal(true);
+                  setIsGeneratingPdfLocal(false);
                   
                   success('Termo de Adesão gerado com sucesso!');
                 } else {
                   error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+                  setShowImprimirModal(false);
+                  setIsGeneratingPdfLocal(false);
                 }
               } catch (err) {
-                let errorMessage = 'Erro ao gerar termo de adesão';
-                
-                // Se já é um Error com mensagem (lançado pelo service), usar diretamente
-                if (err instanceof Error) {
-                  errorMessage = err.message;
-                } else {
-                  // Tentar extrair de AxiosError como fallback
-                  const axiosError = err as AxiosError<{ message?: string }>;
-                  
-                  if (axiosError.response) {
-                    if (axiosError.response.data instanceof Blob) {
-                      try {
-                        const text = await axiosError.response.data.text();
-                        const errorData = JSON.parse(text);
-                        errorMessage = errorData.message || errorMessage;
-                      } catch {
-                        errorMessage = `Erro ${axiosError.response.status}: ${axiosError.response.statusText}`;
-                      }
-                    } else if (typeof axiosError.response.data === 'object' && axiosError.response.data !== null) {
-                      errorMessage = (axiosError.response.data as { message?: string }).message || errorMessage;
-                    }
-                    
-                    if (axiosError.response.status === 404) {
-                      errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
-                    } else if (axiosError.response.status === 500) {
-                      errorMessage = 'Erro interno do servidor ao gerar termo de adesão. Tente novamente.';
-                    }
-                  } else if (axiosError.message) {
-                    errorMessage = axiosError.message;
+                const errorMessage = await extractApiErrorMessage(err, {
+                  defaultMessage: 'Erro ao gerar termo de adesão',
+                  handleBlobResponse: true,
+                  customStatusMessages: {
+                    404: 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.',
+                    500: 'Erro interno do servidor ao gerar termo de adesão. Tente novamente.'
                   }
-                }
-                
+                });
                 error(errorMessage);
-              } finally {
+                setShowImprimirModal(false);
                 setIsGeneratingPdfLocal(false);
               }
             }
@@ -461,7 +438,16 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                 return;
               }
               
+              // Abrir modal imediatamente
+              setShowImprimirModal(true);
               setIsGeneratingPdfLocal(true);
+              
+              // Limpar URL anterior se existir
+              if (pdfUrlLocal) {
+                window.URL.revokeObjectURL(pdfUrlLocal);
+                setPdfUrlLocal(null);
+              }
+              
               try {
                 const modeloPermanencia = await DocumentoSistemaService.getDefaultByType('contrato');
                 
@@ -471,6 +457,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                   
                   if (!conteudoPermanencia || conteudoPermanencia.trim() === '') {
                     error('Conteúdo do contrato de permanência não encontrado. Verifique se o modelo possui conteúdo cadastrado.');
+                    setShowImprimirModal(false);
+                    setIsGeneratingPdfLocal(false);
                     return;
                   }
                   
@@ -481,52 +469,26 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                   );
                   
                   const url = window.URL.createObjectURL(pdfBlob);
-                  // Limpar URL anterior se existir
-                  if (pdfUrlLocal) {
-                    window.URL.revokeObjectURL(pdfUrlLocal);
-                  }
                   setPdfUrlLocal(url);
-                  setShowImprimirModal(true);
+                  setIsGeneratingPdfLocal(false);
                   
                   success('Contrato de Permanência gerado com sucesso!');
                 } else {
                   error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+                  setShowImprimirModal(false);
+                  setIsGeneratingPdfLocal(false);
                 }
               } catch (err) {
-                let errorMessage = 'Erro ao gerar contrato de permanência';
-                
-                // Se já é um Error com mensagem (lançado pelo service), usar diretamente
-                if (err instanceof Error) {
-                  errorMessage = err.message;
-                } else {
-                  // Tentar extrair de AxiosError como fallback
-                  const axiosError = err as AxiosError<{ message?: string }>;
-                  
-                  if (axiosError.response) {
-                    if (axiosError.response.data instanceof Blob) {
-                      try {
-                        const text = await axiosError.response.data.text();
-                        const errorData = JSON.parse(text);
-                        errorMessage = errorData.message || errorMessage;
-                      } catch {
-                        errorMessage = `Erro ${axiosError.response.status}: ${axiosError.response.statusText}`;
-                      }
-                    } else if (typeof axiosError.response.data === 'object' && axiosError.response.data !== null) {
-                      errorMessage = (axiosError.response.data as { message?: string }).message || errorMessage;
-                    }
-                    
-                    if (axiosError.response.status === 404) {
-                      errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
-                    } else if (axiosError.response.status === 500) {
-                      errorMessage = 'Erro interno do servidor ao gerar contrato de permanência. Tente novamente.';
-                    }
-                  } else if (axiosError.message) {
-                    errorMessage = axiosError.message;
+                const errorMessage = await extractApiErrorMessage(err, {
+                  defaultMessage: 'Erro ao gerar contrato de permanência',
+                  handleBlobResponse: true,
+                  customStatusMessages: {
+                    404: 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.',
+                    500: 'Erro interno do servidor ao gerar contrato de permanência. Tente novamente.'
                   }
-                }
-                
+                });
                 error(errorMessage);
-              } finally {
+                setShowImprimirModal(false);
                 setIsGeneratingPdfLocal(false);
               }
             }
@@ -631,26 +593,30 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         }}
       />
 
-      {(impressaoHook.pdfUrl || pdfUrlLocal) && (
-        <ImprimirModal
-          show={showImprimirModal}
-          onClose={() => {
-            setShowImprimirModal(false);
+      <ImprimirModal
+        show={impressaoHook.showModal || showImprimirModal}
+        onClose={() => {
+          if (impressaoHook.showModal) {
             impressaoHook.limparPdfUrl();
-            if (pdfUrlLocal) {
-              window.URL.revokeObjectURL(pdfUrlLocal);
-              setPdfUrlLocal(null);
-            }
-          }}
-          pdfUrl={impressaoHook.pdfUrl || pdfUrlLocal || null}
-        />
-      )}
+          }
+          setShowImprimirModal(false);
+          if (pdfUrlLocal) {
+            window.URL.revokeObjectURL(pdfUrlLocal);
+            setPdfUrlLocal(null);
+          }
+        }}
+        pdfUrl={impressaoHook.pdfUrl || pdfUrlLocal || null}
+        isGenerating={impressaoHook.isGeneratingPdf || isGeneratingPdfLocal}
+        title="Visualizar Documento"
+        modalId="contrato-list-imprimir-modal"
+      />
 
       {/* Modal de Visualização de PDF de Auditoria */}
       <ImprimirModal
         show={auditoria.showPreview}
         onClose={auditoria.handleClosePreview}
         pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
         title="Relatórios de logs"
         modalId="auditoria-contrato-modal"
       />

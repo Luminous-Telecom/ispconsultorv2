@@ -4,10 +4,10 @@
  */
 
 import { useState } from 'react';
-import { AxiosError } from 'axios';
 import { TituloService } from '../services/tituloService';
 import DocumentoSistemaService from '../services/documentoSistemaService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { extractApiErrorMessage } from '../utils/apiErrorHelper';
 import { TituloItem } from '../types/cliente';
 import { CarneParcela, PaginatedResponse } from '../types';
 import { useImpressaoContrato } from './useImpressaoContrato';
@@ -48,11 +48,7 @@ export const useClienteImpressao = ({
 
   // Hook para impressão de contratos (usado internamente)
   const impressaoContratoHook = useImpressaoContrato({
-    clienteId: clienteId || undefined,
-    onPdfGenerated: (url) => {
-      setPdfUrl(url);
-      setShowImprimirModal(true);
-    }
+    clienteId: clienteId || undefined
   });
 
   const handleCloseImprimirModal = () => {
@@ -68,19 +64,28 @@ export const useClienteImpressao = ({
 
   const handleImprimirTitulosSelecionados = async (selectedItems: TituloItem[]) => {
     if (selectedItems.length > 0) {
+      // Abrir modal imediatamente
+      setShowImprimirModal(true);
       setIsGeneratingPdf(true);
+      
+      // Limpar URL anterior se existir
+      if (pdfUrl) {
+        window.URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
+      
       try {
         const ids = selectedItems.map(item => item.id);
         const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
         
         const url = window.URL.createObjectURL(pdfBlob);
         setPdfUrl(url);
-        setShowImprimirModal(true);
+        setIsGeneratingPdf(false);
         
         success('Boletos selecionados gerados com sucesso!');
       } catch (err) {
         error('Erro ao gerar boletos selecionados');
-      } finally {
+        setShowImprimirModal(false);
         setIsGeneratingPdf(false);
       }
     } else {
@@ -95,19 +100,28 @@ export const useClienteImpressao = ({
     );
     
     if (titulosEmAberto.length > 0) {
+      // Abrir modal imediatamente
+      setShowImprimirModal(true);
       setIsGeneratingPdf(true);
+      
+      // Limpar URL anterior se existir
+      if (pdfUrl) {
+        window.URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
+      
       try {
         const ids = titulosEmAberto.map((item: CarneParcela) => item.id);
         const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
         
         const url = window.URL.createObjectURL(pdfBlob);
         setPdfUrl(url);
-        setShowImprimirModal(true);
+        setIsGeneratingPdf(false);
         
         success('Boletos em aberto gerados com sucesso!');
       } catch (err) {
         error('Erro ao gerar boletos em aberto');
-      } finally {
+        setShowImprimirModal(false);
         setIsGeneratingPdf(false);
       }
     } else {
@@ -132,16 +146,17 @@ export const useClienteImpressao = ({
       return;
     }
 
+    // Abrir modal imediatamente
+    setShowImprimirModal(true);
     setIsGeneratingPdf(true);
+    
+    // Limpar URL anterior se existir
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+    
     try {
-      await new Promise<void>(resolve => {
-        if (window.requestIdleCallback) {
-          window.requestIdleCallback(() => resolve());
-        } else {
-          setTimeout(() => resolve(), 0);
-        }
-      });
-      
       const modeloTermo = await DocumentoSistemaService.getDefaultByType('contrato');
       
       if (modeloTermo.success && modeloTermo.data) {
@@ -150,6 +165,8 @@ export const useClienteImpressao = ({
         
         if (!conteudoAdesao || conteudoAdesao.trim() === '') {
           error('Conteúdo do termo de adesão não encontrado. Verifique se o modelo possui conteúdo cadastrado.');
+          setShowImprimirModal(false);
+          setIsGeneratingPdf(false);
           return;
         }
         
@@ -161,30 +178,24 @@ export const useClienteImpressao = ({
         
         const url = window.URL.createObjectURL(pdfBlob);
         setPdfUrl(url);
-        setShowImprimirModal(true);
+        setIsGeneratingPdf(false);
         
         success('Termo de Adesão gerado com sucesso!');
       } else {
         error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+        setShowImprimirModal(false);
+        setIsGeneratingPdf(false);
       }
     } catch (err) {
-      let errorMessage = 'Erro ao gerar termo de adesão';
-      
-      // Se já é um Error com mensagem (lançado pelo service), usar diretamente
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        // Tentar extrair de AxiosError como fallback
-        const axiosError = err as AxiosError<{ message?: string }>;
-        if (axiosError.response?.status === 404) {
-          errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
-        } else if (axiosError.message) {
-          errorMessage = axiosError.message;
+      const errorMessage = await extractApiErrorMessage(err, {
+        defaultMessage: 'Erro ao gerar termo de adesão',
+        handleBlobResponse: true,
+        customStatusMessages: {
+          404: 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.'
         }
-      }
-      
+      });
       error(errorMessage);
-    } finally {
+      setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
   };
@@ -195,16 +206,17 @@ export const useClienteImpressao = ({
       return;
     }
 
+    // Abrir modal imediatamente
+    setShowImprimirModal(true);
     setIsGeneratingPdf(true);
+    
+    // Limpar URL anterior se existir
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+    
     try {
-      await new Promise<void>(resolve => {
-        if (window.requestIdleCallback) {
-          window.requestIdleCallback(() => resolve());
-        } else {
-          setTimeout(() => resolve(), 0);
-        }
-      });
-      
       const modeloPermanencia = await DocumentoSistemaService.getDefaultByType('contrato');
       
       if (modeloPermanencia.success && modeloPermanencia.data) {
@@ -213,6 +225,8 @@ export const useClienteImpressao = ({
         
         if (!conteudoPermanencia || conteudoPermanencia.trim() === '') {
           error('Conteúdo do contrato de permanência não encontrado. Verifique se o modelo possui conteúdo cadastrado.');
+          setShowImprimirModal(false);
+          setIsGeneratingPdf(false);
           return;
         }
         
@@ -224,30 +238,24 @@ export const useClienteImpressao = ({
         
         const url = window.URL.createObjectURL(pdfBlob);
         setPdfUrl(url);
-        setShowImprimirModal(true);
+        setIsGeneratingPdf(false);
         
         success('Contrato de Permanência gerado com sucesso!');
       } else {
         error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+        setShowImprimirModal(false);
+        setIsGeneratingPdf(false);
       }
     } catch (err) {
-      let errorMessage = 'Erro ao gerar contrato de permanência';
-      
-      // Se já é um Error com mensagem (lançado pelo service), usar diretamente
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        // Tentar extrair de AxiosError como fallback
-        const axiosError = err as AxiosError<{ message?: string }>;
-        if (axiosError.response?.status === 404) {
-          errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
-        } else if (axiosError.message) {
-          errorMessage = axiosError.message;
+      const errorMessage = await extractApiErrorMessage(err, {
+        defaultMessage: 'Erro ao gerar contrato de permanência',
+        handleBlobResponse: true,
+        customStatusMessages: {
+          404: 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.'
         }
-      }
-      
+      });
       error(errorMessage);
-    } finally {
+      setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
   };
@@ -256,10 +264,27 @@ export const useClienteImpressao = ({
   const combinedPdfUrl = impressaoContratoHook.pdfUrl || pdfUrl;
   // Combinar isGeneratingPdf do hook de contratos com estado local (títulos)
   const combinedIsGeneratingPdf = impressaoContratoHook.isGeneratingPdf || isGeneratingPdf;
+  // Combinar showModal do hook de contratos com estado local
+  const combinedShowModal = impressaoContratoHook.showModal || showImprimirModal;
+
+  const handleCloseImprimirModalCombined = () => {
+    setShowImprimirModal(false);
+    impressaoContratoHook.setShowModal(false);
+    handleCloseImprimirModal();
+  };
 
   return {
-    showImprimirModal,
-    setShowImprimirModal,
+    showImprimirModal: combinedShowModal,
+    setShowImprimirModal: (value: boolean | ((prev: boolean) => boolean)) => {
+      if (typeof value === 'function') {
+        const newValue = value(combinedShowModal);
+        setShowImprimirModal(newValue);
+        impressaoContratoHook.setShowModal(newValue);
+      } else {
+        setShowImprimirModal(value);
+        impressaoContratoHook.setShowModal(value);
+      }
+    },
     pdfUrl: combinedPdfUrl,
     isGeneratingPdf: combinedIsGeneratingPdf,
     handleImprimirTitulosSelecionados,
@@ -267,7 +292,7 @@ export const useClienteImpressao = ({
     handleImprimirContrato,
     handleImprimirTermoAdesao,
     handleImprimirContratoPermanencia,
-    handleCloseImprimirModal
+    handleCloseImprimirModal: handleCloseImprimirModalCombined
   };
 };
 

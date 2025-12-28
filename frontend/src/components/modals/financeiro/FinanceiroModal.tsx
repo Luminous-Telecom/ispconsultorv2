@@ -9,7 +9,7 @@ import { TituloService } from '@/services/tituloService';
 import { formatDate, formatDateTime } from '@/utils/formatters';
 import DraggableModal from '@/components/common/DraggableModal';
 import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { TableConfig, BulkAction } from '@/components/tables/types';
 import { TituloModal } from '@/components/modals/titulos';
 import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
@@ -171,22 +171,31 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       error('Nenhum título selecionado');
       return;
     }
+    // Abrir modal imediatamente
+    setShowImprimirModal(true);
     setIsGeneratingPdf(true);
+    
+    // Limpar URL anterior se existir
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+    
     try {
       const ids = selectedItems.map(item => item.id);
       const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
       
       const url = window.URL.createObjectURL(pdfBlob);
       setPdfUrl(url);
-      setShowImprimirModal(true);
+      setIsGeneratingPdf(false);
       
       success('Boletos selecionados gerados com sucesso!');
     } catch (err) {
       error('Erro ao gerar boletos selecionados');
-    } finally {
+      setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, error, success]);
+  }, [selectedItems, error, success, pdfUrl]);
 
   const handleImprimirTodosEmAberto = useCallback(async () => {
     if (!titulos || titulos.length === 0) {
@@ -200,22 +209,31 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       error('Nenhum título em aberto encontrado');
       return;
     }
+    // Abrir modal imediatamente
+    setShowImprimirModal(true);
     setIsGeneratingPdf(true);
+    
+    // Limpar URL anterior se existir
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+    
     try {
       const ids = titulosEmAberto.map((titulo: Titulo) => titulo.id);
       const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
       
       const url = window.URL.createObjectURL(pdfBlob);
       setPdfUrl(url);
-      setShowImprimirModal(true);
+      setIsGeneratingPdf(false);
       
       success('Boletos em aberto gerados com sucesso!');
     } catch (err) {
       error('Erro ao gerar boletos em aberto');
-    } finally {
+      setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [titulos, error, success]);
+  }, [titulos, error, success, pdfUrl]);
 
   const columns: TableConfig<Titulo>['columns'] = [
     {
@@ -469,9 +487,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       },
       {
         key: 'imprimir',
-        label: isGeneratingPdf ? 'Gerando...' : 'Imprimir',
+        label: 'Imprimir',
         variant: 'primary' as const,
-        disabled: () => isGeneratingPdf,
         dropdown: [
           {
             label: 'Selecionados',
@@ -484,7 +501,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         ]
       }
     ];
-  }, [isGeneratingPdf, success, error, queryClient, refetch, handleImprimirSelecionados, handleImprimirTodosEmAberto]);
+  }, [success, error, queryClient, refetch, handleImprimirSelecionados, handleImprimirTodosEmAberto]);
 
   const modalContent = (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -515,13 +532,15 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                 responsive: true,
                 selectable: true,
                 multiSelect: !onSelectTitulo,
-                bulkActions: memoizedBulkActions.map(action => {
+                bulkActions: memoizedBulkActions.map((action: BulkAction<Titulo>) => {
                   let disabledFunc: ((selectedItems: Titulo[]) => boolean) | undefined;
-                  if (typeof action.disabled === 'function') {
-                    disabledFunc = action.disabled;
-                  } else if (typeof action.disabled === 'boolean') {
-                    const disabledValue = action.disabled;
-                    disabledFunc = () => disabledValue;
+                  if (action.disabled !== undefined) {
+                    if (typeof action.disabled === 'function') {
+                      disabledFunc = action.disabled;
+                    } else if (typeof action.disabled === 'boolean') {
+                      const disabledValue = action.disabled;
+                      disabledFunc = () => disabledValue;
+                    }
                   }
                   
                   return {
@@ -695,25 +714,27 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           />
         )}
 
-        {showImprimirModal && pdfUrl && (
-          <ImprimirModal
-            show={showImprimirModal}
-            onClose={() => {
-              setShowImprimirModal(false);
-              if (pdfUrl) {
-                window.URL.revokeObjectURL(pdfUrl);
-                setPdfUrl(null);
-              }
-            }}
-            pdfUrl={pdfUrl}
-          />
-        )}
+        <ImprimirModal
+          show={showImprimirModal}
+          onClose={() => {
+            setShowImprimirModal(false);
+            if (pdfUrl) {
+              window.URL.revokeObjectURL(pdfUrl);
+              setPdfUrl(null);
+            }
+          }}
+          pdfUrl={pdfUrl}
+          isGenerating={isGeneratingPdf}
+          title="Visualizar Documento"
+          modalId="financeiro-imprimir-modal"
+        />
 
         {/* Modal de Visualização de PDF de Auditoria */}
         <ImprimirModal
           show={auditoria.showPreview}
           onClose={auditoria.handleClosePreview}
           pdfUrl={auditoria.pdfUrl}
+          isGenerating={auditoria.isGeneratingPdf}
           title="Relatórios de logs"
           modalId="auditoria-titulo-modal"
         />

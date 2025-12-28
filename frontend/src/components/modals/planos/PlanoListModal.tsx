@@ -331,6 +331,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         show={auditoria.showPreview}
         onClose={auditoria.handleClosePreview}
         pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
         title="Relatórios de logs"
         modalId="auditoria-plano-modal"
       />

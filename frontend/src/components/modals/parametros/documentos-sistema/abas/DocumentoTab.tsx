@@ -257,6 +257,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
           show={auditoria.showPreview}
           onClose={auditoria.handleClosePreview}
           pdfUrl={auditoria.pdfUrl}
+          isGenerating={auditoria.isGeneratingPdf}
           title="Relatórios de logs"
           modalId={`auditoria-modelo-documento-${tipo}-modal`}
         />

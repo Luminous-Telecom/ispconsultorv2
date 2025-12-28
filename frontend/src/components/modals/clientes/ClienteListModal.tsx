@@ -367,6 +367,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         show={auditoria.showPreview}
         onClose={auditoria.handleClosePreview}
         pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
         title="Relatórios de logs"
         modalId="auditoria-cliente-modal"
       />

@@ -8,6 +8,7 @@ interface ImprimirModalProps {
   pdfUrl: string | null;
   title?: string;
   modalId?: string;
+  isGenerating?: boolean;
 }
 
 const ImprimirModal: React.FC<ImprimirModalProps> = ({
@@ -15,7 +16,8 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
   onClose,
   pdfUrl,
   title = "Visualizar Documento",
-  modalId = "imprimir-modal"
+  modalId = "imprimir-modal",
+  isGenerating = false
 }) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,21 +51,10 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
         }
       };
       
-      // Adicionar listener para erros não capturados
-      const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-        // eslint-disable-next-line no-console
-        console.error('[ImprimirModal] Promise rejeitada', {
-          reason: event.reason,
-          pdfUrl
-        });
-      };
-      
       window.addEventListener('error', handleResourceError);
-      window.addEventListener('unhandledrejection', handleUnhandledRejection);
       
       return () => {
         window.removeEventListener('error', handleResourceError);
-        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
       };
     }
   }, [show, pdfUrl]);
@@ -99,7 +90,16 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
       modalId={modalId}
     >
       <div style={{ height: '80vh', width: '100%', position: 'relative' }}>
-        {pdfUrl ? (
+        {isGenerating || !pdfUrl ? (
+          <div className="d-flex align-items-center justify-content-center h-100">
+            <div className="text-center">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Carregando...</span>
+              </div>
+              <p className="mt-2 text-muted">Carregando documento...</p>
+            </div>
+          </div>
+        ) : (
           <>
             {isLoading && (
               <div className="d-flex align-items-center justify-content-center" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1, background: 'rgba(255, 255, 255, 0.9)' }}>
@@ -149,15 +149,6 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
               />
             )}
           </>
-        ) : (
-          <div className="d-flex align-items-center justify-content-center h-100">
-            <div className="text-center">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Carregando...</span>
-              </div>
-              <p className="mt-2 text-muted">Carregando documento...</p>
-            </div>
-          </div>
         )}
       </div>
     </DraggableModal>

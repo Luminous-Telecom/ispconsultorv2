@@ -14,6 +14,11 @@ interface UseAuditoriaReturn {
   showPreview: boolean;
   
   /**
+   * Estado de loading durante geração do PDF
+   */
+  isGeneratingPdf: boolean;
+  
+  /**
    * URL do PDF de auditoria
    */
   pdfUrl: string | null;
@@ -35,18 +40,33 @@ export const useAuditoria = (): UseAuditoriaReturn => {
   const { success, error } = useNotificationContext();
   const [showPreview, setShowPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const handleAudit = useCallback(async (entidade: string, entidadeId: number) => {
+    // Abrir modal imediatamente
+    setShowPreview(true);
+    setIsGeneratingPdf(true);
+    
+    // Limpar URL anterior se existir (sem fechar o modal)
+    setPdfUrl(prevUrl => {
+      if (prevUrl) {
+        window.URL.revokeObjectURL(prevUrl);
+      }
+      return null;
+    });
+    
     try {
       const blob = await auditoriaService.generatePdf(entidade, entidadeId);
       const url = window.URL.createObjectURL(blob);
       
       setPdfUrl(url);
-      setShowPreview(true);
+      setIsGeneratingPdf(false);
       success('PDF de auditoria gerado com sucesso!');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar PDF de auditoria';
       error(errorMessage);
+      setShowPreview(false);
+      setIsGeneratingPdf(false);
     }
   }, [success, error]);
 
@@ -62,6 +82,7 @@ export const useAuditoria = (): UseAuditoriaReturn => {
 
   return {
     showPreview,
+    isGeneratingPdf,
     pdfUrl,
     handleAudit,
     handleClosePreview

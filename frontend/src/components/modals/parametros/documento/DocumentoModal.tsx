@@ -307,7 +307,16 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   const handlePrint = async (documentoTipo?: 'contrato' | 'adesao' | 'permanencia') => {
     if (!isEditing || !currentDocumento) return;
 
+    // Abrir modal imediatamente
+    setShowPreview(true);
     setIsGeneratingPdf(true);
+    
+    // Limpar URL anterior se existir
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+    
     try {
       if (tipo === 'contrato' && documentoTipo) {
         const conteudo = getContentByType(documentoTipo);
@@ -317,9 +326,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
             : await DocumentoSistemaService.generatePdfWithContent(currentDocumento.id, conteudo);
           
           const url = window.URL.createObjectURL(blob);
-          if (pdfUrl) window.URL.revokeObjectURL(pdfUrl);
           setPdfUrl(url);
-          setShowPreview(true);
+          setIsGeneratingPdf(false);
           return;
         }
       }
@@ -330,14 +338,11 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         : await service.generatePdf(currentDocumento.id);
       
       const url = window.URL.createObjectURL(blob);
-      if (pdfUrl) {
-        window.URL.revokeObjectURL(pdfUrl);
-      }
       setPdfUrl(url);
-      setShowPreview(true);
+      setIsGeneratingPdf(false);
     } catch (err) {
       error(err instanceof Error ? err.message : 'Erro ao gerar PDF');
-    } finally {
+      setShowPreview(false);
       setIsGeneratingPdf(false);
     }
   };
@@ -355,8 +360,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
             e.stopPropagation();
             setShowImprimirDropdown(!showImprimirDropdown);
           }}
-          disabled={!isEditing || isGeneratingPdf}
-          isLoading={isGeneratingPdf}
+          disabled={!isEditing}
         >
           Imprimir
         </Button>
@@ -364,12 +368,12 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           <ul className="dropdown-menu show" style={{ display: 'block', position: 'absolute', zIndex: 1050 }}>
             {tipo === 'contrato' ? (
               <>
-                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('contrato'); }} disabled={!isEditing || isGeneratingPdf}>Modelo Contrato</button></li>
-                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('adesao'); }} disabled={!isEditing || isGeneratingPdf}>Termo Adesão</button></li>
-                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('permanencia'); }} disabled={!isEditing || isGeneratingPdf}>Contrato Permanência</button></li>
+                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('contrato'); }} disabled={!isEditing}>Modelo Contrato</button></li>
+                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('adesao'); }} disabled={!isEditing}>Termo Adesão</button></li>
+                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('permanencia'); }} disabled={!isEditing}>Contrato Permanência</button></li>
               </>
             ) : (
-              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint(); }} disabled={!isEditing || isGeneratingPdf}>{getTipoLabel(tipo)}</button></li>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint(); }} disabled={!isEditing}>{getTipoLabel(tipo)}</button></li>
             )}
           </ul>
         )}
@@ -486,7 +490,20 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       </DraggableModal>
 
       {isEditing && (
-        <ImprimirModal show={showPreview} onClose={() => { setShowPreview(false); if (pdfUrl) { window.URL.revokeObjectURL(pdfUrl); setPdfUrl(null); } }} pdfUrl={pdfUrl} title="Visualizar Documento" modalId="documento-imprimir-modal" />
+        <ImprimirModal 
+          show={showPreview} 
+          onClose={() => { 
+            setShowPreview(false); 
+            if (pdfUrl) { 
+              window.URL.revokeObjectURL(pdfUrl); 
+              setPdfUrl(null); 
+            } 
+          }} 
+          pdfUrl={pdfUrl} 
+          isGenerating={isGeneratingPdf}
+          title="Visualizar Documento" 
+          modalId="documento-imprimir-modal" 
+        />
       )}
 
       <ClienteListModal
