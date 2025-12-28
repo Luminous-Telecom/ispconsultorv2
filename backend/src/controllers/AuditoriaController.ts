@@ -700,8 +700,8 @@ export class AuditoriaController {
         .filter(([key]) => !camposExcluir.includes(key))
         .map(([key, value]) => `
           <tr>
-            <td>${escapeHtml(key)}</td>
-            <td>${escapeHtml(formatarValor(value, key))}</td>
+            <td style="font-size: 7pt !important;">${escapeHtml(key)}</td>
+            <td style="font-size: 7pt !important;">${escapeHtml(formatarValor(value, key))}</td>
           </tr>
         `).join('');
     };
@@ -724,7 +724,7 @@ export class AuditoriaController {
   <style>
     body {
       font-family: Arial, sans-serif;
-      font-size: 8pt;
+      font-size: 8pt !important;
       margin: 0;
       padding: 10px;
     }
@@ -765,10 +765,11 @@ export class AuditoriaController {
     }
     .data-table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
       margin-top: 0;
       margin-bottom: 0;
-      font-size: 7pt;
+      font-size: 7pt !important;
       border: 1px solid #666;
     }
     .data-table thead td {
@@ -777,15 +778,23 @@ export class AuditoriaController {
       background-color: #555;
       color: #fff;
       font-weight: bold;
+      font-size: 7pt !important;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
     .data-table tbody td {
       border: 1px solid #ddd;
       padding: 4px 6px;
+      font-size: 7pt !important;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
     .data-table tbody td:first-child {
       font-weight: bold;
       background-color: #f9f9f9;
       width: 30%;
+      font-size: 7pt !important;
     }
     h2 {
       font-size: 10pt;
@@ -841,9 +850,9 @@ export class AuditoriaController {
             
             return `
               <tr>
-                <td style="${estiloDestaque}">${escapeHtml(key)}</td>
-                <td style="${estiloDestaque}">${escapeHtml(valorAnteriorFormatado)}</td>
-                <td style="${estiloDestaque}">${escapeHtml(valorNovoFormatado)}</td>
+                <td style="${estiloDestaque} font-size: 7pt !important;">${escapeHtml(key)}</td>
+                <td style="${estiloDestaque} font-size: 7pt !important;">${escapeHtml(valorAnteriorFormatado)}</td>
+                <td style="${estiloDestaque} font-size: 7pt !important;">${escapeHtml(valorNovoFormatado)}</td>
               </tr>
             `;
           }).join('');
@@ -858,7 +867,7 @@ export class AuditoriaController {
         <table class="data-table" style="margin-bottom: 0; margin-top: 0;">
           <thead>
             <tr>
-              <td ${isUpdate ? 'colspan="3"' : 'colspan="2"'} style="font-size: 7pt; padding: 4px 6px; background-color: #555; color: #fff; border: 1px solid #666; font-weight: normal;">
+              <td ${isUpdate ? 'colspan="3"' : 'colspan="2"'} style="font-size: 7pt !important; padding: 4px 6px; background-color: #555; color: #fff; border: 1px solid #666; font-weight: normal;">
                 <strong>Forma:</strong> Sistema | 
                 <strong>Usuário:</strong> ${escapeHtml(usuarioNome)} | 
                 <strong>Operação:</strong> ${escapeHtml(acaoFormatada)} | 
@@ -866,10 +875,10 @@ export class AuditoriaController {
               </td>
             </tr>
             <tr>
-              <td style="font-weight: bold; border-top: 1px solid #666;">Campo</td>
+              <td style="font-weight: bold; border-top: 1px solid #666; font-size: 7pt !important;">Campo</td>
               ${isUpdate ? 
-                '<td style="font-weight: bold; border-top: 1px solid #666;">Valor Anterior</td><td style="font-weight: bold; border-top: 1px solid #666;">Valor Novo</td>' :
-                '<td style="font-weight: bold; border-top: 1px solid #666;">Valor</td>'
+                '<td style="font-weight: bold; border-top: 1px solid #666; font-size: 7pt !important;">Valor Anterior</td><td style="font-weight: bold; border-top: 1px solid #666; font-size: 7pt !important;">Valor Novo</td>' :
+                '<td style="font-weight: bold; border-top: 1px solid #666; font-size: 7pt !important;">Valor</td>'
               }
             </tr>
           </thead>
