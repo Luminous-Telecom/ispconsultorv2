@@ -765,7 +765,7 @@ export class AuditoriaController {
     }
     .data-table {
       width: 100%;
-      table-layout: fixed;
+      table-layout: auto;
       border-collapse: collapse;
       margin-top: 0;
       margin-bottom: 0;
@@ -793,7 +793,8 @@ export class AuditoriaController {
     .data-table tbody td:first-child {
       font-weight: bold;
       background-color: #f9f9f9;
-      width: 20%;
+      width: auto;
+      white-space: nowrap;
       font-size: 7pt !important;
     }
     h2 {
