@@ -92,6 +92,22 @@ function Table<T extends { id: number | string }>({
   // Estado para controlar abertura do menu FAB
   const [isFabOpen, setIsFabOpen] = useState(false);
   
+  // Fechar FAB ao clicar fora
+  useEffect(() => {
+    if (!isMobile || !isFabOpen) return;
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      if (fabContainerRef.current && !fabContainerRef.current.contains(e.target as Node)) {
+        setIsFabOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobile, isFabOpen]);
+  
   // Estado para controlar linhas expandidas no mobile
   const [expandedRows, setExpandedRows] = useState<Set<number | string>>(new Set());
   
@@ -1755,34 +1771,16 @@ function Table<T extends { id: number | string }>({
             {/* Dropdown com botões */}
             {isFabOpen && (
               <>
-                {/* Overlay para fechar ao clicar fora */}
-                <div 
-                  className="table-mobile-fab-overlay"
-                  onClick={() => setIsFabOpen(false)}
-                />
                 <div 
                   ref={fabDropdownRef}
                   className="table-mobile-fab-dropdown"
                 >
                   {fabActions.map((bulkAction, index) => {
-                    const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
-                    const isExcluirButton = bulkAction.label.toLowerCase().includes('excluir');
+                    const isDisabled = bulkAction.disabled && typeof bulkAction.disabled === 'function' 
+                      ? bulkAction.disabled(state.selectedItems) 
+                      : false;
                     
-                    const isDisabledBySelection = !isNewButton && state.selectedItems.length === 0;
-                    const isDisabledByCondition = bulkAction.disabled && typeof bulkAction.disabled === 'function' ? bulkAction.disabled(state.selectedItems) : false;
-                    const isDisabled = isDisabledBySelection || isDisabledByCondition;
-                    
-                    // Determinar ícone baseado no label
-                    let icon = bulkAction.icon;
-                    if (!icon) {
-                      if (isNewButton) {
-                        icon = 'plus-circle';
-                      } else if (isExcluirButton) {
-                        icon = 'trash';
-                      } else if (bulkAction.label.toLowerCase().includes('editar')) {
-                        icon = 'pencil';
-                      }
-                    }
+                    const icon = bulkAction.icon || 'plus-circle';
                     
                     return (
                       <button
@@ -1790,16 +1788,17 @@ function Table<T extends { id: number | string }>({
                         type="button"
                         className="dropdown-item d-flex align-items-center gap-2 py-2"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
-                          setIsFabOpen(false);
                           if (!isDisabled && bulkAction.onClick) {
+                            setIsFabOpen(false);
                             bulkAction.onClick(state.selectedItems);
                           }
                         }}
                         disabled={isDisabled}
                         style={{ color: 'var(--text-primary)' }}
                       >
-                        {icon && <i className={`bi bi-${icon}`}></i>}
+                        <i className={`bi bi-${icon}`}></i>
                         <span>{bulkAction.label}</span>
                       </button>
                     );

@@ -827,7 +827,7 @@ body {
   position: fixed;
   bottom: 4.5rem; /* Valor inicial ajustado para 72px (mais próximo do real com paginação) */
   right: 1rem;
-  z-index: 1000; /* Acima da paginação (1000) mas abaixo do dropdown de ações (99999) */
+  z-index: 100001; /* Acima da paginação (100000) e do dropdown de ações */
   transition: bottom 0.2s ease-out; /* Transição mais rápida para ajuste imperceptível */
 }
 
@@ -864,18 +864,8 @@ body {
   height: 24px;
 }
 
-.table-mobile-fab-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: transparent;
-  z-index: 1999; /* Abaixo do FAB container (2000) mas acima da paginação (1000) */
-}
 
 .table-mobile-fab-dropdown {
-  /* Posição será definida dinamicamente via JavaScript */
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -885,7 +875,8 @@ body {
   border-radius: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 0.375rem 0;
-  z-index: 1001; /* Acima do rodapé (1000) */
+  z-index: 100003 !important;
+  position: fixed !important;
 }
 
 .table-mobile-fab-dropdown .dropdown-item {

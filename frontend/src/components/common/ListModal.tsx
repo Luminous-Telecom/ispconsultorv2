@@ -66,19 +66,14 @@ function ListModal<T extends { id: number | string }>({
               key: action.label.toLowerCase().replace(/\s+/g, '-'),
               label: action.label,
               onClick: (selectedItems: T[]) => {
-                if (action.action.length > 0) {
-                  (action.action as (selectedItems: T[]) => void)(selectedItems);
-                } else {
-                  (action.action as () => void)();
+                // Sempre passar selectedItems - funções que não usam parâmetros podem ignorá-los
+                if (typeof action.action === 'function') {
+                  action.action(selectedItems);
                 }
               },
               disabled: (selectedItems: T[]) => {
-                if (action.disabled) {
-                  if (action.disabled.length > 0) {
-                    return (action.disabled as (selectedItems: T[]) => boolean)(selectedItems);
-                  } else {
-                    return (action.disabled as () => boolean)();
-                  }
+                if (typeof action.disabled === 'function') {
+                  return action.disabled(selectedItems);
                 }
                 return false;
               }
