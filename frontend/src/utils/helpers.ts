@@ -1,40 +1,11 @@
 // Funções helper gerais
 import debounce from 'lodash/debounce';
 import throttle from 'lodash/throttle';
+import cloneDeep from 'lodash/cloneDeep';
 
-// Re-exportar debounce e throttle do lodash
+// Re-exportar debounce, throttle e cloneDeep do lodash
 export { debounce, throttle };
-
-/**
- * Deep clone: cria uma cópia profunda de um objeto
- * @param obj - Objeto a ser clonado
- * @returns Objeto clonado
- */
-export const deepClone = <T>(obj: T): T => {
-  if (obj === null || typeof obj !== 'object') {
-    return obj;
-  }
-
-  if (obj instanceof Date) {
-    return new Date(obj.getTime()) as T;
-  }
-
-  if (obj instanceof Array) {
-    return obj.map(item => deepClone(item)) as T;
-  }
-
-  if (typeof obj === 'object') {
-    const clonedObj = {} as T;
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        clonedObj[key] = deepClone(obj[key]);
-      }
-    }
-    return clonedObj;
-  }
-
-  return obj;
-};
+export { cloneDeep as deepClone };
 
 /**
  * Remove propriedades undefined ou null de um objeto

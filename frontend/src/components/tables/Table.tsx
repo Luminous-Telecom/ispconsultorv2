@@ -9,6 +9,7 @@ import FormField from '../ui/FormField';
 import Button from '../ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
+import { debounce } from '@/utils/helpers';
 
 // Helper para normalizar paginação (aceita snake_case da API ou camelCase interno)
 const normalizePagination = (pagination: TableConfig<unknown>['pagination']): TablePagination | undefined => {
@@ -388,13 +389,26 @@ function Table<T extends { id: number | string }>({
   const onRefreshRef = useRef(onRefresh);
   const onSearchRef = useRef(onSearch);
   const tableActionsRef = useRef(tableActions);
+  const selectedSearchFieldRef = useRef(selectedSearchField);
   
   // Atualizar refs quando mudarem
   useEffect(() => {
     onRefreshRef.current = onRefresh;
     onSearchRef.current = onSearch;
     tableActionsRef.current = tableActions;
-  }, [onRefresh, onSearch, tableActions]);
+    selectedSearchFieldRef.current = selectedSearchField;
+  }, [onRefresh, onSearch, tableActions, selectedSearchField]);
+
+  // Função debounced para busca (300ms de delay)
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value: string, field: string) => {
+        if (onSearchRef.current) {
+          onSearchRef.current(value, field);
+        }
+      }, 300),
+    []
+  );
 
   // Handler para o botão de auditar com gerenciamento de loading
   const handleAuditClick = useCallback(async () => {
@@ -530,14 +544,7 @@ function Table<T extends { id: number | string }>({
     }
   }, [isMobile, headerSearchValue, searchTerm, selectedSearchField]);
 
-  // Conectar busca com callback externo
-  useEffect(() => {
-    // Apenas chamar callback se não for mobile (no mobile já chamamos acima)
-    // Ou se for uma mudança iniciada pelo hook (ex: filtro)
-    if (!isMobile && onSearch && searchTerm !== state.searchTerm) {
-      onSearch(searchTerm, selectedSearchField);
-    }
-  }, [searchTerm, selectedSearchField, onSearch, state.searchTerm, isMobile]);
+  // Conectar busca com callback externo (removido - agora usa debounce direto no onChange)
 
   // Fechar dropdown quando clicar fora (callback memoizado)
   const handleClickOutside = useCallback(() => {
@@ -1305,9 +1312,7 @@ function Table<T extends { id: number | string }>({
                   onChange={(val) => {
                     const newValue = val as string;
                     setSearchTerm(newValue);
-                    if (onSearchRef.current) {
-                      onSearchRef.current(newValue, selectedSearchField);
-                    }
+                    debouncedSearch(newValue, selectedSearchFieldRef.current);
                   }}
                   placeholder={searchPlaceholder}
                   icon="search"
@@ -1489,9 +1494,7 @@ function Table<T extends { id: number | string }>({
                   onChange={(e) => {
                     const newValue = e.target.value;
                     setSearchTerm(newValue);
-                    if (onSearchRef.current) {
-                      onSearchRef.current(newValue, selectedSearchField);
-                    }
+                    debouncedSearch(newValue, selectedSearchFieldRef.current);
                   }}
                   style={{ width: '400px', height: '32px' }}
                 />
