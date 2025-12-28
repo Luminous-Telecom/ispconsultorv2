@@ -5,19 +5,8 @@ import { DadosEmpresaService, type DadosEmpresa } from '@/services/dadosEmpresaS
 import { getBrandLogo } from '@/utils/brandLogos';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui';
+import { throttle } from '@/utils/helpers';
 import './Home.css';
-
-// Throttle function para otimizar scroll handler
-const throttle = <T extends (...args: unknown[]) => void>(func: T, limit: number): T => {
-  let inThrottle: boolean;
-  return ((...args: Parameters<T>) => {
-    if (!inThrottle) {
-      func(...args);
-      inThrottle = true;
-      setTimeout(() => (inThrottle = false), limit);
-    }
-  }) as T;
-};
 
 const Home: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);

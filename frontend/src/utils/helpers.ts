@@ -1,52 +1,9 @@
 // Funções helper gerais
+import debounce from 'lodash/debounce';
+import throttle from 'lodash/throttle';
 
-/**
- * Debounce: adia a execução de uma função até que um período de inatividade tenha passado
- * @param func - Função a ser executada
- * @param wait - Tempo de espera em milissegundos
- * @returns Função com debounce aplicado
- */
-export const debounce = <TFunc extends (...args: never[]) => unknown>(
-  func: TFunc,
-  wait: number
-): ((...args: Parameters<TFunc>) => void) => {
-  let timeout: NodeJS.Timeout | null = null;
-
-  return function executedFunction(...args: Parameters<TFunc>) {
-    const later = () => {
-      timeout = null;
-      func(...args);
-    };
-
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-    timeout = setTimeout(later, wait);
-  };
-};
-
-/**
- * Throttle: limita a frequência de execução de uma função
- * @param func - Função a ser executada
- * @param limit - Limite de tempo em milissegundos
- * @returns Função com throttle aplicado
- */
-export const throttle = <TFunc extends (...args: never[]) => unknown>(
-  func: TFunc,
-  limit: number
-): ((...args: Parameters<TFunc>) => void) => {
-  let inThrottle: boolean = false;
-
-  return function executedFunction(...args: Parameters<TFunc>) {
-    if (!inThrottle) {
-      func(...args);
-      inThrottle = true;
-      setTimeout(() => {
-        inThrottle = false;
-      }, limit);
-    }
-  };
-};
+// Re-exportar debounce e throttle do lodash
+export { debounce, throttle };
 
 /**
  * Deep clone: cria uma cópia profunda de um objeto
