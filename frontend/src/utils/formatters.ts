@@ -88,18 +88,6 @@ export const formatDateTime = (date: string | Date | null | undefined): string =
   }
 };
 
-/**
- * Formata um número como porcentagem
- * @param value - Valor numérico para formatar
- * @returns String formatada como porcentagem
- */
-export const formatPercentage = (value: number | string): string => {
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  
-  if (isNaN(numValue)) return '-';
-  
-  return `${numValue}%`;
-};
 
 /**
  * Formata um CNPJ progressivamente durante a digitação
