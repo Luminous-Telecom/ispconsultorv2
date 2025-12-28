@@ -25,28 +25,30 @@ export const removeNullish = <T extends Record<string, string | number | boolean
 };
 
 /**
- * Converte um objeto em query string
+ * Converte um objeto em query string usando URLSearchParams nativo
  * @param params - Objeto com parâmetros
  * @returns String de query formatada
  */
 export const toQueryString = (params: Record<string, string | number | boolean | null | undefined | (string | number | boolean)[]>): string => {
   const cleaned = removeNullish(params);
-  const keys = Object.keys(cleaned);
+  const searchParams = new URLSearchParams();
   
-  if (keys.length === 0) return '';
-  
-  const pairs = keys.map(key => {
-    const value = cleaned[key];
-    if (value === null || value === undefined) return null;
+  for (const [key, value] of Object.entries(cleaned)) {
+    if (value === null || value === undefined) continue;
     
     if (Array.isArray(value)) {
-      return value.map(v => `${encodeURIComponent(key)}[]=${encodeURIComponent(String(v))}`).join('&');
+      // Para arrays, adiciona múltiplos parâmetros com o mesmo nome
+      // O backend geralmente aceita isso como array
+      value.forEach(v => {
+        searchParams.append(key, String(v));
+      });
+    } else {
+      searchParams.append(key, String(value));
     }
-    
-    return `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`;
-  }).filter(Boolean);
+  }
   
-  return pairs.length > 0 ? `?${pairs.join('&')}` : '';
+  const queryString = searchParams.toString();
+  return queryString ? `?${queryString}` : '';
 };
 
 /**
