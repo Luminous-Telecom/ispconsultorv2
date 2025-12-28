@@ -730,17 +730,38 @@ jobs:
               echo "⚠ Fazendo commit vazio para registrar o deploy..."
               
               # Preparar mensagem do commit com todas as mensagens usando arquivo temporário
+              # Usar variáveis com valores padrão para evitar erros de printf
+              COMMIT_HASH="${{ steps.commit_info.outputs.hash }}"
+              COMMIT_MESSAGE="${{ steps.commit_info.outputs.message }}"
+              ALL_MESSAGES="${{ steps.commit_info.outputs.all_messages }}"
+              COMMIT_AUTHOR="${{ steps.commit_info.outputs.author }}"
+              COMMIT_DATE="${{ steps.commit_info.outputs.date }}"
+              
+              # Garantir que variáveis não estejam vazias
+              [ -z "${COMMIT_HASH}" ] && COMMIT_HASH="unknown"
+              [ -z "${COMMIT_MESSAGE}" ] && COMMIT_MESSAGE="Deploy automático"
+              [ -z "${COMMIT_AUTHOR}" ] && COMMIT_AUTHOR="GitHub Actions"
+              [ -z "${COMMIT_DATE}" ] && COMMIT_DATE="$(date -Iseconds)"
+              
               COMMIT_MSG_FILE=$(mktemp)
-              printf "Deploy: %s - %s\n\n" "${{ steps.commit_info.outputs.hash }}" "${{ steps.commit_info.outputs.message }}" >> "${COMMIT_MSG_FILE}"
-              printf "Commits incluídos neste deploy:\n" >> "${COMMIT_MSG_FILE}"
-              printf "%s\n" "${{ steps.commit_info.outputs.all_messages }}" >> "${COMMIT_MSG_FILE}"
-              printf "\nDetalhes:\n" >> "${COMMIT_MSG_FILE}"
-              printf "- Commit original: %s\n" "${{ steps.commit_info.outputs.hash }}" >> "${COMMIT_MSG_FILE}"
-              printf "- Autor: %s\n" "${{ steps.commit_info.outputs.author }}" >> "${COMMIT_MSG_FILE}"
-              printf "- Data: %s\n" "${{ steps.commit_info.outputs.date }}" >> "${COMMIT_MSG_FILE}"
-              printf "- Workflow: %s\n" "${{ github.workflow }}" >> "${COMMIT_MSG_FILE}"
-              printf "- Run: %s\n" "${{ github.run_id }}" >> "${COMMIT_MSG_FILE}"
-              printf "- Nota: Build executado mas arquivos idênticos aos existentes\n" >> "${COMMIT_MSG_FILE}"
+              {
+                echo "Deploy: ${COMMIT_HASH} - ${COMMIT_MESSAGE}"
+                echo ""
+                echo "Commits incluídos neste deploy:"
+                if [ -n "${ALL_MESSAGES}" ]; then
+                  echo "${ALL_MESSAGES}"
+                else
+                  echo "• [${COMMIT_HASH}] ${COMMIT_MESSAGE}"
+                fi
+                echo ""
+                echo "Detalhes:"
+                echo "- Commit original: ${COMMIT_HASH}"
+                echo "- Autor: ${COMMIT_AUTHOR}"
+                echo "- Data: ${COMMIT_DATE}"
+                echo "- Workflow: ${{ github.workflow }}"
+                echo "- Run: ${{ github.run_id }}"
+                echo "- Nota: Build executado mas arquivos idênticos aos existentes"
+              } >> "${COMMIT_MSG_FILE}"
               
               git commit --allow-empty -F "${COMMIT_MSG_FILE}"
               rm -f "${COMMIT_MSG_FILE}"
@@ -748,16 +769,37 @@ jobs:
               echo "✓ Mudanças detectadas, fazendo commit..."
               
               # Preparar mensagem do commit com todas as mensagens usando arquivo temporário
+              # Usar variáveis com valores padrão para evitar erros de printf
+              COMMIT_HASH="${{ steps.commit_info.outputs.hash }}"
+              COMMIT_MESSAGE="${{ steps.commit_info.outputs.message }}"
+              ALL_MESSAGES="${{ steps.commit_info.outputs.all_messages }}"
+              COMMIT_AUTHOR="${{ steps.commit_info.outputs.author }}"
+              COMMIT_DATE="${{ steps.commit_info.outputs.date }}"
+              
+              # Garantir que variáveis não estejam vazias
+              [ -z "${COMMIT_HASH}" ] && COMMIT_HASH="unknown"
+              [ -z "${COMMIT_MESSAGE}" ] && COMMIT_MESSAGE="Deploy automático"
+              [ -z "${COMMIT_AUTHOR}" ] && COMMIT_AUTHOR="GitHub Actions"
+              [ -z "${COMMIT_DATE}" ] && COMMIT_DATE="$(date -Iseconds)"
+              
               COMMIT_MSG_FILE=$(mktemp)
-              printf "Deploy: %s - %s\n\n" "${{ steps.commit_info.outputs.hash }}" "${{ steps.commit_info.outputs.message }}" >> "${COMMIT_MSG_FILE}"
-              printf "Commits incluídos neste deploy:\n" >> "${COMMIT_MSG_FILE}"
-              printf "%s\n" "${{ steps.commit_info.outputs.all_messages }}" >> "${COMMIT_MSG_FILE}"
-              printf "\nDetalhes:\n" >> "${COMMIT_MSG_FILE}"
-              printf "- Commit original: %s\n" "${{ steps.commit_info.outputs.hash }}" >> "${COMMIT_MSG_FILE}"
-              printf "- Autor: %s\n" "${{ steps.commit_info.outputs.author }}" >> "${COMMIT_MSG_FILE}"
-              printf "- Data: %s\n" "${{ steps.commit_info.outputs.date }}" >> "${COMMIT_MSG_FILE}"
-              printf "- Workflow: %s\n" "${{ github.workflow }}" >> "${COMMIT_MSG_FILE}"
-              printf "- Run: %s\n" "${{ github.run_id }}" >> "${COMMIT_MSG_FILE}"
+              {
+                echo "Deploy: ${COMMIT_HASH} - ${COMMIT_MESSAGE}"
+                echo ""
+                echo "Commits incluídos neste deploy:"
+                if [ -n "${ALL_MESSAGES}" ]; then
+                  echo "${ALL_MESSAGES}"
+                else
+                  echo "• [${COMMIT_HASH}] ${COMMIT_MESSAGE}"
+                fi
+                echo ""
+                echo "Detalhes:"
+                echo "- Commit original: ${COMMIT_HASH}"
+                echo "- Autor: ${COMMIT_AUTHOR}"
+                echo "- Data: ${COMMIT_DATE}"
+                echo "- Workflow: ${{ github.workflow }}"
+                echo "- Run: ${{ github.run_id }}"
+              } >> "${COMMIT_MSG_FILE}"
               
               git commit -F "${COMMIT_MSG_FILE}"
               rm -f "${COMMIT_MSG_FILE}"
@@ -820,10 +862,18 @@ jobs:
             echo "⚠ Versão não encontrada, usando padrão: ${CLEAN_VERSION}"
           fi
           
-          COMMIT_HASH=${{ steps.commit_info.outputs.hash }}
+          COMMIT_HASH="${{ steps.commit_info.outputs.hash }}"
           COMMIT_MESSAGE="${{ steps.commit_info.outputs.message }}"
           ALL_COMMITS_MESSAGES="${{ steps.commit_info.outputs.all_messages }}"
+          COMMIT_AUTHOR="${{ steps.commit_info.outputs.author }}"
+          COMMIT_DATE="${{ steps.commit_info.outputs.date }}"
           TAG_NAME="v${CLEAN_VERSION}"
+          
+          # Garantir que variáveis não estejam vazias
+          [ -z "${COMMIT_HASH}" ] && COMMIT_HASH="unknown"
+          [ -z "${COMMIT_MESSAGE}" ] && COMMIT_MESSAGE="Deploy automático"
+          [ -z "${COMMIT_AUTHOR}" ] && COMMIT_AUTHOR="GitHub Actions"
+          [ -z "${COMMIT_DATE}" ] && COMMIT_DATE="$(date -Iseconds)"
           
           # Criar tag no repositório de produção
           echo "=== Criando tag ${TAG_NAME} ==="
@@ -832,14 +882,22 @@ jobs:
           
           # Criar release usando API do GitHub no repositório de produção
           RELEASE_BODY_FILE=$(mktemp)
-          printf "%s\n\n" "${COMMIT_MESSAGE}" >> "${RELEASE_BODY_FILE}"
-          printf "**Commits incluídos neste deploy:**\n" >> "${RELEASE_BODY_FILE}"
-          printf "%s\n\n" "${ALL_COMMITS_MESSAGES}" >> "${RELEASE_BODY_FILE}"
-          printf "**Detalhes:**\n" >> "${RELEASE_BODY_FILE}"
-          printf "- Commit: %s\n" "${COMMIT_HASH}" >> "${RELEASE_BODY_FILE}"
-          printf "- Autor: %s\n" "${{ steps.commit_info.outputs.author }}" >> "${RELEASE_BODY_FILE}"
-          printf "- Data: %s\n" "${{ steps.commit_info.outputs.date }}" >> "${RELEASE_BODY_FILE}"
-          printf "- Workflow: %s\n" "${{ github.workflow }}" >> "${RELEASE_BODY_FILE}"
+          {
+            echo "${COMMIT_MESSAGE}"
+            echo ""
+            echo "**Commits incluídos neste deploy:**"
+            if [ -n "${ALL_COMMITS_MESSAGES}" ]; then
+              echo "${ALL_COMMITS_MESSAGES}"
+            else
+              echo "• [${COMMIT_HASH}] ${COMMIT_MESSAGE}"
+            fi
+            echo ""
+            echo "**Detalhes:**"
+            echo "- Commit: ${COMMIT_HASH}"
+            echo "- Autor: ${COMMIT_AUTHOR}"
+            echo "- Data: ${COMMIT_DATE}"
+            echo "- Workflow: ${{ github.workflow }}"
+          } >> "${RELEASE_BODY_FILE}"
           RELEASE_BODY=$(cat "${RELEASE_BODY_FILE}")
           rm -f "${RELEASE_BODY_FILE}"
           
