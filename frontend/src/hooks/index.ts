@@ -1,7 +1,6 @@
 // Exportações centralizadas de hooks
 
 // Hooks base unificados
-export * from './useApi';
 export * from './usePagination';
 export * from './useFilters';
 export * from './useSearch';
