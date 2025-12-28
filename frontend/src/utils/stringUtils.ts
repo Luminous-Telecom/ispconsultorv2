@@ -11,10 +11,3 @@ export const ensureString = (value: unknown): string => {
   return String(value);
 };
 
-/**
- * Garante que um array de valores seja convertido para array de strings
- */
-export const ensureStringArray = (values: unknown[]): string[] => {
-  return values.map(ensureString);
-};
-

@@ -4,7 +4,6 @@ export * from './formatters';
 export * from './validators';
 export * from './stringUtils';
 export * from './dateUtils';
-export * from './numberUtils';
 export * from './helpers';
 export * from './constants';
 export * from './modalStack';
