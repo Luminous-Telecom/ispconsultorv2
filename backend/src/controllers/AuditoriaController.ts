@@ -830,10 +830,16 @@ export class AuditoriaController {
       const usuarioNome = log.usuario_nome || log.usuario_email || 'N/A';
       
       // Verificar se é continuidade (mesmo entidade_id do log anterior)
+      // Como o PDF é gerado para uma entidade específica, todos os logs após o primeiro são continuidade
       const logAnterior = index > 0 ? logs[index - 1] : null;
+      const entidadeIdAnterior = logAnterior?.entidade_id?.toString() || logAnterior?.entidade_id || '';
+      const entidadeIdAtual = log?.entidade_id?.toString() || log?.entidade_id || '';
+      const entidadeAnterior = String(logAnterior?.entidade || '');
+      const entidadeAtual = String(log?.entidade || '');
+      
       const isContinuidade = logAnterior && 
-        logAnterior.entidade_id === log.entidade_id && 
-        logAnterior.entidade === log.entidade;
+        entidadeIdAnterior === entidadeIdAtual && 
+        entidadeAnterior === entidadeAtual;
       
       // Obter dados do log (anteriores ou novos)
       const dadosLog = log.dados_novos || log.dados_anteriores || {};
