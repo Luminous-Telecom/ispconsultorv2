@@ -6,7 +6,7 @@ import { logger } from '../utils/logger';
 import { fornecedorCreateSchema, fornecedorUpdateSchema } from '../validators/fornecedor.validator';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
 import { setAuditData } from '../middleware/auditMiddleware';
-import { normalizeDateForDb } from '../utils/dateUtils';
+import { normalizeDateForDb, formatCEP } from '../utils/dateUtils';
 import axios from 'axios';
 
 export class FornecedorController {
@@ -464,7 +464,7 @@ export class FornecedorController {
       const dadosEmpresa = {
         nome_razao_social: response.data.nome || '',
         nome_fantasia: response.data.fantasia || '',
-        cep: response.data.cep ? response.data.cep.replace(/^(\d{5})(\d{3})$/, '$1-$2') : '',
+        cep: formatCEP(response.data.cep),
         logradouro: response.data.logradouro || '',
         numero: response.data.numero || '',
         complemento: response.data.complemento || '',

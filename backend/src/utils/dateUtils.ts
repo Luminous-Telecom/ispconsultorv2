@@ -1,6 +1,17 @@
 import Parametros from '../models/Parametros';
 
 /**
+ * Formata um CEP removendo caracteres não numéricos e aplicando máscara 00000-000
+ * @param cep - CEP com ou sem formatação
+ * @returns CEP formatado como 00000-000 ou string vazia se inválido
+ */
+export const formatCEP = (cep: string | null | undefined): string => {
+  if (!cep) return '';
+  const cepLimpo = cep.replace(/\D/g, '');
+  return cepLimpo.length === 8 ? `${cepLimpo.slice(0, 5)}-${cepLimpo.slice(5, 8)}` : '';
+};
+
+/**
  * Ajusta a data de vencimento baseado nos parâmetros do sistema
  * Se a data cair em sábado ou domingo e essas opções não estiverem marcadas,
  * move para o próximo dia útil (segunda-feira)

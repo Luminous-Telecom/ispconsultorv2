@@ -5,6 +5,7 @@ import { Op, WhereOptions } from 'sequelize';
 import Joi from 'joi';
 import axios from 'axios';
 import { logger } from '../utils/logger';
+import { formatCEP } from '../utils/dateUtils';
 import { setAuditData } from '../middleware/auditMiddleware';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
 
@@ -833,7 +834,7 @@ export class ClienteController {
       const dadosEmpresa = {
         razao_social: response.data.nome || '',
         nome_fantasia: response.data.fantasia || '',
-        cep: response.data.cep ? response.data.cep.replace(/^(\d{5})(\d{3})$/, '$1-$2') : '',
+        cep: formatCEP(response.data.cep),
         endereco: response.data.logradouro || '',
         numero: response.data.numero || '',
         complemento: response.data.complemento || '',
