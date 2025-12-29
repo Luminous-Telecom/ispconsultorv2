@@ -266,12 +266,12 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
       return;
     }
 
-    const cleanedCpfCnpj = formData.cpf_cnpj.replace(/\D/g, '');
+    // Manter CPF/CNPJ formatado como nos clientes (formato completo: CPF = 14 chars, CNPJ = 18 chars)
     const submitData: CreateFornecedor = {
       tipo_pessoa: formData.tipo_pessoa,
       nome_razao_social: formData.nome_razao_social.trim(),
       nome_fantasia: formData.nome_fantasia.trim() || undefined,
-      cpf_cnpj: cleanedCpfCnpj,
+      cpf_cnpj: formData.cpf_cnpj, // Já vem formatado do campo
       cep: formData.cep.trim() || undefined,
       logradouro: formData.logradouro.trim() || undefined,
       numero: formData.numero.trim() || undefined,
