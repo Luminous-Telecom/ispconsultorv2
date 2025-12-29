@@ -144,6 +144,25 @@ class ContaPagarServiceClass {
       throw error;
     }
   }
+
+  /**
+   * Duplicar conta a pagar
+   */
+  async duplicar(id: number): Promise<ApiResponse<ContaPagar>> {
+    try {
+      const url = `${this.baseEndpoint}/${id}/duplicar`;
+      const response = await this.apiClient.post<ContaPagar>(url);
+      if (response && typeof response === 'object' && 'data' in response) {
+        return response as ApiResponse<ContaPagar>;
+      }
+      return {
+        success: true,
+        data: response as unknown as ContaPagar
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 // Instância única do serviço
@@ -205,6 +224,17 @@ export class ContaPagarService {
    */
   static async pagar(id: number, data: { data?: string; valor: number; tipo_pagamento: string; observacao?: string }): Promise<ContaPagar> {
     const response = await contaPagarServiceInstance.pagar(id, data);
+    if (response.data) {
+      return response.data;
+    }
+    return response as unknown as ContaPagar;
+  }
+
+  /**
+   * Duplicar conta a pagar
+   */
+  static async duplicar(id: number): Promise<ContaPagar> {
+    const response = await contaPagarServiceInstance.duplicar(id);
     if (response.data) {
       return response.data;
     }

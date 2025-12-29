@@ -106,3 +106,21 @@ export const usePagarContaPagar = () => {
   });
 };
 
+// Hook para duplicar conta a pagar
+export const useDuplicarContaPagar = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotificationContext();
+
+  return useMutation({
+    mutationFn: ContaPagarService.duplicar,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contas-pagar'] });
+      success('Conta a pagar duplicada com sucesso!');
+    },
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao duplicar conta a pagar');
+    },
+  });
+};
+

@@ -232,6 +232,100 @@ export class ContaPagarController {
     }
   }
 
+  // Duplicar conta a pagar
+  static async duplicar(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: 'ID inválido'
+        });
+        return;
+      }
+
+      const contaOriginal = await ContaPagar.findByPk(id);
+
+      if (!contaOriginal) {
+        res.status(404).json({
+          success: false,
+          error: 'Conta a pagar não encontrada'
+        });
+        return;
+      }
+
+      // Criar nova conta com os mesmos dados, mas resetando campos de pagamento
+      const novaConta = await ContaPagar.create({
+        fornecedor_id: contaOriginal.fornecedor_id,
+        data_vencimento: contaOriginal.data_vencimento,
+        valor: contaOriginal.valor,
+        tipo_pagamento: contaOriginal.tipo_pagamento,
+        numero_documento: contaOriginal.numero_documento,
+        nota_fiscal: contaOriginal.nota_fiscal,
+        observacoes: contaOriginal.observacoes,
+        linha_digitavel: contaOriginal.linha_digitavel,
+        tipo_chave_pix: contaOriginal.tipo_chave_pix,
+        chave_pix: contaOriginal.chave_pix,
+        valor_pago: 0,
+        status: 'A_PAGAR',
+        data_pagamento: null,
+        data_cadastro: new Date()
+      });
+
+      // Registrar auditoria
+      try {
+        await registrarCriacao(
+          req,
+          'ContaPagar',
+          novaConta.id,
+          novaConta.toJSON() as Record<string, unknown>
+        );
+        logger.info('Auditoria de duplicação registrada com sucesso', {
+          context: 'ContaPagarController',
+          action: 'duplicar',
+          conta_original_id: id,
+          conta_duplicada_id: novaConta.id
+        });
+      } catch (auditError) {
+        logger.error('Erro ao registrar auditoria de duplicação', {
+          context: 'ContaPagarController',
+          action: 'duplicar',
+          conta_original_id: id,
+          conta_duplicada_id: novaConta.id,
+          error: auditError instanceof Error ? auditError.message : 'Erro desconhecido',
+          stack: auditError instanceof Error ? auditError.stack : undefined
+        });
+        // Não interromper o fluxo, mas logar o erro
+      }
+
+      // Buscar conta duplicada com relacionamentos
+      const contaDuplicada = await ContaPagar.findByPk(novaConta.id, {
+        include: [
+          { association: 'fornecedor', required: false }
+        ]
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Conta a pagar duplicada com sucesso',
+        data: contaDuplicada
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao duplicar conta a pagar', {
+        context: 'ContaPagarController',
+        action: 'duplicar',
+        error: errorMessage,
+        contaId: req.params.id
+      });
+      res.status(500).json({
+        success: false,
+        error: 'Erro interno do servidor',
+        message: errorMessage
+      });
+    }
+  }
+
   // Atualizar conta a pagar
   static async update(req: Request, res: Response): Promise<void> {
     try {

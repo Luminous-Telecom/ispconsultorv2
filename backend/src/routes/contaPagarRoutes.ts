@@ -16,6 +16,7 @@ router.delete('/:id', ContaPagarController.destroy);
 // Rotas específicas
 router.post('/:id/pagar', ContaPagarController.pagar);
 router.post('/:id/cancelar', ContaPagarController.cancelar);
+router.post('/:id/duplicar', ContaPagarController.duplicar);
 
 export default router;
 

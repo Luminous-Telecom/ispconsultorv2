@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useContasPagar, useDeleteContaPagar } from '@/hooks/useContasPagar';
+import { useContasPagar, useDeleteContaPagar, useDuplicarContaPagar } from '@/hooks/useContasPagar';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
@@ -214,6 +214,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   });
 
   const deleteContaPagarMutation = useDeleteContaPagar();
+  const duplicarContaPagarMutation = useDuplicarContaPagar();
 
   const handleSelect = (selectedItems?: ContaPagar[]) => {
     const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
@@ -229,6 +230,15 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   const handleDelete = async (contaPagarId: number) => {
     try {
       await deleteContaPagarMutation.mutateAsync(contaPagarId);
+      refetch();
+    } catch (error) {
+      // Erro já tratado pelo hook
+    }
+  };
+
+  const handleDuplicar = async (contaPagarId: number) => {
+    try {
+      await duplicarContaPagarMutation.mutateAsync(contaPagarId);
       refetch();
     } catch (error) {
       // Erro já tratado pelo hook
@@ -318,6 +328,17 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
           }
         }
       ]
+    },
+    {
+      label: 'Duplicar',
+      variant: 'secondary' as const,
+      disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
+      action: (selectedItems: ContaPagar[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+        if (item) {
+          handleDuplicar(item.id);
+        }
+      }
     },
     {
       label: 'Excluir',
