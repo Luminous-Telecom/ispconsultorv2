@@ -40,6 +40,38 @@ export const isValidCNPJ = (cnpj: string): boolean => {
 };
 
 /**
+ * Valida se um CPF é válido
+ * @param cpf - CPF para validar
+ * @returns true se válido, false caso contrário
+ */
+export const isValidCPF = (cpf: string): boolean => {
+  const cleaned = cpf.replace(/\D/g, '');
+  
+  if (cleaned.length !== 11) return false;
+  
+  // Verificar se todos os dígitos são iguais
+  if (/^(\d)\1+$/.test(cleaned)) return false;
+  
+  // Algoritmo de validação do CPF
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleaned[i]) * (10 - i);
+  }
+  let digit = 11 - (sum % 11);
+  if (digit >= 10) digit = 0;
+  if (digit !== parseInt(cleaned[9])) return false;
+  
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleaned[i]) * (11 - i);
+  }
+  digit = 11 - (sum % 11);
+  if (digit >= 10) digit = 0;
+  
+  return digit === parseInt(cleaned[10]);
+};
+
+/**
  * Valida se um email é válido
  * @param email - Email para validar
  * @returns true se válido, false caso contrário
@@ -146,16 +178,48 @@ export const clienteValidators = {
  * @param formData - Dados do formulário
  * @returns Objeto com erros encontrados
  */
-export const validateClienteForm = (formData: Record<string, unknown>): Record<string, string> => {
+export const validateClienteForm = (formData: Record<string, string | unknown>): Record<string, string> => {
   const errors: Record<string, string> = {};
   
-  Object.entries(clienteValidators).forEach(([field, validator]) => {
-    const value = formData[field];
-    const error = validator(typeof value === 'string' ? value : '');
-    if (error) {
-      errors[field] = error;
-    }
-  });
+  const cnpj = typeof formData.cnpj === 'string' ? formData.cnpj : '';
+  const cnpjError = clienteValidators.cnpj(cnpj);
+  if (cnpjError) errors.cnpj = cnpjError;
+  
+  const razaoSocial = typeof formData.razao_social === 'string' ? formData.razao_social : '';
+  const razaoSocialError = clienteValidators.razao_social(razaoSocial);
+  if (razaoSocialError) errors.razao_social = razaoSocialError;
+  
+  const nomeFantasia = typeof formData.nome_fantasia === 'string' ? formData.nome_fantasia : '';
+  const nomeFantasiaError = clienteValidators.nome_fantasia(nomeFantasia);
+  if (nomeFantasiaError) errors.nome_fantasia = nomeFantasiaError;
+  
+  const email = typeof formData.email === 'string' ? formData.email : '';
+  const emailError = clienteValidators.email(email);
+  if (emailError) errors.email = emailError;
+  
+  const telefone = typeof formData.telefone === 'string' ? formData.telefone : '';
+  const telefoneError = clienteValidators.telefone(telefone);
+  if (telefoneError) errors.telefone = telefoneError;
+  
+  const whatsapp = typeof formData.whatsapp === 'string' ? formData.whatsapp : '';
+  const whatsappError = clienteValidators.whatsapp(whatsapp);
+  if (whatsappError) errors.whatsapp = whatsappError;
+  
+  const cep = typeof formData.cep === 'string' ? formData.cep : '';
+  const cepError = clienteValidators.cep(cep);
+  if (cepError) errors.cep = cepError;
+  
+  const endereco = typeof formData.endereco === 'string' ? formData.endereco : '';
+  const enderecoError = clienteValidators.endereco(endereco);
+  if (enderecoError) errors.endereco = enderecoError;
+  
+  const cidade = typeof formData.cidade === 'string' ? formData.cidade : '';
+  const cidadeError = clienteValidators.cidade(cidade);
+  if (cidadeError) errors.cidade = cidadeError;
+  
+  const estado = typeof formData.estado === 'string' ? formData.estado : '';
+  const estadoError = clienteValidators.estado(estado);
+  if (estadoError) errors.estado = estadoError;
   
   return errors;
 };

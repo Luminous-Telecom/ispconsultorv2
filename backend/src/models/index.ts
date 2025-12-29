@@ -19,6 +19,13 @@ import { Auditoria } from './Auditoria';
 import { AssinaturaDigital } from './AssinaturaDigital';
 import { ClienteArquivo } from './ClienteArquivo';
 import AssinaturaDigitalProvider from './AssinaturaDigitalProvider';
+import { Fornecedor } from './Fornecedor';
+import { FornecedorContato } from './FornecedorContato';
+import { FornecedorArquivo } from './FornecedorArquivo';
+import { FornecedorHistorico } from './FornecedorHistorico';
+import { ContaPagar } from './ContaPagar';
+import { ContaPagarArquivo } from './ContaPagarArquivo';
+import { ContaPagarPagamento } from './ContaPagarPagamento';
 //
 // Importar associações específicas
 import './associations';
@@ -201,6 +208,78 @@ Auditoria.belongsTo(Usuario, {
   as: 'usuario'
 });
 
+// Fornecedor
+Fornecedor.hasMany(FornecedorContato, {
+  foreignKey: 'fornecedor_id',
+  as: 'contatos'
+});
+
+FornecedorContato.belongsTo(Fornecedor, {
+  foreignKey: 'fornecedor_id',
+  as: 'fornecedor'
+});
+
+Fornecedor.hasMany(FornecedorArquivo, {
+  foreignKey: 'fornecedor_id',
+  as: 'arquivos'
+});
+
+FornecedorArquivo.belongsTo(Fornecedor, {
+  foreignKey: 'fornecedor_id',
+  as: 'fornecedor'
+});
+
+Fornecedor.hasMany(FornecedorHistorico, {
+  foreignKey: 'fornecedor_id',
+  as: 'historicos'
+});
+
+FornecedorHistorico.belongsTo(Fornecedor, {
+  foreignKey: 'fornecedor_id',
+  as: 'fornecedor'
+});
+
+FornecedorHistorico.belongsTo(Usuario, {
+  foreignKey: 'usuario_id',
+  as: 'usuario'
+});
+
+// ContaPagar
+Fornecedor.hasMany(ContaPagar, {
+  foreignKey: 'fornecedor_id',
+  as: 'contasPagar'
+});
+
+ContaPagar.belongsTo(Fornecedor, {
+  foreignKey: 'fornecedor_id',
+  as: 'fornecedor'
+});
+
+ContaPagar.hasMany(ContaPagarArquivo, {
+  foreignKey: 'conta_pagar_id',
+  as: 'arquivos'
+});
+
+ContaPagarArquivo.belongsTo(ContaPagar, {
+  foreignKey: 'conta_pagar_id',
+  as: 'contaPagar'
+});
+
+ContaPagar.hasMany(ContaPagarPagamento, {
+  foreignKey: 'conta_pagar_id',
+  as: 'pagamentos'
+});
+
+ContaPagarPagamento.belongsTo(ContaPagar, {
+  foreignKey: 'conta_pagar_id',
+  as: 'contaPagar'
+});
+
+ContaPagarPagamento.belongsTo(Usuario, {
+  foreignKey: 'usuario_id',
+  as: 'usuario'
+});
+
 // Exportar todos os modelos
 export {
   Cliente,
@@ -222,5 +301,12 @@ export {
   Auditoria,
   AssinaturaDigital,
   ClienteArquivo,
-  AssinaturaDigitalProvider
+  AssinaturaDigitalProvider,
+  Fornecedor,
+  FornecedorContato,
+  FornecedorArquivo,
+  FornecedorHistorico,
+  ContaPagar,
+  ContaPagarArquivo,
+  ContaPagarPagamento
 };

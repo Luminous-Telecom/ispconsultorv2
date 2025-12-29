@@ -29,6 +29,8 @@ import assinaturaDigitalRoutes from './assinaturaDigitalRoutes';
 import assinaturaDigitalProviderRoutes from './assinaturaDigitalProviderRoutes';
 import clienteArquivoRoutes from './clienteArquivoRoutes';
 import auditoriaRoutes from './auditoriaRoutes';
+import fornecedorRoutes from './fornecedorRoutes';
+import contaPagarRoutes from './contaPagarRoutes';
 
 const router = Router();
 
@@ -65,6 +67,8 @@ const routes = [
     // Registrar manualmente ANTES de /api para garantir ordem
     { path: '/api/cliente-arquivos', route: clienteArquivoRoutes },
     { path: '/api/auditoria', route: auditoriaRoutes },
+    { path: '/api/fornecedores', route: fornecedorRoutes },
+    { path: '/api/contas-pagar', route: contaPagarRoutes },
 
     // Rotas de webhook
     { path: '/webhook', route: webhookRoutes },

@@ -65,18 +65,26 @@ function ListModal<T extends { id: number | string }>({
             return bulkActions.map(action => ({
               key: action.label.toLowerCase().replace(/\s+/g, '-'),
               label: action.label,
-              onClick: (selectedItems: T[]) => {
+              onClick: action.action ? (selectedItems: T[]) => {
                 // Sempre passar selectedItems - funções que não usam parâmetros podem ignorá-los
                 if (typeof action.action === 'function') {
                   action.action(selectedItems);
                 }
-              },
+              } : () => {},
               disabled: (selectedItems: T[]) => {
                 if (typeof action.disabled === 'function') {
                   return action.disabled(selectedItems);
                 }
                 return false;
-              }
+              },
+              dropdown: action.dropdown ? action.dropdown.map(item => ({
+                label: item.label,
+                action: (selectedItems?: T[]) => {
+                  if (typeof item.action === 'function') {
+                    item.action(selectedItems || []);
+                  }
+                }
+              })) : undefined
             }));
           }, [bulkActions])
         }}

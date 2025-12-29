@@ -284,6 +284,123 @@ export interface CarneParcela {
 }
 
 // ============================================
+// Fornecedor
+// ============================================
+export interface Fornecedor {
+  id: number;
+  tipo_pessoa: 'FISICA' | 'JURIDICA';
+  nome_razao_social: string;
+  nome_fantasia?: string;
+  cpf_cnpj: string;
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  pais?: string;
+  observacoes?: string;
+  created_at?: string;
+  created_at_formatada?: string | null;
+  updated_at?: string;
+  
+  // Relacionamentos
+  contatos?: FornecedorContato[];
+  arquivos?: FornecedorArquivo[];
+  historicos?: FornecedorHistorico[];
+  contasPagar?: ContaPagar[];
+}
+
+export interface FornecedorContato {
+  id: number;
+  fornecedor_id: number;
+  tipo: 'telefone' | 'email' | 'whatsapp' | 'celular' | 'fixo' | 'outro';
+  valor: string;
+  principal: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FornecedorArquivo {
+  id: number;
+  fornecedor_id: number;
+  nome: string;
+  tipo?: string;
+  caminho: string;
+  tamanho?: number;
+  mime_type?: string;
+  data_upload: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FornecedorHistorico {
+  id: number;
+  fornecedor_id: number;
+  data: string;
+  usuario_id?: number;
+  descricao: string;
+  tipo: 'criacao' | 'atualizacao' | 'exclusao' | 'pagamento' | 'outro';
+  created_at?: string;
+}
+
+// ============================================
+// Conta a Pagar
+// ============================================
+export interface ContaPagar {
+  id: number;
+  fornecedor_id: number;
+  data_vencimento: string;
+  valor: number;
+  tipo_pagamento: 'DINHEIRO' | 'BOLETO' | 'CARTAO' | 'DEPOSITO' | 'DEBITO_CONTA' | 'TRANSFERENCIA' | 'PIX';
+  numero_documento?: string;
+  nota_fiscal?: string;
+  observacoes?: string;
+  linha_digitavel?: string;
+  tipo_chave_pix?: 'CPF_CNPJ' | 'CELULAR' | 'EMAIL' | 'ALEATORIA' | 'QRCODE';
+  chave_pix?: string;
+  status: 'A_PAGAR' | 'PAGO' | 'PARCIAL' | 'CANCELADO';
+  valor_pago: number;
+  data_pagamento?: string;
+  data_cadastro: string;
+  created_at?: string;
+  created_at_formatada?: string | null;
+  updated_at?: string;
+  saldo_devedor?: number; // Calculado no backend
+  vencida?: boolean; // Calculado no backend
+  
+  // Relacionamentos
+  fornecedor?: Fornecedor;
+  pagamentos?: ContaPagarPagamento[];
+  arquivos?: ContaPagarArquivo[];
+}
+
+export interface ContaPagarPagamento {
+  id: number;
+  conta_pagar_id: number;
+  data: string;
+  valor: number;
+  tipo_pagamento: 'DINHEIRO' | 'BOLETO' | 'CARTAO' | 'DEPOSITO' | 'DEBITO_CONTA' | 'TRANSFERENCIA' | 'PIX';
+  usuario_id?: number;
+  observacao?: string;
+  created_at?: string;
+}
+
+export interface ContaPagarArquivo {
+  id: number;
+  conta_pagar_id: number;
+  nome: string;
+  tipo?: string;
+  caminho: string;
+  tamanho?: number;
+  mime_type?: string;
+  data_upload: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ============================================
 // Dados da Empresa
 // ============================================
 export interface DadosEmpresa {
@@ -449,7 +566,7 @@ export interface BulkAction<T = unknown> {
   disabled?: (selectedItems: T[]) => boolean;
   dropdown?: {
     label: string;
-    action: () => void;
+    action: (selectedItems?: T[]) => void;
   }[];
 }
 

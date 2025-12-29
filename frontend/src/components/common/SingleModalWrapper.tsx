@@ -12,6 +12,8 @@ const ServidorEmailModal = lazy(() => import('../modals/parametros/servidor-emai
 const ServidorWhatsappModal = lazy(() => import('../modals/parametros/servidor-whatsapp').then(m => ({ default: m.ServidorWhatsappModal })));
 const ContratoListModal = lazy(() => import('../modals/contratos/ContratoListModal'));
 const FinanceiroModal = lazy(() => import('../modals/financeiro/FinanceiroModal'));
+const FornecedorListModal = lazy(() => import('../modals/fornecedores').then(m => ({ default: m.FornecedorListModal })));
+const ContasPagarListModal = lazy(() => import('../modals/contas-pagar').then(m => ({ default: m.ContasPagarListModal })));
 const UsuariosModal = lazy(() => import('../modals/parametros/UsuariosModal'));
 const RecursosSistemaModal = lazy(() => import('../modals/parametros/RecursosSistemaModal'));
 const DiasVencimentoModal = lazy(() => import('../modals/parametros/DiasVencimentoModal'));
@@ -41,6 +43,8 @@ const MODAL_CONFIGS: Record<string, ModalConfig> = {
   bancos: { component: BancoListModal, title: 'Bancos', loadingMessage: 'Carregando bancos...' },
   contratos: { component: ContratoListModal, title: 'Contratos', loadingMessage: 'Carregando contratos...' },
   financeiro: { component: FinanceiroModal, title: 'Financeiro - Títulos', loadingMessage: 'Carregando financeiro...', className: 'no-padding' },
+  fornecedores: { component: FornecedorListModal, title: 'Fornecedores', loadingMessage: 'Carregando fornecedores...' },
+  'contas-pagar': { component: ContasPagarListModal, title: 'Contas a Pagar', loadingMessage: 'Carregando contas a pagar...' },
   'dados-empresa': { component: DadosEmpresaModal, title: 'Dados da Empresa', loadingMessage: 'Carregando dados da empresa...' },
   usuarios: { component: UsuariosModal, title: 'Usuários', loadingMessage: 'Carregando usuários...' },
   'recursos-sistema': { component: RecursosSistemaModal, title: 'Recursos do Sistema', loadingMessage: 'Carregando recursos do sistema...' },

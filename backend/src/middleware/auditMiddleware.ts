@@ -33,6 +33,8 @@ const ROUTE_ENTITY_MAP: Record<string, string> = {
   '/api/assinatura-digital': 'AssinaturaDigital',
   '/api/cliente-arquivos': 'ClienteArquivo',
   '/api/scheduler': 'ScheduledRoutine',
+  '/api/fornecedores': 'Fornecedor',
+  '/api/contas-pagar': 'ContaPagar',
 };
 
 /**

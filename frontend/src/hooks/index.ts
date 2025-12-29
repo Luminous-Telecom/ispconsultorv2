@@ -6,6 +6,7 @@ export * from './useSearch';
 
 // Hooks específicos de entidades (mantidos para compatibilidade)
 export * from './useClientes';
+export * from './useFornecedores';
 export * from './useBancos';
 export * from './usePlanos';
 export * from './useTitulos';

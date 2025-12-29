@@ -336,7 +336,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           height: '100%',
           backgroundColor: 'transparent',
           zIndex: zIndex - 1,
-          pointerEvents: isVisible ? 'auto' : 'none'
+          pointerEvents: 'none'
         }}
       />
 

@@ -98,6 +98,20 @@ export interface CarneFilters extends BaseFilters {
   cliente_id?: number;
   plano_id?: number;
   banco_id?: number;
+}
+
+export interface FornecedorFilters extends BaseFilters {
+  tipo_pessoa?: 'FISICA' | 'JURIDICA';
+  cidade?: string;
+  estado?: string;
+}
+
+export interface ContaPagarFilters extends BaseFilters {
+  status?: 'A_PAGAR' | 'PAGO' | 'PARCIAL' | 'CANCELADO';
+  tipo_pagamento?: 'DINHEIRO' | 'BOLETO' | 'CARTAO' | 'DEPOSITO' | 'DEBITO_CONTA' | 'TRANSFERENCIA' | 'PIX';
+  fornecedor_id?: string;
+  data_inicio?: string;
+  data_fim?: string;
   data_vencimento_inicio?: string;
   data_vencimento_fim?: string;
 }

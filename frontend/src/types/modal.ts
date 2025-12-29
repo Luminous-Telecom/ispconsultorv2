@@ -47,7 +47,11 @@ export interface ListModalProps<T> {
     label: string;
     variant?: 'primary' | 'secondary' | 'danger';
     disabled?: (() => boolean) | ((selectedItems: T[]) => boolean);
-    action: (() => void) | ((selectedItems: T[]) => void);
+    action?: (() => void) | ((selectedItems: T[]) => void);
+    dropdown?: {
+      label: string;
+      action: (selectedItems?: T[]) => void;
+    }[];
   }>;
   onAudit?: (item: T) => void | Promise<void>;
   auditEntity?: string;

@@ -80,11 +80,24 @@ export async function registrarAuditoria(
   } catch (error) {
     // Não lançar erro para não interromper o fluxo principal
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    const errorName = error instanceof Error ? error.name : undefined;
+    
     logger.error('Erro ao registrar auditoria', {
       context: 'AuditoriaService',
       action: 'registrarAuditoria',
       error: errorMessage,
-      dados
+      errorName,
+      stack: errorStack,
+      entidade: dados.entidade,
+      acao: dados.acao,
+      entidade_id: dados.entidade_id,
+      has_dados_anteriores: !!dados.dados_anteriores,
+      has_dados_novos: !!dados.dados_novos,
+      dados_keys: {
+        anteriores: dados.dados_anteriores ? Object.keys(dados.dados_anteriores).slice(0, 10) : [],
+        novos: dados.dados_novos ? Object.keys(dados.dados_novos).slice(0, 10) : []
+      }
     });
   }
 }

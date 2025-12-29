@@ -198,7 +198,7 @@ const FormField: React.FC<FormFieldProps> = ({
     if (!helpText) return null;
     
     return (
-      <div className="form-text">
+      <div className="form-text text-muted">
         {helpText}
       </div>
     );
