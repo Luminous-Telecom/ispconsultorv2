@@ -122,15 +122,19 @@ const Layout: React.FC = () => {
     openModal(modalName as ModalType);
   };
 
+  // Proteção de rotas: verificar autenticação imediatamente
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const token = getAuthToken();
-      if (location.pathname !== '/login' && !token) {
-        navigate('/login', { replace: true });
-      }
-    }, 500);
+    const token = getAuthToken();
+    // Rotas públicas que não precisam de autenticação
+    const publicRoutes = ['/login', '/', '/pagamento'];
+    const isPublicRoute = publicRoutes.some(route => 
+      location.pathname === route || location.pathname.startsWith(route + '/')
+    );
     
-    return () => clearTimeout(timer);
+    // Se não está em rota pública e não tem token, redirecionar para login
+    if (!isPublicRoute && !token) {
+      navigate('/login', { replace: true });
+    }
   }, [navigate, location.pathname]);
 
   const handleLogout = () => {

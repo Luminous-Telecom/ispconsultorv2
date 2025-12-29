@@ -23,6 +23,11 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+$/i }, // GET página pública de pagamento
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+\/pdf$/i }, // GET PDF do boleto (público)
+  // Rotas auxiliares de clientes (usadas em formulários)
+  { method: 'GET', path: /^\/api\/clientes\/buscar-cep\/.+$/i }, // Buscar CEP (público para uso em formulários)
+  { method: 'GET', path: /^\/api\/clientes\/consultar-cnpj\/.+$/i }, // Consultar CNPJ (público para uso em formulários)
+  // Rotas auxiliares de fornecedores (usadas em formulários)
+  { method: 'GET', path: /^\/api\/fornecedores\/consultar-cnpj\/.+$/i }, // Consultar CNPJ (público para uso em formulários)
 ];
 
 const isPublicRoute = (req: Request): boolean => {
