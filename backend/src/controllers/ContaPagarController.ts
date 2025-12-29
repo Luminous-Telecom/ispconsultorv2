@@ -6,6 +6,7 @@ import { Op, WhereOptions } from 'sequelize';
 import { logger } from '../utils/logger';
 import { contaPagarCreateSchema, contaPagarUpdateSchema, contaPagarPagamentoSchema } from '../validators/contaPagar.validator';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { registrarCriacaoElasticsearch } from '../services/elasticsearch/ElasticsearchAuditService';
 import { setAuditData } from '../middleware/auditMiddleware';
 import { normalizeDateForDb } from '../utils/dateUtils';
 import { Transaction } from 'sequelize';
@@ -266,11 +267,19 @@ export class ContaPagarController {
         // Registrar auditoria para cada conta criada (após commit)
         for (const conta of contasCriadas) {
           try {
+            const contaData = conta.toJSON() as Record<string, unknown>;
             await registrarCriacao(
               req as AuthenticatedRequest,
               'ContaPagar',
               conta.id,
-              conta.toJSON() as Record<string, unknown>
+              contaData
+            );
+            // Registrar também no Elasticsearch para consulta
+            await registrarCriacaoElasticsearch(
+              req as AuthenticatedRequest,
+              'ContaPagar',
+              conta.id,
+              contaData
             );
             logger.info('Auditoria de criação em lote registrada com sucesso', {
               context: 'ContaPagarController',
