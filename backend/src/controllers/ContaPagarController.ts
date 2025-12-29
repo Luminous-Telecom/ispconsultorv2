@@ -265,6 +265,7 @@ export class ContaPagarController {
         // Registrar auditoria para cada conta criada (após commit)
         for (const conta of contasCriadas) {
           try {
+            await conta.reload();
             await registrarCriacao(req, 'ContaPagar', conta.id, conta.toJSON() as Record<string, unknown>);
           } catch (auditError) {
             logger.error('Erro ao registrar auditoria de criação em lote', {
