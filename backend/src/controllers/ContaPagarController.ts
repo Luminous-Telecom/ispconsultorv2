@@ -206,16 +206,16 @@ export class ContaPagarController {
           return;
         }
 
-        // Calcular intervalo de dias
-        const totalDias = Math.ceil((dataFinal.getTime() - dataInicial.getTime()) / (1000 * 60 * 60 * 24));
-        const quantidadeContas = totalDias + 1; // Incluir ambas as datas
+        // Calcular quantidade de meses entre as datas
+        const quantidadeMeses = (dataFinal.getFullYear() - dataInicial.getFullYear()) * 12 + 
+                                 (dataFinal.getMonth() - dataInicial.getMonth()) + 1;
         
-        if (quantidadeContas > 365) {
+        if (quantidadeMeses > 120) {
           await transaction.rollback();
           res.status(400).json({
             success: false,
             error: 'Intervalo muito grande',
-            message: 'O intervalo não pode exceder 365 dias'
+            message: 'O intervalo não pode exceder 120 meses (10 anos)'
           });
           return;
         }
@@ -236,35 +236,45 @@ export class ContaPagarController {
           data_cadastro: new Date()
         };
 
-        for (let i = 0; i < quantidadeContas; i++) {
-          const dataVencimento = i === quantidadeContas - 1 
-            ? new Date(dataFinal)
-            : (() => {
-                const data = new Date(dataInicial);
-                data.setDate(data.getDate() + Math.round((i * totalDias) / (quantidadeContas - 1)));
-                return data;
-              })();
+        const diaVencimento = dataInicial.getDate();
+
+        for (let i = 0; i < quantidadeMeses; i++) {
+          let dataVencimento = new Date(dataInicial.getFullYear(), dataInicial.getMonth() + i, diaVencimento);
+          
+          // Ajustar se o dia não existir no mês (ex: 31 em fevereiro)
+          const ultimoDiaDoMes = new Date(dataVencimento.getFullYear(), dataVencimento.getMonth() + 1, 0).getDate();
+          if (diaVencimento > ultimoDiaDoMes) {
+            dataVencimento.setDate(ultimoDiaDoMes);
+          }
+          
+          // Último mês usa a data final
+          if (i === quantidadeMeses - 1) {
+            dataVencimento = new Date(dataFinal);
+          }
 
           const conta = await ContaPagar.create({
             ...dadosBase,
             data_vencimento: dataVencimento
           }, { transaction });
 
+          contasCriadas.push(conta);
+        }
+
+        await transaction.commit();
+
+        // Registrar auditoria para cada conta criada (após commit)
+        for (const conta of contasCriadas) {
           try {
             await registrarCriacao(req, 'ContaPagar', conta.id, conta.toJSON() as Record<string, unknown>);
           } catch (auditError) {
-            logger.error('Erro ao registrar auditoria', {
+            logger.error('Erro ao registrar auditoria de criação em lote', {
               context: 'ContaPagarController',
               action: 'store',
               conta_id: conta.id,
               error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
             });
           }
-
-          contasCriadas.push(conta);
         }
-
-        await transaction.commit();
 
         res.status(201).json({
           success: true,
