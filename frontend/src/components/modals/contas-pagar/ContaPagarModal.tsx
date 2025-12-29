@@ -30,6 +30,7 @@ interface ContaPagarFormData {
   tipo_pagamento: 'DINHEIRO' | 'BOLETO' | 'CARTAO' | 'DEPOSITO' | 'DEBITO_CONTA' | 'TRANSFERENCIA' | 'PIX';
   numero_documento: string;
   nota_fiscal: string;
+  descricao: string;
   observacoes: string;
   linha_digitavel: string;
   tipo_chave_pix: 'CPF_CNPJ' | 'CELULAR' | 'EMAIL' | 'ALEATORIA' | 'QRCODE' | '';
@@ -46,6 +47,7 @@ const initialFormData: ContaPagarFormData = {
   tipo_pagamento: 'PIX',
   numero_documento: '',
   nota_fiscal: '',
+  descricao: '',
   observacoes: '',
   linha_digitavel: '',
   tipo_chave_pix: '',
@@ -117,6 +119,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
         tipo_pagamento: contaPagar.tipo_pagamento || 'PIX',
         numero_documento: contaPagar.numero_documento || '',
         nota_fiscal: contaPagar.nota_fiscal || '',
+        descricao: contaPagar.descricao || '',
         observacoes: contaPagar.observacoes || '',
         linha_digitavel: contaPagar.linha_digitavel ? formatLinhaDigitavel(contaPagar.linha_digitavel) : '',
         tipo_chave_pix: contaPagar.tipo_chave_pix || '',
@@ -252,6 +255,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
       tipo_pagamento: formData.tipo_pagamento,
       numero_documento: formData.numero_documento.trim() || undefined,
       nota_fiscal: formData.nota_fiscal.trim() || undefined,
+      descricao: formData.descricao.trim() || undefined,
       observacoes: formData.observacoes.trim() || undefined,
       linha_digitavel: formData.tipo_pagamento === 'BOLETO' ? (formData.linha_digitavel.replace(/\D/g, '').trim() || undefined) : undefined,
       tipo_chave_pix: formData.tipo_pagamento === 'PIX' ? (formData.tipo_chave_pix || undefined) : undefined,
@@ -549,6 +553,21 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
 
           <div className="col-md-12 mb-3">
             <FormField
+              name="descricao"
+              type="textarea"
+              label="Descrição"
+              value={formData.descricao}
+              onChange={(value) => {
+                setFormData(prev => ({ ...prev, descricao: String(value || '') }));
+              }}
+              placeholder="Descrição da conta a pagar"
+              rows={3}
+              size="sm"
+            />
+          </div>
+
+          <div className="col-md-12 mb-3">
+            <FormField
               name="observacoes"
               type="textarea"
               label="Observações"
@@ -569,7 +588,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
   return (
     <>
       <DraggableModal
-        show={show && !showPagamentoOnOpen}
+        show={show}
         onClose={onClose}
         title={modalTitle}
         size="lg"

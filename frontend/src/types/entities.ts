@@ -356,6 +356,7 @@ export interface ContaPagar {
   tipo_pagamento: 'DINHEIRO' | 'BOLETO' | 'CARTAO' | 'DEPOSITO' | 'DEBITO_CONTA' | 'TRANSFERENCIA' | 'PIX';
   numero_documento?: string;
   nota_fiscal?: string;
+  descricao?: string;
   observacoes?: string;
   linha_digitavel?: string;
   tipo_chave_pix?: 'CPF_CNPJ' | 'CELULAR' | 'EMAIL' | 'ALEATORIA' | 'QRCODE';

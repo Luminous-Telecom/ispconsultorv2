@@ -34,6 +34,7 @@ export class ContaPagar extends Model<
   declare tipo_pagamento: 'DINHEIRO' | 'BOLETO' | 'CARTAO' | 'DEPOSITO' | 'DEBITO_CONTA' | 'TRANSFERENCIA' | 'PIX';
   declare numero_documento: string | null;
   declare nota_fiscal: string | null;
+  declare descricao: string | null;
   declare observacoes: string | null;
   declare linha_digitavel: string | null;
   declare tipo_chave_pix: 'CPF_CNPJ' | 'CELULAR' | 'EMAIL' | 'ALEATORIA' | 'QRCODE' | null;
@@ -152,6 +153,10 @@ ContaPagar.init(
     },
     nota_fiscal: {
       type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    descricao: {
+      type: DataTypes.TEXT,
       allowNull: true
     },
     observacoes: {

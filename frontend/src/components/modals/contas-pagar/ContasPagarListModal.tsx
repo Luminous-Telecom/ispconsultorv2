@@ -247,6 +247,17 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         )
       },
       {
+        key: 'descricao',
+        label: 'Descrição',
+        sortable: false,
+        width: '200px',
+        render: (item: ContaPagar) => (
+          <span className="text-nowrap" title={item.descricao || ''}>
+            {item.descricao ? (item.descricao.length > 50 ? `${item.descricao.substring(0, 50)}...` : item.descricao) : '-'}
+          </span>
+        )
+      },
+      {
         key: 'data_pagamento',
         label: 'Data Pagamento',
         sortable: true,
@@ -602,11 +613,35 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     </div>
   );
 
+  const modals = (
+    <>
+      {showCreateModal && (
+        <ContaPagarModal
+          show={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      {showEditModal && selectedContaPagarId && (
+        <ContaPagarModal
+          show={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedContaPagarId(null);
+          }}
+          contaPagarId={selectedContaPagarId}
+          onSuccess={() => refetch()}
+        />
+      )}
+    </>
+  );
+
   if (_skipWrapper) {
     return (
       <>
         {modalContent}
-
+        {modals}
       </>
     );
   }
@@ -626,30 +661,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         {modalContent}
       </DraggableModal>
 
-      {showCreateModal && (
-        <ContaPagarModal
-          show={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSuccess={() => {
-            refetch();
-            // Não fechar o modal automaticamente - permitir múltiplas edições
-          }}
-        />
-      )}
-
-      {showEditModal && selectedContaPagarId && (
-        <ContaPagarModal
-          show={showEditModal}
-          onClose={() => {
-            setShowEditModal(false);
-            setSelectedContaPagarId(null);
-          }}
-          contaPagarId={selectedContaPagarId}
-          onSuccess={() => {
-            refetch();
-          }}
-        />
-      )}
+      {modals}
 
       {showPagamentoModal && selectedContaPagarId && (
         <ContaPagarModal
