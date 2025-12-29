@@ -10,6 +10,7 @@ import { setAuditData } from '../middleware/auditMiddleware';
 import { normalizeDateForDb } from '../utils/dateUtils';
 import { Transaction } from 'sequelize';
 import { sequelize } from '../config/database';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class ContaPagarController {
   // Listar todas as contas a pagar
@@ -265,7 +266,12 @@ export class ContaPagarController {
         // Registrar auditoria para cada conta criada (após commit)
         for (const conta of contasCriadas) {
           try {
-            await registrarCriacao(req, 'ContaPagar', conta.id, conta.toJSON() as Record<string, unknown>);
+            await registrarCriacao(
+              req as AuthenticatedRequest,
+              'ContaPagar',
+              conta.id,
+              conta.toJSON() as Record<string, unknown>
+            );
           } catch (auditError) {
             logger.error('Erro ao registrar auditoria de criação em lote', {
               context: 'ContaPagarController',
