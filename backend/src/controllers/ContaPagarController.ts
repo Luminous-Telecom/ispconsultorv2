@@ -265,14 +265,14 @@ export class ContaPagarController {
         // Registrar auditoria para cada conta criada (após commit)
         for (const conta of contasCriadas) {
           try {
-            await conta.reload();
             await registrarCriacao(req, 'ContaPagar', conta.id, conta.toJSON() as Record<string, unknown>);
           } catch (auditError) {
             logger.error('Erro ao registrar auditoria de criação em lote', {
               context: 'ContaPagarController',
               action: 'store',
               conta_id: conta.id,
-              error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+              error: auditError instanceof Error ? auditError.message : 'Erro desconhecido',
+              stack: auditError instanceof Error ? auditError.stack : undefined
             });
           }
         }
