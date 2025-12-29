@@ -13,9 +13,30 @@ export const contaPagarCreateSchema = Joi.object({
   data_vencimento: Joi.alternatives().try(
     Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/),
     Joi.date()
-  ).required().messages({
+  ).when(Joi.ref('data_vencimento_inicial'), {
+    is: Joi.exist(),
+    then: Joi.optional(),
+    otherwise: Joi.required()
+  }).messages({
     'alternatives.match': 'Data de vencimento deve ser uma data válida (YYYY-MM-DD)',
-    'any.required': 'Data de vencimento é obrigatória'
+    'any.required': 'Data de vencimento é obrigatória quando não é lote'
+  }),
+  data_vencimento_inicial: Joi.alternatives().try(
+    Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/),
+    Joi.date()
+  ).optional().messages({
+    'alternatives.match': 'Data inicial de vencimento deve ser uma data válida (YYYY-MM-DD)'
+  }),
+  data_vencimento_final: Joi.alternatives().try(
+    Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/),
+    Joi.date()
+  ).when(Joi.ref('data_vencimento_inicial'), {
+    is: Joi.exist(),
+    then: Joi.required(),
+    otherwise: Joi.optional()
+  }).messages({
+    'alternatives.match': 'Data final de vencimento deve ser uma data válida (YYYY-MM-DD)',
+    'any.required': 'Data final de vencimento é obrigatória quando data inicial é fornecida'
   }),
   valor: Joi.number().positive().precision(2).required().messages({
     'number.base': 'Valor deve ser um número',

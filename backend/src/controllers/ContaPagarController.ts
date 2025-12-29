@@ -155,10 +155,13 @@ export class ContaPagarController {
 
   // Criar nova conta a pagar
   static async store(req: Request, res: Response): Promise<void> {
+    const transaction = await sequelize.transaction();
+    
     try {
       const { error, value } = contaPagarCreateSchema.validate(req.body);
       
       if (error) {
+        await transaction.rollback();
         res.status(400).json({
           success: false,
           error: 'Dados inválidos',
@@ -170,6 +173,7 @@ export class ContaPagarController {
       // Verificar se fornecedor existe
       const fornecedor = await Fornecedor.findByPk(value.fornecedor_id);
       if (!fornecedor) {
+        await transaction.rollback();
         res.status(404).json({
           success: false,
           error: 'Fornecedor não encontrado'
@@ -177,47 +181,172 @@ export class ContaPagarController {
         return;
       }
 
-      // Normalizar data de vencimento
-      if (typeof value.data_vencimento === 'string') {
-        value.data_vencimento = normalizeDateForDb(value.data_vencimento) || new Date(value.data_vencimento);
-      }
+      // Verificar se é criação em lote
+      const isLote = value.data_vencimento_inicial && value.data_vencimento_final;
+      
+      if (isLote) {
+        // Criar múltiplas contas em lote
+        const dataInicial = normalizeDateForDb(value.data_vencimento_inicial);
+        const dataFinal = normalizeDateForDb(value.data_vencimento_final);
 
-      const conta = await ContaPagar.create({
-        ...value,
-        valor_pago: 0,
-        status: 'A_PAGAR'
-      });
+        if (!dataInicial || !dataFinal) {
+          await transaction.rollback();
+          res.status(400).json({
+            success: false,
+            error: 'Datas inválidas',
+            message: 'As datas de vencimento fornecidas são inválidas'
+          });
+          return;
+        }
 
-      // Registrar auditoria
-      try {
-        await registrarCriacao(
-          req,
-          'ContaPagar',
-          conta.id,
-          conta.toJSON() as Record<string, unknown>
-        );
-        logger.info('Auditoria de criação registrada com sucesso', {
-          context: 'ContaPagarController',
-          action: 'store',
-          conta_id: conta.id
+        if (dataInicial > dataFinal) {
+          await transaction.rollback();
+          res.status(400).json({
+            success: false,
+            error: 'Intervalo inválido',
+            message: 'A data inicial deve ser anterior à data final'
+          });
+          return;
+        }
+
+        // Calcular intervalo de dias
+        const totalDias = Math.ceil((dataFinal.getTime() - dataInicial.getTime()) / (1000 * 60 * 60 * 24));
+        const quantidadeContas = totalDias + 1; // Incluir ambas as datas
+        
+        if (quantidadeContas > 365) {
+          await transaction.rollback();
+          res.status(400).json({
+            success: false,
+            error: 'Intervalo muito grande',
+            message: 'O intervalo não pode exceder 365 dias'
+          });
+          return;
+        }
+
+        const contasCriadas = [];
+
+        for (let i = 0; i < quantidadeContas; i++) {
+          // Calcular data de vencimento distribuída no intervalo
+          let dataVencimento: Date;
+          if (quantidadeContas === 1) {
+            dataVencimento = new Date(dataInicial);
+          } else if (i === quantidadeContas - 1) {
+            // Última conta sempre usa data final
+            dataVencimento = new Date(dataFinal);
+          } else {
+            // Distribuir datas uniformemente
+            const diasAdicionar = Math.round((i * totalDias) / (quantidadeContas - 1));
+            dataVencimento = new Date(dataInicial);
+            dataVencimento.setDate(dataVencimento.getDate() + diasAdicionar);
+          }
+
+          const conta = await ContaPagar.create({
+            fornecedor_id: value.fornecedor_id,
+            data_vencimento: dataVencimento,
+            valor: value.valor,
+            tipo_pagamento: value.tipo_pagamento,
+            numero_documento: value.numero_documento,
+            nota_fiscal: value.nota_fiscal,
+            observacoes: value.observacoes,
+            linha_digitavel: value.linha_digitavel,
+            tipo_chave_pix: value.tipo_chave_pix,
+            chave_pix: value.chave_pix,
+            valor_pago: 0,
+            status: 'A_PAGAR',
+            data_cadastro: new Date()
+          }, { transaction });
+
+          // Registrar auditoria
+          try {
+            await registrarCriacao(
+              req,
+              'ContaPagar',
+              conta.id,
+              conta.toJSON() as Record<string, unknown>
+            );
+          } catch (auditError) {
+            logger.error('Erro ao registrar auditoria de criação em lote', {
+              context: 'ContaPagarController',
+              action: 'store',
+              conta_id: conta.id,
+              error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+            });
+          }
+
+          contasCriadas.push(conta);
+        }
+
+        await transaction.commit();
+
+        // Buscar contas criadas com relacionamentos
+        const contasComRelacionamentos = await ContaPagar.findAll({
+          where: { id: contasCriadas.map(c => c.id) },
+          include: [
+            { association: 'fornecedor', required: false }
+          ]
         });
-      } catch (auditError) {
-        logger.error('Erro ao registrar auditoria de criação', {
-          context: 'ContaPagarController',
-          action: 'store',
-          conta_id: conta.id,
-          error: auditError instanceof Error ? auditError.message : 'Erro desconhecido',
-          stack: auditError instanceof Error ? auditError.stack : undefined
-        });
-        // Não interromper o fluxo, mas logar o erro
-      }
 
-      res.status(201).json({
-        success: true,
-        message: 'Conta a pagar criada com sucesso',
-        data: conta
-      });
+        res.status(201).json({
+          success: true,
+          message: `${contasCriadas.length} conta(s) criada(s) com sucesso`,
+          data: contasComRelacionamentos
+        });
+      } else {
+        // Criar uma única conta
+        if (!value.data_vencimento) {
+          await transaction.rollback();
+          res.status(400).json({
+            success: false,
+            error: 'Data de vencimento obrigatória',
+            message: 'Data de vencimento é obrigatória para criação única'
+          });
+          return;
+        }
+
+        // Normalizar data de vencimento
+        if (typeof value.data_vencimento === 'string') {
+          value.data_vencimento = normalizeDateForDb(value.data_vencimento) || new Date(value.data_vencimento);
+        }
+
+        const conta = await ContaPagar.create({
+          ...value,
+          valor_pago: 0,
+          status: 'A_PAGAR'
+        }, { transaction });
+
+        // Registrar auditoria
+        try {
+          await registrarCriacao(
+            req,
+            'ContaPagar',
+            conta.id,
+            conta.toJSON() as Record<string, unknown>
+          );
+          logger.info('Auditoria de criação registrada com sucesso', {
+            context: 'ContaPagarController',
+            action: 'store',
+            conta_id: conta.id
+          });
+        } catch (auditError) {
+          logger.error('Erro ao registrar auditoria de criação', {
+            context: 'ContaPagarController',
+            action: 'store',
+            conta_id: conta.id,
+            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido',
+            stack: auditError instanceof Error ? auditError.stack : undefined
+          });
+        }
+
+        await transaction.commit();
+
+        res.status(201).json({
+          success: true,
+          message: 'Conta a pagar criada com sucesso',
+          data: conta
+        });
+      }
     } catch (error) {
+      await transaction.rollback();
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar conta a pagar', {
         context: 'ContaPagarController',

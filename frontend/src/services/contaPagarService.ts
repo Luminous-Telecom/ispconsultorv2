@@ -163,6 +163,30 @@ class ContaPagarServiceClass {
       throw error;
     }
   }
+
+  /**
+   * Duplicar contas a pagar em lote
+   */
+  async duplicarLote(data: {
+    ids: number[];
+    data_vencimento_inicial: string;
+    data_vencimento_final: string;
+    fornecedor_id?: number;
+  }): Promise<ApiResponse<ContaPagar[]>> {
+    try {
+      const url = `${this.baseEndpoint}/duplicar-lote`;
+      const response = await this.apiClient.post<ContaPagar[]>(url, data);
+      if (response && typeof response === 'object' && 'data' in response) {
+        return response as ApiResponse<ContaPagar[]>;
+      }
+      return {
+        success: true,
+        data: Array.isArray(response) ? response : []
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 // Instância única do serviço
@@ -240,6 +264,7 @@ export class ContaPagarService {
     }
     return response as unknown as ContaPagar;
   }
+
 }
 
 /**

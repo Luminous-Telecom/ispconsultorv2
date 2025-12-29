@@ -21,8 +21,11 @@ interface ContaPagarModalProps {
 }
 
 interface ContaPagarFormData {
+  tipo_criacao: 'unica' | 'lote';
   fornecedor_id: number;
   data_vencimento: string;
+  data_vencimento_inicial: string;
+  data_vencimento_final: string;
   valor: string;
   tipo_pagamento: 'DINHEIRO' | 'BOLETO' | 'CARTAO' | 'DEPOSITO' | 'DEBITO_CONTA' | 'TRANSFERENCIA' | 'PIX';
   numero_documento: string;
@@ -34,8 +37,11 @@ interface ContaPagarFormData {
 }
 
 const initialFormData: ContaPagarFormData = {
+  tipo_criacao: 'unica',
   fornecedor_id: 0,
   data_vencimento: '',
+  data_vencimento_inicial: '',
+  data_vencimento_final: '',
   valor: '',
   tipo_pagamento: 'PIX',
   numero_documento: '',
@@ -102,8 +108,11 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
     
     if (isEditing && contaPagar) {
       setFormData({
+        tipo_criacao: 'unica',
         fornecedor_id: contaPagar.fornecedor_id,
         data_vencimento: contaPagar.data_vencimento ? contaPagar.data_vencimento.split('T')[0] : '',
+        data_vencimento_inicial: '',
+        data_vencimento_final: '',
         valor: contaPagar.valor ? formatCurrency(Number(contaPagar.valor), false) : '',
         tipo_pagamento: contaPagar.tipo_pagamento || 'PIX',
         numero_documento: contaPagar.numero_documento || '',
@@ -190,8 +199,22 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
       newErrors.fornecedor_id = 'Fornecedor é obrigatório';
     }
 
-    if (!formData.data_vencimento.trim()) {
-      newErrors.data_vencimento = 'Data de vencimento é obrigatória';
+    if (formData.tipo_criacao === 'unica') {
+      if (!formData.data_vencimento.trim()) {
+        newErrors.data_vencimento = 'Data de vencimento é obrigatória';
+      }
+    } else {
+      if (!formData.data_vencimento_inicial.trim()) {
+        newErrors.data_vencimento_inicial = 'Data inicial é obrigatória';
+      }
+      if (!formData.data_vencimento_final.trim()) {
+        newErrors.data_vencimento_final = 'Data final é obrigatória';
+      }
+      if (formData.data_vencimento_inicial.trim() && formData.data_vencimento_final.trim()) {
+        if (formData.data_vencimento_inicial > formData.data_vencimento_final) {
+          newErrors.data_vencimento_final = 'Data final deve ser posterior à data inicial';
+        }
+      }
     }
 
     if (!formData.valor.trim()) {
@@ -215,9 +238,9 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
     }
 
     const valorNum = parseFloat(formData.valor.replace(/\./g, '').replace(',', '.'));
-    const submitData = {
+    
+    const baseData: Record<string, unknown> = {
       fornecedor_id: formData.fornecedor_id,
-      data_vencimento: formData.data_vencimento,
       valor: valorNum,
       tipo_pagamento: formData.tipo_pagamento,
       numero_documento: formData.numero_documento.trim() || undefined,
@@ -233,7 +256,16 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
         }
         return chave;
       })() : undefined
-    } as CreateContaPagar;
+    };
+
+    if (formData.tipo_criacao === 'lote') {
+      baseData.data_vencimento_inicial = formData.data_vencimento_inicial;
+      baseData.data_vencimento_final = formData.data_vencimento_final;
+    } else {
+      baseData.data_vencimento = formData.data_vencimento;
+    }
+
+    const submitData = baseData as CreateContaPagar & { data_vencimento_inicial?: string; data_vencimento_final?: string };
 
     try {
       if (isEditing && contaPagarId) {
@@ -285,21 +317,81 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             />
           </div>
 
-          <div className="col-md-6 mb-3">
-            <FormField
-              name="data_vencimento"
-              type="date"
-              label="Data de Vencimento"
-              value={formData.data_vencimento}
-              onChange={(value) => {
-                setFormData(prev => ({ ...prev, data_vencimento: String(value || '') }));
-                setErrors(prev => ({ ...prev, data_vencimento: undefined }));
-              }}
-              required
-              size="sm"
-              error={errors.data_vencimento}
-            />
-          </div>
+          {!isEditing && (
+            <div className="col-md-12 mb-3">
+              <FormField
+                name="tipo_criacao"
+                type="select"
+                label="Tipo de Criação"
+                value={formData.tipo_criacao}
+                onChange={(value) => {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    tipo_criacao: value as 'unica' | 'lote',
+                    data_vencimento: value === 'lote' ? '' : prev.data_vencimento,
+                    data_vencimento_inicial: value === 'unica' ? '' : prev.data_vencimento_inicial,
+                    data_vencimento_final: value === 'unica' ? '' : prev.data_vencimento_final
+                  }));
+                }}
+                options={[
+                  { value: 'unica', label: 'Única' },
+                  { value: 'lote', label: 'Lote' }
+                ]}
+                size="sm"
+              />
+            </div>
+          )}
+
+          {formData.tipo_criacao === 'unica' || isEditing ? (
+            <div className="col-md-6 mb-3">
+              <FormField
+                name="data_vencimento"
+                type="date"
+                label="Data de Vencimento"
+                value={formData.data_vencimento}
+                onChange={(value) => {
+                  setFormData(prev => ({ ...prev, data_vencimento: String(value || '') }));
+                  setErrors(prev => ({ ...prev, data_vencimento: undefined }));
+                }}
+                required
+                size="sm"
+                error={errors.data_vencimento}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="col-md-6 mb-3">
+                <FormField
+                  name="data_vencimento_inicial"
+                  type="date"
+                  label="Data Inicial de Vencimento"
+                  value={formData.data_vencimento_inicial}
+                  onChange={(value) => {
+                    setFormData(prev => ({ ...prev, data_vencimento_inicial: String(value || '') }));
+                    setErrors(prev => ({ ...prev, data_vencimento_inicial: undefined }));
+                  }}
+                  required
+                  size="sm"
+                  error={errors.data_vencimento_inicial}
+                />
+              </div>
+              <div className="col-md-6 mb-3">
+                <FormField
+                  name="data_vencimento_final"
+                  type="date"
+                  label="Data Final de Vencimento"
+                  value={formData.data_vencimento_final}
+                  onChange={(value) => {
+                    setFormData(prev => ({ ...prev, data_vencimento_final: String(value || '') }));
+                    setErrors(prev => ({ ...prev, data_vencimento_final: undefined }));
+                  }}
+                  required
+                  size="sm"
+                  error={errors.data_vencimento_final}
+                />
+              </div>
+            </>
+          )}
 
           <div className="col-md-6 mb-3">
             <FormField
