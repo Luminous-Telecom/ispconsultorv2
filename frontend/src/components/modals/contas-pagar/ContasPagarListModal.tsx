@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useContasPagar, useDeleteContaPagar, useDuplicarContaPagar } from '@/hooks/useContasPagar';
+import { useFornecedores } from '@/hooks/useFornecedores';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { formatDateTime, formatDate, formatCurrency } from '@/utils/formatters';
-import { ContaPagar } from '@/types';
+import { ContaPagar, ContaPagarFilters } from '@/types';
 import ListModal from '@/components/common/ListModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import ContaPagarModal from './ContaPagarModal';
@@ -29,18 +30,36 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
   const [selectedContaPagarId, setSelectedContaPagarId] = useState<number | null>(null);
+  const [searchField, setSearchField] = useState<string>('numero_documento');
   
   // Hook de auditoria
   const auditoria = useAuditoria();
   
   // Hook unificado para filtros, busca e paginação
-  const tableFilters = useTableFilters({
+  const tableFilters = useTableFilters<ContaPagarFilters>({
     initialSearch: '',
     initialPage: 1,
     initialLimit: 15,
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
+    initialFilters: {
+      status: undefined,
+      tipo_pagamento: undefined,
+      fornecedor_id: undefined,
+      data_inicio: undefined,
+      data_fim: undefined,
+    } as ContaPagarFilters,
   });
+
+  // Buscar fornecedores para o filtro
+  const { data: fornecedoresData } = useFornecedores({ limit: 1000 });
+  const fornecedoresOptions = useMemo(() => {
+    if (!fornecedoresData?.data) return [];
+    return fornecedoresData.data.map(fornecedor => ({
+      value: fornecedor.id?.toString() || '',
+      label: fornecedor.nome_razao_social || fornecedor.nome_fantasia || `Fornecedor ${fornecedor.id}`
+    }));
+  }, [fornecedoresData]);
   
   // Usar hook customizado para gerenciar seleção
   const {
@@ -88,6 +107,54 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   // Configurar modal centralizado
   const modal = useListModal({
     title,
+    filters: [
+      {
+        key: 'fornecedor_id',
+        label: 'Fornecedor',
+        type: 'select',
+        options: fornecedoresOptions,
+        placeholder: 'Selecione o fornecedor'
+      },
+      {
+        key: 'data_inicio',
+        label: 'Vencimento Inicial',
+        type: 'date',
+        placeholder: 'Data inicial'
+      },
+      {
+        key: 'data_fim',
+        label: 'Vencimento Final',
+        type: 'date',
+        placeholder: 'Data final'
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        type: 'select',
+        options: [
+          { value: 'A_PAGAR', label: 'A Pagar' },
+          { value: 'PAGO', label: 'Pago' },
+          { value: 'PARCIAL', label: 'Parcial' },
+          { value: 'CANCELADO', label: 'Cancelado' }
+        ],
+        placeholder: 'Selecione o status'
+      },
+      {
+        key: 'tipo_pagamento',
+        label: 'Tipo',
+        type: 'select',
+        options: [
+          { value: 'DINHEIRO', label: 'Dinheiro' },
+          { value: 'BOLETO', label: 'Boleto' },
+          { value: 'CARTAO', label: 'Cartão' },
+          { value: 'DEPOSITO', label: 'Depósito' },
+          { value: 'DEBITO_CONTA', label: 'Débito em Conta' },
+          { value: 'TRANSFERENCIA', label: 'Transferência' },
+          { value: 'PIX', label: 'PIX' }
+        ],
+        placeholder: 'Selecione o tipo'
+      }
+    ],
     columns: [
       {
         key: 'id',
@@ -201,16 +268,50 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     searchPlaceholder: 'Buscar...',
     searchFields: [
       { key: 'numero_documento', label: 'Nº Documento' },
-      { key: 'nota_fiscal', label: 'Nota Fiscal' }
+      { key: 'nota_fiscal', label: 'Nota Fiscal' },
+      { key: 'fornecedor', label: 'Fornecedor' },
+      { key: 'vencimento', label: 'Vencimento' },
+      { key: 'valor', label: 'Valor' },
+      { key: 'status', label: 'Status' },
+      { key: 'tipo', label: 'Tipo' }
     ],
     multiSelect: false
   });
 
+  // Preparar filtros para a API
+  const apiFilters = useMemo(() => {
+    const filters: ContaPagarFilters = {};
+    
+    if (tableFilters.filters.status) {
+      filters.status = tableFilters.filters.status as ContaPagarFilters['status'];
+    }
+    
+    if (tableFilters.filters.tipo_pagamento) {
+      filters.tipo_pagamento = tableFilters.filters.tipo_pagamento as ContaPagarFilters['tipo_pagamento'];
+    }
+    
+    if (tableFilters.filters.fornecedor_id) {
+      filters.fornecedor_id = String(tableFilters.filters.fornecedor_id);
+    }
+    
+    if (tableFilters.filters.data_inicio) {
+      filters.data_inicio = String(tableFilters.filters.data_inicio);
+    }
+    
+    if (tableFilters.filters.data_fim) {
+      filters.data_fim = String(tableFilters.filters.data_fim);
+    }
+    
+    return filters;
+  }, [tableFilters.filters]);
+
   // Hook para buscar contas a pagar usando parâmetros do useTableFilters
   const { data: contasPagarData, isLoading, refetch } = useContasPagar({
     search: tableFilters.debouncedSearch || undefined,
+    searchField: searchField || undefined,
     page: tableFilters.page,
-    limit: tableFilters.limit
+    limit: tableFilters.limit,
+    ...apiFilters
   });
 
   const deleteContaPagarMutation = useDeleteContaPagar();
@@ -367,8 +468,33 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
         search={tableFilters.search}
-        onSearchChange={(search) => {
+        onSearchChange={(search, field) => {
           tableFilters.setSearch(search);
+          setSearchField(field);
+        }}
+        onSearchFieldChange={setSearchField}
+        filters={modal.config.filters}
+        filterValues={tableFilters.filters}
+        onFilterChange={(key, value) => {
+          // Converter FilterValue para o tipo esperado (remover arrays)
+          const convertedValue = Array.isArray(value) 
+            ? (value.length > 0 ? value[0] : null)
+            : value;
+          tableFilters.setFilter(key as keyof ContaPagarFilters, convertedValue as string | number | boolean | null | undefined);
+        }}
+        onFiltersChange={(filters) => {
+          // Converter FilterValue para o tipo esperado
+          const convertedFilters: Partial<ContaPagarFilters> = {};
+          Object.keys(filters).forEach(key => {
+            const value = filters[key];
+            convertedFilters[key as keyof ContaPagarFilters] = Array.isArray(value)
+              ? (value.length > 0 ? value[0] : null)
+              : (value as string | number | boolean | null | undefined);
+          });
+          tableFilters.setFilters(convertedFilters);
+        }}
+        onClearFilters={() => {
+          tableFilters.resetFilters();
         }}
         pagination={pagination}
         onPageChange={tableFilters.setPage}

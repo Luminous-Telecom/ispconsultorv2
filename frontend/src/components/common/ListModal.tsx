@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import DraggableModal from './DraggableModal';
 import { Table } from '../tables';
 import { ListModalProps } from '@/types/modal';
+import { FilterValue } from '@/types/common';
 
 function ListModal<T extends { id: number | string }>({
   show,
@@ -23,8 +24,25 @@ function ListModal<T extends { id: number | string }>({
   bulkActions = [],
   onAudit,
   auditEntity,
-  skipWrapper = false
-}: ListModalProps<T>) {
+  skipWrapper = false,
+  filters,
+  filterValues: _filterValues,
+  onFilterChange: _onFilterChange,
+  onFiltersChange,
+  onClearFilters: _onClearFilters
+}: ListModalProps<T> & {
+  filters?: Array<{
+    key: string;
+    label: string;
+    type: 'text' | 'select' | 'date' | 'dateRange' | 'number' | 'boolean';
+    options?: Array<{ value: string | number; label: string }>;
+    placeholder?: string;
+  }>;
+  filterValues?: Record<string, FilterValue>;
+  onFilterChange?: (key: string, value: FilterValue) => void;
+  onFiltersChange?: (filters: Record<string, FilterValue>) => void;
+  onClearFilters?: () => void;
+}) {
   const {
     title,
     columns,
@@ -61,6 +79,7 @@ function ListModal<T extends { id: number | string }>({
           searchFields,
           emptyMessage,
           className: 'no-padding',
+          filters: filters || [],
           bulkActions: useMemo(() => {
             return bulkActions.map(action => ({
               key: action.label.toLowerCase().replace(/\s+/g, '-'),
@@ -93,6 +112,11 @@ function ListModal<T extends { id: number | string }>({
           onSearchChange?.(search, field);
         }}
         onSearchFieldChange={onSearchFieldChange}
+        onFilter={(filters) => {
+          if (onFiltersChange) {
+            onFiltersChange(filters);
+          }
+        }}
         onPageChange={onPageChange}
         onPageSizeChange={onLimitChange}
         onRefresh={onRefresh || refreshQueryFn}

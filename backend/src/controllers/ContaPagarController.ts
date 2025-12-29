@@ -20,56 +20,142 @@ export class ContaPagarController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 15;
       const search = req.query.search as string;
+      const searchField = req.query.searchField as string;
       const status = req.query.status as string;
       const tipoPagamento = req.query.tipo_pagamento as string;
       const fornecedorId = req.query.fornecedor_id as string;
       const dataInicio = req.query.data_inicio as string;
       const dataFim = req.query.data_fim as string;
 
-      const offset = (page - 1) * limit;
 
-      const where: WhereOptions = {};
+      const offset = (page - 1) * limit;
+      const whereConditions: Array<WhereOptions> = [];
       
       if (status) {
-        where.status = status;
+        whereConditions.push({ status });
       }
 
       if (tipoPagamento) {
-        where.tipo_pagamento = tipoPagamento;
+        whereConditions.push({ tipo_pagamento: tipoPagamento });
       }
 
       if (fornecedorId) {
         const fornecedorIdNum = parseInt(fornecedorId, 10);
         if (!isNaN(fornecedorIdNum)) {
-          where.fornecedor_id = fornecedorIdNum;
+          whereConditions.push({ fornecedor_id: fornecedorIdNum });
         }
       }
 
       if (dataInicio || dataFim) {
-        where.data_vencimento = {};
+        const vencimentoCondition: WhereOptions = {};
         if (dataInicio) {
           const dataInicioDate = normalizeDateForDb(dataInicio);
           if (dataInicioDate) {
-            where.data_vencimento[Op.gte] = dataInicioDate;
+            (vencimentoCondition as Record<symbol, unknown>)[Op.gte] = dataInicioDate;
           }
         }
         if (dataFim) {
           const dataFimDate = normalizeDateForDb(dataFim);
           if (dataFimDate) {
-            where.data_vencimento[Op.lte] = dataFimDate;
+            (vencimentoCondition as Record<symbol, unknown>)[Op.lte] = dataFimDate;
           }
+        }
+        if (Object.keys(vencimentoCondition).length > 0) {
+          whereConditions.push({ data_vencimento: vencimentoCondition });
         }
       }
 
-      const count = await ContaPagar.count({ where });
+      if (search && search.trim()) {
+        const searchTerm = search.trim();
+        
+        switch (searchField) {
+          case 'numero_documento':
+            whereConditions.push({ numero_documento: { [Op.like]: `%${searchTerm}%` } });
+            break;
+          case 'nota_fiscal':
+            whereConditions.push({ nota_fiscal: { [Op.like]: `%${searchTerm}%` } });
+            break;
+          case 'fornecedor':
+            break;
+          case 'vencimento':
+            const searchDate = normalizeDateForDb(searchTerm);
+            if (searchDate) {
+              whereConditions.push({ data_vencimento: searchDate });
+            }
+            break;
+          case 'valor':
+            const valorNum = parseFloat(searchTerm.replace(/[^\d.,]/g, '').replace(',', '.'));
+            if (!isNaN(valorNum)) {
+              whereConditions.push({ valor: { [Op.gte]: valorNum * 0.9, [Op.lte]: valorNum * 1.1 } });
+            }
+            break;
+          case 'status':
+            whereConditions.push({ status: { [Op.like]: `%${searchTerm.toUpperCase()}%` } });
+            break;
+          case 'tipo':
+            whereConditions.push({ tipo_pagamento: { [Op.like]: `%${searchTerm.toUpperCase()}%` } });
+            break;
+          default:
+            whereConditions.push({
+              [Op.or]: [
+                { numero_documento: { [Op.like]: `%${searchTerm}%` } },
+                { nota_fiscal: { [Op.like]: `%${searchTerm}%` } }
+              ]
+            } as WhereOptions);
+        }
+      }
+
+      const validConditions = whereConditions.filter(cond => {
+        if (!cond || typeof cond !== 'object') return false;
+        return Object.keys(cond).length > 0;
+      });
+
+      const where: WhereOptions = validConditions.length === 0
+        ? {}
+        : validConditions.length === 1
+        ? validConditions[0]
+        : { [Op.and]: validConditions } as WhereOptions;
+
+      // Configurar include - se buscar por fornecedor, precisa incluir a associação com where
+      const shouldSearchFornecedor = Boolean(
+        search && search.trim() && (searchField === 'fornecedor' || !searchField)
+      );
       
+      const fornecedorInclude: {
+        association: string;
+        required?: boolean;
+        where?: WhereOptions;
+      } = {
+        association: 'fornecedor',
+        required: shouldSearchFornecedor
+      };
+      
+      if (shouldSearchFornecedor && search) {
+        fornecedorInclude.where = {
+          [Op.or]: [
+            { nome_razao_social: { [Op.like]: `%${search.trim()}%` } },
+            { nome_fantasia: { [Op.like]: `%${search.trim()}%` } }
+          ]
+        } as WhereOptions;
+      }
+      
+      const includeOptions = [
+        fornecedorInclude,
+        { association: 'pagamentos', required: false, limit: 5, order: [['created_at', 'DESC']] as [string, string][] },
+        { association: 'arquivos', required: false, limit: 5 }
+      ];
+
+      const count = shouldSearchFornecedor
+        ? (await ContaPagar.findAll({
+            where,
+            include: [includeOptions[0]],
+            attributes: ['id']
+          })).length
+        : await ContaPagar.count({ where });
+
       const contas = await ContaPagar.findAll({
         where,
-        include: [
-          { association: 'fornecedor', required: false },
-          { association: 'pagamentos', required: false, limit: 5, order: [['created_at', 'DESC']] },
-          { association: 'arquivos', required: false, limit: 5 }
-        ],
+        include: includeOptions,
         order: [['data_vencimento', 'ASC'], ['created_at', 'DESC']],
         limit,
         offset
@@ -90,16 +176,16 @@ export class ContaPagarController {
         }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao listar contas a pagar', {
         context: 'ContaPagarController',
         action: 'index',
-        error: errorMessage
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        query: req.query
       });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: errorMessage
+        message: error instanceof Error ? error.message : 'Erro desconhecido'
       });
     }
   }

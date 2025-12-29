@@ -16,6 +16,13 @@ export interface ListModalConfig<T> {
   multiSelect?: boolean;
   showRefresh?: boolean;
   showFilters?: boolean;
+  filters?: Array<{
+    key: string;
+    label: string;
+    type: 'text' | 'select' | 'date' | 'dateRange' | 'number' | 'boolean';
+    options?: Array<{ value: string | number; label: string }>;
+    placeholder?: string;
+  }>;
 }
 
 export interface ListModalProps<T> {

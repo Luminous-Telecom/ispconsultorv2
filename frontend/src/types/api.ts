@@ -114,6 +114,7 @@ export interface ContaPagarFilters extends BaseFilters {
   data_fim?: string;
   data_vencimento_inicio?: string;
   data_vencimento_fim?: string;
+  searchField?: string;
 }
 
 export interface CarneParcelaFilters extends BaseFilters {
