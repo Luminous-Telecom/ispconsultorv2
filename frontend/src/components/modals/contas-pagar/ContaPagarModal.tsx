@@ -9,7 +9,7 @@ import FormField from '@/components/ui/FormField';
 import EntitySelectField from '@/components/ui/EntitySelectField';
 import FornecedorListModal from '@/components/modals/fornecedores/FornecedorListModal';
 import { CreateContaPagar } from '@/types';
-import { formatCurrency, formatCPF, formatCNPJ } from '@/utils/formatters';
+import { formatCurrency, formatCPF, formatCNPJ, formatLinhaDigitavel } from '@/utils/formatters';
 import { getTodayISO } from '@/utils/dateUtils';
 
 interface ContaPagarModalProps {
@@ -109,10 +109,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
         numero_documento: contaPagar.numero_documento || '',
         nota_fiscal: contaPagar.nota_fiscal || '',
         observacoes: contaPagar.observacoes || '',
-        linha_digitavel: contaPagar.linha_digitavel ? (() => {
-          const cleaned = contaPagar.linha_digitavel.replace(/\s/g, '').slice(0, 47);
-          return cleaned.match(/.{1,5}/g)?.join(' ') || contaPagar.linha_digitavel;
-        })() : '',
+        linha_digitavel: contaPagar.linha_digitavel ? formatLinhaDigitavel(contaPagar.linha_digitavel) : '',
         tipo_chave_pix: contaPagar.tipo_chave_pix || '',
         chave_pix: contaPagar.chave_pix ? (() => {
           if (contaPagar.tipo_chave_pix === 'CPF_CNPJ') {
@@ -226,7 +223,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
       numero_documento: formData.numero_documento.trim() || undefined,
       nota_fiscal: formData.nota_fiscal.trim() || undefined,
       observacoes: formData.observacoes.trim() || undefined,
-      linha_digitavel: formData.tipo_pagamento === 'BOLETO' ? (formData.linha_digitavel.replace(/\s/g, '').trim() || undefined) : undefined,
+      linha_digitavel: formData.tipo_pagamento === 'BOLETO' ? (formData.linha_digitavel.replace(/\D/g, '').trim() || undefined) : undefined,
       tipo_chave_pix: formData.tipo_pagamento === 'PIX' ? (formData.tipo_chave_pix || undefined) : undefined,
       chave_pix: formData.tipo_pagamento === 'PIX' ? (() => {
         const chave = formData.chave_pix.trim();
@@ -365,10 +362,11 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 value={formData.linha_digitavel}
                 onChange={(value) => {
                   const cleaned = String(value || '').replace(/\D/g, '');
-                  const formatted = cleaned.slice(0, 47).match(/.{1,5}/g)?.join(' ') || cleaned;
+                  const limited = cleaned.slice(0, 47);
+                  const formatted = formatLinhaDigitavel(limited);
                   setFormData(prev => ({ ...prev, linha_digitavel: formatted }));
                 }}
-                placeholder="00000 00000 00000 00000 00000 00000 00000 00000000 00000"
+                placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
                 size="sm"
               />
             </div>

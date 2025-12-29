@@ -195,3 +195,28 @@ export const formatDateLong = (date: string | Date | null | undefined): string =
     return '-';
   }
 };
+
+/**
+ * Formata a linha digitável do boleto no padrão FEBRABAN
+ * Formato: 00000.00000 00000.000000 00000.000000 0 00000000000000
+ * @param linha - Linha digitável com ou sem formatação
+ * @returns String formatada no padrão FEBRABAN ou string original se não tiver 47 dígitos
+ */
+export const formatLinhaDigitavel = (linha: string): string => {
+  if (!linha) return '';
+  
+  // Remove todos os caracteres não numéricos
+  const digitos = linha.replace(/\D/g, '');
+  
+  // Se não tiver 47 dígitos, retorna o valor original (ou limpo)
+  if (digitos.length !== 47) {
+    return digitos;
+  }
+  
+  // Formata no padrão FEBRABAN: 00000.00000 00000.000000 00000.000000 0 00000000000000
+  return `${digitos.substring(0, 5)}.${digitos.substring(5, 10)} ` +
+         `${digitos.substring(10, 15)}.${digitos.substring(15, 21)} ` +
+         `${digitos.substring(21, 26)}.${digitos.substring(26, 32)} ` +
+         `${digitos.substring(32, 33)} ` +
+         `${digitos.substring(33)}`;
+};
