@@ -27,7 +27,6 @@ export class ContaPagarController {
       const dataInicio = req.query.data_inicio as string;
       const dataFim = req.query.data_fim as string;
 
-
       const offset = (page - 1) * limit;
       const whereConditions: Array<WhereOptions> = [];
       
@@ -48,19 +47,18 @@ export class ContaPagarController {
 
       if (dataInicio || dataFim) {
         const vencimentoCondition: WhereOptions = {};
+        
         if (dataInicio) {
-          const dataInicioDate = normalizeDateForDb(dataInicio);
-          if (dataInicioDate) {
-            (vencimentoCondition as Record<symbol, unknown>)[Op.gte] = dataInicioDate;
-          }
+          const [year, month, day] = (dataInicio as string).split('-').map(Number);
+          (vencimentoCondition as Record<symbol, unknown>)[Op.gte] = new Date(year, month - 1, day, 0, 0, 0, 0);
         }
+        
         if (dataFim) {
-          const dataFimDate = normalizeDateForDb(dataFim);
-          if (dataFimDate) {
-            (vencimentoCondition as Record<symbol, unknown>)[Op.lte] = dataFimDate;
-          }
+          const [year, month, day] = (dataFim as string).split('-').map(Number);
+          (vencimentoCondition as Record<symbol, unknown>)[Op.lte] = new Date(year, month - 1, day, 23, 59, 59, 999);
         }
-        if (Object.keys(vencimentoCondition).length > 0) {
+        
+        if (Object.keys(vencimentoCondition).length > 0 || Object.getOwnPropertySymbols(vencimentoCondition).length > 0) {
           whereConditions.push({ data_vencimento: vencimentoCondition });
         }
       }
@@ -106,8 +104,7 @@ export class ContaPagarController {
       }
 
       const validConditions = whereConditions.filter(cond => {
-        if (!cond || typeof cond !== 'object') return false;
-        return Object.keys(cond).length > 0;
+        return cond && typeof cond === 'object' && (Object.keys(cond).length > 0 || Object.getOwnPropertySymbols(cond).length > 0);
       });
 
       const where: WhereOptions = validConditions.length === 0

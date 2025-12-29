@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useContasPagar, useDeleteContaPagar, useDuplicarContaPagar } from '@/hooks/useContasPagar';
 import { useFornecedores } from '@/hooks/useFornecedores';
 import { useModalSelect } from '@/hooks/useModalSelect';
@@ -33,6 +33,8 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
   const [selectedContaPagarId, setSelectedContaPagarId] = useState<number | null>(null);
   const [searchField, setSearchField] = useState<string>('numero_documento');
+  const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>('');
+  const [dataVencimentoFim, setDataVencimentoFim] = useState<string>('');
   const isMobile = useIsMobile();
   
   // Hook de auditoria
@@ -281,32 +283,23 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     multiSelect: false
   });
 
+  // Resetar página quando filtros de data mudarem
+  useEffect(() => {
+    tableFilters.setPage(1);
+  }, [dataVencimentoInicio, dataVencimentoFim, tableFilters]);
+
   // Preparar filtros para a API
   const apiFilters = useMemo(() => {
-    const filters: ContaPagarFilters = {};
-    
-    if (tableFilters.filters.status) {
-      filters.status = tableFilters.filters.status as ContaPagarFilters['status'];
-    }
-    
-    if (tableFilters.filters.tipo_pagamento) {
-      filters.tipo_pagamento = tableFilters.filters.tipo_pagamento as ContaPagarFilters['tipo_pagamento'];
-    }
-    
-    if (tableFilters.filters.fornecedor_id) {
-      filters.fornecedor_id = String(tableFilters.filters.fornecedor_id);
-    }
-    
-    if (tableFilters.filters.data_inicio) {
-      filters.data_inicio = String(tableFilters.filters.data_inicio);
-    }
-    
-    if (tableFilters.filters.data_fim) {
-      filters.data_fim = String(tableFilters.filters.data_fim);
-    }
+    const filters: ContaPagarFilters = {
+      ...(tableFilters.filters.status && { status: tableFilters.filters.status as ContaPagarFilters['status'] }),
+      ...(tableFilters.filters.tipo_pagamento && { tipo_pagamento: tableFilters.filters.tipo_pagamento as ContaPagarFilters['tipo_pagamento'] }),
+      ...(tableFilters.filters.fornecedor_id && { fornecedor_id: String(tableFilters.filters.fornecedor_id) }),
+      ...(dataVencimentoInicio && { data_inicio: dataVencimentoInicio }),
+      ...(dataVencimentoFim && { data_fim: dataVencimentoFim })
+    };
     
     return filters;
-  }, [tableFilters.filters]);
+  }, [tableFilters.filters, dataVencimentoInicio, dataVencimentoFim]);
 
   // Hook para buscar contas a pagar usando parâmetros do useTableFilters
   const { data: contasPagarData, isLoading, refetch } = useContasPagar({
@@ -530,20 +523,13 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
             filters={modal.config.filters}
             filterValues={tableFilters.filters}
             onFilterChange={(key, value) => {
-              // Converter FilterValue para o tipo esperado (remover arrays)
-              const convertedValue = Array.isArray(value) 
-                ? (value.length > 0 ? value[0] : null)
-                : value;
+              const convertedValue = Array.isArray(value) ? (value[0] || null) : value;
               tableFilters.setFilter(key as keyof ContaPagarFilters, convertedValue as string | number | boolean | null | undefined);
             }}
             onFiltersChange={(filters) => {
-              // Converter FilterValue para o tipo esperado
               const convertedFilters: Partial<ContaPagarFilters> = {};
-              Object.keys(filters).forEach(key => {
-                const value = filters[key];
-                convertedFilters[key as keyof ContaPagarFilters] = Array.isArray(value)
-                  ? (value.length > 0 ? value[0] : null)
-                  : (value as string | number | boolean | null | undefined);
+              Object.entries(filters).forEach(([key, value]) => {
+                convertedFilters[key as keyof ContaPagarFilters] = Array.isArray(value) ? (value[0] || null) : (value as string | number | boolean | null | undefined);
               });
               tableFilters.setFilters(convertedFilters);
             }}
@@ -560,6 +546,28 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
             onAudit={handleAudit}
             auditEntity="ContaPagar"
             skipWrapper={true}
+            customControlsAfterActions={
+              <div className="d-flex align-items-center gap-2">
+                <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
+                <input
+                  type="date"
+                  id="dataVencimentoInicio"
+                  className="form-control form-control-sm"
+                  style={{ width: '150px' }}
+                  value={dataVencimentoInicio}
+                  onChange={(e) => setDataVencimentoInicio(e.target.value)}
+                />
+                <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
+                <input
+                  type="date"
+                  id="dataVencimentoFim"
+                  className="form-control form-control-sm"
+                  style={{ width: '150px' }}
+                  value={dataVencimentoFim}
+                  onChange={(e) => setDataVencimentoFim(e.target.value)}
+                />
+              </div>
+            }
           />
         </div>
 

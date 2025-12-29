@@ -63,4 +63,5 @@ export interface ListModalProps<T> {
   onAudit?: (item: T) => void | Promise<void>;
   auditEntity?: string;
   skipWrapper?: boolean;
+  customControlsAfterActions?: React.ReactNode;
 }

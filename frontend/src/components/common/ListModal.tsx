@@ -29,7 +29,8 @@ function ListModal<T extends { id: number | string }>({
   filterValues: _filterValues,
   onFilterChange: _onFilterChange,
   onFiltersChange,
-  onClearFilters: _onClearFilters
+  onClearFilters: _onClearFilters,
+  customControlsAfterActions
 }: ListModalProps<T> & {
   filters?: Array<{
     key: string;
@@ -105,7 +106,8 @@ function ListModal<T extends { id: number | string }>({
                 }
               })) : undefined
             }));
-          }, [bulkActions])
+          }, [bulkActions]),
+          customControlsAfterActions
         }}
         onSelectionChange={onSelectionChange}
         onSearch={(search, field) => {
