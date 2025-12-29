@@ -9,6 +9,9 @@ import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 import { CreateFornecedor } from '@/types';
+import { FornecedorService } from '@/services/fornecedorService';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { AxiosError } from 'axios';
 
 interface FornecedorModalProps {
   show: boolean;
@@ -66,8 +69,10 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
   const createMutation = useCreateFornecedor();
   const updateMutation = useUpdateFornecedor();
   const cepSearchedRef = useRef<string>('');
+  const lastCnpjConsultedRef = useRef<string>('');
 
   const { buscarCep } = useCep();
+  const { success, error, info } = useNotificationContext();
 
   // Resetar formulário quando modal fechar
   useEffect(() => {
@@ -76,6 +81,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
       setErrors({});
       setActiveTab('dados-basicos');
       cepSearchedRef.current = '';
+      lastCnpjConsultedRef.current = '';
     }
   }, [show]);
 
@@ -109,7 +115,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
     }
   }, [show, fornecedor, isEditing]);
 
-  const handleInputChange = (field: keyof FornecedorFormData, value: string) => {
+  const handleInputChange = async (field: keyof FornecedorFormData, value: string) => {
     // Limpar erro do campo quando começar a digitar
     if (errors[field]) {
       setErrors(prev => {
@@ -123,6 +129,63 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
     if (field === 'cpf_cnpj') {
       const formatted = formData.tipo_pessoa === 'FISICA' ? formatCPF(value) : formatCNPJ(value);
       setFormData(prev => ({ ...prev, cpf_cnpj: formatted }));
+      
+      // Se for CNPJ (pessoa jurídica) e estiver completo e válido, consultar dados
+      if (formData.tipo_pessoa === 'JURIDICA' && !isEditing) {
+        const cnpjLimpo = formatted.replace(/\D/g, '');
+        
+        // Verificar se CNPJ está completo (14 dígitos) e válido
+        if (cnpjLimpo.length === 14 && isValidCNPJ(formatted)) {
+          // Verificar se já consultou este CNPJ para evitar consultas duplicadas
+          if (lastCnpjConsultedRef.current === cnpjLimpo) {
+            return;
+          }
+
+          // Verificar se os campos já estão preenchidos (não sobrescrever se usuário já preencheu)
+          const camposVazios = !formData.nome_razao_social && !formData.nome_fantasia && !formData.logradouro;
+          
+          if (camposVazios) {
+            lastCnpjConsultedRef.current = cnpjLimpo;
+
+            try {
+              const response = await FornecedorService.consultarCnpj(cnpjLimpo);
+              
+              if (response.success && response.data) {
+                const dados = response.data;
+                
+                // Preencher campos automaticamente
+                setFormData(prev => ({
+                  ...prev,
+                  nome_razao_social: dados.nome_razao_social || prev.nome_razao_social,
+                  nome_fantasia: dados.nome_fantasia || prev.nome_fantasia,
+                  cep: dados.cep || prev.cep,
+                  logradouro: dados.logradouro || prev.logradouro,
+                  numero: dados.numero || prev.numero,
+                  complemento: dados.complemento || prev.complemento,
+                  bairro: dados.bairro || prev.bairro,
+                  cidade: dados.cidade || prev.cidade,
+                  estado: dados.estado || prev.estado
+                }));
+
+                success('Dados do CNPJ preenchidos automaticamente!');
+              }
+            } catch (err) {
+              const axiosError = err as AxiosError<{ message?: string; error?: string }>;
+              const status = axiosError?.response?.status;
+              
+              if (status === 404) {
+                info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
+              } else {
+                const errorMessage = axiosError?.response?.data?.message || 
+                                   axiosError?.response?.data?.error || 
+                                   'Erro ao consultar CNPJ. Tente novamente ou preencha os dados manualmente.';
+                error(errorMessage);
+              }
+            }
+          }
+        }
+      }
+      
       return;
     }
 

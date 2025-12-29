@@ -183,6 +183,27 @@ export class FornecedorService {
   static async delete(id: number): Promise<void> {
     await fornecedorServiceInstance.delete(id);
   }
+
+  /**
+   * Consultar dados do CNPJ na ReceitaWS
+   */
+  static async consultarCnpj(cnpj: string): Promise<ApiResponse<{
+    nome_razao_social: string;
+    nome_fantasia: string;
+    cep: string;
+    logradouro: string;
+    numero: string;
+    complemento: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    situacao?: string;
+    abertura?: string;
+    natureza_juridica?: string;
+    capital_social?: string;
+  }>> {
+    return defaultApiClient.get(`/fornecedores/consultar-cnpj/${cnpj}`);
+  }
 }
 
 /**
