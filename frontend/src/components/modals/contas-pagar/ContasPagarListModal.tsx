@@ -5,10 +5,12 @@ import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useAuditoria } from '@/hooks/useAuditoria';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { formatDateTime, formatDate, formatCurrency } from '@/utils/formatters';
 import { ContaPagar, ContaPagarFilters } from '@/types';
 import ListModal from '@/components/common/ListModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import DraggableModal from '@/components/common/DraggableModal';
 import ContaPagarModal from './ContaPagarModal';
 
 interface ContasPagarListModalProps {
@@ -31,6 +33,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
   const [selectedContaPagarId, setSelectedContaPagarId] = useState<number | null>(null);
   const [searchField, setSearchField] = useState<string>('numero_documento');
+  const isMobile = useIsMobile();
   
   // Hook de auditoria
   const auditoria = useAuditoria();
@@ -314,6 +317,55 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     ...apiFilters
   });
 
+  // Calcular resumo financeiro baseado nos dados filtrados
+  const resumoFinanceiro = useMemo(() => {
+    const contas = (contasPagarData?.data || []).filter(item => item.id != null);
+    
+    const valorTotal = contas.reduce((sum, item) => {
+      return sum + Number(item.valor || 0);
+    }, 0);
+
+    const valorBaixado = contas.reduce((sum, item) => {
+      const valorPago = Number(item.valor_pago || 0);
+      if (valorPago > 0) {
+        return sum + valorPago;
+      }
+      return sum;
+    }, 0);
+
+    const valorAberto = contas.reduce((sum, item) => {
+      if (item.status === 'PAGO' || item.status === 'CANCELADO') {
+        return sum;
+      }
+      const valor = Number(item.valor || 0);
+      const valorPago = Number(item.valor_pago || 0);
+      const valorAberto = valor - valorPago;
+      return sum + (valorAberto > 0 ? valorAberto : 0);
+    }, 0);
+
+    const valorTotalPago = contas.reduce((sum, item) => {
+      if (item.status === 'PAGO') {
+        return sum + Number(item.valor || 0);
+      }
+      return sum;
+    }, 0);
+
+    const valorCancelado = contas.reduce((sum, item) => {
+      if (item.status === 'CANCELADO') {
+        return sum + Number(item.valor || 0);
+      }
+      return sum;
+    }, 0);
+
+    return {
+      valorTotal,
+      valorBaixado,
+      valorAberto,
+      valorTotalPago,
+      valorCancelado
+    };
+  }, [contasPagarData?.data]);
+
   const deleteContaPagarMutation = useDeleteContaPagar();
   const duplicarContaPagarMutation = useDuplicarContaPagar();
 
@@ -454,59 +506,117 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     }
   ];
 
+  const modalContent = (
+    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0 }}>
+      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <ListModal
+            show={show}
+            onClose={() => {
+              clearSelection();
+              onClose();
+            }}
+            config={modal.config}
+            data={(contasPagarData?.data || []).filter(item => item.id != null)}
+            loading={isLoading}
+            selectedItems={selectedItem ? [selectedItem] : []}
+            onSelectionChange={handleSelectionChange}
+            search={tableFilters.search}
+            onSearchChange={(search, field) => {
+              tableFilters.setSearch(search);
+              setSearchField(field);
+            }}
+            onSearchFieldChange={setSearchField}
+            filters={modal.config.filters}
+            filterValues={tableFilters.filters}
+            onFilterChange={(key, value) => {
+              // Converter FilterValue para o tipo esperado (remover arrays)
+              const convertedValue = Array.isArray(value) 
+                ? (value.length > 0 ? value[0] : null)
+                : value;
+              tableFilters.setFilter(key as keyof ContaPagarFilters, convertedValue as string | number | boolean | null | undefined);
+            }}
+            onFiltersChange={(filters) => {
+              // Converter FilterValue para o tipo esperado
+              const convertedFilters: Partial<ContaPagarFilters> = {};
+              Object.keys(filters).forEach(key => {
+                const value = filters[key];
+                convertedFilters[key as keyof ContaPagarFilters] = Array.isArray(value)
+                  ? (value.length > 0 ? value[0] : null)
+                  : (value as string | number | boolean | null | undefined);
+              });
+              tableFilters.setFilters(convertedFilters);
+            }}
+            onClearFilters={() => {
+              tableFilters.resetFilters();
+            }}
+            pagination={pagination}
+            onPageChange={tableFilters.setPage}
+            limit={tableFilters.limit}
+            onLimitChange={tableFilters.setLimit}
+            refreshQueryKeys={['contas-pagar']}
+            refreshQueryFn={refetch}
+            bulkActions={bulkActions}
+            onAudit={handleAudit}
+            auditEntity="ContaPagar"
+            skipWrapper={true}
+          />
+        </div>
+
+        {/* Resumo Financeiro - Fora do container com scroll, fixo no final */}
+        {show && (contasPagarData?.data || []).filter(item => item.id != null).length > 0 && (
+          <div className="d-flex justify-content-end align-items-center p-3 bg-light rounded financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+            <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
+              <div className="text-end">
+                <div className="small text-muted">Valor:</div>
+                <strong>{formatCurrency(resumoFinanceiro.valorTotal)}</strong>
+              </div>
+              <div className="text-end">
+                <div className="small text-muted">Valor baixado:</div>
+                <strong>{formatCurrency(resumoFinanceiro.valorBaixado)}</strong>
+              </div>
+              <div className="text-end">
+                <div className="small text-muted">Valor aberto:</div>
+                <strong>{formatCurrency(resumoFinanceiro.valorAberto)}</strong>
+              </div>
+              <div className="text-end">
+                <div className="small text-muted">Valor total pago:</div>
+                <strong>{formatCurrency(resumoFinanceiro.valorTotalPago)}</strong>
+              </div>
+              <div className="text-end">
+                <div className="small text-muted">Valor cancelado:</div>
+                <strong>{formatCurrency(resumoFinanceiro.valorCancelado)}</strong>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (_skipWrapper) {
+    return (
+      <>
+        {modalContent}
+
+      </>
+    );
+  }
+
   return (
     <>
-      <ListModal
+      <DraggableModal
         show={show}
         onClose={() => {
           clearSelection();
           onClose();
         }}
-        config={modal.config}
-        data={(contasPagarData?.data || []).filter(item => item.id != null)}
-        loading={isLoading}
-        selectedItems={selectedItem ? [selectedItem] : []}
-        onSelectionChange={handleSelectionChange}
-        search={tableFilters.search}
-        onSearchChange={(search, field) => {
-          tableFilters.setSearch(search);
-          setSearchField(field);
-        }}
-        onSearchFieldChange={setSearchField}
-        filters={modal.config.filters}
-        filterValues={tableFilters.filters}
-        onFilterChange={(key, value) => {
-          // Converter FilterValue para o tipo esperado (remover arrays)
-          const convertedValue = Array.isArray(value) 
-            ? (value.length > 0 ? value[0] : null)
-            : value;
-          tableFilters.setFilter(key as keyof ContaPagarFilters, convertedValue as string | number | boolean | null | undefined);
-        }}
-        onFiltersChange={(filters) => {
-          // Converter FilterValue para o tipo esperado
-          const convertedFilters: Partial<ContaPagarFilters> = {};
-          Object.keys(filters).forEach(key => {
-            const value = filters[key];
-            convertedFilters[key as keyof ContaPagarFilters] = Array.isArray(value)
-              ? (value.length > 0 ? value[0] : null)
-              : (value as string | number | boolean | null | undefined);
-          });
-          tableFilters.setFilters(convertedFilters);
-        }}
-        onClearFilters={() => {
-          tableFilters.resetFilters();
-        }}
-        pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        limit={tableFilters.limit}
-        onLimitChange={tableFilters.setLimit}
-        refreshQueryKeys={['contas-pagar']}
-        refreshQueryFn={refetch}
-        bulkActions={bulkActions}
-        onAudit={handleAudit}
-        auditEntity="ContaPagar"
-        skipWrapper={_skipWrapper}
-      />
+        title={title}
+        size="lg"
+        className="no-padding"
+      >
+        {modalContent}
+      </DraggableModal>
 
       {showCreateModal && (
         <ContaPagarModal
