@@ -272,6 +272,11 @@ export class ContaPagarController {
               conta.id,
               conta.toJSON() as Record<string, unknown>
             );
+            logger.info('Auditoria de criação em lote registrada com sucesso', {
+              context: 'ContaPagarController',
+              action: 'store',
+              conta_id: conta.id
+            });
           } catch (auditError) {
             logger.error('Erro ao registrar auditoria de criação em lote', {
               context: 'ContaPagarController',
