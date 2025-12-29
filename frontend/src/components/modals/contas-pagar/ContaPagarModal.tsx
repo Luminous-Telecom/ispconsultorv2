@@ -209,11 +209,8 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
       }
       if (!formData.data_vencimento_final.trim()) {
         newErrors.data_vencimento_final = 'Data final é obrigatória';
-      }
-      if (formData.data_vencimento_inicial.trim() && formData.data_vencimento_final.trim()) {
-        if (formData.data_vencimento_inicial > formData.data_vencimento_final) {
-          newErrors.data_vencimento_final = 'Data final deve ser posterior à data inicial';
-        }
+      } else if (formData.data_vencimento_inicial.trim() && formData.data_vencimento_inicial > formData.data_vencimento_final) {
+        newErrors.data_vencimento_final = 'Data final deve ser posterior à data inicial';
       }
     }
 
@@ -239,7 +236,17 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
 
     const valorNum = parseFloat(formData.valor.replace(/\./g, '').replace(',', '.'));
     
-    const baseData: Record<string, unknown> = {
+    const processarChavePix = () => {
+      if (formData.tipo_pagamento !== 'PIX') return undefined;
+      const chave = formData.chave_pix.trim();
+      if (!chave) return undefined;
+      if (formData.tipo_chave_pix === 'CPF_CNPJ' || formData.tipo_chave_pix === 'CELULAR') {
+        return chave.replace(/\D/g, '');
+      }
+      return chave;
+    };
+
+    const submitData = {
       fornecedor_id: formData.fornecedor_id,
       valor: valorNum,
       tipo_pagamento: formData.tipo_pagamento,
@@ -248,24 +255,11 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
       observacoes: formData.observacoes.trim() || undefined,
       linha_digitavel: formData.tipo_pagamento === 'BOLETO' ? (formData.linha_digitavel.replace(/\D/g, '').trim() || undefined) : undefined,
       tipo_chave_pix: formData.tipo_pagamento === 'PIX' ? (formData.tipo_chave_pix || undefined) : undefined,
-      chave_pix: formData.tipo_pagamento === 'PIX' ? (() => {
-        const chave = formData.chave_pix.trim();
-        if (!chave) return undefined;
-        if (formData.tipo_chave_pix === 'CPF_CNPJ' || formData.tipo_chave_pix === 'CELULAR') {
-          return chave.replace(/\D/g, '');
-        }
-        return chave;
-      })() : undefined
-    };
-
-    if (formData.tipo_criacao === 'lote') {
-      baseData.data_vencimento_inicial = formData.data_vencimento_inicial;
-      baseData.data_vencimento_final = formData.data_vencimento_final;
-    } else {
-      baseData.data_vencimento = formData.data_vencimento;
-    }
-
-    const submitData = baseData as CreateContaPagar & { data_vencimento_inicial?: string; data_vencimento_final?: string };
+      chave_pix: processarChavePix(),
+      ...(formData.tipo_criacao === 'lote' 
+        ? { data_vencimento_inicial: formData.data_vencimento_inicial, data_vencimento_final: formData.data_vencimento_final }
+        : { data_vencimento: formData.data_vencimento })
+    } as CreateContaPagar & { data_vencimento_inicial?: string; data_vencimento_final?: string };
 
     try {
       if (isEditing && contaPagarId) {

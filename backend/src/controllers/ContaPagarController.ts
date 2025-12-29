@@ -44,21 +44,18 @@ export class ContaPagarController {
       }
 
       if (dataInicio || dataFim) {
-        const dateFilters: any = {};
+        where.data_vencimento = {};
         if (dataInicio) {
           const dataInicioDate = normalizeDateForDb(dataInicio);
           if (dataInicioDate) {
-            dateFilters[Op.gte] = dataInicioDate;
+            where.data_vencimento[Op.gte] = dataInicioDate;
           }
         }
         if (dataFim) {
           const dataFimDate = normalizeDateForDb(dataFim);
           if (dataFimDate) {
-            dateFilters[Op.lte] = dataFimDate;
+            where.data_vencimento[Op.lte] = dataFimDate;
           }
-        }
-        if (Object.keys(dateFilters).length > 0) {
-          where.data_vencimento = dateFilters;
         }
       }
 
@@ -224,48 +221,39 @@ export class ContaPagarController {
         }
 
         const contasCriadas = [];
+        const dadosBase = {
+          fornecedor_id: value.fornecedor_id,
+          valor: value.valor,
+          tipo_pagamento: value.tipo_pagamento,
+          numero_documento: value.numero_documento,
+          nota_fiscal: value.nota_fiscal,
+          observacoes: value.observacoes,
+          linha_digitavel: value.linha_digitavel,
+          tipo_chave_pix: value.tipo_chave_pix,
+          chave_pix: value.chave_pix,
+          valor_pago: 0,
+          status: 'A_PAGAR' as const,
+          data_cadastro: new Date()
+        };
 
         for (let i = 0; i < quantidadeContas; i++) {
-          // Calcular data de vencimento distribuída no intervalo
-          let dataVencimento: Date;
-          if (quantidadeContas === 1) {
-            dataVencimento = new Date(dataInicial);
-          } else if (i === quantidadeContas - 1) {
-            // Última conta sempre usa data final
-            dataVencimento = new Date(dataFinal);
-          } else {
-            // Distribuir datas uniformemente
-            const diasAdicionar = Math.round((i * totalDias) / (quantidadeContas - 1));
-            dataVencimento = new Date(dataInicial);
-            dataVencimento.setDate(dataVencimento.getDate() + diasAdicionar);
-          }
+          const dataVencimento = i === quantidadeContas - 1 
+            ? new Date(dataFinal)
+            : (() => {
+                const data = new Date(dataInicial);
+                data.setDate(data.getDate() + Math.round((i * totalDias) / (quantidadeContas - 1)));
+                return data;
+              })();
 
           const conta = await ContaPagar.create({
-            fornecedor_id: value.fornecedor_id,
-            data_vencimento: dataVencimento,
-            valor: value.valor,
-            tipo_pagamento: value.tipo_pagamento,
-            numero_documento: value.numero_documento,
-            nota_fiscal: value.nota_fiscal,
-            observacoes: value.observacoes,
-            linha_digitavel: value.linha_digitavel,
-            tipo_chave_pix: value.tipo_chave_pix,
-            chave_pix: value.chave_pix,
-            valor_pago: 0,
-            status: 'A_PAGAR',
-            data_cadastro: new Date()
+            ...dadosBase,
+            data_vencimento: dataVencimento
           }, { transaction });
 
-          // Registrar auditoria
           try {
-            await registrarCriacao(
-              req,
-              'ContaPagar',
-              conta.id,
-              conta.toJSON() as Record<string, unknown>
-            );
+            await registrarCriacao(req, 'ContaPagar', conta.id, conta.toJSON() as Record<string, unknown>);
           } catch (auditError) {
-            logger.error('Erro ao registrar auditoria de criação em lote', {
+            logger.error('Erro ao registrar auditoria', {
               context: 'ContaPagarController',
               action: 'store',
               conta_id: conta.id,
@@ -278,18 +266,10 @@ export class ContaPagarController {
 
         await transaction.commit();
 
-        // Buscar contas criadas com relacionamentos
-        const contasComRelacionamentos = await ContaPagar.findAll({
-          where: { id: contasCriadas.map(c => c.id) },
-          include: [
-            { association: 'fornecedor', required: false }
-          ]
-        });
-
         res.status(201).json({
           success: true,
           message: `${contasCriadas.length} conta(s) criada(s) com sucesso`,
-          data: contasComRelacionamentos
+          data: contasCriadas
         });
       } else {
         // Criar uma única conta
