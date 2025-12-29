@@ -97,7 +97,7 @@ export class ErrorHandler {
           // Rotas que não devem ser tratadas como erro de autenticação
           const optionalRoutes = [
             'consultar', 'mensagens-', 'servidores-', 'servidor-', 
-            'dados-empresa', 'modelos-', 'modelo-', '/parametros'
+            'dados-empresa', 'modelos-', 'modelo-', '/parametros', 'buscar-cep'
           ];
           
           const isOptionalRoute = optionalRoutes.some(route => 

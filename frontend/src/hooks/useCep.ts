@@ -17,19 +17,21 @@ export const useCep = () => {
     setCepData(null);
 
     try {
-      // Tentar primeiro com ViaCEP
+      // Tentar primeiro com ViaCEP (API externa, não precisa de autenticação)
       const data = await CepService.buscarCep(cep);
       setCepData(data);
       success('CEP encontrado com sucesso!');
       return data;
     } catch (viaCepError) {
+      // Se ViaCEP falhar, tentar API própria apenas se necessário
       try {
-        // Fallback para API própria
         const data = await CepService.buscarCepApi(cep);
         setCepData(data);
         success('CEP encontrado com sucesso!');
         return data;
-      } catch (apiError) {
+      } catch (apiError: unknown) {
+        // Sempre tratar como erro de CEP não encontrado, não propagar para evitar logout
+        // Ignorar qualquer erro de autenticação ou rede
         error('CEP não encontrado. Verifique se o CEP está correto.');
         return null;
       }

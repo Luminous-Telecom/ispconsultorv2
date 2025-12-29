@@ -69,9 +69,11 @@ export class CepService {
         return response.data;
       }
 
-      throw new Error(response.message || 'Erro ao buscar CEP');
+      // Criar um erro que não cause logout - apenas erro de CEP não encontrado
+      throw new Error(response.message || 'CEP não encontrado');
     } catch (error) {
-      throw error;
+      // Se for qualquer erro, tratar como CEP não encontrado para evitar logout
+      throw new Error('CEP não encontrado');
     }
   }
 

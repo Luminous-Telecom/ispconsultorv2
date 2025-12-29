@@ -221,7 +221,8 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
           }));
         }
       }).catch(() => {
-        // Ignorar erros de CEP
+        // Ignorar todos os erros de CEP silenciosamente para evitar logout
+        // O erro já foi tratado no hook useCep
       });
     }
   }, [formData.cep, show, buscarCep, isLoadingFornecedor, isEditing]);
