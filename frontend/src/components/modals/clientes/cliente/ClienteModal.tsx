@@ -123,7 +123,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     handleImprimirTodosEmAberto: impressaoHook.handleImprimirTodosEmAberto,
     handleImprimirContrato: impressaoHook.handleImprimirContrato,
     handleImprimirTermoAdesao: impressaoHook.handleImprimirTermoAdesao,
-    handleImprimirContratoPermanencia: impressaoHook.handleImprimirContratoPermanencia
+    handleImprimirContratoPermanencia: impressaoHook.handleImprimirContratoPermanencia,
+    handleImprimirRecibos: impressaoHook.handleImprimirRecibos
   });
 
   // Determinar se as abas Contratos e Financeiro devem ser habilitadas

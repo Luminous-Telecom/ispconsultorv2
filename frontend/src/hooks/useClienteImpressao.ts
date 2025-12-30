@@ -33,6 +33,9 @@ interface UseClienteImpressaoReturn {
   handleImprimirTermoAdesao: (contratoId: number) => Promise<void>;
   handleImprimirContratoPermanencia: (contratoId: number) => Promise<void>;
   
+  // Função de impressão para recibos
+  handleImprimirRecibos: (selectedItems: TituloItem[]) => Promise<void>;
+  
   // Handler para fechar modal e limpar URL
   handleCloseImprimirModal: () => void;
 }
@@ -260,6 +263,54 @@ export const useClienteImpressao = ({
     }
   };
 
+  const handleImprimirRecibos = async (selectedItems: TituloItem[]) => {
+    if (selectedItems.length === 0) {
+      error('Nenhum título selecionado');
+      return;
+    }
+
+    // Filtrar apenas itens pagos
+    const itensPagos = selectedItems.filter(item => item.status === 'pago' || item.status === 'pago_atraso');
+    
+    if (itensPagos.length === 0) {
+      error('Nenhum título pago selecionado. Apenas títulos pagos podem ter recibo.');
+      return;
+    }
+
+    // Abrir modal imediatamente
+    setShowImprimirModal(true);
+    setIsGeneratingPdf(true);
+    
+    // Limpar URL anterior se existir
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+    
+    try {
+      const ids = itensPagos.map(item => item.id).join(',');
+      const axios = (await import('axios')).default;
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await axios.get(`/api/recibo/web/multiplos?ids=${ids}`, {
+        responseType: 'blob',
+        timeout: 120000,
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+
+      const url = window.URL.createObjectURL(response.data);
+      setPdfUrl(url);
+      setIsGeneratingPdf(false);
+      success(`${itensPagos.length} recibo(s) gerado(s) com sucesso!`);
+    } catch (err) {
+      error('Erro ao gerar recibos');
+      setShowImprimirModal(false);
+      setIsGeneratingPdf(false);
+    }
+  };
+
   // Combinar pdfUrl do hook de contratos com pdfUrl local (outros documentos)
   const combinedPdfUrl = impressaoContratoHook.pdfUrl || pdfUrl;
   // Combinar isGeneratingPdf do hook de contratos com estado local (títulos)
@@ -292,6 +343,7 @@ export const useClienteImpressao = ({
     handleImprimirContrato,
     handleImprimirTermoAdesao,
     handleImprimirContratoPermanencia,
+    handleImprimirRecibos,
     handleCloseImprimirModal: handleCloseImprimirModalCombined
   };
 };

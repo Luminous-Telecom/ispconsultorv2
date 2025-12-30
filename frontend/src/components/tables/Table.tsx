@@ -1423,22 +1423,31 @@ function Table<T extends { id: number | string }>({
                         className="dropdown-menu show" 
                         style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
                       >
-                        {bulkAction.dropdown.map((item, itemIndex) => (
-                          <li key={itemIndex}>
-                            <button
-                              type="button"
-                              className="dropdown-item"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                item.action(state.selectedItems);
-                                setOpenDropdown(null);
-                              }}
-                            >
-                              {item.label}
-                            </button>
-                          </li>
-                        ))}
+                        {bulkAction.dropdown.map((item, itemIndex) => {
+                          const isItemDisabled = typeof item.disabled === 'function' 
+                            ? item.disabled(state.selectedItems) 
+                            : item.disabled || false;
+                          
+                          return (
+                            <li key={itemIndex}>
+                              <button
+                                type="button"
+                                className="dropdown-item"
+                                disabled={isItemDisabled}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (!isItemDisabled) {
+                                    item.action(state.selectedItems);
+                                    setOpenDropdown(null);
+                                  }
+                                }}
+                              >
+                                {item.label}
+                              </button>
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                   </div>

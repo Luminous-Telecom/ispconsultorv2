@@ -197,6 +197,54 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     }
   }, [selectedItems, error, success, pdfUrl]);
 
+  const handleImprimirRecibos = useCallback(async () => {
+    if (selectedItems.length === 0) {
+      error('Nenhum título selecionado');
+      return;
+    }
+
+    // Filtrar apenas itens pagos
+    const itensPagos = selectedItems.filter(item => item.status === 'pago' || item.status === 'pago_atraso');
+    
+    if (itensPagos.length === 0) {
+      error('Nenhum título pago selecionado. Apenas títulos pagos podem ter recibo.');
+      return;
+    }
+
+    // Abrir modal imediatamente
+    setShowImprimirModal(true);
+    setIsGeneratingPdf(true);
+    
+    // Limpar URL anterior se existir
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+    
+    try {
+      const ids = itensPagos.map(item => item.id).join(',');
+      const axios = (await import('axios')).default;
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await axios.get(`/api/recibo/web/multiplos?ids=${ids}`, {
+        responseType: 'blob',
+        timeout: 120000,
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+
+      const url = window.URL.createObjectURL(response.data);
+      setPdfUrl(url);
+      setIsGeneratingPdf(false);
+      success(`${itensPagos.length} recibo(s) gerado(s) com sucesso!`);
+    } catch (err) {
+      error('Erro ao gerar recibos');
+      setShowImprimirModal(false);
+      setIsGeneratingPdf(false);
+    }
+  }, [selectedItems, error, success, pdfUrl]);
+
   const handleImprimirTodosEmAberto = useCallback(async () => {
     if (!titulos || titulos.length === 0) {
       error('Nenhum título encontrado');
@@ -497,11 +545,21 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           {
             label: 'Abertos',
             action: handleImprimirTodosEmAberto
+          },
+          {
+            label: 'Recibo',
+            action: handleImprimirRecibos,
+            disabled: (selectedItems: Titulo[]) => {
+              if (selectedItems.length === 0) return true;
+              // Apenas itens pagos podem ter recibo
+              const itensPagos = selectedItems.filter(item => item.status === 'pago' || item.status === 'pago_atraso');
+              return itensPagos.length === 0;
+            }
           }
         ]
       }
     ];
-  }, [success, error, queryClient, refetch, handleImprimirSelecionados, handleImprimirTodosEmAberto]);
+  }, [success, error, queryClient, refetch, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos]);
 
   const modalContent = (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>

@@ -10,6 +10,10 @@ router.post('/', ModeloReciboController.create);
 // Rotas para variáveis
 router.get('/variaveis/disponiveis', ModeloReciboController.listarVariaveis);
 
+// Rota para imprimir recibos de múltiplos títulos pagos (DEVE VIR ANTES da rota com :id)
+router.get('/web/multiplos', ModeloReciboController.imprimirRecibosMultiplos);
+router.post('/web/multiplos', ModeloReciboController.imprimirRecibosMultiplos);
+
 // Rotas para PDFs
 router.get('/:id/pdf', ModeloReciboController.generatePdf);
 router.get('/:id/pdf-teste', ModeloReciboController.generateTestPdf);

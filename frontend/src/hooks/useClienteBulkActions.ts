@@ -32,6 +32,7 @@ interface UseClienteBulkActionsParams {
   handleImprimirContrato: (contratoId: number) => Promise<void>;
   handleImprimirTermoAdesao: (contratoId: number) => Promise<void>;
   handleImprimirContratoPermanencia: (contratoId: number) => Promise<void>;
+  handleImprimirRecibos: (selectedItems: TituloItem[]) => Promise<void>;
 }
 
 interface UseClienteBulkActionsReturn {
@@ -71,7 +72,8 @@ export const useClienteBulkActions = ({
   handleImprimirTodosEmAberto,
   handleImprimirContrato,
   handleImprimirTermoAdesao,
-  handleImprimirContratoPermanencia
+  handleImprimirContratoPermanencia,
+  handleImprimirRecibos
 }: UseClienteBulkActionsParams): UseClienteBulkActionsReturn => {
   const { success, error, info } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -279,6 +281,22 @@ export const useClienteBulkActions = ({
     }
   };
 
+  const handleImprimirRecibosWrapper = async (items: CarneParcela[]) => {
+    const tituloItems: TituloItem[] = items.map(item => ({
+      id: item.id,
+      numero_titulo: (item.numero_titulo || item.numero_parcela || `Título ${item.id}`).toString(),
+      valor_parcela: item.valor || item.valor_parcela || 0,
+      data_vencimento: item.data_vencimento,
+      status: item.status,
+      valor_pago: item.valor_pago || 0,
+      data_pagamento: item.data_pagamento || null,
+      charge_id: item.charge_id || null,
+      cliente: undefined
+    }));
+    
+    await handleImprimirRecibos(tituloItems);
+  };
+
   // Ações em lote para títulos
   const titulosBulkActions: BulkAction<CarneParcela>[] = [
     {
@@ -347,6 +365,16 @@ export const useClienteBulkActions = ({
         {
           label: 'Abertos',
           action: handleImprimirTodosEmAberto
+        },
+        {
+          label: 'Recibo',
+          action: () => handleImprimirRecibosWrapper(selectedItems as CarneParcela[]),
+          disabled: (selectedItems: CarneParcela[]) => {
+            if (selectedItems.length === 0) return true;
+            // Apenas itens pagos podem ter recibo
+            const itensPagos = selectedItems.filter(item => item.status === 'pago' || item.status === 'pago_atraso');
+            return itensPagos.length === 0;
+          }
         }
       ]
     },

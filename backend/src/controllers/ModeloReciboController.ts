@@ -1,14 +1,17 @@
 import { Request, Response } from 'express';
-import { ModeloRecibo } from '../models/ModeloRecibo';
+import { ModeloDocumento } from '../models/ModeloDocumento';
 import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
+import { Titulo } from '../models/Titulo';
+import { Op } from 'sequelize';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import { PDFGenerationService } from '../services/pdf-generation/PDFGenerationService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
 import { setAuditData } from '../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../types/auth';
+import type { TituloComRelacoes } from './titulos/types';
 
 export class ModeloReciboController {
   /**
@@ -16,7 +19,8 @@ export class ModeloReciboController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const recibos = await ModeloRecibo.findAll({
+      const recibos = await ModeloDocumento.findAll({
+        where: { tipo: 'recibo' },
         order: [['created_at', 'DESC']],
       });
 
@@ -41,7 +45,12 @@ export class ModeloReciboController {
     try {
       const { id } = req.params;
 
-      const recibo = await ModeloRecibo.findByPk(id);
+      const recibo = await ModeloDocumento.findOne({
+        where: { 
+          id: parseInt(id),
+          tipo: 'recibo'
+        }
+      });
 
       if (!recibo) {
         res.status(404).json({
@@ -72,8 +81,9 @@ export class ModeloReciboController {
     try {
       const { nome, conteudo, descricao, ativo, tamanho_maximo, tipos_permitidos, retencao_dias, auto_backup, criptografia } = req.body;
 
-      const recibo = await ModeloRecibo.create({
+      const recibo = await ModeloDocumento.create({
         nome,
+        tipo: 'recibo',
         conteudo,
         descricao,
         ativo: ativo !== undefined ? ativo : true,
@@ -86,7 +96,7 @@ export class ModeloReciboController {
 
       await registrarCriacao(
         req as AuthenticatedRequest,
-        'ModeloRecibo',
+        'ModeloDocumento',
         recibo.id,
         recibo.toJSON() as unknown as Record<string, unknown>
       );
@@ -113,7 +123,12 @@ export class ModeloReciboController {
       const { id } = req.params;
       const updateData = req.body;
 
-      const recibo = await ModeloRecibo.findByPk(id);
+      const recibo = await ModeloDocumento.findOne({
+        where: { 
+          id: parseInt(id),
+          tipo: 'recibo'
+        }
+      });
 
       if (!recibo) {
         res.status(404).json({
@@ -124,7 +139,9 @@ export class ModeloReciboController {
       }
 
       const dadosAnteriores = recibo.toJSON() as unknown as Record<string, unknown>;
-      await recibo.update(updateData);
+      // Garantir que o tipo não seja alterado
+      const { tipo, ...dataToUpdate } = updateData;
+      await recibo.update(dataToUpdate);
       await recibo.reload();
 
       const dadosNovos = recibo.toJSON() as unknown as Record<string, unknown>;
@@ -132,7 +149,7 @@ export class ModeloReciboController {
 
       await registrarAtualizacao(
         req as AuthenticatedRequest,
-        'ModeloRecibo',
+        'ModeloDocumento',
         recibo.id,
         dadosAnteriores,
         dadosNovos
@@ -159,7 +176,12 @@ export class ModeloReciboController {
     try {
       const { id } = req.params;
 
-      const recibo = await ModeloRecibo.findByPk(id);
+      const recibo = await ModeloDocumento.findOne({
+        where: { 
+          id: parseInt(id),
+          tipo: 'recibo'
+        }
+      });
 
       if (!recibo) {
         res.status(404).json({
@@ -175,7 +197,7 @@ export class ModeloReciboController {
 
       await registrarExclusao(
         req as AuthenticatedRequest,
-        'ModeloRecibo',
+        'ModeloDocumento',
         recibo.id,
         dadosAnteriores
       );
@@ -200,7 +222,12 @@ export class ModeloReciboController {
     try {
       const { id } = req.params;
 
-      const recibo = await ModeloRecibo.findByPk(id);
+      const recibo = await ModeloDocumento.findOne({
+        where: { 
+          id: parseInt(id),
+          tipo: 'recibo'
+        }
+      });
 
       if (!recibo) {
         res.status(404).json({
@@ -241,7 +268,12 @@ export class ModeloReciboController {
       const { id } = req.params;
       const { cliente_id } = req.query;
 
-      const recibo = await ModeloRecibo.findByPk(id);
+      const recibo = await ModeloDocumento.findOne({
+        where: { 
+          id: parseInt(id),
+          tipo: 'recibo'
+        }
+      });
 
       if (!recibo) {
         res.status(404).json({
@@ -449,6 +481,129 @@ export class ModeloReciboController {
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Imprimir recibos de múltiplos títulos pagos
+   */
+  static async imprimirRecibosMultiplos(req: Request, res: Response): Promise<void> {
+    try {
+      const idsParam = req.query.ids as string;
+      
+      if (!idsParam) {
+        res.status(400).json({ success: false, message: 'IDs dos títulos não fornecidos' });
+        return;
+      }
+
+      const ids = idsParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+
+      if (ids.length === 0) {
+        res.status(400).json({ success: false, message: 'IDs dos títulos inválidos' });
+        return;
+      }
+
+      // Buscar títulos pagos com suas relações
+      const titulos = await Titulo.findAll({
+        where: { 
+          id: { [Op.in]: ids },
+          status: { [Op.in]: ['pago', 'pago_atraso'] }
+        },
+        include: [
+          { model: Cliente, as: 'cliente', required: false },
+          { model: Plano, as: 'plano', required: false }
+        ]
+      });
+
+      if (titulos.length === 0) {
+        res.status(404).json({ success: false, message: 'Nenhum título pago encontrado' });
+        return;
+      }
+
+      const recibo = await ModeloDocumento.findOne({
+        where: { tipo: 'recibo', ativo: true },
+        order: [['created_at', 'DESC']]
+      });
+
+      if (!recibo) {
+        res.status(404).json({ success: false, message: 'Nenhum modelo de recibo encontrado. Configure um modelo de recibo primeiro.' });
+        return;
+      }
+
+      const recibosHtml: string[] = [];
+
+      for (const titulo of titulos) {
+        try {
+          const tituloComRelacoes = titulo as TituloComRelacoes;
+          const cliente = tituloComRelacoes.cliente;
+
+          if (!cliente) {
+            logger.warn(`Título ${titulo.id} sem cliente associado`);
+            continue;
+          }
+
+          const contrato = titulo.contrato_id 
+            ? await Contrato.findByPk(titulo.contrato_id, {
+                include: [{ model: Plano, as: 'plano', required: false }]
+              })
+            : null;
+
+          const conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
+            recibo.conteudo,
+            { cliente, contrato: contrato || undefined, titulo: tituloComRelacoes }
+          );
+
+          recibosHtml.push(`<div style="page-break-after: always;">${conteudoProcessado}</div>`);
+        } catch (error) {
+          logger.error(`Erro ao processar recibo para título ${titulo.id}:`, error);
+        }
+      }
+
+      if (recibosHtml.length === 0) {
+        res.status(500).json({ success: false, message: 'Nenhum recibo pôde ser gerado' });
+        return;
+      }
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 0; }
+            img { max-width: 100%; height: auto; page-break-inside: avoid; }
+            table { width: 100%; border-collapse: collapse; }
+            p { margin: 0; padding: 0; }
+            p:empty { display: none; }
+          </style>
+        </head>
+        <body>${recibosHtml.join('')}</body>
+        </html>
+      `;
+
+      // Se for para imprimir diretamente, retornar HTML
+      if (req.query.print === 'true') {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.send(htmlContent);
+        return;
+      }
+
+      // Caso contrário, gerar PDF
+      const pdfBuffer = await PDFGenerationService.generateFromHtml(htmlContent, 'html-pdf-node', {
+        format: 'A4',
+        margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
+        printBackground: true
+      });
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="recibos-pagamento.pdf"`);
+      res.send(pdfBuffer);
+    } catch (error) {
+      logger.error('Erro ao imprimir recibos múltiplos:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao gerar recibos'
       });
     }
   }
