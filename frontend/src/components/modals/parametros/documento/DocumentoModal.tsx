@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import DocumentoSistemaService from '@/services/documentoSistemaService';
@@ -68,6 +68,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     }
   }, [documento, show]);
 
+
   const getTipoLabel = (tipo: string) => {
     const labels = {
       contrato: 'Contrato',
@@ -77,6 +78,17 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     };
     return labels[tipo as keyof typeof labels] || 'Documento';
   };
+
+  // Service functions
+  const getService = useCallback(() => {
+    switch (tipo) {
+      case 'contrato': return DocumentoSistemaService;
+      case 'recibo': return ModeloReciboService;
+      case 'carta_cobranca': return ModeloCartaService;
+      case 'termo': return ModeloTermoService;
+      default: return DocumentoSistemaService;
+    }
+  }, [tipo]);
 
   // Carregar dados do documento atual
   useEffect(() => {
@@ -90,34 +102,49 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     }
 
     const loadData = async () => {
-      const conteudoAtual = (currentDocumento as { conteudo?: string } | null)?.conteudo ?? '';
+      const service = getService();
+      try {
+        const response = await service.getById(currentDocumento.id);
+        const doc = response.success && response.data ? response.data : currentDocumento;
+        const conteudo = (doc as { conteudo?: string })?.conteudo ?? '';
 
-      if (tipo === 'contrato') {
-        try {
-          const response = await DocumentoSistemaService.getModelosByModeloContrato(currentDocumento.id);
+        if (tipo === 'contrato') {
+          try {
+            const modelos = await DocumentoSistemaService.getModelosByModeloContrato(doc.id);
+            setFormData({
+              nome: doc.nome,
+              descricao: doc.descricao || '',
+              conteudo,
+              conteudo_contrato: modelos.success ? (modelos.data.modelo_contrato_conteudo || '') : conteudo,
+              conteudo_adesao: modelos.success ? (modelos.data.modelo_termo_adesao || '') : '',
+              conteudo_permanencia: modelos.success ? (modelos.data.modelo_contrato_permanencia || '') : '',
+            });
+          } catch {
+            setFormData({
+              nome: doc.nome,
+              descricao: doc.descricao || '',
+              conteudo,
+              conteudo_contrato: conteudo,
+              conteudo_adesao: '',
+              conteudo_permanencia: '',
+            });
+          }
+        } else {
           setFormData({
-            nome: currentDocumento.nome,
-            descricao: currentDocumento.descricao || '',
-            conteudo: conteudoAtual,
-            conteudo_contrato: response.success ? (response.data.modelo_contrato_conteudo || '') : conteudoAtual,
-            conteudo_adesao: response.success ? (response.data.modelo_termo_adesao || '') : '',
-            conteudo_permanencia: response.success ? (response.data.modelo_contrato_permanencia || '') : '',
-          });
-        } catch {
-          setFormData({
-            nome: currentDocumento.nome,
-            descricao: currentDocumento.descricao || '',
-            conteudo: conteudoAtual,
-            conteudo_contrato: conteudoAtual,
+            nome: doc.nome,
+            descricao: doc.descricao || '',
+            conteudo,
+            conteudo_contrato: '',
             conteudo_adesao: '',
             conteudo_permanencia: '',
           });
         }
-      } else {
+      } catch {
+        const conteudo = (currentDocumento as { conteudo?: string })?.conteudo ?? '';
         setFormData({
           nome: currentDocumento.nome,
           descricao: currentDocumento.descricao || '',
-          conteudo: conteudoAtual,
+          conteudo,
           conteudo_contrato: '',
           conteudo_adesao: '',
           conteudo_permanencia: '',
@@ -126,7 +153,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     };
 
     loadData();
-  }, [currentDocumento, show, tipo]);
+  }, [currentDocumento?.id, show, tipo, currentDocumento, getService]);
 
   useEffect(() => {
     if (!show && pdfUrl) {
@@ -137,17 +164,6 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       setShowImprimirDropdown(false);
     }
   }, [show, pdfUrl]);
-
-  // Service functions
-  const getService = () => {
-    switch (tipo) {
-      case 'contrato': return DocumentoSistemaService;
-      case 'recibo': return ModeloReciboService;
-      case 'carta_cobranca': return ModeloCartaService;
-      case 'termo': return ModeloTermoService;
-      default: return DocumentoSistemaService;
-    }
-  };
 
   const createDocumentoMutation = useMutation({
     mutationFn: async (data: { nome: string; descricao?: string; conteudo: string }): Promise<DocumentoUnion> => {
@@ -185,14 +201,11 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       onSuccess?.(createdDocumento);
     },
     onError: (err: unknown) => {
-      if (err instanceof Error && 'response' in err) {
-        const axiosError = err as AxiosError<{ message: string }>;
-        error( axiosError.response?.data?.message || 'Erro ao criar documento');
-      } else if (err instanceof Error) {
-        error( err.message || 'Erro ao criar documento');
-      } else {
-        error( 'Erro ao criar documento');
-      }
+      const message = err instanceof Error && 'response' in err
+        ? (err as AxiosError<{ message: string }>).response?.data?.message || 'Erro ao criar documento'
+        : err instanceof Error ? (err.message || 'Erro ao criar documento')
+        : 'Erro ao criar documento';
+      error(message);
     }
   });
 
@@ -224,8 +237,9 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         return updatedResponse.data;
       }
       
-      const response = await service.update(currentDocumento.id, data as Record<string, unknown>);
-      return response.data;
+      await service.update(currentDocumento.id, data as Record<string, unknown>);
+      const updatedResponse = await service.getById(currentDocumento.id);
+      return updatedResponse.data;
     },
     onSuccess: (updatedDocumento) => {
       success('Documento salvo com sucesso');
@@ -236,14 +250,11 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       onSuccess?.(updatedDocumento);
     },
     onError: (err: unknown) => {
-      if (err instanceof Error && 'response' in err) {
-        const axiosError = err as AxiosError<{ message: string }>;
-        error( axiosError.response?.data?.message || 'Erro ao salvar documento');
-      } else if (err instanceof Error) {
-        error( err.message || 'Erro ao salvar documento');
-      } else {
-        error( 'Erro ao salvar documento');
-      }
+      const message = err instanceof Error && 'response' in err
+        ? (err as AxiosError<{ message: string }>).response?.data?.message || 'Erro ao salvar documento'
+        : err instanceof Error ? (err.message || 'Erro ao salvar documento')
+        : 'Erro ao salvar documento';
+      error(message);
     }
   });
 

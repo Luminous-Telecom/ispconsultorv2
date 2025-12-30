@@ -139,8 +139,8 @@ export class ModeloReciboController {
       }
 
       const dadosAnteriores = recibo.toJSON() as unknown as Record<string, unknown>;
-      // Garantir que o tipo não seja alterado
       const { tipo, ...dataToUpdate } = updateData;
+      
       await recibo.update(dataToUpdate);
       await recibo.reload();
 
