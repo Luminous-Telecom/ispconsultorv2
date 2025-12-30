@@ -999,9 +999,7 @@ function Table<T extends { id: number | string }>({
                 onRowClick?.(item, index);
               }}
               style={{ 
-                cursor: 'pointer',
-                backgroundColor: isSelected ? '#0d6efd' : 'inherit',
-                color: isSelected ? 'white' : 'inherit'
+                cursor: 'pointer'
               }}
             >
               {/* Checkbox de seleção */}
@@ -1011,8 +1009,6 @@ function Table<T extends { id: number | string }>({
                   style={{ 
                     fontSize: '0.75rem', 
                     padding: '0.5rem',
-                    backgroundColor: isSelected ? '#0d6efd' : 'inherit',
-                    color: isSelected ? 'white' : 'inherit',
                     width: '40px'
                   }}
                   onClick={(e) => e.stopPropagation()}

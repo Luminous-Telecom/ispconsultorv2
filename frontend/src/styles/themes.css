@@ -1300,14 +1300,37 @@ body {
   background: #e8eaed;
 }
 
-/* Linha selecionada - Simplificado */
-.table tbody tr.table-active {
+/* Linha selecionada - Deve sobrescrever todas as outras regras */
+.table tbody tr.table-active,
+.table tbody tr.table-active:nth-child(even),
+.table tbody tr.table-active:nth-child(odd) {
   background-color: #6366f1 !important;
 }
 
 .table tbody tr.table-active td,
-.table tbody tr.table-active th {
+.table tbody tr.table-active th,
+.table tbody tr.table-active:nth-child(even) td,
+.table tbody tr.table-active:nth-child(even) th,
+.table tbody tr.table-active:nth-child(odd) td,
+.table tbody tr.table-active:nth-child(odd) th {
   background-color: #6366f1 !important;
+  color: white !important;
+}
+
+/* Hover em linha selecionada - tom mais claro para diferenciar */
+.table tbody tr.table-active:hover,
+.table tbody tr.table-active:nth-child(even):hover,
+.table tbody tr.table-active:nth-child(odd):hover {
+  background-color: #818cf8 !important;
+}
+
+.table tbody tr.table-active:hover td,
+.table tbody tr.table-active:hover th,
+.table tbody tr.table-active:nth-child(even):hover td,
+.table tbody tr.table-active:nth-child(even):hover th,
+.table tbody tr.table-active:nth-child(odd):hover td,
+.table tbody tr.table-active:nth-child(odd):hover th {
+  background-color: #818cf8 !important;
   color: white !important;
 }
 
@@ -2568,6 +2591,40 @@ body {
 
 [data-theme="dark"] .table tbody tr:nth-child(even):hover {
   background-color: #334155 !important;
+}
+
+/* Linhas selecionadas no tema dark - devem sobrescrever todas as outras regras */
+[data-theme="dark"] .table tbody tr.table-active,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even),
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd) {
+  background-color: #6366f1 !important;
+}
+
+[data-theme="dark"] .table tbody tr.table-active td,
+[data-theme="dark"] .table tbody tr.table-active th,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even) td,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even) th,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd) td,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd) th {
+  background-color: #6366f1 !important;
+  color: white !important;
+}
+
+/* Hover em linha selecionada no tema dark - tom mais claro para diferenciar */
+[data-theme="dark"] .table tbody tr.table-active:hover,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover {
+  background-color: #818cf8 !important;
+}
+
+[data-theme="dark"] .table tbody tr.table-active:hover td,
+[data-theme="dark"] .table tbody tr.table-active:hover th,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover td,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover th,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover td,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover th {
+  background-color: #818cf8 !important;
+  color: white !important;
 }
 
 /* Sobrescrever bg-light para tema escuro */
