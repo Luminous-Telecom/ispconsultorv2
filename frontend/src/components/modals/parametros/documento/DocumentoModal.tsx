@@ -92,12 +92,10 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
 
   // Carregar dados do documento atual
   useEffect(() => {
-    if (!show) {
-      return;
-    }
-
-    if (!currentDocumento) {
-      setFormData({ ...emptyForm });
+    if (!show || !currentDocumento?.id) {
+      if (!show) {
+        setFormData({ ...emptyForm });
+      }
       return;
     }
 
@@ -153,7 +151,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     };
 
     loadData();
-  }, [currentDocumento?.id, show, tipo, currentDocumento, getService]);
+  }, [currentDocumento, show, tipo, getService]);
 
   useEffect(() => {
     if (!show && pdfUrl) {
