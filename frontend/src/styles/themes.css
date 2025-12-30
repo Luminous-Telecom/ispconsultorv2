@@ -710,7 +710,7 @@ body {
 .dashboard-container .row {
   margin-left: 0;
   margin-right: 0;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
 }
 
 .dashboard-container .row:last-child {
@@ -718,8 +718,8 @@ body {
 }
 
 .dashboard-container .row.g-3 {
-  --bs-gutter-x: 0.5rem;
-  --bs-gutter-y: 0.5rem;
+  --bs-gutter-x: 0.375rem;
+  --bs-gutter-y: 0.375rem;
   margin-left: calc(var(--bs-gutter-x) * -0.5);
   margin-right: calc(var(--bs-gutter-x) * -0.5);
 }
@@ -1485,7 +1485,7 @@ body {
 .metric-card {
   background: var(--bg-secondary);
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
   height: 100%;
@@ -1639,7 +1639,7 @@ body {
   position: relative;
   width: 100px;
   height: 100px;
-  margin: 0 auto 0.5rem;
+  margin: 0 auto 0.25rem;
   border-radius: 50%;
   background: var(--bg-tertiary);
   -webkit-user-select: none;
@@ -1689,9 +1689,9 @@ body {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.125rem;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   max-width: 100%;
   flex: 1;
   min-height: 0;
@@ -1701,7 +1701,7 @@ body {
   font-size: 0.625rem;
   font-weight: 400;
   color: var(--text-primary);
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.25rem;
   text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1713,11 +1713,11 @@ body {
   flex-direction: row;
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 0.5rem;
+  gap: 0.25rem;
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
   flex: 1;
   min-height: 0;
 }
@@ -1730,15 +1730,6 @@ body {
 }
 
 .pie-chart-box {
-  /* Tamanho dinâmico baseado no container: de 100px até 140px */
-  /* Usa 35% da largura do container, limitado entre 100px e 140px */
-  width: clamp(100px, 35%, 140px);
-  height: clamp(100px, 35%, 140px);
-  aspect-ratio: 1;
-  min-width: 100px;
-  min-height: 100px;
-  max-width: 140px;
-  max-height: 140px;
   flex-shrink: 0;
   position: relative;
 }
@@ -1754,9 +1745,9 @@ body {
   .pie-legend-box {
     width: auto !important;
     flex: 1 1 auto;
-    margin-left: 0.5rem;
+    margin-left: 0.25rem;
     min-width: 0;
-    max-width: calc(100% - clamp(100px, 35%, 140px) - 0.5rem);
+    max-width: calc(100% - clamp(120px, 40%, 160px) - 0.25rem);
   }
 
   .pie-legend-text {
@@ -1768,16 +1759,27 @@ body {
 
 /* Telas pequenas - legenda ao lado também */
 @media (max-width: 575.98px) {
+  .pie-chart-box {
+    width: clamp(120px, 50%, 160px) !important;
+    height: clamp(120px, 50%, 160px) !important;
+    min-width: 120px !important;
+    min-height: 120px !important;
+    max-width: 160px !important;
+    max-height: 160px !important;
+  }
+
   .pie-chart-content {
     flex-direction: row !important;
     align-items: flex-start !important;
+    justify-content: space-between !important;
   }
 
   .pie-legend-box {
     width: auto !important;
-    margin-left: 0 !important;
+    flex: 1 1 auto !important;
+    margin-left: 0.25rem !important;
     margin-top: 0 !important;
-    max-width: calc(100% - clamp(100px, 35%, 140px) - 0.5rem) !important;
+    min-width: 0 !important;
   }
 
   .pie-legend-text {
@@ -1797,10 +1799,11 @@ body {
   margin: 0;
   min-width: 0;
   flex: 1 1 auto;
-  overflow: hidden;
+  overflow: visible;
   visibility: visible !important;
   opacity: 1 !important;
   position: relative;
+  z-index: 1;
 }
 
 /* Canvas para legenda - apenas o canvas será registrado como interativo */
@@ -1813,10 +1816,10 @@ body {
 .pie-legend-item {
   display: flex !important;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.125rem;
   width: 100% !important;
   max-width: 100%;
-  padding: 0.0625rem 0.125rem;
+  padding: 0.03125rem 0.0625rem;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.6875rem;
@@ -1854,7 +1857,7 @@ body {
 .pie-legend-text {
   color: var(--text-primary);
   font-weight: 400;
-  line-height: 1.3;
+  line-height: 1.2;
   flex: 1;
   min-width: 0;
   max-width: 100%;
@@ -1877,9 +1880,9 @@ body {
   .pie-legend-box {
     width: auto !important;
     flex: 1 1 auto;
-    margin-left: 0.75rem;
+    margin-left: 0.25rem;
     min-width: 0;
-    max-width: calc(100% - 150px);
+    max-width: none;
   }
 
   .pie-legend-text {
@@ -3308,20 +3311,20 @@ select:focus,
 }
 
 .dashboard-hero-body {
-  padding: 1rem;
+  padding: 0.5rem;
 }
 
 .dashboard-hero-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 0.75rem;
+  gap: 0.5rem;
   width: 100%;
 }
 
 @media (min-width: 992px) {
   .dashboard-hero-stats {
     grid-template-columns: repeat(4, minmax(180px, 1fr));
-    gap: 1rem;
+    gap: 0.5rem;
   }
 }
 
@@ -3337,14 +3340,14 @@ select:focus,
   padding: 0.375rem 0.75rem;
   background: rgba(99, 102, 241, 0.1);
   border-radius: 8px;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .dashboard-hero-title {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -3357,12 +3360,12 @@ select:focus,
 
 .dashboard-hero-stat {
   min-width: 150px;
-  padding: 1rem;
+  padding: 0.5rem;
   border-radius: 12px;
   border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.125rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   align-items: flex-start;
   justify-content: flex-start;
@@ -3397,7 +3400,7 @@ select:focus,
   border-radius: 16px;
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 0.75rem;
+  padding: 0.5rem;
   background: var(--bg-primary);
   height: 100%;
 }
@@ -3437,7 +3440,7 @@ select:focus,
 
 .chart-card {
   border-radius: 16px;
-  padding: 0.75rem;
+  padding: 0.5rem;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -3464,6 +3467,7 @@ select:focus,
   border: 1px solid var(--border-color);
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 0.5rem;
 }
 
 .chart-card-line:hover {
@@ -3481,7 +3485,7 @@ select:focus,
 .chart-title {
   font-size: 0.8125rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   color: var(--text-primary);
   letter-spacing: -0.01em;
   text-transform: none;
@@ -3490,7 +3494,7 @@ select:focus,
 .pie-chart {
   width: 120px;
   height: 120px;
-  margin: 0 auto 1rem;
+  margin: 0 auto 0.25rem;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
 }
 
@@ -3536,12 +3540,12 @@ select:focus,
 /* Dashboard Responsive */
 @media (max-width: 992px) {
   .dashboard-hero-body {
-    padding: 1.5rem;
+    padding: 0.75rem;
   }
 
   .dashboard-hero-stat {
     min-width: 120px;
-    padding: 0.875rem 1rem;
+    padding: 0.5rem;
     height: 100%;
     min-height: 90px;
     align-items: flex-start;
@@ -3549,11 +3553,11 @@ select:focus,
   }
 
   .dashboard-section .card-body {
-    padding: 0.875rem;
+    padding: 0.5rem;
   }
 
   .chart-card {
-    padding: 0.875rem;
+    padding: 0.5rem;
   }
 
   .dashboard-hero-title {
@@ -3573,7 +3577,7 @@ select:focus,
   }
 
   .dashboard-hero-body {
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
 
   .dashboard-hero-title {
@@ -3583,7 +3587,7 @@ select:focus,
 
   .dashboard-hero-subtitle {
     font-size: 0.6875rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
   }
 
   .dashboard-hero-stats {
@@ -3592,7 +3596,7 @@ select:focus,
   }
 
   .dashboard-hero-stat {
-    padding: 0.625rem;
+    padding: 0.5rem;
     height: 100% !important;
     align-items: flex-start;
     justify-content: flex-start;
@@ -3607,21 +3611,30 @@ select:focus,
   }
   
   .dashboard-hero .gap-3 {
-    gap: 0.75rem !important;
+    gap: 0.5rem !important;
   }
 
   .dashboard-section .card-body {
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
 
   .chart-card {
-    padding: 0.75rem;
-    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 
   .chart-title {
     font-size: 0.75rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .pie-chart-box {
+    width: clamp(120px, 50%, 160px) !important;
+    height: clamp(120px, 50%, 160px) !important;
+    min-width: 120px !important;
+    min-height: 120px !important;
+    max-width: 160px !important;
+    max-height: 160px !important;
   }
 
   .pie-chart {
@@ -3637,12 +3650,15 @@ select:focus,
   .pie-chart-content {
     flex-direction: row !important;
     align-items: flex-start !important;
+    justify-content: space-between !important;
   }
 
   .pie-legend-box {
     width: auto !important;
-    margin-left: 0 !important;
+    flex: 1 1 auto !important;
+    margin-left: 0.25rem !important;
     margin-top: 0 !important;
+    min-width: 0 !important;
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -4211,5 +4227,13 @@ select:focus,
   .table-mobile-cards,
   .table-mobile-card {
     display: none;
+  }
+}
+
+/* Classe customizada para 5 colunas em telas xl (>= 1200px) */
+@media (min-width: 1200px) {
+  .col-xl-5-custom {
+    flex: 0 0 auto;
+    width: 20%;
   }
 }

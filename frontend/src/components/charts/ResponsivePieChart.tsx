@@ -268,11 +268,11 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
   // Calcular raios baseado no tamanho do container (proporcional)
   const radii = useMemo(() => {
     const size = Math.min(pieDimensions.width, pieDimensions.height);
-    if (size === 0) return { inner: 22, outer: 45 };
-    // Interpolação linear: 80px -> 16/32, 110px -> 22/45
-    const ratio = Math.max(0, Math.min(1, (size - 80) / (110 - 80)));
-    const inner = Math.round(16 + (22 - 16) * ratio);
-    const outer = Math.round(32 + (45 - 32) * ratio);
+    if (size === 0) return { inner: 28, outer: 55 };
+    // Interpolação linear: 80px -> 20/40, 140px -> 28/55
+    const ratio = Math.max(0, Math.min(1, (size - 80) / (140 - 80)));
+    const inner = Math.round(20 + (28 - 20) * ratio);
+    const outer = Math.round(40 + (55 - 40) * ratio);
     return { inner, outer };
   }, [pieDimensions]);
 

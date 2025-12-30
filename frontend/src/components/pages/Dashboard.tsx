@@ -68,12 +68,12 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       <div className="container-fluid px-0 px-md-0">
-        <div className="dashboard-hero card border-0 shadow-sm mb-2">
+        <div className="dashboard-hero card border-0 shadow-sm mb-1">
           <div className="dashboard-hero-body">
-            <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+            <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2">
               <div className="w-100 w-lg-auto">
                 <span className="dashboard-badge text-uppercase">Visão geral</span>
-                <h2 className="dashboard-hero-title mb-2">Painel financeiro e operacional</h2>
+                <h2 className="dashboard-hero-title mb-1">Painel financeiro e operacional</h2>
                 <p className="dashboard-hero-subtitle mb-0">
                   Atualizado em {lastUpdatedDate} às {lastUpdatedTime}
                 </p>
@@ -102,7 +102,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="row g-3">
-          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.clientesChartData}
@@ -113,7 +113,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.planosChartData}
@@ -124,7 +124,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.statusPagamentoData}
@@ -135,7 +135,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.distribuicaoPlanos}
@@ -146,7 +146,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.taxaPagamentoChartData}
@@ -157,7 +157,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.contratosChartData}
@@ -168,7 +168,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ValueChart data={charts.ticketMedioChartData} title="Ticket Médio R$" format="currency" />
             </div>
