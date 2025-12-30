@@ -1655,6 +1655,8 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
+  line-height: 1.2;
+  min-height: 1.2em;
 }
 
 /* Gráfico de Pizza */
@@ -1729,6 +1731,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.2;
+  min-height: 1.2em;
 }
 
 .pie-chart-content {
@@ -3546,6 +3550,8 @@ select:focus,
   color: var(--text-primary);
   letter-spacing: -0.01em;
   text-transform: none;
+  line-height: 1.2;
+  min-height: 1.2em;
 }
 
 .pie-chart {
@@ -3683,6 +3689,8 @@ select:focus,
   .chart-title {
     font-size: 0.75rem;
     margin-bottom: 0.5rem;
+    line-height: 1.2;
+    min-height: 1.2em;
   }
 
   .pie-chart-box {

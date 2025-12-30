@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import DocumentoSistemaService from '@/services/documentoSistemaService';
@@ -47,14 +47,9 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   const { success, error } = useNotificationContext();
 
   const { data: clienteTeste } = useCliente(clienteTesteId || 0);
-  const { data: clientesData } = useClientes({ limit: 9999 }); // Buscar todos os clientes
+  const { data: clientesData } = useClientes({ limit: 9999 });
 
-  const clientesDisponiveis = useMemo(() => {
-    if (clientesData?.data) {
-      return clientesData.data;
-    }
-    return clienteTeste ? [clienteTeste] : [];
-  }, [clientesData, clienteTeste]);
+  const clientesDisponiveis = clientesData?.data || (clienteTeste ? [clienteTeste] : []);
 
   useEffect(() => {
     if (show) {
@@ -65,21 +60,26 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       setActiveTab('contrato');
       setClienteTesteId(0);
       setShowImprimirDropdown(false);
+      setShowPreview(false);
+      setIsGeneratingPdf(false);
+      if (pdfUrl) {
+        window.URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
     }
-  }, [documento, show]);
+  }, [documento, show, pdfUrl]);
 
 
   const getTipoLabel = (tipo: string) => {
-    const labels = {
+    const labels: Record<string, string> = {
       contrato: 'Contrato',
       recibo: 'Recibo',
       carta_cobranca: 'Carta de Cobrança',
       termo: 'Termo',
     };
-    return labels[tipo as keyof typeof labels] || 'Documento';
+    return labels[tipo] || 'Documento';
   };
 
-  // Service functions
   const getService = useCallback(() => {
     switch (tipo) {
       case 'contrato': return DocumentoSistemaService;
@@ -153,16 +153,6 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     loadData();
   }, [currentDocumento, show, tipo, getService]);
 
-  useEffect(() => {
-    if (!show && pdfUrl) {
-      window.URL.revokeObjectURL(pdfUrl);
-      setPdfUrl(null);
-    }
-    if (!show) {
-      setShowImprimirDropdown(false);
-    }
-  }, [show, pdfUrl]);
-
   const createDocumentoMutation = useMutation({
     mutationFn: async (data: { nome: string; descricao?: string; conteudo: string }): Promise<DocumentoUnion> => {
       if (tipo === 'contrato') {
@@ -199,10 +189,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       onSuccess?.(createdDocumento);
     },
     onError: (err: unknown) => {
-      const message = err instanceof Error && 'response' in err
-        ? (err as AxiosError<{ message: string }>).response?.data?.message || 'Erro ao criar documento'
-        : err instanceof Error ? (err.message || 'Erro ao criar documento')
-        : 'Erro ao criar documento';
+      const axiosError = err as AxiosError<{ message: string }>;
+      const message = axiosError?.response?.data?.message || 'Erro ao criar documento';
       error(message);
     }
   });
@@ -248,10 +236,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       onSuccess?.(updatedDocumento);
     },
     onError: (err: unknown) => {
-      const message = err instanceof Error && 'response' in err
-        ? (err as AxiosError<{ message: string }>).response?.data?.message || 'Erro ao salvar documento'
-        : err instanceof Error ? (err.message || 'Erro ao salvar documento')
-        : 'Erro ao salvar documento';
+      const axiosError = err as AxiosError<{ message: string }>;
+      const message = axiosError?.response?.data?.message || 'Erro ao salvar documento';
       error(message);
     }
   });
@@ -280,14 +266,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         await createDocumentoMutation.mutateAsync(data);
       }
     } catch (err: unknown) {
-      if (err instanceof Error && 'response' in err) {
-        const axiosError = err as AxiosError<{ message: string }>;
-        error( axiosError.response?.data?.message || 'Erro ao salvar documento');
-      } else if (err instanceof Error) {
-        error( err.message || 'Erro ao salvar documento');
-      } else {
-        error( 'Erro ao salvar documento');
-      }
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError?.response?.data?.message || 'Erro ao salvar documento');
     }
   };
 
@@ -296,6 +276,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     setCurrentDocumento(null);
     setFormData({ ...emptyForm });
     setShowPreview(false);
+    setIsGeneratingPdf(false);
     if (pdfUrl) {
       window.URL.revokeObjectURL(pdfUrl);
       setPdfUrl(null);
