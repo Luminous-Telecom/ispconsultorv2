@@ -249,7 +249,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       {
         key: 'descricao',
         label: 'Descrição',
-        sortable: false,
+        sortable: true,
         width: '200px',
         render: (item: ContaPagar) => (
           <span className="text-nowrap" title={item.descricao || ''}>
@@ -318,6 +318,8 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     searchField: searchField || undefined,
     page: tableFilters.page,
     limit: tableFilters.limit,
+    sortColumn: tableFilters.sortColumn || undefined,
+    sortDirection: tableFilters.sortDirection || undefined,
     ...apiFilters
   });
 

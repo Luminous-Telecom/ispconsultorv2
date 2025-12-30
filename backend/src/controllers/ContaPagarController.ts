@@ -26,6 +26,8 @@ export class ContaPagarController {
       const fornecedorId = req.query.fornecedor_id as string;
       const dataInicio = req.query.data_inicio as string;
       const dataFim = req.query.data_fim as string;
+      const sortColumn = req.query.sortColumn as string;
+      const sortDirection = req.query.sortDirection as string;
 
       const offset = (page - 1) * limit;
       const whereConditions: Array<WhereOptions> = [];
@@ -150,10 +152,26 @@ export class ContaPagarController {
           })).length
         : await ContaPagar.count({ where });
 
+      // Construir ordenação
+      let order: Array<[string, string]> = [['data_vencimento', 'ASC'], ['created_at', 'DESC']]; // Padrão
+      if (sortColumn && sortDirection) {
+        // Validar colunas permitidas para ordenação
+        const allowedColumns = [
+          'id', 'numero_documento', 'nota_fiscal', 'data_vencimento', 'valor', 
+          'valor_pago', 'status', 'tipo_pagamento', 'data_pagamento', 
+          'created_at', 'descricao'
+        ];
+        
+        if (allowedColumns.includes(sortColumn)) {
+          const direction = sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+          order = [[sortColumn, direction]];
+        }
+      }
+
       const contas = await ContaPagar.findAll({
         where,
         include: includeOptions,
-        order: [['data_vencimento', 'ASC'], ['created_at', 'DESC']],
+        order,
         limit,
         offset
       });
