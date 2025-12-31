@@ -53,6 +53,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
 
   useEffect(() => {
     if (show) {
+      setActiveTab('contrato');
       setCurrentDocumento(documento ?? null);
     } else {
       setCurrentDocumento(null);
@@ -62,12 +63,16 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       setShowImprimirDropdown(false);
       setShowPreview(false);
       setIsGeneratingPdf(false);
-      if (pdfUrl) {
-        window.URL.revokeObjectURL(pdfUrl);
-        setPdfUrl(null);
-      }
     }
-  }, [documento, show, pdfUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documento, show]);
+
+  useEffect(() => {
+    if (!show && pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+  }, [show, pdfUrl]);
 
 
   const getTipoLabel = (tipo: string) => {

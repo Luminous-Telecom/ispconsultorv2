@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -26,6 +26,11 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   const { success, error: showError } = useNotificationContext();
   const [, setSelectedItems] = useState<DocumentoUnion[]>([]);
   const auditoria = useAuditoria();
+  const onDocumentosLoadedRef = useRef(onDocumentosLoaded);
+  
+  useEffect(() => {
+    onDocumentosLoadedRef.current = onDocumentosLoaded;
+  }, [onDocumentosLoaded]);
   
   // Limpar seleção quando mudar de tipo
   useEffect(() => {
@@ -91,10 +96,10 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   });
 
   useEffect(() => {
-    if (onDocumentosLoaded) {
-      onDocumentosLoaded(documentos?.data ? (documentos.data as DocumentoUnion[]) : []);
+    if (onDocumentosLoadedRef.current) {
+      onDocumentosLoadedRef.current(documentos?.data ? (documentos.data as DocumentoUnion[]) : []);
     }
-  }, [documentos, onDocumentosLoaded]);
+  }, [documentos]);
 
   // Mutation para deletar documento
   const deleteDocumentoMutation = useMutation({
