@@ -135,12 +135,17 @@ export class PDFGenerationService {
     options: PDFOptions = {},
     styleName: string = 'document'
   ): Promise<Buffer> {
+    // Garantir que imagens e recursos relativos funcionem no PDF
+    const baseHref = process.env.APP_URL || process.env.BASE_URL || '';
+    const normalizedBase = baseHref.endsWith('/') ? baseHref : `${baseHref}/`;
+
     // Gerar HTML diretamente sem template - conteúdo do editor já vem formatado
     const html = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8">
+        ${baseHref ? `<base href="${normalizedBase}">` : ''}
       </head>
       <body>
         <div>${content}</div>
