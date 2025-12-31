@@ -28,6 +28,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   const auditoria = useAuditoria();
   const onDocumentosLoadedRef = useRef(onDocumentosLoaded);
   
+  // Atualizar ref quando a função mudar
   useEffect(() => {
     onDocumentosLoadedRef.current = onDocumentosLoaded;
   }, [onDocumentosLoaded]);

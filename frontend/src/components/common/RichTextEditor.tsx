@@ -22,7 +22,6 @@ import 'tinymce/plugins/media';
 import 'tinymce/plugins/table';
 import 'tinymce/plugins/wordcount';
 import 'tinymce/skins/ui/oxide/skin.min.css';
-import 'tinymce/skins/content/default/content.min.css';
 import 'tinymce-i18n/langs/pt_BR';
 
 interface RichTextEditorProps {
@@ -114,16 +113,13 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
           font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 20pt 24pt 28pt 32pt 36pt 48pt 60pt 72pt',
           placeholder: safePlaceholder,
           content_style: `
-            body { 
+            body.mce-content-body { 
               font-family: Arial, Helvetica, sans-serif; 
               font-size: 14px;
               line-height: 1.4;
+              margin: 0 !important;
+              padding: 8px;
             }
-            .line-height-1 { line-height: 1.0 !important; }
-            .line-height-115 { line-height: 1.15 !important; }
-            .line-height-12 { line-height: 1.2 !important; }
-            .line-height-15 { line-height: 1.5 !important; }
-            .line-height-2 { line-height: 2.0 !important; }
           `,
           setup: (editor) => {
             // Aplicar estilo de fonte
