@@ -16,7 +16,6 @@ import 'tinymce/plugins/insertdatetime';
 import 'tinymce/plugins/link';
 import 'tinymce/plugins/lists';
 import 'tinymce/plugins/media';
-import 'tinymce/plugins/preview';
 import 'tinymce/plugins/searchreplace';
 import 'tinymce/plugins/table';
 import 'tinymce/plugins/visualblocks';
@@ -97,29 +96,26 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
           language: 'pt_BR',
           height: height || 500,
           menubar: false,
+          // Usa skins via CDN para evitar 404 e não poluir o CSS global do app
+          skin_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.9.1/skins/ui/oxide',
+          content_css: 'https://cdn.jsdelivr.net/npm/tinymce@7.9.1/skins/content/default/content.css',
           plugins: [
-            'advlist', 'autolink', 'lists', 'link', 'image', 'preview',
-            'searchreplace', 'code', 'fullscreen',
+            'advlist', 'autolink', 'lists', 'link', 'image',
+            'searchreplace', 'code',
             'table', 'wordcount'
           ],
-          toolbar: 'undo redo | fontfamily fontsize | ' +
+          toolbar: 'undo redo | fontfamily fontsize variables | ' +
             'bold italic underline forecolor backcolor | ' +
             'alignleft aligncenter alignright alignjustify | ' +
             'bullist numlist outdent indent | ' +
             'link image table | ' +
-            'searchreplace code preview fullscreen | ' +
-            'removeformat | variables',
+            'searchreplace code | ' +
+            'removeformat',
           // Garantir que larguras de tabela personalizadas sejam mantidas
           table_style_by_css: true,
           table_default_styles: {
             width: 'auto'
           },
-          font_size_formats: '8pt 10pt 12pt 14pt 18pt 24pt 36pt',
-          font_family_formats: 'Arial=arial,helvetica,sans-serif;'
-            + 'Helvetica=helvetica,arial,sans-serif;'
-            + 'Times New Roman=times new roman,times;'
-            + 'Georgia=georgia,serif;'
-            + 'Courier New=courier new,courier,monospace',
           placeholder: safePlaceholder,
           content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }',
           entity_encoding: 'raw',
@@ -155,6 +151,17 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
             editor.ui.registry.addMenuButton('variables', {
               text: 'Variáveis',
               tooltip: 'Inserir Variáveis',
+              onSetup: () => {
+                const button = editor.editorContainer?.querySelector('.tox-tbtn[aria-label="Variáveis"]') as HTMLElement | null;
+                if (button) {
+                  button.classList.add('tox-tbtn--select');
+                }
+                return () => {
+                  if (button) {
+                    button.classList.remove('tox-tbtn--select');
+                  }
+                };
+              },
               fetch: async (callback) => {
                 try {
                   const variaveisData = await buscarVariaveis();
