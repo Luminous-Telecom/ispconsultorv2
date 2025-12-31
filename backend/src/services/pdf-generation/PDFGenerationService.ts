@@ -1,7 +1,6 @@
 import puppeteer from 'puppeteer';
 import htmlPdf from 'html-pdf-node';
 import { logger } from '../../utils/logger';
-import { TemplateLoader } from './utils/TemplateLoader';
 import { PDFEngine, PDFOptions, HtmlPdfNodeOptions, PuppeteerPDFOptions } from './types';
 
 /**
@@ -257,7 +256,7 @@ export class PDFGenerationService {
   }
 
   /**
-   * Gera PDF a partir de conteúdo usando template base
+   * Gera PDF a partir de conteúdo
    */
   static async generateFromContent(
     content: string,
@@ -265,11 +264,18 @@ export class PDFGenerationService {
     options: PDFOptions = {},
     styleName: string = 'document'
   ): Promise<Buffer> {
-    const styles = TemplateLoader.loadStyle(styleName);
-    const html = TemplateLoader.renderTemplate('base', {
-      styles,
-      content
-    });
+    // Gerar HTML diretamente sem template - conteúdo do editor já vem formatado
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+      </head>
+      <body>
+        <div>${content}</div>
+      </body>
+      </html>
+    `;
 
     return this.generateFromHtml(html, engine, options);
   }

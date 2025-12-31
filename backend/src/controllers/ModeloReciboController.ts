@@ -313,128 +313,24 @@ export class ModeloReciboController {
         );
       }
 
-      // Prepara o HTML completo com estilos básicos
+      // Prepara o HTML completo - apenas estilos mínimos, conteúdo do editor será renderizado como está
       const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="UTF-8">
           <style>
-            body {
-              font-family: Arial, sans-serif;
-              font-size: 12px;
-              color: #333;
-              margin: 0;
-              padding: 0;
-              line-height: 1.2;
-            }
+            /* Estilos mínimos - apenas para garantir funcionamento básico do PDF */
+            /* O conteúdo do editor será renderizado com seus próprios estilos inline */
             
-            /* Estilos para imagens - preservar dimensões inline */
+            /* Evitar quebra de página dentro de imagens */
             img {
-              display: block;
               page-break-inside: avoid;
-              object-fit: contain;
-              max-width: 100% !important;
             }
             
-            /* Limitar imagens muito grandes (largura > 800px) */
-            img[width] {
-              max-width: 100% !important;
-              height: auto !important;
-            }
-            
-            /* Se tem style inline com dimensões, preservar proporções */
-            img[style*="width"] {
-              max-width: 100% !important;
-              height: auto !important;
-            }
-            
-            /* NÃO forçar auto se a imagem tem dimensões inline razoáveis */
-            img:not([style*="width"]):not([style*="height"]):not([width]):not([height]) {
-              max-width: 100%;
-              height: auto;
-            }
-            
-            /* Estilos para tabelas */
-            figure.table {
-              width: 100% !important;
-              float: none !important;
-              margin: 0 !important;
-              margin-inline-start: 0 !important;
-              margin-inline-end: 0 !important;
-              margin-top: 0 !important;
-              margin-bottom: 0.5em !important;
-            }
-            
-            table {
-              border-collapse: collapse;
-              width: 100% !important;
-              table-layout: auto !important;
-              margin: 0 !important;
-            }
-            
-            table colgroup,
-            table colgroup col {
-              width: auto !important;
-            }
-            
-            table td, table th {
-              border: none;
-              width: auto !important;
-              max-width: none !important;
-              min-width: 0 !important;
-              padding: 0 !important;
-            }
-            
-            /* Remover espaçamento excessivo entre elementos */
-            p {
-              margin: 0 !important;
-              padding: 0 !important;
-              line-height: 1.2 !important;
-            }
-            
-            /* Classes de espaçamento entre linhas */
-            .line-height-1 { line-height: 1.0 !important; }
-            .line-height-115 { line-height: 1.15 !important; }
-            .line-height-12 { line-height: 1.2 !important; }
-            .line-height-15 { line-height: 1.5 !important; }
-            .line-height-2 { line-height: 2.0 !important; }
-            
+            /* Ocultar parágrafos vazios */
             p:empty {
-              margin: 0 !important;
-              padding: 0 !important;
-              line-height: 0 !important;
-              height: 0 !important;
-              display: none !important;
-            }
-            
-            br {
-              display: block !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              line-height: 1 !important;
-              height: 0.5em !important;
-            }
-            
-            /* Adicionar pequeno espaço apenas entre parágrafos consecutivos */
-            p + p {
-              margin-top: 0.2em !important;
-            }
-            
-            /* Espaçamento do body */
-            body {
-              line-height: 1.2 !important;
-            }
-            
-            /* Espaçamento entre tabelas */
-            figure.table + figure.table {
-              margin-top: 0.5em !important;
-            }
-            
-            /* Remover espaço entre parágrafos vazios e tabelas */
-            p:empty + figure.table,
-            figure.table + p:empty {
-              margin: 0 !important;
+              display: none;
             }
           </style>
         </head>
@@ -571,11 +467,18 @@ export class ModeloReciboController {
         <head>
           <meta charset="UTF-8">
           <style>
-            body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 0; }
-            img { max-width: 100%; height: auto; page-break-inside: avoid; }
-            table { width: 100%; border-collapse: collapse; }
-            p { margin: 0; padding: 0; }
-            p:empty { display: none; }
+            /* Estilos mínimos - apenas para garantir funcionamento básico do PDF */
+            /* O conteúdo do editor será renderizado com seus próprios estilos inline */
+            
+            /* Evitar quebra de página dentro de imagens */
+            img {
+              page-break-inside: avoid;
+            }
+            
+            /* Ocultar parágrafos vazios */
+            p:empty {
+              display: none;
+            }
           </style>
         </head>
         <body>${recibosHtml.join('')}</body>
