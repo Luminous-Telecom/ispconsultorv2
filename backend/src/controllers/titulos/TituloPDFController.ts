@@ -703,7 +703,7 @@ export class TituloPDFController {
         const file = { content: templateLimpo };
         const options: PdfOptions = {
           format: 'A4',
-          margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
+          margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
           printBackground: true,
           displayHeaderFooter: false
         };

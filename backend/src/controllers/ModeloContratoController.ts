@@ -327,7 +327,7 @@ export class ModeloContratoController {
         'html-pdf-node',
         {
           format: 'A4',
-          margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
+          margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
           printBackground: true
         }
       );
@@ -398,7 +398,7 @@ export class ModeloContratoController {
         'html-pdf-node',
         {
           format: 'A4',
-          margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
+          margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
           printBackground: true
         }
       );

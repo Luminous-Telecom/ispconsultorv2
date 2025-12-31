@@ -6,20 +6,20 @@ import 'tinymce/themes/silver';
 import 'tinymce/icons/default';
 import 'tinymce/models/dom';
 import 'tinymce/plugins/advlist';
-import 'tinymce/plugins/autolink';
-import 'tinymce/plugins/lists';
-import 'tinymce/plugins/link';
-import 'tinymce/plugins/image';
-import 'tinymce/plugins/charmap';
-import 'tinymce/plugins/preview';
 import 'tinymce/plugins/anchor';
-import 'tinymce/plugins/searchreplace';
-import 'tinymce/plugins/visualblocks';
+import 'tinymce/plugins/autolink';
+import 'tinymce/plugins/charmap';
 import 'tinymce/plugins/code';
 import 'tinymce/plugins/fullscreen';
+import 'tinymce/plugins/image';
 import 'tinymce/plugins/insertdatetime';
+import 'tinymce/plugins/link';
+import 'tinymce/plugins/lists';
 import 'tinymce/plugins/media';
+import 'tinymce/plugins/preview';
+import 'tinymce/plugins/searchreplace';
 import 'tinymce/plugins/table';
+import 'tinymce/plugins/visualblocks';
 import 'tinymce/plugins/wordcount';
 import 'tinymce/skins/ui/oxide/skin.min.css';
 import 'tinymce-i18n/langs/pt_BR';
@@ -95,43 +95,35 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
         }}
         init={{
           language: 'pt_BR',
-          height: height,
+          height: height || 500,
           menubar: false,
-          skin: false,
-          content_css: false,
           plugins: [
-            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'wordcount'
+            'advlist', 'autolink', 'lists', 'link', 'image', 'preview',
+            'searchreplace', 'code', 'fullscreen',
+            'table', 'wordcount'
           ],
-          toolbar_mode: 'wrap',
-          toolbar: 'undo redo | blocks | fontfamily fontsize | ' +
-            'bold italic underline | alignleft aligncenter ' +
-            'alignright alignjustify | bullist numlist outdent indent | ' +
-            'removeformat | link image table | variables | code',
-          font_family_formats: 'Arial=arial,helvetica,sans-serif; Courier New=courier new,courier; Georgia=georgia,palatino; Helvetica=helvetica; Impact=impact,chicago; Tahoma=tahoma,arial,helvetica,sans-serif; Times New Roman=times new roman,times; Trebuchet MS=trebuchet ms,geneva; Verdana=verdana,geneva',
-          font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 20pt 24pt 28pt 32pt 36pt 48pt 60pt 72pt',
+          toolbar: 'undo redo | fontfamily fontsize | ' +
+            'bold italic underline forecolor backcolor | ' +
+            'alignleft aligncenter alignright alignjustify | ' +
+            'bullist numlist outdent indent | ' +
+            'link image table | ' +
+            'searchreplace code preview fullscreen | ' +
+            'removeformat | variables',
+          // Garantir que larguras de tabela personalizadas sejam mantidas
+          table_style_by_css: true,
+          table_default_styles: {
+            width: 'auto'
+          },
+          font_size_formats: '8pt 10pt 12pt 14pt 18pt 24pt 36pt',
+          font_family_formats: 'Arial=arial,helvetica,sans-serif;'
+            + 'Helvetica=helvetica,arial,sans-serif;'
+            + 'Times New Roman=times new roman,times;'
+            + 'Georgia=georgia,serif;'
+            + 'Courier New=courier new,courier,monospace',
           placeholder: safePlaceholder,
-          content_style: `
-            body.mce-content-body { 
-              font-family: Arial, Helvetica, sans-serif; 
-              font-size: 14px;
-              line-height: 1.4;
-              margin: 0 !important;
-              padding: 8px;
-            }
-          `,
+          content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }',
+          entity_encoding: 'raw',
           setup: (editor) => {
-            // Aplicar estilo de fonte
-            const applyFontFamily = (fontFamily: string) => {
-              editor.dom.setStyle(editor.selection.getNode(), 'font-family', fontFamily);
-            };
-
-            // Aplicar tamanho de fonte
-            const applyFontSize = (fontSize: string) => {
-              editor.dom.setStyle(editor.selection.getNode(), 'font-size', fontSize);
-            };
-
             // Interface para variáveis
             interface Variavel {
               variavel: string;
@@ -205,64 +197,6 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
               }
             });
 
-            // Botão de fonte com dropdown
-            editor.ui.registry.addMenuButton('fontfamily', {
-              text: 'Fonte',
-              tooltip: 'Fonte',
-              fetch: (callback) => {
-                const fonts = [
-                  { name: 'Arial', value: 'arial,helvetica,sans-serif' },
-                  { name: 'Courier New', value: 'courier new,courier' },
-                  { name: 'Georgia', value: 'georgia,palatino' },
-                  { name: 'Helvetica', value: 'helvetica' },
-                  { name: 'Impact', value: 'impact,chicago' },
-                  { name: 'Tahoma', value: 'tahoma,arial,helvetica,sans-serif' },
-                  { name: 'Times New Roman', value: 'times new roman,times' },
-                  { name: 'Trebuchet MS', value: 'trebuchet ms,geneva' },
-                  { name: 'Verdana', value: 'verdana,geneva' }
-                ];
-                const items = fonts.map(font => ({
-                  type: 'menuitem' as const,
-                  text: font.name,
-                  onAction: () => applyFontFamily(font.value)
-                }));
-                callback(items);
-              }
-            });
-
-            // Botão de tamanho com dropdown
-            editor.ui.registry.addMenuButton('fontsize', {
-              text: 'Tamanho',
-              tooltip: 'Tamanho da Fonte',
-              fetch: (callback) => {
-                const sizes = ['8pt', '10pt', '12pt', '14pt', '16pt', '18pt', '20pt', '24pt', '28pt', '32pt', '36pt', '48pt', '60pt', '72pt'];
-                const items = sizes.map(size => ({
-                  type: 'menuitem' as const,
-                  text: size,
-                  onAction: () => applyFontSize(size)
-                }));
-                callback(items);
-              }
-            });
-
-            editor.on('init', () => {
-              const style = document.createElement('style');
-              style.id = 'tinymce-print-styles';
-              style.textContent = `
-                @media print {
-                  @page {
-                    margin: 2cm 1.5cm 3cm 1.5cm;
-                  }
-                  img {
-                    max-width: 100% !important;
-                    height: auto !important;
-                    page-break-inside: avoid !important;
-                  }
-                }
-              `;
-              document.head.appendChild(style);
-            });
-            
           },
           images_upload_handler: async (blobInfo) => {
             const { getAuthToken } = await import('../../services/core');
@@ -289,29 +223,12 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
               throw new Error(data.message || 'URL da imagem não retornada pelo servidor');
             }
             
-            // Converter URL relativa para absoluta usando window.location.origin
             const imageUrl = data.url.startsWith('/') 
               ? `${window.location.origin}${data.url}`
               : data.url;
             
             return imageUrl;
-          },
-          image_advtab: true,
-          image_caption: true,
-          allow_unsafe_link_target: true,
-          convert_urls: false,
-          relative_urls: false,
-          remove_script_host: false,
-          entity_encoding: 'raw',
-          forced_root_block: 'p',
-          forced_root_block_attrs: {},
-          remove_trailing_brs: false,
-          indent: true,
-          indent_use_margin: false,
-          indent_before: 'p,div,h1,h2,h3,h4,h5,h6,blockquote,ul,ol,li,table',
-          indent_after: 'p,div,h1,h2,h3,h4,h5,h6,blockquote,ul,ol,li,table',
-          branding: false,
-          promotion: false
+          }
         }}
       />
     </div>
