@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';
@@ -66,7 +68,7 @@ export class SistemaVariableHandler implements VariableHandler {
       return '';
     }
 
-    return `<img src="${assinaturaUrl}" alt="Assinatura do Responsável" />`;
+    return `<img src="${assinaturaUrl}" />`;
   }
 
   /**
@@ -96,7 +98,7 @@ export class SistemaVariableHandler implements VariableHandler {
       return '';
     }
 
-    return `<img src="${assinaturaUrl}" alt="Assinatura do Cliente" />`;
+    return `<img src="${assinaturaUrl}" />`;
   }
 
   /**
@@ -115,13 +117,33 @@ export class SistemaVariableHandler implements VariableHandler {
   }
 
   /**
-   * Retorna o caminho informado sem bloquear protocolos ou montar URLs.
+   * Retorna o caminho informado apenas se houver algo válido; evita quebrar o PDF
+   * quando a assinatura não existe (não gera <img> vazio).
    */
   private resolverUrlOuVazio(assinaturaPath: string, _baseUrl?: string): string {
     if (!assinaturaPath) {
       return '';
     }
-    return assinaturaPath;
+
+    const caminho = assinaturaPath.trim();
+    if (!caminho) {
+      return '';
+    }
+
+    // URLs externas permanecem como estão; se estiverem inválidas, o PDF pode quebrar a imagem,
+    // mas assumimos que quem preencheu forneceu um link válido.
+    if (caminho.includes('://')) {
+      return caminho;
+    }
+
+    // Para caminhos locais, só renderiza se o arquivo existir.
+    const localPath = caminho.startsWith('/') ? caminho.slice(1) : caminho;
+    const absolutePath = path.resolve(process.cwd(), localPath);
+    if (!fs.existsSync(absolutePath)) {
+      return '';
+    }
+
+    return caminho;
   }
 }
 
