@@ -5,7 +5,6 @@ import { Contrato } from '../../models/Contrato';
 import { Plano } from '../../models/Plano';
 import { Banco } from '../../models/Banco';
 import { Op, WhereOptions } from 'sequelize';
-import { sequelize } from '../../config/database';
 import { logger } from '../../utils/logger';
 import { normalizeDateForDb } from '../../utils/dateUtils';
 import { gerarLinkPagamentoPublico } from './TituloHelpers';
@@ -22,87 +21,154 @@ export class TituloCRUDController {
    */
   public static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 10, status, cliente_id, data_vencimento_inicio, data_vencimento_fim, search } = req.query;
+      const {
+        page = 1,
+        limit = 10,
+        status,
+        cliente_id,
+        data_vencimento_inicio,
+        data_vencimento_fim,
+        search,
+        searchField
+      } = req.query;
 
-      const offset = (Number(page) - 1) * Number(limit);
-      
+      const limitNum = Number(limit);
+      const pageNum = Number(page);
+      const offset = (pageNum - 1) * limitNum;
+
       const where: WhereOptions = {};
-      
+
       if (status) {
-        where.status = typeof status === 'string' && status.startsWith('!')
-          ? { [Op.ne]: status.substring(1) }
-          : status;
+        if (typeof status === 'string' && status.startsWith('!')) {
+          where.status = { [Op.ne]: status.substring(1) };
+        } else {
+          where.status = status;
+        }
       }
-      
+
       if (cliente_id) {
         where.cliente_id = cliente_id;
       }
-      
+
       if (data_vencimento_inicio || data_vencimento_fim) {
-        where.data_vencimento = {};
-        
-        // CORREÇÃO: Cria datas no local 00:00 e 23:59 para evitar problemas com fuso horário na query
+        const range: Record<symbol, unknown> = {};
+
         if (data_vencimento_inicio) {
           const [year, month, day] = (data_vencimento_inicio as string).split('-').map(Number);
-          where.data_vencimento[Op.gte] = new Date(year, month - 1, day, 0, 0, 0, 0); // Local 00:00:00
+          range[Op.gte] = new Date(year, month - 1, day, 0, 0, 0, 0);
         }
-        
+
         if (data_vencimento_fim) {
           const [year, month, day] = (data_vencimento_fim as string).split('-').map(Number);
-          where.data_vencimento[Op.lte] = new Date(year, month - 1, day, 23, 59, 59, 999); // Local 23:59:59
+          range[Op.lte] = new Date(year, month - 1, day, 23, 59, 59, 999);
+        }
+
+        where.data_vencimento = range;
+      }
+
+      if (search && String(search).trim()) {
+        const term = String(search).trim();
+        const likePattern = `%${term.replace(/[%_\\]/g, '\\$&')}%`;
+        const termNum = Number(term);
+        const isNumericSearch = !isNaN(termNum) && term !== '';
+
+        const field = typeof searchField === 'string' ? searchField : undefined;
+        const orConditions: WhereOptions[] = [];
+
+        const addMultiFieldSearch = () => {
+          orConditions.push(
+            { numero_titulo: { [Op.like]: likePattern } } as WhereOptions,
+            { status: { [Op.like]: likePattern } } as WhereOptions,
+            { charge_id: { [Op.like]: likePattern } } as WhereOptions,
+            { nosso_numero: { [Op.like]: likePattern } } as WhereOptions,
+            { '$cliente.razao_social$': { [Op.like]: likePattern } } as WhereOptions,
+            { '$cliente.nome_fantasia$': { [Op.like]: likePattern } } as WhereOptions,
+            { '$plano.nome_plano$': { [Op.like]: likePattern } } as WhereOptions
+          );
+
+          if (isNumericSearch) {
+            orConditions.push(
+              { id: termNum } as WhereOptions,
+              { valor: termNum } as WhereOptions,
+              { valor_pago: termNum } as WhereOptions,
+              { contrato_id: termNum } as WhereOptions
+            );
+          }
+        };
+
+        if (field) {
+          switch (field) {
+            case 'id':
+              if (isNumericSearch) orConditions.push({ id: termNum } as WhereOptions);
+              break;
+            case 'numero_titulo':
+              orConditions.push({ numero_titulo: { [Op.like]: likePattern } } as WhereOptions);
+              break;
+            case 'status':
+              orConditions.push({ status: { [Op.like]: likePattern } } as WhereOptions);
+              break;
+            case 'charge_id':
+              orConditions.push({ charge_id: { [Op.like]: likePattern } } as WhereOptions);
+              break;
+            case 'nosso_numero':
+              orConditions.push({ nosso_numero: { [Op.like]: likePattern } } as WhereOptions);
+              break;
+            case 'contrato_id':
+              if (isNumericSearch) orConditions.push({ contrato_id: termNum } as WhereOptions);
+              break;
+            case 'valor':
+              if (isNumericSearch) orConditions.push({ valor: termNum } as WhereOptions);
+              break;
+            case 'valor_pago':
+              if (isNumericSearch) orConditions.push({ valor_pago: termNum } as WhereOptions);
+              break;
+            case 'cliente':
+              orConditions.push(
+                { '$cliente.razao_social$': { [Op.like]: likePattern } } as WhereOptions,
+                { '$cliente.nome_fantasia$': { [Op.like]: likePattern } } as WhereOptions
+              );
+              break;
+            case 'plano':
+              orConditions.push({ '$plano.nome_plano$': { [Op.like]: likePattern } } as WhereOptions);
+              break;
+            default:
+              addMultiFieldSearch();
+              break;
+          }
+        } else {
+          addMultiFieldSearch();
+        }
+
+        // Se escolheram um campo numérico e digitaram texto, retornamos vazio (sem OR inválido)
+        if (orConditions.length === 0) {
+          where.id = { [Op.eq]: -1 };
+        } else {
+          (where as Record<symbol, unknown>)[Op.or] = orConditions as unknown as WhereOptions[];
         }
       }
 
-      if (search) {
-        // Buscar apenas nos campos que correspondem às colunas da tabela
-        // Incluir busca em relacionamentos usando Sequelize.literal
-        const searchString = typeof search === 'string' ? search : String(search);
-        const searchPattern = `%${searchString}%`;
-        const escapedSearch = searchString.replace(/'/g, "''");
-        (where as Record<symbol, unknown>)[Op.or] = [
-          { id: { [Op.like]: searchPattern } },
-          { numero_titulo: { [Op.like]: searchPattern } },
-          { status: { [Op.like]: searchPattern } },
-          { charge_id: { [Op.like]: searchPattern } },
-          { nosso_numero: { [Op.like]: searchPattern } },
-          { valor: { [Op.like]: searchPattern } },
-          { valor_pago: { [Op.like]: searchPattern } },
-          { contrato_id: { [Op.like]: searchPattern } },
-          sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = titulos.cliente_id AND (clientes.razao_social LIKE '${escapedSearch}' OR clientes.nome_fantasia LIKE '${escapedSearch}'))`),
-          sequelize.literal(`EXISTS (SELECT 1 FROM planos WHERE planos.id = titulos.plano_id AND planos.nome_plano LIKE '${escapedSearch}')`)
-        ];
-      }
+      const include = [
+        { model: Cliente, as: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email'], required: false },
+        { model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'], required: false },
+        { model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco'], required: false }
+      ];
 
-      // Lógica de count mantida devido ao problema potencial com Op.ne no count
-      const isStatusExclusion = status && typeof status === 'string' && status.startsWith('!');
-      let count: number;
-      
-      if (isStatusExclusion) {
-        const allMatching = await Titulo.findAll({ where, attributes: ['id'] });
-        count = allMatching.length;
-      } else {
-        count = await Titulo.count({ where });
-      }
-      
-      const rows = await Titulo.findAll({
+      const { count, rows } = await Titulo.findAndCountAll({
         where,
-        include: [
-          { model: Cliente, as: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email'] },
-          { model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'] },
-          { model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
-        ],
+        include,
         order: [['id', 'DESC']],
-        limit: Number(limit),
-        offset
+        limit: limitNum,
+        offset,
+        distinct: true,
+        subQuery: false
       });
 
       const total = Number(count);
-      const perPage = Number(limit);
-      const currentPage = Number(page);
+      const perPage = limitNum;
+      const currentPage = pageNum;
       const lastPage = total > 0 ? Math.ceil(total / perPage) : 1;
       const from = total > 0 ? offset + 1 : 0;
       const to = total > 0 ? Math.min(offset + perPage, total) : 0;
-
 
       res.json({
         success: true,
@@ -110,7 +176,19 @@ export class TituloCRUDController {
         pagination: { current_page: currentPage, per_page: perPage, total, last_page: lastPage, from, to }
       });
     } catch (error: unknown) {
-      logger.error('Erro ao listar títulos', { error });
+      const errorObj = error instanceof Error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      } : { message: 'Erro desconhecido', original: error };
+      
+      logger.error('Erro ao listar títulos', {
+        error: errorObj,
+        query: req.query,
+        search: req.query.search ? String(req.query.search) : null,
+        status: req.query.status ? String(req.query.status) : null,
+        cliente_id: req.query.cliente_id ? String(req.query.cliente_id) : null
+      });
       res.status(500).json({ success: false, message: 'Erro interno do servidor' });
     }
   }
