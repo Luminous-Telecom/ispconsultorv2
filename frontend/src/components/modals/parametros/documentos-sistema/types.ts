@@ -10,6 +10,7 @@ export type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta | Mod
 export interface DocumentosSistemaModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
 }
 
 export interface DocumentoTabProps {

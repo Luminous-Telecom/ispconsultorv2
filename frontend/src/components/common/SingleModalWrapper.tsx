@@ -21,6 +21,7 @@ const AtualizacoesModal = lazy(() => import('../modals/parametros/AtualizacoesMo
 const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
 const AssinaturaDigitalModal = lazy(() => import('../modals/parametros/AssinaturaDigitalModal'));
 const AuditoriaModal = lazy(() => import('../modals/parametros/AuditoriaModal'));
+const DocumentosSistemaModal = lazy(() => import('../modals/parametros/documentos-sistema').then(m => ({ default: m.DocumentosSistemaModal })));
 
 interface ModalComponentProps {
   show: boolean;
@@ -55,6 +56,7 @@ const MODAL_CONFIGS: Record<string, ModalConfig> = {
   'agendador-tarefas': { component: AgendadorTarefasModal, title: 'Agendador de Tarefas', loadingMessage: 'Carregando agendador de tarefas...' },
   'assinatura-digital': { component: AssinaturaDigitalModal, title: 'Assinatura Digital', loadingMessage: 'Carregando configurações de assinatura digital...' },
   auditoria: { component: AuditoriaModal, title: 'Logs de Auditoria', loadingMessage: 'Carregando logs de auditoria...', className: 'no-padding' },
+  'documentos-sistema': { component: DocumentosSistemaModal, title: 'Modelos de Documentos', loadingMessage: 'Carregando modelos de documentos...' },
 };
 
 const SingleModalWrapper: React.FC = () => {
