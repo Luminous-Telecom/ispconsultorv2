@@ -11,6 +11,7 @@ interface AssinaturaDigitalModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
+  onHeaderActionsReady?: (actions: React.ReactNode) => void;
 }
 
 interface AssinaturaDigitalForm {
@@ -29,7 +30,7 @@ const initialFormData: AssinaturaDigitalForm = {
   diasExpiracaoPadrao: 30
 };
 
-const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, onClose, skipWrapper = false }) => {
+const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -153,9 +154,36 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
     updateMutation.mutate(formData);
   };
 
-  const handleCancel = () => {
-    onClose();
-  };
+  const headerActionsContent = useMemo(() => (
+    <div className="d-flex gap-2">
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        onClick={onClose}
+        disabled={updateMutation.isPending || isLoading || isLoadingEnabled}
+      >
+        Cancelar
+      </Button>
+      <Button
+        type="submit"
+        form="assinatura-digital-form"
+        variant="primary"
+        size="sm"
+        isLoading={updateMutation.isPending}
+        disabled={isLoading || isLoadingEnabled}
+      >
+        Salvar
+      </Button>
+    </div>
+  ), [onClose, updateMutation.isPending, isLoading, isLoadingEnabled]);
+
+  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
+  useEffect(() => {
+    if (skipWrapper && onHeaderActionsReady) {
+      onHeaderActionsReady(headerActionsContent);
+    }
+  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
 
   const modalContent = (
     <>
@@ -320,29 +348,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
       title="Assinatura Digital Eletrônica"
       size="md"
       modalId="assinatura-digital-modal"
-      headerActions={
-        <div className="d-flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={handleCancel}
-            disabled={updateMutation.isPending || isLoading || isLoadingEnabled}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            form="assinatura-digital-form"
-            variant="primary"
-            size="sm"
-            isLoading={updateMutation.isPending}
-            disabled={isLoading || isLoadingEnabled}
-          >
-            Salvar
-          </Button>
-        </div>
-      }
+      headerActions={headerActionsContent}
     >
       {modalContent}
     </DraggableModal>

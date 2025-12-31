@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { useModal } from '@/contexts/ModalContext';
 import Loading from './Loading';
 import DraggableModal from './DraggableModal';
@@ -28,6 +28,7 @@ interface ModalComponentProps {
   onClose: () => void;
   title?: string;
   skipWrapper?: boolean;
+  headerActions?: React.ReactNode;
   [key: string]: unknown;
 }
 
@@ -61,6 +62,7 @@ const MODAL_CONFIGS: Record<string, ModalConfig> = {
 
 const SingleModalWrapper: React.FC = () => {
   const { activeModal, closeModal } = useModal();
+  const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
 
   if (!activeModal) return null;
 
@@ -72,11 +74,9 @@ const SingleModalWrapper: React.FC = () => {
     show: true,
     onClose: closeModal,
     skipWrapper: true,
+    onHeaderActionsReady: setHeaderActions,
+    ...(['clientes', 'planos', 'bancos', 'contratos'].includes(activeModal) && { title: modalConfig.title }),
   };
-
-  if (['clientes', 'planos', 'bancos', 'contratos'].includes(activeModal)) {
-    modalProps.title = modalConfig.title;
-  }
 
   return (
     <DraggableModal
@@ -86,6 +86,7 @@ const SingleModalWrapper: React.FC = () => {
       size="xl"
       modalId={`single-modal-${activeModal}`}
       className={modalConfig.className || ''}
+      headerActions={headerActions}
     >
       <Suspense fallback={<Loading message={modalConfig.loadingMessage} />}>
         <ModalComponent {...modalProps} />

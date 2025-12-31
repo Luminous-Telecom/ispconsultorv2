@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -9,7 +9,7 @@ import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
 
-const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, skipWrapper = false }) => {
+const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -122,7 +122,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
     await saveServidorMutation.mutateAsync(formData);
   };
 
-  const handleSaveMensagem = () => {
+  const handleSaveMensagem = useCallback(() => {
     if (!mensagemType) return showError('Selecione um tipo');
     saveMensagemMutation.mutate({ 
       tipo: mensagemType, 
@@ -131,9 +131,9 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
       mensagem_manual: mensagemManual || undefined,
       ativo: true 
     });
-  };
+  }, [mensagemType, tipoEnvio, mensagemTexto, mensagemManual, saveMensagemMutation, showError]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (servidorAtivo?.data?.id) {
       ServidorEmailService.delete(servidorAtivo.data.id).then(() => {
         success('Servidor removido!');
@@ -141,15 +141,15 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
       });
     }
     setFormData(initialFormData);
-  };
+  }, [servidorAtivo?.data?.id, success, queryClient, initialFormData]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setFormData(initialFormData);
     setMensagemType('');
     setMensagemTexto('<p></p>');
     setTipoEnvio('pdf');
     onClose();
-  };
+  }, [onClose, initialFormData]);
 
   const handleSendTestEmail = () => {
     if (!emailTeste.trim()) return showError('Digite um e-mail');
@@ -160,6 +160,52 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
   const handleFormChange = (field: keyof ServidorEmailForm, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const headerActionsContent = useMemo(() => (
+    <div className="d-flex gap-2">
+      <Button
+        type="button"
+        variant="primary"
+        size="sm"
+        onClick={() => {
+          if (activeTab === 'servidor') {
+            const form = document.getElementById('servidor-email-form') as HTMLFormElement;
+            form?.requestSubmit();
+          } else {
+            handleSaveMensagem();
+          }
+        }}
+        isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
+      >
+        Salvar
+      </Button>
+      <Button
+        type="button"
+        variant="outline-danger"
+        size="sm"
+        onClick={handleReset}
+        disabled={saveServidorMutation.isPending}
+      >
+        {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
+      </Button>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        onClick={handleClose}
+        disabled={saveServidorMutation.isPending}
+      >
+        Fechar
+      </Button>
+    </div>
+  ), [activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, handleClose, handleReset, handleSaveMensagem]);
+
+  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
+  useEffect(() => {
+    if (skipWrapper && onHeaderActionsReady) {
+      onHeaderActionsReady(headerActionsContent);
+    }
+  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
 
   const modalContent = (
     <>
@@ -265,46 +311,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
       title="Servidor de E-Mail"
       size="xl"
       modalId="servidor-email-modal"
-      headerActions={
-        <div className="d-flex gap-2">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            onClick={() => {
-              if (activeTab === 'servidor') {
-                const form = document.getElementById('servidor-email-form') as HTMLFormElement;
-                form?.requestSubmit();
-              } else {
-                handleSaveMensagem();
-              }
-            }}
-            isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
-          >
-            Salvar
-          </Button>
-          <Button
-            type="button"
-            variant="outline-danger"
-            size="sm"
-            onClick={handleReset}
-            disabled={saveServidorMutation.isPending}
-          >
-            {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={handleClose}
-            disabled={saveServidorMutation.isPending}
-          >
-            Fechar
-          </Button>
-        </div>
-      }
+      headerActions={headerActionsContent}
     >
       {modalContent}
     </DraggableModal>

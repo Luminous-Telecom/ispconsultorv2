@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -12,6 +12,7 @@ interface RecursosSistemaModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
+  onHeaderActionsReady?: (actions: React.ReactNode) => void;
 }
 
 interface ParametrosForm {
@@ -23,7 +24,7 @@ interface ParametrosForm {
   total_titulos_financeiro: number;
 }
 
-const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClose, skipWrapper = false }) => {
+const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -103,6 +104,36 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
     }
   };
 
+  const headerActionsContent = useMemo(() => (
+    <div className="d-flex gap-2">
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        onClick={onClose}
+        disabled={updateParametrosMutation.isPending}
+      >
+        Cancelar
+      </Button>
+      <Button
+        type="submit"
+        form="recursos-sistema-form"
+        variant="primary"
+        size="sm"
+        isLoading={updateParametrosMutation.isPending}
+      >
+        Salvar
+      </Button>
+    </div>
+  ), [onClose, updateParametrosMutation.isPending]);
+
+  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
+  useEffect(() => {
+    if (skipWrapper && onHeaderActionsReady) {
+      onHeaderActionsReady(headerActionsContent);
+    }
+  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
+
   const modalContent = (
     <>
       {isLoading ? (
@@ -112,133 +143,135 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
           </div>
         </div>
       ) : (
-      <form id="recursos-sistema-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
-        <div>
-          <div className="card mb-3">
-            <div className="card-header py-1 px-2">
-              <small className="fw-bold mb-0">Validações</small>
+        <>
+          <form id="recursos-sistema-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+            <div>
+              <div className="card mb-3">
+                <div className="card-header py-1 px-2">
+                  <small className="fw-bold mb-0">Validações</small>
+                </div>
+                <div className="card-body p-2">
+                  <div className="form-check mb-3">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="validar_cpf_cnpj"
+                      name="validar_cpf_cnpj"
+                      checked={formData.validar_cpf_cnpj}
+                      onChange={() => handleCheckboxChange('validar_cpf_cnpj')}
+                      disabled={updateParametrosMutation.isPending}
+                    />
+                    <label className="form-check-label" htmlFor="validar_cpf_cnpj">
+                      Validar CPF/CNPJ
+                    </label>
+                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                      Quando ativado, valida se CPF/CNPJ é válido ao cadastrar/editar clientes
+                    </div>
+                  </div>
+
+                  <div className="form-check mb-3">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="validar_cep"
+                      name="validar_cep"
+                      checked={formData.validar_cep}
+                      onChange={() => handleCheckboxChange('validar_cep')}
+                      disabled={updateParametrosMutation.isPending}
+                    />
+                    <label className="form-check-label" htmlFor="validar_cep">
+                      Validar CEP
+                    </label>
+                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                      Quando ativado, busca automaticamente os dados do endereço ao digitar um CEP válido
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card mb-3">
+                <div className="card-header py-1 px-2">
+                  <small className="fw-bold mb-0">Geração de Títulos</small>
+                </div>
+                <div className="card-body p-2">
+                  <div className="form-check mb-3">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="titulos_vence_sabado"
+                      name="titulos_vence_sabado"
+                      checked={formData.titulos_vence_sabado}
+                      onChange={() => handleCheckboxChange('titulos_vence_sabado')}
+                      disabled={updateParametrosMutation.isPending}
+                    />
+                    <label className="form-check-label" htmlFor="titulos_vence_sabado">
+                      Títulos Vencem aos Sábados
+                    </label>
+                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                      Permite que títulos tenham vencimento aos sábados
+                    </div>
+                  </div>
+
+                  <div className="form-check mb-3">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="titulos_vence_domingo"
+                      name="titulos_vence_domingo"
+                      checked={formData.titulos_vence_domingo}
+                      onChange={() => handleCheckboxChange('titulos_vence_domingo')}
+                      disabled={updateParametrosMutation.isPending}
+                    />
+                    <label className="form-check-label" htmlFor="titulos_vence_domingo">
+                      Títulos Vencem aos Domingos
+                    </label>
+                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                      Permite que títulos tenham vencimento aos domingos
+                    </div>
+                  </div>
+
+                  <div className="form-check mb-3">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="auto_lancamento_titulos"
+                      name="auto_lancamento_titulos"
+                      checked={formData.auto_lancamento_titulos}
+                      onChange={() => handleCheckboxChange('auto_lancamento_titulos')}
+                      disabled={updateParametrosMutation.isPending}
+                    />
+                    <label className="form-check-label" htmlFor="auto_lancamento_titulos">
+                      Auto Lançamento de Títulos
+                    </label>
+                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                      Lança automaticamente novos títulos para manter o total configurado no financeiro
+                    </div>
+                  </div>
+
+                  <div className="mb-2">
+                    <label htmlFor="total_titulos_financeiro" className="form-label small mb-1">
+                      Total de Títulos no Financeiro
+                    </label>
+                    <input
+                      type="number"
+                      className="form-control form-control-sm"
+                      id="total_titulos_financeiro"
+                      name="total_titulos_financeiro"
+                      min="1"
+                      max="24"
+                      value={formData.total_titulos_financeiro}
+                      onChange={(e) => handleNumberChange('total_titulos_financeiro', e.target.value)}
+                      disabled={updateParametrosMutation.isPending || !formData.auto_lancamento_titulos}
+                    />
+                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                      Quantidade de títulos futuros a manter sempre disponíveis no financeiro (de 1 a 24 meses)
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="card-body p-2">
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="validar_cpf_cnpj"
-                  name="validar_cpf_cnpj"
-                  checked={formData.validar_cpf_cnpj}
-                  onChange={() => handleCheckboxChange('validar_cpf_cnpj')}
-                  disabled={updateParametrosMutation.isPending}
-                />
-                <label className="form-check-label" htmlFor="validar_cpf_cnpj">
-                  Validar CPF/CNPJ
-                </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Quando ativado, valida se CPF/CNPJ é válido ao cadastrar/editar clientes
-                </div>
-              </div>
-
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="validar_cep"
-                  name="validar_cep"
-                  checked={formData.validar_cep}
-                  onChange={() => handleCheckboxChange('validar_cep')}
-                  disabled={updateParametrosMutation.isPending}
-                />
-                <label className="form-check-label" htmlFor="validar_cep">
-                  Validar CEP
-                </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Quando ativado, busca automaticamente os dados do endereço ao digitar um CEP válido
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card mb-3">
-            <div className="card-header py-1 px-2">
-              <small className="fw-bold mb-0">Geração de Títulos</small>
-            </div>
-            <div className="card-body p-2">
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="titulos_vence_sabado"
-                  name="titulos_vence_sabado"
-                  checked={formData.titulos_vence_sabado}
-                  onChange={() => handleCheckboxChange('titulos_vence_sabado')}
-                  disabled={updateParametrosMutation.isPending}
-                />
-                <label className="form-check-label" htmlFor="titulos_vence_sabado">
-                  Títulos Vencem aos Sábados
-                </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Permite que títulos tenham vencimento aos sábados
-                </div>
-              </div>
-
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="titulos_vence_domingo"
-                  name="titulos_vence_domingo"
-                  checked={formData.titulos_vence_domingo}
-                  onChange={() => handleCheckboxChange('titulos_vence_domingo')}
-                  disabled={updateParametrosMutation.isPending}
-                />
-                <label className="form-check-label" htmlFor="titulos_vence_domingo">
-                  Títulos Vencem aos Domingos
-                </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Permite que títulos tenham vencimento aos domingos
-                </div>
-              </div>
-
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="auto_lancamento_titulos"
-                  name="auto_lancamento_titulos"
-                  checked={formData.auto_lancamento_titulos}
-                  onChange={() => handleCheckboxChange('auto_lancamento_titulos')}
-                  disabled={updateParametrosMutation.isPending}
-                />
-                <label className="form-check-label" htmlFor="auto_lancamento_titulos">
-                  Auto Lançamento de Títulos
-                </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Lança automaticamente novos títulos para manter o total configurado no financeiro
-                </div>
-              </div>
-
-              <div className="mb-2">
-                <label htmlFor="total_titulos_financeiro" className="form-label small mb-1">
-                  Total de Títulos no Financeiro
-                </label>
-                <input
-                  type="number"
-                  className="form-control form-control-sm"
-                  id="total_titulos_financeiro"
-                  name="total_titulos_financeiro"
-                  min="1"
-                  max="24"
-                  value={formData.total_titulos_financeiro}
-                  onChange={(e) => handleNumberChange('total_titulos_financeiro', e.target.value)}
-                  disabled={updateParametrosMutation.isPending || !formData.auto_lancamento_titulos}
-                />
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Quantidade de títulos futuros a manter sempre disponíveis no financeiro (de 1 a 24 meses)
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </form>
+          </form>
+        </>
       )}
     </>
   );
@@ -254,30 +287,7 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
       title="Recursos do Sistema"
       size="md"
       modalId="recursos-sistema-modal"
-      headerActions={
-        <div className="d-flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={onClose}
-            disabled={updateParametrosMutation.isPending}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            form="recursos-sistema-form"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            isLoading={updateParametrosMutation.isPending}
-          >
-            Salvar
-          </Button>
-        </div>
-      }
+      headerActions={headerActionsContent}
     >
       {modalContent}
     </DraggableModal>

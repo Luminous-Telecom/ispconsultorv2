@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -17,7 +17,7 @@ interface GrupoVariaveis {
   variaveis: Array<{ variavel: string; descricao: string }>;
 }
 
-const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onClose, skipWrapper = false }) => {
+const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -189,7 +189,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     await saveServidorMutation.mutateAsync(formData);
   };
 
-  const handleSaveMensagem = async () => {
+  const handleSaveMensagem = useCallback(async () => {
     if (!mensagemType) {
       showError('Selecione um tipo de mensagem');
       return;
@@ -223,9 +223,9 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       interacao3: interacao3 || undefined,
       ativo: true
     });
-  };
+  }, [mensagemType, tipoEnvio, mensagemPadrao, mensagemManual, templateMapping, interacao1, interacao2, interacao3, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showError]);
 
-  const handleReset = async () => {
+  const handleReset = useCallback(async () => {
     if (servidorAtivo?.data?.id) {
       try {
         await ServidorWhatsAppService.delete(servidorAtivo.data.id);
@@ -237,12 +237,12 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       }
     }
     setFormData(initialFormData);
-  };
+  }, [servidorAtivo?.data?.id, success, queryClient, showError, initialFormData]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setFormData(initialFormData);
     onClose();
-  };
+  }, [onClose, initialFormData]);
 
   const handleSendTestMessage = async () => {
     if (!testPhone.trim()) {
@@ -281,6 +281,53 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       setMensagemPadrao(prev => prev + variable);
     }
   };
+
+  const headerActionsContent = useMemo(() => (
+    <div className="d-flex gap-2">
+      <Button
+        type="button"
+        variant="primary"
+        size="sm"
+        onClick={(e) => {
+          if (activeTab === 'servidor') {
+            const form = document.getElementById('servidor-whatsapp-form') as HTMLFormElement;
+            form?.requestSubmit();
+          } else {
+            e.preventDefault();
+            handleSaveMensagem();
+          }
+        }}
+        isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
+      >
+        Salvar
+      </Button>
+      <Button
+        type="button"
+        variant="outline-danger"
+        size="sm"
+        onClick={handleReset}
+        disabled={saveServidorMutation.isPending}
+      >
+        {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
+      </Button>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        onClick={handleClose}
+        disabled={saveServidorMutation.isPending}
+      >
+        Fechar
+      </Button>
+    </div>
+  ), [activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, handleClose, handleReset, handleSaveMensagem]);
+
+  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
+  useEffect(() => {
+    if (skipWrapper && onHeaderActionsReady) {
+      onHeaderActionsReady(headerActionsContent);
+    }
+  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
 
   const modalContent = (
     <>
@@ -406,47 +453,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         title="Servidor de WhatsApp - Evolution API"
         size="lg"
         modalId="servidor-whatsapp-modal"
-        headerActions={
-          <div className="d-flex gap-2">
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              leftIcon={<i className="bi bi-check-lg"></i>}
-              onClick={(e) => {
-                if (activeTab === 'servidor') {
-                  const form = document.getElementById('servidor-whatsapp-form') as HTMLFormElement;
-                  form?.requestSubmit();
-                } else {
-                  e.preventDefault();
-                  handleSaveMensagem();
-                }
-              }}
-              isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
-            >
-              Salvar
-            </Button>
-            <Button
-              type="button"
-              variant="outline-danger"
-              size="sm"
-              onClick={handleReset}
-              disabled={saveServidorMutation.isPending}
-            >
-              {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              leftIcon={<i className="bi bi-x-lg"></i>}
-              onClick={handleClose}
-              disabled={saveServidorMutation.isPending}
-            >
-              Fechar
-            </Button>
-          </div>
-        }
+        headerActions={headerActionsContent}
       >
         {modalContent}
       </DraggableModal>
