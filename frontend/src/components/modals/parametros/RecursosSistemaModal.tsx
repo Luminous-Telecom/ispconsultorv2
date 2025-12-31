@@ -244,7 +244,35 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
   );
 
   if (skipWrapper) {
-    return modalContent;
+    return (
+      <div className="d-flex flex-column" style={{ height: '100%' }}>
+        <div className="d-flex justify-content-end gap-2 mb-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
+            onClick={onClose}
+            disabled={updateParametrosMutation.isPending}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="recursos-sistema-form"
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={updateParametrosMutation.isPending}
+          >
+            Salvar
+          </Button>
+        </div>
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          {modalContent}
+        </div>
+      </div>
+    );
   }
 
   return (
