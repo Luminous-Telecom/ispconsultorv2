@@ -219,8 +219,9 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         if (data.conteudo_permanencia !== undefined) {
           promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(currentDocumento.id, data.conteudo_permanencia || ''));
         }
-        if (data.nome || data.descricao || data.conteudo) {
-          promises.push(DocumentoSistemaService.update(currentDocumento.id, { nome: data.nome, descricao: data.descricao, conteudo: data.conteudo }));
+        if (data.nome || data.descricao) {
+          // Evita sobrescrever o conteúdo recém-salvo em requisições paralelas
+          promises.push(DocumentoSistemaService.update(currentDocumento.id, { nome: data.nome, descricao: data.descricao }));
         }
         await Promise.all(promises);
 
