@@ -87,6 +87,8 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
     },
   });
 
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
   const resetForm = () => {
     setFormData({
       nome: 'Geração de Títulos', // Gerado automaticamente baseado no tipo
@@ -135,9 +137,31 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
       onClose={handleClose}
       title={isEditMode ? 'Editar Rotina' : 'Nova Rotina'}
       size="lg"
+      headerActions={
+        <div className="d-flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleClose}
+            disabled={isSaving}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="rotina-agendada-form"
+            variant="primary"
+            size="sm"
+            isLoading={isSaving}
+          >
+            Salvar
+          </Button>
+        </div>
+      }
     >
       <div style={{ padding: isMobile ? '0' : '16px' }}>
-        <form onSubmit={handleSubmit}>
+        <form id="rotina-agendada-form" onSubmit={handleSubmit}>
           <div className="row g-3">
           <div className="col-12">
             <FormField
@@ -223,26 +247,6 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
             </div>
           </div>
 
-          <div className="col-12 mt-3">
-            <div className="d-flex gap-2 justify-content-end">
-              <Button
-                type="button"
-                variant="secondary"
-                leftIcon={<i className="bi bi-x-lg"></i>}
-                onClick={handleClose}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                leftIcon={<i className="bi bi-check-lg"></i>}
-                isLoading={createMutation.isPending || updateMutation.isPending}
-              >
-                Salvar
-              </Button>
-            </div>
-          </div>
         </div>
         </form>
       </div>
