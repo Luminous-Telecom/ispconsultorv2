@@ -276,6 +276,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         
         /* Estilos para modo escuro */
         [data-theme="dark"] .modal-content .form-control:not(:disabled):not(textarea) {
+          background-color: #2d3748 !important;
           border-color: #4a5568 !important;
           color: #ffffff !important;
           height: 30px !important;
@@ -284,6 +285,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         }
         
         [data-theme="dark"] .modal-content .form-select:not(:disabled) {
+          background-color: #2d3748 !important;
           border-color: #4a5568 !important;
           color: #ffffff !important;
           height: 30px !important;
@@ -296,6 +298,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         }
         
         [data-theme="dark"] .modal-content textarea.form-control:not(:disabled) {
+          background-color: #2d3748 !important;
           border-color: #4a5568 !important;
           color: #ffffff !important;
           min-height: 30px !important;
@@ -323,6 +326,36 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           padding: 4px 8px !important;
           font-size: 13px !important;
           resize: vertical !important;
+        }
+        
+        /* Estilos para inputs readOnly no modo escuro */
+        [data-theme="dark"] .modal-content .form-control[readonly]:not(textarea) {
+          background-color: #1a202c !important;
+          border-color: #2d3748 !important;
+          color: #718096 !important;
+          cursor: not-allowed !important;
+        }
+        
+        [data-theme="dark"] .modal-content textarea.form-control[readonly] {
+          background-color: #1a202c !important;
+          border-color: #2d3748 !important;
+          color: #718096 !important;
+          cursor: not-allowed !important;
+        }
+        
+        /* Estilos para inputs readOnly no modo claro */
+        [data-theme="light"] .modal-content .form-control[readonly]:not(textarea) {
+          background-color: #e9ecef !important;
+          border-color: #ced4da !important;
+          color: #495057 !important;
+          cursor: not-allowed !important;
+        }
+        
+        [data-theme="light"] .modal-content textarea.form-control[readonly] {
+          background-color: #e9ecef !important;
+          border-color: #ced4da !important;
+          color: #495057 !important;
+          cursor: not-allowed !important;
         }
       `}</style>
 

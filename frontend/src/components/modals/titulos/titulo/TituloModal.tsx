@@ -318,7 +318,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
                       return `${cliente.nome_fantasia || cliente.razao_social} - ${cliente.cnpj}`;
                     })()}
                     readOnly
-                    style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
+                    style={{ cursor: 'not-allowed' }}
                   />
                   <small className="text-muted">Cliente não pode ser alterado</small>
                 </div>
@@ -331,7 +331,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
                     className="form-control form-control-sm"
                     value={planos?.data?.find((p: Plano) => p.id === formData.plano_id)?.nome_plano || 'Carregando...'}
                     readOnly
-                    style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
+                    style={{ cursor: 'not-allowed' }}
                   />
                   <small className="text-muted">Plano não pode ser alterado</small>
                 </div>
