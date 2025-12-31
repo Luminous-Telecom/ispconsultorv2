@@ -9,6 +9,8 @@ import { normalizeDateForDb } from '../../utils/dateUtils';
 import { titulosBulkCreateSchema } from '../../validators/titulo.validator';
 import { withTransaction } from '../../utils/transaction';
 import { registrarCriacao } from '../../services/AuditoriaService';
+import { registrarCriacaoElasticsearch } from '../../services/elasticsearch/ElasticsearchAuditService';
+import { FinancialCalculationsService } from '../../services/FinancialCalculationsService';
 import type { AuthenticatedRequest } from '../../types/auth';
 
 export class TituloBulkController {
@@ -48,27 +50,17 @@ export class TituloBulkController {
 
           const numeroTitulo = `TIT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-          let valorFinal = parseFloat(plano.valor_mensal.toString());
-          const desconto_percentual = dadosTitulo.desconto_percentual ? parseFloat(dadosTitulo.desconto_percentual.toString()) : null;
-          const desconto_valor = dadosTitulo.desconto_valor ? parseFloat(dadosTitulo.desconto_valor.toString()) : null;
-          const acrescimo_percentual = dadosTitulo.acrescimo_percentual ? parseFloat(dadosTitulo.acrescimo_percentual.toString()) : null;
-          const acrescimo_valor = dadosTitulo.acrescimo_valor ? parseFloat(dadosTitulo.acrescimo_valor.toString()) : null;
-
-          if (desconto_valor && desconto_valor > 0) {
-            valorFinal = valorFinal - desconto_valor;
-          } else if (desconto_percentual && desconto_percentual > 0) {
-            valorFinal = valorFinal * (1 - (desconto_percentual / 100));
-          }
-
-          if (acrescimo_percentual && acrescimo_percentual > 0) {
-            valorFinal = valorFinal * (1 + (acrescimo_percentual / 100));
-          }
-
-          if (acrescimo_valor && acrescimo_valor > 0) {
-            valorFinal = valorFinal + acrescimo_valor;
-          }
-
-          valorFinal = Math.max(0.01, valorFinal);
+          const valorFinal = FinancialCalculationsService.calcularValorFinal(
+            parseFloat(plano.valor_mensal.toString()),
+            {
+              desconto_valor: dadosTitulo.desconto_valor ? parseFloat(dadosTitulo.desconto_valor.toString()) : undefined,
+              desconto_percentual: dadosTitulo.desconto_percentual ? parseFloat(dadosTitulo.desconto_percentual.toString()) : undefined
+            },
+            {
+              acrescimo_valor: dadosTitulo.acrescimo_valor ? parseFloat(dadosTitulo.acrescimo_valor.toString()) : undefined,
+              acrescimo_percentual: dadosTitulo.acrescimo_percentual ? parseFloat(dadosTitulo.acrescimo_percentual.toString()) : undefined
+            }
+          );
 
           const titulo = await Titulo.create({
             cliente_id: dadosTitulo.cliente_id,
@@ -98,12 +90,9 @@ export class TituloBulkController {
 
       // Registrar auditoria para cada título criado
       for (const titulo of titulosCriados) {
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'Titulo',
-          titulo.id,
-          titulo.toJSON() as Record<string, unknown>
-        );
+        const tituloData = titulo.toJSON() as Record<string, unknown>;
+        await registrarCriacao(req as AuthenticatedRequest, 'Titulo', titulo.id, tituloData);
+        await registrarCriacaoElasticsearch(req as AuthenticatedRequest, 'Titulo', titulo.id, tituloData);
       }
 
       const { metrics, isMetricsEnabled } = await import('../../utils/metrics');

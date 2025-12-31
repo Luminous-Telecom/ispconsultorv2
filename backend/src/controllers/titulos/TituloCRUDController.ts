@@ -12,6 +12,7 @@ import { gerarLinkPagamentoPublico } from './TituloHelpers';
 import { TituloBulkController } from './TituloBulkController';
 import type { TituloComRelacoes } from './types';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../services/AuditoriaService';
+import { registrarCriacaoElasticsearch } from '../../services/elasticsearch/ElasticsearchAuditService';
 import { setAuditData } from '../../middleware/auditMiddleware';
 
 export class TituloCRUDController {
@@ -287,11 +288,18 @@ export class TituloCRUDController {
       });
 
       // Registrar auditoria
+      const tituloData = titulo.toJSON() as Record<string, unknown>;
       await registrarCriacao(
         req,
         'Titulo',
         titulo.id,
-        titulo.toJSON() as Record<string, unknown>
+        tituloData
+      );
+      await registrarCriacaoElasticsearch(
+        req,
+        'Titulo',
+        titulo.id,
+        tituloData
       );
 
       res.status(201).json({ success: true, message: 'Título criado com sucesso', data: titulo });
