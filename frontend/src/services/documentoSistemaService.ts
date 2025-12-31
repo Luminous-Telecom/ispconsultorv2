@@ -48,6 +48,8 @@ export interface ModelosByContratoData {
   modelo_contrato_conteudo?: string;
   modelo_termo_adesao?: string;
   modelo_contrato_permanencia?: string;
+  modelo_recibo?: string;
+  modelo_carta?: string;
 }
 
 const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): { success: boolean; data: T; message: string } => ({
@@ -350,6 +352,22 @@ class DocumentoSistemaService {
 
   static async saveModeloContratoPermanencia(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: ModeloContratoResponse; message: string }> {
     const response = await apiService.post<ModeloContratoResponse>('/modelos-documento/modelo-contrato-permanencia', {
+      modelo_documento_id: modeloContratoId,
+      modelo
+    });
+    return normalizeResponse(response, {} as ModeloContratoResponse);
+  }
+
+  static async saveModeloRecibo(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: ModeloContratoResponse; message: string }> {
+    const response = await apiService.post<ModeloContratoResponse>('/modelos-documento/modelo-recibo', {
+      modelo_documento_id: modeloContratoId,
+      modelo
+    });
+    return normalizeResponse(response, {} as ModeloContratoResponse);
+  }
+
+  static async saveModeloCarta(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: ModeloContratoResponse; message: string }> {
+    const response = await apiService.post<ModeloContratoResponse>('/modelos-documento/modelo-carta', {
       modelo_documento_id: modeloContratoId,
       modelo
     });

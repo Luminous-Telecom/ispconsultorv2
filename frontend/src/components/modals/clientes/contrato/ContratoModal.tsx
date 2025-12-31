@@ -37,6 +37,8 @@ import TermosTab from './abas/TermosTab';
 import FinanceiroTab from './abas/FinanceiroTab';
 import FinanceiroAvulsoTab from './abas/FinanceiroAvulsoTab';
 import ServicosAdicionaisTab from './abas/ServicosAdicionaisTab';
+import RecibosTab from './abas/RecibosTab';
+import CartaCobrancaTab from './abas/CartaCobrancaTab';
 import { TermoEditModal, SelecionarTermoModal, ServicoAdicionalModal, EnviarAssinaturaModal } from './modals';
 import { BulkAction } from './types';
 
@@ -1669,6 +1671,36 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 Serviços Adicionais
               </button>
             </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'recibos' ? 'active' : ''}`}
+                type="button"
+                onClick={() => {
+                  if (isEditMode) {
+                    handleTabChange('recibos');
+                  }
+                }}
+                disabled={!isEditMode}
+                style={{ cursor: !isEditMode ? 'not-allowed' : 'pointer', opacity: !isEditMode ? 0.6 : 1 }}
+              >
+                Recibos
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'carta-cobranca' ? 'active' : ''}`}
+                type="button"
+                onClick={() => {
+                  if (isEditMode) {
+                    handleTabChange('carta-cobranca');
+                  }
+                }}
+                disabled={!isEditMode}
+                style={{ cursor: !isEditMode ? 'not-allowed' : 'pointer', opacity: !isEditMode ? 0.6 : 1 }}
+              >
+                Carta de Cobrança
+              </button>
+            </li>
           </ul>
 
           {/* Conteúdo das Abas */}
@@ -1676,9 +1708,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             className="tab-content" 
             style={{ 
               flex: 1, 
-              overflow: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'financeiro-avulso' || activeTab === 'servicos-adicionais') ? 'hidden' : 'auto', 
+              overflow: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'financeiro-avulso' || activeTab === 'servicos-adicionais' || activeTab === 'recibos' || activeTab === 'carta-cobranca') ? 'hidden' : 'auto', 
               // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
-              padding: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'financeiro-avulso' || activeTab === 'servicos-adicionais') ? '0' : (isMobile ? '0' : '16px'),
+              padding: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'financeiro-avulso' || activeTab === 'servicos-adicionais' || activeTab === 'recibos' || activeTab === 'carta-cobranca') ? '0' : (isMobile ? '0' : '16px'),
               minHeight: 0,
               display: 'flex',
               flexDirection: 'column'
@@ -1824,6 +1856,32 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
                   <div className="text-center">
                     <p className="text-muted">Crie o contrato primeiro para gerenciar serviços adicionais.</p>
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* Aba Recibos */}
+            {activeTab === 'recibos' && (
+              isEditMode ? (
+                <RecibosTab contratoId={internalContratoId} />
+              ) : (
+                <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
+                  <div className="text-center">
+                    <p className="text-muted">Crie o contrato primeiro para gerenciar recibos.</p>
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* Aba Carta de Cobrança */}
+            {activeTab === 'carta-cobranca' && (
+              isEditMode ? (
+                <CartaCobrancaTab contratoId={internalContratoId} />
+              ) : (
+                <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
+                  <div className="text-center">
+                    <p className="text-muted">Crie o contrato primeiro para gerenciar cartas de cobrança.</p>
                   </div>
                 </div>
               )

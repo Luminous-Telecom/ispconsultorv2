@@ -12,6 +12,8 @@ export interface DocumentoForm {
   conteudo_contrato: string;
   conteudo_adesao: string;
   conteudo_permanencia: string;
+  conteudo_recibo: string;
+  conteudo_carta: string;
 }
 
 export interface DocumentoModalProps {

@@ -27,7 +27,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   };
 
   const getTipoLabel = (tipo: TipoDocumento) => {
-    const labels = {
+    const labels: Record<TipoDocumento, string> = {
       contrato: 'Contratos',
       recibo: 'Recibos',
       carta_cobranca: 'Cartas de Cobrança',
@@ -83,26 +83,6 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
             >
               <i className="bi bi-file-earmark-text me-2"></i>
               Contratos
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'recibo' ? 'active' : ''}`}
-              onClick={() => handleTabChange('recibo')}
-              type="button"
-            >
-              <i className="bi bi-receipt me-2"></i>
-              Recibos
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'carta_cobranca' ? 'active' : ''}`}
-              onClick={() => handleTabChange('carta_cobranca')}
-              type="button"
-            >
-              <i className="bi bi-envelope me-2"></i>
-              Cartas de Cobrança
             </button>
           </li>
           <li className="nav-item" role="presentation">

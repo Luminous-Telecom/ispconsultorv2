@@ -82,6 +82,8 @@ router.post('/upload-imagem', (req, res, next) => {
 router.post('/modelo-contrato-conteudo', ModeloDocumentoController.saveModeloContratoConteudo);
 router.post('/modelo-termo-adesao', ModeloDocumentoController.saveModeloTermoAdesao);
 router.post('/modelo-contrato-permanencia', ModeloDocumentoController.saveModeloContratoPermanencia);
+router.post('/modelo-recibo', ModeloDocumentoController.saveModeloRecibo);
+router.post('/modelo-carta', ModeloDocumentoController.saveModeloCarta);
 
 // Rotas para gerar PDF do documento
 router.get('/:id/pdf', ModeloDocumentoController.generatePdf);

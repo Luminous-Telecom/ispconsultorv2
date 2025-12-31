@@ -8,6 +8,8 @@ interface ModeloDocumentoAttributes {
   conteudo: string;
   conteudo_adesao?: string;
   conteudo_permanencia?: string;
+  conteudo_recibo?: string;
+  conteudo_carta?: string;
   descricao?: string;
   ativo: boolean;
   tamanho_maximo: number;
@@ -28,6 +30,8 @@ export class ModeloDocumento extends Model<ModeloDocumentoAttributes, ModeloDocu
   public conteudo!: string;
   public conteudo_adesao?: string;
   public conteudo_permanencia?: string;
+  public conteudo_recibo?: string;
+  public conteudo_carta?: string;
   public descricao?: string;
   public ativo!: boolean;
   public tamanho_maximo!: number;
@@ -97,6 +101,14 @@ ModeloDocumento.init(
       allowNull: true,
     },
     conteudo_permanencia: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
+    },
+    conteudo_recibo: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
+    },
+    conteudo_carta: {
       type: DataTypes.TEXT('long'),
       allowNull: true,
     },

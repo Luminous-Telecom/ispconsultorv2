@@ -16,6 +16,8 @@ import { DocumentoForm, DocumentoModalProps, DocumentoUnion } from './types';
 import ContratoTab from './abas/ContratoTab';
 import AdesaoTab from './abas/AdesaoTab';
 import PermanenciaTab from './abas/PermanenciaTab';
+import ReciboTab from './abas/ReciboTab';
+import CartaTab from './abas/CartaTab';
 import ConteudoTab from './abas/ConteudoTab';
 import { useCliente, useClientes } from '@/hooks/useClientes';
 import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
@@ -27,6 +29,8 @@ const emptyForm: DocumentoForm = {
   conteudo_contrato: '',
   conteudo_adesao: '',
   conteudo_permanencia: '',
+  conteudo_recibo: '',
+  conteudo_carta: '',
 };
 
 const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, documento, tipo, onSuccess }) => {
@@ -40,7 +44,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [clienteTesteId, setClienteTesteId] = useState<number>(0);
   const [showClienteModal, setShowClienteModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'contrato' | 'adesao' | 'permanencia'>('contrato');
+  const [activeTab, setActiveTab] = useState<'contrato' | 'adesao' | 'permanencia' | 'recibo' | 'carta'>('contrato');
   const [showImprimirDropdown, setShowImprimirDropdown] = useState(false);
 
   const queryClient = useQueryClient();
@@ -121,6 +125,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
               conteudo_contrato: modelos.success ? (modelos.data.modelo_contrato_conteudo || '') : conteudo,
               conteudo_adesao: modelos.success ? (modelos.data.modelo_termo_adesao || '') : '',
               conteudo_permanencia: modelos.success ? (modelos.data.modelo_contrato_permanencia || '') : '',
+              conteudo_recibo: modelos.success ? (modelos.data.modelo_recibo || '') : '',
+              conteudo_carta: modelos.success ? (modelos.data.modelo_carta || '') : '',
             });
           } catch {
             setFormData({
@@ -130,6 +136,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
               conteudo_contrato: conteudo,
               conteudo_adesao: '',
               conteudo_permanencia: '',
+              conteudo_recibo: '',
+              conteudo_carta: '',
             });
           }
         } else {
@@ -140,6 +148,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
             conteudo_contrato: '',
             conteudo_adesao: '',
             conteudo_permanencia: '',
+            conteudo_recibo: '',
+            conteudo_carta: '',
           });
         }
       } catch {
@@ -151,6 +161,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           conteudo_contrato: '',
           conteudo_adesao: '',
           conteudo_permanencia: '',
+          conteudo_recibo: '',
+          conteudo_carta: '',
         });
       }
     };
@@ -201,7 +213,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   });
 
   const updateDocumentoMutation = useMutation({
-    mutationFn: async (data: { nome: string; descricao?: string; conteudo?: string; conteudo_contrato?: string; conteudo_adesao?: string; conteudo_permanencia?: string }): Promise<DocumentoUnion> => {
+    mutationFn: async (data: { nome: string; descricao?: string; conteudo?: string; conteudo_contrato?: string; conteudo_adesao?: string; conteudo_permanencia?: string; conteudo_recibo?: string; conteudo_carta?: string }): Promise<DocumentoUnion> => {
       if (!currentDocumento) {
         throw new Error('Documento não encontrado');
       }
@@ -218,6 +230,12 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         }
         if (data.conteudo_permanencia !== undefined) {
           promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(currentDocumento.id, data.conteudo_permanencia || ''));
+        }
+        if (data.conteudo_recibo !== undefined) {
+          promises.push(DocumentoSistemaService.saveModeloRecibo(currentDocumento.id, data.conteudo_recibo || ''));
+        }
+        if (data.conteudo_carta !== undefined) {
+          promises.push(DocumentoSistemaService.saveModeloCarta(currentDocumento.id, data.conteudo_carta || ''));
         }
         if (data.nome || data.descricao) {
           // Evita sobrescrever o conteúdo recém-salvo em requisições paralelas
@@ -263,7 +281,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
 
     try {
       if (isEditing) {
-        const data = { nome: formData.nome, descricao: formData.descricao, conteudo: formData.conteudo, conteudo_contrato: formData.conteudo_contrato, conteudo_adesao: formData.conteudo_adesao, conteudo_permanencia: formData.conteudo_permanencia };
+        const data = { nome: formData.nome, descricao: formData.descricao, conteudo: formData.conteudo, conteudo_contrato: formData.conteudo_contrato, conteudo_adesao: formData.conteudo_adesao, conteudo_permanencia: formData.conteudo_permanencia, conteudo_recibo: formData.conteudo_recibo, conteudo_carta: formData.conteudo_carta };
         await updateDocumentoMutation.mutateAsync(data);
       } else {
         // Para criação, usar conteudo_contrato se for contrato, senão conteudo
@@ -291,16 +309,18 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   };
 
 
-  const getContentByType = (documentoTipo: 'contrato' | 'adesao' | 'permanencia') => {
+  const getContentByType = (documentoTipo: 'contrato' | 'adesao' | 'permanencia' | 'recibo' | 'carta') => {
     switch (documentoTipo) {
       case 'contrato': return formData.conteudo_contrato;
       case 'adesao': return formData.conteudo_adesao;
       case 'permanencia': return formData.conteudo_permanencia;
+      case 'recibo': return formData.conteudo_recibo;
+      case 'carta': return formData.conteudo_carta;
       default: return '';
     }
   };
 
-  const handlePrint = async (documentoTipo?: 'contrato' | 'adesao' | 'permanencia') => {
+  const handlePrint = async (documentoTipo?: 'contrato' | 'adesao' | 'permanencia' | 'recibo' | 'carta') => {
     if (!isEditing || !currentDocumento) return;
 
     // Abrir modal imediatamente
@@ -367,6 +387,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                 <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('contrato'); }} disabled={!isEditing}>Modelo Contrato</button></li>
                 <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('adesao'); }} disabled={!isEditing}>Termo Adesão</button></li>
                 <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('permanencia'); }} disabled={!isEditing}>Contrato Permanência</button></li>
+                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('recibo'); }} disabled={!isEditing}>Recibos</button></li>
+                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('carta'); }} disabled={!isEditing}>Carta de Cobrança</button></li>
               </>
             ) : (
               <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint(); }} disabled={!isEditing}>{getTipoLabel(tipo)}</button></li>
@@ -445,6 +467,12 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                   <li className="nav-item" role="presentation">
                     <button className={`nav-link ${activeTab === 'permanencia' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('permanencia')}>Contrato Permanência</button>
                   </li>
+                  <li className="nav-item" role="presentation">
+                    <button className={`nav-link ${activeTab === 'recibo' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('recibo')}>Recibos</button>
+                  </li>
+                  <li className="nav-item" role="presentation">
+                    <button className={`nav-link ${activeTab === 'carta' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('carta')}>Carta de Cobrança</button>
+                  </li>
                 </ul>
               )}
               
@@ -469,6 +497,20 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                       value={formData.conteudo_permanencia}
                       onChange={(value) => setFormData(prev => ({ ...prev, conteudo_permanencia: value }))}
                       editorKey={`${isEditing ? currentDocumento?.id : 'create'}-permanencia`}
+                    />
+                  )}
+                  {activeTab === 'recibo' && (
+                    <ReciboTab
+                      value={formData.conteudo_recibo}
+                      onChange={(value) => setFormData(prev => ({ ...prev, conteudo_recibo: value }))}
+                      editorKey={`${isEditing ? currentDocumento?.id : 'create'}-recibo`}
+                    />
+                  )}
+                  {activeTab === 'carta' && (
+                    <CartaTab
+                      value={formData.conteudo_carta}
+                      onChange={(value) => setFormData(prev => ({ ...prev, conteudo_carta: value }))}
+                      editorKey={`${isEditing ? currentDocumento?.id : 'create'}-carta`}
                     />
                   )}
                 </>

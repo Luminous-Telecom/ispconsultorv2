@@ -613,6 +613,88 @@ export class ModeloDocumentoController {
   }
 
   /**
+   * Salvar modelo específico de recibo
+   */
+  static async saveModeloRecibo(req: Request, res: Response): Promise<void> {
+    try {
+      const { modelo_documento_id, modelo } = req.body;
+
+      if (!modelo_documento_id || modelo === undefined || modelo === null) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do modelo de documento e modelo são obrigatórios'
+        });
+        return;
+      }
+
+      const modeloDocumento = await ModeloDocumento.findByPk(modelo_documento_id);
+      
+      if (!modeloDocumento) {
+        res.status(404).json({
+          success: false,
+          message: 'Modelo de documento não encontrado'
+        });
+        return;
+      }
+
+      await modeloDocumento.update({ conteudo_recibo: modelo });
+
+      res.json({
+        success: true,
+        data: modeloDocumento,
+        message: 'Modelo de recibo salvo com sucesso'
+      });
+    } catch (error) {
+      logger.error('Erro ao salvar modelo de recibo:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Salvar modelo específico de carta de cobrança
+   */
+  static async saveModeloCarta(req: Request, res: Response): Promise<void> {
+    try {
+      const { modelo_documento_id, modelo } = req.body;
+
+      if (!modelo_documento_id || modelo === undefined || modelo === null) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do modelo de documento e modelo são obrigatórios'
+        });
+        return;
+      }
+
+      const modeloDocumento = await ModeloDocumento.findByPk(modelo_documento_id);
+      
+      if (!modeloDocumento) {
+        res.status(404).json({
+          success: false,
+          message: 'Modelo de documento não encontrado'
+        });
+        return;
+      }
+
+      await modeloDocumento.update({ conteudo_carta: modelo });
+
+      res.json({
+        success: true,
+        data: modeloDocumento,
+        message: 'Modelo de carta de cobrança salvo com sucesso'
+      });
+    } catch (error) {
+      logger.error('Erro ao salvar modelo de carta de cobrança:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
    * Buscar todos os modelos de um modelo de documento
    */
   static async getModelosByModeloContrato(req: Request, res: Response): Promise<void> {
@@ -635,7 +717,9 @@ export class ModeloDocumentoController {
           modelo_documento: modeloDocumento,
           modelo_contrato_conteudo: modeloDocumento.conteudo || '',
           modelo_termo_adesao: modeloDocumento.conteudo_adesao || '',
-          modelo_contrato_permanencia: modeloDocumento.conteudo_permanencia || ''
+          modelo_contrato_permanencia: modeloDocumento.conteudo_permanencia || '',
+          modelo_recibo: modeloDocumento.conteudo_recibo || '',
+          modelo_carta: modeloDocumento.conteudo_carta || ''
         },
         message: 'Modelos do modelo de documento recuperados com sucesso'
       });
