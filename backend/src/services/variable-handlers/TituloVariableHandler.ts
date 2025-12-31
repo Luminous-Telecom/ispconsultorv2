@@ -40,7 +40,7 @@ export class TituloVariableHandler implements VariableHandler {
         { variavel: '#titulo.valor_pago#', descricao: 'Valor pago' },
         { variavel: '#titulo.saldo#', descricao: 'Saldo devedor' },
         { variavel: '#titulo.vencimento#', descricao: 'Data de vencimento' },
-        { variavel: '#titulo.pagamento#', descricao: 'Data de pagamento' },
+        { variavel: '#titulo.pagamento#', descricao: 'Data e hora de pagamento' },
         { variavel: '#titulo.status#', descricao: 'Status do título' },
         { variavel: '#titulo.dias_atraso#', descricao: 'Dias em atraso' },
         { variavel: '#titulo.juros#', descricao: 'Valor de juros' },
@@ -112,9 +112,7 @@ export class TituloVariableHandler implements VariableHandler {
    * Gera link de pagamento público
    */
   private gerarLinkPagamento(titulo: Titulo, baseUrl?: string): string {
-    // Se baseUrl não foi fornecido, usar relativo (será resolvido pelo navegador)
-    const urlFinal = baseUrl || undefined;
-    return gerarLinkPagamentoPublico(titulo.id, urlFinal);
+    return gerarLinkPagamentoPublico(titulo.id, baseUrl);
   }
 
   /**
@@ -141,7 +139,7 @@ export class TituloVariableHandler implements VariableHandler {
         ? Formatter.formatarData(new Date(titulo.data_vencimento)) 
         : '',
       '#titulo.pagamento#': titulo.data_pagamento 
-        ? Formatter.formatarData(new Date(titulo.data_pagamento)) 
+        ? Formatter.formatarDataHora(new Date(titulo.data_pagamento)) 
         : '',
       '#titulo.status#': titulo.status || '',
       '#titulo.dias_atraso#': String(diasAtraso),

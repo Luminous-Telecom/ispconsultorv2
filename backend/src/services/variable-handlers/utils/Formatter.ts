@@ -1,4 +1,4 @@
-import { formatDate } from '../../../utils/dateUtils';
+import { formatDate, formatDateTime } from '../../../utils/dateUtils';
 
 /**
  * Classe utilitária para formatação de valores
@@ -35,7 +35,7 @@ export class Formatter {
    * Formata data e hora no formato brasileiro
    */
   static formatarDataHora(data: Date): string {
-    return `${this.formatarData(data)} ${this.formatarHora(data)}`;
+    return formatDateTime(data) || '';
   }
 
   /**
