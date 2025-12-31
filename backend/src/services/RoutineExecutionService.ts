@@ -9,6 +9,9 @@ import { metrics, isMetricsEnabled } from '../utils/metrics';
 import { Op } from 'sequelize';
 import type { Transaction } from 'sequelize';
 import type Parametros from '../models/Parametros';
+import { registrarCriacao } from './AuditoriaService';
+import { registrarCriacaoElasticsearch } from './elasticsearch/ElasticsearchAuditService';
+import type { Request } from 'express';
 import type {
   RoutineExecutionResult,
   GeracaoTitulosResult,
@@ -328,6 +331,8 @@ export class RoutineExecutionService {
             }
             
             // Usar transação para garantir que todos os títulos sejam criados ou nenhum
+            const titulosCriadosNaTransacao: InstanceType<typeof Titulo>[] = [];
+            
             await withTransaction(async (transaction: Transaction) => {
               let tentativas = 0;
               let títulosCriadosNoContrato = 0;
@@ -392,7 +397,7 @@ export class RoutineExecutionService {
                   // Normalizar data de vencimento para evitar problemas de timezone
                   const dataVencimentoNormalizada = normalizeDateForDb(dataVencimento) || dataVencimento;
                   
-                  await Titulo.create({
+                  const titulo = await Titulo.create({
                     contrato_id: contratoValidado.id,
                     cliente_id: contratoValidado.cliente_id,
                     plano_id: contratoValidado.plano_id,
@@ -405,6 +410,9 @@ export class RoutineExecutionService {
                     numero_titulo: numeroTitulo,
                     is_avulso: false
                   }, { transaction });
+
+                  // Armazenar título criado para registrar auditoria após a transação
+                  titulosCriadosNaTransacao.push(titulo);
 
                   // Incrementar métrica de título gerado se métricas estiverem habilitadas
                   if (isMetricsEnabled() && metrics) {
@@ -423,6 +431,44 @@ export class RoutineExecutionService {
                 }
               }
             });
+
+            // Registrar auditoria para cada título criado (após a transação ser commitada)
+            // Criar request simulado para auditoria (ação automática do sistema)
+            const reqSimulado = {
+              headers: {},
+              socket: { remoteAddress: null },
+              user: undefined
+            } as unknown as Request;
+
+            for (const titulo of titulosCriadosNaTransacao) {
+              try {
+                const tituloData = titulo.toJSON() as Record<string, unknown>;
+
+                // Registrar no banco de dados
+                await registrarCriacao(
+                  reqSimulado,
+                  'Titulo',
+                  titulo.id,
+                  tituloData,
+                  'Título gerado automaticamente pelo agendador de tarefas'
+                );
+
+                // Registrar no Elasticsearch
+                await registrarCriacaoElasticsearch(
+                  reqSimulado,
+                  'Titulo',
+                  titulo.id,
+                  tituloData,
+                  'Título gerado automaticamente pelo agendador de tarefas'
+                );
+              } catch (error) {
+                // Log do erro mas não interrompe o processo
+                logger.warn('Erro ao registrar auditoria de título gerado', {
+                  titulo_id: titulo.id,
+                  error: error instanceof Error ? error.message : 'Erro desconhecido'
+                });
+              }
+            }
 
             contratosProcessados++;
           }
