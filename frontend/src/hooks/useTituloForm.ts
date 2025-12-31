@@ -45,12 +45,16 @@ interface UseTituloFormReturn {
   
   // Flag de edição
   isEditing: boolean;
+  
+  // Flag indicando se título foi registrado no banco emissor
+  tituloRegistradoNoBanco: boolean;
 }
 
 const initialFormData: TituloForm = {
   plano_id: 0,
   contrato_id: undefined,
   data_vencimento: '',
+  valor: 0,
   observacoes: '',
   desconto_percentual: 0,
   desconto_valor: 0,
@@ -120,6 +124,16 @@ export const useTituloForm = ({
   });
 
   const titulo = tituloResponse?.success ? tituloResponse.data : undefined;
+  
+  // Verificar se o título foi registrado no banco emissor
+  // Um título está registrado no banco se tiver algum dos campos: nosso_numero, codigo_barras, linha_digitavel, charge_id, url_boleto
+  const tituloRegistradoNoBanco: boolean = !!(isEditing && titulo && (
+    (titulo.nosso_numero && String(titulo.nosso_numero).trim() !== '') ||
+    (titulo.codigo_barras && String(titulo.codigo_barras).trim() !== '') ||
+    (titulo.linha_digitavel && String(titulo.linha_digitavel).trim() !== '') ||
+    (titulo.charge_id && String(titulo.charge_id).trim() !== '') ||
+    (titulo.url_boleto && String(titulo.url_boleto).trim() !== '')
+  ));
 
   // Dados customizados do título (quando editando)
   const customFormData = useMemo(() => {
@@ -134,6 +148,7 @@ export const useTituloForm = ({
       plano_id: titulo.plano_id || 0,
       contrato_id: undefined, // CarneParcela não tem contrato_id
       data_vencimento: dataVencimento,
+      valor: titulo.valor_final || titulo.valor || titulo.valor_parcela || 0,
       status: titulo.status || 'pendente',
       pago: titulo.pago || false,
       observacoes: titulo.observacoes || '',
@@ -239,10 +254,18 @@ export const useTituloForm = ({
     if (isEditing && tituloId) {
       // Modo edição - apenas campos editáveis conforme backend
       // Backend aceita: status, data_vencimento, observacoes
+      // Se título foi gerado, não permite alterar data_vencimento
       const dataToSend: Partial<CarneParcela> = {
-        data_vencimento: typedData.data_vencimento,
         observacoes: typedData.observacoes || undefined,
       };
+      
+      // Só incluir data_vencimento e valor se o título não foi registrado no banco
+      if (!tituloRegistradoNoBanco) {
+        dataToSend.data_vencimento = typedData.data_vencimento;
+        if (typedData.valor && typedData.valor > 0) {
+          dataToSend.valor = typedData.valor;
+        }
+      }
       
       updateTituloMutation.mutate(dataToSend);
     } else if (!isEditing && clienteId) {
@@ -291,7 +314,8 @@ export const useTituloForm = ({
     handleSubmit,
     validateForm,
     titulo,
-    isEditing
+    isEditing,
+    tituloRegistradoNoBanco
   };
 };
 

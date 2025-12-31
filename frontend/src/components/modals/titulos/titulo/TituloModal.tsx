@@ -105,6 +105,15 @@ const TituloModal: React.FC<TituloModalProps> = ({
   // Usar dados do título do hook
   const tituloData = formHook.titulo ? { success: true, data: formHook.titulo } : undefined;
   const isLoadingTitulo = formHook.isLoadingTitulo;
+  const tituloRegistradoNoBanco = formHook.tituloRegistradoNoBanco;
+  
+  // Obter valor do título para exibição
+  const valorTitulo = tituloData?.data 
+    ? (tituloData.data as CarneParcela).valor_final 
+      || (tituloData.data as CarneParcela).valor 
+      || (tituloData.data as CarneParcela).valor_parcela 
+      || 0
+    : 0;
 
   // Função para calcular a próxima data de vencimento
   const calcularProximaDataVencimento = (diaVencimento: number): string => {
@@ -357,7 +366,41 @@ const TituloModal: React.FC<TituloModalProps> = ({
         </div>
 
         <div className="row">
-          <div className="col-md-6">
+          {isEditMode && (
+            <div className="col-md-6">
+              <div className="mb-3">
+                {tituloRegistradoNoBanco ? (
+                  <>
+                    <label className="form-label">Valor</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTitulo)}
+                      readOnly
+                      style={{ cursor: 'not-allowed' }}
+                    />
+                    <small className="text-muted">Valor não pode ser alterado após registro no banco emissor</small>
+                  </>
+                ) : (
+                  <FormField
+                    name="valor"
+                    type="number"
+                    label="Valor"
+                    required={true}
+                    size="sm"
+                    value={formData.valor || valorTitulo}
+                    onChange={(value: FormValue) => handleInputChange('valor', parseFloat(String(value)) || 0)}
+                    error={errors.valor}
+                    isInvalid={!!errors.valor}
+                    disabled={isPending}
+                    min={0.01}
+                    step={0.01}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+          <div className={isEditMode ? "col-md-6" : "col-md-6"}>
             <div className="mb-3">
               <FormField
                 name="data_vencimento"
@@ -369,8 +412,10 @@ const TituloModal: React.FC<TituloModalProps> = ({
                 onChange={(value: FormValue) => handleInputChange('data_vencimento', value as string)}
                 error={errors.data_vencimento}
                 isInvalid={!!errors.data_vencimento}
-                disabled={isPending}
+                disabled={isPending || tituloRegistradoNoBanco}
+                readOnly={tituloRegistradoNoBanco}
               />
+              {tituloRegistradoNoBanco && <small className="text-muted">Data de vencimento não pode ser alterada após registro no banco emissor</small>}
             </div>
           </div>
           {!isEditMode && (

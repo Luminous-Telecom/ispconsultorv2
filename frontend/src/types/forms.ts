@@ -77,6 +77,7 @@ export interface TituloFormErrors {
   cliente_id?: string;
   plano_id?: string;
   valor_parcela?: string;
+  valor?: string;
   data_vencimento?: string;
 }
 

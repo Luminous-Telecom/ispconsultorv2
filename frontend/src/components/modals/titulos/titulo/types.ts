@@ -3,6 +3,7 @@ export interface TituloForm {
   plano_id: number;
   contrato_id?: number;
   data_vencimento: string;
+  valor?: number;
   observacoes?: string;
   desconto_percentual?: number;
   desconto_valor?: number;
@@ -15,6 +16,7 @@ export interface TituloFormErrors {
   cliente_id?: string;
   plano_id?: string;
   data_vencimento?: string;
+  valor?: string;
 }
 
 export interface TituloModalProps {

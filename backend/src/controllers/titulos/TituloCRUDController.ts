@@ -314,7 +314,7 @@ export class TituloCRUDController {
   public static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { status, data_vencimento, observacoes } = req.body;
+      const { status, data_vencimento, observacoes, valor } = req.body;
 
       const titulo = await Titulo.findByPk(id, { include: [{ model: Cliente, as: 'cliente' }, { model: Banco, as: 'banco' }] }) as TituloComRelacoes | null;
 
@@ -355,6 +355,27 @@ export class TituloCRUDController {
         }
       }
 
+      // Verificar se título está registrado no banco emissor
+      const tituloRegistradoNoBanco = !!(
+        titulo.nosso_numero ||
+        titulo.codigo_barras ||
+        titulo.linha_digitavel ||
+        titulo.charge_id ||
+        titulo.url_boleto
+      );
+
+      // Validar alteração de valor
+      if (valor !== undefined && valor !== null) {
+        if (tituloRegistradoNoBanco) {
+          res.status(400).json({ success: false, message: 'Não é possível alterar o valor de um título já registrado no banco emissor' });
+          return;
+        }
+        if (valor <= 0) {
+          res.status(400).json({ success: false, message: 'Valor deve ser maior que zero' });
+          return;
+        }
+      }
+
       // Lógica de alteração de vencimento
       let dataVencimentoParaUpdate: Date | undefined;
       if (data_vencimento) {
@@ -364,6 +385,11 @@ export class TituloCRUDController {
         if (dataVencimentoNova !== dataVencimentoOriginal) {
           if (titulo.status === 'cancelado') {
             res.status(400).json({ success: false, message: 'Não é possível alterar o vencimento de um título cancelado' });
+            return;
+          }
+          
+          if (tituloRegistradoNoBanco) {
+            res.status(400).json({ success: false, message: 'Não é possível alterar o vencimento de um título já registrado no banco emissor' });
             return;
           }
           
@@ -378,12 +404,30 @@ export class TituloCRUDController {
         }
       }
 
-      // Atualizar título
-      await titulo.update({
+      // Preparar dados para atualização
+      const dadosParaUpdate: Partial<Titulo> = {
         status: status || titulo.status,
-        data_vencimento: dataVencimentoParaUpdate ?? titulo.data_vencimento,
         observacoes: observacoes !== undefined ? observacoes : titulo.observacoes
-      });
+      };
+
+      // Só atualizar data_vencimento e valor se não estiver registrado no banco
+      if (!tituloRegistradoNoBanco) {
+        if (dataVencimentoParaUpdate) {
+          dadosParaUpdate.data_vencimento = dataVencimentoParaUpdate;
+        } else if (data_vencimento) {
+          dadosParaUpdate.data_vencimento = normalizeDateForDb(data_vencimento) || new Date(data_vencimento);
+        }
+        
+        if (valor !== undefined && valor !== null && valor > 0) {
+          dadosParaUpdate.valor = valor;
+        }
+      } else if (dataVencimentoParaUpdate) {
+        // Se estiver registrado, só atualizar data se foi fornecida e diferente
+        dadosParaUpdate.data_vencimento = dataVencimentoParaUpdate;
+      }
+
+      // Atualizar título
+      await titulo.update(dadosParaUpdate);
 
       // Recarregar título para obter dados atualizados
       await titulo.reload();
