@@ -61,14 +61,9 @@ export class SistemaVariableHandler implements VariableHandler {
       return '';
     }
 
-    let assinaturaUrl = empresa.responsavel_assinatura;
-    if (!assinaturaUrl.startsWith('http://') && !assinaturaUrl.startsWith('https://')) {
-      // Se baseUrl não foi fornecido, manter URL relativa
-      // O Puppeteer pode não conseguir carregar, mas evita URLs hardcoded
-      const baseUrl = context.baseUrl;
-      if (baseUrl) {
-        assinaturaUrl = `${baseUrl}${assinaturaUrl}`;
-      }
+    const assinaturaUrl = this.resolverUrlOuVazio(empresa.responsavel_assinatura, context.baseUrl);
+    if (!assinaturaUrl) {
+      return '';
     }
 
     return `<img src="${assinaturaUrl}" alt="Assinatura do Responsável" />`;
@@ -96,14 +91,9 @@ export class SistemaVariableHandler implements VariableHandler {
       return '';
     }
 
-    let assinaturaUrl = assinaturaCliente.caminho;
-    if (!assinaturaUrl.startsWith('http://') && !assinaturaUrl.startsWith('https://')) {
-      // Se baseUrl não foi fornecido, manter URL relativa
-      // O Puppeteer pode não conseguir carregar, mas evita URLs hardcoded
-      const baseUrl = context.baseUrl;
-      if (baseUrl) {
-        assinaturaUrl = `${baseUrl}${assinaturaUrl}`;
-      }
+    const assinaturaUrl = this.resolverUrlOuVazio(assinaturaCliente.caminho, context.baseUrl);
+    if (!assinaturaUrl) {
+      return '';
     }
 
     return `<img src="${assinaturaUrl}" alt="Assinatura do Cliente" />`;
@@ -122,6 +112,16 @@ export class SistemaVariableHandler implements VariableHandler {
       '#assinatura_consultor#': assinaturaConsultorHtml,
       '#assinatura_cliente#': assinaturaClienteHtml
     };
+  }
+
+  /**
+   * Retorna o caminho informado sem bloquear protocolos ou montar URLs.
+   */
+  private resolverUrlOuVazio(assinaturaPath: string, _baseUrl?: string): string {
+    if (!assinaturaPath) {
+      return '';
+    }
+    return assinaturaPath;
   }
 }
 
