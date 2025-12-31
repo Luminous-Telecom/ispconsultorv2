@@ -39,6 +39,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
   });
+  const { setPage, clearSearch } = tableFilters;
   
   const [selectedItems, setSelectedItems] = useState<Titulo[]>([]);
   const [searchField, setSearchField] = useState<string>('numero_titulo');
@@ -72,8 +73,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   
   // Resetar página quando filtros específicos mudarem
   useEffect(() => {
-    tableFilters.setPage(1);
-  }, [showCancelados, dataVencimentoInicio, dataVencimentoFim, tableFilters]);
+    setPage(1);
+  }, [showCancelados, dataVencimentoInicio, dataVencimentoFim, setPage]);
   
   const filters: TituloFilters = {
     page: tableFilters.page,
@@ -130,11 +131,11 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     if (!show) {
       setDataVencimentoInicio('');
       setDataVencimentoFim('');
-      tableFilters.clearSearch();
-      tableFilters.setPage(1);
+      clearSearch();
+      setPage(1);
       setSelectedItems([]);
     }
-  }, [show, tableFilters]);
+  }, [show, clearSearch, setPage]);
 
   // Dados filtrados para usar no resumo financeiro (já filtrados pelo backend)
   const filteredData = sortedData;

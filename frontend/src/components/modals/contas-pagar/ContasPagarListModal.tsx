@@ -55,6 +55,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       data_fim: undefined,
     } as ContaPagarFilters,
   });
+  const { setPage } = tableFilters;
 
   // Buscar fornecedores para o filtro
   const { data: fornecedoresData } = useFornecedores({ limit: 1000 });
@@ -296,8 +297,8 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
 
   // Resetar página quando filtros de data mudarem
   useEffect(() => {
-    tableFilters.setPage(1);
-  }, [dataVencimentoInicio, dataVencimentoFim, tableFilters]);
+    setPage(1);
+  }, [dataVencimentoInicio, dataVencimentoFim, setPage]);
 
   // Preparar filtros para a API
   const apiFilters = useMemo(() => {
