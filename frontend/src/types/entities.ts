@@ -51,7 +51,7 @@ export interface Plano {
   id: number;
   nome_plano: string;
   descricao?: string;
-  tipo_servico: 'suporte' | 'infraestrutura' | 'consultoria';
+  tipo_servico: 'infraestrutura' | 'consultoria';
   servicos_inclusos?: string[];
   quantidade_usuarios?: number;
   valor_mensal: number;

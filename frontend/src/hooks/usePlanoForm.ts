@@ -47,7 +47,7 @@ interface UsePlanoFormReturn {
 
 const initialFormData: PlanoForm = {
   nome_plano: '',
-  tipo_servico: 'suporte',
+  tipo_servico: 'consultoria',
   descricao: '',
   valor_mensal: 0,
   quantidade_usuarios: 1,
@@ -133,7 +133,7 @@ export const usePlanoForm = ({
     
     return {
       nome_plano: plano.nome_plano || '',
-      tipo_servico: (plano.tipo_servico || 'suporte') as ZodPlanoFormData['tipo_servico'],
+      tipo_servico: (plano.tipo_servico || 'consultoria') as ZodPlanoFormData['tipo_servico'],
       descricao: plano.descricao || '',
       valor_mensal: Number(plano.valor_mensal) || 0,
       quantidade_usuarios: Number(plano.quantidade_usuarios) || 1,

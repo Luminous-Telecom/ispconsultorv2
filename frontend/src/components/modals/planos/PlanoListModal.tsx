@@ -199,7 +199,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
   const getTipoServicoLabel = (tipo: string) => {
     const tipos: { [key: string]: string } = {
-      suporte: 'Suporte',
       infraestrutura: 'Infraestrutura',
       consultoria: 'Consultoria'
     };

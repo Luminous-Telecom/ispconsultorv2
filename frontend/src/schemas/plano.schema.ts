@@ -18,9 +18,9 @@ export const planoSchema = z.object({
     .trim(),
   
   tipo_servico: z.string().refine(
-    (val) => ['suporte', 'infraestrutura', 'consultoria'].includes(val),
+    (val) => ['infraestrutura', 'consultoria'].includes(val),
     { message: 'Tipo de serviço inválido' }
-  ).default('suporte' as const),
+  ).default('consultoria' as const),
   
   descricao: z
     .string()

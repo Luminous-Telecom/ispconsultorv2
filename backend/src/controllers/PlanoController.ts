@@ -57,7 +57,7 @@ export class PlanoController {
       }
 
       if (tipo_servico) {
-        whereConditions.push({ tipo_servico: tipo_servico as 'suporte' | 'infraestrutura' | 'consultoria' });
+        whereConditions.push({ tipo_servico: tipo_servico as 'infraestrutura' | 'consultoria' });
       }
 
       const where: WhereOptions<Plano> = whereConditions.length > 0
@@ -308,7 +308,7 @@ export class PlanoController {
       interface PlanoUpdateData {
         nome_plano?: string;
         descricao?: string | null;
-        tipo_servico?: 'suporte' | 'infraestrutura' | 'consultoria';
+        tipo_servico?: 'infraestrutura' | 'consultoria';
         servicos_inclusos?: string[] | null;
         quantidade_usuarios?: number | null;
         valor_mensal?: number;

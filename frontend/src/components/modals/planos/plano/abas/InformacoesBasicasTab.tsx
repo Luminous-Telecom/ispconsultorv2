@@ -50,7 +50,6 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
               isInvalid={!!errors.tipo_servico}
               disabled={isSubmitting}
               options={[
-                { value: 'suporte', label: 'Suporte' },
                 { value: 'infraestrutura', label: 'Infraestrutura' },
                 { value: 'consultoria', label: 'Consultoria' }
               ]}
