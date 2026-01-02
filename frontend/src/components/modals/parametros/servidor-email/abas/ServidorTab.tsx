@@ -21,7 +21,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
           </small>
         </div>
         <div className="card-body p-2">
-          <div className="row g-0">
+          <div className="row g-2">
             <div className="col-md-6">
               <FormField
                 name="host"
@@ -48,7 +48,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
             </div>
           </div>
           
-          <div className="row g-0">
+          <div className="row g-2">
             <div className="col-md-6">
               <FormField
                 name="usuario"
@@ -82,7 +82,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
             </div>
           </div>
 
-          <div className="row g-0">
+          <div className="row g-2">
             <div className="col-md-6">
               <FormField
                 name="nome_remetente"
@@ -109,7 +109,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
             </div>
           </div>
           
-          <div className="row g-0">
+          <div className="row g-2">
             <div className="col-md-4">
               <Checkbox
                 name="ssl"

@@ -424,7 +424,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       <DraggableModal show={show} onClose={handleClose} title={`${isEditing ? 'Editar' : 'Novo'} ${getTipoLabel(tipo)}`} size="xl" headerActions={headerActions}>
         <div style={{ padding: isMobile ? '0' : '16px' }}>
           <form onSubmit={handleSubmit}>
-            <div className="row g-0 mb-0">
+            <div className="row g-2 mb-0">
               <div className="col-md-6">
                 <FormField name="nome" type="text" label="Nome" value={formData.nome} onChange={(value) => setFormData(prev => ({ ...prev, nome: String(value ?? '') }))} placeholder={isEditing ? undefined : `Ex: ${getTipoLabel(tipo)} Padrão`} required size="sm" />
               </div>

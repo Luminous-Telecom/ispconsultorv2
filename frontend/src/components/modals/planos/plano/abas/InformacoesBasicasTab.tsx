@@ -11,7 +11,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
 }) => {
   return (
     <>
-      <div className="row g-0">
+      <div className="row g-2">
         <div className="col-md-6">
           <div className="mb-0">
             <FormField
@@ -75,7 +75,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
         />
       </div>
 
-      <div className="row">
+      <div className="row g-2">
         <div className="col-md-6">
           <div className="mb-0">
             <FormField
@@ -119,7 +119,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
         </div>
       </div>
 
-      <div className="row">
+      <div className="row g-2">
         <div className="col-md-6">
           <div className="mb-0">
             <FormField
@@ -158,7 +158,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
         </div>
       </div>
 
-      <div className="row">
+      <div className="row g-2">
         <div className="col-md-4">
           <div className="mb-0">
             <FormField

@@ -33,7 +33,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
         </div>
       </div>
 
-      <div className="row">
+      <div className="row g-2">
         <div className="col-md-6">
           <div className="mb-0">
             <FormField

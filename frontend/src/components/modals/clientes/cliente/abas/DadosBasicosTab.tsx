@@ -11,7 +11,7 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
   formPrefix
 }) => {
   return (
-    <div className="row">
+    <div className="row g-2">
       <div className="col-md-4">
         <FormField
           name="cnpj"
