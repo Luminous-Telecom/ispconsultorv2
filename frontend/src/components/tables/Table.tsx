@@ -828,51 +828,44 @@ function Table<T extends { id: number | string }>({
                           }}
                           className="table-mobile-dropdown"
                         >
-                          {/* Criar ações padrão baseadas nos bulkActions se não houver ações configuradas */}
-                          {(() => {
-                            // Se há ações configuradas, usar elas
-                            if (_actions.length > 0) {
-                              return _actions
-                                .filter(action => {
-                                  if (typeof action.hidden === 'function') {
-                                    return !action.hidden(item);
-                                  }
-                                  return !action.hidden;
-                                })
-                                .map((action) => {
-                                  const isDisabled = typeof action.disabled === 'function' 
-                                    ? action.disabled(item) 
-                                    : action.disabled;
-                                  
-                                  return (
-                                    <button
-                                      key={action.key}
-                                      type="button"
-                                      className={`table-mobile-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenActionDropdown(null);
-                                        if (!isDisabled && onActionClick) {
-                                          onActionClick(action, item, index);
-                                        } else if (!isDisabled && action.onClick) {
-                                          action.onClick(item, index);
-                                        }
-                                      }}
-                                      disabled={isDisabled}
-                                    >
-                                      {action.icon && <i className={action.icon}></i>}
-                                      <span>{action.label}</span>
-                                    </button>
-                                  );
-                                });
-                            }
-                            
-                            // Se não há ações, criar ações padrão baseadas nos bulkActions
-                            const defaultActions = bulkActions
+                          {_actions.length > 0 ? (
+                            _actions
+                              .filter(action => {
+                                if (typeof action.hidden === 'function') {
+                                  return !action.hidden(item);
+                                }
+                                return !action.hidden;
+                              })
+                              .map((action) => {
+                                const isDisabled = typeof action.disabled === 'function' 
+                                  ? action.disabled(item) 
+                                  : action.disabled;
+                                
+                                return (
+                                  <button
+                                    key={action.key}
+                                    type="button"
+                                    className={`table-mobile-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenActionDropdown(null);
+                                      if (!isDisabled && onActionClick) {
+                                        onActionClick(action, item, index);
+                                      } else if (!isDisabled && action.onClick) {
+                                        action.onClick(item, index);
+                                      }
+                                    }}
+                                    disabled={isDisabled}
+                                  >
+                                    {action.icon && <i className={action.icon}></i>}
+                                    <span>{action.label}</span>
+                                  </button>
+                                );
+                              })
+                          ) : (
+                            bulkActions
                               .filter(bulkAction => {
-                                // Filtrar ações que fazem sentido para item individual ou seleção
                                 const label = bulkAction.label.toLowerCase();
-                                // Incluir ações de edição, exclusão, inserção e cancelamento
                                 return label.includes('editar') || 
                                        label.includes('excluir') || 
                                        label.includes('inserir') || 
@@ -880,43 +873,27 @@ function Table<T extends { id: number | string }>({
                                        label.includes('selecionar');
                               })
                               .map(bulkAction => {
-                                // Para ações de linha específica, sempre habilitar
-                                // e selecionar o item automaticamente antes de executar
-                                
-                                return {
-                                  key: bulkAction.label.toLowerCase().replace(/\s+/g, '-'),
-                                  label: bulkAction.label,
-                                  variant: bulkAction.variant || 'primary',
-                                  disabled: false, // Sempre habilitado para ações de linha específica
-                                  onClick: () => {
-                                    // No mobile, chamar diretamente com o item da linha sem selecionar
-                                    if (bulkAction.onClick) {
-                                      bulkAction.onClick([item]);
-                                    } else if (onBulkActionClick) {
-                                      onBulkActionClick(bulkAction, [item]);
-                                    }
-                                  }
-                                };
-                              });
-                            
-                            return defaultActions.map((action) => (
-                              <button
-                                key={action.key}
-                                type="button"
-                                className={`table-mobile-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenActionDropdown(null);
-                                  if (!action.disabled && action.onClick) {
-                                    action.onClick();
-                                  }
-                                }}
-                                disabled={action.disabled}
-                              >
-                                <span>{action.label}</span>
-                              </button>
-                            ));
-                          })()}
+                                const actionKey = bulkAction.label.toLowerCase().replace(/\s+/g, '-');
+                                return (
+                                  <button
+                                    key={actionKey}
+                                    type="button"
+                                    className={`table-mobile-dropdown-item ${bulkAction.variant === 'danger' ? 'danger' : ''}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenActionDropdown(null);
+                                      if (bulkAction.onClick) {
+                                        bulkAction.onClick([item]);
+                                      } else if (onBulkActionClick) {
+                                        onBulkActionClick(bulkAction, [item]);
+                                      }
+                                    }}
+                                  >
+                                    <span>{bulkAction.label}</span>
+                                  </button>
+                                );
+                              })
+                          )}
                         </div>
                       </>,
                       document.body
@@ -1174,51 +1151,44 @@ function Table<T extends { id: number | string }>({
                           }}
                         />
                         <div className="table-dropdown">
-                          {/* Criar ações padrão baseadas nos bulkActions se não houver ações configuradas */}
-                          {(() => {
-                            // Se há ações configuradas, usar elas
-                            if (_actions.length > 0) {
-                              return _actions
-                                .filter(action => {
-                                  if (typeof action.hidden === 'function') {
-                                    return !action.hidden(item);
-                                  }
-                                  return !action.hidden;
-                                })
-                                .map((action) => {
-                                  const isDisabled = typeof action.disabled === 'function' 
-                                    ? action.disabled(item) 
-                                    : action.disabled;
-                                  
-                                  return (
-                                    <button
-                                      key={action.key}
-                                      type="button"
-                                      className={`table-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenActionDropdown(null);
-                                        if (!isDisabled && onActionClick) {
-                                          onActionClick(action, item, index);
-                                        } else if (!isDisabled && action.onClick) {
-                                          action.onClick(item, index);
-                                        }
-                                      }}
-                                      disabled={isDisabled}
-                                    >
-                                      {action.icon && <i className={action.icon}></i>}
-                                      <span>{action.label}</span>
-                                    </button>
-                                  );
-                                });
-                            }
-                            
-                            // Se não há ações, criar ações padrão baseadas nos bulkActions
-                            const defaultActions = bulkActions
+                          {_actions.length > 0 ? (
+                            _actions
+                              .filter(action => {
+                                if (typeof action.hidden === 'function') {
+                                  return !action.hidden(item);
+                                }
+                                return !action.hidden;
+                              })
+                              .map((action) => {
+                                const isDisabled = typeof action.disabled === 'function' 
+                                  ? action.disabled(item) 
+                                  : action.disabled;
+                                
+                                return (
+                                  <button
+                                    key={action.key}
+                                    type="button"
+                                    className={`table-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenActionDropdown(null);
+                                      if (!isDisabled && onActionClick) {
+                                        onActionClick(action, item, index);
+                                      } else if (!isDisabled && action.onClick) {
+                                        action.onClick(item, index);
+                                      }
+                                    }}
+                                    disabled={isDisabled}
+                                  >
+                                    {action.icon && <i className={action.icon}></i>}
+                                    <span>{action.label}</span>
+                                  </button>
+                                );
+                              })
+                          ) : (
+                            bulkActions
                               .filter(bulkAction => {
-                                // Filtrar ações que fazem sentido para item individual ou seleção
                                 const label = bulkAction.label.toLowerCase();
-                                // Incluir ações de edição, exclusão, inserção e cancelamento
                                 return label.includes('editar') || 
                                        label.includes('excluir') || 
                                        label.includes('inserir') || 
@@ -1226,56 +1196,27 @@ function Table<T extends { id: number | string }>({
                                        label.includes('selecionar');
                               })
                               .map(bulkAction => {
-                                // Para ações de linha específica, criar uma ação que funciona diretamente com o item
-                                
-                                return {
-                                  key: bulkAction.label.toLowerCase().replace(/\s+/g, '-'),
-                                  label: bulkAction.label,
-                                  variant: bulkAction.variant || 'primary',
-                                  disabled: false, // Sempre habilitado para ações de linha específica
-                                  onClick: () => {
-                                    // Para ações de linha específica no mobile, chamar diretamente com o item
-                                    // sem precisar selecionar o item primeiro
-                                    
-                                    // Chamar diretamente com o item da linha
-                                    if (bulkAction.onClick) {
-                                      bulkAction.onClick([item]);
-                                    } else if (onBulkActionClick) {
-                                      onBulkActionClick(bulkAction, [item]);
-                                    } else {
-                                      // Fallback: tentar usar action se disponível (compatibilidade com ListModal)
-                                      const actionFn = (bulkAction as unknown as Record<string, unknown>).action;
-                                      if (actionFn && typeof actionFn === 'function') {
-                                        // Chamar a função passando o item como parâmetro se ela aceitar
-                                        if (actionFn.length > 0) {
-                                          (actionFn as (selectedItems: T[]) => void)([item]);
-                                        } else {
-                                          (actionFn as () => void)();
-                                        }
+                                const actionKey = bulkAction.label.toLowerCase().replace(/\s+/g, '-');
+                                return (
+                                  <button
+                                    key={actionKey}
+                                    type="button"
+                                    className={`table-dropdown-item ${bulkAction.variant === 'danger' ? 'danger' : ''}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenActionDropdown(null);
+                                      if (bulkAction.onClick) {
+                                        bulkAction.onClick([item]);
+                                      } else if (onBulkActionClick) {
+                                        onBulkActionClick(bulkAction, [item]);
                                       }
-                                    }
-                                  }
-                                };
-                              });
-                            
-                            return defaultActions.map((action) => (
-                              <button
-                                key={action.key}
-                                type="button"
-                                className={`table-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenActionDropdown(null);
-                                  if (!action.disabled && action.onClick) {
-                                    action.onClick();
-                                  }
-                                }}
-                                disabled={action.disabled}
-                              >
-                                <span>{action.label}</span>
-                              </button>
-                            ));
-                          })()}
+                                    }}
+                                  >
+                                    <span>{bulkAction.label}</span>
+                                  </button>
+                                );
+                              })
+                          )}
                         </div>
                       </>
                     )}
