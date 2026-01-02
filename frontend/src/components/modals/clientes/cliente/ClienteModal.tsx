@@ -101,8 +101,12 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     createdClienteId: formHook.createdClienteId,
     parcelasData,
     contratosData: contratosHook.contratosData,
-    onRefreshParcelas: refetchParcelas,
-    onRefreshContratos: contratosHook.refetchContratos,
+    onRefreshParcelas: async () => {
+      await refetchParcelas();
+    },
+    onRefreshContratos: async () => {
+      await contratosHook.refetchContratos();
+    },
     onShowTituloEditModal: (tituloId: number) => {
       setSelectedTituloId(tituloId);
       setShowTituloEditModal(true);

@@ -385,10 +385,11 @@ export class RoutineExecutionService {
                   
                   const plano = contratoWithPlano.plano;
 
-                  // Gerar número de título único
+                  // Gerar número de título único (timestamp + contador + random para evitar duplicatas)
                   const timestamp = Date.now();
-                  const numeroTitulo = `T${contratoValidado.id}-${timestamp}`;
-
+                  const random = Math.floor(Math.random() * 100000);
+                  const numeroTitulo = `T${contratoValidado.id}-${timestamp}-${títulosCriadosNoContrato}-${random}`;
+                  
                   // Criar título dentro da transação
                   // dataVencimento já é um Date local, mas garantimos que está correto
                   // banco_id já foi validado antes do loop
@@ -474,13 +475,13 @@ export class RoutineExecutionService {
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-          const errorStack = error instanceof Error ? error.stack : undefined;
+          const contratoWithCliente = contrato as unknown as ContratoWithCliente;
+          
           logger.error('Erro ao processar contrato na geração de títulos', {
             context: 'RoutineExecutionService',
-            action: 'executeGeracaoTitulos',
             contratoId: contrato.id,
-            error: errorMessage,
-            stack: errorStack
+            clienteId: contratoWithCliente.cliente_id,
+            error: errorMessage
           });
           erros++;
         }

@@ -472,6 +472,10 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                   }
                 }
                 
+                // Aguardar invalidação e refetch completarem antes de mostrar mensagem
+                await queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
+                await refetch();
+                
                 if (successCount > 0) {
                   const message = successCount === 1 
                     ? 'Título cancelado com sucesso!'
@@ -485,9 +489,6 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                     : `${errorCount} títulos não puderam ser cancelados`;
                   error(message);
                 }
-                
-                queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
-                refetch();
               } catch (err) {
                 error('Erro ao cancelar títulos');
               }

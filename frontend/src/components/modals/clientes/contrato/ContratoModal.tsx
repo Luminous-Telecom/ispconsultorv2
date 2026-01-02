@@ -504,6 +504,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 }
               }
               
+              // Aguardar invalidação e refetch completarem antes de mostrar mensagem
+              await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
+              await refetchTitulos();
+              
               if (successCount > 0) {
                 const message = successCount === 1 
                   ? 'Título cancelado com sucesso!'
@@ -517,8 +521,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   : `${errorCount} títulos não puderam ser cancelados`;
                 error(message);
               }
-              
-              queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
             } catch (err) {
               error('Erro ao cancelar títulos');
             }
@@ -754,6 +756,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 }
               }
               
+              // Aguardar invalidação e refetch completarem antes de mostrar mensagem
+              await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
+              await refetchTitulosAvulsos();
+              
               if (successCount > 0) {
                 const message = successCount === 1 
                   ? 'Título cancelado com sucesso!'
@@ -767,8 +773,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   : `${errorCount} títulos não puderam ser cancelados`;
                 error(message);
               }
-              
-              queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
             } catch (err) {
               error('Erro ao cancelar títulos');
             }

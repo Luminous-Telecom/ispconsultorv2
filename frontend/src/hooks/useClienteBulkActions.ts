@@ -19,8 +19,8 @@ interface UseClienteBulkActionsParams {
   createdClienteId: number | null;
   parcelasData: PaginatedResponse<CarneParcela> | undefined;
   contratosData: Contrato[] | undefined;
-  onRefreshParcelas: () => void;
-  onRefreshContratos: () => void;
+  onRefreshParcelas: () => void | Promise<void>;
+  onRefreshContratos: () => void | Promise<void>;
   onShowTituloEditModal: (tituloId: number) => void;
   onShowReceberModal: (parcela: TituloItem) => void;
   onShowContratoCreateModal: () => void;
@@ -104,6 +104,15 @@ export const useClienteBulkActions = ({
             }
           }
           
+          // Aguardar invalidação e refetch completarem antes de mostrar mensagem
+          await queryClient.invalidateQueries({ queryKey: ['cliente', effectiveClienteId] });
+          await queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', effectiveClienteId] });
+          // onRefreshParcelas pode retornar uma Promise ou void
+          const refreshResult = onRefreshParcelas();
+          if (refreshResult && typeof refreshResult === 'object' && 'then' in refreshResult) {
+            await refreshResult;
+          }
+          
           if (successCount > 0) {
             const message = successCount === 1 
               ? 'Título cancelado com sucesso!'
@@ -117,11 +126,6 @@ export const useClienteBulkActions = ({
               : `${errorCount} títulos não puderam ser cancelados`;
             error(message);
           }
-          
-          // Recarregar dados
-          queryClient.invalidateQueries({ queryKey: ['cliente', effectiveClienteId] });
-          queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', effectiveClienteId] });
-          onRefreshParcelas();
         } catch (err) {
           error('Erro ao cancelar títulos');
         }

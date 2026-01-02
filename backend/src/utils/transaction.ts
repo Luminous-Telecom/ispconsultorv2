@@ -22,12 +22,10 @@ export async function withTransaction<T>(
     await transaction.rollback();
     
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    const errorStack = error instanceof Error ? error.stack : undefined;
     
     logger.error('Erro em transação - rollback executado', {
       context: 'transaction',
-      error: errorMessage,
-      stack: errorStack
+      error: errorMessage
     });
     
     throw error;
