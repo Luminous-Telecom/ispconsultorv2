@@ -11,8 +11,15 @@ export interface ApiClientConfig {
   withCredentials?: boolean;
 }
 
+// Interface para estender AxiosRequestConfig com propriedade customizada de loading
+interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
+  __shouldShowLoading?: boolean;
+}
+
 export class ApiClient {
   private api: AxiosInstance;
+  private static loadingCallbacks: Set<(loading: boolean) => void> = new Set();
+  private static activeRequests: number = 0;
 
   constructor(config?: ApiClientConfig) {
     const baseURL = config?.baseURL || API_CONFIG.BASE_URL || '/api';
@@ -28,6 +35,51 @@ export class ApiClient {
     });
 
     this.setupInterceptors();
+  }
+
+  /**
+   * Registra um callback para ser notificado sobre mudanças no estado de loading
+   */
+  static registerLoadingCallback(callback: (loading: boolean) => void): () => void {
+    ApiClient.loadingCallbacks.add(callback);
+    
+    // Retorna função para desregistrar
+    return () => {
+      ApiClient.loadingCallbacks.delete(callback);
+    };
+  }
+
+  /**
+   * Atualiza o estado de loading e notifica todos os callbacks registrados
+   */
+  private static updateLoadingState(loading: boolean): void {
+    ApiClient.loadingCallbacks.forEach(callback => {
+      try {
+        callback(loading);
+      } catch {
+        // Silenciosamente ignorar erros nos callbacks para não quebrar o fluxo
+      }
+    });
+  }
+
+  /**
+   * Incrementa o contador de requisições ativas e atualiza o loading
+   */
+  private static incrementActiveRequests(): void {
+    ApiClient.activeRequests++;
+    if (ApiClient.activeRequests === 1) {
+      ApiClient.updateLoadingState(true);
+    }
+  }
+
+  /**
+   * Decrementa o contador de requisições ativas e atualiza o loading
+   */
+  private static decrementActiveRequests(): void {
+    ApiClient.activeRequests = Math.max(0, ApiClient.activeRequests - 1);
+    if (ApiClient.activeRequests === 0) {
+      ApiClient.updateLoadingState(false);
+    }
   }
 
   private setupInterceptors(): void {
@@ -61,19 +113,46 @@ export class ApiClient {
           delete config.headers['Content-Type'];
         }
         
+        const extendedConfig = config as ExtendedAxiosRequestConfig;
+        extendedConfig.__shouldShowLoading = !isPublicRoute;
+        
+        if (!isPublicRoute) {
+          ApiClient.incrementActiveRequests();
+        }
+        
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => {
+        // Em caso de erro na requisição, verificar se deve decrementar
+        const config = error.config as ExtendedAxiosRequestConfig;
+        if (config?.__shouldShowLoading) {
+          ApiClient.decrementActiveRequests();
+        }
+        return Promise.reject(error);
+      }
     );
 
     this.api.interceptors.response.use(
       (response: AxiosResponse) => {
+        // Decrementar contador apenas se a requisição estava marcada para mostrar loading
+        const config = response.config as ExtendedAxiosRequestConfig;
+        if (config?.__shouldShowLoading) {
+          ApiClient.decrementActiveRequests();
+        }
+        
         if (response.config.responseType === 'blob') {
           return response.data;
         }
         return response.data ?? {};
       },
-      (error) => Promise.reject(error)
+      (error) => {
+        // Decrementar contador apenas se a requisição estava marcada para mostrar loading
+        const config = error.config as ExtendedAxiosRequestConfig;
+        if (config?.__shouldShowLoading) {
+          ApiClient.decrementActiveRequests();
+        }
+        return Promise.reject(error);
+      }
     );
   }
 

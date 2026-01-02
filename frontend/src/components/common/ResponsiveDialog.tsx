@@ -13,12 +13,9 @@ interface ResponsiveDialogProps {
   className?: string;
   headerActions?: React.ReactNode;
   modalId?: string;
+  isLoading?: boolean;
 }
 
-/**
- * Componente interno que renderiza o conteúdo do diálogo.
- * Este componente deve ser filho de um TableHeaderProvider para ter seu próprio contexto.
- */
 const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
   isOpen,
   onClose,
@@ -26,6 +23,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
   children,
   className = '',
   headerActions,
+  isLoading: _isLoading = false, // Mantido para compatibilidade, mas não usado
 }) => {
   const isMobile = useIsMobile();
   const tableHeader = useTableHeader();
@@ -426,37 +424,17 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
   );
 };
 
-/**
- * ResponsiveDialog - Componente responsivo que adapta o comportamento baseado no dispositivo
- * 
- * Desktop (>= 768px): Renderiza como modal centralizado usando DraggableModal
- * Mobile (< 768px): Renderiza como página fullscreen com header fixo e botão voltar
- */
 const ResponsiveDialog: React.FC<ResponsiveDialogProps> = (props) => {
   const isMobile = useIsMobile();
 
-  // Se não for mobile, não renderizar (DraggableModal cuida do desktop)
-  if (!isMobile) {
+  if (!isMobile || !props.isOpen) {
     return null;
   }
 
-  // Se não estiver aberto, não renderizar
-  if (!props.isOpen) {
-    return null;
-  }
-
-  // Importante: Removemos o TableHeaderProvider isolado aqui.
-  // Children passados para este componente consomem o contexto onde foram criados (Global/Layout).
-  // Se criarmos um Provider novo aqui, a Table (children) continuará escrevendo no Global,
-  // mas este componente lerá do Local (vazio), quebrando a comunicação.
-  // Voltamos a usar o contexto Global. O conflito com o dashboard é mitigado pelo fato
-  // de que a tabela do modal é montada por último.
-  const mobileContent = (
-    <ResponsiveDialogContent {...props} />
+  return ReactDOM.createPortal(
+    <ResponsiveDialogContent {...props} />,
+    document.body
   );
-
-  // Renderizar usando portal para garantir que apareça no nível raiz
-  return ReactDOM.createPortal(mobileContent, document.body);
 };
 
 export default ResponsiveDialog;

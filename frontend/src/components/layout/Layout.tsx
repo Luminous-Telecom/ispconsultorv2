@@ -11,6 +11,9 @@ import { getAuthToken } from '@/services/core';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
 import { useModal, type ModalType } from '@/contexts/ModalContext';
+import { useLoading } from '@/contexts/LoadingContext';
+import { useApiLoading } from '@/hooks/useApiLoading';
+import LoadingDots from '../common/LoadingDots';
 import SingleModalWrapper from '../common/SingleModalWrapper';
 
 const Layout: React.FC = () => {
@@ -45,6 +48,12 @@ const Layout: React.FC = () => {
   
   // Usar o contexto de modais (gerenciado pelo ModalProvider)
   const { openModal } = useModal();
+  
+  // Contexto de loading global
+  const { isLoading } = useLoading();
+  
+  // Registrar o loading automático para requisições HTTP
+  useApiLoading();
 
   // Fechar menu de usuário ao clicar fora
   useEffect(() => {
@@ -494,6 +503,27 @@ const Layout: React.FC = () => {
             )}
           </div>
         </header>
+        
+        {/* Loading dots no topo da tela */}
+        {isLoading && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '3px',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'var(--bg-primary)',
+              borderBottom: '1px solid var(--border-color)'
+            }}
+          >
+            <LoadingDots />
+          </div>
+        )}
         
         {/* Campo de busca mobile - aparece quando showMobileSearch é true */}
         {isMobile && tableHeader.showMobileSearch && tableHeader.showSearch && (

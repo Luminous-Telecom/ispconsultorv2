@@ -17,6 +17,7 @@ interface DraggableModalProps {
   className?: string;
   headerActions?: React.ReactNode;
   modalId?: string;
+  isLoading?: boolean;
 }
 
 const DraggableModal: React.FC<DraggableModalProps> = ({
@@ -28,9 +29,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   className = '',
   headerActions,
   modalId: propModalId,
+  isLoading: _isLoading = false, // Mantido para compatibilidade, mas não usado
 }) => {
-  // Verificação direta e simples de mobile
-  // Usar função helper para verificar mobile de forma síncrona
   const checkIsMobile = (): boolean => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < 768;
@@ -39,18 +39,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   const [isMobile, setIsMobile] = useState(() => checkIsMobile());
 
   useEffect(() => {
-    const checkMobile = () => {
-      const mobile = checkIsMobile();
-      setIsMobile(mobile);
-    };
-    
-    // Verificar imediatamente
+    const checkMobile = () => setIsMobile(checkIsMobile());
     checkMobile();
-    
-    // Listener para mudanças de tamanho
     window.addEventListener('resize', checkMobile);
     window.addEventListener('orientationchange', checkMobile);
-    
     return () => {
       window.removeEventListener('resize', checkMobile);
       window.removeEventListener('orientationchange', checkMobile);
@@ -207,10 +199,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   }, [modalId, isMobile]);
 
   // Em mobile, usar ResponsiveDialog diretamente
-  // Verificar mobile de forma síncrona no momento da renderização para garantir detecção correta
-  const currentIsMobile = checkIsMobile();
-  
-  if (currentIsMobile && show) {
+  if (isMobile && show) {
     return (
       <ResponsiveDialog
         isOpen={show}
@@ -226,14 +215,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     );
   }
   
-  if (currentIsMobile && !show) {
-    return null;
-  }
-
-  // Não renderizar se não deve ser renderizado
-  const shouldRender = show || isVisible;
-
-  if (!shouldRender) {
+  if (isMobile || !show || !isVisible) {
     return null;
   }
 

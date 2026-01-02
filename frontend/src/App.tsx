@@ -6,6 +6,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
 import { TableHeaderProvider } from './contexts/TableHeaderContext';
 import { ModalProvider } from './contexts/ModalContext';
+import { LoadingProvider } from './contexts/LoadingContext';
 import Loading from './components/common/Loading';
 import ProtectionLayer from './components/common/ProtectionLayer';
 import Layout from './components/layout/Layout';
@@ -71,7 +72,9 @@ function App() {
                     <DashboardFiltersProvider>
                       <TableHeaderProvider>
                         <ModalProvider>
-                          <Layout />
+                          <LoadingProvider>
+                            <Layout />
+                          </LoadingProvider>
                         </ModalProvider>
                       </TableHeaderProvider>
                     </DashboardFiltersProvider>
