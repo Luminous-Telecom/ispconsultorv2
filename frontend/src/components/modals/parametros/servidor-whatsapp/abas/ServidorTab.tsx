@@ -27,7 +27,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
         </div>
         <div className="card-body p-2">
           {/* Seleção do Tipo de API */}
-          <div className="row g-2 mb-3">
+          <div className="row g-0 mb-0">
             <div className="col-12">
               <FormField
                 name="tipo_api"
@@ -48,7 +48,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
           {/* Campos da Evolution API */}
           {isEvolution && (
             <>
-              <div className="row g-2">
+              <div className="row g-0">
                 <div className="col-12">
                   <FormField
                     name="evolution_api_url"
@@ -63,7 +63,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 </div>
               </div>
 
-              <div className="row g-2">
+              <div className="row g-0">
                 <div className="col-12">
                   <FormField
                     name="instance_name"
@@ -79,7 +79,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 </div>
               </div>
 
-              <div className="row g-2">
+              <div className="row g-0">
                 <div className="col-12">
                   <FormField
                     name="evolution_api_key"
@@ -105,7 +105,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
           {/* Campos da WhatsApp Cloud API */}
           {isWhatsAppCloud && (
             <>
-              <div className="row g-2">
+              <div className="row g-0">
                 <div className="col-12">
                   <FormField
                     name="whatsapp_cloud_token"
@@ -129,7 +129,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 </div>
               </div>
 
-              <div className="row g-2">
+              <div className="row g-0">
                 <div className="col-12">
                   <FormField
                     name="whatsapp_cloud_phone_number_id"
@@ -147,7 +147,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 </div>
               </div>
 
-              <div className="row g-2">
+              <div className="row g-0">
                 <div className="col-12">
                   <FormField
                     name="whatsapp_cloud_business_account_id"

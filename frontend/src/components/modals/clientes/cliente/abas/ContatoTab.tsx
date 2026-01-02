@@ -30,7 +30,7 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
       <div className="col-md-4">
         <h6 className="text-primary mb-3">Preferências de Comunicação</h6>
         
-        <div className="mb-3">
+        <div className="mb-0">
           <FormField
             name="recebe_email"
             type="checkbox"
@@ -41,7 +41,7 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
           />
         </div>
 
-        <div className="mb-3">
+        <div className="mb-0">
           <FormField
             name="recebe_whatsapp"
             type="checkbox"

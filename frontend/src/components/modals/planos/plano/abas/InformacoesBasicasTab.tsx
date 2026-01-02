@@ -11,9 +11,9 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
 }) => {
   return (
     <>
-      <div className="row g-2">
+      <div className="row g-0">
         <div className="col-md-6">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="nome_plano"
               type="text"
@@ -34,7 +34,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
         </div>
 
         <div className="col-md-6">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="tipo_servico"
               type="select"
@@ -78,7 +78,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
 
       <div className="row">
         <div className="col-md-6">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="valor_mensal"
               type="number"
@@ -101,7 +101,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
         </div>
 
         <div className="col-md-6">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="quantidade_usuarios"
               type="number"
@@ -122,7 +122,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
 
       <div className="row">
         <div className="col-md-6">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="data_inicio"
               type="date"
@@ -142,7 +142,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
         </div>
 
         <div className="col-md-6">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="data_fim"
               type="date"
@@ -161,7 +161,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
 
       <div className="row">
         <div className="col-md-4">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="periodicidade"
               type="select"
@@ -187,7 +187,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
         </div>
 
         <div className="col-md-4">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="status"
               type="select"
@@ -208,7 +208,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
         </div>
 
         <div className="col-md-4">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="renovacao_automatica"
               type="checkbox"

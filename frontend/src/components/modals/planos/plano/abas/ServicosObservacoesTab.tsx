@@ -10,7 +10,7 @@ const ServicosObservacoesTab: React.FC<PlanoTabProps> = ({
 }) => {
   return (
     <>
-      <div className="mb-2">
+      <div className="mb-0">
         <FormField
           name="observacoes"
           type="textarea"

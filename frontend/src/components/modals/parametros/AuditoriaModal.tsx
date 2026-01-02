@@ -342,7 +342,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
           <div className="p-3">
             <div className="mb-3">
               <h6 className="mb-2">Informações Gerais</h6>
-              <div className="row g-2">
+              <div className="row g-0">
                 <div className="col-md-6">
                   <small className="text-muted">Ação:</small><br />
                   <span className={`badge bg-${getAcaoBadgeClass(selectedLog.acao)}`}>

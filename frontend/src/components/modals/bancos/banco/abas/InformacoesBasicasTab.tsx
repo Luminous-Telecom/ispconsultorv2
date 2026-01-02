@@ -13,7 +13,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
     <>
       <div className="row">
         <div className="col-md-12">
-          <div className="mb-3">
+          <div className="mb-0">
             <FormField
               name="nome"
               type="text"
@@ -35,7 +35,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
 
       <div className="row">
         <div className="col-md-6">
-          <div className="mb-3">
+          <div className="mb-0">
             <FormField
               name="tipo_banco"
               type="select"
@@ -55,7 +55,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
         </div>
 
         <div className="col-md-6">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="ativo"
               type="checkbox"

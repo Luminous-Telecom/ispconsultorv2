@@ -18,7 +18,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
   };
 
   return (
-    <div className="mb-2">
+    <div className="mb-0">
       <div className="row">
         <div className="col-md-4">
           <FormField

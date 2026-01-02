@@ -71,7 +71,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
       }
     >
       <div style={{ padding: isMobile ? '0' : '16px' }}>
-        <div className="row g-2">
+        <div className="row g-0">
           {Array.from({ length: 30 }, (_, i) => i + 1).map(dia => (
             <div key={dia} className="col-12 col-sm-6 col-md-4 col-lg-3">
               <div className="form-check form-switch">

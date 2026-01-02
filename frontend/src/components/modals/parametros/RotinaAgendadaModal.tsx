@@ -162,7 +162,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
     >
       <div style={{ padding: isMobile ? '0' : '16px' }}>
         <form id="rotina-agendada-form" onSubmit={handleSubmit}>
-          <div className="row g-3">
+          <div className="row g-0">
           <div className="col-12">
             <FormField
               name="tipo"

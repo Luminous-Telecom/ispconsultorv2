@@ -177,7 +177,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
       >
         <form id="servico-adicional-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
           <div className="row">
-            <div className="col-md-12 mb-3">
+            <div className="col-md-12 mb-1">
               <EntitySelectField
                 value={planoId}
                 onChange={(value) => {
@@ -199,14 +199,14 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
             </div>
 
             {planoSelecionado && (
-              <div className="col-md-12 mb-3">
+              <div className="col-md-12 mb-1">
                 <div className="alert alert-info mb-0">
                   <strong>Plano selecionado:</strong> {planoSelecionado.nome_plano} - R$ {(parseFloat(planoSelecionado.valor_mensal?.toString() || '0') || 0).toFixed(2).replace('.', ',')}
                 </div>
               </div>
             )}
 
-            <div className="col-md-6 mb-3">
+            <div className="col-md-6 mb-1">
               <FormField
                 name="desconto_percentual"
                 type="number"
@@ -220,7 +220,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
               />
             </div>
 
-            <div className="col-md-6 mb-3">
+            <div className="col-md-6 mb-1">
               <FormField
                 name="desconto_valor"
                 type="number"
@@ -233,7 +233,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
               />
             </div>
 
-            <div className="col-md-6 mb-3">
+            <div className="col-md-6 mb-1">
               <FormField
                 name="status"
                 type="select"
@@ -249,7 +249,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
               />
             </div>
 
-            <div className="col-md-12 mb-3">
+            <div className="col-md-12 mb-1">
               <FormField
                 name="observacoes"
                 type="textarea"

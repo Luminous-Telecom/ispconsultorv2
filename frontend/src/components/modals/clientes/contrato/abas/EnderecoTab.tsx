@@ -30,7 +30,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
   return (
     <div className="row">
       {/* Usar Endereço do Cliente */}
-      <div className="col-12 mb-3">
+      <div className="col-12 mb-1">
         <div className="form-check">
           <input
             className="form-check-input"
@@ -49,7 +49,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
       </div>
 
       {/* Endereço */}
-      <div className="col-md-8 mb-2">
+      <div className="col-md-8 mb-1">
         <FormField
           name="endereco"
           type="text"
@@ -62,7 +62,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
       </div>
 
       {/* Número */}
-      <div className="col-md-4 mb-2">
+      <div className="col-md-4 mb-1">
         <FormField
           name="numero"
           type="text"
@@ -75,7 +75,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
       </div>
 
       {/* Complemento */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <FormField
           name="complemento"
           type="text"
@@ -88,7 +88,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
       </div>
 
       {/* Bairro */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <FormField
           name="bairro"
           type="text"
@@ -101,7 +101,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
       </div>
 
       {/* Cidade */}
-      <div className="col-md-8 mb-2">
+      <div className="col-md-8 mb-1">
         <FormField
           name="cidade"
           type="text"
@@ -114,7 +114,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
       </div>
 
       {/* Estado */}
-      <div className="col-md-4 mb-2">
+      <div className="col-md-4 mb-1">
         <FormField
           name="estado"
           type="text"

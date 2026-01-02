@@ -12,7 +12,7 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
     <>
       <div className="row">
         <div className="col-md-4">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="periodicidade"
               type="select"
@@ -38,7 +38,7 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
         </div>
 
         <div className="col-md-4">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="status"
               type="select"
@@ -60,7 +60,7 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
         </div>
 
         <div className="col-md-4">
-          <div className="mb-2">
+          <div className="mb-0">
             <FormField
               name="renovacao_automatica"
               type="checkbox"

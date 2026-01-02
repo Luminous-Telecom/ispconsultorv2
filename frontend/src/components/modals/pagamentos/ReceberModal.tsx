@@ -102,7 +102,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
             <h6 className="mb-0">Informações da Parcela</h6>
           </div>
           <div className="card-body py-2">
-            <div className="row g-2">
+            <div className="row g-0">
               <div className="col-md-6">
                 <small className="text-muted">Cliente:</small><br />
                 <span className="text-secondary">{parcela.cliente?.razao_social || 'N/A'}</span>

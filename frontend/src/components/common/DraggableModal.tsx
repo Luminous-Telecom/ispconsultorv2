@@ -357,6 +357,20 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           color: #495057 !important;
           cursor: not-allowed !important;
         }
+        
+        /* Reduzir espaçamento em modais - compacto mas confortável */
+        .modal-content .form-label {
+          margin-bottom: 0.25rem !important;
+        }
+        
+        .modal-content .form-field {
+          margin-bottom: 0.5rem !important;
+        }
+        
+        .modal-content .mb-0 .form-label,
+        .modal-content .mb-0 label {
+          margin-bottom: 0.25rem !important;
+        }
       `}</style>
 
       {/* Backdrop customizado - não cobre a sidebar */}

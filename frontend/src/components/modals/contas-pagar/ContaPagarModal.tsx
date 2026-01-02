@@ -295,7 +295,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
     return (
       <form id={isEditing ? 'conta-pagar-edit-form' : 'conta-pagar-create-form'} onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
         <div className="row">
-          <div className="col-md-12 mb-3">
+          <div className="col-md-12 mb-1">
             <EntitySelectField
               value={formData.fornecedor_id}
               onChange={(value) => {
@@ -316,7 +316,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
           </div>
 
           {!isEditing && (
-            <div className="col-md-12 mb-3">
+            <div className="col-md-12 mb-1">
               <FormField
                 name="tipo_criacao"
                 type="select"
@@ -341,7 +341,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
           )}
 
           {formData.tipo_criacao === 'unica' || isEditing ? (
-            <div className="col-md-6 mb-3">
+            <div className="col-md-6 mb-1">
               <FormField
                 name="data_vencimento"
                 type="date"
@@ -358,7 +358,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             </div>
           ) : (
             <>
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="data_vencimento_inicial"
                   type="date"
@@ -373,7 +373,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                   error={errors.data_vencimento_inicial}
                 />
               </div>
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="data_vencimento_final"
                   type="date"
@@ -391,7 +391,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             </>
           )}
 
-          <div className="col-md-6 mb-3">
+          <div className="col-md-6 mb-0">
             <FormField
               name="valor"
               type="text"
@@ -415,7 +415,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             />
           </div>
 
-          <div className="col-md-6 mb-3">
+          <div className="col-md-6 mb-0">
             <FormField
               name="tipo_pagamento"
               type="select"
@@ -444,7 +444,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
           </div>
 
           {formData.tipo_pagamento === 'BOLETO' && (
-            <div className="col-md-12 mb-3">
+            <div className="col-md-12 mb-1">
               <FormField
                 name="linha_digitavel"
                 type="text"
@@ -464,7 +464,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
 
           {formData.tipo_pagamento === 'PIX' && (
             <>
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="tipo_chave_pix"
                   type="select"
@@ -487,7 +487,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                   size="sm"
                 />
               </div>
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="chave_pix"
                   type="text"
@@ -523,7 +523,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             </>
           )}
 
-          <div className="col-md-6 mb-3">
+          <div className="col-md-6 mb-0">
             <FormField
               name="numero_documento"
               type="text"
@@ -537,7 +537,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             />
           </div>
 
-          <div className="col-md-6 mb-3">
+          <div className="col-md-6 mb-0">
             <FormField
               name="nota_fiscal"
               type="text"
@@ -551,7 +551,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             />
           </div>
 
-          <div className="col-md-12 mb-3">
+          <div className="col-md-12 mb-1">
             <FormField
               name="descricao"
               type="textarea"
@@ -566,7 +566,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             />
           </div>
 
-          <div className="col-md-12 mb-3">
+          <div className="col-md-12 mb-1">
             <FormField
               name="observacoes"
               type="textarea"
@@ -671,7 +671,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
         >
           <div style={{ padding: isMobile ? '0' : '16px' }}>
             <div className="row">
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="data_pagamento"
                   type="date"
@@ -685,7 +685,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 />
               </div>
 
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="tipo_pagamento_pagamento"
                   type="select"
@@ -708,7 +708,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 />
               </div>
 
-              <div className="col-md-12 mb-3">
+              <div className="col-md-12 mb-1">
                 <FormField
                   name="valor_aberto"
                   type="text"
@@ -720,7 +720,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 />
               </div>
 
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="desconto_percentual"
                   type="text"
@@ -735,7 +735,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 />
               </div>
 
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="desconto_valor"
                   type="text"
@@ -756,7 +756,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 />
               </div>
 
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="acrescimo_percentual"
                   type="text"
@@ -771,7 +771,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 />
               </div>
 
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="acrescimo_valor"
                   type="text"
@@ -792,7 +792,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 />
               </div>
 
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="valor_baixado"
                   type="text"
@@ -804,7 +804,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 />
               </div>
 
-              <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-1">
                 <FormField
                   name="valor_total"
                   type="text"
@@ -831,7 +831,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 />
               </div>
 
-              <div className="col-md-12 mb-3">
+              <div className="col-md-12 mb-1">
                 <FormField
                   name="observacao_pagamento"
                   type="textarea"

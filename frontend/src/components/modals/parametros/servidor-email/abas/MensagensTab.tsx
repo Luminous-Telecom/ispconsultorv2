@@ -17,7 +17,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
 }) => {
   return (
     <div>
-      <div className="row g-2 mb-3">
+      <div className="row g-0 mb-0">
         <div className="col-md-6">
           <FormField
             name="mensagemType"

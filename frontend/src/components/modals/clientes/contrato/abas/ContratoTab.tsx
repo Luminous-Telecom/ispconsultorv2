@@ -127,7 +127,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   return (
     <div className="row">
       {/* Plano */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <EntitySelectField
           value={planoSelecionado?.id || 0}
           onChange={(value) => {
@@ -149,7 +149,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Status */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <label htmlFor="status" className="form-label">
           Status <span className="text-danger ms-1">*</span>
         </label>
@@ -168,7 +168,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Data de Início */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <FormField
           name="data_inicio"
           type="date"
@@ -183,7 +183,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Data de Fim */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <FormField
           name="data_fim"
           type="date"
@@ -195,7 +195,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Dia de Vencimento */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <label htmlFor="dia_vencimento_id" className="form-label">
           Dia de Vencimento <span className="text-danger ms-1">*</span>
         </label>
@@ -219,7 +219,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Banco para Boleto */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <EntitySelectField
           value={bancoSelecionado?.id || 0}
           onChange={(value) => {
@@ -241,7 +241,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Desconto Percentual */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <FormField
           name="desconto_percentual"
           type="number"
@@ -259,7 +259,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Desconto Valor */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <FormField
           name="desconto_valor"
           type="number"
@@ -276,7 +276,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Data Validade Desconto */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <FormField
           name="data_validade_desconto"
           type="date"
@@ -288,7 +288,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Isento Mensalidade */}
-      <div className="col-md-6 mb-2">
+      <div className="col-md-6 mb-1">
         <div className="form-check">
           <input
             className="form-check-input"
@@ -305,7 +305,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Modelo de Contrato */}
-      <div className="col-md-12 mb-2">
+      <div className="col-md-12 mb-1">
         <EntitySelectField
           value={modeloContratoSelecionado?.id || 0}
           onChange={(value) => {
@@ -328,7 +328,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       </div>
 
       {/* Observações */}
-      <div className="col-12 mb-2">
+      <div className="col-12 mb-1">
         <FormField
           name="observacoes"
           type="textarea"

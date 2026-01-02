@@ -82,7 +82,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
           </h6>
         </div>
         <div className="card-body p-3">
-          <div className="row g-2">
+          <div className="row g-0">
             <div className="col-12">
               <FormField
                 name="mensagemType"
@@ -111,7 +111,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               {/* Template Mapping (WhatsApp Cloud API) - Mostrar apenas para WhatsApp Cloud */}
               {isWhatsAppCloud && onTemplateMappingChange ? (
                 <>
-                  <div className="row g-2 mt-3">
+                  <div className="row g-0 mt-3">
                     <div className="col-12">
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <label className="form-label mb-0">
@@ -153,7 +153,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               ) : (
                 <>
                   {/* Tipo de Envio - Apenas para Evolution API */}
-                  <div className="row g-2 mt-3">
+                  <div className="row g-0 mt-3">
                     <div className="col-12">
                       <label className="form-label mb-2">
                         <i className="bi bi-send me-2"></i>
@@ -192,7 +192,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   </div>
 
                   {/* Mensagem Padrão - Apenas para Evolution API */}
-                  <div className="row g-2 mt-3">
+                  <div className="row g-0 mt-3">
                     <div className="col-12">
                       <div className="mb-2">
                         <label className="form-label">
@@ -215,7 +215,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
 
                   {/* Mensagem Manual - Apenas para tipo envio_manual */}
                   {mensagemType === 'envio_manual' && (
-                    <div className="row g-2 mt-3">
+                    <div className="row g-0 mt-3">
                       <div className="col-12">
                         <div className="mb-2">
                           <label className="form-label">
@@ -239,7 +239,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   )}
 
                   {/* Interações (opcionais) - Apenas para Evolution API */}
-                  <div className="row g-2 mt-3">
+                  <div className="row g-0 mt-3">
                     <div className="col-12">
                       <div className="mb-2">
                         <label className="form-label">
@@ -261,7 +261,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     </div>
                   </div>
 
-                  <div className="row g-2 mt-2">
+                  <div className="row g-0 mt-2">
                     <div className="col-12">
                       <div className="mb-2">
                         <label className="form-label">
@@ -283,7 +283,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     </div>
                   </div>
 
-                  <div className="row g-2 mt-2">
+                  <div className="row g-0 mt-2">
                     <div className="col-12">
                       <div className="mb-2">
                         <label className="form-label">
@@ -307,7 +307,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
 
                   {/* Container de Variáveis - Apenas para Evolution API */}
                   {variaveisData && (
-                <div className="row g-2 mt-3">
+                <div className="row g-0 mt-3">
                   <div className="col-12">
                     <div className="card border-primary">
                       <div className="card-header py-2 px-3 bg-primary bg-opacity-10">
@@ -320,7 +320,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                         </small>
                       </div>
                       <div className="card-body p-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                        <div className="row g-3">
+                        <div className="row g-0">
                           {Object.entries(variaveisData).map(([chave, grupo], index, array) => {
                             const isLastInRow = (index + 1) % 3 === 0;
                             const isLastItem = index === array.length - 1;

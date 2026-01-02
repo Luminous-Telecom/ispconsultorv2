@@ -43,18 +43,27 @@
 
 /* FormField */
 .form-field {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .form-field .form-label {
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   color: #495057;
 }
 
 .form-field .form-text {
   margin-top: 0.25rem;
   font-size: 0.875rem;
+}
+
+/* Reduzir espaçamento em modais */
+.modal-content .form-label {
+  margin-bottom: 0.25rem !important;
+}
+
+.modal-content .form-field {
+  margin-bottom: 0.5rem !important;
 }
 
 /* Botão com loading */
@@ -174,7 +183,7 @@
 /* Responsividade */
 @media (max-width: 576px) {
   .form-field {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
   }
   
   .btn {

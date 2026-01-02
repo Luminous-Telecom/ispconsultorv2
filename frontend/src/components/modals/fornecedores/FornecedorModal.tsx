@@ -366,7 +366,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
             {/* Aba Dados Básicos */}
             {activeTab === 'dados-basicos' && (
               <div className="row">
-                <div className="col-md-6 mb-3">
+                <div className="col-md-6 mb-1">
                   <label className="form-label">
                     Tipo de Pessoa:
                     <span className="text-danger ms-1">*</span>
@@ -434,7 +434,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   )}
                 </div>
 
-                <div className="col-md-6 mb-3">
+                <div className="col-md-6 mb-1">
                   <FormField
                     name="cpf_cnpj"
                     type="text"
@@ -448,7 +448,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   />
                 </div>
 
-                <div className="col-md-8 mb-3">
+                <div className="col-md-8 mb-1">
                   <FormField
                     name="nome_razao_social"
                     type="text"
@@ -461,7 +461,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   />
                 </div>
 
-                <div className="col-md-4 mb-3">
+                <div className="col-md-4 mb-1">
                   <FormField
                     name="nome_fantasia"
                     type="text"
@@ -478,7 +478,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
             {/* Aba Endereço */}
             {activeTab === 'endereco' && (
               <div className="row">
-                <div className="col-md-3 mb-3">
+                <div className="col-md-3 mb-1">
                   <FormField
                     name="cep"
                     type="text"
@@ -491,7 +491,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   />
                 </div>
 
-                <div className="col-md-7 mb-3">
+                <div className="col-md-7 mb-1">
                   <FormField
                     name="logradouro"
                     type="text"
@@ -503,7 +503,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   />
                 </div>
 
-                <div className="col-md-2 mb-3">
+                <div className="col-md-2 mb-1">
                   <FormField
                     name="numero"
                     type="text"
@@ -515,7 +515,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   />
                 </div>
 
-                <div className="col-md-4 mb-3">
+                <div className="col-md-4 mb-1">
                   <FormField
                     name="complemento"
                     type="text"
@@ -527,7 +527,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   />
                 </div>
 
-                <div className="col-md-4 mb-3">
+                <div className="col-md-4 mb-1">
                   <FormField
                     name="bairro"
                     type="text"
@@ -539,7 +539,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   />
                 </div>
 
-                <div className="col-md-3 mb-3">
+                <div className="col-md-3 mb-1">
                   <FormField
                     name="cidade"
                     type="text"
@@ -551,7 +551,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   />
                 </div>
 
-                <div className="col-md-1 mb-3">
+                <div className="col-md-1 mb-1">
                   <FormField
                     name="estado"
                     type="text"
@@ -564,7 +564,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   />
                 </div>
 
-                <div className="col-md-12 mb-3">
+                <div className="col-md-12 mb-1">
                   <FormField
                     name="pais"
                     type="text"
@@ -581,7 +581,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
             {/* Aba Observações */}
             {activeTab === 'observacoes' && (
               <div className="row">
-                <div className="col-md-12 mb-3">
+                <div className="col-md-12 mb-1">
                   <FormField
                     name="observacoes"
                     type="textarea"

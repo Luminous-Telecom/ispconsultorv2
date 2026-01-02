@@ -198,7 +198,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
     >
       <form id="usuario-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
         <div>
-          <div className="row g-2 mb-3">
+          <div className="row g-1 mb-0">
             <div className="col-md-12">
               <FormField
                 name="nome"
@@ -274,7 +274,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
           </div>
 
           {isEditing && (
-            <div className="row g-2 mb-3">
+            <div className="row g-1 mb-0">
               <div className="col-md-12">
                 <div className="mb-3">
                   <FormField

@@ -37,7 +37,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
   const fieldId = `${label.toLowerCase().replace(/\s+/g, '_')}_id_field`;
 
   return (
-    <div className="mb-3">
+    <div className="mb-1">
       <label htmlFor={fieldId} className="form-label small">
         {label} {required && <span className="text-danger ms-1">*</span>}
       </label>
