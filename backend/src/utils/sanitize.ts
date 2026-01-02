@@ -4,6 +4,22 @@
  */
 
 /**
+ * Remove apenas caracteres de controle perigosos sem codificar HTML entities
+ * Usado para campos de texto simples (nomes, endereços, etc)
+ * @param input - String a ser sanitizada
+ * @returns String sanitizada
+ */
+export function sanitizeText(input: string | null | undefined): string {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+
+  // Remover apenas caracteres de controle perigosos (exceto quebras de linha e tabs)
+  // Não codificar HTML entities para campos de texto simples
+  return input.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '').trim();
+}
+
+/**
  * Remove caracteres perigosos e HTML tags de uma string
  * @param input - String a ser sanitizada
  * @param allowHtml - Se true, permite HTML mas remove scripts (padrão: false)
@@ -180,8 +196,25 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   // Apenas remover caracteres de controle perigosos, sem HTML encoding
   const noSanitizeFields = ['logo', 'responsavel_assinatura'];
   
-  // Campos que não devem ter HTML encoding (CPF/CNPJ, códigos, etc)
-  const noHtmlEncodeFields = ['cpf_cnpj_assinante', 'cpf_cnpj', 'cnpj', 'cpf'];
+  // Campos que não devem ter HTML encoding (CPF/CNPJ, códigos, nomes, etc)
+  const noHtmlEncodeFields = [
+    'cpf_cnpj_assinante', 
+    'cpf_cnpj', 
+    'cnpj', 
+    'cpf',
+    'razao_social',
+    'nome_fantasia',
+    'nome_razao_social',
+    'nome',
+    'endereco',
+    'complemento',
+    'bairro',
+    'cidade',
+    'numero',
+    'telefone',
+    'whatsapp',
+    'observacoes'
+  ];
   
   // Campos que contêm HTML e devem ser preservados mesmo quando allowHtml=false
   const htmlFields = [
@@ -202,13 +235,13 @@ export function sanitizeObject<T extends Record<string, unknown>>(
         // Campos que não devem ter nenhuma sanitização
         if (noSanitizeFields.includes(key.toLowerCase())) {
           // Apenas remover caracteres de controle perigosos
-          (sanitized as Record<string, unknown>)[key] = value.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+          (sanitized as Record<string, unknown>)[key] = sanitizeText(value);
         } else if (urlFields.includes(key.toLowerCase())) {
           // Para campos de URL, usar sanitizeUrl que não escapa barras
           (sanitized as Record<string, unknown>)[key] = sanitizeUrl(value);
         } else if (noHtmlEncodeFields.includes(key.toLowerCase())) {
           // Campos que não devem ter HTML encoding (apenas remover caracteres de controle)
-          (sanitized as Record<string, unknown>)[key] = value.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+          (sanitized as Record<string, unknown>)[key] = sanitizeText(value);
         } else if (htmlFields.includes(key.toLowerCase())) {
           // Campos de HTML: permitir HTML mas remover scripts e eventos perigosos
           (sanitized as Record<string, unknown>)[key] = sanitizeString(value, true);
@@ -233,7 +266,7 @@ export function sanitizeObject<T extends Record<string, unknown>>(
               return sanitizeUrl(item);
             }
             if (noHtmlEncodeFields.includes(key.toLowerCase())) {
-              return item.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+              return sanitizeText(item);
             }
             if (htmlFields.includes(key.toLowerCase())) {
               return sanitizeString(item, true);
