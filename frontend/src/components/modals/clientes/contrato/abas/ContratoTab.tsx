@@ -44,27 +44,85 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   onShowBancoModal,
   onShowModeloContratoModal
 }) => {
-  // Handlers simplificados para desconto
+  const [descontoPercentualDisplay, setDescontoPercentualDisplay] = React.useState<string>(
+    formData.desconto_percentual > 0 ? formData.desconto_percentual.toString() : ''
+  );
+  const [descontoValorDisplay, setDescontoValorDisplay] = React.useState<string>(
+    formData.desconto_valor > 0 ? formData.desconto_valor.toString() : ''
+  );
+
+  React.useEffect(() => {
+    setDescontoPercentualDisplay(formData.desconto_percentual > 0 ? formData.desconto_percentual.toString() : '');
+  }, [formData.desconto_percentual]);
+
+  React.useEffect(() => {
+    setDescontoValorDisplay(formData.desconto_valor > 0 ? formData.desconto_valor.toString() : '');
+  }, [formData.desconto_valor]);
+
+  const valorPlano = Number(planoSelecionado?.valor_mensal || 0);
+
   const handleDescontoPercentualChange = (value: FormValue) => {
-    const percentual = typeof value === 'string' ? parseFloat(value) || 0 : (typeof value === 'number' ? value : 0);
-    // Arredondar para 2 casas decimais para evitar problemas de validação HTML5 com step={0.01}
+    const stringValue = String(value || '');
+    setDescontoPercentualDisplay(stringValue);
+    
+    if (!stringValue.trim()) {
+      handleInputChange('desconto_percentual', 0);
+      handleInputChange('desconto_valor', 0);
+      setDescontoValorDisplay('');
+      return;
+    }
+    
+    const percentual = Number(stringValue);
+    if (isNaN(percentual)) {
+      handleInputChange('desconto_percentual', 0);
+      handleInputChange('desconto_valor', 0);
+      setDescontoValorDisplay('');
+      return;
+    }
+    
     const percentualArredondado = Math.round(percentual * 100) / 100;
     handleInputChange('desconto_percentual', percentualArredondado);
     
-    // Limpar desconto em valor quando desconto percentual é usado
-    // Isso evita problemas de arredondamento ao recalcular o valor final
-    handleInputChange('desconto_valor', 0);
+    if (percentualArredondado > 0 && valorPlano > 0) {
+      const valorEquivalente = Math.round((valorPlano * percentualArredondado / 100) * 100) / 100;
+      handleInputChange('desconto_valor', valorEquivalente);
+      setDescontoValorDisplay(valorEquivalente.toString());
+    } else {
+      handleInputChange('desconto_valor', 0);
+      setDescontoValorDisplay('');
+    }
   };
 
   const handleDescontoValorChange = (value: FormValue) => {
-    const valor = typeof value === 'string' ? parseFloat(value) || 0 : (typeof value === 'number' ? value : 0);
-    // Arredondar o valor para 2 casas decimais
+    const stringValue = String(value || '');
+    setDescontoValorDisplay(stringValue);
+    
+    if (!stringValue.trim()) {
+      handleInputChange('desconto_valor', 0);
+      handleInputChange('desconto_percentual', 0);
+      setDescontoPercentualDisplay('');
+      return;
+    }
+    
+    const valor = Number(stringValue);
+    if (isNaN(valor)) {
+      handleInputChange('desconto_valor', 0);
+      handleInputChange('desconto_percentual', 0);
+      setDescontoPercentualDisplay('');
+      return;
+    }
+    
     const valorArredondado = Math.round(valor * 100) / 100;
     handleInputChange('desconto_valor', valorArredondado);
     
-    // Limpar desconto percentual quando desconto em valor é usado
-    // Isso evita problemas de arredondamento ao recalcular o valor final
-    handleInputChange('desconto_percentual', 0);
+    if (valorArredondado > 0 && valorPlano > 0) {
+      const percentualEquivalente = Math.round((valorArredondado / valorPlano * 100) * 100) / 100;
+      handleInputChange('desconto_percentual', percentualEquivalente);
+      setDescontoPercentualDisplay(percentualEquivalente.toString());
+    } else {
+      handleInputChange('desconto_percentual', 0);
+      setDescontoPercentualDisplay('');
+    }
   };
   return (
     <div className="row">
@@ -190,7 +248,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           label="Desconto Percentual (%)"
           placeholder="0.00"
           size="md"
-          value={formData.desconto_percentual}
+          value={descontoPercentualDisplay}
           onChange={handleDescontoPercentualChange}
           error={errors.desconto_percentual?.toString()}
           isInvalid={!!errors.desconto_percentual}
@@ -208,7 +266,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           label="Desconto Valor (R$)"
           placeholder="0.00"
           size="md"
-          value={formData.desconto_valor}
+          value={descontoValorDisplay}
           onChange={handleDescontoValorChange}
           error={errors.desconto_valor?.toString()}
           isInvalid={!!errors.desconto_valor}

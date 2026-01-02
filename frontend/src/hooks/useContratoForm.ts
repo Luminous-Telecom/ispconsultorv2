@@ -244,14 +244,20 @@ export const useContratoForm = ({
   const onSubmit = (data: any) => {
     const typedData = data as Omit<ZodContratoFormData, 'cliente_id'>;
     
+    // Função auxiliar para enviar valores numéricos (incluindo 0)
+    const getNumericValue = (value: number | undefined | null): number | undefined => {
+      if (value === null || value === undefined) return undefined;
+      return value;
+    };
+    
     if (isEditing && contratoId) {
       // Modo edição
       const dataToSend: CreateContratoData & { id: number } = {
         id: contratoId,
         cliente_id: contrato?.cliente_id || 0,
         plano_id: typedData.plano_id,
-        desconto_percentual: typedData.desconto_percentual || undefined,
-        desconto_valor: typedData.desconto_valor || undefined,
+        desconto_percentual: getNumericValue(typedData.desconto_percentual),
+        desconto_valor: getNumericValue(typedData.desconto_valor),
         data_inicio: typedData.data_inicio || undefined,
         data_fim: typedData.data_fim || undefined,
         status: typedData.status as CreateContratoData['status'],
@@ -276,8 +282,8 @@ export const useContratoForm = ({
       const dataToSend: CreateContratoData = {
         cliente_id: clienteId,
         plano_id: typedData.plano_id,
-        desconto_percentual: typedData.desconto_percentual || undefined,
-        desconto_valor: typedData.desconto_valor || undefined,
+        desconto_percentual: getNumericValue(typedData.desconto_percentual),
+        desconto_valor: getNumericValue(typedData.desconto_valor),
         data_inicio: typedData.data_inicio || undefined,
         data_fim: typedData.data_fim || undefined,
         status: typedData.status as CreateContratoData['status'],
