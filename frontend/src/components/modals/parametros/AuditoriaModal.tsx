@@ -226,7 +226,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
 
   // Filtros customizados
   const customFilters = (
-    <div className="row mb-3">
+    <div className="row mb-1">
       <div className="col-md-4">
         <label className="form-label small">Buscar</label>
         <input
@@ -305,25 +305,31 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
         title="Logs de Auditoria"
         size="xl"
       >
-        <div className="p-3">
-          {customFilters}
-          <div>
-            <ListModal
-              show={true}
-              onClose={() => {}}
-              config={modal.config}
-              data={data?.data || []}
-              loading={isLoading}
-              selectedItems={selectedItem ? [selectedItem] : []}
-              onSelectionChange={handleSelectionChange}
-              pagination={pagination}
-              onPageChange={tableFilters.setPage}
-              limit={tableFilters.limit}
-              onLimitChange={tableFilters.setLimit}
-              refreshQueryFn={refetch}
-              bulkActions={bulkActions}
-              skipWrapper={true}
-            />
+        <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
+          <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
+            {/* Filtros */}
+            <div style={{ padding: '16px', paddingBottom: '8px', flexShrink: 0 }}>
+              {customFilters}
+            </div>
+            {/* Tabela */}
+            <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+              <ListModal
+                show={true}
+                onClose={() => {}}
+                config={modal.config}
+                data={data?.data || []}
+                loading={isLoading}
+                selectedItems={selectedItem ? [selectedItem] : []}
+                onSelectionChange={handleSelectionChange}
+                pagination={pagination}
+                onPageChange={tableFilters.setPage}
+                limit={tableFilters.limit}
+                onLimitChange={tableFilters.setLimit}
+                refreshQueryFn={refetch}
+                bulkActions={bulkActions}
+                skipWrapper={true}
+              />
+            </div>
           </div>
         </div>
       </DraggableModal>
@@ -339,10 +345,10 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
           title="Detalhes do Log de Auditoria"
           size="lg"
         >
-          <div className="p-3">
-            <div className="mb-3">
-              <h6 className="mb-2">Informações Gerais</h6>
-              <div className="row g-0">
+          <div style={{ padding: '16px' }}>
+            <div className="mb-1">
+              <h6 className="mb-1">Informações Gerais</h6>
+              <div className="row g-1">
                 <div className="col-md-6">
                   <small className="text-muted">Ação:</small><br />
                   <span className={`badge bg-${getAcaoBadgeClass(selectedLog.acao)}`}>
@@ -394,8 +400,8 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
             </div>
 
             {(selectedLog.dados_anteriores || selectedLog.dados_novos) && (
-              <div className="mb-3">
-                <h6 className="mb-2">Dados</h6>
+              <div className="mb-1">
+                <h6 className="mb-1">Dados</h6>
                 <div className="card">
                   <div className="card-body" style={{ backgroundColor: 'var(--bg-secondary)' }}>
                     <pre 

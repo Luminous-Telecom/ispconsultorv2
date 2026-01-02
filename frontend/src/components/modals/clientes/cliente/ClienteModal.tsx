@@ -428,9 +428,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
             id="clienteTabContent" 
             style={{ 
               flex: 1, 
-              overflow: (activeTab === 'contratos' || activeTab === 'financeiro') ? 'hidden' : 'auto', 
+              overflow: (activeTab === 'contratos' || activeTab === 'financeiro' || activeTab === 'arquivos') ? 'hidden' : 'auto', 
               // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
-              padding: (activeTab === 'contratos' || activeTab === 'financeiro') ? '0' : (isMobile ? '0' : '16px'), 
+              padding: (activeTab === 'contratos' || activeTab === 'financeiro' || activeTab === 'arquivos') ? '0' : (isMobile ? '0' : '16px'), 
               minHeight: 0,
               display: 'flex',
               flexDirection: 'column'

@@ -1708,13 +1708,11 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
             {/* Aba Endereço */}
             {activeTab === 'endereco' && (
-              <div className="p-3">
-                <EnderecoTab
-                  formData={formData}
-                  handleInputChange={handleInputChange}
-                  clienteData={clienteData || null}
-                />
-              </div>
+              <EnderecoTab
+                formData={formData}
+                handleInputChange={handleInputChange}
+                clienteData={clienteData || null}
+              />
             )}
 
             {/* Aba Termos */}
