@@ -235,57 +235,24 @@ export class NotaFiscalPDFService {
     const imagesPath = path.join(__dirname, '../../images/sistema');
     const logoPath = fs.existsSync(imagesPath) ? path.join(imagesPath, logoFileName) : path.join(process.cwd(), 'images/sistema', logoFileName);
 
-    logger.info('Verificando logo NFSe', {
-      nota_id: notaFiscal.id,
-      logoFileName,
-      imagesPath,
-      logoPath,
-      imagesPathExists: fs.existsSync(imagesPath),
-      logoPathExists: fs.existsSync(logoPath),
-      __dirname,
-      cwd: process.cwd()
-    });
-
     if (fs.existsSync(logoPath)) {
       try {
-        logger.info('Logo encontrado, lendo arquivo', {
-          nota_id: notaFiscal.id,
-          logoPath,
-          fileSize: fs.statSync(logoPath).size
-        });
-
         const logoSvg = fs.readFileSync(logoPath, 'utf-8');
-
-        logger.info('Arquivo lido com sucesso', {
-          nota_id: notaFiscal.id,
-          logoLength: logoSvg.length,
-          logoPreview: logoSvg.substring(0, 100)
-        });
-
         logoNfseBase64 = `data:image/svg+xml;base64,${Buffer.from(logoSvg).toString('base64')}`;
-
-        logger.info('Logo convertido para base64', {
+        logger.debug('Logo NFSe carregado com sucesso', {
           nota_id: notaFiscal.id,
-          base64Length: logoNfseBase64.length,
-          base64Preview: logoNfseBase64.substring(0, 50)
+          logoSize: logoSvg.length
         });
       } catch (error) {
-        logger.error('Erro ao processar logo NFSe', {
+        logger.warn('Erro ao processar logo NFSe, continuando sem logo', {
           nota_id: notaFiscal.id,
           logoPath,
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-          stack: error instanceof Error ? error.stack : undefined
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
         });
-        // Logo opcional, continua sem ele
       }
     } else {
-      logger.warn('Logo NFSe não encontrado', {
-        nota_id: notaFiscal.id,
-        logoPath,
-        availablePaths: [
-          path.join(__dirname, '../../images/sistema', logoFileName),
-          path.join(process.cwd(), 'images/sistema', logoFileName)
-        ]
+      logger.debug('Logo NFSe não encontrado, usando template sem logo', {
+        nota_id: notaFiscal.id
       });
     }
 
@@ -376,30 +343,45 @@ export class NotaFiscalPDFService {
     };
 
     // Substituir variáveis no template
+    let totalVariablesProcessed = 0;
+    let totalReplacements = 0;
+
     Object.entries(templateVars).forEach(([key, value]) => {
       const regex = new RegExp(`{{${key}}}`, 'g');
       const matchesBefore = (template.match(regex) || []).length;
       template = template.replace(regex, String(value || ''));
       const matchesAfter = (template.match(regex) || []).length;
 
-      logger.info('Substituindo variável no template', {
-        nota_id: notaFiscal.id,
-        variable: key,
-        valueLength: String(value || '').length,
-        matchesBefore,
-        matchesAfter,
-        valuePreview: key === 'LOGO_NFSE' ? String(value || '').substring(0, 100) : undefined
-      });
+      totalVariablesProcessed++;
+      totalReplacements += matchesBefore;
     });
 
-    // Verificar se o LOGO_NFSE foi incluído no HTML final
+    logger.info('Variáveis do template processadas', {
+      nota_id: notaFiscal.id,
+      totalVariables: totalVariablesProcessed,
+      totalReplacements,
+      templateLength: template.length
+    });
+
+    // Validar template processado
+    const remainingVariables = template.match(/\{\{[^}]+\}\}/g) || [];
     const hasLogoInFinalHtml = template.includes('data:image/svg+xml;base64,');
-    logger.info('Template processado', {
+
+    logger.info('Template processado e validado', {
       nota_id: notaFiscal.id,
       templateLength: template.length,
       hasLogoInFinalHtml,
-      logoOccurrences: (template.match(/data:image\/svg\+xml;base64,/g) || []).length
+      logoOccurrences: (template.match(/data:image\/svg\+xml;base64,/g) || []).length,
+      remainingVariablesCount: remainingVariables.length,
+      remainingVariables: remainingVariables.length > 0 ? remainingVariables.slice(0, 5) : []
     });
+
+    if (remainingVariables.length > 0) {
+      logger.warn('Variáveis não substituídas encontradas no template', {
+        nota_id: notaFiscal.id,
+        remainingVariables
+      });
+    }
 
     return template;
   }
