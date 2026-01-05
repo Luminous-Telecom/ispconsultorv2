@@ -2,17 +2,22 @@ import { NotaFiscal } from '../models/NotaFiscal';
 import { Cliente } from '../models/Cliente';
 import { DadosEmpresa } from '../models/DadosEmpresa';
 import { logger } from '../utils/logger';
-import axios, { AxiosError } from 'axios';
 import { PortalNacionalNFSeService } from './PortalNacionalNFSeService';
 import { AsaasNFSeService } from './AsaasNFSeService';
 import { NFSeConfigService } from './NFSeConfigService';
+import { Titulo } from '../models/Titulo';
+import { Plano } from '../models/Plano';
+import { Contrato } from '../models/Contrato';
+import { ContratoPlanoAdicional } from '../models/ContratoPlanoAdicional';
+import { FinancialCalculationsService } from './FinancialCalculationsService';
+import { normalizeDateForDb } from '../utils/dateUtils';
 
 export interface DadosNFe {
   cliente_id: number;
   titulo_id?: number;
   natureza_operacao?: string;
-  data_emissao?: Date;
-  data_vencimento?: Date;
+  data_emissao?: Date | string;
+  data_vencimento?: Date | string;
   valor_total: number;
   valor_servicos?: number;
   valor_produtos?: number;
@@ -67,7 +72,6 @@ export class NFeService {
 
 
       // Buscar configuração da NFS-e para usar descrição padrão
-      const { NFSeConfigService } = await import('./NFSeConfigService');
       const nfseConfig = await NFSeConfigService.getConfig();
       const descricaoPadrao = nfseConfig?.descricao_servico || null;
 
@@ -77,10 +81,6 @@ export class NFeService {
       let valorTotal = dados.valor_total;
 
       if (dados.titulo_id) {
-        const { Titulo } = await import('../models/Titulo');
-        const { Plano } = await import('../models/Plano');
-        const { Contrato } = await import('../models/Contrato');
-        const { ContratoPlanoAdicional } = await import('../models/ContratoPlanoAdicional');
 
         const titulo = await Titulo.findByPk(dados.titulo_id, {
           include: [
@@ -90,21 +90,17 @@ export class NFeService {
               attributes: ['id', 'nome_plano', 'valor_mensal']
             }
           ]
-        }) as any;
+        }) as (Titulo & { plano?: Plano }) | null;
 
-        if (titulo && titulo.plano) {
-          const { FinancialCalculationsService } = await import('./FinancialCalculationsService');
-          
+        if (titulo?.plano) {
           const valorPlano = Number(titulo.plano.valor_mensal);
           let totalServicos = valorPlano;
           let totalFinal = valorPlano;
 
-          // Usar valor final do título
           if (titulo.valor_final) {
             totalFinal = Number(titulo.valor_final);
           }
 
-          // Buscar planos adicionais do contrato se existir
           if (titulo.contrato_id) {
             const contrato = await Contrato.findByPk(titulo.contrato_id);
             
@@ -112,7 +108,7 @@ export class NFeService {
               const planosAdicionais = await ContratoPlanoAdicional.findAll({
                 where: { contrato_id: contrato.id, status: 'ativo' },
                 include: [{ model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'] }]
-              }) as any[];
+              }) as Array<ContratoPlanoAdicional & { plano?: Plano }>;
 
               for (const planoAdicional of planosAdicionais) {
                 if (planoAdicional.plano) {
@@ -137,13 +133,36 @@ export class NFeService {
         }
       }
 
-      // Usar função utilitária existente para normalizar datas
-      const { normalizeDateForDb } = await import('../utils/dateUtils');
 
-      // Criar data_emissao
-      const dataEmissao = dados.data_emissao 
-        ? normalizeDateForDb(dados.data_emissao) || dados.data_emissao
-        : new Date();
+      // Criar data_emissao preservando hora atual
+      // Se data_emissao for fornecida como string YYYY-MM-DD (sem hora), usar data fornecida com hora atual
+      // Se data_emissao for fornecida como Date ou string com hora, preservar hora
+      // Se não fornecida, usar data/hora atual
+      let dataEmissao: Date;
+      const now = new Date();
+      
+      
+      if (dados.data_emissao instanceof Date) {
+        dataEmissao = dados.data_emissao;
+      } else if (typeof dados.data_emissao === 'string') {
+        const hasTime = /T|\s/.test(dados.data_emissao);
+        
+        if (hasTime) {
+          dataEmissao = new Date(dados.data_emissao);
+        } else {
+          // Sem hora (formato YYYY-MM-DD), usar data fornecida com hora atual
+          const dateMatch = dados.data_emissao.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (dateMatch) {
+            const [, year, month, day] = dateMatch.map(Number);
+            dataEmissao = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+          } else {
+            dataEmissao = new Date(dados.data_emissao);
+          }
+        }
+      } else {
+        dataEmissao = new Date();
+      }
+      
 
       // Criar data_vencimento
       const dataVencimentoValue = dados.data_vencimento 
@@ -174,9 +193,8 @@ export class NFeService {
 
       notaFiscal.status = 'PROCESSANDO';
       await notaFiscal.save();
-      await notaFiscal.reload();
-
-      // A nota fiscal será atualizada com nfse_status quando for gerada
+      
+      
 
       const resultadoProvedor = await this.gerarNFeComProvedor(notaFiscal, cliente, dadosEmpresa);
 
@@ -203,13 +221,10 @@ export class NFeService {
 
         // Atualizar título se titulo_id foi fornecido (vínculo com nota fiscal)
         if (dados.titulo_id) {
-          const { Titulo } = await import('../models/Titulo');
-          const titulo = await Titulo.findByPk(dados.titulo_id);
-          if (titulo) {
-            await titulo.update({
-              nota_fiscal_id: notaFiscal.id
-            });
-          }
+          await Titulo.update(
+            { nota_fiscal_id: notaFiscal.id },
+            { where: { id: dados.titulo_id } }
+          );
         }
 
       } else {
@@ -220,13 +235,8 @@ export class NFeService {
         notaFiscal.codigo_erro = resultadoProvedor.codigo_erro 
           ? resultadoProvedor.codigo_erro.substring(0, 10) 
           : null;
+        notaFiscal.nfse_status = 'erro';
         await notaFiscal.save();
-
-        // Atualizar nota fiscal com status de erro
-        if (notaFiscal) {
-          notaFiscal.nfse_status = 'erro';
-          await notaFiscal.save();
-        }
 
         return {
           success: false,
@@ -340,27 +350,21 @@ export class NFeService {
       // Se tem chave de acesso, consultar no provedor configurado
       if (notaFiscal.chave_acesso) {
         const config = await NFSeConfigService.getConfig();
+        let resultado: { success: boolean; status?: string; erro?: string } | null = null;
 
         if (config.provider === 'ASAAS') {
-          const resultado = await AsaasNFSeService.consultarStatus(notaFiscal.chave_acesso);
-          if (resultado.success && resultado.status) {
-            // Atualizar status no banco se mudou
-            if (resultado.status !== notaFiscal.status) {
-              notaFiscal.status = resultado.status as any;
-              await notaFiscal.save();
-            }
-            return resultado;
-          }
+          resultado = await AsaasNFSeService.consultarStatus(notaFiscal.chave_acesso);
         } else if (config.provider === 'PORTAL_NACIONAL') {
-          const resultado = await PortalNacionalNFSeService.consultarStatus(notaFiscal.chave_acesso);
-          if (resultado.success && resultado.status) {
-            // Atualizar status no banco se mudou
-            if (resultado.status !== notaFiscal.status) {
-              notaFiscal.status = resultado.status as any;
-              await notaFiscal.save();
-            }
-            return resultado;
-          }
+          resultado = await PortalNacionalNFSeService.consultarStatus(notaFiscal.chave_acesso);
+        }
+
+        if (resultado?.success && resultado.status && resultado.status !== notaFiscal.status) {
+          notaFiscal.status = resultado.status as NotaFiscal['status'];
+          await notaFiscal.save();
+        }
+
+        if (resultado) {
+          return resultado;
         }
       }
 

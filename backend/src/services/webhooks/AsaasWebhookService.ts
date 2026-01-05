@@ -141,8 +141,7 @@ export class AsaasWebhookService {
    * @returns Token esperado ou undefined se não encontrado
    */
   static async findExpectedToken(
-    titulo: (Titulo & { banco?: Banco | null }) | null,
-    receivedSecret?: string
+    titulo: (Titulo & { banco?: Banco | null }) | null
   ): Promise<string | undefined> {
     // Se temos título com banco Asaas, usar token dele
     if (titulo?.banco?.tipo_banco === 'asaas') {
@@ -152,15 +151,15 @@ export class AsaasWebhookService {
       }
     }
 
-    // Buscar em todos os bancos Asaas ativos
+    // Buscar em todos os bancos Asaas ativos e retornar o primeiro token encontrado
     const bancosAsaas = await Banco.findAll({
       where: { tipo_banco: 'asaas', ativo: true }
     });
 
     for (const banco of bancosAsaas) {
       const token = PaymentCommonService.getWebhookToken(banco);
-      if (token && (!receivedSecret || receivedSecret === token)) {
-        return token;
+      if (token) {
+        return token; // Retorna o primeiro token encontrado
       }
     }
 

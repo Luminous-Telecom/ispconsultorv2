@@ -2,14 +2,17 @@ import * as fs from 'fs';
 import * as path from 'path';
 import QRCode from 'qrcode';
 import { NotaFiscal } from '../models/NotaFiscal';
+import { NFSeConfig } from '../models/NFSeConfig';
 import { Cliente } from '../models/Cliente';
 import { DadosEmpresa } from '../models/DadosEmpresa';
 import { Titulo } from '../models/Titulo';
 import { Plano } from '../models/Plano';
+import { Contrato } from '../models/Contrato';
 import { ContratoPlanoAdicional } from '../models/ContratoPlanoAdicional';
 import { logger } from '../utils/logger';
-import { formatDate, formatDateTime, parseDateFromDb } from '../utils/dateUtils';
+import { formatDate, parseDateFromDb } from '../utils/dateUtils';
 import { PDFGenerationService } from './pdf-generation/PDFGenerationService';
+import { FinancialCalculationsService } from './FinancialCalculationsService';
 
 export class NotaFiscalPDFService {
   /**
@@ -37,6 +40,7 @@ export class NotaFiscalPDFService {
    * Processa HTML da NFS-e substituindo variáveis do template
    */
   private static async processarNfseHtml(notaFiscal: NotaFiscal & { cliente?: Cliente | null }): Promise<string> {
+    
     if (!notaFiscal.cliente) {
       throw new Error('Cliente não encontrado para a nota fiscal');
     }
@@ -46,7 +50,6 @@ export class NotaFiscalPDFService {
       throw new Error('Dados da empresa não configurados');
     }
 
-    const { NFSeConfig } = await import('../models/NFSeConfig');
     const nfseConfig = await NFSeConfig.findOne();
     const descricaoServico = nfseConfig?.descricao_servico || '';
 
@@ -59,7 +62,6 @@ export class NotaFiscalPDFService {
     }> = [];
 
     if (notaFiscal.titulo_id) {
-      const { Contrato } = await import('../models/Contrato');
 
       const titulo = await Titulo.findByPk(notaFiscal.titulo_id, {
         include: [
@@ -72,7 +74,6 @@ export class NotaFiscalPDFService {
       }) as (Titulo & { plano?: Plano }) | null;
 
       if (titulo && titulo.plano) {
-        const { FinancialCalculationsService } = await import('./FinancialCalculationsService');
         const valorPlano = Number(titulo.plano.valor_mensal);
         let valorFinal = valorPlano;
 
@@ -167,23 +168,17 @@ export class NotaFiscalPDFService {
     const formatarDataHora = (data: Date | string | null | undefined): string => {
       if (!data) return '';
       try {
-        // Se for string do banco, tentar extrair componentes diretamente para evitar problemas de timezone
-        if (typeof data === 'string') {
-          // Formato do banco: "YYYY-MM-DD HH:mm:ss" ou "YYYY-MM-DDTHH:mm:ss"
-          const match = data.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
-          if (match) {
-            const [, year, month, day, hour, minute, second] = match;
-            return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
-          }
-          // Se não tiver hora, usar 00:00:00
-          const dateOnlyMatch = data.match(/^(\d{4})-(\d{2})-(\d{2})/);
-          if (dateOnlyMatch) {
-            const [, year, month, day] = dateOnlyMatch;
-            return `${day}/${month}/${year} 00:00:00`;
-          }
-        }
-        // Se for Date object, usar formatDateTime normalmente
-        return formatDateTime(data instanceof Date ? data : parseDateFromDb(data)) || '';
+        const dateToFormat = data instanceof Date ? data : parseDateFromDb(data);
+        if (!dateToFormat || isNaN(dateToFormat.getTime())) return '';
+
+        const day = String(dateToFormat.getDate()).padStart(2, '0');
+        const month = String(dateToFormat.getMonth() + 1).padStart(2, '0');
+        const year = dateToFormat.getFullYear();
+        const hour = String(dateToFormat.getHours()).padStart(2, '0');
+        const minute = String(dateToFormat.getMinutes()).padStart(2, '0');
+        const second = String(dateToFormat.getSeconds()).padStart(2, '0');
+
+        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
       } catch {
         return '';
       }

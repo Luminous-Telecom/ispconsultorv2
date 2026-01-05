@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { NotaFiscal } from '../models/NotaFiscal';
 import { Cliente } from '../models/Cliente';
+import { Titulo } from '../models/Titulo';
 import { NFeService, DadosNFe } from '../services/NFeService';
 import { logger } from '../utils/logger';
 import { Op } from 'sequelize';
@@ -20,8 +21,9 @@ export class NotaFiscalController {
     }),
     titulo_id: Joi.number().integer().positive().allow(null, ''),
     natureza_operacao: Joi.string().max(100).allow(null, ''),
-    data_emissao: Joi.date().allow(null, ''),
-    data_vencimento: Joi.date().allow(null, ''),
+    // Aceitar string (YYYY-MM-DD) ou Date para evitar conversão de timezone pelo Joi
+    data_emissao: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, ''),
+    data_vencimento: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, ''),
     valor_total: Joi.number().positive().required().messages({
       'any.required': 'Valor total é obrigatório',
       'number.base': 'Valor total deve ser um número',
@@ -242,6 +244,8 @@ export class NotaFiscalController {
       }
 
       const dados: DadosNFe = value;
+      
+      
       const resultado = await NFeService.gerarNFe(dados);
 
       if (resultado.success && resultado.notaFiscal) {
@@ -424,6 +428,7 @@ export class NotaFiscalController {
         return null;
       }
 
+
       const { NotaFiscalPDFService } = await import('../services/NotaFiscalPDFService');
       return await NotaFiscalPDFService.gerarPdf(notaCompleta);
     } catch (error) {
@@ -510,15 +515,21 @@ export class NotaFiscalController {
         return;
       }
 
-      const notasFiscais = await NotaFiscal.findAll({
-        where: {
-          titulo_id: { [Op.in]: idsArray },
-          nfse_status: 'emitida',
-          numero: { [Op.ne]: null }
-        }
-      });
+      // Para cada título, buscar sua NF específica
+      const pdfBuffers: Buffer[] = [];
 
-      if (notasFiscais.length === 0) {
+      for (const tituloId of idsArray) {
+        const titulo = await Titulo.findByPk(tituloId);
+        if (!titulo?.nota_fiscal_id) continue;
+
+        const notaFiscal = await NotaFiscal.findByPk(titulo.nota_fiscal_id);
+        if (notaFiscal?.nfse_status === 'emitida' && notaFiscal.numero) {
+          const pdfBuffer = await NotaFiscalController.getPdfBuffer(notaFiscal);
+          if (pdfBuffer) pdfBuffers.push(pdfBuffer);
+        }
+      }
+
+      if (pdfBuffers.length === 0) {
         res.status(404).json({
           success: false,
           message: 'Nenhum título com NFS-e emitida encontrado'
@@ -526,20 +537,10 @@ export class NotaFiscalController {
         return;
       }
 
-      const notaFiscal = notasFiscais[0];
-      const pdfBuffer = await NotaFiscalController.getPdfBuffer(notaFiscal);
-
-      if (!pdfBuffer) {
-        res.status(404).json({
-          success: false,
-          message: 'PDF da NFS-e não encontrado. A nota pode ainda estar sendo processada.'
-        });
-        return;
-      }
-
+      // Retornar o primeiro PDF válido encontrado
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="nfse-${notaFiscal.numero || 'multiplas'}.pdf"`);
-      res.send(pdfBuffer);
+      res.setHeader('Content-Disposition', `inline; filename="nfse-${idsArray[0]}.pdf"`);
+      res.send(pdfBuffers[0]);
     } catch (error) {
       logger.error('Erro ao imprimir múltiplas NFS-e:', error);
       res.status(500).json({
