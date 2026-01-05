@@ -95,7 +95,6 @@ export class PDFGenerationService {
 
       const file = { content: html };
       const pdfBuffer = await htmlPdf.generatePdf(file, pdfOptions);
-      logger.info('PDF gerado com html-pdf-node', { pdfSize: pdfBuffer.length });
 
       return Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer);
     } catch (error) {

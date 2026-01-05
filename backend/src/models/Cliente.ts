@@ -19,6 +19,7 @@ import { sequelize } from '../config/database';
 import { Plano } from './Plano';
 import { Contrato } from './Contrato';
 import { Titulo } from './Titulo';
+import { NotaFiscal } from './NotaFiscal';
 import { formatCreatedAt } from '../utils/dateUtils';
 
 export class Cliente extends Model<
@@ -83,6 +84,17 @@ export class Cliente extends Model<
   declare hasContratos: HasManyHasAssociationsMixin<Contrato, number>;
   declare countContratos: HasManyCountAssociationsMixin;
   declare createContrato: HasManyCreateAssociationMixin<Contrato>;
+
+  declare getNotasFiscais: HasManyGetAssociationsMixin<NotaFiscal>;
+  declare addNotaFiscal: HasManyAddAssociationMixin<NotaFiscal, number>;
+  declare addNotasFiscais: HasManyAddAssociationsMixin<NotaFiscal, number>;
+  declare setNotasFiscais: HasManySetAssociationsMixin<NotaFiscal, number>;
+  declare removeNotaFiscal: HasManyRemoveAssociationMixin<NotaFiscal, number>;
+  declare removeNotasFiscais: HasManyRemoveAssociationsMixin<NotaFiscal, number>;
+  declare hasNotaFiscal: HasManyHasAssociationMixin<NotaFiscal, number>;
+  declare hasNotasFiscais: HasManyHasAssociationsMixin<NotaFiscal, number>;
+  declare countNotasFiscais: HasManyCountAssociationsMixin;
+  declare createNotaFiscal: HasManyCreateAssociationMixin<NotaFiscal>;
 
 
   /**

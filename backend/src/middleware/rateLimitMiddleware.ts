@@ -46,7 +46,6 @@ const generalLimiter = rateLimit({
       '/health',
       '/api/health',
       '/webhook',
-      '/config.js',
       '/uploads'
     ];
 

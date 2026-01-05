@@ -1,9 +1,4 @@
-/**
- * Hook para gerenciar ações em lote para títulos e contratos
- * Centraliza toda a lógica de operações em massa
- */
-
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { TituloService } from '../services/tituloService';
@@ -26,13 +21,14 @@ interface UseClienteBulkActionsParams {
   onShowContratoCreateModal: () => void;
   onShowContratoEditModal: (contratoId: number) => void;
   onShowImprimirModal: () => void;
-  // Handlers de impressão do hook useClienteImpressao
   handleImprimirTitulosSelecionados: (selectedItems: TituloItem[]) => Promise<void>;
   handleImprimirTodosEmAberto: () => Promise<void>;
   handleImprimirContrato: (contratoId: number) => Promise<void>;
   handleImprimirTermoAdesao: (contratoId: number) => Promise<void>;
   handleImprimirContratoPermanencia: (contratoId: number) => Promise<void>;
   handleImprimirRecibos: (selectedItems: TituloItem[]) => Promise<void>;
+  onShowGerarNFeModal: (titulo?: CarneParcela) => void;
+  handleImprimirNF: (ids: number[]) => Promise<void>;
 }
 
 interface UseClienteBulkActionsReturn {
@@ -59,7 +55,7 @@ interface UseClienteBulkActionsReturn {
 export const useClienteBulkActions = ({
   clienteId,
   createdClienteId,
-  parcelasData: _parcelasData,
+  parcelasData,
   contratosData: _contratosData,
   onRefreshParcelas,
   onRefreshContratos,
@@ -73,7 +69,9 @@ export const useClienteBulkActions = ({
   handleImprimirContrato,
   handleImprimirTermoAdesao,
   handleImprimirContratoPermanencia,
-  handleImprimirRecibos
+  handleImprimirRecibos,
+  onShowGerarNFeModal,
+  handleImprimirNF
 }: UseClienteBulkActionsParams): UseClienteBulkActionsReturn => {
   const { success, error, info } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -83,6 +81,16 @@ export const useClienteBulkActions = ({
   const [selectedContratosItems, setSelectedContratosItems] = useState<Contrato[]>([]);
 
   const effectiveClienteId = clienteId || createdClienteId;
+
+  const getItemsCompletos = useMemo((): CarneParcela[] => {
+    if (!parcelasData?.data || selectedItems.length === 0) return [];
+    const selectedIds = selectedItems.map(item => item.id);
+    return parcelasData.data.filter((item: CarneParcela) => selectedIds.includes(item.id));
+  }, [selectedItems, parcelasData]);
+
+  const hasNFSeEmitida = useMemo(() => {
+    return getItemsCompletos.some(item => item.nfse_status === 'emitida' && item.nfse_numero);
+  }, [getItemsCompletos]);
 
   const handleCancelarTitulos = async (items: CarneParcela[]) => {
     if (items.length > 0) {
@@ -297,9 +305,9 @@ export const useClienteBulkActions = ({
       charge_id: item.charge_id || null,
       cliente: undefined
     }));
-    
     await handleImprimirRecibos(tituloItems);
   };
+
 
   // Ações em lote para títulos
   const titulosBulkActions: BulkAction<CarneParcela>[] = [
@@ -372,14 +380,25 @@ export const useClienteBulkActions = ({
         },
         {
           label: 'Recibo',
-          action: () => handleImprimirRecibosWrapper(selectedItems as CarneParcela[]),
+          action: () => {
+            handleImprimirRecibosWrapper(getItemsCompletos);
+          },
           disabled: (selectedItems: CarneParcela[]) => {
             if (selectedItems.length === 0) return true;
-            // Apenas itens pagos podem ter recibo
-            const itensPagos = selectedItems.filter(item => item.status === 'pago' || item.status === 'pago_atraso');
-            return itensPagos.length === 0;
+            return selectedItems.every(item => item.status !== 'pago' && item.status !== 'pago_atraso');
           }
-        }
+        },
+        ...(hasNFSeEmitida ? [{
+          label: 'Imprimir NF',
+          action: () => {
+            const itensComNFSe = getItemsCompletos.filter(item => item.nfse_status === 'emitida' && item.nfse_numero);
+            if (itensComNFSe.length === 0) {
+              error('Nenhum título selecionado possui NFS-e emitida');
+              return;
+            }
+            handleImprimirNF(itensComNFSe.map(item => item.id));
+          }
+        }] : [])
       ]
     },
     {
@@ -393,12 +412,28 @@ export const useClienteBulkActions = ({
       dropdown: [
         {
           label: 'Via WhatsApp',
-          action: () => handleEnviarWhatsApp(selectedItems as CarneParcela[])
+          action: () => handleEnviarWhatsApp(getItemsCompletos)
         },
         {
           label: 'Via Email',
-          action: () => handleEnviarEmail(selectedItems as CarneParcela[])
+          action: () => handleEnviarEmail(getItemsCompletos)
         }
+      ]
+    },
+    {
+      key: 'nfse',
+      label: 'NFS-e',
+      variant: 'primary',
+      disabled: (selectedItems: CarneParcela[]) => selectedItems.length === 0,
+      dropdown: [
+        {
+          label: 'Gerar NFS-e Avulsa',
+          action: (selectedItems?: CarneParcela[]) => {
+            if (selectedItems && selectedItems.length > 0) {
+              onShowGerarNFeModal(selectedItems[0]);
+            }
+          }
+        },
       ]
     }
   ];

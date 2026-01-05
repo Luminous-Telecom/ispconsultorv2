@@ -96,6 +96,12 @@ export interface AsaasPaymentPayload {
     pixQrCodeUrl?: string;
     dueDate?: string;
   };
+  invoice?: {
+    id?: string;
+    number?: string;
+    status?: string;
+    customer?: string;
+  };
   token?: string;
 }
 

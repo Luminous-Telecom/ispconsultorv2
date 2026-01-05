@@ -63,9 +63,11 @@ export class ParametroController {
       });
 
       if (!parametro) {
-        res.status(404).json({
+        // Retornar 200 com success: false ao invés de 404 para evitar redirecionamento
+        res.status(200).json({
           success: false,
-          message: 'Parâmetro não encontrado'
+          message: 'Parâmetro não encontrado',
+          data: null
         });
         return;
       }
@@ -96,16 +98,34 @@ export class ParametroController {
   public async update(req: Request, res: Response): Promise<void> {
     try {
       const { chave } = req.params;
-      const { valor, ativo } = req.body;
+      const { valor, ativo, tipo, descricao, categoria } = req.body;
 
-      const parametro = await Parametro.findOne({
+      let parametro = await Parametro.findOne({
         where: { chave }
       });
 
+      // Se não existir, criar com valores padrão
       if (!parametro) {
-        res.status(404).json({
-          success: false,
-          message: 'Parâmetro não encontrado'
+        parametro = await Parametro.create({
+          chave,
+          valor: valor?.toString() || '',
+          tipo: tipo || 'string',
+          descricao: descricao || `Parâmetro ${chave}`,
+          categoria: categoria || 'geral',
+          ativo: ativo !== undefined ? ativo : true
+        });
+
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'Parametro',
+          parametro.id,
+          parametro.toJSON() as unknown as Record<string, unknown>
+        );
+
+        res.json({
+          success: true,
+          message: 'Parâmetro criado com sucesso',
+          data: parametro
         });
         return;
       }
@@ -170,9 +190,15 @@ export class ParametroController {
   // Atualizar múltiplos parâmetros
   public async updateMultiple(req: Request, res: Response): Promise<void> {
     try {
+      logger.info('Recebendo atualização de múltiplos parâmetros', {
+        body: req.body,
+        parametrosCount: Array.isArray(req.body.parametros) ? req.body.parametros.length : 0
+      });
+
       const { parametros } = req.body;
 
       if (!Array.isArray(parametros)) {
+        logger.error('Parâmetros não é um array', { body: req.body });
         res.status(400).json({
           success: false,
           message: 'Parâmetros devem ser um array'
@@ -183,59 +209,138 @@ export class ParametroController {
       const results = [];
 
       for (const param of parametros) {
-        const { chave, valor, ativo } = param;
+        const { chave, valor, ativo, tipo, descricao, categoria } = param;
 
-        const parametro = await Parametro.findOne({
+        logger.info(`Processando parâmetro: ${chave}`, { chave, valor, tipo, descricao, categoria });
+
+        let parametro = await Parametro.findOne({
           where: { chave }
         });
 
-        if (parametro) {
-          // Converter valor baseado no tipo
-          let valorConvertido = valor;
-          if (parametro.tipo === 'boolean') {
-            valorConvertido = valor === 'true' || valor === true;
-          } else if (parametro.tipo === 'number') {
-            valorConvertido = parseFloat(valor);
-          } else if (parametro.tipo === 'json') {
-            try {
-              valorConvertido = JSON.parse(valor);
-            } catch {
-              results.push({
-                chave,
-                success: false,
-                error: 'Valor JSON inválido'
-              });
-              continue;
-            }
-          }
+        // Se não existir, criar
+        if (!parametro) {
+          logger.info(`Criando novo parâmetro: ${chave}`);
+          try {
+            parametro = await Parametro.create({
+              chave,
+              valor: valor?.toString() || '',
+              tipo: tipo || 'string',
+              descricao: descricao || `Parâmetro ${chave}`,
+              categoria: categoria || 'geral',
+              ativo: ativo !== undefined ? ativo : true
+            });
+            
+            await parametro.reload(); // Garantir que os dados estão sincronizados
 
-          const dadosAnteriores = parametro.toJSON();
-          await parametro.update({
-            valor: valorConvertido.toString(),
-            ativo: ativo !== undefined ? ativo : parametro.ativo
-          });
+            // Registrar auditoria (não bloquear se falhar)
+            try {
+              await registrarCriacao(
+                req as AuthenticatedRequest,
+                'Parametro',
+                parametro.id,
+                parametro.toJSON() as unknown as Record<string, unknown>
+              );
+            } catch (auditError) {
+              logger.warn(`Erro ao registrar auditoria para parâmetro ${chave}`, { error: auditError });
+            }
+
+            logger.info(`Parâmetro ${chave} criado com sucesso`, { id: parametro.id, valor: parametro.valor });
+            results.push({
+              chave,
+              success: true
+            });
+          } catch (createError) {
+            logger.error(`Erro ao criar parâmetro ${chave}`, { error: createError });
+            results.push({
+              chave,
+              success: false,
+              error: createError instanceof Error ? createError.message : 'Erro ao criar parâmetro'
+            });
+          }
+          continue;
+        }
+
+        // Converter valor baseado no tipo
+        let valorConvertido = valor;
+        const tipoParametro = tipo || parametro.tipo;
+        if (tipoParametro === 'boolean') {
+          valorConvertido = valor === 'true' || valor === true;
+        } else if (tipoParametro === 'number') {
+          valorConvertido = parseFloat(valor?.toString() || '0');
+        } else if (tipoParametro === 'json') {
+          try {
+            valorConvertido = JSON.parse(valor?.toString() || '{}');
+          } catch {
+            results.push({
+              chave,
+              success: false,
+              error: 'Valor JSON inválido'
+            });
+            continue;
+          }
+        }
+
+        const dadosAnteriores = parametro.toJSON();
+        const updateData: any = {
+          valor: valorConvertido.toString(),
+          ativo: ativo !== undefined ? ativo : parametro.ativo
+        };
+
+        // Atualizar tipo, descricao e categoria se fornecidos
+        if (tipo) updateData.tipo = tipo;
+        if (descricao) updateData.descricao = descricao;
+        if (categoria) updateData.categoria = categoria;
+
+        logger.info(`Atualizando parâmetro existente: ${chave}`, { 
+          valorAnterior: dadosAnteriores.valor, 
+          valorNovo: valorConvertido.toString(),
+          updateData 
+        });
+
+        try {
+          await parametro.update(updateData);
           await parametro.reload();
 
-          await registrarAtualizacao(
-            req as AuthenticatedRequest,
-            'Parametro',
-            parametro.id,
-            dadosAnteriores as unknown as Record<string, unknown>,
-            parametro.toJSON() as unknown as Record<string, unknown>
-          );
+          logger.info(`Parâmetro ${chave} atualizado com sucesso`, { 
+            id: parametro.id, 
+            valor: parametro.valor,
+            tipo: parametro.tipo,
+            categoria: parametro.categoria
+          });
+
+          // Registrar auditoria (não bloquear se falhar)
+          try {
+            await registrarAtualizacao(
+              req as AuthenticatedRequest,
+              'Parametro',
+              parametro.id,
+              dadosAnteriores as unknown as Record<string, unknown>,
+              parametro.toJSON() as unknown as Record<string, unknown>
+            );
+          } catch (auditError) {
+            logger.warn(`Erro ao registrar auditoria para parâmetro ${chave}`, { error: auditError });
+          }
 
           results.push({
             chave,
             success: true
           });
-        } else {
+        } catch (updateError) {
+          logger.error(`Erro ao atualizar parâmetro ${chave}`, { error: updateError });
           results.push({
             chave,
             success: false,
-            error: 'Parâmetro não encontrado'
+            error: updateError instanceof Error ? updateError.message : 'Erro ao atualizar parâmetro'
           });
         }
       }
+
+      logger.info('Parâmetros atualizados com sucesso', {
+        total: results.length,
+        sucessos: results.filter(r => r.success).length,
+        falhas: results.filter(r => !r.success).length,
+        results
+      });
 
       res.json({
         success: true,

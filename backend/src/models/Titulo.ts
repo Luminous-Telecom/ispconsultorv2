@@ -48,6 +48,7 @@ export class Titulo extends Model<
   declare url_boleto: string | null;
   declare nosso_numero: string | null;
   declare is_avulso: boolean;
+  declare nota_fiscal_id: number | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -448,12 +449,64 @@ export class Titulo extends Model<
   }
 
   /**
-   * Sobrescrever toJSON para incluir data_pagamento_formatada e created_at_formatada
+   * Busca o número da NFS-e através da nota fiscal vinculada
+   */
+  async getNfseNumero(): Promise<string | null> {
+    if (!this.nota_fiscal_id) {
+      return null;
+    }
+    
+    try {
+      const { NotaFiscal } = await import('./NotaFiscal');
+      const notaFiscal = await NotaFiscal.findByPk(this.nota_fiscal_id);
+      return notaFiscal?.numero || null;
+    } catch (error) {
+      logger.error('Erro ao buscar número da NFS-e', {
+        titulo_id: this.id,
+        nota_fiscal_id: this.nota_fiscal_id,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Busca o status da NFS-e através da nota fiscal vinculada
+   */
+  async getNfseStatus(): Promise<'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro' | null> {
+    if (!this.nota_fiscal_id) {
+      return null;
+    }
+    
+    try {
+      const { NotaFiscal } = await import('./NotaFiscal');
+      const notaFiscal = await NotaFiscal.findByPk(this.nota_fiscal_id);
+      return notaFiscal?.nfse_status || null;
+    } catch (error) {
+      logger.error('Erro ao buscar status da NFS-e', {
+        titulo_id: this.id,
+        nota_fiscal_id: this.nota_fiscal_id,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Sobrescrever toJSON para incluir data_pagamento_formatada, created_at_formatada, nfse_numero e nfse_status
    */
   toJSON(): Record<string, unknown> {
     const json = this.get({ plain: true }) as Record<string, unknown>;
     json.data_pagamento_formatada = this.getDataPagamentoFormatada();
     json.created_at_formatada = this.getCreatedAtFormatada();
+    
+    // Incluir número e status da NFS-e se a nota fiscal estiver carregada
+    if (this.nota_fiscal_id && (this as any).nota_fiscal) {
+      const notaFiscal = (this as any).nota_fiscal;
+      json.nfse_numero = notaFiscal?.numero || null;
+      json.nfse_status = notaFiscal?.nfse_status || null;
+    }
+    
     return json;
   }
 
@@ -654,6 +707,17 @@ Titulo.init(
       defaultValue: false,
       comment: 'Indica se o título foi criado manualmente (avulso) ou gerado automaticamente pelo sistema'
     },
+    nota_fiscal_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'notas_fiscais',
+        key: 'id'
+      },
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE',
+      comment: 'ID da nota fiscal vinculada ao título'
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -696,6 +760,9 @@ Titulo.init(
       {
         fields: ['numero_titulo'],
         unique: true
+      },
+      {
+        fields: ['nota_fiscal_id']
       }
     ]
   }

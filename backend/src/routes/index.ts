@@ -32,6 +32,8 @@ import clienteArquivoRoutes from './clienteArquivoRoutes';
 import auditoriaRoutes from './auditoriaRoutes';
 import fornecedorRoutes from './fornecedorRoutes';
 import contaPagarRoutes from './contaPagarRoutes';
+import notaFiscalRoutes from './notaFiscalRoutes';
+import nfseConfigRoutes from './nfseConfigRoutes';
 
 const router = Router();
 
@@ -71,6 +73,8 @@ const routes = [
     { path: '/api/auditoria', route: auditoriaRoutes },
     { path: '/api/fornecedores', route: fornecedorRoutes },
     { path: '/api/contas-pagar', route: contaPagarRoutes },
+    { path: '/api/notas-fiscais', route: notaFiscalRoutes },
+    { path: '/api/nfse-config', route: nfseConfigRoutes },
 
     // Rotas de webhook
     { path: '/webhook', route: webhookRoutes },

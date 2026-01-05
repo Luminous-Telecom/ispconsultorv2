@@ -75,6 +75,12 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
   const authHeader = req.get('Authorization');
 
   if (!authHeader?.startsWith('Bearer ')) {
+    if (req.path.includes('/notas-fiscais') || req.path.includes('/nfse')) {
+      logger.warn('Requisição bloqueada - sem token de autenticação', {
+        path: req.path,
+        originalUrl: req.originalUrl
+      });
+    }
     res.status(404).end();
     return;
   }

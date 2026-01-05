@@ -96,7 +96,7 @@
  * ```
  */
 
-import { Cliente, Plano, Banco, Contrato, Carne, CarneParcela, Fornecedor, ContaPagar } from './entities';
+import { Cliente, Plano, Banco, Contrato, Carne, CarneParcela, Fornecedor, ContaPagar, NotaFiscal, CreateNotaFiscal } from './entities';
 
 // Re-exportar tipos consolidados
 export * from './entities';
@@ -117,7 +117,7 @@ export type { PlanoInfo, BancoInfo, ContratoItem, TituloItem, BulkActionItem, No
 
 // Todos os filtros estão em api.ts agora
 // Mantendo apenas para compatibilidade com código existente
-export type { ClienteFilters, PlanoFilters, BancoFilters, CarneFilters, CarneParcelaFilters, FornecedorFilters, ContaPagarFilters } from './api';
+export type { ClienteFilters, PlanoFilters, BancoFilters, CarneFilters, CarneParcelaFilters, FornecedorFilters, ContaPagarFilters, NotaFiscalFilters } from './api';
 
 // ============================================
 // TIPOS DE CRIAÇÃO E ATUALIZAÇÃO
@@ -147,6 +147,10 @@ export type UpdateFornecedor = Partial<CreateFornecedor>;
 
 export type CreateContaPagar = Omit<ContaPagar, 'id' | 'created_at' | 'updated_at' | 'created_at_formatada' | 'saldo_devedor' | 'vencida'>;
 export type UpdateContaPagar = Partial<CreateContaPagar>;
+
+// CreateNotaFiscal já está definido em entities.ts e é exportado via export *
+// UpdateNotaFiscal também é definido aqui
+export type UpdateNotaFiscal = Partial<CreateNotaFiscal>;
 
 // ============================================
 // TIPOS PARA DASHBOARD E GRÁFICOS

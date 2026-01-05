@@ -81,7 +81,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
   // Posicionar modal na área restante (excluindo menu) - 95% da dashboard (apenas desktop)
   useEffect(() => {
-    if (isMobile) return;
+    if (isMobile) {
+      setIsVisible(show);
+      return;
+    }
     
     if (show && !isInitialized) {
       const screenWidth = window.innerWidth;
@@ -108,10 +111,12 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       setIsInitialized(true);
       setIsVisible(true);
     } else if (!show && isInitialized) {
-      // Resetar quando fechar para recalcular na próxima abertura
       setIsInitialized(false);
       setIsVisible(false);
+    } else if (show && isInitialized) {
+      setIsVisible(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, isInitialized, isMobile]);
 
   // Funções de drag - só permite arrastar pelo título (apenas desktop)

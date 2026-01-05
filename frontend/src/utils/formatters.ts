@@ -20,6 +20,25 @@ export const formatCurrency = (value: number | string, showCurrency: boolean = t
 };
 
 /**
+ * Converte uma string formatada como moeda brasileira para número
+ * @param value - String formatada como moeda (ex: "R$ 1.234,56" ou "1.234,56")
+ * @returns Número correspondente ou 0 se inválido
+ */
+export const parseCurrency = (value: string): number => {
+  if (!value) return 0;
+  
+  // Remove símbolos de moeda e espaços
+  let cleaned = value.replace(/R\$\s*/g, '').trim();
+  
+  // Remove pontos (separadores de milhar) e substitui vírgula por ponto
+  cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+  
+  const numValue = parseFloat(cleaned);
+  
+  return isNaN(numValue) ? 0 : numValue;
+};
+
+/**
  * Formata um número com separadores de milhar brasileiros
  * @param value - Valor numérico para formatar
  * @returns String formatada com separadores

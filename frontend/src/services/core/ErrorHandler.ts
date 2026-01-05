@@ -46,6 +46,19 @@ export class ErrorHandler {
     const axiosError = error as AxiosError<{ message?: string; error?: string; errors?: Record<string, string[]> }>;
     const statusCode = axiosError.response?.status;
     const responseData = axiosError.response?.data;
+    const requestUrl = (axiosError.config?.url || '').toLowerCase();
+    
+    // Log imediato para debug (antes de qualquer processamento)
+    if (statusCode === 401) {
+      // eslint-disable-next-line no-console
+      console.log('[ErrorHandler] processError - 401 detectado:', {
+        requestUrl,
+        statusCode,
+        responseData,
+        configUrl: axiosError.config?.url,
+        fullUrl: (axiosError.config?.baseURL || '') + (axiosError.config?.url || '')
+      });
+    }
 
     // Determinar tipo de erro baseado no status code
     let errorType: ErrorType;
@@ -74,7 +87,26 @@ export class ErrorHandler {
           const lastLoginTime401 = sessionStorage.getItem('last_login_time');
           const timeSinceLogin401 = lastLoginTime401 ? Date.now() - parseInt(lastLoginTime401, 10) : Infinity;
           
-          if (currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000) {
+          // Não redirecionar se for uma requisição de parâmetro que pode não existir (404 disfarçado)
+          // ou se for teste de autenticação do Portal Nacional (401 esperado quando credenciais estão erradas)
+          const isParametroRequest = requestUrl.includes('parametro/');
+          const isTestAuthRequest = requestUrl.includes('nfse-config/test-auth');
+          
+          // Logs para debug
+          // eslint-disable-next-line no-console
+          console.log('[ErrorHandler] 401 Error Debug:', {
+            requestUrl,
+            currentPath: currentPath401,
+            hasToken: !!hasToken401,
+            timeSinceLogin: timeSinceLogin401,
+            isParametroRequest,
+            isTestAuthRequest,
+            willRedirect: currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000 && !isParametroRequest && !isTestAuthRequest
+          });
+          
+          if (currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000 && !isParametroRequest && !isTestAuthRequest) {
+            // eslint-disable-next-line no-console
+            console.log('[ErrorHandler] Redirecionando para login');
             if (hasToken401) {
               localStorage.removeItem('auth_token');
             }
@@ -83,6 +115,9 @@ export class ErrorHandler {
                 window.location.href = '/login';
               }
             }, 100);
+          } else {
+            // eslint-disable-next-line no-console
+            console.log('[ErrorHandler] NÃO redirecionando para login');
           }
           break;
         case 403:
@@ -90,7 +125,6 @@ export class ErrorHandler {
           message = responseData?.message || responseData?.error || 'Sem permissão para esta ação';
           break;
         case 404:
-          const requestUrl = (axiosError.config?.url || '').toLowerCase();
           const baseURL = (axiosError.config?.baseURL || '').toLowerCase();
           const fullUrl = `${baseURL}${requestUrl}`;
           

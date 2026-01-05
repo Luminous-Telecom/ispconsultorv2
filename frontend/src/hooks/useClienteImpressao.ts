@@ -36,6 +36,9 @@ interface UseClienteImpressaoReturn {
   // Função de impressão para recibos
   handleImprimirRecibos: (selectedItems: TituloItem[]) => Promise<void>;
   
+  // Função de impressão para NFS-e
+  handleImprimirNF: (ids: number[]) => Promise<void>;
+  
   // Handler para fechar modal e limpar URL
   handleCloseImprimirModal: () => void;
 }
@@ -311,6 +314,45 @@ export const useClienteImpressao = ({
     }
   };
 
+  const handleImprimirNF = async (ids: number[]) => {
+    if (ids.length === 0) {
+      error('Nenhum título selecionado');
+      return;
+    }
+
+    // Abrir modal imediatamente
+    setShowImprimirModal(true);
+    setIsGeneratingPdf(true);
+    
+    // Limpar URL anterior se existir
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+    
+    try {
+      const { defaultApiClient } = await import('../services/core/ApiClient');
+      
+      const response = await defaultApiClient.get(`/notas-fiscais/nfse/multiplos?ids=${ids.join(',')}&print=true`, {
+        responseType: 'blob'
+      });
+      
+      if (response.data instanceof Blob) {
+        const url = window.URL.createObjectURL(response.data);
+        setPdfUrl(url);
+        setIsGeneratingPdf(false);
+        success('NFS-e(s) gerada(s) com sucesso!');
+      } else {
+        throw new Error('Resposta inválida do servidor');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar PDF da NFS-e';
+      error(errorMessage);
+      setShowImprimirModal(false);
+      setIsGeneratingPdf(false);
+    }
+  };
+
   // Combinar pdfUrl do hook de contratos com pdfUrl local (outros documentos)
   const combinedPdfUrl = impressaoContratoHook.pdfUrl || pdfUrl;
   // Combinar isGeneratingPdf do hook de contratos com estado local (títulos)
@@ -344,6 +386,7 @@ export const useClienteImpressao = ({
     handleImprimirTermoAdesao,
     handleImprimirContratoPermanencia,
     handleImprimirRecibos,
+    handleImprimirNF,
     handleCloseImprimirModal: handleCloseImprimirModalCombined
   };
 };

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nota Fiscal de Serviços Eletrônica</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 10px;
+      color: #2c3e50;
+      background: #fff;
+      padding: 0;
+      margin: 0;
+      line-height: 1.3;
+    }
+    .nfse-container {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 8px;
+      background: #ffffff;
+    }
+    .logo-nfse {
+      text-align: center;
+      margin-bottom: 5px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #34495e;
+    }
+    .logo-nfse img {
+      max-width: 180px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .nfse-title {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      margin: 5px 0;
+      text-transform: uppercase;
+      color: #2c3e50;
+      letter-spacing: 0.5px;
+      padding: 4px 0;
+      border-top: 2px solid #34495e;
+      border-bottom: 2px solid #34495e;
+    }
+    .nfse-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      padding: 5px;
+      background: #f8f9fa;
+      border-radius: 3px;
+      border-left: 3px solid #3498db;
+      font-size: 9px;
+    }
+    .nfse-info-item {
+      flex: 1;
+      padding: 0 3px;
+    }
+    .nfse-info-item strong {
+      display: block;
+      margin-bottom: 1px;
+      color: #34495e;
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .section {
+      margin-bottom: 6px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 6px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .section-title {
+      background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+      color: #ffffff;
+      padding: 4px 8px;
+      font-weight: 600;
+      font-size: 10px;
+      margin: -6px -6px 6px -6px;
+      border-radius: 4px 4px 0 0;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .row {
+      display: flex;
+      margin-bottom: 2px;
+      font-size: 9px;
+      padding: 2px 0;
+      border-bottom: 1px dotted #e0e0e0;
+    }
+    .row:last-child {
+      border-bottom: none;
+    }
+    .row-label {
+      font-weight: 600;
+      width: 130px;
+      flex-shrink: 0;
+      color: #555;
+    }
+    .row-value {
+      flex: 1;
+      color: #2c3e50;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 5px;
+      font-size: 9px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .table th,
+    .table td {
+      border: 1px solid #ddd;
+      padding: 4px;
+      text-align: left;
+    }
+    .table th {
+      background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+      color: #ffffff;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 8px;
+      letter-spacing: 0.3px;
+    }
+    .table td {
+      text-align: right;
+      background: #ffffff;
+    }
+    .table td:first-child {
+      text-align: left;
+      font-weight: 500;
+    }
+    .table tbody tr:hover {
+      background: #f8f9fa;
+    }
+    .totals {
+      margin-top: 6px;
+      padding-top: 5px;
+      border-top: 2px solid #34495e;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+      font-size: 9px;
+      padding: 2px 0;
+    }
+    .total-row.total-final {
+      font-weight: 700;
+      font-size: 11px;
+      border-top: 2px solid #34495e;
+      padding-top: 4px;
+      margin-top: 4px;
+      color: #2c3e50;
+      background: #f8f9fa;
+      padding: 4px 6px;
+      border-radius: 3px;
+    }
+    .footer {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 8px;
+      text-align: center;
+      color: #7f8c8d;
+      line-height: 1.3;
+    }
+    .chave-acesso {
+      font-size: 7px;
+      word-break: break-all;
+      margin-top: 5px;
+      padding: 5px;
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      color: #2c3e50;
+    }
+    .protocolo {
+      font-size: 9px;
+      margin-top: 4px;
+      padding: 4px;
+      background: #f8f9fa;
+      border-radius: 3px;
+    }
+    .qr-code {
+      text-align: center;
+      margin: 6px 0;
+      padding: 6px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border: 1px dashed #3498db;
+    }
+    .qr-code img {
+      max-width: 100px;
+      height: auto;
+    }
+    .qr-code-text {
+      font-size: 8px;
+      margin-top: 4px;
+      color: #555;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .qr-code-text p {
+      margin: 1px 0;
+    }
+    .qr-code-text strong {
+      color: #2c3e50;
+      font-size: 9px;
+    }
+    .chave-acesso-text {
+      font-size: 11px;
+      font-weight: 600;
+    }
+    @media print {
+      body {
+        padding: 0;
+      }
+      .nfse-container {
+        border: none;
+        padding: 0;
+        box-shadow: none;
+      }
+      .section {
+        box-shadow: none;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="nfse-container">
+    <!-- Logo da NFS-e -->
+    <div class="logo-nfse">
+      {{LOGO_NFSE}}
+    </div>
+
+    <!-- Título -->
+    <div class="nfse-title">
+      NOTA FISCAL DE SERVIÇO ELETRÔNICA
+    </div>
+
+    <!-- Informações da NFS-e -->
+    <div class="nfse-info">
+      <div class="nfse-info-item">
+        <strong>Número:</strong> {{NUMERO}}
+      </div>
+      <div class="nfse-info-item">
+        <strong>Série:</strong> {{SERIE}}
+      </div>
+      <div class="nfse-info-item">
+        <strong>Data e Hora de Emissão:</strong> {{DATA_EMISSAO}}
+      </div>
+      <div class="nfse-info-item">
+        <strong>Status:</strong> {{STATUS}}
+      </div>
+    </div>
+
+    <!-- Prestador de Serviços -->
+    <div class="section">
+      <div class="section-title">PRESTADOR DE SERVIÇOS</div>
+      <div class="row">
+        <span class="row-label">Razão Social:</span>
+        <span class="row-value">{{EMPRESA_RAZAO_SOCIAL}}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">CNPJ:</span>
+        <span class="row-value">{{EMPRESA_CNPJ}}</span>
+      </div>
+      {{EMPRESA_INSCRICAO_MUNICIPAL_SECTION}}
+      <div class="row">
+        <span class="row-label">Endereço:</span>
+        <span class="row-value">{{EMPRESA_ENDERECO}}, {{EMPRESA_NUMERO}} - {{EMPRESA_COMPLEMENTO}} - {{EMPRESA_BAIRRO}} - {{EMPRESA_CIDADE}}/{{EMPRESA_ESTADO}} - CEP: {{EMPRESA_CEP}}</span>
+      </div>
+    </div>
+
+    <!-- Tomador de Serviços -->
+    <div class="section">
+      <div class="section-title">TOMADOR DE SERVIÇOS</div>
+      <div class="row">
+        <span class="row-label">Razão Social:</span>
+        <span class="row-value">{{CLIENTE_RAZAO_SOCIAL}}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Nome Fantasia:</span>
+        <span class="row-value">{{CLIENTE_NOME_FANTASIA}}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">CNPJ/CPF:</span>
+        <span class="row-value">{{CLIENTE_CNPJ}}</span>
+      </div>
+      {{CLIENTE_INSCRICAO_ESTADUAL_SECTION}}
+      <div class="row">
+        <span class="row-label">Endereço:</span>
+        <span class="row-value">{{CLIENTE_ENDERECO}}, {{CLIENTE_NUMERO}} - {{CLIENTE_COMPLEMENTO}} - {{CLIENTE_BAIRRO}} - {{CLIENTE_CIDADE}}/{{CLIENTE_ESTADO}} - CEP: {{CLIENTE_CEP}}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Telefone:</span>
+        <span class="row-value">{{CLIENTE_TELEFONE}}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Email:</span>
+        <span class="row-value">{{CLIENTE_EMAIL}}</span>
+      </div>
+    </div>
+
+    <!-- Discriminação dos Serviços -->
+    <div class="section">
+      <div class="section-title">DISCRIMINAÇÃO DOS SERVIÇOS</div>
+      <div class="row">
+        <span class="row-label">Descrição:</span>
+        <span class="row-value">{{DESCRICAO}}</span>
+      </div>
+      {{OBSERVACOES_SECTION}}
+      <div class="row">
+        <span class="row-label">Natureza da Operação:</span>
+        <span class="row-value">{{NATUREZA_OPERACAO}}</span>
+      </div>
+      <div class="row">
+        <span class="row-label">Código de Tributação Nacional:</span>
+        <span class="row-value">{{CODIGO_SERVICO_MUNICIPAL}}</span>
+      </div>
+    </div>
+
+    <!-- Valores -->
+    <div class="section">
+      <div class="section-title">VALORES</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Descrição</th>
+            <th>Quantidade</th>
+            <th>Valor Unitário</th>
+            <th>Desconto</th>
+            <th>Valor Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{SERVICOS_TABLE_ROWS}}
+        </tbody>
+      </table>
+      <div class="totals">
+        <div class="total-row">
+          <span>Valor dos Serviços:</span>
+          <span>{{VALOR_SERVICOS_FORMATADO}}</span>
+        </div>
+        <div class="total-row">
+          <span>Valor dos Produtos:</span>
+          <span>{{VALOR_PRODUTOS_FORMATADO}}</span>
+        </div>
+        <div class="total-row">
+          <span>Desconto:</span>
+          <span>{{VALOR_DESCONTO_FORMATADO}}</span>
+        </div>
+        <div class="total-row">
+          <span>Alíquota ISS:</span>
+          <span>{{ALIQUOTA_ISS}}%</span>
+        </div>
+        <div class="total-row">
+          <span>Valor do ISS:</span>
+          <span>{{VALOR_ISS_FORMATADO}}</span>
+        </div>
+        <div class="total-row total-final">
+          <span>VALOR TOTAL:</span>
+          <span>{{VALOR_TOTAL_FORMATADO}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Informações Fiscais -->
+    <div class="section">
+      <div class="section-title">INFORMAÇÕES FISCAIS</div>
+      <div class="qr-code">
+        {{QR_CODE}}
+        <div class="qr-code-text">
+          <p><strong>Chave de Acesso da NFS-e</strong></p>
+          <p class="chave-acesso-text">{{CHAVE_ACESSO}}</p>
+          <p>A autenticidade desta NFS-e pode ser verificada pela leitura deste código QR ou pela consulta da chave de acesso no portal nacional da NFS-e</p>
+        </div>
+      </div>
+      {{PROTOCOLO_SECTION}}
+      {{DATA_AUTORIZACAO_SECTION}}
+    </div>
+
+    <!-- Rodapé -->
+    <div class="footer">
+      <p>Este documento é uma representação gráfica da Nota Fiscal de Serviços Eletrônica.</p>
+      <p>Para validar, acesse o site da prefeitura ou utilize a chave de acesso acima.</p>
+    </div>
+  </div>
+</body>
+</html>
+

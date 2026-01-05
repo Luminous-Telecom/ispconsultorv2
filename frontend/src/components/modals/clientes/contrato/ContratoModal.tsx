@@ -1195,6 +1195,31 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       render: (item: Titulo) => (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`
     },
     {
+      key: 'nfse_numero',
+      label: 'NF',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.nfse_numero || '-'
+    },
+    {
+      key: 'nfse_status',
+      label: 'Status NF',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => {
+        if (!item.nfse_status) return '-';
+        const statusMap: Record<string, { label: string; color: string }> = {
+          'agendado': { label: 'Agendado', color: 'info' },
+          'emitida': { label: 'Emitida', color: 'success' },
+          'cancelada': { label: 'Cancelada', color: 'danger' },
+          'rejeitada': { label: 'Rejeitada', color: 'warning' },
+          'erro': { label: 'Erro', color: 'danger' }
+        };
+        const status = statusMap[item.nfse_status] || { label: item.nfse_status, color: 'secondary' };
+        return <span className={`badge bg-${status.color}`}>{status.label}</span>;
+      }
+    },
+    {
       key: 'data_pagamento',
       label: 'Data Pagamento',
       sortable: true,

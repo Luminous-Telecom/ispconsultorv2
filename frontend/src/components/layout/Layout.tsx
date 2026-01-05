@@ -164,6 +164,7 @@ const Layout: React.FC = () => {
     { path: '/financeiro', icon: 'bi-cash-coin', label: 'Financeiro', isModal: true, modalHandler: () => handleOpenModal('financeiro') },
     { path: '/fornecedores', icon: 'bi-truck', label: 'Fornecedores', isModal: true, modalHandler: () => handleOpenModal('fornecedores') },
     { path: '/contas-pagar', icon: 'bi-receipt-cutoff', label: 'Contas a Pagar', isModal: true, modalHandler: () => handleOpenModal('contas-pagar') },
+    { path: '/notas-fiscais', icon: 'bi-file-earmark-text', label: 'Notas Fiscais', isModal: true, modalHandler: () => handleOpenModal('notas-fiscais') },
     { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa', isModal: true, modalHandler: () => handleOpenModal('dados-empresa') },
   ];
 
@@ -174,6 +175,7 @@ const Layout: React.FC = () => {
     { id: 'agendador-tarefas', label: 'Agendador de Tarefas', icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
     { id: 'servidor-email', label: 'Servidor de E-Mail', icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
     { id: 'servidor-whatsapp', label: 'Servidor de WhatsApp', icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
+    { id: 'nfse', label: 'NFS-e', icon: 'bi-receipt', onClick: () => handleOpenModal('nfse') },
     { id: 'documentos-sistema', label: 'Documentos do Sistema', icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('documentos-sistema') },
     { id: 'assinatura-digital', label: 'Assinatura Digital', icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
     { id: 'dias-vencimento', label: 'Dias de Vencimento', icon: 'bi-calendar', onClick: () => handleOpenModal('dias-vencimento') },

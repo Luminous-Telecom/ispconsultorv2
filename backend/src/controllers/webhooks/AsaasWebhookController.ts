@@ -34,30 +34,26 @@ export class AsaasWebhookController {
         req.get('access_token') ||
         (typeof payload?.token === 'string' ? payload.token : undefined);
 
-      // Extrair objeto payment
+      // Extrair objeto payment ou invoice
       const payment = (payload.payment && typeof payload.payment === 'object' && !Array.isArray(payload.payment))
         ? payload.payment as AsaasPaymentPayload['payment']
         : undefined;
 
-      // Se não tem payment.id, retornar sucesso (webhook pode vir sem payment)
-      if (!payment || !payment.id) {
+      const invoice = (payload && 'invoice' in payload && typeof payload.invoice === 'object' && !Array.isArray(payload.invoice))
+        ? payload.invoice as { id?: string; number?: string; status?: string; customer?: string }
+        : undefined;
+
+      // Se não tem payment.id nem invoice.id, retornar sucesso (webhook pode vir sem dados)
+      if ((!payment || !payment.id) && (!invoice || !invoice.id)) {
         res.status(200).json({
           success: true,
-          message: 'Webhook recebido sem payment.id'
+          message: 'Webhook recebido sem payment.id ou invoice.id'
         });
         return;
       }
 
-      const chargeId = String(payment.id);
-
-      // Buscar título pelo charge_id para validar token
-      const titulo = await Titulo.findOne({
-        where: { charge_id: chargeId },
-        include: [{ model: Banco, as: 'banco' }]
-      }) as (Titulo & { banco?: Banco | null }) | null;
-
-      // Buscar token esperado (do banco relacionado ou de todos bancos Asaas)
-      const expectedSecret = await AsaasWebhookService.findExpectedToken(titulo, receivedSecret);
+      // Buscar token esperado (de qualquer banco Asaas)
+      const expectedSecret = await AsaasWebhookService.findExpectedToken(null, receivedSecret);
 
       // Validar token (obrigatório para Asaas)
       if (!expectedSecret) {
@@ -70,21 +66,11 @@ export class AsaasWebhookController {
 
       if (!receivedSecret || receivedSecret !== expectedSecret) {
         logger.warn('Webhook Asaas com token inválido', {
-          charge_id: chargeId,
           has_received_secret: !!receivedSecret
         });
         res.status(401).json({
           success: false,
           message: 'Token do webhook inválido'
-        });
-        return;
-      }
-
-      // Se título não encontrado, retornar sucesso (não é erro)
-      if (!titulo) {
-        res.status(200).json({
-          success: true,
-          message: 'Título não encontrado para este charge_id'
         });
         return;
       }
@@ -96,15 +82,35 @@ export class AsaasWebhookController {
       });
 
       // Processar webhook em background (sem await)
-      AsaasWebhookService.processWebhook(payment, titulo).catch(error => {
-        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        logger.error('Erro ao processar webhook Asaas em background', {
-          charge_id: chargeId,
-          titulo_id: titulo.id,
-          error: errorMessage,
-          stack: error instanceof Error ? error.stack : undefined
+      if (payment && payment.id) {
+        const chargeId = String(payment.id);
+        const titulo = await Titulo.findOne({
+          where: { charge_id: chargeId },
+          include: [{ model: Banco, as: 'banco' }]
+        }) as (Titulo & { banco?: Banco | null }) | null;
+
+        if (titulo) {
+          AsaasWebhookService.processWebhook(payment, titulo).catch(error => {
+            const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+            logger.error('Erro ao processar webhook Asaas (payment) em background', {
+              charge_id: chargeId,
+              titulo_id: titulo.id,
+              error: errorMessage,
+              stack: error instanceof Error ? error.stack : undefined
+            });
+          });
+        }
+      } else if (invoice && invoice.id) {
+        // Processar webhook de invoice (NFS-e)
+        AsaasWebhookService.processInvoiceWebhook(invoice).catch(error => {
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          logger.error('Erro ao processar webhook Asaas (invoice) em background', {
+            invoice_id: invoice.id,
+            error: errorMessage,
+            stack: error instanceof Error ? error.stack : undefined
+          });
         });
-      });
+      }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';

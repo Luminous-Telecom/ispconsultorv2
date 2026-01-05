@@ -187,5 +187,153 @@ export class AsaasWebhookService {
 
     return statusMap[asaasStatus];
   }
+
+  /**
+   * Processa webhook de invoice (NFS-e) do Asaas
+   * @param invoice Objeto invoice do payload
+   */
+  static async processInvoiceWebhook(
+    invoice: { id?: string; number?: string; status?: string; customer?: string; pdfUrl?: string; invoiceUrl?: string; url?: string }
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      if (!invoice || !invoice.id) {
+        return {
+          success: true,
+          message: 'Webhook recebido sem invoice.id'
+        };
+      }
+
+      const invoiceId = String(invoice.id);
+      const invoiceNumber = invoice.number ? String(invoice.number) : null;
+      const invoiceStatusOriginal = invoice.status !== undefined && invoice.status !== null 
+        ? String(invoice.status) 
+        : null;
+      const invoiceStatus = invoiceStatusOriginal ? invoiceStatusOriginal.toLowerCase().trim() : null;
+
+      // Mapear status do Asaas para nosso status (case-insensitive)
+      const statusMap: Record<string, 'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro'> = {
+        'scheduled': 'agendado',
+        'SCHEDULED': 'agendado',
+        'authorized': 'emitida',
+        'AUTHORIZED': 'emitida',
+        'synchronized': 'emitida', // SYNCHRONIZED significa que foi sincronizada/emitida
+        'SYNCHRONIZED': 'emitida',
+        'cancelled': 'cancelada',
+        'CANCELLED': 'cancelada',
+        'canceled': 'cancelada', // variação sem 'l'
+        'rejected': 'rejeitada',
+        'REJECTED': 'rejeitada',
+        'error': 'erro',
+        'ERROR': 'erro',
+        'failed': 'erro',
+        'pending': 'agendado',
+        'processing': 'agendado'
+      };
+
+      // Se não tem status, assumir que está agendado (status inicial)
+
+      const nfseStatus = invoiceStatus && statusMap[invoiceStatus] 
+        ? statusMap[invoiceStatus] 
+        : (!invoiceStatus ? 'agendado' : null);
+
+      if (!nfseStatus) {
+        logger.warn('Status de NFS-e não reconhecido', {
+          invoice_id: invoiceId,
+          invoice_number: invoiceNumber,
+          status_original: invoiceStatusOriginal,
+          status_lowercase: invoiceStatus,
+          status_tipo: typeof invoice.status,
+          status_map_keys: Object.keys(statusMap)
+        });
+        return {
+          success: true,
+          message: 'Status de NFS-e não reconhecido'
+        };
+      }
+
+      // Buscar título através da nota fiscal vinculada
+      // A nota fiscal tem titulo_id, então buscamos a nota fiscal pelo invoice_id
+      // e depois buscamos o título através do titulo_id
+      const { Op } = await import('sequelize');
+      const { NotaFiscal } = await import('../../models/NotaFiscal');
+      
+      let titulo = null;
+      
+      // Buscar nota fiscal pelo asaas_invoice_id ou pelo número
+      let notaFiscal = null;
+      
+      if (invoiceNumber) {
+        notaFiscal = await NotaFiscal.findOne({
+          where: { 
+            numero: invoiceNumber,
+            titulo_id: { [Op.ne]: null }
+          },
+          order: [['created_at', 'DESC']]
+        });
+      }
+      
+      if (!notaFiscal) {
+        notaFiscal = await NotaFiscal.findOne({
+          where: { 
+            asaas_invoice_id: invoiceId,
+            titulo_id: { [Op.ne]: null }
+          },
+          order: [['created_at', 'DESC']] // Buscar a mais recente
+        });
+      }
+      
+      if (notaFiscal && notaFiscal.titulo_id) {
+        titulo = await Titulo.findByPk(notaFiscal.titulo_id);
+      }
+
+      if (!titulo) {
+        logger.warn('Título não encontrado para NFS-e', {
+          invoice_id: invoiceId,
+          invoice_number: invoiceNumber
+        });
+        return {
+          success: true,
+          message: 'Título não encontrado para esta NFS-e'
+        };
+      }
+
+      // Buscar nota fiscal vinculada para atualizar status
+      const notaFiscalVinculada = await NotaFiscal.findOne({
+        where: { titulo_id: titulo.id },
+        order: [['created_at', 'DESC']]
+      });
+
+        // Atualizar nota fiscal (status, número, série, chave de acesso, PDF URL e XML URL)
+        if (notaFiscalVinculada) {
+          const pdfUrl = invoice.pdfUrl || invoice.invoiceUrl || invoice.url || null;
+          const xmlUrl = (invoice as any).xmlUrl || null;
+          const rpsNumber = (invoice as any).rpsNumber || null;
+          const rpsSerie = (invoice as any).rpsSerie || null;
+          const chaveAcesso = (invoice as any).validationCode || (invoice as any).accessKey || (invoice as any).chaveAcesso || (invoice as any).accessKeyCode || (invoice as any).validation_code || null;
+          
+          await notaFiscalVinculada.update({
+            nfse_status: nfseStatus,
+            numero: invoiceNumber || (invoice as any).number || notaFiscalVinculada.numero,
+            serie: rpsSerie || notaFiscalVinculada.serie,
+            chave_acesso: chaveAcesso || notaFiscalVinculada.chave_acesso,
+            pdf_url: pdfUrl || notaFiscalVinculada.pdf_url,
+            xml: xmlUrl || notaFiscalVinculada.xml
+          });
+        }
+
+      return {
+        success: true,
+        message: 'NFS-e atualizada via webhook Asaas'
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao processar webhook de invoice Asaas', {
+        invoice_id: invoice?.id,
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw error;
+    }
+  }
 }
 

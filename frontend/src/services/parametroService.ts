@@ -16,6 +16,9 @@ export interface Parametro {
 export interface ParametroUpdate {
   chave: string;
   valor: string | number | boolean;
+  tipo?: 'string' | 'number' | 'boolean' | 'json';
+  descricao?: string;
+  categoria?: string;
   ativo?: boolean;
 }
 
@@ -29,32 +32,32 @@ const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): ApiRespons
 export class ParametroService {
   // Listar todos os parâmetros
   static async getParametros(categoria?: string): Promise<ApiResponse<Parametro[]>> {
-    const url = categoria ? `/parametros/categoria/${categoria}` : '/parametros';
+    const url = categoria ? `/parametro/categoria/${categoria}` : '/parametro';
     const response = await apiService.get<Parametro[]>(url);
     return normalizeResponse(response, []);
   }
 
   // Obter parâmetro por chave
   static async getParametro(chave: string): Promise<ApiResponse<Parametro>> {
-    const response = await apiService.get<Parametro>(`/parametros/${chave}`);
+    const response = await apiService.get<Parametro>(`/parametro/${chave}`);
     return normalizeResponse(response, {} as Parametro);
   }
 
   // Atualizar parâmetro
   static async updateParametro(chave: string, data: { valor: string; ativo?: boolean }): Promise<ApiResponse<Parametro>> {
-    const response = await apiService.put<Parametro>(`/parametros/${chave}`, data);
+    const response = await apiService.put<Parametro>(`/parametro/${chave}`, data);
     return normalizeResponse(response, {} as Parametro);
   }
 
   // Atualizar múltiplos parâmetros
   static async updateParametros(parametros: ParametroUpdate[]): Promise<ApiResponse<Parametro[]>> {
-    const response = await apiService.put<Parametro[]>('/parametros', { parametros });
+    const response = await apiService.put<Parametro[]>('/parametro', { parametros });
     return normalizeResponse(response, []);
   }
 
   // Resetar parâmetros para valores padrão
   static async resetDefaults(): Promise<ApiResponse<Parametro[]>> {
-    const response = await apiService.post<Parametro[]>('/parametros/reset-defaults');
+    const response = await apiService.post<Parametro[]>('/parametro/reset-defaults');
     return normalizeResponse(response, []);
   }
 

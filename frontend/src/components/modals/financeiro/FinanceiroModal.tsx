@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTitulosFinanceiro } from '@/hooks/useTitulosFinanceiro';
 import { Titulo, TituloFilters } from '@/types';
+import { TituloItem } from '@/types/cliente';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useSorting } from '@/hooks/useSorting';
 import { useTableFilters } from '@/hooks/useTableFilters';
@@ -13,6 +14,7 @@ import { TableConfig, BulkAction } from '@/components/tables/types';
 import { TituloModal } from '@/components/modals/titulos';
 import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import GerarNFeModal from '@/components/modals/notas-fiscais/GerarNFeModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
 
@@ -62,7 +64,9 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [showImprimirModal, setShowImprimirModal] = useState(false);
-  
+  const [showGerarNFeModal, setShowGerarNFeModal] = useState(false);
+  const [selectedTituloForNFe, setSelectedTituloForNFe] = useState<Titulo | null>(null);
+
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   const auditoria = useAuditoria();
@@ -90,6 +94,31 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
 
   const { data: titulosData, isLoading, refetch } = useTitulosFinanceiro(filters);
 
+  // Helper para invalidar queries e refetch
+  const handleRefreshData = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
+    await refetch();
+  }, [queryClient, refetch]);
+
+  // Helper para limpar PDF URL
+  const clearPdfUrl = useCallback(() => {
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+  }, [pdfUrl]);
+
+  // Helper para abrir modal de impressão
+  const openPrintModal = useCallback(() => {
+    clearPdfUrl();
+    setShowImprimirModal(true);
+    setIsGeneratingPdf(true);
+  }, [clearPdfUrl]);
+
+  // Helper para filtrar itens com NFS-e emitida
+  const getItensComNFSe = useCallback((items: Titulo[]) => {
+    return items.filter(item => item.nfse_status === 'emitida' && item.nfse_numero);
+  }, []);
 
   const titulos = useMemo(() => titulosData?.data || [], [titulosData?.data]);
   
@@ -172,15 +201,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       error('Nenhum título selecionado');
       return;
     }
-    // Abrir modal imediatamente
-    setShowImprimirModal(true);
-    setIsGeneratingPdf(true);
-    
-    // Limpar URL anterior se existir
-    if (pdfUrl) {
-      window.URL.revokeObjectURL(pdfUrl);
-      setPdfUrl(null);
-    }
+    openPrintModal();
     
     try {
       const ids = selectedItems.map(item => item.id);
@@ -196,7 +217,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, error, success, pdfUrl]);
+  }, [selectedItems, error, success, openPrintModal]);
 
   const handleImprimirRecibos = useCallback(async () => {
     if (selectedItems.length === 0) {
@@ -212,15 +233,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       return;
     }
 
-    // Abrir modal imediatamente
-    setShowImprimirModal(true);
-    setIsGeneratingPdf(true);
-    
-    // Limpar URL anterior se existir
-    if (pdfUrl) {
-      window.URL.revokeObjectURL(pdfUrl);
-      setPdfUrl(null);
-    }
+    openPrintModal();
     
     try {
       const ids = itensPagos.map(item => item.id).join(',');
@@ -244,7 +257,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, error, success, pdfUrl]);
+  }, [selectedItems, error, success, openPrintModal]);
 
   const handleImprimirTodosEmAberto = useCallback(async () => {
     if (!titulos || titulos.length === 0) {
@@ -258,15 +271,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       error('Nenhum título em aberto encontrado');
       return;
     }
-    // Abrir modal imediatamente
-    setShowImprimirModal(true);
-    setIsGeneratingPdf(true);
-    
-    // Limpar URL anterior se existir
-    if (pdfUrl) {
-      window.URL.revokeObjectURL(pdfUrl);
-      setPdfUrl(null);
-    }
+    openPrintModal();
     
     try {
       const ids = titulosEmAberto.map((titulo: Titulo) => titulo.id);
@@ -282,7 +287,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [titulos, error, success, pdfUrl]);
+  }, [titulos, error, success, openPrintModal]);
 
   const columns: TableConfig<Titulo>['columns'] = [
     {
@@ -393,6 +398,31 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       render: (item: Titulo) => item.nosso_numero || '-'
     },
     {
+      key: 'nfse_numero',
+      label: 'NF',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.nfse_numero || '-'
+    },
+    {
+      key: 'nfse_status',
+      label: 'Status NF',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => {
+        if (!item.nfse_status) return '-';
+        const statusMap: Record<string, { label: string; color: string }> = {
+          'agendado': { label: 'Agendado', color: 'info' },
+          'emitida': { label: 'Emitida', color: 'success' },
+          'cancelada': { label: 'Cancelada', color: 'danger' },
+          'rejeitada': { label: 'Rejeitada', color: 'warning' },
+          'erro': { label: 'Erro', color: 'danger' }
+        };
+        const status = statusMap[item.nfse_status] || { label: item.nfse_status, color: 'secondary' };
+        return <span className={`badge bg-${status.color}`}>{status.label}</span>;
+      }
+    },
+    {
       key: 'created_at',
       label: 'Criado em',
       sortable: true,
@@ -407,6 +437,49 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       }
     }
   ];
+
+  // Verificar se há títulos com NFS-e emitida
+  const hasNFSeEmitida = useMemo(() => {
+    return sortedData.some(item => item.nfse_status === 'emitida' && item.nfse_numero);
+  }, [sortedData]);
+
+  // Função para gerar PDF de NFS-e
+  const handleImprimirNFSe = useCallback(async (selectedItems: Titulo[]) => {
+    if (!selectedItems || selectedItems.length === 0) {
+      error('Nenhum título selecionado possui NFS-e emitida');
+      return;
+    }
+    const itensComNFSe = getItensComNFSe(selectedItems);
+    if (itensComNFSe.length === 0) {
+      error('Nenhum título selecionado possui NFS-e emitida');
+      return;
+    }
+    
+    openPrintModal();
+    
+    try {
+      const ids = itensComNFSe.map(item => item.id).join(',');
+      const { defaultApiClient } = await import('@/services/core/ApiClient');
+      
+      const response = await defaultApiClient.get(`/notas-fiscais/nfse/multiplos?ids=${ids}&print=true`, {
+        responseType: 'blob'
+      });
+      
+      if (response.data instanceof Blob) {
+        const url = window.URL.createObjectURL(response.data);
+        setPdfUrl(url);
+        setIsGeneratingPdf(false);
+        success('NFS-e gerada com sucesso!');
+      } else {
+        throw new Error('Resposta inválida do servidor');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar PDF da NFS-e';
+      error(errorMessage);
+      setShowImprimirModal(false);
+      setIsGeneratingPdf(false);
+    }
+  }, [error, success, getItensComNFSe, openPrintModal]);
 
   // Memoizar bulkActions
   const memoizedBulkActions = useMemo(() => {
@@ -473,8 +546,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                 }
                 
                 // Aguardar invalidação e refetch completarem antes de mostrar mensagem
-                await queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
-                await refetch();
+                await handleRefreshData();
                 
                 if (successCount > 0) {
                   const message = successCount === 1 
@@ -518,8 +590,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                 try {
                   await TituloService.estornar(item.id);
                   success('Título estornado com sucesso!');
-                  queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
-                  refetch();
+                  handleRefreshData();
                 } catch (err) {
                   const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
                   error(errorMessage);
@@ -553,15 +624,46 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
             action: handleImprimirRecibos,
             disabled: (selectedItems: Titulo[]) => {
               if (selectedItems.length === 0) return true;
-              // Apenas itens pagos podem ter recibo
               const itensPagos = selectedItems.filter(item => item.status === 'pago' || item.status === 'pago_atraso');
               return itensPagos.length === 0;
             }
-          }
+          },
+          // Mostrar "Imprimir NF" apenas se houver NFS-e emitida
+          ...(hasNFSeEmitida ? [{
+            label: 'Imprimir NF',
+            action: (selectedItems?: Titulo[]) => handleImprimirNFSe(selectedItems || []),
+            disabled: (items: Titulo[]) => {
+              if (items.length === 0) return true;
+              return getItensComNFSe(items).length === 0;
+            }
+          }] : [])
+        ]
+      },
+      {
+        key: 'nfse',
+        label: 'NFS-e',
+        variant: 'primary' as const,
+        disabled: (selectedItems: Titulo[]): boolean => selectedItems.length === 0,
+        dropdown: [
+          {
+            label: 'Gerar NFS-e Avulsa',
+            action: (selectedItems?: Titulo[]) => {
+              if (!selectedItems || selectedItems.length === 0) {
+                error('Selecione pelo menos um título');
+                return;
+              }
+              const titulo = selectedItems[0];
+              setSelectedTituloForNFe(titulo);
+              setShowGerarNFeModal(true);
+            },
+            disabled: (selectedItems: Titulo[]) => {
+              return !selectedItems || selectedItems.length === 0;
+            }
+          },
         ]
       }
     ];
-  }, [success, error, queryClient, refetch, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos]);
+  }, [success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe]);
 
   const modalContent = (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -747,9 +849,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
               setShowTituloEditModal(false);
               setSelectedTituloId(null);
             }}
-            onSuccess={() => {
-              queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
-              refetch();
+            onSuccess={async () => {
+              await handleRefreshData();
               setShowTituloEditModal(false);
               setSelectedTituloId(null);
             }}
@@ -764,9 +865,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
               setShowReceberModal(false);
               setSelectedParcela(null);
             }}
-            onSuccess={() => {
-              queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
-              refetch();
+            onSuccess={async () => {
+              await handleRefreshData();
               setShowReceberModal(false);
               setSelectedParcela(null);
             }}
@@ -778,10 +878,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           show={showImprimirModal}
           onClose={() => {
             setShowImprimirModal(false);
-            if (pdfUrl) {
-              window.URL.revokeObjectURL(pdfUrl);
-              setPdfUrl(null);
-            }
+            clearPdfUrl();
           }}
           pdfUrl={pdfUrl}
           isGenerating={isGeneratingPdf}
@@ -798,6 +895,36 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           title="Relatórios de logs"
           modalId="auditoria-titulo-modal"
         />
+
+        {/* Modal de Gerar NFS-e Avulsa */}
+        <GerarNFeModal
+          show={showGerarNFeModal}
+          onClose={() => {
+            setShowGerarNFeModal(false);
+            setSelectedTituloForNFe(null);
+          }}
+          cliente={selectedTituloForNFe?.cliente || undefined}
+          titulo={selectedTituloForNFe ? {
+            id: selectedTituloForNFe.id,
+            numero_titulo: selectedTituloForNFe.numero_titulo,
+            status: selectedTituloForNFe.status,
+            valor: selectedTituloForNFe.valor,
+            valor_parcela: selectedTituloForNFe.valor_final || selectedTituloForNFe.valor,
+            valor_pago: selectedTituloForNFe.valor_pago || null,
+            data_vencimento: selectedTituloForNFe.data_vencimento,
+            data_pagamento: selectedTituloForNFe.data_pagamento || null,
+            charge_id: selectedTituloForNFe.charge_id || null,
+            descricao: selectedTituloForNFe.descricao,
+            observacoes: selectedTituloForNFe.observacoes
+          } as TituloItem & { descricao?: string; observacoes?: string } : undefined}
+          onSuccess={async () => {
+            await handleRefreshData();
+            setShowGerarNFeModal(false);
+            setSelectedTituloForNFe(null);
+          }}
+        />
+
+
       </>
     );
   }
@@ -822,9 +949,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
             setShowTituloEditModal(false);
             setSelectedTituloId(null);
           }}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
-            refetch();
+          onSuccess={async () => {
+            await handleRefreshData();
             setShowTituloEditModal(false);
             setSelectedTituloId(null);
           }}
@@ -839,9 +965,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
             setShowReceberModal(false);
             setSelectedParcela(null);
           }}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
-            refetch();
+          onSuccess={async () => {
+            await handleRefreshData();
             setShowReceberModal(false);
             setSelectedParcela(null);
           }}
@@ -849,19 +974,17 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         />
       )}
 
-      {showImprimirModal && pdfUrl && (
-        <ImprimirModal
-          show={showImprimirModal}
-          onClose={() => {
-            setShowImprimirModal(false);
-            if (pdfUrl) {
-              window.URL.revokeObjectURL(pdfUrl);
-              setPdfUrl(null);
-            }
-          }}
-          pdfUrl={pdfUrl}
-        />
-      )}
+      <ImprimirModal
+        show={showImprimirModal}
+        onClose={() => {
+          setShowImprimirModal(false);
+          clearPdfUrl();
+        }}
+        pdfUrl={pdfUrl}
+        isGenerating={isGeneratingPdf}
+        title="Visualizar Documento"
+        modalId="financeiro-imprimir-modal"
+      />
 
       {/* Modal de Visualização de PDF de Auditoria */}
       <ImprimirModal
@@ -871,6 +994,35 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         title="Relatórios de logs"
         modalId="auditoria-titulo-modal"
       />
+
+      {/* Modal de Gerar NFS-e Avulsa */}
+      <GerarNFeModal
+        show={showGerarNFeModal}
+        onClose={() => {
+          setShowGerarNFeModal(false);
+          setSelectedTituloForNFe(null);
+        }}
+        cliente={selectedTituloForNFe?.cliente || undefined}
+        titulo={selectedTituloForNFe ? {
+          id: selectedTituloForNFe.id,
+          numero_titulo: selectedTituloForNFe.numero_titulo,
+          status: selectedTituloForNFe.status,
+          valor: selectedTituloForNFe.valor,
+          valor_parcela: selectedTituloForNFe.valor_final || selectedTituloForNFe.valor,
+          valor_pago: selectedTituloForNFe.valor_pago || null,
+          data_vencimento: selectedTituloForNFe.data_vencimento,
+          data_pagamento: selectedTituloForNFe.data_pagamento || null,
+          charge_id: selectedTituloForNFe.charge_id || null,
+          descricao: selectedTituloForNFe.descricao,
+          observacoes: selectedTituloForNFe.observacoes
+        } as TituloItem & { descricao?: string; observacoes?: string } : undefined}
+        onSuccess={async () => {
+          await handleRefreshData();
+          setShowGerarNFeModal(false);
+          setSelectedTituloForNFe(null);
+        }}
+      />
+
     </>
   );
 };

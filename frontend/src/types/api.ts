@@ -124,3 +124,11 @@ export interface CarneParcelaFilters extends BaseFilters {
   data_vencimento_inicio?: string;
   data_vencimento_fim?: string;
 }
+
+export interface NotaFiscalFilters extends BaseFilters {
+  status?: 'PENDENTE' | 'PROCESSANDO' | 'AUTORIZADA' | 'CANCELADA' | 'REJEITADA' | 'ERRO';
+  cliente_id?: number;
+  data_inicio?: string;
+  data_fim?: string;
+  searchField?: string;
+}

@@ -26,6 +26,8 @@ import { FornecedorHistorico } from './FornecedorHistorico';
 import { ContaPagar } from './ContaPagar';
 import { ContaPagarArquivo } from './ContaPagarArquivo';
 import { ContaPagarPagamento } from './ContaPagarPagamento';
+import { NotaFiscal } from './NotaFiscal';
+import { NFSeConfig } from './NFSeConfig';
 //
 // Importar associações específicas
 import './associations';
@@ -49,6 +51,11 @@ Cliente.hasMany(Contrato, {
 Cliente.hasMany(Titulo, {
   foreignKey: 'cliente_id',
   as: 'titulos'
+});
+
+Cliente.hasMany(NotaFiscal, {
+  foreignKey: 'cliente_id',
+  as: 'notasFiscais'
 });
 
 // Plano
@@ -280,6 +287,27 @@ ContaPagarPagamento.belongsTo(Usuario, {
   as: 'usuario'
 });
 
+// NotaFiscal
+NotaFiscal.belongsTo(Cliente, {
+  foreignKey: 'cliente_id',
+  as: 'cliente'
+});
+
+NotaFiscal.belongsTo(Titulo, {
+  foreignKey: 'titulo_id',
+  as: 'titulo'
+});
+
+Titulo.hasMany(NotaFiscal, {
+  foreignKey: 'titulo_id',
+  as: 'notas_fiscais'
+});
+
+Titulo.belongsTo(NotaFiscal, {
+  foreignKey: 'nota_fiscal_id',
+  as: 'nota_fiscal'
+});
+
 // Exportar todos os modelos
 export {
   Cliente,
@@ -308,5 +336,7 @@ export {
   FornecedorHistorico,
   ContaPagar,
   ContaPagarArquivo,
-  ContaPagarPagamento
+  ContaPagarPagamento,
+  NotaFiscal,
+  NFSeConfig
 };

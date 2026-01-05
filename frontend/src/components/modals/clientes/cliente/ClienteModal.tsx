@@ -16,6 +16,7 @@ import ImprimirModal from '@/components/common/ImprimirModal';
 import { TituloModal } from '@/components/modals/titulos/titulo';
 import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
 import ContratoModal from '../contrato/ContratoModal';
+import GerarNFeModal from '@/components/modals/notas-fiscais/GerarNFeModal';
 import { Button } from '@/components/ui';
 // Componentes de abas
 import DadosBasicosTab from './abas/DadosBasicosTab';
@@ -52,6 +53,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<TituloItem | null>(null);
+  const [showGerarNFeModal, setShowGerarNFeModal] = useState(false);
+  const [selectedTituloForNFe, setSelectedTituloForNFe] = useState<CarneParcela | null>(null);
 
   // Resetar aba ativa quando modal abrir
   useEffect(() => {
@@ -128,7 +131,15 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     handleImprimirContrato: impressaoHook.handleImprimirContrato,
     handleImprimirTermoAdesao: impressaoHook.handleImprimirTermoAdesao,
     handleImprimirContratoPermanencia: impressaoHook.handleImprimirContratoPermanencia,
-    handleImprimirRecibos: impressaoHook.handleImprimirRecibos
+    handleImprimirRecibos: impressaoHook.handleImprimirRecibos,
+    onShowGerarNFeModal: (titulo?: CarneParcela) => {
+      if (titulo) {
+        // O titulo já é CarneParcela vindo da tabela
+        setSelectedTituloForNFe(titulo);
+      }
+      setShowGerarNFeModal(true);
+    },
+    handleImprimirNF: impressaoHook.handleImprimirNF
   });
 
   // Determinar se as abas Contratos e Financeiro devem ser habilitadas
@@ -260,6 +271,31 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       searchable: false,
       render: (item: CarneParcela) => {
         return (item.status === 'pago' || item.status === 'cancelado') ? formatCurrency(0) : formatCurrency(item.valor || 0);
+      }
+    },
+    {
+      key: 'nfse_numero',
+      label: 'NF',
+      sortable: true,
+      searchable: true,
+      render: (item: CarneParcela & { nfse_numero?: string | null }) => item.nfse_numero || '-'
+    },
+    {
+      key: 'nfse_status',
+      label: 'Status NF',
+      sortable: true,
+      searchable: true,
+      render: (item: CarneParcela & { nfse_status?: 'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro' | null }) => {
+        if (!item.nfse_status) return '-';
+        const statusMap: Record<string, { label: string; color: string }> = {
+          'agendado': { label: 'Agendado', color: 'info' },
+          'emitida': { label: 'Emitida', color: 'success' },
+          'cancelada': { label: 'Cancelada', color: 'danger' },
+          'rejeitada': { label: 'Rejeitada', color: 'warning' },
+          'erro': { label: 'Erro', color: 'danger' }
+        };
+        const status = statusMap[item.nfse_status] || { label: item.nfse_status, color: 'secondary' };
+        return <span className={`badge bg-${status.color}`}>{status.label}</span>;
       }
     },
     {
@@ -612,6 +648,23 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           title="Relatórios de logs"
           modalId="auditoria-cliente-modal"
         />
+
+        {/* Modal de Gerar NFS-e Avulsa */}
+        <GerarNFeModal
+          show={showGerarNFeModal}
+          onClose={() => {
+            setShowGerarNFeModal(false);
+            setSelectedTituloForNFe(null);
+          }}
+          cliente={formHook.cliente || undefined}
+          titulo={selectedTituloForNFe || undefined}
+          onSuccess={() => {
+            refetchParcelas();
+            setShowGerarNFeModal(false);
+            setSelectedTituloForNFe(null);
+          }}
+        />
+
       </>
     );
   };

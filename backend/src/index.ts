@@ -24,8 +24,6 @@ import { rateLimitMiddleware } from './middleware/rateLimitMiddleware';
 import { defaultSanitizeMiddleware } from './middleware/sanitizeMiddleware';
 import { metricsMiddleware } from './middleware/metricsMiddleware';
 
-// Importar middleware do frontend
-import { frontendMiddleware } from './middleware/frontendMiddleware';
 
 // Importar modelos para configurar relacionamentos
 import './models';
@@ -61,43 +59,25 @@ const PORT = process.env.PORT;
 app.set('trust proxy', 1);
 
 // Middleware de segurança
-// Aplicar helmet com exceção para rotas de PDF e arquivos de cliente
+const isPdfOrDownloadRoute = (path: string) => 
+  path.startsWith('/webhook/integration/pdf/') || 
+  (path.startsWith('/api/cliente-arquivos/') && path.includes('/download'));
+
 app.use((req, res, next) => {
-  // Não aplicar frameguard para rotas de PDF do webhook e download de arquivos
-  const isPdfRoute = req.path.startsWith('/webhook/integration/pdf/');
-  const isClienteArquivoDownload = req.path.startsWith('/api/cliente-arquivos/') && req.path.includes('/download');
-  
-  if (isPdfRoute || isClienteArquivoDownload) {
-    // Para rotas de PDF e arquivos de cliente, usar helmet sem frameguard
-    helmet({
-      crossOriginResourcePolicy: { policy: 'cross-origin' },
-      contentSecurityPolicy: false,
-      frameguard: false, // Desabilitar completamente para permitir iframe
-      noSniff: true,
-      xssFilter: false,
-      referrerPolicy: { policy: 'no-referrer' },
-      hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true
-      }
-    })(req, res, next);
-  } else {
-    // Para outras rotas, usar configuração padrão
-    helmet({
-      crossOriginResourcePolicy: { policy: 'cross-origin' },
-      contentSecurityPolicy: false,
-      frameguard: { action: 'deny' },
-      noSniff: true,
-      xssFilter: false,
-      referrerPolicy: { policy: 'no-referrer' },
-      hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true
-      }
-    })(req, res, next);
-  }
+  const frameguard = isPdfOrDownloadRoute(req.path) ? false : { action: 'deny' as const };
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false,
+    frameguard,
+    noSniff: true,
+    xssFilter: false,
+    referrerPolicy: { policy: 'no-referrer' },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    }
+  })(req, res, next);
 });
 
 // Middleware de CORS
@@ -137,46 +117,26 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // O sanitizeObject já trata campos de HTML automaticamente (conteudo, conteudo_contrato, etc)
 app.use(defaultSanitizeMiddleware);
 
-// Middleware de CSRF Protection (opcional - apenas se ENABLE_CSRF=true)
 const ENABLE_CSRF = process.env.ENABLE_CSRF === 'true';
 if (ENABLE_CSRF) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { csrfTokenMiddleware, csrfProtectionMiddleware } = require('./middleware/csrfMiddleware');
-    
-    // Gerar token CSRF para rotas GET (deve vir antes das rotas)
     app.use(csrfTokenMiddleware);
-    
-    // Proteger rotas mutáveis (POST, PUT, DELETE, PATCH)
     app.use('/api', csrfProtectionMiddleware);
-    
-    logger.info('Middleware de CSRF Protection habilitado', {
-      context: 'index',
-      action: 'middleware'
-    });
   } catch (error) {
     logger.warn('Erro ao carregar middleware de CSRF', {
-      context: 'index',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
 }
 
-// Middleware de métricas Prometheus (opcional - apenas se ENABLE_METRICS=true)
-// Importação condicional para não carregar módulo se desabilitado
 const ENABLE_METRICS = process.env.ENABLE_METRICS === 'true';
 if (ENABLE_METRICS) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { metricsMiddleware } = require('./middleware/metricsMiddleware');
     app.use(metricsMiddleware);
-    logger.info('Middleware de métricas Prometheus habilitado', {
-      context: 'index',
-      action: 'middleware'
-    });
   } catch (error) {
     logger.warn('Erro ao carregar middleware de métricas', {
-      context: 'index',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
@@ -195,7 +155,6 @@ app.use(ddosProtectionMiddleware({
     '/api/health',
     '/webhook',
     '/api/assinaturas-digital/webhook', // Webhooks de assinatura digital não devem ter proteção DDoS
-    '/config.js',
     '/uploads',
     '/api/titulos/boletos-multiplos-pdf', // Geração de PDF pode demorar mais que 15s
     '/api/auditoria/pdf', // Geração de PDF de auditoria pode demorar mais que 15s
@@ -211,25 +170,6 @@ logger.info('Middleware de proteção DDoS habilitado', {
 // Aplicar rate limiting nas rotas da API
 // Deve vir antes das rotas mas depois do parsing de JSON
 app.use('/api', rateLimitMiddleware());
-
-app.get('/config.js', (req, res) => {
-  // URL da API sempre relativa (hardcoded)
-  const apiUrl = '/api';
-
-  // Valores padrão hardcoded (não precisa de variáveis de ambiente)
-  const configJs = `window.__APP_CONFIG__ = {
-    REACT_APP_API_URL: '${apiUrl}',
-    REACT_APP_API_TIMEOUT: '10000',
-    REACT_APP_API_RETRY_ATTEMPTS: '3',
-    REACT_APP_API_RETRY_DELAY: '1000'
-  };`;
-
-  res.setHeader('Content-Type', 'application/javascript');
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.send(configJs);
-});
 
 // Aplicar middlewares de proteção
 app.use(copyProtectionMiddleware);
@@ -253,13 +193,9 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(routes);
 
 // Middleware global de tratamento de erros
-// Deve ser o último middleware antes do frontend
 import { errorHandlerMiddleware } from './middleware/errorHandlerMiddleware';
 app.use(errorHandlerMiddleware);
 
-// Middleware do frontend (deve vir depois das rotas da API)
-// Serve arquivos estáticos e faz fallback para index.html (SPA routing)
-app.use(frontendMiddleware());
 
 // Middleware para rotas não encontradas (apenas para rotas da API)
 app.use('/api/*', (req, res) => {
@@ -276,52 +212,33 @@ let server: ReturnType<typeof app.listen> | null = null;
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-    logger.info('Conexão com o banco estabelecida com sucesso');
-
-    // NOTA: Não usar sequelize.sync() ou model.sync() aqui
-    // Todas as tabelas devem ser criadas/alteradas apenas através de migrations
-    // Execute: npx sequelize-cli db:migrate
 
     server = app.listen(PORT, async () => {
       if (!server) return;
       
-      server.maxHeadersCount = 2000; // Aumentar limite de cabeçalhos
-      
-      // Aumentar limite de listeners para evitar warning de memory leak
-      // Isso é necessário devido ao middleware DDoS que adiciona listeners em sockets
+      server.maxHeadersCount = 2000;
       server.setMaxListeners(20);
       
       try {
         const { SchedulerService } = await import('./services/SchedulerService');
-        const schedulerService = SchedulerService.getInstance();
-        await schedulerService.start();
-        logger.info('Agendador de rotinas iniciado');
+        await SchedulerService.getInstance().start();
       } catch (error) {
         logger.error('Erro ao iniciar agendador:', error);
       }
 
-      // Verificar conexão com Elasticsearch (assíncrono, não bloqueia startup)
       try {
         const { getElasticsearchService } = await import('./services/elasticsearch');
         const elasticsearchService = getElasticsearchService();
         
-        // Verificar conexão após um pequeno delay para dar tempo do Elasticsearch iniciar
         setTimeout(async () => {
           const isConnected = await elasticsearchService.checkConnection();
           if (isConnected) {
             await elasticsearchService.ensureIndex();
-            logger.info('Elasticsearch conectado e índice verificado');
-          } else {
-            logger.warn('Elasticsearch não está disponível. Logs de auditoria serão salvos em arquivo local.');
           }
-        }, 3000); // Aguardar 3 segundos antes de verificar
+        }, 3000);
       } catch (error) {
-        logger.debug('Erro ao verificar Elasticsearch no startup (não crítico)', {
-          error: error instanceof Error ? error.message : 'Erro desconhecido'
-        });
+        // Ignorar erro do Elasticsearch no startup
       }
-
-      logger.info(`Servidor iniciado e escutando requisições na porta ${PORT} (${process.env.NODE_ENV})`);
     });
   } catch (error) {
     logger.error('Erro ao inicializar servidor', error);
@@ -329,17 +246,13 @@ const startServer = async () => {
   }
 };
 
-// Função para graceful shutdown
 const gracefulShutdown = async (signal: string) => {
   logger.info(`Recebido sinal ${signal}, iniciando encerramento gracioso...`);
   
   if (server) {
     const serverToClose = server;
     await new Promise<void>((resolve) => {
-      serverToClose.close(() => {
-        logger.info('Servidor HTTP fechado');
-        resolve();
-      });
+      serverToClose.close(() => resolve());
       setTimeout(() => resolve(), 5000);
     });
     server = null;
@@ -347,8 +260,7 @@ const gracefulShutdown = async (signal: string) => {
   
   try {
     const { SchedulerService } = await import('./services/SchedulerService');
-    const schedulerService = SchedulerService.getInstance();
-    await schedulerService.stop();
+    await SchedulerService.getInstance().stop();
   } catch (error) {
     logger.error('Erro ao parar agendador:', error);
   }

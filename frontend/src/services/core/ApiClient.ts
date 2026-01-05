@@ -151,6 +151,19 @@ export class ApiClient {
         if (config?.__shouldShowLoading) {
           ApiClient.decrementActiveRequests();
         }
+        
+        // Log imediato antes de processar o erro (para debug)
+        if (error?.response?.status === 401) {
+          // eslint-disable-next-line no-console
+          console.log('[ApiClient] Interceptor - 401 detectado ANTES do processError:', {
+            url: error.config?.url,
+            baseURL: error.config?.baseURL,
+            fullUrl: (error.config?.baseURL || '') + (error.config?.url || ''),
+            status: error.response?.status,
+            data: error.response?.data
+          });
+        }
+        
         return Promise.reject(error);
       }
     );

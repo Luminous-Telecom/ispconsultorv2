@@ -3,12 +3,12 @@ import { useFornecedores, useDeleteFornecedor } from '@/hooks/useFornecedores';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
-import { useAuditoria } from '@/hooks/useAuditoria';
 import { formatDateTime } from '@/utils/formatters';
 import { Fornecedor } from '@/types';
 import ListModal from '@/components/common/ListModal';
 import FornecedorModal from './FornecedorModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import { useAuditoria } from '@/hooks/useAuditoria';
 
 interface FornecedorListModalProps {
   show: boolean;

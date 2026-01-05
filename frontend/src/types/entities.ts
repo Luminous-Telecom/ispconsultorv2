@@ -102,6 +102,10 @@ export interface Titulo {
   charge_id?: string;
   url_boleto?: string;
   is_avulso?: boolean;
+  nota_fiscal_id?: number | null;
+  // Campos calculados do backend (vindos da nota fiscal vinculada)
+  nfse_numero?: string | null;
+  nfse_status?: 'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro' | null;
   created_at: string;
   updated_at?: string;
   
@@ -275,6 +279,10 @@ export interface CarneParcela {
   charge_id?: string;
   url_boleto?: string;
   nosso_numero?: string;
+  nota_fiscal_id?: number | null;
+  // Campos calculados do backend (vindos da nota fiscal vinculada)
+  nfse_numero?: string | null;
+  nfse_status?: 'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro' | null;
   created_at?: string;
   updated_at?: string;
   
@@ -375,6 +383,81 @@ export interface ContaPagar {
   fornecedor?: Fornecedor;
   pagamentos?: ContaPagarPagamento[];
   arquivos?: ContaPagarArquivo[];
+}
+
+// ============================================
+// Nota Fiscal Eletrônica
+// ============================================
+export interface NotaFiscal {
+  id: number;
+  cliente_id: number;
+  titulo_id?: number | null;
+  numero?: string;
+  serie?: string;
+  chave_acesso?: string;
+  status: 'PENDENTE' | 'PROCESSANDO' | 'AUTORIZADA' | 'CANCELADA' | 'REJEITADA' | 'ERRO';
+  tipo_operacao: 'ENTRADA' | 'SAIDA';
+  modelo: number;
+  natureza_operacao: string;
+  data_emissao: string;
+  data_vencimento?: string;
+  valor_total: number;
+  valor_produtos: number;
+  valor_servicos: number;
+  valor_desconto: number;
+  valor_icms: number;
+  valor_iss: number;
+  aliquota_iss: number;
+  cst_icms?: string;
+  cfop?: string;
+  descricao?: string;
+  observacoes?: string;
+  xml?: string;
+  pdf_url?: string;
+  danfe_url?: string;
+  protocolo?: string;
+  data_autorizacao?: string;
+  mensagem_erro?: string;
+  codigo_erro?: string;
+  nfse_status?: 'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro' | null;
+  asaas_invoice_id?: string | null;
+  created_at?: string;
+  created_at_formatada?: string | null;
+  updated_at?: string;
+  valor_formatado?: string;
+  is_autorizada?: boolean;
+  pode_cancelar?: boolean;
+  
+  // Relacionamentos
+  cliente?: Cliente;
+}
+
+export interface CreateNotaFiscal {
+  cliente_id: number;
+  titulo_id?: number;
+  natureza_operacao?: string;
+  data_emissao?: string;
+  data_vencimento?: string;
+  valor_total: number;
+  valor_servicos?: number;
+  valor_produtos?: number;
+  valor_desconto?: number;
+  aliquota_iss?: number;
+  descricao?: string;
+  observacoes?: string;
+  modelo?: number;
+  cfop?: string;
+  cst_icms?: string;
+}
+
+export interface NotaFiscalFilters {
+  search?: string;
+  status?: string;
+  cliente_id?: number;
+  data_inicio?: string;
+  data_fim?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface ContaPagarPagamento {

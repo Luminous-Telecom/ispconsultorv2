@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useClientes, useDeleteCliente } from '@/hooks/useClientes';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
@@ -8,22 +8,7 @@ import { useAuditoria } from '@/hooks/useAuditoria';
 import ListModal from '@/components/common/ListModal';
 import ClienteModal from './cliente/ClienteModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
-
-interface Cliente {
-  id: number;
-  cnpj: string;
-  razao_social: string;
-  nome_fantasia?: string;
-  email: string;
-  whatsapp?: string;
-  ativo: boolean;
-  endereco?: string;
-  numero?: string;
-  complemento?: string;
-  bairro?: string;
-  cidade?: string;
-  estado?: string;
-}
+import { Cliente } from '@/types';
 
 interface ClienteListModalProps {
   show: boolean;
@@ -47,9 +32,9 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   
   const auditoria = useAuditoria();
 
-  const handleAudit = (cliente: Cliente) => {
+  const handleAudit = useCallback((cliente: Cliente) => {
     auditoria.handleAudit('Cliente', cliente.id);
-  };
+  }, [auditoria]);
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -225,7 +210,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
   const deleteClienteMutation = useDeleteCliente();
 
-  const handleSelect = (selectedItems?: Cliente[]) => {
+  const handleSelect = useCallback((selectedItems?: Cliente[]) => {
     const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
     if (item) {
       clearSelection();
@@ -234,15 +219,30 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         onClose();
       }
     }
-  };
+  }, [selectedItem, clearSelection, onSelectClient, onClose]);
 
-  const handleDelete = async (clienteId: number) => {
+  const handleDelete = useCallback(async (clienteId: number) => {
     try {
       await deleteClienteMutation.mutateAsync(clienteId);
       refetch();
     } catch (error) {
     }
-  };
+  }, [deleteClienteMutation, refetch]);
+
+  const handleEdit = useCallback((selectedItems: Cliente[]) => {
+    const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+    if (item) {
+      setSelectedClienteId(item.id);
+      setShowEditModal(true);
+    }
+  }, [selectedItem]);
+
+  const handleEditDelete = useCallback((selectedItems: Cliente[]) => {
+    const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+    if (item && window.confirm('Tem certeza que deseja excluir este cliente?')) {
+      handleDelete(item.id);
+    }
+  }, [selectedItem, handleDelete]);
 
   // Paginação do backend - usar valores do backend quando disponíveis
   const pagination = clientesData?.pagination ? {
@@ -275,7 +275,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       label: 'Inserir',
       variant: 'primary' as const,
       disabled: (selectedItems: Cliente[]) => selectedItems.length === 0 && !selectedItem,
-      action: (selectedItems: Cliente[]) => handleSelect(selectedItems)
+      action: handleSelect
     }
   ] : [
     {
@@ -287,27 +287,15 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       label: 'Editar',
       variant: 'primary' as const,
       disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
-      action: (selectedItems: Cliente[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (item) {
-          setSelectedClienteId(item.id);
-          setShowEditModal(true);
-        }
-      }
+      action: handleEdit
     },
     {
       label: 'Excluir',
       variant: 'danger' as const,
       disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
-      action: (selectedItems: Cliente[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (item && window.confirm('Tem certeza que deseja excluir este cliente?')) {
-          handleDelete(item.id);
-        }
-      }
+      action: handleEditDelete
     }
   ];
-
   return (
     <>
       <ListModal

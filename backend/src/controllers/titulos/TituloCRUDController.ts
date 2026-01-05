@@ -147,10 +147,13 @@ export class TituloCRUDController {
         }
       }
 
+      const { NotaFiscal } = await import('../../models/NotaFiscal');
+      
       const include = [
         { model: Cliente, as: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email'], required: false },
         { model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'], required: false },
-        { model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco'], required: false }
+        { model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco'], required: false },
+        { model: NotaFiscal, as: 'nota_fiscal', attributes: ['id', 'numero', 'nfse_status'], required: false }
       ];
 
       const { count, rows } = await Titulo.findAndCountAll({

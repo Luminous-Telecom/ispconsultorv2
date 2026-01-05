@@ -7,6 +7,7 @@ import { ParametrosService } from '@/services/parametrosService';
 import { useFormReset } from '@/hooks/useFormReset';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
+import NFSeConfigSection from './NFSeConfigSection';
 
 interface ParametrosModalProps {
   show: boolean;
@@ -272,6 +273,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
               </div>
             </div>
           </div>
+
         </div>
 
       </form>
