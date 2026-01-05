@@ -208,7 +208,9 @@ export class NotaFiscalPDFService {
     }
 
     let logoNfseBase64 = '';
-    const logoPath = path.join(__dirname, '../../images/bancos/logo-nfse-assinatura-horizontal.svg');
+    const logoFileName = 'logo-nfse-assinatura-horizontal.svg';
+    const imagesPath = path.join(__dirname, '../../images/sistema');
+    const logoPath = fs.existsSync(imagesPath) ? path.join(imagesPath, logoFileName) : path.join(process.cwd(), 'images/sistema', logoFileName);
     if (fs.existsSync(logoPath)) {
       try {
         const logoSvg = fs.readFileSync(logoPath, 'utf-8');

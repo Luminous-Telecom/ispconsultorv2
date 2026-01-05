@@ -99,7 +99,8 @@ export class TituloPDFController {
       const valorBoleto = Number(titulo.valor || 0).toFixed(2).replace('.', ',');
       
       // Carregar templates
-      const templatesPath = path.join(__dirname, '../../templates');
+      const srcTemplatesPath = path.join(__dirname, '../../templates');
+      const templatesPath = fs.existsSync(srcTemplatesPath) ? srcTemplatesPath : path.join(process.cwd(), 'src/templates');
       const topoTemplatePath = path.join(templatesPath, 'boleto-topo-inner.html');
       const corpoTemplatePath = path.join(templatesPath, 'boleto-corpo-inner.html');
       
