@@ -230,9 +230,9 @@ export class NotaFiscalPDFService {
     let logoNfseBase64 = '';
     const logoFileName = 'logo-nfse-assinatura-horizontal.svg';
 
-    // Usar mesma lógica dos boletos para consistência
-    const imagesPath = path.join(__dirname, '../../images/sistema');
-    const logoPath = fs.existsSync(imagesPath) ? path.join(imagesPath, logoFileName) : path.join(process.cwd(), 'images/sistema', logoFileName);
+    // Usar mesma lógica dos boletos - pasta bancos funciona em produção
+    const imagesPath = path.join(__dirname, '../../images/bancos');
+    const logoPath = fs.existsSync(imagesPath) ? path.join(imagesPath, logoFileName) : path.join(process.cwd(), 'images/bancos', logoFileName);
 
     console.log('DEBUG LOGO NFS-E - Tentando carregar logo:', {
       nota_id: notaFiscal.id,
