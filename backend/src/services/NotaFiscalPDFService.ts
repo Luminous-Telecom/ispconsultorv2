@@ -312,9 +312,14 @@ export class NotaFiscalPDFService {
     const cliente = notaFiscal.cliente;
     const logoNfseHtml = logoNfseBase64 ? `<img src="${logoNfseBase64}" style="max-width: 200px; height: auto; display: block; margin: 0 auto 10px;" />` : '';
 
-    logger.debug('Processando template NFSe', {
+    console.log('DEBUG LOGO NFS-E - logoNfseBase64 preview:', logoNfseBase64.substring(0, 100) + '...');
+    console.log('DEBUG LOGO NFS-E - logoNfseHtml:', logoNfseHtml);
+
+    logger.error('DEBUG LOGO NFS-E - Processando template', {
       nota_id: notaFiscal.id,
-      hasLogo: !!logoNfseBase64
+      hasLogo: !!logoNfseBase64,
+      logoNfseBase64Length: logoNfseBase64.length,
+      logoNfseHtmlLength: logoNfseHtml.length
     });
 
     const templateVars: Record<string, string> = {
@@ -387,6 +392,17 @@ export class NotaFiscalPDFService {
 
       totalVariablesProcessed++;
       totalReplacements += matchesBefore;
+
+      // Log específico para LOGO_NFSE
+      if (key === 'LOGO_NFSE') {
+        console.log('DEBUG LOGO NFS-E - Substituição LOGO_NFSE:', {
+          nota_id: notaFiscal.id,
+          matchesBefore,
+          matchesAfter,
+          valueLength: String(value || '').length,
+          valuePreview: String(value || '').substring(0, 150) + '...'
+        });
+      }
     });
 
     logger.debug('Variáveis do template processadas', {
@@ -398,6 +414,20 @@ export class NotaFiscalPDFService {
     // Validar template processado
     const remainingVariables = template.match(/\{\{[^}]+\}\}/g) || [];
     const hasLogoInFinalHtml = template.includes('data:image/svg+xml;base64,');
+
+    console.log('DEBUG LOGO NFS-E - Template final contém logo?', {
+      nota_id: notaFiscal.id,
+      hasLogoInFinalHtml,
+      logoSection: template.includes('<img src="data:image/svg+xml;base64,') ? 'SIM - img tag encontrada' : 'NAO - img tag não encontrada'
+    });
+
+    logger.error('DEBUG LOGO NFS-E - Template final', {
+      nota_id: notaFiscal.id,
+      hasLogoInFinalHtml,
+      logoSectionLength: template.includes('<img src="data:image/svg+xml;base64,') ?
+        template.substring(template.indexOf('<img src="data:image/svg+xml;base64,'), template.indexOf('<img src="data:image/svg+xml;base64,') + 200) + '...' :
+        'Logo não encontrada no template'
+    });
 
     logger.info('Template NFSe processado', {
       nota_id: notaFiscal.id,
