@@ -102,12 +102,20 @@ export function normalizeDateForDb(date: string | Date | null | undefined): Date
     if (date instanceof Date) {
       if (isNaN(date.getTime())) return null;
       
-      // Se já tem hora específica (não é meia-noite), manter como está
+      // Verificar se é meia-noite UTC (data sem hora do frontend)
+      const isMidnightUTC = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0;
+      
+      // Se for meia-noite UTC, criar como meia-noite local
+      if (isMidnightUTC) {
+        return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0);
+      }
+      
+      // Se já tem hora específica (não é meia-noite local), manter como está
       if (date.getHours() !== 0 || date.getMinutes() !== 0 || date.getSeconds() !== 0 || date.getMilliseconds() !== 0) {
         return date;
       }
       
-      // Se é meia-noite, garantir que seja meia-noite local (não UTC)
+      // Se é meia-noite local, garantir que seja meia-noite local (não UTC)
       return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
     }
     

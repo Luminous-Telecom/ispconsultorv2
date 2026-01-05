@@ -65,7 +65,8 @@ export class NFeService {
         };
       }
 
-      // Buscar configuração da NFS-e para usar descrição padrão se não fornecida
+
+      // Buscar configuração da NFS-e para usar descrição padrão
       const { NFSeConfigService } = await import('./NFSeConfigService');
       const nfseConfig = await NFSeConfigService.getConfig();
       const descricaoPadrao = nfseConfig?.descricao_servico || null;
@@ -136,7 +137,19 @@ export class NFeService {
         }
       }
 
-      // Criar registro da nota fiscal
+      // Usar função utilitária existente para normalizar datas
+      const { normalizeDateForDb } = await import('../utils/dateUtils');
+
+      // Criar data_emissao
+      const dataEmissao = dados.data_emissao 
+        ? normalizeDateForDb(dados.data_emissao) || dados.data_emissao
+        : new Date();
+
+      // Criar data_vencimento
+      const dataVencimentoValue = dados.data_vencimento 
+        ? normalizeDateForDb(dados.data_vencimento)
+        : null;
+
       const notaFiscal = await NotaFiscal.create({
         cliente_id: dados.cliente_id,
         titulo_id: dados.titulo_id || null,
@@ -144,8 +157,8 @@ export class NFeService {
         tipo_operacao: 'SAIDA',
         modelo: dados.modelo || 55, // NFS-e usa modelo 55 para compatibilidade
         natureza_operacao: dados.natureza_operacao || 'PRESTAÇÃO DE SERVIÇOS',
-        data_emissao: dados.data_emissao || new Date(),
-        data_vencimento: dados.data_vencimento || null,
+        data_emissao: dataEmissao,
+        data_vencimento: dataVencimentoValue,
         valor_total: valorTotal,
         valor_servicos: valorServicos,
         valor_produtos: dados.valor_produtos || 0,
@@ -161,6 +174,7 @@ export class NFeService {
 
       notaFiscal.status = 'PROCESSANDO';
       await notaFiscal.save();
+      await notaFiscal.reload();
 
       // A nota fiscal será atualizada com nfse_status quando for gerada
 

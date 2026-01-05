@@ -142,13 +142,13 @@ export class NotaFiscalPDFService {
       }
     }
 
-    // Se não encontrou serviços, usar descrição padrão
+    // Se não encontrou serviços, usar valor padrão
     if (servicos.length === 0) {
       const valorServicos = Number(notaFiscal.valor_servicos || notaFiscal.valor_total);
       const valorDesconto = Number(notaFiscal.valor_desconto || 0);
       const valorFinal = Number(notaFiscal.valor_total);
       servicos.push({
-        nome: notaFiscal.descricao || descricaoServico,
+        nome: 'Serviço',
         valor: valorServicos,
         desconto: valorDesconto,
         valorFinal: valorFinal
@@ -167,6 +167,22 @@ export class NotaFiscalPDFService {
     const formatarDataHora = (data: Date | string | null | undefined): string => {
       if (!data) return '';
       try {
+        // Se for string do banco, tentar extrair componentes diretamente para evitar problemas de timezone
+        if (typeof data === 'string') {
+          // Formato do banco: "YYYY-MM-DD HH:mm:ss" ou "YYYY-MM-DDTHH:mm:ss"
+          const match = data.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
+          if (match) {
+            const [, year, month, day, hour, minute, second] = match;
+            return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+          }
+          // Se não tiver hora, usar 00:00:00
+          const dateOnlyMatch = data.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (dateOnlyMatch) {
+            const [, year, month, day] = dateOnlyMatch;
+            return `${day}/${month}/${year} 00:00:00`;
+          }
+        }
+        // Se for Date object, usar formatDateTime normalmente
         return formatDateTime(data instanceof Date ? data : parseDateFromDb(data)) || '';
       } catch {
         return '';
@@ -224,34 +240,6 @@ export class NotaFiscalPDFService {
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor));
     };
 
-    // Gerar HTML da tabela de serviços
-    const gerarTabelaServicos = (): string => {
-      if (servicos.length === 0) {
-        const valorServicos = Number(notaFiscal.valor_servicos || notaFiscal.valor_total);
-        const valorDesconto = Number(notaFiscal.valor_desconto || 0);
-        const valorFinal = Number(notaFiscal.valor_total);
-        return `
-          <tr>
-            <td>${notaFiscal.descricao || descricaoServico}</td>
-            <td>1</td>
-            <td>${formatarValor(valorServicos)}</td>
-            <td>${formatarValor(valorDesconto)}</td>
-            <td>${formatarValor(valorFinal)}</td>
-          </tr>
-        `;
-      }
-
-      return servicos.map(servico => `
-        <tr>
-          <td>${servico.nome}</td>
-          <td>1</td>
-          <td>${formatarValor(servico.valor)}</td>
-          <td>${formatarValor(servico.desconto)}</td>
-          <td>${formatarValor(servico.valorFinal)}</td>
-        </tr>
-      `).join('');
-    };
-
     const cliente = notaFiscal.cliente;
     const templateVars: Record<string, string> = {
       LOGO_NFSE: logoNfseBase64 ? `<img src="${logoNfseBase64}" style="max-width: 200px; height: auto; display: block; margin: 0 auto 10px;" />` : '',
@@ -284,11 +272,10 @@ export class NotaFiscalPDFService {
       CLIENTE_ESTADO: cliente.estado || '',
       CLIENTE_TELEFONE: cliente.telefone || '',
       CLIENTE_EMAIL: cliente.email || '',
-      DESCRICAO: notaFiscal.descricao || descricaoServico,
+      DESCRICAO: descricaoServico,
       OBSERVACOES: notaFiscal.observacoes || '',
       NATUREZA_OPERACAO: notaFiscal.natureza_operacao || '',
       CODIGO_SERVICO_MUNICIPAL: codigoServicoMunicipal,
-      SERVICOS_TABLE_ROWS: gerarTabelaServicos(),
       VALOR_TOTAL_FORMATADO: formatarValor(notaFiscal.valor_total),
       VALOR_SERVICOS_FORMATADO: formatarValor(notaFiscal.valor_servicos),
       VALOR_PRODUTOS_FORMATADO: formatarValor(notaFiscal.valor_produtos),
