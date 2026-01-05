@@ -20,12 +20,35 @@ export class NotaFiscalPDFService {
    */
   static async gerarPdf(notaFiscal: NotaFiscal & { cliente?: Cliente | null }): Promise<Buffer> {
     try {
+      logger.info('Iniciando geração de PDF da NFS-e', {
+        nota_id: notaFiscal.id,
+        cliente_id: notaFiscal.cliente?.id,
+        numero: notaFiscal.numero,
+        serie: notaFiscal.serie
+      });
+
       const html = await NotaFiscalPDFService.processarNfseHtml(notaFiscal);
-      return await PDFGenerationService.generateFromHtml(html, 'html-pdf-node', {
+
+      logger.info('HTML processado para PDF', {
+        nota_id: notaFiscal.id,
+        htmlLength: html.length,
+        hasLogoInHtml: html.includes('data:image/svg+xml;base64,'),
+        hasImgTag: html.includes('<img'),
+        logoImgTags: (html.match(/<img[^>]*src="[^"]*data:image\/svg\+xml;base64,[^"]*"[^>]*>/g) || []).length
+      });
+
+      const pdfBuffer = await PDFGenerationService.generateFromHtml(html, 'html-pdf-node', {
         format: 'A4',
         margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
         printBackground: true
       });
+
+      logger.info('PDF gerado com sucesso', {
+        nota_id: notaFiscal.id,
+        pdfSize: pdfBuffer.length
+      });
+
+      return pdfBuffer;
     } catch (error) {
       logger.error('Erro ao gerar PDF da NFS-e no NotaFiscalPDFService', {
         nota_id: notaFiscal.id,
@@ -211,13 +234,59 @@ export class NotaFiscalPDFService {
     const logoFileName = 'logo-nfse-assinatura-horizontal.svg';
     const imagesPath = path.join(__dirname, '../../images/sistema');
     const logoPath = fs.existsSync(imagesPath) ? path.join(imagesPath, logoFileName) : path.join(process.cwd(), 'images/sistema', logoFileName);
+
+    logger.info('Verificando logo NFSe', {
+      nota_id: notaFiscal.id,
+      logoFileName,
+      imagesPath,
+      logoPath,
+      imagesPathExists: fs.existsSync(imagesPath),
+      logoPathExists: fs.existsSync(logoPath),
+      __dirname,
+      cwd: process.cwd()
+    });
+
     if (fs.existsSync(logoPath)) {
       try {
+        logger.info('Logo encontrado, lendo arquivo', {
+          nota_id: notaFiscal.id,
+          logoPath,
+          fileSize: fs.statSync(logoPath).size
+        });
+
         const logoSvg = fs.readFileSync(logoPath, 'utf-8');
+
+        logger.info('Arquivo lido com sucesso', {
+          nota_id: notaFiscal.id,
+          logoLength: logoSvg.length,
+          logoPreview: logoSvg.substring(0, 100)
+        });
+
         logoNfseBase64 = `data:image/svg+xml;base64,${Buffer.from(logoSvg).toString('base64')}`;
-      } catch {
+
+        logger.info('Logo convertido para base64', {
+          nota_id: notaFiscal.id,
+          base64Length: logoNfseBase64.length,
+          base64Preview: logoNfseBase64.substring(0, 50)
+        });
+      } catch (error) {
+        logger.error('Erro ao processar logo NFSe', {
+          nota_id: notaFiscal.id,
+          logoPath,
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+          stack: error instanceof Error ? error.stack : undefined
+        });
         // Logo opcional, continua sem ele
       }
+    } else {
+      logger.warn('Logo NFSe não encontrado', {
+        nota_id: notaFiscal.id,
+        logoPath,
+        availablePaths: [
+          path.join(__dirname, '../../images/sistema', logoFileName),
+          path.join(process.cwd(), 'images/sistema', logoFileName)
+        ]
+      });
     }
 
     const templatePath = path.join(__dirname, '../templates/nfse.html');
@@ -238,8 +307,18 @@ export class NotaFiscalPDFService {
     };
 
     const cliente = notaFiscal.cliente;
+    const logoNfseHtml = logoNfseBase64 ? `<img src="${logoNfseBase64}" style="max-width: 200px; height: auto; display: block; margin: 0 auto 10px;" />` : '';
+
+    logger.info('Processando template NFSe', {
+      nota_id: notaFiscal.id,
+      logoNfseBase64Present: !!logoNfseBase64,
+      logoNfseBase64Length: logoNfseBase64.length,
+      logoNfseHtmlLength: logoNfseHtml.length,
+      logoNfseHtmlPreview: logoNfseHtml.substring(0, 100)
+    });
+
     const templateVars: Record<string, string> = {
-      LOGO_NFSE: logoNfseBase64 ? `<img src="${logoNfseBase64}" style="max-width: 200px; height: auto; display: block; margin: 0 auto 10px;" />` : '',
+      LOGO_NFSE: logoNfseHtml,
       EMPRESA_RAZAO_SOCIAL: dadosEmpresa.razao_social || '',
       EMPRESA_CNPJ: dadosEmpresa.cnpj || '',
       EMPRESA_INSCRICAO_MUNICIPAL: dadosEmpresa.inscricao_municipal || '',
@@ -296,8 +375,30 @@ export class NotaFiscalPDFService {
         : ''
     };
 
+    // Substituir variáveis no template
     Object.entries(templateVars).forEach(([key, value]) => {
-      template = template.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''));
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      const matchesBefore = (template.match(regex) || []).length;
+      template = template.replace(regex, String(value || ''));
+      const matchesAfter = (template.match(regex) || []).length;
+
+      logger.info('Substituindo variável no template', {
+        nota_id: notaFiscal.id,
+        variable: key,
+        valueLength: String(value || '').length,
+        matchesBefore,
+        matchesAfter,
+        valuePreview: key === 'LOGO_NFSE' ? String(value || '').substring(0, 100) : undefined
+      });
+    });
+
+    // Verificar se o LOGO_NFSE foi incluído no HTML final
+    const hasLogoInFinalHtml = template.includes('data:image/svg+xml;base64,');
+    logger.info('Template processado', {
+      nota_id: notaFiscal.id,
+      templateLength: template.length,
+      hasLogoInFinalHtml,
+      logoOccurrences: (template.match(/data:image\/svg\+xml;base64,/g) || []).length
     });
 
     return template;
