@@ -70,20 +70,26 @@ export class NFSeXmlParserService {
 
       // Tenta diferentes padrões de XML de NFS-e
 
-      // 1. Padrão ABRASF (mais comum)
-      dados.numero = this.extractValue(xmlLimpo, /<Numero>(.*?)<\/Numero>/i) ||
+      // 1. Padrão NFS-e (SPED/SEFAZ) - estrutura real do XML fornecido
+      dados.numero = this.extractValue(xmlLimpo, /<nNFSe>(.*?)<\/nNFSe>/i) ||
+                    this.extractValue(xmlLimpo, /<Numero>(.*?)<\/Numero>/i) ||
                     this.extractValue(xmlLimpo, /<NumeroNFe>(.*?)<\/NumeroNFe>/i) ||
                     this.extractValue(xmlLimpo, /<NumeroNFSe>(.*?)<\/NumeroNFSe>/i);
 
-      dados.serie = this.extractValue(xmlLimpo, /<Serie>(.*?)<\/Serie>/i) ||
+      dados.serie = this.extractValue(xmlLimpo, /<serie>(.*?)<\/serie>/i) ||
+                   this.extractValue(xmlLimpo, /<Serie>(.*?)<\/Serie>/i) ||
                    this.extractValue(xmlLimpo, /<SerieNFe>(.*?)<\/SerieNFe>/i);
 
-      dados.chave_acesso = this.extractValue(xmlLimpo, /<ChaveNFe>(.*?)<\/ChaveNFe>/i) ||
+      // Chave de acesso é o ID do infNFSe
+      const infNFSeId = this.extractAttribute(xmlLimpo, 'infNFSe', 'Id');
+      dados.chave_acesso = infNFSeId ||
+                          this.extractValue(xmlLimpo, /<ChaveNFe>(.*?)<\/ChaveNFe>/i) ||
                           this.extractValue(xmlLimpo, /<ChaveAcesso>(.*?)<\/ChaveAcesso>/i) ||
                           this.extractValue(xmlLimpo, /<Id>(.*?)<\/Id>/i);
 
       // Data de emissão
-      const dataEmissaoStr = this.extractValue(xmlLimpo, /<DataEmissao>(.*?)<\/DataEmissao>/i) ||
+      const dataEmissaoStr = this.extractValue(xmlLimpo, /<dhEmi>(.*?)<\/dhEmi>/i) ||
+                            this.extractValue(xmlLimpo, /<DataEmissao>(.*?)<\/DataEmissao>/i) ||
                             this.extractValue(xmlLimpo, /<DataHoraEmissao>(.*?)<\/DataHoraEmissao>/i) ||
                             this.extractValue(xmlLimpo, /<DataNFSe>(.*?)<\/DataNFSe>/i);
 
@@ -92,7 +98,9 @@ export class NFSeXmlParserService {
       }
 
       // Valores
-      const valorTotalStr = this.extractValue(xmlLimpo, /<ValorTotal>(.*?)<\/ValorTotal>/i) ||
+      const valorTotalStr = this.extractValue(xmlLimpo, /<vLiq>(.*?)<\/vLiq>/i) ||
+                           this.extractValue(xmlLimpo, /<vServ>(.*?)<\/vServ>/i) ||
+                           this.extractValue(xmlLimpo, /<ValorTotal>(.*?)<\/ValorTotal>/i) ||
                            this.extractValue(xmlLimpo, /<ValorNFSe>(.*?)<\/ValorNFSe>/i) ||
                            this.extractValue(xmlLimpo, /<ValorServicos>(.*?)<\/ValorServicos>/i);
 
@@ -100,21 +108,17 @@ export class NFSeXmlParserService {
         dados.valor_total = this.parseDecimal(valorTotalStr);
       }
 
-      const valorServicosStr = this.extractValue(xmlLimpo, /<ValorServicos>(.*?)<\/ValorServicos>/i) ||
+      const valorServicosStr = this.extractValue(xmlLimpo, /<vServ>(.*?)<\/vServ>/i) ||
+                              this.extractValue(xmlLimpo, /<ValorServicos>(.*?)<\/ValorServicos>/i) ||
                               this.extractValue(xmlLimpo, /<ValorLiquidoNfse>(.*?)<\/ValorLiquidoNfse>/i);
 
       if (valorServicosStr) {
         dados.valor_servicos = this.parseDecimal(valorServicosStr);
       }
 
-      const valorDeducoesStr = this.extractValue(xmlLimpo, /<ValorDeducoes>(.*?)<\/ValorDeducoes>/i);
-
-      if (valorDeducoesStr) {
-        dados.valor_deducoes = this.parseDecimal(valorDeducoesStr);
-      }
-
-      // Alíquota ISS
-      const aliquotaIssStr = this.extractValue(xmlLimpo, /<Aliquota>(.*?)<\/Aliquota>/i) ||
+      // Alíquota ISS - procurar em diferentes locais
+      const aliquotaIssStr = this.extractValue(xmlLimpo, /<tribISSQN>(.*?)<\/tribISSQN>/i) ||
+                            this.extractValue(xmlLimpo, /<Aliquota>(.*?)<\/Aliquota>/i) ||
                             this.extractValue(xmlLimpo, /<AliquotaISS>(.*?)<\/AliquotaISS>/i);
 
       if (aliquotaIssStr) {
@@ -122,43 +126,94 @@ export class NFSeXmlParserService {
       }
 
       // Serviço
-      dados.codigo_servico = this.extractValue(xmlLimpo, /<CodigoServico>(.*?)<\/CodigoServico>/i) ||
-                            this.extractValue(xmlLimpo, /<ItemListaServico>(.*?)<\/ItemListaServico>/i);
+      dados.codigo_servico = this.extractValue(xmlLimpo, /<cTribNac>(.*?)<\/cTribNac>/i) ||
+                            this.extractValue(xmlLimpo, /<ItemListaServico>(.*?)<\/ItemListaServico>/i) ||
+                            this.extractValue(xmlLimpo, /<CodigoServico>(.*?)<\/CodigoServico>/i);
 
-      dados.discriminacao_servico = this.extractValue(xmlLimpo, /<Discriminacao>(.*?)<\/Discriminacao>/i) ||
+      dados.discriminacao_servico = this.extractValue(xmlLimpo, /<xTribNac>(.*?)<\/xTribNac>/i) ||
+                                   this.extractValue(xmlLimpo, /<xDescServ>(.*?)<\/xDescServ>/i) ||
+                                   this.extractValue(xmlLimpo, /<Discriminacao>(.*?)<\/Discriminacao>/i) ||
                                    this.extractValue(xmlLimpo, /<Descricao>(.*?)<\/Descricao>/i);
 
-      // Dados do Prestador
+      // RPS
+      dados.numero_rps = this.extractValue(xmlLimpo, /<nDPS>(.*?)<\/nDPS>/i) ||
+                        this.extractValue(xmlLimpo, /<NumeroRPS>(.*?)<\/NumeroRPS>/i);
+
+      dados.serie_rps = this.extractValue(xmlLimpo, /<serie>(.*?)<\/serie>/i) ||
+                       this.extractValue(xmlLimpo, /<SerieRPS>(.*?)<\/SerieRPS>/i);
+
+      // Protocolo
+      dados.protocolo = this.extractValue(xmlLimpo, /<nDFSe>(.*?)<\/nDFSe>/i) ||
+                       this.extractValue(xmlLimpo, /<Protocolo>(.*?)<\/Protocolo>/i);
+
+      // Status
+      const statusStr = this.extractValue(xmlLimpo, /<cStat>(.*?)<\/cStat>/i) ||
+                       this.extractValue(xmlLimpo, /<Status>(.*?)<\/Status>/i);
+      if (statusStr) {
+        dados.status = statusStr;
+      }
+
+      // Data de autorização/processamento
+      const dataAutorizacaoStr = this.extractValue(xmlLimpo, /<dhProc>(.*?)<\/dhProc>/i) ||
+                                this.extractValue(xmlLimpo, /<DataAutorizacao>(.*?)<\/DataAutorizacao>/i);
+
+      if (dataAutorizacaoStr) {
+        dados.data_autorizacao = this.parseDate(dataAutorizacaoStr);
+      }
+
+      // Código de verificação
+      dados.codigo_verificacao = this.extractValue(xmlLimpo, /<CodigoVerificacao>(.*?)<\/CodigoVerificacao>/i);
+
+      // Natureza da operação
+      dados.natureza_operacao = this.extractValue(xmlLimpo, /<tpEmit>(.*?)<\/tpEmit>/i) ||
+                               this.extractValue(xmlLimpo, /<NaturezaOperacao>(.*?)<\/NaturezaOperacao>/i);
+
+      // Dados do Prestador (emitente)
       dados.prestador = {
-        cnpj: this.extractValue(xmlLimpo, /<Cnpj>(.*?)<\/Cnpj>/i) ||
+        cnpj: this.extractValue(xmlLimpo, /<emit>[\s\S]*?<CNPJ>(.*?)<\/CNPJ>[\s\S]*?<\/emit>/i) ||
+              this.extractValue(xmlLimpo, /<prest>[\s\S]*?<CNPJ>(.*?)<\/CNPJ>[\s\S]*?<\/prest>/i) ||
+              this.extractValue(xmlLimpo, /<Cnpj>(.*?)<\/Cnpj>/i) ||
               this.extractValue(xmlLimpo, /<CNPJ>(.*?)<\/CNPJ>/i),
-        razao_social: this.extractValue(xmlLimpo, /<RazaoSocial>(.*?)<\/RazaoSocial>/i),
-        nome_fantasia: this.extractValue(xmlLimpo, /<NomeFantasia>(.*?)<\/NomeFantasia>/i),
-        endereco: this.extractValue(xmlLimpo, /<Endereco>(.*?)<\/Endereco>/i),
-        numero: this.extractValue(xmlLimpo, /<Numero>(.*?)<\/Numero>/i),
-        complemento: this.extractValue(xmlLimpo, /<Complemento>(.*?)<\/Complemento>/i),
-        bairro: this.extractValue(xmlLimpo, /<Bairro>(.*?)<\/Bairro>/i),
-        cidade: this.extractValue(xmlLimpo, /<Cidade>(.*?)<\/Cidade>/i),
-        uf: this.extractValue(xmlLimpo, /<Uf>(.*?)<\/Uf>/i) ||
-            this.extractValue(xmlLimpo, /<UF>(.*?)<\/UF>/i),
-        cep: this.extractValue(xmlLimpo, /<Cep>(.*?)<\/Cep>/i),
-        telefone: this.extractValue(xmlLimpo, /<Telefone>(.*?)<\/Telefone>/i),
-        email: this.extractValue(xmlLimpo, /<Email>(.*?)<\/Email>/i)
+        razao_social: this.extractValue(xmlLimpo, /<emit>[\s\S]*?<xNome>(.*?)<\/xNome>[\s\S]*?<\/emit>/i) ||
+                     this.extractValue(xmlLimpo, /<RazaoSocial>(.*?)<\/RazaoSocial>/i),
+        endereco: this.extractValue(xmlLimpo, /<enderNac>[\s\S]*?<xLgr>(.*?)<\/xLgr>[\s\S]*?<\/enderNac>/i) ||
+                 this.extractValue(xmlLimpo, /<Endereco>(.*?)<\/Endereco>/i),
+        numero: this.extractValue(xmlLimpo, /<enderNac>[\s\S]*?<nro>(.*?)<\/nro>[\s\S]*?<\/enderNac>/i) ||
+               this.extractValue(xmlLimpo, /<Numero>(.*?)<\/Numero>/i),
+        bairro: this.extractValue(xmlLimpo, /<enderNac>[\s\S]*?<xBairro>(.*?)<\/xBairro>[\s\S]*?<\/enderNac>/i) ||
+               this.extractValue(xmlLimpo, /<Bairro>(.*?)<\/Bairro>/i),
+        cidade: this.extractValue(xmlLimpo, /<xLocEmi>(.*?)<\/xLocEmi>/i) ||
+               this.extractValue(xmlLimpo, /<Cidade>(.*?)<\/Cidade>/i),
+        uf: this.extractValue(xmlLimpo, /<enderNac>[\s\S]*?<UF>(.*?)<\/UF>[\s\S]*?<\/enderNac>/i) ||
+           this.extractValue(xmlLimpo, /<Uf>(.*?)<\/Uf>/i) ||
+           this.extractValue(xmlLimpo, /<UF>(.*?)<\/UF>/i),
+        cep: this.extractValue(xmlLimpo, /<enderNac>[\s\S]*?<CEP>(.*?)<\/CEP>[\s\S]*?<\/enderNac>/i) ||
+            this.extractValue(xmlLimpo, /<Cep>(.*?)<\/Cep>/i),
+        telefone: this.extractValue(xmlLimpo, /<fone>(.*?)<\/fone>/i) ||
+                 this.extractValue(xmlLimpo, /<Telefone>(.*?)<\/Telefone>/i),
+        email: this.extractValue(xmlLimpo, /<email>(.*?)<\/email>/i) ||
+              this.extractValue(xmlLimpo, /<Email>(.*?)<\/Email>/i)
       };
 
       // Dados do Tomador
       dados.tomador = {
-        cnpj_cpf: this.extractValue(xmlLimpo, /<CpfCnpj>(.*?)<\/CpfCnpj>/i) ||
-                 this.extractValue(xmlLimpo, /<CNPJ>(.*?)<\/CNPJ>/i) ||
+        cnpj_cpf: this.extractValue(xmlLimpo, /<toma>[\s\S]*?<CNPJ>(.*?)<\/CNPJ>[\s\S]*?<\/toma>/i) ||
+                 this.extractValue(xmlLimpo, /<CpfCnpj>(.*?)<\/CpfCnpj>/i) ||
                  this.extractValue(xmlLimpo, /<CPF>(.*?)<\/CPF>/i),
-        razao_social: this.extractValue(xmlLimpo, /<RazaoSocialTomador>(.*?)<\/RazaoSocialTomador>/i),
-        endereco: this.extractValue(xmlLimpo, /<EnderecoTomador>(.*?)<\/EnderecoTomador>/i),
-        numero: this.extractValue(xmlLimpo, /<NumeroTomador>(.*?)<\/NumeroTomador>/i),
-        bairro: this.extractValue(xmlLimpo, /<BairroTomador>(.*?)<\/BairroTomador>/i),
+        razao_social: this.extractValue(xmlLimpo, /<toma>[\s\S]*?<xNome>(.*?)<\/xNome>[\s\S]*?<\/toma>/i) ||
+                     this.extractValue(xmlLimpo, /<RazaoSocialTomador>(.*?)<\/RazaoSocialTomador>/i),
+        endereco: this.extractValue(xmlLimpo, /<end>[\s\S]*?<xLgr>(.*?)<\/xLgr>[\s\S]*?<\/end>/i) ||
+                 this.extractValue(xmlLimpo, /<EnderecoTomador>(.*?)<\/EnderecoTomador>/i),
+        numero: this.extractValue(xmlLimpo, /<end>[\s\S]*?<nro>(.*?)<\/nro>[\s\S]*?<\/end>/i) ||
+               this.extractValue(xmlLimpo, /<NumeroTomador>(.*?)<\/NumeroTomador>/i),
+        bairro: this.extractValue(xmlLimpo, /<end>[\s\S]*?<xBairro>(.*?)<\/xBairro>[\s\S]*?<\/end>/i) ||
+               this.extractValue(xmlLimpo, /<BairroTomador>(.*?)<\/BairroTomador>/i),
         cidade: this.extractValue(xmlLimpo, /<CidadeTomador>(.*?)<\/CidadeTomador>/i),
         uf: this.extractValue(xmlLimpo, /<UfTomador>(.*?)<\/UfTomador>/i),
-        cep: this.extractValue(xmlLimpo, /<CepTomador>(.*?)<\/CepTomador>/i),
-        email: this.extractValue(xmlLimpo, /<EmailTomador>(.*?)<\/EmailTomador>/i)
+        cep: this.extractValue(xmlLimpo, /<endNac>[\s\S]*?<CEP>(.*?)<\/CEP>[\s\S]*?<\/endNac>/i) ||
+            this.extractValue(xmlLimpo, /<CepTomador>(.*?)<\/CepTomador>/i),
+        email: this.extractValue(xmlLimpo, /<toma>[\s\S]*?<email>(.*?)<\/email>[\s\S]*?<\/toma>/i) ||
+              this.extractValue(xmlLimpo, /<EmailTomador>(.*?)<\/EmailTomador>/i)
       };
 
       // Status e outras informações
@@ -168,12 +223,7 @@ export class NFSeXmlParserService {
       dados.serie_rps = this.extractValue(xmlLimpo, /<SerieRPS>(.*?)<\/SerieRPS>/i);
       dados.natureza_operacao = this.extractValue(xmlLimpo, /<NaturezaOperacao>(.*?)<\/NaturezaOperacao>/i);
 
-      // Data de autorização
-      const dataAutorizacaoStr = this.extractValue(xmlLimpo, /<DataAutorizacao>(.*?)<\/DataAutorizacao>/i);
-
-      if (dataAutorizacaoStr) {
-        dados.data_autorizacao = this.parseDate(dataAutorizacaoStr);
-      }
+      // Data de autorização já foi extraída acima
 
       dados.codigo_verificacao = this.extractValue(xmlLimpo, /<CodigoVerificacao>(.*?)<\/CodigoVerificacao>/i);
 
@@ -201,6 +251,15 @@ export class NFSeXmlParserService {
    * Extrai valor de uma tag XML usando regex
    */
   private static extractValue(xml: string, regex: RegExp): string | undefined {
+    const match = xml.match(regex);
+    return match ? match[1]?.trim() : undefined;
+  }
+
+  /**
+   * Extrai atributo de uma tag XML
+   */
+  private static extractAttribute(xml: string, tagName: string, attributeName: string): string | undefined {
+    const regex = new RegExp(`<${tagName}[^>]*${attributeName}="([^"]*)"[^>]*>`, 'i');
     const match = xml.match(regex);
     return match ? match[1]?.trim() : undefined;
   }
