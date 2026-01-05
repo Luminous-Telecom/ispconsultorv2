@@ -64,12 +64,49 @@ export function getLogoBancoPadrao(tipoBanco: string): string {
     const fileName = logosPadrao[tipoBanco] || logosPadrao['outros'];
     const imagesPath = path.join(__dirname, '../../images/bancos');
     const imagePath = fs.existsSync(imagesPath) ? path.join(imagesPath, fileName) : path.join(process.cwd(), 'images/bancos', fileName);
+
+    console.log('DEBUG LOGO BOLETO - Tentando carregar logo:', {
+      tipoBanco,
+      fileName,
+      __dirname,
+      processCwd: process.cwd(),
+      imagesPath,
+      imagesPathExists: fs.existsSync(imagesPath),
+      imagePath,
+      imagePathExists: fs.existsSync(imagePath)
+    });
+
+    logger.error('DEBUG LOGO BOLETO - Tentando carregar logo', {
+      tipoBanco,
+      fileName,
+      __dirname,
+      processCwd: process.cwd(),
+      imagesPath,
+      imagesPathExists: fs.existsSync(imagesPath),
+      imagePath,
+      imagePathExists: fs.existsSync(imagePath)
+    });
     
     if (fs.existsSync(imagePath)) {
       const imageBuffer = fs.readFileSync(imagePath);
       const base64Image = imageBuffer.toString('base64');
       const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
       const mimeType = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png';
+
+      console.log('DEBUG LOGO BOLETO - Logo carregada com sucesso:', {
+        tipoBanco,
+        fileName,
+        imagePath,
+        imageSize: imageBuffer.length
+      });
+
+      logger.error('DEBUG LOGO BOLETO - Logo carregada com sucesso', {
+        tipoBanco,
+        fileName,
+        imagePath,
+        imageSize: imageBuffer.length
+      });
+
       return `data:${mimeType};base64,${base64Image}`;
     }
     return '';
