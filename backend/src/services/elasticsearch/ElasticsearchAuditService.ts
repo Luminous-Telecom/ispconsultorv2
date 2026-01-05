@@ -9,8 +9,6 @@ import { JwtPayload } from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../../types/auth';
 import { getElasticsearchService } from './ElasticsearchService';
 import { logger } from '../../utils/logger';
-import * as fs from 'fs';
-import * as path from 'path';
 
 export type AcaoAuditoria = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import';
 
@@ -72,34 +70,6 @@ function getUserData(req: Request | AuthenticatedRequest): {
   };
 }
 
-/**
- * Salvar log em arquivo local como fallback
- */
-function saveToLocalFile(data: Record<string, unknown>): void {
-  try {
-    const logsDir = path.join(process.cwd(), 'logs', 'auditoria');
-    
-    // Criar diretório se não existir
-    if (!fs.existsSync(logsDir)) {
-      fs.mkdirSync(logsDir, { recursive: true });
-    }
-
-    const filename = `auditoria-${new Date().toISOString().split('T')[0]}.json`;
-    const filepath = path.join(logsDir, filename);
-    
-    const logEntry = {
-      ...data,
-      saved_at: new Date().toISOString(),
-      source: 'elasticsearch_fallback'
-    };
-
-    // Adicionar ao arquivo (append)
-    fs.appendFileSync(filepath, JSON.stringify(logEntry) + '\n', { encoding: 'utf-8' });
-  } catch (error) {
-    // Se falhar até o fallback, apenas logar no console
-    console.error('Erro ao salvar log de auditoria em arquivo local:', error);
-  }
-}
 
 /**
  * Registrar ação na auditoria (Elasticsearch)
@@ -116,22 +86,11 @@ export async function registrarAuditoriaElasticsearch(
       const client = elasticsearchService.getClient();
 
       if (!client) {
-        // Se Elasticsearch não estiver configurado, salvar em arquivo local
-        logger.warn('Cliente Elasticsearch não disponível, usando fallback', {
+        // Cliente Elasticsearch não disponível
+        logger.warn('Cliente Elasticsearch não disponível', {
           context: 'ElasticsearchAuditService',
           action: 'registrarAuditoriaElasticsearch'
         });
-        const userData = getUserData(req);
-        const auditData = {
-          ...dados,
-          usuario_id: userData.id,
-          usuario_nome: userData.nome,
-          usuario_email: userData.email,
-          ip_address: getClientIp(req),
-          user_agent: getUserAgent(req),
-          timestamp: new Date().toISOString()
-        };
-        saveToLocalFile(auditData);
         return;
       }
 
@@ -139,19 +98,8 @@ export async function registrarAuditoriaElasticsearch(
       const isConnected = await elasticsearchService.checkConnection();
       
       if (!isConnected) {
-        // Se não conseguir conectar, salvar em arquivo local
-        const userData = getUserData(req);
-        const auditData = {
-          ...dados,
-          usuario_id: userData.id,
-          usuario_nome: userData.nome,
-          usuario_email: userData.email,
-          ip_address: getClientIp(req),
-          user_agent: getUserAgent(req),
-          timestamp: new Date().toISOString()
-        };
-        saveToLocalFile(auditData);
-        logger.warn('Elasticsearch não disponível, log salvo em arquivo local', {
+        // Elasticsearch não disponível
+        logger.warn('Elasticsearch não disponível', {
           context: 'ElasticsearchAuditService',
           action: 'registrarAuditoriaElasticsearch'
         });
@@ -201,7 +149,7 @@ export async function registrarAuditoriaElasticsearch(
       // Não lançar erro para não interromper o fluxo principal
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
-      
+
       logger.error('Erro ao registrar auditoria no Elasticsearch', {
         context: 'ElasticsearchAuditService',
         action: 'registrarAuditoriaElasticsearch',
@@ -213,40 +161,6 @@ export async function registrarAuditoriaElasticsearch(
           entidade_id: dados.entidade_id
         }
       });
-      
-      // Tentar salvar em arquivo local como fallback
-      try {
-        const userData = getUserData(req);
-        const auditData = {
-          ...dados,
-          usuario_id: userData.id,
-          usuario_nome: userData.nome,
-          usuario_email: userData.email,
-          ip_address: getClientIp(req),
-          user_agent: getUserAgent(req),
-          timestamp: new Date().toISOString(),
-          error: errorMessage
-        };
-        saveToLocalFile(auditData);
-        logger.info('Log de auditoria salvo em arquivo local (fallback)', {
-          context: 'ElasticsearchAuditService',
-          acao: dados.acao,
-          entidade: dados.entidade
-        });
-      } catch (fallbackError) {
-        // Se até o fallback falhar, apenas logar
-        logger.error('Erro ao registrar auditoria e ao salvar fallback', {
-          context: 'ElasticsearchAuditService',
-          action: 'registrarAuditoriaElasticsearch',
-          error: errorMessage,
-          fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Erro desconhecido',
-          dados: {
-            acao: dados.acao,
-            entidade: dados.entidade,
-            entidade_id: dados.entidade_id
-          }
-        });
-      }
     }
   });
 }

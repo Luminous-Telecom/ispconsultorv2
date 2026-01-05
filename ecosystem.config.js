@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'BackNet-backend',
+      name: 'backend',
       cwd: './backend',
       script: './dist/index.js',
       interpreter: 'node',
