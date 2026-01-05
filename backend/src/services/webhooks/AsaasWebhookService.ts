@@ -197,6 +197,20 @@ export class AsaasWebhookService {
     invoice: AsaasPaymentPayload['invoice']
   ): Promise<{ success: boolean; message: string }> {
     try {
+      // Log completo do payload da invoice para debug
+      logger.info('=== WEBHOOK INVOICE RECEBIDO ===', {
+        invoice_id: invoice?.id,
+        invoice_full_payload: JSON.stringify(invoice, null, 2),
+        invoice_keys: invoice ? Object.keys(invoice) : [],
+        invoice_status: invoice?.status,
+        invoice_number: invoice?.number,
+        invoice_validationCode: invoice?.validationCode,
+        invoice_accessKey: invoice?.accessKey,
+        invoice_chaveAcesso: invoice?.chaveAcesso,
+        invoice_accessKeyCode: invoice?.accessKeyCode,
+        invoice_validation_code: invoice?.validation_code
+      });
+
       if (!invoice || !invoice.id) {
         return {
           success: true,
@@ -206,10 +220,21 @@ export class AsaasWebhookService {
 
       const invoiceId = String(invoice.id);
       const invoiceNumber = invoice.number ? String(invoice.number) : null;
-      const invoiceStatusOriginal = invoice.status !== undefined && invoice.status !== null 
-        ? String(invoice.status) 
+      const invoiceStatusOriginal = invoice.status !== undefined && invoice.status !== null
+        ? String(invoice.status)
         : null;
       const invoiceStatus = invoiceStatusOriginal ? invoiceStatusOriginal.toLowerCase().trim() : null;
+
+      logger.info('Processando invoice webhook', {
+        invoice_id: invoiceId,
+        invoice_number: invoiceNumber,
+        invoice_status_original: invoiceStatusOriginal,
+        invoice_status_processado: invoiceStatus,
+        invoice_serie: invoice.rpsSerie,
+        invoice_rps_number: invoice.rpsNumber,
+        invoice_pdf_url: invoice.pdfUrl,
+        invoice_xml_url: invoice.xmlUrl
+      });
 
       // Mapear status do Asaas para nosso status (case-insensitive)
       const statusMap: Record<string, 'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro'> = {
@@ -313,6 +338,28 @@ export class AsaasWebhookService {
 
           const chaveAcesso = invoice.validationCode || invoice.accessKey || invoice.chaveAcesso || invoice.accessKeyCode || invoice.validation_code || null;
 
+          logger.info('=== PROCESSANDO CAMPOS NFS-E ===', {
+            invoice_id: invoiceId,
+            nota_fiscal_id: notaFiscalVinculada.id,
+            chave_acesso_encontrada: chaveAcesso,
+            chave_acesso_origem: chaveAcesso === invoice.validationCode ? 'validationCode' :
+                               chaveAcesso === invoice.accessKey ? 'accessKey' :
+                               chaveAcesso === invoice.chaveAcesso ? 'chaveAcesso' :
+                               chaveAcesso === invoice.accessKeyCode ? 'accessKeyCode' :
+                               chaveAcesso === invoice.validation_code ? 'validation_code' : 'nenhuma',
+            numero_encontrado: invoiceNumber || invoice.number,
+            serie_encontrada: rpsSerie,
+            pdf_url_encontrada: pdfUrl,
+            xml_url_encontrada: xmlUrl,
+            status_mapeado: nfseStatus,
+            nota_fiscal_atual: {
+              numero: notaFiscalVinculada.numero,
+              serie: notaFiscalVinculada.serie,
+              chave_acesso: notaFiscalVinculada.chave_acesso,
+              nfse_status: notaFiscalVinculada.nfse_status
+            }
+          });
+
           await notaFiscalVinculada.update({
             nfse_status: nfseStatus,
             numero: invoiceNumber || invoice.number || notaFiscalVinculada.numero,
@@ -320,6 +367,27 @@ export class AsaasWebhookService {
             chave_acesso: chaveAcesso || notaFiscalVinculada.chave_acesso,
             pdf_url: pdfUrl || notaFiscalVinculada.pdf_url,
             xml: xmlUrl || notaFiscalVinculada.xml
+          });
+
+          logger.info('=== NOTA FISCAL ATUALIZADA ===', {
+            nota_fiscal_id: notaFiscalVinculada.id,
+            invoice_id: invoiceId,
+            dados_finais: {
+              numero: notaFiscalVinculada.numero,
+              serie: notaFiscalVinculada.serie,
+              chave_acesso: notaFiscalVinculada.chave_acesso,
+              nfse_status: notaFiscalVinculada.nfse_status,
+              pdf_url: notaFiscalVinculada.pdf_url,
+              xml_url: notaFiscalVinculada.xml
+            },
+            alteracoes_feitas: {
+              numero_alterado: (invoiceNumber || invoice.number) !== notaFiscalVinculada.numero,
+              serie_alterada: rpsSerie !== notaFiscalVinculada.serie,
+              chave_acesso_alterada: chaveAcesso !== notaFiscalVinculada.chave_acesso,
+              status_alterado: nfseStatus !== notaFiscalVinculada.nfse_status,
+              pdf_alterado: pdfUrl !== notaFiscalVinculada.pdf_url,
+              xml_alterado: xmlUrl !== notaFiscalVinculada.xml
+            }
           });
         }
 
