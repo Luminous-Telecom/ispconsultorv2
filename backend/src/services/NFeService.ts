@@ -98,17 +98,16 @@ export class NFeService {
           let totalServicos = valorPlano;
           let totalFinal = valorPlano;
 
+          // Usar valor final do título
+          if (titulo.valor_final) {
+            totalFinal = Number(titulo.valor_final);
+          }
+
+          // Buscar planos adicionais do contrato se existir
           if (titulo.contrato_id) {
             const contrato = await Contrato.findByPk(titulo.contrato_id);
             
             if (contrato) {
-              totalFinal = contrato.valor_final 
-                ? Number(contrato.valor_final)
-                : FinancialCalculationsService.calcularValorFinal(valorPlano, {
-                    desconto_valor: contrato.desconto_valor,
-                    desconto_percentual: contrato.desconto_percentual
-                  });
-
               const planosAdicionais = await ContratoPlanoAdicional.findAll({
                 where: { contrato_id: contrato.id, status: 'ativo' },
                 include: [{ model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'] }]

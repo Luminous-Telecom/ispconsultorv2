@@ -76,31 +76,24 @@ export class NotaFiscalPDFService {
         const valorPlano = Number(titulo.plano.valor_mensal);
         let valorFinal = valorPlano;
 
-        // Buscar contrato para pegar os descontos
+        // Usar valor final do título
+        if (titulo.valor_final) {
+          valorFinal = Number(titulo.valor_final);
+        }
+
+        const descontoTotal = Math.max(0, valorPlano - valorFinal);
+        servicos.push({
+          nome: titulo.plano.nome_plano,
+          valor: valorPlano,
+          desconto: descontoTotal,
+          valorFinal: valorFinal
+        });
+
+        // Buscar planos adicionais do contrato se existir
         if (titulo.contrato_id) {
           const contrato = await Contrato.findByPk(titulo.contrato_id);
           
           if (contrato) {
-            // Calcular valor final do plano principal usando descontos do contrato
-            if (contrato.valor_final) {
-              valorFinal = Number(contrato.valor_final);
-            } else {
-              valorFinal = FinancialCalculationsService.calcularValorFinal(
-                valorPlano,
-                {
-                  desconto_valor: contrato.desconto_valor,
-                  desconto_percentual: contrato.desconto_percentual
-                }
-              );
-            }
-
-            const descontoTotal = Math.max(0, valorPlano - valorFinal);
-            servicos.push({
-              nome: titulo.plano.nome_plano,
-              valor: valorPlano,
-              desconto: descontoTotal,
-              valorFinal: valorFinal
-            });
 
             // Buscar planos adicionais
             const planosAdicionais = await ContratoPlanoAdicional.findAll({
@@ -145,17 +138,6 @@ export class NotaFiscalPDFService {
               }
             }
           }
-        }
-        
-        // Se não adicionou serviço ainda (sem contrato), adicionar plano principal
-        if (servicos.length === 0) {
-          const descontoTotal = Math.max(0, valorPlano - valorFinal);
-          servicos.push({
-            nome: titulo.plano.nome_plano,
-            valor: valorPlano,
-            desconto: descontoTotal,
-            valorFinal: valorFinal
-          });
         }
       }
     }
