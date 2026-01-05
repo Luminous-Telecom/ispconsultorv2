@@ -80,12 +80,16 @@ export class NFSeXmlParserService {
                    this.extractValue(xmlLimpo, /<Serie>(.*?)<\/Serie>/i) ||
                    this.extractValue(xmlLimpo, /<SerieNFe>(.*?)<\/SerieNFe>/i);
 
-      // Chave de acesso é o ID do infNFSe
+      // Chave de acesso é o ID do infNFSe (remover prefixo "NFS" se existir)
       const infNFSeId = this.extractAttribute(xmlLimpo, 'infNFSe', 'Id');
-      dados.chave_acesso = infNFSeId ||
-                          this.extractValue(xmlLimpo, /<ChaveNFe>(.*?)<\/ChaveNFe>/i) ||
-                          this.extractValue(xmlLimpo, /<ChaveAcesso>(.*?)<\/ChaveAcesso>/i) ||
-                          this.extractValue(xmlLimpo, /<Id>(.*?)<\/Id>/i);
+      if (infNFSeId) {
+        // Remove o prefixo "NFS" se existir, mantendo apenas a parte numérica
+        dados.chave_acesso = infNFSeId.replace(/^NFS/i, '');
+      } else {
+        dados.chave_acesso = this.extractValue(xmlLimpo, /<ChaveNFe>(.*?)<\/ChaveNFe>/i) ||
+                            this.extractValue(xmlLimpo, /<ChaveAcesso>(.*?)<\/ChaveAcesso>/i) ||
+                            this.extractValue(xmlLimpo, /<Id>(.*?)<\/Id>/i);
+      }
 
       // Data de emissão
       const dataEmissaoStr = this.extractValue(xmlLimpo, /<dhEmi>(.*?)<\/dhEmi>/i) ||
