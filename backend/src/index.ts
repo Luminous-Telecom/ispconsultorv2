@@ -211,6 +211,10 @@ let server: ReturnType<typeof app.listen> | null = null;
 // Inicializar servidor
 const startServer = async () => {
   try {
+    // Log do ambiente de execução
+    const environment = process.env.NODE_ENV === 'production' ? 'Produção' : 'Desenvolvimento';
+    logger.info(`🚀 Iniciando aplicação em modo: ${environment}`);
+
     await sequelize.authenticate();
 
     server = app.listen(PORT, async () => {
