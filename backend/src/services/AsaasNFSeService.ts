@@ -376,10 +376,7 @@ export class AsaasNFSeService {
     }
   }
 
-  static async cancelarNFSe(
-    chaveAcesso: string,
-    justificativa: string
-  ): Promise<{
+  static async cancelarNFSe(chaveAcesso: string, justificativa: string): Promise<{
     success: boolean;
     mensagem?: string;
     erro?: string;
@@ -390,21 +387,60 @@ export class AsaasNFSeService {
         return { success: false, erro: 'Configuração não encontrada' };
       }
 
+      logger.info('Cancelando NFS-e no Asaas', {
+        identificador: chaveAcesso,
+        justificativa_length: justificativa.length
+      });
+
       const apiClient = this.createApiClient(config);
-      const response = await apiClient.delete(`/invoices/${chaveAcesso}`, {
-        data: { reason: justificativa }
+
+      // Endpoint correto para cancelar NFS-e: /invoices/{id}/cancel
+      const cancelEndpoint = `/invoices/${chaveAcesso}/cancel`;
+
+      logger.info('Fazendo requisição DELETE para cancelar NFS-e', {
+        endpoint: cancelEndpoint,
+        baseURL: config.baseUrl
+      });
+
+      const response = await apiClient.delete(cancelEndpoint, {
+        data: {
+          reason: justificativa,
+          id: chaveAcesso  // Alguns endpoints podem precisar do ID também
+        }
+      });
+
+      logger.info('Resposta do cancelamento Asaas', {
+        status: response.status,
+        statusText: response.statusText,
+        invoice_status: response.data?.status,
+        invoice_id: response.data?.id
       });
 
       if (response.status === 200 || response.status === 204) {
-        return { success: true, mensagem: 'NFS-e cancelada com sucesso' };
+        logger.info('NFS-e cancelada com sucesso no Asaas');
+        return {
+          success: true,
+          mensagem: 'NFS-e cancelada com sucesso no Asaas'
+        };
       }
 
-      return { success: false, erro: 'Erro ao cancelar NFS-e' };
-    } catch (error) {
-      logger.error('Erro ao cancelar NFS-e no Asaas:', error);
       return {
         success: false,
-        erro: error instanceof Error ? error.message : 'Erro ao cancelar NFS-e'
+        erro: `Erro HTTP ${response.status}`,
+        mensagem: response.data?.message || 'Erro ao cancelar NFS-e'
+      };
+    } catch (error: any) {
+      logger.error('Erro na resposta do Asaas', error.message);
+      logger.error('Erro ao cancelar NFS-e no Asaas:', {
+        identificador: chaveAcesso,
+        status: error.response?.status,
+        data: error.response?.data,
+        headers: error.response?.headers
+      });
+      return {
+        success: false,
+        erro: 'ERRO_CANCELAMENTO',
+        mensagem: error.response?.data?.message || 'Erro ao cancelar NFS-e no Asaas'
       };
     }
   }

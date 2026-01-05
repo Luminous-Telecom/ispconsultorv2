@@ -9,6 +9,7 @@ import { NotaFiscal } from '@/types';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import CancelarNotaFiscalModal from './CancelarNotaFiscalModal';
 
 interface NotaFiscalListModalProps {
   show: boolean;
@@ -28,6 +29,8 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
   const [showImprimirModal, setShowImprimirModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showCancelarModal, setShowCancelarModal] = useState(false);
+  const [notaFiscalParaCancelar, setNotaFiscalParaCancelar] = useState<NotaFiscal | null>(null);
 
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -235,14 +238,57 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     }
   }, [error, success, pdfUrl]);
 
+  const handleCancelar = useCallback((selectedItems?: NotaFiscal[]) => {
+    if (!selectedItems || selectedItems.length === 0) {
+      error('Selecione uma nota fiscal para cancelar');
+      return;
+    }
+
+    if (selectedItems.length > 1) {
+      error('Selecione apenas uma nota fiscal para cancelar');
+      return;
+    }
+
+    const notaFiscal = selectedItems[0];
+
+    // Verificar se a nota fiscal pode ser cancelada
+    if (notaFiscal.status !== 'AUTORIZADA') {
+      if (notaFiscal.status === 'CANCELADA') {
+        error('Esta nota fiscal já foi cancelada');
+      } else {
+        error('Apenas notas fiscais autorizadas podem ser canceladas');
+      }
+      return;
+    }
+
+    setNotaFiscalParaCancelar(notaFiscal);
+    setShowCancelarModal(true);
+  }, [error]);
+
+  const handleCancelarSuccess = useCallback(() => {
+    refetch();
+    setNotaFiscalParaCancelar(null);
+    setShowCancelarModal(false);
+  }, [refetch]);
+
   const bulkActions = useMemo(() => [
     {
       label: 'Imprimir',
       variant: 'primary' as const,
       disabled: (selectedItems: NotaFiscal[]) => selectedItems.length === 0,
       action: (selectedItems: NotaFiscal[]) => handleImprimir(selectedItems)
+    },
+    {
+      label: 'Cancelar Nota Fiscal',
+      variant: 'danger' as const,
+      disabled: (selectedItems: NotaFiscal[]) => {
+        if (selectedItems.length !== 1) return true;
+        const notaFiscal = selectedItems[0];
+        return notaFiscal.status !== 'AUTORIZADA';
+      },
+      action: (selectedItems: NotaFiscal[]) => handleCancelar(selectedItems)
     }
-  ], [handleImprimir]);
+  ], [handleImprimir, handleCancelar]);
 
   return (
     <>
@@ -290,6 +336,17 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
         isGenerating={isGeneratingPdf}
         title="Visualizar Nota Fiscal"
         modalId="nota-fiscal-imprimir-modal"
+      />
+
+      {/* Modal de Cancelamento de Nota Fiscal */}
+      <CancelarNotaFiscalModal
+        show={showCancelarModal}
+        onClose={() => {
+          setShowCancelarModal(false);
+          setNotaFiscalParaCancelar(null);
+        }}
+        onSuccess={handleCancelarSuccess}
+        notaFiscal={notaFiscalParaCancelar}
       />
     </>
   );

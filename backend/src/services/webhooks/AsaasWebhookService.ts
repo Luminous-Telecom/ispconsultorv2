@@ -343,7 +343,8 @@ export class AsaasWebhookService {
               }
             }
 
-            await notaFiscalVinculada.update({
+            // Preparar dados para atualização
+            const updateData: any = {
               nfse_status: nfseStatus,
               numero: invoiceNumber || invoice.number || notaFiscalVinculada.numero,
               serie: invoice.rpsSerie || notaFiscalVinculada.serie,
@@ -351,7 +352,14 @@ export class AsaasWebhookService {
               pdf_url: pdfUrl || notaFiscalVinculada.pdf_url,
               pdf_base64: pdfData || notaFiscalVinculada.pdf_base64,
               xml: xmlData || notaFiscalVinculada.xml
-            });
+            };
+
+            // Se a NFS-e foi cancelada, também atualizar status principal
+            if (nfseStatus === 'cancelada') {
+              updateData.status = 'CANCELADA';
+            }
+
+            await notaFiscalVinculada.update(updateData);
 
             logger.info(`NF ${notaFiscalVinculada.id} atualizada com sucesso`);
           } catch (updateError) {

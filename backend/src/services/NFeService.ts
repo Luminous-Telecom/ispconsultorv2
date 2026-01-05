@@ -407,6 +407,15 @@ export class NFeService {
         };
       }
 
+      // Verificar se já está cancelada
+      if (notaFiscal.status === 'CANCELADA') {
+        return {
+          success: false,
+          erro: 'NOTA_JA_CANCELADA',
+          mensagem: 'Esta nota fiscal já foi cancelada'
+        };
+      }
+
       if (!justificativa || justificativa.length < 15) {
         return {
           success: false,
@@ -415,36 +424,26 @@ export class NFeService {
         };
       }
 
-      // Tentar cancelar no provedor se configurado
-      if (notaFiscal.chave_acesso) {
-        const config = await NFSeConfigService.getConfig();
+      // Cancelar no Asaas se tiver identificador
+      const identificador = notaFiscal.chave_acesso || notaFiscal.asaas_invoice_id;
 
-        if (config.provider === 'ASAAS') {
-          const resultado = await AsaasNFSeService.cancelarNFSe(
-            notaFiscal.chave_acesso,
-            justificativa
-          );
-          
-          if (!resultado.success) {
-            return {
-              success: false,
-              erro: resultado.erro || 'Erro ao cancelar NFS-e no Asaas',
-              mensagem: resultado.erro
-            };
-          }
-        } else if (config.provider === 'PORTAL_NACIONAL') {
-          const resultado = await PortalNacionalNFSeService.cancelarNFSe(
-            notaFiscal.chave_acesso,
-            justificativa
-          );
-          
-          if (!resultado.success) {
-            return {
-              success: false,
-              erro: resultado.erro || 'Erro ao cancelar NFS-e no Portal Nacional',
-              mensagem: resultado.erro
-            };
-          }
+      if (identificador) {
+        logger.info('Tentando cancelar NFS-e', {
+          nota_id: notaFiscal.id,
+          identificador: identificador,
+          tipo: notaFiscal.chave_acesso ? 'chave_acesso' : 'asaas_invoice_id',
+          chave_acesso: notaFiscal.chave_acesso,
+          asaas_invoice_id: notaFiscal.asaas_invoice_id
+        });
+
+        const resultado = await AsaasNFSeService.cancelarNFSe(identificador, justificativa);
+
+        if (!resultado.success) {
+          return {
+            success: false,
+            erro: resultado.erro,
+            mensagem: resultado.mensagem
+          };
         }
       }
 
