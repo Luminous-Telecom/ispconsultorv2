@@ -197,13 +197,7 @@ export class AsaasWebhookService {
     invoice: AsaasPaymentPayload['invoice']
   ): Promise<{ success: boolean; message: string }> {
     try {
-      logger.info('Webhook invoice Asaas recebido', {
-        invoice_id: invoice?.id,
-        status: invoice?.status,
-        validation_code: !!invoice?.validationCode,
-        pdf_url: !!invoice?.pdfUrl,
-        xml_url: !!invoice?.xmlUrl
-      });
+      logger.info(`Webhook Asaas: ${invoice?.id}`);
 
       if (!invoice || !invoice.id) {
         return {
@@ -219,11 +213,7 @@ export class AsaasWebhookService {
         : null;
       const invoiceStatus = invoiceStatusOriginal ? invoiceStatusOriginal.toLowerCase().trim() : null;
 
-      logger.info('Processando invoice webhook', {
-        invoice_id: invoiceId,
-        status_processado: invoiceStatus,
-        numero: invoiceNumber
-      });
+      logger.info(`Processando: ${invoiceId}`);
 
       // Mapear status do Asaas para nosso status (case-insensitive)
       const statusMap: Record<string, 'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro'> = {
@@ -318,58 +308,56 @@ export class AsaasWebhookService {
         order: [['created_at', 'DESC']]
       });
 
-        // Atualizar nota fiscal (status, número, série, chave de acesso, PDF e XML)
+        // Atualizar nota fiscal
         if (notaFiscalVinculada) {
-          const pdfUrl = invoice.pdfUrl || invoice.invoiceUrl || invoice.url || null;
-          const xmlUrl = invoice.xmlUrl || null;
-          const rpsSerie = invoice.rpsSerie || null;
-          const chaveAcesso = invoice.validationCode || notaFiscalVinculada.chave_acesso;
+          try {
+            const pdfUrl = invoice.pdfUrl || invoice.invoiceUrl || invoice.url;
+            const xmlUrl = invoice.xmlUrl;
+            const chaveAcesso = invoice.validationCode || notaFiscalVinculada.chave_acesso;
 
-          let pdfData = null;
-          let xmlData = null;
+            logger.info(`Atualizando NF ${notaFiscalVinculada.id} - Chave: ${chaveAcesso ? 'SIM' : 'NAO'}`);
 
-          // Baixar PDF se URL estiver disponível
-          if (pdfUrl && !notaFiscalVinculada.pdf_base64) {
-            try {
-              const axios = await import('axios');
-              const response = await axios.default.get(pdfUrl, { responseType: 'arraybuffer' });
-              pdfData = Buffer.from(response.data).toString('base64');
-              logger.info('PDF baixado e convertido para base64', { invoice_id: invoiceId });
-            } catch (error) {
-              logger.warn('Erro ao baixar PDF', { invoice_id: invoiceId, error: error instanceof Error ? error.message : String(error) });
+            // Baixar arquivos se necessário
+            let pdfData = null;
+            let xmlData = null;
+
+            const axios = await import('axios');
+
+            if (pdfUrl && !notaFiscalVinculada.pdf_base64) {
+              try {
+                const response = await axios.default.get(pdfUrl, { responseType: 'arraybuffer' });
+                pdfData = Buffer.from(response.data).toString('base64');
+                logger.info(`PDF baixado: ${pdfData.length} chars`);
+              } catch (error) {
+                logger.warn(`Erro PDF: ${error instanceof Error ? error.message : String(error)}`);
+              }
             }
-          }
 
-          // Baixar XML se URL estiver disponível
-          if (xmlUrl && !notaFiscalVinculada.xml) {
-            try {
-              const axios = await import('axios');
-              const response = await axios.default.get(xmlUrl, { responseType: 'text' });
-              xmlData = response.data;
-              logger.info('XML baixado', { invoice_id: invoiceId });
-            } catch (error) {
-              logger.warn('Erro ao baixar XML', { invoice_id: invoiceId, error: error instanceof Error ? error.message : String(error) });
+            if (xmlUrl && !notaFiscalVinculada.xml) {
+              try {
+                const response = await axios.default.get(xmlUrl, { responseType: 'text' });
+                xmlData = response.data;
+                logger.info(`XML baixado: ${xmlData.length} chars`);
+              } catch (error) {
+                logger.warn(`Erro XML: ${error instanceof Error ? error.message : String(error)}`);
+              }
             }
+
+            await notaFiscalVinculada.update({
+              nfse_status: nfseStatus,
+              numero: invoiceNumber || invoice.number || notaFiscalVinculada.numero,
+              serie: invoice.rpsSerie || notaFiscalVinculada.serie,
+              chave_acesso: chaveAcesso,
+              pdf_url: pdfUrl || notaFiscalVinculada.pdf_url,
+              pdf_base64: pdfData || notaFiscalVinculada.pdf_base64,
+              xml: xmlData || notaFiscalVinculada.xml
+            });
+
+            logger.info(`NF ${notaFiscalVinculada.id} atualizada com sucesso`);
+          } catch (updateError) {
+            logger.error(`Erro ao atualizar NF: ${updateError instanceof Error ? updateError.message : String(updateError)}`);
+            throw updateError;
           }
-
-          await notaFiscalVinculada.update({
-            nfse_status: nfseStatus,
-            numero: invoiceNumber || invoice.number || notaFiscalVinculada.numero,
-            serie: rpsSerie || notaFiscalVinculada.serie,
-            chave_acesso: chaveAcesso,
-            pdf_url: pdfUrl || notaFiscalVinculada.pdf_url,
-            pdf_base64: pdfData || notaFiscalVinculada.pdf_base64,
-            xml: xmlData || notaFiscalVinculada.xml
-          });
-
-          logger.info('Nota fiscal atualizada via webhook', {
-            nota_fiscal_id: notaFiscalVinculada.id,
-            invoice_id: invoiceId,
-            status: nfseStatus,
-            chave_acesso: !!chaveAcesso,
-            pdf_baixado: !!pdfData,
-            xml_baixado: !!xmlData
-          });
         }
 
       return {
