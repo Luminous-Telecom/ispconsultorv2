@@ -54,18 +54,18 @@ export class AsaasWebhookService {
 
       if (novoStatus === 'pago') {
         // Normalizar data de pagamento preservando hora
-        const dataPagamentoNormalizada = paymentDate 
+        const dataPagamentoNormalizada = paymentDate
           ? PaymentCommonService.normalizePaymentDate(paymentDate)
           : new Date();
-        
-        const valorPago = typeof payment.value === 'number' ? Number(payment.value) : 
-                          typeof payment.netValue === 'number' ? Number(payment.netValue) : 
+
+        const valorPago = typeof payment.value === 'number' ? Number(payment.value) :
+                          typeof payment.netValue === 'number' ? Number(payment.netValue) :
                           titulo.valor;
-        
+
         // Usar método marcarComoPago para garantir lógica consistente
         // skipLiquidacaoBanco = true pois o webhook já indica que o banco sabe do pagamento
         await titulo.marcarComoPago(valorPago, dataPagamentoNormalizada || undefined, true);
-        
+
         // Não adicionar data_pagamento e valor_pago ao updates, pois já foi salvo pelo marcarComoPago
         // Apenas atualizar status se necessário
         delete updates.data_pagamento;
@@ -116,7 +116,9 @@ export class AsaasWebhookService {
       logger.info('Título atualizado via webhook Asaas', {
         titulo_id: titulo.id,
         charge_id: payment.id,
-        status: novoStatus
+        status: novoStatus,
+        final_titulo_status: titulo.status,
+        final_titulo_pago: titulo.pago
       });
 
       return {

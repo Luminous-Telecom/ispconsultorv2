@@ -160,6 +160,11 @@ export const auditLogMiddleware = (req: AuthenticatedRequest, res: Response, nex
   const originalSend = res.json.bind(res);
   const originalStatus = res.status.bind(res);
 
+  // Excluir rotas de webhook da auditoria (não têm usuário autenticado)
+  if (req.originalUrl.startsWith('/webhook/')) {
+    return next();
+  }
+
   // Interceptar resposta para capturar status
   let responseStatus = 200;
   res.status = function(code: number) {

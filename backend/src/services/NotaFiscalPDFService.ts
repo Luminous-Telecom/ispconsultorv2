@@ -178,7 +178,7 @@ export class NotaFiscalPDFService {
         const minute = String(dateToFormat.getMinutes()).padStart(2, '0');
         const second = String(dateToFormat.getSeconds()).padStart(2, '0');
 
-        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+            return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
       } catch {
         return '';
       }

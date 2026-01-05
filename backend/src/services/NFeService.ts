@@ -91,7 +91,7 @@ export class NFeService {
             }
           ]
         }) as (Titulo & { plano?: Plano }) | null;
-
+          
         if (titulo?.plano) {
           const valorPlano = Number(titulo.plano.valor_mensal);
           let totalServicos = valorPlano;
@@ -193,7 +193,7 @@ export class NFeService {
 
       notaFiscal.status = 'PROCESSANDO';
       await notaFiscal.save();
-      
+
       
 
       const resultadoProvedor = await this.gerarNFeComProvedor(notaFiscal, cliente, dadosEmpresa);
@@ -360,11 +360,11 @@ export class NFeService {
 
         if (resultado?.success && resultado.status && resultado.status !== notaFiscal.status) {
           notaFiscal.status = resultado.status as NotaFiscal['status'];
-          await notaFiscal.save();
-        }
+              await notaFiscal.save();
+            }
 
         if (resultado) {
-          return resultado;
+            return resultado;
         }
       }
 
