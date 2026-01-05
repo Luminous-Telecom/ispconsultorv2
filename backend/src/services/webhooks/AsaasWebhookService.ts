@@ -197,28 +197,13 @@ export class AsaasWebhookService {
     invoice: AsaasPaymentPayload['invoice']
   ): Promise<{ success: boolean; message: string }> {
     try {
-      // Log completo do payload da invoice para debug
-      logger.info(`=== WEBHOOK INVOICE RECEBIDO ===
-Invoice ID: ${invoice?.id}
-Invoice Number: ${invoice?.number}
-Invoice Status: ${invoice?.status}
-Invoice ValidationCode: ${invoice?.validationCode}
-Invoice AccessKey: ${invoice?.accessKey}
-Invoice ChaveAcesso: ${invoice?.chaveAcesso}
-Invoice AccessKeyCode: ${invoice?.accessKeyCode}
-Invoice Validation_Code: ${invoice?.validation_code}
-Invoice Code: ${(invoice as any)?.code}
-Invoice AuthorizationCode: ${(invoice as any)?.authorizationCode}
-Invoice Protocol: ${(invoice as any)?.protocol}
-Invoice Key: ${(invoice as any)?.key}
-Invoice NfseKey: ${(invoice as any)?.nfseKey}
-Invoice InvoiceKey: ${(invoice as any)?.invoiceKey}
-Invoice PDF URL: ${invoice?.pdfUrl}
-Invoice XML URL: ${invoice?.xmlUrl}
-Invoice RPS Number: ${invoice?.rpsNumber}
-Invoice RPS Serie: ${invoice?.rpsSerie}
-Invoice Keys: ${invoice ? Object.keys(invoice).join(', ') : 'null'}
-Payload completo: ${JSON.stringify(invoice, null, 2)}`);
+      logger.info('Webhook invoice Asaas recebido', {
+        invoice_id: invoice?.id,
+        status: invoice?.status,
+        validation_code: !!invoice?.validationCode,
+        pdf_url: !!invoice?.pdfUrl,
+        xml_url: !!invoice?.xmlUrl
+      });
 
       if (!invoice || !invoice.id) {
         return {
@@ -234,15 +219,11 @@ Payload completo: ${JSON.stringify(invoice, null, 2)}`);
         : null;
       const invoiceStatus = invoiceStatusOriginal ? invoiceStatusOriginal.toLowerCase().trim() : null;
 
-      logger.info(`Processando invoice webhook:
-Invoice ID: ${invoiceId}
-Invoice Number: ${invoiceNumber}
-Status Original: ${invoiceStatusOriginal}
-Status Processado: ${invoiceStatus}
-Serie: ${invoice.rpsSerie}
-RPS Number: ${invoice.rpsNumber}
-PDF URL: ${invoice.pdfUrl}
-XML URL: ${invoice.xmlUrl}`);
+      logger.info('Processando invoice webhook', {
+        invoice_id: invoiceId,
+        status_processado: invoiceStatus,
+        numero: invoiceNumber
+      });
 
       // Mapear status do Asaas para nosso status (case-insensitive)
       const statusMap: Record<string, 'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro'> = {
@@ -337,82 +318,58 @@ XML URL: ${invoice.xmlUrl}`);
         order: [['created_at', 'DESC']]
       });
 
-        // Atualizar nota fiscal (status, número, série, chave de acesso, PDF URL e XML URL)
+        // Atualizar nota fiscal (status, número, série, chave de acesso, PDF e XML)
         if (notaFiscalVinculada) {
           const pdfUrl = invoice.pdfUrl || invoice.invoiceUrl || invoice.url || null;
           const xmlUrl = invoice.xmlUrl || null;
-          const rpsNumber = invoice.rpsNumber ? String(invoice.rpsNumber) : null;
           const rpsSerie = invoice.rpsSerie || null;
+          const chaveAcesso = invoice.validationCode || notaFiscalVinculada.chave_acesso;
 
-          // Tentar múltiplos campos possíveis onde a chave de acesso pode vir
-          const chaveAcesso = invoice.validationCode || invoice.accessKey || invoice.chaveAcesso ||
-                             invoice.accessKeyCode || invoice.validation_code || (invoice as any).code ||
-                             (invoice as any).authorizationCode || (invoice as any).protocol || (invoice as any).key ||
-                             (invoice as any).nfseKey || (invoice as any).invoiceKey || null;
+          let pdfData = null;
+          let xmlData = null;
 
-          // Log detalhado de todos os campos possíveis da chave de acesso
-          logger.info(`=== DEBUG CAMPOS CHAVE ACESSO ===
-validationCode: ${invoice.validationCode}
-accessKey: ${invoice.accessKey}
-chaveAcesso: ${invoice.chaveAcesso}
-accessKeyCode: ${invoice.accessKeyCode}
-validation_code: ${invoice.validation_code}
-code: ${(invoice as any).code}
-authorizationCode: ${(invoice as any).authorizationCode}
-protocol: ${(invoice as any).protocol}
-key: ${(invoice as any).key}
-nfseKey: ${(invoice as any).nfseKey}
-invoiceKey: ${(invoice as any).invoiceKey}
-CHAVE FINAL ENCONTRADA: ${chaveAcesso}`);
+          // Baixar PDF se URL estiver disponível
+          if (pdfUrl && !notaFiscalVinculada.pdf_base64) {
+            try {
+              const axios = await import('axios');
+              const response = await axios.default.get(pdfUrl, { responseType: 'arraybuffer' });
+              pdfData = Buffer.from(response.data).toString('base64');
+              logger.info('PDF baixado e convertido para base64', { invoice_id: invoiceId });
+            } catch (error) {
+              logger.warn('Erro ao baixar PDF', { invoice_id: invoiceId, error: error instanceof Error ? error.message : String(error) });
+            }
+          }
 
-          logger.info(`=== PROCESSANDO CAMPOS NFS-E ===
-Invoice ID: ${invoiceId}
-Nota Fiscal ID: ${notaFiscalVinculada.id}
-Chave Acesso Encontrada: ${chaveAcesso}
-Chave Acesso Origem: ${chaveAcesso === invoice.validationCode ? 'validationCode' :
-                      chaveAcesso === invoice.accessKey ? 'accessKey' :
-                      chaveAcesso === invoice.chaveAcesso ? 'chaveAcesso' :
-                      chaveAcesso === invoice.accessKeyCode ? 'accessKeyCode' :
-                      chaveAcesso === invoice.validation_code ? 'validation_code' :
-                      chaveAcesso === (invoice as any).code ? 'code' :
-                      chaveAcesso === (invoice as any).authorizationCode ? 'authorizationCode' :
-                      chaveAcesso === (invoice as any).protocol ? 'protocol' :
-                      chaveAcesso === (invoice as any).key ? 'key' :
-                      chaveAcesso === (invoice as any).nfseKey ? 'nfseKey' :
-                      chaveAcesso === (invoice as any).invoiceKey ? 'invoiceKey' : 'nenhuma'}
-Numero Encontrado: ${invoiceNumber || invoice.number}
-Serie Encontrada: ${rpsSerie}
-PDF URL Encontrada: ${pdfUrl}
-XML URL Encontrada: ${xmlUrl}
-Status Mapeado: ${nfseStatus}
-Nota Fiscal Atual - Numero: ${notaFiscalVinculada.numero}, Serie: ${notaFiscalVinculada.serie}, Chave: ${notaFiscalVinculada.chave_acesso}, Status: ${notaFiscalVinculada.nfse_status}`);
+          // Baixar XML se URL estiver disponível
+          if (xmlUrl && !notaFiscalVinculada.xml) {
+            try {
+              const axios = await import('axios');
+              const response = await axios.default.get(xmlUrl, { responseType: 'text' });
+              xmlData = response.data;
+              logger.info('XML baixado', { invoice_id: invoiceId });
+            } catch (error) {
+              logger.warn('Erro ao baixar XML', { invoice_id: invoiceId, error: error instanceof Error ? error.message : String(error) });
+            }
+          }
 
           await notaFiscalVinculada.update({
             nfse_status: nfseStatus,
             numero: invoiceNumber || invoice.number || notaFiscalVinculada.numero,
             serie: rpsSerie || notaFiscalVinculada.serie,
-            chave_acesso: chaveAcesso || notaFiscalVinculada.chave_acesso,
+            chave_acesso: chaveAcesso,
             pdf_url: pdfUrl || notaFiscalVinculada.pdf_url,
-            xml: xmlUrl || notaFiscalVinculada.xml
+            pdf_base64: pdfData || notaFiscalVinculada.pdf_base64,
+            xml: xmlData || notaFiscalVinculada.xml
           });
 
-          logger.info(`=== NOTA FISCAL ATUALIZADA ===
-Nota Fiscal ID: ${notaFiscalVinculada.id}
-Invoice ID: ${invoiceId}
-DADOS FINAIS:
-- Numero: ${notaFiscalVinculada.numero}
-- Serie: ${notaFiscalVinculada.serie}
-- Chave Acesso: ${notaFiscalVinculada.chave_acesso}
-- Status: ${notaFiscalVinculada.nfse_status}
-- PDF URL: ${notaFiscalVinculada.pdf_url}
-- XML URL: ${notaFiscalVinculada.xml}
-ALTERACOES FEITAS:
-- Numero alterado: ${(invoiceNumber || invoice.number) !== notaFiscalVinculada.numero}
-- Serie alterada: ${rpsSerie !== notaFiscalVinculada.serie}
-- Chave acesso alterada: ${chaveAcesso !== notaFiscalVinculada.chave_acesso}
-- Status alterado: ${nfseStatus !== notaFiscalVinculada.nfse_status}
-- PDF alterado: ${pdfUrl !== notaFiscalVinculada.pdf_url}
-- XML alterado: ${xmlUrl !== notaFiscalVinculada.xml}`);
+          logger.info('Nota fiscal atualizada via webhook', {
+            nota_fiscal_id: notaFiscalVinculada.id,
+            invoice_id: invoiceId,
+            status: nfseStatus,
+            chave_acesso: !!chaveAcesso,
+            pdf_baixado: !!pdfData,
+            xml_baixado: !!xmlData
+          });
         }
 
       return {
