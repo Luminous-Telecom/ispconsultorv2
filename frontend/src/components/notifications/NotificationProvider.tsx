@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { NotificationProviderProps, NotificationContextValue } from './types';
 import { useNotification } from './useNotification';
 
@@ -47,7 +47,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     zIndex,
   });
 
-  const contextValue: NotificationContextValue = {
+  const contextValue: NotificationContextValue = useMemo(() => ({
     notifications,
     config: defaultConfig,
     addNotification,
@@ -63,7 +63,23 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     warning,
     info,
     loading,
-  };
+  }), [
+    notifications,
+    defaultConfig,
+    addNotification,
+    removeNotification,
+    updateNotification,
+    clearAllNotifications,
+    pauseNotification,
+    resumeNotification,
+    pauseAllNotifications,
+    resumeAllNotifications,
+    success,
+    error,
+    warning,
+    info,
+    loading,
+  ]);
 
   return (
     <NotificationContext.Provider value={contextValue}>

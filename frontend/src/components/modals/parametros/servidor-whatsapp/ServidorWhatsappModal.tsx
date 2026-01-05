@@ -172,17 +172,19 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         whatsapp_cloud_phone_number_id: servidor.whatsapp_cloud_phone_number_id || '',
         whatsapp_cloud_business_account_id: servidor.whatsapp_cloud_business_account_id || ''
       });
-    } else {
+    } else if (!servidorAtivo) {
       setFormData(initialFormData);
     }
-  }, [servidorAtivo, initialFormData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [servidorAtivo?.data?.id, initialFormData]);
 
   // Forçar carregamento quando modal abrir
   useEffect(() => {
     if (show) {
       queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
     }
-  }, [show, queryClient]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -327,7 +329,8 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     if (skipWrapper && onHeaderActionsReady) {
       onHeaderActionsReady(headerActionsContent);
     }
-  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipWrapper, onHeaderActionsReady]);
 
   const modalContent = (
     <>

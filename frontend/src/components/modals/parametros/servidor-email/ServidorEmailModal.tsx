@@ -100,10 +100,11 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
         tentativas: servidorAtivo.data.tentativas,
         intervalo_tentativas: servidorAtivo.data.intervalo_tentativas
       });
-    } else {
+    } else if (!servidorAtivo) {
       setFormData(initialFormData);
     }
-  }, [servidorAtivo, initialFormData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [servidorAtivo?.data?.id, initialFormData]);
 
   useEffect(() => {
     if (mensagemData) {
@@ -205,7 +206,8 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
     if (skipWrapper && onHeaderActionsReady) {
       onHeaderActionsReady(headerActionsContent);
     }
-  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipWrapper, onHeaderActionsReady]);
 
   const modalContent = (
     <>
