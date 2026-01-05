@@ -310,8 +310,9 @@ export class AsaasWebhookService {
           const xmlUrl = invoice.xmlUrl || null;
           const rpsNumber = invoice.rpsNumber ? String(invoice.rpsNumber) : null;
           const rpsSerie = invoice.rpsSerie || null;
+
           const chaveAcesso = invoice.validationCode || invoice.accessKey || invoice.chaveAcesso || invoice.accessKeyCode || invoice.validation_code || null;
-          
+
           await notaFiscalVinculada.update({
             nfse_status: nfseStatus,
             numero: invoiceNumber || invoice.number || notaFiscalVinculada.numero,
