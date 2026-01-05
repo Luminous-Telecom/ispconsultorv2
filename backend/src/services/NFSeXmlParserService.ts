@@ -1,0 +1,352 @@
+import { logger } from '../utils/logger';
+
+export interface NFSeXmlData {
+  numero?: string;
+  serie?: string;
+  chave_acesso?: string;
+  data_emissao?: Date;
+  valor_total?: number;
+  valor_servicos?: number;
+  valor_deducoes?: number;
+  aliquota_iss?: number;
+  codigo_servico?: string;
+  discriminacao_servico?: string;
+  prestador?: {
+    cnpj?: string;
+    razao_social?: string;
+    nome_fantasia?: string;
+    endereco?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidade?: string;
+    uf?: string;
+    cep?: string;
+    telefone?: string;
+    email?: string;
+  };
+  tomador?: {
+    cnpj_cpf?: string;
+    razao_social?: string;
+    nome_fantasia?: string;
+    endereco?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidade?: string;
+    uf?: string;
+    cep?: string;
+    telefone?: string;
+    email?: string;
+  };
+  status?: string;
+  protocolo?: string;
+  data_autorizacao?: Date;
+  codigo_verificacao?: string;
+  numero_rps?: string;
+  serie_rps?: string;
+  natureza_operacao?: string;
+}
+
+export class NFSeXmlParserService {
+  /**
+   * Extrai dados de uma NFS-e a partir do XML
+   */
+  static async parseXml(xmlContent: string): Promise<NFSeXmlData> {
+    try {
+      if (!xmlContent || xmlContent.trim() === '') {
+        logger.warn('XML vazio ou nulo fornecido para parsing');
+        return {};
+      }
+
+      logger.info('Iniciando parsing do XML da NFS-e', {
+        xmlLength: xmlContent.length
+      });
+
+      const dados: NFSeXmlData = {};
+
+      // Remove namespaces para facilitar o parsing
+      const xmlLimpo = xmlContent.replace(/xmlns[^=]*="[^"]*"/g, '');
+
+      // Tenta diferentes padrões de XML de NFS-e
+
+      // 1. Padrão ABRASF (mais comum)
+      dados.numero = this.extractValue(xmlLimpo, /<Numero>(.*?)<\/Numero>/i) ||
+                    this.extractValue(xmlLimpo, /<NumeroNFe>(.*?)<\/NumeroNFe>/i) ||
+                    this.extractValue(xmlLimpo, /<NumeroNFSe>(.*?)<\/NumeroNFSe>/i);
+
+      dados.serie = this.extractValue(xmlLimpo, /<Serie>(.*?)<\/Serie>/i) ||
+                   this.extractValue(xmlLimpo, /<SerieNFe>(.*?)<\/SerieNFe>/i);
+
+      dados.chave_acesso = this.extractValue(xmlLimpo, /<ChaveNFe>(.*?)<\/ChaveNFe>/i) ||
+                          this.extractValue(xmlLimpo, /<ChaveAcesso>(.*?)<\/ChaveAcesso>/i) ||
+                          this.extractValue(xmlLimpo, /<Id>(.*?)<\/Id>/i);
+
+      // Data de emissão
+      const dataEmissaoStr = this.extractValue(xmlLimpo, /<DataEmissao>(.*?)<\/DataEmissao>/i) ||
+                            this.extractValue(xmlLimpo, /<DataHoraEmissao>(.*?)<\/DataHoraEmissao>/i) ||
+                            this.extractValue(xmlLimpo, /<DataNFSe>(.*?)<\/DataNFSe>/i);
+
+      if (dataEmissaoStr) {
+        dados.data_emissao = this.parseDate(dataEmissaoStr);
+      }
+
+      // Valores
+      const valorTotalStr = this.extractValue(xmlLimpo, /<ValorTotal>(.*?)<\/ValorTotal>/i) ||
+                           this.extractValue(xmlLimpo, /<ValorNFSe>(.*?)<\/ValorNFSe>/i) ||
+                           this.extractValue(xmlLimpo, /<ValorServicos>(.*?)<\/ValorServicos>/i);
+
+      if (valorTotalStr) {
+        dados.valor_total = this.parseDecimal(valorTotalStr);
+      }
+
+      const valorServicosStr = this.extractValue(xmlLimpo, /<ValorServicos>(.*?)<\/ValorServicos>/i) ||
+                              this.extractValue(xmlLimpo, /<ValorLiquidoNfse>(.*?)<\/ValorLiquidoNfse>/i);
+
+      if (valorServicosStr) {
+        dados.valor_servicos = this.parseDecimal(valorServicosStr);
+      }
+
+      const valorDeducoesStr = this.extractValue(xmlLimpo, /<ValorDeducoes>(.*?)<\/ValorDeducoes>/i);
+
+      if (valorDeducoesStr) {
+        dados.valor_deducoes = this.parseDecimal(valorDeducoesStr);
+      }
+
+      // Alíquota ISS
+      const aliquotaIssStr = this.extractValue(xmlLimpo, /<Aliquota>(.*?)<\/Aliquota>/i) ||
+                            this.extractValue(xmlLimpo, /<AliquotaISS>(.*?)<\/AliquotaISS>/i);
+
+      if (aliquotaIssStr) {
+        dados.aliquota_iss = this.parseDecimal(aliquotaIssStr);
+      }
+
+      // Serviço
+      dados.codigo_servico = this.extractValue(xmlLimpo, /<CodigoServico>(.*?)<\/CodigoServico>/i) ||
+                            this.extractValue(xmlLimpo, /<ItemListaServico>(.*?)<\/ItemListaServico>/i);
+
+      dados.discriminacao_servico = this.extractValue(xmlLimpo, /<Discriminacao>(.*?)<\/Discriminacao>/i) ||
+                                   this.extractValue(xmlLimpo, /<Descricao>(.*?)<\/Descricao>/i);
+
+      // Dados do Prestador
+      dados.prestador = {
+        cnpj: this.extractValue(xmlLimpo, /<Cnpj>(.*?)<\/Cnpj>/i) ||
+              this.extractValue(xmlLimpo, /<CNPJ>(.*?)<\/CNPJ>/i),
+        razao_social: this.extractValue(xmlLimpo, /<RazaoSocial>(.*?)<\/RazaoSocial>/i),
+        nome_fantasia: this.extractValue(xmlLimpo, /<NomeFantasia>(.*?)<\/NomeFantasia>/i),
+        endereco: this.extractValue(xmlLimpo, /<Endereco>(.*?)<\/Endereco>/i),
+        numero: this.extractValue(xmlLimpo, /<Numero>(.*?)<\/Numero>/i),
+        complemento: this.extractValue(xmlLimpo, /<Complemento>(.*?)<\/Complemento>/i),
+        bairro: this.extractValue(xmlLimpo, /<Bairro>(.*?)<\/Bairro>/i),
+        cidade: this.extractValue(xmlLimpo, /<Cidade>(.*?)<\/Cidade>/i),
+        uf: this.extractValue(xmlLimpo, /<Uf>(.*?)<\/Uf>/i) ||
+            this.extractValue(xmlLimpo, /<UF>(.*?)<\/UF>/i),
+        cep: this.extractValue(xmlLimpo, /<Cep>(.*?)<\/Cep>/i),
+        telefone: this.extractValue(xmlLimpo, /<Telefone>(.*?)<\/Telefone>/i),
+        email: this.extractValue(xmlLimpo, /<Email>(.*?)<\/Email>/i)
+      };
+
+      // Dados do Tomador
+      dados.tomador = {
+        cnpj_cpf: this.extractValue(xmlLimpo, /<CpfCnpj>(.*?)<\/CpfCnpj>/i) ||
+                 this.extractValue(xmlLimpo, /<CNPJ>(.*?)<\/CNPJ>/i) ||
+                 this.extractValue(xmlLimpo, /<CPF>(.*?)<\/CPF>/i),
+        razao_social: this.extractValue(xmlLimpo, /<RazaoSocialTomador>(.*?)<\/RazaoSocialTomador>/i),
+        endereco: this.extractValue(xmlLimpo, /<EnderecoTomador>(.*?)<\/EnderecoTomador>/i),
+        numero: this.extractValue(xmlLimpo, /<NumeroTomador>(.*?)<\/NumeroTomador>/i),
+        bairro: this.extractValue(xmlLimpo, /<BairroTomador>(.*?)<\/BairroTomador>/i),
+        cidade: this.extractValue(xmlLimpo, /<CidadeTomador>(.*?)<\/CidadeTomador>/i),
+        uf: this.extractValue(xmlLimpo, /<UfTomador>(.*?)<\/UfTomador>/i),
+        cep: this.extractValue(xmlLimpo, /<CepTomador>(.*?)<\/CepTomador>/i),
+        email: this.extractValue(xmlLimpo, /<EmailTomador>(.*?)<\/EmailTomador>/i)
+      };
+
+      // Status e outras informações
+      dados.status = this.extractValue(xmlLimpo, /<Status>(.*?)<\/Status>/i);
+      dados.protocolo = this.extractValue(xmlLimpo, /<Protocolo>(.*?)<\/Protocolo>/i);
+      dados.numero_rps = this.extractValue(xmlLimpo, /<NumeroRPS>(.*?)<\/NumeroRPS>/i);
+      dados.serie_rps = this.extractValue(xmlLimpo, /<SerieRPS>(.*?)<\/SerieRPS>/i);
+      dados.natureza_operacao = this.extractValue(xmlLimpo, /<NaturezaOperacao>(.*?)<\/NaturezaOperacao>/i);
+
+      // Data de autorização
+      const dataAutorizacaoStr = this.extractValue(xmlLimpo, /<DataAutorizacao>(.*?)<\/DataAutorizacao>/i);
+
+      if (dataAutorizacaoStr) {
+        dados.data_autorizacao = this.parseDate(dataAutorizacaoStr);
+      }
+
+      dados.codigo_verificacao = this.extractValue(xmlLimpo, /<CodigoVerificacao>(.*?)<\/CodigoVerificacao>/i);
+
+      logger.info('XML da NFS-e parseado com sucesso', {
+        numero: dados.numero,
+        serie: dados.serie,
+        chave_acesso: dados.chave_acesso,
+        valor_total: dados.valor_total,
+        prestador_cnpj: dados.prestador?.cnpj,
+        tomador_cnpj: dados.tomador?.cnpj_cpf
+      });
+
+      return dados;
+
+    } catch (error) {
+      logger.error('Erro ao fazer parsing do XML da NFS-e:', {
+        error: error instanceof Error ? error.message : String(error),
+        xmlLength: xmlContent?.length || 0
+      });
+      return {};
+    }
+  }
+
+  /**
+   * Extrai valor de uma tag XML usando regex
+   */
+  private static extractValue(xml: string, regex: RegExp): string | undefined {
+    const match = xml.match(regex);
+    return match ? match[1]?.trim() : undefined;
+  }
+
+  /**
+   * Converte string para Date
+   */
+  private static parseDate(dateStr: string): Date | undefined {
+    try {
+      // Tenta diferentes formatos de data
+      const formats = [
+        /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/, // ISO
+        /^(\d{4})-(\d{2})-(\d{2})/, // YYYY-MM-DD
+        /^(\d{2})\/(\d{2})\/(\d{4})/, // DD/MM/YYYY
+        /^(\d{4})\/(\d{2})\/(\d{2})/  // YYYY/MM/DD
+      ];
+
+      for (const format of formats) {
+        const match = dateStr.match(format);
+        if (match) {
+          if (match.length === 7) { // Com hora
+            return new Date(
+              parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]),
+              parseInt(match[4]), parseInt(match[5]), parseInt(match[6])
+            );
+          } else { // Sem hora
+            return new Date(parseInt(match[3] || match[1]), parseInt(match[2]) - 1, parseInt(match[1] === match[3] ? match[2] : match[1]));
+          }
+        }
+      }
+
+      // Última tentativa: construtor nativo
+      const date = new Date(dateStr);
+      return isNaN(date.getTime()) ? undefined : date;
+
+    } catch (error) {
+      logger.debug('Erro ao parsear data:', { dateStr, error });
+      return undefined;
+    }
+  }
+
+  /**
+   * Converte string para decimal
+   */
+  private static parseDecimal(valueStr: string): number | undefined {
+    try {
+      // Remove caracteres não numéricos exceto . e ,
+      const cleaned = valueStr.replace(/[^\d.,]/g, '');
+
+      // Converte , para . e depois para número
+      const normalized = cleaned.replace(',', '.');
+      const parsed = parseFloat(normalized);
+
+      return isNaN(parsed) ? undefined : parsed;
+    } catch (error) {
+      logger.debug('Erro ao parsear decimal:', { valueStr, error });
+      return undefined;
+    }
+  }
+
+  /**
+   * Atualiza uma nota fiscal com dados extraídos do XML
+   */
+  static async atualizarNotaFiscalComXml(notaFiscalId: number, xmlContent: string): Promise<boolean> {
+    try {
+      const dadosXml = await this.parseXml(xmlContent);
+
+      if (Object.keys(dadosXml).length === 0) {
+        logger.warn('Nenhum dado extraído do XML', { notaFiscalId });
+        return false;
+      }
+
+      // Importa o modelo aqui para evitar dependências circulares
+      const { NotaFiscal } = await import('../models/NotaFiscal');
+
+      const notaFiscal = await NotaFiscal.findByPk(notaFiscalId);
+      if (!notaFiscal) {
+        logger.error('Nota fiscal não encontrada para atualização', { notaFiscalId });
+        return false;
+      }
+
+      const updates: Partial<typeof notaFiscal> = {};
+
+      // Atualiza campos básicos
+      if (dadosXml.numero && !notaFiscal.numero) {
+        updates.numero = dadosXml.numero;
+      }
+
+      if (dadosXml.serie && !notaFiscal.serie) {
+        updates.serie = dadosXml.serie;
+      }
+
+      if (dadosXml.chave_acesso && !notaFiscal.chave_acesso) {
+        updates.chave_acesso = dadosXml.chave_acesso;
+      }
+
+      if (dadosXml.data_emissao && !notaFiscal.data_emissao) {
+        updates.data_emissao = dadosXml.data_emissao;
+      }
+
+      if (dadosXml.valor_total && !notaFiscal.valor_total) {
+        updates.valor_total = dadosXml.valor_total;
+      }
+
+      if (dadosXml.valor_servicos && !notaFiscal.valor_servicos) {
+        updates.valor_servicos = dadosXml.valor_servicos;
+      }
+
+      if (dadosXml.valor_deducoes && !notaFiscal.valor_desconto) {
+        updates.valor_desconto = dadosXml.valor_deducoes;
+      }
+
+      if (dadosXml.aliquota_iss && !notaFiscal.aliquota_iss) {
+        updates.aliquota_iss = dadosXml.aliquota_iss;
+      }
+
+      if (dadosXml.discriminacao_servico && !notaFiscal.descricao) {
+        updates.descricao = dadosXml.discriminacao_servico;
+      }
+
+      if (dadosXml.protocolo && !notaFiscal.protocolo) {
+        updates.protocolo = dadosXml.protocolo;
+      }
+
+      if (dadosXml.data_autorizacao && !notaFiscal.data_autorizacao) {
+        updates.data_autorizacao = dadosXml.data_autorizacao;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await notaFiscal.update(updates);
+        logger.info('Nota fiscal atualizada com dados do XML', {
+          notaFiscalId,
+          camposAtualizados: Object.keys(updates)
+        });
+        return true;
+      }
+
+      logger.info('Nenhum campo precisou ser atualizado', { notaFiscalId });
+      return true;
+
+    } catch (error) {
+      logger.error('Erro ao atualizar nota fiscal com XML:', {
+        notaFiscalId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return false;
+    }
+  }
+}

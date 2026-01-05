@@ -383,6 +383,49 @@ export class NFeService {
   }
 
   /**
+   * Atualiza nota fiscal com dados extraídos do XML
+   */
+  static async atualizarComXml(notaFiscalId: number): Promise<{ success: boolean; mensagem: string }> {
+    try {
+      const notaFiscal = await NotaFiscal.findByPk(notaFiscalId);
+      if (!notaFiscal) {
+        return {
+          success: false,
+          mensagem: 'Nota fiscal não encontrada'
+        };
+      }
+
+      if (!notaFiscal.xml) {
+        return {
+          success: false,
+          mensagem: 'XML não disponível para esta nota fiscal'
+        };
+      }
+
+      const { NFSeXmlParserService } = await import('./NFSeXmlParserService');
+      const sucesso = await NFSeXmlParserService.atualizarNotaFiscalComXml(notaFiscalId, notaFiscal.xml);
+
+      if (sucesso) {
+        return {
+          success: true,
+          mensagem: 'Nota fiscal atualizada com dados do XML'
+        };
+      } else {
+        return {
+          success: false,
+          mensagem: 'Falha ao extrair dados do XML'
+        };
+      }
+    } catch (error) {
+      logger.error('Erro ao atualizar NF com XML:', error);
+      return {
+        success: false,
+        mensagem: 'Erro interno ao processar XML'
+      };
+    }
+  }
+
+  /**
    * Cancela uma NFS-e
    */
   static async cancelarNFe(notaFiscalId: number, justificativa: string): Promise<{

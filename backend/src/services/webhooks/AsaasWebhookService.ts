@@ -338,6 +338,15 @@ export class AsaasWebhookService {
                 const response = await axios.default.get(xmlUrl, { responseType: 'text' });
                 xmlData = response.data;
                 logger.info(`XML baixado: ${xmlData.length} chars`);
+
+                // Parsear XML e extrair dados automaticamente
+                if (xmlData) {
+                  const { NFSeXmlParserService } = await import('../../services/NFSeXmlParserService');
+                  const sucesso = await NFSeXmlParserService.atualizarNotaFiscalComXml(notaFiscalVinculada.id, xmlData);
+                  if (sucesso) {
+                    logger.info('Dados extraídos do XML com sucesso', { nota_id: notaFiscalVinculada.id });
+                  }
+                }
               } catch (error) {
                 logger.warn(`Erro XML: ${error instanceof Error ? error.message : String(error)}`);
               }

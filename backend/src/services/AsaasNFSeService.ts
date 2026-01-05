@@ -136,8 +136,40 @@ export class AsaasNFSeService {
           // Consultar invoice novamente após autorização para obter dados completos
           try {
             const invoiceDetails = await apiClient.get(`/invoices/${invoiceId}`);
-            
-            return this.processarRespostaNota(invoiceDetails.data || authorizeResponse.data, invoiceId);
+            const resultado = this.processarRespostaNota(invoiceDetails.data || authorizeResponse.data, invoiceId);
+
+            // Tentar parsear XML se disponível para extrair dados completos
+            if (resultado.xml) {
+              try {
+                const axios = await import('axios');
+                const xmlResponse = await axios.default.get(resultado.xml, { responseType: 'text' });
+                const { NFSeXmlParserService } = await import('./NFSeXmlParserService');
+                const dadosXmlExtraidos = await NFSeXmlParserService.parseXml(xmlResponse.data);
+
+                // Atualizar resultado com dados do XML se disponíveis
+                if (dadosXmlExtraidos.numero && !resultado.numero) {
+                  resultado.numero = dadosXmlExtraidos.numero;
+                }
+                if (dadosXmlExtraidos.serie && !resultado.serie) {
+                  resultado.serie = dadosXmlExtraidos.serie;
+                }
+                if (dadosXmlExtraidos.chave_acesso && !resultado.chave_acesso) {
+                  resultado.chave_acesso = dadosXmlExtraidos.chave_acesso;
+                }
+
+                logger.info('Dados extraídos do XML após autorização', {
+                  numero: dadosXmlExtraidos.numero,
+                  chave_acesso: dadosXmlExtraidos.chave_acesso,
+                  valor_total: dadosXmlExtraidos.valor_total
+                });
+              } catch (xmlError) {
+                logger.warn('Não foi possível extrair dados do XML após autorização', {
+                  error: xmlError instanceof Error ? xmlError.message : String(xmlError)
+                });
+              }
+            }
+
+            return resultado;
           } catch (detailError) {
             logger.warn('Erro ao consultar detalhes da invoice', {
               invoice_id: invoiceId,
@@ -170,7 +202,40 @@ export class AsaasNFSeService {
           
           // Retornar resposta da criação (invoice agendada)
           // O webhook atualizará quando a invoice for autorizada
-          return this.processarRespostaNota(response.data, invoiceId);
+          const resultado = this.processarRespostaNota(response.data, invoiceId);
+
+          // Tentar parsear XML se disponível para extrair dados completos
+          if (resultado.xml) {
+            try {
+              const axios = await import('axios');
+              const xmlResponse = await axios.default.get(resultado.xml, { responseType: 'text' });
+              const { NFSeXmlParserService } = await import('./NFSeXmlParserService');
+              const dadosXmlExtraidos = await NFSeXmlParserService.parseXml(xmlResponse.data);
+
+              // Atualizar resultado com dados do XML se disponíveis
+              if (dadosXmlExtraidos.numero && !resultado.numero) {
+                resultado.numero = dadosXmlExtraidos.numero;
+              }
+              if (dadosXmlExtraidos.serie && !resultado.serie) {
+                resultado.serie = dadosXmlExtraidos.serie;
+              }
+              if (dadosXmlExtraidos.chave_acesso && !resultado.chave_acesso) {
+                resultado.chave_acesso = dadosXmlExtraidos.chave_acesso;
+              }
+
+              logger.info('Dados extraídos do XML na emissão', {
+                numero: dadosXmlExtraidos.numero,
+                chave_acesso: dadosXmlExtraidos.chave_acesso,
+                valor_total: dadosXmlExtraidos.valor_total
+              });
+            } catch (xmlError) {
+              logger.warn('Não foi possível extrair dados do XML na emissão', {
+                error: xmlError instanceof Error ? xmlError.message : String(xmlError)
+              });
+            }
+          }
+
+          return resultado;
         }
       }
 
