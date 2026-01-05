@@ -230,28 +230,57 @@ export class NotaFiscalPDFService {
     let logoNfseBase64 = '';
     const logoFileName = 'logo-nfse-assinatura-horizontal.svg';
 
-    // Usar EXATAMENTE a mesma lógica dos boletos, mas para pasta sistema
-    const imagesPath = path.join(__dirname, '../../images/sistema');
-    const logoPath = fs.existsSync(imagesPath) ? path.join(imagesPath, logoFileName) : path.join(process.cwd(), 'images/sistema', logoFileName);
+    // Lógica robusta para múltiplos ambientes
+    let logoPath = '';
+
+    // 1. Tentar caminho relativo (desenvolvimento/dist)
+    const relativePath = path.join(__dirname, '../../images/sistema');
+    if (fs.existsSync(relativePath)) {
+      logoPath = path.join(relativePath, logoFileName);
+    }
+
+    // 2. Tentar process.cwd() + images/sistema (produção padrão)
+    if (!logoPath || !fs.existsSync(logoPath)) {
+      const cwdPath = path.join(process.cwd(), 'images/sistema');
+      if (fs.existsSync(cwdPath)) {
+        logoPath = path.join(cwdPath, logoFileName);
+      }
+    }
+
+    // 3. Tentar process.cwd() + dist/images/sistema (fallback dist)
+    if (!logoPath || !fs.existsSync(logoPath)) {
+      const distPath = path.join(process.cwd(), 'dist/images/sistema');
+      if (fs.existsSync(distPath)) {
+        logoPath = path.join(distPath, logoFileName);
+      }
+    }
 
     console.log('DEBUG LOGO NFS-E - Tentando carregar logo:', {
       nota_id: notaFiscal.id,
       __dirname,
       processCwd: process.cwd(),
-      imagesPath,
-      imagesPathExists: fs.existsSync(imagesPath),
-      logoPath,
-      logoPathExists: fs.existsSync(logoPath)
+      relativePath,
+      relativePathExists: fs.existsSync(relativePath),
+      cwdPath: path.join(process.cwd(), 'images/sistema'),
+      cwdPathExists: fs.existsSync(path.join(process.cwd(), 'images/sistema')),
+      distPath: path.join(process.cwd(), 'dist/images/sistema'),
+      distPathExists: fs.existsSync(path.join(process.cwd(), 'dist/images/sistema')),
+      finalLogoPath: logoPath,
+      finalLogoPathExists: logoPath ? fs.existsSync(logoPath) : false
     });
 
     logger.error('DEBUG LOGO NFS-E - Tentando carregar logo', {
       nota_id: notaFiscal.id,
       __dirname,
       processCwd: process.cwd(),
-      imagesPath,
-      imagesPathExists: fs.existsSync(imagesPath),
-      logoPath,
-      logoPathExists: fs.existsSync(logoPath)
+      relativePath,
+      relativePathExists: fs.existsSync(relativePath),
+      cwdPath: path.join(process.cwd(), 'images/sistema'),
+      cwdPathExists: fs.existsSync(path.join(process.cwd(), 'images/sistema')),
+      distPath: path.join(process.cwd(), 'dist/images/sistema'),
+      distPathExists: fs.existsSync(path.join(process.cwd(), 'dist/images/sistema')),
+      finalLogoPath: logoPath,
+      finalLogoPathExists: logoPath ? fs.existsSync(logoPath) : false
     });
 
     if (fs.existsSync(logoPath)) {
