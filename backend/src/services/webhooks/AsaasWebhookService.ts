@@ -193,7 +193,7 @@ export class AsaasWebhookService {
    * @param invoice Objeto invoice do payload
    */
   static async processInvoiceWebhook(
-    invoice: { id?: string; number?: string; status?: string; customer?: string; pdfUrl?: string; invoiceUrl?: string; url?: string }
+    invoice: AsaasPaymentPayload['invoice']
   ): Promise<{ success: boolean; message: string }> {
     try {
       if (!invoice || !invoice.id) {
@@ -306,14 +306,14 @@ export class AsaasWebhookService {
         // Atualizar nota fiscal (status, número, série, chave de acesso, PDF URL e XML URL)
         if (notaFiscalVinculada) {
           const pdfUrl = invoice.pdfUrl || invoice.invoiceUrl || invoice.url || null;
-          const xmlUrl = (invoice as any).xmlUrl || null;
-          const rpsNumber = (invoice as any).rpsNumber || null;
-          const rpsSerie = (invoice as any).rpsSerie || null;
-          const chaveAcesso = (invoice as any).validationCode || (invoice as any).accessKey || (invoice as any).chaveAcesso || (invoice as any).accessKeyCode || (invoice as any).validation_code || null;
+          const xmlUrl = invoice.xmlUrl || null;
+          const rpsNumber = invoice.rpsNumber ? String(invoice.rpsNumber) : null;
+          const rpsSerie = invoice.rpsSerie || null;
+          const chaveAcesso = invoice.validationCode || invoice.accessKey || invoice.chaveAcesso || invoice.accessKeyCode || invoice.validation_code || null;
           
           await notaFiscalVinculada.update({
             nfse_status: nfseStatus,
-            numero: invoiceNumber || (invoice as any).number || notaFiscalVinculada.numero,
+            numero: invoiceNumber || invoice.number || notaFiscalVinculada.numero,
             serie: rpsSerie || notaFiscalVinculada.serie,
             chave_acesso: chaveAcesso || notaFiscalVinculada.chave_acesso,
             pdf_url: pdfUrl || notaFiscalVinculada.pdf_url,

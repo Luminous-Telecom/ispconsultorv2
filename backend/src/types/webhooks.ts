@@ -80,6 +80,9 @@ export interface EfiDadosAtualizados {
 }
 
 export interface AsaasPaymentPayload {
+  event?: string;
+  id?: string;
+  dateCreated?: string;
   payment?: {
     id?: string;
     status?: string;
@@ -101,6 +104,32 @@ export interface AsaasPaymentPayload {
     number?: string;
     status?: string;
     customer?: string;
+    pdfUrl?: string;
+    xmlUrl?: string;
+    invoiceUrl?: string;
+    url?: string;
+    rpsNumber?: string | number;
+    rpsSerie?: string;
+    validationCode?: string;
+    accessKey?: string;
+    chaveAcesso?: string;
+    accessKeyCode?: string;
+    validation_code?: string;
+    effectiveDate?: string;
+    value?: number;
+    deductions?: number;
+    serviceDescription?: string;
+    municipalServiceCode?: string;
+    municipalServiceName?: string;
+    taxes?: {
+      retainIss?: boolean;
+      iss?: number;
+      cofins?: number;
+      csll?: number;
+      inss?: number;
+      ir?: number;
+      pis?: number;
+    };
   };
   token?: string;
 }
