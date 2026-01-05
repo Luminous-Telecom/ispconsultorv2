@@ -232,7 +232,17 @@ export class NotaFiscalPDFService {
     const imagesPath = path.join(__dirname, '../../images/sistema');
     const logoPath = fs.existsSync(imagesPath) ? path.join(imagesPath, logoFileName) : path.join(process.cwd(), 'images/sistema', logoFileName);
 
-    logger.info('Tentando carregar logo NFS-e', {
+    console.log('DEBUG LOGO NFS-E - Tentando carregar logo:', {
+      nota_id: notaFiscal.id,
+      __dirname,
+      processCwd: process.cwd(),
+      imagesPath,
+      imagesPathExists: fs.existsSync(imagesPath),
+      logoPath,
+      logoPathExists: fs.existsSync(logoPath)
+    });
+
+    logger.error('DEBUG LOGO NFS-E - Tentando carregar logo', {
       nota_id: notaFiscal.id,
       __dirname,
       processCwd: process.cwd(),
@@ -246,20 +256,37 @@ export class NotaFiscalPDFService {
       try {
         const logoSvg = fs.readFileSync(logoPath, 'utf-8');
         logoNfseBase64 = `data:image/svg+xml;base64,${Buffer.from(logoSvg).toString('base64')}`;
-        logger.info('Logo NFS-e carregada com sucesso', {
+        console.log('DEBUG LOGO NFS-E - Logo carregada com sucesso:', {
+          nota_id: notaFiscal.id,
+          logoPath,
+          logoSize: logoSvg.length
+        });
+
+        logger.error('DEBUG LOGO NFS-E - Logo carregada com sucesso', {
           nota_id: notaFiscal.id,
           logoPath,
           logoSize: logoSvg.length
         });
       } catch (error) {
-        logger.error('Erro ao ler logo NFS-e', {
+        console.log('DEBUG LOGO NFS-E - Erro ao ler logo:', {
+          nota_id: notaFiscal.id,
+          logoPath,
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
+
+        logger.error('DEBUG LOGO NFS-E - Erro ao ler logo', {
           nota_id: notaFiscal.id,
           logoPath,
           error: error instanceof Error ? error.message : 'Erro desconhecido'
         });
       }
     } else {
-      logger.warn('Logo NFS-e não encontrada', {
+      console.log('DEBUG LOGO NFS-E - Logo não encontrada:', {
+        nota_id: notaFiscal.id,
+        logoPath
+      });
+
+      logger.error('DEBUG LOGO NFS-E - Logo não encontrada', {
         nota_id: notaFiscal.id,
         logoPath
       });
