@@ -230,14 +230,25 @@ export class NotaFiscalPDFService {
     let logoNfseBase64 = '';
     const logoFileName = 'logo-nfse-assinatura-horizontal.svg';
 
-    // Usar mesma lógica dos boletos - pasta bancos funciona em produção
-    const imagesPath = path.join(__dirname, '../../images/bancos');
+    // Verificar se está em produção (build) ou desenvolvimento (dist)
+    const isProduction = __dirname.includes('/build/') || __dirname.includes('/dist/');
+
+    let imagesPath;
+    if (isProduction) {
+      // Em produção: backend/build ou backend/dist
+      imagesPath = path.join(__dirname, '../../../images/bancos');
+    } else {
+      // Em desenvolvimento
+      imagesPath = path.join(__dirname, '../../images/bancos');
+    }
+
     const logoPath = fs.existsSync(imagesPath) ? path.join(imagesPath, logoFileName) : path.join(process.cwd(), 'images/bancos', logoFileName);
 
     console.log('DEBUG LOGO NFS-E - Tentando carregar logo:', {
       nota_id: notaFiscal.id,
       __dirname,
       processCwd: process.cwd(),
+      isProduction,
       imagesPath,
       imagesPathExists: fs.existsSync(imagesPath),
       logoPath,
@@ -248,6 +259,7 @@ export class NotaFiscalPDFService {
       nota_id: notaFiscal.id,
       __dirname,
       processCwd: process.cwd(),
+      isProduction,
       imagesPath,
       imagesPathExists: fs.existsSync(imagesPath),
       logoPath,
