@@ -232,24 +232,36 @@ export class NotaFiscalPDFService {
     const imagesPath = path.join(__dirname, '../../images/sistema');
     const logoPath = fs.existsSync(imagesPath) ? path.join(imagesPath, logoFileName) : path.join(process.cwd(), 'images/sistema', logoFileName);
 
+    logger.info('Tentando carregar logo NFS-e', {
+      nota_id: notaFiscal.id,
+      __dirname,
+      processCwd: process.cwd(),
+      imagesPath,
+      imagesPathExists: fs.existsSync(imagesPath),
+      logoPath,
+      logoPathExists: fs.existsSync(logoPath)
+    });
+
     if (fs.existsSync(logoPath)) {
       try {
         const logoSvg = fs.readFileSync(logoPath, 'utf-8');
         logoNfseBase64 = `data:image/svg+xml;base64,${Buffer.from(logoSvg).toString('base64')}`;
-        logger.debug('Logo NFSe carregado com sucesso', {
+        logger.info('Logo NFS-e carregada com sucesso', {
           nota_id: notaFiscal.id,
+          logoPath,
           logoSize: logoSvg.length
         });
       } catch (error) {
-        logger.warn('Erro ao processar logo NFSe, continuando sem logo', {
+        logger.error('Erro ao ler logo NFS-e', {
           nota_id: notaFiscal.id,
           logoPath,
           error: error instanceof Error ? error.message : 'Erro desconhecido'
         });
       }
     } else {
-      logger.debug('Logo NFSe não encontrado, usando template sem logo', {
-        nota_id: notaFiscal.id
+      logger.warn('Logo NFS-e não encontrada', {
+        nota_id: notaFiscal.id,
+        logoPath
       });
     }
 
