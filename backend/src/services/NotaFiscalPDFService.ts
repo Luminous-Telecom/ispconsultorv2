@@ -314,9 +314,6 @@ export class NotaFiscalPDFService {
     const cliente = notaFiscal.cliente;
     const logoNfseHtml = logoNfseBase64 ? `<img src="${logoNfseBase64}" style="max-width: 200px; height: auto; display: block; margin: 0 auto 10px;" />` : '';
 
-    console.log('DEBUG LOGO NFS-E - logoNfseBase64 preview:', logoNfseBase64.substring(0, 100) + '...');
-    console.log('DEBUG LOGO NFS-E - logoNfseHtml:', logoNfseHtml);
-
     logger.error('DEBUG LOGO NFS-E - Processando template', {
       nota_id: notaFiscal.id,
       hasLogo: !!logoNfseBase64,
