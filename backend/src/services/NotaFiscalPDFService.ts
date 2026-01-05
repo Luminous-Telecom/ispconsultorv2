@@ -21,15 +21,12 @@ export class NotaFiscalPDFService {
   static async gerarPdf(notaFiscal: NotaFiscal & { cliente?: Cliente | null }): Promise<Buffer> {
     try {
       logger.info('Iniciando geração de PDF da NFS-e', {
-        nota_id: notaFiscal.id,
-        cliente_id: notaFiscal.cliente?.id,
-        numero: notaFiscal.numero,
-        serie: notaFiscal.serie
+        nota_id: notaFiscal.id
       });
 
       const html = await NotaFiscalPDFService.processarNfseHtml(notaFiscal);
 
-      logger.info('HTML processado para PDF', {
+      logger.debug('HTML processado para PDF', {
         nota_id: notaFiscal.id,
         htmlLength: html.length,
         hasLogoInHtml: html.includes('data:image/svg+xml;base64,'),
@@ -276,12 +273,9 @@ export class NotaFiscalPDFService {
     const cliente = notaFiscal.cliente;
     const logoNfseHtml = logoNfseBase64 ? `<img src="${logoNfseBase64}" style="max-width: 200px; height: auto; display: block; margin: 0 auto 10px;" />` : '';
 
-    logger.info('Processando template NFSe', {
+    logger.debug('Processando template NFSe', {
       nota_id: notaFiscal.id,
-      logoNfseBase64Present: !!logoNfseBase64,
-      logoNfseBase64Length: logoNfseBase64.length,
-      logoNfseHtmlLength: logoNfseHtml.length,
-      logoNfseHtmlPreview: logoNfseHtml.substring(0, 100)
+      hasLogo: !!logoNfseBase64
     });
 
     const templateVars: Record<string, string> = {
@@ -356,30 +350,27 @@ export class NotaFiscalPDFService {
       totalReplacements += matchesBefore;
     });
 
-    logger.info('Variáveis do template processadas', {
+    logger.debug('Variáveis do template processadas', {
       nota_id: notaFiscal.id,
       totalVariables: totalVariablesProcessed,
-      totalReplacements,
-      templateLength: template.length
+      totalReplacements
     });
 
     // Validar template processado
     const remainingVariables = template.match(/\{\{[^}]+\}\}/g) || [];
     const hasLogoInFinalHtml = template.includes('data:image/svg+xml;base64,');
 
-    logger.info('Template processado e validado', {
+    logger.info('Template NFSe processado', {
       nota_id: notaFiscal.id,
       templateLength: template.length,
-      hasLogoInFinalHtml,
-      logoOccurrences: (template.match(/data:image\/svg\+xml;base64,/g) || []).length,
-      remainingVariablesCount: remainingVariables.length,
-      remainingVariables: remainingVariables.length > 0 ? remainingVariables.slice(0, 5) : []
+      hasLogo: hasLogoInFinalHtml
     });
 
     if (remainingVariables.length > 0) {
-      logger.warn('Variáveis não substituídas encontradas no template', {
+      logger.warn('Variáveis não substituídas no template NFSe', {
         nota_id: notaFiscal.id,
-        remainingVariables
+        count: remainingVariables.length,
+        variables: remainingVariables.slice(0, 3)
       });
     }
 
