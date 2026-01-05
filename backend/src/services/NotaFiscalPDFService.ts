@@ -230,28 +230,70 @@ export class NotaFiscalPDFService {
     let logoNfseBase64 = '';
     const logoFileName = 'logo-nfse-assinatura-horizontal.svg';
 
-    // Usar a mesma lógica dos boletos para consistência
-    const imagesPath = path.join(__dirname, '../../images/sistema');
-    const logoPath = fs.existsSync(imagesPath) ? path.join(imagesPath, logoFileName) : path.join(process.cwd(), 'images/sistema', logoFileName);
+    // Usar múltiplos fallbacks para máxima compatibilidade
+    let logoPath = '';
+
+    // 1. Tentar pasta sistema (nova localização)
+    const sistemaImagesPath = path.join(__dirname, '../../images/sistema');
+    if (fs.existsSync(sistemaImagesPath)) {
+      logoPath = path.join(sistemaImagesPath, logoFileName);
+    }
+
+    // 2. Tentar pasta sistema em process.cwd()
+    if (!logoPath || !fs.existsSync(logoPath)) {
+      const sistemaCwdPath = path.join(process.cwd(), 'images/sistema');
+      if (fs.existsSync(sistemaCwdPath)) {
+        logoPath = path.join(sistemaCwdPath, logoFileName);
+      }
+    }
+
+    // 3. Fallback: usar pasta bancos (como os boletos) - colocar logo lá temporariamente
+    if (!logoPath || !fs.existsSync(logoPath)) {
+      const bancosImagesPath = path.join(__dirname, '../../images/bancos');
+      if (fs.existsSync(bancosImagesPath)) {
+        // Usar nome diferente para não confundir com logos de bancos
+        logoPath = path.join(bancosImagesPath, 'logo-nfse.svg');
+      }
+    }
+
+    // 4. Último fallback: bancos em process.cwd()
+    if (!logoPath || !fs.existsSync(logoPath)) {
+      const bancosCwdPath = path.join(process.cwd(), 'images/bancos');
+      if (fs.existsSync(bancosCwdPath)) {
+        logoPath = path.join(bancosCwdPath, 'logo-nfse.svg');
+      }
+    }
 
     console.log('DEBUG LOGO NFS-E - Tentando carregar logo:', {
       nota_id: notaFiscal.id,
       __dirname,
       processCwd: process.cwd(),
-      imagesPath,
-      imagesPathExists: fs.existsSync(imagesPath),
-      logoPath,
-      logoPathExists: fs.existsSync(logoPath)
+      sistemaImagesPath: sistemaImagesPath,
+      sistemaImagesPathExists: fs.existsSync(sistemaImagesPath),
+      sistemaCwdPath: path.join(process.cwd(), 'images/sistema'),
+      sistemaCwdPathExists: fs.existsSync(path.join(process.cwd(), 'images/sistema')),
+      bancosImagesPath: path.join(__dirname, '../../images/bancos'),
+      bancosImagesPathExists: fs.existsSync(path.join(__dirname, '../../images/bancos')),
+      bancosCwdPath: path.join(process.cwd(), 'images/bancos'),
+      bancosCwdPathExists: fs.existsSync(path.join(process.cwd(), 'images/bancos')),
+      finalLogoPath: logoPath,
+      finalLogoPathExists: logoPath ? fs.existsSync(logoPath) : false
     });
 
     logger.error('DEBUG LOGO NFS-E - Tentando carregar logo', {
       nota_id: notaFiscal.id,
       __dirname,
       processCwd: process.cwd(),
-      imagesPath,
-      imagesPathExists: fs.existsSync(imagesPath),
-      logoPath,
-      logoPathExists: fs.existsSync(logoPath)
+      sistemaImagesPath: sistemaImagesPath,
+      sistemaImagesPathExists: fs.existsSync(sistemaImagesPath),
+      sistemaCwdPath: path.join(process.cwd(), 'images/sistema'),
+      sistemaCwdPathExists: fs.existsSync(path.join(process.cwd(), 'images/sistema')),
+      bancosImagesPath: path.join(__dirname, '../../images/bancos'),
+      bancosImagesPathExists: fs.existsSync(path.join(__dirname, '../../images/bancos')),
+      bancosCwdPath: path.join(process.cwd(), 'images/bancos'),
+      bancosCwdPathExists: fs.existsSync(path.join(process.cwd(), 'images/bancos')),
+      finalLogoPath: logoPath,
+      finalLogoPathExists: logoPath ? fs.existsSync(logoPath) : false
     });
 
     if (fs.existsSync(logoPath)) {
