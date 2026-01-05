@@ -207,12 +207,12 @@ Invoice AccessKey: ${invoice?.accessKey}
 Invoice ChaveAcesso: ${invoice?.chaveAcesso}
 Invoice AccessKeyCode: ${invoice?.accessKeyCode}
 Invoice Validation_Code: ${invoice?.validation_code}
-Invoice Code: ${invoice?.code}
-Invoice AuthorizationCode: ${invoice?.authorizationCode}
-Invoice Protocol: ${invoice?.protocol}
-Invoice Key: ${invoice?.key}
-Invoice NfseKey: ${invoice?.nfseKey}
-Invoice InvoiceKey: ${invoice?.invoiceKey}
+Invoice Code: ${(invoice as any)?.code}
+Invoice AuthorizationCode: ${(invoice as any)?.authorizationCode}
+Invoice Protocol: ${(invoice as any)?.protocol}
+Invoice Key: ${(invoice as any)?.key}
+Invoice NfseKey: ${(invoice as any)?.nfseKey}
+Invoice InvoiceKey: ${(invoice as any)?.invoiceKey}
 Invoice PDF URL: ${invoice?.pdfUrl}
 Invoice XML URL: ${invoice?.xmlUrl}
 Invoice RPS Number: ${invoice?.rpsNumber}
@@ -346,9 +346,9 @@ XML URL: ${invoice.xmlUrl}`);
 
           // Tentar múltiplos campos possíveis onde a chave de acesso pode vir
           const chaveAcesso = invoice.validationCode || invoice.accessKey || invoice.chaveAcesso ||
-                             invoice.accessKeyCode || invoice.validation_code || invoice.code ||
-                             invoice.authorizationCode || invoice.protocol || invoice.key ||
-                             invoice.nfseKey || invoice.invoiceKey || null;
+                             invoice.accessKeyCode || invoice.validation_code || (invoice as any).code ||
+                             (invoice as any).authorizationCode || (invoice as any).protocol || (invoice as any).key ||
+                             (invoice as any).nfseKey || (invoice as any).invoiceKey || null;
 
           // Log detalhado de todos os campos possíveis da chave de acesso
           logger.info(`=== DEBUG CAMPOS CHAVE ACESSO ===
@@ -357,12 +357,12 @@ accessKey: ${invoice.accessKey}
 chaveAcesso: ${invoice.chaveAcesso}
 accessKeyCode: ${invoice.accessKeyCode}
 validation_code: ${invoice.validation_code}
-code: ${invoice.code}
-authorizationCode: ${invoice.authorizationCode}
-protocol: ${invoice.protocol}
-key: ${invoice.key}
-nfseKey: ${invoice.nfseKey}
-invoiceKey: ${invoice.invoiceKey}
+code: ${(invoice as any).code}
+authorizationCode: ${(invoice as any).authorizationCode}
+protocol: ${(invoice as any).protocol}
+key: ${(invoice as any).key}
+nfseKey: ${(invoice as any).nfseKey}
+invoiceKey: ${(invoice as any).invoiceKey}
 CHAVE FINAL ENCONTRADA: ${chaveAcesso}`);
 
           logger.info(`=== PROCESSANDO CAMPOS NFS-E ===
@@ -374,12 +374,12 @@ Chave Acesso Origem: ${chaveAcesso === invoice.validationCode ? 'validationCode'
                       chaveAcesso === invoice.chaveAcesso ? 'chaveAcesso' :
                       chaveAcesso === invoice.accessKeyCode ? 'accessKeyCode' :
                       chaveAcesso === invoice.validation_code ? 'validation_code' :
-                      chaveAcesso === invoice.code ? 'code' :
-                      chaveAcesso === invoice.authorizationCode ? 'authorizationCode' :
-                      chaveAcesso === invoice.protocol ? 'protocol' :
-                      chaveAcesso === invoice.key ? 'key' :
-                      chaveAcesso === invoice.nfseKey ? 'nfseKey' :
-                      chaveAcesso === invoice.invoiceKey ? 'invoiceKey' : 'nenhuma'}
+                      chaveAcesso === (invoice as any).code ? 'code' :
+                      chaveAcesso === (invoice as any).authorizationCode ? 'authorizationCode' :
+                      chaveAcesso === (invoice as any).protocol ? 'protocol' :
+                      chaveAcesso === (invoice as any).key ? 'key' :
+                      chaveAcesso === (invoice as any).nfseKey ? 'nfseKey' :
+                      chaveAcesso === (invoice as any).invoiceKey ? 'invoiceKey' : 'nenhuma'}
 Numero Encontrado: ${invoiceNumber || invoice.number}
 Serie Encontrada: ${rpsSerie}
 PDF URL Encontrada: ${pdfUrl}
