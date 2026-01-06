@@ -50,25 +50,22 @@ const imagesDest = path.join(arquivosDest, 'images');
 console.log('📁 Copiando apenas pasta images de arquivos...');
 if (fs.existsSync(imagesSource)) {
   // Criar estrutura de diretórios necessária
-  if (fs.existsSync(arquivosDest)) {
-    // Remover apenas images se existir, manter outras pastas
-    if (fs.existsSync(imagesDest)) {
-      fs.rmSync(imagesDest, { recursive: true, force: true });
-    }
-  } else {
+  if (!fs.existsSync(arquivosDest)) {
     fs.mkdirSync(arquivosDest, { recursive: true });
   }
   
-  // Limpar e criar estrutura de pastas vazias para uploads (não copiar conteúdo)
+  // Remover apenas images se existir (para atualizar com versão mais recente)
+  if (fs.existsSync(imagesDest)) {
+    fs.rmSync(imagesDest, { recursive: true, force: true });
+  }
+  
+  // Criar estrutura de pastas para uploads apenas se não existirem (não limpar conteúdo existente)
   const subpastas = ['empresa', 'clientes', 'documentos'];
   subpastas.forEach(subpasta => {
     const fullPath = path.join(arquivosDest, subpasta);
-    // Remover pasta se existir (para limpar arquivos antigos)
-    if (fs.existsSync(fullPath)) {
-      fs.rmSync(fullPath, { recursive: true, force: true });
+    if (!fs.existsSync(fullPath)) {
+      fs.mkdirSync(fullPath, { recursive: true });
     }
-    // Criar pasta vazia
-    fs.mkdirSync(fullPath, { recursive: true });
   });
   
   // Copiar apenas images
@@ -83,7 +80,9 @@ if (fs.existsSync(imagesSource)) {
   const subpastas = ['images/bancos', 'images/sistema', 'empresa', 'clientes', 'documentos'];
   subpastas.forEach(subpasta => {
     const fullPath = path.join(arquivosDest, subpasta);
-    fs.mkdirSync(fullPath, { recursive: true });
+    if (!fs.existsSync(fullPath)) {
+      fs.mkdirSync(fullPath, { recursive: true });
+    }
   });
   console.log('✅ Estrutura de pastas criada');
 }
