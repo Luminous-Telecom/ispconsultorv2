@@ -2,6 +2,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 import { logger } from '../../../utils/logger';
+import { resolveArquivosPath } from '../../../utils/pathUtils';
 
 /**
  * Cache para logo da empresa (evita conversões repetidas)
@@ -76,9 +77,23 @@ export class ImageConverter {
    * Converte arquivo local para base64
    */
   private static converterArquivoParaBase64(logoUrl: string): string {
-    const absolutePath = path.isAbsolute(logoUrl)
-      ? logoUrl
-      : path.join(process.cwd(), logoUrl);
+    let absolutePath: string;
+    
+    if (path.isAbsolute(logoUrl)) {
+      absolutePath = logoUrl;
+    } else {
+      // Se começar com /arquivos/, usar resolveArquivosPath
+      if (logoUrl.startsWith('/arquivos/') || logoUrl.startsWith('arquivos/')) {
+        const cleanPath = logoUrl.startsWith('/') ? logoUrl.substring(1) : logoUrl;
+        const pathParts = cleanPath.startsWith('arquivos/') 
+          ? cleanPath.substring('arquivos/'.length).split('/')
+          : cleanPath.split('/');
+        absolutePath = resolveArquivosPath(...pathParts);
+      } else {
+        // Para outros caminhos, usar process.cwd()
+        absolutePath = path.join(process.cwd(), logoUrl);
+      }
+    }
 
     if (!fs.existsSync(absolutePath)) {
       return '';
