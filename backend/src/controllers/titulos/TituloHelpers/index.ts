@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
-import { resolveImagePath } from '../../../utils/pathUtils';
+import { resolveImagePath, resolveArquivosPath } from '../../../utils/pathUtils';
 import { TituloComRelacoes } from './types';
 
 /**
@@ -40,16 +40,11 @@ export function converterLogoParaBase64(logo: string): string {
     if (path.isAbsolute(cleanPath)) {
       imagePath = cleanPath;
     } else {
-      // Para arquivos, tentar primeiro na raiz, depois em dist
+      // Para arquivos, usar resolveArquivosPath que detecta ambiente automaticamente
       if (cleanPath.startsWith('arquivos/')) {
-        imagePath = path.join(process.cwd(), cleanPath);
-        if (!fs.existsSync(imagePath) && __dirname.includes('dist')) {
-          // Em produção, tentar também na raiz (arquivos não são copiados para dist)
-          const rootPath = path.join(process.cwd(), '..', cleanPath);
-          if (fs.existsSync(rootPath)) {
-            imagePath = rootPath;
-          }
-        }
+        // Remover prefixo 'arquivos/' e usar resolveArquivosPath
+        const pathParts = cleanPath.substring('arquivos/'.length).split('/');
+        imagePath = resolveArquivosPath(...pathParts);
       } else {
         // Para outros caminhos, usar resolveImagePath quando possível
         const pathParts = cleanPath.split('/');
