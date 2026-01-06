@@ -41,20 +41,42 @@ if (fs.existsSync(templatesSource)) {
   console.warn('⚠️  Pasta src/templates não encontrada');
 }
 
-// 4. Copiar pasta arquivos completa para dist
+// 4. Copiar apenas pasta images de arquivos para dist
 const arquivosSource = path.join(process.cwd(), 'arquivos');
 const arquivosDest = path.join(distPath, 'arquivos');
+const imagesSource = path.join(arquivosSource, 'images');
+const imagesDest = path.join(arquivosDest, 'images');
 
-console.log('📁 Copiando pasta arquivos...');
-if (fs.existsSync(arquivosSource)) {
+console.log('📁 Copiando apenas pasta images de arquivos...');
+if (fs.existsSync(imagesSource)) {
+  // Criar estrutura de diretórios necessária
   if (fs.existsSync(arquivosDest)) {
-    fs.rmSync(arquivosDest, { recursive: true, force: true });
+    // Remover apenas images se existir, manter outras pastas
+    if (fs.existsSync(imagesDest)) {
+      fs.rmSync(imagesDest, { recursive: true, force: true });
+    }
+  } else {
+    fs.mkdirSync(arquivosDest, { recursive: true });
   }
-  fs.cpSync(arquivosSource, arquivosDest, { recursive: true });
-  console.log('✅ Pasta arquivos copiada');
+  
+  // Criar estrutura de pastas vazias para uploads (não copiar conteúdo)
+  const subpastas = ['empresa', 'clientes', 'documentos'];
+  subpastas.forEach(subpasta => {
+    const fullPath = path.join(arquivosDest, subpasta);
+    if (!fs.existsSync(fullPath)) {
+      fs.mkdirSync(fullPath, { recursive: true });
+    }
+  });
+  
+  // Copiar apenas images
+  fs.cpSync(imagesSource, imagesDest, { recursive: true });
+  console.log('✅ Pasta images copiada');
 } else {
   // Se não existir, criar estrutura básica
   console.log('📁 Criando estrutura de pastas de arquivos...');
+  if (!fs.existsSync(arquivosDest)) {
+    fs.mkdirSync(arquivosDest, { recursive: true });
+  }
   const subpastas = ['images/bancos', 'images/sistema', 'empresa', 'clientes', 'documentos'];
   subpastas.forEach(subpasta => {
     const fullPath = path.join(arquivosDest, subpasta);
