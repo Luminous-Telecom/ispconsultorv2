@@ -394,7 +394,7 @@ export class AtualizacoesController {
       try {
         res.write(`data: ${JSON.stringify({ 
           error: 'Erro interno do servidor durante a atualização',
-          details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+          details: !__dirname.includes('dist') ? errorMessage : undefined
         })}\n\n`);
         res.end();
       } catch (writeError) {
@@ -615,7 +615,7 @@ export class AtualizacoesController {
       res.status(500).json({
         success: false,
         message: userMessage,
-        error: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+        error: !__dirname.includes('dist') ? errorMessage : undefined,
       });
     }
   }

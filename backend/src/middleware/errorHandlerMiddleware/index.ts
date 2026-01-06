@@ -102,10 +102,10 @@ export const errorHandlerMiddleware = (
   // Erro genérico (500)
   const errorResponse: Record<string, unknown> = {
     success: false,
-    message: process.env.NODE_ENV === 'development' ? errorMessage : 'Erro interno do servidor',
+    message: !__dirname.includes('dist') ? errorMessage : 'Erro interno do servidor',
     error: 'INTERNAL_SERVER_ERROR'
   };
-  if (process.env.NODE_ENV === 'development' && errorStack) {
+  if (!__dirname.includes('dist') && errorStack) {
     errorResponse.stack = errorStack;
   }
   res.status(500).json(errorResponse);

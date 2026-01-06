@@ -894,7 +894,7 @@ export class IntegrationWebhookController {
       res.status(500).json({
         success: false,
         message: 'Erro interno ao processar sincronização de clientes',
-        error: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+        error: !__dirname.includes('dist') ? errorMessage : undefined
       });
     }
   }

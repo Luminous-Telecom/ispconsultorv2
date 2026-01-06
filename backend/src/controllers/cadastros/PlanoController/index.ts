@@ -409,7 +409,7 @@ export class PlanoController {
         success: false,
         error: 'Erro interno do servidor',
         message: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? {
+        details: !__dirname.includes('dist') ? {
           stack: errorStack,
           name: errorName
         } : undefined
@@ -490,7 +490,7 @@ export class PlanoController {
         success: false,
         error: 'Erro interno do servidor',
         message: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? {
+        details: !__dirname.includes('dist') ? {
           stack: errorStack,
           name: errorName
         } : undefined

@@ -78,7 +78,7 @@ export function csrfTokenMiddleware(req: Request, res: Response, next: NextFunct
     // Enviar token via cookie e disponibilizar via res.locals
     res.cookie('XSRF-TOKEN', token, {
       httpOnly: false, // Deve ser acessível via JavaScript para enviar no header
-      secure: process.env.NODE_ENV === 'production',
+      secure: __dirname.includes('dist'),
       sameSite: 'strict',
       maxAge: 3600000 // 1 hora
     });
@@ -97,7 +97,7 @@ export function csrfTokenMiddleware(req: Request, res: Response, next: NextFunct
       
       res.cookie('XSRF-TOKEN', token, {
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
+        secure: __dirname.includes('dist'),
         sameSite: 'strict',
         maxAge: 3600000
       });

@@ -14,6 +14,7 @@ import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { BarcodeService } from '../../../services/bancos/BarcodeService';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
+import { resolveTemplatePath } from '../../../utils/pathUtils';
 import { TituloComRelacoes } from '../TituloHelpers/types';
 import { converterLogoParaBase64, getLogoBancoPadrao, processarInstrucao } from '../TituloHelpers';
 
@@ -100,19 +101,9 @@ export class TituloPDFController {
       const dataProcessamento = formatDate(new Date()) || '';
       const valorBoleto = Number(titulo.valor || 0).toFixed(2).replace('.', ',');
       
-      // Carregar templates
-      // Em dev (ts-node): templates estão em src/templates
-      // Em prod (compilado): templates estão em dist/templates (copiados pelo build)
-      // Usar process.cwd() + verificar se está em src ou dist
-      const isDev = __dirname.includes('src');
-      const isProd = __dirname.includes('dist');
-      const templatesPath = isDev 
-        ? path.join(process.cwd(), 'src', 'templates')
-        : isProd
-        ? path.join(process.cwd(), 'dist', 'templates')
-        : path.join(process.cwd(), 'templates');
-      const topoTemplatePath = path.join(templatesPath, 'boleto-topo-inner.html');
-      const corpoTemplatePath = path.join(templatesPath, 'boleto-corpo-inner.html');
+      // Carregar templates usando resolveTemplatePath para funcionar tanto em dev quanto em produção
+      const topoTemplatePath = resolveTemplatePath('boleto-topo-inner.html');
+      const corpoTemplatePath = resolveTemplatePath('boleto-corpo-inner.html');
       
       // Verificar se os arquivos de template existem
       if (!fs.existsSync(topoTemplatePath)) {
@@ -762,7 +753,7 @@ export class TituloPDFController {
         res.status(500).json({
           success: false,
           message: 'Erro interno do servidor ao gerar PDF de múltiplos boletos',
-          error: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+          error: !__dirname.includes('dist') ? errorMessage : undefined
         });
       }
     }

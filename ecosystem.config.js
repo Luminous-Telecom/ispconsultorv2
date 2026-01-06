@@ -9,7 +9,6 @@ module.exports = {
       exec_mode: 'fork',
       watch: false,
       env: {
-        NODE_ENV: 'production',
         PORT: process.env.PORT || 3001
       },
       log_file: './logs/backend-combined.log',

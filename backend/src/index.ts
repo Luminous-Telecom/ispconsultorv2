@@ -3,12 +3,14 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 
 // Importar configurações
 import { sequelize } from './config/database';
 import { logger } from './utils/logger';
+import { isProduction } from './utils/envUtils';
 
 // Importar middlewares de proteção
 import { 
@@ -102,7 +104,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction(),
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
@@ -187,8 +189,9 @@ app.use(auditCaptureMiddleware);
 app.use(auditLogMiddleware);
 
 // Servir arquivos estáticos (imagens, etc.)
-// Usar process.cwd() para funcionar tanto em dev (ts-node) quanto em produção (compilado)
-app.use('/images', express.static(path.join(process.cwd(), 'images')));
+// Usar __dirname para navegar relativamente - em produção está em dist/, em dev está em src/
+const imagesPath = path.join(__dirname, '..', 'images');
+app.use('/images', express.static(imagesPath));
 
 // Usar rotas da aplicação
 app.use(routes);
@@ -213,7 +216,7 @@ let server: ReturnType<typeof app.listen> | null = null;
 const startServer = async () => {
   try {
     // Log do ambiente de execução
-    const environment = process.env.NODE_ENV === 'production' ? 'Produção' : 'Desenvolvimento';
+    const environment = isProduction() ? 'Produção' : 'Desenvolvimento';
     logger.info(`🚀 Iniciando aplicação em modo: ${environment}`);
 
     await sequelize.authenticate();

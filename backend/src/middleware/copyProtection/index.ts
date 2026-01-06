@@ -19,7 +19,7 @@ export const copyProtectionMiddleware = (req: Request, res: Response, next: Next
     res.setHeader('Expires', '0');
     res.setHeader('Surrogate-Control', 'no-store');
     
-    if (process.env.NODE_ENV !== 'production') {
+    if (!__dirname.includes('dist')) {
       res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
       res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     }

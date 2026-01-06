@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
+import { resolveImagePath } from '../../../utils/pathUtils';
 import { TituloComRelacoes } from './types';
 
 /**
@@ -34,8 +35,31 @@ export function converterLogoParaBase64(logo: string): string {
     if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
     
     // Caminho relativo a partir da raiz do backend
-    // Usar process.cwd() para funcionar tanto em dev (ts-node) quanto em produção (compilado)
-    const imagePath = path.join(process.cwd(), cleanPath);
+    // Tentar primeiro como caminho absoluto, depois relativo
+    let imagePath: string;
+    if (path.isAbsolute(cleanPath)) {
+      imagePath = cleanPath;
+    } else {
+      // Para uploads, tentar primeiro na raiz, depois em dist
+      if (cleanPath.startsWith('uploads/')) {
+        imagePath = path.join(process.cwd(), cleanPath);
+        if (!fs.existsSync(imagePath) && __dirname.includes('dist')) {
+          // Em produção, tentar também na raiz (uploads não são copiados para dist)
+          const rootPath = path.join(process.cwd(), '..', cleanPath);
+          if (fs.existsSync(rootPath)) {
+            imagePath = rootPath;
+          }
+        }
+      } else {
+        // Para outros caminhos, usar resolveImagePath quando possível
+        const pathParts = cleanPath.split('/');
+        if (pathParts[0] === 'images') {
+          imagePath = resolveImagePath(...pathParts.slice(1));
+        } else {
+          imagePath = path.join(process.cwd(), cleanPath);
+        }
+      }
+    }
     
     if (fs.existsSync(imagePath)) {
       const imageBuffer = fs.readFileSync(imagePath);
@@ -64,9 +88,8 @@ export function getLogoBancoPadrao(tipoBanco: string): string {
     };
     
     const fileName = logosPadrao[tipoBanco] || logosPadrao['outros'];
-    // Usar process.cwd() para funcionar tanto em dev (ts-node) quanto em produção (compilado)
-    const imagesPath = path.join(process.cwd(), 'images', 'bancos');
-    const imagePath = path.join(imagesPath, fileName);
+    // Usar resolveImagePath para funcionar tanto em dev quanto em produção
+    const imagePath = resolveImagePath('bancos', fileName);
     
     if (fs.existsSync(imagePath)) {
       const imageBuffer = fs.readFileSync(imagePath);

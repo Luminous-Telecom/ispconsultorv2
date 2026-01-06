@@ -132,7 +132,7 @@ export class SelfUpdateService {
         maxBuffer: 10 * 1024 * 1024, // 10MB buffer
         env: {
           ...process.env,
-          NODE_ENV: process.env.NODE_ENV || 'production',
+          NODE_ENV: __dirname.includes('dist') ? 'production' : 'development',
         },
       });
 

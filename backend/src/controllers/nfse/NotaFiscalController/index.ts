@@ -21,6 +21,7 @@ import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoA
 import { formatDate, parseDateFromDb } from '../../../utils/dateUtils';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
 import { FinancialCalculationsService } from '../../../services/FinancialCalculationsService';
+import { resolveImagePath, resolveTemplatePath } from '../../../utils/pathUtils';
 
 export class NotaFiscalController {
   // Schema de validação para criação
@@ -774,12 +775,8 @@ export class NotaFiscalController {
     }
 
     let logoNfseBase64 = '';
-    // NFS-e está em controllers/nfse/NotaFiscalController/
-    // Em dev (ts-node): __dirname = src/controllers/nfse/NotaFiscalController/, então ../../../images/sistema = images/sistema
-    // Em prod (compilado): __dirname = dist/controllers/nfse/NotaFiscalController/, então ../../../images/sistema = dist/images/sistema
-    // Mas em dev, images está na raiz, então precisamos usar process.cwd() para funcionar em ambos os casos
-    const imagesPath = path.join(process.cwd(), 'images', 'sistema');
-    const logoPath = path.join(imagesPath, 'logo-nfse-assinatura-horizontal.svg');
+    // Usar resolveImagePath para funcionar tanto em dev quanto em produção
+    const logoPath = resolveImagePath('sistema', 'logo-nfse-assinatura-horizontal.svg');
 
     if (fs.existsSync(logoPath)) {
       try {
@@ -804,16 +801,8 @@ export class NotaFiscalController {
       });
     }
 
-    // Em dev (ts-node): templates estão em src/templates
-    // Em prod (compilado): templates estão em dist/templates (copiados pelo build)
-    // Usar process.cwd() + verificar se está em src ou dist
-    const isDev = __dirname.includes('src');
-    const isProd = __dirname.includes('dist');
-    const templatePath = isDev 
-      ? path.join(process.cwd(), 'src', 'templates', 'nfse.html')
-      : isProd
-      ? path.join(process.cwd(), 'dist', 'templates', 'nfse.html')
-      : path.join(process.cwd(), 'templates', 'nfse.html');
+    // Usar resolveTemplatePath para funcionar tanto em dev quanto em produção
+    const templatePath = resolveTemplatePath('nfse.html');
     if (!fs.existsSync(templatePath)) {
       throw new Error(`Template não encontrado: ${templatePath}`);
     }

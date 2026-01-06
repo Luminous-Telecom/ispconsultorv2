@@ -9,7 +9,8 @@ const {
   colorize
 } = winston.format;
 
-const isProduction = process.env.NODE_ENV === 'production';
+// Usar __dirname diretamente para evitar dependência circular
+const isProduction = __dirname.includes('dist');
 
 const consoleFormat = isProduction
   ? combine(
