@@ -3,6 +3,7 @@ import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
+import { resolveArquivosPath } from '../../../utils/pathUtils';
 
 export class DadosEmpresaController {
   // Dados padrão para criação de empresa
@@ -222,12 +223,14 @@ export class DadosEmpresaController {
         if (dadosEmpresa.logo) {
           try {
             const fs = require('fs');
-            const path = require('path');
             const logoPath = dadosEmpresa.logo.startsWith('/') 
               ? dadosEmpresa.logo.substring(1)
               : dadosEmpresa.logo;
-            // Usar process.cwd() para funcionar tanto em dev (ts-node) quanto em produção (compilado)
-            const oldLogoPath = path.join(process.cwd(), logoPath);
+            // Remover prefixo 'arquivos/' e usar resolveArquivosPath
+            const pathParts = logoPath.startsWith('arquivos/') 
+              ? logoPath.substring('arquivos/'.length).split('/')
+              : logoPath.split('/');
+            const oldLogoPath = resolveArquivosPath(...pathParts);
             if (fs.existsSync(oldLogoPath)) {
               fs.unlinkSync(oldLogoPath);
             }
@@ -340,11 +343,14 @@ export class DadosEmpresaController {
         if (dadosEmpresa.responsavel_assinatura) {
           try {
             const fs = require('fs');
-            const path = require('path');
             const assinaturaPath = dadosEmpresa.responsavel_assinatura.startsWith('/') 
               ? dadosEmpresa.responsavel_assinatura.substring(1)
               : dadosEmpresa.responsavel_assinatura;
-            const oldAssinaturaPath = path.join(__dirname, '../../../', assinaturaPath);
+            // Remover prefixo 'arquivos/' e usar resolveArquivosPath
+            const pathParts = assinaturaPath.startsWith('arquivos/') 
+              ? assinaturaPath.substring('arquivos/'.length).split('/')
+              : assinaturaPath.split('/');
+            const oldAssinaturaPath = resolveArquivosPath(...pathParts);
             if (fs.existsSync(oldAssinaturaPath)) {
               fs.unlinkSync(oldAssinaturaPath);
             }
