@@ -13,6 +13,29 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Storage para logo - sempre usa o mesmo nome para substituir o arquivo antigo
+const logoStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (_req, _file, cb) => {
+    // Sempre usar o mesmo nome para substituir o arquivo antigo
+    cb(null, 'logo.png');
+  }
+});
+
+// Storage para assinatura - sempre usa o mesmo nome para substituir o arquivo antigo
+const assinaturaStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (_req, _file, cb) => {
+    // Sempre usar o mesmo nome para substituir o arquivo antigo
+    cb(null, 'assinatura.png');
+  }
+});
+
+// Storage genérico (mantido para compatibilidade)
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, uploadDir);
@@ -52,8 +75,9 @@ const pngFileFilter = (_req: Express.Request, file: Express.Multer.File, cb: mul
   }
 };
 
+// Upload para logo - usa storage específico que sempre substitui o arquivo antigo
 const upload = multer({ 
-  storage,
+  storage: logoStorage,
   fileFilter,
   limits: {
     fileSize: 2 * 1024 * 1024 // 2MB
@@ -102,9 +126,9 @@ router.post('/logo', (req, res, next) => {
   });
 }, DadosEmpresaController.uploadLogo);
 
-// Upload específico para assinatura (apenas PNG)
+// Upload específico para assinatura (apenas PNG) - usa storage específico que sempre substitui o arquivo antigo
 const uploadAssinatura = multer({ 
-  storage,
+  storage: assinaturaStorage,
   fileFilter: pngFileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB

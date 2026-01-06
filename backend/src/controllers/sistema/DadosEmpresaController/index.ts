@@ -207,7 +207,8 @@ export class DadosEmpresaController {
         return;
       }
 
-      const filePath = `/arquivos/empresa/${req.file.filename}`;
+      // Sempre usar o mesmo caminho para substituir o arquivo antigo
+      const filePath = `/arquivos/empresa/logo.png`;
       let dadosEmpresa = await DadosEmpresa.findOne();
 
       if (!dadosEmpresa) {
@@ -219,7 +220,7 @@ export class DadosEmpresaController {
           dadosEmpresa.toJSON() as Record<string, unknown>
         );
       } else {
-        // Deletar logo antiga se existir
+        // Deletar logo antiga se existir (pode ter nome diferente)
         if (dadosEmpresa.logo) {
           try {
             const fs = require('fs');
@@ -231,7 +232,8 @@ export class DadosEmpresaController {
               ? logoPath.substring('arquivos/'.length).split('/')
               : logoPath.split('/');
             const oldLogoPath = resolveArquivosPath(...pathParts);
-            if (fs.existsSync(oldLogoPath)) {
+            // Só deletar se for um arquivo diferente do novo
+            if (fs.existsSync(oldLogoPath) && !oldLogoPath.endsWith('logo.png')) {
               fs.unlinkSync(oldLogoPath);
             }
           } catch (err) {
@@ -333,13 +335,14 @@ export class DadosEmpresaController {
         return;
       }
 
-      const filePath = `/arquivos/empresa/${req.file.filename}`;
+      // Sempre usar o mesmo caminho para substituir o arquivo antigo
+      const filePath = `/arquivos/empresa/assinatura.png`;
       let dadosEmpresa = await DadosEmpresa.findOne();
 
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresa.create({ ...DadosEmpresaController.getDefaultData(), responsavel_assinatura: filePath });
       } else {
-        // Deletar assinatura antiga se existir
+        // Deletar assinatura antiga se existir (pode ter nome diferente)
         if (dadosEmpresa.responsavel_assinatura) {
           try {
             const fs = require('fs');
@@ -351,7 +354,8 @@ export class DadosEmpresaController {
               ? assinaturaPath.substring('arquivos/'.length).split('/')
               : assinaturaPath.split('/');
             const oldAssinaturaPath = resolveArquivosPath(...pathParts);
-            if (fs.existsSync(oldAssinaturaPath)) {
+            // Só deletar se for um arquivo diferente do novo
+            if (fs.existsSync(oldAssinaturaPath) && !oldAssinaturaPath.endsWith('assinatura.png')) {
               fs.unlinkSync(oldAssinaturaPath);
             }
           } catch (err) {
