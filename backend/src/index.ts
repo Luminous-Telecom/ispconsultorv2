@@ -186,6 +186,21 @@ import { auditCaptureMiddleware, auditLogMiddleware } from './middleware/auditMi
 app.use(auditCaptureMiddleware);
 app.use(auditLogMiddleware);
 
+// Rota para config.js (deve vir antes das rotas para evitar conflito)
+app.get('/config.js', (_req, res) => {
+  // Gerar configuração dinâmica para o frontend
+  const config = {
+    REACT_APP_API_URL: '/api',
+    REACT_APP_API_TIMEOUT: '10000',
+    REACT_APP_API_RETRY_ATTEMPTS: '3',
+    REACT_APP_API_RETRY_DELAY: '1000'
+  };
+  
+  // Retornar como JavaScript válido com Content-Type correto
+  res.setHeader('Content-Type', 'application/javascript');
+  res.send(`window.__APP_CONFIG__ = ${JSON.stringify(config, null, 2)};`);
+});
+
 // Servir arquivos estáticos de arquivos (ANTES das rotas, mas DEPOIS dos middlewares de proteção)
 // Em produção serve de dist/arquivos/, em dev serve da raiz arquivos/
 const arquivosStaticPath = resolveArquivosPath();

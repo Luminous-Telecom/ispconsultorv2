@@ -97,6 +97,11 @@ export const imageProtectionMiddleware = (req: Request, res: Response, next: Nex
 export const configProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const configPatterns = [/\.env/i, /\.config/i, /\.json$/i, /\.js$/i, /\.ts$/i, /\.md$/i, /\.txt$/i, /\.log$/i];
   
+  // Permitir /config.js (arquivo de configuração do frontend)
+  if (req.path === '/config.js') {
+    return next();
+  }
+  
   if (configPatterns.some(pattern => pattern.test(req.path)) && !req.path.startsWith('/api/') && !req.path.startsWith('/arquivos/')) {
     return res.status(404).json({
       error: 'Arquivo não encontrado',
