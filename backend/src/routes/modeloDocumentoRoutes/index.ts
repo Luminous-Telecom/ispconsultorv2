@@ -3,11 +3,12 @@ import { ModeloDocumentoController } from '../../controllers/documentos/ModeloDo
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { resolveArquivosPath } from '../../utils/pathUtils';
 
 const router = Router();
 
 // Configuração do multer para upload de imagens de documentos
-const documentosUploadDir = path.resolve(process.cwd(), 'arquivos', 'documentos');
+const documentosUploadDir = resolveArquivosPath('documentos');
 if (!fs.existsSync(documentosUploadDir)) {
   fs.mkdirSync(documentosUploadDir, { recursive: true });
 }
