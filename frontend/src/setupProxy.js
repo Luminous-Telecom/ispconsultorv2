@@ -49,6 +49,17 @@ module.exports = function(app) {
     })
   );
 
+  // Proxy para arquivos (logos, documentos, etc)
+  app.use(
+    '/arquivos',
+    createProxyMiddleware({
+      target: backendUrl,
+      changeOrigin: true,
+      secure: false,
+      logLevel: 'silent',
+    })
+  );
+
   // Proxy para client-ip
   app.use(
     '/client-ip',
