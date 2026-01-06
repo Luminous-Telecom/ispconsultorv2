@@ -527,8 +527,6 @@ cp env.example .env
 ```env
 # Configurações do Servidor
 PORT=3001
-NODE_ENV=production
-BASE_URL=http://localhost:3001
 
 # ⚠️ IMPORTANTE: Configuração da API para o frontend
 # Em produção, SEMPRE use URL relativa: /api
@@ -572,8 +570,14 @@ npm run build
 
 Isso irá:
 - Transpilar TypeScript para JavaScript em `dist/`
-- Copiar templates e imagens necessárias
-- Copiar o build do frontend para `dist/frontend` (se necessário)
+- Copiar templates de `src/templates/` para `dist/templates/`
+- Copiar imagens de `images/` para `dist/images/`
+
+**⚠️ Importante sobre detecção de ambiente:**
+- O sistema detecta automaticamente se está em produção ou desenvolvimento
+- Em **produção**: código compilado está em `dist/` → detecta via `__dirname.includes('dist')`
+- Em **desenvolvimento**: código está em `src/` → detecta automaticamente
+- O sistema detecta automaticamente - não é necessário configurar variáveis de ambiente
 
 ### 4. Executar Backend
 
@@ -1060,7 +1064,6 @@ module.exports = {
       instances: 1,
       exec_mode: 'fork',
       env: {
-        NODE_ENV: 'production',
         PORT: 3001
       },
       error_file: './logs/backend-error.log',
@@ -1078,7 +1081,6 @@ module.exports = {
       instances: 1,
       exec_mode: 'fork',
       env: {
-        NODE_ENV: 'production',
         PORT: 3000
       },
       error_file: './logs/frontend-error.log',
@@ -1151,8 +1153,6 @@ pm2 startup
 | Variável | Descrição | Exemplo |
 |----------|-----------|---------|
 | `PORT` | Porta da API | `3001` |
-| `NODE_ENV` | Ambiente de execução | `production` |
-| `BASE_URL` | URL base da aplicação | `http://localhost:3001` |
 | `REACT_APP_API_URL` | ⚠️ **URL da API para o frontend** (obrigatório em produção) | `/api` (relativo) |
 | `DB_HOST` | Host do banco de dados | `localhost` |
 | `DB_PORT` | Porta do banco de dados | `3306` |
@@ -1173,6 +1173,12 @@ pm2 startup
 - O backend gera `/config.js` dinamicamente com este valor
 - O frontend sempre prioriza `window.__APP_CONFIG__` sobre `process.env`
 - Não faça build do frontend com URLs hardcoded
+
+**ℹ️ Sobre detecção de ambiente:**
+- O backend detecta automaticamente o ambiente através do `__dirname`
+- Em produção (código em `dist/`): usa `dist/templates/` e `dist/images/`
+- Em desenvolvimento (código em `src/`): usa `src/templates/` e `images/` na raiz
+- O sistema detecta automaticamente - não é necessário configurar variáveis de ambiente
 
 ### Frontend (.env)
 
