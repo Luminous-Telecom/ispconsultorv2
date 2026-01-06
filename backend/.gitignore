@@ -23,7 +23,8 @@ uploads/*
 # Test coverage
 coverage/
 
-scripts
+scripts/*
+!scripts/build.js
 
 # Dependency versions tracking (local configuration)
 .dependency-versions.json
