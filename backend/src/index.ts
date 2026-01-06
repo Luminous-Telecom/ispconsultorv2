@@ -93,11 +93,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-// Servir arquivos estáticos de arquivos
-// Em produção serve de dist/arquivos/, em dev serve da raiz arquivos/
-const arquivosStaticPath = resolveArquivosPath();
-app.use('/arquivos', express.static(arquivosStaticPath));
-
 // Cookie parser (necessário para CSRF e outras funcionalidades)
 app.use(cookieParser());
 
@@ -190,6 +185,11 @@ app.use(authMiddleware);
 import { auditCaptureMiddleware, auditLogMiddleware } from './middleware/auditMiddleware';
 app.use(auditCaptureMiddleware);
 app.use(auditLogMiddleware);
+
+// Servir arquivos estáticos de arquivos (ANTES das rotas, mas DEPOIS dos middlewares de proteção)
+// Em produção serve de dist/arquivos/, em dev serve da raiz arquivos/
+const arquivosStaticPath = resolveArquivosPath();
+app.use('/arquivos', express.static(arquivosStaticPath));
 
 // Servir arquivos estáticos (imagens, etc.)
 // Usar __dirname para navegar relativamente - em produção está em dist/, em dev está em src/
