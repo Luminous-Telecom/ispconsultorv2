@@ -41,20 +41,22 @@ if (fs.existsSync(templatesSource)) {
   console.warn('⚠️  Pasta src/templates não encontrada');
 }
 
-// 4. Copiar arquivos
-const arquivosSource = path.join(process.cwd(), 'arquivos');
+// 4. Criar estrutura de pastas de arquivos (sem copiar arquivos)
 const arquivosDest = path.join(distPath, 'arquivos');
+const subpastas = ['images/bancos', 'images/sistema', 'empresa', 'clientes', 'documentos'];
 
-if (fs.existsSync(arquivosSource)) {
-  console.log('📁 Copiando arquivos...');
-  if (fs.existsSync(arquivosDest)) {
-    fs.rmSync(arquivosDest, { recursive: true, force: true });
-  }
-  fs.cpSync(arquivosSource, arquivosDest, { recursive: true });
-  console.log('✅ Arquivos copiados');
-} else {
-  console.warn('⚠️  Pasta arquivos não encontrada');
+console.log('📁 Criando estrutura de pastas de arquivos...');
+if (fs.existsSync(arquivosDest)) {
+  fs.rmSync(arquivosDest, { recursive: true, force: true });
 }
+
+// Criar apenas a estrutura de diretórios, sem copiar arquivos
+subpastas.forEach(subpasta => {
+  const fullPath = path.join(arquivosDest, subpasta);
+  fs.mkdirSync(fullPath, { recursive: true });
+});
+
+console.log('✅ Estrutura de pastas criada');
 
 console.log('🎉 Build concluído com sucesso!');
 
