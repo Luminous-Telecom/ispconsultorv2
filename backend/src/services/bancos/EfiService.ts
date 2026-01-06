@@ -4,7 +4,7 @@ import { Titulo } from '../../models/Titulo';
 import { Cliente } from '../../models/Cliente';
 import { logger } from '../../utils/logger';
 import { efiConfig } from '../../config/bancos/efi';
-import type { JsonValue } from '../../types';
+import type { JsonValue } from '../../types/index';
 import type { ApiResponse, TituloWithRelations, AxiosErrorResponse, IBancoService } from './types';
 
 interface ClienteForBoleto {
@@ -234,7 +234,7 @@ export class EfiService implements IBancoService {
         const barcode = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.barcode);
         const url = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.url);
         // Importar BarcodeService para conversão correta (antes de usar)
-        const { BarcodeService } = await import('../BarcodeService');
+        const { BarcodeService } = await import('./BarcodeService');
         
         const linhaDigitavelPath = efiConfig.api_response_mapping.boleto.linha_digitavel || '';
         const linhaDigitavelRaw = linhaDigitavelPath ? this.getNestedValue(dados, linhaDigitavelPath) : null;
@@ -260,7 +260,8 @@ export class EfiService implements IBancoService {
           codigoBarrasFinal = BarcodeService.converterLinhaDigitavelParaCodigoBarras(barcodeLimpo);
         }
 
-        await titulo.update({
+        const tituloModel = titulo as unknown as Titulo;
+        await tituloModel.update({
           charge_id: chargeIdString,
           codigo_barras: codigoBarrasFinal,
           url_boleto: typeof url === 'string' ? url : null,

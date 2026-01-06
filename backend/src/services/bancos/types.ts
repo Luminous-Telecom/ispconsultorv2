@@ -2,7 +2,8 @@ import type { Banco } from '../../models/Banco';
 import type { Titulo } from '../../models/Titulo';
 import type { Cliente } from '../../models/Cliente';
 import type { Plano } from '../../models/Plano';
-import type { JsonValue } from '../../types';
+import type { JsonValue } from '../../types/index';
+import type { InferAttributes } from 'sequelize';
 
 export interface ApiResponseData {
   charge_id?: string;
@@ -16,7 +17,7 @@ export interface ApiResponse {
   status?: string;
 }
 
-export interface TituloWithRelations extends Titulo {
+export interface TituloWithRelations extends InferAttributes<Titulo> {
   banco?: Banco;
   cliente?: Cliente;
   plano?: Plano;

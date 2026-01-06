@@ -1,6 +1,7 @@
 import { Cliente } from '../../models/Cliente';
 import { Contrato } from '../../models/Contrato';
 import { Titulo } from '../../models/Titulo';
+import type { TituloComRelacoes } from '../../controllers/titulos/TituloHelpers/types';
 
 /**
  * Informações sobre uma variável disponível
@@ -44,7 +45,7 @@ export interface VariableHandler {
 export interface VariableContext {
   cliente?: Cliente;
   contrato?: Contrato | (Partial<Contrato> & { id: number });
-  titulo?: Titulo;
+  titulo?: Titulo | TituloComRelacoes;
   dataReferencia?: Date;
   baseUrl?: string;
 }

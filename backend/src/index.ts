@@ -187,7 +187,8 @@ app.use(auditCaptureMiddleware);
 app.use(auditLogMiddleware);
 
 // Servir arquivos estáticos (imagens, etc.)
-app.use('/images', express.static(path.join(__dirname, 'images')));
+// Usar process.cwd() para funcionar tanto em dev (ts-node) quanto em produção (compilado)
+app.use('/images', express.static(path.join(process.cwd(), 'images')));
 
 // Usar rotas da aplicação
 app.use(routes);
@@ -224,7 +225,7 @@ const startServer = async () => {
       server.setMaxListeners(20);
       
       try {
-        const { SchedulerService } = await import('./services/SchedulerService');
+        const { SchedulerService } = await import('./services/scheduler/SchedulerService');
         await SchedulerService.getInstance().start();
       } catch (error) {
         logger.error('Erro ao iniciar agendador:', error);
@@ -263,7 +264,7 @@ const gracefulShutdown = async (signal: string) => {
   }
   
   try {
-    const { SchedulerService } = await import('./services/SchedulerService');
+    const { SchedulerService } = await import('./services/scheduler/SchedulerService');
     await SchedulerService.getInstance().stop();
   } catch (error) {
     logger.error('Erro ao parar agendador:', error);

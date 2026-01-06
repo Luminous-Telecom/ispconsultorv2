@@ -1,6 +1,6 @@
 import { Banco } from '../../models/Banco';
 import { Titulo } from '../../models/Titulo';
-import { BarcodeService } from '../BarcodeService';
+import { BarcodeService } from '../bancos/BarcodeService';
 import { PaymentCommonService } from './PaymentCommonService';
 import { logger } from '../../utils/logger';
 import { JsonValue } from '../../types/index';
@@ -341,7 +341,7 @@ export class AsaasWebhookService {
 
                 // Parsear XML e extrair dados automaticamente
                 if (xmlData) {
-                  const { NFSeXmlParserService } = await import('../../services/NFSeXmlParserService');
+                  const { NFSeXmlParserService } = await import('../nfse/NFSeXmlParserService');
                   const sucesso = await NFSeXmlParserService.atualizarNotaFiscalComXml(notaFiscalVinculada.id, xmlData);
                   if (sucesso) {
                     logger.info('Dados extraídos do XML com sucesso', { nota_id: notaFiscalVinculada.id });

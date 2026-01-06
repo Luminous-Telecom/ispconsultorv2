@@ -59,7 +59,8 @@ export class TituloVariableHandler implements VariableHandler {
     }
 
     const dataRef = context.dataReferencia || new Date();
-    const substitutions = this.buildSubstitutions(context.titulo, dataRef, context.baseUrl);
+    const titulo = context.titulo as Titulo;
+    const substitutions = this.buildSubstitutions(titulo, dataRef, context.baseUrl);
     
     return VariableReplacer.replace(conteudo, substitutions);
   }

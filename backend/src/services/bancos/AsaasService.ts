@@ -4,9 +4,9 @@ import { Titulo } from '../../models/Titulo';
 import { Cliente } from '../../models/Cliente';
 import { Plano } from '../../models/Plano';
 import { logger } from '../../utils/logger';
-import { BarcodeService } from '../BarcodeService';
+import { BarcodeService } from '../bancos/BarcodeService';
 import asaasConfig from '../../config/bancos/asaas';
-import type { JsonValue } from '../../types';
+import type { JsonValue } from '../../types/index';
 import type { ApiResponse, TituloWithRelations, AxiosErrorResponse, IBancoService } from './types';
 
 export class AsaasService implements IBancoService {
@@ -218,7 +218,8 @@ export class AsaasService implements IBancoService {
         // Se não tem linha digitável, gerar localmente (para sandbox)
         if (!linhaDigitavelRaw && banco.sandbox) {
           try {
-            linhaDigitavelRaw = await titulo.gerarLinhaDigitavel();
+            const tituloModel = titulo as unknown as Titulo;
+            linhaDigitavelRaw = await tituloModel.gerarLinhaDigitavel();
           } catch (gerarError) {
             logger.warn('Erro ao gerar linha digitável localmente', { titulo_id: titulo.id, error: gerarError });
           }

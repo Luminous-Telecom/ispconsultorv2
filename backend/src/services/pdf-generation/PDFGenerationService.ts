@@ -94,7 +94,17 @@ export class PDFGenerationService {
       };
 
       const file = { content: html };
-      const pdfBuffer = await htmlPdf.generatePdf(file, pdfOptions);
+      
+      // html-pdf-node usa callback, então precisamos promisificar
+      const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
+        htmlPdf.generatePdf(file, pdfOptions, (err: Error | null, buffer: Buffer) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(buffer);
+          }
+        });
+      });
 
       return Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer);
     } catch (error) {
