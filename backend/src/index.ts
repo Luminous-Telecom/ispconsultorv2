@@ -11,6 +11,7 @@ import session from 'express-session';
 import { sequelize } from './config/database';
 import { logger } from './utils/logger';
 import { isProduction } from './utils/envUtils';
+import { resolveArquivosPath } from './utils/pathUtils';
 
 // Importar middlewares de proteção
 import { 
@@ -93,7 +94,9 @@ app.use(cors({
 }));
 
 // Servir arquivos estáticos de arquivos
-app.use('/arquivos', express.static(path.resolve(process.cwd(), 'arquivos')));
+// Em produção serve de dist/arquivos/, em dev serve da raiz arquivos/
+const arquivosStaticPath = resolveArquivosPath();
+app.use('/arquivos', express.static(arquivosStaticPath));
 
 // Cookie parser (necessário para CSRF e outras funcionalidades)
 app.use(cookieParser());
