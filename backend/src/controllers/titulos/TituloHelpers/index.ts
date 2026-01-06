@@ -53,7 +53,10 @@ export function converterLogoParaBase64(logo: string): string {
       } else {
         // Para outros caminhos, usar resolveImagePath quando possível
         const pathParts = cleanPath.split('/');
-        if (pathParts[0] === 'images') {
+        if (pathParts[0] === 'arquivos' && pathParts[1] === 'images') {
+          imagePath = resolveImagePath(...pathParts.slice(2));
+        } else if (pathParts[0] === 'images') {
+          // Compatibilidade: se ainda houver referências antigas a images/, redirecionar para arquivos/images/
           imagePath = resolveImagePath(...pathParts.slice(1));
         } else {
           imagePath = path.join(process.cwd(), cleanPath);

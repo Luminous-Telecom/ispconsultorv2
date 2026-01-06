@@ -19,9 +19,9 @@ export function resolveTemplatePath(templateName: string): string {
  */
 export function resolveImagePath(...imagePath: string[]): string {
   // pathUtils está em utils/pathUtils/, então:
-  // - Em dev: __dirname = .../src/utils/pathUtils -> ../../images = images (raiz)
-  // - Em prod: __dirname = .../dist/utils/pathUtils -> ../../images = dist/images
-  return path.join(__dirname, '..', '..', 'images', ...imagePath);
+  // - Em dev: __dirname = .../src/utils/pathUtils -> ../../arquivos/images = arquivos/images
+  // - Em prod: __dirname = .../dist/utils/pathUtils -> ../../arquivos/images = arquivos/images
+  return path.join(__dirname, '..', '..', 'arquivos', 'images', ...imagePath);
 }
 
 /**

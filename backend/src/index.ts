@@ -190,7 +190,7 @@ app.use(auditLogMiddleware);
 
 // Servir arquivos estáticos (imagens, etc.)
 // Usar __dirname para navegar relativamente - em produção está em dist/, em dev está em src/
-const imagesPath = path.join(__dirname, '..', 'images');
+const imagesPath = path.join(__dirname, '..', 'arquivos', 'images');
 app.use('/images', express.static(imagesPath));
 
 // Usar rotas da aplicação
