@@ -549,8 +549,8 @@ DB_DIALECT=mysql
 JWT_SECRET=seu-jwt-secret-aqui
 JWT_EXPIRES_IN=24h
 
-# Configurações de Upload
-UPLOAD_PATH=./uploads
+# Configurações de Arquivos
+UPLOAD_PATH=./arquivos
 MAX_FILE_SIZE=5242880
 
 # Configurações de Rate Limiting
@@ -749,8 +749,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Proxy para uploads
-    location /uploads {
+    # Proxy para arquivos
+    location /arquivos {
         proxy_pass http://backend;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -892,8 +892,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Proxy para uploads
-    location /uploads {
+    # Proxy para arquivos
+    location /arquivos {
         proxy_pass http://backend;
         proxy_http_version 1.1;
         proxy_set_header Host $host;

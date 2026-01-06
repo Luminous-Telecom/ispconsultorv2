@@ -7,7 +7,7 @@ import fs from 'fs';
 const router = Router();
 
 // Configuração do multer para upload de imagens de documentos
-const documentosUploadDir = path.resolve(process.cwd(), 'uploads', 'documentos');
+const documentosUploadDir = path.resolve(process.cwd(), 'arquivos', 'documentos');
 if (!fs.existsSync(documentosUploadDir)) {
   fs.mkdirSync(documentosUploadDir, { recursive: true });
 }

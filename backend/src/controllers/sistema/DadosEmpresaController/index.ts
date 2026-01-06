@@ -206,7 +206,7 @@ export class DadosEmpresaController {
         return;
       }
 
-      const filePath = `/uploads/empresa/${req.file.filename}`;
+      const filePath = `/arquivos/empresa/${req.file.filename}`;
       let dadosEmpresa = await DadosEmpresa.findOne();
 
       if (!dadosEmpresa) {
@@ -330,7 +330,7 @@ export class DadosEmpresaController {
         return;
       }
 
-      const filePath = `/uploads/empresa/${req.file.filename}`;
+      const filePath = `/arquivos/empresa/${req.file.filename}`;
       let dadosEmpresa = await DadosEmpresa.findOne();
 
       if (!dadosEmpresa) {

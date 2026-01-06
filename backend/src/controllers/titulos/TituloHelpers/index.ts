@@ -40,11 +40,11 @@ export function converterLogoParaBase64(logo: string): string {
     if (path.isAbsolute(cleanPath)) {
       imagePath = cleanPath;
     } else {
-      // Para uploads, tentar primeiro na raiz, depois em dist
-      if (cleanPath.startsWith('uploads/')) {
+      // Para arquivos, tentar primeiro na raiz, depois em dist
+      if (cleanPath.startsWith('arquivos/')) {
         imagePath = path.join(process.cwd(), cleanPath);
         if (!fs.existsSync(imagePath) && __dirname.includes('dist')) {
-          // Em produção, tentar também na raiz (uploads não são copiados para dist)
+          // Em produção, tentar também na raiz (arquivos não são copiados para dist)
           const rootPath = path.join(process.cwd(), '..', cleanPath);
           if (fs.existsSync(rootPath)) {
             imagePath = rootPath;

@@ -7,7 +7,7 @@ import fs from 'fs';
 const router = Router();
 
 // Configuração do multer para upload de logo
-const uploadDir = path.resolve(process.cwd(), 'uploads', 'empresa');
+const uploadDir = path.resolve(process.cwd(), 'arquivos', 'empresa');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

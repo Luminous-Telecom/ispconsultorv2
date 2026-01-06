@@ -46,7 +46,7 @@ const generalLimiter = rateLimit({
       '/health',
       '/api/health',
       '/webhook',
-      '/uploads'
+      '/arquivos'
     ];
 
     return skipRoutes.some(route => req.path.startsWith(route));

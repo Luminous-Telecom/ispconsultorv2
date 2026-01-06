@@ -16,7 +16,7 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/assinaturas?-digital\/webhook\/.*$/i }, // Webhooks de assinatura digital com qualquer provider (zapsign, assinafy, etc)
   { path: /^\/api\/assinatura-digital\/webhook/i }, // Alias sem "s" - aceita qualquer path depois
   { path: /^\/api\/assinatura-digital\/webhook\/.*$/i }, // Alias sem "s" com qualquer provider
-  { path: /^\/uploads(\/.*)?$/i },
+  { path: /^\/arquivos(\/.*)?$/i },
   // Download de arquivos de cliente (visualização pública controlada)
   { method: 'GET', path: /^\/api\/cliente-arquivos\/\d+\/download\/?$/i },
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET dados públicos da empresa (para site público)

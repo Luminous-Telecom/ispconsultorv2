@@ -73,7 +73,7 @@ export const apiProtectionMiddleware = (req: Request, res: Response, next: NextF
 };
 
 export const imageProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  if (req.path.startsWith('/uploads/')) {
+  if (req.path.startsWith('/arquivos/')) {
     return next();
   }
   
@@ -97,7 +97,7 @@ export const imageProtectionMiddleware = (req: Request, res: Response, next: Nex
 export const configProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const configPatterns = [/\.env/i, /\.config/i, /\.json$/i, /\.js$/i, /\.ts$/i, /\.md$/i, /\.txt$/i, /\.log$/i];
   
-  if (configPatterns.some(pattern => pattern.test(req.path)) && !req.path.startsWith('/api/') && !req.path.startsWith('/uploads/')) {
+  if (configPatterns.some(pattern => pattern.test(req.path)) && !req.path.startsWith('/api/') && !req.path.startsWith('/arquivos/')) {
     return res.status(404).json({
       error: 'Arquivo não encontrado',
       message: 'O recurso solicitado não existe'

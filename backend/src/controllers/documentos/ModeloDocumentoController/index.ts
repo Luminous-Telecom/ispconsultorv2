@@ -879,7 +879,7 @@ export class ModeloDocumentoController {
         return;
       }
 
-      const filePath = `/uploads/documentos/${req.file.filename}`;
+      const filePath = `/arquivos/documentos/${req.file.filename}`;
       // URL relativa (não precisa de baseUrl)
       const imageUrl = filePath;
 

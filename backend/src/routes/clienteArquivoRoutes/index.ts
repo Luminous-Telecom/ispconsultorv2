@@ -10,7 +10,7 @@ const router = Router();
 logger.info('Carregando rotas de cliente-arquivos');
 
 // Configuração do multer para upload de arquivos de cliente
-const uploadDir = path.resolve(process.cwd(), 'uploads', 'clientes');
+const uploadDir = path.resolve(process.cwd(), 'arquivos', 'clientes');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

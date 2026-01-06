@@ -92,8 +92,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-// Servir arquivos estáticos de uploads
-app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
+// Servir arquivos estáticos de arquivos
+app.use('/arquivos', express.static(path.resolve(process.cwd(), 'arquivos')));
 
 // Cookie parser (necessário para CSRF e outras funcionalidades)
 app.use(cookieParser());
@@ -157,7 +157,7 @@ app.use(ddosProtectionMiddleware({
     '/api/health',
     '/webhook',
     '/api/assinaturas-digital/webhook', // Webhooks de assinatura digital não devem ter proteção DDoS
-    '/uploads',
+    '/arquivos',
     '/api/titulos/boletos-multiplos-pdf', // Geração de PDF pode demorar mais que 15s
     '/api/auditoria/pdf', // Geração de PDF de auditoria pode demorar mais que 15s
     '/api/atualizacoes/update' // Atualização pode levar vários minutos (git pull, npm install, build, migrations, pm2 reload)
