@@ -11,7 +11,8 @@ import { ZapsignService } from '../../../services/assinatura-digital/ZapsignServ
 import { ClienteArquivoService } from '../../../services/cadastros';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import AssinaturaDigitalProvider from '../../../models/assinatura-digital/AssinaturaDigitalProvider';
-import { registrarCriacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarExclusao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
+import { registrarAtualizacaoElasticsearch, registrarCriacaoElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 // Interface comum para serviços de assinatura digital
@@ -679,7 +680,8 @@ export class AssinaturaDigitalController {
         assignmentSignerCount,
         signingUrl,
         certificatedPdfUrl,
-        'assinafy'
+        'assinafy',
+        req
       )
         .catch((error: unknown) => {
           logger.error('Erro ao processar webhook Assinafy em background', {
@@ -729,7 +731,8 @@ export class AssinaturaDigitalController {
         undefined,
         signingUrl,
         certificatedPdfUrl,
-        'zapsign'
+        'zapsign',
+        req
       ).catch((error: unknown) => {
         logger.error('Erro ao processar webhook ZAPSIGN em background', {
           documentId,
@@ -819,7 +822,8 @@ export class AssinaturaDigitalController {
         assignmentSignerCount,
         signingUrl,
         certificatedPdfUrl,
-        provider
+        provider,
+        req
       )
         .catch((error: unknown) => {
           logger.error('Erro ao processar webhook em background', {
@@ -855,7 +859,8 @@ export class AssinaturaDigitalController {
     assignmentSignerCount?: number,
     signingUrl?: string,
     certificatedPdfUrl?: string,
-    provider?: 'assinafy' | 'zapsign'
+    provider?: 'assinafy' | 'zapsign',
+    req?: Request
   ): Promise<void> {
 
     let assinatura = await AssinaturaDigital.findOne({
@@ -874,10 +879,38 @@ export class AssinaturaDigitalController {
 
     // Atualizar URL de assinatura se fornecida no webhook
     if (signingUrl && !assinatura.url_assinatura) {
+      // Capturar dados anteriores antes de atualizar
+      const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
+      
       await AssinaturaDigital.update(
         { url_assinatura: signingUrl },
         { where: { id: assinatura.id } }
       );
+      
+      // Recarregar assinatura para obter dados atualizados
+      await assinatura.reload();
+      
+      // Capturar dados novos após atualização
+      const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
+      
+      // Registrar auditoria no Elasticsearch se req foi fornecido
+      if (req) {
+        try {
+          await registrarAtualizacaoElasticsearch(
+            req,
+            'AssinaturaDigital',
+            assinatura.id,
+            dadosAnteriores,
+            dadosNovos,
+            `Atualização via webhook (URL assinatura) - Provider: ${provider || 'desconhecido'}`
+          );
+        } catch (auditError) {
+          logger.warn('Erro ao registrar auditoria de webhook (URL assinatura)', {
+            assinatura_id: assinatura.id,
+            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+          });
+        }
+      }
     }
 
     // Verificar se documento foi assinado - apenas quando realmente estiver completo
@@ -951,13 +984,37 @@ export class AssinaturaDigitalController {
         }
       }
 
+      // Capturar dados anteriores antes de atualizar
+      const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
+      
       await AssinaturaDigital.update(dadosParaAtualizar, {
         where: { id: assinatura.id }
       });
 
-
       // Recarregar assinatura para ter dados atualizados
       await assinatura.reload();
+      
+      // Capturar dados novos após atualização
+      const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
+      
+      // Registrar auditoria no Elasticsearch se req foi fornecido
+      if (req) {
+        try {
+          await registrarAtualizacaoElasticsearch(
+            req,
+            'AssinaturaDigital',
+            assinatura.id,
+            dadosAnteriores,
+            dadosNovos,
+            `Atualização via webhook (assinatura completa) - Status: ${status || 'desconhecido'} - Provider: ${provider || 'desconhecido'}`
+          );
+        } catch (auditError) {
+          logger.warn('Erro ao registrar auditoria de webhook (assinatura completa)', {
+            assinatura_id: assinatura.id,
+            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+          });
+        }
+      }
 
       if (assinatura.cliente_id && pdfBufferParaSalvar) {
         try {
@@ -972,7 +1029,7 @@ export class AssinaturaDigitalController {
           if (!arquivoExistente) {
             const nomeArquivo = `Documento_Assinado_${assinatura.id}_${Date.now()}.pdf`;
             
-            await ClienteArquivoService.createFromBuffer({
+            const arquivoCriado = await ClienteArquivoService.createFromBuffer({
               cliente_id: assinatura.cliente_id,
               nome: nomeArquivo,
               tipo: 'assinatura',
@@ -983,6 +1040,26 @@ export class AssinaturaDigitalController {
               referencia_id: assinatura.id,
               referencia_tipo: 'assinatura_digital'
             });
+            
+            // Registrar auditoria no Elasticsearch se req foi fornecido
+            if (req && arquivoCriado) {
+              try {
+                const dadosNovos = arquivoCriado.toJSON 
+                  ? arquivoCriado.toJSON() as Record<string, unknown> 
+                  : (arquivoCriado as unknown as Record<string, unknown>);
+                await registrarCriacaoElasticsearch(
+                  req,
+                  'ClienteArquivo',
+                  typeof arquivoCriado.id === 'number' ? arquivoCriado.id : parseInt(String(arquivoCriado.id), 10),
+                  dadosNovos,
+                  `Criação via webhook (assinatura digital) - Provider: ${provider || 'desconhecido'}`
+                );
+              } catch (auditError) {
+                logger.warn('Erro ao registrar auditoria de webhook (criação arquivo)', {
+                  error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+                });
+              }
+            }
           }
         } catch (error) {
           logger.error('Erro ao salvar PDF assinado como arquivo do cliente', {
@@ -997,6 +1074,9 @@ export class AssinaturaDigitalController {
       if (assinatura.termo_contrato_id) {
         const termoContrato = await TermoContrato.findByPk(assinatura.termo_contrato_id);
         if (termoContrato) {
+          // Capturar dados anteriores antes de atualizar
+          const dadosAnteriores = termoContrato.toJSON() as Record<string, unknown>;
+          
           const dataAceite = new Date();
           const aceitoPor = assinatura.nome_assinante || 'Assinatura Digital';
           
@@ -1004,12 +1084,65 @@ export class AssinaturaDigitalController {
           termoContrato.data_aceite = dataAceite;
           termoContrato.aceito_por = aceitoPor;
           await termoContrato.save();
+          
+          // Recarregar termo para obter dados atualizados
+          await termoContrato.reload();
+          
+          // Capturar dados novos após atualização
+          const dadosNovos = termoContrato.toJSON() as Record<string, unknown>;
+          
+          // Registrar auditoria no Elasticsearch se req foi fornecido
+          if (req) {
+            try {
+              await registrarAtualizacaoElasticsearch(
+                req,
+                'TermoContrato',
+                termoContrato.id,
+                dadosAnteriores,
+                dadosNovos,
+                `Atualização via webhook (assinatura digital) - Provider: ${provider || 'desconhecido'}`
+              );
+            } catch (auditError) {
+              logger.warn('Erro ao registrar auditoria de webhook (termo contrato)', {
+                termo_contrato_id: termoContrato.id,
+                error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+              });
+            }
+          }
         }
       }
 
     if (status === 'canceled' || event === 'document.canceled') {
+      // Capturar dados anteriores antes de atualizar
+      const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
+      
       assinatura.status = 'cancelado';
       await assinatura.save();
+      
+      // Recarregar assinatura para obter dados atualizados
+      await assinatura.reload();
+      
+      // Capturar dados novos após atualização
+      const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
+      
+      // Registrar auditoria no Elasticsearch se req foi fornecido
+      if (req) {
+        try {
+          await registrarAtualizacaoElasticsearch(
+            req,
+            'AssinaturaDigital',
+            assinatura.id,
+            dadosAnteriores,
+            dadosNovos,
+            `Atualização via webhook (cancelamento) - Provider: ${provider || 'desconhecido'}`
+          );
+        } catch (auditError) {
+          logger.warn('Erro ao registrar auditoria de webhook (cancelamento)', {
+            assinatura_id: assinatura.id,
+            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+          });
+        }
+      }
     }
   }
 }

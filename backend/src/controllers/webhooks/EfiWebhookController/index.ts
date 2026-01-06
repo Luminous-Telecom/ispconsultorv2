@@ -45,7 +45,8 @@ export class EfiWebhookController {
         // Este precisa ser síncrono pois retorna resultado da consulta
         const result = await EfiWebhookService.processNotificationToken(
           notificationToken,
-          receivedSecret
+          receivedSecret,
+          req
         );
         res.status(result.status || 200).json(result);
         return;
@@ -98,7 +99,8 @@ export class EfiWebhookController {
       EfiWebhookController.processNotificationInBackground(
         notificationType,
         notification,
-        receivedSecret
+        receivedSecret,
+        req
       ).catch(error => {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
         logger.error('Erro ao processar webhook EFI em background', {
@@ -128,7 +130,8 @@ export class EfiWebhookController {
   private static async processNotificationInBackground(
     notificationType: string,
     notification: NotificationItem | ChargeNotification | null,
-    receivedSecret?: string
+    receivedSecret?: string,
+    req?: Request
   ): Promise<void> {
     if (!notification) {
       logger.warn('Notificação nula, não é possível processar');
@@ -146,7 +149,9 @@ export class EfiWebhookController {
         case 'charge_pending':
           await EfiWebhookService.processChargeNotification(
             notification as ChargeNotification | NotificationItem,
-            receivedSecret
+            receivedSecret,
+            undefined,
+            req
           );
           break;
 
@@ -158,7 +163,8 @@ export class EfiWebhookController {
         case 'pix_pending':
           await EfiWebhookService.processPixNotification(
             notification as NotificationItem,
-            receivedSecret
+            receivedSecret,
+            req
           );
           break;
 
@@ -171,7 +177,8 @@ export class EfiWebhookController {
           logger.info(`Processando notificação genérica: ${notificationType}`);
           await EfiWebhookService.processGenericNotification(
             notification as NotificationItem | ChargeNotification,
-            receivedSecret
+            receivedSecret,
+            req
           );
           break;
 

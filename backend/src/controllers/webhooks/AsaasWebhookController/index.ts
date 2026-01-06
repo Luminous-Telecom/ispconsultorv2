@@ -98,7 +98,7 @@ export class AsaasWebhookController {
         }) as (Titulo & { banco?: Banco | null }) | null;
 
         if (titulo) {
-          AsaasWebhookService.processWebhook(payment, titulo).catch(error => {
+          AsaasWebhookService.processWebhook(payment, titulo, req).catch(error => {
             const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
             logger.error('Erro ao processar webhook Asaas (payment) em background', {
               charge_id: chargeId,
@@ -110,7 +110,7 @@ export class AsaasWebhookController {
         }
       } else if (invoice && invoice.id) {
         // Processar webhook de invoice (NFS-e)
-        AsaasWebhookService.processInvoiceWebhook(invoice).catch(error => {
+        AsaasWebhookService.processInvoiceWebhook(invoice, req).catch(error => {
           const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
           logger.error('Erro ao processar webhook Asaas (invoice) em background', {
             invoice_id: invoice.id,

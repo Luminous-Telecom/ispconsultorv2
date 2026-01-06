@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import { Banco } from '../../models/cadastros/Banco';
 import { Titulo } from '../../models/financeiro/Titulo';
 import { BarcodeService } from '../bancos/BarcodeService';
@@ -5,6 +6,7 @@ import { PaymentCommonService } from './PaymentCommonService';
 import { logger } from '../../utils/logger';
 import { JsonValue } from '../../types/index';
 import { AsaasPaymentPayload } from '../../types/webhooks';
+import { registrarAtualizacaoElasticsearch } from '../elasticsearch/ElasticsearchAuditService';
 
 /**
  * Serviço para processamento de webhooks do Asaas
@@ -14,11 +16,13 @@ export class AsaasWebhookService {
    * Processa webhook do Asaas
    * @param payment Objeto payment do payload
    * @param titulo Título encontrado pelo charge_id
+   * @param req Objeto Request para auditoria
    * @returns WebhookResponse com resultado do processamento
    */
   static async processWebhook(
     payment: AsaasPaymentPayload['payment'],
-    titulo: Titulo & { banco?: Banco | null }
+    titulo: Titulo & { banco?: Banco | null },
+    req?: Request
   ): Promise<{ success: boolean; message: string }> {
     try {
       if (!payment || !payment.id) {
@@ -109,8 +113,37 @@ export class AsaasWebhookService {
         }
       }
 
+      // Capturar dados anteriores antes de atualizar
+      const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
+      
       if (Object.keys(updates).length > 0) {
         await titulo.update(updates);
+      }
+      
+      // Recarregar título para obter dados atualizados
+      await titulo.reload();
+      
+      // Capturar dados novos após atualização
+      const dadosNovos = titulo.toJSON() as Record<string, unknown>;
+      
+      // Registrar auditoria no Elasticsearch se req foi fornecido
+      if (req) {
+        try {
+          await registrarAtualizacaoElasticsearch(
+            req,
+            'Titulo',
+            titulo.id,
+            dadosAnteriores,
+            dadosNovos,
+            `Atualização via webhook Asaas - Status: ${paymentStatus}`
+          );
+        } catch (auditError) {
+          // Não bloquear processamento se auditoria falhar
+          logger.warn('Erro ao registrar auditoria de webhook Asaas', {
+            titulo_id: titulo.id,
+            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+          });
+        }
       }
 
       logger.info('Título atualizado via webhook Asaas', {
@@ -192,9 +225,11 @@ export class AsaasWebhookService {
   /**
    * Processa webhook de invoice (NFS-e) do Asaas
    * @param invoice Objeto invoice do payload
+   * @param req Objeto Request para auditoria
    */
   static async processInvoiceWebhook(
-    invoice: AsaasPaymentPayload['invoice']
+    invoice: AsaasPaymentPayload['invoice'],
+    req?: Request
   ): Promise<{ success: boolean; message: string }> {
     try {
       logger.info(`Webhook Asaas: ${invoice?.id}`);
@@ -368,7 +403,36 @@ export class AsaasWebhookService {
               updateData.status = 'CANCELADA';
             }
 
+            // Capturar dados anteriores antes de atualizar
+            const dadosAnteriores = notaFiscalVinculada.toJSON() as Record<string, unknown>;
+            
             await notaFiscalVinculada.update(updateData);
+            
+            // Recarregar nota fiscal para obter dados atualizados
+            await notaFiscalVinculada.reload();
+            
+            // Capturar dados novos após atualização
+            const dadosNovos = notaFiscalVinculada.toJSON() as Record<string, unknown>;
+            
+            // Registrar auditoria no Elasticsearch se req foi fornecido
+            if (req) {
+              try {
+                await registrarAtualizacaoElasticsearch(
+                  req,
+                  'NotaFiscal',
+                  notaFiscalVinculada.id,
+                  dadosAnteriores,
+                  dadosNovos,
+                  `Atualização via webhook Asaas (NFS-e) - Status: ${nfseStatus}`
+                );
+              } catch (auditError) {
+                // Não bloquear processamento se auditoria falhar
+                logger.warn('Erro ao registrar auditoria de webhook Asaas (NFS-e)', {
+                  nota_fiscal_id: notaFiscalVinculada.id,
+                  error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+                });
+              }
+            }
 
             logger.info(`NF ${notaFiscalVinculada.id} atualizada com sucesso`);
           } catch (updateError) {
