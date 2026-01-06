@@ -59,13 +59,16 @@ if (fs.existsSync(imagesSource)) {
     fs.mkdirSync(arquivosDest, { recursive: true });
   }
   
-  // Criar estrutura de pastas vazias para uploads (não copiar conteúdo)
+  // Limpar e criar estrutura de pastas vazias para uploads (não copiar conteúdo)
   const subpastas = ['empresa', 'clientes', 'documentos'];
   subpastas.forEach(subpasta => {
     const fullPath = path.join(arquivosDest, subpasta);
-    if (!fs.existsSync(fullPath)) {
-      fs.mkdirSync(fullPath, { recursive: true });
+    // Remover pasta se existir (para limpar arquivos antigos)
+    if (fs.existsSync(fullPath)) {
+      fs.rmSync(fullPath, { recursive: true, force: true });
     }
+    // Criar pasta vazia
+    fs.mkdirSync(fullPath, { recursive: true });
   });
   
   // Copiar apenas images
