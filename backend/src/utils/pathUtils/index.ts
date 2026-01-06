@@ -35,3 +35,22 @@ export function resolveProjectPath(...pathParts: string[]): string {
   return path.join(__dirname, '..', '..', ...pathParts);
 }
 
+/**
+ * Resolve o caminho para a pasta de arquivos (uploads)
+ * Em produção, arquivos devem ser salvos na raiz do projeto, não em dist/
+ * Se o código está em dist/, volta um nível para a raiz do projeto
+ */
+export function resolveArquivosPath(...pathParts: string[]): string {
+  // Se estamos em produção (código em dist/), voltar um nível para a raiz
+  // Se estamos em dev (código em src/), usar process.cwd() diretamente
+  let basePath = process.cwd();
+  
+  if (__dirname.includes('dist')) {
+    // Em produção: __dirname = .../dist/utils/pathUtils
+    // Voltar para a raiz do projeto: .../backend/
+    basePath = path.join(__dirname, '..', '..', '..');
+  }
+  
+  return path.join(basePath, 'arquivos', ...pathParts);
+}
+

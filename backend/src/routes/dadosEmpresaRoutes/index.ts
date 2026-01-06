@@ -3,11 +3,12 @@ import { DadosEmpresaController } from '../../controllers/sistema/DadosEmpresaCo
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { resolveArquivosPath } from '../../utils/pathUtils';
 
 const router = Router();
 
 // Configuração do multer para upload de logo
-const uploadDir = path.resolve(process.cwd(), 'arquivos', 'empresa');
+const uploadDir = resolveArquivosPath('empresa');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

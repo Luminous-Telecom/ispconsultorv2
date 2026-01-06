@@ -22,8 +22,10 @@ export interface UpdateClienteArquivoData {
   descricao?: string;
 }
 
+import { resolveArquivosPath } from '../../utils/pathUtils';
+
 export class ClienteArquivoService {
-  private static readonly UPLOAD_DIR = path.join(process.cwd(), 'arquivos', 'clientes');
+  private static readonly UPLOAD_DIR = resolveArquivosPath('clientes');
 
   /**
    * Garante que o diretório de upload existe

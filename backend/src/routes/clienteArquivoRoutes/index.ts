@@ -4,13 +4,14 @@ import { logger } from '../../utils/logger';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { resolveArquivosPath } from '../../utils/pathUtils';
 
 const router = Router();
 
 logger.info('Carregando rotas de cliente-arquivos');
 
 // Configuração do multer para upload de arquivos de cliente
-const uploadDir = path.resolve(process.cwd(), 'arquivos', 'clientes');
+const uploadDir = resolveArquivosPath('clientes');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
