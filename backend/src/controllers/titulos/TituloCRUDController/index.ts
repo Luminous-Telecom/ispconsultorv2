@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { Titulo } from '../../../models/Titulo';
-import { Cliente } from '../../../models/Cliente';
-import { Contrato } from '../../../models/Contrato';
-import { Plano } from '../../../models/Plano';
-import { Banco } from '../../../models/Banco';
+import { Titulo } from '../../../models/financeiro/Titulo';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Banco } from '../../../models/cadastros/Banco';
 import { Op, WhereOptions } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
@@ -147,7 +147,7 @@ export class TituloCRUDController {
         }
       }
 
-      const { NotaFiscal } = await import('../../../models/NotaFiscal');
+      const { NotaFiscal } = await import('../../../models/nfse/NotaFiscal');
       
       const include = [
         { model: Cliente, as: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email'], required: false },

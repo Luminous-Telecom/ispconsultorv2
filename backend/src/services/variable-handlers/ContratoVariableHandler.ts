@@ -1,7 +1,7 @@
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
-import { Contrato } from '../../models/Contrato';
-import { Plano } from '../../models/Plano';
-import { DiasVencimento } from '../../models/DiasVencimento';
+import { Contrato } from '../../models/contratos/Contrato';
+import { Plano } from '../../models/cadastros/Plano';
+import { DiasVencimento } from '../../models/cadastros/DiasVencimento';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';
 

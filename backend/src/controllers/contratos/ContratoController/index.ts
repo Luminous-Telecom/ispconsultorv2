@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { Contrato } from '../../../models/Contrato';
-import { Cliente } from '../../../models/Cliente';
-import { Plano } from '../../../models/Plano';
-import { Banco } from '../../../models/Banco';
-import { ModeloDocumento } from '../../../models/ModeloDocumento';
-import { ContratoPlanoAdicional } from '../../../models/ContratoPlanoAdicional';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Banco } from '../../../models/cadastros/Banco';
+import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
+import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
 import { Op, WhereOptions, Transaction } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import * as Joi from 'joi';
@@ -589,7 +589,7 @@ export class ContratoController {
       }
 
       // Verificar se contrato tem títulos associados
-      const { Titulo } = await import('../../../models/Titulo');
+      const { Titulo } = await import('../../../models/financeiro/Titulo');
       const titulosCount = await Titulo.count({
         where: {
           contrato_id: id

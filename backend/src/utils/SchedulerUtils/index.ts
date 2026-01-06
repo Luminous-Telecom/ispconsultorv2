@@ -1,5 +1,5 @@
 import * as cron from 'node-cron';
-import { ScheduledRoutine } from '../../models/ScheduledRoutine';
+import { ScheduledRoutine } from '../../models/sistema/ScheduledRoutine';
 import { ajustarDataVencimento } from '../dateUtils';
 import type { CreateRoutineData, UpdateRoutineData } from '../../types/scheduler';
 

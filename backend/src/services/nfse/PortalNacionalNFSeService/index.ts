@@ -1,9 +1,9 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { logger } from '../../../utils/logger';
 import { NFSeConfigService } from '../NFSeConfigService';
-import { NotaFiscal } from '../../../models/NotaFiscal';
-import { Cliente } from '../../../models/Cliente';
-import { DadosEmpresa } from '../../../models/DadosEmpresa';
+import { NotaFiscal } from '../../../models/nfse/NotaFiscal';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 
 interface PortalNacionalConfig {
   username: string;

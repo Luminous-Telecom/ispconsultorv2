@@ -1,11 +1,11 @@
 import { Op } from 'sequelize';
-import { ServidorEmail } from '../../../models/ServidorEmail';
-import { MensagemEmail } from '../../../models/MensagemEmail';
-import { Titulo } from '../../../models/Titulo';
-import { Cliente } from '../../../models/Cliente';
-import { Plano } from '../../../models/Plano';
-import { Banco } from '../../../models/Banco';
-import { Contrato } from '../../../models/Contrato';
+import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
+import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
+import { Titulo } from '../../../models/financeiro/Titulo';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Banco } from '../../../models/cadastros/Banco';
+import { Contrato } from '../../../models/contratos/Contrato';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../documentos/VariaveisDocumentoService';
 import nodemailer, { SendMailOptions } from 'nodemailer';

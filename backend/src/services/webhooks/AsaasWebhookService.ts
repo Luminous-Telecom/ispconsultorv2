@@ -1,5 +1,5 @@
-import { Banco } from '../../models/Banco';
-import { Titulo } from '../../models/Titulo';
+import { Banco } from '../../models/cadastros/Banco';
+import { Titulo } from '../../models/financeiro/Titulo';
 import { BarcodeService } from '../bancos/BarcodeService';
 import { PaymentCommonService } from './PaymentCommonService';
 import { logger } from '../../utils/logger';
@@ -260,7 +260,7 @@ export class AsaasWebhookService {
       // A nota fiscal tem titulo_id, então buscamos a nota fiscal pelo invoice_id
       // e depois buscamos o título através do titulo_id
       const { Op } = await import('sequelize');
-      const { NotaFiscal } = await import('../../models/NotaFiscal');
+      const { NotaFiscal } = await import('../../models/nfse/NotaFiscal');
       
       let titulo = null;
       

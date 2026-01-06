@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { ContratoPlanoAdicional } from '../../../models/ContratoPlanoAdicional';
-import { Contrato } from '../../../models/Contrato';
-import { Plano } from '../../../models/Plano';
+import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { Plano } from '../../../models/cadastros/Plano';
 import * as Joi from 'joi';
 import { logger } from '../../../utils/logger';
 import { isJoiError, getErrorMessage } from '../../../utils/errorUtils';

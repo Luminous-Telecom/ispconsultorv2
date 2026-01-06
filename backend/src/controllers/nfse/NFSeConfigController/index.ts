@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { NFSeConfig } from '../../../models/NFSeConfig';
+import { NFSeConfig } from '../../../models/nfse/NFSeConfig';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
 import type { AuthenticatedRequest } from '../../../types/auth';

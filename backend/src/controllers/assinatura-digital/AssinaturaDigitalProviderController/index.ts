@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../utils/logger';
-import AssinaturaDigitalProvider from '../../../models/AssinaturaDigitalProvider';
+import AssinaturaDigitalProvider from '../../../models/assinatura-digital/AssinaturaDigitalProvider';
 import { Op } from 'sequelize';
 import Joi from 'joi';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';

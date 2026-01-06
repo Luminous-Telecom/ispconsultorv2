@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { NotaFiscal } from '../../../models/NotaFiscal';
-import { Cliente } from '../../../models/Cliente';
-import { Titulo } from '../../../models/Titulo';
+import { NotaFiscal } from '../../../models/nfse/NotaFiscal';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Titulo } from '../../../models/financeiro/Titulo';
 import { NFeService, DadosNFe } from '../../../services/nfse/NFeService';
 import { logger } from '../../../utils/logger';
 import { Op } from 'sequelize';
@@ -13,11 +13,11 @@ import type { AuthenticatedRequest } from '../../../types/auth';
 import * as fs from 'fs';
 import * as path from 'path';
 import QRCode from 'qrcode';
-import { NFSeConfig } from '../../../models/NFSeConfig';
-import { DadosEmpresa } from '../../../models/DadosEmpresa';
-import { Plano } from '../../../models/Plano';
-import { Contrato } from '../../../models/Contrato';
-import { ContratoPlanoAdicional } from '../../../models/ContratoPlanoAdicional';
+import { NFSeConfig } from '../../../models/nfse/NFSeConfig';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
 import { formatDate, parseDateFromDb } from '../../../utils/dateUtils';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
 import { FinancialCalculationsService } from '../../../services/FinancialCalculationsService';
@@ -808,8 +808,11 @@ export class NotaFiscalController {
     // Em prod (compilado): templates estão em dist/templates (copiados pelo build)
     // Usar process.cwd() + verificar se está em src ou dist
     const isDev = __dirname.includes('src');
+    const isProd = __dirname.includes('dist');
     const templatePath = isDev 
       ? path.join(process.cwd(), 'src', 'templates', 'nfse.html')
+      : isProd
+      ? path.join(process.cwd(), 'dist', 'templates', 'nfse.html')
       : path.join(process.cwd(), 'templates', 'nfse.html');
     if (!fs.existsSync(templatePath)) {
       throw new Error(`Template não encontrado: ${templatePath}`);

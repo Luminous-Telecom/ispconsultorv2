@@ -1,14 +1,14 @@
-import { NotaFiscal } from '../../../models/NotaFiscal';
-import { Cliente } from '../../../models/Cliente';
-import { DadosEmpresa } from '../../../models/DadosEmpresa';
+import { NotaFiscal } from '../../../models/nfse/NotaFiscal';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import { PortalNacionalNFSeService } from '../PortalNacionalNFSeService';
 import { AsaasNFSeService } from '../AsaasNFSeService';
 import { NFSeConfigService } from '../NFSeConfigService';
-import { Titulo } from '../../../models/Titulo';
-import { Plano } from '../../../models/Plano';
-import { Contrato } from '../../../models/Contrato';
-import { ContratoPlanoAdicional } from '../../../models/ContratoPlanoAdicional';
+import { Titulo } from '../../../models/financeiro/Titulo';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
 import { FinancialCalculationsService } from '../../FinancialCalculationsService';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
 

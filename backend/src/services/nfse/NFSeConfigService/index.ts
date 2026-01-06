@@ -1,4 +1,4 @@
-import { NFSeConfig } from '../../../models/NFSeConfig';
+import { NFSeConfig } from '../../../models/nfse/NFSeConfig';
 import { logger } from '../../../utils/logger';
 
 export class NFSeConfigService {

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { WorkerManager } from '../WorkerManager';
-import RoutineExecutionLog from '../../models/RoutineExecutionLog';
-import ScheduledRoutine from '../../models/ScheduledRoutine';
+import RoutineExecutionLog from '../../models/sistema/RoutineExecutionLog';
+import ScheduledRoutine from '../../models/sistema/ScheduledRoutine';
 import { Op } from 'sequelize';
 import { logger } from '../../utils/logger';
 

@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { Titulo } from '../../../models/Titulo';
+import { Titulo } from '../../../models/financeiro/Titulo';
 import { logger } from '../../../utils/logger';
 import { IRoutine, RoutineResult } from '../../../interfaces/IRoutine';
 import { JsonValue } from '../../../types/index';

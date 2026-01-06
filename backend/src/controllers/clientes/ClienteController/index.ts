@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Cliente } from '../../../models/Cliente';
-import { Titulo } from '../../../models/Titulo';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Titulo } from '../../../models/financeiro/Titulo';
 import { Op, WhereOptions } from 'sequelize';
 import Joi from 'joi';
 import axios from 'axios';

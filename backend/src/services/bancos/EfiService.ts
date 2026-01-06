@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { Banco } from '../../models/Banco';
-import { Titulo } from '../../models/Titulo';
-import { Cliente } from '../../models/Cliente';
+import { Banco } from '../../models/cadastros/Banco';
+import { Titulo } from '../../models/financeiro/Titulo';
+import { Cliente } from '../../models/clientes/Cliente';
 import { logger } from '../../utils/logger';
 import { efiConfig } from '../../config/bancos/efi';
 import type { JsonValue } from '../../types/index';
@@ -343,7 +343,7 @@ export class EfiService implements IBancoService {
     plano: PlanoForBoleto
   ): Promise<BoletoData> {
     // Buscar dados da empresa (recebedor)
-    const { DadosEmpresa } = await import('../../models/DadosEmpresa');
+    const { DadosEmpresa } = await import('../../models/sistema/DadosEmpresa');
     const dadosEmpresa = await DadosEmpresa.findOne();
 
     if (!dadosEmpresa) {

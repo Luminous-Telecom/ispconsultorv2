@@ -1,9 +1,9 @@
-import { Titulo } from '../../../models/Titulo';
+import { Titulo } from '../../../models/financeiro/Titulo';
 import type { InferAttributes } from 'sequelize';
-import { Cliente } from '../../../models/Cliente';
-import { Banco } from '../../../models/Banco';
-import { Contrato } from '../../../models/Contrato';
-import { Plano } from '../../../models/Plano';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Banco } from '../../../models/cadastros/Banco';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { Plano } from '../../../models/cadastros/Plano';
 
 // Interface para Titulo com relações carregadas
 // Usa InferAttributes para obter os atributos do modelo Sequelize

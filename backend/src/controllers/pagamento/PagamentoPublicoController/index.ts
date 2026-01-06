@@ -1,8 +1,8 @@
 import { Request, Response as ExpressResponse } from 'express';
-import { Titulo } from '../../../models/Titulo';
-import { Cliente } from '../../../models/Cliente';
-import { Plano } from '../../../models/Plano';
-import { Banco } from '../../../models/Banco';
+import { Titulo } from '../../../models/financeiro/Titulo';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Banco } from '../../../models/cadastros/Banco';
 import { TituloPDFController } from '../../titulos/TituloPDFController';
 import { TituloComRelacoes } from '../../titulos/TituloHelpers/types';
 import { logger } from '../../../utils/logger';

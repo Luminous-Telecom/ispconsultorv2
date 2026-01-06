@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { ModeloDocumento } from '../../../models/ModeloDocumento';
-import { Cliente } from '../../../models/Cliente';
-import { Contrato } from '../../../models/Contrato';
-import { Plano } from '../../../models/Plano';
-import { Titulo } from '../../../models/Titulo';
+import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Titulo } from '../../../models/financeiro/Titulo';
 import { Op } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';

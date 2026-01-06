@@ -1,4 +1,4 @@
-import { ServidorWhatsApp } from '../../../models/ServidorWhatsApp';
+import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
 import { logger } from '../../../utils/logger';
 
 interface WhatsAppCloudTemplateComponent {

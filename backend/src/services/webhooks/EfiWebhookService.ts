@@ -1,5 +1,5 @@
-import { Banco } from '../../models/Banco';
-import { Titulo } from '../../models/Titulo';
+import { Banco } from '../../models/cadastros/Banco';
+import { Titulo } from '../../models/financeiro/Titulo';
 import { BancoApiService } from '../bancos/BancoApiService';
 import { PaymentCommonService } from './PaymentCommonService';
 import { logger } from '../../utils/logger';

@@ -1,33 +1,50 @@
 // Importar todos os modelos
-import { Cliente } from './Cliente';
-import { Plano } from './Plano';
-import { Banco } from './Banco';
-import { Titulo } from './Titulo';
-import { Contrato } from './Contrato';
-import { DadosEmpresa } from './DadosEmpresa';
-import { ScheduledRoutine } from './ScheduledRoutine';
-import { RoutineExecutionLog } from './RoutineExecutionLog';
-import { ServidorEmail } from './ServidorEmail';
-import { ServidorWhatsApp } from './ServidorWhatsApp';
-import { ModeloDocumento } from './ModeloDocumento';
-import { DiasVencimento } from './DiasVencimento';
-import { TermoContrato } from './TermoContrato';
-import { ModeloTermo } from './ModeloTermo';
-import { Usuario } from './Usuario';
-import { ContratoPlanoAdicional } from './ContratoPlanoAdicional';
-import { Auditoria } from './Auditoria';
-import { AssinaturaDigital } from './AssinaturaDigital';
-import { ClienteArquivo } from './ClienteArquivo';
-import AssinaturaDigitalProvider from './AssinaturaDigitalProvider';
-import { Fornecedor } from './Fornecedor';
-import { FornecedorContato } from './FornecedorContato';
-import { FornecedorArquivo } from './FornecedorArquivo';
-import { FornecedorHistorico } from './FornecedorHistorico';
-import { ContaPagar } from './ContaPagar';
-import { ContaPagarArquivo } from './ContaPagarArquivo';
-import { ContaPagarPagamento } from './ContaPagarPagamento';
-import { NotaFiscal } from './NotaFiscal';
-import { NFSeConfig } from './NFSeConfig';
+// Assinatura Digital
+import { AssinaturaDigital } from './assinatura-digital/AssinaturaDigital';
+import AssinaturaDigitalProvider from './assinatura-digital/AssinaturaDigitalProvider';
+
+// Clientes
+import { Cliente } from './clientes/Cliente';
+import { ClienteArquivo } from './clientes/ClienteArquivo';
+
+// Contratos
+import { Contrato } from './contratos/Contrato';
+import { ContratoPlanoAdicional } from './contratos/ContratoPlanoAdicional';
+import { TermoContrato } from './contratos/TermoContrato';
+import { ModeloTermo } from './contratos/ModeloTermo';
+
+// Documentos
+import { ModeloDocumento } from './documentos/ModeloDocumento';
+
+// Financeiro
+import { Titulo } from './financeiro/Titulo';
+import { Fornecedor } from './financeiro/Fornecedor';
+import { FornecedorContato } from './financeiro/FornecedorContato';
+import { FornecedorArquivo } from './financeiro/FornecedorArquivo';
+import { FornecedorHistorico } from './financeiro/FornecedorHistorico';
+import { ContaPagar } from './financeiro/ContaPagar';
+import { ContaPagarArquivo } from './financeiro/ContaPagarArquivo';
+import { ContaPagarPagamento } from './financeiro/ContaPagarPagamento';
+
+// NFS-e
+import { NotaFiscal } from './nfse/NotaFiscal';
+import { NFSeConfig } from './nfse/NFSeConfig';
+
+// Cadastros
+import { Plano } from './cadastros/Plano';
+import { Banco } from './cadastros/Banco';
+import { Usuario } from './cadastros/Usuario';
+import { DiasVencimento } from './cadastros/DiasVencimento';
+
+// Sistema
+import { DadosEmpresa } from './sistema/DadosEmpresa';
+import { ScheduledRoutine } from './sistema/ScheduledRoutine';
+import { RoutineExecutionLog } from './sistema/RoutineExecutionLog';
+import { Auditoria } from './sistema/Auditoria';
+
+// Comunicação
+import { ServidorEmail } from './comunicacao/ServidorEmail';
+import { ServidorWhatsApp } from './comunicacao/ServidorWhatsApp';
 //
 // Importar associações específicas
 import './associations';

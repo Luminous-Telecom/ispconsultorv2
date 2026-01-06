@@ -1,8 +1,8 @@
 import axios, { AxiosInstance } from 'axios';
 import { logger } from '../../../utils/logger';
 import { PDFGenerationService } from '../../pdf-generation/PDFGenerationService';
-import AssinaturaDigitalProvider from '../../../models/AssinaturaDigitalProvider';
-import { AssinaturaDigital } from '../../../models/AssinaturaDigital';
+import AssinaturaDigitalProvider from '../../../models/assinatura-digital/AssinaturaDigitalProvider';
+import { AssinaturaDigital } from '../../../models/assinatura-digital/AssinaturaDigital';
 
 interface ZapsignConfig {
   apiKey: string;

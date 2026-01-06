@@ -1,16 +1,16 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../utils/logger';
-import { AssinaturaDigital } from '../../../models/AssinaturaDigital';
-import { TermoContrato } from '../../../models/TermoContrato';
-import { Cliente } from '../../../models/Cliente';
-import { Contrato } from '../../../models/Contrato';
-import { ClienteArquivo } from '../../../models/ClienteArquivo';
-import { ModeloDocumento } from '../../../models/ModeloDocumento';
+import { AssinaturaDigital } from '../../../models/assinatura-digital/AssinaturaDigital';
+import { TermoContrato } from '../../../models/contratos/TermoContrato';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { ClienteArquivo } from '../../../models/clientes/ClienteArquivo';
+import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
 import { AssinafyService } from '../../../services/assinatura-digital/AssinafyService';
 import { ZapsignService } from '../../../services/assinatura-digital/ZapsignService';
 import { ClienteArquivoService } from '../../../services/cadastros';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
-import AssinaturaDigitalProvider from '../../../models/AssinaturaDigitalProvider';
+import AssinaturaDigitalProvider from '../../../models/assinatura-digital/AssinaturaDigitalProvider';
 import { registrarCriacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import type { AuthenticatedRequest } from '../../../types/auth';
 

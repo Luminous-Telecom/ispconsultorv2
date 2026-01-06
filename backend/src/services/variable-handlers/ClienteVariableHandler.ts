@@ -1,5 +1,5 @@
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
-import { Cliente } from '../../models/Cliente';
+import { Cliente } from '../../models/clientes/Cliente';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';
 

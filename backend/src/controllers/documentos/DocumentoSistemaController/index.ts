@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { ValidationError } from 'sequelize';
-import { ModeloContrato } from '../../../models/ModeloContrato';
-import { Cliente } from '../../../models/Cliente';
-import { Contrato } from '../../../models/Contrato';
-import { Plano } from '../../../models/Plano';
+import { ModeloContrato } from '../../../models/contratos/ModeloContrato';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { Plano } from '../../../models/cadastros/Plano';
 import { logger } from '../../../utils/logger';
 import fs from 'fs/promises';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';

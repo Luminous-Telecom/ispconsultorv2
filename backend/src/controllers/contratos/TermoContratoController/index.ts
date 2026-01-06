@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { TermoContrato } from '../../../models/TermoContrato';
-import { Contrato } from '../../../models/Contrato';
-import { ModeloDocumento } from '../../../models/ModeloDocumento';
+import { TermoContrato } from '../../../models/contratos/TermoContrato';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { setAuditData } from '../../../middleware/auditMiddleware';

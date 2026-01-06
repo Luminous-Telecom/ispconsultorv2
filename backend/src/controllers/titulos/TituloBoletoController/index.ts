@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { Titulo } from '../../../models/Titulo';
-import { Cliente } from '../../../models/Cliente';
-import { Plano } from '../../../models/Plano';
-import { Banco } from '../../../models/Banco';
+import { Titulo } from '../../../models/financeiro/Titulo';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Banco } from '../../../models/cadastros/Banco';
 import { logger } from '../../../utils/logger';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { TituloComRelacoes } from '../TituloHelpers/types';

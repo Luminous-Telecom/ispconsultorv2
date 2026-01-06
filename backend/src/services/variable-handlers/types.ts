@@ -1,6 +1,6 @@
-import { Cliente } from '../../models/Cliente';
-import { Contrato } from '../../models/Contrato';
-import { Titulo } from '../../models/Titulo';
+import { Cliente } from '../../models/clientes/Cliente';
+import { Contrato } from '../../models/contratos/Contrato';
+import { Titulo } from '../../models/financeiro/Titulo';
 import type { TituloComRelacoes } from '../../controllers/titulos/TituloHelpers/types';
 
 /**

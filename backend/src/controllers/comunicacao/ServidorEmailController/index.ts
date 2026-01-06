@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { ServidorEmail } from '../../../models/ServidorEmail';
-import { MensagemEmail } from '../../../models/MensagemEmail';
+import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
+import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
 import { logger } from '../../../utils/logger';
 import { formatDateTime } from '../../../utils/dateUtils';
 import nodemailer from 'nodemailer';

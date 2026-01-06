@@ -5,7 +5,7 @@ import Joi from 'joi';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
-import { ClienteArquivo } from '../../../models/ClienteArquivo';
+import { ClienteArquivo } from '../../../models/clientes/ClienteArquivo';
 
 export class ClienteArquivoController {
   private static createSchema = Joi.object({

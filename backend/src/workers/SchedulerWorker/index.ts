@@ -1,6 +1,6 @@
 import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
-import ScheduledRoutine from '../../models/ScheduledRoutine';
-import RoutineExecutionLog from '../../models/RoutineExecutionLog';
+import ScheduledRoutine from '../../models/sistema/ScheduledRoutine';
+import RoutineExecutionLog from '../../models/sistema/RoutineExecutionLog';
 import { EnvioBoletosRoutine } from '../../services/scheduler/routines/EnvioBoletosRoutine';
 import { RemessaBancariaRoutine } from '../../services/scheduler/routines/RemessaBancariaRoutine';
 import { IRoutine } from '../../interfaces/IRoutine';

@@ -337,7 +337,7 @@ export class NFSeXmlParserService {
       }
 
       // Importa o modelo aqui para evitar dependências circulares
-      const { NotaFiscal } = await import('../../../models/NotaFiscal');
+      const { NotaFiscal } = await import('../../../models/nfse/NotaFiscal');
 
       const notaFiscal = await NotaFiscal.findByPk(notaFiscalId);
       if (!notaFiscal) {

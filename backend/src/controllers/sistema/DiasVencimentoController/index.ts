@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { DiasVencimento } from '../../../models/DiasVencimento';
+import { DiasVencimento } from '../../../models/cadastros/DiasVencimento';
 import { logger } from '../../../utils/logger';
 import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
 import type { AuthenticatedRequest } from '../../../types/auth';

@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { Banco } from '../../models/Banco';
-import { Titulo } from '../../models/Titulo';
-import { Cliente } from '../../models/Cliente';
-import { Plano } from '../../models/Plano';
+import { Banco } from '../../models/cadastros/Banco';
+import { Titulo } from '../../models/financeiro/Titulo';
+import { Cliente } from '../../models/clientes/Cliente';
+import { Plano } from '../../models/cadastros/Plano';
 import { logger } from '../../utils/logger';
 import { BarcodeService } from '../bancos/BarcodeService';
 import asaasConfig from '../../config/bancos/asaas';

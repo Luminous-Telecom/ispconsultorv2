@@ -1,6 +1,6 @@
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
-import { Cliente } from '../../models/Cliente';
-import { Titulo } from '../../models/Titulo';
+import { Cliente } from '../../models/clientes/Cliente';
+import { Titulo } from '../../models/financeiro/Titulo';
 import { Op } from 'sequelize';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';

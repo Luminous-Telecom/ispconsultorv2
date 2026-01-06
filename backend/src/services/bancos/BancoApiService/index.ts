@@ -1,9 +1,9 @@
 import axios, { type AxiosResponse } from 'axios';
-import { Banco } from '../../../models/Banco';
-import { Titulo } from '../../../models/Titulo';
+import { Banco } from '../../../models/cadastros/Banco';
+import { Titulo } from '../../../models/financeiro/Titulo';
 import type { InferAttributes } from 'sequelize';
-import { Cliente } from '../../../models/Cliente';
-import { Plano } from '../../../models/Plano';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Plano } from '../../../models/cadastros/Plano';
 import { logger } from '../../../utils/logger';
 import { efiConfig } from '../../../config/bancos/efi';
 import asaasConfig from '../../../config/bancos/asaas';

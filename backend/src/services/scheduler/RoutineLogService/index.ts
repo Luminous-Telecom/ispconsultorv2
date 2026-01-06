@@ -1,5 +1,5 @@
-import { ScheduledRoutine } from '../../../models/ScheduledRoutine';
-import { RoutineExecutionLog } from '../../../models/RoutineExecutionLog';
+import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
+import { RoutineExecutionLog } from '../../../models/sistema/RoutineExecutionLog';
 import { logger } from '../../../utils/logger';
 import type { JsonValue } from '../../../types/index';
 import type { RoutineExecutionResult } from '../../../types/scheduler';

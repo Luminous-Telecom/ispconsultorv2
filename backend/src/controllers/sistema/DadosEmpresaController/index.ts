@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { DadosEmpresa } from '../../../models/DadosEmpresa';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';

@@ -1,5 +1,5 @@
 import * as cron from 'node-cron';
-import { ScheduledRoutine } from '../../../models/ScheduledRoutine';
+import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
 import { logger } from '../../../utils/logger';
 import { buildCronExpression, validateCronExpression } from '../../../utils/SchedulerUtils';
 import { RoutineExecutionService } from '../RoutineExecutionService';

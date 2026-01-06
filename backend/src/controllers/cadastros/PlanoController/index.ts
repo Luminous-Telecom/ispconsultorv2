@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Plano } from '../../../models/Plano';
-import { Contrato } from '../../../models/Contrato';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Contrato } from '../../../models/contratos/Contrato';
 import { Op, WhereOptions, Order } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';

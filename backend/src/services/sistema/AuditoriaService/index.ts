@@ -5,7 +5,7 @@
  * @module services/AuditoriaService
  */
 import { Request } from 'express';
-import { Auditoria, AcaoAuditoria } from '../../../models/Auditoria';
+import { Auditoria, AcaoAuditoria } from '../../../models/sistema/Auditoria';
 import { logger } from '../../../utils/logger';
 
 // Interface para Request com usuário autenticado

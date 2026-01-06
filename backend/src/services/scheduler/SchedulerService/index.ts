@@ -1,4 +1,4 @@
-import { ScheduledRoutine } from '../../../models/ScheduledRoutine';
+import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
 import { logger } from '../../../utils/logger';
 import { calculateNextExecution } from '../../../utils/SchedulerUtils';
 import { RoutineScheduleService } from '../RoutineScheduleService';

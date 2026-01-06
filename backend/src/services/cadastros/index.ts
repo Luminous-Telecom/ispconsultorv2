@@ -1,5 +1,5 @@
-import { ClienteArquivo } from '../../models/ClienteArquivo';
-import { Cliente } from '../../models/Cliente';
+import { ClienteArquivo } from '../../models/clientes/ClienteArquivo';
+import { Cliente } from '../../models/clientes/Cliente';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';

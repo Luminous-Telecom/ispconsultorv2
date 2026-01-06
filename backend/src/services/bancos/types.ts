@@ -1,7 +1,7 @@
-import type { Banco } from '../../models/Banco';
-import type { Titulo } from '../../models/Titulo';
-import type { Cliente } from '../../models/Cliente';
-import type { Plano } from '../../models/Plano';
+import type { Banco } from '../../models/cadastros/Banco';
+import type { Titulo } from '../../models/financeiro/Titulo';
+import type { Cliente } from '../../models/clientes/Cliente';
+import type { Plano } from '../../models/cadastros/Plano';
 import type { JsonValue } from '../../types/index';
 import type { InferAttributes } from 'sequelize';
 

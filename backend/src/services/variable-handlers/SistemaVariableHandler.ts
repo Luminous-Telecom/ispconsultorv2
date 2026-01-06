@@ -3,7 +3,7 @@ import path from 'path';
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';
-import { DadosEmpresa } from '../../models/DadosEmpresa';
+import { DadosEmpresa } from '../../models/sistema/DadosEmpresa';
 
 /**
  * Handler para processamento de variáveis do sistema
@@ -79,7 +79,7 @@ export class SistemaVariableHandler implements VariableHandler {
       return '';
     }
 
-    const { ClienteArquivo } = await import('../../models/ClienteArquivo');
+    const { ClienteArquivo } = await import('../../models/clientes/ClienteArquivo');
     
     const assinaturaCliente = await ClienteArquivo.findOne({
       where: {

@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
-import { NotaFiscal } from '../../../models/NotaFiscal';
-import { Cliente } from '../../../models/Cliente';
-import { DadosEmpresa } from '../../../models/DadosEmpresa';
+import { NotaFiscal } from '../../../models/nfse/NotaFiscal';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import { NFSeConfigService } from '../NFSeConfigService';
 import asaasConfig from '../../../config/bancos/asaas';

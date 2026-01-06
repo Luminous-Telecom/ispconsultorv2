@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Titulo } from '../../../models/Titulo';
-import { Banco } from '../../../models/Banco';
+import { Titulo } from '../../../models/financeiro/Titulo';
+import { Banco } from '../../../models/cadastros/Banco';
 import { AsaasWebhookService } from '../../../services/webhooks/AsaasWebhookService';
 import { logger } from '../../../utils/logger';
 import { JsonValue } from '../../../types/index';

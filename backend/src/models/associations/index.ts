@@ -1,6 +1,6 @@
-import { ModeloDocumento } from '../ModeloDocumento';
-import ModeloContratoConteudo from '../ModeloContratoConteudo';
-import ModeloContratoPermanencia from '../ModeloContratoPermanencia';
+import { ModeloDocumento } from '../documentos/ModeloDocumento';
+import ModeloContratoConteudo from '../contratos/ModeloContratoConteudo';
+import ModeloContratoPermanencia from '../contratos/ModeloContratoPermanencia';
 
 // Definir associações
 // Nota: ModeloTermoAdesao foi removido - agora usa campo conteudo_adesao em ModeloDocumento

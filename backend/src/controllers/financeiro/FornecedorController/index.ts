@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Fornecedor } from '../../../models/Fornecedor';
-import { ContaPagar } from '../../../models/ContaPagar';
+import { Fornecedor } from '../../../models/financeiro/Fornecedor';
+import { ContaPagar } from '../../../models/financeiro/ContaPagar';
 import { Op, WhereOptions } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import { fornecedorCreateSchema, fornecedorUpdateSchema } from '../../../validators/fornecedor.validator';

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import SchedulerWorker from '../SchedulerWorker';
-import ScheduledRoutine from '../../models/ScheduledRoutine';
+import ScheduledRoutine from '../../models/sistema/ScheduledRoutine';
 import { Op } from 'sequelize';
 import { logger } from '../../utils/logger';
 

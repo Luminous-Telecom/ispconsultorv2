@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { ModeloRecibo } from '../../../models/ModeloRecibo';
-import { Cliente } from '../../../models/Cliente';
-import { Contrato } from '../../../models/Contrato';
-import { Plano } from '../../../models/Plano';
+import { ModeloRecibo } from '../../../models/documentos/ModeloRecibo';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Contrato } from '../../../models/contratos/Contrato';
+import { Plano } from '../../../models/cadastros/Plano';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';

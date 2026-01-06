@@ -1,6 +1,6 @@
-import { ScheduledRoutine } from '../../../models/ScheduledRoutine';
-import { DiasVencimento } from '../../../models/DiasVencimento';
-import { ContratoPlanoAdicional } from '../../../models/ContratoPlanoAdicional';
+import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
+import { DiasVencimento } from '../../../models/cadastros/DiasVencimento';
+import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
 import { logger } from '../../../utils/logger';
 import { BarcodeService } from '../../bancos/BarcodeService';
 import { ajustarDataVencimento, formatDate, normalizeDateForDb } from '../../../utils/dateUtils';
@@ -8,7 +8,7 @@ import { withTransaction } from '../../../utils/transaction';
 import { metrics, isMetricsEnabled } from '../../../utils/metrics';
 import { Op } from 'sequelize';
 import type { Transaction } from 'sequelize';
-import type Parametros from '../../../models/Parametros';
+import type Parametros from '../../../models/sistema/Parametros';
 import { registrarCriacao } from '../../sistema/AuditoriaService';
 import { registrarCriacaoElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
 import type { Request } from 'express';
@@ -101,10 +101,10 @@ export class RoutineExecutionService {
    * @returns Resultado da geração de títulos
    */
   public async executeGeracaoTitulos(_routine: ScheduledRoutine): Promise<GeracaoTitulosResult> {
-    const { Contrato: ContratoModel } = await import('../../../models/Contrato');
-    const { Titulo } = await import('../../../models/Titulo');
-    const { Plano } = await import('../../../models/Plano');
-    const { default: Parametros } = await import('../../../models/Parametros');
+    const { Contrato: ContratoModel } = await import('../../../models/contratos/Contrato');
+    const { Titulo } = await import('../../../models/financeiro/Titulo');
+    const { Plano } = await import('../../../models/cadastros/Plano');
+    const { default: Parametros } = await import('../../../models/sistema/Parametros');
     
     try {
       // Buscar configuração de total de títulos
@@ -112,7 +112,7 @@ export class RoutineExecutionService {
       const quantidadeMinimaTitulos = parametros?.total_titulos_financeiro || 12;
       
       // Buscar modelo Cliente
-      const { Cliente } = await import('../../../models/Cliente');
+      const { Cliente } = await import('../../../models/clientes/Cliente');
       
       // Buscar todos os contratos ativos
       const contratos = await ContratoModel.findAll({
@@ -728,10 +728,10 @@ export class RoutineExecutionService {
    * @returns Resultado da remessa bancária
    */
   public async executeRemessaBancaria(_routine: ScheduledRoutine): Promise<RemessaBancariaResult> {
-    const { Titulo: TituloModel } = await import('../../../models/Titulo');
-    const { Banco } = await import('../../../models/Banco');
-    const { Cliente } = await import('../../../models/Cliente');
-    const { Plano } = await import('../../../models/Plano');
+    const { Titulo: TituloModel } = await import('../../../models/financeiro/Titulo');
+    const { Banco } = await import('../../../models/cadastros/Banco');
+    const { Cliente } = await import('../../../models/clientes/Cliente');
+    const { Plano } = await import('../../../models/cadastros/Plano');
           const { BancoApiService } = await import('../../bancos/BancoApiService');
     
     try {

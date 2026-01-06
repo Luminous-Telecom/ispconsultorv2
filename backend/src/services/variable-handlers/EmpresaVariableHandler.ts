@@ -1,5 +1,5 @@
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
-import { DadosEmpresa } from '../../models/DadosEmpresa';
+import { DadosEmpresa } from '../../models/sistema/DadosEmpresa';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';
 import { ImageConverter } from './utils/ImageConverter';

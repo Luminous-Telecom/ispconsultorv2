@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { Titulo } from '../../../models/Titulo';
-import { Cliente } from '../../../models/Cliente';
-import { Plano } from '../../../models/Plano';
-import { Banco } from '../../../models/Banco';
+import { Titulo } from '../../../models/financeiro/Titulo';
+import { Cliente } from '../../../models/clientes/Cliente';
+import { Plano } from '../../../models/cadastros/Plano';
+import { Banco } from '../../../models/cadastros/Banco';
 import { Op } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import puppeteer from 'puppeteer';
@@ -10,7 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type htmlPdf from 'html-pdf-node';
 import type { Options } from 'html-pdf-node';
-import { DadosEmpresa } from '../../../models/DadosEmpresa';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { BarcodeService } from '../../../services/bancos/BarcodeService';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
@@ -105,8 +105,11 @@ export class TituloPDFController {
       // Em prod (compilado): templates estão em dist/templates (copiados pelo build)
       // Usar process.cwd() + verificar se está em src ou dist
       const isDev = __dirname.includes('src');
+      const isProd = __dirname.includes('dist');
       const templatesPath = isDev 
         ? path.join(process.cwd(), 'src', 'templates')
+        : isProd
+        ? path.join(process.cwd(), 'dist', 'templates')
         : path.join(process.cwd(), 'templates');
       const topoTemplatePath = path.join(templatesPath, 'boleto-topo-inner.html');
       const corpoTemplatePath = path.join(templatesPath, 'boleto-corpo-inner.html');

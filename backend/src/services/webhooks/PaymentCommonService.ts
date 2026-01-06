@@ -1,5 +1,5 @@
-import { Banco } from '../../models/Banco';
-import { Usuario } from '../../models/Usuario';
+import { Banco } from '../../models/cadastros/Banco';
+import { Usuario } from '../../models/cadastros/Usuario';
 import { logger } from '../../utils/logger';
 
 /**

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Parametro } from '../../../models/Parametro';
+import { Parametro } from '../../../models/sistema/Parametro';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
 import type { AuthenticatedRequest } from '../../../types/auth';

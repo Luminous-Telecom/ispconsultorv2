@@ -1,4 +1,4 @@
-import Parametros from '../../models/Parametros';
+import Parametros from '../../models/sistema/Parametros';
 
 /**
  * Formata um CEP removendo caracteres não numéricos e aplicando máscara 00000-000

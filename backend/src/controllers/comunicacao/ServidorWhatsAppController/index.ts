@@ -1,7 +1,7 @@
 import { Request, Response as ExpressResponse } from 'express';
 import { ValidationError } from 'sequelize';
-import { ServidorWhatsApp } from '../../../models/ServidorWhatsApp';
-import { MensagemWhatsApp } from '../../../models/MensagemWhatsApp';
+import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
+import { MensagemWhatsApp } from '../../../models/comunicacao/MensagemWhatsApp';
 import { logger } from '../../../utils/logger';
 
 import { WhatsAppCloudService } from '../../../services/comunicacao/WhatsAppCloudService';

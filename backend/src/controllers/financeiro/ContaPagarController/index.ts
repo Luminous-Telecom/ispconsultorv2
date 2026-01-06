@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { ContaPagar } from '../../../models/ContaPagar';
-import { ContaPagarPagamento } from '../../../models/ContaPagarPagamento';
-import { Fornecedor } from '../../../models/Fornecedor';
+import { ContaPagar } from '../../../models/financeiro/ContaPagar';
+import { ContaPagarPagamento } from '../../../models/financeiro/ContaPagarPagamento';
+import { Fornecedor } from '../../../models/financeiro/Fornecedor';
 import { Op, WhereOptions } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import { contaPagarCreateSchema, contaPagarUpdateSchema, contaPagarPagamentoSchema } from '../../../validators/contaPagar.validator';

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Banco } from '../../../models/Banco';
+import { Banco } from '../../../models/cadastros/Banco';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { logger } from '../../../utils/logger';
 import { Op, WhereOptions, ValidationError } from 'sequelize';

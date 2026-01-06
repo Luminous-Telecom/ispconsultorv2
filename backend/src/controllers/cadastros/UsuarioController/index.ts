@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Usuario } from '../../../models/Usuario';
+import { Usuario } from '../../../models/cadastros/Usuario';
 import { Op, WhereOptions } from 'sequelize';
 import * as Joi from 'joi';
 import * as bcrypt from 'bcryptjs';

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Parametros from '../../../models/Parametros';
+import Parametros from '../../../models/sistema/Parametros';
 import Joi from 'joi';
 import { logger } from '../../../utils/logger';
 import { cache } from '../../../utils/cache';

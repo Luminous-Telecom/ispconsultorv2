@@ -1,4 +1,4 @@
-import { Parametro } from '../../../models/Parametro';
+import { Parametro } from '../../../models/sistema/Parametro';
 import { logger } from '../../../utils/logger';
 
 export class ParametroService {

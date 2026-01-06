@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { getElasticsearchService } from '../../../services/elasticsearch/ElasticsearchService';
 import { logger } from '../../../utils/logger';
-import { Auditoria } from '../../../models/Auditoria';
-import { Usuario } from '../../../models/Usuario';
+import { Auditoria } from '../../../models/sistema/Auditoria';
+import { Usuario } from '../../../models/cadastros/Usuario';
 import { Op, WhereOptions } from 'sequelize';
 import { converterLogoParaBase64 } from '../../titulos/TituloHelpers';
 
@@ -589,7 +589,7 @@ export class AuditoriaController {
         return;
       }
 
-      const { DadosEmpresa } = await import('../../../models/DadosEmpresa');
+      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
       const dadosEmpresa = await DadosEmpresa.findOne();
 
       const html = AuditoriaController.generateAuditPdfHtml(logs, entidade as string, dadosEmpresa);

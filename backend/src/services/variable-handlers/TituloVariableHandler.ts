@@ -1,5 +1,5 @@
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
-import { Titulo } from '../../models/Titulo';
+import { Titulo } from '../../models/financeiro/Titulo';
 import { gerarLinkPagamentoPublico } from '../../controllers/titulos/TituloHelpers';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';
