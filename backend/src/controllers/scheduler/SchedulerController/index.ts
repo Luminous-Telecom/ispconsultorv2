@@ -5,6 +5,7 @@ import { ScheduledRoutine } from '../../../models';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
+import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
 
 export class SchedulerController {
   private schedulerService: SchedulerService;
@@ -28,18 +29,9 @@ export class SchedulerController {
 
       res.json(result);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao listar rotinas', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
-        action: 'index',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
+        action: 'index'
       });
     }
   }
@@ -51,31 +43,16 @@ export class SchedulerController {
       const routine = await this.schedulerService.getRoutineById(Number(id));
 
       if (!routine) {
-        res.status(404).json({
-          success: false,
-          message: 'Rotina não encontrada'
-        });
+        sendNotFound(res, 'Rotina não encontrada');
         return;
       }
 
-      res.json({
-        success: true,
-        data: routine
-      });
+      sendSuccess(res, routine);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter rotina', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
         action: 'show',
-        error: errorMessage,
-        stack: errorStack,
         rotinaId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -87,42 +64,30 @@ export class SchedulerController {
 
       // Validações básicas
       if (!routineData.nome || !routineData.tipo || !routineData.frequencia || !routineData.hora_execucao) {
-        res.status(400).json({
-          success: false,
-          message: 'Campos obrigatórios: nome, tipo, frequencia, hora_execucao'
-        });
+        sendValidationError(res, 'Campos obrigatórios: nome, tipo, frequencia, hora_execucao');
         return;
       }
 
       const routine = await this.schedulerService.createRoutine(routineData);
 
       // Registrar auditoria
-      await registrarCriacao(
-        req,
-        'ScheduledRoutine',
-        routine.id,
-        routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>)
-      );
+      try {
+        await registrarCriacao(
+          req,
+          'ScheduledRoutine',
+          routine.id,
+          routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>)
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        message: 'Rotina criada com sucesso',
-        data: routine
-      });
+      sendSuccess(res, routine, 'Rotina criada com sucesso', 201);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao criar rotina', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
         action: 'create',
-        error: errorMessage,
-        stack: errorStack,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -142,10 +107,7 @@ export class SchedulerController {
       // Recarregar rotina para obter dados atualizados
       const routineAtualizada = await ScheduledRoutineService.getById(Number(id));
       if (!routineAtualizada) {
-        res.status(404).json({
-          success: false,
-          message: 'Rotina não encontrada após atualização'
-        });
+        sendNotFound(res, 'Rotina não encontrada após atualização');
         return;
       }
 
@@ -155,34 +117,25 @@ export class SchedulerController {
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
       
-      await registrarAtualizacao(
-        req,
-        'ScheduledRoutine',
-        Number(id),
-        dadosAnteriores,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req,
+          'ScheduledRoutine',
+          Number(id),
+          dadosAnteriores,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Rotina atualizada com sucesso',
-        data: routineAtualizada
-      });
+      sendSuccess(res, routineAtualizada, 'Rotina atualizada com sucesso');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar rotina', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
         action: 'update',
-        error: errorMessage,
-        stack: errorStack,
         rotinaId: req.params.id,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -211,24 +164,12 @@ export class SchedulerController {
 
       await this.schedulerService.deleteRoutine(Number(id));
 
-      res.json({
-        success: true,
-        message: 'Rotina deletada com sucesso'
-      });
+      sendSuccess(res, undefined, 'Rotina deletada com sucesso');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao deletar rotina', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
         action: 'delete',
-        error: errorMessage,
-        stack: errorStack,
         rotinaId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -240,10 +181,7 @@ export class SchedulerController {
       const { ativo } = req.body;
 
       if (typeof ativo !== 'boolean') {
-        res.status(400).json({
-          success: false,
-          message: 'Campo "ativo" deve ser um booleano'
-        });
+        sendValidationError(res, 'Campo "ativo" deve ser um booleano');
         return;
       }
 
@@ -256,10 +194,7 @@ export class SchedulerController {
       // Recarregar rotina para obter dados atualizados
       const routineAtualizada = await ScheduledRoutineService.getById(Number(id));
       if (!routineAtualizada) {
-        res.status(404).json({
-          success: false,
-          message: 'Rotina não encontrada após atualização'
-        });
+        sendNotFound(res, 'Rotina não encontrada após atualização');
         return;
       }
 
@@ -269,34 +204,25 @@ export class SchedulerController {
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
       
-      await registrarAtualizacao(
-        req,
-        'ScheduledRoutine',
-        Number(id),
-        dadosAnteriores,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req,
+          'ScheduledRoutine',
+          Number(id),
+          dadosAnteriores,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: `Rotina ${ativo ? 'ativada' : 'desativada'} com sucesso`,
-        data: routineAtualizada
-      });
+      sendSuccess(res, routineAtualizada, `Rotina ${ativo ? 'ativada' : 'desativada'} com sucesso`);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao alterar status da rotina', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
         action: 'toggleStatus',
-        error: errorMessage,
-        stack: errorStack,
         rotinaId: req.params.id,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -308,25 +234,12 @@ export class SchedulerController {
 
       const resultado = await this.schedulerService.executeRoutineManually(Number(id));
 
-      res.json({
-        success: true,
-        message: 'Rotina iniciada em background',
-        data: resultado
-      });
+      sendSuccess(res, resultado, 'Rotina iniciada em background');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao executar rotina', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
         action: 'execute',
-        error: errorMessage,
-        stack: errorStack,
         rotinaId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -337,23 +250,11 @@ export class SchedulerController {
     try {
       const status = this.schedulerService.getStatus();
 
-      res.json({
-        success: true,
-        data: status
-      });
+      sendSuccess(res, status);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter status do scheduler', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
-        action: 'getStatus',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
+        action: 'getStatus'
       });
     }
   }
@@ -365,34 +266,19 @@ export class SchedulerController {
       const routineId = Number(id);
       
       if (isNaN(routineId)) {
-        res.status(400).json({
-          success: false,
-          message: 'ID da rotina inválido'
-        });
+        sendValidationError(res, 'ID da rotina inválido');
         return;
       }
 
       const logs = await this.schedulerService.getExecutionLogs(routineId);
 
-      res.json({
-        success: true,
-        data: logs
-      });
+      sendSuccess(res, logs);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter logs de execução', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
         action: 'getLogsByRoutine',
-        error: errorMessage,
-        stack: errorStack,
         rotinaId: req.params.id,
         query: req.query
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -402,24 +288,12 @@ export class SchedulerController {
     try {
       const logs = await this.schedulerService.getRecentExecutionLogs(50);
 
-      res.json({
-        success: true,
-        data: logs
-      });
+      sendSuccess(res, logs);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter logs de execução', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'SchedulerController',
         action: 'getAllLogs',
-        error: errorMessage,
-        stack: errorStack,
         query: req.query
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }

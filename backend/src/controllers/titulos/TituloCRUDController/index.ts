@@ -9,7 +9,7 @@ import { ClienteService } from '../../../services/clientes/ClienteService';
 import { ContratoService } from '../../../services/contratos/ContratoService';
 import { PlanoService } from '../../../services/cadastros/PlanoService';
 import { BancoService } from '../../../services/cadastros/BancoService';
-import { Op, WhereOptions, Transaction } from 'sequelize';
+import { Transaction, WhereOptions } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
 import { formatDateOnly } from '../../../utils/timezoneUtils';
@@ -18,6 +18,7 @@ import { TituloBulkController } from '../TituloBulkController';
 import type { TituloComRelacoes } from '../TituloHelpers/types';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class TituloCRUDController {
   
@@ -39,119 +40,8 @@ export class TituloCRUDController {
 
       const limitNum = Number(limit);
       const pageNum = Number(page);
-      const offset = (pageNum - 1) * limitNum;
 
-      const where: WhereOptions = {};
-
-      if (status) {
-        if (typeof status === 'string' && status.startsWith('!')) {
-          where.status = { [Op.ne]: status.substring(1) };
-        } else {
-          where.status = status;
-        }
-      }
-
-      if (cliente_id) {
-        where.cliente_id = cliente_id;
-      }
-
-      if (data_vencimento_inicio || data_vencimento_fim) {
-        const range: Record<symbol, unknown> = {};
-
-        if (data_vencimento_inicio) {
-          const [year, month, day] = (data_vencimento_inicio as string).split('-').map(Number);
-          range[Op.gte] = new Date(year, month - 1, day, 0, 0, 0, 0);
-        }
-
-        if (data_vencimento_fim) {
-          const [year, month, day] = (data_vencimento_fim as string).split('-').map(Number);
-          range[Op.lte] = new Date(year, month - 1, day, 23, 59, 59, 999);
-        }
-
-        where.data_vencimento = range;
-      }
-
-      if (search && String(search).trim()) {
-        const term = String(search).trim();
-        const likePattern = `%${term.replace(/[%_\\]/g, '\\$&')}%`;
-        const termNum = Number(term);
-        const isNumericSearch = !isNaN(termNum) && term !== '';
-
-        const field = typeof searchField === 'string' ? searchField : undefined;
-        const orConditions: WhereOptions[] = [];
-
-        const addMultiFieldSearch = () => {
-          orConditions.push(
-            { numero_titulo: { [Op.like]: likePattern } } as WhereOptions,
-            { status: { [Op.like]: likePattern } } as WhereOptions,
-            { charge_id: { [Op.like]: likePattern } } as WhereOptions,
-            { nosso_numero: { [Op.like]: likePattern } } as WhereOptions,
-            { '$cliente.razao_social$': { [Op.like]: likePattern } } as WhereOptions,
-            { '$cliente.nome_fantasia$': { [Op.like]: likePattern } } as WhereOptions,
-            { '$plano.nome_plano$': { [Op.like]: likePattern } } as WhereOptions
-          );
-
-          if (isNumericSearch) {
-            orConditions.push(
-              { id: termNum } as WhereOptions,
-              { valor: termNum } as WhereOptions,
-              { valor_pago: termNum } as WhereOptions,
-              { contrato_id: termNum } as WhereOptions
-            );
-          }
-        };
-
-        if (field) {
-          switch (field) {
-            case 'id':
-              if (isNumericSearch) orConditions.push({ id: termNum } as WhereOptions);
-              break;
-            case 'numero_titulo':
-              orConditions.push({ numero_titulo: { [Op.like]: likePattern } } as WhereOptions);
-              break;
-            case 'status':
-              orConditions.push({ status: { [Op.like]: likePattern } } as WhereOptions);
-              break;
-            case 'charge_id':
-              orConditions.push({ charge_id: { [Op.like]: likePattern } } as WhereOptions);
-              break;
-            case 'nosso_numero':
-              orConditions.push({ nosso_numero: { [Op.like]: likePattern } } as WhereOptions);
-              break;
-            case 'contrato_id':
-              if (isNumericSearch) orConditions.push({ contrato_id: termNum } as WhereOptions);
-              break;
-            case 'valor':
-              if (isNumericSearch) orConditions.push({ valor: termNum } as WhereOptions);
-              break;
-            case 'valor_pago':
-              if (isNumericSearch) orConditions.push({ valor_pago: termNum } as WhereOptions);
-              break;
-            case 'cliente':
-              orConditions.push(
-                { '$cliente.razao_social$': { [Op.like]: likePattern } } as WhereOptions,
-                { '$cliente.nome_fantasia$': { [Op.like]: likePattern } } as WhereOptions
-              );
-              break;
-            case 'plano':
-              orConditions.push({ '$plano.nome_plano$': { [Op.like]: likePattern } } as WhereOptions);
-              break;
-            default:
-              addMultiFieldSearch();
-              break;
-          }
-        } else {
-          addMultiFieldSearch();
-        }
-
-        // Se escolheram um campo numérico e digitaram texto, retornamos vazio (sem OR inválido)
-        if (orConditions.length === 0) {
-          where.id = { [Op.eq]: -1 };
-        } else {
-          (where as Record<symbol, unknown>)[Op.or] = orConditions as unknown as WhereOptions[];
-        }
-      }
-
+      // Passar parâmetros diretamente para o service (que já constrói os filtros internamente usando helpers)
       const result = await TituloService.list({
         page: pageNum,
         limit: limitNum,
@@ -163,22 +53,14 @@ export class TituloCRUDController {
         searchField: searchField as string
       });
 
-      res.json(result);
+      sendSuccess(res, result);
     } catch (error: unknown) {
-      const errorObj = error instanceof Error ? {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      } : { message: 'Erro desconhecido', original: error };
-      
-      logger.error('Erro ao listar títulos', {
-        error: errorObj,
+      sendError(res, error, 'Erro ao listar títulos', 500, true, {
         query: req.query,
         search: req.query.search ? String(req.query.search) : null,
         status: req.query.status ? String(req.query.status) : null,
         cliente_id: req.query.cliente_id ? String(req.query.cliente_id) : null
       });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
     }
   }
 
@@ -192,7 +74,7 @@ export class TituloCRUDController {
       const titulo = await TituloService.getById(id);
 
       if (!titulo) {
-        res.status(404).json({ success: false, message: 'Título não encontrado' });
+        sendNotFound(res, 'Título não encontrado');
         return;
       }
 
@@ -204,10 +86,9 @@ export class TituloCRUDController {
         link_pagamento_publico: linkPagamento
       };
 
-      res.json({ success: true, data: tituloComLink });
+      sendSuccess(res, tituloComLink);
     } catch (error: unknown) {
-      logger.error('Erro ao buscar título', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao buscar título', 500, true);
     }
   }
 
@@ -235,7 +116,16 @@ export class TituloCRUDController {
           errors: errorDetails,
           body: JSON.stringify(req.body) 
         });
-        res.status(400).json({ success: false, message: 'Dados inválidos', errors: error.details.map(detail => detail.message) });
+        // Converter para Record<string, string[]> esperado pelo sendValidationError
+        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
+          const field = detail.path.join('.') || 'general';
+          if (!acc[field]) {
+            acc[field] = [];
+          }
+          acc[field].push(detail.message);
+          return acc;
+        }, {} as Record<string, string[]>);
+        sendValidationError(res, 'Dados inválidos', errorsByField);
         return;
       }
 
@@ -248,7 +138,7 @@ export class TituloCRUDController {
 
       const cliente = await ClienteService.getById(cliente_id);
       if (!cliente || !cliente.ativo) {
-        res.status(404).json({ success: false, message: 'Cliente não encontrado ou inativo' });
+        sendNotFound(res, 'Cliente não encontrado ou inativo');
         return;
       }
 
@@ -259,7 +149,7 @@ export class TituloCRUDController {
           contratoReferencia = null;
         }
         if (!contratoReferencia) {
-          res.status(404).json({ success: false, message: 'Contrato informado não encontrado para este cliente' });
+          sendNotFound(res, 'Contrato informado não encontrado para este cliente');
           return;
         }
       } else {
@@ -271,22 +161,22 @@ export class TituloCRUDController {
       if (plano_id) {
         plano = await PlanoService.getById(plano_id);
         if (!plano) {
-          res.status(404).json({ success: false, message: 'Plano não encontrado' });
+          sendNotFound(res, 'Plano não encontrado');
           return;
         }
       } else if (contratoReferencia) {
         plano = await contratoReferencia.getPlano();
         if (!plano) {
-          res.status(400).json({ success: false, message: 'Contrato selecionado não possui plano associado' });
+          sendValidationError(res, 'Contrato selecionado não possui plano associado');
           return;
         }
       } else {
-        res.status(400).json({ success: false, message: 'Informe o plano ou associe o cliente a um contrato com plano ativo' });
+        sendValidationError(res, 'Informe o plano ou associe o cliente a um contrato com plano ativo');
         return;
       }
 
       if (!data_vencimento) {
-         res.status(400).json({ success: false, message: 'Data de vencimento é obrigatória' });
+         sendValidationError(res, 'Data de vencimento é obrigatória');
          return;
       }
       
@@ -296,13 +186,13 @@ export class TituloCRUDController {
       if (bancoIdToFind) {
         banco = await BancoService.getById(bancoIdToFind);
         if (!banco || !banco.ativo) {
-          res.status(400).json({ success: false, message: 'Banco configurado não está ativo' });
+          sendValidationError(res, 'Banco configurado não está ativo');
           return;
         }
       } else {
         banco = await BancoService.findFirstAtivo();
         if (!banco) {
-          res.status(400).json({ success: false, message: 'Nenhum banco ativo encontrado' });
+          sendValidationError(res, 'Nenhum banco ativo encontrado');
           return;
         }
       }
@@ -313,7 +203,7 @@ export class TituloCRUDController {
       
       // Para título avulso, valor é obrigatório
       if (is_avulso && (!valorInformado || parseFloat(valorInformado.toString()) <= 0)) {
-        res.status(400).json({ success: false, message: 'Valor é obrigatório para títulos avulsos e deve ser maior que zero' });
+        sendValidationError(res, 'Valor é obrigatório para títulos avulsos e deve ser maior que zero');
         return;
       }
       
@@ -335,7 +225,7 @@ export class TituloCRUDController {
       );
       
       if (!FinancialCalculationsService.validarValor(valorFinal)) {
-        res.status(400).json({ success: false, message: 'Valor inválido (R$ ' + valorFinal.toFixed(2) + '). Valor mínimo R$ 0,01.' });
+        sendValidationError(res, 'Valor inválido (R$ ' + valorFinal.toFixed(2) + '). Valor mínimo R$ 0,01.');
         return;
       }
 
@@ -365,24 +255,22 @@ export class TituloCRUDController {
 
       // Registrar auditoria (já registra no Elasticsearch internamente)
       const tituloData = titulo.toJSON() as Record<string, unknown>;
-      await registrarCriacao(
-        req,
-        'Titulo',
-        titulo.id,
-        tituloData
-      );
+      try {
+        await registrarCriacao(
+          req,
+          'Titulo',
+          titulo.id,
+          tituloData
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({ success: true, message: 'Título criado com sucesso', data: titulo });
+      sendSuccess(res, titulo, 'Título criado com sucesso', 201);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      logger.error('Erro ao criar título', { 
-        error: errorMessage,
-        stack: errorStack,
+      sendError(res, error, 'Erro ao criar título', 500, true, {
         body: req.body
       });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor: ' + errorMessage });
     }
   }
 
@@ -397,7 +285,7 @@ export class TituloCRUDController {
       const titulo = await TituloService.getById(id) as TituloComRelacoes | null;
 
       if (!titulo) {
-        res.status(404).json({ success: false, message: 'Título não encontrado' });
+        sendNotFound(res, 'Título não encontrado');
         return;
       }
 
@@ -407,15 +295,15 @@ export class TituloCRUDController {
 
       // Validações de status
       if (status === 'cancelado' && titulo.status === 'pago') {
-        res.status(400).json({ success: false, message: 'Não é possível cancelar um título que já foi pago' });
+        sendValidationError(res, 'Não é possível cancelar um título que já foi pago');
         return;
       }
       if (status === 'cancelado' && titulo.status === 'cancelado') {
-        res.status(400).json({ success: false, message: 'Este título já está cancelado' });
+        sendValidationError(res, 'Este título já está cancelado');
         return;
       }
       if (status === 'pago' && titulo.status === 'cancelado') {
-        res.status(400).json({ success: false, message: 'Não é possível marcar como pago um título cancelado' });
+        sendValidationError(res, 'Não é possível marcar como pago um título cancelado');
         return;
       }
 
@@ -427,7 +315,7 @@ export class TituloCRUDController {
 
           if (!resultadoCancelamento.success) {
             logger.warn('Falha ao cancelar título no gateway bancário', { titulo_id: titulo.id, charge_id: titulo.charge_id, message: resultadoCancelamento.message });
-            res.status(400).json({ success: false, message: resultadoCancelamento.message ?? 'Não foi possível cancelar o título no banco emissor' });
+            sendError(res, new Error(resultadoCancelamento.message ?? 'Não foi possível cancelar o título no banco emissor'), resultadoCancelamento.message ?? 'Não foi possível cancelar o título no banco emissor', 400, false);
             return;
           }
           logger.info('Título cancelado no gateway bancário', { titulo_id: titulo.id, charge_id: titulo.charge_id });
@@ -446,11 +334,11 @@ export class TituloCRUDController {
       // Validar alteração de valor
       if (valor !== undefined && valor !== null) {
         if (tituloRegistradoNoBanco) {
-          res.status(400).json({ success: false, message: 'Não é possível alterar o valor de um título já registrado no banco emissor' });
+          sendValidationError(res, 'Não é possível alterar o valor de um título já registrado no banco emissor');
           return;
         }
         if (valor <= 0) {
-          res.status(400).json({ success: false, message: 'Valor deve ser maior que zero' });
+          sendValidationError(res, 'Valor deve ser maior que zero');
           return;
         }
       }
@@ -463,12 +351,12 @@ export class TituloCRUDController {
         
         if (dataVencimentoNova !== dataVencimentoOriginal) {
           if (titulo.status === 'cancelado') {
-            res.status(400).json({ success: false, message: 'Não é possível alterar o vencimento de um título cancelado' });
+            sendValidationError(res, 'Não é possível alterar o vencimento de um título cancelado');
             return;
           }
           
           if (tituloRegistradoNoBanco) {
-            res.status(400).json({ success: false, message: 'Não é possível alterar o vencimento de um título já registrado no banco emissor' });
+            sendValidationError(res, 'Não é possível alterar o vencimento de um título já registrado no banco emissor');
             return;
           }
           
@@ -530,10 +418,9 @@ export class TituloCRUDController {
         });
       }
 
-      res.json({ success: true, message: 'Título atualizado com sucesso', data: tituloAtualizado });
+      sendSuccess(res, tituloAtualizado, 'Título atualizado com sucesso');
     } catch (error: unknown) {
-      logger.error('Erro ao atualizar título', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao atualizar título', 500, true);
     }
   }
 
@@ -547,7 +434,7 @@ export class TituloCRUDController {
       const titulo = await TituloService.getById(id) as TituloComRelacoes | null;
 
       if (!titulo) {
-        res.status(404).json({ success: false, message: 'Título não encontrado' });
+        sendNotFound(res, 'Título não encontrado');
         return;
       }
 
@@ -567,20 +454,23 @@ export class TituloCRUDController {
       }
 
       // Registrar auditoria
-      await registrarExclusao(
-        req,
-        'Titulo',
-        titulo.id,
-        dadosAnteriores
-      );
+      try {
+        await registrarExclusao(
+          req,
+          'Titulo',
+          titulo.id,
+          dadosAnteriores
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       // Deletar título
       await TituloService.delete(id);
 
-      res.json({ success: true, message: 'Título deletado com sucesso' });
+      sendSuccess(res, undefined, 'Título deletado com sucesso');
     } catch (error: unknown) {
-      logger.error('Erro ao deletar título', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao deletar título', 500, true);
     }
   }
 
@@ -593,7 +483,7 @@ export class TituloCRUDController {
 
       const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
-        res.status(404).json({ success: false, message: 'Contrato não encontrado' });
+        sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
@@ -610,10 +500,9 @@ export class TituloCRUDController {
         return dateB - dateA; // DESC
       });
 
-      res.json({ success: true, data: titulos });
+      sendSuccess(res, titulos);
     } catch (error: unknown) {
-      logger.error('Erro ao buscar títulos por contrato', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao buscar títulos por contrato', 500, true);
     }
   }
 
@@ -626,7 +515,7 @@ export class TituloCRUDController {
 
       const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
-        res.status(404).json({ success: false, message: 'Contrato não encontrado' });
+        sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
@@ -643,10 +532,9 @@ export class TituloCRUDController {
         return dateB - dateA; // DESC
       });
 
-      res.json({ success: true, data: titulos });
+      sendSuccess(res, titulos);
     } catch (error: unknown) {
-      logger.error('Erro ao buscar títulos avulsos por contrato', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao buscar títulos avulsos por contrato', 500, true);
     }
   }
 
@@ -676,16 +564,12 @@ export class TituloCRUDController {
         Titulo.sum('valor', { where: { ...where, status: 'cancelado' } })
       ]);
 
-      res.json({
-        success: true,
-        data: {
-          quantidade: { total: totalTitulos, pendentes: titulosPendentes, pagos: titulosPagos, vencidos: titulosVencidos, cancelados: titulosCancelados },
-          valores: { total: valorTotal || 0, pendente: valorPendente || 0, pago: valorPago || 0, vencido: valorVencido || 0, cancelado: valorCancelado || 0 }
-        }
+      sendSuccess(res, {
+        quantidade: { total: totalTitulos, pendentes: titulosPendentes, pagos: titulosPagos, vencidos: titulosVencidos, cancelados: titulosCancelados },
+        valores: { total: valorTotal || 0, pendente: valorPendente || 0, pago: valorPago || 0, vencido: valorVencido || 0, cancelado: valorCancelado || 0 }
       });
     } catch (error: unknown) {
-      logger.error('Erro ao buscar estatísticas dos títulos', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao buscar estatísticas dos títulos', 500, true);
     }
   }
 
@@ -696,23 +580,22 @@ export class TituloCRUDController {
     try {
       const tituloId = parseInt(req.params.id, 10);
       if (isNaN(tituloId)) {
-        res.status(400).json({ success: false, message: 'ID do título inválido' });
+        sendValidationError(res, 'ID do título inválido');
         return;
       }
 
       const titulo = await TituloService.getById(tituloId);
       if (!titulo) {
-        res.status(404).json({ success: false, message: 'Título não encontrado' });
+        sendNotFound(res, 'Título não encontrado');
         return;
       }
 
       // Gerar link relativo de pagamento (não precisa de baseUrl)
       const link = gerarLinkPagamentoPublico(tituloId);
 
-      res.json({ success: true, data: { titulo_id: tituloId, link: link, numero_titulo: titulo.numero_titulo }, message: 'Link de pagamento gerado com sucesso' });
+      sendSuccess(res, { titulo_id: tituloId, link: link, numero_titulo: titulo.numero_titulo }, 'Link de pagamento gerado com sucesso');
     } catch (error: unknown) {
-      logger.error('Erro ao gerar link de pagamento:', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao gerar link de pagamento', 500, true);
     }
   }
 
@@ -723,7 +606,7 @@ export class TituloCRUDController {
     try {
       const tituloId = parseInt(req.params.id, 10);
       if (isNaN(tituloId)) {
-        res.status(400).json({ success: false, message: 'ID do título inválido' });
+        sendValidationError(res, 'ID do título inválido');
         return;
       }
 
@@ -731,13 +614,12 @@ export class TituloCRUDController {
       const resultado = await WhatsAppService.enviarTituloManual(tituloId);
 
       if (resultado.sucesso) {
-        res.json({ success: true, message: resultado.mensagem || 'Mensagem enviada com sucesso' });
+        sendSuccess(res, undefined, resultado.mensagem || 'Mensagem enviada com sucesso');
       } else {
-        res.status(400).json({ success: false, message: resultado.mensagem || 'Erro ao enviar mensagem' });
+        sendError(res, new Error(resultado.mensagem || 'Erro ao enviar mensagem'), resultado.mensagem || 'Erro ao enviar mensagem', 400, false);
       }
     } catch (error: unknown) {
-      logger.error('Erro ao enviar título via WhatsApp:', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao enviar título via WhatsApp', 500, true);
     }
   }
 
@@ -748,7 +630,7 @@ export class TituloCRUDController {
     try {
       const tituloId = parseInt(req.params.id, 10);
       if (isNaN(tituloId)) {
-        res.status(400).json({ success: false, message: 'ID do título inválido' });
+        sendValidationError(res, 'ID do título inválido');
         return;
       }
 
@@ -756,13 +638,12 @@ export class TituloCRUDController {
       const resultado = await EmailService.enviarTituloManual(tituloId);
 
       if (resultado.sucesso) {
-        res.json({ success: true, message: resultado.mensagem || 'Email enviado com sucesso' });
+        sendSuccess(res, undefined, resultado.mensagem || 'Email enviado com sucesso');
       } else {
-        res.status(400).json({ success: false, message: resultado.mensagem || 'Erro ao enviar email' });
+        sendError(res, new Error(resultado.mensagem || 'Erro ao enviar email'), resultado.mensagem || 'Erro ao enviar email', 400, false);
       }
     } catch (error: unknown) {
-      logger.error('Erro ao enviar título via Email:', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao enviar título via Email', 500, true);
     }
   }
 }

@@ -151,68 +151,21 @@ export const auditCaptureMiddleware = (req: AuthenticatedRequest, res: Response,
 
 /**
  * Middleware para registrar auditoria após operação bem-sucedida
+ * 
+ * NOTA: Este middleware não registra auditoria automaticamente.
+ * CREATE/UPDATE/DELETE devem ser registrados explicitamente pelos controllers
+ * usando registrarCriacao, registrarAtualizacao, registrarExclusao do AuditoriaService.
+ * 
+ * Mantido para compatibilidade e possíveis extensões futuras.
  */
 export const auditLogMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-  const method = req.method.toUpperCase();
-  const originalSend = res.json.bind(res);
-  const originalStatus = res.status.bind(res);
-
   // Excluir rotas de webhook da auditoria (não têm usuário autenticado)
   if (req.originalUrl.startsWith('/webhook/')) {
     return next();
   }
 
-  // Interceptar resposta para capturar status
-  let responseStatus = 200;
-  res.status = function(code: number) {
-    responseStatus = code;
-    return originalStatus(code);
-  } as typeof res.status;
-
-  res.json = function(body: unknown) {
-    // Chamar função original primeiro
-    const result = originalSend(body);
-
-    // Registrar auditoria apenas se a operação foi bem-sucedida
-    if (responseStatus >= 200 && responseStatus < 300) {
-      setImmediate(async () => {
-        try {
-          const entity = (req as any).__auditEntity || getEntityFromRoute(req.originalUrl);
-          if (!entity) {
-            logger.debug('Entidade não encontrada para auditoria', {
-              context: 'auditMiddleware',
-              method,
-              url: req.originalUrl
-            });
-            return;
-          }
-
-          const entityId = (req as any).__auditEntityId || getEntityId(req);
-          
-          logger.debug('Processando auditoria', {
-            context: 'auditMiddleware',
-            method,
-            entity,
-            entityId,
-            url: req.originalUrl
-          });
-          
-          // CREATE/UPDATE/DELETE devem ser registrados explicitamente pelos controllers
-          // O middleware não registra automaticamente para evitar duplicação
-          // Os controllers devem usar registrarCriacao, registrarAtualizacao, registrarExclusao do AuditoriaService
-        } catch (error) {
-          // Não bloquear resposta em caso de erro na auditoria
-          logger.error('Erro ao registrar auditoria no middleware', {
-            context: 'auditMiddleware',
-            error: error instanceof Error ? error.message : 'Erro desconhecido'
-          });
-        }
-      });
-    }
-
-    return result;
-  } as typeof res.json;
-
+  // Middleware atualmente não executa ação automática
+  // Controllers devem registrar auditoria explicitamente
   next();
 };
 

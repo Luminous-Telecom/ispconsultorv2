@@ -6,6 +6,7 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { ClienteArquivo } from '../../../models/clientes/ClienteArquivo';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class ClienteArquivoController {
   private static createSchema = Joi.object({
@@ -32,10 +33,7 @@ export class ClienteArquivoController {
       const { tipo, origem } = req.query;
 
       if (!cliente_id) {
-        res.status(400).json({
-          success: false,
-          message: 'cliente_id é obrigatório'
-        });
+        sendValidationError(res, 'cliente_id é obrigatório');
         return;
       }
 
@@ -44,16 +42,9 @@ export class ClienteArquivoController {
         origem: origem as string | undefined
       });
 
-      res.json({
-        success: true,
-        data: arquivos
-      });
+      sendSuccess(res, arquivos);
     } catch (error) {
-      logger.error('Erro ao listar arquivos do cliente', { error });
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao listar arquivos do cliente'
-      });
+      sendError(res, error, 'Erro ao listar arquivos do cliente', 500, true);
     }
   }
 
@@ -66,23 +57,13 @@ export class ClienteArquivoController {
       const arquivo = await ClienteArquivoService.getById(Number(id));
 
       if (!arquivo) {
-        res.status(404).json({
-          success: false,
-          message: 'Arquivo não encontrado'
-        });
+        sendNotFound(res, 'Arquivo não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: arquivo
-      });
+      sendSuccess(res, arquivo);
     } catch (error) {
-      logger.error('Erro ao buscar arquivo', { error });
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao buscar arquivo'
-      });
+      sendError(res, error, 'Erro ao buscar arquivo', 500, true);
     }
   }
 
@@ -95,19 +76,13 @@ export class ClienteArquivoController {
       const { error, value } = ClienteArquivoController.createSchema.validate(req.body);
 
       if (error) {
-        res.status(400).json({
-          success: false,
-          message: error.details[0].message
-        });
+        sendValidationError(res, error.details[0].message);
         return;
       }
 
       // Verificar se arquivo foi enviado
       if (!req.file) {
-        res.status(400).json({
-          success: false,
-          message: 'Arquivo é obrigatório'
-        });
+        sendValidationError(res, 'Arquivo é obrigatório');
         return;
       }
 
@@ -125,25 +100,20 @@ export class ClienteArquivoController {
 
       const arquivo = await ClienteArquivoService.create(createData);
 
-      await registrarCriacao(
-        req as AuthenticatedRequest,
-        'ClienteArquivo',
-        arquivo.id,
-        arquivo.toJSON() as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'ClienteArquivo',
+          arquivo.id,
+          arquivo.toJSON() as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        message: 'Arquivo criado com sucesso',
-        data: arquivo
-      });
+      sendSuccess(res, arquivo, 'Arquivo criado com sucesso', 201);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao criar arquivo', { error: errorMessage });
-      res.status(500).json({
-        success: false,
-        message: errorMessage
-      });
+      sendError(res, error, 'Erro ao criar arquivo', 500, true);
     }
   }
 
@@ -156,10 +126,7 @@ export class ClienteArquivoController {
       const { error, value } = ClienteArquivoController.updateSchema.validate(req.body);
 
       if (error) {
-        res.status(400).json({
-          success: false,
-          message: error.details[0].message
-        });
+        sendValidationError(res, error.details[0].message);
         return;
       }
 
@@ -173,25 +140,21 @@ export class ClienteArquivoController {
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores as Record<string, unknown>, dadosNovos);
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'ClienteArquivo',
-        arquivo.id,
-        dadosAnteriores as Record<string, unknown>,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ClienteArquivo',
+          arquivo.id,
+          dadosAnteriores as Record<string, unknown>,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Arquivo atualizado com sucesso',
-        data: arquivo
-      });
+      sendSuccess(res, arquivo, 'Arquivo atualizado com sucesso');
     } catch (error) {
-      logger.error('Erro ao atualizar arquivo', { error });
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Erro ao atualizar arquivo'
-      });
+      sendError(res, error, 'Erro ao atualizar arquivo', 500, true);
     }
   }
 
@@ -207,24 +170,21 @@ export class ClienteArquivoController {
       await ClienteArquivoService.delete(Number(id));
 
       if (arquivo && dadosAnteriores) {
-        await registrarExclusao(
-          req as AuthenticatedRequest,
-          'ClienteArquivo',
-          arquivo.id,
-          dadosAnteriores as Record<string, unknown>
-        );
+        try {
+          await registrarExclusao(
+            req as AuthenticatedRequest,
+            'ClienteArquivo',
+            arquivo.id,
+            dadosAnteriores as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       }
 
-      res.json({
-        success: true,
-        message: 'Arquivo deletado com sucesso'
-      });
+      sendSuccess(res, undefined, 'Arquivo deletado com sucesso');
     } catch (error) {
-      logger.error('Erro ao deletar arquivo', { error });
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Erro ao deletar arquivo'
-      });
+      sendError(res, error, 'Erro ao deletar arquivo', 500, true);
     }
   }
 
@@ -237,10 +197,7 @@ export class ClienteArquivoController {
       const arquivo = await ClienteArquivoService.getById(Number(id));
 
       if (!arquivo) {
-        res.status(404).json({
-          success: false,
-          message: 'Arquivo não encontrado'
-        });
+        sendNotFound(res, 'Arquivo não encontrado');
         return;
       }
 
@@ -258,13 +215,8 @@ export class ClienteArquivoController {
       
       res.send(buffer);
     } catch (error) {
-      logger.error('Erro ao fazer download do arquivo', { 
-        id: req.params.id,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-      res.status(500).json({
-        success: false,
-        message: error instanceof Error ? error.message : 'Erro ao fazer download do arquivo'
+      sendError(res, error, 'Erro ao fazer download do arquivo', 500, true, {
+        id: req.params.id
       });
     }
   }

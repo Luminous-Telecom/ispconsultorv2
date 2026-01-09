@@ -7,6 +7,7 @@ import { Plano } from '../../../models/cadastros/Plano';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
+import { sendSuccess, sendError, sendNotFound } from '../../../utils/responseUtils';
 
 export class ModeloCartaController {
   /**
@@ -16,16 +17,9 @@ export class ModeloCartaController {
     try {
       const result = await ModeloCartaService.list();
 
-      res.json({
-        ...result,
-        message: 'Cartas de cobrança listadas com sucesso'
-      });
+      sendSuccess(res, result, 'Cartas de cobrança listadas com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar cartas de cobrança:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar cartas de cobrança', 500, true);
     }
   }
 
@@ -39,24 +33,13 @@ export class ModeloCartaController {
       const carta = await ModeloCartaService.getById(id);
 
       if (!carta) {
-        res.status(404).json({
-          success: false,
-          message: 'Carta de cobrança não encontrada'
-        });
+        sendNotFound(res, 'Carta de cobrança não encontrada');
         return;
       }
 
-      res.json({
-        success: true,
-        data: carta,
-        message: 'Carta de cobrança encontrada com sucesso'
-      });
+      sendSuccess(res, carta, 'Carta de cobrança encontrada com sucesso');
     } catch (error) {
-      logger.error('Erro ao buscar carta de cobrança:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar carta de cobrança', 500, true);
     }
   }
 
@@ -79,17 +62,9 @@ export class ModeloCartaController {
         criptografia: criptografia || false,
       });
 
-      res.status(201).json({
-        success: true,
-        data: carta,
-        message: 'Carta de cobrança criada com sucesso'
-      });
+      sendSuccess(res, carta, 'Carta de cobrança criada com sucesso', 201);
     } catch (error) {
-      logger.error('Erro ao criar carta de cobrança:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao criar carta de cobrança', 500, true);
     }
   }
 
@@ -104,26 +79,15 @@ export class ModeloCartaController {
       const carta = await ModeloCartaService.getById(id);
 
       if (!carta) {
-        res.status(404).json({
-          success: false,
-          message: 'Carta de cobrança não encontrada'
-        });
+        sendNotFound(res, 'Carta de cobrança não encontrada');
         return;
       }
 
       await ModeloCartaService.update(id, updateData);
 
-      res.json({
-        success: true,
-        data: carta,
-        message: 'Carta de cobrança atualizada com sucesso'
-      });
+      sendSuccess(res, carta, 'Carta de cobrança atualizada com sucesso');
     } catch (error) {
-      logger.error('Erro ao atualizar carta de cobrança:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao atualizar carta de cobrança', 500, true);
     }
   }
 
@@ -137,25 +101,15 @@ export class ModeloCartaController {
       const carta = await ModeloCartaService.getById(id);
 
       if (!carta) {
-        res.status(404).json({
-          success: false,
-          message: 'Carta de cobrança não encontrada'
-        });
+        sendNotFound(res, 'Carta de cobrança não encontrada');
         return;
       }
 
       await ModeloCartaService.delete(id);
 
-      res.json({
-        success: true,
-        message: 'Carta de cobrança deletada com sucesso'
-      });
+      sendSuccess(res, undefined, 'Carta de cobrança deletada com sucesso');
     } catch (error) {
-      logger.error('Erro ao deletar carta de cobrança:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao deletar carta de cobrança', 500, true);
     }
   }
 
@@ -169,10 +123,7 @@ export class ModeloCartaController {
       const carta = await ModeloCartaService.getById(id);
 
       if (!carta) {
-        res.status(404).json({
-          success: false,
-          message: 'Carta de cobrança não encontrada'
-        });
+        sendNotFound(res, 'Carta de cobrança não encontrada');
         return;
       }
 
@@ -319,11 +270,7 @@ export class ModeloCartaController {
       res.setHeader('Content-Disposition', `inline; filename="${carta.nome}.pdf"`);
       res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao gerar PDF:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar PDF'
-      });
+      sendError(res, error, 'Erro ao gerar PDF', 500, true);
     }
   }
 
@@ -338,10 +285,7 @@ export class ModeloCartaController {
       const carta = await ModeloCartaService.getById(id);
 
       if (!carta) {
-        res.status(404).json({
-          success: false,
-          message: 'Carta de cobrança não encontrada'
-        });
+        sendNotFound(res, 'Carta de cobrança não encontrada');
         return;
       }
 
@@ -352,10 +296,7 @@ export class ModeloCartaController {
         const cliente = await ClienteService.getById(cliente_id as string);
         
         if (!cliente) {
-          res.status(404).json({
-            success: false,
-            message: 'Cliente não encontrado'
-          });
+          sendNotFound(res, 'Cliente não encontrado');
           return;
         }
 
@@ -515,10 +456,9 @@ export class ModeloCartaController {
       res.setHeader('Content-Disposition', `inline; filename="${carta.nome}-teste.pdf"`);
       res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao gerar PDF de teste:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar PDF de teste'
+      sendError(res, error, 'Erro ao gerar PDF de teste', 500, true, {
+        context: 'ModeloCartaController',
+        action: 'gerarPdfTeste'
       });
     }
   }
@@ -530,17 +470,9 @@ export class ModeloCartaController {
     try {
       const variaveis = VariaveisDocumentoService.getVariaveisDisponiveis();
 
-      res.json({
-        success: true,
-        data: variaveis,
-        message: 'Variáveis listadas com sucesso'
-      });
+      sendSuccess(res, variaveis, 'Variáveis listadas com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar variáveis:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar variáveis', 500, true);
     }
   }
 }

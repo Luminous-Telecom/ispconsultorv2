@@ -10,6 +10,7 @@ import { Op } from 'sequelize';
 import { ValidationError } from 'sequelize';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class ServidorEmailController {
   /**
@@ -19,17 +20,9 @@ export class ServidorEmailController {
     try {
       const result = await ServidorEmailService.list();
 
-      res.json({
-        success: result.success,
-        data: result.data,
-        message: 'Servidores de email listados com sucesso'
-      });
+      sendSuccess(res, result.data, 'Servidores de email listados com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar servidores de email:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar servidores de email', 500, true);
     }
   }
 
@@ -43,24 +36,13 @@ export class ServidorEmailController {
       const servidor = await ServidorEmailService.getById(id, { excludePassword: true });
 
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor de email não encontrado'
-        });
+        sendNotFound(res, 'Servidor de email não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: servidor,
-        message: 'Servidor de email encontrado'
-      });
+      sendSuccess(res, servidor, 'Servidor de email encontrado');
     } catch (error) {
-      logger.error('Erro ao buscar servidor de email:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar servidor de email', 500, true);
     }
   }
 
@@ -73,10 +55,7 @@ export class ServidorEmailController {
 
       // Validar dados obrigatórios
       if (!servidorData.host || !servidorData.porta || !servidorData.usuario || !servidorData.senha) {
-        res.status(400).json({
-          success: false,
-          message: 'Host, porta, usuário e senha são obrigatórios'
-        });
+        sendValidationError(res, 'Host, porta, usuário e senha são obrigatórios');
         return;
       }
 
@@ -91,34 +70,26 @@ export class ServidorEmailController {
 
       const servidor = await ServidorEmailService.create(servidorData);
 
-      await registrarCriacao(
-        req as AuthenticatedRequest,
-        'ServidorEmail',
-        servidor.id,
-        servidor.toJSON() as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'ServidorEmail',
+          servidor.id,
+          servidor.toJSON() as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        data: servidor,
-        message: 'Servidor de email criado com sucesso'
-      });
+      sendSuccess(res, servidor, 'Servidor de email criado com sucesso', 201);
     } catch (error: unknown) {
-      logger.error('Erro ao criar servidor de email:', error);
-      
       if (error instanceof ValidationError) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.errors ? error.errors.map((err) => err.message) : []
-        });
+        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+        sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
 
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao criar servidor de email', 500, true);
     }
   }
 
@@ -133,10 +104,7 @@ export class ServidorEmailController {
       const servidor = await ServidorEmailService.getById(id);
 
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor de email não encontrado'
-        });
+        sendNotFound(res, 'Servidor de email não encontrado');
         return;
       }
 
@@ -151,35 +119,27 @@ export class ServidorEmailController {
       const dadosAnteriores = servidor.toJSON();
       await ServidorEmailService.updateInstance(servidor, servidorData);
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'ServidorEmail',
-        servidor.id,
-        dadosAnteriores as unknown as Record<string, unknown>,
-        servidor.toJSON() as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ServidorEmail',
+          servidor.id,
+          dadosAnteriores as unknown as Record<string, unknown>,
+          servidor.toJSON() as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        data: servidor,
-        message: 'Servidor de email atualizado com sucesso'
-      });
+      sendSuccess(res, servidor, 'Servidor de email atualizado com sucesso');
     } catch (error: unknown) {
-      logger.error('Erro ao atualizar servidor de email:', error);
-      
       if (error instanceof ValidationError) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.errors ? error.errors.map((err) => err.message) : []
-        });
+        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+        sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
 
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao atualizar servidor de email', 500, true);
     }
   }
 
@@ -193,33 +153,27 @@ export class ServidorEmailController {
       const servidor = await ServidorEmailService.getById(id);
 
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor de email não encontrado'
-        });
+        sendNotFound(res, 'Servidor de email não encontrado');
         return;
       }
 
       const dadosAnteriores = servidor.toJSON();
       await ServidorEmailService.delete(servidor.id);
 
-      await registrarExclusao(
-        req as AuthenticatedRequest,
-        'ServidorEmail',
-        servidor.id,
-        dadosAnteriores as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarExclusao(
+          req as AuthenticatedRequest,
+          'ServidorEmail',
+          servidor.id,
+          dadosAnteriores as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Servidor de email deletado com sucesso'
-      });
+      sendSuccess(res, undefined, 'Servidor de email deletado com sucesso');
     } catch (error) {
-      logger.error('Erro ao deletar servidor de email:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao deletar servidor de email', 500, true);
     }
   }
 
@@ -233,33 +187,22 @@ export class ServidorEmailController {
       const servidor = await ServidorEmailService.getById(id);
 
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor de email não encontrado'
-        });
+        sendNotFound(res, 'Servidor de email não encontrado');
         return;
       }
 
       // Aqui você implementaria a lógica de teste de conexão
       // Por enquanto, vamos simular um teste
       const testResult = {
-        success: true,
-        message: 'Conexão testada com sucesso',
-        details: {
-          host: servidor.host,
-          porta: servidor.porta,
-          ssl: servidor.ssl,
-          tls: servidor.tls
-        }
+        host: servidor.host,
+        porta: servidor.porta,
+        ssl: servidor.ssl,
+        tls: servidor.tls
       };
 
-      res.json(testResult);
+      sendSuccess(res, testResult, 'Conexão testada com sucesso');
     } catch (error) {
-      logger.error('Erro ao testar conexão do servidor de email:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao testar conexão do servidor de email', 500, true);
     }
   }
 
@@ -272,19 +215,13 @@ export class ServidorEmailController {
       const { email_teste } = req.body;
 
       if (!email_teste) {
-        res.status(400).json({
-          success: false,
-          message: 'E-mail de teste é obrigatório'
-        });
+        sendValidationError(res, 'E-mail de teste é obrigatório');
         return;
       }
 
       const servidor = await ServidorEmailService.getById(id);
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor não encontrado'
-        });
+        sendNotFound(res, 'Servidor não encontrado');
         return;
       }
 
@@ -333,19 +270,10 @@ export class ServidorEmailController {
 
       logger.info(`E-mail de teste enviado com sucesso para: ${email_teste}`);
 
-      res.json({
-        success: true,
-        message: `E-mail de teste enviado com sucesso para ${email_teste}`
-      });
+      sendSuccess(res, undefined, `E-mail de teste enviado com sucesso para ${email_teste}`);
 
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao enviar e-mail de teste:', error);
-      
-      res.status(500).json({
-        success: false,
-        message: `Erro ao enviar e-mail de teste: ${errorMessage}`
-      });
+      sendError(res, error, 'Erro ao enviar e-mail de teste', 500, true);
     }
   }
 
@@ -362,24 +290,13 @@ export class ServidorEmailController {
       });
 
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Nenhum servidor de email ativo encontrado'
-        });
+        sendNotFound(res, 'Nenhum servidor de email ativo encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: servidor,
-        message: 'Servidor ativo encontrado'
-      });
+      sendSuccess(res, servidor, 'Servidor ativo encontrado');
     } catch (error) {
-      logger.error('Erro ao buscar servidor ativo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar servidor ativo', 500, true);
     }
   }
 
@@ -399,10 +316,7 @@ export class ServidorEmailController {
         // Atualizar servidor existente
         // Validar dados obrigatórios (senha é opcional ao atualizar)
         if (!servidorData.host || !servidorData.porta || !servidorData.usuario) {
-          res.status(400).json({
-            success: false,
-            message: 'Host, porta e usuário são obrigatórios'
-          });
+          sendValidationError(res, 'Host, porta e usuário são obrigatórios');
           return;
         }
 
@@ -414,27 +328,24 @@ export class ServidorEmailController {
         const dadosAnteriores = servidor.toJSON();
         await ServidorEmailService.updateInstance(servidor, servidorData);
         
-        await registrarAtualizacao(
-          req as AuthenticatedRequest,
-          'ServidorEmail',
-          servidor.id,
-          dadosAnteriores as unknown as Record<string, unknown>,
-          servidor.toJSON() as unknown as Record<string, unknown>
-        );
+        try {
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'ServidorEmail',
+            servidor.id,
+            dadosAnteriores as unknown as Record<string, unknown>,
+            servidor.toJSON() as unknown as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
         
-        res.json({
-          success: true,
-          data: servidor,
-          message: 'Servidor de email atualizado com sucesso'
-        });
+        sendSuccess(res, servidor, 'Servidor de email atualizado com sucesso');
       } else {
         // Criar novo servidor
         // Validar dados obrigatórios (senha é obrigatória ao criar)
         if (!servidorData.host || !servidorData.porta || !servidorData.usuario || !servidorData.senha) {
-          res.status(400).json({
-            success: false,
-            message: 'Host, porta, usuário e senha são obrigatórios'
-          });
+          sendValidationError(res, 'Host, porta, usuário e senha são obrigatórios');
           return;
         }
 
@@ -448,35 +359,27 @@ export class ServidorEmailController {
           },
         });
         
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'ServidorEmail',
-          novoServidor.id,
-          novoServidor.toJSON() as unknown as Record<string, unknown>
-        );
+        try {
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'ServidorEmail',
+            novoServidor.id,
+            novoServidor.toJSON() as unknown as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
         
-        res.status(201).json({
-          success: true,
-          data: novoServidor,
-          message: 'Servidor de email criado com sucesso'
-        });
+        sendSuccess(res, novoServidor, 'Servidor de email criado com sucesso', 201);
       }
     } catch (error: unknown) {
-      logger.error('Erro ao criar/atualizar servidor de email:', error);
-      
       if (error instanceof ValidationError) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.errors ? error.errors.map((err) => err.message) : []
-        });
+        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+        sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
 
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao criar/atualizar servidor de email', 500, true);
     }
   }
 
@@ -492,24 +395,15 @@ export class ServidorEmailController {
 
       if (!mensagem) {
         logger.info('Mensagem não encontrada para o tipo:', { tipo });
-        res.status(404).json({
-          success: false,
-          message: 'Mensagem não encontrada'
-        });
+        sendNotFound(res, 'Mensagem não encontrada');
         return;
       }
 
       logger.info('Mensagem encontrada:', { tipo, id: mensagem.id });
-      res.json({
-        success: true,
-        data: mensagem
-      });
+      sendSuccess(res, mensagem);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao buscar mensagem por tipo:', { tipo: req.params.tipo, error: errorMessage });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
+      sendError(res, error, 'Erro ao buscar mensagem por tipo', 500, true, {
+        tipo: req.params.tipo
       });
     }
   }
@@ -522,26 +416,17 @@ export class ServidorEmailController {
       const { tipo, tipo_envio, mensagem_padrao, mensagem_manual, ativo } = req.body;
 
       if (!tipo || !tipo_envio) {
-        res.status(400).json({
-          success: false,
-          message: 'Tipo e tipo de envio são obrigatórios'
-        });
+        sendValidationError(res, 'Tipo e tipo de envio são obrigatórios');
         return;
       }
 
       if (tipo === 'envio_manual' && !mensagem_padrao && !mensagem_manual) {
-        res.status(400).json({
-          success: false,
-          message: 'Mensagem padrão ou mensagem manual é obrigatória para envio manual'
-        });
+        sendValidationError(res, 'Mensagem padrão ou mensagem manual é obrigatória para envio manual');
         return;
       }
 
       if (tipo !== 'envio_manual' && !mensagem_padrao) {
-        res.status(400).json({
-          success: false,
-          message: 'Mensagem padrão é obrigatória'
-        });
+        sendValidationError(res, 'Mensagem padrão é obrigatória');
         return;
       }
 
@@ -590,18 +475,9 @@ export class ServidorEmailController {
         throw new Error(`Erro ao salvar mensagem: ${dbErrorMessage}`);
       }
 
-      res.json({
-        success: true,
-        message: 'Mensagem salva com sucesso',
-        data: mensagem
-      });
+      sendSuccess(res, mensagem, 'Mensagem salva com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao salvar mensagem:', error);
-      res.status(500).json({
-        success: false,
-        message: errorMessage || 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao salvar mensagem', 500, true);
     }
   }
 }

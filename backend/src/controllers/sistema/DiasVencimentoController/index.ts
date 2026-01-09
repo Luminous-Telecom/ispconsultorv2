@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { DiasVencimento } from '../../../models/cadastros/DiasVencimento';
 import { DiasVencimentoService } from '../../../services/cadastros/DiasVencimentoService';
 import { logger } from '../../../utils/logger';
 import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError } from '../../../utils/responseUtils';
 
 export class DiasVencimentoController {
   /**
@@ -13,17 +13,9 @@ export class DiasVencimentoController {
     try {
       const dias = await DiasVencimentoService.list();
 
-      res.json({
-        success: true,
-        data: dias,
-        message: 'Dias de vencimento encontrados'
-      });
+      sendSuccess(res, dias, 'Dias de vencimento encontrados');
     } catch (error) {
-      logger.error('Erro ao buscar dias de vencimento:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar dias de vencimento', 500, true);
     }
   }
 
@@ -64,10 +56,9 @@ export class DiasVencimentoController {
         }
       }
 
-      res.json({ success: true, message: 'Dias de vencimento atualizados com sucesso' });
+      sendSuccess(res, undefined, 'Dias de vencimento atualizados com sucesso');
     } catch (error) {
-      logger.error('Erro ao atualizar dias de vencimento:', error);
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao atualizar dias de vencimento', 500, true);
     }
   }
 
@@ -93,10 +84,9 @@ export class DiasVencimentoController {
         );
       }
 
-      res.status(201).json({ success: true, message: 'Dias de vencimento criados com sucesso' });
+      sendSuccess(res, undefined, 'Dias de vencimento criados com sucesso', 201);
     } catch (error) {
-      logger.error('Erro ao criar dias de vencimento:', error);
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao criar dias de vencimento', 500, true);
     }
   }
 

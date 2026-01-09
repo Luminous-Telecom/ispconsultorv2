@@ -7,6 +7,7 @@ import { Usuario } from '../../models/cadastros/Usuario';
 import { UsuarioService } from '../../services/cadastros/UsuarioService';
 import { registrarLogin } from '../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest as AuthRequest } from '../../types/auth';
+import { sendSuccess, sendError, sendValidationError, sendUnauthorized, sendNotFound } from '../../utils/responseUtils';
 
 interface AuthenticatedRequest extends Request {
   user?: JwtPayload | string;
@@ -52,36 +53,26 @@ export class AuthController {
       const { error, value } = loginSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
 
       if (error) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.details.reduce<Record<string, string[]>>((acc, detail) => {
-            const field = detail.path.join('.') || 'general';
-            acc[field] = acc[field] || [];
-            acc[field].push(detail.message);
-            return acc;
-          }, {}),
-        });
+        sendValidationError(res, 'Dados inválidos', error.details.reduce<Record<string, string[]>>((acc, detail) => {
+          const field = detail.path.join('.') || 'general';
+          acc[field] = acc[field] || [];
+          acc[field].push(detail.message);
+          return acc;
+        }, {}));
         return;
       }
 
       const usuario = await UsuarioService.findByEmailWithPassword(value.email, true);
 
       if (!usuario) {
-        res.status(401).json({
-          success: false,
-          message: 'Credenciais inválidas',
-        });
+        sendUnauthorized(res, 'Credenciais inválidas');
         return;
       }
 
       const isPasswordValid = await bcrypt.compare(value.password, usuario.password_hash);
 
       if (!isPasswordValid) {
-        res.status(401).json({
-          success: false,
-          message: 'Credenciais inválidas',
-        });
+        sendUnauthorized(res, 'Credenciais inválidas');
         return;
       }
 
@@ -104,32 +95,21 @@ export class AuthController {
         path: '/api/auth/login',
       });
 
-      res.json({
-        success: true,
-        message: 'Autenticação realizada com sucesso',
-        data: {
-          token,
-          token_type: 'Bearer',
-          expires_in: process.env.JWT_EXPIRES_IN || '24h',
-          user: {
-            id: usuario.id,
-            nome: usuario.nome,
-            email: usuario.email,
-            role: usuario.role,
-            precisaTrocarSenha: usuario.precisa_trocar_senha,
-            ultimoLogin: usuario.ultimo_login,
-          },
+      sendSuccess(res, {
+        token,
+        token_type: 'Bearer',
+        expires_in: process.env.JWT_EXPIRES_IN || '24h',
+        user: {
+          id: usuario.id,
+          nome: usuario.nome,
+          email: usuario.email,
+          role: usuario.role,
+          precisaTrocarSenha: usuario.precisa_trocar_senha,
+          ultimoLogin: usuario.ultimo_login,
         },
-      });
+      }, 'Autenticação realizada com sucesso');
     } catch (err) {
-      logger.error('Erro inesperado durante login', {
-        error: err instanceof Error ? err.message : 'Erro desconhecido',
-      });
-
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-      });
+      sendError(res, err, 'Erro inesperado durante login', 500, true);
     }
   }
 
@@ -139,43 +119,27 @@ export class AuthController {
       const userPayload = authenticatedReq.user as JwtPayload;
 
       if (!userPayload || !userPayload.sub) {
-        res.status(401).json({
-          success: false,
-          message: 'Token inválido',
-        });
+        sendUnauthorized(res, 'Token inválido');
         return;
       }
 
       const usuario = await UsuarioService.getById(userPayload.sub);
 
       if (!usuario) {
-        res.status(404).json({
-          success: false,
-          message: 'Usuário não encontrado',
-        });
+        sendNotFound(res, 'Usuário não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: {
-          id: usuario.id,
-          nome: usuario.nome,
-          email: usuario.email,
-          role: usuario.role,
-          precisaTrocarSenha: usuario.precisa_trocar_senha,
-          ultimoLogin: usuario.ultimo_login,
-        },
+      sendSuccess(res, {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        role: usuario.role,
+        precisaTrocarSenha: usuario.precisa_trocar_senha,
+        ultimoLogin: usuario.ultimo_login,
       });
     } catch (err) {
-      logger.error('Erro ao buscar usuário atual', {
-        error: err instanceof Error ? err.message : 'Erro desconhecido',
-      });
-
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-      });
+      sendError(res, err, 'Erro ao buscar usuário atual', 500, true);
     }
   }
 }

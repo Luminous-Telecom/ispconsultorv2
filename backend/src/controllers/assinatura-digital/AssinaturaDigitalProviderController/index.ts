@@ -5,6 +5,7 @@ import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from 
 import Joi from 'joi';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class AssinaturaDigitalProviderController {
   private static updateSchema = Joi.object({
@@ -49,16 +50,9 @@ export class AssinaturaDigitalProviderController {
     try {
       const providers = await AssinaturaDigitalProviderService.list();
 
-      res.status(200).json({
-        success: true,
-        data: providers
-      });
+      sendSuccess(res, providers);
     } catch (error) {
-      logger.error('Erro ao listar providers de assinatura digital:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao listar providers de assinatura digital'
-      });
+      sendError(res, error, 'Erro ao listar providers de assinatura digital', 500, true);
     }
   }
 
@@ -70,34 +64,20 @@ export class AssinaturaDigitalProviderController {
       const { provider } = req.params;
 
       if (!AssinaturaDigitalProviderController.isValidProvider(provider)) {
-        res.status(400).json({
-          success: false,
-          message: 'Provider inválido'
-        });
+        sendValidationError(res, 'Provider inválido');
         return;
       }
 
       const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType);
 
       if (!providerConfig) {
-        res.status(200).json({
-          success: false,
-          message: 'Provider não encontrado',
-          data: null
-        });
+        sendSuccess(res, null, 'Provider não encontrado', 200);
         return;
       }
 
-      res.status(200).json({
-        success: true,
-        data: providerConfig
-      });
+      sendSuccess(res, providerConfig);
     } catch (error) {
-      logger.error('Erro ao obter provider de assinatura digital:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao obter provider de assinatura digital'
-      });
+      sendError(res, error, 'Erro ao obter provider de assinatura digital', 500, true);
     }
   }
 
@@ -109,23 +89,13 @@ export class AssinaturaDigitalProviderController {
       const provider = await AssinaturaDigitalProviderService.getEnabled();
 
       if (!provider) {
-        res.status(404).json({
-          success: false,
-          message: 'Nenhum provider habilitado'
-        });
+        sendNotFound(res, 'Nenhum provider habilitado');
         return;
       }
 
-      res.status(200).json({
-        success: true,
-        data: provider
-      });
+      sendSuccess(res, provider);
     } catch (error) {
-      logger.error('Erro ao obter provider habilitado:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao obter provider habilitado'
-      });
+      sendError(res, error, 'Erro ao obter provider habilitado', 500, true);
     }
   }
 
@@ -145,21 +115,23 @@ export class AssinaturaDigitalProviderController {
           message: detail.message
         }));
 
-        res.status(400).json({
-          success: false,
-          message: 'Erro de validação',
-          details: errorMessages
-        });
+        // Converter para Record<string, string[]> esperado pelo sendValidationError
+        const errorsByField: Record<string, string[]> = errorMessages.reduce((acc, err) => {
+          const field = err.field || 'general';
+          if (!acc[field]) {
+            acc[field] = [];
+          }
+          acc[field].push(err.message);
+          return acc;
+        }, {} as Record<string, string[]>);
+        sendValidationError(res, 'Erro de validação', errorsByField);
         return;
       }
 
       const { provider } = req.params;
 
       if (!AssinaturaDigitalProviderController.isValidProvider(provider)) {
-        res.status(400).json({
-          success: false,
-          message: 'Provider inválido'
-        });
+        sendValidationError(res, 'Provider inválido');
         return;
       }
 
@@ -179,33 +151,33 @@ export class AssinaturaDigitalProviderController {
       );
 
       if (created) {
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'AssinaturaDigitalProvider',
-          providerConfig.id,
-          providerConfig.toJSON() as unknown as Record<string, unknown>
-        );
+        try {
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'AssinaturaDigitalProvider',
+            providerConfig.id,
+            providerConfig.toJSON() as unknown as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       } else if (dadosAnteriores) {
-        await registrarAtualizacao(
-          req as AuthenticatedRequest,
-          'AssinaturaDigitalProvider',
-          providerConfig.id,
-          dadosAnteriores as unknown as Record<string, unknown>,
-          providerConfig.toJSON() as unknown as Record<string, unknown>
-        );
+        try {
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'AssinaturaDigitalProvider',
+            providerConfig.id,
+            dadosAnteriores as unknown as Record<string, unknown>,
+            providerConfig.toJSON() as unknown as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       }
 
-      res.status(200).json({
-        success: true,
-        message: created ? 'Provider criado com sucesso' : 'Provider atualizado com sucesso',
-        data: providerConfig
-      });
+      sendSuccess(res, providerConfig, created ? 'Provider criado com sucesso' : 'Provider atualizado com sucesso');
     } catch (error) {
-      logger.error('Erro ao criar/atualizar provider de assinatura digital:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao criar/atualizar provider de assinatura digital'
-      });
+      sendError(res, error, 'Erro ao criar/atualizar provider de assinatura digital', 500, true);
     }
   }
 
@@ -225,31 +197,31 @@ export class AssinaturaDigitalProviderController {
           message: detail.message
         }));
 
-        res.status(400).json({
-          success: false,
-          message: 'Erro de validação',
-          details: errorMessages
-        });
+        // Converter para Record<string, string[]> esperado pelo sendValidationError
+        const errorsByField: Record<string, string[]> = errorMessages.reduce((acc, err) => {
+          const field = err.field || 'general';
+          if (!acc[field]) {
+            acc[field] = [];
+          }
+          acc[field].push(err.message);
+          return acc;
+        }, {} as Record<string, string[]>);
+
+        sendValidationError(res, 'Erro de validação', errorsByField);
         return;
       }
 
       const { provider } = req.params;
 
       if (!AssinaturaDigitalProviderController.isValidProvider(provider)) {
-        res.status(400).json({
-          success: false,
-          message: 'Provider inválido'
-        });
+        sendValidationError(res, 'Provider inválido');
         return;
       }
 
       const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider);
 
       if (!providerConfig) {
-        res.status(404).json({
-          success: false,
-          message: 'Provider não encontrado'
-        });
+        sendNotFound(res, 'Provider não encontrado');
         return;
       }
 
@@ -258,25 +230,21 @@ export class AssinaturaDigitalProviderController {
       
       const providerAtualizado = await AssinaturaDigitalProviderService.update(provider, updateData);
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'AssinaturaDigitalProvider',
-        providerAtualizado.id,
-        dadosAnteriores as unknown as Record<string, unknown>,
-        providerAtualizado.toJSON() as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'AssinaturaDigitalProvider',
+          providerAtualizado.id,
+          dadosAnteriores as unknown as Record<string, unknown>,
+          providerAtualizado.toJSON() as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(200).json({
-        success: true,
-        message: 'Provider atualizado com sucesso',
-        data: providerAtualizado
-      });
+      sendSuccess(res, providerAtualizado, 'Provider atualizado com sucesso');
     } catch (error) {
-      logger.error('Erro ao atualizar provider de assinatura digital:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao atualizar provider de assinatura digital'
-      });
+      sendError(res, error, 'Erro ao atualizar provider de assinatura digital', 500, true);
     }
   }
 
@@ -288,43 +256,34 @@ export class AssinaturaDigitalProviderController {
       const { provider } = req.params;
 
       if (!AssinaturaDigitalProviderController.isValidProvider(provider)) {
-        res.status(400).json({
-          success: false,
-          message: 'Provider inválido'
-        });
+        sendValidationError(res, 'Provider inválido');
         return;
       }
 
       const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType);
 
       if (!providerConfig) {
-        res.status(404).json({
-          success: false,
-          message: 'Provider não encontrado'
-        });
+        sendNotFound(res, 'Provider não encontrado');
         return;
       }
 
       const dadosAnteriores = providerConfig.toJSON();
       await AssinaturaDigitalProviderService.delete(provider as AssinaturaDigitalProviderType);
 
-      await registrarExclusao(
-        req as AuthenticatedRequest,
-        'AssinaturaDigitalProvider',
-        providerConfig.id,
-        dadosAnteriores as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarExclusao(
+          req as AuthenticatedRequest,
+          'AssinaturaDigitalProvider',
+          providerConfig.id,
+          dadosAnteriores as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(200).json({
-        success: true,
-        message: 'Provider deletado com sucesso'
-      });
+      sendSuccess(res, undefined, 'Provider deletado com sucesso');
     } catch (error) {
-      logger.error('Erro ao deletar provider de assinatura digital:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao deletar provider de assinatura digital'
-      });
+      sendError(res, error, 'Erro ao deletar provider de assinatura digital', 500, true);
     }
   }
 }

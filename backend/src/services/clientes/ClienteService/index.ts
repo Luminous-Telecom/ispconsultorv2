@@ -190,5 +190,29 @@ export class ClienteService {
       limit: options?.limit
     });
   }
+
+  /**
+   * Buscar cliente por CNPJ
+   */
+  static async findByCnpj(cnpj: string): Promise<Cliente | null> {
+    return await Cliente.findOne({
+      where: { cnpj },
+      include: [
+        { association: 'titulos' },
+        { association: 'planos' },
+        { association: 'contratos' }
+      ]
+    });
+  }
+
+  /**
+   * Listar clientes ativos
+   */
+  static async findAtivos(): Promise<Cliente[]> {
+    return await Cliente.findAll({
+      where: { ativo: true },
+      order: [['razao_social', 'ASC']]
+    });
+  }
 }
 

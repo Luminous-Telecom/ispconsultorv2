@@ -5,6 +5,7 @@ import { Plano } from '../../../models/cadastros/Plano';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Op, WhereOptions, Transaction } from 'sequelize';
 import { logger } from '../../../utils/logger';
+import { buildDateFilter, buildNumericSearchFilter, combineFilters } from '../../../utils/queryFilters';
 
 export interface ListTitulosFilters {
   page?: number;
@@ -67,35 +68,25 @@ export class TituloService {
     const pageNum = Number(page);
     const offset = (pageNum - 1) * limitNum;
 
-    const where: WhereOptions = {};
+    // Construir filtros usando helpers
+    const whereConditions: (WhereOptions | null)[] = [];
 
+    // Filtro de status
     if (status) {
       if (typeof status === 'string' && status.startsWith('!')) {
-        where.status = { [Op.ne]: status.substring(1) };
+        whereConditions.push({ status: { [Op.ne]: status.substring(1) } } as WhereOptions);
       } else {
-        where.status = status;
+        whereConditions.push({ status } as WhereOptions);
       }
     }
 
+    // Filtro de cliente
     if (cliente_id) {
-      where.cliente_id = cliente_id;
+      whereConditions.push({ cliente_id } as WhereOptions);
     }
 
-    if (data_vencimento_inicio || data_vencimento_fim) {
-      const range: Record<symbol, unknown> = {};
-
-      if (data_vencimento_inicio) {
-        const [year, month, day] = (data_vencimento_inicio as string).split('-').map(Number);
-        range[Op.gte] = new Date(year, month - 1, day, 0, 0, 0, 0);
-      }
-
-      if (data_vencimento_fim) {
-        const [year, month, day] = (data_vencimento_fim as string).split('-').map(Number);
-        range[Op.lte] = new Date(year, month - 1, day, 23, 59, 59, 999);
-      }
-
-      where.data_vencimento = range;
-    }
+    // Filtro de data usando helper
+    whereConditions.push(buildDateFilter(data_vencimento_inicio, data_vencimento_fim, 'data_vencimento'));
 
     if (search && String(search).trim()) {
       const term = String(search).trim();
@@ -148,10 +139,16 @@ export class TituloService {
             if (isNumericSearch) orConditions.push({ contrato_id: termNum } as WhereOptions);
             break;
           case 'valor':
-            if (isNumericSearch) orConditions.push({ valor: termNum } as WhereOptions);
+            if (isNumericSearch) {
+              const numericFilter = buildNumericSearchFilter(term, 'valor', 0.1);
+              if (numericFilter) orConditions.push(numericFilter);
+            }
             break;
           case 'valor_pago':
-            if (isNumericSearch) orConditions.push({ valor_pago: termNum } as WhereOptions);
+            if (isNumericSearch) {
+              const numericFilter = buildNumericSearchFilter(term, 'valor_pago', 0.1);
+              if (numericFilter) orConditions.push(numericFilter);
+            }
             break;
           case 'cliente':
             orConditions.push(
@@ -171,11 +168,14 @@ export class TituloService {
       }
 
       if (orConditions.length === 0) {
-        where.id = { [Op.eq]: -1 };
+        whereConditions.push({ id: { [Op.eq]: -1 } } as WhereOptions);
       } else {
-        (where as Record<symbol, unknown>)[Op.or] = orConditions as unknown as WhereOptions[];
+        whereConditions.push({ [Op.or]: orConditions } as WhereOptions);
       }
     }
+
+    // Combinar todos os filtros
+    const where = combineFilters(...whereConditions) || {};
 
     const { NotaFiscal } = await import('../../../models/nfse/NotaFiscal');
     

@@ -8,6 +8,7 @@ import { TituloPDFController } from '../../titulos/TituloPDFController';
 import { TituloComRelacoes } from '../../titulos/TituloHelpers/types';
 import { logger } from '../../../utils/logger';
 import crypto from 'crypto';
+import { sendSuccess, sendError, sendValidationError, sendForbidden, sendNotFound } from '../../../utils/responseUtils';
 
 export class PagamentoPublicoController {
   /**
@@ -39,19 +40,13 @@ export class PagamentoPublicoController {
       const { id, token } = req.params;
 
       if (!id || !token) {
-        res.status(400).json({
-          success: false,
-          message: 'ID e token são obrigatórios'
-        });
+        sendValidationError(res, 'ID e token são obrigatórios');
         return;
       }
 
       const tituloId = parseInt(id, 10);
       if (isNaN(tituloId)) {
-        res.status(400).json({
-          success: false,
-          message: 'ID inválido'
-        });
+        sendValidationError(res, 'ID inválido');
         return;
       }
 
@@ -59,32 +54,22 @@ export class PagamentoPublicoController {
       const expectedHash = crypto.createHmac('sha256', secret).update(String(tituloId)).digest('hex').substring(0, 16);
       
       if (token !== expectedHash) {
-        res.status(403).json({
-          success: false,
-          message: 'Token inválido ou expirado'
-        });
+        sendForbidden(res, 'Token inválido ou expirado');
         return;
       }
 
       const titulo = await TituloService.getById(tituloId) as TituloComRelacoes | null;
 
       if (!titulo) {
-        res.status(404).json({
-          success: false,
-          message: 'Título não encontrado'
-        });
+        sendNotFound(res, 'Título não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: titulo
-      });
+      sendSuccess(res, titulo);
     } catch (error) {
-      logger.error('Erro ao buscar título público:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
+        context: 'PagamentoPublicoController',
+        action: 'getTituloPublico'
       });
     }
   }
@@ -97,19 +82,13 @@ export class PagamentoPublicoController {
       const { id, token } = req.params;
 
       if (!id || !token) {
-        res.status(400).json({
-          success: false,
-          message: 'ID e token são obrigatórios'
-        });
+        sendValidationError(res, 'ID e token são obrigatórios');
         return;
       }
 
       const tituloId = parseInt(id, 10);
       if (isNaN(tituloId)) {
-        res.status(400).json({
-          success: false,
-          message: 'ID inválido'
-        });
+        sendValidationError(res, 'ID inválido');
         return;
       }
 
@@ -118,10 +97,7 @@ export class PagamentoPublicoController {
       const expectedHash = crypto.createHmac('sha256', secret).update(String(tituloId)).digest('hex').substring(0, 16);
       
       if (token !== expectedHash) {
-        res.status(403).json({
-          success: false,
-          message: 'Token inválido'
-        });
+        sendForbidden(res, 'Token inválido');
         return;
       }
 
@@ -129,10 +105,7 @@ export class PagamentoPublicoController {
       const titulo = await TituloService.getById(tituloId) as TituloComRelacoes | null;
 
       if (!titulo) {
-        res.status(404).json({
-          success: false,
-          message: 'Título não encontrado'
-        });
+        sendNotFound(res, 'Título não encontrado');
         return;
       }
 
@@ -140,9 +113,10 @@ export class PagamentoPublicoController {
       const pdfBase64 = await TituloPDFController.gerarPdfBase64(titulo as TituloComRelacoes);
       
       if (!pdfBase64) {
-        res.status(500).json({
-          success: false,
-          message: 'Erro ao gerar PDF do boleto'
+        sendError(res, new Error('Erro ao gerar PDF do boleto'), 'Erro ao gerar PDF do boleto', 500, true, {
+          context: 'PagamentoPublicoController',
+          action: 'downloadPdf',
+          tituloId
         });
         return;
       }
@@ -161,13 +135,9 @@ export class PagamentoPublicoController {
 
       res.end(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao gerar PDF para download público:', { 
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
+        context: 'PagamentoPublicoController',
+        action: 'downloadPdf'
       });
     }
   }

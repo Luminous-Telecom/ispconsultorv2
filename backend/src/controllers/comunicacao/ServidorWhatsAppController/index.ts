@@ -1,13 +1,16 @@
 import { Request, Response as ExpressResponse } from 'express';
 import { ValidationError } from 'sequelize';
-import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
-import { MensagemWhatsApp } from '../../../models/comunicacao/MensagemWhatsApp';
 import { MensagemWhatsAppService } from '../../../services/comunicacao/MensagemWhatsAppService';
 import { ServidorWhatsAppService } from '../../../services/comunicacao/ServidorWhatsAppService';
-import { logger } from '../../../utils/logger';
-import { WhatsAppCloudService } from '../../../services/comunicacao/WhatsAppCloudService';
+import { ServidorWhatsAppValidatorService } from '../../../services/comunicacao/ServidorWhatsAppValidatorService';
+import { ServidorWhatsAppTestService } from '../../../services/comunicacao/ServidorWhatsAppTestService';
+import { ServidorWhatsAppProcessorService } from '../../../services/comunicacao/ServidorWhatsAppProcessorService';
+import { ServidorWhatsAppConnectionService } from '../../../services/comunicacao/ServidorWhatsAppConnectionService';
+import { ServidorWhatsAppMessageService } from '../../../services/comunicacao/ServidorWhatsAppMessageService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
+import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class ServidorWhatsAppController {
   /**
@@ -17,17 +20,9 @@ export class ServidorWhatsAppController {
     try {
       const result = await ServidorWhatsAppService.list();
 
-      res.json({
-        success: result.success,
-        data: result.data,
-        message: 'Servidores de WhatsApp listados com sucesso'
-      });
+      sendSuccess(res, result.data, 'Servidores de WhatsApp listados com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar servidores de WhatsApp:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar servidores de WhatsApp', 500, true);
     }
   }
 
@@ -41,24 +36,13 @@ export class ServidorWhatsAppController {
       const servidor = await ServidorWhatsAppService.getById(id, { excludeTokens: true });
 
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor de WhatsApp não encontrado'
-        });
+        sendNotFound(res, 'Servidor de WhatsApp não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: servidor,
-        message: 'Servidor de WhatsApp encontrado'
-      });
+      sendSuccess(res, servidor, 'Servidor de WhatsApp encontrado');
     } catch (error) {
-      logger.error('Erro ao buscar servidor de WhatsApp:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar servidor de WhatsApp', 500, true);
     }
   }
 
@@ -69,57 +53,33 @@ export class ServidorWhatsAppController {
     try {
       const servidorData = req.body;
 
-      // Validar dados baseado no tipo de API
-      const tipoApi = servidorData.tipo_api || 'evolution';
-      
-      if (tipoApi === 'evolution') {
-        if (!servidorData.evolution_api_url || !servidorData.evolution_api_key || !servidorData.instance_name) {
-          res.status(400).json({
-            success: false,
-            message: 'Para Evolution API: URL da Evolution API, chave da API e nome da instância são obrigatórios'
-          });
-          return;
-        }
-      } else if (tipoApi === 'whatsapp_cloud') {
-        if (!servidorData.whatsapp_cloud_token || !servidorData.whatsapp_cloud_phone_number_id) {
-          res.status(400).json({
-            success: false,
-            message: 'Para WhatsApp Cloud API: Token e Phone Number ID são obrigatórios'
-          });
-          return;
-        }
+      const validation = ServidorWhatsAppValidatorService.validateServidorData(servidorData, res);
+      if (!validation.valid) {
+        return;
       }
 
       const servidor = await ServidorWhatsAppService.create(servidorData);
 
-      await registrarCriacao(
-        req as AuthenticatedRequest,
-        'ServidorWhatsApp',
-        servidor.id,
-        servidor.toJSON() as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'ServidorWhatsApp',
+          servidor.id,
+          servidor.toJSON() as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        data: servidor,
-        message: 'Servidor de WhatsApp criado com sucesso'
-      });
+      sendSuccess(res, servidor, 'Servidor de WhatsApp criado com sucesso', 201);
     } catch (error: unknown) {
-      logger.error('Erro ao criar servidor de WhatsApp:', error);
-      
       if (error instanceof ValidationError) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.errors.map((err) => err.message)
-        });
+        const errors = error.errors.map((err) => err.message);
+        sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
 
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao criar servidor de WhatsApp', 500, true);
     }
   }
 
@@ -134,45 +94,34 @@ export class ServidorWhatsAppController {
       const servidor = await ServidorWhatsAppService.getById(id);
 
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor de WhatsApp não encontrado'
-        });
+        sendNotFound(res, 'Servidor de WhatsApp não encontrado');
         return;
       }
 
       const dadosAnteriores = servidor.toJSON();
       await ServidorWhatsAppService.updateInstance(servidor, servidorData);
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'ServidorWhatsApp',
-        servidor.id,
-        dadosAnteriores as unknown as Record<string, unknown>,
-        servidor.toJSON() as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ServidorWhatsApp',
+          servidor.id,
+          dadosAnteriores as unknown as Record<string, unknown>,
+          servidor.toJSON() as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        data: servidor,
-        message: 'Servidor de WhatsApp atualizado com sucesso'
-      });
+      sendSuccess(res, servidor, 'Servidor de WhatsApp atualizado com sucesso');
     } catch (error: unknown) {
-      logger.error('Erro ao atualizar servidor de WhatsApp:', error);
-      
       if (error instanceof ValidationError) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.errors.map((err) => err.message)
-        });
+        const errors = error.errors.map((err) => err.message);
+        sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
 
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao atualizar servidor de WhatsApp', 500, true);
     }
   }
 
@@ -186,33 +135,27 @@ export class ServidorWhatsAppController {
       const servidor = await ServidorWhatsAppService.getById(id);
 
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor de WhatsApp não encontrado'
-        });
+        sendNotFound(res, 'Servidor de WhatsApp não encontrado');
         return;
       }
 
       const dadosAnteriores = servidor.toJSON();
       await ServidorWhatsAppService.delete(servidor.id);
 
-      await registrarExclusao(
-        req as AuthenticatedRequest,
-        'ServidorWhatsApp',
-        servidor.id,
-        dadosAnteriores as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarExclusao(
+          req as AuthenticatedRequest,
+          'ServidorWhatsApp',
+          servidor.id,
+          dadosAnteriores as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Servidor de WhatsApp deletado com sucesso'
-      });
+      sendSuccess(res, undefined, 'Servidor de WhatsApp deletado com sucesso');
     } catch (error) {
-      logger.error('Erro ao deletar servidor de WhatsApp:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao deletar servidor de WhatsApp', 500, true);
     }
   }
 
@@ -222,39 +165,15 @@ export class ServidorWhatsAppController {
   static async testConnection(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
-
-      const servidor = await ServidorWhatsAppService.getById(id);
-
-      if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor de WhatsApp não encontrado'
-        });
-        return;
+      const result = await ServidorWhatsAppTestService.testConnection(Number(id));
+      
+      if (result.success) {
+        sendSuccess(res, result.details || {}, result.message);
+      } else {
+        sendError(res, new Error(result.message), result.message, 400, false);
       }
-
-      // Aqui você implementaria a lógica de teste de conexão
-      // Por enquanto, vamos simular um teste
-      const testResult = {
-        success: true,
-        message: 'Conexão testada com sucesso',
-        details: {
-          instance_name: servidor.instance_name,
-          evolution_api_url: servidor.evolution_api_url,
-          status_conexao: servidor.status_conexao,
-          webhook_url: servidor.webhook_url,
-          ativo: servidor.ativo,
-          notificacoes_automaticas: servidor.notificacoes_automaticas
-        }
-      };
-
-      res.json(testResult);
     } catch (error) {
-      logger.error('Erro ao testar conexão do servidor de WhatsApp:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao testar conexão do servidor de WhatsApp', 500, true);
     }
   }
 
@@ -266,24 +185,13 @@ export class ServidorWhatsAppController {
       const servidor = await ServidorWhatsAppService.findOne({ ativo: true });
 
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Nenhum servidor de WhatsApp ativo encontrado'
-        });
+        sendNotFound(res, 'Nenhum servidor de WhatsApp ativo encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: servidor,
-        message: 'Servidor ativo encontrado'
-      });
+      sendSuccess(res, servidor, 'Servidor ativo encontrado');
     } catch (error) {
-      logger.error('Erro ao buscar servidor ativo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar servidor ativo', 500, true);
     }
   }
 
@@ -293,218 +201,29 @@ export class ServidorWhatsAppController {
   static async createOrUpdate(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const servidorData = req.body;
+      const result = await ServidorWhatsAppProcessorService.processCreateOrUpdate(
+        servidorData,
+        req as AuthenticatedRequest
+      );
 
-      // Buscar servidor existente
-      const servidor = await ServidorWhatsAppService.findOne({ ativo: true });
-
-      if (servidor) {
-        // Atualizar servidor existente
-        const tipoApi = servidorData.tipo_api || servidor.tipo_api || 'evolution';
-        
-        // Remover campos que não devem ser atualizados
-        delete servidorData.ativo; // O campo ativo não deve ser alterado durante atualização
-        
-        // Validar dados baseado no tipo de API
-        if (tipoApi === 'evolution') {
-          if (!servidorData.evolution_api_url || !servidorData.instance_name) {
-            res.status(400).json({
-              success: false,
-              message: 'Para Evolution API: URL da Evolution API e nome da instância são obrigatórios'
-            });
-            return;
-          }
-          
-          // Se a chave da API não foi fornecida, não atualizar este campo
-          if (!servidorData.evolution_api_key || servidorData.evolution_api_key.trim() === '') {
-            delete servidorData.evolution_api_key;
-          }
-        } else if (tipoApi === 'whatsapp_cloud') {
-          if (!servidorData.whatsapp_cloud_phone_number_id) {
-            res.status(400).json({
-              success: false,
-              message: 'Para WhatsApp Cloud API: Phone Number ID é obrigatório'
-            });
-            return;
-          }
-          
-          // Se o token não foi fornecido, não atualizar este campo
-          if (!servidorData.whatsapp_cloud_token || servidorData.whatsapp_cloud_token.trim() === '') {
-            delete servidorData.whatsapp_cloud_token;
-          }
-        }
-
-        // Tratar webhook_url vazio como null
-        if (servidorData.webhook_url && servidorData.webhook_url.trim() === '') {
-          servidorData.webhook_url = null;
-        }
-
-        const dadosAnteriores = servidor.toJSON();
-        await ServidorWhatsAppService.updateInstance(servidor, servidorData);
-        
-        await registrarAtualizacao(
-          req as AuthenticatedRequest,
-          'ServidorWhatsApp',
-          servidor.id,
-          dadosAnteriores as unknown as Record<string, unknown>,
-          servidor.toJSON() as unknown as Record<string, unknown>
-        );
-        
-        res.json({
-          success: true,
-          data: servidor,
-          message: 'Servidor de WhatsApp atualizado com sucesso'
-        });
-      } else {
-        // Criar novo servidor
-        // Validar dados obrigatórios (evolution_api_key é obrigatória ao criar)
-        // Validar dados baseado no tipo de API
-        const tipoApi = servidorData.tipo_api || 'evolution';
-        
-        if (tipoApi === 'evolution') {
-          if (!servidorData.evolution_api_url || !servidorData.evolution_api_key || !servidorData.instance_name) {
-            res.status(400).json({
-              success: false,
-              message: 'Para Evolution API: URL da Evolution API, chave da API e nome da instância são obrigatórios'
-            });
-            return;
-          }
-        } else if (tipoApi === 'whatsapp_cloud') {
-          if (!servidorData.whatsapp_cloud_token || !servidorData.whatsapp_cloud_phone_number_id) {
-            res.status(400).json({
-              success: false,
-              message: 'Para WhatsApp Cloud API: Token e Phone Number ID são obrigatórios'
-            });
-            return;
-          }
-        }
-
-        // Garantir que nenhum outro servidor esteja ativo antes de criar um novo
-        // Buscar novamente para garantir que não há servidor ativo (pode ter mudado entre requisições)
-        const servidorAtivoExistente = await ServidorWhatsAppService.findOne({ ativo: true });
-        
-        if (servidorAtivoExistente) {
-          // Se encontrou um servidor ativo, atualizar ao invés de criar
-          const tipoApiAtual = servidorData.tipo_api || servidorAtivoExistente.tipo_api || 'evolution';
-          
-          // Remover campos que não devem ser atualizados
-          delete servidorData.ativo; // O campo ativo não deve ser alterado durante atualização
-          
-          if (tipoApiAtual === 'evolution') {
-            if (!servidorData.evolution_api_url || !servidorData.instance_name) {
-              res.status(400).json({
-                success: false,
-                message: 'Para Evolution API: URL da Evolution API e nome da instância são obrigatórios'
-              });
-              return;
-            }
-            
-            if (!servidorData.evolution_api_key || servidorData.evolution_api_key.trim() === '') {
-              delete servidorData.evolution_api_key;
-            }
-          } else if (tipoApiAtual === 'whatsapp_cloud') {
-            if (!servidorData.whatsapp_cloud_phone_number_id) {
-              res.status(400).json({
-                success: false,
-                message: 'Para WhatsApp Cloud API: Phone Number ID é obrigatório'
-              });
-              return;
-            }
-            
-            if (!servidorData.whatsapp_cloud_token || servidorData.whatsapp_cloud_token.trim() === '') {
-              delete servidorData.whatsapp_cloud_token;
-            }
-          }
-
-          if (servidorData.webhook_url && servidorData.webhook_url.trim() === '') {
-            servidorData.webhook_url = null;
-          }
-
-          const dadosAnteriores = servidorAtivoExistente.toJSON();
-          await ServidorWhatsAppService.updateInstance(servidorAtivoExistente, servidorData);
-          
-          await registrarAtualizacao(
-            req as AuthenticatedRequest,
-            'ServidorWhatsApp',
-            servidorAtivoExistente.id,
-            dadosAnteriores as unknown as Record<string, unknown>,
-            servidorAtivoExistente.toJSON() as unknown as Record<string, unknown>
-          );
-          
-          await servidorAtivoExistente.reload({
-            attributes: {
-              exclude: ['evolution_api_key', 'whatsapp_cloud_token'],
-            },
-          });
-          
-          res.json({
-            success: true,
-            data: servidorAtivoExistente,
-            message: 'Servidor de WhatsApp atualizado com sucesso'
-          });
-          return;
-        }
-
-        // Desativar todos os outros servidores antes de criar um novo com ativo=true
-        // Isso evita violação do índice único que permite apenas um servidor ativo
-        await ServidorWhatsAppService.updateBulk(
-          { ativo: true },
-          { ativo: false }
-        );
-        
-        // Verificar novamente se ainda há algum servidor ativo (pode ter mudado durante race condition)
-        const servidorAindaAtivo = await ServidorWhatsAppService.findOne({ ativo: true });
-        if (servidorAindaAtivo) {
-          await servidorAindaAtivo.update({ ativo: false });
-        }
-        
-        servidorData.ativo = true;
-        servidorData.status_conexao = 'disconnected';
-        
-        // Tratar webhook_url vazio como null
-        if (servidorData.webhook_url && servidorData.webhook_url.trim() === '') {
-          servidorData.webhook_url = null;
-        }
-        
-        const novoServidor = await ServidorWhatsAppService.create(servidorData);
-        
-        // Recarregar sem os tokens
-        await novoServidor.reload({
-          attributes: {
-            exclude: ['evolution_api_key', 'whatsapp_cloud_token'],
-          },
-        });
-        
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'ServidorWhatsApp',
-          novoServidor.id,
-          novoServidor.toJSON() as unknown as Record<string, unknown>
-        );
-        
-        res.status(201).json({
-          success: true,
-          data: novoServidor,
-          message: 'Servidor de WhatsApp criado com sucesso'
-        });
-      }
-    } catch (error: unknown) {
-      logger.error('Erro ao criar/atualizar servidor de WhatsApp:', error);
+      const message = result.isNew 
+        ? 'Servidor de WhatsApp criado com sucesso'
+        : 'Servidor de WhatsApp atualizado com sucesso';
       
+      sendSuccess(res, result.servidor, message, result.isNew ? 201 : 200);
+    } catch (error: unknown) {
       if (error instanceof ValidationError) {
-        const errorMessages = error.errors.map((err) => err.message).join(', ');
-        res.status(400).json({
-          success: false,
-          message: errorMessages || 'Dados inválidos',
-          errors: error.errors.map((err) => err.message)
-        });
+        const errors = error.errors.map((err) => err.message);
+        sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
 
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      res.status(500).json({
-        success: false,
-        message: errorMessage || 'Erro interno do servidor'
-      });
+      if (error instanceof Error) {
+        sendValidationError(res, error.message);
+        return;
+      }
+
+      sendError(res, error, 'Erro ao criar/atualizar servidor de WhatsApp', 500, true);
     }
   }
 
@@ -517,40 +236,14 @@ export class ServidorWhatsAppController {
 
       const servidor = await ServidorWhatsAppService.getById(id);
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor não encontrado'
-        });
+        sendNotFound(res, 'Servidor não encontrado');
         return;
       }
 
-      // Aqui você implementaria a chamada para a Evolution API para conectar a instância
-      // Por enquanto, vamos simular a resposta
-      await ServidorWhatsAppService.updateInstance(servidor, { status_conexao: 'connecting' });
-
-      // Simular delay de conexão
-      setTimeout(async () => {
-        try {
-          await ServidorWhatsAppService.updateInstance(servidor, { status_conexao: 'qr_required' });
-          logger.info(`Instância ${servidor.instance_name} requer QR Code`);
-        } catch (error) {
-          logger.error('Erro ao atualizar status:', error);
-        }
-      }, 2000);
-
-      res.json({
-        success: true,
-        message: 'Iniciando conexão com a instância...'
-      });
-
+      await ServidorWhatsAppConnectionService.connectInstance(servidor);
+      sendSuccess(res, undefined, 'Iniciando conexão com a instância...');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao conectar instância:', error);
-      
-      res.status(500).json({
-        success: false,
-        message: `Erro ao conectar instância: ${errorMessage}`
-      });
+      sendError(res, error, 'Erro ao conectar instância', 500, true);
     }
   }
 
@@ -563,169 +256,21 @@ export class ServidorWhatsAppController {
       const { phone, message } = req.body;
 
       if (!phone || !message) {
-        res.status(400).json({
-          success: false,
-          message: 'Número do telefone e mensagem são obrigatórios'
-        });
+        sendValidationError(res, 'Número do telefone e mensagem são obrigatórios');
         return;
       }
 
       const servidor = await ServidorWhatsAppService.getById(id);
       if (!servidor) {
-        res.status(404).json({
-          success: false,
-          message: 'Servidor não encontrado'
-        });
+        sendNotFound(res, 'Servidor não encontrado');
         return;
       }
 
-      let result: Record<string, unknown> = {};
-      
-      // Verificar tipo de API e enviar mensagem apropriadamente
-      if (servidor.tipo_api === 'whatsapp_cloud') {
-        // WhatsApp Cloud API
-        const { WhatsAppCloudService } = await import('../../../services/comunicacao/WhatsAppCloudService');
-        const enviou = await WhatsAppCloudService.enviarTexto(servidor, phone, message);
-        
-        if (!enviou) {
-          throw new Error('Erro ao enviar mensagem via WhatsApp Cloud API');
-        }
-        
-        result = { success: true };
-      } else {
-        // Evolution API
-        const baseUrl = servidor.evolution_api_url.replace(/\/$/, '');
-        const evolutionUrl = `${baseUrl}/message/sendText/${servidor.instance_name}`;
-        
-        const messageData = {
-          number: phone,
-          text: message
-        };
-
-        logger.info(`Enviando mensagem via Evolution API - URL: ${evolutionUrl}`, {
-          instance: servidor.instance_name,
-          phone: phone,
-          hasApiKey: !!servidor.evolution_api_key
-        });
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-        let response: globalThis.Response;
-        try {
-          response = await fetch(evolutionUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': servidor.evolution_api_key || ''
-            },
-            body: JSON.stringify(messageData),
-            signal: controller.signal
-          });
-        } catch (fetchError) {
-          clearTimeout(timeoutId);
-          logger.error('Erro ao fazer requisição para Evolution API:', {
-            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
-            errorName: fetchError instanceof Error ? fetchError.name : 'Unknown',
-            url: evolutionUrl,
-            instance: servidor.instance_name
-          });
-          throw fetchError;
-        }
-
-        clearTimeout(timeoutId);
-
-        logger.info(`Resposta recebida da Evolution API:`, {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-          headers: Object.fromEntries(response.headers.entries())
-        });
-
-        // Tentar parsear JSON, mas tratar erros
-        let responseData: Record<string, unknown> = {};
-        let responseText = '';
-        try {
-          responseText = await response.text();
-          logger.info(`Corpo da resposta da Evolution API (primeiros 500 chars):`, responseText.substring(0, 500));
-          
-          if (responseText) {
-            try {
-              responseData = JSON.parse(responseText) as Record<string, unknown>;
-              logger.info('Resposta parseada com sucesso:', responseData);
-            } catch (parseError) {
-              logger.warn('Resposta da Evolution API não é JSON válido:', {
-                parseError: parseError instanceof Error ? parseError.message : String(parseError),
-                textPreview: responseText.substring(0, 200)
-              });
-              // Se não for JSON, usar o texto como mensagem de erro
-              if (!response.ok) {
-                throw new Error(`Resposta da API: ${responseText.substring(0, 200)}`);
-              }
-            }
-          }
-        } catch (textError) {
-          logger.error('Erro ao ler resposta da Evolution API:', {
-            error: textError instanceof Error ? textError.message : String(textError),
-            errorName: textError instanceof Error ? textError.name : 'Unknown',
-            status: response.status,
-            statusText: response.statusText
-          });
-          if (!response.ok) {
-            throw new Error(`Erro ao processar resposta da Evolution API: ${textError instanceof Error ? textError.message : 'Erro desconhecido'}`);
-          }
-        }
-
-        if (!response.ok) {
-          const errorMsg = (responseData.message as string) || (responseData.error as string) || responseText || `Erro HTTP ${response.status}: ${response.statusText}`;
-          logger.error('Erro ao enviar mensagem via Evolution API:', {
-            status: response.status,
-            statusText: response.statusText,
-            responseData: responseData,
-            responseText: responseText.substring(0, 500),
-            url: evolutionUrl,
-            instance: servidor.instance_name
-          });
-          throw new Error(errorMsg || 'Erro ao enviar mensagem via Evolution API');
-        }
-
-        result = responseData;
-        logger.info(`Mensagem de teste enviada via Evolution API para: ${phone}`);
-      }
-
-      res.json({
-        success: true,
-        message: `Mensagem de teste enviada com sucesso para ${phone}`,
-        data: result
-      });
-
+      const result = await ServidorWhatsAppMessageService.sendTestMessage(servidor, phone, message);
+      sendSuccess(res, result, `Mensagem de teste enviada com sucesso para ${phone}`);
     } catch (error: unknown) {
-      const errorMessageInitial = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao enviar mensagem de teste:', error);
-      
-      let errorMessage = 'Erro ao enviar mensagem de teste';
-      let statusCode = 500;
-      
-      if (error instanceof Error) {
-        const errorWithCause = error as Error & { cause?: string };
-        if (error.name === 'AbortError' || errorWithCause.cause === 'ConnectTimeoutError') {
-          errorMessage = 'Timeout de conexão (30s): A Evolution API não está respondendo. Verifique se a URL está correta e se o servidor está online.';
-          statusCode = 504; // Gateway Timeout
-        } else if (errorMessageInitial.includes('fetch failed')) {
-          errorMessage = 'Erro de conexão: Não foi possível conectar à Evolution API. Verifique a URL e se o servidor está acessível.';
-          statusCode = 503; // Service Unavailable
-        } else if (errorMessageInitial.includes('ENOTFOUND')) {
-          errorMessage = 'Domínio não encontrado: Verifique se a URL da Evolution API está correta.';
-          statusCode = 404;
-        } else {
-          errorMessage = `Erro ao enviar mensagem: ${errorMessageInitial}`;
-        }
-      }
-      
-      res.status(statusCode).json({
-        success: false,
-        message: errorMessage
-      });
+      const { message: errorMessage, statusCode } = ServidorWhatsAppMessageService.extractErrorMessage(error);
+      sendError(res, error, errorMessage, statusCode, true);
     }
   }
 
@@ -741,24 +286,15 @@ export class ServidorWhatsAppController {
 
       if (!mensagem) {
         logger.info('Mensagem não encontrada para o tipo:', { tipo });
-        res.status(404).json({
-          success: false,
-          message: 'Mensagem não encontrada'
-        });
+        sendNotFound(res, 'Mensagem não encontrada');
         return;
       }
 
       logger.info('Mensagem encontrada:', { tipo, id: mensagem.id });
-      res.json({
-        success: true,
-        data: mensagem
-      });
+      sendSuccess(res, mensagem);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao buscar mensagem por tipo:', { tipo: req.params.tipo, error: errorMessage });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
+      sendError(res, error, 'Erro ao buscar mensagem por tipo', 500, true, {
+        tipo: req.params.tipo
       });
     }
   }
@@ -781,10 +317,7 @@ export class ServidorWhatsAppController {
 
       if (!tipo || !tipo_envio) {
         logger.warn('Validação falhou: tipo ou tipo_envio ausente', { tipo, tipo_envio });
-        res.status(400).json({
-          success: false,
-          message: 'Tipo e tipo de envio são obrigatórios'
-        });
+        sendValidationError(res, 'Tipo e tipo de envio são obrigatórios');
         return;
       }
 
@@ -793,19 +326,13 @@ export class ServidorWhatsAppController {
       // Para outros tipos sem template, mensagem_padrao é obrigatória
       if (tipo !== 'envio_manual' && !mensagem_padrao && !template_mapping) {
         logger.warn('Validação falhou: mensagem_padrao ou template_mapping obrigatório', { tipo, temMensagemPadrao: !!mensagem_padrao, temTemplateMapping: !!template_mapping });
-        res.status(400).json({
-          success: false,
-          message: 'Mensagem padrão ou template mapping é obrigatório'
-        });
+        sendValidationError(res, 'Mensagem padrão ou template mapping é obrigatório');
         return;
       }
 
       if (tipo === 'envio_manual' && !template_mapping && !mensagem_manual) {
         logger.warn('Validação falhou: template_mapping ou mensagem_manual obrigatório para envio_manual', { tipo, temTemplateMapping: !!template_mapping, temMensagemManual: !!mensagem_manual });
-        res.status(400).json({
-          success: false,
-          message: 'Template mapping ou mensagem manual é obrigatório para envio manual'
-        });
+        sendValidationError(res, 'Template mapping ou mensagem manual é obrigatório para envio manual');
         return;
       }
 
@@ -849,25 +376,33 @@ export class ServidorWhatsAppController {
           mensagem = await MensagemWhatsAppService.update(mensagem.id, mensagemData);
           logger.info('Mensagem atualizada com sucesso:', { id: mensagem.id });
           
-          await registrarAtualizacao(
-            req as AuthenticatedRequest,
-            'MensagemWhatsApp',
-            mensagem.id,
-            dadosAnteriores as unknown as Record<string, unknown>,
-            mensagem.toJSON() as unknown as Record<string, unknown>
-          );
+          try {
+            await registrarAtualizacao(
+              req as AuthenticatedRequest,
+              'MensagemWhatsApp',
+              mensagem.id,
+              dadosAnteriores as unknown as Record<string, unknown>,
+              mensagem.toJSON() as unknown as Record<string, unknown>
+            );
+          } catch (auditError) {
+            // Não interromper o fluxo
+          }
         } else {
           // Criar novo
           logger.info('Criando nova mensagem:', { tipo });
           mensagem = await MensagemWhatsAppService.create(mensagemData);
           logger.info('Mensagem criada com sucesso:', { id: mensagem.id, tipo });
           
-          await registrarCriacao(
-            req as AuthenticatedRequest,
-            'MensagemWhatsApp',
-            mensagem.id,
-            mensagem.toJSON() as unknown as Record<string, unknown>
-          );
+          try {
+            await registrarCriacao(
+              req as AuthenticatedRequest,
+              'MensagemWhatsApp',
+              mensagem.id,
+              mensagem.toJSON() as unknown as Record<string, unknown>
+            );
+          } catch (auditError) {
+            // Não interromper o fluxo
+          }
         }
       } catch (dbError) {
         const dbErrorMessage = dbError instanceof Error ? dbError.message : 'Erro desconhecido no banco';
@@ -886,19 +421,9 @@ export class ServidorWhatsAppController {
         throw new Error(`Erro ao salvar mensagem: ${dbErrorMessage}`);
       }
 
-      res.json({
-        success: true,
-        message: 'Mensagem salva com sucesso',
-        data: mensagem
-      });
+      sendSuccess(res, mensagem, 'Mensagem salva com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao salvar mensagem:', { error: errorMessage, stack: errorStack });
-      res.status(500).json({
-        success: false,
-        message: errorMessage || 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao salvar mensagem', 500, true);
     }
   }
 
@@ -911,28 +436,19 @@ export class ServidorWhatsAppController {
 
       if (!servidor) {
         logger.warn('Tentativa de buscar templates sem servidor ativo');
-        res.status(404).json({
-          success: false,
-          message: 'Nenhum servidor WhatsApp ativo encontrado'
-        });
+        sendNotFound(res, 'Nenhum servidor WhatsApp ativo encontrado');
         return;
       }
 
       if (servidor.tipo_api !== 'whatsapp_cloud') {
         logger.warn(`Tentativa de buscar templates com tipo de API: ${servidor.tipo_api}`);
-        res.status(400).json({
-          success: false,
-          message: 'Esta funcionalidade é apenas para WhatsApp Cloud API'
-        });
+        sendValidationError(res, 'Esta funcionalidade é apenas para WhatsApp Cloud API');
         return;
       }
 
       if (!servidor.whatsapp_cloud_token) {
         logger.warn('Tentativa de buscar templates sem token configurado');
-        res.status(400).json({
-          success: false,
-          message: 'Token não configurado'
-        });
+        sendValidationError(res, 'Token não configurado');
         return;
       }
 
@@ -967,10 +483,7 @@ export class ServidorWhatsAppController {
             phoneData
           });
 
-          res.status(400).json({
-            success: false,
-            message: `Erro ao buscar informações do Phone Number: ${errorMessage}. Configure o Business Account ID diretamente.`
-          });
+          sendError(res, new Error(`Erro ao buscar informações do Phone Number: ${errorMessage}. Configure o Business Account ID diretamente.`), `Erro ao buscar informações do Phone Number: ${errorMessage}. Configure o Business Account ID diretamente.`, 400, false);
           return;
         }
 
@@ -978,19 +491,13 @@ export class ServidorWhatsAppController {
         
         if (!wabaId) {
           logger.error('WABA ID não encontrado na resposta do Phone Number');
-          res.status(400).json({
-            success: false,
-            message: 'Não foi possível obter o Business Account ID. Configure o Business Account ID diretamente no servidor.'
-          });
+          sendValidationError(res, 'Não foi possível obter o Business Account ID. Configure o Business Account ID diretamente no servidor.');
           return;
         }
 
         apiUrl = `https://graph.facebook.com/v18.0/${wabaId}/message_templates`;
       } else {
-        res.status(400).json({
-          success: false,
-          message: 'Business Account ID ou Phone Number ID não configurado'
-        });
+        sendValidationError(res, 'Business Account ID ou Phone Number ID não configurado');
         return;
       }
       
@@ -1022,9 +529,7 @@ export class ServidorWhatsAppController {
           responseData: JSON.stringify(responseData)
         });
 
-        res.status(400).json({
-          success: false,
-          message: `Erro ao buscar templates: ${errorMessage}`,
+        sendError(res, new Error(`Erro ao buscar templates: ${errorMessage}`), `Erro ao buscar templates: ${errorMessage}`, 400, false, {
           errorCode: errorCode,
           errorType: errorType,
           data: responseData
@@ -1038,29 +543,13 @@ export class ServidorWhatsAppController {
         template.status === 'APPROVED'
       );
 
-      res.json({
-        success: true,
-        message: 'Templates buscados com sucesso',
-        data: {
-          total: templates.length,
-          aprovados: templatesAprovados.length,
-          templates: templatesAprovados
-        }
-      });
+      sendSuccess(res, {
+        total: templates.length,
+        aprovados: templatesAprovados.length,
+        templates: templatesAprovados
+      }, 'Templates buscados com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      logger.error('Erro ao buscar templates:', {
-        error: errorMessage,
-        stack: errorStack
-      });
-      
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: !__dirname.includes('dist') ? errorMessage : undefined
-      });
+      sendError(res, error, 'Erro ao buscar templates', 500, true);
     }
   }
 }

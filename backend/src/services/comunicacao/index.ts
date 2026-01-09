@@ -1,0 +1,16 @@
+export { WhatsAppService } from './WhatsAppService';
+export { WhatsAppSenderService } from './WhatsAppSenderService';
+export { WhatsAppTemplateService } from './WhatsAppTemplateService';
+export { WhatsAppBoletoService } from './WhatsAppBoletoService';
+export { WhatsAppMessageService } from './WhatsAppMessageService';
+export { WhatsAppCloudService } from './WhatsAppCloudService';
+export { ServidorWhatsAppService } from './ServidorWhatsAppService';
+export { ServidorWhatsAppProcessorService } from './ServidorWhatsAppProcessorService';
+export { ServidorWhatsAppConnectionService } from './ServidorWhatsAppConnectionService';
+export { ServidorWhatsAppMessageService } from './ServidorWhatsAppMessageService';
+export { ServidorWhatsAppTestService } from './ServidorWhatsAppTestService';
+export { ServidorWhatsAppValidatorService } from './ServidorWhatsAppValidatorService';
+export { MensagemWhatsAppService } from './MensagemWhatsAppService';
+export { EmailService } from './EmailService';
+export { MensagemEmailService } from './MensagemEmailService';
+export { ServidorEmailService } from './ServidorEmailService';

@@ -234,11 +234,6 @@ export function formatDateISO(date: string | Date | null | undefined): string | 
   }
 }
 
-/**
- * @deprecated Use formatDateISOLocal de timezoneUtils/index.ts
- * Mantido por compatibilidade - reexporta de timezoneUtils
- */
-export { formatDateISOLocal } from '../timezoneUtils';
 
 /**
  * Formata created_at para exibição (sem conversão de timezone)

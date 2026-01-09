@@ -3,6 +3,7 @@ import { AsaasWebhookService } from '../../../services/webhooks/AsaasWebhookServ
 import { logger } from '../../../utils/logger';
 import { JsonValue } from '../../../types/index';
 import { AsaasPaymentPayload } from '../../../types/webhooks';
+import { sendSuccess, sendError, sendValidationError, sendUnauthorized } from '../../../utils/responseUtils';
 
 /**
  * Controller para webhooks do Asaas
@@ -24,10 +25,7 @@ export class AsaasWebhookController {
 
       // Validar payload básico
       if (!payload || typeof payload !== 'object') {
-        res.status(400).json({
-          success: false,
-          message: 'Payload inválido'
-        });
+        sendValidationError(res, 'Payload inválido');
         return;
       }
 
@@ -52,10 +50,7 @@ export class AsaasWebhookController {
 
       // Se não tem payment.id nem invoice.id, retornar sucesso (webhook pode vir sem dados)
       if ((!payment || !payment.id) && (!invoice || !invoice.id)) {
-        res.status(200).json({
-          success: true,
-          message: 'Webhook recebido sem payment.id ou invoice.id'
-        });
+        sendSuccess(res, undefined, 'Webhook recebido sem payment.id ou invoice.id');
         return;
       }
 
@@ -64,28 +59,19 @@ export class AsaasWebhookController {
 
       // Validar token (obrigatório para Asaas)
       if (!expectedSecret) {
-        res.status(401).json({
-          success: false,
-          message: 'Token do webhook não configurado'
-        });
+        sendUnauthorized(res, 'Token do webhook não configurado');
         return;
       }
 
       if (!receivedSecret || receivedSecret !== expectedSecret) {
-        res.status(401).json({
-          success: false,
-          message: 'Token do webhook inválido'
-        });
+        sendUnauthorized(res, 'Token do webhook inválido');
         return;
       }
 
       // Log do evento recebido e validado
 
       // Retornar 200 OK imediatamente (webhook recebido e validado com sucesso)
-      res.status(200).json({
-        success: true,
-        message: 'Webhook recebido'
-      });
+      sendSuccess(res, undefined, 'Webhook recebido');
 
       // Processar webhook em background (sem await)
       if (payment && payment.id) {
@@ -117,15 +103,11 @@ export class AsaasWebhookController {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
       const processingTime = Date.now() - startTime;
-      logger.error('Erro ao processar webhook Asaas', {
-        error: errorMessage,
-        stack: errorStack,
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
+        context: 'AsaasWebhookController',
+        action: 'handle',
         ip: clientIp,
         processing_time_ms: processingTime
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }

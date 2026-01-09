@@ -11,6 +11,7 @@ import * as fs from 'fs/promises';
 import { ValidationError } from 'sequelize';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class ModeloContratoController {
   /**
@@ -29,16 +30,9 @@ export class ModeloContratoController {
         tipo: tipo as string
       });
 
-      res.json({
-        ...result,
-        message: 'Documentos do sistema listados com sucesso'
-      });
+      sendSuccess(res, result, 'Documentos do sistema listados com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar documentos do sistema:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar documentos do sistema', 500, true);
     }
   }
 
@@ -52,24 +46,13 @@ export class ModeloContratoController {
       const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
+        sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: documento,
-        message: 'Documento encontrado'
-      });
+      sendSuccess(res, documento, 'Documento encontrado');
     } catch (error) {
-      logger.error('Erro ao buscar documento:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar documento', 500, true);
     }
   }
 
@@ -82,43 +65,32 @@ export class ModeloContratoController {
 
       // Validar dados obrigatórios
       if (!documentoData.nome || !documentoData.tipo || !documentoData.conteudo) {
-        res.status(400).json({
-          success: false,
-          message: 'Nome, tipo e conteúdo são obrigatórios'
-        });
+        sendValidationError(res, 'Nome, tipo e conteúdo são obrigatórios');
         return;
       }
 
       const documento = await ModeloContratoService.create(documentoData);
 
-      await registrarCriacao(
-        req as AuthenticatedRequest,
-        'ModeloContrato',
-        documento.id,
-        documento.toJSON() as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'ModeloContrato',
+          documento.id,
+          documento.toJSON() as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        data: documento,
-        message: 'Documento criado com sucesso'
-      });
+      sendSuccess(res, documento, 'Documento criado com sucesso', 201);
     } catch (error: unknown) {
-      logger.error('Erro ao criar documento:', error);
-      
       if (error instanceof ValidationError) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.errors ? error.errors.map((err) => err.message) : []
-        });
+        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+        sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
 
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao criar documento', 500, true);
     }
   }
 
@@ -133,10 +105,7 @@ export class ModeloContratoController {
       const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
+        sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
@@ -144,35 +113,27 @@ export class ModeloContratoController {
       await ModeloContratoService.update(id, documentoData);
       await documento.reload();
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'ModeloContrato',
-        documento.id,
-        dadosAnteriores as unknown as Record<string, unknown>,
-        documento.toJSON() as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ModeloContrato',
+          documento.id,
+          dadosAnteriores as unknown as Record<string, unknown>,
+          documento.toJSON() as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        data: documento,
-        message: 'Documento atualizado com sucesso'
-      });
+      sendSuccess(res, documento, 'Documento atualizado com sucesso');
     } catch (error: unknown) {
-      logger.error('Erro ao atualizar documento:', error);
-      
       if (error instanceof ValidationError) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.errors ? error.errors.map((err) => err.message) : []
-        });
+        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+        sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
 
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao atualizar documento', 500, true);
     }
   }
 
@@ -186,33 +147,27 @@ export class ModeloContratoController {
       const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
+        sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
       const dadosAnteriores = documento.toJSON();
       await ModeloContratoService.delete(id);
 
-      await registrarExclusao(
-        req as AuthenticatedRequest,
-        'ModeloContrato',
-        documento.id,
-        dadosAnteriores as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarExclusao(
+          req as AuthenticatedRequest,
+          'ModeloContrato',
+          documento.id,
+          dadosAnteriores as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Documento deletado com sucesso'
-      });
+      sendSuccess(res, undefined, 'Documento deletado com sucesso');
     } catch (error) {
-      logger.error('Erro ao deletar documento:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao deletar documento', 500, true);
     }
   }
 
@@ -227,16 +182,9 @@ export class ModeloContratoController {
         tipo: tipo as string
       });
 
-      res.json({
-        ...result,
-        message: `Documentos do tipo ${tipo} listados com sucesso`
-      });
+      sendSuccess(res, result, `Documentos do tipo ${tipo} listados com sucesso`);
     } catch (error) {
-      logger.error('Erro ao buscar documentos por tipo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar documentos por tipo', 500, true);
     }
   }
 
@@ -250,24 +198,13 @@ export class ModeloContratoController {
       const documento = await ModeloContratoService.getByTipo(tipo, true);
 
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: `Nenhum documento padrão encontrado para o tipo ${tipo}`
-        });
+        sendNotFound(res, `Nenhum documento padrão encontrado para o tipo ${tipo}`);
         return;
       }
 
-      res.json({
-        success: true,
-        data: documento,
-        message: 'Documento padrão encontrado'
-      });
+      sendSuccess(res, documento, 'Documento padrão encontrado');
     } catch (error) {
-      logger.error('Erro ao buscar documento padrão:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar documento padrão', 500, true);
     }
   }
 
@@ -278,17 +215,9 @@ export class ModeloContratoController {
     try {
       const tiposList = await ModeloContratoService.getTypes();
 
-      res.json({
-        success: true,
-        data: tiposList,
-        message: 'Tipos de documentos listados com sucesso'
-      });
+      sendSuccess(res, tiposList, 'Tipos de documentos listados com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar tipos de documentos:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar tipos de documentos', 500, true);
     }
   }
 
@@ -302,10 +231,7 @@ export class ModeloContratoController {
       const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
+        sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
@@ -324,11 +250,7 @@ export class ModeloContratoController {
       res.setHeader('Content-Disposition', `inline; filename="${documento.nome}.pdf"`);
       res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao gerar PDF:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar PDF'
-      });
+      sendError(res, error, 'Erro ao gerar PDF', 500, true);
     }
   }
 
@@ -343,10 +265,7 @@ export class ModeloContratoController {
       const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
+        sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
@@ -357,10 +276,7 @@ export class ModeloContratoController {
         const cliente = await ClienteService.getById(cliente_id as string);
         
         if (!cliente) {
-          res.status(404).json({
-            success: false,
-            message: 'Cliente não encontrado'
-          });
+          sendNotFound(res, 'Cliente não encontrado');
           return;
         }
 
@@ -392,11 +308,7 @@ export class ModeloContratoController {
       res.setHeader('Content-Disposition', `inline; filename="${documento.nome}-teste.pdf"`);
       res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao gerar PDF de teste:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar PDF de teste'
-      });
+      sendError(res, error, 'Erro ao gerar PDF de teste', 500, true);
     }
   }
 
@@ -407,17 +319,9 @@ export class ModeloContratoController {
     try {
       const variaveis = VariaveisDocumentoService.getVariaveisDisponiveis();
 
-      res.json({
-        success: true,
-        data: variaveis,
-        message: 'Variáveis listadas com sucesso'
-      });
+      sendSuccess(res, variaveis, 'Variáveis listadas com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar variáveis:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar variáveis', 500, true);
     }
   }
 }

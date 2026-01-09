@@ -12,6 +12,7 @@ import { withTransaction } from '../../../utils/transaction';
 import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
 import { FinancialCalculationsService } from '../../../services/FinancialCalculationsService';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
 
 export class TituloBulkController {
   
@@ -23,7 +24,16 @@ export class TituloBulkController {
       const { error, value } = titulosBulkCreateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
 
       if (error) {
-        res.status(400).json({ success: false, message: 'Dados inválidos', errors: error.details.map(detail => detail.message) });
+        // Converter para Record<string, string[]> esperado pelo sendValidationError
+        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
+          const field = detail.path.join('.') || 'general';
+          if (!acc[field]) {
+            acc[field] = [];
+          }
+          acc[field].push(detail.message);
+          return acc;
+        }, {} as Record<string, string[]>);
+        sendValidationError(res, 'Dados inválidos', errorsByField);
         return;
       }
 
@@ -91,7 +101,11 @@ export class TituloBulkController {
       // Registrar auditoria para cada título criado (já registra no Elasticsearch internamente)
       for (const titulo of titulosCriados) {
         const tituloData = titulo.toJSON() as Record<string, unknown>;
-        await registrarCriacao(req as AuthenticatedRequest, 'Titulo', titulo.id, tituloData);
+        try {
+          await registrarCriacao(req as AuthenticatedRequest, 'Titulo', titulo.id, tituloData);
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       }
 
       const { metrics, isMetricsEnabled } = await import('../../../utils/metrics');
@@ -99,11 +113,12 @@ export class TituloBulkController {
         metrics.businessTitulosGerados.inc(titulosCriados.length);
       }
 
-      res.status(201).json({ success: true, message: `${titulosCriados.length} título(s) criado(s) com sucesso`, data: titulosCriados });
+      sendSuccess(res, titulosCriados, `${titulosCriados.length} título(s) criado(s) com sucesso`, 201);
     } catch (error: unknown) {
-      logger.error('Erro ao criar títulos em lote', { context: 'TituloBulkController', action: 'createBulk', error });
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      res.status(500).json({ success: false, message: errorMessage });
+      sendError(res, error, 'Erro ao criar títulos em lote', 500, true, {
+        context: 'TituloBulkController',
+        action: 'createBulk'
+      });
     }
   }
 }

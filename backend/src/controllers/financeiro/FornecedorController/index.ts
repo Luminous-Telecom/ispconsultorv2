@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
 import { Fornecedor } from '../../../models/financeiro/Fornecedor';
-import { ContaPagar } from '../../../models/financeiro/ContaPagar';
 import { FornecedorService } from '../../../services/financeiro/FornecedorService';
 import { logger } from '../../../utils/logger';
 import { fornecedorCreateSchema, fornecedorUpdateSchema } from '../../../validators/fornecedor.validator';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
-import { normalizeDateForDb, formatCEP } from '../../../utils/dateUtils';
+import { formatCEP } from '../../../utils/dateUtils';
 import axios from 'axios';
+import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 
 export class FornecedorController {
   // Listar todos os fornecedores
@@ -28,18 +28,11 @@ export class FornecedorController {
         ativo: req.query.ativo as string
       });
 
-      res.json(result);
+      sendSuccess(res, result.data, undefined, result.success ? 200 : 500);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao listar fornecedores', {
+      sendError(res, error, 'Erro ao listar fornecedores', 500, true, {
         context: 'FornecedorController',
-        action: 'index',
-        error: errorMessage
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'index'
       });
     }
   }
@@ -49,39 +42,23 @@ export class FornecedorController {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) {
-        res.status(400).json({
-          success: false,
-          error: 'ID inválido'
-        });
+        sendValidationError(res, 'ID inválido');
         return;
       }
 
       const fornecedor = await FornecedorService.getById(id, true);
 
       if (!fornecedor) {
-        res.status(404).json({
-          success: false,
-          error: 'Fornecedor não encontrado'
-        });
+        sendNotFound(res, 'Fornecedor não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: fornecedor
-      });
+      sendSuccess(res, fornecedor);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao buscar fornecedor', {
+      sendError(res, error, 'Erro ao buscar fornecedor', 500, true, {
         context: 'FornecedorController',
         action: 'show',
-        error: errorMessage,
         fornecedorId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -92,11 +69,15 @@ export class FornecedorController {
       const { error, value } = fornecedorCreateSchema.validate(req.body);
       
       if (error) {
-        res.status(400).json({
-          success: false,
-          error: 'Dados inválidos',
-          details: error.details.map(d => d.message)
+        const errors: Record<string, string[]> = {};
+        error.details.forEach(detail => {
+          const path = detail.path.join('.');
+          if (!errors[path]) {
+            errors[path] = [];
+          }
+          errors[path].push(detail.message);
         });
+        sendValidationError(res, 'Dados inválidos', errors);
         return;
       }
 
@@ -104,11 +85,7 @@ export class FornecedorController {
       const fornecedorExistente = await FornecedorService.existsByCpfCnpj(value.cpf_cnpj);
 
       if (fornecedorExistente) {
-        res.status(409).json({
-          success: false,
-          error: 'CPF/CNPJ já cadastrado',
-          message: 'Já existe um fornecedor cadastrado com este CPF/CNPJ'
-        });
+        sendForbidden(res, 'Já existe um fornecedor cadastrado com este CPF/CNPJ');
         return;
       }
 
@@ -122,41 +99,16 @@ export class FornecedorController {
           fornecedor.id,
           fornecedor.toJSON() as Record<string, unknown>
         );
-        logger.info('Auditoria de criação registrada com sucesso', {
-          context: 'FornecedorController',
-          action: 'store',
-          fornecedor_id: fornecedor.id
-        });
       } catch (auditError) {
-        logger.error('Erro ao registrar auditoria de criação', {
-          context: 'FornecedorController',
-          action: 'store',
-          fornecedor_id: fornecedor.id,
-          error: auditError instanceof Error ? auditError.message : 'Erro desconhecido',
-          stack: auditError instanceof Error ? auditError.stack : undefined
-        });
         // Não interromper o fluxo, mas logar o erro
       }
 
-      res.status(201).json({
-        success: true,
-        message: 'Fornecedor criado com sucesso',
-        data: fornecedor
-      });
+      sendSuccess(res, fornecedor, 'Fornecedor criado com sucesso', 201);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao criar fornecedor', {
+      sendError(res, error, 'Erro ao criar fornecedor', 500, true, {
         context: 'FornecedorController',
         action: 'store',
-        error: errorMessage,
-        stack: errorStack,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -166,31 +118,29 @@ export class FornecedorController {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) {
-        res.status(400).json({
-          success: false,
-          error: 'ID inválido'
-        });
+        sendValidationError(res, 'ID inválido');
         return;
       }
 
       const { error, value } = fornecedorUpdateSchema.validate(req.body);
       
       if (error) {
-        res.status(400).json({
-          success: false,
-          error: 'Dados inválidos',
-          details: error.details.map(d => d.message)
+        const errors: Record<string, string[]> = {};
+        error.details.forEach(detail => {
+          const path = detail.path.join('.');
+          if (!errors[path]) {
+            errors[path] = [];
+          }
+          errors[path].push(detail.message);
         });
+        sendValidationError(res, 'Dados inválidos', errors);
         return;
       }
 
       const fornecedor = await FornecedorService.getById(id, false);
 
       if (!fornecedor) {
-        res.status(404).json({
-          success: false,
-          error: 'Fornecedor não encontrado'
-        });
+        sendNotFound(res, 'Fornecedor não encontrado');
         return;
       }
 
@@ -199,11 +149,7 @@ export class FornecedorController {
         const fornecedorExistente = await FornecedorService.existsByCpfCnpj(value.cpf_cnpj, fornecedor.id);
 
         if (fornecedorExistente) {
-          res.status(409).json({
-            success: false,
-            error: 'CPF/CNPJ já cadastrado',
-            message: 'Já existe um fornecedor cadastrado com este CPF/CNPJ'
-          });
+          sendForbidden(res, 'Já existe um fornecedor cadastrado com este CPF/CNPJ');
           return;
         }
       }
@@ -215,19 +161,6 @@ export class FornecedorController {
       
       // Registrar auditoria
       const dadosNovos = fornecedorAtualizado.toJSON() as Record<string, unknown>;
-      
-      logger.info('Tentando registrar auditoria de atualização', {
-        context: 'FornecedorController',
-        action: 'update',
-        fornecedor_id: fornecedor.id,
-        entidade_id: fornecedor.id,
-        has_dados_anteriores: !!dadosAnteriores,
-        has_dados_novos: !!dadosNovos,
-        keys_anteriores: dadosAnteriores ? Object.keys(dadosAnteriores).length : 0,
-        keys_novos: dadosNovos ? Object.keys(dadosNovos).length : 0
-      });
-      
-      // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
@@ -238,40 +171,16 @@ export class FornecedorController {
           dadosAnteriores,
           dadosNovos
         );
-        logger.info('Auditoria de atualização registrada com sucesso', {
-          context: 'FornecedorController',
-          action: 'update',
-          fornecedor_id: fornecedorAtualizado.id,
-          entidade_id: fornecedorAtualizado.id
-        });
       } catch (auditError) {
-        logger.error('Erro ao registrar auditoria de atualização', {
-          context: 'FornecedorController',
-          action: 'update',
-          fornecedor_id: fornecedor.id,
-          error: auditError instanceof Error ? auditError.message : 'Erro desconhecido',
-          stack: auditError instanceof Error ? auditError.stack : undefined
-        });
         // Não interromper o fluxo, mas logar o erro
       }
 
-      res.json({
-        success: true,
-        message: 'Fornecedor atualizado com sucesso',
-        data: fornecedorAtualizado
-      });
+      sendSuccess(res, fornecedorAtualizado, 'Fornecedor atualizado com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao atualizar fornecedor', {
+      sendError(res, error, 'Erro ao atualizar fornecedor', 500, true, {
         context: 'FornecedorController',
         action: 'update',
-        error: errorMessage,
         fornecedorId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -281,20 +190,14 @@ export class FornecedorController {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) {
-        res.status(400).json({
-          success: false,
-          error: 'ID inválido'
-        });
+        sendValidationError(res, 'ID inválido');
         return;
       }
 
       const fornecedor = await FornecedorService.getById(id, false);
 
       if (!fornecedor) {
-        res.status(404).json({
-          success: false,
-          error: 'Fornecedor não encontrado'
-        });
+        sendNotFound(res, 'Fornecedor não encontrado');
         return;
       }
 
@@ -303,11 +206,7 @@ export class FornecedorController {
       const contasVinculadas = await ContaPagarService.count({ fornecedor_id: id });
 
       if (contasVinculadas > 0) {
-        res.status(409).json({
-          success: false,
-          error: 'Não é possível excluir fornecedor com contas vinculadas',
-          message: `Existem ${contasVinculadas} conta(s) vinculada(s) a este fornecedor`
-        });
+        sendForbidden(res, `Existem ${contasVinculadas} conta(s) vinculada(s) a este fornecedor`);
         return;
       }
 
@@ -324,38 +223,16 @@ export class FornecedorController {
           id,
           dadosAnteriores
         );
-        logger.info('Auditoria de exclusão registrada com sucesso', {
-          context: 'FornecedorController',
-          action: 'destroy',
-          fornecedor_id: id
-        });
       } catch (auditError) {
-        logger.error('Erro ao registrar auditoria de exclusão', {
-          context: 'FornecedorController',
-          action: 'destroy',
-          fornecedor_id: id,
-          error: auditError instanceof Error ? auditError.message : 'Erro desconhecido',
-          stack: auditError instanceof Error ? auditError.stack : undefined
-        });
         // Não interromper o fluxo, mas logar o erro
       }
 
-      res.json({
-        success: true,
-        message: 'Fornecedor excluído com sucesso'
-      });
+      sendSuccess(res, undefined, 'Fornecedor excluído com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao excluir fornecedor', {
+      sendError(res, error, 'Erro ao excluir fornecedor', 500, true, {
         context: 'FornecedorController',
         action: 'destroy',
-        error: errorMessage,
         fornecedorId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -369,11 +246,7 @@ export class FornecedorController {
       const cnpjLimpo = cnpj.replace(/\D/g, '');
       
       if (cnpjLimpo.length !== 14) {
-        res.status(400).json({
-          success: false,
-          error: 'CNPJ inválido',
-          message: 'CNPJ deve ter 14 dígitos'
-        });
+        sendValidationError(res, 'CNPJ deve ter 14 dígitos');
         return;
       }
 
@@ -383,11 +256,7 @@ export class FornecedorController {
       });
 
       if (response.data.status === 'ERROR') {
-        res.status(404).json({
-          success: false,
-          error: 'CNPJ não encontrado',
-          message: response.data.message || 'CNPJ não encontrado na base da Receita Federal'
-        });
+        sendNotFound(res, response.data.message || 'CNPJ não encontrado na base da Receita Federal');
         return;
       }
 
@@ -408,56 +277,28 @@ export class FornecedorController {
         capital_social: response.data.capital_social || ''
       };
 
-      res.json({
-        success: true,
-        data: dadosEmpresa
-      });
+      sendSuccess(res, dadosEmpresa);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 429) {
-          logger.warn('Limite de requisições excedido ao consultar CNPJ', {
+          sendError(res, error, 'Muitas requisições. Tente novamente em alguns instantes.', 429, true, {
             context: 'FornecedorController',
             action: 'consultarCnpj',
             cnpj: req.params.cnpj
-          });
-          res.status(429).json({
-            success: false,
-            error: 'Limite de requisições excedido',
-            message: 'Muitas requisições. Tente novamente em alguns instantes.'
           });
           return;
         }
         
         if (error.response?.status === 404) {
-          logger.warn('CNPJ não encontrado', {
-            context: 'FornecedorController',
-            action: 'consultarCnpj',
-            cnpj: req.params.cnpj
-          });
-          res.status(404).json({
-            success: false,
-            error: 'CNPJ não encontrado',
-            message: 'CNPJ não encontrado na base da Receita Federal'
-          });
+          sendNotFound(res, 'CNPJ não encontrado na base da Receita Federal');
           return;
         }
       }
 
-      logger.error('Erro ao consultar CNPJ', {
+      sendError(res, error, 'Erro ao consultar CNPJ', 500, true, {
         context: 'FornecedorController',
         action: 'consultarCnpj',
-        error: errorMessage,
-        stack: errorStack,
         cnpj: req.params.cnpj
-      });
-
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }

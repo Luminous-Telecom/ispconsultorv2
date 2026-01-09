@@ -9,10 +9,10 @@ import {
   WebhookResponse,
   NotificationData,
   NotificationItem,
-  NotificationIdentifiers,
-  ChargeNotification,
-  TituloUpdateData
+  ChargeNotification
 } from '../../../types/webhooks';
+import { EfiWebhookValidatorService } from '../EfiWebhookValidatorService';
+import { EfiWebhookProcessorService } from '../EfiWebhookProcessorService';
 
 /**
  * Serviço para processamento de webhooks da EFI (Efí/Gerencianet)
@@ -128,7 +128,7 @@ export class EfiWebhookService {
             });
             
             // Processar os dados da notificação
-            return await EfiWebhookService.processNotificationData(
+            return await EfiWebhookProcessorService.processNotificationData(
               resultado.data as NotificationData | NotificationItem[] | NotificationItem,
               banco,
               receivedSecret,
@@ -184,170 +184,11 @@ export class EfiWebhookService {
     receivedSecret?: string,
     req?: Request
   ): Promise<WebhookResponse> {
-    try {
-      logger.info('Processando dados da notificação', {
-        banco_id: banco.id,
-        dados
-      });
-
-      // Validar secret apenas se foi enviado (para segurança adicional)
-      // Não bloquear processamento, pois dados já foram obtidos com sucesso da API
-      if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(banco, receivedSecret))) {
-        logger.debug('Webhook EFI: secret não corresponde ao banco, mas continuando processamento', {
-          banco_id: banco.id,
-          possui_secret: !!banco.webhook_secret
-        });
-        // Não retornar erro - os dados já foram validados pela API da Efí
-      }
-
-      // Nova estrutura da EFI: array de notificações
-      if (!Array.isArray(dados) && 'code' in dados && dados.code && 'data' in dados && dados.data && Array.isArray(dados.data)) {
-        logger.info('Processando notificações em lote', {
-          count: dados.data.length
-        });
-        
-        let processadas = 0;
-        for (const notificacao of dados.data) {
-          if (notificacao.type && notificacao.identifiers) {
-            processadas += await EfiWebhookService.processIndividualNotification(notificacao, banco, receivedSecret, req);
-          }
-        }
-        
-        return {
-          success: true,
-          message: `${processadas} notificações processadas`,
-          data: { total_processadas: processadas }
-        };
-      }
-
-      // Verificar se é uma notificação de charge (boleto individual) - estrutura antiga
-      if (!Array.isArray(dados) && 'charge' in dados && dados.charge) {
-        const charge = dados.charge;
-        const chargeId = charge.charge_id || null;
-        const status = charge.status || 'unknown';
-        
-        if (chargeId) {
-          logger.info('Processando notificação de charge', {
-            charge_id: chargeId,
-            status
-          });
-          
-          // Buscar título pelo charge_id
-          const titulo = await Titulo.findOne({
-            where: { charge_id: chargeId }
-          });
-          
-          if (titulo) {
-            // Capturar dados anteriores antes de atualizar
-            const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
-            
-            const statusLocal = EfiWebhookService.mapEfiStatus(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
-            const oldStatus = titulo.status;
-            const oldPago = titulo.pago;
-            
-            await titulo.update({
-              status: statusLocal,
-              pago: ['pago', 'liquidado'].includes(statusLocal)
-            });
-            
-            // Recarregar título para obter dados atualizados
-            await titulo.reload();
-            
-            // Capturar dados novos após atualização
-            const dadosNovos = titulo.toJSON() as Record<string, unknown>;
-            
-            // Registrar auditoria no Elasticsearch se req foi fornecido
-            if (req) {
-              try {
-                await registrarAtualizacaoElasticsearch(
-                  req,
-                  'Titulo',
-                  titulo.id,
-                  dadosAnteriores,
-                  dadosNovos,
-                  `Atualização via webhook EFI (charge notification) - Status: ${status}`
-                );
-              } catch (auditError) {
-                // Não bloquear processamento se auditoria falhar
-                logger.warn('Erro ao registrar auditoria de webhook EFI (charge notification)', {
-                  titulo_id: titulo.id,
-                  error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-                });
-              }
-            }
-            
-            logger.info('Título atualizado via webhook', {
-              titulo_id: titulo.id,
-              charge_id: chargeId,
-              status_anterior: oldStatus,
-              status_novo: statusLocal,
-              pago_anterior: oldPago,
-              pago_novo: titulo.pago
-            });
-            
-            return {
-              success: true,
-              message: 'Título atualizado com sucesso',
-              data: { titulo_id: titulo.id }
-            };
-          } else {
-            logger.warn('Título não encontrado para charge', { charge_id: chargeId });
-            return {
-              success: false,
-              message: 'Título não encontrado',
-              status: 404
-            };
-          }
-        }
-      }
-
-      // Verificar se é uma notificação individual ou múltipla (estrutura direta)
-      if (Array.isArray(dados)) {
-        // Notificação múltipla
-        let totalProcessadas = 0;
-        for (const notificacao of dados) {
-          const processadas = await EfiWebhookService.processIndividualNotification(notificacao, banco, receivedSecret, req);
-          totalProcessadas += processadas;
-        }
-        
-        return {
-          success: true,
-          message: `${totalProcessadas} notificações processadas`,
-          data: { total_processadas: totalProcessadas }
-        };
-      } else if (!Array.isArray(dados) && 'type' in dados) {
-        // Notificação individual
-        const processadas = await EfiWebhookService.processIndividualNotification(dados as NotificationItem, banco, receivedSecret, req);
-        
-        return {
-          success: true,
-          message: 'Notificação processada',
-          data: { processadas }
-        };
-      }
-      
-      // Fallback: retornar erro se não foi possível processar
-      return {
-        success: false,
-        message: 'Formato de notificação não reconhecido',
-        status: 400
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao processar dados da notificação', {
-        banco_id: banco.id,
-        error: errorMessage
-      });
-      return {
-        success: false,
-        message: 'Erro ao processar dados da notificação',
-        status: 500
-      };
-    }
+    return await EfiWebhookProcessorService.processNotificationData(dados, banco, receivedSecret, req);
   }
 
   /**
-   * Processa notificação individual
+   * Processa notificação individual (delegado para EfiWebhookProcessorService)
    */
   static async processIndividualNotification(
     notificacao: NotificationItem,
@@ -355,181 +196,11 @@ export class EfiWebhookService {
     receivedSecret?: string,
     req?: Request
   ): Promise<number> {
-    try {
-      const type = notificacao.type || '';
-      const identifiers = notificacao.identifiers || {};
-      const status = typeof notificacao.status === 'object' && notificacao.status?.current
-        ? notificacao.status.current
-        : typeof notificacao.status === 'string' ? notificacao.status : null;
-      const customId = notificacao.custom_id || null;
-      
-      // Validar secret apenas se foi enviado (para segurança adicional)
-      // Não bloquear processamento, pois dados já foram validados pela API da Efí
-      if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(banco, receivedSecret))) {
-        logger.debug('Webhook EFI: secret não corresponde ao banco em notificação individual, mas continuando', {
-          banco_id: banco.id,
-          possui_secret: !!banco.webhook_secret
-        });
-        // Não retornar 0 - continuar processando
-      }
-      
-      switch (type) {
-        case 'charge':
-          return await EfiWebhookService.processTituloNotification(identifiers, status, customId, notificacao, banco, receivedSecret, req);
-          
-        default:
-          logger.warn('Tipo de notificação não suportado', { type });
-          return 0;
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao processar notificação individual', {
-        notificacao,
-        error: errorMessage
-      });
-      return 0;
-    }
+    return await EfiWebhookProcessorService.processIndividualNotification(notificacao, banco, receivedSecret, req);
   }
 
   /**
-   * Processa notificação de título (charge)
-   */
-  static async processTituloNotification(
-    identifiers: NotificationIdentifiers,
-    status: string | null,
-    customId: string | null,
-    dadosCompletos?: NotificationItem,
-    bancoContext?: Banco,
-    receivedSecret?: string,
-    req?: Request
-  ): Promise<number> {
-    const chargeId = identifiers.charge_id || null;
-    
-    if (!chargeId) {
-      logger.warn('Charge ID não encontrado na notificação de título');
-      return 0;
-    }
-
-    try {
-      // Buscar título pelo charge_id
-      const titulo = await Titulo.findOne({
-        where: { charge_id: chargeId },
-        include: [
-          {
-            model: Banco,
-            as: 'banco',
-            attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret']
-          }
-        ]
-      });
-
-      if (!titulo) {
-        logger.warn('Título não encontrado', { charge_id: chargeId });
-        return 0;
-      }
-
-      const bancoRelacionado = bancoContext ?? (titulo as Titulo & { banco?: Banco | null }).banco ?? null;
-      // Validar secret apenas se foi enviado, mas não bloquear processamento
-      if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(bancoRelacionado ?? undefined, receivedSecret))) {
-        logger.debug('Webhook EFI: secret não corresponde ao banco ao processar título, mas continuando', {
-          charge_id: chargeId,
-          banco_id: bancoRelacionado?.id ?? null
-        });
-        // Não retornar 0 - continuar processando
-      }
-
-      // Atualizar status do título
-      const statusString = status || 'pendente';
-      const novoStatus = EfiWebhookService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
-      const isPago = ['pago', 'liquidado'].includes(novoStatus);
-      
-      const updateData: TituloUpdateData = { 
-        status: novoStatus,
-        pago: isPago
-      };
-
-      
-      if (isPago && !titulo.pago) {
-        // Buscar data de pagamento do webhook (com hora se disponível)
-        // Tentar created_at completo primeiro (pode ter hora), depois paid_at, depois confirm_at
-        const dataPagamentoWebhook = dadosCompletos?.created_at 
-          || dadosCompletos?.paid_at 
-          || dadosCompletos?.confirmed_at
-          || dadosCompletos?.payment_date;
-        
-        // Normalizar data de pagamento preservando hora
-        const dataPagamentoNormalizada = dataPagamentoWebhook 
-          ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook)
-          : new Date();
-        
-        // Usar método marcarComoPago para garantir lógica consistente
-        // skipLiquidacaoBanco = true pois o webhook já indica que o banco sabe do pagamento
-        await titulo.marcarComoPago(titulo.valor, dataPagamentoNormalizada || undefined, true);
-        // Não adicionar data_pagamento e valor_pago ao updateData, pois já foi salvo pelo marcarComoPago
-      }
-      
-      if (!isPago && titulo.pago) {
-        updateData.data_pagamento = null;
-        updateData.valor_pago = null;
-      }
-      
-      // Atualizar data de vencimento se fornecida no webhook
-      if (dadosCompletos?.expire_at) {
-        const normalizedDate = PaymentCommonService.normalizeDueDate(dadosCompletos.expire_at);
-        if (normalizedDate) {
-          updateData.data_vencimento = normalizedDate;
-        }
-      } else if (dadosCompletos?.due_date) {
-        const normalizedDate = PaymentCommonService.normalizeDueDate(dadosCompletos.due_date);
-        if (normalizedDate) {
-          updateData.data_vencimento = normalizedDate;
-        }
-      }
-      
-      // Capturar dados anteriores antes de atualizar
-      const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
-      
-      await titulo.update(updateData as Partial<typeof titulo>);
-      
-      // Recarregar título para obter dados atualizados
-      await titulo.reload();
-      
-      // Capturar dados novos após atualização
-      const dadosNovos = titulo.toJSON() as Record<string, unknown>;
-      
-      // Registrar auditoria no Elasticsearch se req foi fornecido
-      if (req) {
-        try {
-          await registrarAtualizacaoElasticsearch(
-            req,
-            'Titulo',
-            titulo.id,
-            dadosAnteriores,
-            dadosNovos,
-            `Atualização via webhook EFI - Status: ${statusString}`
-          );
-        } catch (auditError) {
-          // Não bloquear processamento se auditoria falhar
-          logger.warn('Erro ao registrar auditoria de webhook EFI', {
-            titulo_id: titulo.id,
-            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-          });
-        }
-      }
-
-      return 1;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao processar notificação de título', {
-        charge_id: chargeId,
-        error: errorMessage
-      });
-      return 0;
-    }
-  }
-
-  /**
-   * Processa notificação de charge (formato direto)
+   * Processa notificação de charge (formato direto) - delegado para EfiWebhookProcessorService
    */
   static async processChargeNotification(
     notification: ChargeNotification | NotificationItem,
@@ -537,108 +208,7 @@ export class EfiWebhookService {
     bancoContext?: Banco,
     req?: Request
   ): Promise<WebhookResponse> {
-    try {
-      const chargeId = 'charge_id' in notification ? notification.charge_id : notification.id;
-      const status = typeof notification.status === 'string' 
-        ? notification.status 
-        : notification.status?.current;
-      const customId = notification.custom_id;
-
-      if (!chargeId) {
-        return {
-          success: false,
-          message: 'Charge ID não encontrado',
-          status: 400
-        };
-      }
-
-      // Buscar título pelo charge_id
-      const titulo = await Titulo.findOne({
-        where: { charge_id: chargeId },
-        include: [{ model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret'] }]
-      }) as (Titulo & { banco?: Banco | null }) | null;
-
-      const bancoRelacionado = bancoContext ?? titulo?.banco ?? null;
-
-      // Validar secret apenas se foi enviado, mas não bloquear processamento
-      if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(bancoRelacionado ?? undefined, receivedSecret))) {
-        logger.debug('Webhook EFI: secret não corresponde ao banco ao processar charge, mas continuando', {
-          charge_id: chargeId,
-          banco_id: bancoRelacionado?.id ?? null
-        });
-        // Não retornar erro - continuar processando
-      }
-
-      if (!titulo) {
-        logger.warn('Título não encontrado para charge', { charge_id: chargeId });
-        return {
-          success: false,
-          message: 'Título não encontrado',
-          status: 404
-        };
-      }
-
-      // Capturar dados anteriores antes de atualizar
-      const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
-      
-      // Atualizar status do título
-      const statusString = status || '';
-      const novoStatus = EfiWebhookService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
-      await titulo.update({ status: novoStatus });
-      
-      // Recarregar título para obter dados atualizados
-      await titulo.reload();
-      
-      // Capturar dados novos após atualização
-      const dadosNovos = titulo.toJSON() as Record<string, unknown>;
-      
-      // Registrar auditoria no Elasticsearch se req foi fornecido
-      if (req) {
-        try {
-          await registrarAtualizacaoElasticsearch(
-            req,
-            'Titulo',
-            titulo.id,
-            dadosAnteriores,
-            dadosNovos,
-            `Atualização via webhook EFI (charge) - Status: ${statusString}`
-          );
-        } catch (auditError) {
-          // Não bloquear processamento se auditoria falhar
-          logger.warn('Erro ao registrar auditoria de webhook EFI (charge)', {
-            titulo_id: titulo.id,
-            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-          });
-        }
-      }
-
-      logger.info('Status do título atualizado via charge', {
-        titulo_id: titulo.id,
-        charge_id: chargeId,
-        status_anterior: dadosAnteriores.status,
-        status_novo: novoStatus
-      });
-
-      return {
-        success: true,
-        message: 'Status do título atualizado',
-        data: {
-          titulo_id: titulo.id,
-          status: novoStatus
-        }
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao processar notificação de charge', {
-        notification,
-        error: errorMessage
-      });
-      return {
-        success: false,
-        message: 'Erro ao processar notificação de charge',
-        status: 500
-      };
-    }
+    return await EfiWebhookProcessorService.processChargeNotification(notification, receivedSecret, bancoContext, req);
   }
 
   /**
@@ -654,7 +224,7 @@ export class EfiWebhookService {
 
       // Implementar lógica específica para PIX se necessário
       // Por enquanto, tratar como notificação genérica
-      return await EfiWebhookService.processGenericNotification(notification, receivedSecret, req);
+      return await EfiWebhookProcessorService.processChargeNotification(notification, receivedSecret, undefined, req);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação de PIX', {
@@ -683,7 +253,7 @@ export class EfiWebhookService {
       const customId = notification.custom_id;
 
       if (chargeId) {
-        return await EfiWebhookService.processChargeNotification(notification, receivedSecret, undefined, req);
+        return await EfiWebhookProcessorService.processChargeNotification(notification, receivedSecret, undefined, req);
       } else if (customId) {
         // Tentar buscar por custom_id
         const titulo = await Titulo.findByPk(String(customId), {
@@ -705,7 +275,7 @@ export class EfiWebhookService {
           const statusString = typeof notification.status === 'string' 
             ? notification.status 
             : notification.status?.current || 'pendente';
-          const novoStatus = EfiWebhookService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+          const novoStatus = EfiWebhookProcessorService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
           await titulo.update({ status: novoStatus });
           
           // Recarregar título para obter dados atualizados

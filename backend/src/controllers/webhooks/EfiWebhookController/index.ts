@@ -7,6 +7,7 @@ import {
   ChargeNotification,
   WebhookResponse
 } from '../../../types/webhooks';
+import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
 
 /**
  * Controller para webhooks da EFI (Efí/Gerencianet)
@@ -54,20 +55,14 @@ export class EfiWebhookController {
       // Validar estrutura básica do payload
       if (!payload || (typeof payload !== 'object')) {
         logger.warn('Payload inválido ou ausente');
-        res.status(400).json({
-          success: false,
-          message: 'Payload inválido'
-        });
+        sendValidationError(res, 'Payload inválido');
         return;
       }
 
       // Verificar se é uma notificação válida da Efí
       if (!payload.notification && !payload.charge && !payload.pix) {
         logger.warn('Payload não contém campos esperados da Efí');
-        res.status(400).json({
-          success: false,
-          message: 'Payload inválido'
-        });
+        sendValidationError(res, 'Payload inválido');
         return;
       }
 
@@ -89,10 +84,7 @@ export class EfiWebhookController {
       logger.info(`Tipo de notificação identificado: ${notificationType}`);
 
       // Retornar 200 OK imediatamente (webhook recebido com sucesso)
-      res.status(200).json({
-        success: true,
-        message: 'Webhook recebido'
-      });
+      sendSuccess(res, undefined, 'Webhook recebido');
 
       // Processar notificação em background (sem await)
       EfiWebhookController.processNotificationInBackground(
@@ -112,13 +104,9 @@ export class EfiWebhookController {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao processar webhook EFI', {
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
+        context: 'EfiWebhookController',
+        action: 'handle'
       });
     }
   }

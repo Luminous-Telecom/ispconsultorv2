@@ -14,6 +14,7 @@ import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
 import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
+import { sendSuccess, sendError } from '../../../utils/responseUtils';
 
 interface TituloWithCliente extends Titulo {
   cliente?: Cliente | null;
@@ -59,10 +60,10 @@ export class DashboardController {
       fimPeriodo.setHours(23, 59, 59, 999);
 
       // Buscar todas as estatísticas e dados em paralelo
-      const [statsData, titulosRecentes, titulosVencidos, contratos, contratosAtivosTodos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos] = await Promise.all([
-        DashboardController.getStatsData(inicioPeriodo, fimPeriodo),
-        DashboardController.getTitulosRecentesData(5),
-        DashboardController.getTitulosVencidosData(10),
+      const [statsData, titulosRecentes, titulosVencidos, contratos, contratosAtivosTodos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos, aReceberPeriodo, recebidosPeriodo, resumoPeriodo, receitaUltimosMeses] = await Promise.all([
+        DashboardService.getStatsData(inicioPeriodo, fimPeriodo),
+        DashboardService.getTitulosRecentesData(5),
+        DashboardService.getTitulosVencidosData(10),
         DashboardService.getContratosPeriodo(inicioPeriodo, fimPeriodo),
         DashboardService.getContratosAtivos(),
         DashboardService.getClientesPeriodo(inicioPeriodo, fimPeriodo),
@@ -70,16 +71,12 @@ export class DashboardController {
         DashboardService.getTitulosPeriodo(inicioPeriodo, fimPeriodo),
         DashboardService.getAllClientes(),
         DashboardService.getAllTitulos(),
-        DashboardService.getAllContratos()
+        DashboardService.getAllContratos(),
+        DashboardService.getReceberPorPeriodoData(parsedStart, parsedEnd),
+        DashboardService.getRecebidosPorPeriodoData(parsedStart, parsedEnd),
+        DashboardService.getResumoFinanceiroPeriodo(parsedStart, parsedEnd),
+        DashboardService.getReceitaUltimos12Meses()
       ]);
-
-      const [aReceberPeriodo, recebidosPeriodo, resumoPeriodo] = await Promise.all([
-        DashboardController.getReceberPorPeriodoData(parsedStart, parsedEnd),
-        DashboardController.getRecebidosPorPeriodoData(parsedStart, parsedEnd),
-        DashboardController.getResumoFinanceiroPeriodo(parsedStart, parsedEnd)
-      ]);
-
-      const receitaUltimosMeses = await DashboardController.getReceitaUltimos12Meses();
 
       const dashboardData = {
         stats: statsData,
@@ -108,212 +105,15 @@ export class DashboardController {
       };
 
 
-      res.json({
-        success: true,
-        data: dashboardData
-      });
+      sendSuccess(res, dashboardData);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter dados do dashboard', {
+      sendError(res, error, 'Erro ao obter dados do dashboard', 500, true, {
         context: 'DashboardController',
-        action: 'index',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'index'
       });
     }
   }
 
-  // Método auxiliar para obter estatísticas
-  private static async getStatsData(startDate?: Date, endDate?: Date) {
-    // Preparar filtros de data se fornecidos
-    const inicioPeriodo = startDate ? new Date(startDate) : undefined;
-    const fimPeriodo = endDate ? new Date(endDate) : undefined;
-    
-    if (inicioPeriodo) inicioPeriodo.setHours(0, 0, 0, 0);
-    if (fimPeriodo) fimPeriodo.setHours(23, 59, 59, 999);
-
-    // Construir condições de filtro
-    const clienteWhere = inicioPeriodo && fimPeriodo ? {
-      created_at: {
-        [Op.between]: [inicioPeriodo, fimPeriodo]
-      }
-    } : {};
-
-    const planoWhere = inicioPeriodo && fimPeriodo ? {
-      created_at: {
-        [Op.between]: [inicioPeriodo, fimPeriodo]
-      }
-    } : {};
-
-    const tituloWhere = inicioPeriodo && fimPeriodo ? {
-      data_vencimento: {
-        [Op.between]: [inicioPeriodo, fimPeriodo]
-      }
-    } : {};
-
-    const [
-      totalClientes,
-      clientesAtivos,
-      _totalPlanos,
-      planosAtivos,
-      _totalBancos,
-      _bancosAtivos,
-      _totalTitulos,
-      titulosAtivos,
-      _titulosPagos,
-      _carnesPendentes
-    ] = await Promise.all([
-      ClienteService.count(clienteWhere),
-      ClienteService.count({ ...clienteWhere, ativo: true }),
-        PlanoService.count(planoWhere),
-        PlanoService.count({ ...planoWhere, status: 'ativo' }),
-        BancoService.count(),
-        BancoService.count({ ativo: true }),
-      TituloService.count(tituloWhere),
-      TituloService.count({ ...tituloWhere, status: 'vencido' }),
-      TituloService.count({ ...tituloWhere, status: 'pago' }),
-      TituloService.count({ ...tituloWhere, status: 'pendente' })
-    ]);
-
-    // Calcular valores monetários - filtrar por período se fornecido
-    const titulos = await TituloService.findAllWithFilters(tituloWhere);
-
-    let _valorTotalTitulos = 0;
-    let valorTotalPago = 0;
-    let valorTotalPendente = 0;
-
-    for (const titulo of titulos) {
-      const valorTitulo = parseFloat(titulo.valor.toString());
-
-      _valorTotalTitulos += valorTitulo;
-
-      if (titulo.status === 'pago') {
-        valorTotalPago += valorTitulo;
-      } else if (titulo.status === 'pendente' || titulo.status === 'vencido') {
-        valorTotalPendente += valorTitulo;
-      }
-    }
-
-    // Filtrar contratos que se sobrepõem ao período
-    const contratoWhere = inicioPeriodo && fimPeriodo ? {
-      [Op.and]: [
-        {
-          data_inicio: {
-            [Op.lte]: fimPeriodo
-          }
-        },
-        {
-          [Op.or]: [
-            {
-              data_fim: {
-                [Op.gte]: inicioPeriodo
-              }
-            },
-            {
-              data_fim: null
-            }
-          ]
-        }
-      ]
-    } : {};
-
-    const contratos = await DashboardService.getContratosAtivos();
-    const totalValorContratos = contratos.reduce((acumulado, contrato) => {
-      return acumulado + parseFloat(String(contrato.valor_final || 0));
-    }, 0);
-
-    // Calcular títulos vencidos no período
-    const hoje = new Date();
-    hoje.setHours(23, 59, 59, 999);
-    const titulosVencidosWhere = inicioPeriodo && fimPeriodo ? {
-      ...tituloWhere,
-      data_vencimento: {
-        [Op.and]: [
-          { [Op.lte]: hoje },
-          { [Op.between]: [inicioPeriodo, fimPeriodo] }
-        ]
-      },
-      status: 'pendente'
-    } : {
-      data_vencimento: { [Op.lte]: hoje },
-      status: 'pendente'
-    };
-
-    return {
-      totalClientes: totalClientes,
-      clientesAtivos: clientesAtivos,
-      planosAtivos: planosAtivos,
-      titulosAtivos: titulosAtivos,
-      titulosVencidos: await TituloService.count(titulosVencidosWhere),
-      valorTotalReceber: valorTotalPendente,
-      valorTotalRecebido: valorTotalPago,
-      receitaMensal: valorTotalPago, // Simplificado
-      crescimentoMensal: 0, // Placeholder
-      ticketMedio: totalClientes > 0
-        ? totalValorContratos / totalClientes
-        : 0
-    };
-  }
-
-  // Método auxiliar para obter títulos recentes
-  private static async getTitulosRecentesData(limit: number) {
-    const titulos = await DashboardService.getTitulosWithIncludes({}, {
-      limit,
-      order: [['created_at', 'DESC']],
-      include: [
-        { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia'] },
-        { association: 'plano', attributes: ['id', 'nome_plano'] },
-        { association: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
-      ]
-    });
-
-    return titulos.map(titulo => {
-      const tituloWithCliente = titulo as TituloWithCliente;
-      return {
-        id: titulo.id,
-        numero_titulo: titulo.numero_titulo,
-        cliente: tituloWithCliente.cliente?.razao_social || 'N/A',
-        valor: titulo.valor,
-        status: titulo.status,
-        data: formatDate(new Date(titulo.created_at)) || 'N/A'
-      };
-    });
-  }
-
-  // Método auxiliar para obter títulos vencidos
-  private static async getTitulosVencidosData(limit: number) {
-    const hoje = new Date();
-    hoje.setHours(23, 59, 59, 999);
-
-    const titulos = await TituloService.findAllWithFilters({
-      data_vencimento: { [Op.lte]: hoje },
-      status: 'pendente'
-    }, {
-      include: [
-        { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email'] }
-      ],
-      order: [['data_vencimento', 'ASC']],
-      limit
-    });
-
-    return titulos.map(titulo => {
-      const tituloWithCliente = titulo as TituloWithCliente;
-      return {
-        id: titulo.id,
-        numero_titulo: titulo.numero_titulo,
-        valor: titulo.valor,
-        data_vencimento: titulo.data_vencimento,
-        cliente: tituloWithCliente.cliente?.razao_social || 'N/A',
-        status: titulo.status
-      };
-    });
-  }
 
   // Obter estatísticas gerais do dashboard
   static async getStats(req: Request, res: Response): Promise<void> {
@@ -379,23 +179,11 @@ export class DashboardController {
         ticket_medio: totalClientes > 0 ? valorTotalPago / totalClientes : 0
       };
 
-      res.json({
-        success: true,
-        data: stats
-      });
+      sendSuccess(res, stats);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter estatísticas do dashboard', {
+      sendError(res, error, 'Erro ao obter estatísticas do dashboard', 500, true, {
         context: 'DashboardController',
-        action: 'estatisticas',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'estatisticas'
       });
     }
   }
@@ -415,23 +203,11 @@ export class DashboardController {
         limit
       });
 
-      res.json({
-        success: true,
-        data: titulos
-      });
+      sendSuccess(res, titulos);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter títulos recentes', {
+      sendError(res, error, 'Erro ao obter títulos recentes', 500, true, {
         context: 'DashboardController',
-        action: 'titulosRecentes',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'titulosRecentes'
       });
     }
   }
@@ -456,23 +232,11 @@ export class DashboardController {
         order: [['data_vencimento', 'ASC']]
       });
 
-      res.json({
-        success: true,
-        data: titulos
-      });
+      sendSuccess(res, titulos);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter títulos vencidos', {
+      sendError(res, error, 'Erro ao obter títulos vencidos', 500, true, {
         context: 'DashboardController',
-        action: 'titulosVencidos',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'titulosVencidos'
       });
     }
   }
@@ -498,23 +262,11 @@ export class DashboardController {
         order: [['data_vencimento', 'ASC']]
       });
 
-      res.json({
-        success: true,
-        data: titulos
-      });
+      sendSuccess(res, titulos);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter títulos próximos do vencimento', {
+      sendError(res, error, 'Erro ao obter títulos próximos do vencimento', 500, true, {
         context: 'DashboardController',
-        action: 'titulosProximosVencimento',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'titulosProximosVencimento'
       });
     }
   }
@@ -548,23 +300,11 @@ export class DashboardController {
         };
       });
 
-      res.json({
-        success: true,
-        data: dados
-      });
+      sendSuccess(res, dados);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter gráfico de títulos por status', {
+      sendError(res, error, 'Erro ao obter gráfico de títulos por status', 500, true, {
         context: 'DashboardController',
-        action: 'graficoTitulosPorStatus',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'graficoTitulosPorStatus'
       });
     }
   }
@@ -605,23 +345,11 @@ export class DashboardController {
         };
       });
 
-      res.json({
-        success: true,
-        data: dados
-      });
+      sendSuccess(res, dados);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter gráfico de clientes por cidade', {
+      sendError(res, error, 'Erro ao obter gráfico de clientes por cidade', 500, true, {
         context: 'DashboardController',
-        action: 'graficoClientesPorCidade',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'graficoClientesPorCidade'
       });
     }
   }
@@ -683,24 +411,12 @@ export class DashboardController {
         clientes_novos: clientesNovos
       };
 
-      res.json({
-        success: true,
-        data: resumo
-      });
+      sendSuccess(res, resumo);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter resumo mensal', {
+      sendError(res, error, 'Erro ao obter resumo mensal', 500, true, {
         context: 'DashboardController',
         action: 'resumoMensal',
-        error: errorMessage,
-        stack: errorStack,
         query: req.query
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -739,289 +455,4 @@ export class DashboardController {
     return data;
   }
 
-  private static async getReceberPorPeriodoData(startDate: Date, endDate: Date) {
-    const inicio = new Date(startDate);
-    inicio.setHours(0, 0, 0, 0);
-    const fim = new Date(endDate);
-    fim.setHours(23, 59, 59, 999);
-
-    const diffTime = fim.getTime() - inicio.getTime();
-    const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-    const titulosPeriodo = await TituloService.findAllWithFilters({
-      data_vencimento: {
-        [Op.between]: [inicio, fim]
-      },
-      status: {
-        [Op.in]: ['pendente', 'vencido']
-      }
-    }, {
-      attributes: ['valor', 'data_vencimento']
-    });
-
-    const valoresPorDia = new Array(Math.max(dias, 0)).fill(0);
-
-    const MS_POR_DIA = 1000 * 60 * 60 * 24;
-
-    for (const titulo of titulosPeriodo) {
-      if (!titulo.data_vencimento) {
-        continue;
-      }
-      const dataTitulo = parseDateFromDb(titulo.data_vencimento);
-      if (!dataTitulo) continue;
-      
-      dataTitulo.setHours(0, 0, 0, 0);
-      const diff = dataTitulo.getTime() - inicio.getTime();
-      const indice = Math.floor(diff / MS_POR_DIA);
-      if (indice >= 0 && indice < valoresPorDia.length) {
-        const valorTitulo = parseFloat(titulo.valor.toString());
-        valoresPorDia[indice] += valorTitulo;
-      }
-    }
-
-    const labels = valoresPorDia.map((_, index) => {
-      const data = new Date(inicio);
-      data.setDate(inicio.getDate() + index);
-      return formatDate(data) || '';
-    });
-
-    return {
-      labels,
-      data: valoresPorDia
-    };
-  }
-
-  private static async getRecebidosPorPeriodoData(startDate: Date, endDate: Date) {
-    const inicio = new Date(startDate);
-    inicio.setHours(0, 0, 0, 0);
-    const fim = new Date(endDate);
-    fim.setHours(23, 59, 59, 999);
-
-    const diffTime = fim.getTime() - inicio.getTime();
-    const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-    const titulosPeriodo = await TituloService.findAllWithFilters({
-      data_pagamento: {
-        [Op.between]: [inicio, fim]
-      },
-      status: {
-        [Op.in]: ['pago', 'pago_atraso', 'parcial']
-      }
-    }, {
-      attributes: ['valor', 'valor_pago', 'status', 'data_pagamento']
-    });
-
-    const valoresPorDia = new Array(Math.max(dias, 0)).fill(0);
-    const MS_POR_DIA = 1000 * 60 * 60 * 24;
-
-    for (const titulo of titulosPeriodo) {
-      if (!titulo.data_pagamento) {
-        continue;
-      }
-
-      const dataPagamento = parseDateFromDb(titulo.data_pagamento);
-      if (!dataPagamento) continue;
-
-      dataPagamento.setHours(0, 0, 0, 0);
-      const diff = dataPagamento.getTime() - inicio.getTime();
-      const indice = Math.floor(diff / MS_POR_DIA);
-
-      if (indice >= 0 && indice < valoresPorDia.length) {
-        const valorPago = titulo.valor_pago !== null && titulo.valor_pago !== undefined
-          ? parseFloat(titulo.valor_pago.toString())
-          : parseFloat(titulo.valor.toString());
-
-        valoresPorDia[indice] += valorPago;
-      }
-    }
-
-    const labels = valoresPorDia.map((_, index) => {
-      const data = new Date(inicio);
-      data.setDate(inicio.getDate() + index);
-      return formatDate(data) || '';
-    });
-
-    return {
-      labels,
-      data: valoresPorDia
-    };
-  }
-
-  private static async getResumoFinanceiroPeriodo(startDate: Date, endDate: Date) {
-    const inicio = new Date(startDate);
-    inicio.setHours(0, 0, 0, 0);
-    const fim = new Date(endDate);
-    fim.setHours(23, 59, 59, 999);
-
-    const titulosPeriodo = await TituloService.findAllWithFilters({
-      data_vencimento: {
-        [Op.between]: [inicio, fim]
-      }
-    }, {
-      attributes: ['valor', 'valor_pago', 'status', 'cliente_id', 'data_vencimento']
-    });
-
-    let totalPrevisto = 0;
-    let totalRecebido = 0;
-    let totalPendente = 0;
-    const clientesPeriodo = new Set<number>();
-
-    for (const titulo of titulosPeriodo) {
-      const valorTitulo = parseFloat(titulo.valor.toString());
-      const valorPago = titulo.valor_pago !== null && titulo.valor_pago !== undefined
-        ? parseFloat(titulo.valor_pago.toString())
-        : valorTitulo;
-
-      if (titulo.cliente_id) {
-        clientesPeriodo.add(titulo.cliente_id);
-      }
-
-      switch (titulo.status) {
-        case 'pago':
-        case 'pago_atraso':
-          totalRecebido += valorPago;
-          // Receita prevista = total a receber + recebidos no período
-          totalPrevisto += valorTitulo;
-          break;
-        case 'parcial':
-          totalRecebido += Math.min(valorPago, valorTitulo);
-          const valorPendenteParcial = Math.max(valorTitulo - valorPago, 0);
-          totalPendente += valorPendenteParcial;
-          // Receita prevista = total a receber + recebidos no período
-          totalPrevisto += valorTitulo;
-          break;
-        case 'pendente':
-        case 'vencido':
-          totalPendente += valorTitulo;
-          // Receita prevista = total a receber + recebidos no período
-          totalPrevisto += valorTitulo;
-          break;
-        case 'cancelado':
-          // Títulos cancelados não entram no previsto nem no pendente
-          break;
-        default:
-          // Para outros status, considerar como pendente
-          totalPendente += valorTitulo;
-          totalPrevisto += valorTitulo;
-          break;
-      }
-    }
-
-    // Calcular ticket médio: soma dos valores dos planos com clientes / quantidade de clientes ativos com planos
-    const contratosAtivos = await DashboardService.getContratosAtivos();
-
-    let valorTotalPlanos = 0;
-    const clientesComPlanos = new Set<number>();
-
-    interface ClienteJson {
-      id?: number;
-      ativo?: boolean;
-    }
-    
-    interface PlanoJson {
-      id?: number;
-      nome_plano?: string;
-      valor_mensal?: number | string;
-    }
-    
-    interface ContratoJson extends Record<string, unknown> {
-      cliente?: ClienteJson;
-      plano?: PlanoJson;
-    }
-    
-    for (const contrato of contratosAtivos) {
-      const contratoJson = contrato.toJSON() as ContratoJson;
-      const cliente = contratoJson.cliente;
-      
-      if (cliente && cliente.ativo === true) {
-        const clienteId = contrato.cliente_id;
-        if (clienteId) {
-          clientesComPlanos.add(clienteId);
-          
-          // Usar valor_final do contrato se disponível, senão usar valor_mensal do plano
-          if (contrato.valor_final && parseFloat(contrato.valor_final.toString()) > 0) {
-            valorTotalPlanos += parseFloat(contrato.valor_final.toString());
-          } else if (contratoJson.plano && contratoJson.plano.valor_mensal) {
-            const valorMensal = typeof contratoJson.plano.valor_mensal === 'string' 
-              ? parseFloat(contratoJson.plano.valor_mensal) 
-              : contratoJson.plano.valor_mensal;
-            valorTotalPlanos += valorMensal || 0;
-          }
-        }
-      }
-    }
-
-    const ticketMedio = clientesComPlanos.size > 0 
-      ? valorTotalPlanos / clientesComPlanos.size 
-      : 0;
-
-    return {
-      totalPrevisto,
-      totalRecebido,
-      totalPendente,
-      clientesComTitulos: clientesPeriodo.size,
-      ticketMedio
-    };
-  }
-
-  private static async getReceitaUltimos12Meses() {
-    const hoje = new Date();
-    const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
-    const inicioPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1, 0, 0, 0, 0);
-
-    const titulos = await TituloService.findAllWithFilters({
-      data_vencimento: {
-        [Op.between]: [inicioPeriodo, fimPeriodo]
-      },
-      status: {
-        [Op.in]: ['pago', 'pago_atraso', 'parcial']
-      }
-    }, {
-      attributes: ['valor', 'valor_pago', 'status', 'data_pagamento', 'data_vencimento']
-    });
-
-    const labels: string[] = [];
-    const data: number[] = [];
-
-    for (let i = 11; i >= 0; i--) {
-      const mes = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1, 0, 0, 0, 0);
-      const proxMes = new Date(hoje.getFullYear(), hoje.getMonth() - i + 1, 1, 0, 0, 0, 0);
-
-      const totalMes = titulos.reduce((acumulado, titulo) => {
-        const refRaw = titulo.data_pagamento ?? titulo.data_vencimento;
-        const referencia = parseDateFromDb(refRaw);
-        
-        if (!referencia) {
-          return acumulado;
-        }
-
-        if (referencia >= mes && referencia < proxMes) {
-          if (titulo.status === 'parcial') {
-            const valorPago = titulo.valor_pago !== null && titulo.valor_pago !== undefined
-              ? parseFloat(titulo.valor_pago.toString())
-              : 0;
-            return acumulado + valorPago;
-          }
-
-          const valorTitulo = titulo.valor_pago !== null && titulo.valor_pago !== undefined
-            ? parseFloat(titulo.valor_pago.toString())
-            : parseFloat(titulo.valor.toString());
-          return acumulado + valorTitulo;
-        }
-
-        return acumulado;
-      }, 0);
-
-      // Formatar como MM/AA (ex: 12/24, 01/25)
-      const month = String(mes.getMonth() + 1).padStart(2, '0');
-      const year = String(mes.getFullYear()).slice(-2);
-      labels.push(`${month}/${year}`);
-      data.push(totalMes);
-    }
-
-    return {
-      labels,
-      data
-    };
-  }
 }

@@ -64,8 +64,7 @@ const routes = [
     { path: '/api/termos-contrato', route: termosContratoRoutes },
     { path: '/api/modelos-termo', route: modelosTermoRoutes },
     { path: '/api/atualizacoes', route: atualizacoesRoutes },
-    { path: '/api/assinaturas-digital', route: assinaturaDigitalRoutes },
-    { path: '/api/assinatura-digital', route: assinaturaDigitalRoutes }, // Alias sem "s" para compatibilidade
+    { path: '/api/assinatura-digital', route: assinaturaDigitalRoutes },
     { path: '/api/assinatura-digital-providers', route: assinaturaDigitalProviderRoutes },
     // IMPORTANTE: cliente-arquivos deve vir ANTES de /api para evitar conflito
     // Registrar manualmente ANTES de /api para garantir ordem

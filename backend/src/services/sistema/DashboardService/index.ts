@@ -151,5 +151,461 @@ export class DashboardService {
       limit: options?.limit
     });
   }
+
+  /**
+   * Obter estatísticas do dashboard
+   */
+  static async getStatsData(startDate?: Date, endDate?: Date) {
+    const { ClienteService } = await import('../../clientes/ClienteService');
+    const { PlanoService } = await import('../../cadastros/PlanoService');
+    const { BancoService } = await import('../../cadastros/BancoService');
+    const { TituloService } = await import('../../financeiro/TituloService');
+
+    const inicioPeriodo = startDate ? new Date(startDate) : undefined;
+    const fimPeriodo = endDate ? new Date(endDate) : undefined;
+    
+    if (inicioPeriodo) inicioPeriodo.setHours(0, 0, 0, 0);
+    if (fimPeriodo) fimPeriodo.setHours(23, 59, 59, 999);
+
+    const clienteWhere = inicioPeriodo && fimPeriodo ? {
+      created_at: {
+        [Op.between]: [inicioPeriodo, fimPeriodo]
+      }
+    } : {};
+
+    const planoWhere = inicioPeriodo && fimPeriodo ? {
+      created_at: {
+        [Op.between]: [inicioPeriodo, fimPeriodo]
+      }
+    } : {};
+
+    const tituloWhere = inicioPeriodo && fimPeriodo ? {
+      data_vencimento: {
+        [Op.between]: [inicioPeriodo, fimPeriodo]
+      }
+    } : {};
+
+    const [
+      totalClientes,
+      clientesAtivos,
+      planosAtivos,
+      titulosAtivos
+    ] = await Promise.all([
+      ClienteService.count(clienteWhere),
+      ClienteService.count({ ...clienteWhere, ativo: true }),
+      PlanoService.count({ ...planoWhere, status: 'ativo' }),
+      TituloService.count({ ...tituloWhere, status: 'vencido' })
+    ]);
+
+    const titulos = await TituloService.findAllWithFilters(tituloWhere);
+
+    let valorTotalPago = 0;
+    let valorTotalPendente = 0;
+
+    for (const titulo of titulos) {
+      const valorTitulo = parseFloat(titulo.valor.toString());
+      if (titulo.status === 'pago') {
+        valorTotalPago += valorTitulo;
+      } else if (titulo.status === 'pendente' || titulo.status === 'vencido') {
+        valorTotalPendente += valorTitulo;
+      }
+    }
+
+    const contratos = await this.getContratosAtivos();
+    const totalValorContratos = contratos.reduce((acumulado, contrato) => {
+      return acumulado + parseFloat(String(contrato.valor_final || 0));
+    }, 0);
+
+    const hoje = new Date();
+    hoje.setHours(23, 59, 59, 999);
+    const titulosVencidosWhere = inicioPeriodo && fimPeriodo ? {
+      ...tituloWhere,
+      data_vencimento: {
+        [Op.and]: [
+          { [Op.lte]: hoje },
+          { [Op.between]: [inicioPeriodo, fimPeriodo] }
+        ]
+      },
+      status: 'pendente'
+    } : {
+      data_vencimento: { [Op.lte]: hoje },
+      status: 'pendente'
+    };
+
+    return {
+      totalClientes: totalClientes,
+      clientesAtivos: clientesAtivos,
+      planosAtivos: planosAtivos,
+      titulosAtivos: titulosAtivos,
+      titulosVencidos: await TituloService.count(titulosVencidosWhere),
+      valorTotalReceber: valorTotalPendente,
+      valorTotalRecebido: valorTotalPago,
+      receitaMensal: valorTotalPago,
+      crescimentoMensal: 0,
+      ticketMedio: totalClientes > 0
+        ? totalValorContratos / totalClientes
+        : 0
+    };
+  }
+
+  /**
+   * Obter títulos recentes formatados
+   */
+  static async getTitulosRecentesData(limit: number) {
+    const { formatDate } = await import('../../../utils/dateUtils');
+    const titulos = await this.getTitulosWithIncludes({}, {
+      limit,
+      order: [['created_at', 'DESC']],
+      include: [
+        { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia'] },
+        { association: 'plano', attributes: ['id', 'nome_plano'] },
+        { association: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
+      ]
+    });
+
+    return titulos.map(titulo => {
+      const tituloWithCliente = titulo as any;
+      return {
+        id: titulo.id,
+        numero_titulo: titulo.numero_titulo,
+        cliente: tituloWithCliente.cliente?.razao_social || 'N/A',
+        valor: titulo.valor,
+        status: titulo.status,
+        data: formatDate(new Date(titulo.created_at)) || 'N/A'
+      };
+    });
+  }
+
+  /**
+   * Obter títulos vencidos formatados
+   */
+  static async getTitulosVencidosData(limit: number) {
+    const { TituloService } = await import('../../financeiro/TituloService');
+    const hoje = new Date();
+    hoje.setHours(23, 59, 59, 999);
+
+    const titulos = await TituloService.findAllWithFilters({
+      data_vencimento: { [Op.lte]: hoje },
+      status: 'pendente'
+    }, {
+      include: [
+        { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email'] }
+      ],
+      order: [['data_vencimento', 'ASC']],
+      limit
+    });
+
+    return titulos.map(titulo => {
+      const tituloWithCliente = titulo as any;
+      return {
+        id: titulo.id,
+        numero_titulo: titulo.numero_titulo,
+        valor: titulo.valor,
+        data_vencimento: titulo.data_vencimento,
+        cliente: tituloWithCliente.cliente?.razao_social || 'N/A',
+        status: titulo.status
+      };
+    });
+  }
+
+  /**
+   * Obter receber por período
+   */
+  static async getReceberPorPeriodoData(startDate: Date, endDate: Date) {
+    const { TituloService } = await import('../../financeiro/TituloService');
+    const { formatDate, parseDateFromDb } = await import('../../../utils/dateUtils');
+    
+    const inicio = new Date(startDate);
+    inicio.setHours(0, 0, 0, 0);
+    const fim = new Date(endDate);
+    fim.setHours(23, 59, 59, 999);
+
+    const diffTime = fim.getTime() - inicio.getTime();
+    const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    const titulosPeriodo = await TituloService.findAllWithFilters({
+      data_vencimento: {
+        [Op.between]: [inicio, fim]
+      },
+      status: {
+        [Op.in]: ['pendente', 'vencido']
+      }
+    }, {
+      attributes: ['valor', 'data_vencimento']
+    });
+
+    const valoresPorDia = new Array(Math.max(dias, 0)).fill(0);
+    const MS_POR_DIA = 1000 * 60 * 60 * 24;
+
+    for (const titulo of titulosPeriodo) {
+      if (!titulo.data_vencimento) {
+        continue;
+      }
+      const dataTitulo = parseDateFromDb(titulo.data_vencimento);
+      if (!dataTitulo) continue;
+      
+      dataTitulo.setHours(0, 0, 0, 0);
+      const diff = dataTitulo.getTime() - inicio.getTime();
+      const indice = Math.floor(diff / MS_POR_DIA);
+      if (indice >= 0 && indice < valoresPorDia.length) {
+        const valorTitulo = parseFloat(titulo.valor.toString());
+        valoresPorDia[indice] += valorTitulo;
+      }
+    }
+
+    const labels = valoresPorDia.map((_, index) => {
+      const data = new Date(inicio);
+      data.setDate(inicio.getDate() + index);
+      return formatDate(data) || '';
+    });
+
+    return {
+      labels,
+      data: valoresPorDia
+    };
+  }
+
+  /**
+   * Obter recebidos por período
+   */
+  static async getRecebidosPorPeriodoData(startDate: Date, endDate: Date) {
+    const { TituloService } = await import('../../financeiro/TituloService');
+    const { formatDate, parseDateFromDb } = await import('../../../utils/dateUtils');
+    
+    const inicio = new Date(startDate);
+    inicio.setHours(0, 0, 0, 0);
+    const fim = new Date(endDate);
+    fim.setHours(23, 59, 59, 999);
+
+    const diffTime = fim.getTime() - inicio.getTime();
+    const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    const titulosPeriodo = await TituloService.findAllWithFilters({
+      data_pagamento: {
+        [Op.between]: [inicio, fim]
+      },
+      status: {
+        [Op.in]: ['pago', 'pago_atraso', 'parcial']
+      }
+    }, {
+      attributes: ['valor', 'valor_pago', 'status', 'data_pagamento']
+    });
+
+    const valoresPorDia = new Array(Math.max(dias, 0)).fill(0);
+    const MS_POR_DIA = 1000 * 60 * 60 * 24;
+
+    for (const titulo of titulosPeriodo) {
+      if (!titulo.data_pagamento) {
+        continue;
+      }
+
+      const dataPagamento = parseDateFromDb(titulo.data_pagamento);
+      if (!dataPagamento) continue;
+
+      dataPagamento.setHours(0, 0, 0, 0);
+      const diff = dataPagamento.getTime() - inicio.getTime();
+      const indice = Math.floor(diff / MS_POR_DIA);
+
+      if (indice >= 0 && indice < valoresPorDia.length) {
+        const valorPago = titulo.valor_pago !== null && titulo.valor_pago !== undefined
+          ? parseFloat(titulo.valor_pago.toString())
+          : parseFloat(titulo.valor.toString());
+
+        valoresPorDia[indice] += valorPago;
+      }
+    }
+
+    const labels = valoresPorDia.map((_, index) => {
+      const data = new Date(inicio);
+      data.setDate(inicio.getDate() + index);
+      return formatDate(data) || '';
+    });
+
+    return {
+      labels,
+      data: valoresPorDia
+    };
+  }
+
+  /**
+   * Obter resumo financeiro do período
+   */
+  static async getResumoFinanceiroPeriodo(startDate: Date, endDate: Date) {
+    const { TituloService } = await import('../../financeiro/TituloService');
+    
+    const inicio = new Date(startDate);
+    inicio.setHours(0, 0, 0, 0);
+    const fim = new Date(endDate);
+    fim.setHours(23, 59, 59, 999);
+
+    const titulosPeriodo = await TituloService.findAllWithFilters({
+      data_vencimento: {
+        [Op.between]: [inicio, fim]
+      }
+    }, {
+      attributes: ['valor', 'valor_pago', 'status', 'cliente_id', 'data_vencimento']
+    });
+
+    let totalPrevisto = 0;
+    let totalRecebido = 0;
+    let totalPendente = 0;
+    const clientesPeriodo = new Set<number>();
+
+    for (const titulo of titulosPeriodo) {
+      const valorTitulo = parseFloat(titulo.valor.toString());
+      const valorPago = titulo.valor_pago !== null && titulo.valor_pago !== undefined
+        ? parseFloat(titulo.valor_pago.toString())
+        : valorTitulo;
+
+      if (titulo.cliente_id) {
+        clientesPeriodo.add(titulo.cliente_id);
+      }
+
+      switch (titulo.status) {
+        case 'pago':
+        case 'pago_atraso':
+          totalRecebido += valorPago;
+          totalPrevisto += valorTitulo;
+          break;
+        case 'parcial':
+          totalRecebido += Math.min(valorPago, valorTitulo);
+          const valorPendenteParcial = Math.max(valorTitulo - valorPago, 0);
+          totalPendente += valorPendenteParcial;
+          totalPrevisto += valorTitulo;
+          break;
+        case 'pendente':
+        case 'vencido':
+          totalPendente += valorTitulo;
+          totalPrevisto += valorTitulo;
+          break;
+        case 'cancelado':
+          break;
+        default:
+          totalPendente += valorTitulo;
+          totalPrevisto += valorTitulo;
+          break;
+      }
+    }
+
+    const contratosAtivos = await this.getContratosAtivos();
+
+    let valorTotalPlanos = 0;
+    const clientesComPlanos = new Set<number>();
+
+    interface ClienteJson {
+      id?: number;
+      ativo?: boolean;
+    }
+    
+    interface PlanoJson {
+      id?: number;
+      nome_plano?: string;
+      valor_mensal?: number | string;
+    }
+    
+    interface ContratoJson extends Record<string, unknown> {
+      cliente?: ClienteJson;
+      plano?: PlanoJson;
+    }
+    
+    for (const contrato of contratosAtivos) {
+      const contratoJson = contrato.toJSON() as ContratoJson;
+      const cliente = contratoJson.cliente;
+      
+      if (cliente && cliente.ativo === true) {
+        const clienteId = contrato.cliente_id;
+        if (clienteId) {
+          clientesComPlanos.add(clienteId);
+          
+          if (contrato.valor_final && parseFloat(contrato.valor_final.toString()) > 0) {
+            valorTotalPlanos += parseFloat(contrato.valor_final.toString());
+          } else if (contratoJson.plano && contratoJson.plano.valor_mensal) {
+            const valorMensal = typeof contratoJson.plano.valor_mensal === 'string' 
+              ? parseFloat(contratoJson.plano.valor_mensal) 
+              : contratoJson.plano.valor_mensal;
+            valorTotalPlanos += valorMensal || 0;
+          }
+        }
+      }
+    }
+
+    const ticketMedio = clientesComPlanos.size > 0 
+      ? valorTotalPlanos / clientesComPlanos.size 
+      : 0;
+
+    return {
+      totalPrevisto,
+      totalRecebido,
+      totalPendente,
+      clientesComTitulos: clientesPeriodo.size,
+      ticketMedio
+    };
+  }
+
+  /**
+   * Obter receita dos últimos 12 meses
+   */
+  static async getReceitaUltimos12Meses() {
+    const { TituloService } = await import('../../financeiro/TituloService');
+    const { parseDateFromDb } = await import('../../../utils/dateUtils');
+    
+    const hoje = new Date();
+    const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
+    const inicioPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1, 0, 0, 0, 0);
+
+    const titulos = await TituloService.findAllWithFilters({
+      data_vencimento: {
+        [Op.between]: [inicioPeriodo, fimPeriodo]
+      },
+      status: {
+        [Op.in]: ['pago', 'pago_atraso', 'parcial']
+      }
+    }, {
+      attributes: ['valor', 'valor_pago', 'status', 'data_pagamento', 'data_vencimento']
+    });
+
+    const labels: string[] = [];
+    const data: number[] = [];
+
+    for (let i = 11; i >= 0; i--) {
+      const mes = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1, 0, 0, 0, 0);
+      const proxMes = new Date(hoje.getFullYear(), hoje.getMonth() - i + 1, 1, 0, 0, 0, 0);
+
+      const totalMes = titulos.reduce((acumulado, titulo) => {
+        const refRaw = titulo.data_pagamento ?? titulo.data_vencimento;
+        const referencia = parseDateFromDb(refRaw);
+        
+        if (!referencia) {
+          return acumulado;
+        }
+
+        if (referencia >= mes && referencia < proxMes) {
+          if (titulo.status === 'parcial') {
+            const valorPago = titulo.valor_pago !== null && titulo.valor_pago !== undefined
+              ? parseFloat(titulo.valor_pago.toString())
+              : 0;
+            return acumulado + valorPago;
+          }
+
+          const valorTitulo = titulo.valor_pago !== null && titulo.valor_pago !== undefined
+            ? parseFloat(titulo.valor_pago.toString())
+            : parseFloat(titulo.valor.toString());
+          return acumulado + valorTitulo;
+        }
+
+        return acumulado;
+      }, 0);
+
+      const month = String(mes.getMonth() + 1).padStart(2, '0');
+      const year = String(mes.getFullYear()).slice(-2);
+      labels.push(`${month}/${year}`);
+      data.push(totalMes);
+    }
+
+    return {
+      labels,
+      data
+    };
+  }
 }
 

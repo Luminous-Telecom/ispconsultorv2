@@ -2,12 +2,13 @@ import { Request, Response } from 'express';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { ClienteService } from '../../../services/clientes/ClienteService';
+import { ViaCepService } from '../../../services/externos/ViaCepService';
+import { ReceitaWsService } from '../../../services/externos/ReceitaWsService';
 import Joi from 'joi';
-import axios from 'axios';
 import { logger } from '../../../utils/logger';
-import { formatCEP } from '../../../utils/dateUtils';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
+import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 
 export class ClienteController {
   // Schema de validação para criação
@@ -117,26 +118,16 @@ export class ClienteController {
         estado
       });
 
-      res.json(result);
+      sendSuccess(res, result.data, undefined, result.success ? 200 : 500);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao listar clientes', {
+      sendError(res, error, 'Erro ao listar clientes', 500, true, {
         context: 'ClienteController',
         action: 'list',
-        error: errorMessage,
-        stack: errorStack,
         query: req.query
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
 
-  // Mostrar um cliente específico
   static async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -144,10 +135,7 @@ export class ClienteController {
       const cliente = await ClienteService.getById(id);
 
       if (!cliente) {
-        res.status(404).json({
-          success: false,
-          error: 'Cliente não encontrado'
-        });
+        sendNotFound(res, 'Cliente não encontrado');
         return;
       }
 
@@ -176,29 +164,16 @@ export class ClienteController {
         });
       }
 
-      res.json({
-        success: true,
-        data: clienteData
-      });
+      sendSuccess(res, clienteData);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar cliente', {
+      sendError(res, error, 'Erro ao buscar cliente', 500, true, {
         context: 'ClienteController',
         action: 'show',
-        error: errorMessage,
-        stack: errorStack,
         clienteId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
       });
     }
   }
 
-  // Criar novo cliente
   static async store(req: Request, res: Response): Promise<void> {
     try {
       // Normalizar CNPJ (remover HTML entities se houver)
@@ -209,11 +184,16 @@ export class ClienteController {
       const { error, value } = ClienteController.createSchema.validate(bodyNormalizado);
       
       if (error) {
-        res.status(400).json({
-          success: false,
-          error: 'Dados inválidos',
-          details: error.details.map(d => d.message)
-        });
+        // Converter para Record<string, string[]> esperado pelo sendValidationError
+        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
+          const field = detail.path.join('.') || 'general';
+          if (!acc[field]) {
+            acc[field] = [];
+          }
+          acc[field].push(detail.message);
+          return acc;
+        }, {} as Record<string, string[]>);
+        sendValidationError(res, 'Dados inválidos', errorsByField);
         return;
       }
 
@@ -221,11 +201,7 @@ export class ClienteController {
       const clienteExistente = await ClienteService.existsByCnpj(value.cnpj);
 
       if (clienteExistente) {
-        res.status(409).json({
-          success: false,
-          error: 'CNPJ já cadastrado',
-          message: 'Já existe um cliente cadastrado com este CNPJ'
-        });
+        sendValidationError(res, 'Já existe um cliente cadastrado com este CNPJ');
         return;
       }
 
@@ -237,38 +213,28 @@ export class ClienteController {
 
       // Registrar auditoria
       if (clienteCriado) {
-        await registrarCriacao(
-          req,
-          'Cliente',
-          clienteCriado.id,
-          clienteCriado.toJSON() as Record<string, unknown>
-        );
+        try {
+          await registrarCriacao(
+            req,
+            'Cliente',
+            clienteCriado.id,
+            clienteCriado.toJSON() as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       }
 
-      res.status(201).json({
-        success: true,
-        data: clienteCriado,
-        message: 'Cliente criado com sucesso'
-      });
+      sendSuccess(res, clienteCriado, 'Cliente criado com sucesso', 201);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao criar cliente', {
+      sendError(res, error, 'Erro ao criar cliente', 500, true, {
         context: 'ClienteController',
         action: 'create',
-        error: errorMessage,
-        stack: errorStack,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
 
-  // Atualizar cliente
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -308,11 +274,15 @@ export class ClienteController {
           body: req.body
         });
         
-        res.status(400).json({
-          success: false,
-          error: 'Dados inválidos',
-          details: error.details.map(d => d.message)
+        const errors: Record<string, string[]> = {};
+        error.details.forEach(detail => {
+          const path = detail.path.join('.');
+          if (!errors[path]) {
+            errors[path] = [];
+          }
+          errors[path].push(detail.message);
         });
+        sendValidationError(res, 'Dados inválidos', errors);
         return;
       }
 
@@ -339,10 +309,7 @@ export class ClienteController {
           clienteId: id
         });
         
-        res.status(404).json({
-          success: false,
-          error: 'Cliente não encontrado'
-        });
+        sendNotFound(res, 'Cliente não encontrado');
         return;
       }
 
@@ -373,11 +340,7 @@ export class ClienteController {
             cnpj: value.cnpj
           });
           
-          res.status(409).json({
-            success: false,
-            error: 'CNPJ já cadastrado',
-            message: 'Já existe outro cliente cadastrado com este CNPJ'
-          });
+          sendValidationError(res, 'Já existe outro cliente cadastrado com este CNPJ');
           return;
         }
       }
@@ -426,10 +389,10 @@ export class ClienteController {
           clienteId: id
         });
         
-        res.status(500).json({
-          success: false,
-          error: 'Erro interno do servidor',
-          message: 'Cliente não encontrado após atualização'
+        sendError(res, new Error('Cliente não encontrado após atualização'), 'Cliente não encontrado após atualização', 500, true, {
+          context: 'ClienteController',
+          action: 'update',
+          clienteId: id
         });
         return;
       }
@@ -461,28 +424,13 @@ export class ClienteController {
         clienteId: id
       });
 
-      res.json({
-        success: true,
-        data: clienteData || clienteComRelacionamentos,
-        message: 'Cliente atualizado com sucesso'
-      });
+      sendSuccess(res, clienteData || clienteComRelacionamentos, 'Cliente atualizado com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      logger.error('Erro ao atualizar cliente', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'ClienteController',
         action: 'update',
-        error: errorMessage,
-        stack: errorStack,
         clienteId: req.params.id,
         body: req.body
-      });
-      
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -493,12 +441,9 @@ export class ClienteController {
       const { id } = req.params;
 
       const cliente = await ClienteService.getById(id);
-      
+
       if (!cliente) {
-        res.status(404).json({
-          success: false,
-          error: 'Cliente não encontrado'
-        });
+        sendNotFound(res, 'Cliente não encontrado');
         return;
       }
 
@@ -511,19 +456,11 @@ export class ClienteController {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
         if (errorMessage.includes('título(s) associado(s)')) {
-          res.status(409).json({
-            success: false,
-            error: 'Não é possível excluir cliente',
-            message: errorMessage
-          });
+          sendForbidden(res, errorMessage);
           return;
         }
         if (errorMessage.includes('contrato(s)')) {
-          res.status(409).json({
-            success: false,
-            error: 'Não é possível excluir cliente',
-            message: errorMessage
-          });
+          sendForbidden(res, errorMessage);
           return;
         }
         throw error;
@@ -537,276 +474,102 @@ export class ClienteController {
         dadosAnteriores
       );
 
-      res.json({
-        success: true,
-        message: 'Cliente excluído com sucesso'
-      });
+      sendSuccess(res, undefined, 'Cliente excluído com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao excluir cliente', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'ClienteController',
         action: 'delete',
-        error: errorMessage,
-        stack: errorStack,
         clienteId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
 
-  // Buscar cliente por CNPJ
   static async findByCnpj(req: Request, res: Response): Promise<void> {
     try {
       const { cnpj } = req.params;
-
-      const cliente = await Cliente.findByCnpj(cnpj);
+      const cliente = await ClienteService.findByCnpj(cnpj);
 
       if (!cliente) {
-        res.status(404).json({
-          success: false,
-          error: 'Cliente não encontrado'
-        });
+        sendNotFound(res, 'Cliente não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: cliente
-      });
+      sendSuccess(res, cliente);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar cliente por CNPJ', {
+      sendError(res, error, 'Erro ao buscar cliente por CNPJ', 500, true, {
         context: 'ClienteController',
         action: 'findByCnpj',
-        error: errorMessage,
-        stack: errorStack,
         cnpj: req.params.cnpj
       });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
-      });
     }
   }
 
-  // Listar clientes ativos
   static async findAtivos(req: Request, res: Response): Promise<void> {
     try {
-      const clientes = await Cliente.findAtivos();
-
-      res.json({
-        success: true,
-        data: clientes
-      });
+      const clientes = await ClienteService.findAtivos();
+      sendSuccess(res, clientes);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao listar clientes ativos', {
+      sendError(res, error, 'Erro ao listar clientes ativos', 500, true, {
         context: 'ClienteController',
-        action: 'listAtivos',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'findAtivos'
       });
     }
   }
 
-  // Buscar CEP usando ViaCEP
   static async buscarCep(req: Request, res: Response): Promise<void> {
     try {
       const { cep } = req.params;
+      const dadosCep = await ViaCepService.buscarCep(cep);
 
-      // Remover formatação do CEP
-      const cepLimpo = cep.replace(/\D/g, '');
-      
-      if (cepLimpo.length !== 8) {
-        res.status(400).json({
-          success: false,
-          error: 'CEP inválido',
-          message: 'CEP deve ter 8 dígitos'
-        });
+      if (!dadosCep) {
+        sendNotFound(res, 'CEP não encontrado na base dos Correios');
         return;
       }
 
-      // Consultar na API ViaCEP
-      const response = await axios.get(`https://viacep.com.br/ws/${cepLimpo}/json/`, {
-        timeout: 10000
-      });
-
-      if (response.data.erro) {
-        res.status(404).json({
-          success: false,
-          error: 'CEP não encontrado',
-          message: 'CEP não encontrado na base dos Correios'
-        });
-        return;
-      }
-
-      // Mapear dados da API para o formato do sistema
-      const dadosCep = {
-        cep: response.data.cep || cepLimpo.replace(/^(\d{5})(\d{3})$/, '$1-$2'),
-        logradouro: response.data.logradouro || '',
-        complemento: response.data.complemento || '',
-        bairro: response.data.bairro || '',
-        localidade: response.data.localidade || '',
-        uf: response.data.uf || '',
-        ibge: response.data.ibge || '',
-        gia: response.data.gia || '',
-        ddd: response.data.ddd || '',
-        siafi: response.data.siafi || ''
-      };
-
-      res.json({
-        success: true,
-        data: dadosCep
-      });
+      sendSuccess(res, dadosCep);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 404) {
-          logger.warn('CEP não encontrado', {
-            context: 'ClienteController',
-            action: 'buscarCep',
-            cep: req.params.cep
-          });
-          res.status(404).json({
-            success: false,
-            error: 'CEP não encontrado',
-            message: 'CEP não encontrado na base dos Correios'
-          });
-          return;
-        }
+      if (error instanceof Error && error.message === 'CEP deve ter 8 dígitos') {
+        sendValidationError(res, error.message);
+        return;
       }
-
-      logger.error('Erro ao buscar CEP', {
+      sendError(res, error, 'Erro ao buscar CEP', 500, true, {
         context: 'ClienteController',
         action: 'buscarCep',
-        error: errorMessage,
-        stack: errorStack,
         cep: req.params.cep
-      });
-
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
 
-  // Consultar dados do CNPJ na ReceitaWS
   static async consultarCnpj(req: Request, res: Response): Promise<void> {
     try {
       const { cnpj } = req.params;
-      
-      // Remover formatação do CNPJ
-      const cnpjLimpo = cnpj.replace(/\D/g, '');
-      
-      if (cnpjLimpo.length !== 14) {
-        res.status(400).json({
-          success: false,
-          error: 'CNPJ inválido',
-          message: 'CNPJ deve ter 14 dígitos'
-        });
+      const dadosEmpresa = await ReceitaWsService.consultarCnpj(cnpj);
+
+      if (!dadosEmpresa) {
+        sendNotFound(res, 'CNPJ não encontrado na base da Receita Federal');
         return;
       }
 
-      // Consultar na API ReceitaWS
-      const response = await axios.get(`https://www.receitaws.com.br/v1/cnpj/${cnpjLimpo}`, {
-        timeout: 10000
-      });
-
-      if (response.data.status === 'ERROR') {
-        res.status(404).json({
-          success: false,
-          error: 'CNPJ não encontrado',
-          message: response.data.message || 'CNPJ não encontrado na base da Receita Federal'
-        });
-        return;
-      }
-
-      // Mapear dados da API para o formato do sistema
-      const dadosEmpresa = {
-        razao_social: response.data.nome || '',
-        nome_fantasia: response.data.fantasia || '',
-        cep: formatCEP(response.data.cep),
-        endereco: response.data.logradouro || '',
-        numero: response.data.numero || '',
-        complemento: response.data.complemento || '',
-        bairro: response.data.bairro || '',
-        cidade: response.data.municipio || '',
-        estado: response.data.uf || '',
-        telefone: response.data.telefone || '',
-        email: response.data.email || '',
-        situacao: response.data.situacao || '',
-        abertura: response.data.abertura || '',
-        natureza_juridica: response.data.natureza_juridica || '',
-        capital_social: response.data.capital_social || ''
-      };
-
-      res.json({
-        success: true,
-        data: dadosEmpresa
-      });
+      sendSuccess(res, dadosEmpresa);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 429) {
-          logger.warn('Limite de requisições excedido ao consultar CNPJ', {
-            context: 'ClienteController',
-            action: 'consultarCnpj',
-            cnpj: req.params.cnpj
-          });
-          res.status(429).json({
-            success: false,
-            error: 'Limite de requisições excedido',
-            message: 'Muitas requisições. Tente novamente em alguns instantes.'
-          });
+      if (error instanceof Error) {
+        if (error.message === 'CNPJ deve ter 14 dígitos') {
+          sendValidationError(res, error.message);
           return;
         }
-        
-        if (error.response?.status === 404) {
-          logger.warn('CNPJ não encontrado', {
+        if (error.message.includes('Muitas requisições')) {
+          sendError(res, error, error.message, 429, true, {
             context: 'ClienteController',
             action: 'consultarCnpj',
             cnpj: req.params.cnpj
-          });
-          res.status(404).json({
-            success: false,
-            error: 'CNPJ não encontrado',
-            message: 'CNPJ não encontrado na base da Receita Federal'
           });
           return;
         }
       }
-
-      logger.error('Erro ao consultar CNPJ', {
+      sendError(res, error, 'Erro ao consultar CNPJ', 500, true, {
         context: 'ClienteController',
         action: 'consultarCnpj',
-        error: errorMessage,
-        stack: errorStack,
         cnpj: req.params.cnpj
-      });
-
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }

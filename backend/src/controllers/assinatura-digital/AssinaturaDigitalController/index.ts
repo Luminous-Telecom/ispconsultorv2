@@ -12,12 +12,16 @@ import { Contrato } from '../../../models/contratos/Contrato';
 import { ClienteArquivo } from '../../../models/clientes/ClienteArquivo';
 import { AssinafyService } from '../../../services/assinatura-digital/AssinafyService';
 import { ZapsignService } from '../../../services/assinatura-digital/ZapsignService';
+import { AssinaturaWebhookService } from '../../../services/assinatura-digital/AssinaturaWebhookService';
+import { AssinaturaEnvioService } from '../../../services/assinatura-digital/AssinaturaEnvioService';
+import { AssinaturaConsultaService } from '../../../services/assinatura-digital/AssinaturaConsultaService';
+import { AssinaturaWebhookProcessorService } from '../../../services/assinatura-digital/AssinaturaWebhookProcessorService';
 import { ClienteArquivoService } from '../../../services/cadastros';
-import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import { registrarCriacao, registrarExclusao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import { registrarAtualizacaoElasticsearch, registrarCriacaoElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
 import { getCurrentTimestamp } from '../../../utils/timezoneUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 // Interface comum para serviços de assinatura digital
 interface ISignatureService {
@@ -32,38 +36,7 @@ interface ISignatureService {
 type SignatureService = AssinafyService | ZapsignService;
 
 export class AssinaturaDigitalController {
-  /**
-   * Obtém o serviço de assinatura digital correto baseado no provider configurado
-   * @param providerForced - Provider específico a ser usado (obrigatório)
-   */
-  private static async getSignatureService(providerForced: 'assinafy' | 'zapsign'): Promise<SignatureService | null> {
-    try {
-      // Os serviços já fazem a verificação de configuração internamente
-      switch (providerForced) {
-        case 'zapsign':
-          return await ZapsignService.createFromDatabase();
-        case 'assinafy':
-        default:
-          return await AssinafyService.createFromDatabase();
-      }
-    } catch (error) {
-      logger.error('Erro ao obter serviço de assinatura digital:', error);
-      return null;
-    }
-  }
 
-  /**
-   * Verifica se a assinatura digital está habilitada
-   */
-  private static async isSignatureEnabled(): Promise<boolean> {
-    try {
-      const provider = await AssinaturaDigitalProviderService.getEnabled();
-      return !!provider && !!provider.api_key;
-    } catch (error) {
-      logger.error('Erro ao verificar se assinatura digital está habilitada:', error);
-      return false;
-    }
-  }
 
   /**
    * Obtém o serviço de geração de PDF (pode ser qualquer um, pois o método é estático)
@@ -100,16 +73,9 @@ export class AssinaturaDigitalController {
         termo_contrato_id: termo_contrato_id as string | number
       });
 
-      res.json({
-        success: true,
-        data: assinaturas
-      });
+      sendSuccess(res, assinaturas);
     } catch (error) {
-      logger.error('Erro ao listar assinaturas:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao listar assinaturas'
-      });
+      sendError(res, error, 'Erro ao listar assinaturas', 500, true);
     }
   }
 
@@ -123,23 +89,13 @@ export class AssinaturaDigitalController {
       const assinatura = await AssinaturaDigitalService.getById(id);
 
       if (!assinatura) {
-        res.status(404).json({
-          success: false,
-          message: 'Assinatura não encontrada'
-        });
+        sendNotFound(res, 'Assinatura não encontrada');
         return;
       }
 
-      res.json({
-        success: true,
-        data: assinatura
-      });
+      sendSuccess(res, assinatura);
     } catch (error) {
-      logger.error('Erro ao buscar assinatura:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao buscar assinatura'
-      });
+      sendError(res, error, 'Erro ao buscar assinatura', 500, true);
     }
   }
 
@@ -159,224 +115,38 @@ export class AssinaturaDigitalController {
       } = req.body;
 
       if (!email_assinante || !nome_assinante) {
-        res.status(400).json({
-          success: false,
-          message: 'Email e nome do assinante são obrigatórios'
-        });
+        sendValidationError(res, 'Email e nome do assinante são obrigatórios');
         return;
       }
 
-      // Buscar termo de contrato se fornecido
-      let cliente: Cliente | null = null;
-      let contrato: Contrato | null = null;
-      let conteudoHtml = '';
-
-      if (termo_contrato_id) {
-        const termoContrato = await TermoContratoService.getById(termo_contrato_id);
-
-        if (!termoContrato) {
-          res.status(404).json({
-            success: false,
-            message: 'Termo de contrato não encontrado'
-          });
-          return;
-        }
-
-        if (!termoContrato.modelo_documento_id) {
-          res.status(400).json({
-            success: false,
-            message: 'Termo de contrato não possui modelo de documento associado'
-          });
-          return;
-        }
-
-        contrato = await termoContrato.getContrato();
-        if (contrato) {
-          cliente = await contrato.getCliente();
-        }
-
-        const modeloDocumento = await ModeloDocumentoService.getById(termoContrato.modelo_documento_id);
-        if (!modeloDocumento) {
-          res.status(404).json({
-            success: false,
-            message: 'Modelo de documento não encontrado'
-          });
-          return;
-        }
-
-        const conteudoMap: Record<string, string> = {
-          'adesao': modeloDocumento.conteudo_adesao || modeloDocumento.conteudo || '',
-          'permanencia': modeloDocumento.conteudo_permanencia || modeloDocumento.conteudo || ''
-        };
-        
-        conteudoHtml = conteudoMap[termoContrato.tipo_termo] || modeloDocumento.conteudo || '';
-
-        if (!conteudoHtml) {
-          res.status(400).json({
-            success: false,
-            message: 'Modelo de documento não possui conteúdo válido'
-          });
-          return;
-        }
-      } else if (cliente_id) {
-        cliente = await ClienteService.getById(cliente_id);
-        if (!cliente) {
-          res.status(404).json({
-            success: false,
-            message: 'Cliente não encontrado'
-          });
-          return;
-        }
-      }
-
-      const isEnabled = await AssinaturaDigitalController.isSignatureEnabled();
-      if (!isEnabled) {
-        res.status(400).json({
-          success: false,
-          message: 'Assinatura digital não está habilitada. Configure em Parâmetros > Assinatura Digital'
-        });
-        return;
-      }
-
-      // Buscar provider habilitado
-      const providerConfig = await AssinaturaDigitalProviderService.getEnabled();
-      
-      if (!providerConfig) {
-        res.status(500).json({
-          success: false,
-          message: 'Nenhum provider de assinatura digital habilitado. Configure em Parâmetros > Assinatura Digital'
-        });
-        return;
-      }
-
-      const provider = providerConfig.provider as 'assinafy' | 'zapsign';
-      
-      // Este método genérico está deprecated - use os controllers específicos
-      const signatureService = await AssinaturaDigitalController.getSignatureService(provider);
-      if (!signatureService) {
-        res.status(500).json({
-          success: false,
-          message: 'API Key não configurada. Configure em Parâmetros > Assinatura Digital'
-        });
-        return;
-      }
-
-      if (conteudoHtml && cliente) {
-        // baseUrl não é mais necessário - links serão relativos
-        const baseUrl = undefined;
-        const contratoRef = contrato ? { id: contrato.id } : undefined;
-
-        conteudoHtml = await VariaveisDocumentoService.processarVariaveis(
-          conteudoHtml,
-          {
-            cliente,
-            contrato: contratoRef,
-            dataReferencia: new Date()
-          },
-          baseUrl
-        );
-      }
-
-      const pdfBase64 = await AssinaturaDigitalController.gerarPdfBase64(
-        conteudoHtml || '<html><body><h1>Documento para assinatura</h1></body></html>',
-        `termo-${termo_contrato_id || 'documento'}.pdf`
-      );
-
-      const diasExpiracaoFinal = (dias_expiracao as number) || providerConfig.dias_expiracao_padrao || 30;
-      const dataExpiracao = new Date();
-      dataExpiracao.setDate(dataExpiracao.getDate() + diasExpiracaoFinal);
-      const cpfCnpjLimpo = cpf_cnpj_assinante?.replace(/[.\-\/\s]/g, '') || '';
-      
-      // Preparar signatários para envio
-      const signers = [{
-        name: nome_assinante,
-        email: email_assinante,
-        cpf: cpfCnpjLimpo.length === 11 ? cpfCnpjLimpo : undefined,
-        cnpj: cpfCnpjLimpo.length === 14 ? cpfCnpjLimpo : undefined,
-        order: 1
-      }];
-      
-      // Para ZAPSIGN, os signatários devem ser enviados junto com a criação do documento
-      // Para Assinafy, enviamos depois
-      const uploadResult = await (signatureService as ISignatureService).uploadDocumento({
-        name: `Termo de Contrato ${termo_contrato_id || 'Documento'}`,
-        file: pdfBase64,
-        signers: provider === 'zapsign' ? signers : undefined // Incluir signatários apenas para ZAPSIGN
-      });
-
-      if (!uploadResult.success || !uploadResult.data) {
-        res.status(500).json({
-          success: false,
-          message: uploadResult.message || uploadResult.error || 'Erro ao fazer upload do documento'
-        });
-        return;
-      }
-
-      const documentId = uploadResult.data.id;
-      
-      // Para Assinafy, processar signatários em background
-      // Para ZAPSIGN, enviar documento para assinatura por email aos signatários
-      if (provider === 'assinafy') {
-        (signatureService as ISignatureService).processarDocumentoEmBackground?.(documentId, {
-          name: `Termo de Contrato ${termo_contrato_id || 'Documento'}`,
-          file: pdfBase64,
-          signers: signers,
-          expiresAt: dataExpiracao.toISOString(),
-          message: mensagem || 'Por favor, assine este documento'
-        }).catch((error: unknown) => {
-          logger.error('Erro ao processar documento em background', {
-            documentId,
-            error: error instanceof Error ? error.message : 'Erro desconhecido'
-          });
-        });
-      } else if (provider === 'zapsign') {
-        // Para ZAPSIGN, o email já é enviado automaticamente quando fazemos upload com signers
-        // que têm send_automatic_email: true. Não precisamos chamar endpoint /send separadamente.
-      }
-
-      // Para ZAPSIGN, a URL de assinatura já vem na resposta do upload
-      const urlAssinatura = provider === 'zapsign' && uploadResult.data?.url 
-        ? uploadResult.data.url 
-        : null;
-
-      const assinatura = await AssinaturaDigitalService.create({
-        termo_contrato_id: termo_contrato_id || null,
-        cliente_id: cliente?.id || cliente_id || null,
-        documento_tipo: termo_contrato_id ? 'termo' : 'outro' as const,
-        documento_id: termo_contrato_id || null,
-        api_provider: provider as 'assinafy' | 'zapsign',
-        api_document_id: documentId,
-        status: 'enviado' as const,
-        url_assinatura: urlAssinatura,
+      const assinatura = await AssinaturaEnvioService.enviarParaAssinatura({
+        termo_contrato_id,
+        cliente_id,
         email_assinante,
         nome_assinante,
-        cpf_cnpj_assinante: cpfCnpjLimpo || null,
-        data_envio: new Date(),
-        data_expiracao: dataExpiracao
+        cpf_cnpj_assinante,
+        mensagem,
+        dias_expiracao,
+        req: req as AuthenticatedRequest
       });
 
-      await registrarCriacao(
-        req as AuthenticatedRequest,
-        'AssinaturaDigital',
-        assinatura.id,
-        assinatura.toJSON() as Record<string, unknown>
-      );
-
-      res.json({
-        success: true,
-        message: 'Documento enviado para assinatura com sucesso',
-        data: assinatura.toJSON ? assinatura.toJSON() : assinatura
-      });
+      sendSuccess(res, assinatura.toJSON ? assinatura.toJSON() : assinatura, 'Documento enviado para assinatura com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao enviar documento para assinatura:', error);
-      
-      if (!res.headersSent) {
-        res.status(500).json({
-          success: false,
-          message: `Erro ao enviar documento para assinatura: ${errorMessage}`
-        });
+      if (error instanceof Error) {
+        if (error.message.includes('não encontrado')) {
+          sendNotFound(res, error.message);
+          return;
+        }
+        if (error.message.includes('obrigatórios') || error.message.includes('não possui')) {
+          sendValidationError(res, error.message);
+          return;
+        }
+        if (error.message.includes('não está habilitada') || error.message.includes('não configurada')) {
+          sendError(res, error, error.message, 500, false);
+          return;
+        }
       }
+      sendError(res, error, 'Erro ao enviar documento para assinatura', 500, true);
     }
   }
 
@@ -390,29 +160,20 @@ export class AssinaturaDigitalController {
       const assinatura = await AssinaturaDigitalService.getById(id);
 
       if (!assinatura) {
-        res.status(404).json({
-          success: false,
-          message: 'Assinatura não encontrada'
-        });
+        sendNotFound(res, 'Assinatura não encontrada');
         return;
       }
 
       if (!assinatura.api_document_id) {
-        res.status(400).json({
-          success: false,
-          message: 'Assinatura não possui ID da API'
-        });
+        sendValidationError(res, 'Assinatura não possui ID da API');
         return;
       }
 
-      const signatureService = await AssinaturaDigitalController.getSignatureService(
+      const signatureService = await AssinaturaEnvioService.getSignatureService(
         assinatura.api_provider as 'assinafy' | 'zapsign'
       );
       if (!signatureService) {
-        res.status(500).json({
-          success: false,
-          message: 'API Key não configurada. Configure em Parâmetros > Assinatura Digital'
-        });
+        sendError(res, new Error('API Key não configurada. Configure em Parâmetros > Assinatura Digital'), 'API Key não configurada. Configure em Parâmetros > Assinatura Digital', 500, false);
         return;
       }
 
@@ -436,32 +197,21 @@ export class AssinaturaDigitalController {
           await assinatura.save();
         }
 
-        res.json({
-          success: true,
-          data: {
-            ...assinatura.toJSON(),
-            status_api: resultado.data.status,
-            url_assinatura: resultado.data.url
-          }
+        sendSuccess(res, {
+          ...assinatura.toJSON(),
+          status_api: resultado.data.status,
+          url_assinatura: resultado.data.url
         });
       } else {
         logger.error('Erro ao consultar status na API', {
           assinaturaId: id,
           resultado
         });
-        res.status(500).json({
-          success: false,
-          message: resultado.error || 'Erro ao consultar status'
-        });
+        sendError(res, new Error(resultado.error || 'Erro ao consultar status'), resultado.error || 'Erro ao consultar status', 500, false);
       }
     } catch (error) {
-      logger.error('Erro ao consultar status da assinatura:', {
-        assinaturaId: req.params.id,
-        error
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao consultar status da assinatura'
+      sendError(res, error, 'Erro ao consultar status da assinatura', 500, true, {
+        assinaturaId: req.params.id
       });
     }
   }
@@ -476,18 +226,12 @@ export class AssinaturaDigitalController {
       const assinatura = await AssinaturaDigitalService.getById(id);
 
       if (!assinatura) {
-        res.status(404).json({
-          success: false,
-          message: 'Assinatura não encontrada'
-        });
+        sendNotFound(res, 'Assinatura não encontrada');
         return;
       }
 
       if (assinatura.status !== 'assinado') {
-        res.status(400).json({
-          success: false,
-          message: 'Documento ainda não foi assinado'
-        });
+        sendValidationError(res, 'Documento ainda não foi assinado');
         return;
       }
 
@@ -500,31 +244,22 @@ export class AssinaturaDigitalController {
       }
 
       if (!assinatura.api_document_id) {
-        res.status(400).json({
-          success: false,
-          message: 'Assinatura não possui ID da API'
-        });
+        sendValidationError(res, 'Assinatura não possui ID da API');
         return;
       }
 
-      const signatureService = await AssinaturaDigitalController.getSignatureService(
+      const signatureService = await AssinaturaEnvioService.getSignatureService(
         assinatura.api_provider as 'assinafy' | 'zapsign'
       );
       if (!signatureService) {
-        res.status(500).json({
-          success: false,
-          message: 'API Key não configurada. Configure em Parâmetros > Assinatura Digital'
-        });
+        sendError(res, new Error('API Key não configurada. Configure em Parâmetros > Assinatura Digital'), 'API Key não configurada. Configure em Parâmetros > Assinatura Digital', 500, false);
         return;
       }
 
       const pdfBuffer = await (signatureService as ISignatureService).baixarPdfAssinado(assinatura.api_document_id);
 
       if (!pdfBuffer) {
-        res.status(500).json({
-          success: false,
-          message: 'Erro ao baixar PDF assinado'
-        });
+        sendError(res, new Error('Erro ao baixar PDF assinado'), 'Erro ao baixar PDF assinado', 500, false);
         return;
       }
 
@@ -535,13 +270,8 @@ export class AssinaturaDigitalController {
       res.setHeader('Content-Disposition', `inline; filename="documento-assinado-${id}.pdf"`);
       res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao baixar PDF assinado:', {
-        assinaturaId: req.params.id,
-        error
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao baixar PDF assinado'
+      sendError(res, error, 'Erro ao baixar PDF assinado', 500, true, {
+        assinaturaId: req.params.id
       });
     }
   }
@@ -556,23 +286,17 @@ export class AssinaturaDigitalController {
       const assinatura = await AssinaturaDigitalService.getById(id);
 
       if (!assinatura) {
-        res.status(404).json({
-          success: false,
-          message: 'Assinatura não encontrada'
-        });
+        sendNotFound(res, 'Assinatura não encontrada');
         return;
       }
 
       if (assinatura.status === 'assinado') {
-        res.status(400).json({
-          success: false,
-          message: 'Não é possível cancelar uma assinatura já concluída'
-        });
+        sendValidationError(res, 'Não é possível cancelar uma assinatura já concluída');
         return;
       }
 
       if (assinatura.api_document_id) {
-        const signatureService = await AssinaturaDigitalController.getSignatureService(
+        const signatureService = await AssinaturaEnvioService.getSignatureService(
           assinatura.api_provider as 'assinafy' | 'zapsign'
         );
         if (signatureService) {
@@ -584,25 +308,21 @@ export class AssinaturaDigitalController {
       assinatura.status = 'cancelado';
       await assinatura.save();
 
-      await registrarExclusao(
-        req as AuthenticatedRequest,
-        'AssinaturaDigital',
-        assinatura.id,
-        dadosAnteriores as Record<string, unknown>,
-        'Assinatura cancelada'
-      );
+      try {
+        await registrarExclusao(
+          req as AuthenticatedRequest,
+          'AssinaturaDigital',
+          assinatura.id,
+          dadosAnteriores as Record<string, unknown>,
+          'Assinatura cancelada'
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Assinatura cancelada com sucesso',
-        data: assinatura
-      });
+      sendSuccess(res, assinatura, 'Assinatura cancelada com sucesso');
     } catch (error) {
-      logger.error('Erro ao cancelar assinatura:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao cancelar assinatura'
-      });
+      sendError(res, error, 'Erro ao cancelar assinatura', 500, true);
     }
   }
 
@@ -623,11 +343,7 @@ export class AssinaturaDigitalController {
     const timestamp = getCurrentTimestamp();
     
     try {
-      res.status(200).json({
-        success: true,
-        message: 'Webhook Assinafy recebido',
-        timestamp
-      });
+      sendSuccess(res, { timestamp }, 'Webhook Assinafy recebido', 200);
 
       const documentId = req.body?.object?.id || req.body?.document_id || req.body?.id;
       const status = req.body?.object?.status || req.body?.status;
@@ -645,7 +361,7 @@ export class AssinaturaDigitalController {
         return;
       }
 
-      AssinaturaDigitalController.processarWebhookEmBackground(
+      AssinaturaWebhookProcessorService.processarWebhookEmBackground(
         documentId, 
         status, 
         signedPdf, 
@@ -664,13 +380,7 @@ export class AssinaturaDigitalController {
           });
         });
     } catch (error: unknown) {
-      logger.error('Erro ao receber webhook Assinafy:', {
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao processar webhook Assinafy'
-      });
+      sendError(res, error, 'Erro ao processar webhook Assinafy', 500, true);
     }
   }
 
@@ -679,10 +389,7 @@ export class AssinaturaDigitalController {
    */
   static async webhookZapsign(req: Request, res: Response): Promise<void> {
     try {
-      res.status(200).json({
-        success: true,
-        message: 'Webhook ZAPSIGN recebido'
-      });
+      sendSuccess(res, undefined, 'Webhook ZAPSIGN recebido', 200);
 
       const documentId = req.body?.token || req.body?.data?.token;
       const status = req.body?.status || req.body?.data?.status;
@@ -696,7 +403,7 @@ export class AssinaturaDigitalController {
       }
 
       // Processar em background
-      AssinaturaDigitalController.processarWebhookEmBackground(
+      AssinaturaWebhookProcessorService.processarWebhookEmBackground(
         documentId, 
         status, 
         signedPdf,
@@ -727,11 +434,7 @@ export class AssinaturaDigitalController {
     const timestamp = getCurrentTimestamp();
     
     try {
-      res.status(200).json({
-        success: true,
-        message: 'Webhook recebido',
-        timestamp
-      });
+      sendSuccess(res, { timestamp }, 'Webhook recebido', 200);
 
       let documentId: string | undefined;
       let status: string | undefined;
@@ -787,7 +490,7 @@ export class AssinaturaDigitalController {
       }
 
       // Processar em background
-      AssinaturaDigitalController.processarWebhookEmBackground(
+      AssinaturaWebhookProcessorService.processarWebhookEmBackground(
         documentId, 
         status, 
         signedPdf, 
@@ -814,292 +517,8 @@ export class AssinaturaDigitalController {
         error: error instanceof Error ? error.message : 'Erro desconhecido',
         stack: error instanceof Error ? error.stack : undefined
       });
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao processar webhook'
-      });
+      sendError(res, error, 'Erro ao processar webhook', 500, true);
     }
   }
 
-  /**
-   * Processa webhook em background
-   */
-  private static async processarWebhookEmBackground(
-    documentId: string,
-    status: string | undefined,
-    signedPdf?: string,
-    event?: string,
-    assignmentCompletedCount?: number,
-    assignmentSignerCount?: number,
-    signingUrl?: string,
-    certificatedPdfUrl?: string,
-    provider?: 'assinafy' | 'zapsign',
-    req?: Request
-  ): Promise<void> {
-
-    let assinatura = await AssinaturaDigitalService.getByApiDocumentId(documentId);
-
-    if (!assinatura) {
-      return;
-    }
-
-    // Atualizar URL de assinatura se fornecida no webhook
-    if (signingUrl && !assinatura.url_assinatura) {
-      // Capturar dados anteriores antes de atualizar
-      const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
-      
-      await AssinaturaDigitalService.updateById(assinatura.id, { url_assinatura: signingUrl });
-      
-      // Recarregar assinatura para obter dados atualizados
-      await assinatura.reload();
-      
-      // Capturar dados novos após atualização
-      const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
-      
-      // Registrar auditoria no Elasticsearch se req foi fornecido
-      if (req) {
-        try {
-          await registrarAtualizacaoElasticsearch(
-            req,
-            'AssinaturaDigital',
-            assinatura.id,
-            dadosAnteriores,
-            dadosNovos,
-            `Atualização via webhook (URL assinatura) - Provider: ${provider || 'desconhecido'}`
-          );
-        } catch (auditError) {
-          logger.warn('Erro ao registrar auditoria de webhook (URL assinatura)', {
-            assinatura_id: assinatura.id,
-            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-          });
-        }
-      }
-    }
-
-    // Verificar se documento foi assinado - apenas quando realmente estiver completo
-    // Assinafy: status 'certificated' ou event 'document_ready'
-    // ZAPSIGN: status 'signed' ou event 'doc_signed'
-    const isAssinado = 
-      status === 'certificated' || 
-      event === 'document_ready' ||
-      status === 'signed' ||
-      status === 'completed' ||
-      event === 'doc_signed' ||
-      (provider === 'zapsign' && (status === 'signed' || status === 'completed' || event === 'doc_signed'));
-
-    if (!isAssinado) {
-      return;
-    }
-
-    if (assinatura.status === 'assinado') {
-      return;
-    }
-
-    const dadosParaAtualizar: Record<string, unknown> = {
-        status: 'assinado',
-        data_assinatura: new Date()
-      };
-      
-      if (certificatedPdfUrl) {
-        dadosParaAtualizar.pdf_assinado_url = certificatedPdfUrl;
-      }
-
-      // Usar PDF do webhook se disponível
-      let pdfBufferParaSalvar: Buffer | null = null;
-      let pdfBase64ParaSalvar: string | null = null;
-      
-      if (signedPdf) {
-        const base64Content = signedPdf.replace(/^data:.*,/, '');
-        pdfBufferParaSalvar = Buffer.from(base64Content, 'base64');
-        dadosParaAtualizar.pdf_assinado_base64 = signedPdf;
-        pdfBase64ParaSalvar = signedPdf;
-      } else if (!assinatura.pdf_assinado_base64) {
-        // Baixar PDF usando o método do serviço com a URL configurada no banco de dados
-        // Não usar a URL do webhook, usar apenas o documentId para o serviço buscar via API
-        try {
-          const signatureService = await AssinaturaDigitalController.getSignatureService(
-            assinatura.api_provider as 'assinafy' | 'zapsign'
-          );
-          if (signatureService) {
-            const pdfBuffer = await (signatureService as ISignatureService).baixarPdfAssinado(
-              documentId,
-              certificatedPdfUrl || undefined
-            );
-            if (pdfBuffer) {
-              pdfBufferParaSalvar = pdfBuffer;
-              const base64 = pdfBuffer.toString('base64');
-              dadosParaAtualizar.pdf_assinado_base64 = base64;
-              pdfBase64ParaSalvar = base64;
-            }
-          }
-        } catch (error) {
-          // Ignorar erro ao baixar PDF
-        }
-      } else {
-        pdfBase64ParaSalvar = assinatura.pdf_assinado_base64;
-        if (pdfBase64ParaSalvar) {
-          try {
-            const base64Content = pdfBase64ParaSalvar.replace(/^data:.*,/, '');
-            pdfBufferParaSalvar = Buffer.from(base64Content, 'base64');
-          } catch (error) {
-            // Ignorar erro de conversão
-          }
-        }
-      }
-
-      // Capturar dados anteriores antes de atualizar
-      const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
-      
-      await AssinaturaDigitalService.updateById(assinatura.id, dadosParaAtualizar);
-
-      // Recarregar assinatura para ter dados atualizados
-      await assinatura.reload();
-      
-      // Capturar dados novos após atualização
-      const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
-      
-      // Registrar auditoria no Elasticsearch se req foi fornecido
-      if (req) {
-        try {
-          await registrarAtualizacaoElasticsearch(
-            req,
-            'AssinaturaDigital',
-            assinatura.id,
-            dadosAnteriores,
-            dadosNovos,
-            `Atualização via webhook (assinatura completa) - Status: ${status || 'desconhecido'} - Provider: ${provider || 'desconhecido'}`
-          );
-        } catch (auditError) {
-          logger.warn('Erro ao registrar auditoria de webhook (assinatura completa)', {
-            assinatura_id: assinatura.id,
-            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-          });
-        }
-      }
-
-      if (assinatura.cliente_id && pdfBufferParaSalvar) {
-        try {
-          const arquivoExistente = await ClienteArquivoService.findByReferencia(
-            assinatura.cliente_id,
-            assinatura.id,
-            'assinatura_digital'
-          );
-
-          if (!arquivoExistente) {
-            const nomeArquivo = `Documento_Assinado_${assinatura.id}_${Date.now()}.pdf`;
-            
-            const arquivoCriado = await ClienteArquivoService.createFromBuffer({
-              cliente_id: assinatura.cliente_id,
-              nome: nomeArquivo,
-              tipo: 'assinatura',
-              arquivo_buffer: pdfBufferParaSalvar,
-              mime_type: 'application/pdf',
-              descricao: `Documento assinado digitalmente${assinatura.nome_assinante ? ` - ${assinatura.nome_assinante}` : ''}`,
-              origem: 'assinatura_digital',
-              referencia_id: assinatura.id,
-              referencia_tipo: 'assinatura_digital'
-            });
-            
-            // Registrar auditoria no Elasticsearch se req foi fornecido
-            if (req && arquivoCriado) {
-              try {
-                const dadosNovos = arquivoCriado.toJSON 
-                  ? arquivoCriado.toJSON() as Record<string, unknown> 
-                  : (arquivoCriado as unknown as Record<string, unknown>);
-                await registrarCriacaoElasticsearch(
-                  req,
-                  'ClienteArquivo',
-                  typeof arquivoCriado.id === 'number' ? arquivoCriado.id : parseInt(String(arquivoCriado.id), 10),
-                  dadosNovos,
-                  `Criação via webhook (assinatura digital) - Provider: ${provider || 'desconhecido'}`
-                );
-              } catch (auditError) {
-                logger.warn('Erro ao registrar auditoria de webhook (criação arquivo)', {
-                  error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-                });
-              }
-            }
-          }
-        } catch (error) {
-          logger.error('Erro ao salvar PDF assinado como arquivo do cliente', {
-            clienteId: assinatura.cliente_id,
-            assinaturaId: assinatura.id,
-            error: error instanceof Error ? error.message : 'Erro desconhecido'
-          });
-        }
-      }
-
-      // Atualizar termo de contrato relacionado
-      if (assinatura.termo_contrato_id) {
-        const termoContrato = await TermoContratoService.getById(assinatura.termo_contrato_id);
-        if (termoContrato) {
-          // Capturar dados anteriores antes de atualizar
-          const dadosAnteriores = termoContrato.toJSON() as Record<string, unknown>;
-          
-          const dataAceite = new Date();
-          const aceitoPor = assinatura.nome_assinante || 'Assinatura Digital';
-          
-          const termoAtualizado = await TermoContratoService.update(assinatura.termo_contrato_id, {
-            assinado: 'SIM',
-            data_aceite: dataAceite,
-            aceito_por: aceitoPor
-          });
-          
-          // Capturar dados novos após atualização
-          const dadosNovos = termoAtualizado.toJSON() as Record<string, unknown>;
-          
-          // Registrar auditoria no Elasticsearch se req foi fornecido
-          if (req) {
-            try {
-              await registrarAtualizacaoElasticsearch(
-                req,
-                'TermoContrato',
-                termoAtualizado.id,
-                dadosAnteriores,
-                dadosNovos,
-                `Atualização via webhook (assinatura digital) - Provider: ${provider || 'desconhecido'}`
-              );
-            } catch (auditError) {
-              logger.warn('Erro ao registrar auditoria de webhook (termo contrato)', {
-                termo_contrato_id: termoAtualizado.id,
-                error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-              });
-            }
-          }
-        }
-      }
-
-    if (status === 'canceled' || event === 'document.canceled') {
-      // Capturar dados anteriores antes de atualizar
-      const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
-      
-      assinatura.status = 'cancelado';
-      await assinatura.save();
-      
-      // Recarregar assinatura para obter dados atualizados
-      await assinatura.reload();
-      
-      // Capturar dados novos após atualização
-      const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
-      
-      // Registrar auditoria no Elasticsearch se req foi fornecido
-      if (req) {
-        try {
-          await registrarAtualizacaoElasticsearch(
-            req,
-            'AssinaturaDigital',
-            assinatura.id,
-            dadosAnteriores,
-            dadosNovos,
-            `Atualização via webhook (cancelamento) - Provider: ${provider || 'desconhecido'}`
-          );
-        } catch (auditError) {
-          logger.warn('Erro ao registrar auditoria de webhook (cancelamento)', {
-            assinatura_id: assinatura.id,
-            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-          });
-        }
-      }
-    }
-  }
 }

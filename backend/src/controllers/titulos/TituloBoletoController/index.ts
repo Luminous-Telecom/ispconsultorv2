@@ -9,6 +9,7 @@ import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { TituloComRelacoes } from '../TituloHelpers/types';
 import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class TituloBoletoController {
   
@@ -22,16 +23,16 @@ export class TituloBoletoController {
 
       const titulo = await TituloService.getById(id);
       if (!titulo) {
-        res.status(404).json({ success: false, message: 'Título não encontrado' });
+        sendNotFound(res, 'Título não encontrado');
         return;
       }
 
       if (titulo.status === 'cancelado') {
-        res.status(400).json({ success: false, message: 'Não é possível marcar como pago um título cancelado' });
+        sendValidationError(res, 'Não é possível marcar como pago um título cancelado');
         return;
       }
       if (titulo.status === 'pago') {
-        res.status(400).json({ success: false, message: 'Este título já foi marcado como pago' });
+        sendValidationError(res, 'Este título já foi marcado como pago');
         return;
       }
 
@@ -49,10 +50,12 @@ export class TituloBoletoController {
         titulo.toJSON() as Record<string, unknown>
       );
 
-      res.json({ success: true, message: 'Título marcado como pago', data: titulo });
+      sendSuccess(res, titulo, 'Título marcado como pago');
     } catch (error: unknown) {
-      logger.error('Erro ao marcar título como pago', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
+        context: 'TituloBoletoController',
+        action: 'marcarComoPago'
+      });
     }
   }
 
@@ -65,7 +68,7 @@ export class TituloBoletoController {
 
       const titulo = await TituloService.getById(id);
       if (!titulo) {
-        res.status(404).json({ success: false, message: 'Título não encontrado' });
+        sendNotFound(res, 'Título não encontrado');
         return;
       }
 
@@ -73,18 +76,21 @@ export class TituloBoletoController {
       await titulo.desmarcarPago();
       await titulo.reload();
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'Titulo',
-        titulo.id,
-        dadosAnteriores as Record<string, unknown>,
-        titulo.toJSON() as Record<string, unknown>
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'Titulo',
+          titulo.id,
+          dadosAnteriores as Record<string, unknown>,
+          titulo.toJSON() as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({ success: true, message: 'Título desmarcado como pago', data: titulo });
+      sendSuccess(res, titulo, 'Título desmarcado como pago');
     } catch (error: unknown) {
-      logger.error('Erro ao desmarcar título como pago', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao desmarcar título como pago', 500, true);
     }
   }
 
@@ -98,11 +104,11 @@ export class TituloBoletoController {
       const titulo = await TituloService.getById(id);
 
       if (!titulo) {
-        res.status(404).json({ success: false, message: 'Título não encontrado' });
+        sendNotFound(res, 'Título não encontrado');
         return;
       }
       if (!titulo.charge_id) {
-        res.status(400).json({ success: false, message: 'Título não possui charge_id (não foi registrado no banco)' });
+        sendValidationError(res, 'Título não possui charge_id (não foi registrado no banco)');
         return;
       }
 
@@ -119,32 +125,27 @@ export class TituloBoletoController {
           await titulo.marcarComoPago(Number(valorPago), dataPagamento);
           await titulo.reload();
 
-          await registrarAtualizacao(
-            req as AuthenticatedRequest,
-            'Titulo',
-            titulo.id,
-            dadosAnteriores as Record<string, unknown>,
-            titulo.toJSON() as Record<string, unknown>
-          );
+          try {
+            await registrarAtualizacao(
+              req as AuthenticatedRequest,
+              'Titulo',
+              titulo.id,
+              dadosAnteriores as Record<string, unknown>,
+              titulo.toJSON() as Record<string, unknown>
+            );
+          } catch (auditError) {
+            // Não interromper o fluxo
+          }
 
-          res.json({
-            success: true,
-            message: 'Título atualizado com sucesso',
-            data: { titulo_id: titulo.id, status_novo: titulo.status, valor_pago: valorPago, data_pagamento: dataPagamento }
-          });
+          sendSuccess(res, { titulo_id: titulo.id, status_novo: titulo.status, valor_pago: valorPago, data_pagamento: dataPagamento }, 'Título atualizado com sucesso');
         } else {
-          res.json({
-            success: true,
-            message: 'Título consultado - sem alterações (ainda não foi pago)',
-            data: { titulo_id: titulo.id, status: titulo.status, status_banco: resultado.data.status }
-          });
+          sendSuccess(res, { titulo_id: titulo.id, status: titulo.status, status_banco: resultado.data.status }, 'Título consultado - sem alterações (ainda não foi pago)');
         }
       } else {
-        res.status(400).json({ success: false, message: resultado.message || 'Erro ao consultar status no banco' });
+        sendError(res, new Error(resultado.message || 'Erro ao consultar status no banco'), resultado.message || 'Erro ao consultar status no banco', 400, false);
       }
     } catch (error: unknown) {
-      logger.error('Erro ao consultar recebimento', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao consultar recebimento', 500, true);
     }
   }
 
@@ -157,12 +158,12 @@ export class TituloBoletoController {
 
       const titulo = await TituloService.getById(id);
       if (!titulo) {
-        res.status(404).json({ success: false, message: 'Título não encontrado' });
+        sendNotFound(res, 'Título não encontrado');
         return;
       }
 
       if (titulo.status !== 'pago') {
-        res.status(400).json({ success: false, message: 'Só é possível estornar títulos que estão pagos' });
+        sendValidationError(res, 'Só é possível estornar títulos que estão pagos');
         return;
       }
 
@@ -170,18 +171,21 @@ export class TituloBoletoController {
       await titulo.desmarcarPago();
       await titulo.reload();
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'Titulo',
-        titulo.id,
-        dadosAnteriores as Record<string, unknown>,
-        titulo.toJSON() as Record<string, unknown>
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'Titulo',
+          titulo.id,
+          dadosAnteriores as Record<string, unknown>,
+          titulo.toJSON() as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({ success: true, message: 'Título estornado com sucesso', data: titulo });
+      sendSuccess(res, titulo, 'Título estornado com sucesso');
     } catch (error: unknown) {
-      logger.error('Erro ao estornar título', { error });
-      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao estornar título', 500, true);
     }
   }
 }

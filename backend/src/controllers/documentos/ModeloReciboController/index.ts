@@ -1,17 +1,12 @@
 import { Request, Response } from 'express';
-import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
-import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocumentoService';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { ContratoService } from '../../../services/contratos/ContratoService';
-import { Plano } from '../../../models/cadastros/Plano';
-import { Titulo } from '../../../models/financeiro/Titulo';
 import { TituloService } from '../../../services/financeiro/TituloService';
-import { Op } from 'sequelize';
+import { ContratoService } from '../../../services/contratos/ContratoService';
+import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocumentoService';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
 import type { TituloComRelacoes } from '../../titulos/TituloHelpers/types';
+import { sendError, sendValidationError } from '../../../utils/responseUtils';
 
 export class ModeloReciboController {
 
@@ -23,14 +18,14 @@ export class ModeloReciboController {
       const idsParam = req.query.ids as string;
       
       if (!idsParam) {
-        res.status(400).json({ success: false, message: 'IDs dos títulos não fornecidos' });
+        sendValidationError(res, 'IDs dos títulos não fornecidos');
         return;
       }
 
       const ids = idsParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
 
       if (ids.length === 0) {
-        res.status(400).json({ success: false, message: 'IDs dos títulos inválidos' });
+        sendValidationError(res, 'IDs dos títulos inválidos');
         return;
       }
 
@@ -38,7 +33,7 @@ export class ModeloReciboController {
       const titulos = await TituloService.getByIds(ids, ['pago', 'pago_atraso']);
 
       if (titulos.length === 0) {
-        res.status(404).json({ success: false, message: 'Nenhum título pago encontrado' });
+        sendError(res, new Error('Nenhum título pago encontrado'), 'Nenhum título pago encontrado', 404, false);
         return;
       }
 
@@ -84,7 +79,7 @@ export class ModeloReciboController {
       }
 
       if (recibosHtml.length === 0) {
-        res.status(500).json({ success: false, message: 'Nenhum recibo pôde ser gerado' });
+        sendError(res, new Error('Nenhum recibo pôde ser gerado'), 'Nenhum recibo pôde ser gerado', 500, false);
         return;
       }
 
@@ -130,11 +125,7 @@ export class ModeloReciboController {
       res.setHeader('Content-Disposition', `inline; filename="recibos-pagamento.pdf"`);
       res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao imprimir recibos múltiplos:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar recibos'
-      });
+      sendError(res, error, 'Erro ao gerar recibos', 500, true);
     }
   }
 }

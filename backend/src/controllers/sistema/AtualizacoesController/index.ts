@@ -7,6 +7,7 @@ import fs from 'fs';
 import { SelfUpdateService } from '../../../services/sistema/SelfUpdateService';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
+import { sendSuccess, sendError, sendValidationError, sendNotFound, sendForbidden } from '../../../utils/responseUtils';
 
 interface GitHubRelease {
   tag_name: string;
@@ -35,10 +36,7 @@ export class AtualizacoesController {
     const githubRepo = process.env.GITHUB_REPO;
     
     if (!githubRepo) {
-      res.status(400).json({
-        success: false,
-        message: 'GITHUB_REPO não configurado nas variáveis de ambiente'
-      });
+      sendValidationError(res, 'GITHUB_REPO não configurado nas variáveis de ambiente');
       return;
     }
     
@@ -61,11 +59,7 @@ export class AtualizacoesController {
       // Se não houver releases, retornar array vazio
       if (!response.data || response.data.length === 0) {
         logger.info('Nenhuma release encontrada no repositório', { repo: githubRepo });
-        res.json({
-          success: true,
-          data: [],
-          versao_atual: 'N/A'
-        });
+        sendSuccess(res, { data: [], versao_atual: 'N/A' });
         return;
       }
       
@@ -170,42 +164,27 @@ export class AtualizacoesController {
         });
       }
 
-      res.json({
-        success: true,
-        data: atualizacoes,
-        versao_atual: versaoAtual
-      });
+      sendSuccess(res, { data: atualizacoes, versao_atual: versaoAtual });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const axiosError = error as { response?: { status?: number; statusText?: string } };
-      
-      logger.error('Erro ao buscar atualizações do GitHub', {
-        error: errorMessage,
-        status: axiosError.response?.status,
-        statusText: axiosError.response?.statusText,
-      });
       
       // Se for erro 404 do GitHub, pode ser que o repositório não existe ou não tem releases
       if (axiosError.response?.status === 404) {
-        res.status(404).json({
-          success: false,
-          message: 'Repositório não encontrado ou sem releases. Verifique a configuração GITHUB_REPO.'
-        });
+        sendNotFound(res, 'Repositório não encontrado ou sem releases. Verifique a configuração GITHUB_REPO.');
         return;
       }
       
       // Se for erro 403, pode ser problema de autenticação
       if (axiosError.response?.status === 403) {
-        res.status(403).json({
-          success: false,
-          message: 'Acesso negado ao repositório. Verifique o GITHUB_TOKEN se o repositório for privado.'
-        });
+        sendForbidden(res, 'Acesso negado ao repositório. Verifique o GITHUB_TOKEN se o repositório for privado.');
         return;
       }
       
-      res.status(500).json({
-        success: false,
-        message: `Erro ao buscar atualizações do GitHub: ${errorMessage}`
+      sendError(res, error, 'Erro ao buscar atualizações do GitHub', 500, true, {
+        context: 'AtualizacoesController',
+        action: 'get',
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText
       });
     }
   }
@@ -360,7 +339,7 @@ export class AtualizacoesController {
           } as Record<string, unknown>
         );
       } catch (auditError) {
-        logger.warn('Erro ao registrar auditoria (não crítico)', { error: auditError });
+        // Não interromper o fluxo
       }
 
       // Enviar resultado final
@@ -403,221 +382,5 @@ export class AtualizacoesController {
     }
   }
 
-  /**
-   * Executa o self-update da aplicação
-   * Requer autenticação e permissão de admin
-   * @deprecated Use updateStream para progresso em tempo real
-   */
-  static async update(req: Request, res: Response): Promise<void> {
-    let branch = 'main';
-    
-    try {
-      // Verificar se o usuário é admin
-      if (!AtualizacoesController.isAdmin(req)) {
-        res.status(403).json({
-          success: false,
-          message: 'Acesso negado. Apenas administradores podem executar atualizações.',
-        });
-        return;
-      }
-
-      branch = req.body?.branch || 'main';
-
-      // Validar branch
-      if (typeof branch !== 'string' || !branch.trim()) {
-        res.status(400).json({
-          success: false,
-          message: 'Branch inválida',
-        });
-        return;
-      }
-
-      logger.info('Iniciando processo de atualização', {
-        branch,
-        usuario: (req as AuthenticatedRequest).user,
-      });
-
-      let updateService: SelfUpdateService;
-      try {
-        updateService = new SelfUpdateService();
-      } catch (error) {
-        logger.error('Erro ao criar SelfUpdateService', {
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-        });
-        res.status(500).json({
-          success: false,
-          message: `Erro ao inicializar serviço de atualização: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        });
-        return;
-      }
-
-      let result;
-      try {
-        result = await updateService.executeUpdate(branch);
-      } catch (error) {
-        logger.error('Erro inesperado ao executar atualização', {
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-          stack: error instanceof Error ? error.stack : undefined,
-        });
-        res.status(500).json({
-          success: false,
-          message: `Erro inesperado durante atualização: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        });
-        return;
-      }
-
-      if (!result.success) {
-        logger.error('Falha no processo de atualização', {
-          steps: Object.keys(result.steps).map(key => {
-            const step = result.steps[key as keyof typeof result.steps];
-            return {
-              step: key,
-              success: step?.success ?? false,
-              error: step?.error || step?.stderr,
-            };
-          }),
-        });
-
-        res.status(500).json({
-          success: false,
-          message: result.message,
-          steps: {
-            gitPull: {
-              success: result.steps.gitPull.success,
-              stdout: result.steps.gitPull.stdout,
-              stderr: result.steps.gitPull.stderr,
-              error: result.steps.gitPull.error || result.steps.gitPull.stderr,
-            },
-            npmInstall: {
-              success: result.steps.npmInstall.success,
-              stdout: result.steps.npmInstall.stdout,
-              stderr: result.steps.npmInstall.stderr,
-              error: result.steps.npmInstall.error || result.steps.npmInstall.stderr,
-            },
-            build: {
-              success: result.steps.build.success,
-              stdout: result.steps.build.stdout,
-              stderr: result.steps.build.stderr,
-              error: result.steps.build.error || result.steps.build.stderr,
-            },
-            migrate: {
-              success: result.steps.migrate.success,
-              stdout: result.steps.migrate.stdout,
-              stderr: result.steps.migrate.stderr,
-              error: result.steps.migrate.error || result.steps.migrate.stderr,
-            },
-          },
-        });
-        return;
-      }
-
-      // Se chegou até aqui, tudo deu certo até as migrations
-      // Agora aguardar o PM2 reload completar ANTES de retornar sucesso
-      logger.info('Atualização concluída com sucesso, iniciando reinicialização do PM2');
-
-      // Aguardar PM2 reload completar antes de retornar resposta
-      // Isso garante que o frontend só receba sucesso depois que o backend já reiniciou
-      let pm2ReloadResult;
-      try {
-        pm2ReloadResult = await updateService.reloadPM2();
-        logger.info('PM2 reload concluído com sucesso');
-      } catch (error) {
-        logger.error('Erro ao reiniciar PM2 após atualização', {
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-        });
-        // Se PM2 reload falhar, ainda retornar sucesso parcial
-        // mas incluir informação sobre o PM2 reload
-        pm2ReloadResult = {
-          success: false,
-          stdout: '',
-          stderr: error instanceof Error ? error.message : 'Erro desconhecido ao reiniciar PM2',
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-        };
-      }
-
-      // Registrar auditoria da atualização do sistema
-      const authenticatedReq = req as AuthenticatedRequest;
-      await registrarCriacao(
-        authenticatedReq,
-        'SistemaAtualizacao',
-        0,
-        {
-          branch,
-          steps: {
-            gitPull: { success: result.steps.gitPull.success },
-            npmInstall: { success: result.steps.npmInstall.success },
-            build: { success: result.steps.build.success },
-            migrate: { success: result.steps.migrate.success },
-            pm2Reload: { success: pm2ReloadResult.success }
-          },
-          message: result.message
-        } as Record<string, unknown>
-      );
-
-      // Retornar sucesso APÓS PM2 reload completar
-      res.json({
-        success: true,
-        message: result.message,
-        steps: {
-          gitPull: {
-            success: result.steps.gitPull.success,
-            stdout: result.steps.gitPull.stdout,
-            stderr: result.steps.gitPull.stderr,
-          },
-          npmInstall: {
-            success: result.steps.npmInstall.success,
-            stdout: result.steps.npmInstall.stdout,
-            stderr: result.steps.npmInstall.stderr,
-          },
-          build: {
-            success: result.steps.build.success,
-            stdout: result.steps.build.stdout,
-            stderr: result.steps.build.stderr,
-          },
-          migrate: {
-            success: result.steps.migrate.success,
-            stdout: result.steps.migrate.stdout,
-            stderr: result.steps.migrate.stderr,
-          },
-          pm2Reload: {
-            success: pm2ReloadResult.success,
-            stdout: pm2ReloadResult.stdout,
-            stderr: pm2ReloadResult.stderr,
-          },
-        },
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      logger.error('Erro inesperado durante atualização', {
-        error: errorMessage,
-        stack: errorStack,
-        branch,
-        usuario: (req as AuthenticatedRequest).user,
-      });
-
-      // Retornar mensagem mais específica se possível
-      let userMessage = 'Erro interno do servidor durante a atualização';
-      
-      if (errorMessage.includes('ENOENT') || errorMessage.includes('não encontrado')) {
-        userMessage = 'Arquivo ou diretório não encontrado. Verifique se o repositório está configurado corretamente.';
-      } else if (errorMessage.includes('permission denied') || errorMessage.includes('EACCES')) {
-        userMessage = 'Erro de permissão. Verifique as permissões do diretório e do usuário que executa o processo.';
-      } else if (errorMessage.includes('git')) {
-        userMessage = 'Erro ao executar Git. Verifique se o repositório está configurado corretamente e se há permissões adequadas.';
-      } else if (errorMessage.includes('npm')) {
-        userMessage = 'Erro ao executar npm. Verifique se o npm está instalado e acessível.';
-      } else if (errorMessage.includes('pm2')) {
-        userMessage = 'Erro ao executar PM2. Verifique se o PM2 está instalado e o processo está configurado corretamente.';
-      }
-
-      res.status(500).json({
-        success: false,
-        message: userMessage,
-        error: !__dirname.includes('dist') ? errorMessage : undefined,
-      });
-    }
-  }
 }
 

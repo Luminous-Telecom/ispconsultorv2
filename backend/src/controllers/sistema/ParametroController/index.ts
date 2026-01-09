@@ -4,6 +4,7 @@ import { ParametroService } from '../../../services/sistema/ParametroService';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class ParametroController {
   
@@ -32,21 +33,12 @@ export class ParametroController {
         ativo: whereClause.ativo
       });
 
-      res.json(result);
+      sendSuccess(res, result);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao listar parâmetros', {
+      sendError(res, error, 'Erro ao listar parâmetros', 500, true, {
         context: 'ParametroController',
         action: 'index',
-        error: errorMessage,
-        stack: errorStack,
         query: req.query
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -60,32 +52,16 @@ export class ParametroController {
 
       if (!parametro) {
         // Retornar 200 com success: false ao invés de 404 para evitar redirecionamento
-        res.status(200).json({
-          success: false,
-          message: 'Parâmetro não encontrado',
-          data: null
-        });
+        sendSuccess(res, null, 'Parâmetro não encontrado', 200);
         return;
       }
 
-      res.json({
-        success: true,
-        data: parametro
-      });
+      sendSuccess(res, parametro);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter parâmetro', {
+      sendError(res, error, 'Erro ao obter parâmetro', 500, true, {
         context: 'ParametroController',
         action: 'getByChave',
-        error: errorMessage,
-        stack: errorStack,
         chave: req.params.chave
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -109,18 +85,18 @@ export class ParametroController {
           ativo: ativo !== undefined ? ativo : true
         });
 
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'Parametro',
-          parametro.id,
-          parametro.toJSON() as unknown as Record<string, unknown>
-        );
+        try {
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'Parametro',
+            parametro.id,
+            parametro.toJSON() as unknown as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
 
-        res.json({
-          success: true,
-          message: 'Parâmetro criado com sucesso',
-          data: parametro
-        });
+        sendSuccess(res, parametro, 'Parâmetro criado com sucesso');
         return;
       }
 
@@ -134,10 +110,7 @@ export class ParametroController {
         try {
           valorConvertido = JSON.parse(valor);
         } catch {
-          res.status(400).json({
-            success: false,
-            message: 'Valor JSON inválido'
-          });
+          sendValidationError(res, 'Valor JSON inválido');
           return;
         }
       }
@@ -148,34 +121,25 @@ export class ParametroController {
         ativo: ativo !== undefined ? ativo : parametro.ativo
       });
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'Parametro',
-        parametro.id,
-        dadosAnteriores as unknown as Record<string, unknown>,
-        parametro.toJSON() as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'Parametro',
+          parametro.id,
+          dadosAnteriores as unknown as Record<string, unknown>,
+          parametro.toJSON() as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Parâmetro atualizado com sucesso',
-        data: parametro
-      });
+      sendSuccess(res, parametro, 'Parâmetro atualizado com sucesso');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar parâmetro', {
+      sendError(res, error, 'Erro ao atualizar parâmetro', 500, true, {
         context: 'ParametroController',
         action: 'update',
-        error: errorMessage,
-        stack: errorStack,
         chave: req.params.chave,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -192,10 +156,7 @@ export class ParametroController {
 
       if (!Array.isArray(parametros)) {
         logger.error('Parâmetros não é um array', { body: req.body });
-        res.status(400).json({
-          success: false,
-          message: 'Parâmetros devem ser um array'
-        });
+        sendValidationError(res, 'Parâmetros devem ser um array');
         return;
       }
 
@@ -332,25 +293,12 @@ export class ParametroController {
         results
       });
 
-      res.json({
-        success: true,
-        message: 'Parâmetros atualizados',
-        data: results
-      });
+      sendSuccess(res, results, 'Parâmetros atualizados');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar múltiplos parâmetros', {
+      sendError(res, error, 'Erro ao atualizar múltiplos parâmetros', 500, true, {
         context: 'ParametroController',
         action: 'updateMultiple',
-        error: errorMessage,
-        stack: errorStack,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -362,21 +310,12 @@ export class ParametroController {
 
       const result = await ParametroService.getByCategoria(categoria);
 
-      res.json(result);
+      sendSuccess(res, result);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter parâmetros por categoria', {
+      sendError(res, error, 'Erro ao obter parâmetros por categoria', 500, true, {
         context: 'ParametroController',
         action: 'getByCategoria',
-        error: errorMessage,
-        stack: errorStack,
         categoria: req.params.categoria
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -432,24 +371,11 @@ export class ParametroController {
         results.push(parametro);
       }
 
-      res.json({
-        success: true,
-        message: 'Parâmetros resetados para valores padrão',
-        data: results
-      });
+      sendSuccess(res, results, 'Parâmetros resetados para valores padrão');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao resetar parâmetros', {
+      sendError(res, error, 'Erro ao resetar parâmetros', 500, true, {
         context: 'ParametroController',
-        action: 'resetDefaults',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
+        action: 'resetDefaults'
       });
     }
   }

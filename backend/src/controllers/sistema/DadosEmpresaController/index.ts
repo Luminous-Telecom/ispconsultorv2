@@ -5,6 +5,7 @@ import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class DadosEmpresaController {
   // Dados padrão para criação de empresa
@@ -66,17 +67,12 @@ export class DadosEmpresaController {
         ...publicData 
       } = dadosEmpresaJson;
       
-      res.json(publicData);
+      sendSuccess(res, publicData);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar dados públicos da empresa', {
+      sendError(res, error, 'Erro ao buscar dados públicos da empresa', 500, true, {
         context: 'DadosEmpresaController',
-        action: 'getPublic',
-        error: errorMessage,
-        stack: errorStack
+        action: 'getPublic'
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
@@ -89,7 +85,7 @@ export class DadosEmpresaController {
       const hasValidToken = authHeader?.startsWith('Bearer ') && authenticatedReq.user;
       
       if (!hasValidToken) {
-        res.status(404).end();
+        sendNotFound(res, '');
         return;
       }
 
@@ -104,17 +100,12 @@ export class DadosEmpresaController {
       dadosEmpresaJson.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosEmpresaJson.responsavel_assinatura);
 
       // Retornar dados completos apenas para requisições autenticadas do sistema
-      res.json(dadosEmpresaJson);
+      sendSuccess(res, dadosEmpresaJson);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar dados da empresa', {
+      sendError(res, error, 'Erro ao buscar dados da empresa', 500, true, {
         context: 'DadosEmpresaController',
-        action: 'get',
-        error: errorMessage,
-        stack: errorStack
+        action: 'get'
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
@@ -130,40 +121,43 @@ export class DadosEmpresaController {
 
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresaService.create(dadosAtualizados);
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'DadosEmpresa',
-          dadosEmpresa.id,
-          dadosEmpresa.toJSON() as Record<string, unknown>
-        );
+        try {
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'DadosEmpresa',
+            dadosEmpresa.id,
+            dadosEmpresa.toJSON() as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       } else {
         dadosEmpresa = await DadosEmpresaService.update(dadosAtualizados);
         await dadosEmpresa.reload();
-        await registrarAtualizacao(
-          req as AuthenticatedRequest,
-          'DadosEmpresa',
-          dadosEmpresa.id,
-          dadosAnteriores as Record<string, unknown>,
-          dadosEmpresa.toJSON() as Record<string, unknown>
-        );
+        try {
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'DadosEmpresa',
+            dadosEmpresa.id,
+            dadosAnteriores as Record<string, unknown>,
+            dadosEmpresa.toJSON() as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       }
 
       const dadosEmpresaJson = dadosEmpresa.toJSON();
       dadosEmpresaJson.logo = DadosEmpresaController.normalizePath(dadosEmpresaJson.logo);
       dadosEmpresaJson.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosEmpresaJson.responsavel_assinatura);
 
-      res.json(dadosEmpresaJson);
+      sendSuccess(res, dadosEmpresaJson);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar dados da empresa', {
+      sendError(res, error, 'Erro ao atualizar dados da empresa', 500, true, {
         context: 'DadosEmpresaController',
         action: 'update',
-        error: errorMessage,
-        stack: errorStack,
         body: req.body
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
@@ -176,16 +170,10 @@ export class DadosEmpresaController {
         }
         const body = req.body as MulterErrorBody;
         if (body && body.error) {
-          res.status(400).json({ 
-            success: false,
-            message: body.error 
-          });
+          sendValidationError(res, body.error);
           return;
         }
-        res.status(400).json({ 
-          success: false,
-          message: 'Arquivo não enviado' 
-        });
+        sendValidationError(res, 'Arquivo não enviado');
         return;
       }
 
@@ -201,10 +189,7 @@ export class DadosEmpresaController {
             }
           } catch {}
         }
-        res.status(400).json({ 
-          success: false,
-          message: 'Tipo de arquivo inválido. Apenas imagens são permitidas (JPG, PNG, GIF, WEBP)' 
-        });
+        sendValidationError(res, 'Tipo de arquivo inválido. Apenas imagens são permitidas (JPG, PNG, GIF, WEBP)');
         return;
       }
 
@@ -214,12 +199,16 @@ export class DadosEmpresaController {
 
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), logo: filePath });
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'DadosEmpresa',
-          dadosEmpresa.id,
-          dadosEmpresa.toJSON() as Record<string, unknown>
-        );
+        try {
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'DadosEmpresa',
+            dadosEmpresa.id,
+            dadosEmpresa.toJSON() as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       } else {
         // Deletar logo antiga se existir (pode ter nome diferente)
         if (dadosEmpresa.logo) {
@@ -245,28 +234,24 @@ export class DadosEmpresaController {
         dadosEmpresa = await DadosEmpresaService.update({ logo: filePath });
         await dadosEmpresa.reload();
         
-        await registrarAtualizacao(
-          req as AuthenticatedRequest,
-          'DadosEmpresa',
-          dadosEmpresa.id,
-          dadosAnteriores as Record<string, unknown>,
-          dadosEmpresa.toJSON() as Record<string, unknown>
-        );
+        try {
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'DadosEmpresa',
+            dadosEmpresa.id,
+            dadosAnteriores as Record<string, unknown>,
+            dadosEmpresa.toJSON() as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       }
 
-      res.json({ success: true, logo: filePath });
+      sendSuccess(res, { success: true, logo: filePath });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao fazer upload da logo', {
+      sendError(res, error, 'Erro ao fazer upload da logo', 500, true, {
         context: 'DadosEmpresaController',
-        action: 'uploadLogo',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({ 
-        success: false,
-        message: errorMessage 
+        action: 'uploadLogo'
       });
     }
   }
@@ -276,22 +261,17 @@ export class DadosEmpresaController {
       const dadosEmpresa = await DadosEmpresaService.findOne();
       
       if (!dadosEmpresa || !dadosEmpresa.logo) {
-        res.status(404).json({ error: 'Logo não encontrada' });
+        sendNotFound(res, 'Logo não encontrada');
         return;
       }
 
       // Redirecionar para o arquivo de upload
       res.redirect(dadosEmpresa.logo);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar logo', {
+      sendError(res, error, 'Erro ao buscar logo', 500, true, {
         context: 'DadosEmpresaController',
-        action: 'getLogo',
-        error: errorMessage,
-        stack: errorStack
+        action: 'getLogo'
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
@@ -304,16 +284,10 @@ export class DadosEmpresaController {
         }
         const body = req.body as MulterErrorBody;
         if (body && body.error) {
-          res.status(400).json({ 
-            success: false,
-            message: body.error 
-          });
+          sendValidationError(res, body.error);
           return;
         }
-        res.status(400).json({ 
-          success: false,
-          message: 'Arquivo não enviado' 
-        });
+        sendValidationError(res, 'Arquivo não enviado');
         return;
       }
 
@@ -329,10 +303,7 @@ export class DadosEmpresaController {
             }
           } catch {}
         }
-        res.status(400).json({ 
-          success: false,
-          message: 'Tipo de arquivo inválido. Apenas arquivos PNG são permitidos' 
-        });
+        sendValidationError(res, 'Tipo de arquivo inválido. Apenas arquivos PNG são permitidos');
         return;
       }
 
@@ -366,19 +337,11 @@ export class DadosEmpresaController {
         dadosEmpresa = await DadosEmpresaService.update({ responsavel_assinatura: filePath });
       }
 
-      res.json({ success: true, responsavel_assinatura: filePath });
+      sendSuccess(res, { success: true, responsavel_assinatura: filePath });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao fazer upload da assinatura', {
+      sendError(res, error, 'Erro ao fazer upload da assinatura', 500, true, {
         context: 'DadosEmpresaController',
-        action: 'uploadAssinatura',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({ 
-        success: false,
-        message: errorMessage 
+        action: 'uploadAssinatura'
       });
     }
   }

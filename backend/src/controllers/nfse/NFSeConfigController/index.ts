@@ -7,6 +7,7 @@ import type { AuthenticatedRequest } from '../../../types/auth';
 import Joi from 'joi';
 import axios from 'axios';
 import { URLSearchParams } from 'url';
+import { sendSuccess, sendError, sendValidationError, sendUnauthorized } from '../../../utils/responseUtils';
 
 export class NFSeConfigController {
   // Schema de validação
@@ -32,31 +33,26 @@ export class NFSeConfigController {
 
       // Registrar criação se for novo
       if (config.created_at.getTime() === config.updated_at.getTime()) {
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'NFSeConfig',
-          config.id,
-          config.toJSON() as unknown as Record<string, unknown>
-        );
+        try {
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'NFSeConfig',
+            config.id,
+            config.toJSON() as unknown as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       }
 
-      return res.json({
-        success: true,
-        data: config
-      });
+      sendSuccess(res, config);
+      return res;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter configuração NFS-e', {
+      sendError(res, error, 'Erro ao obter configuração NFS-e', 500, true, {
         context: 'NFSeConfigController',
-        action: 'get',
-        error: errorMessage,
-        stack: errorStack
+        action: 'get'
       });
-      return res.status(500).json({
-        success: false,
-        message: 'Erro ao obter configuração NFS-e'
-      });
+      return res;
     }
   }
 
@@ -75,11 +71,18 @@ export class NFSeConfigController {
           message: detail.message
         }));
 
-        return res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: errorMessages
-        });
+        // Converter para Record<string, string[]> esperado pelo sendValidationError
+        const errorsByField: Record<string, string[]> = errorMessages.reduce((acc, err) => {
+          const field = err.field || 'general';
+          if (!acc[field]) {
+            acc[field] = [];
+          }
+          acc[field].push(err.message);
+          return acc;
+        }, {} as Record<string, string[]>);
+
+        sendValidationError(res, 'Dados inválidos', errorsByField);
+        return res;
       }
 
       // Obter configuração existente (ou criar se não existir)
@@ -92,42 +95,40 @@ export class NFSeConfigController {
       
       // Se foi criado agora, registrar criação
       if (foiCriadoAgora) {
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'NFSeConfig',
-          configAtualizado.id,
-          configAtualizado.toJSON() as unknown as Record<string, unknown>
-        );
+        try {
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'NFSeConfig',
+            configAtualizado.id,
+            configAtualizado.toJSON() as unknown as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       } else {
         // Se já existia, registrar atualização
-        await registrarAtualizacao(
-          req as AuthenticatedRequest,
-          'NFSeConfig',
-          configAtualizado.id,
-          dadosAnteriores as unknown as Record<string, unknown>,
-          configAtualizado.toJSON() as unknown as Record<string, unknown>
-        );
+        try {
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'NFSeConfig',
+            configAtualizado.id,
+            dadosAnteriores as unknown as Record<string, unknown>,
+            configAtualizado.toJSON() as unknown as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       }
 
-      return res.json({
-        success: true,
-        message: 'Configuração NFS-e atualizada com sucesso',
-        data: configAtualizado
-      });
+      sendSuccess(res, configAtualizado, 'Configuração NFS-e atualizada com sucesso');
+      return res;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar configuração NFS-e', {
+      sendError(res, error, 'Erro ao atualizar configuração NFS-e', 500, true, {
         context: 'NFSeConfigController',
         action: 'update',
-        error: errorMessage,
-        stack: errorStack,
         body: req.body
       });
-      return res.status(500).json({
-        success: false,
-        message: 'Erro ao atualizar configuração NFS-e'
-      });
+      return res;
     }
   }
 
@@ -147,10 +148,8 @@ export class NFSeConfigController {
       // Testar conexão do Asaas
       if (provider === 'ASAAS') {
         if (!asaas_api_key) {
-          return res.status(400).json({
-            success: false,
-            message: 'API Key do Asaas é obrigatória para testar conexão'
-          });
+          sendValidationError(res, 'API Key do Asaas é obrigatória para testar conexão');
+          return res;
         }
 
         try {
@@ -170,15 +169,11 @@ export class NFSeConfigController {
 
           if (response.data) {
             logger.info('Teste de conexão Asaas bem-sucedido');
-            return res.json({
-              success: true,
-              message: 'Conexão com Asaas testada com sucesso! A API Key está válida.'
-            });
+            sendSuccess(res, undefined, 'Conexão com Asaas testada com sucesso! A API Key está válida.');
+            return res;
           } else {
-            return res.status(401).json({
-              success: false,
-              message: 'Erro ao validar API Key do Asaas'
-            });
+            sendUnauthorized(res, 'Erro ao validar API Key do Asaas');
+            return res;
           }
         } catch (authError: any) {
           const statusCode = authError?.response?.status || 500;
@@ -207,10 +202,8 @@ export class NFSeConfigController {
       // Testar autenticação do Portal Nacional
       if (!portal_nacional_username || !portal_nacional_password) {
         logger.warn('Validação falhou: usuário ou senha não fornecidos');
-        return res.status(400).json({
-          success: false,
-          message: 'Usuário e senha são obrigatórios para testar autenticação'
-        });
+        sendValidationError(res, 'Usuário e senha são obrigatórios para testar autenticação');
+        return res;
       }
 
       const ambiente = portal_nacional_ambiente || 'HOMOLOGACAO';
@@ -273,16 +266,12 @@ export class NFSeConfigController {
 
         if (response.data?.access_token) {
           logger.info('Autenticação bem-sucedida');
-          return res.json({
-            success: true,
-            message: 'Autenticação realizada com sucesso!'
-          });
+          sendSuccess(res, undefined, 'Autenticação realizada com sucesso!');
+          return res;
         } else {
           logger.warn('Autenticação falhou: token não encontrado na resposta');
-          return res.status(401).json({
-            success: false,
-            message: 'Autenticação falhou: credenciais inválidas'
-          });
+          sendUnauthorized(res, 'Autenticação falhou: credenciais inválidas');
+          return res;
         }
       } catch (authError: any) {
         let errorMessage: string;
@@ -337,27 +326,20 @@ export class NFSeConfigController {
           url: `${baseUrl}/auth/login`
         });
 
-        return res.status(statusCode).json({
-          success: false,
-          message: errorMessage
+        sendError(res, authError, errorMessage, statusCode, true, {
+          context: 'NFSeConfigController',
+          action: 'testAuth',
+          provider: 'PORTAL_NACIONAL'
         });
+        return res;
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      logger.error('Erro ao testar autenticação NFS-e', {
+      sendError(res, error, 'Erro interno ao testar autenticação', 500, true, {
         context: 'NFSeConfigController',
         action: 'testAuth',
-        error: errorMessage,
-        stack: errorStack,
         errorType: error?.constructor?.name
       });
-
-      return res.status(500).json({
-        success: false,
-        message: 'Erro interno ao testar autenticação'
-      });
+      return res;
     }
   }
 }

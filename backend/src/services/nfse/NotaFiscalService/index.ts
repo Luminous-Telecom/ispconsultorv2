@@ -2,6 +2,7 @@ import { NotaFiscal } from '../../../models/nfse/NotaFiscal';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Op, WhereOptions } from 'sequelize';
 import { sequelize } from '../../../config/database';
+import { buildDateFilter, buildNumericSearchFilter, combineFilters } from '../../../utils/queryFilters';
 
 export interface ListNotasFiscaisFilters {
   page?: number;
@@ -45,99 +46,101 @@ export class NotaFiscalService {
     const limitNumber = parseInt(String(limit), 10);
     const offset = (pageNumber - 1) * limitNumber;
 
-    const where: any = {};
+    // Construir filtros usando helpers
+    const whereConditions: (WhereOptions | null)[] = [];
 
+    // Filtro de status
+    if (status) {
+      whereConditions.push({ status } as WhereOptions);
+    }
+
+    // Filtro de cliente
+    if (cliente_id) {
+      whereConditions.push({ cliente_id } as WhereOptions);
+    }
+
+    // Filtro de data usando helper
+    whereConditions.push(buildDateFilter(data_inicio, data_fim, 'data_emissao'));
+
+    // Filtro de busca
     if (search) {
       const searchTerm = (search as string).trim();
       const isNumericSearch = !isNaN(Number(searchTerm));
       const termNum = parseInt(searchTerm, 10);
       const likePattern = `%${searchTerm}%`;
+      const orConditions: WhereOptions[] = [];
 
       if (searchField && typeof searchField === 'string') {
         switch (searchField) {
           case 'id':
             if (isNumericSearch) {
-              where.id = termNum;
+              orConditions.push({ id: termNum } as WhereOptions);
             } else {
-              where.id = { [Op.eq]: -1 };
+              whereConditions.push({ id: { [Op.eq]: -1 } } as WhereOptions);
             }
             break;
           case 'numero':
-            where.numero = { [Op.like]: likePattern };
+            orConditions.push({ numero: { [Op.like]: likePattern } } as WhereOptions);
             break;
           case 'chave_acesso':
-            where.chave_acesso = { [Op.like]: likePattern };
+            orConditions.push({ chave_acesso: { [Op.like]: likePattern } } as WhereOptions);
             break;
           case 'protocolo':
-            where.protocolo = { [Op.like]: likePattern };
+            orConditions.push({ protocolo: { [Op.like]: likePattern } } as WhereOptions);
             break;
           case 'valor':
             if (isNumericSearch) {
-              where.valor_total = {
-                [Op.between]: [termNum * 0.9, termNum * 1.1]
-              };
+              const numericFilter = buildNumericSearchFilter(searchTerm, 'valor_total', 0.1);
+              if (numericFilter) orConditions.push(numericFilter);
             } else {
-              where.id = { [Op.eq]: -1 };
+              whereConditions.push({ id: { [Op.eq]: -1 } } as WhereOptions);
             }
             break;
           case 'status':
-            where.status = { [Op.like]: likePattern };
+            orConditions.push({ status: { [Op.like]: likePattern } } as WhereOptions);
             break;
           case 'nfse_status':
-            where.nfse_status = { [Op.like]: likePattern };
+            orConditions.push({ nfse_status: { [Op.like]: likePattern } } as WhereOptions);
             break;
           case 'titulo_id':
             if (isNumericSearch) {
-              where.titulo_id = termNum;
+              orConditions.push({ titulo_id: termNum } as WhereOptions);
             } else {
-              where.id = { [Op.eq]: -1 };
+              whereConditions.push({ id: { [Op.eq]: -1 } } as WhereOptions);
             }
             break;
           case 'cliente':
-            where[Op.or] = [
-              sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = notas_fiscais.cliente_id AND (clientes.razao_social LIKE '${searchTerm.replace(/'/g, "''")}' OR clientes.nome_fantasia LIKE '${searchTerm.replace(/'/g, "''")}'))`)
-            ];
+            orConditions.push(
+              sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = notas_fiscais.cliente_id AND (clientes.razao_social LIKE '${searchTerm.replace(/'/g, "''")}' OR clientes.nome_fantasia LIKE '${searchTerm.replace(/'/g, "''")}'))`) as any
+            );
             break;
           default:
-            where[Op.or] = [
-              { numero: { [Op.like]: likePattern } },
-              { chave_acesso: { [Op.like]: likePattern } },
-              { protocolo: { [Op.like]: likePattern } }
-            ];
+            orConditions.push(
+              { numero: { [Op.like]: likePattern } } as WhereOptions,
+              { chave_acesso: { [Op.like]: likePattern } } as WhereOptions,
+              { protocolo: { [Op.like]: likePattern } } as WhereOptions
+            );
+            break;
         }
       } else {
-        const orConditions: any[] = [
-          { numero: { [Op.like]: likePattern } },
-          { chave_acesso: { [Op.like]: likePattern } },
-          { protocolo: { [Op.like]: likePattern } }
-        ];
-        
+        // Busca genérica
+        orConditions.push(
+          { numero: { [Op.like]: likePattern } } as WhereOptions,
+          { chave_acesso: { [Op.like]: likePattern } } as WhereOptions,
+          { protocolo: { [Op.like]: likePattern } } as WhereOptions
+        );
         if (isNumericSearch) {
-          orConditions.push({ id: termNum });
-          orConditions.push({ titulo_id: termNum });
+          orConditions.push({ id: termNum } as WhereOptions, { titulo_id: termNum } as WhereOptions);
         }
-        
-        where[Op.or] = orConditions;
+      }
+
+      if (orConditions.length > 0) {
+        whereConditions.push({ [Op.or]: orConditions } as WhereOptions);
       }
     }
 
-    if (status) {
-      where.status = status;
-    }
-
-    if (cliente_id) {
-      where.cliente_id = cliente_id;
-    }
-
-    if (data_inicio || data_fim) {
-      where.data_emissao = {};
-      if (data_inicio) {
-        where.data_emissao[Op.gte] = new Date(data_inicio as string);
-      }
-      if (data_fim) {
-        where.data_emissao[Op.lte] = new Date(data_fim as string);
-      }
-    }
+    // Combinar todos os filtros
+    const where = combineFilters(...whereConditions) || {};
 
     const { count, rows } = await NotaFiscal.findAndCountAll({
       where,

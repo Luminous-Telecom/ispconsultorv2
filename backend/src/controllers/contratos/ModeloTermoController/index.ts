@@ -10,6 +10,7 @@ import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class ModeloTermoController {
   // Listar todos os modelos de termo
@@ -18,16 +19,9 @@ export class ModeloTermoController {
       const result = await ModeloDocumentoService.getByType('termo', true);
       const modelos = result;
 
-      res.json({
-        success: true,
-        data: modelos
-      });
+      sendSuccess(res, modelos);
     } catch (error) {
-      logger.error('Erro ao listar modelos de termo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar modelos de termo', 500, true);
     }
   }
 
@@ -38,23 +32,13 @@ export class ModeloTermoController {
       const modelo = await ModeloDocumentoService.getById(id);
 
       if (!modelo) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de termo não encontrado'
-        });
+        sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: modelo
-      });
+      sendSuccess(res, modelo);
     } catch (error) {
-      logger.error('Erro ao buscar modelo de termo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar modelo de termo', 500, true);
     }
   }
 
@@ -64,10 +48,7 @@ export class ModeloTermoController {
       const { nome, descricao, tipo_termo, conteudo } = req.body;
 
       if (!nome || !conteudo) {
-        res.status(400).json({
-          success: false,
-          message: 'Nome e conteúdo são obrigatórios'
-        });
+        sendValidationError(res, 'Nome e conteúdo são obrigatórios');
         return;
       }
 
@@ -84,24 +65,20 @@ export class ModeloTermoController {
         criptografia: false
       });
 
-      await registrarCriacao(
-        req as AuthenticatedRequest,
-        'ModeloTermo',
-        modelo.id,
-        modelo.toJSON() as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'ModeloTermo',
+          modelo.id,
+          modelo.toJSON() as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        message: 'Modelo de termo criado com sucesso',
-        data: modelo
-      });
+      sendSuccess(res, modelo, 'Modelo de termo criado com sucesso', 201);
     } catch (error) {
-      logger.error('Erro ao criar modelo de termo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao criar modelo de termo', 500, true);
     }
   }
 
@@ -113,10 +90,7 @@ export class ModeloTermoController {
 
       const modelo = await ModeloDocumentoService.getById(id);
       if (!modelo) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de termo não encontrado'
-        });
+        sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
 
@@ -133,25 +107,21 @@ export class ModeloTermoController {
       const dadosNovos = modelo.toJSON() as unknown as Record<string, unknown>;
       setAuditData(req, dadosAnteriores, dadosNovos);
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'ModeloTermo',
-        modelo.id,
-        dadosAnteriores,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ModeloTermo',
+          modelo.id,
+          dadosAnteriores,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Modelo de termo atualizado com sucesso',
-        data: modelo
-      });
+      sendSuccess(res, modelo, 'Modelo de termo atualizado com sucesso');
     } catch (error) {
-      logger.error('Erro ao atualizar modelo de termo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao atualizar modelo de termo', 500, true);
     }
   }
 
@@ -162,10 +132,7 @@ export class ModeloTermoController {
       const modelo = await ModeloDocumentoService.getById(id);
 
       if (!modelo) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de termo não encontrado'
-        });
+        sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
 
@@ -174,23 +141,20 @@ export class ModeloTermoController {
       
       await ModeloDocumentoService.delete(id);
 
-      await registrarExclusao(
-        req as AuthenticatedRequest,
-        'ModeloTermo',
-        modelo.id,
-        dadosAnteriores
-      );
+      try {
+        await registrarExclusao(
+          req as AuthenticatedRequest,
+          'ModeloTermo',
+          modelo.id,
+          dadosAnteriores
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Modelo de termo excluído com sucesso'
-      });
+      sendSuccess(res, undefined, 'Modelo de termo excluído com sucesso');
     } catch (error) {
-      logger.error('Erro ao excluir modelo de termo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao excluir modelo de termo', 500, true);
     }
   }
 
@@ -200,16 +164,9 @@ export class ModeloTermoController {
       const { tipo } = req.params;
       const modelos = await ModeloDocumentoService.getByType('termo', true);
 
-      res.json({
-        success: true,
-        data: modelos
-      });
+      sendSuccess(res, modelos);
     } catch (error) {
-      logger.error('Erro ao buscar modelos por tipo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar modelos por tipo', 500, true);
     }
   }
 
@@ -220,26 +177,17 @@ export class ModeloTermoController {
       const modelo = await ModeloDocumentoService.getById(id);
 
       if (!modelo) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de termo não encontrado'
-        });
+        sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
 
       if (modelo.tipo !== 'termo') {
-        res.status(400).json({
-          success: false,
-          message: 'O documento não é um modelo de termo'
-        });
+        sendValidationError(res, 'O documento não é um modelo de termo');
         return;
       }
 
       if (!modelo.conteudo) {
-        res.status(400).json({
-          success: false,
-          message: 'O modelo de termo não possui conteúdo'
-        });
+        sendValidationError(res, 'O modelo de termo não possui conteúdo');
         return;
       }
 
@@ -259,9 +207,9 @@ export class ModeloTermoController {
       );
 
       if (!pdfBuffer || pdfBuffer.length === 0) {
-        res.status(500).json({
-          success: false,
-          message: 'Erro ao gerar PDF: buffer vazio'
+        sendError(res, new Error('Erro ao gerar PDF: buffer vazio'), 'Erro ao gerar PDF: buffer vazio', 500, true, {
+          context: 'ModeloTermoController',
+          action: 'gerarPdf'
         });
         return;
       }
@@ -274,11 +222,7 @@ export class ModeloTermoController {
       res.end(pdfBuffer);
 
     } catch (error: unknown) {
-      logger.error('Erro ao gerar PDF do modelo de termo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao gerar PDF do modelo de termo', 500, true);
     }
   }
 
@@ -291,10 +235,7 @@ export class ModeloTermoController {
       const modelo = await ModeloDocumentoService.getById(id);
 
       if (!modelo) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de termo não encontrado'
-        });
+        sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
 
@@ -305,10 +246,7 @@ export class ModeloTermoController {
         const cliente = await ClienteService.getById(clienteId as string);
         
         if (!cliente) {
-          res.status(404).json({
-            success: false,
-            message: 'Cliente não encontrado'
-          });
+          sendNotFound(res, 'Cliente não encontrado');
           return;
         }
 
@@ -349,11 +287,7 @@ export class ModeloTermoController {
       res.send(pdfBuffer);
 
     } catch (error) {
-      logger.error('Erro ao gerar PDF de teste do modelo de termo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao gerar PDF de teste do modelo de termo', 500, true);
     }
   }
 
@@ -365,36 +299,24 @@ export class ModeloTermoController {
       const modelo = await ModeloDocumentoService.getById(id);
 
       if (!modelo) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de termo não encontrado'
-        });
+        sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
 
       if (modelo.tipo !== 'termo') {
-        res.status(400).json({
-          success: false,
-          message: 'O documento não é um modelo de termo'
-        });
+        sendValidationError(res, 'O documento não é um modelo de termo');
         return;
       }
 
       if (!modelo.conteudo) {
-        res.status(400).json({
-          success: false,
-          message: 'O modelo de termo não possui conteúdo'
-        });
+        sendValidationError(res, 'O modelo de termo não possui conteúdo');
         return;
       }
 
       const contrato = await ContratoService.getById(contratoId);
 
       if (!contrato) {
-        res.status(404).json({
-          success: false,
-          message: 'Contrato não encontrado'
-        });
+        sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
@@ -419,10 +341,7 @@ export class ModeloTermoController {
       );
 
       if (!pdfBuffer || pdfBuffer.length === 0) {
-        res.status(500).json({
-          success: false,
-          message: 'Erro ao gerar PDF: buffer vazio'
-        });
+        sendError(res, new Error('Buffer vazio'), 'Erro ao gerar PDF: buffer vazio', 500, false);
         return;
       }
 
@@ -433,11 +352,7 @@ export class ModeloTermoController {
       });
       res.end(pdfBuffer);
     } catch (error: unknown) {
-      logger.error('Erro ao gerar PDF do termo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao gerar PDF do termo', 500, true);
     }
   }
 }

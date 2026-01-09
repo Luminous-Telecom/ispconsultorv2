@@ -148,12 +148,92 @@ export async function registrarAuditoriaElasticsearch(
           'dataValues', '_changed', '_options', 'isNewRecord', '_previousDataValues', 
           '$modelOptions', 'Model', 'sequelize', 'tableName',
           'xml', 'pdf_base64', 'pdf_url', 'danfe_url',
-          'pagamentos', 'arquivos', 'created_at_formatada', 'saldo_devedor', 'vencida'
+          'pagamentos', 'arquivos', 'saldo_devedor', 'vencida'
         ];
         
+        // Campos de relacionamento que devem ser convertidos para arrays de IDs
+        const relacionamentosArray = ['planos', 'titulos', 'contratos', 'termos', 'mensagens', 'notas_fiscais', 'parcelas', 'documentos', 'anexos'];
+        
         for (const [key, value] of Object.entries(dados)) {
-          // Ignorar campos internos do Sequelize, campos muito grandes e relacionamentos
+          // Ignorar campos internos do Sequelize e campos muito grandes
           if (key.startsWith('_') || key.startsWith('$') || camposExcluir.includes(key)) {
+            continue;
+          }
+          
+          // Ignorar valores null para evitar conflitos de mapeamento no Elasticsearch
+          if (value === null || value === undefined) {
+            continue;
+          }
+          
+          // Tratar relacionamentos que são arrays (planos, titulos, contratos, etc.)
+          if (relacionamentosArray.includes(key)) {
+            if (Array.isArray(value)) {
+              // Extrair apenas IDs dos objetos do relacionamento que estão ativos
+              const ids = value
+                .slice(0, 10) // Limitar a 10 itens para não sobrecarregar
+                .map((item: any) => {
+                  if (item && typeof item === 'object' && item.id !== undefined) {
+                    // Verificar se o item está ativo baseado no tipo de relacionamento
+                    let isAtivo = true; // Por padrão, incluir se não tiver campo de status
+                    
+                    // Para contratos: status === 'ativo'
+                    if (key === 'contratos' && item.status) {
+                      isAtivo = String(item.status).toLowerCase() === 'ativo';
+                    }
+                    // Para títulos: status !== 'cancelado'
+                    else if (key === 'titulos' && item.status) {
+                      isAtivo = String(item.status).toLowerCase() !== 'cancelado';
+                    }
+                    // Para outros relacionamentos: verificar campo ativo ou status
+                    else if (item.ativo !== undefined) {
+                      isAtivo = item.ativo === true || item.ativo === 1;
+                    } else if (item.status !== undefined) {
+                      const statusLower = String(item.status).toLowerCase();
+                      isAtivo = !['cancelado', 'inativo', 'excluido', 'deleted', 'suspenso'].includes(statusLower);
+                    }
+                    
+                    return isAtivo ? item.id : null;
+                  }
+                  return null;
+                })
+                .filter((id: any) => id !== null);
+              
+              if (ids.length > 0) {
+                limpo[`${key}_ids`] = ids; // Usar sufixo _ids para indicar que é array de IDs
+              }
+            } else if (value && typeof value === 'object' && (value as any).id !== undefined) {
+              // Se for um único objeto, verificar se está ativo antes de incluir
+              const item = value as any;
+              let isAtivo = true; // Por padrão, incluir se não tiver campo de status
+              
+              // Para contratos: status === 'ativo'
+              if (key === 'contratos' && item.status) {
+                isAtivo = String(item.status).toLowerCase() === 'ativo';
+              }
+              // Para títulos: status !== 'cancelado'
+              else if (key === 'titulos' && item.status) {
+                isAtivo = String(item.status).toLowerCase() !== 'cancelado';
+              }
+              // Para outros relacionamentos: verificar campo ativo ou status
+              else if (item.ativo !== undefined) {
+                isAtivo = item.ativo === true || item.ativo === 1;
+              } else if (item.status !== undefined) {
+                const statusLower = String(item.status).toLowerCase();
+                isAtivo = !['cancelado', 'inativo', 'excluido', 'deleted', 'suspenso'].includes(statusLower);
+              }
+              
+              if (isAtivo) {
+                limpo[`${key}_id`] = item.id;
+              }
+            }
+            continue;
+          }
+          
+          // Incluir created_at_formatada e outros campos formatados como strings
+          if (key === 'created_at_formatada' || key.endsWith('_formatada')) {
+            if (typeof value === 'string') {
+              limpo[key] = value;
+            }
             continue;
           }
           
@@ -166,8 +246,8 @@ export async function registrarAuditoriaElasticsearch(
             continue;
           }
           
-          // Manter todos os valores primitivos
-          if (value === null || value instanceof Date || typeof value !== 'object') {
+          // Manter valores primitivos (exceto null que já foi tratado)
+          if (value instanceof Date || typeof value !== 'object') {
             if (value instanceof Date) {
               limpo[key] = safeFormatDateISOLocal(value);
             } else {
@@ -176,8 +256,13 @@ export async function registrarAuditoriaElasticsearch(
             continue;
           }
           
-          // Para arrays, converter para array de IDs ou remover se for relacionamento
+          // Para arrays genéricos, converter para array de IDs ou valores primitivos
           if (Array.isArray(value)) {
+            // Se array vazio, não incluir para evitar conflitos de mapeamento
+            if (value.length === 0) {
+              continue;
+            }
+            
             const arrLimpo = value.slice(0, 5).map((item: any) => {
               if (item && typeof item === 'object' && item.id !== undefined) {
                 return item.id;
@@ -185,6 +270,7 @@ export async function registrarAuditoriaElasticsearch(
               return typeof item === 'object' ? null : item;
             }).filter((item: any) => item !== null);
             
+            // Só incluir se tiver itens válidos
             if (arrLimpo.length > 0) {
               limpo[key] = arrLimpo;
             }

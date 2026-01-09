@@ -7,6 +7,7 @@ import { ValidationError } from 'sequelize';
 import { randomBytes } from 'crypto';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
+import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 
 export class BancoController {
   /**
@@ -15,15 +16,9 @@ export class BancoController {
   static async findAtivos(req: Request, res: Response): Promise<void> {
     try {
       const result = await BancoService.findAtivos();
-      res.json(result);
+      sendSuccess(res, result);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao buscar bancos ativos', { error: errorMessage });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
-      });
+      sendError(res, error, 'Erro ao buscar bancos ativos', 500, true);
     }
   }
 
@@ -39,13 +34,9 @@ export class BancoController {
         limit: Number(limit)
       });
       
-      res.json(result);
+      sendSuccess(res, result);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao listar bancos', {
-        error: errorMessage
-      });
-      res.status(500).json({ error: 'Erro interno do servidor' });
+      sendError(res, error, 'Erro ao listar bancos', 500, true);
     }
   }
 
@@ -59,21 +50,15 @@ export class BancoController {
       const banco = await BancoService.getById(id);
       
       if (!banco) {
-        res.status(404).json({ error: 'Banco não encontrado' });
+        sendNotFound(res, 'Banco não encontrado');
         return;
       }
       
-      res.json({
-        success: true,
-        data: banco
-      });
+      sendSuccess(res, banco);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao buscar banco', {
-        banco_id: req.params.id,
-        error: errorMessage
+      sendError(res, error, 'Erro ao buscar banco', 500, true, {
+        banco_id: req.params.id
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
@@ -86,12 +71,12 @@ export class BancoController {
       
       // Validações básicas
       if (!dadosBanco.nome) {
-        res.status(400).json({ error: 'Nome do banco é obrigatório' });
+        sendValidationError(res, 'Nome do banco é obrigatório');
         return;
       }
       
       if (!dadosBanco.tipo_banco) {
-        res.status(400).json({ error: 'Tipo do banco é obrigatório' });
+        sendValidationError(res, 'Tipo do banco é obrigatório');
         return;
       }
       
@@ -99,19 +84,23 @@ export class BancoController {
       const bancoExistente = await BancoService.existsByName(dadosBanco.nome);
       
       if (bancoExistente) {
-        res.status(400).json({ error: 'Já existe um banco com este nome' });
+        sendValidationError(res, 'Já existe um banco com este nome');
         return;
       }
       
       const banco = await BancoService.create(dadosBanco);
       
       // Registrar auditoria
-      await registrarCriacao(
-        req,
-        'Banco',
-        banco.id,
-        banco.toJSON() as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req,
+          'Banco',
+          banco.id,
+          banco.toJSON() as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       
       logger.info('Banco criado com sucesso', {
         banco_id: banco.id,
@@ -119,38 +108,17 @@ export class BancoController {
         tipo_banco: banco.tipo_banco
       });
       
-      res.status(201).json({
-        success: true,
-        message: 'Banco cadastrado com sucesso!',
-        data: banco
-      });
+      sendSuccess(res, banco, 'Banco cadastrado com sucesso!', 201);
     } catch (error: unknown) {
       // Capturar erros de validação do Sequelize
       if (error instanceof ValidationError) {
         const errorMessages = error.errors.map(err => err.message);
-        logger.warn('Erro de validação ao criar banco', {
-          errors: errorMessages,
-          body: req.body
-        });
-        res.status(400).json({
-          success: false,
-          error: 'Dados inválidos',
-          message: errorMessages.join(', ')
-        });
+        sendValidationError(res, errorMessages.join(', '));
         return;
       }
       
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao criar banco', {
-        error: errorMessage,
-        stack: errorStack,
+      sendError(res, error, 'Erro ao criar banco', 500, true, {
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -174,7 +142,7 @@ export class BancoController {
       const banco = await BancoService.getById(id);
       
       if (!banco) {
-        res.status(404).json({ error: 'Banco não encontrado' });
+        sendNotFound(res, 'Banco não encontrado');
         return;
       }
       
@@ -186,7 +154,7 @@ export class BancoController {
         const bancoExistente = await BancoService.existsByName(dadosBanco.nome, banco.id);
         
         if (bancoExistente) {
-          res.status(400).json({ error: 'Já existe um banco com este nome' });
+          sendValidationError(res, 'Já existe um banco com este nome');
           return;
         }
       }
@@ -234,13 +202,17 @@ export class BancoController {
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
       
-      await registrarAtualizacao(
-        req,
-        'Banco',
-        bancoAtualizado.id,
-        dadosAnteriores,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req,
+          'Banco',
+          bancoAtualizado.id,
+          dadosAnteriores,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       
       logger.info('Banco atualizado com sucesso', {
         banco_id: bancoAtualizado.id,
@@ -250,40 +222,18 @@ export class BancoController {
         has_client_secret_after: !!bancoAtualizado.client_secret_producao
       });
       
-      res.json({
-        success: true,
-        message: 'Banco atualizado com sucesso!',
-        data: bancoAtualizado
-      });
+      sendSuccess(res, bancoAtualizado, 'Banco atualizado com sucesso!');
     } catch (error: unknown) {
       // Capturar erros de validação do Sequelize
       if (error instanceof ValidationError) {
         const errorMessages = error.errors.map(err => err.message);
-        logger.warn('Erro de validação ao atualizar banco', {
-          banco_id: req.params.id,
-          errors: errorMessages,
-          body: req.body
-        });
-        res.status(400).json({
-          success: false,
-          error: 'Dados inválidos',
-          message: errorMessages.join(', ')
-        });
+        sendValidationError(res, errorMessages.join(', '));
         return;
       }
       
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar banco', {
+      sendError(res, error, 'Erro ao atualizar banco', 500, true, {
         banco_id: req.params.id,
-        error: errorMessage,
-        stack: errorStack,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -299,7 +249,7 @@ export class BancoController {
       const banco = await BancoService.getById(id);
       
       if (!banco) {
-        res.status(404).json({ error: 'Banco não encontrado' });
+        sendNotFound(res, 'Banco não encontrado');
         return;
       }
       
@@ -311,40 +261,34 @@ export class BancoController {
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
         if (errorMessage.includes('títulos associados')) {
-          res.status(400).json({ 
-            error: 'Não é possível excluir banco com títulos associados.' 
-          });
+          sendForbidden(res, 'Não é possível excluir banco com títulos associados.');
           return;
         }
         throw error;
       }
       
       // Registrar auditoria
-      await registrarExclusao(
-        req,
-        'Banco',
-        banco.id,
-        dadosAnteriores
-      );
+      try {
+        await registrarExclusao(
+          req,
+          'Banco',
+          banco.id,
+          dadosAnteriores
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       
       logger.info('Banco excluído com sucesso', {
         banco_id: id,
         nome: banco.nome
       });
       
-      res.json({
-        success: true,
-        message: 'Banco excluído com sucesso!'
-      });
+      sendSuccess(res, undefined, 'Banco excluído com sucesso!');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao deletar banco', {
-        banco_id: req.params.id,
-        error: errorMessage,
-        stack: errorStack
+      sendError(res, error, 'Erro ao deletar banco', 500, true, {
+        banco_id: req.params.id
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
@@ -358,10 +302,7 @@ export class BancoController {
       const banco = await BancoService.getById(id);
       
       if (!banco) {
-        res.status(404).json({ 
-          success: false,
-          message: 'Banco não encontrado' 
-        });
+        sendNotFound(res, 'Banco não encontrado');
         return;
       }
       
@@ -376,25 +317,13 @@ export class BancoController {
       const resultado = await BancoApiService.testarAutenticacao(banco);
       
       if (resultado.success) {
-        res.json({
-          success: true,
-          message: resultado.message || 'Conexão com a API do banco realizada com sucesso!'
-        });
+        sendSuccess(res, undefined, resultado.message || 'Conexão com a API do banco realizada com sucesso!');
       } else {
-        res.status(400).json({
-          success: false,
-          message: resultado.message || 'Falha na conexão'
-        });
+        sendError(res, new Error(resultado.message || 'Falha na conexão'), resultado.message || 'Falha na conexão', 400, false);
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao testar conexão', {
-        banco_id: req.params.id,
-        error: errorMessage
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno: ' + errorMessage
+      sendError(res, error, 'Erro ao testar conexão', 500, true, {
+        banco_id: req.params.id
       });
     }
   }
@@ -409,25 +338,16 @@ export class BancoController {
       const banco = await BancoService.getById(id);
       
       if (!banco) {
-        res.status(404).json({ error: 'Banco não encontrado' });
+        sendNotFound(res, 'Banco não encontrado');
         return;
       }
       
       // EFI Bank não fornece dados da conta via API pública
       // Retornar mensagem explicativa
-      res.json({
-        success: false,
-        message: 'Busca automática de dados não disponível para este banco. Configure manualmente.'
-      });
+      sendSuccess(res, null, 'Busca automática de dados não disponível para este banco. Configure manualmente.', 200);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao buscar dados da API', {
-        banco_id: req.params.id,
-        error: errorMessage
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno: ' + errorMessage
+      sendError(res, error, 'Erro ao buscar dados da API', 500, true, {
+        banco_id: req.params.id
       });
     }
   }
@@ -439,18 +359,12 @@ export class BancoController {
       const banco = await BancoService.getById(id);
 
       if (!banco) {
-        res.status(404).json({
-          success: false,
-          message: 'Banco não encontrado'
-        });
+        sendNotFound(res, 'Banco não encontrado');
         return;
       }
 
       if (banco.tipo_banco !== 'asaas') {
-        res.status(400).json({
-          success: false,
-          message: 'Webhook secret disponível apenas para bancos do tipo Asaas'
-        });
+        sendValidationError(res, 'Webhook secret disponível apenas para bancos do tipo Asaas');
         return;
       }
 
@@ -461,23 +375,12 @@ export class BancoController {
         banco_id: banco.id
       });
 
-      res.json({
-        success: true,
-        message: 'Webhook secret gerado com sucesso',
-        data: {
-          webhook_secret: novoSecret
-        }
-      });
+      sendSuccess(res, {
+        webhook_secret: novoSecret
+      }, 'Webhook secret gerado com sucesso');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao gerar webhook secret', {
-        banco_id: req.params.id,
-        error: errorMessage
-      });
-
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno ao gerar webhook secret'
+      sendError(res, error, 'Erro ao gerar webhook secret', 500, true, {
+        banco_id: req.params.id
       });
     }
   }
@@ -496,35 +399,20 @@ export class BancoController {
         const config = await import(configPath);
         
         if (!config || !config.default) {
-          res.status(404).json({
-            success: false,
-            message: 'Configurações do banco não encontradas'
-          });
+          sendNotFound(res, 'Configurações do banco não encontradas');
           return;
         }
         
         const bancoConfig = config.default;
         const url = bancoConfig.api_url || null;
         
-        res.json({
-          success: true,
-          url: url
-        });
+        sendSuccess(res, { url });
       } catch {
-        res.status(404).json({
-          success: false,
-          message: 'Configurações do banco não encontradas'
-        });
+        sendNotFound(res, 'Configurações do banco não encontradas');
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao buscar URL padrão', {
-        tipo_banco: req.params.tipoBanco,
-        error: errorMessage
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno: ' + errorMessage
+      sendError(res, error, 'Erro ao buscar URL padrão', 500, true, {
+        tipo_banco: req.params.tipoBanco
       });
     }
   }

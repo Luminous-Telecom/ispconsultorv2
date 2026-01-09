@@ -6,6 +6,7 @@ import { logger } from '../../../utils/logger';
 import { cache } from '../../../utils/cache';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
 
 export class ParametrosController {
   // Schema de validação
@@ -52,18 +53,11 @@ export class ParametrosController {
 
       return res.json(response);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter parâmetros', {
+      sendError(res, error, 'Erro ao obter parâmetros do sistema', 500, true, {
         context: 'ParametrosController',
-        action: 'get',
-        error: errorMessage,
-        stack: errorStack
+        action: 'get'
       });
-      return res.status(500).json({
-        success: false,
-        message: 'Erro ao obter parâmetros do sistema'
-      });
+      return res;
     }
   }
 
@@ -88,18 +82,24 @@ export class ParametrosController {
           value: detail.context?.value
         }));
         
+        // Converter para Record<string, string[]> esperado pelo sendValidationError
+        const errorsByField: Record<string, string[]> = errorMessages.reduce((acc, err) => {
+          const field = err.field || 'general';
+          if (!acc[field]) {
+            acc[field] = [];
+          }
+          acc[field].push(err.message);
+          return acc;
+        }, {} as Record<string, string[]>);
+        
         logger.warn('Erro de validação ao atualizar parâmetros', {
           errors: errorMessages,
           body: req.body,
           validatedValue: value
         });
         
-        return res.status(400).json({
-          success: false,
-          message: `Erro de validação: ${errorMessages[0].message}`,
-          details: errorMessages,
-          receivedFields: Object.keys(req.body)
-        });
+        sendValidationError(res, `Erro de validação: ${errorMessages[0].message}`, errorsByField);
+        return res;
       }
 
       const parametrosAntes = await ParametrosService.get();
@@ -109,47 +109,45 @@ export class ParametrosController {
       
       // Registrar auditoria
       if (parametrosAntes.created_at.getTime() === parametrosAntes.updated_at.getTime()) {
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'Parametros',
-          parametros.id,
-          parametros.toJSON() as unknown as Record<string, unknown>
-        );
+        try {
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'Parametros',
+            parametros.id,
+            parametros.toJSON() as unknown as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       } else {
         logger.info('Parâmetros atualizados', {
           camposAtualizados: Object.keys(value)
         });
-        await registrarAtualizacao(
-          req as AuthenticatedRequest,
-          'Parametros',
-          parametros.id,
-          dadosAnteriores as unknown as Record<string, unknown>,
-          parametros.toJSON() as unknown as Record<string, unknown>
-        );
+        try {
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'Parametros',
+            parametros.id,
+            dadosAnteriores as unknown as Record<string, unknown>,
+            parametros.toJSON() as unknown as Record<string, unknown>
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       }
 
       // Invalidar cache após atualização
       cache.delete('parametros:sistema');
 
-      return res.json({
-        success: true,
-        message: 'Parâmetros atualizados com sucesso',
-        data: parametros
-      });
+      sendSuccess(res, parametros, 'Parâmetros atualizados com sucesso');
+      return res;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar parâmetros', {
+      sendError(res, error, 'Erro ao atualizar parâmetros do sistema', 500, true, {
         context: 'ParametrosController',
         action: 'update',
-        error: errorMessage,
-        stack: errorStack,
         body: req.body
       });
-      return res.status(500).json({
-        success: false,
-        message: 'Erro ao atualizar parâmetros do sistema'
-      });
+      return res;
     }
   }
 }

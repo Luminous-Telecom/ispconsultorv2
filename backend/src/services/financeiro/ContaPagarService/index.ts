@@ -3,6 +3,7 @@ import { ContaPagarPagamento } from '../../../models/financeiro/ContaPagarPagame
 import { Fornecedor } from '../../../models/financeiro/Fornecedor';
 import { Op, WhereOptions, Transaction } from 'sequelize';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
+import { buildDateFilter, buildNumericSearchFilter, buildDateSearchFilter, combineFilters } from '../../../utils/queryFilters';
 
 export interface ListContasPagarFilters {
   page?: number;
@@ -68,22 +69,10 @@ export class ContaPagarService {
       }
     }
 
-    if (data_inicio || data_fim) {
-      const vencimentoCondition: WhereOptions = {};
-      
-      if (data_inicio) {
-        const [year, month, day] = (data_inicio as string).split('-').map(Number);
-        (vencimentoCondition as Record<symbol, unknown>)[Op.gte] = new Date(year, month - 1, day, 0, 0, 0, 0);
-      }
-      
-      if (data_fim) {
-        const [year, month, day] = (data_fim as string).split('-').map(Number);
-        (vencimentoCondition as Record<symbol, unknown>)[Op.lte] = new Date(year, month - 1, day, 23, 59, 59, 999);
-      }
-      
-      if (Object.keys(vencimentoCondition).length > 0 || Object.getOwnPropertySymbols(vencimentoCondition).length > 0) {
-        whereConditions.push({ data_vencimento: vencimentoCondition });
-      }
+    // Filtro de data usando helper
+    const dateFilter = buildDateFilter(data_inicio, data_fim, 'data_vencimento');
+    if (dateFilter) {
+      whereConditions.push(dateFilter);
     }
 
     if (search && search.trim()) {
@@ -99,15 +88,15 @@ export class ContaPagarService {
         case 'fornecedor':
           break;
         case 'vencimento':
-          const searchDate = normalizeDateForDb(searchTerm);
-          if (searchDate) {
-            whereConditions.push({ data_vencimento: searchDate });
+          const dateSearchFilter = buildDateSearchFilter(searchTerm, 'data_vencimento');
+          if (dateSearchFilter) {
+            whereConditions.push(dateSearchFilter);
           }
           break;
         case 'valor':
-          const valorNum = parseFloat(searchTerm.replace(/[^\d.,]/g, '').replace(',', '.'));
-          if (!isNaN(valorNum)) {
-            whereConditions.push({ valor: { [Op.gte]: valorNum * 0.9, [Op.lte]: valorNum * 1.1 } });
+          const numericFilter = buildNumericSearchFilter(searchTerm, 'valor', 0.1);
+          if (numericFilter) {
+            whereConditions.push(numericFilter);
           }
           break;
         case 'status':
@@ -126,15 +115,8 @@ export class ContaPagarService {
       }
     }
 
-    const validConditions = whereConditions.filter(cond => {
-      return cond && typeof cond === 'object' && (Object.keys(cond).length > 0 || Object.getOwnPropertySymbols(cond).length > 0);
-    });
-
-    const where: WhereOptions = validConditions.length === 0
-      ? {}
-      : validConditions.length === 1
-      ? validConditions[0]
-      : { [Op.and]: validConditions } as WhereOptions;
+    // Combinar todos os filtros usando helper
+    const where = combineFilters(...whereConditions) || {};
 
     // Configurar include - se buscar por fornecedor, precisa incluir a associação com where
     const shouldSearchFornecedor = Boolean(

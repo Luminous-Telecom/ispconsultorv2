@@ -8,6 +8,7 @@ import { Plano } from '../../../models/cadastros/Plano';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
+import { sendSuccess, sendError, sendNotFound } from '../../../utils/responseUtils';
 
 export class ModeloReciboController {
   /**
@@ -17,16 +18,9 @@ export class ModeloReciboController {
     try {
       const result = await ModeloReciboService.list();
 
-      res.json({
-        ...result,
-        message: 'Recibos listados com sucesso'
-      });
+      sendSuccess(res, result, 'Recibos listados com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar recibos:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar recibos', 500, true);
     }
   }
 
@@ -40,24 +34,13 @@ export class ModeloReciboController {
       const recibo = await ModeloReciboService.getById(id);
 
       if (!recibo) {
-        res.status(404).json({
-          success: false,
-          message: 'Recibo não encontrado'
-        });
+        sendNotFound(res, 'Recibo não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: recibo,
-        message: 'Recibo encontrado com sucesso'
-      });
+      sendSuccess(res, recibo, 'Recibo encontrado com sucesso');
     } catch (error) {
-      logger.error('Erro ao buscar recibo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar recibo', 500, true);
     }
   }
 
@@ -80,17 +63,9 @@ export class ModeloReciboController {
         criptografia: criptografia || false,
       });
 
-      res.status(201).json({
-        success: true,
-        data: recibo,
-        message: 'Recibo criado com sucesso'
-      });
+      sendSuccess(res, recibo, 'Recibo criado com sucesso', 201);
     } catch (error) {
-      logger.error('Erro ao criar recibo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao criar recibo', 500, true);
     }
   }
 
@@ -105,26 +80,15 @@ export class ModeloReciboController {
       const recibo = await ModeloReciboService.getById(id);
 
       if (!recibo) {
-        res.status(404).json({
-          success: false,
-          message: 'Recibo não encontrado'
-        });
+        sendNotFound(res, 'Recibo não encontrado');
         return;
       }
 
       await ModeloReciboService.update(id, updateData);
 
-      res.json({
-        success: true,
-        data: recibo,
-        message: 'Recibo atualizado com sucesso'
-      });
+      sendSuccess(res, recibo, 'Recibo atualizado com sucesso');
     } catch (error) {
-      logger.error('Erro ao atualizar recibo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao atualizar recibo', 500, true);
     }
   }
 
@@ -138,25 +102,15 @@ export class ModeloReciboController {
       const recibo = await ModeloReciboService.getById(id);
 
       if (!recibo) {
-        res.status(404).json({
-          success: false,
-          message: 'Recibo não encontrado'
-        });
+        sendNotFound(res, 'Recibo não encontrado');
         return;
       }
 
       await ModeloReciboService.delete(id);
 
-      res.json({
-        success: true,
-        message: 'Recibo deletado com sucesso'
-      });
+      sendSuccess(res, undefined, 'Recibo deletado com sucesso');
     } catch (error) {
-      logger.error('Erro ao deletar recibo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao deletar recibo', 500, true);
     }
   }
 
@@ -170,10 +124,7 @@ export class ModeloReciboController {
       const recibo = await ModeloReciboService.getById(id);
 
       if (!recibo) {
-        res.status(404).json({
-          success: false,
-          message: 'Recibo não encontrado'
-        });
+        sendNotFound(res, 'Recibo não encontrado');
         return;
       }
 
@@ -320,11 +271,7 @@ export class ModeloReciboController {
       res.setHeader('Content-Disposition', `inline; filename="${recibo.nome}.pdf"`);
       res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao gerar PDF:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar PDF'
-      });
+      sendError(res, error, 'Erro ao gerar PDF', 500, true);
     }
   }
 
@@ -339,10 +286,7 @@ export class ModeloReciboController {
       const recibo = await ModeloReciboService.getById(id);
 
       if (!recibo) {
-        res.status(404).json({
-          success: false,
-          message: 'Recibo não encontrado'
-        });
+        sendNotFound(res, 'Recibo não encontrado');
         return;
       }
 
@@ -353,10 +297,7 @@ export class ModeloReciboController {
         const cliente = await ClienteService.getById(cliente_id as string);
         
         if (!cliente) {
-          res.status(404).json({
-            success: false,
-            message: 'Cliente não encontrado'
-          });
+          sendNotFound(res, 'Cliente não encontrado');
           return;
         }
 
@@ -516,11 +457,7 @@ export class ModeloReciboController {
       res.setHeader('Content-Disposition', `inline; filename="${recibo.nome}-teste.pdf"`);
       res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao gerar PDF de teste:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar PDF de teste'
-      });
+      sendError(res, error, 'Erro ao gerar PDF de teste', 500, true);
     }
   }
 
@@ -531,17 +468,9 @@ export class ModeloReciboController {
     try {
       const variaveis = VariaveisDocumentoService.getVariaveisDisponiveis();
 
-      res.json({
-        success: true,
-        data: variaveis,
-        message: 'Variáveis listadas com sucesso'
-      });
+      sendSuccess(res, variaveis, 'Variáveis listadas com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar variáveis:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar variáveis', 500, true);
     }
   }
 }

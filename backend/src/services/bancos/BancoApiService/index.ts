@@ -10,6 +10,9 @@ import asaasConfig from '../../../config/bancos/asaas';
 import type { JsonValue } from '../../../types/index';
 import { AsaasService } from '../AsaasService';
 import { EfiService } from '../EfiService';
+import { BancoApiAuthService } from '../BancoApiAuthService';
+import { BancoApiRequestService } from '../BancoApiRequestService';
+import { BancoApiTituloService } from '../BancoApiTituloService';
 
 export interface BancoConfig {
   nome: string;
@@ -194,163 +197,30 @@ export class BancoApiService {
   }
 
   /**
-   * Obter token de acesso com retry para timeouts
+   * Obter token de acesso (delegado para services específicos ou BancoApiAuthService)
    */
   private static async obterToken(banco: Banco, config: BancoConfig): Promise<string | null> {
     if (banco.tipo_banco === 'asaas') {
-      // Tentar pegar api_key de várias formas
-      let apiKey = banco.api_key;
-      
-      // Banco pode vir como instância do Sequelize Model ou como objeto simples
-      // Verificar se é instância do Model e tem métodos do Sequelize
-      interface BancoModelLike {
-        dataValues?: { api_key?: string | null };
-        getDataValue?: (key: string) => string | null;
-      }
-      const bancoModel = banco as BancoModelLike;
-      
-      if (!apiKey && bancoModel.dataValues) {
-        apiKey = bancoModel.dataValues.api_key || null;
-      }
-      
-      if (!apiKey && typeof bancoModel.getDataValue === 'function') {
-        const value = bancoModel.getDataValue('api_key');
-        apiKey = value || null;
-      }
-      
-      if (!apiKey) {
-        logger.error('API Key não configurada para Asaas', {
-          banco_id: banco.id,
-          banco_nome: banco.nome
-        });
-        return null;
-      }
-      
-      return apiKey;
+      return await this.asaasService.obterToken(banco);
     }
-
-    const maxTentativas = 3;
-    let delay = 2000; // 2 segundos inicial
-    
-    for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
-      try {
-        // Usar URL correta baseada no ambiente (sandbox vs produção)
-        const baseUrl = banco.sandbox 
-          ? config.sandbox_url
-          : config.cobranca_base_url;
-        const endpoint = baseUrl + config.token;
-        
-        let authData: AuthData = {};
-        
-        if (config.auth_type === 'basic') {
-          // Usar sempre as mesmas credenciais, independente de sandbox ou produção
-          // A diferença entre sandbox e produção é apenas a URL
-          authData = {
-            [config.client_id_field]: banco.client_id_producao || null,
-            [config.client_secret_field]: banco.client_secret_producao || null,
-            grant_type: 'client_credentials'
-          };
-        }
-
-        const response = await axios.post(endpoint, authData, {
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          timeout: 30000 // 30 segundos de timeout
-        });
-
-        if (response.data && response.data.access_token) {
-          if (tentativa > 1) {
-            logger.info('Token obtido com sucesso após retry', {
-              tentativa,
-              banco_id: banco.id
-            });
-          }
-          return response.data.access_token;
-        }
-
-        logger.warn('Token não encontrado na resposta', {
-          response_keys: Object.keys(response.data || {}),
-          tentativa
-        });
-        return null;
-      } catch (error) {
-        const axiosError = error as Error & AxiosErrorResponse;
-        const isTimeout = axiosError.code === 'ECONNABORTED' || 
-                         axiosError.response?.status === 504 || 
-                         axiosError.response?.status === 502 || 
-                         axiosError.response?.status === 503;
-        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        const errorResponse = axiosError.response;
-        
-        if (tentativa < maxTentativas && isTimeout) {
-          logger.warn(`Tentativa ${tentativa} falhou por timeout, tentando novamente em ${delay}ms`, {
-            banco_id: banco.id,
-            error: errorMessage,
-            status: errorResponse?.status,
-            tentativa
-          });
-          
-          await new Promise(resolve => setTimeout(resolve, delay));
-          delay *= 2; // Exponential backoff
-          continue;
-        }
-        
-        // Se for erro 401 (token expirado), logar como warn, caso contrário como error
-        const isAuthError = errorResponse?.status === 401 || errorResponse?.status === 403;
-        
-        if (isAuthError) {
-          logger.warn('Token expirado/inválido, será renovado na próxima requisição', {
-            banco_id: banco.id,
-            status: errorResponse?.status,
-            statusText: errorResponse?.statusText,
-            tentativa,
-            isTimeout
-          });
-        } else {
-          logger.error('Erro ao obter token', { 
-            banco_id: banco.id,
-            error: errorMessage,
-            status: errorResponse?.status,
-            statusText: errorResponse?.statusText,
-            tentativa,
-            isTimeout
-          });
-        }
-        return null;
-      }
+    if (banco.tipo_banco === 'efi') {
+      return await this.efiService.obterToken(banco);
     }
-    
-    return null;
+    return await BancoApiAuthService.obterToken(banco, config);
   }
 
   /**
-   * Preparar headers para requisições
+   * Preparar headers para requisições (delegado para BancoApiRequestService)
    */
   private static buildAuthHeaders(tipoBanco: string, token: string): Record<string, string> {
-    if (tipoBanco === 'asaas') {
-      return {
-        'access_token': token,
-        'Accept': 'application/json'
-      };
-    }
-    
-    return {
-      'Authorization': `Bearer ${token}`
-    };
+    return BancoApiRequestService.buildRequestHeaders(tipoBanco, token, this.getBancoConfig(tipoBanco)!);
   }
 
-
   /**
-   * Obter valor aninhado de um objeto usando notação de ponto
+   * Obter valor aninhado de um objeto usando notação de ponto (delegado para BancoApiRequestService)
    */
   private static getNestedValue(obj: Record<string, JsonValue>, path: string): JsonValue | undefined {
-    return path.split('.').reduce<JsonValue | undefined>((current, key) => {
-      if (current && typeof current === 'object' && !Array.isArray(current)) {
-        return (current as Record<string, JsonValue>)[key];
-      }
-      return undefined;
-    }, obj as JsonValue);
+    return BancoApiRequestService.getNestedValue(obj, path);
   }
 
   /**
@@ -499,6 +369,13 @@ export class BancoApiService {
    * Consultar status de um título
    */
   static async consultarStatus(titulo: TituloWithRelations): Promise<ApiResponse> {
+    return await BancoApiTituloService.consultarStatus(titulo);
+  }
+
+  /**
+   * Consultar status de um título (método antigo - delegado)
+   */
+  private static async consultarStatus_OLD(titulo: TituloWithRelations): Promise<ApiResponse> {
     const banco = titulo.banco;
     
     if (!banco) {
@@ -765,6 +642,13 @@ export class BancoApiService {
    * Cancelar título individual
    */
   static async cancelarTitulo(titulo: TituloWithRelations): Promise<ApiResponse> {
+    return await BancoApiTituloService.cancelarTitulo(titulo);
+  }
+
+  /**
+   * Cancelar título individual (método antigo - delegado)
+   */
+  private static async cancelarTitulo_OLD(titulo: TituloWithRelations): Promise<ApiResponse> {
     const banco = titulo.banco;
     
     if (!banco) {
@@ -902,6 +786,13 @@ export class BancoApiService {
    * Liquidar título individual no banco externo
    */
   static async liquidarTitulo(titulo: TituloWithRelations): Promise<ApiResponse> {
+    return await BancoApiTituloService.liquidarTitulo(titulo);
+  }
+
+  /**
+   * Liquidar título individual (método antigo - delegado)
+   */
+  private static async liquidarTitulo_OLD(titulo: TituloWithRelations): Promise<ApiResponse> {
     try {
       const banco = titulo.banco;
       if (!banco) {

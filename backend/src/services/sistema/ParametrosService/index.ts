@@ -1,10 +1,17 @@
 import Parametros from '../../../models/sistema/Parametros';
+import { cache } from '../../../utils/cache';
 
 export class ParametrosService {
   /**
    * Obter parâmetros (sempre retorna o primeiro registro)
    */
   static async get(): Promise<Parametros> {
+    const cacheKey = 'parametros:config';
+    const cached = cache.get<Parametros>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     let parametros = await Parametros.findOne({
       attributes: ['id', 'validar_cpf_cnpj', 'validar_cep', 'titulos_vence_sabado', 'titulos_vence_domingo', 'auto_lancamento_titulos', 'total_titulos_financeiro', 'created_at', 'updated_at']
     });
@@ -21,6 +28,7 @@ export class ParametrosService {
       });
     }
 
+    cache.set(cacheKey, parametros, 600000); // Cache por 10 minutos
     return parametros;
   }
 
@@ -44,6 +52,7 @@ export class ParametrosService {
       await parametros.reload();
     }
 
+    cache.delete('parametros:config');
     return parametros;
   }
 }

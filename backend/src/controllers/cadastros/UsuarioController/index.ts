@@ -7,6 +7,7 @@ import { randomBytes } from 'crypto';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class UsuarioController {
   private static createSchema = Joi.object({
@@ -56,13 +57,9 @@ export class UsuarioController {
         ativo: ativo as string
       });
 
-      res.json(result);
+      sendSuccess(res, result);
     } catch (error) {
-      logger.error('Erro ao listar usuários', { error });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar usuários', 500, true);
     }
   }
 
@@ -72,23 +69,13 @@ export class UsuarioController {
       const usuario = await UsuarioService.getById(id);
 
       if (!usuario) {
-        res.status(404).json({
-          success: false,
-          message: 'Usuário não encontrado'
-        });
+        sendNotFound(res, 'Usuário não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: usuario
-      });
+      sendSuccess(res, usuario);
     } catch (error) {
-      logger.error('Erro ao buscar usuário', { error });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar usuário', 500, true);
     }
   }
 
@@ -97,20 +84,14 @@ export class UsuarioController {
       const { error, value } = UsuarioController.createSchema.validate(req.body);
 
       if (error) {
-        res.status(400).json({
-          success: false,
-          message: error.details[0].message
-        });
+        sendValidationError(res, error.details[0].message);
         return;
       }
 
       const usuarioExistente = await UsuarioService.existsByEmail(value.email);
 
       if (usuarioExistente) {
-        res.status(400).json({
-          success: false,
-          message: 'Email já cadastrado'
-        });
+        sendValidationError(res, 'Email já cadastrado');
         return;
       }
 
@@ -123,24 +104,20 @@ export class UsuarioController {
       });
 
       // Registrar auditoria
-      await registrarCriacao(
-        req,
-        'Usuario',
-        usuario.id,
-        { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req,
+          'Usuario',
+          usuario.id,
+          { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        message: 'Usuário criado com sucesso',
-        data: usuario
-      });
+      sendSuccess(res, usuario, 'Usuário criado com sucesso', 201);
     } catch (error) {
-      logger.error('Erro ao criar usuário', { error });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao criar usuário', 500, true);
     }
   }
 
@@ -150,20 +127,14 @@ export class UsuarioController {
       const { error, value } = UsuarioController.updateSchema.validate(req.body);
 
       if (error) {
-        res.status(400).json({
-          success: false,
-          message: error.details[0].message
-        });
+        sendValidationError(res, error.details[0].message);
         return;
       }
 
       const usuario = await UsuarioService.getById(id);
 
       if (!usuario) {
-        res.status(404).json({
-          success: false,
-          message: 'Usuário não encontrado'
-        });
+        sendNotFound(res, 'Usuário não encontrado');
         return;
       }
 
@@ -174,10 +145,7 @@ export class UsuarioController {
         const emailExistente = await UsuarioService.existsByEmail(value.email, usuario.id);
 
         if (emailExistente) {
-          res.status(400).json({
-            success: false,
-            message: 'Email já cadastrado'
-          });
+          sendValidationError(res, 'Email já cadastrado');
           return;
         }
       }
@@ -192,29 +160,23 @@ export class UsuarioController {
       
       // Registrar auditoria
       const dadosNovos = { ...usuarioAtualizado.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
-      
-      // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
       
-      await registrarAtualizacao(
-        req,
-        'Usuario',
-        usuario.id,
-        dadosAnteriores,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req,
+          'Usuario',
+          usuario.id,
+          dadosAnteriores,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Usuário atualizado com sucesso',
-        data: usuario
-      });
+      sendSuccess(res, usuario, 'Usuário atualizado com sucesso');
     } catch (error) {
-      logger.error('Erro ao atualizar usuário', { error });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao atualizar usuário', 500, true);
     }
   }
 
@@ -225,10 +187,7 @@ export class UsuarioController {
       const usuario = await UsuarioService.getById(id);
 
       if (!usuario) {
-        res.status(404).json({
-          success: false,
-          message: 'Usuário não encontrado'
-        });
+        sendNotFound(res, 'Usuário não encontrado');
         return;
       }
 
@@ -236,25 +195,22 @@ export class UsuarioController {
       const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
       
       // Registrar auditoria
-      await registrarExclusao(
-        req,
-        'Usuario',
-        usuario.id,
-        dadosAnteriores
-      );
+      try {
+        await registrarExclusao(
+          req,
+          'Usuario',
+          usuario.id,
+          dadosAnteriores
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       await UsuarioService.delete(id);
 
-      res.json({
-        success: true,
-        message: 'Usuário excluído com sucesso'
-      });
+      sendSuccess(res, undefined, 'Usuário excluído com sucesso');
     } catch (error) {
-      logger.error('Erro ao excluir usuário', { error });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao excluir usuário', 500, true);
     }
   }
 
@@ -265,10 +221,7 @@ export class UsuarioController {
       const usuario = await UsuarioService.getById(id);
 
       if (!usuario) {
-        res.status(404).json({
-          success: false,
-          message: 'Usuário não encontrado'
-        });
+        sendNotFound(res, 'Usuário não encontrado');
         return;
       }
 
@@ -279,22 +232,12 @@ export class UsuarioController {
         usuario_id: usuario.id
       });
 
-      res.json({
-        success: true,
-        message: 'Webhook secret gerado com sucesso',
-        data: {
-          webhook_secret: novoSecret
-        }
-      });
+      sendSuccess(res, {
+        webhook_secret: novoSecret
+      }, 'Webhook secret gerado com sucesso');
     } catch (error) {
-      logger.error('Erro ao gerar webhook secret', {
-        usuario_id: req.params.id,
-        error
-      });
-
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno ao gerar webhook secret'
+      sendError(res, error, 'Erro ao gerar webhook secret', 500, true, {
+        usuario_id: req.params.id
       });
     }
   }

@@ -3,6 +3,7 @@ import { PlanoService } from '../../../services/cadastros/PlanoService';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
+import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 
 export class PlanoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -25,18 +26,13 @@ export class PlanoController {
         sortDirection
       });
 
-      res.json(result);
+      sendSuccess(res, result);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao listar planos', {
+      sendError(res, error, 'Erro ao listar planos', 500, true, {
         context: 'PlanoController',
         action: 'list',
-        error: errorMessage,
-        stack: errorStack,
         query: req.query
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
@@ -46,7 +42,7 @@ export class PlanoController {
       const plano = await PlanoService.getById(id);
 
       if (!plano) {
-        res.status(404).json({ error: 'Plano não encontrado' });
+        sendNotFound(res, 'Plano não encontrado');
         return;
       }
 
@@ -60,18 +56,13 @@ export class PlanoController {
         }
       }
 
-      res.json(planoData);
+      sendSuccess(res, planoData);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar plano', {
+      sendError(res, error, 'Erro ao buscar plano', 500, true, {
         context: 'PlanoController',
         action: 'getById',
-        error: errorMessage,
-        stack: errorStack,
         planoId: req.params.id
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
@@ -82,25 +73,24 @@ export class PlanoController {
       const plano = await PlanoService.create(body);
       
       // Registrar auditoria
-      await registrarCriacao(
-        req,
-        'Plano',
-        plano.id,
-        plano.toJSON() as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req,
+          'Plano',
+          plano.id,
+          plano.toJSON() as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       
-      res.status(201).json(plano);
+      sendSuccess(res, plano, 'Plano criado com sucesso', 201);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao criar plano', {
+      sendError(res, error, 'Erro ao criar plano', 500, true, {
         context: 'PlanoController',
         action: 'create',
-        error: errorMessage,
-        stack: errorStack,
         body: req.body
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
@@ -111,10 +101,7 @@ export class PlanoController {
       // Verificar se o plano existe e capturar dados anteriores para auditoria
       const existingPlano = await PlanoService.getById(id);
       if (!existingPlano) {
-        res.status(404).json({
-          success: false,
-          error: 'Plano não encontrado'
-        });
+        sendNotFound(res, 'Plano não encontrado');
         return;
       }
       
@@ -123,11 +110,7 @@ export class PlanoController {
       // Validar dados obrigatórios
       const { nome_plano, tipo_servico, valor_mensal } = req.body;
       if (!nome_plano || !tipo_servico || valor_mensal === undefined) {
-        res.status(400).json({
-          success: false,
-          error: 'Dados obrigatórios não fornecidos',
-          message: 'Nome do plano, tipo de serviço e valor mensal são obrigatórios'
-        });
+        sendValidationError(res, 'Nome do plano, tipo de serviço e valor mensal são obrigatórios');
         return;
       }
       
@@ -135,46 +118,27 @@ export class PlanoController {
       
       // Registrar auditoria
       const dadosNovos = plano.toJSON() as Record<string, unknown>;
-      
-      // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
       
-      await registrarAtualizacao(
-        req,
-        'Plano',
-        plano.id,
-        dadosAnteriores,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req,
+          'Plano',
+          plano.id,
+          dadosAnteriores,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       
-      res.json({
-        success: true,
-        message: 'Plano atualizado com sucesso!',
-        data: plano
-      });
+      sendSuccess(res, plano, 'Plano atualizado com sucesso!');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      const errorName = error instanceof Error ? error.name : undefined;
-      
-      logger.error('Erro ao atualizar plano', {
+      sendError(res, error, 'Erro ao atualizar plano', 500, true, {
         context: 'PlanoController',
         action: 'update',
-        error: errorMessage,
-        stack: errorStack,
-        name: errorName,
         planId: req.params.id,
         body: req.body
-      });
-      
-      res.status(500).json({ 
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage,
-        details: !__dirname.includes('dist') ? {
-          stack: errorStack,
-          name: errorName
-        } : undefined
       });
     }
   }
@@ -186,10 +150,7 @@ export class PlanoController {
       const plano = await PlanoService.getById(id);
       
       if (!plano) {
-        res.status(404).json({ 
-          success: false,
-          error: 'Plano não encontrado' 
-        });
+        sendNotFound(res, 'Plano não encontrado');
         return;
       }
       
@@ -200,59 +161,31 @@ export class PlanoController {
         await PlanoService.delete(id);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        if (errorMessage.includes('título(s) associado(s)')) {
-          res.status(409).json({ 
-            success: false,
-            error: 'Não é possível excluir plano',
-            message: errorMessage
-          });
-          return;
-        }
-        if (errorMessage.includes('contrato(s)')) {
-          res.status(409).json({ 
-            success: false,
-            error: 'Não é possível excluir plano',
-            message: errorMessage
-          });
+        if (errorMessage.includes('título(s) associado(s)') || errorMessage.includes('contrato(s)')) {
+          sendForbidden(res, errorMessage);
           return;
         }
         throw error;
       }
       
       // Registrar auditoria
-      await registrarExclusao(
-        req,
-        'Plano',
-        plano.id,
-        dadosAnteriores
-      );
+      try {
+        await registrarExclusao(
+          req,
+          'Plano',
+          plano.id,
+          dadosAnteriores
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       
-      res.json({
-        success: true,
-        message: 'Plano excluído com sucesso!'
-      });
+      sendSuccess(res, undefined, 'Plano excluído com sucesso!');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      const errorName = error instanceof Error ? error.name : undefined;
-      
-      logger.error('Erro ao deletar plano', {
+      sendError(res, error, 'Erro ao deletar plano', 500, true, {
         context: 'PlanoController',
         action: 'delete',
-        error: errorMessage,
-        stack: errorStack,
-        name: errorName,
         planoId: req.params.id
-      });
-      
-      res.status(500).json({ 
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage,
-        details: !__dirname.includes('dist') ? {
-          stack: errorStack,
-          name: errorName
-        } : undefined
       });
     }
   }
@@ -261,17 +194,12 @@ export class PlanoController {
     try {
       const planos = await PlanoService.findAtivos();
 
-      res.json(planos);
+      sendSuccess(res, planos);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar planos ativos', {
+      sendError(res, error, 'Erro ao buscar planos ativos', 500, true, {
         context: 'PlanoController',
-        action: 'getAtivos',
-        error: errorMessage,
-        stack: errorStack
+        action: 'getAtivos'
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
@@ -283,40 +211,23 @@ export class PlanoController {
 
       // Validar status
       if (!status || !['ativo', 'inativo'].includes(status)) {
-        res.status(400).json({
-          success: false,
-          error: 'Status inválido',
-          message: 'Status deve ser: ativo ou inativo'
-        });
+        sendValidationError(res, 'Status deve ser: ativo ou inativo');
         return;
       }
 
       const plano = await PlanoService.updateStatus(id, status);
 
-      res.json({
-        success: true,
-        message: `Plano ${status === 'ativo' ? 'ativado' : 'desativado'} com sucesso!`,
-        data: {
-          id: plano.id,
-          nome_plano: plano.nome_plano,
-          status: plano.status
-        }
-      });
+      sendSuccess(res, {
+        id: plano.id,
+        nome_plano: plano.nome_plano,
+        status: plano.status
+      }, `Plano ${status === 'ativo' ? 'ativado' : 'desativado'} com sucesso!`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao alterar status do plano', {
+      sendError(res, error, 'Erro ao alterar status do plano', 500, true, {
         context: 'PlanoController',
         action: 'toggleStatus',
-        error: errorMessage,
-        stack: errorStack,
         planoId: req.params.id,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }

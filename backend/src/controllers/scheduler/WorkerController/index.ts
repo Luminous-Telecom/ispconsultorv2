@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { SchedulerService } from '../../../services/scheduler/SchedulerService';
 import { logger } from '../../../utils/logger';
+import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
 
 export class WorkerController {
   /**
@@ -11,23 +12,11 @@ export class WorkerController {
       const schedulerService = SchedulerService.getInstance();
       const status = schedulerService.getWorkersStatus();
 
-      res.json({
-        success: true,
-        data: status
-      });
+      sendSuccess(res, status);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter status dos workers', {
+      sendError(res, error, 'Erro ao obter status dos workers', 500, true, {
         context: 'WorkerController',
-        action: 'getStatus',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'getStatus'
       });
     }
   }
@@ -40,23 +29,11 @@ export class WorkerController {
       const schedulerService = SchedulerService.getInstance();
       const health = await schedulerService.getHealthStatus();
 
-      res.json({
-        success: true,
-        data: health
-      });
+      sendSuccess(res, health);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter status de saúde', {
+      sendError(res, error, 'Erro interno do servidor', 500, true, {
         context: 'WorkerController',
-        action: 'getHealth',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
+        action: 'getHealth'
       });
     }
   }
@@ -70,34 +47,19 @@ export class WorkerController {
       const daysNumber = parseInt(days as string, 10);
 
       if (isNaN(daysNumber) || daysNumber < 1 || daysNumber > 365) {
-        res.status(400).json({
-          success: false,
-          error: 'Parâmetro days deve ser um número entre 1 e 365'
-        });
+        sendValidationError(res, 'Parâmetro days deve ser um número entre 1 e 365');
         return;
       }
 
       const schedulerService = SchedulerService.getInstance();
       const stats = schedulerService.getDetailedStats();
 
-      res.json({
-        success: true,
-        data: stats
-      });
+      sendSuccess(res, stats);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter estatísticas', {
+      sendError(res, error, 'Erro ao obter estatísticas', 500, true, {
         context: 'WorkerController',
         action: 'getStats',
-        error: errorMessage,
-        stack: errorStack,
         query: req.query
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -111,34 +73,19 @@ export class WorkerController {
       const routineId = parseInt(id, 10);
 
       if (isNaN(routineId)) {
-        res.status(400).json({
-          success: false,
-          error: 'ID da rotina inválido'
-        });
+        sendValidationError(res, 'ID da rotina inválido');
         return;
       }
 
       const schedulerService = SchedulerService.getInstance();
       await schedulerService.executeRoutineManually(routineId);
 
-      res.json({
-        success: true,
-        message: 'Rotina executada com sucesso'
-      });
+      sendSuccess(res, undefined, 'Rotina executada com sucesso');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao executar rotina', {
+      sendError(res, error, 'Erro ao executar rotina', 500, true, {
         context: 'WorkerController',
         action: 'executeRoutine',
-        error: errorMessage,
-        stack: errorStack,
         rotinaId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -155,43 +102,25 @@ export class WorkerController {
       const limitNumber = parseInt(limit as string, 10);
 
       if (isNaN(routineId)) {
-        res.status(400).json({
-          success: false,
-          error: 'ID da rotina inválido'
-        });
+        sendValidationError(res, 'ID da rotina inválido');
         return;
       }
 
       if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 1000) {
-        res.status(400).json({
-          success: false,
-          error: 'Parâmetro limit deve ser um número entre 1 e 1000'
-        });
+        sendValidationError(res, 'Parâmetro limit deve ser um número entre 1 e 1000');
         return;
       }
 
       const schedulerService = SchedulerService.getInstance();
       const logs = await schedulerService.getExecutionLogs(routineId);
 
-      res.json({
-        success: true,
-        data: logs
-      });
+      sendSuccess(res, logs);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter logs de execução', {
+      sendError(res, error, 'Erro ao obter logs de execução', 500, true, {
         context: 'WorkerController',
         action: 'getExecutionLogs',
-        error: errorMessage,
-        stack: errorStack,
         rotinaId: req.params.id,
         query: req.query
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }
@@ -205,34 +134,19 @@ export class WorkerController {
       const limitNumber = parseInt(limit as string, 10);
 
       if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 1000) {
-        res.status(400).json({
-          success: false,
-          error: 'Parâmetro limit deve ser um número entre 1 e 1000'
-        });
+        sendValidationError(res, 'Parâmetro limit deve ser um número entre 1 e 1000');
         return;
       }
 
       const schedulerService = SchedulerService.getInstance();
       const logs = await schedulerService.getRecentExecutionLogs(limitNumber);
 
-      res.json({
-        success: true,
-        data: logs
-      });
+      sendSuccess(res, logs);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter logs recentes', {
+      sendError(res, error, 'Erro ao obter logs recentes', 500, true, {
         context: 'WorkerController',
         action: 'getRecentLogs',
-        error: errorMessage,
-        stack: errorStack,
         query: req.query
-      });
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: errorMessage
       });
     }
   }

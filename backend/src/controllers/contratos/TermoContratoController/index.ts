@@ -7,6 +7,7 @@ import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class TermoContratoController {
   // Listar termos de um contrato específico
@@ -15,33 +16,18 @@ export class TermoContratoController {
       const { contratoId } = req.params;
       
       if (!contratoId) {
-        res.status(400).json({ 
-          success: false, 
-          message: 'ID do contrato é obrigatório' 
-        });
+        sendValidationError(res, 'ID do contrato é obrigatório');
         return;
       }
 
       const termos = await TermoContratoService.getByContrato(parseInt(contratoId));
       
-      res.json({
-        success: true,
-        data: termos
-      });
+      sendSuccess(res, termos);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar termos do contrato', {
+      sendError(res, error, 'Erro ao buscar termos do contrato', 500, true, {
         context: 'TermoContratoController',
         action: 'getByContrato',
-        error: errorMessage,
-        stack: errorStack,
         contratoId: req.params.contratoId
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: errorMessage
       });
     }
   }
@@ -54,30 +40,16 @@ export class TermoContratoController {
       const termo = await TermoContratoService.getById(id);
       
       if (!termo) {
-        res.status(404).json({
-          success: false,
-          message: 'Termo não encontrado'
-        });
+        sendNotFound(res, 'Termo não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: termo
-      });
+      sendSuccess(res, termo);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar termo', {
+      sendError(res, error, 'Erro ao buscar termo', 500, true, {
         context: 'TermoContratoController',
         action: 'show',
-        error: errorMessage,
-        stack: errorStack,
         id: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -90,39 +62,27 @@ export class TermoContratoController {
 
       // Validações
       if (!contratoId) {
-        res.status(400).json({
-          success: false,
-          message: 'Contrato ID é obrigatório'
-        });
+        sendValidationError(res, 'Contrato ID é obrigatório');
         return;
       }
 
       // Se não há modelo_documento_id, retornar erro
       if (!modelo_documento_id) {
-        res.status(400).json({
-          success: false,
-          message: 'É obrigatório selecionar um modelo de termo'
-        });
+        sendValidationError(res, 'É obrigatório selecionar um modelo de termo');
         return;
       }
 
       // Verificar se o contrato existe
       const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
-        res.status(404).json({
-          success: false,
-          message: 'Contrato não encontrado'
-        });
+        sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
       // Buscar o modelo de documento (termo)
       const modeloDocumento = await ModeloDocumentoService.getById(modelo_documento_id);
       if (!modeloDocumento) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de termo não encontrado'
-        });
+        sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
 
@@ -142,10 +102,7 @@ export class TermoContratoController {
 
       // Validar que temos conteúdo
       if (!conteudoTermo || conteudoTermo.trim() === '') {
-        res.status(400).json({
-          success: false,
-          message: `O modelo de termo não possui conteúdo para o tipo '${tipoTermo}'. Verifique se o modelo possui conteúdo cadastrado.`
-        });
+        sendValidationError(res, `O modelo de termo não possui conteúdo para o tipo '${tipoTermo}'. Verifique se o modelo possui conteúdo cadastrado.`);
         return;
       }
 
@@ -158,48 +115,35 @@ export class TermoContratoController {
         ativo: true
       });
 
-      await registrarCriacao(
-        req as AuthenticatedRequest,
-        'TermoContrato',
-        termo.id,
-        termo.toJSON() as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'TermoContrato',
+          termo.id,
+          termo.toJSON() as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        message: 'Termo criado com sucesso',
-        data: termo
-      });
+      sendSuccess(res, termo, 'Termo criado com sucesso', 201);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
       // Tratar erro de constraint de unicidade
       if (error instanceof Error && (error as any).name === 'SequelizeUniqueConstraintError') {
         logger.warn('Tentativa de criar termo duplicado', {
           context: 'TermoContratoController',
           action: 'create',
           contratoId,
-          tipoTermo: req.body.tipo_termo || 'adesao',
-          error: errorMessage
+          tipoTermo: req.body.tipo_termo || 'adesao'
         });
-        res.status(409).json({
-          success: false,
-          message: `Já existe um termo do tipo '${req.body.tipo_termo || 'adesao'}' para este contrato. Remova a constraint UNIQUE do banco de dados para permitir múltiplos termos do mesmo tipo.`
-        });
+        sendError(res, error, `Já existe um termo do tipo '${req.body.tipo_termo || 'adesao'}' para este contrato. Remova a constraint UNIQUE do banco de dados para permitir múltiplos termos do mesmo tipo.`, 409, false);
         return;
       }
       
-      logger.error('Erro ao criar termo', {
+      sendError(res, error, 'Erro ao criar termo', 500, true, {
         context: 'TermoContratoController',
         action: 'create',
-        error: errorMessage,
-        stack: errorStack,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -211,12 +155,9 @@ export class TermoContratoController {
       const { ativo, modelo_documento_id, assinado } = req.body;
 
       const termo = await TermoContratoService.getById(id);
-      
+
       if (!termo) {
-        res.status(404).json({
-          success: false,
-          message: 'Termo não encontrado'
-        });
+        sendNotFound(res, 'Termo não encontrado');
         return;
       }
 
@@ -235,33 +176,25 @@ export class TermoContratoController {
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores as Record<string, unknown>, dadosNovos);
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'TermoContrato',
-        termo.id,
-        dadosAnteriores as Record<string, unknown>,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'TermoContrato',
+          termo.id,
+          dadosAnteriores as Record<string, unknown>,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Termo atualizado com sucesso',
-        data: termo
-      });
+      sendSuccess(res, termo, 'Termo atualizado com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar termo', {
+      sendError(res, error, 'Erro ao atualizar termo', 500, true, {
         context: 'TermoContratoController',
         action: 'update',
-        error: errorMessage,
-        stack: errorStack,
         id: req.params.id,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -273,44 +206,26 @@ export class TermoContratoController {
       const { aceito_por } = req.body;
 
       if (!aceito_por) {
-        res.status(400).json({
-          success: false,
-          message: 'Nome de quem aceitou é obrigatório'
-        });
+        sendValidationError(res, 'Nome de quem aceitou é obrigatório');
         return;
       }
 
       const termo = await TermoContratoService.getById(id);
       
       if (!termo) {
-        res.status(404).json({
-          success: false,
-          message: 'Termo não encontrado'
-        });
+        sendNotFound(res, 'Termo não encontrado');
         return;
       }
 
       await termo.marcarComoAceito(aceito_por);
 
-      res.json({
-        success: true,
-        message: 'Termo marcado como aceito',
-        data: termo
-      });
+      sendSuccess(res, termo, 'Termo marcado como aceito');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao marcar termo como aceito', {
+      sendError(res, error, 'Erro ao marcar termo como aceito', 500, true, {
         context: 'TermoContratoController',
         action: 'markAccepted',
-        error: errorMessage,
-        stack: errorStack,
         id: req.params.id,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -323,33 +238,19 @@ export class TermoContratoController {
       const termo = await TermoContratoService.getById(id);
       
       if (!termo) {
-        res.status(404).json({
-          success: false,
-          message: 'Termo não encontrado'
-        });
+        sendNotFound(res, 'Termo não encontrado');
         return;
       }
 
       termo.ativo = false;
       await termo.save();
 
-      res.json({
-        success: true,
-        message: 'Termo desativado com sucesso'
-      });
+      sendSuccess(res, undefined, 'Termo desativado com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao desativar termo', {
+      sendError(res, error, 'Erro ao desativar termo', 500, true, {
         context: 'TermoContratoController',
         action: 'deactivate',
-        error: errorMessage,
-        stack: errorStack,
         id: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -362,10 +263,7 @@ export class TermoContratoController {
       const termo = await TermoContratoService.getById(id);
       
       if (!termo) {
-        res.status(404).json({
-          success: false,
-          message: 'Termo não encontrado'
-        });
+        sendNotFound(res, 'Termo não encontrado');
         return;
       }
 
@@ -376,30 +274,23 @@ export class TermoContratoController {
       
       await TermoContratoService.delete(id);
 
-      await registrarExclusao(
-        req as AuthenticatedRequest,
-        'TermoContrato',
-        termo.id,
-        dadosAnteriores
-      );
+      try {
+        await registrarExclusao(
+          req as AuthenticatedRequest,
+          'TermoContrato',
+          termo.id,
+          dadosAnteriores
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Termo deletado com sucesso'
-      });
+      sendSuccess(res, undefined, 'Termo deletado com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao deletar termo', {
+      sendError(res, error, 'Erro ao deletar termo', 500, true, {
         context: 'TermoContratoController',
         action: 'delete',
-        error: errorMessage,
-        stack: errorStack,
         id: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -409,22 +300,11 @@ export class TermoContratoController {
     try {
       const termos = await TermoContratoService.list(true);
 
-      res.json({
-        success: true,
-        data: termos
-      });
+      sendSuccess(res, termos);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar termos ativos', {
+      sendError(res, error, 'Erro ao buscar termos ativos', 500, true, {
         context: 'TermoContratoController',
-        action: 'getAtivos',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
+        action: 'getAtivos'
       });
     }
   }

@@ -9,6 +9,7 @@ import { isJoiError, getErrorMessage } from '../../../utils/errorUtils';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 //
 export class ContratoPlanoAdicionalController {
   // Schema de validação para criação
@@ -35,10 +36,7 @@ export class ContratoPlanoAdicionalController {
       const { contrato_id } = req.params;
 
       if (!contrato_id || isNaN(parseInt(contrato_id))) {
-        res.status(400).json({
-          success: false,
-          message: 'ID do contrato inválido'
-        });
+        sendValidationError(res, 'ID do contrato inválido');
         return;
       }
 
@@ -60,23 +58,12 @@ export class ContratoPlanoAdicionalController {
         })
       );
 
-      res.json({
-        success: true,
-        data: servicosComValorFinal
-      });
+      sendSuccess(res, servicosComValorFinal);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao listar serviços adicionais', {
+      sendError(res, error, 'Erro ao listar serviços adicionais', 500, true, {
         context: 'ContratoPlanoAdicionalController',
         action: 'index',
-        error: errorMessage,
-        stack: errorStack,
         contratoId: req.params.contrato_id
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -90,20 +77,14 @@ export class ContratoPlanoAdicionalController {
       // Verificar se o contrato existe
       const contrato = await ContratoService.getById(contrato_id);
       if (!contrato) {
-        res.status(404).json({
-          success: false,
-          message: 'Contrato não encontrado'
-        });
+        sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
       // Verificar se o plano existe
       const plano = await PlanoService.getById(value.plano_id);
       if (!plano) {
-        res.status(404).json({
-          success: false,
-          message: 'Plano não encontrado'
-        });
+        sendNotFound(res, 'Plano não encontrado');
         return;
       }
 
@@ -116,10 +97,7 @@ export class ContratoPlanoAdicionalController {
       });
 
       if (servicoExistente) {
-        res.status(400).json({
-          success: false,
-          message: 'Este plano já está vinculado ao contrato'
-        });
+        sendValidationError(res, 'Este plano já está vinculado ao contrato');
         return;
       }
 
@@ -145,39 +123,28 @@ export class ContratoPlanoAdicionalController {
 
       const servicoComPlano = await ContratoPlanoAdicionalService.getById(servico.id, true);
 
-      await registrarCriacao(
-        req as AuthenticatedRequest,
-        'ContratoPlanoAdicional',
-        servico.id,
-        servicoComPlano?.toJSON() as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'ContratoPlanoAdicional',
+          servico.id,
+          servicoComPlano?.toJSON() as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        message: 'Serviço adicional vinculado com sucesso',
-        data: servicoComPlano
-      });
+      sendSuccess(res, servicoComPlano, 'Serviço adicional vinculado com sucesso', 201);
     } catch (error: unknown) {
       if (isJoiError(error)) {
-        res.status(400).json({
-          success: false,
-          message: getErrorMessage(error)
-        });
+        sendValidationError(res, getErrorMessage(error));
         return;
       }
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao adicionar serviço adicional', {
+      sendError(res, error, 'Erro ao adicionar serviço adicional', 500, true, {
         context: 'ContratoPlanoAdicionalController',
         action: 'create',
-        error: errorMessage,
-        stack: errorStack,
         contratoId: req.params.contrato_id,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -191,10 +158,7 @@ export class ContratoPlanoAdicionalController {
       const servico = await ContratoPlanoAdicionalService.getById(id);
 
       if (!servico) {
-        res.status(404).json({
-          success: false,
-          message: 'Serviço adicional não encontrado'
-        });
+        sendNotFound(res, 'Serviço adicional não encontrado');
         return;
       }
 
@@ -203,10 +167,7 @@ export class ContratoPlanoAdicionalController {
       if (value.plano_id && value.plano_id !== servico.plano_id) {
         const novoPlano = await PlanoService.getById(value.plano_id);
         if (!novoPlano) {
-          res.status(404).json({
-            success: false,
-            message: 'Plano não encontrado'
-          });
+          sendNotFound(res, 'Plano não encontrado');
           return;
         }
         planoIdParaUsar = value.plano_id;
@@ -215,10 +176,7 @@ export class ContratoPlanoAdicionalController {
       // Buscar plano para calcular valor_final (usar o novo plano se foi alterado)
       const plano = await PlanoService.getById(planoIdParaUsar);
       if (!plano) {
-        res.status(404).json({
-          success: false,
-          message: 'Plano não encontrado'
-        });
+        sendNotFound(res, 'Plano não encontrado');
         return;
       }
 
@@ -249,40 +207,29 @@ export class ContratoPlanoAdicionalController {
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'ContratoPlanoAdicional',
-        servico.id,
-        dadosAnteriores,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ContratoPlanoAdicional',
+          servico.id,
+          dadosAnteriores,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Serviço adicional atualizado com sucesso',
-        data: servicoAtualizado
-      });
+      sendSuccess(res, servicoAtualizado, 'Serviço adicional atualizado com sucesso');
     } catch (error: unknown) {
       if (isJoiError(error)) {
-        res.status(400).json({
-          success: false,
-          message: getErrorMessage(error)
-        });
+        sendValidationError(res, getErrorMessage(error));
         return;
       }
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar serviço adicional', {
+      sendError(res, error, 'Erro ao atualizar serviço adicional', 500, true, {
         context: 'ContratoPlanoAdicionalController',
         action: 'update',
-        error: errorMessage,
-        stack: errorStack,
         id: req.params.id,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -293,10 +240,7 @@ export class ContratoPlanoAdicionalController {
       const { id } = req.params;
 
       if (!id || isNaN(parseInt(id))) {
-        res.status(400).json({
-          success: false,
-          message: 'ID do serviço adicional inválido'
-        });
+        sendValidationError(res, 'ID do serviço adicional inválido');
         return;
       }
 
@@ -304,40 +248,30 @@ export class ContratoPlanoAdicionalController {
       const servico = await ContratoPlanoAdicionalService.getById(servicoId);
       
       if (!servico) {
-        res.status(404).json({
-          success: false,
-          message: 'Serviço adicional não encontrado'
-        });
+        sendNotFound(res, 'Serviço adicional não encontrado');
         return;
       }
 
       const dadosAnteriores = servico.toJSON();
       await ContratoPlanoAdicionalService.delete(servicoId);
 
-      await registrarExclusao(
-        req as AuthenticatedRequest,
-        'ContratoPlanoAdicional',
-        servico.id,
-        dadosAnteriores as Record<string, unknown>
-      );
+      try {
+        await registrarExclusao(
+          req as AuthenticatedRequest,
+          'ContratoPlanoAdicional',
+          servico.id,
+          dadosAnteriores as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Serviço adicional removido com sucesso'
-      });
+      sendSuccess(res, undefined, 'Serviço adicional removido com sucesso');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao remover serviço adicional', {
+      sendError(res, error, 'Erro ao remover serviço adicional', 500, true, {
         context: 'ContratoPlanoAdicionalController',
         action: 'delete',
-        error: errorMessage,
-        stack: errorStack,
         id: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        message: errorMessage
       });
     }
   }

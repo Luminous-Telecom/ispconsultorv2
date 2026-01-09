@@ -1,19 +1,16 @@
 import { Request, Response } from 'express';
-import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
 import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocumentoService';
+import { ModeloDocumentoPdfService } from '../../../services/documentos/ModeloDocumentoPdfService';
+import { ModeloDocumentoContentService } from '../../../services/documentos/ModeloDocumentoContentService';
 import { ClienteService } from '../../../services/clientes/ClienteService';
 import { ContratoService } from '../../../services/contratos/ContratoService';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { Plano } from '../../../models/cadastros/Plano';
-import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
-import * as fs from 'fs/promises';
 import { ValidationError } from 'sequelize';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
 export class ModeloDocumentoController {
   /**
@@ -33,16 +30,9 @@ export class ModeloDocumentoController {
         ativo: whereClause.ativo
       });
 
-      res.json({
-        ...result,
-        message: 'Documentos do sistema listados com sucesso'
-      });
+      sendSuccess(res, result, 'Documentos do sistema listados com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar documentos do sistema:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar documentos do sistema', 500, true);
     }
   }
 
@@ -56,24 +46,13 @@ export class ModeloDocumentoController {
       const documento = await ModeloDocumentoService.getById(id);
 
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
+        sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: documento,
-        message: 'Documento encontrado'
-      });
+      sendSuccess(res, documento, 'Documento encontrado');
     } catch (error) {
-      logger.error('Erro ao buscar documento:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar documento', 500, true);
     }
   }
 
@@ -86,43 +65,32 @@ export class ModeloDocumentoController {
 
       // Validar dados obrigatórios
       if (!documentoData.nome || !documentoData.tipo || !documentoData.conteudo) {
-        res.status(400).json({
-          success: false,
-          message: 'Nome, tipo e conteúdo são obrigatórios'
-        });
+        sendValidationError(res, 'Nome, tipo e conteúdo são obrigatórios');
         return;
       }
 
       const documento = await ModeloDocumentoService.create(documentoData);
 
-      await registrarCriacao(
-        req as AuthenticatedRequest,
-        'ModeloDocumento',
-        documento.id,
-        documento.toJSON() as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'ModeloDocumento',
+          documento.id,
+          documento.toJSON() as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        data: documento,
-        message: 'Documento criado com sucesso'
-      });
+      sendSuccess(res, documento, 'Documento criado com sucesso', 201);
     } catch (error: unknown) {
-      logger.error('Erro ao criar documento:', error);
-      
       if (error instanceof ValidationError) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.errors ? error.errors.map((err) => err.message) : []
-        });
+        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+        sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
 
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao criar documento', 500, true);
     }
   }
 
@@ -137,10 +105,7 @@ export class ModeloDocumentoController {
       const documento = await ModeloDocumentoService.getById(id);
 
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
+        sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
@@ -152,35 +117,27 @@ export class ModeloDocumentoController {
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores as unknown as Record<string, unknown>, dadosNovos);
 
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'ModeloDocumento',
-        documentoAtualizado.id,
-        dadosAnteriores as unknown as Record<string, unknown>,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ModeloDocumento',
+          documentoAtualizado.id,
+          dadosAnteriores as unknown as Record<string, unknown>,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        data: documentoAtualizado,
-        message: 'Documento atualizado com sucesso'
-      });
+      sendSuccess(res, documentoAtualizado, 'Documento atualizado com sucesso');
     } catch (error: unknown) {
-      logger.error('Erro ao atualizar documento:', error);
-      
       if (error instanceof ValidationError) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.errors ? error.errors.map((err) => err.message) : []
-        });
+        const errors = error.errors ? error.errors.map((err) => err.message) : [];
+        sendValidationError(res, 'Dados inválidos', { errors });
         return;
       }
 
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao atualizar documento', 500, true);
     }
   }
 
@@ -194,10 +151,7 @@ export class ModeloDocumentoController {
       const documento = await ModeloDocumentoService.getById(id);
 
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
+        sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
@@ -208,23 +162,20 @@ export class ModeloDocumentoController {
       
       await ModeloDocumentoService.delete(id);
 
-      await registrarExclusao(
-        req as AuthenticatedRequest,
-        'ModeloDocumento',
-        documento.id,
-        dadosAnteriores as unknown as Record<string, unknown>
-      );
+      try {
+        await registrarExclusao(
+          req as AuthenticatedRequest,
+          'ModeloDocumento',
+          documento.id,
+          dadosAnteriores as unknown as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Documento deletado com sucesso'
-      });
+      sendSuccess(res, undefined, 'Documento deletado com sucesso');
     } catch (error) {
-      logger.error('Erro ao deletar documento:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao deletar documento', 500, true);
     }
   }
 
@@ -237,17 +188,9 @@ export class ModeloDocumentoController {
 
       const documentos = await ModeloDocumentoService.getByType(tipo);
 
-      res.json({
-        success: true,
-        data: documentos,
-        message: `Documentos do tipo ${tipo} listados com sucesso`
-      });
+      sendSuccess(res, documentos, `Documentos do tipo ${tipo} listados com sucesso`);
     } catch (error) {
-      logger.error('Erro ao buscar documentos por tipo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar documentos por tipo', 500, true);
     }
   }
 
@@ -261,24 +204,13 @@ export class ModeloDocumentoController {
       const documento = await ModeloDocumentoService.getDefaultByType(tipo);
 
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: `Nenhum documento padrão encontrado para o tipo ${tipo}`
-        });
+        sendNotFound(res, `Nenhum documento padrão encontrado para o tipo ${tipo}`);
         return;
       }
 
-      res.json({
-        success: true,
-        data: documento,
-        message: 'Documento padrão encontrado'
-      });
+      sendSuccess(res, documento, 'Documento padrão encontrado');
     } catch (error) {
-      logger.error('Erro ao buscar documento padrão:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar documento padrão', 500, true);
     }
   }
 
@@ -289,17 +221,9 @@ export class ModeloDocumentoController {
     try {
       const tiposList = await ModeloDocumentoService.getTypes();
 
-      res.json({
-        success: true,
-        data: tiposList,
-        message: 'Tipos de documentos listados com sucesso'
-      });
+      sendSuccess(res, tiposList, 'Tipos de documentos listados com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar tipos de documentos:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar tipos de documentos', 500, true);
     }
   }
 
@@ -309,37 +233,9 @@ export class ModeloDocumentoController {
   static async generatePdf(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-
-      const documento = await ModeloDocumentoService.getById(id);
-
-      if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
-        return;
-      }
-
-      const pdfBuffer = await PDFGenerationService.generateFromContent(
-        documento.conteudo,
-        'html-pdf-node',
-        {
-          format: 'A4',
-          margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
-          printBackground: true
-        }
-      );
-
-      // Configurar headers
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="${documento.nome}.pdf"`);
-      res.send(pdfBuffer);
+      await ModeloDocumentoPdfService.gerarPdf(Number(id), res);
     } catch (error) {
-      logger.error('Erro ao gerar PDF:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar PDF'
-      });
+      sendError(res, error, 'Erro ao gerar PDF', 500, true);
     }
   }
 
@@ -350,90 +246,15 @@ export class ModeloDocumentoController {
     try {
       const { id } = req.params;
       const { cliente_id, contrato_id } = req.query;
-
-      const documento = await ModeloDocumentoService.getById(id);
-
-      if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
-        return;
-      }
-
-      // Buscar cliente se fornecido
-      let conteudoProcessado = documento.conteudo;
-      
-      if (cliente_id) {
-        const cliente = await ClienteService.getById(cliente_id as string);
-        
-        if (!cliente) {
-          res.status(404).json({
-            success: false,
-            message: 'Cliente não encontrado'
-          });
-          return;
-        }
-
-        // Se contrato_id foi fornecido, usar esse contrato específico
-        // Caso contrário, buscar contrato ativo do cliente
-        let contrato: Contrato | null = null;
-        
-        if (contrato_id) {
-          contrato = await ContratoService.getById(contrato_id as string);
-          
-          if (!contrato) {
-            res.status(404).json({
-              success: false,
-              message: 'Contrato não encontrado'
-            });
-            return;
-          }
-          
-          // Verificar se o contrato pertence ao cliente
-          if (contrato.cliente_id !== cliente.id) {
-            res.status(400).json({
-              success: false,
-              message: 'Contrato não pertence ao cliente informado'
-            });
-            return;
-          }
-        } else {
-          contrato = await ContratoService.findAtivoByCliente(cliente.id);
-        }
-
-        // Processar variáveis do documento
-        // Detectar baseUrl da requisição para URLs absolutas de assinaturas
-        const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : undefined;
-        conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
-          documento.conteudo,
-          {
-            cliente,
-            contrato: contrato || undefined
-          },
-          baseUrl
-        );
-      }
-
-      const pdfBuffer = await PDFGenerationService.generateFromContent(
-        conteudoProcessado,
-        'html-pdf-node',
-        {
-          format: 'A4',
-          margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
-          printBackground: true
-        }
+      await ModeloDocumentoPdfService.gerarTestPdf(
+        Number(id),
+        cliente_id as string | undefined,
+        contrato_id as string | undefined,
+        req,
+        res
       );
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="${documento.nome}-teste.pdf"`);
-      res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao gerar PDF de teste:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar PDF de teste'
-      });
+      sendError(res, error, 'Erro ao gerar PDF de teste', 500, true);
     }
   }
 
@@ -444,17 +265,9 @@ export class ModeloDocumentoController {
     try {
       const variaveis = VariaveisDocumentoService.getVariaveisDisponiveis();
 
-      res.json({
-        success: true,
-        data: variaveis,
-        message: 'Variáveis listadas com sucesso'
-      });
+      sendSuccess(res, variaveis, 'Variáveis listadas com sucesso');
     } catch (error) {
-      logger.error('Erro ao listar variáveis:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao listar variáveis', 500, true);
     }
   }
 
@@ -464,202 +277,90 @@ export class ModeloDocumentoController {
   static async saveModeloContratoConteudo(req: Request, res: Response): Promise<void> {
     try {
       const { modelo_documento_id, modelo } = req.body;
-
       if (!modelo_documento_id || modelo === undefined || modelo === null) {
-        res.status(400).json({
-          success: false,
-          message: 'ID do modelo de documento e modelo são obrigatórios'
-        });
+        sendValidationError(res, 'ID do modelo de documento e modelo são obrigatórios');
         return;
       }
-
-      const modeloDocumento = await ModeloDocumentoService.getById(modelo_documento_id);
-      
-      if (!modeloDocumento) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de documento não encontrado'
-        });
-        return;
+      const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo', modelo);
+      if (result.success) {
+        sendSuccess(res, result.data, result.message);
+      } else {
+        sendNotFound(res, result.message);
       }
-
-      await ModeloDocumentoService.update(modelo_documento_id, { conteudo: modelo });
-
-      res.json({
-        success: true,
-        data: modeloDocumento,
-        message: 'Modelo de documento salvo com sucesso'
-      });
     } catch (error) {
-      logger.error('Erro ao salvar modelo de documento:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao salvar modelo de documento', 500, true);
     }
   }
 
-  /**
-   * Salvar modelo específico do termo de adesão
-   */
   static async saveModeloTermoAdesao(req: Request, res: Response): Promise<void> {
     try {
       const { modelo_documento_id, modelo } = req.body;
-
       if (!modelo_documento_id || modelo === undefined || modelo === null) {
-        res.status(400).json({
-          success: false,
-          message: 'ID do modelo de documento e modelo são obrigatórios'
-        });
+        sendValidationError(res, 'ID do modelo de documento e modelo são obrigatórios');
         return;
       }
-
-      const modeloDocumento = await ModeloDocumentoService.getById(modelo_documento_id);
-      
-      if (!modeloDocumento) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de documento não encontrado'
-        });
-        return;
+      const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_adesao', modelo);
+      if (result.success) {
+        sendSuccess(res, result.data, result.message);
+      } else {
+        sendNotFound(res, result.message);
       }
-
-      await ModeloDocumentoService.update(modelo_documento_id, { conteudo_adesao: modelo });
-
-      res.json({
-        success: true,
-        data: modeloDocumento,
-        message: 'Modelo de termo de adesão salvo com sucesso'
-      });
     } catch (error) {
-      logger.error('Erro ao salvar modelo de termo de adesão:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao salvar modelo de termo de adesão', 500, true);
     }
   }
 
-  /**
-   * Salvar modelo específico do contrato de permanência
-   */
   static async saveModeloContratoPermanencia(req: Request, res: Response): Promise<void> {
     try {
       const { modelo_documento_id, modelo } = req.body;
-
       if (!modelo_documento_id || modelo === undefined || modelo === null) {
-        res.status(400).json({
-          success: false,
-          message: 'ID do modelo de documento e modelo são obrigatórios'
-        });
+        sendValidationError(res, 'ID do modelo de documento e modelo são obrigatórios');
         return;
       }
-
-      const modeloDocumento = await ModeloDocumentoService.getById(modelo_documento_id);
-      
-      if (!modeloDocumento) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de documento não encontrado'
-        });
-        return;
+      const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_permanencia', modelo);
+      if (result.success) {
+        sendSuccess(res, result.data, result.message);
+      } else {
+        sendNotFound(res, result.message);
       }
-
-      await ModeloDocumentoService.update(modelo_documento_id, { conteudo_permanencia: modelo });
-
-      res.json({
-        success: true,
-        data: modeloDocumento,
-        message: 'Modelo de contrato de permanência salvo com sucesso'
-      });
     } catch (error) {
-      logger.error('Erro ao salvar modelo de contrato de permanência:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao salvar modelo de contrato de permanência', 500, true);
     }
   }
 
-  /**
-   * Salvar modelo específico de recibo
-   */
   static async saveModeloRecibo(req: Request, res: Response): Promise<void> {
     try {
       const { modelo_documento_id, modelo } = req.body;
-
       if (!modelo_documento_id || modelo === undefined || modelo === null) {
-        res.status(400).json({
-          success: false,
-          message: 'ID do modelo de documento e modelo são obrigatórios'
-        });
+        sendValidationError(res, 'ID do modelo de documento e modelo são obrigatórios');
         return;
       }
-
-      const modeloDocumento = await ModeloDocumentoService.getById(modelo_documento_id);
-      
-      if (!modeloDocumento) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de documento não encontrado'
-        });
-        return;
+      const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_recibo', modelo);
+      if (result.success) {
+        sendSuccess(res, result.data, result.message);
+      } else {
+        sendNotFound(res, result.message);
       }
-
-      await ModeloDocumentoService.update(modelo_documento_id, { conteudo_recibo: modelo });
-
-      res.json({
-        success: true,
-        data: modeloDocumento,
-        message: 'Modelo de recibo salvo com sucesso'
-      });
     } catch (error) {
-      logger.error('Erro ao salvar modelo de recibo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao salvar modelo de recibo', 500, true);
     }
   }
 
-  /**
-   * Salvar modelo específico de carta de cobrança
-   */
   static async saveModeloCarta(req: Request, res: Response): Promise<void> {
     try {
       const { modelo_documento_id, modelo } = req.body;
-
       if (!modelo_documento_id || modelo === undefined || modelo === null) {
-        res.status(400).json({
-          success: false,
-          message: 'ID do modelo de documento e modelo são obrigatórios'
-        });
+        sendValidationError(res, 'ID do modelo de documento e modelo são obrigatórios');
         return;
       }
-
-      const modeloDocumento = await ModeloDocumentoService.getById(modelo_documento_id);
-      
-      if (!modeloDocumento) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de documento não encontrado'
-        });
-        return;
+      const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_carta', modelo);
+      if (result.success) {
+        sendSuccess(res, result.data, result.message);
+      } else {
+        sendNotFound(res, result.message);
       }
-
-      await ModeloDocumentoService.update(modelo_documento_id, { conteudo_carta: modelo });
-
-      res.json({
-        success: true,
-        data: modeloDocumento,
-        message: 'Modelo de carta de cobrança salvo com sucesso'
-      });
     } catch (error) {
-      logger.error('Erro ao salvar modelo de carta de cobrança:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao salvar modelo de carta de cobrança', 500, true);
     }
   }
 
@@ -673,31 +374,20 @@ export class ModeloDocumentoController {
       const modeloDocumento = await ModeloDocumentoService.getById(id);
 
       if (!modeloDocumento) {
-        res.status(404).json({
-          success: false,
-          message: 'Modelo de documento não encontrado'
-        });
+        sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
 
-      res.json({
-        success: true,
-        data: {
-          modelo_documento: modeloDocumento,
-          modelo_contrato_conteudo: modeloDocumento.conteudo || '',
-          modelo_termo_adesao: modeloDocumento.conteudo_adesao || '',
-          modelo_contrato_permanencia: modeloDocumento.conteudo_permanencia || '',
-          modelo_recibo: modeloDocumento.conteudo_recibo || '',
-          modelo_carta: modeloDocumento.conteudo_carta || ''
-        },
-        message: 'Modelos do modelo de documento recuperados com sucesso'
-      });
+      sendSuccess(res, {
+        modelo_documento: modeloDocumento,
+        modelo_contrato_conteudo: modeloDocumento.conteudo || '',
+        modelo_termo_adesao: modeloDocumento.conteudo_adesao || '',
+        modelo_contrato_permanencia: modeloDocumento.conteudo_permanencia || '',
+        modelo_recibo: modeloDocumento.conteudo_recibo || '',
+        modelo_carta: modeloDocumento.conteudo_carta || ''
+      }, 'Modelos do modelo de documento recuperados com sucesso');
     } catch (error) {
-      logger.error('Erro ao buscar modelos do modelo de documento:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
+      sendError(res, error, 'Erro ao buscar modelos do modelo de documento', 500, true);
     }
   }
 
@@ -709,13 +399,9 @@ export class ModeloDocumentoController {
       const { id } = req.params;
       const { conteudo } = req.body;
 
-      const documento = await ModeloDocumentoService.getById(id);
-
+      const documento = await ModeloDocumentoService.getById(Number(id));
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
+        sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
@@ -729,56 +415,35 @@ export class ModeloDocumentoController {
         }
       );
 
-      // Configurar headers
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${documento.nome}.pdf"`);
       res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao gerar PDF com conteúdo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar PDF'
-      });
+      sendError(res, error, 'Erro ao gerar PDF com conteúdo', 500, true);
     }
   }
 
-  /**
-   * Gerar PDF de teste com conteúdo específico e dados de um cliente
-   */
   static async generateTestPdfWithContent(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const { cliente_id, conteudo } = req.body;
 
-      const documento = await ModeloDocumentoService.getById(id);
-
+      const documento = await ModeloDocumentoService.getById(Number(id));
       if (!documento) {
-        res.status(404).json({
-          success: false,
-          message: 'Documento não encontrado'
-        });
+        sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
-      // Buscar cliente se fornecido
       let conteudoProcessado = conteudo;
       
       if (cliente_id) {
         const cliente = await ClienteService.getById(cliente_id);
-        
         if (!cliente) {
-          res.status(404).json({
-            success: false,
-            message: 'Cliente não encontrado'
-          });
+          sendNotFound(res, 'Cliente não encontrado');
           return;
         }
 
-        // Buscar contrato ativo do cliente
         const contrato = await ContratoService.findAtivoByCliente(cliente.id);
-
-        // Processar variáveis do documento
-        // Detectar baseUrl da requisição para URLs absolutas de assinaturas
         const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : undefined;
         conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
           conteudo,
@@ -800,16 +465,11 @@ export class ModeloDocumentoController {
         }
       );
 
-      // Configurar headers
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${documento.nome}-teste.pdf"`);
       res.send(pdfBuffer);
     } catch (error) {
-      logger.error('Erro ao gerar PDF de teste com conteúdo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao gerar PDF de teste'
-      });
+      sendError(res, error, 'Erro ao gerar PDF de teste com conteúdo', 500, true);
     }
   }
 
@@ -819,17 +479,12 @@ export class ModeloDocumentoController {
   static async uploadImagem(req: Request, res: Response): Promise<void> {
     try {
       if (!req.file) {
-        res.status(400).json({ 
-          success: false,
-          message: 'Arquivo não enviado' 
-        });
+        sendValidationError(res, 'Arquivo não enviado');
         return;
       }
 
-      // Validar tipo de arquivo
       const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       if (!allowedMimes.includes(req.file.mimetype)) {
-        // Deletar arquivo inválido se foi salvo
         if (req.file.path) {
           try {
             const fs = require('fs');
@@ -838,32 +493,19 @@ export class ModeloDocumentoController {
             }
           } catch {}
         }
-        res.status(400).json({ 
-          success: false,
-          message: 'Tipo de arquivo inválido. Apenas imagens são permitidas (JPG, PNG, GIF, WEBP)' 
-        });
+        sendValidationError(res, 'Tipo de arquivo inválido. Apenas imagens são permitidas (JPG, PNG, GIF, WEBP)');
         return;
       }
 
       const filePath = `/arquivos/documentos/${req.file.filename}`;
-      // URL relativa (não precisa de baseUrl)
-      const imageUrl = filePath;
-
-      res.json({ 
-        success: true, 
-        url: imageUrl,
+      sendSuccess(res, { 
+        url: filePath,
         path: filePath
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao fazer upload de imagem', {
+      sendError(res, error, 'Erro ao fazer upload de imagem', 500, true, {
         context: 'ModeloDocumentoController',
-        action: 'uploadImagem',
-        error: errorMessage
-      });
-      res.status(500).json({ 
-        success: false,
-        message: errorMessage 
+        action: 'uploadImagem'
       });
     }
   }

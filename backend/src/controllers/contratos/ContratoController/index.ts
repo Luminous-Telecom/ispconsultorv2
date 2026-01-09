@@ -17,6 +17,7 @@ import { logger } from '../../../utils/logger';
 import { withTransaction } from '../../../utils/transaction';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
+import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 
 export class ContratoController {
   // Função auxiliar para normalizar data (evitar problemas de timezone)
@@ -146,20 +147,12 @@ export class ContratoController {
         searchField: searchField as string
       });
 
-      res.json(result);
+      sendSuccess(res, result);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao listar contratos', {
+      sendError(res, error, 'Erro ao listar contratos', 500, true, {
         context: 'ContratoController',
         action: 'index',
-        error: errorMessage,
-        stack: errorStack,
         query: req.query
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -176,20 +169,12 @@ export class ContratoController {
         searchField: 'cliente_id'
       });
 
-      res.json(result.data);
+      sendSuccess(res, result.data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar contratos do cliente', {
+      sendError(res, error, 'Erro ao buscar contratos do cliente', 500, true, {
         context: 'ContratoController',
         action: 'getByCliente',
-        error: errorMessage,
-        stack: errorStack,
         clienteId: req.params.clienteId
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -200,29 +185,18 @@ export class ContratoController {
       const { id } = req.params;
       
       const contrato = await ContratoService.getById(id);
-
+      
       if (!contrato) {
-        res.status(404).json({
-          success: false,
-          message: 'Contrato não encontrado'
-        });
+        sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
-      res.json(contrato);
+      sendSuccess(res, contrato);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar contrato', {
+      sendError(res, error, 'Erro ao buscar contrato', 500, true, {
         context: 'ContratoController',
         action: 'show',
-        error: errorMessage,
-        stack: errorStack,
         contratoId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -233,11 +207,16 @@ export class ContratoController {
       const { error, value } = ContratoController.createSchema.validate(req.body);
       
       if (error) {
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.details.map(detail => detail.message)
-        });
+        // Converter para Record<string, string[]> esperado pelo sendValidationError
+        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
+          const field = detail.path.join('.') || 'general';
+          if (!acc[field]) {
+            acc[field] = [];
+          }
+          acc[field].push(detail.message);
+          return acc;
+        }, {} as Record<string, string[]>);
+        sendValidationError(res, 'Dados inválidos', errorsByField);
         return;
       }
 
@@ -254,20 +233,14 @@ export class ContratoController {
       // Verificar se o cliente existe
       const cliente = await ClienteService.getById(value.cliente_id);
       if (!cliente) {
-        res.status(404).json({
-          success: false,
-          message: 'Cliente não encontrado'
-        });
+        sendNotFound(res, 'Cliente não encontrado');
         return;
       }
 
       // Verificar se o plano existe
       const plano = await PlanoService.getById(value.plano_id);
       if (!plano) {
-        res.status(404).json({
-          success: false,
-          message: 'Plano não encontrado'
-        });
+        sendNotFound(res, 'Plano não encontrado');
         return;
       }
 
@@ -275,10 +248,7 @@ export class ContratoController {
       if (value.conta_boleto) {
         const banco = await BancoService.getById(value.conta_boleto);
         if (!banco) {
-          res.status(404).json({
-            success: false,
-            message: 'Banco não encontrado'
-          });
+          sendNotFound(res, 'Banco não encontrado');
           return;
         }
       }
@@ -288,10 +258,7 @@ export class ContratoController {
         const { ModeloDocumentoService } = await import('../../../services/documentos/ModeloDocumentoService');
         const modeloDocumento = await ModeloDocumentoService.getById(value.modelo_documento_id);
         if (!modeloDocumento) {
-          res.status(404).json({
-            success: false,
-            message: 'Modelo de documento não encontrado'
-          });
+          sendNotFound(res, 'Modelo de documento não encontrado');
           return;
         }
       }
@@ -371,37 +338,29 @@ export class ContratoController {
       });
 
       // Registrar auditoria
-      await registrarCriacao(
-        req,
-        'Contrato',
-        resultado.contrato.id,
-        resultado.contrato.toJSON() as Record<string, unknown>
-      );
+      try {
+        await registrarCriacao(
+          req,
+          'Contrato',
+          resultado.contrato.id,
+          resultado.contrato.toJSON() as Record<string, unknown>
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.status(201).json({
-        success: true,
-        message: `Contrato criado com sucesso${temServicosAdicionais ? ` e ${resultado.servicosAdicionais.length} serviço(s) adicional(is) vinculado(s)` : ''}`,
-        data: {
-          ...resultado.contrato.toJSON(),
-          servicos_adicionais: resultado.servicosAdicionais
-        }
-      });
+      sendSuccess(res, {
+        ...resultado.contrato.toJSON(),
+        servicos_adicionais: resultado.servicosAdicionais
+      }, `Contrato criado com sucesso${temServicosAdicionais ? ` e ${resultado.servicosAdicionais.length} serviço(s) adicional(is) vinculado(s)` : ''}`, 201);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      const errorName = error instanceof Error ? error.name : undefined;
-      
       // Tratar erro de constraint de unicidade
       if (error instanceof Error && error.name === 'SequelizeUniqueConstraintError') {
         logger.warn('Erro de constraint de unicidade ao criar contrato', {
           context: 'ContratoController',
-          action: 'create',
-          error: errorMessage
+          action: 'create'
         });
-        res.status(409).json({
-          success: false,
-          message: 'Erro de constraint de unicidade no banco de dados'
-        });
+        sendError(res, error, 'Erro de constraint de unicidade no banco de dados', 409, false);
         return;
       }
       
@@ -419,26 +378,15 @@ export class ContratoController {
             table: fkError.table,
             fields: fkError.fields
           });
-          res.status(404).json({
-            success: false,
-            message: 'Modelo de documento não encontrado'
-          });
+          sendNotFound(res, 'Modelo de documento não encontrado');
           return;
         }
       }
       
-      logger.error('Erro ao criar contrato', {
+      sendError(res, error, 'Erro ao criar contrato', 500, true, {
         context: 'ContratoController',
         action: 'create',
-        error: errorMessage,
-        stack: errorStack,
-        name: errorName,
         body: req.body
-      });
-      
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -455,27 +403,25 @@ export class ContratoController {
       if (error) {
         logger.warn('Erro de validação do contrato', {
           context: 'ContratoController',
-          action: 'create',
+          action: 'update',
           details: error.details
         });
-        res.status(400).json({
-          success: false,
-          message: 'Dados inválidos',
-          errors: error.details.map(detail => ({
-            field: detail.path.join('.'),
-            message: detail.message,
-            type: detail.type
-          }))
-        });
+        // Converter para Record<string, string[]> esperado pelo sendValidationError
+        const errorsByField: Record<string, string[]> = error.details.reduce((acc, detail) => {
+          const field = detail.path.join('.') || 'general';
+          if (!acc[field]) {
+            acc[field] = [];
+          }
+          acc[field].push(detail.message);
+          return acc;
+        }, {} as Record<string, string[]>);
+        sendValidationError(res, 'Dados inválidos', errorsByField);
         return;
       }
 
       const contrato = await ContratoService.getById(id);
       if (!contrato) {
-        res.status(404).json({
-          success: false,
-          message: 'Contrato não encontrado'
-        });
+        sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
@@ -525,33 +471,25 @@ export class ContratoController {
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
       
-      await registrarAtualizacao(
-        req,
-        'Contrato',
-        contrato.id,
-        dadosAnteriores,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req,
+          'Contrato',
+          contrato.id,
+          dadosAnteriores,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
-      res.json({
-        success: true,
-        message: 'Contrato atualizado com sucesso',
-        data: contrato
-      });
+      sendSuccess(res, contrato, 'Contrato atualizado com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar contrato', {
+      sendError(res, error, 'Erro ao atualizar contrato', 500, true, {
         context: 'ContratoController',
         action: 'update',
-        error: errorMessage,
-        stack: errorStack,
         contratoId: req.params.id,
         body: req.body
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -563,10 +501,7 @@ export class ContratoController {
       
       const contrato = await ContratoService.getById(id);
       if (!contrato) {
-        res.status(404).json({
-          success: false,
-          message: 'Contrato não encontrado'
-        });
+        sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
@@ -580,41 +515,30 @@ export class ContratoController {
       const dadosAnteriores = contrato.toJSON() as Record<string, unknown>;
 
       if (titulosCount > 0) {
-        res.status(409).json({
-          success: false,
-          error: 'Não é possível excluir contrato',
-          message: `Contrato possui ${titulosCount} título(s) financeiro(s) associado(s). Remova os títulos antes de excluir o contrato.`
-        });
+        sendForbidden(res, `Contrato possui ${titulosCount} título(s) financeiro(s) associado(s). Remova os títulos antes de excluir o contrato.`);
         return;
       }
 
       // Registrar auditoria
-      await registrarExclusao(
-        req,
-        'Contrato',
-        contrato.id,
-        dadosAnteriores
-      );
+      try {
+        await registrarExclusao(
+          req,
+          'Contrato',
+          contrato.id,
+          dadosAnteriores
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       await ContratoService.delete(id);
 
-      res.json({
-        success: true,
-        message: 'Contrato excluído com sucesso'
-      });
+      sendSuccess(res, undefined, 'Contrato excluído com sucesso');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao excluir contrato', {
+      sendError(res, error, 'Erro ao excluir contrato', 500, true, {
         context: 'ContratoController',
         action: 'delete',
-        error: errorMessage,
-        stack: errorStack,
         contratoId: req.params.id
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
       });
     }
   }
@@ -628,19 +552,11 @@ export class ContratoController {
         status: 'ativo'
       });
 
-      res.json(result.data);
+      sendSuccess(res, result.data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar contratos ativos', {
+      sendError(res, error, 'Erro ao buscar contratos ativos', 500, true, {
         context: 'ContratoController',
-        action: 'getAtivos',
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
+        action: 'getAtivos'
       });
     }
   }
