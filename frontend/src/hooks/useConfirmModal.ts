@@ -68,7 +68,6 @@ export interface UseConfirmModalReturn {
  * Retorna uma Promise<boolean> que resolve com true se confirmado, false se cancelado
  * 
  * @example
- * ```tsx
  * const { confirm, modalProps } = useConfirmModal();
  * 
  * const handleDelete = async () => {
@@ -82,13 +81,8 @@ export interface UseConfirmModalReturn {
  *   }
  * };
  * 
- * return (
- *   <>
- *     {/* seu componente */}
- *     {modalProps && <ConfirmModal {...modalProps} />}
- *   </>
- * );
- * ```
+ * // No return do componente:
+ * // {modalProps && <ConfirmModal {...modalProps} />}
  */
 export const useConfirmModal = (): UseConfirmModalReturn => {
   const [isOpen, setIsOpen] = useState(false);
@@ -150,4 +144,5 @@ export const useConfirmModal = (): UseConfirmModalReturn => {
   };
 };
 
+export { useConfirmModal };
 export default useConfirmModal;
