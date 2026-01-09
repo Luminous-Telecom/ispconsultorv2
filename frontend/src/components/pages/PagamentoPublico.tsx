@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { defaultApiClient } from '@/services/core';
 import { formatDate } from '@/utils/formatters';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import './PagamentoPublico.css';
 
 interface TituloPublico {
@@ -28,6 +29,7 @@ interface TituloPublico {
 const PagamentoPublico: React.FC = () => {
   const { id, token } = useParams<{ id: string; token: string }>();
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const { error } = useNotificationContext();
 
   const { data: titulo, isLoading, error } = useQuery<TituloPublico>({
     queryKey: ['pagamento-publico', id, token],
@@ -64,7 +66,7 @@ const PagamentoPublico: React.FC = () => {
         setCopiedField(fieldName);
         setTimeout(() => setCopiedField(null), 2000);
       } catch (err) {
-        alert('Erro ao copiar. Por favor, selecione o texto manualmente.');
+        error('Erro ao copiar. Por favor, selecione o texto manualmente.');
       }
       document.body.removeChild(textArea);
     }

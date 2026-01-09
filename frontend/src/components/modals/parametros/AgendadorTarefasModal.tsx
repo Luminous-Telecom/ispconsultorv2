@@ -11,6 +11,7 @@ import ListModal from '@/components/common/ListModal';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
@@ -24,6 +25,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
   const auditoria = useAuditoria();
+  const { confirm, ConfirmModal } = useConfirmModal();
 
   const handleAudit = (rotina: RotinaAgendada) => {
     auditoria.handleAudit('ScheduledRoutine', rotina.id);
@@ -177,15 +179,24 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     } catch (error: unknown) {
       if (error instanceof Error && 'response' in error) {
         const axiosError = error as AxiosError<{ message?: string }>;
-        alert(`Erro ao atualizar status: ${axiosError.response?.data?.message || 'Erro desconhecido'}`);
+        showError(`Erro ao atualizar status: ${axiosError.response?.data?.message || 'Erro desconhecido'}`);
       } else {
-        alert('Erro ao atualizar status: Erro desconhecido');
+        showError('Erro ao atualizar status: Erro desconhecido');
       }
     }
   };
 
   const handleExecute = async (rotina: RotinaAgendada) => {
-    if (!window.confirm('Deseja executar a rotina agora?')) return;
+    const confirmed = await confirm({
+      message: 'Deseja executar a rotina agora?',
+      variant: 'info',
+      title: 'Executar rotina',
+      confirmText: 'Executar',
+      cancelText: 'Cancelar',
+    });
+    
+    if (!confirmed) return;
+    
     try {
       await SchedulerService.executeRotina(rotina.id);
       success('Rotina iniciada em background');
@@ -201,16 +212,26 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   };
 
   const handleDelete = async (rotina: RotinaAgendada) => {
-    if (!window.confirm('Tem certeza que deseja deletar esta rotina?')) return;
+    const confirmed = await confirm({
+      message: 'Tem certeza que deseja deletar esta rotina?',
+      variant: 'danger',
+      title: 'Deletar rotina',
+      confirmText: 'Deletar',
+      cancelText: 'Cancelar',
+    });
+    
+    if (!confirmed) return;
+    
     try {
       await SchedulerService.deleteRotina(rotina.id);
+      success('Rotina deletada com sucesso');
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
     } catch (error: unknown) {
       if (error instanceof Error && 'response' in error) {
         const axiosError = error as AxiosError<{ message?: string }>;
-        alert(`Erro ao deletar rotina: ${axiosError.response?.data?.message || 'Erro desconhecido'}`);
+        showError(`Erro ao deletar rotina: ${axiosError.response?.data?.message || 'Erro desconhecido'}`);
       } else {
-        alert('Erro ao deletar rotina: Erro desconhecido');
+        showError('Erro ao deletar rotina: Erro desconhecido');
       }
     }
   };
@@ -335,6 +356,9 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         title="Relatórios de logs"
         modalId="auditoria-scheduled-routine-modal"
       />
+
+      {/* ConfirmModal */}
+      {ConfirmModal}
     </>
   );
 };
