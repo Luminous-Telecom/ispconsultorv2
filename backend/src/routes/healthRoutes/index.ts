@@ -6,6 +6,7 @@ import { SchedulerService } from '../../services/scheduler/SchedulerService';
 import { sequelize } from '../../config/database';
 import { logger } from '../../utils/logger';
 import { getMetrics, isMetricsEnabled } from '../../utils/metrics';
+import { getCurrentTimestamp } from '../../utils/timezoneUtils';
 
 const router = Router();
 
@@ -83,7 +84,7 @@ router.get('/health', async (_req: Request, res: Response): Promise<void> => {
 
     res.json({
       status: 'ok',
-      timestamp: new Date().toISOString(),
+      timestamp: getCurrentTimestamp(),
       uptime: process.uptime(),
       database: 'connected',
       scheduler: {
@@ -105,7 +106,7 @@ router.get('/health', async (_req: Request, res: Response): Promise<void> => {
 
     res.status(503).json({
       status: 'error',
-      timestamp: new Date().toISOString(),
+      timestamp: getCurrentTimestamp(),
       error: 'Service unavailable'
     });
   }
@@ -123,7 +124,7 @@ router.get('/health/detailed', async (_req: Request, res: Response): Promise<voi
 
     res.json({
       status: 'ok',
-      timestamp: new Date().toISOString(),
+      timestamp: getCurrentTimestamp(),
       uptime: process.uptime(),
       database: 'connected',
       scheduler: stats.scheduler,
@@ -139,7 +140,7 @@ router.get('/health/detailed', async (_req: Request, res: Response): Promise<voi
 
     res.status(503).json({
       status: 'error',
-      timestamp: new Date().toISOString(),
+      timestamp: getCurrentTimestamp(),
       error: 'Service unavailable'
     });
   }

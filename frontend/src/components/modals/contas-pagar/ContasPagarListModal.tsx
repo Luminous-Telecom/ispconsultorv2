@@ -36,6 +36,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>('');
   const [dataVencimentoFim, setDataVencimentoFim] = useState<string>('');
   const isMobile = useIsMobile();
+
   
   // Hook de auditoria
   const auditoria = useAuditoria();
@@ -481,6 +482,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
           action: (selectedItems?: ContaPagar[]) => {
             const items = selectedItems || (selectedItem ? [selectedItem] : []);
             const item = items.length > 0 ? items[0] : selectedItem;
+            
             if (item) {
               setSelectedContaPagarId(item.id);
               setShowPagamentoModal(true);
@@ -640,11 +642,37 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     </>
   );
 
+
+
   if (_skipWrapper) {
     return (
       <>
         {modalContent}
         {modals}
+        
+        <ContaPagarModal
+          key={`pagamento-manual-${selectedContaPagarId || 'none'}`}
+          show={showPagamentoModal}
+          onClose={() => {
+            setShowPagamentoModal(false);
+            setSelectedContaPagarId(null);
+          }}
+          contaPagarId={selectedContaPagarId}
+          onSuccess={() => {
+            refetch();
+          }}
+          showPagamentoOnOpen={true}
+        />
+
+        {/* Modal de Visualização de PDF de Auditoria */}
+        <ImprimirModal
+          show={auditoria.showPreview}
+          onClose={auditoria.handleClosePreview}
+          pdfUrl={auditoria.pdfUrl}
+          isGenerating={auditoria.isGeneratingPdf}
+          title="Relatórios de logs"
+          modalId="auditoria-conta-pagar-modal"
+        />
       </>
     );
   }
@@ -666,21 +694,19 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
 
       {modals}
 
-      {showPagamentoModal && selectedContaPagarId && (
-        <ContaPagarModal
-          show={showPagamentoModal}
-          onClose={() => {
-            setShowPagamentoModal(false);
-            setSelectedContaPagarId(null);
-          }}
-          contaPagarId={selectedContaPagarId}
-          onSuccess={() => {
-            refetch();
-            // Não fechar o modal aqui - deixar o usuário fechar manualmente
-          }}
-          showPagamentoOnOpen={true}
-        />
-      )}
+      <ContaPagarModal
+        key={`pagamento-manual-${selectedContaPagarId || 'none'}`}
+        show={showPagamentoModal}
+        onClose={() => {
+          setShowPagamentoModal(false);
+          setSelectedContaPagarId(null);
+        }}
+        contaPagarId={selectedContaPagarId}
+        onSuccess={() => {
+          refetch();
+        }}
+        showPagamentoOnOpen={true}
+      />
 
       {/* Modal de Visualização de PDF de Auditoria */}
       <ImprimirModal

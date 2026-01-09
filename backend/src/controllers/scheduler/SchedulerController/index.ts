@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { Op, WhereOptions } from 'sequelize';
 import { SchedulerService } from '../../../services/scheduler/SchedulerService';
+import { ScheduledRoutineService } from '../../../services/scheduler/ScheduledRoutineService';
 import { ScheduledRoutine } from '../../../models';
 import { logger } from '../../../utils/logger';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 
 export class SchedulerController {
@@ -18,37 +18,15 @@ export class SchedulerController {
     try {
       const { page = 1, limit = 15, search, sort = 'created_at', direction = 'desc' } = req.query;
 
-      const offset = (Number(page) - 1) * Number(limit);
-      const where: WhereOptions = {};
-
-      // Filtro de busca
-      if (search) {
-        (where as Record<symbol, unknown>)[Op.or] = [
-          { nome: { [Op.like]: `%${search}%` } },
-          { tipo: { [Op.like]: `%${search}%` } },
-          { descricao: { [Op.like]: `%${search}%` } }
-        ];
-      }
-
-      const routines = await ScheduledRoutine.findAndCountAll({
-        where,
+      const result = await ScheduledRoutineService.list({
+        page: Number(page),
         limit: Number(limit),
-        offset,
-        order: [[sort as string, direction as 'asc' | 'desc']]
+        search: search as string,
+        sort: sort as string,
+        direction: direction as 'asc' | 'desc'
       });
 
-      const totalPages = Math.ceil(routines.count / Number(limit));
-
-      res.json({
-        success: true,
-        data: routines.rows,
-        pagination: {
-          total: routines.count,
-          page: Number(page),
-          limit: Number(limit),
-          pages: totalPages
-        }
-      });
+      res.json(result);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
@@ -156,13 +134,13 @@ export class SchedulerController {
       const updateData = req.body;
 
       // Buscar rotina antes de atualizar para capturar dados anteriores
-      const routineBefore = await ScheduledRoutine.findByPk(Number(id));
+      const routineBefore = await ScheduledRoutineService.getById(Number(id));
       const dadosAnteriores = routineBefore ? (routineBefore.toJSON ? routineBefore.toJSON() as Record<string, unknown> : (routineBefore as unknown as Record<string, unknown>)) : {};
 
       const routine = await this.schedulerService.updateRoutine(Number(id), updateData);
       
       // Recarregar rotina para obter dados atualizados
-      const routineAtualizada = await ScheduledRoutine.findByPk(Number(id));
+      const routineAtualizada = await ScheduledRoutineService.getById(Number(id));
       if (!routineAtualizada) {
         res.status(404).json({
           success: false,
@@ -215,7 +193,7 @@ export class SchedulerController {
       const { id } = req.params;
 
       // Buscar rotina antes de deletar para capturar dados anteriores
-      const routine = await ScheduledRoutine.findByPk(Number(id));
+      const routine = await ScheduledRoutineService.getById(Number(id));
       if (routine) {
         const dadosAnteriores = routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>);
         
@@ -270,13 +248,13 @@ export class SchedulerController {
       }
 
       // Buscar rotina antes de atualizar para capturar dados anteriores
-      const routineBefore = await ScheduledRoutine.findByPk(Number(id));
+      const routineBefore = await ScheduledRoutineService.getById(Number(id));
       const dadosAnteriores = routineBefore ? (routineBefore.toJSON ? routineBefore.toJSON() as Record<string, unknown> : (routineBefore as unknown as Record<string, unknown>)) : {};
 
-      const routine = await this.schedulerService.toggleRoutine(Number(id), ativo);
+      await this.schedulerService.toggleRoutine(Number(id), ativo);
       
       // Recarregar rotina para obter dados atualizados
-      const routineAtualizada = await ScheduledRoutine.findByPk(Number(id));
+      const routineAtualizada = await ScheduledRoutineService.getById(Number(id));
       if (!routineAtualizada) {
         res.status(404).json({
           success: false,

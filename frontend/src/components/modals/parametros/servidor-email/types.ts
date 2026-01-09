@@ -35,6 +35,7 @@ export interface MensagensTabProps {
   tipoEnvio: 'desativado' | 'pdf';
   mensagemTexto: string;
   mensagemManual?: string;
+  editorKey?: number;
   onMensagemTypeChange: (value: string) => void;
   onTipoEnvioChange: (value: 'desativado' | 'pdf') => void;
   onMensagemTextoChange: (value: string) => void;

@@ -48,6 +48,20 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
     setPage(1);
   }, [showCancelados, setPage]);
 
+  // Limpar seleção de itens cancelados quando o filtro de ocultar cancelados for ativado
+  useEffect(() => {
+    if (!showCancelados && _selectedItems.length > 0) {
+      const canceladosSelecionados = _selectedItems.filter(item => item.status?.toLowerCase() === 'cancelado');
+      
+      if (canceladosSelecionados.length > 0) {
+        // Remover apenas os cancelados, mantendo os outros selecionados
+        const itensNaoCancelados = _selectedItems.filter(item => item.status?.toLowerCase() !== 'cancelado');
+        setSelectedItems(itensNaoCancelados);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCancelados]);
+
   // Callback para ordenação (o Table gerencia internamente)
   const handleSort = useCallback((_column: string, _direction: SortDirection) => {
     // Esta função será chamada pelo Table quando o usuário clicar em uma coluna

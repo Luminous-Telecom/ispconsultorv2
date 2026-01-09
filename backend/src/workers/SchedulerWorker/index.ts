@@ -6,6 +6,7 @@ import { RemessaBancariaRoutine } from '../../services/scheduler/routines/Remess
 import { IRoutine } from '../../interfaces/IRoutine';
 import type { WorkersStatus } from '../WorkerManager';
 import { logger } from '../../utils/logger';
+import { getCurrentTimestamp } from '../../utils/timezoneUtils';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
@@ -65,7 +66,7 @@ class SchedulerWorker {
       data_inicio: new Date(),
       resultado: {
         worker_id: this.activeWorkers + 1,
-        timestamp: new Date().toISOString()
+        timestamp: getCurrentTimestamp()
       }
     });
 
@@ -166,7 +167,7 @@ class SchedulerWorker {
           resultado: {
             ...executionLog.resultado,
             ...message.data,
-            last_update: new Date().toISOString()
+            last_update: getCurrentTimestamp()
           }
         });
         break;
@@ -179,7 +180,7 @@ class SchedulerWorker {
           resultado: {
             ...executionLog.resultado,
             ...message.data,
-            completed_at: new Date().toISOString()
+            completed_at: getCurrentTimestamp()
           }
         });
         break;
@@ -195,7 +196,7 @@ class SchedulerWorker {
             ...executionLog.resultado,
             error: message.error || null,
             error_data: errorData?.error_data || null,
-            failed_at: new Date().toISOString()
+            failed_at: getCurrentTimestamp()
           }
         });
         break;
@@ -217,7 +218,7 @@ class SchedulerWorker {
           resultado: {
             ...executionLog.resultado,
             error,
-            failed_at: new Date().toISOString()
+            failed_at: getCurrentTimestamp()
           }
         });
       }

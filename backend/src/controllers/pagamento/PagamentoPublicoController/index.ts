@@ -1,5 +1,6 @@
 import { Request, Response as ExpressResponse } from 'express';
 import { Titulo } from '../../../models/financeiro/Titulo';
+import { TituloService } from '../../../services/financeiro/TituloService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Plano } from '../../../models/cadastros/Plano';
 import { Banco } from '../../../models/cadastros/Banco';
@@ -65,21 +66,7 @@ export class PagamentoPublicoController {
         return;
       }
 
-      const titulo = await Titulo.findByPk(tituloId, {
-        include: [
-          { 
-            model: Cliente, 
-            as: 'cliente',
-            attributes: ['id', 'razao_social', 'nome_fantasia']
-          },
-          { 
-            model: Plano, 
-            as: 'plano',
-            attributes: ['id', 'nome_plano']
-          }
-        ],
-        attributes: ['id', 'numero_titulo', 'valor', 'valor_final', 'data_vencimento', 'status', 'qrcode', 'linha_digitavel']
-      }) as TituloComRelacoes | null;
+      const titulo = await TituloService.getById(tituloId) as TituloComRelacoes | null;
 
       if (!titulo) {
         res.status(404).json({
@@ -139,21 +126,7 @@ export class PagamentoPublicoController {
       }
 
       // Buscar título
-      const titulo = await Titulo.findByPk(tituloId, {
-        include: [
-          { model: Cliente, as: 'cliente' },
-          { model: Plano, as: 'plano' },
-          { 
-            model: Banco, 
-            as: 'banco',
-            attributes: [
-              'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
-              'url_retorno', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 
-              'instrucao_linha_3', 'instrucao_linha_4', 'instrucao_linha_5', 'logo'
-            ]
-          }
-        ]
-      }) as TituloComRelacoes | null;
+      const titulo = await TituloService.getById(tituloId) as TituloComRelacoes | null;
 
       if (!titulo) {
         res.status(404).json({

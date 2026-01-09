@@ -18,7 +18,7 @@ const sequelize = new Sequelize({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   logging: false,
-  timezone: '-03:00', // Configura fuso horário para Brasil (GMT-3)
+  timezone: '-03:00', // Horário de Brasília
   pool: {
     max: 10,
     min: 0,

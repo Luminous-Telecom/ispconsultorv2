@@ -5,12 +5,17 @@ import { Plano } from '../../../models/cadastros/Plano';
 import { Banco } from '../../../models/cadastros/Banco';
 import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
 import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
-import { Op, WhereOptions, Transaction } from 'sequelize';
+import { ContratoService } from '../../../services/contratos/ContratoService';
+import { ClienteService } from '../../../services/clientes/ClienteService';
+import { BancoService } from '../../../services/cadastros/BancoService';
+import { PlanoService } from '../../../services/cadastros/PlanoService';
+import { ContratoPlanoAdicionalService } from '../../../services/contratos/ContratoPlanoAdicionalService';
+import { Transaction, Op, WhereOptions } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import * as Joi from 'joi';
 import { logger } from '../../../utils/logger';
 import { withTransaction } from '../../../utils/transaction';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 
 export class ContratoController {
@@ -133,25 +138,15 @@ export class ContratoController {
         whereClause.status = status;
       }
 
-      const { count, rows } = await Contrato.findAndCountAll({
-        where: whereClause,
-        include: [
-          { model: Cliente, as: 'cliente' },
-          { model: Plano, as: 'plano' },
-          { model: Banco, as: 'bancoBoleto' }
-        ],
-        order: [['id', 'DESC']], // Maior ID para o menor
-        limit: limitNum,
-        offset
-      });
-
-      res.json({
-        data: rows,
-        total: count,
+      const result = await ContratoService.list({
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(count / limitNum)
+        search: search as string,
+        status: status as string,
+        searchField: searchField as string
       });
+
+      res.json(result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
@@ -174,16 +169,14 @@ export class ContratoController {
     try {
       const { clienteId } = req.params;
       
-      const contratos = await Contrato.findAll({
-        where: { cliente_id: clienteId },
-        include: [
-          { model: Plano, as: 'plano' },
-          { model: Banco, as: 'bancoBoleto' }
-        ],
-        order: [['created_at', 'DESC']]
+      const result = await ContratoService.list({
+        page: 1,
+        limit: 1000,
+        search: clienteId,
+        searchField: 'cliente_id'
       });
 
-      res.json(contratos);
+      res.json(result.data);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
@@ -206,13 +199,7 @@ export class ContratoController {
     try {
       const { id } = req.params;
       
-      const contrato = await Contrato.findByPk(id, {
-        include: [
-          { model: Cliente, as: 'cliente' },
-          { model: Plano, as: 'plano' },
-          { model: Banco, as: 'bancoBoleto' }
-        ]
-      });
+      const contrato = await ContratoService.getById(id);
 
       if (!contrato) {
         res.status(404).json({
@@ -265,7 +252,7 @@ export class ContratoController {
       value.data_validade_desconto = ContratoController.normalizeDate(value.data_validade_desconto);
 
       // Verificar se o cliente existe
-      const cliente = await Cliente.findByPk(value.cliente_id);
+      const cliente = await ClienteService.getById(value.cliente_id);
       if (!cliente) {
         res.status(404).json({
           success: false,
@@ -275,7 +262,7 @@ export class ContratoController {
       }
 
       // Verificar se o plano existe
-      const plano = await Plano.findByPk(value.plano_id);
+      const plano = await PlanoService.getById(value.plano_id);
       if (!plano) {
         res.status(404).json({
           success: false,
@@ -286,7 +273,7 @@ export class ContratoController {
 
       // Verificar se o banco existe (se fornecido)
       if (value.conta_boleto) {
-        const banco = await Banco.findByPk(value.conta_boleto);
+        const banco = await BancoService.getById(value.conta_boleto);
         if (!banco) {
           res.status(404).json({
             success: false,
@@ -298,7 +285,8 @@ export class ContratoController {
 
       // Verificar se o modelo de documento existe (se fornecido)
       if (value.modelo_documento_id) {
-        const modeloDocumento = await ModeloDocumento.findByPk(value.modelo_documento_id);
+        const { ModeloDocumentoService } = await import('../../../services/documentos/ModeloDocumentoService');
+        const modeloDocumento = await ModeloDocumentoService.getById(value.modelo_documento_id);
         if (!modeloDocumento) {
           res.status(404).json({
             success: false,
@@ -310,7 +298,6 @@ export class ContratoController {
 
       // Calcular valor_final se não fornecido
       if (!value.valor_final) {
-        const plano = await Plano.findByPk(value.plano_id);
         if (plano) {
           let valorFinal = parseFloat(plano.valor_mensal.toString());
           
@@ -342,30 +329,31 @@ export class ContratoController {
       // Criar contrato e serviços adicionais dentro de uma transação
       const resultado = await withTransaction(async (transaction: Transaction) => {
         // Criar contrato
-        const contrato = await Contrato.create(value, { transaction });
+        const contrato = await ContratoService.create(value, transaction);
 
         // Criar serviços adicionais se fornecidos
         const servicosCriados = [];
         if (temServicosAdicionais) {
+          const { FinancialCalculationsService } = await import('../../../services/FinancialCalculationsService');
+          
           for (const servicoData of servicosAdicionais) {
             // Validar plano do serviço adicional
-            const planoAdicional = await Plano.findByPk(servicoData.plano_id, { transaction });
+            const planoAdicional = await PlanoService.getById(servicoData.plano_id, transaction);
             if (!planoAdicional) {
               throw new Error(`Plano adicional ${servicoData.plano_id} não encontrado`);
             }
 
             // Calcular valor final do serviço
-            let valorFinal = parseFloat(planoAdicional.valor_mensal.toString());
-            if (servicoData.desconto_valor && servicoData.desconto_valor > 0) {
-              valorFinal = Math.max(0, valorFinal - parseFloat(servicoData.desconto_valor.toString()));
-            } else if (servicoData.desconto_percentual && servicoData.desconto_percentual > 0) {
-              const descontoValor = valorFinal * (parseFloat(servicoData.desconto_percentual.toString()) / 100);
-              valorFinal = Math.max(0, valorFinal - descontoValor);
-            }
-            valorFinal = Math.round(valorFinal * 100) / 100;
+            const valorFinal = FinancialCalculationsService.calcularValorFinal(
+              parseFloat(planoAdicional.valor_mensal.toString()),
+              {
+                desconto_valor: servicoData.desconto_valor,
+                desconto_percentual: servicoData.desconto_percentual
+              }
+            );
 
             // Criar serviço adicional
-            const servico = await ContratoPlanoAdicional.create({
+            const servico = await ContratoPlanoAdicionalService.create({
               contrato_id: contrato.id,
               plano_id: servicoData.plano_id,
               desconto_percentual: servicoData.desconto_percentual || null,
@@ -373,7 +361,7 @@ export class ContratoController {
               valor_final: valorFinal,
               status: servicoData.status || 'ativo',
               observacoes: servicoData.observacoes || null
-            }, { transaction });
+            }, transaction);
 
             servicosCriados.push(servico);
           }
@@ -482,7 +470,7 @@ export class ContratoController {
         return;
       }
 
-      const contrato = await Contrato.findByPk(id);
+      const contrato = await ContratoService.getById(id);
       if (!contrato) {
         res.status(404).json({
           success: false,
@@ -507,38 +495,32 @@ export class ContratoController {
       value.data_fim = ContratoController.normalizeDate(value.data_fim);
       value.data_validade_desconto = ContratoController.normalizeDate(value.data_validade_desconto);
 
-      await contrato.update(value);
+      let contratoAtualizado = await ContratoService.update(id, value);
 
       // Recalcular valor_final se plano ou descontos mudaram
       if (value.plano_id !== undefined || value.desconto_percentual !== undefined || value.desconto_valor !== undefined) {
-        // Recarregar contrato para pegar valores atualizados
-        await contrato.reload();
-        
         // Recalcular baseado no plano e descontos
-        const plano = await contrato.getPlano();
+        const plano = await contratoAtualizado.getPlano();
         let novoValorFinal = parseFloat(plano.valor_mensal.toString());
 
         // Sempre usar desconto em valor quando disponível (mais preciso)
         // Se não houver desconto em valor, calcular a partir do percentual
-        if (contrato.desconto_valor && contrato.desconto_valor > 0) {
-          const descontoValor = parseFloat(contrato.desconto_valor.toString());
+        if (contratoAtualizado.desconto_valor && contratoAtualizado.desconto_valor > 0) {
+          const descontoValor = parseFloat(contratoAtualizado.desconto_valor.toString());
           novoValorFinal = Math.max(0, novoValorFinal - descontoValor);
-        } else if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
+        } else if (contratoAtualizado.desconto_percentual && contratoAtualizado.desconto_percentual > 0) {
           // Calcular valor do desconto a partir do percentual
-          const descontoValor = novoValorFinal * (parseFloat(contrato.desconto_percentual.toString()) / 100);
+          const descontoValor = novoValorFinal * (parseFloat(contratoAtualizado.desconto_percentual.toString()) / 100);
           novoValorFinal = Math.max(0, novoValorFinal - descontoValor);
         }
 
         // Arredondar para 2 casas decimais para evitar problemas de precisão
         const valorFinalArredondado = Math.round(novoValorFinal * 100) / 100;
-        await contrato.update({ valor_final: valorFinalArredondado });
+        contratoAtualizado = await ContratoService.update(id, { valor_final: valorFinalArredondado });
       }
-
-      // Recarregar contrato para obter dados atualizados
-      await contrato.reload();
       
       // Registrar auditoria
-      const dadosNovos = contrato.toJSON() as Record<string, unknown>;
+      const dadosNovos = contratoAtualizado.toJSON() as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -579,7 +561,7 @@ export class ContratoController {
     try {
       const { id } = req.params;
       
-      const contrato = await Contrato.findByPk(id);
+      const contrato = await ContratoService.getById(id);
       if (!contrato) {
         res.status(404).json({
           success: false,
@@ -589,11 +571,9 @@ export class ContratoController {
       }
 
       // Verificar se contrato tem títulos associados
-      const { Titulo } = await import('../../../models/financeiro/Titulo');
-      const titulosCount = await Titulo.count({
-        where: {
-          contrato_id: id
-        }
+      const { TituloService } = await import('../../../services/financeiro/TituloService');
+      const titulosCount = await TituloService.count({
+        contrato_id: id
       });
 
       // Capturar dados anteriores para auditoria
@@ -616,7 +596,7 @@ export class ContratoController {
         dadosAnteriores
       );
 
-      await contrato.destroy();
+      await ContratoService.delete(id);
 
       res.json({
         success: true,
@@ -642,17 +622,13 @@ export class ContratoController {
   // Listar contratos ativos
   static async getAtivos(req: Request, res: Response): Promise<void> {
     try {
-      const contratos = await Contrato.findAll({
-        where: { status: 'ativo' },
-        include: [
-          { model: Cliente, as: 'cliente' },
-          { model: Plano, as: 'plano' },
-          { model: Banco, as: 'bancoBoleto' }
-        ],
-        order: [['created_at', 'DESC']]
+      const result = await ContratoService.list({
+        page: 1,
+        limit: 1000,
+        status: 'ativo'
       });
 
-      res.json(contratos);
+      res.json(result.data);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;

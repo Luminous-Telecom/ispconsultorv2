@@ -1,18 +1,18 @@
 import { Request, Response } from 'express';
 import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { Plano } from '../../../models/cadastros/Plano';
+import { ContratoPlanoAdicionalService } from '../../../services/contratos/ContratoPlanoAdicionalService';
+import { ContratoService } from '../../../services/contratos/ContratoService';
+import { PlanoService } from '../../../services/cadastros/PlanoService';
 import * as Joi from 'joi';
 import { logger } from '../../../utils/logger';
 import { isJoiError, getErrorMessage } from '../../../utils/errorUtils';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 //
 export class ContratoPlanoAdicionalController {
   // Schema de validação para criação
   private static createSchema = Joi.object({
-    contrato_id: Joi.number().integer().min(1).required(),
     plano_id: Joi.number().integer().min(1).required(),
     desconto_percentual: Joi.number().min(0).max(100).allow(null),
     desconto_valor: Joi.number().min(0).allow(null),
@@ -42,16 +42,7 @@ export class ContratoPlanoAdicionalController {
         return;
       }
 
-      const servicos = await ContratoPlanoAdicional.findAll({
-        where: { contrato_id: parseInt(contrato_id) },
-        include: [
-          {
-            association: 'plano',
-            attributes: ['id', 'nome_plano', 'descricao', 'tipo_servico', 'valor_mensal', 'status']
-          }
-        ],
-        order: [['created_at', 'DESC']]
-      });
+      const servicos = await ContratoPlanoAdicionalService.getByContrato(parseInt(contrato_id));
 
       // Calcular valor_final para cada serviço
       interface ServicoJson extends ReturnType<typeof servicos[0]['toJSON']> {
@@ -81,7 +72,7 @@ export class ContratoPlanoAdicionalController {
         action: 'index',
         error: errorMessage,
         stack: errorStack,
-        contratoId: req.params.contratoId
+        contratoId: req.params.contrato_id
       });
       res.status(500).json({
         success: false,
@@ -97,7 +88,7 @@ export class ContratoPlanoAdicionalController {
       const value = await ContratoPlanoAdicionalController.createSchema.validateAsync(req.body);
 
       // Verificar se o contrato existe
-      const contrato = await Contrato.findByPk(contrato_id);
+      const contrato = await ContratoService.getById(contrato_id);
       if (!contrato) {
         res.status(404).json({
           success: false,
@@ -107,7 +98,7 @@ export class ContratoPlanoAdicionalController {
       }
 
       // Verificar se o plano existe
-      const plano = await Plano.findByPk(value.plano_id);
+      const plano = await PlanoService.getById(value.plano_id);
       if (!plano) {
         res.status(404).json({
           success: false,
@@ -117,7 +108,7 @@ export class ContratoPlanoAdicionalController {
       }
 
       // Verificar se o plano já está vinculado ao contrato
-      const servicoExistente = await ContratoPlanoAdicional.findOne({
+      const servicoExistente = await ContratoPlanoAdicionalService.findOne({
         where: {
           contrato_id: parseInt(contrato_id),
           plano_id: value.plano_id
@@ -142,7 +133,7 @@ export class ContratoPlanoAdicionalController {
       }
       valorFinal = Math.round(valorFinal * 100) / 100;
 
-      const servico = await ContratoPlanoAdicional.create({
+      const servico = await ContratoPlanoAdicionalService.create({
         contrato_id: parseInt(contrato_id),
         plano_id: value.plano_id,
         desconto_percentual: value.desconto_percentual || null,
@@ -152,14 +143,7 @@ export class ContratoPlanoAdicionalController {
         observacoes: value.observacoes || null
       });
 
-      const servicoComPlano = await ContratoPlanoAdicional.findByPk(servico.id, {
-        include: [
-          {
-            association: 'plano',
-            attributes: ['id', 'nome_plano', 'descricao', 'tipo_servico', 'valor_mensal', 'status']
-          }
-        ]
-      });
+      const servicoComPlano = await ContratoPlanoAdicionalService.getById(servico.id, true);
 
       await registrarCriacao(
         req as AuthenticatedRequest,
@@ -188,7 +172,7 @@ export class ContratoPlanoAdicionalController {
         action: 'create',
         error: errorMessage,
         stack: errorStack,
-        contratoId: req.params.contratoId,
+        contratoId: req.params.contrato_id,
         body: req.body
       });
       res.status(500).json({
@@ -204,7 +188,7 @@ export class ContratoPlanoAdicionalController {
       const { id } = req.params;
       const value = await ContratoPlanoAdicionalController.updateSchema.validateAsync(req.body);
 
-      const servico = await ContratoPlanoAdicional.findByPk(id);
+      const servico = await ContratoPlanoAdicionalService.getById(id);
 
       if (!servico) {
         res.status(404).json({
@@ -217,7 +201,7 @@ export class ContratoPlanoAdicionalController {
       // Se plano_id foi fornecido, verificar se o plano existe
       let planoIdParaUsar = servico.plano_id;
       if (value.plano_id && value.plano_id !== servico.plano_id) {
-        const novoPlano = await Plano.findByPk(value.plano_id);
+        const novoPlano = await PlanoService.getById(value.plano_id);
         if (!novoPlano) {
           res.status(404).json({
             success: false,
@@ -229,7 +213,7 @@ export class ContratoPlanoAdicionalController {
       }
 
       // Buscar plano para calcular valor_final (usar o novo plano se foi alterado)
-      const plano = await Plano.findByPk(planoIdParaUsar);
+      const plano = await PlanoService.getById(planoIdParaUsar);
       if (!plano) {
         res.status(404).json({
           success: false,
@@ -248,7 +232,7 @@ export class ContratoPlanoAdicionalController {
       }
       valorFinal = Math.round(valorFinal * 100) / 100;
 
-      await servico.update({
+      await ContratoPlanoAdicionalService.update(id, {
         plano_id: planoIdParaUsar,
         desconto_percentual: value.desconto_percentual !== undefined ? value.desconto_percentual : servico.desconto_percentual,
         desconto_valor: value.desconto_valor !== undefined ? value.desconto_valor : servico.desconto_valor,
@@ -257,14 +241,7 @@ export class ContratoPlanoAdicionalController {
         observacoes: value.observacoes !== undefined ? value.observacoes : servico.observacoes
       });
 
-      const servicoAtualizado = await ContratoPlanoAdicional.findByPk(id, {
-        include: [
-          {
-            association: 'plano',
-            attributes: ['id', 'nome_plano', 'descricao', 'tipo_servico', 'valor_mensal', 'status']
-          }
-        ]
-      });
+      const servicoAtualizado = await ContratoPlanoAdicionalService.getById(id, true);
 
       const dadosAnteriores = servico.toJSON() as Record<string, unknown>;
       const dadosNovos = servicoAtualizado?.toJSON() as Record<string, unknown>;
@@ -324,7 +301,7 @@ export class ContratoPlanoAdicionalController {
       }
 
       const servicoId = parseInt(id);
-      const servico = await ContratoPlanoAdicional.findByPk(servicoId);
+      const servico = await ContratoPlanoAdicionalService.getById(servicoId);
       
       if (!servico) {
         res.status(404).json({
@@ -335,7 +312,7 @@ export class ContratoPlanoAdicionalController {
       }
 
       const dadosAnteriores = servico.toJSON();
-      await servico.destroy();
+      await ContratoPlanoAdicionalService.delete(servicoId);
 
       await registrarExclusao(
         req as AuthenticatedRequest,

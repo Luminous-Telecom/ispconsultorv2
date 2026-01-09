@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
+import { z } from 'zod';
 import { TituloService } from '../services/tituloService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CarneParcela, CreateCarneParcela } from '../types';
@@ -76,7 +77,16 @@ export const useTituloForm = ({
   const queryClient = useQueryClient();
 
   // Criar schema sem cliente_id para o formulário (cliente_id será adicionado no submit)
-  const tituloFormSchema = tituloSchema.omit({ cliente_id: true });
+  // Se for título avulso, tornar valor obrigatório
+  // No modo edição, valor é opcional (pode já estar preenchido)
+  const tituloFormSchema = isAvulso && !isEditing
+    ? tituloSchema.omit({ cliente_id: true }).extend({
+        valor: z
+          .number()
+          .min(0.01, 'Valor deve ser maior que zero')
+          .max(999999.99, 'Valor muito alto')
+      })
+    : tituloSchema.omit({ cliente_id: true });
 
   // React Hook Form com Zod
   const {
@@ -148,7 +158,21 @@ export const useTituloForm = ({
       plano_id: titulo.plano_id || 0,
       contrato_id: undefined, // CarneParcela não tem contrato_id
       data_vencimento: dataVencimento,
-      valor: titulo.valor_final || titulo.valor || titulo.valor_parcela || 0,
+      valor: (() => {
+        if (titulo.valor_final) {
+          const v = parseFloat(String(titulo.valor_final));
+          return v > 0 ? v : undefined;
+        }
+        if (titulo.valor) {
+          const v = parseFloat(String(titulo.valor));
+          return v > 0 ? v : undefined;
+        }
+        if (titulo.valor_parcela) {
+          const v = parseFloat(String(titulo.valor_parcela));
+          return v > 0 ? v : undefined;
+        }
+        return undefined;
+      })(),
       status: titulo.status || 'pendente',
       pago: titulo.pago || false,
       observacoes: titulo.observacoes || '',
@@ -282,6 +306,15 @@ export const useTituloForm = ({
         cliente_id: clienteId,
         is_avulso: isAvulso || false
       };
+      
+      // Para título avulso, incluir valor se informado
+      // Para título não avulso, não enviar valor (backend usa valor do plano)
+      if (isAvulso) {
+        if (typedData.valor && typedData.valor > 0) {
+          payload.valor = typedData.valor;
+        }
+      }
+      // Se não for avulso, não incluir valor no payload
       
       if (contratoId || typedData.contrato_id) {
         payload.contrato_id = contratoId || typedData.contrato_id;

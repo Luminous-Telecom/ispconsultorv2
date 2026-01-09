@@ -169,9 +169,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
   }, [showPagamentoModal, contaPagar, valorTotalCalculado, pagamentoData.valor_total]);
 
   const handlePagarManual = async () => {
-    if (!contaPagarId || !contaPagar) return;
-
-    if (valorTotal <= 0) {
+    if (!contaPagarId || !contaPagar || valorTotal <= 0) {
       return;
     }
 
@@ -185,13 +183,14 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
           observacao: pagamentoData.observacao || undefined
         }
       });
+      
       setPagamentoData(getInitialPagamentoData());
       if (contaPagarId) {
         await refetchContaPagar();
       }
-      // Atualizar lista no componente pai sem fechar o modal
       onSuccess?.();
     } catch (error) {
+      // Erro já tratado pelo hook
     }
   };
 
@@ -587,39 +586,42 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
 
   return (
     <>
-      <DraggableModal
-        show={show}
-        onClose={onClose}
-        title={modalTitle}
-        size="lg"
-        modalId={isEditing ? 'conta-pagar-edit-modal' : 'conta-pagar-create-modal'}
-        headerActions={
-          !(isLoadingContaPagar && isEditing) ? (
-            <div className="d-flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={onClose}
-                disabled={createMutation.isPending || updateMutation.isPending || pagarMutation.isPending}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                form={isEditing ? 'conta-pagar-edit-form' : 'conta-pagar-create-form'}
-                variant="primary"
-                size="sm"
-                isLoading={createMutation.isPending || updateMutation.isPending}
-              >
-                Salvar
-              </Button>
-            </div>
-          ) : undefined
-        }
-      >
-        {renderContent()}
-      </DraggableModal>
+      {/* Não renderizar o modal de edição se for apenas para pagamento */}
+      {!showPagamentoOnOpen && (
+        <DraggableModal
+          show={show}
+          onClose={onClose}
+          title={modalTitle}
+          size="lg"
+          modalId={isEditing ? 'conta-pagar-edit-modal' : 'conta-pagar-create-modal'}
+          headerActions={
+            !(isLoadingContaPagar && isEditing) ? (
+              <div className="d-flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={onClose}
+                  disabled={createMutation.isPending || updateMutation.isPending || pagarMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  form={isEditing ? 'conta-pagar-edit-form' : 'conta-pagar-create-form'}
+                  variant="primary"
+                  size="sm"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                >
+                  Salvar
+                </Button>
+              </div>
+            ) : undefined
+          }
+        >
+          {renderContent()}
+        </DraggableModal>
+      )}
 
       <FornecedorListModal
         show={fornecedorSelect.showModal}
@@ -639,9 +641,9 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             setShowPagamentoModal(false);
             setPagamentoData(getInitialPagamentoData());
           }}
-          title="Pagar Conta Manualmente"
-          size="lg"
-          modalId="conta-pagar-pagamento-modal"
+            title="Pagar Conta Manualmente"
+            size="lg"
+            modalId="conta-pagar-pagamento-modal"
           headerActions={
             <div className="d-flex gap-2">
               <Button

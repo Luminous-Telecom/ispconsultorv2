@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { Fornecedor } from '../../../models/financeiro/Fornecedor';
 import { ContaPagar } from '../../../models/financeiro/ContaPagar';
-import { Op, WhereOptions } from 'sequelize';
+import { FornecedorService } from '../../../services/financeiro/FornecedorService';
 import { logger } from '../../../utils/logger';
 import { fornecedorCreateSchema, fornecedorUpdateSchema } from '../../../validators/fornecedor.validator';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { normalizeDateForDb, formatCEP } from '../../../utils/dateUtils';
 import axios from 'axios';
@@ -19,62 +19,16 @@ export class FornecedorController {
       const searchField = req.query.searchField as string;
       const tipoPessoa = req.query.tipo_pessoa as string;
 
-      const offset = (page - 1) * limit;
-
-      const where: WhereOptions = {};
-      
-      if (search) {
-        const searchPattern = `%${search}%`;
-        if (searchField) {
-          const allowedFields = ['nome_razao_social', 'nome_fantasia', 'cpf_cnpj', 'cidade', 'estado'];
-          if (allowedFields.includes(searchField)) {
-            where[searchField as keyof typeof where] = { [Op.like]: searchPattern };
-          }
-        } else {
-          (where as Record<symbol, unknown>)[Op.or] = [
-            { nome_razao_social: { [Op.like]: searchPattern } },
-            { nome_fantasia: { [Op.like]: searchPattern } },
-            { cpf_cnpj: { [Op.like]: searchPattern } }
-          ];
-        }
-      }
-
-      if (tipoPessoa) {
-        where.tipo_pessoa = tipoPessoa;
-      }
-
-      const count = await Fornecedor.count({ where });
-      
-      const fornecedores = await Fornecedor.findAll({
-        where,
-        include: [
-          { association: 'contatos', required: false },
-          { association: 'arquivos', required: false, limit: 5 },
-          { 
-            association: 'contasPagar', 
-            required: false,
-            attributes: ['id', 'status', 'valor', 'valor_pago', 'data_vencimento']
-          }
-        ],
-        order: [['created_at', 'DESC']],
+      const result = await FornecedorService.list({
+        page,
         limit,
-        offset
+        search,
+        searchField,
+        tipo_pessoa: tipoPessoa,
+        ativo: req.query.ativo as string
       });
 
-      const totalPages = Math.ceil(count / limit);
-
-      res.json({
-        success: true,
-        data: fornecedores,
-        pagination: {
-          current_page: page,
-          per_page: limit,
-          total: count,
-          last_page: totalPages,
-          from: offset + 1,
-          to: Math.min(offset + limit, count)
-        }
-      });
+      res.json(result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao listar fornecedores', {
@@ -102,20 +56,7 @@ export class FornecedorController {
         return;
       }
 
-      const fornecedor = await Fornecedor.findByPk(id, {
-        include: [
-          { association: 'contatos', required: false },
-          { association: 'arquivos', required: false },
-          { association: 'historicos', required: false, limit: 50, order: [['created_at', 'DESC']] },
-          { 
-            association: 'contasPagar', 
-            required: false,
-            include: [
-              { association: 'pagamentos', required: false, limit: 10, order: [['created_at', 'DESC']] }
-            ]
-          }
-        ]
-      });
+      const fornecedor = await FornecedorService.getById(id, true);
 
       if (!fornecedor) {
         res.status(404).json({
@@ -160,9 +101,7 @@ export class FornecedorController {
       }
 
       // Verificar se CPF/CNPJ já existe
-      const fornecedorExistente = await Fornecedor.findOne({
-        where: { cpf_cnpj: value.cpf_cnpj }
-      });
+      const fornecedorExistente = await FornecedorService.existsByCpfCnpj(value.cpf_cnpj);
 
       if (fornecedorExistente) {
         res.status(409).json({
@@ -173,7 +112,7 @@ export class FornecedorController {
         return;
       }
 
-      const fornecedor = await Fornecedor.create(value);
+      const fornecedor = await FornecedorService.create(value);
 
       // Registrar auditoria
       try {
@@ -245,7 +184,7 @@ export class FornecedorController {
         return;
       }
 
-      const fornecedor = await Fornecedor.findByPk(id);
+      const fornecedor = await FornecedorService.getById(id, false);
 
       if (!fornecedor) {
         res.status(404).json({
@@ -257,9 +196,7 @@ export class FornecedorController {
 
       // Se CPF/CNPJ está sendo alterado, verificar se já existe
       if (value.cpf_cnpj && value.cpf_cnpj !== fornecedor.cpf_cnpj) {
-        const fornecedorExistente = await Fornecedor.findOne({
-          where: { cpf_cnpj: value.cpf_cnpj }
-        });
+        const fornecedorExistente = await FornecedorService.existsByCpfCnpj(value.cpf_cnpj, fornecedor.id);
 
         if (fornecedorExistente) {
           res.status(409).json({
@@ -274,13 +211,10 @@ export class FornecedorController {
       // Capturar dados anteriores para auditoria
       const dadosAnteriores = fornecedor.toJSON() as Record<string, unknown>;
       
-      await fornecedor.update(value);
-      
-      // Recarregar fornecedor para obter dados atualizados
-      await fornecedor.reload();
+      const fornecedorAtualizado = await FornecedorService.update(id, value);
       
       // Registrar auditoria
-      const dadosNovos = fornecedor.toJSON() as Record<string, unknown>;
+      const dadosNovos = fornecedorAtualizado.toJSON() as Record<string, unknown>;
       
       logger.info('Tentando registrar auditoria de atualização', {
         context: 'FornecedorController',
@@ -300,15 +234,15 @@ export class FornecedorController {
         await registrarAtualizacao(
           req,
           'Fornecedor',
-          fornecedor.id,
+          fornecedorAtualizado.id,
           dadosAnteriores,
           dadosNovos
         );
         logger.info('Auditoria de atualização registrada com sucesso', {
           context: 'FornecedorController',
           action: 'update',
-          fornecedor_id: fornecedor.id,
-          entidade_id: fornecedor.id
+          fornecedor_id: fornecedorAtualizado.id,
+          entidade_id: fornecedorAtualizado.id
         });
       } catch (auditError) {
         logger.error('Erro ao registrar auditoria de atualização', {
@@ -324,7 +258,7 @@ export class FornecedorController {
       res.json({
         success: true,
         message: 'Fornecedor atualizado com sucesso',
-        data: fornecedor
+        data: fornecedorAtualizado
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -354,9 +288,7 @@ export class FornecedorController {
         return;
       }
 
-      const fornecedor = await Fornecedor.findByPk(id, {
-        include: [{ association: 'contasPagar', required: false }]
-      });
+      const fornecedor = await FornecedorService.getById(id, false);
 
       if (!fornecedor) {
         res.status(404).json({
@@ -367,9 +299,8 @@ export class FornecedorController {
       }
 
       // Verificar se há contas vinculadas
-      const contasVinculadas = await ContaPagar.count({
-        where: { fornecedor_id: id }
-      });
+      const { ContaPagarService } = await import('../../../services/financeiro/ContaPagarService');
+      const contasVinculadas = await ContaPagarService.count({ fornecedor_id: id });
 
       if (contasVinculadas > 0) {
         res.status(409).json({
@@ -383,7 +314,7 @@ export class FornecedorController {
       // Capturar dados anteriores para auditoria
       const dadosAnteriores = fornecedor.toJSON() as Record<string, unknown>;
       
-      await fornecedor.destroy();
+      await FornecedorService.delete(id);
 
       // Registrar auditoria
       try {

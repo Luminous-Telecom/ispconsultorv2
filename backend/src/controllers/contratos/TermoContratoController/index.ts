@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import { TermoContrato } from '../../../models/contratos/TermoContrato';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
+import { TermoContratoService } from '../../../services/contratos/TermoContratoService';
+import { ContratoService } from '../../../services/contratos/ContratoService';
+import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocumentoService';
 import { logger } from '../../../utils/logger';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
@@ -21,7 +22,7 @@ export class TermoContratoController {
         return;
       }
 
-      const termos = await TermoContrato.findByContrato(parseInt(contratoId));
+      const termos = await TermoContratoService.getByContrato(parseInt(contratoId));
       
       res.json({
         success: true,
@@ -50,7 +51,7 @@ export class TermoContratoController {
     try {
       const { id } = req.params;
       
-      const termo = await TermoContrato.findByPk(id);
+      const termo = await TermoContratoService.getById(id);
       
       if (!termo) {
         res.status(404).json({
@@ -106,7 +107,7 @@ export class TermoContratoController {
       }
 
       // Verificar se o contrato existe
-      const contrato = await Contrato.findByPk(contratoId);
+      const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
         res.status(404).json({
           success: false,
@@ -116,7 +117,7 @@ export class TermoContratoController {
       }
 
       // Buscar o modelo de documento (termo)
-      const modeloDocumento = await ModeloDocumento.findByPk(modelo_documento_id);
+      const modeloDocumento = await ModeloDocumentoService.getById(modelo_documento_id);
       if (!modeloDocumento) {
         res.status(404).json({
           success: false,
@@ -148,7 +149,7 @@ export class TermoContratoController {
         return;
       }
 
-      const termo = await TermoContrato.create({
+      const termo = await TermoContratoService.create({
         contrato_id: parseInt(contratoId),
         modelo_documento_id: modelo_documento_id,
         tipo_termo: tipoTermo as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',
@@ -209,7 +210,7 @@ export class TermoContratoController {
       const { id } = req.params;
       const { ativo, modelo_documento_id, assinado } = req.body;
 
-      const termo = await TermoContrato.findByPk(id);
+      const termo = await TermoContratoService.getById(id);
       
       if (!termo) {
         res.status(404).json({
@@ -279,7 +280,7 @@ export class TermoContratoController {
         return;
       }
 
-      const termo = await TermoContrato.findByPk(id);
+      const termo = await TermoContratoService.getById(id);
       
       if (!termo) {
         res.status(404).json({
@@ -319,7 +320,7 @@ export class TermoContratoController {
     try {
       const { id } = req.params;
 
-      const termo = await TermoContrato.findByPk(id);
+      const termo = await TermoContratoService.getById(id);
       
       if (!termo) {
         res.status(404).json({
@@ -358,7 +359,7 @@ export class TermoContratoController {
     try {
       const { id } = req.params;
 
-      const termo = await TermoContrato.findByPk(id);
+      const termo = await TermoContratoService.getById(id);
       
       if (!termo) {
         res.status(404).json({
@@ -373,7 +374,7 @@ export class TermoContratoController {
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores);
       
-      await termo.destroy();
+      await TermoContratoService.delete(id);
 
       await registrarExclusao(
         req as AuthenticatedRequest,
@@ -406,19 +407,7 @@ export class TermoContratoController {
   // Listar todos os termos ativos
   static async getAtivos(req: Request, res: Response): Promise<void> {
     try {
-      const termos = await TermoContrato.findAll({
-        where: { ativo: true },
-        include: [
-          {
-            association: 'contrato',
-            include: [
-              { association: 'cliente' },
-              { association: 'plano' }
-            ]
-          }
-        ],
-        order: [['created_at', 'DESC']]
-      });
+      const termos = await TermoContratoService.list(true);
 
       res.json({
         success: true,

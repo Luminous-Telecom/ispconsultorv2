@@ -14,14 +14,19 @@ export function resolveTemplatePath(templateName: string): string {
 
 /**
  * Resolve o caminho para arquivos de imagens
- * Usa __dirname para navegar relativamente ao arquivo atual
- * Funciona tanto em dev (ts-node) quanto em produção (compilado)
+ * Em produção, imagens devem estar em dist/arquivos/images/
+ * Em desenvolvimento, imagens são salvos na raiz backend/arquivos/images/
  */
 export function resolveImagePath(...imagePath: string[]): string {
-  // pathUtils está em utils/pathUtils/, então:
-  // - Em dev: __dirname = .../src/utils/pathUtils -> ../../arquivos/images = arquivos/images
-  // - Em prod: __dirname = .../dist/utils/pathUtils -> ../../arquivos/images = arquivos/images
-  return path.join(__dirname, '..', '..', 'arquivos', 'images', ...imagePath);
+  if (__dirname.includes('dist')) {
+    // Em produção: __dirname = .../dist/utils/pathUtils
+    // Imagens devem estar em dist/arquivos/images/
+    return path.join(__dirname, '..', '..', 'arquivos', 'images', ...imagePath);
+  } else {
+    // Em desenvolvimento: __dirname = .../src/utils/pathUtils
+    // Imagens na raiz do backend (backend/arquivos/images/)
+    return path.join(process.cwd(), 'arquivos', 'images', ...imagePath);
+  }
 }
 
 /**

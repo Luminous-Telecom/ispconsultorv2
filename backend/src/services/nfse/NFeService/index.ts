@@ -7,10 +7,8 @@ import { AsaasNFSeService } from '../AsaasNFSeService';
 import { NFSeConfigService } from '../NFSeConfigService';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Plano } from '../../../models/cadastros/Plano';
-import { Contrato } from '../../../models/contratos/Contrato';
-import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
-import { FinancialCalculationsService } from '../../FinancialCalculationsService';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
+import { getCurrentTimestamp } from '../../../utils/timezoneUtils';
 
 export interface DadosNFe {
   cliente_id: number;
@@ -48,9 +46,7 @@ export class NFeService {
   static async gerarNFe(dados: DadosNFe): Promise<ResultadoGeracaoNFe> {
     try {
       // Buscar cliente
-      const cliente = await Cliente.findByPk(dados.cliente_id, {
-        include: []
-      });
+      const cliente = await Cliente.findByPk(dados.cliente_id);
 
       if (!cliente) {
         return {
@@ -71,98 +67,34 @@ export class NFeService {
       }
 
 
-      // Buscar configuração da NFS-e para usar descrição padrão
-      const nfseConfig = await NFSeConfigService.getConfig();
-      const descricaoPadrao = nfseConfig?.descricao_servico || null;
-
-      // Calcular valores se houver título vinculado
+      // Calcular valores
       let valorServicos = dados.valor_servicos || dados.valor_total;
       let valorDesconto = dados.valor_desconto || 0;
       let valorTotal = dados.valor_total;
 
+      // Se houver título vinculado, usar valores do título
       if (dados.titulo_id) {
-
         const titulo = await Titulo.findByPk(dados.titulo_id, {
-          include: [
-            {
-              model: Plano,
-              as: 'plano',
-              attributes: ['id', 'nome_plano', 'valor_mensal']
-            }
-          ]
+          include: [{ model: Plano, as: 'plano', attributes: ['valor_mensal'] }]
         }) as (Titulo & { plano?: Plano }) | null;
           
         if (titulo?.plano) {
           const valorPlano = Number(titulo.plano.valor_mensal);
-          let totalServicos = valorPlano;
-          let totalFinal = valorPlano;
-
-          if (titulo.valor_final) {
-            totalFinal = Number(titulo.valor_final);
-          }
-
-          if (titulo.contrato_id) {
-            const contrato = await Contrato.findByPk(titulo.contrato_id);
-            
-            if (contrato) {
-              const planosAdicionais = await ContratoPlanoAdicional.findAll({
-                where: { contrato_id: contrato.id, status: 'ativo' },
-                include: [{ model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'] }]
-              }) as Array<ContratoPlanoAdicional & { plano?: Plano }>;
-
-              for (const planoAdicional of planosAdicionais) {
-                if (planoAdicional.plano) {
-                  const valorAdicional = Number(planoAdicional.plano.valor_mensal);
-                  const valorFinalAdicional = planoAdicional.valor_final
-                    ? Number(planoAdicional.valor_final)
-                    : FinancialCalculationsService.calcularValorFinal(valorAdicional, {
-                        desconto_valor: planoAdicional.desconto_valor,
-                        desconto_percentual: planoAdicional.desconto_percentual
-                      });
-                  
-                  totalServicos += valorAdicional;
-                  totalFinal += valorFinalAdicional;
-                }
-              }
-            }
-          }
-
-          valorServicos = totalServicos;
-          valorTotal = dados.valor_total || totalFinal;
-          valorDesconto = Math.max(0, totalServicos - valorTotal);
+          valorTotal = dados.valor_total || Number(titulo.valor_final || valorPlano);
+          valorServicos = dados.valor_servicos || valorPlano;
+          valorDesconto = Math.max(0, valorServicos - valorTotal);
         }
+      }
+      
+      // Validar: desconto não pode ser superior ao valor total
+      if (valorDesconto > valorTotal) {
+        valorDesconto = valorTotal;
       }
 
 
-      // Criar data_emissao preservando hora atual
-      // Se data_emissao for fornecida como string YYYY-MM-DD (sem hora), usar data fornecida com hora atual
-      // Se data_emissao for fornecida como Date ou string com hora, preservar hora
-      // Se não fornecida, usar data/hora atual
-      let dataEmissao: Date;
-      const now = new Date();
-      
-      
-      if (dados.data_emissao instanceof Date) {
-        dataEmissao = dados.data_emissao;
-      } else if (typeof dados.data_emissao === 'string') {
-        const hasTime = /T|\s/.test(dados.data_emissao);
-        
-        if (hasTime) {
-          dataEmissao = new Date(dados.data_emissao);
-        } else {
-          // Sem hora (formato YYYY-MM-DD), usar data fornecida com hora atual
-          const dateMatch = dados.data_emissao.match(/^(\d{4})-(\d{2})-(\d{2})/);
-          if (dateMatch) {
-            const [, year, month, day] = dateMatch.map(Number);
-            dataEmissao = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
-          } else {
-            dataEmissao = new Date(dados.data_emissao);
-          }
-        }
-      } else {
-        dataEmissao = new Date();
-      }
-      
+      // Sempre usar data e hora atual local
+      const dataEmissao = new Date();
+      logger.info(`[NFeService] Data emissão - Local: ${dataEmissao.getFullYear()}-${String(dataEmissao.getMonth() + 1).padStart(2, '0')}-${String(dataEmissao.getDate()).padStart(2, '0')} ${String(dataEmissao.getHours()).padStart(2, '0')}:${String(dataEmissao.getMinutes()).padStart(2, '0')}:${String(dataEmissao.getSeconds()).padStart(2, '0')}`);
 
       // Criar data_vencimento
       const dataVencimentoValue = dados.data_vencimento 
@@ -187,14 +119,16 @@ export class NFeService {
         aliquota_iss: dados.aliquota_iss || 0,
         cfop: dados.cfop || null,
         cst_icms: dados.cst_icms || null,
-        descricao: dados.descricao || descricaoPadrao,
+        descricao: dados.descricao || null,
         observacoes: dados.observacoes || null
       });
 
       notaFiscal.status = 'PROCESSANDO';
       await notaFiscal.save();
-
       
+      // Log após salvar para ver o que foi realmente salvo
+      await notaFiscal.reload();
+      logger.info(`[NFeService] Data emissão após salvar no banco - Local: ${notaFiscal.data_emissao.getFullYear()}-${String(notaFiscal.data_emissao.getMonth() + 1).padStart(2, '0')}-${String(notaFiscal.data_emissao.getDate()).padStart(2, '0')} ${String(notaFiscal.data_emissao.getHours()).padStart(2, '0')}:${String(notaFiscal.data_emissao.getMinutes()).padStart(2, '0')}:${String(notaFiscal.data_emissao.getSeconds()).padStart(2, '0')}`);
 
       const resultadoProvedor = await this.gerarNFeComProvedor(notaFiscal, cliente, dadosEmpresa);
 
@@ -206,6 +140,7 @@ export class NFeService {
         notaFiscal.chave_acesso = resultadoProvedor.chave_acesso || null;
         notaFiscal.protocolo = resultadoProvedor.protocolo || null;
         notaFiscal.data_autorizacao = resultadoProvedor.data_autorizacao || new Date();
+        logger.info(`[NFeService] Data autorização - Local: ${notaFiscal.data_autorizacao.getFullYear()}-${String(notaFiscal.data_autorizacao.getMonth() + 1).padStart(2, '0')}-${String(notaFiscal.data_autorizacao.getDate()).padStart(2, '0')} ${String(notaFiscal.data_autorizacao.getHours()).padStart(2, '0')}:${String(notaFiscal.data_autorizacao.getMinutes()).padStart(2, '0')}:${String(notaFiscal.data_autorizacao.getSeconds()).padStart(2, '0')}`);
         notaFiscal.xml = resultadoProvedor.xml || null;
         notaFiscal.pdf_url = resultadoProvedor.pdf_url || null;
         notaFiscal.danfe_url = resultadoProvedor.danfe_url || null;
@@ -485,7 +420,7 @@ export class NFeService {
 
       // Atualizar status no banco
       notaFiscal.status = 'CANCELADA';
-      notaFiscal.observacoes = (notaFiscal.observacoes || '') + `\nCancelada em ${new Date().toISOString()}: ${justificativa}`;
+      notaFiscal.observacoes = (notaFiscal.observacoes || '') + `\nCancelada em ${getCurrentTimestamp()}: ${justificativa}`;
       await notaFiscal.save();
 
       return {

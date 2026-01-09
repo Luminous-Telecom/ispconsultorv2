@@ -1,9 +1,8 @@
-import React, { useCallback, useMemo, useEffect } from 'react';
+import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { Titulo } from '@/types/entities';
 import Table from '@/components/tables/Table';
 import { BulkAction } from '../types';
 import { TableColumn } from '@/components/tables/types';
-import { SortDirection } from '@/components/tables/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface FinanceiroAvulsoTabProps {
@@ -48,53 +47,76 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
     setPage(1);
   }, [showCancelados, setPage]);
 
-  // Callback para ordenação (o Table gerencia internamente)
-  const handleSort = useCallback((_column: string, _direction: SortDirection) => {
-    // Esta função será chamada pelo Table quando o usuário clicar em uma coluna
-    // Não precisamos fazer nada aqui, o Table gerencia internamente
-  }, []);
-
-  // Função para filtrar cancelados
-  const filterCancelados = useCallback((data: Titulo[]) => {
-    return data.filter((titulo) => {
-      const isCancelado = titulo.status?.toLowerCase() === 'cancelado';
-      if (isCancelado && !showCancelados) {
-        return false;
+  // Limpar seleção de itens cancelados quando o filtro de ocultar cancelados for desativado
+  const prevShowCanceladosRef = useRef(showCancelados);
+  useEffect(() => {
+    if (prevShowCanceladosRef.current && !showCancelados && _selectedItems.length > 0) {
+      const itensNaoCancelados = _selectedItems.filter(item => item.status?.toLowerCase() !== 'cancelado');
+      if (itensNaoCancelados.length !== _selectedItems.length) {
+        setSelectedItems(itensNaoCancelados);
       }
-      return true;
-    });
+    }
+    prevShowCanceladosRef.current = showCancelados;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showCancelados]);
 
-  // Memoizar o filtro de cancelados para garantir que o Table detecte mudanças
+  // Limpar seleção quando os dados mudarem e houver itens inválidos
+  useEffect(() => {
+    if (!sortedData || _selectedItems.length === 0) return;
+    
+    const currentIds = new Set(sortedData.map((t: Titulo) => String(t.id)));
+    const validItems = _selectedItems.filter((item: Titulo) => {
+      if (currentIds.has(String(item.id))) return true;
+      // Manter cancelados selecionados mesmo quando filtrados
+      return item.status?.toLowerCase() === 'cancelado' && !showCancelados;
+    });
+    
+    if (validItems.length !== _selectedItems.length) {
+      setSelectedItems(validItems);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortedData, showCancelados]);
+
+  // Filtro customizado que inclui itens selecionados mesmo quando filtrados
   const customFilters = useCallback((data: Titulo[]) => {
-    return filterCancelados(data);
-  }, [filterCancelados]);
+    const selectedIds = new Set(_selectedItems.map(item => String(item.id)));
+    const dataIds = new Set(data.map(item => String(item.id)));
+    
+    // Adicionar itens selecionados que não estão nos dados
+    const selectedNotInData = _selectedItems.filter(item => !dataIds.has(String(item.id)));
+    const dataWithSelected = [...data, ...selectedNotInData];
+    
+    // Filtrar cancelados, mas sempre incluir itens selecionados
+    return dataWithSelected.filter((titulo) => {
+      if (selectedIds.has(String(titulo.id))) return true;
+      const isCancelado = titulo.status?.toLowerCase() === 'cancelado';
+      return !(isCancelado && !showCancelados);
+    });
+  }, [showCancelados, _selectedItems]);
 
   // Dados filtrados para usar no resumo financeiro
   const filteredData = useMemo(() => {
-    return filterCancelados(sortedData);
-  }, [sortedData, filterCancelados]);
-
-  // Memoizar bulkActions para evitar recriação desnecessária
-  const memoizedBulkActions = useMemo(() => {
-    return bulkActions.map(action => {
-      let disabledFunc: ((selectedItems: Titulo[]) => boolean) | undefined;
-      if (typeof action.disabled === 'function') {
-        disabledFunc = action.disabled;
-      } else if (typeof action.disabled === 'boolean') {
-        const disabledValue = action.disabled;
-        disabledFunc = () => disabledValue;
-      }
-      
-      return {
-        key: action.label,
-        label: action.label,
-        variant: action.variant || 'primary',
-        onClick: action.action,
-        disabled: disabledFunc,
-        dropdown: action.dropdown
-      };
+    const selectedIds = new Set(_selectedItems.map(item => String(item.id)));
+    return sortedData.filter((titulo) => {
+      if (selectedIds.has(String(titulo.id))) return true;
+      const isCancelado = titulo.status?.toLowerCase() === 'cancelado';
+      return !(isCancelado && !showCancelados);
     });
+  }, [sortedData, showCancelados, _selectedItems]);
+
+  const memoizedBulkActions = useMemo(() => {
+    return bulkActions.map(action => ({
+      key: action.label,
+      label: action.label,
+      variant: action.variant || 'primary',
+      onClick: action.action,
+      disabled: typeof action.disabled === 'function' 
+        ? action.disabled 
+        : typeof action.disabled === 'boolean' 
+          ? () => action.disabled as boolean 
+          : undefined,
+      dropdown: action.dropdown
+    }));
   }, [bulkActions]);
 
   return (
@@ -102,7 +124,7 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0, paddingBottom: isMobile ? '0' : undefined }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            key="financeiro-avulso-tab-table"
+            key={`financeiro-avulso-tab-table-${showCancelados}`}
             config={{
               columns: columns,
               data: sortedData,
@@ -146,7 +168,7 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
             onPageChange={setPage}
             onPageSizeChange={setLimit}
             onRefresh={onRefresh}
-            onSort={handleSort}
+            onSort={() => {}}
             onAudit={onAudit}
             auditEntity={auditEntity}
           />

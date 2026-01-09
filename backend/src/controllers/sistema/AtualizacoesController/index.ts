@@ -6,7 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { SelfUpdateService } from '../../../services/sistema/SelfUpdateService';
 import { AuthenticatedRequest } from '../../../types/auth';
-import { registrarCriacao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
 
 interface GitHubRelease {
   tag_name: string;

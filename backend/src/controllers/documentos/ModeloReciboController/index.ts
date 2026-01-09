@@ -1,9 +1,12 @@
 import { Request, Response } from 'express';
 import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
+import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocumentoService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Contrato } from '../../../models/contratos/Contrato';
+import { ContratoService } from '../../../services/contratos/ContratoService';
 import { Plano } from '../../../models/cadastros/Plano';
 import { Titulo } from '../../../models/financeiro/Titulo';
+import { TituloService } from '../../../services/financeiro/TituloService';
 import { Op } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
@@ -32,16 +35,7 @@ export class ModeloReciboController {
       }
 
       // Buscar títulos pagos com suas relações
-      const titulos = await Titulo.findAll({
-        where: { 
-          id: { [Op.in]: ids },
-          status: { [Op.in]: ['pago', 'pago_atraso'] }
-        },
-        include: [
-          { model: Cliente, as: 'cliente', required: false },
-          { model: Plano, as: 'plano', required: false }
-        ]
-      });
+      const titulos = await TituloService.getByIds(ids, ['pago', 'pago_atraso']);
 
       if (titulos.length === 0) {
         res.status(404).json({ success: false, message: 'Nenhum título pago encontrado' });
@@ -62,9 +56,7 @@ export class ModeloReciboController {
 
           // Buscar contrato do título
           const contrato = titulo.contrato_id 
-            ? await Contrato.findByPk(titulo.contrato_id, {
-                include: [{ model: Plano, as: 'plano', required: false }]
-              })
+            ? await ContratoService.getById(titulo.contrato_id)
             : null;
 
           if (!contrato || !contrato.modelo_documento_id) {
@@ -73,7 +65,7 @@ export class ModeloReciboController {
           }
 
           // Buscar modelo de documento do contrato
-          const modeloDocumento = await ModeloDocumento.findByPk(contrato.modelo_documento_id);
+          const modeloDocumento = await ModeloDocumentoService.getById(contrato.modelo_documento_id);
           
           if (!modeloDocumento || !modeloDocumento.conteudo_recibo) {
             logger.warn(`Título ${titulo.id}: Modelo de documento não encontrado ou sem conteúdo de recibo configurado`);

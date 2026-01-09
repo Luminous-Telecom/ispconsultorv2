@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { Parametro } from '../../../models/sistema/Parametro';
+import { ParametroService } from '../../../services/sistema/ParametroService';
 import { logger } from '../../../utils/logger';
-import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 export class ParametroController {
@@ -26,15 +27,12 @@ export class ParametroController {
         }
       }
 
-      const parametros = await Parametro.findAll({
-        where: whereClause,
-        order: [['categoria', 'ASC'], ['chave', 'ASC']]
+      const result = await ParametroService.list({
+        categoria: categoria as string,
+        ativo: whereClause.ativo
       });
 
-      res.json({
-        success: true,
-        data: parametros
-      });
+      res.json(result);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
@@ -58,9 +56,7 @@ export class ParametroController {
     try {
       const { chave } = req.params;
       
-      const parametro = await Parametro.findOne({
-        where: { chave }
-      });
+      const parametro = await ParametroService.getByChave(chave);
 
       if (!parametro) {
         // Retornar 200 com success: false ao invés de 404 para evitar redirecionamento
@@ -100,13 +96,11 @@ export class ParametroController {
       const { chave } = req.params;
       const { valor, ativo, tipo, descricao, categoria } = req.body;
 
-      let parametro = await Parametro.findOne({
-        where: { chave }
-      });
+      let parametro = await ParametroService.getByChave(chave);
 
       // Se não existir, criar com valores padrão
       if (!parametro) {
-        parametro = await Parametro.create({
+        parametro = await ParametroService.create({
           chave,
           valor: valor?.toString() || '',
           tipo: tipo || 'string',
@@ -149,11 +143,10 @@ export class ParametroController {
       }
 
       const dadosAnteriores = parametro.toJSON();
-      await parametro.update({
+      parametro = await ParametroService.update(chave, {
         valor: valorConvertido.toString(),
         ativo: ativo !== undefined ? ativo : parametro.ativo
       });
-      await parametro.reload();
 
       await registrarAtualizacao(
         req as AuthenticatedRequest,
@@ -213,15 +206,13 @@ export class ParametroController {
 
         logger.info(`Processando parâmetro: ${chave}`, { chave, valor, tipo, descricao, categoria });
 
-        let parametro = await Parametro.findOne({
-          where: { chave }
-        });
+        let parametro = await ParametroService.getByChave(chave);
 
         // Se não existir, criar
         if (!parametro) {
           logger.info(`Criando novo parâmetro: ${chave}`);
           try {
-            parametro = await Parametro.create({
+            parametro = await ParametroService.create({
               chave,
               valor: valor?.toString() || '',
               tipo: tipo || 'string',
@@ -298,8 +289,7 @@ export class ParametroController {
         });
 
         try {
-          await parametro.update(updateData);
-          await parametro.reload();
+          parametro = await ParametroService.update(chave, updateData);
 
           logger.info(`Parâmetro ${chave} atualizado com sucesso`, { 
             id: parametro.id, 
@@ -370,18 +360,9 @@ export class ParametroController {
     try {
       const { categoria } = req.params;
 
-      const parametros = await Parametro.findAll({
-        where: { 
-          categoria,
-          ativo: true
-        },
-        order: [['chave', 'ASC']]
-      });
+      const result = await ParametroService.getByCategoria(categoria);
 
-      res.json({
-        success: true,
-        data: parametros
-      });
+      res.json(result);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
@@ -425,16 +406,12 @@ export class ParametroController {
       const results = [];
 
       for (const param of parametrosPadrao) {
-        const [parametro, created] = await Parametro.findOrCreate({
-          where: { chave: param.chave },
-          defaults: param
-        });
+        const [parametro, created] = await ParametroService.findOrCreate(param.chave, param);
 
         // Se já existia, atualizar com valores padrão
         if (!created && parametro.valor !== param.valor) {
           const dadosAnteriores = parametro.toJSON();
-          await parametro.update({ valor: param.valor });
-          await parametro.reload();
+          await ParametroService.updateInstance(parametro, { valor: param.valor });
           
           await registrarAtualizacao(
             req as AuthenticatedRequest,

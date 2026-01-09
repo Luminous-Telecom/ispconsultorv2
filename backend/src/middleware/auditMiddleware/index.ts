@@ -6,11 +6,8 @@
  */
 import { Request, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../../types/auth';
-import { 
-  registrarCriacaoElasticsearch, 
-  registrarAtualizacaoElasticsearch, 
-  registrarExclusaoElasticsearch 
-} from '../../services/elasticsearch/ElasticsearchAuditService';
+// Imports de Elasticsearch removidos - middleware não registra mais automaticamente
+// Os controllers devem usar registrarCriacao, registrarAtualizacao, registrarExclusao do AuditoriaService
 import { logger } from '../../utils/logger';
 
 // Mapeamento de rotas para entidades
@@ -200,87 +197,9 @@ export const auditLogMiddleware = (req: AuthenticatedRequest, res: Response, nex
             url: req.originalUrl
           });
           
-          // Para CREATE, pegar ID da resposta
-          if (method === 'POST' && body && typeof body === 'object') {
-            const responseBody = body as Record<string, unknown>;
-            if (responseBody.success && responseBody.data) {
-              const data = responseBody.data as Record<string, unknown>;
-              if (data.id) {
-                const id = parseInt(String(data.id), 10);
-                if (!isNaN(id)) {
-                  await registrarCriacaoElasticsearch(
-                    req,
-                    entity,
-                    id,
-                    safeSerialize(data) || {},
-                    `Criação via ${req.method} ${req.originalUrl}`
-                  );
-                }
-              }
-            }
-          }
-          
-          // Para UPDATE, precisamos que o controller forneça dados anteriores
-          // Este middleware apenas registra se os dados estiverem disponíveis
-          if ((method === 'PUT' || method === 'PATCH') && entityId) {
-            const dadosAnteriores = (req as any).__auditDadosAnteriores;
-            const dadosNovos = (req as any).__auditDadosNovos;
-            
-            logger.debug('Verificando dados de auditoria para UPDATE', {
-              context: 'auditMiddleware',
-              method,
-              entity,
-              entityId,
-              url: req.originalUrl,
-              hasDadosAnteriores: !!dadosAnteriores,
-              hasDadosNovos: !!dadosNovos,
-              keysAnteriores: dadosAnteriores ? Object.keys(dadosAnteriores).slice(0, 5) : [],
-              keysNovos: dadosNovos ? Object.keys(dadosNovos).slice(0, 5) : []
-            });
-            
-            if (dadosAnteriores && dadosNovos) {
-              logger.debug('Registrando auditoria de atualização via middleware', {
-                context: 'auditMiddleware',
-                entity,
-                entityId,
-                method
-              });
-              
-              await registrarAtualizacaoElasticsearch(
-                req,
-                entity,
-                entityId,
-                dadosAnteriores,
-                dadosNovos,
-                `Atualização via ${req.method} ${req.originalUrl}`
-              );
-            } else {
-              // Se não houver dados, o controller provavelmente já registrou a auditoria diretamente
-              // Não é necessário logar como warning, apenas debug para rastreamento
-              logger.debug('Dados de auditoria não encontrados para UPDATE - controller pode ter registrado diretamente', {
-                context: 'auditMiddleware',
-                entity,
-                entityId,
-                method,
-                url: req.originalUrl
-              });
-            }
-          }
-          
-          // Para DELETE, precisamos que o controller forneça dados anteriores
-          if (method === 'DELETE' && entityId) {
-            const dadosAnteriores = (req as any).__auditDadosAnteriores;
-            
-            if (dadosAnteriores) {
-              await registrarExclusaoElasticsearch(
-                req,
-                entity,
-                entityId,
-                dadosAnteriores,
-                `Exclusão via ${req.method} ${req.originalUrl}`
-              );
-            }
-          }
+          // CREATE/UPDATE/DELETE devem ser registrados explicitamente pelos controllers
+          // O middleware não registra automaticamente para evitar duplicação
+          // Os controllers devem usar registrarCriacao, registrarAtualizacao, registrarExclusao do AuditoriaService
         } catch (error) {
           // Não bloquear resposta em caso de erro na auditoria
           logger.error('Erro ao registrar auditoria no middleware', {

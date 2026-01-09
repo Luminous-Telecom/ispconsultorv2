@@ -4,6 +4,7 @@ import { Cliente } from '../../../models/clientes/Cliente';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import { NFSeConfigService } from '../NFSeConfigService';
+import { formatDateOnly } from '../../../utils/timezoneUtils';
 import asaasConfig from '../../../config/bancos/asaas';
 
 interface AsaasConfig {
@@ -81,13 +82,34 @@ export class AsaasNFSeService {
       (error) => {
         const axiosError = error as AxiosError;
         const errorData = axiosError.response?.data as any;
+        const url = axiosError.config?.url || '';
+        const status = axiosError.response?.status;
+        const errorDescription = errorData?.errors?.[0]?.description || errorData?.message || axiosError.message;
         
-        logger.error('Erro na resposta do Asaas', {
-          message: axiosError.message,
-          status: axiosError.response?.status,
-          url: axiosError.config?.url,
-          error: errorData?.errors?.[0]?.description || errorData?.message || axiosError.message
-        });
+        // Erros esperados que não devem ser logados como erro crítico:
+        // - 400 em /authorize (falta de saldo ou outros problemas esperados)
+        // - Erros relacionados a saldo
+        const isExpectedError = 
+          (url.includes('/authorize') && status === 400) ||
+          (errorDescription && (errorDescription.includes('saldo') || errorDescription.includes('Saldo')));
+        
+        if (isExpectedError) {
+          // Logar apenas como debug para não poluir os logs
+          logger.debug('Resposta esperada do Asaas (não crítico)', {
+            status,
+            url,
+            error: errorDescription
+          });
+        } else {
+          // Logar como erro apenas para erros inesperados
+          logger.error('Erro na resposta do Asaas', {
+            message: axiosError.message,
+            status,
+            url,
+            error: errorDescription
+          });
+        }
+        
         return Promise.reject(error);
       }
     );
@@ -189,14 +211,21 @@ export class AsaasNFSeService {
           // Se o erro for por falta de saldo, deixar agendada e o webhook atualizará quando autorizar
           if (errorDescription?.includes('saldo') || errorDescription?.includes('Saldo')) {
             // Invoice agendada - será autorizada quando houver saldo. O webhook atualizará quando autorizada.
+            logger.debug('Invoice agendada (sem saldo disponível). Será autorizada quando houver saldo.', {
+              invoice_id: invoiceId,
+              ambiente: isSandbox ? 'SANDBOX' : 'PRODUÇÃO'
+            });
           } else {
+            // Logar como warning apenas para erros não relacionados a saldo
             logger.warn('Erro ao autorizar nota fiscal imediatamente', {
               invoice_id: invoiceId,
               error: axiosError.message,
               status: axiosError.response?.status,
               statusText: axiosError.response?.statusText,
               error_description: errorDescription,
-              ambiente: isSandbox ? 'SANDBOX' : 'PRODUÇÃO'
+              error_data: errorData,
+              ambiente: isSandbox ? 'SANDBOX' : 'PRODUÇÃO',
+              nota: 'Invoice criada com sucesso, mas não foi possível autorizar imediatamente. O webhook atualizará quando autorizada.'
             });
           }
           
@@ -392,13 +421,29 @@ export class AsaasNFSeService {
     const serviceDescription = notaFiscal.descricao || config.descricao_servico || '';
     const aliquotaIss = Number(notaFiscal.aliquota_iss) || Number(config.aliquota_iss) || 0;
 
+    // Calcular valor total e deduções
+    const valorTotal = Number(notaFiscal.valor_total) || 0;
+    const valorDesconto = notaFiscal.valor_desconto ? Number(notaFiscal.valor_desconto) : 0;
+    
+    // Validar: deduções não podem ser superiores ao valor total
+    const deductions = Math.min(valorDesconto, valorTotal);
+    
+    if (valorDesconto > valorTotal) {
+      logger.warn('Valor de desconto ajustado para não exceder valor total da nota', {
+        nota_fiscal_id: notaFiscal.id,
+        valor_total: valorTotal,
+        valor_desconto_original: valorDesconto,
+        valor_desconto_ajustado: deductions
+      });
+    }
+
     return {
       customer: customerId,
       serviceDescription: serviceDescription,
       observations: notaFiscal.observacoes || '',
-      value: Number(notaFiscal.valor_total),
-      deductions: notaFiscal.valor_desconto ? Number(notaFiscal.valor_desconto) : 0,
-      effectiveDate: notaFiscal.data_emissao?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+      value: valorTotal,
+      deductions: deductions,
+      effectiveDate: formatDateOnly(notaFiscal.data_emissao) || formatDateOnly(new Date()) || '',
       municipalServiceName: config.descricao_servico || serviceDescription,
       municipalServiceCode: config.codigo_servico_municipal || null,
       municipalServiceId: null,

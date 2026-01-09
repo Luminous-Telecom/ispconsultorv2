@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { ValidationError } from 'sequelize';
 import { ModeloContrato } from '../../../models/contratos/ModeloContrato';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
+import { ModeloContratoService } from '../../../services/contratos/ModeloContratoService';
+import { ClienteService } from '../../../services/clientes/ClienteService';
+import { ContratoService } from '../../../services/contratos/ContratoService';
 import { Plano } from '../../../models/cadastros/Plano';
 import { logger } from '../../../utils/logger';
 import fs from 'fs/promises';
@@ -22,14 +23,12 @@ export class ModeloContratoController {
         whereClause.tipo = tipo as string;
       }
 
-      const documentos = await ModeloContrato.findAll({
-        where: whereClause,
-        order: [['created_at', 'DESC']],
+      const result = await ModeloContratoService.list({
+        tipo: tipo as string
       });
 
       res.json({
-        success: true,
-        data: documentos,
+        ...result,
         message: 'Documentos do sistema listados com sucesso'
       });
     } catch (error) {
@@ -48,7 +47,7 @@ export class ModeloContratoController {
     try {
       const { id } = req.params;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -88,7 +87,7 @@ export class ModeloContratoController {
         return;
       }
 
-      const documento = await ModeloContrato.create(documentoData);
+      const documento = await ModeloContratoService.create(documentoData);
 
       res.status(201).json({
         success: true,
@@ -122,7 +121,7 @@ export class ModeloContratoController {
       const { id } = req.params;
       const documentoData = req.body;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -132,7 +131,7 @@ export class ModeloContratoController {
         return;
       }
 
-      await documento.update(documentoData);
+      await ModeloContratoService.update(id, documentoData);
 
       res.json({
         success: true,
@@ -165,7 +164,7 @@ export class ModeloContratoController {
     try {
       const { id } = req.params;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -175,7 +174,7 @@ export class ModeloContratoController {
         return;
       }
 
-      await documento.destroy();
+      await ModeloContratoService.delete(id);
 
       res.json({
         success: true,
@@ -197,14 +196,12 @@ export class ModeloContratoController {
     try {
       const { tipo } = req.params;
 
-      const documentos = await ModeloContrato.findAll({
-        where: { tipo, ativo: true },
-        order: [['nome', 'ASC']],
+      const result = await ModeloContratoService.list({
+        tipo: tipo as string
       });
 
       res.json({
-        success: true,
-        data: documentos,
+        ...result,
         message: `Documentos do tipo ${tipo} listados com sucesso`
       });
     } catch (error) {
@@ -223,10 +220,7 @@ export class ModeloContratoController {
     try {
       const { tipo } = req.params;
 
-      const documento = await ModeloContrato.findOne({
-        where: { tipo, ativo: true },
-        order: [['created_at', 'ASC']], // Pega o primeiro criado como padrão
-      });
+      const documento = await ModeloContratoService.getByTipo(tipo);
 
       if (!documento) {
         res.status(404).json({
@@ -255,14 +249,7 @@ export class ModeloContratoController {
    */
   static async getTypes(req: Request, res: Response): Promise<void> {
     try {
-      const tipos = await ModeloContrato.findAll({
-        attributes: ['tipo'],
-        group: ['tipo'],
-        where: { ativo: true },
-        order: [['tipo', 'ASC']],
-      });
-
-      const tiposList = tipos.map((doc) => doc.tipo as string);
+      const tiposList = await ModeloContratoService.getTypes();
 
       res.json({
         success: true,
@@ -285,7 +272,7 @@ export class ModeloContratoController {
     try {
       const { id } = req.params;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -326,7 +313,7 @@ export class ModeloContratoController {
       const { id } = req.params;
       const { cliente_id, contrato_id } = req.query;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -340,7 +327,7 @@ export class ModeloContratoController {
       let conteudoProcessado = documento.conteudo;
       
       if (cliente_id) {
-        const cliente = await Cliente.findByPk(cliente_id as string);
+        const cliente = await ClienteService.getById(cliente_id as string);
         
         if (!cliente) {
           res.status(404).json({
@@ -352,15 +339,10 @@ export class ModeloContratoController {
 
         // Se contrato_id foi fornecido, usar esse contrato específico
         // Caso contrário, buscar contrato ativo do cliente
-        let contrato: Contrato | null = null;
+        let contrato = null;
         
         if (contrato_id) {
-          contrato = await Contrato.findByPk(contrato_id as string, {
-            include: [
-              { model: Plano, as: 'plano' },
-              { model: Cliente, as: 'cliente' }
-            ]
-          });
+          contrato = await ContratoService.getById(contrato_id as string);
           
           if (!contrato) {
             res.status(404).json({
@@ -370,10 +352,8 @@ export class ModeloContratoController {
             return;
           }
           
-          const contratoComIncludes = contrato as Contrato & { plano?: Plano; cliente?: Cliente };
-          
           // Verificar se o contrato pertence ao cliente
-          if (contratoComIncludes.cliente_id !== cliente.id) {
+          if (contrato.cliente_id !== cliente.id) {
             res.status(400).json({
               success: false,
               message: 'Contrato não pertence ao cliente informado'
@@ -381,13 +361,7 @@ export class ModeloContratoController {
             return;
           }
         } else {
-          contrato = await Contrato.findOne({
-            where: { cliente_id: cliente.id, status: 'ativo' },
-            include: [
-              { model: Plano, as: 'plano' },
-              { model: Cliente, as: 'cliente' }
-            ]
-          });
+          contrato = await ContratoService.findAtivoByCliente(cliente.id);
         }
 
         // Processar variáveis do documento
@@ -452,7 +426,7 @@ export class ModeloContratoController {
       const { id } = req.params;
       const { conteudo } = req.body;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -496,7 +470,7 @@ export class ModeloContratoController {
       logger.info(`[generateTestPdfWithContent] Request received - id: ${id}, cliente_id: ${cliente_id}`);
       logger.info(`[generateTestPdfWithContent] Content length: ${conteudo?.length || 0}`);
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -510,7 +484,7 @@ export class ModeloContratoController {
       let conteudoProcessado = conteudo;
       
       if (cliente_id) {
-        const cliente = await Cliente.findByPk(cliente_id);
+        const cliente = await ClienteService.getById(cliente_id);
         
         if (!cliente) {
           res.status(404).json({
@@ -521,10 +495,7 @@ export class ModeloContratoController {
         }
 
         // Buscar contrato ativo do cliente
-        const contrato = await Contrato.findOne({
-          where: { cliente_id: cliente.id, status: 'ativo' },
-          include: [{ model: Plano, as: 'plano' }]
-        });
+        const contrato = await ContratoService.findAtivoByCliente(cliente.id);
 
         // Processar variáveis do documento
         conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
@@ -575,7 +546,7 @@ export class ModeloContratoController {
       }
 
       // Atualizar diretamente na tabela modelo_contrato
-      const modeloContrato = await ModeloContrato.findByPk(modelo_contrato_id);
+      const modeloContrato = await ModeloContratoService.getById(modelo_contrato_id);
       
       if (!modeloContrato) {
         res.status(404).json({
@@ -585,7 +556,7 @@ export class ModeloContratoController {
         return;
       }
 
-      await modeloContrato.update({ conteudo: modelo });
+      await ModeloContratoService.update(modelo_contrato_id, { conteudo: modelo });
 
       res.json({
         success: true,
@@ -617,7 +588,7 @@ export class ModeloContratoController {
       }
 
       // Atualizar diretamente na tabela modelo_contrato
-      const modeloContrato = await ModeloContrato.findByPk(modelo_contrato_id);
+      const modeloContrato = await ModeloContratoService.getById(modelo_contrato_id);
       
       if (!modeloContrato) {
         res.status(404).json({
@@ -627,7 +598,7 @@ export class ModeloContratoController {
         return;
       }
 
-      await modeloContrato.update({ conteudo_adesao: modelo });
+      await ModeloContratoService.update(modelo_contrato_id, { conteudo_adesao: modelo });
 
       res.json({
         success: true,
@@ -659,7 +630,7 @@ export class ModeloContratoController {
       }
 
       // Atualizar diretamente na tabela modelo_contrato
-      const modeloContrato = await ModeloContrato.findByPk(modelo_contrato_id);
+      const modeloContrato = await ModeloContratoService.getById(modelo_contrato_id);
       
       if (!modeloContrato) {
         res.status(404).json({
@@ -669,7 +640,7 @@ export class ModeloContratoController {
         return;
       }
 
-      await modeloContrato.update({ conteudo_permanencia: modelo });
+      await ModeloContratoService.update(modelo_contrato_id, { conteudo_permanencia: modelo });
 
       res.json({
         success: true,
@@ -692,7 +663,7 @@ export class ModeloContratoController {
     try {
       const { id } = req.params;
 
-      const modeloContrato = await ModeloContrato.findByPk(id);
+      const modeloContrato = await ModeloContratoService.getById(id);
 
       if (!modeloContrato) {
         res.status(404).json({

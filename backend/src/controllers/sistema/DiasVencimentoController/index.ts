@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { DiasVencimento } from '../../../models/cadastros/DiasVencimento';
+import { DiasVencimentoService } from '../../../services/cadastros/DiasVencimentoService';
 import { logger } from '../../../utils/logger';
-import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
+import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 export class DiasVencimentoController {
@@ -10,9 +11,7 @@ export class DiasVencimentoController {
    */
   static async get(req: Request, res: Response): Promise<void> {
     try {
-      const dias = await DiasVencimento.findAll({
-        order: [['dia', 'ASC']],
-      });
+      const dias = await DiasVencimentoService.list();
 
       res.json({
         success: true,
@@ -35,16 +34,16 @@ export class DiasVencimentoController {
     try {
       const { dias } = req.body;
       
-      const diasAntes = await DiasVencimento.findAll();
+      const diasAntes = await DiasVencimentoService.list();
       const dadosAnteriores = diasAntes.map(d => d.toJSON());
       
-      await DiasVencimento.update({ ativo: false }, { where: {} });
+      await DiasVencimentoService.updateStatus(false);
       
       if (dias.length > 0) {
-        await DiasVencimento.update({ ativo: true }, { where: { dia: dias } });
+        await DiasVencimentoService.updateStatus(true, { dia: dias });
       }
 
-      const diasDepois = await DiasVencimento.findAll();
+      const diasDepois = await DiasVencimentoService.list();
       const dadosNovos = diasDepois.map(d => d.toJSON());
 
       // Registrar auditoria para cada dia que mudou
@@ -76,14 +75,14 @@ export class DiasVencimentoController {
     try {
       const { dias } = req.body;
       
-      await DiasVencimento.update({ ativo: false }, { where: {} });
+      await DiasVencimentoService.updateStatus(false);
       
       if (dias.length > 0) {
-        await DiasVencimento.update({ ativo: true }, { where: { dia: dias } });
+        await DiasVencimentoService.updateStatus(true, { dia: dias });
       }
 
       // Para create, usar update já que é a mesma lógica
-      const diasDepois = await DiasVencimento.findAll({ where: { ativo: true } });
+      const diasDepois = await DiasVencimentoService.list({ ativo: true });
       for (const dia of diasDepois) {
         await registrarAtualizacao(
           req as AuthenticatedRequest,

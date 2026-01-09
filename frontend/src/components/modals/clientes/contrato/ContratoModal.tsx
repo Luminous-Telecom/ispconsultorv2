@@ -108,7 +108,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     termoCadastradoId: 0
   });
   const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
-  const [isCreatingAvulso, setIsCreatingAvulso] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
@@ -239,6 +238,34 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     staleTime: 30 * 1000,
   });
 
+  // Limpar seleção quando os dados dos títulos mudarem e houver itens inválidos
+  useEffect(() => {
+    if (titulosData?.data && selectedItems.length > 0) {
+      // Verificar se algum item selecionado não existe mais nos dados
+      const selectedIds = selectedItems.map(item => item.id);
+      const currentIds = titulosData.data.map((titulo: Titulo) => titulo.id);
+      const hasInvalidSelection = selectedIds.some(id => !currentIds.includes(id));
+      
+      if (hasInvalidSelection) {
+        // Limpar seleção apenas se houver itens inválidos
+        setSelectedItems([]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [titulosData?.data]);
+
+  // Limpar seleção de itens cancelados quando o filtro de ocultar cancelados for ativado (títulos regulares)
+  useEffect(() => {
+    if (!showCancelados && selectedItems.length > 0) {
+      const canceladosSelecionados = selectedItems.filter(item => item.status?.toLowerCase() === 'cancelado');
+      if (canceladosSelecionados.length > 0) {
+        const itensNaoCancelados = selectedItems.filter(item => item.status?.toLowerCase() !== 'cancelado');
+        setSelectedItems(itensNaoCancelados);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCancelados]);
+
   // Buscar títulos avulsos do contrato (apenas no modo edição)
   const { data: titulosAvulsosData, isLoading: isLoadingTitulosAvulsos, refetch: refetchTitulosAvulsos } = useQuery({
     queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'],
@@ -249,6 +276,34 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     enabled: isEditMode && !!internalContratoId,
     staleTime: 30 * 1000,
   });
+
+  // Limpar seleção quando os dados dos títulos avulsos mudarem e houver itens inválidos
+  useEffect(() => {
+    if (titulosAvulsosData?.data && selectedAvulsosItems.length > 0) {
+      // Verificar se algum item selecionado não existe mais nos dados
+      const selectedIds = selectedAvulsosItems.map(item => item.id);
+      const currentIds = titulosAvulsosData.data.map((titulo: Titulo) => titulo.id);
+      const hasInvalidSelection = selectedIds.some(id => !currentIds.includes(id));
+      
+      if (hasInvalidSelection) {
+        // Limpar seleção apenas se houver itens inválidos
+        setSelectedAvulsosItems([]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [titulosAvulsosData?.data]);
+
+  // Limpar seleção de itens cancelados quando o filtro de ocultar cancelados for ativado (títulos avulsos)
+  useEffect(() => {
+    if (!showCanceladosAvulsos && selectedAvulsosItems.length > 0) {
+      const canceladosSelecionados = selectedAvulsosItems.filter(item => item.status?.toLowerCase() === 'cancelado');
+      if (canceladosSelecionados.length > 0) {
+        const itensNaoCancelados = selectedAvulsosItems.filter(item => item.status?.toLowerCase() !== 'cancelado');
+        setSelectedAvulsosItems(itensNaoCancelados);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCanceladosAvulsos]);
 
   // Mutations são gerenciadas pelo hook useContratoForm
 
@@ -449,13 +504,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Bulk actions para títulos (apenas no modo edição)
   const bulkActions: BulkAction<Titulo>[] = isEditMode ? [
     {
-      label: 'Novo',
-      action: () => {
-        setIsCreatingAvulso(false);
-        setShowTituloCreateModal(true);
-      }
-    },
-    {
       label: 'Editar',
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
@@ -507,6 +555,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               // Aguardar invalidação e refetch completarem antes de mostrar mensagem
               await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
               await refetchTitulos();
+              
+              // Limpar seleção após cancelamento
+              setSelectedItems([]);
               
               if (successCount > 0) {
                 const message = successCount === 1 
@@ -699,11 +750,11 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   ] : [];
 
   // Bulk actions para títulos avulsos (apenas no modo edição)
+  // Apenas títulos avulsos podem ser criados manualmente (títulos normais são gerados pelo scheduler)
   const bulkActionsAvulsos: BulkAction<Titulo>[] = isEditMode ? [
     {
-      label: 'Novo',
+      label: 'Novo Título Avulso',
       action: () => {
-        setIsCreatingAvulso(true);
         setShowTituloCreateModal(true);
       }
     },
@@ -759,6 +810,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               // Aguardar invalidação e refetch completarem antes de mostrar mensagem
               await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
               await refetchTitulosAvulsos();
+              
+              // Limpar seleção após cancelamento
+              setSelectedAvulsosItems([]);
               
               if (successCount > 0) {
                 const message = successCount === 1 
@@ -1863,18 +1917,17 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       {/* Modais - apenas no modo edição */}
       {isEditMode && internalContratoId && (
         <>
+          {/* Modal de título apenas para títulos avulsos (títulos normais são gerados pelo scheduler) */}
           <TituloModal
             show={showTituloCreateModal}
             clienteId={contratoData?.cliente_id}
             contratoId={internalContratoId || undefined}
-            isAvulso={isCreatingAvulso}
+            isAvulso={true}
             onClose={() => {
               setShowTituloCreateModal(false);
-              setIsCreatingAvulso(false);
             }}
             onSuccess={() => {
               setShowTituloCreateModal(false);
-              setIsCreatingAvulso(false);
               queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
               queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
               if (contratoData?.cliente_id) {

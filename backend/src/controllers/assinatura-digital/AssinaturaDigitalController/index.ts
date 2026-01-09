@@ -1,18 +1,22 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../utils/logger';
 import { AssinaturaDigital } from '../../../models/assinatura-digital/AssinaturaDigital';
+import { AssinaturaDigitalService } from '../../../services/assinatura-digital/AssinaturaDigitalService';
+import { AssinaturaDigitalProviderService } from '../../../services/assinatura-digital/AssinaturaDigitalProviderService';
+import { TermoContratoService } from '../../../services/contratos/TermoContratoService';
+import { ClienteService } from '../../../services/clientes/ClienteService';
+import { ModeloDocumentoService } from '../../../services/documentos/ModeloDocumentoService';
 import { TermoContrato } from '../../../models/contratos/TermoContrato';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Contrato } from '../../../models/contratos/Contrato';
 import { ClienteArquivo } from '../../../models/clientes/ClienteArquivo';
-import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
 import { AssinafyService } from '../../../services/assinatura-digital/AssinafyService';
 import { ZapsignService } from '../../../services/assinatura-digital/ZapsignService';
 import { ClienteArquivoService } from '../../../services/cadastros';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
-import AssinaturaDigitalProvider from '../../../models/assinatura-digital/AssinaturaDigitalProvider';
-import { registrarCriacao, registrarExclusao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarExclusao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import { registrarAtualizacaoElasticsearch, registrarCriacaoElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
+import { getCurrentTimestamp } from '../../../utils/timezoneUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 // Interface comum para serviços de assinatura digital
@@ -53,9 +57,7 @@ export class AssinaturaDigitalController {
    */
   private static async isSignatureEnabled(): Promise<boolean> {
     try {
-      const provider = await AssinaturaDigitalProvider.findOne({
-        where: { habilitado: true }
-      });
+      const provider = await AssinaturaDigitalProviderService.getEnabled();
       return !!provider && !!provider.api_key;
     } catch (error) {
       logger.error('Erro ao verificar se assinatura digital está habilitada:', error);
@@ -92,23 +94,10 @@ export class AssinaturaDigitalController {
         where.termo_contrato_id = termo_contrato_id;
       }
 
-      const assinaturas = await AssinaturaDigital.findAll({
-        where,
-        include: [
-          {
-            model: TermoContrato,
-            as: 'termoContrato',
-            required: false,
-            attributes: ['id', 'tipo_termo', 'assinado']
-          },
-          {
-            model: Cliente,
-            as: 'cliente',
-            required: false,
-            attributes: ['id', 'nome', 'email', 'cpf_cnpj']
-          }
-        ],
-        order: [['created_at', 'DESC']]
+      const assinaturas = await AssinaturaDigitalService.list({
+        status: status as string,
+        cliente_id: cliente_id as string | number,
+        termo_contrato_id: termo_contrato_id as string | number
       });
 
       res.json({
@@ -131,20 +120,7 @@ export class AssinaturaDigitalController {
     try {
       const { id } = req.params;
 
-      const assinatura = await AssinaturaDigital.findByPk(id, {
-        include: [
-          {
-            model: TermoContrato,
-            as: 'termoContrato',
-            required: false
-          },
-          {
-            model: Cliente,
-            as: 'cliente',
-            required: false
-          }
-        ]
-      });
+      const assinatura = await AssinaturaDigitalService.getById(id);
 
       if (!assinatura) {
         res.status(404).json({
@@ -196,7 +172,7 @@ export class AssinaturaDigitalController {
       let conteudoHtml = '';
 
       if (termo_contrato_id) {
-        const termoContrato = await TermoContrato.findByPk(termo_contrato_id);
+        const termoContrato = await TermoContratoService.getById(termo_contrato_id);
 
         if (!termoContrato) {
           res.status(404).json({
@@ -219,7 +195,7 @@ export class AssinaturaDigitalController {
           cliente = await contrato.getCliente();
         }
 
-        const modeloDocumento = await ModeloDocumento.findByPk(termoContrato.modelo_documento_id);
+        const modeloDocumento = await ModeloDocumentoService.getById(termoContrato.modelo_documento_id);
         if (!modeloDocumento) {
           res.status(404).json({
             success: false,
@@ -243,7 +219,7 @@ export class AssinaturaDigitalController {
           return;
         }
       } else if (cliente_id) {
-        cliente = await Cliente.findByPk(cliente_id);
+        cliente = await ClienteService.getById(cliente_id);
         if (!cliente) {
           res.status(404).json({
             success: false,
@@ -263,9 +239,7 @@ export class AssinaturaDigitalController {
       }
 
       // Buscar provider habilitado
-      const providerConfig = await AssinaturaDigitalProvider.findOne({
-        where: { habilitado: true }
-      });
+      const providerConfig = await AssinaturaDigitalProviderService.getEnabled();
       
       if (!providerConfig) {
         res.status(500).json({
@@ -365,7 +339,7 @@ export class AssinaturaDigitalController {
         ? uploadResult.data.url 
         : null;
 
-      const assinatura = await AssinaturaDigital.create({
+      const assinatura = await AssinaturaDigitalService.create({
         termo_contrato_id: termo_contrato_id || null,
         cliente_id: cliente?.id || cliente_id || null,
         documento_tipo: termo_contrato_id ? 'termo' : 'outro' as const,
@@ -413,7 +387,7 @@ export class AssinaturaDigitalController {
     try {
       const { id } = req.params;
 
-      const assinatura = await AssinaturaDigital.findByPk(id);
+      const assinatura = await AssinaturaDigitalService.getById(id);
 
       if (!assinatura) {
         res.status(404).json({
@@ -449,7 +423,7 @@ export class AssinaturaDigitalController {
           await assinatura.marcarComoAssinado();
           
           if (assinatura.termo_contrato_id) {
-            const termoContrato = await TermoContrato.findByPk(assinatura.termo_contrato_id);
+            const termoContrato = await TermoContratoService.getById(assinatura.termo_contrato_id);
             if (termoContrato && termoContrato.assinado === 'NAO') {
               termoContrato.assinado = 'SIM';
               termoContrato.data_aceite = new Date();
@@ -499,7 +473,7 @@ export class AssinaturaDigitalController {
     try {
       const { id } = req.params;
 
-      const assinatura = await AssinaturaDigital.findByPk(id);
+      const assinatura = await AssinaturaDigitalService.getById(id);
 
       if (!assinatura) {
         res.status(404).json({
@@ -579,7 +553,7 @@ export class AssinaturaDigitalController {
     try {
       const { id } = req.params;
 
-      const assinatura = await AssinaturaDigital.findByPk(id);
+      const assinatura = await AssinaturaDigitalService.getById(id);
 
       if (!assinatura) {
         res.status(404).json({
@@ -646,7 +620,7 @@ export class AssinaturaDigitalController {
    * Webhook específico para Assinafy
    */
   static async webhookAssinafy(req: Request, res: Response): Promise<void> {
-    const timestamp = new Date().toISOString();
+    const timestamp = getCurrentTimestamp();
     
     try {
       res.status(200).json({
@@ -750,7 +724,7 @@ export class AssinaturaDigitalController {
    * Webhook genérico (mantido para compatibilidade - detecta provider automaticamente)
    */
   static async webhook(req: Request, res: Response): Promise<void> {
-    const timestamp = new Date().toISOString();
+    const timestamp = getCurrentTimestamp();
     
     try {
       res.status(200).json({
@@ -803,10 +777,10 @@ export class AssinaturaDigitalController {
 
       // Se não detectou provider, tentar identificar pela assinatura no banco
       if (!provider) {
-        const assinatura = await AssinaturaDigital.findOne({
-          where: { api_document_id: String(documentId) },
-          attributes: ['api_provider']
-        });
+        const assinatura = await AssinaturaDigitalService.getByApiDocumentIdWithAttributes(
+          documentId,
+          ['api_provider']
+        );
         if (assinatura) {
           provider = assinatura.api_provider as 'assinafy' | 'zapsign';
         }
@@ -863,15 +837,7 @@ export class AssinaturaDigitalController {
     req?: Request
   ): Promise<void> {
 
-    let assinatura = await AssinaturaDigital.findOne({
-      where: { api_document_id: String(documentId) }
-    });
-
-    if (!assinatura && !isNaN(Number(documentId))) {
-      assinatura = await AssinaturaDigital.findOne({
-        where: { api_document_id: Number(documentId) }
-      });
-    }
+    let assinatura = await AssinaturaDigitalService.getByApiDocumentId(documentId);
 
     if (!assinatura) {
       return;
@@ -882,10 +848,7 @@ export class AssinaturaDigitalController {
       // Capturar dados anteriores antes de atualizar
       const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
       
-      await AssinaturaDigital.update(
-        { url_assinatura: signingUrl },
-        { where: { id: assinatura.id } }
-      );
+      await AssinaturaDigitalService.updateById(assinatura.id, { url_assinatura: signingUrl });
       
       // Recarregar assinatura para obter dados atualizados
       await assinatura.reload();
@@ -987,9 +950,7 @@ export class AssinaturaDigitalController {
       // Capturar dados anteriores antes de atualizar
       const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
       
-      await AssinaturaDigital.update(dadosParaAtualizar, {
-        where: { id: assinatura.id }
-      });
+      await AssinaturaDigitalService.updateById(assinatura.id, dadosParaAtualizar);
 
       // Recarregar assinatura para ter dados atualizados
       await assinatura.reload();
@@ -1018,13 +979,11 @@ export class AssinaturaDigitalController {
 
       if (assinatura.cliente_id && pdfBufferParaSalvar) {
         try {
-          const arquivoExistente = await ClienteArquivo.findOne({
-            where: {
-              cliente_id: assinatura.cliente_id,
-              referencia_id: assinatura.id,
-              referencia_tipo: 'assinatura_digital'
-            }
-          });
+          const arquivoExistente = await ClienteArquivoService.findByReferencia(
+            assinatura.cliente_id,
+            assinatura.id,
+            'assinatura_digital'
+          );
 
           if (!arquivoExistente) {
             const nomeArquivo = `Documento_Assinado_${assinatura.id}_${Date.now()}.pdf`;
@@ -1072,7 +1031,7 @@ export class AssinaturaDigitalController {
 
       // Atualizar termo de contrato relacionado
       if (assinatura.termo_contrato_id) {
-        const termoContrato = await TermoContrato.findByPk(assinatura.termo_contrato_id);
+        const termoContrato = await TermoContratoService.getById(assinatura.termo_contrato_id);
         if (termoContrato) {
           // Capturar dados anteriores antes de atualizar
           const dadosAnteriores = termoContrato.toJSON() as Record<string, unknown>;
@@ -1080,16 +1039,14 @@ export class AssinaturaDigitalController {
           const dataAceite = new Date();
           const aceitoPor = assinatura.nome_assinante || 'Assinatura Digital';
           
-          termoContrato.assinado = 'SIM';
-          termoContrato.data_aceite = dataAceite;
-          termoContrato.aceito_por = aceitoPor;
-          await termoContrato.save();
-          
-          // Recarregar termo para obter dados atualizados
-          await termoContrato.reload();
+          const termoAtualizado = await TermoContratoService.update(assinatura.termo_contrato_id, {
+            assinado: 'SIM',
+            data_aceite: dataAceite,
+            aceito_por: aceitoPor
+          });
           
           // Capturar dados novos após atualização
-          const dadosNovos = termoContrato.toJSON() as Record<string, unknown>;
+          const dadosNovos = termoAtualizado.toJSON() as Record<string, unknown>;
           
           // Registrar auditoria no Elasticsearch se req foi fornecido
           if (req) {
@@ -1097,14 +1054,14 @@ export class AssinaturaDigitalController {
               await registrarAtualizacaoElasticsearch(
                 req,
                 'TermoContrato',
-                termoContrato.id,
+                termoAtualizado.id,
                 dadosAnteriores,
                 dadosNovos,
                 `Atualização via webhook (assinatura digital) - Provider: ${provider || 'desconhecido'}`
               );
             } catch (auditError) {
               logger.warn('Erro ao registrar auditoria de webhook (termo contrato)', {
-                termo_contrato_id: termoContrato.id,
+                termo_contrato_id: termoAtualizado.id,
                 error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
               });
             }

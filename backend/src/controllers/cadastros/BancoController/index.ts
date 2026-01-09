@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { Banco } from '../../../models/cadastros/Banco';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
+import { BancoService } from '../../../services/cadastros/BancoService';
 import { logger } from '../../../utils/logger';
-import { Op, WhereOptions, ValidationError } from 'sequelize';
+import { ValidationError } from 'sequelize';
 import { randomBytes } from 'crypto';
-import { cache } from '../../../utils/cache';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 
 export class BancoController {
@@ -14,32 +14,8 @@ export class BancoController {
    */
   static async findAtivos(req: Request, res: Response): Promise<void> {
     try {
-      // Cache para bancos ativos (dados raramente mudam)
-      const cacheKey = 'bancos:ativos';
-      const cached = cache.get(cacheKey);
-      
-      if (cached) {
-        res.json(cached);
-        return;
-      }
-
-      const bancos = await Banco.findAll({
-        where: { ativo: true },
-        include: [
-          { association: 'titulos' }
-        ],
-        order: [['nome', 'ASC']]
-      });
-
-      const response = {
-        success: true,
-        data: bancos
-      };
-
-      // Cachear por 10 minutos (bancos raramente mudam)
-      cache.set(cacheKey, response, 600000);
-
-      res.json(response);
+      const result = await BancoService.findAtivos();
+      res.json(result);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao buscar bancos ativos', { error: errorMessage });
@@ -55,58 +31,15 @@ export class BancoController {
     try {
       const { search, status, tipo_banco, page = 1, limit = 15 } = req.query;
       
-      const where: WhereOptions<Banco> = {};
-      
-      // Filtro por busca - buscar apenas nos campos que correspondem às colunas da tabela
-      if (search) {
-        (where as Record<symbol, unknown>)[Op.or] = [
-          { id: { [Op.like]: `%${search}%` } },
-          { nome: { [Op.like]: `%${search}%` } },
-          { descricao: { [Op.like]: `%${search}%` } },
-          { tipo_banco: { [Op.like]: `%${search}%` } },
-          { sandbox: { [Op.like]: `%${search}%` } },
-          { ativo: { [Op.like]: `%${search}%` } }
-        ];
-      }
-      
-      // Filtro por status
-      if (status) {
-        where.ativo = status === 'ativo';
-      }
-      
-      // Filtro por tipo de banco
-      if (tipo_banco) {
-        where.tipo_banco = tipo_banco as 'efi' | 'asaas' | 'bancario' | 'outros';
-      }
-      
-      const offset = (Number(page) - 1) * Number(limit);
-      
-      // Contar total de bancos sem includes para evitar duplicatas
-      const count = await Banco.count({ where });
-      
-      // Buscar bancos com includes
-      const bancos = await Banco.findAll({
-        where,
-        order: [['id', 'DESC']], // Maior ID para o menor
-        limit: Number(limit),
-        offset,
-        include: [
-          { association: 'titulos' }
-        ]
+      const result = await BancoService.list({
+        search: search as string | undefined,
+        status: status as string | undefined,
+        tipo_banco: tipo_banco as string | undefined,
+        page: Number(page),
+        limit: Number(limit)
       });
       
-      res.json({
-        success: true,
-        data: bancos,
-        pagination: {
-          current_page: Number(page),
-          per_page: Number(limit),
-          total: count,
-          last_page: Math.ceil(count / Number(limit)),
-          from: offset + 1,
-          to: Math.min(offset + Number(limit), count)
-        }
-      });
+      res.json(result);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao listar bancos', {
@@ -123,11 +56,7 @@ export class BancoController {
     try {
       const { id } = req.params;
       
-      const banco = await Banco.findByPk(id, {
-        include: [
-          { association: 'titulos' }
-        ]
-      });
+      const banco = await BancoService.getById(id);
       
       if (!banco) {
         res.status(404).json({ error: 'Banco não encontrado' });
@@ -167,16 +96,14 @@ export class BancoController {
       }
       
       // Verificar se já existe banco com mesmo nome
-      const bancoExistente = await Banco.findOne({
-        where: { nome: dadosBanco.nome }
-      });
+      const bancoExistente = await BancoService.existsByName(dadosBanco.nome);
       
       if (bancoExistente) {
         res.status(400).json({ error: 'Já existe um banco com este nome' });
         return;
       }
       
-      const banco = await Banco.create(dadosBanco);
+      const banco = await BancoService.create(dadosBanco);
       
       // Registrar auditoria
       await registrarCriacao(
@@ -244,7 +171,7 @@ export class BancoController {
         client_secret_length: dadosBanco.client_secret_producao?.length || 0
       });
       
-      const banco = await Banco.findByPk(id);
+      const banco = await BancoService.getById(id);
       
       if (!banco) {
         res.status(404).json({ error: 'Banco não encontrado' });
@@ -256,12 +183,7 @@ export class BancoController {
       
       // Verificar se já existe outro banco com mesmo nome
       if (dadosBanco.nome && dadosBanco.nome !== banco.nome) {
-        const bancoExistente = await Banco.findOne({
-          where: { 
-            nome: dadosBanco.nome,
-            id: { [Op.ne]: id }
-          }
-        });
+        const bancoExistente = await BancoService.existsByName(dadosBanco.nome, banco.id);
         
         if (bancoExistente) {
           res.status(400).json({ error: 'Já existe um banco com este nome' });
@@ -304,13 +226,10 @@ export class BancoController {
       delete dadosParaAtualizar.has_api_secret;
       delete dadosParaAtualizar.has_client_secret_producao;
       
-      await banco.update(dadosParaAtualizar);
-      
-      // Recarregar banco para obter dados atualizados
-      await banco.reload();
+      const bancoAtualizado = await BancoService.update(id, dadosParaAtualizar);
       
       // Registrar auditoria
-      const dadosNovos = banco.toJSON() as Record<string, unknown>;
+      const dadosNovos = bancoAtualizado.toJSON() as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -318,28 +237,23 @@ export class BancoController {
       await registrarAtualizacao(
         req,
         'Banco',
-        banco.id,
+        bancoAtualizado.id,
         dadosAnteriores,
         dadosNovos
       );
       
-      // Invalidar cache de bancos ativos se o status mudou
-      if (dadosBanco.ativo !== undefined) {
-        cache.delete('bancos:ativos');
-      }
-      
       logger.info('Banco atualizado com sucesso', {
-        banco_id: banco.id,
-        nome: banco.nome,
-        tipo_banco: banco.tipo_banco,
-        has_client_id_after: !!banco.client_id_producao,
-        has_client_secret_after: !!banco.client_secret_producao
+        banco_id: bancoAtualizado.id,
+        nome: bancoAtualizado.nome,
+        tipo_banco: bancoAtualizado.tipo_banco,
+        has_client_id_after: !!bancoAtualizado.client_id_producao,
+        has_client_secret_after: !!bancoAtualizado.client_secret_producao
       });
       
       res.json({
         success: true,
         message: 'Banco atualizado com sucesso!',
-        data: banco
+        data: bancoAtualizado
       });
     } catch (error: unknown) {
       // Capturar erros de validação do Sequelize
@@ -381,27 +295,29 @@ export class BancoController {
     try {
       const { id } = req.params;
       
-      const banco = await Banco.findByPk(id, {
-        include: [{ association: 'carnes' }]
-      });
+      // Buscar banco antes de deletar para auditoria
+      const banco = await BancoService.getById(id);
       
       if (!banco) {
         res.status(404).json({ error: 'Banco não encontrado' });
         return;
       }
       
-      // Verificar se tem títulos associados
-      const titulosCount = await banco.countTitulos();
-      
-      if (titulosCount > 0) {
-        res.status(400).json({ 
-          error: 'Não é possível excluir banco com títulos associados.' 
-        });
-        return;
-      }
-      
       // Capturar dados anteriores para auditoria
       const dadosAnteriores = banco.toJSON() as Record<string, unknown>;
+      
+      try {
+        await BancoService.delete(id);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        if (errorMessage.includes('títulos associados')) {
+          res.status(400).json({ 
+            error: 'Não é possível excluir banco com títulos associados.' 
+          });
+          return;
+        }
+        throw error;
+      }
       
       // Registrar auditoria
       await registrarExclusao(
@@ -410,8 +326,6 @@ export class BancoController {
         banco.id,
         dadosAnteriores
       );
-      
-      await banco.destroy();
       
       logger.info('Banco excluído com sucesso', {
         banco_id: id,
@@ -424,9 +338,11 @@ export class BancoController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       logger.error('Erro ao deletar banco', {
         banco_id: req.params.id,
-        error: errorMessage
+        error: errorMessage,
+        stack: errorStack
       });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
@@ -439,7 +355,7 @@ export class BancoController {
     try {
       const { id } = req.params;
       
-      const banco = await Banco.findByPk(id);
+      const banco = await BancoService.getById(id);
       
       if (!banco) {
         res.status(404).json({ 
@@ -448,9 +364,6 @@ export class BancoController {
         });
         return;
       }
-      
-      // Recarregar banco para garantir dados atualizados
-      await banco.reload();
       
       logger.info('Testando conexão com banco', {
         banco_id: banco.id,
@@ -493,7 +406,7 @@ export class BancoController {
     try {
       const { id } = req.params;
       
-      const banco = await Banco.findByPk(id);
+      const banco = await BancoService.getById(id);
       
       if (!banco) {
         res.status(404).json({ error: 'Banco não encontrado' });
@@ -523,7 +436,7 @@ export class BancoController {
     try {
       const { id } = req.params;
 
-      const banco = await Banco.findByPk(id);
+      const banco = await BancoService.getById(id);
 
       if (!banco) {
         res.status(404).json({
@@ -542,7 +455,7 @@ export class BancoController {
       }
 
       const novoSecret = randomBytes(32).toString('hex');
-      await banco.update({ webhook_secret: novoSecret });
+      await BancoService.update(id, { webhook_secret: novoSecret });
 
       logger.info('Webhook secret Asaas gerado manualmente', {
         banco_id: banco.id

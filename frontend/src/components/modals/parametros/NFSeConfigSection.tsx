@@ -1,13 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { NFSeConfigService, type NFSeConfigUpdate } from '@/services/nfseConfigService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 
 interface NFSeConfigSectionProps {
   disabled?: boolean;
+  onSaveReady?: (handleSave: () => void, isSaving: boolean) => void;
+  onTestReady?: (handleTest: () => void, isTesting: boolean, canTest: boolean) => void;
 }
 
-const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({ disabled = false }) => {
+const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({ 
+  disabled = false,
+  onSaveReady,
+  onTestReady
+}) => {
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -157,10 +163,35 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({ disabled = false 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = useCallback((e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     saveMutation.mutate(formData);
-  };
+  }, [formData, saveMutation]);
+
+  const handleTest = useCallback(() => {
+    testAuthMutation.mutate(formData);
+  }, [formData, testAuthMutation]);
+
+  const canTest = formData.provider === 'PORTAL_NACIONAL' 
+    ? !!(formData.portal_nacional_username && formData.portal_nacional_password)
+    : formData.provider === 'ASAAS'
+    ? !!formData.asaas_api_key
+    : false;
+
+  // Expor funções para o modal
+  useEffect(() => {
+    if (onSaveReady) {
+      onSaveReady(handleSave, saveMutation.isPending);
+    }
+  }, [onSaveReady, saveMutation.isPending, handleSave]);
+
+  useEffect(() => {
+    if (onTestReady) {
+      onTestReady(handleTest, testAuthMutation.isPending, canTest);
+    }
+  }, [onTestReady, testAuthMutation.isPending, canTest, handleTest]);
 
   if (isLoading) {
     return (
@@ -185,7 +216,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({ disabled = false 
         <h6 className="mb-0">NFS-e</h6>
       </div>
       <div className="card-body">
-        <form onSubmit={handleSave}>
+        <form id="nfse-config-form" onSubmit={handleSave}>
           <div className="row">
             <div className="col-md-6 mb-3">
               <label htmlFor="nfse_codigo_servico" className="form-label">
@@ -414,31 +445,6 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({ disabled = false 
             </>
           )}
 
-          <div className="d-flex justify-content-between align-items-center">
-            {(formData.provider === 'PORTAL_NACIONAL' || formData.provider === 'ASAAS') && (
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => testAuthMutation.mutate(formData)}
-                disabled={
-                  disabled || 
-                  testAuthMutation.isPending || 
-                  (formData.provider === 'PORTAL_NACIONAL' && (!formData.portal_nacional_username || !formData.portal_nacional_password)) ||
-                  (formData.provider === 'ASAAS' && !formData.asaas_api_key)
-                }
-              >
-                {testAuthMutation.isPending ? 'Testando...' : formData.provider === 'ASAAS' ? 'Testar Conexão' : 'Testar Autenticação'}
-              </button>
-            )}
-            
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={disabled || saveMutation.isPending}
-            >
-              {saveMutation.isPending ? 'Salvando...' : 'Salvar Configurações NFS-e'}
-            </button>
-          </div>
         </form>
       </div>
     </div>

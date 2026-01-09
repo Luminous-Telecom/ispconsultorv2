@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaService';
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
-import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 
 export class DadosEmpresaController {
@@ -42,10 +43,10 @@ export class DadosEmpresaController {
   // Rota pública para o site - retorna apenas dados não sensíveis
   static async getPublic(req: Request, res: Response): Promise<void> {
     try {
-      let dadosEmpresa = await DadosEmpresa.findOne();
+      let dadosEmpresa = await DadosEmpresaService.findOne();
 
       if (!dadosEmpresa) {
-        dadosEmpresa = await DadosEmpresa.create(DadosEmpresaController.getDefaultData());
+        dadosEmpresa = await DadosEmpresaService.create(DadosEmpresaController.getDefaultData());
       }
 
       const dadosEmpresaJson = dadosEmpresa.toJSON();
@@ -92,10 +93,10 @@ export class DadosEmpresaController {
         return;
       }
 
-      let dadosEmpresa = await DadosEmpresa.findOne();
+      let dadosEmpresa = await DadosEmpresaService.findOne();
 
       if (!dadosEmpresa) {
-        dadosEmpresa = await DadosEmpresa.create(DadosEmpresaController.getDefaultData());
+        dadosEmpresa = await DadosEmpresaService.create(DadosEmpresaController.getDefaultData());
       }
 
       const dadosEmpresaJson = dadosEmpresa.toJSON();
@@ -124,11 +125,11 @@ export class DadosEmpresaController {
       dadosAtualizados.logo = DadosEmpresaController.normalizePath(dadosAtualizados.logo);
       dadosAtualizados.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosAtualizados.responsavel_assinatura);
 
-      let dadosEmpresa = await DadosEmpresa.findOne();
+      let dadosEmpresa = await DadosEmpresaService.findOne();
       const dadosAnteriores = dadosEmpresa ? dadosEmpresa.toJSON() : null;
 
       if (!dadosEmpresa) {
-        dadosEmpresa = await DadosEmpresa.create(dadosAtualizados);
+        dadosEmpresa = await DadosEmpresaService.create(dadosAtualizados);
         await registrarCriacao(
           req as AuthenticatedRequest,
           'DadosEmpresa',
@@ -136,7 +137,7 @@ export class DadosEmpresaController {
           dadosEmpresa.toJSON() as Record<string, unknown>
         );
       } else {
-        await dadosEmpresa.update(dadosAtualizados);
+        dadosEmpresa = await DadosEmpresaService.update(dadosAtualizados);
         await dadosEmpresa.reload();
         await registrarAtualizacao(
           req as AuthenticatedRequest,
@@ -209,10 +210,10 @@ export class DadosEmpresaController {
 
       // Sempre usar o mesmo caminho para substituir o arquivo antigo
       const filePath = `/arquivos/empresa/logo.png`;
-      let dadosEmpresa = await DadosEmpresa.findOne();
+      let dadosEmpresa = await DadosEmpresaService.findOne();
 
       if (!dadosEmpresa) {
-        dadosEmpresa = await DadosEmpresa.create({ ...DadosEmpresaController.getDefaultData(), logo: filePath });
+        dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), logo: filePath });
         await registrarCriacao(
           req as AuthenticatedRequest,
           'DadosEmpresa',
@@ -241,7 +242,7 @@ export class DadosEmpresaController {
           }
         }
         const dadosAnteriores = dadosEmpresa.toJSON();
-        await dadosEmpresa.update({ logo: filePath });
+        dadosEmpresa = await DadosEmpresaService.update({ logo: filePath });
         await dadosEmpresa.reload();
         
         await registrarAtualizacao(
@@ -272,7 +273,7 @@ export class DadosEmpresaController {
 
   static async getLogo(req: Request, res: Response): Promise<void> {
     try {
-      const dadosEmpresa = await DadosEmpresa.findOne();
+      const dadosEmpresa = await DadosEmpresaService.findOne();
       
       if (!dadosEmpresa || !dadosEmpresa.logo) {
         res.status(404).json({ error: 'Logo não encontrada' });
@@ -337,10 +338,10 @@ export class DadosEmpresaController {
 
       // Sempre usar o mesmo caminho para substituir o arquivo antigo
       const filePath = `/arquivos/empresa/assinatura.png`;
-      let dadosEmpresa = await DadosEmpresa.findOne();
+      let dadosEmpresa = await DadosEmpresaService.findOne();
 
       if (!dadosEmpresa) {
-        dadosEmpresa = await DadosEmpresa.create({ ...DadosEmpresaController.getDefaultData(), responsavel_assinatura: filePath });
+        dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), responsavel_assinatura: filePath });
       } else {
         // Deletar assinatura antiga se existir (pode ter nome diferente)
         if (dadosEmpresa.responsavel_assinatura) {
@@ -362,7 +363,7 @@ export class DadosEmpresaController {
             // Ignorar erro ao deletar assinatura antiga
           }
         }
-        await dadosEmpresa.update({ responsavel_assinatura: filePath });
+        dadosEmpresa = await DadosEmpresaService.update({ responsavel_assinatura: filePath });
       }
 
       res.json({ success: true, responsavel_assinatura: filePath });

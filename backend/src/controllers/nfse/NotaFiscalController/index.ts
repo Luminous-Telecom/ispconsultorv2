@@ -3,12 +3,17 @@ import { NotaFiscal } from '../../../models/nfse/NotaFiscal';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { NFeService, DadosNFe } from '../../../services/nfse/NFeService';
-import { logger } from '../../../utils/logger';
+import { NotaFiscalService } from '../../../services/nfse/NotaFiscalService';
+import { NFSeConfigService } from '../../../services/nfse/NFSeConfigService';
+import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaService';
+import { TituloService } from '../../../services/financeiro/TituloService';
+import { ContratoService } from '../../../services/contratos/ContratoService';
+import { ContratoPlanoAdicionalService } from '../../../services/contratos/ContratoPlanoAdicionalService';
 import { Op } from 'sequelize';
 import { sequelize } from '../../../config/database';
+import { logger } from '../../../utils/logger';
 import Joi from 'joi';
-import { registrarCriacao } from '../../../services/sistema/AuditoriaService';
-import { registrarCriacaoElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
+import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -166,30 +171,18 @@ export class NotaFiscalController {
         }
       }
 
-      const { count, rows } = await NotaFiscal.findAndCountAll({
-        where,
-        include: [
-          {
-            model: Cliente,
-            as: 'cliente',
-            attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj']
-          }
-        ],
-        order: [['created_at', 'DESC']],
+      const result = await NotaFiscalService.list({
+        page: pageNumber,
         limit: limitNumber,
-        offset
+        search: search as string,
+        searchField: searchField as string,
+        status: status as string,
+        cliente_id: cliente_id ? parseInt(String(cliente_id), 10) : undefined,
+        data_inicio: data_inicio as string,
+        data_fim: data_fim as string
       });
 
-      res.json({
-        success: true,
-        data: rows,
-        pagination: {
-          page: pageNumber,
-          limit: limitNumber,
-          total: count,
-          totalPages: Math.ceil(count / limitNumber)
-        }
-      });
+      res.json(result);
     } catch (error) {
       logger.error('Erro ao listar notas fiscais:', error);
       res.status(500).json({
@@ -207,15 +200,7 @@ export class NotaFiscalController {
     try {
       const { id } = req.params;
 
-      const notaFiscal = await NotaFiscal.findByPk(id, {
-        include: [
-          {
-            model: Cliente,
-            as: 'cliente',
-            attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email', 'telefone', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep']
-          }
-        ]
-      });
+      const notaFiscal = await NotaFiscalService.getById(id);
 
       if (!notaFiscal) {
         res.status(404).json({
@@ -265,12 +250,6 @@ export class NotaFiscalController {
           const notaData = resultado.notaFiscal.toJSON() as Record<string, unknown>;
           await registrarCriacao(
             req,
-            'NotaFiscal',
-            resultado.notaFiscal.id,
-            notaData
-          );
-          await registrarCriacaoElasticsearch(
-            req as AuthenticatedRequest,
             'NotaFiscal',
             resultado.notaFiscal.id,
             notaData
@@ -392,25 +371,14 @@ export class NotaFiscalController {
 
       const pageNumber = parseInt(page as string, 10);
       const limitNumber = parseInt(limit as string, 10);
-      const offset = (pageNumber - 1) * limitNumber;
 
-      const { count, rows } = await NotaFiscal.findAndCountAll({
-        where: { cliente_id: parseInt(cliente_id, 10) },
-        order: [['created_at', 'DESC']],
-        limit: limitNumber,
-        offset
-      });
+      const result = await NotaFiscalService.findByCliente(
+        parseInt(cliente_id, 10),
+        pageNumber,
+        limitNumber
+      );
 
-      res.json({
-        success: true,
-        data: rows,
-        pagination: {
-          page: pageNumber,
-          limit: limitNumber,
-          total: count,
-          totalPages: Math.ceil(count / limitNumber)
-        }
-      });
+      res.json(result);
     } catch (error) {
       logger.error('Erro ao listar notas fiscais do cliente:', error);
       res.status(500).json({
@@ -426,15 +394,7 @@ export class NotaFiscalController {
    */
   private static async getPdfBuffer(notaFiscal: NotaFiscal): Promise<Buffer | null> {
     try {
-      const notaCompleta = await NotaFiscal.findByPk(notaFiscal.id, {
-        include: [
-          {
-            model: Cliente,
-            as: 'cliente',
-            attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep', 'telefone', 'email']
-          }
-        ]
-      }) as (NotaFiscal & { cliente?: Cliente | null }) | null;
+      const notaCompleta = await NotaFiscalService.getById(notaFiscal.id) as (NotaFiscal & { cliente?: Cliente | null }) | null;
 
       if (!notaCompleta || !notaCompleta.cliente) {
         return null;
@@ -468,7 +428,7 @@ export class NotaFiscalController {
         return;
       }
 
-      const notaFiscal = await NotaFiscal.findByPk(notaFiscalId);
+      const notaFiscal = await NotaFiscalService.getById(notaFiscalId);
 
       if (!notaFiscal) {
         res.status(404).json({
@@ -530,10 +490,10 @@ export class NotaFiscalController {
       const pdfBuffers: Buffer[] = [];
 
       for (const tituloId of idsArray) {
-        const titulo = await Titulo.findByPk(tituloId);
+        const titulo = await TituloService.getById(tituloId);
         if (!titulo?.nota_fiscal_id) continue;
 
-        const notaFiscal = await NotaFiscal.findByPk(titulo.nota_fiscal_id);
+        const notaFiscal = await NotaFiscalService.getById(titulo.nota_fiscal_id);
         if (notaFiscal?.nfse_status === 'emitida' && notaFiscal.numero) {
           const pdfBuffer = await NotaFiscalController.getPdfBuffer(notaFiscal);
           if (pdfBuffer) pdfBuffers.push(pdfBuffer);
@@ -612,12 +572,12 @@ export class NotaFiscalController {
       throw new Error('Cliente não encontrado para a nota fiscal');
     }
 
-    const dadosEmpresa = await DadosEmpresa.findOne();
+    const dadosEmpresa = await DadosEmpresaService.findOne();
     if (!dadosEmpresa) {
       throw new Error('Dados da empresa não configurados');
     }
 
-    const nfseConfig = await NFSeConfig.findOne();
+    const nfseConfig = await NFSeConfigService.get();
     const descricaoServico = nfseConfig?.descricao_servico || '';
 
     // Buscar serviços (plano principal e adicionais)
@@ -630,15 +590,7 @@ export class NotaFiscalController {
 
     if (notaFiscal.titulo_id) {
 
-      const titulo = await Titulo.findByPk(notaFiscal.titulo_id, {
-        include: [
-          {
-            model: Plano,
-            as: 'plano',
-            attributes: ['id', 'nome_plano', 'valor_mensal']
-          }
-        ]
-      }) as (Titulo & { plano?: Plano }) | null;
+      const titulo = await TituloService.getById(notaFiscal.titulo_id) as (Titulo & { plano?: Plano }) | null;
 
       if (titulo && titulo.plano) {
         const valorPlano = Number(titulo.plano.valor_mensal);
@@ -659,26 +611,17 @@ export class NotaFiscalController {
 
         // Buscar planos adicionais do contrato se existir
         if (titulo.contrato_id) {
-          const contrato = await Contrato.findByPk(titulo.contrato_id);
+          const contrato = await ContratoService.getById(titulo.contrato_id);
 
           if (contrato) {
 
             // Buscar planos adicionais
-            const planosAdicionais = await ContratoPlanoAdicional.findAll({
-              where: {
-                contrato_id: contrato.id,
-                status: 'ativo'
-              },
-              include: [
-                {
-                  model: Plano,
-                  as: 'plano',
-                  attributes: ['id', 'nome_plano', 'valor_mensal']
-                }
-              ]
-            }) as Array<ContratoPlanoAdicional & { plano?: Plano }>;
+            const planosAdicionais = await ContratoPlanoAdicionalService.getByContrato(contrato.id);
+            
+            // Filtrar apenas os ativos
+            const planosAtivos = planosAdicionais.filter(p => p.status === 'ativo') as Array<ContratoPlanoAdicional & { plano?: Plano }>;
 
-            for (const planoAdicional of planosAdicionais) {
+            for (const planoAdicional of planosAtivos) {
               if (planoAdicional.plano) {
                 const valorPlanoAdicional = Number(planoAdicional.plano.valor_mensal);
                 let valorFinalAdicional = valorPlanoAdicional;
@@ -735,9 +678,13 @@ export class NotaFiscalController {
     const formatarDataHora = (data: Date | string | null | undefined): string => {
       if (!data) return '';
       try {
-        const dateToFormat = data instanceof Date ? data : parseDateFromDb(data);
+        const dateToFormat = data instanceof Date ? data : (parseDateFromDb(data) || new Date());
         if (!dateToFormat || isNaN(dateToFormat.getTime())) return '';
 
+        // Log antes de formatar
+        logger.info(`[NotaFiscalController] Formatando data_emissao - Local: ${dateToFormat.getFullYear()}-${String(dateToFormat.getMonth() + 1).padStart(2, '0')}-${String(dateToFormat.getDate()).padStart(2, '0')} ${String(dateToFormat.getHours()).padStart(2, '0')}:${String(dateToFormat.getMinutes()).padStart(2, '0')}:${String(dateToFormat.getSeconds()).padStart(2, '0')}, UTC: ${dateToFormat.getUTCFullYear()}-${String(dateToFormat.getUTCMonth() + 1).padStart(2, '0')}-${String(dateToFormat.getUTCDate()).padStart(2, '0')} ${String(dateToFormat.getUTCHours()).padStart(2, '0')}:${String(dateToFormat.getUTCMinutes()).padStart(2, '0')}:${String(dateToFormat.getUTCSeconds()).padStart(2, '0')}, ISO: ${dateToFormat.toISOString()}`);
+
+        // Usar componentes locais diretamente
         const day = String(dateToFormat.getDate()).padStart(2, '0');
         const month = String(dateToFormat.getMonth() + 1).padStart(2, '0');
         const year = dateToFormat.getFullYear();
@@ -745,7 +692,10 @@ export class NotaFiscalController {
         const minute = String(dateToFormat.getMinutes()).padStart(2, '0');
         const second = String(dateToFormat.getSeconds()).padStart(2, '0');
 
-            return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+        const formatted = `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+        logger.info(`[NotaFiscalController] Data formatada: ${formatted}`);
+        
+        return formatted;
       } catch {
         return '';
       }
@@ -782,11 +732,6 @@ export class NotaFiscalController {
       try {
         const logoSvg = fs.readFileSync(logoPath, 'utf-8');
         logoNfseBase64 = `data:image/svg+xml;base64,${Buffer.from(logoSvg).toString('base64')}`;
-        logger.info('Logo NFS-e carregada com sucesso', {
-          nota_id: notaFiscal.id,
-          logoPath,
-          logoSize: logoSvg.length
-        });
       } catch (error) {
         logger.error('Erro ao ler logo NFS-e', {
           nota_id: notaFiscal.id,
@@ -794,11 +739,6 @@ export class NotaFiscalController {
           error: error instanceof Error ? error.message : 'Erro desconhecido'
         });
       }
-    } else {
-      logger.warn('Logo NFS-e não encontrada', {
-        nota_id: notaFiscal.id,
-        logoPath
-      });
     }
 
     // Usar resolveTemplatePath para funcionar tanto em dev quanto em produção

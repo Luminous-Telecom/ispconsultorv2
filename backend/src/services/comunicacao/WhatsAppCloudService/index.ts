@@ -101,12 +101,17 @@ export class WhatsAppCloudService {
 
       const responseData = await response.json().catch(() => ({}));
 
-      if (response.ok) {
+      const errorObj = responseData as { error?: { message?: string; type?: string; code?: number; error_subcode?: number } };
+      
+      if (response.ok && !errorObj.error) {
         logger.info(`Mensagem de texto enviada via WhatsApp Cloud API para ${telefoneFormatado}`);
         return true;
       } else {
-        logger.error('Erro ao enviar mensagem via WhatsApp Cloud API:', {
+        const errorMessage = errorObj?.error?.message || `Erro HTTP ${response.status}`;
+        logger.error(`Erro ao enviar mensagem via WhatsApp Cloud API: ${errorMessage}`, {
           status: response.status,
+          errorCode: errorObj?.error?.code,
+          errorType: errorObj?.error?.type,
           data: responseData
         });
         return false;
@@ -164,16 +169,19 @@ export class WhatsAppCloudService {
         logger.info(`Template ${templateName} enviado via WhatsApp Cloud API para ${telefoneFormatado} (idioma: ${languageCode})`);
         return true;
       } else {
-        const errorObj = responseData as { error?: { message?: string; type?: string; code?: number } };
+        const errorObj = responseData as { error?: { message?: string; type?: string; code?: number; details?: string } };
         const errorMessage = errorObj?.error?.message || `Erro HTTP ${response.status}`;
         
         logger.error(`Erro ao enviar template via WhatsApp Cloud API - Template: ${templateName}, Mensagem: ${errorMessage}`, {
           status: response.status,
           errorCode: errorObj?.error?.code,
           errorType: errorObj?.error?.type,
+          errorDetails: errorObj?.error?.details,
           template: templateName,
           language: languageCode,
-          telefone: telefoneFormatado
+          telefone: telefoneFormatado,
+          components: JSON.stringify(components).substring(0, 500),
+          fullResponse: JSON.stringify(responseData).substring(0, 1000)
         });
         return false;
       }
@@ -399,17 +407,6 @@ export class WhatsAppCloudService {
       logger.error('Erro ao obter template info:', error);
       return null;
     }
-  }
-
-  /**
-   * Obter template name baseado no template_mapping
-   * @deprecated Use obterTemplateInfo ao invés deste método
-   */
-  static obterTemplateName(
-    templateMapping: string | null | undefined
-  ): string | null {
-    const info = this.obterTemplateInfo(templateMapping);
-    return info?.name || null;
   }
 
   /**

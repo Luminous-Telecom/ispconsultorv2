@@ -2,13 +2,14 @@ import { Request, Response } from 'express';
 import { ContaPagar } from '../../../models/financeiro/ContaPagar';
 import { ContaPagarPagamento } from '../../../models/financeiro/ContaPagarPagamento';
 import { Fornecedor } from '../../../models/financeiro/Fornecedor';
+import { ContaPagarService } from '../../../services/financeiro/ContaPagarService';
+import { FornecedorService } from '../../../services/financeiro/FornecedorService';
 import { Op, WhereOptions } from 'sequelize';
 import { logger } from '../../../utils/logger';
-import { contaPagarCreateSchema, contaPagarUpdateSchema, contaPagarPagamentoSchema } from '../../../validators/contaPagar.validator';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
-import { registrarCriacaoElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
-import { setAuditData } from '../../../middleware/auditMiddleware';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
+import { contaPagarCreateSchema, contaPagarUpdateSchema, contaPagarPagamentoSchema } from '../../../validators/contaPagar.validator';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
+import { setAuditData } from '../../../middleware/auditMiddleware';
 import { Transaction } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import type { AuthenticatedRequest } from '../../../types/auth';
@@ -144,52 +145,21 @@ export class ContaPagarController {
         { association: 'arquivos', required: false, limit: 5 }
       ];
 
-      const count = shouldSearchFornecedor
-        ? (await ContaPagar.findAll({
-            where,
-            include: [includeOptions[0]],
-            attributes: ['id']
-          })).length
-        : await ContaPagar.count({ where });
-
-      // Construir ordenação
-      let order: Array<[string, string]> = [['data_vencimento', 'ASC'], ['created_at', 'DESC']]; // Padrão
-      if (sortColumn && sortDirection) {
-        // Validar colunas permitidas para ordenação
-        const allowedColumns = [
-          'id', 'numero_documento', 'nota_fiscal', 'data_vencimento', 'valor', 
-          'valor_pago', 'status', 'tipo_pagamento', 'data_pagamento', 
-          'created_at', 'descricao'
-        ];
-        
-        if (allowedColumns.includes(sortColumn)) {
-          const direction = sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-          order = [[sortColumn, direction]];
-        }
-      }
-
-      const contas = await ContaPagar.findAll({
-        where,
-        include: includeOptions,
-        order,
+      const result = await ContaPagarService.list({
+        page,
         limit,
-        offset
+        search,
+        searchField,
+        status,
+        tipo_pagamento: tipoPagamento,
+        fornecedor_id: fornecedorId,
+        data_inicio: dataInicio,
+        data_fim: dataFim,
+        sortColumn,
+        sortDirection
       });
 
-      const totalPages = Math.ceil(count / limit);
-
-      res.json({
-        success: true,
-        data: contas,
-        pagination: {
-          current_page: page,
-          per_page: limit,
-          total: count,
-          last_page: totalPages,
-          from: offset + 1,
-          to: Math.min(offset + limit, count)
-        }
-      });
+      res.json(result);
     } catch (error) {
       logger.error('Erro ao listar contas a pagar', {
         context: 'ContaPagarController',
@@ -217,13 +187,7 @@ export class ContaPagarController {
         return;
       }
 
-      const conta = await ContaPagar.findByPk(id, {
-        include: [
-          { association: 'fornecedor', required: false },
-          { association: 'pagamentos', required: false, order: [['created_at', 'DESC']] },
-          { association: 'arquivos', required: false }
-        ]
-      });
+      const conta = await ContaPagarService.getById(id);
 
       if (!conta) {
         res.status(404).json({
@@ -271,7 +235,7 @@ export class ContaPagarController {
       }
 
       // Verificar se fornecedor existe
-      const fornecedor = await Fornecedor.findByPk(value.fornecedor_id);
+      const fornecedor = await FornecedorService.getById(value.fornecedor_id, false);
       if (!fornecedor) {
         await transaction.rollback();
         res.status(404).json({
@@ -356,10 +320,10 @@ export class ContaPagarController {
             dataVencimento = new Date(dataFinal);
           }
 
-          const conta = await ContaPagar.create({
+          const conta = await ContaPagarService.create({
             ...dadosBase,
             data_vencimento: dataVencimento
-          }, { transaction });
+          }, transaction);
 
           contasCriadas.push(conta);
         }
@@ -371,13 +335,6 @@ export class ContaPagarController {
           try {
             const contaData = conta.toJSON() as Record<string, unknown>;
             await registrarCriacao(
-              req as AuthenticatedRequest,
-              'ContaPagar',
-              conta.id,
-              contaData
-            );
-            // Registrar também no Elasticsearch para consulta
-            await registrarCriacaoElasticsearch(
               req as AuthenticatedRequest,
               'ContaPagar',
               conta.id,
@@ -421,11 +378,11 @@ export class ContaPagarController {
           value.data_vencimento = normalizeDateForDb(value.data_vencimento) || new Date(value.data_vencimento);
         }
 
-        const conta = await ContaPagar.create({
+        const conta = await ContaPagarService.create({
           ...value,
           valor_pago: 0,
           status: 'A_PAGAR'
-        }, { transaction });
+        }, transaction);
 
         // Registrar auditoria
         try {
@@ -486,7 +443,7 @@ export class ContaPagarController {
         return;
       }
 
-      const contaOriginal = await ContaPagar.findByPk(id);
+      const contaOriginal = await ContaPagarService.getById(id);
 
       if (!contaOriginal) {
         res.status(404).json({
@@ -497,7 +454,7 @@ export class ContaPagarController {
       }
 
       // Criar nova conta com os mesmos dados, mas resetando campos de pagamento
-      const novaConta = await ContaPagar.create({
+      const novaConta = await ContaPagarService.create({
         fornecedor_id: contaOriginal.fornecedor_id,
         data_vencimento: contaOriginal.data_vencimento,
         valor: contaOriginal.valor,
@@ -542,11 +499,7 @@ export class ContaPagarController {
       }
 
       // Buscar conta duplicada com relacionamentos
-      const contaDuplicada = await ContaPagar.findByPk(novaConta.id, {
-        include: [
-          { association: 'fornecedor', required: false }
-        ]
-      });
+      const contaDuplicada = await ContaPagarService.getById(novaConta.id);
 
       res.status(201).json({
         success: true,
@@ -592,7 +545,7 @@ export class ContaPagarController {
         return;
       }
 
-      const conta = await ContaPagar.findByPk(id);
+      const conta = await ContaPagarService.getById(id);
 
       if (!conta) {
         res.status(404).json({
@@ -616,16 +569,29 @@ export class ContaPagarController {
         value.data_vencimento = normalizeDateForDb(value.data_vencimento) || new Date(value.data_vencimento);
       }
 
-      // Capturar dados anteriores para auditoria
-      const dadosAnteriores = conta.toJSON() as Record<string, unknown>;
+      // Capturar dados anteriores para auditoria - buscar novamente do banco para garantir todos os campos
+      const contaCompleta = await ContaPagar.findByPk(id);
+      if (!contaCompleta) {
+        res.status(404).json({
+          success: false,
+          error: 'Conta a pagar não encontrada'
+        });
+        return;
+      }
+      const dadosAnteriores = contaCompleta.toJSON() as Record<string, unknown>;
       
-      await conta.update(value);
+      const contaAtualizada = await ContaPagarService.update(id, value);
       
-      // Recarregar conta para obter dados atualizados
-      await conta.reload();
-      
-      // Registrar auditoria
-      const dadosNovos = conta.toJSON() as Record<string, unknown>;
+      // Registrar auditoria - buscar novamente do banco para garantir todos os campos
+      const contaAtualizadaCompleta = await ContaPagar.findByPk(contaAtualizada.id);
+      if (!contaAtualizadaCompleta) {
+        res.status(404).json({
+          success: false,
+          error: 'Conta a pagar não encontrada após atualização'
+        });
+        return;
+      }
+      const dadosNovos = contaAtualizadaCompleta.toJSON() as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -634,14 +600,14 @@ export class ContaPagarController {
         await registrarAtualizacao(
           req,
           'ContaPagar',
-          conta.id,
+          contaAtualizada.id,
           dadosAnteriores,
           dadosNovos
         );
         logger.info('Auditoria de atualização registrada com sucesso', {
           context: 'ContaPagarController',
           action: 'update',
-          conta_id: conta.id
+          conta_id: contaAtualizada.id
         });
       } catch (auditError) {
         logger.error('Erro ao registrar auditoria de atualização', {
@@ -657,7 +623,7 @@ export class ContaPagarController {
       res.json({
         success: true,
         message: 'Conta a pagar atualizada com sucesso',
-        data: conta
+        data: contaAtualizada
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -687,7 +653,7 @@ export class ContaPagarController {
         return;
       }
 
-      const conta = await ContaPagar.findByPk(id);
+      const conta = await ContaPagarService.getById(id);
 
       if (!conta) {
         res.status(404).json({
@@ -710,7 +676,7 @@ export class ContaPagarController {
       // Capturar dados anteriores para auditoria
       const dadosAnteriores = conta.toJSON() as Record<string, unknown>;
       
-      await conta.destroy();
+      await ContaPagarService.delete(id);
 
       // Registrar auditoria
       try {
@@ -783,7 +749,7 @@ export class ContaPagarController {
         return;
       }
 
-      const conta = await ContaPagar.findByPk(id, { transaction });
+      const conta = await ContaPagarService.getById(id, transaction);
 
       if (!conta) {
         await transaction.rollback();
@@ -836,34 +802,39 @@ export class ContaPagarController {
 
       // Registrar pagamento no histórico
       const usuarioId = (req as any).user?.id || null;
-      await ContaPagarPagamento.create({
+      await ContaPagarService.createPagamento({
         conta_pagar_id: conta.id,
         data: dataPagamento,
         valor: valorPagamento,
         tipo_pagamento: value.tipo_pagamento,
         usuario_id: usuarioId,
         observacao: value.observacao || null
-      }, { transaction });
+      }, transaction);
 
       // Atualizar conta
       const novoValorPago = Number(conta.valor_pago) + valorPagamento;
       const novoStatus = novoValorPago >= Number(conta.valor) ? 'PAGO' : 'PARCIAL';
 
-      await conta.update({
+      await ContaPagarService.updateInstance(conta, {
         valor_pago: novoValorPago,
         status: novoStatus,
         data_pagamento: dataPagamento // Sempre salvar a data de pagamento, mesmo em pagamentos parciais
-      }, { transaction });
+      }, transaction);
 
       await transaction.commit();
 
       // Recarregar conta com relacionamentos
-      const contaAtualizada = await ContaPagar.findByPk(id, {
-        include: [
-          { association: 'fornecedor', required: false },
-          { association: 'pagamentos', required: false, order: [['created_at', 'DESC']] }
-        ]
-      });
+      const contaAtualizada = await ContaPagarService.getById(id);
+      if (!contaAtualizada) {
+        res.status(404).json({
+          success: false,
+          error: 'Conta a pagar não encontrada após atualização'
+        });
+        return;
+      }
+      
+      // Usar contaAtualizada que já tem os relacionamentos
+      const contaComIncludes = contaAtualizada;
 
       // Registrar auditoria de pagamento (atualização)
       if (contaAtualizada) {
@@ -930,7 +901,7 @@ export class ContaPagarController {
         return;
       }
 
-      const conta = await ContaPagar.findByPk(id);
+      const conta = await ContaPagarService.getById(id);
 
       if (!conta) {
         res.status(404).json({
@@ -951,10 +922,7 @@ export class ContaPagarController {
       // Capturar dados anteriores para auditoria
       const dadosAnteriores = conta.toJSON() as Record<string, unknown>;
       
-      await conta.update({ status: 'CANCELADO' });
-      
-      // Recarregar conta para obter dados atualizados
-      await conta.reload();
+      await ContaPagarService.updateInstance(conta, { status: 'CANCELADO' });
       
       // Registrar auditoria
       const dadosNovos = conta.toJSON() as Record<string, unknown>;
@@ -1010,9 +978,7 @@ export class ContaPagarController {
   // Dashboard/Resumo
   static async resumo(req: Request, res: Response): Promise<void> {
     try {
-      const contas = await ContaPagar.findAll({
-        attributes: ['id', 'valor', 'valor_pago', 'status', 'data_vencimento']
-      });
+      const contas = await ContaPagarService.findAllWithAttributes(['id', 'valor', 'valor_pago', 'status', 'data_vencimento']);
 
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);

@@ -5,6 +5,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { apiService } from '@/services/api';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import { ApiResponse } from '@/types/api';
 import { API_CONFIG } from '@/config/api';
 
@@ -185,89 +186,100 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       title="Atualizações do Sistema"
       size="md"
       modalId="atualizacoes-modal"
+      headerActions={
+        <div className="d-flex gap-2">
+          {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              leftIcon={<i className="bi bi-arrow-clockwise"></i>}
+              onClick={handleUpdate}
+              disabled={isUpdating || updateMutation.isPending}
+              isLoading={isUpdating || updateMutation.isPending}
+            >
+              Atualizar Sistema
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
+            onClick={onClose}
+            disabled={isUpdating || updateMutation.isPending}
+          >
+            Fechar
+          </Button>
+        </div>
+      }
     >
-      <div style={{ padding: isMobile ? '0' : '16px' }}>
+      <div style={{ padding: isMobile ? '0' : '12px' }}>
         {isLoading && (
-          <div className="text-center p-5">
-            <div className="spinner-border text-primary" role="status">
+          <div className="text-center py-4">
+            <div className="spinner-border spinner-border-sm text-primary" role="status">
               <span className="visually-hidden">Carregando...</span>
             </div>
-            <p className="mt-3 text-muted">Buscando atualizações...</p>
+            <p className="mt-2 mb-0 small text-muted">Buscando atualizações...</p>
           </div>
         )}
 
         {error && (
-          <div className="alert alert-warning d-flex align-items-center" role="alert">
-            <i className="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-            <div className="flex-grow-1">
-              <strong>Erro ao buscar atualizações</strong>
-              <p className="mb-0 small mt-1">
-                {error instanceof Error 
-                  ? error.message 
-                  : 'Verifique a conexão ou configure o GitHub corretamente.'}
-              </p>
+          <div className="alert alert-warning py-2 px-3 mb-2" role="alert">
+            <div className="d-flex align-items-center">
+              <i className="bi bi-exclamation-triangle-fill me-2"></i>
+              <div className="flex-grow-1">
+                <strong className="small">Erro ao buscar atualizações</strong>
+                <p className="mb-0 small mt-1">
+                  {error instanceof Error 
+                    ? error.message 
+                    : 'Verifique a conexão ou configure o GitHub corretamente.'}
+                </p>
+              </div>
             </div>
           </div>
         )}
 
         {!isLoading && !error && atualizacoes && atualizacoes.length === 0 && (
-          <div className="alert alert-info d-flex align-items-center" role="alert">
-            <i className="bi bi-info-circle-fill me-2 fs-5"></i>
-            <div>
-              <strong>Nenhuma atualização disponível</strong>
-              <p className="mb-0 small mt-1">O sistema está atualizado com a versão mais recente.</p>
+          <div className="alert alert-info py-2 px-3 mb-0" role="alert">
+            <div className="d-flex align-items-center">
+              <i className="bi bi-info-circle-fill me-2"></i>
+              <div>
+                <strong className="small">Nenhuma atualização disponível</strong>
+                <p className="mb-0 small mt-1">O sistema está atualizado com a versão mais recente.</p>
+              </div>
             </div>
           </div>
         )}
 
         {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
           <div>
-            <div className="d-flex justify-content-center mb-3">
+            <div className="d-flex justify-content-center mb-2">
               <div className="border text-center" style={{ 
-                borderRadius: '0.5rem', 
+                borderRadius: '0.375rem', 
                 backgroundColor: 'var(--bg-tertiary)', 
                 borderColor: 'var(--border-color)', 
-                padding: '0.5rem 1.5rem',
-                minWidth: '200px'
+                padding: '0.5rem 1rem',
+                minWidth: '180px'
               }}>
-                <span className="text-muted small d-block mb-1" style={{ fontSize: '0.7rem' }}>Versão Atual do Sistema</span>
-                <h6 className="mb-0 fw-bold text-primary" style={{ fontSize: '1rem' }}>
-                  <i className="bi bi-check-circle-fill text-success me-1" style={{ fontSize: '0.875rem' }}></i>
+                <span className="text-muted d-block mb-1" style={{ fontSize: '0.7rem' }}>Versão Atual</span>
+                <div className="fw-bold text-primary" style={{ fontSize: '0.9rem' }}>
+                  <i className="bi bi-check-circle-fill text-success me-1" style={{ fontSize: '0.75rem' }}></i>
                   v{versaoAtual}
-                </h6>
+                </div>
               </div>
-            </div>
-
-            {/* Botão de Atualizar */}
-            <div className="d-flex justify-content-center mb-3">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleUpdate}
-                disabled={isUpdating || updateMutation.isPending}
-                style={{ minWidth: '200px' }}
-              >
-                {isUpdating || updateMutation.isPending ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Atualizando...
-                  </>
-                ) : (
-                  'Atualizar Sistema'
-                )}
-              </button>
             </div>
 
             {/* Progresso da Atualização */}
             {isUpdating && updateProgress && (
               <div 
-                className="mb-3" 
+                className="mb-2" 
                 role="alert"
                 style={{
                   backgroundColor: 'var(--bg-secondary)',
                   border: '1px solid var(--info-color)',
                   borderRadius: '0.375rem',
-                  padding: '1rem',
+                  padding: '0.75rem',
                   color: 'var(--text-primary)'
                 }}
               >
@@ -276,18 +288,18 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                     <span className="visually-hidden">Carregando...</span>
                   </div>
                   <div className="flex-grow-1">
-                    <strong style={{ color: 'var(--info-color)' }}>Atualizando sistema...</strong>
+                    <strong className="small" style={{ color: 'var(--info-color)' }}>Atualizando sistema...</strong>
                     <p className="mb-0 small mt-1" style={{ color: 'var(--text-secondary)' }}>{updateProgress}</p>
                   </div>
                 </div>
                 
                 {/* Barra de Progresso */}
-                <div className="mt-3 mb-2">
+                <div className="mb-2">
                   <div 
                     className="progress" 
                     style={{ 
-                      height: '24px', 
-                      borderRadius: '0.375rem',
+                      height: '20px', 
+                      borderRadius: '0.25rem',
                       backgroundColor: 'var(--bg-tertiary)'
                     }}
                   >
@@ -299,21 +311,21 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                       aria-valuemin={0} 
                       aria-valuemax={100}
                     >
-                      <span className="small fw-semibold" style={{ color: '#ffffff' }}>{updateProgressPercent}%</span>
+                      <span className="small fw-semibold" style={{ color: '#ffffff', fontSize: '0.7rem' }}>{updateProgressPercent}%</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Logs da atualização */}
                 {updateLogs.length > 0 && (
-                  <div className="mt-2" style={{ 
-                    maxHeight: '200px', 
+                  <div style={{ 
+                    maxHeight: '150px', 
                     overflowY: 'auto', 
-                    backgroundColor: 'var(--bg-secondary)', 
+                    backgroundColor: 'var(--bg-tertiary)', 
                     color: 'var(--text-primary)',
                     padding: '0.5rem', 
                     borderRadius: '0.25rem', 
-                    fontSize: '0.75rem', 
+                    fontSize: '0.7rem', 
                     fontFamily: 'monospace',
                     border: '1px solid var(--border-color)'
                   }}>
@@ -332,39 +344,38 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                 const badge = getTipoBadge(atualizacao.tipo);
                 return (
                   <div key={atualizacao.versao} className="border" style={{ 
-                    borderRadius: '0.5rem',
+                    borderRadius: '0.375rem',
                     border: '1px solid var(--border-color)',
                     backgroundColor: 'var(--bg-tertiary)',
-                    padding: '0.75rem',
+                    padding: '0.625rem',
                     transition: 'all 0.2s ease'
                   }}>
-                    <div className="d-flex align-items-start mb-1">
+                    <div className="d-flex align-items-start">
                       <div className={`me-2 d-flex align-items-center justify-content-center ${badge.bgClass}`} style={{ 
-                        width: '28px', 
-                        height: '28px', 
-                        borderRadius: '0.375rem',
-                        fontSize: '0.875rem'
+                        width: '24px', 
+                        height: '24px', 
+                        borderRadius: '0.25rem',
+                        fontSize: '0.75rem',
+                        flexShrink: 0
                       }}>
                         <i className={`bi ${badge.icon} ${badge.class}`}></i>
                       </div>
-                      <div className="flex-grow-1" style={{ fontSize: '0.875rem' }}>
+                      <div className="flex-grow-1" style={{ fontSize: '0.875rem', minWidth: 0 }}>
                         <div className="d-flex justify-content-between align-items-start mb-1">
                           <div className="flex-grow-1">
-                            <h6 className="mb-0 fw-semibold" style={{ fontSize: '0.95rem' }}>
+                            <div className="fw-semibold d-inline-block me-2" style={{ fontSize: '0.875rem' }}>
                               v{atualizacao.versao}
-                            </h6>
-                            <small className="text-muted d-flex align-items-center" style={{ fontSize: '0.75rem' }}>
-                              <i className="bi bi-calendar3 me-1" style={{ fontSize: '0.7rem' }}></i>
+                            </div>
+                            <small className="text-muted d-inline-flex align-items-center" style={{ fontSize: '0.7rem' }}>
+                              <i className="bi bi-calendar3 me-1"></i>
                               {formatDate(atualizacao.data)}
                             </small>
                           </div>
-                          <div className="d-flex align-items-center gap-2">
-                            <span className={`badge ${badge.bgClass} ${badge.class} border-0`} style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}>
-                              {badge.label}
-                            </span>
-                          </div>
+                          <span className={`badge ${badge.bgClass} ${badge.class} border-0`} style={{ fontSize: '0.65rem', padding: '0.2rem 0.4rem' }}>
+                            {badge.label}
+                          </span>
                         </div>
-                        <p className="mb-0 text-secondary mt-1" style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
+                        <p className="mb-0 text-secondary" style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
                           {atualizacao.descricao}
                         </p>
                       </div>

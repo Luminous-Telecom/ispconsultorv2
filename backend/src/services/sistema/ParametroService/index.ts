@@ -1,75 +1,111 @@
 import { Parametro } from '../../../models/sistema/Parametro';
-import { logger } from '../../../utils/logger';
+import { WhereOptions } from 'sequelize';
+
+export interface ListParametrosFilters {
+  categoria?: string;
+  ativo?: boolean;
+}
 
 export class ParametroService {
   /**
-   * Obter valor de um parâmetro específico
+   * Listar parâmetros
    */
-  static async getParametro(chave: string): Promise<string | null> {
-    try {
-      const parametro = await Parametro.findOne({
-        where: { chave, ativo: true }
-      });
-      
-      return parametro ? parametro.valor : null;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao obter parâmetro', {
-        context: 'ParametroService',
-        action: 'getParametro',
-        chave,
-        error: errorMessage,
-        stack: errorStack
-      });
-      return null;
+  static async list(filters: ListParametrosFilters = {}): Promise<{ success: boolean; data: Parametro[] }> {
+    const { categoria, ativo } = filters;
+    
+    const whereClause: WhereOptions = {};
+    
+    if (categoria) {
+      whereClause.categoria = categoria;
     }
+    
+    if (ativo !== undefined) {
+      whereClause.ativo = ativo;
+    }
+
+    const parametros = await Parametro.findAll({
+      where: whereClause,
+      order: [['categoria', 'ASC'], ['chave', 'ASC']]
+    });
+
+    return {
+      success: true,
+      data: parametros
+    };
   }
 
   /**
-   * Obter valor booleano de um parâmetro
+   * Buscar parâmetro por chave
    */
-  static async getParametroBoolean(chave: string): Promise<boolean> {
-    const valor = await this.getParametro(chave);
-    return valor === 'true' || valor === '1';
+  static async getByChave(chave: string): Promise<Parametro | null> {
+    return await Parametro.findOne({
+      where: { chave }
+    });
   }
 
   /**
-   * Obter valor numérico de um parâmetro
+   * Criar parâmetro
    */
-  static async getParametroNumber(chave: string): Promise<number> {
-    const valor = await this.getParametro(chave);
-    return valor ? parseInt(valor, 10) : 0;
+  static async create(dados: Partial<Parametro>): Promise<Parametro> {
+    return await Parametro.create(dados as any);
   }
 
   /**
-   * Verificar se auto parcelas está habilitado
+   * Atualizar parâmetro
    */
-  static async isAutoParcelasEnabled(): Promise<boolean> {
-    return await this.getParametroBoolean('auto_parcelas_carne');
+  static async update(chave: string, dados: Partial<Parametro>): Promise<Parametro> {
+    const parametro = await Parametro.findOne({
+      where: { chave }
+    });
+
+    if (!parametro) {
+      throw new Error('Parâmetro não encontrado');
+    }
+
+    await parametro.update(dados);
+    await parametro.reload();
+
+    return parametro;
   }
 
   /**
-   * Obter número de parcelas padrão para auto geração
+   * Buscar ou criar parâmetro
    */
-  static async getNumeroParcelasPadrao(): Promise<number> {
-    const numeroParcelas = await this.getParametroNumber('numero_parcelas_padrao');
-    return numeroParcelas > 0 ? numeroParcelas : 12; // Default 12 parcelas
+  static async findOrCreate(chave: string, defaults: Partial<Parametro>): Promise<[Parametro, boolean]> {
+    return await Parametro.findOrCreate({
+      where: { chave },
+      defaults: defaults as any
+    });
   }
 
   /**
-   * Verificar se geração automática de carnê está habilitada
+   * Buscar parâmetros por categoria
    */
-  static async isGeracaoAutomaticaCarneEnabled(): Promise<boolean> {
-    return await this.getParametroBoolean('geracao_automatica_carne');
+  static async getByCategoria(categoria: string): Promise<{ success: boolean; data: Parametro[] }> {
+    const parametros = await Parametro.findAll({
+      where: { 
+        categoria,
+        ativo: true
+      },
+      order: [['chave', 'ASC']]
+    });
+
+    return {
+      success: true,
+      data: parametros
+    };
   }
 
   /**
-   * Verificar se deve manter sempre um carnê para o cliente
+   * Atualizar instância de parâmetro (método auxiliar para atualizar instância existente)
    */
-  static async isManterCarneClienteEnabled(): Promise<boolean> {
-    return await this.getParametroBoolean('manter_carnes_cliente');
+  static async updateInstance(
+    parametro: Parametro,
+    dados: Partial<Parametro>
+  ): Promise<Parametro> {
+    await parametro.update(dados);
+    await parametro.reload();
+    return parametro;
   }
 }
 
-export default ParametroService;

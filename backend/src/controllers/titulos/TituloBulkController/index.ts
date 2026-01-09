@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
 import { Titulo } from '../../../models/financeiro/Titulo';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Plano } from '../../../models/cadastros/Plano';
-import { Banco } from '../../../models/cadastros/Banco';
+import { TituloService } from '../../../services/financeiro/TituloService';
+import { ClienteService } from '../../../services/clientes/ClienteService';
+import { PlanoService } from '../../../services/cadastros/PlanoService';
+import { BancoService } from '../../../services/cadastros/BancoService';
 import { Transaction } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
 import { titulosBulkCreateSchema } from '../../../validators/titulo.validator';
 import { withTransaction } from '../../../utils/transaction';
-import { registrarCriacao } from '../../../services/sistema/AuditoriaService';
-import { registrarCriacaoElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
+import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
 import { FinancialCalculationsService } from '../../../services/FinancialCalculationsService';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
@@ -33,17 +33,17 @@ export class TituloBulkController {
         const resultados: Titulo[] = [];
 
         for (const dadosTitulo of titulos) {
-          const cliente = await Cliente.findByPk(dadosTitulo.cliente_id, { transaction });
+          const cliente = await ClienteService.getById(dadosTitulo.cliente_id);
           if (!cliente || !cliente.ativo) {
             throw new Error(`Cliente ${dadosTitulo.cliente_id} não encontrado ou inativo`);
           }
 
-          const plano = await Plano.findByPk(dadosTitulo.plano_id, { transaction });
+          const plano = await PlanoService.getById(dadosTitulo.plano_id);
           if (!plano) {
             throw new Error(`Plano ${dadosTitulo.plano_id} não encontrado`);
           }
 
-          const banco = await Banco.findByPk(dadosTitulo.banco_id, { transaction });
+          const banco = await BancoService.getById(dadosTitulo.banco_id);
           if (!banco || !banco.ativo) {
             throw new Error(`Banco ${dadosTitulo.banco_id} não encontrado ou inativo`);
           }
@@ -51,7 +51,7 @@ export class TituloBulkController {
           const numeroTitulo = `TIT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
           const valorFinal = FinancialCalculationsService.calcularValorFinal(
-            parseFloat(plano.valor_mensal.toString()),
+            parseFloat(String(plano.valor_mensal)),
             {
               desconto_valor: dadosTitulo.desconto_valor ? parseFloat(dadosTitulo.desconto_valor.toString()) : undefined,
               desconto_percentual: dadosTitulo.desconto_percentual ? parseFloat(dadosTitulo.desconto_percentual.toString()) : undefined
@@ -62,7 +62,7 @@ export class TituloBulkController {
             }
           );
 
-          const titulo = await Titulo.create({
+          const titulo = await TituloService.create({
             cliente_id: dadosTitulo.cliente_id,
             plano_id: dadosTitulo.plano_id,
             banco_id: dadosTitulo.banco_id,
@@ -80,7 +80,7 @@ export class TituloBulkController {
             status: dadosTitulo.status || 'pendente',
             pago: dadosTitulo.pago || false,
             is_avulso: dadosTitulo.is_avulso === true
-          }, { transaction });
+          }, transaction);
 
           resultados.push(titulo);
         }
@@ -88,11 +88,10 @@ export class TituloBulkController {
         return resultados;
       });
 
-      // Registrar auditoria para cada título criado
+      // Registrar auditoria para cada título criado (já registra no Elasticsearch internamente)
       for (const titulo of titulosCriados) {
         const tituloData = titulo.toJSON() as Record<string, unknown>;
         await registrarCriacao(req as AuthenticatedRequest, 'Titulo', titulo.id, tituloData);
-        await registrarCriacaoElasticsearch(req as AuthenticatedRequest, 'Titulo', titulo.id, tituloData);
       }
 
       const { metrics, isMetricsEnabled } = await import('../../../utils/metrics');

@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { NFSeConfig } from '../../../models/nfse/NFSeConfig';
+import { NFSeConfigService } from '../../../services/nfse/NFSeConfigService';
 import { logger } from '../../../utils/logger';
-import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import Joi from 'joi';
 import axios from 'axios';
@@ -27,27 +28,10 @@ export class NFSeConfigController {
   // Obter configuração (sempre retorna o primeiro registro)
   static async get(req: Request, res: Response): Promise<Response> {
     try {
-      let config = await NFSeConfig.findOne({
-        order: [['id', 'ASC']]
-      });
+      const config = await NFSeConfigService.get();
 
-      // Se não existir, criar com valores padrão
-      if (!config) {
-        config = await NFSeConfig.create({
-          codigo_servico_municipal: null,
-          aliquota_iss: 0.00,
-          descricao_servico: null,
-          serie_nf: '80000',
-          numero_dps: 1,
-          portal_nacional_username: null,
-          portal_nacional_password: null,
-          portal_nacional_base_url: 'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
-          portal_nacional_ambiente: 'HOMOLOGACAO',
-          asaas_api_key: null,
-          asaas_sandbox: false,
-          provider: 'PORTAL_NACIONAL'
-        });
-
+      // Registrar criação se for novo
+      if (config.created_at.getTime() === config.updated_at.getTime()) {
         await registrarCriacao(
           req as AuthenticatedRequest,
           'NFSeConfig',
@@ -98,46 +82,37 @@ export class NFSeConfigController {
         });
       }
 
-      let config = await NFSeConfig.findOne({
-        order: [['id', 'ASC']]
-      });
+      // Obter configuração existente (ou criar se não existir)
+      const config = await NFSeConfigService.get();
+      const dadosAnteriores = config.toJSON();
+      const foiCriadoAgora = config.created_at.getTime() === config.updated_at.getTime();
 
-      if (!config) {
-        // Criar se não existir
-        const dadosAnteriores = {};
-        config = await NFSeConfig.create(value);
-
+      // Atualizar existente
+      const configAtualizado = await NFSeConfigService.update(value);
+      
+      // Se foi criado agora, registrar criação
+      if (foiCriadoAgora) {
         await registrarCriacao(
           req as AuthenticatedRequest,
           'NFSeConfig',
-          config.id,
-          dadosAnteriores as unknown as Record<string, unknown>
+          configAtualizado.id,
+          configAtualizado.toJSON() as unknown as Record<string, unknown>
         );
-
-        return res.json({
-          success: true,
-          message: 'Configuração NFS-e criada com sucesso',
-          data: config
-        });
+      } else {
+        // Se já existia, registrar atualização
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'NFSeConfig',
+          configAtualizado.id,
+          dadosAnteriores as unknown as Record<string, unknown>,
+          configAtualizado.toJSON() as unknown as Record<string, unknown>
+        );
       }
-
-      // Atualizar existente
-      const dadosAnteriores = config.toJSON();
-      await config.update(value);
-      await config.reload();
-
-      await registrarAtualizacao(
-        req as AuthenticatedRequest,
-        'NFSeConfig',
-        config.id,
-        dadosAnteriores as unknown as Record<string, unknown>,
-        config.toJSON() as unknown as Record<string, unknown>
-      );
 
       return res.json({
         success: true,
         message: 'Configuração NFS-e atualizada com sucesso',
-        data: config
+        data: configAtualizado
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';

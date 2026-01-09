@@ -165,7 +165,7 @@ export class WhatsAppService {
               titulo,
               mensagemTexto: msg,
               incluirPdfNoHeader,
-              variables: templateInfo.variables // Passar mapeamento de variáveis configurado
+              variables: templateInfo.variables
             });
             
             const enviouTemplate = await WhatsAppCloudService.enviarTemplate(
@@ -475,23 +475,45 @@ export class WhatsAppService {
     const diasVencimento = calcularDiasVencimento();
 
     for (const variable of variables) {
-      switch (variable) {
+      try {
+        switch (variable) {
         case 'cliente.razao_social':
           bodyParams.push({ type: 'text', text: cliente?.razao_social || 'Cliente' });
           break;
-        case 'titulo.valor_final': {
-          const valor = titulo.valor_final ? parseFloat(String(titulo.valor_final)) : 0;
-          bodyParams.push({ type: 'text', text: valor.toFixed(2) });
+        case 'titulo.valor': {
+          const valor = Number(titulo.valor);
+          bodyParams.push({ type: 'text', text: isNaN(valor) ? '0.00' : valor.toFixed(2) });
           break;
         }
-        case 'titulo.valor_final_currency': {
-          const valor = titulo.valor_final ? parseFloat(String(titulo.valor_final)) : 0;
+        case 'titulo.valor_final': {
+          const valor = titulo.valor_final !== null && titulo.valor_final !== undefined
+            ? Number(titulo.valor_final)
+            : Number(titulo.valor);
+          bodyParams.push({ type: 'text', text: isNaN(valor) ? '0.00' : valor.toFixed(2) });
+          break;
+        }
+        case 'titulo.valor_currency': {
+          const valor = Number(titulo.valor);
           bodyParams.push({
             type: 'currency',
             currency: {
-              fallback_value: `R$ ${valor.toFixed(2)}`,
+              fallback_value: `R$ ${isNaN(valor) ? '0,00' : valor.toFixed(2)}`,
               code: 'BRL',
-              amount_1000: Math.round(valor * 1000)
+              amount_1000: isNaN(valor) ? 0 : Math.round(valor * 1000)
+            }
+          });
+          break;
+        }
+        case 'titulo.valor_final_currency': {
+          const valor = titulo.valor_final !== null && titulo.valor_final !== undefined
+            ? Number(titulo.valor_final)
+            : Number(titulo.valor);
+          bodyParams.push({
+            type: 'currency',
+            currency: {
+              fallback_value: `R$ ${isNaN(valor) ? '0,00' : valor.toFixed(2)}`,
+              code: 'BRL',
+              amount_1000: isNaN(valor) ? 0 : Math.round(valor * 1000)
             }
           });
           break;
@@ -509,6 +531,10 @@ export class WhatsAppService {
         default:
           logger.warn(`Variável desconhecida no template: ${variable}`);
           bodyParams.push({ type: 'text', text: '' });
+      }
+      } catch (error) {
+        logger.error(`Erro ao processar variável ${variable} no template WhatsApp:`, error);
+        bodyParams.push({ type: 'text', text: '' });
       }
     }
 

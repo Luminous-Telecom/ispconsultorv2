@@ -1,51 +1,50 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import NFSeConfigSection from './NFSeConfigSection';
 
 interface NFSeModalProps {
   show: boolean;
   onClose: () => void;
-  skipWrapper?: boolean;
-  onHeaderActionsReady?: (actions: React.ReactNode) => void;
 }
 
 const NFSeModal: React.FC<NFSeModalProps> = ({ 
   show, 
-  onClose, 
-  skipWrapper = false,
-  onHeaderActionsReady 
+  onClose
 }) => {
   const isMobile = useIsMobile();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [canTest, setCanTest] = useState(false);
+  const handleSaveRef = useRef<(() => void) | null>(null);
+  const handleTestRef = useRef<(() => void) | null>(null);
 
-  const headerActionsContent = useMemo(() => (
-    <div className="d-flex gap-2">
-      <button
-        type="button"
-        className="btn btn-secondary btn-sm"
-        onClick={onClose}
-      >
-        Fechar
-      </button>
-    </div>
-  ), [onClose]);
+  const [hasTestButton, setHasTestButton] = useState(false);
 
-  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
-  useEffect(() => {
-    if (skipWrapper && onHeaderActionsReady) {
-      onHeaderActionsReady(headerActionsContent);
+  const handleSaveReady = (handleSave: () => void, isSavingState: boolean) => {
+    handleSaveRef.current = handleSave;
+    setIsSaving(isSavingState);
+  };
+
+  const handleTestReady = (handleTest: () => void, isTestingState: boolean, canTestState: boolean) => {
+    handleTestRef.current = handleTest;
+    setIsTesting(isTestingState);
+    setCanTest(canTestState);
+    setHasTestButton(true);
+  };
+
+  const handleSaveClick = () => {
+    if (handleSaveRef.current) {
+      handleSaveRef.current();
     }
-  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
+  };
 
-  const modalContent = (
-    <div style={{ padding: isMobile ? '0' : '16px' }}>
-      <NFSeConfigSection />
-    </div>
-  );
-
-  if (skipWrapper) {
-    return modalContent;
-  }
+  const handleTestClick = () => {
+    if (handleTestRef.current) {
+      handleTestRef.current();
+    }
+  };
 
   return (
     <DraggableModal
@@ -54,9 +53,49 @@ const NFSeModal: React.FC<NFSeModalProps> = ({
       title="NFS-e"
       size="lg"
       modalId="nfse-modal"
-      headerActions={headerActionsContent}
+      headerActions={
+        <div className="d-flex gap-2">
+          {hasTestButton && (
+            <Button
+              type="button"
+              variant="outline-secondary"
+              size="sm"
+              onClick={handleTestClick}
+              disabled={!canTest || isTesting || !handleTestRef.current}
+              isLoading={isTesting}
+            >
+              {isTesting ? 'Testando...' : 'Teste'}
+            </Button>
+          )}
+          <Button
+            type="submit"
+            form="nfse-config-form"
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            onClick={handleSaveClick}
+            isLoading={isSaving}
+          >
+            Salvar
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
+            onClick={onClose}
+          >
+            Fechar
+          </Button>
+        </div>
+      }
     >
-      {modalContent}
+      <div style={{ padding: isMobile ? '0' : '16px' }}>
+        <NFSeConfigSection 
+          onSaveReady={handleSaveReady}
+          onTestReady={handleTestReady}
+        />
+      </div>
     </DraggableModal>
   );
 };

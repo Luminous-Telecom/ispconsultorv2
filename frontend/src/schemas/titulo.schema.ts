@@ -38,7 +38,8 @@ export const tituloSchema = z.object({
     .number()
     .min(0.01, 'Valor deve ser maior que zero')
     .max(999999.99, 'Valor muito alto')
-    .optional(),
+    .optional()
+    .or(z.undefined()),
   
   valor_parcela: z
     .number()

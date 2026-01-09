@@ -814,7 +814,7 @@ export class BancoApiService {
       });
 
       if (banco.tipo_banco === 'asaas') {
-        return this.asaasService.cancelarTitulo(titulo as unknown as Titulo, banco, token);
+        return (this.asaasService as any).cancelarTitulo(titulo as unknown as Titulo, banco, token);
       }
 
       const headers = this.buildAuthHeaders(banco.tipo_banco, token);
@@ -942,7 +942,7 @@ export class BancoApiService {
         .replace(':id', chargeIdStr);
 
       if (banco.tipo_banco === 'asaas') {
-        return this.asaasService.liquidarTitulo(titulo as unknown as Titulo, banco, token);
+        return (this.asaasService as any).liquidarTitulo(titulo as unknown as Titulo, banco, token);
       }
 
       const headers = this.buildAuthHeaders(banco.tipo_banco, token);

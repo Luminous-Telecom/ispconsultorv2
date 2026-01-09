@@ -68,55 +68,34 @@ export function parseDateFromDb(dateInput: string | Date | null | undefined): Da
 
 /**
  * Normaliza uma data para salvar no banco de dados
- * Garante que datas sem hora sejam salvas como meia-noite no timezone local (não UTC)
- * Isso evita problemas onde "2025-12-15" vira "2025-12-14 21:00:00" no banco
+ * Observação: com o Sequelize usando `timezone: '-03:00'`, aqui evitamos lógica complexa.
+ * A única regra necessária é: strings no formato YYYY-MM-DD devem ser interpretadas como
+ * data local (00:00 local), para não serem interpretadas como UTC pelo JS (o que poderia
+ * "voltar" 3 horas e cair no dia anterior no banco).
  * @param date - Data como string (YYYY-MM-DD) ou Date
- * @returns Date normalizada para meia-noite no timezone local
+ * @returns Date válida (ou null se inválida)
  */
 export function normalizeDateForDb(date: string | Date | null | undefined): Date | null {
   if (!date) return null;
   
   try {
-    // Se for string no formato YYYY-MM-DD, criar Date usando componentes locais
     if (typeof date === 'string') {
-      const isoMatch = date.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (isoMatch) {
-        const [, year, month, day] = isoMatch.map(Number);
-        // Criar Date usando componentes locais (meia-noite local, não UTC)
+      // Caso crítico: YYYY-MM-DD (sem hora). O JS interpreta como UTC; queremos local.
+      const dateOnlyMatch = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (dateOnlyMatch) {
+        const [, yearStr, monthStr, dayStr] = dateOnlyMatch;
+        const year = parseInt(yearStr, 10);
+        const month = parseInt(monthStr, 10);
+        const day = parseInt(dayStr, 10);
         return new Date(year, month - 1, day, 0, 0, 0, 0);
       }
-      
-      // Se não for formato ISO conhecido, tentar criar Date normalmente
+
       const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime())) return null;
-      
-      // Se a data criada tem hora zerada (ou muito próxima), normalizar para meia-noite local
-      if (dateObj.getHours() === 0 && dateObj.getMinutes() === 0 && dateObj.getSeconds() === 0) {
-        return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 0, 0, 0, 0);
-      }
-      
-      return dateObj;
+      return isNaN(dateObj.getTime()) ? null : dateObj;
     }
     
-    // Se for Date object, garantir que seja meia-noite local se não tiver hora específica
     if (date instanceof Date) {
-      if (isNaN(date.getTime())) return null;
-      
-      // Verificar se é meia-noite UTC (data sem hora do frontend)
-      const isMidnightUTC = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0;
-      
-      // Se for meia-noite UTC, criar como meia-noite local
-      if (isMidnightUTC) {
-        return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0);
-      }
-      
-      // Se já tem hora específica (não é meia-noite local), manter como está
-      if (date.getHours() !== 0 || date.getMinutes() !== 0 || date.getSeconds() !== 0 || date.getMilliseconds() !== 0) {
-        return date;
-      }
-      
-      // Se é meia-noite local, garantir que seja meia-noite local (não UTC)
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+      return isNaN(date.getTime()) ? null : date;
     }
     
     return null;
@@ -254,6 +233,12 @@ export function formatDateISO(date: string | Date | null | undefined): string | 
     return null;
   }
 }
+
+/**
+ * @deprecated Use formatDateISOLocal de timezoneUtils/index.ts
+ * Mantido por compatibilidade - reexporta de timezoneUtils
+ */
+export { formatDateISOLocal } from '../timezoneUtils';
 
 /**
  * Formata created_at para exibição (sem conversão de timezone)

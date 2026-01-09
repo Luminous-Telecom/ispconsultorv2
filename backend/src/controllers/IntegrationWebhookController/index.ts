@@ -6,11 +6,15 @@ import { Plano } from '../../models/cadastros/Plano';
 import { Titulo } from '../../models/financeiro/Titulo';
 import { TermoContrato } from '../../models/contratos/TermoContrato';
 import { Banco } from '../../models/cadastros/Banco';
-import { Usuario } from '../../models/cadastros/Usuario';
+import { UsuarioService } from '../../services/cadastros/UsuarioService';
+import { ClienteService } from '../../services/clientes/ClienteService';
+import { ContratoService } from '../../services/contratos/ContratoService';
+import { TituloService } from '../../services/financeiro/TituloService';
 import { TituloPDFController } from '../titulos/TituloPDFController';
 import { TituloComRelacoes } from '../titulos/TituloHelpers/types';
 import { logger } from '../../utils/logger';
 import { formatDateISO } from '../../utils/dateUtils';
+import { getCurrentTimestamp } from '../../utils/timezoneUtils';
 import crypto from 'crypto';
 
 // Armazenamento temporário de PDFs em memória
@@ -334,7 +338,7 @@ export class IntegrationWebhookController {
         res.json({
           success: true,
           message: 'Integração ativa',
-          timestamp: new Date().toISOString()
+          timestamp: getCurrentTimestamp()
         });
         return;
       }
@@ -373,11 +377,10 @@ export class IntegrationWebhookController {
     }
 
     // Buscar usuário pelo webhook_secret
-    const usuario = await Usuario.findOne({
-      where: {
-        webhook_secret: secret
-      }
-    });
+    // Nota: UsuarioService não tem método específico para webhook_secret, então usamos o modelo diretamente
+    // Buscar usuário por webhook_secret
+    const { UsuarioService } = await import('../../services/cadastros/UsuarioService');
+    const usuario = await UsuarioService.findByWebhookSecret(secret);
 
     if (usuario && usuario.webhook_secret === secret) {
       return true;
@@ -516,21 +519,14 @@ export class IntegrationWebhookController {
       
       // Se há filtros de contratos, buscar clientes que têm contratos com esses critérios
       if (Object.keys(contratoWhere).length > 0) {
-        const clientesComContratos = await Contrato.findAll({
-          attributes: ['cliente_id'],
-          where: contratoWhere,
-          group: ['cliente_id'],
-          raw: true
-        });
-
-        const clienteIds = clientesComContratos.map((c: { cliente_id: number }) => c.cliente_id);
+        const clienteIds = await ContratoService.getClienteIdsByContratoFilters(contratoWhere);
         
         if (clienteIds.length === 0) {
           // Nenhum cliente tem contratos com esses critérios, retornar vazio
           res.json({
             success: true,
             message: 'Dados de clientes sincronizados com sucesso',
-            timestamp: new Date().toISOString(),
+            timestamp: getCurrentTimestamp(),
             meta: {
               totalClientes: 0,
               retornados: 0,
@@ -559,23 +555,14 @@ export class IntegrationWebhookController {
       tituloStatusFilter = IntegrationWebhookController.expandTituloStatusFilters(payload.tituloStatus);
       
       // Se há filtro de títulos, buscar apenas clientes que têm títulos com esses status
-      const clientesComTitulos = await Titulo.findAll({
-        attributes: ['cliente_id'],
-        where: {
-          status: { [Op.in]: tituloStatusFilter }
-        },
-        group: ['cliente_id'],
-        raw: true
-      });
-
-      const clienteIds = clientesComTitulos.map((t: { cliente_id: number }) => t.cliente_id);
+      const clienteIds = await TituloService.getClienteIdsByStatus(tituloStatusFilter);
       
       if (clienteIds.length === 0) {
         // Nenhum cliente tem títulos com esses status, retornar vazio
         res.json({
           success: true,
           message: 'Dados de clientes sincronizados com sucesso',
-          timestamp: new Date().toISOString(),
+          timestamp: getCurrentTimestamp(),
           meta: {
             totalClientes: 0,
             retornados: 0,
@@ -600,9 +587,8 @@ export class IntegrationWebhookController {
     logger.info('Buscando clientes com filtros', { filters: JSON.stringify(filters) });
     
     const [totalClientes, clientes] = await Promise.all([
-      Cliente.count({ where: filters }),
-      Cliente.findAll({
-        where: filters,
+      ClienteService.count(filters),
+      ClienteService.findAllWithFilters(filters, {
         include: [
           {
             association: 'contratos',
@@ -697,8 +683,8 @@ export class IntegrationWebhookController {
         ],
         order: [['razao_social', 'ASC']],
         limit,
-        offset
-      })
+        offset: offset as number
+      } as any)
     ]);
 
     logger.info('Clientes encontrados', { total: totalClientes, retornados: clientes.length });
@@ -873,7 +859,7 @@ export class IntegrationWebhookController {
     res.json({
       success: true,
       message: 'Dados de clientes sincronizados com sucesso',
-      timestamp: new Date().toISOString(),
+            timestamp: getCurrentTimestamp(),
       meta: {
         totalClientes,
         retornados: clientesFormatados.length,
@@ -947,22 +933,32 @@ export class IntegrationWebhookController {
 
       // Se for PDF, buscar com todos os relacionamentos necessários
       if (format === 'pdf') {
-        const titulo = await Titulo.findOne({
-          where,
-          include: [
-            { model: Cliente, as: 'cliente' },
-            { model: Plano, as: 'plano' },
-            { 
-              model: Banco, 
-              as: 'banco',
-              attributes: [
-                'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
-                'url_retorno', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
-                'instrucao_linha_4', 'instrucao_linha_5', 'logo'
-              ]
+        // Buscar título por ID ou número
+        let titulo = null;
+        if (where.id) {
+          titulo = await TituloService.getById(where.id as number);
+        } else if (where.numero_titulo) {
+          // Buscar por número de título
+          const titulos = await TituloService.findAllWithFilters(
+            { numero_titulo: where.numero_titulo as string },
+            {
+              include: [
+                { association: 'cliente' },
+                { association: 'plano' },
+                { 
+                  association: 'banco',
+                  attributes: [
+                    'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
+                    'url_retorno', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
+                    'instrucao_linha_4', 'instrucao_linha_5', 'logo'
+                  ]
+                }
+              ],
+              limit: 1
             }
-          ]
-        });
+          );
+          titulo = titulos.length > 0 ? titulos[0] : null;
+        }
 
         if (!titulo) {
           res.status(404).json({
@@ -1004,7 +1000,7 @@ export class IntegrationWebhookController {
         res.json({
           success: true,
           message: 'PDF do boleto gerado com sucesso',
-          timestamp: new Date().toISOString(),
+          timestamp: getCurrentTimestamp(),
           data: {
             id: titulo.id,
             numero_titulo: titulo.numero_titulo,
@@ -1017,8 +1013,7 @@ export class IntegrationWebhookController {
       }
 
       // Formato JSON (padrão)
-      const titulo = await Titulo.findOne({
-        where,
+      const titulos = await TituloService.findAllWithFilters(where, {
         attributes: [
           'id',
           'numero_titulo',
@@ -1029,8 +1024,11 @@ export class IntegrationWebhookController {
           'linha_digitavel',
           'codigo_barras',
           'url_boleto'
-        ]
+        ],
+        limit: 1
       });
+
+      const titulo = titulos.length > 0 ? titulos[0] : null;
 
       if (!titulo) {
         res.status(404).json({
@@ -1071,7 +1069,7 @@ export class IntegrationWebhookController {
         res.json({
           success: true,
           message: 'Título encontrado',
-          timestamp: new Date().toISOString(),
+          timestamp: getCurrentTimestamp(),
           data: filteredData
         });
       } else {
@@ -1079,7 +1077,7 @@ export class IntegrationWebhookController {
         res.json({
           success: true,
           message: 'Título encontrado',
-          timestamp: new Date().toISOString(),
+          timestamp: getCurrentTimestamp(),
           data: {
             id: tituloData.id,
             numero_titulo: tituloData.numero_titulo,

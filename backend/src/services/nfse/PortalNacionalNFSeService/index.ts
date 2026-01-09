@@ -4,6 +4,7 @@ import { NFSeConfigService } from '../NFSeConfigService';
 import { NotaFiscal } from '../../../models/nfse/NotaFiscal';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
 
 interface PortalNacionalConfig {
   username: string;
@@ -247,6 +248,24 @@ export class PortalNacionalNFSeService {
   ): Promise<Record<string, any>> {
     // Buscar configurações de NFS-e
     const config = await NFSeConfigService.getConfig();
+    
+    // Calcular valor total e deduções
+    const valorTotal = Number(notaFiscal.valor_total) || 0;
+    const valorServicos = Number(notaFiscal.valor_servicos) || valorTotal;
+    const valorDesconto = notaFiscal.valor_desconto ? Number(notaFiscal.valor_desconto) : 0;
+    
+    // Validar: deduções não podem ser superiores ao valor total
+    const valorDeducoes = Math.min(valorDesconto, valorTotal);
+    
+    if (valorDesconto > valorTotal) {
+      logger.warn('Valor de desconto ajustado para não exceder valor total da nota', {
+        nota_fiscal_id: notaFiscal.id,
+        valor_total: valorTotal,
+        valor_desconto_original: valorDesconto,
+        valor_desconto_ajustado: valorDeducoes
+      });
+    }
+    
     return {
       // Dados do Prestador (Empresa)
       Prestador: {
@@ -290,8 +309,8 @@ export class PortalNacionalNFSeService {
       // Dados da NFS-e
       Servico: {
         Valores: {
-          ValorServicos: notaFiscal.valor_servicos || notaFiscal.valor_total,
-          ValorDeducoes: notaFiscal.valor_desconto || 0,
+          ValorServicos: valorServicos,
+          ValorDeducoes: valorDeducoes,
           ValorPis: 0,
           ValorCofins: 0,
           ValorInss: 0,
@@ -310,7 +329,7 @@ export class PortalNacionalNFSeService {
         MunicipioIncidencia: '' // Preencher manualmente ou adicionar campo no banco
       },
       // Dados gerais
-      DataEmissao: notaFiscal.data_emissao?.toISOString() || new Date().toISOString(),
+      DataEmissao: formatDateISOForAPI(notaFiscal.data_emissao) || formatDateISOForAPI(new Date()) || '',
       NaturezaOperacao: notaFiscal.natureza_operacao || 'PRESTAÇÃO DE SERVIÇOS',
       RegimeEspecialTributacao: '', // Preencher se aplicável
       OptanteSimplesNacional: '2', // 1=Sim, 2=Não - Ajustar conforme configuração da empresa

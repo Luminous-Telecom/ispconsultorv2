@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import { Usuario } from '../../../models/cadastros/Usuario';
+import { UsuarioService } from '../../../services/cadastros/UsuarioService';
 import { Op, WhereOptions } from 'sequelize';
 import * as Joi from 'joi';
-import * as bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { logger } from '../../../utils/logger';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 
 export class UsuarioController {
@@ -48,25 +49,14 @@ export class UsuarioController {
         whereClause.ativo = ativo === 'true';
       }
 
-      const { count, rows } = await Usuario.findAndCountAll({
-        where: whereClause,
-        order: [['id', 'DESC']],
+      const result = await UsuarioService.list({
+        page: pageNum,
         limit: limitNum,
-        offset
+        search: search as string,
+        ativo: ativo as string
       });
 
-      res.json({
-        success: true,
-        data: rows,
-        pagination: {
-          current_page: pageNum,
-          per_page: limitNum,
-          total: count,
-          last_page: Math.ceil(count / limitNum),
-          from: offset + 1,
-          to: Math.min(offset + limitNum, count)
-        }
-      });
+      res.json(result);
     } catch (error) {
       logger.error('Erro ao listar usuários', { error });
       res.status(500).json({
@@ -79,7 +69,7 @@ export class UsuarioController {
   static async getById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const usuario = await Usuario.findByPk(id);
+      const usuario = await UsuarioService.getById(id);
 
       if (!usuario) {
         res.status(404).json({
@@ -114,9 +104,7 @@ export class UsuarioController {
         return;
       }
 
-      const usuarioExistente = await Usuario.findOne({
-        where: { email: value.email }
-      });
+      const usuarioExistente = await UsuarioService.existsByEmail(value.email);
 
       if (usuarioExistente) {
         res.status(400).json({
@@ -126,18 +114,15 @@ export class UsuarioController {
         return;
       }
 
-      const passwordHash = await bcrypt.hash(value.password, 10);
-
-      const usuario = await Usuario.create({
+      const usuario = await UsuarioService.create({
         nome: value.nome,
         email: value.email,
-        password_hash: passwordHash,
+        password: value.password,
         role: value.role || 'admin',
         ativo: value.ativo !== undefined ? value.ativo : true
       });
 
       // Registrar auditoria
-      const { registrarCriacao } = await import('../../../services/sistema/AuditoriaService');
       await registrarCriacao(
         req,
         'Usuario',
@@ -172,7 +157,7 @@ export class UsuarioController {
         return;
       }
 
-      const usuario = await Usuario.findByPk(id);
+      const usuario = await UsuarioService.getById(id);
 
       if (!usuario) {
         res.status(404).json({
@@ -186,9 +171,7 @@ export class UsuarioController {
       const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
 
       if (value.email && value.email !== usuario.email) {
-        const emailExistente = await Usuario.findOne({
-          where: { email: value.email }
-        });
+        const emailExistente = await UsuarioService.existsByEmail(value.email, usuario.id);
 
         if (emailExistente) {
           res.status(400).json({
@@ -199,24 +182,16 @@ export class UsuarioController {
         }
       }
 
-      const updateData: Partial<Usuario> = {};
-      if (value.nome) updateData.nome = value.nome;
-      if (value.email) updateData.email = value.email;
-      if (value.role) updateData.role = value.role;
-      if (value.ativo !== undefined) updateData.ativo = value.ativo;
-      
-      if (value.password) {
-        updateData.password_hash = await bcrypt.hash(value.password, 10);
-      }
-
-      await usuario.update(updateData);
-      
-      // Recarregar usuário para obter dados atualizados
-      await usuario.reload();
+      const usuarioAtualizado = await UsuarioService.update(id, {
+        nome: value.nome,
+        email: value.email,
+        password: value.password,
+        role: value.role,
+        ativo: value.ativo
+      });
       
       // Registrar auditoria
-      const { registrarAtualizacao } = await import('../../../services/sistema/AuditoriaService');
-      const dadosNovos = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
+      const dadosNovos = { ...usuarioAtualizado.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -247,7 +222,7 @@ export class UsuarioController {
     try {
       const { id } = req.params;
 
-      const usuario = await Usuario.findByPk(id);
+      const usuario = await UsuarioService.getById(id);
 
       if (!usuario) {
         res.status(404).json({
@@ -261,7 +236,6 @@ export class UsuarioController {
       const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
       
       // Registrar auditoria
-      const { registrarExclusao } = await import('../../../services/sistema/AuditoriaService');
       await registrarExclusao(
         req,
         'Usuario',
@@ -269,7 +243,7 @@ export class UsuarioController {
         dadosAnteriores
       );
 
-      await usuario.destroy();
+      await UsuarioService.delete(id);
 
       res.json({
         success: true,
@@ -288,7 +262,7 @@ export class UsuarioController {
     try {
       const { id } = req.params;
 
-      const usuario = await Usuario.findByPk(id);
+      const usuario = await UsuarioService.getById(id);
 
       if (!usuario) {
         res.status(404).json({
@@ -299,7 +273,7 @@ export class UsuarioController {
       }
 
       const novoSecret = randomBytes(32).toString('hex');
-      await usuario.update({ webhook_secret: novoSecret });
+      await UsuarioService.update(id, { webhook_secret: novoSecret });
 
       logger.info('Webhook secret gerado para usuário', {
         usuario_id: usuario.id

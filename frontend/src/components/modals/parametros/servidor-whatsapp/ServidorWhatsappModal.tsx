@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -103,7 +103,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   }, [mensagemData]);
 
   // Buscar servidor ativo
-  const { data: servidorAtivo, isLoading } = useQuery({
+  const { data: servidorAtivo, isLoading, refetch: refetchServidorAtivo } = useQuery({
     queryKey: ['servidor-whatsapp-ativo'],
     queryFn: async () => {
       try {
@@ -121,13 +121,28 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     mutationFn: (data: ServidorWhatsAppForm) => {
       return ServidorWhatsAppService.createOrUpdate(data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       success('Configurações do servidor de WhatsApp salvas com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
+      await refetchServidorAtivo();
     },
     onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      showError(error?.response?.data?.message || 'Erro ao salvar configurações');
+      const error = err as AxiosError<{ message?: string; errors?: string[] }>;
+      let errorMessage = 'Erro ao salvar configurações';
+      
+      if (error?.response?.data) {
+        if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
+          errorMessage = error.response.data.errors.join(', ');
+        } else if (error.response.data.errors && typeof error.response.data.errors === 'object') {
+          errorMessage = Object.values(error.response.data.errors).flat().join(', ');
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      showError(errorMessage);
     }
   });
 
@@ -188,7 +203,11 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await saveServidorMutation.mutateAsync(formData);
+    try {
+      await saveServidorMutation.mutateAsync(formData);
+    } catch (error) {
+      // O erro já é tratado no onError da mutation
+    }
   };
 
   const handleSaveMensagem = useCallback(async () => {
@@ -324,12 +343,27 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     </div>
   ), [activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, handleClose, handleReset, handleSaveMensagem]);
 
+  const headerActionsContentRef = useRef(headerActionsContent);
+  headerActionsContentRef.current = headerActionsContent;
+
   // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
   useEffect(() => {
     if (skipWrapper && onHeaderActionsReady) {
-      onHeaderActionsReady(headerActionsContent);
+      if (!show) {
+        onHeaderActionsReady(null);
+      } else {
+        onHeaderActionsReady(headerActionsContentRef.current);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipWrapper, onHeaderActionsReady, activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, show]);
+
+  useEffect(() => {
+    return () => {
+      if (skipWrapper && onHeaderActionsReady) {
+        onHeaderActionsReady(null);
+      }
+    };
   }, [skipWrapper, onHeaderActionsReady]);
 
   const modalContent = (

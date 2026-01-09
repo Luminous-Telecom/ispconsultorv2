@@ -1,17 +1,24 @@
 import { NFSeConfig } from '../../../models/nfse/NFSeConfig';
-import { logger } from '../../../utils/logger';
 
 export class NFSeConfigService {
   /**
-   * Obter configuração de NFS-e
+   * Obter configuração (sempre retorna o primeiro registro)
+   * Alias para get() para compatibilidade
    */
   static async getConfig(): Promise<NFSeConfig> {
+    return this.get();
+  }
+
+  /**
+   * Obter configuração (sempre retorna o primeiro registro)
+   */
+  static async get(): Promise<NFSeConfig> {
     let config = await NFSeConfig.findOne({
       order: [['id', 'ASC']]
     });
 
+    // Se não existir, criar com valores padrão
     if (!config) {
-      // Criar com valores padrão se não existir
       config = await NFSeConfig.create({
         codigo_servico_municipal: null,
         aliquota_iss: 0.00,
@@ -32,16 +39,21 @@ export class NFSeConfigService {
   }
 
   /**
-   * Obter valor de configuração específico
+   * Atualizar configuração
    */
-  static async getValor<T = string>(campo: keyof NFSeConfig): Promise<T | null> {
-    try {
-      const config = await this.getConfig();
-      return (config[campo] as T) || null;
-    } catch (error) {
-      logger.error(`Erro ao obter valor de configuração NFS-e: ${String(campo)}`, { error });
-      return null;
+  static async update(dados: Partial<NFSeConfig>): Promise<NFSeConfig> {
+    let config = await NFSeConfig.findOne({
+      order: [['id', 'ASC']]
+    });
+
+    if (!config) {
+      config = await NFSeConfig.create(dados as any);
+    } else {
+      await config.update(dados);
+      await config.reload();
     }
+
+    return config;
   }
 }
 

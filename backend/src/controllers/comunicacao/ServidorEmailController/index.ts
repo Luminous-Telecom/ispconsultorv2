@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
 import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
+import { MensagemEmailService } from '../../../services/comunicacao/MensagemEmailService';
+import { ServidorEmailService } from '../../../services/comunicacao/ServidorEmailService';
 import { logger } from '../../../utils/logger';
 import { formatDateTime } from '../../../utils/dateUtils';
 import nodemailer from 'nodemailer';
 import { Op } from 'sequelize';
 import { ValidationError } from 'sequelize';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 export class ServidorEmailController {
@@ -15,16 +17,11 @@ export class ServidorEmailController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const servidores = await ServidorEmail.findAll({
-        order: [['created_at', 'DESC']],
-        attributes: {
-          exclude: ['senha'], // Não retornar a senha na listagem
-        },
-      });
+      const result = await ServidorEmailService.list();
 
       res.json({
-        success: true,
-        data: servidores,
+        success: result.success,
+        data: result.data,
         message: 'Servidores de email listados com sucesso'
       });
     } catch (error) {
@@ -43,11 +40,7 @@ export class ServidorEmailController {
     try {
       const { id } = req.params;
 
-      const servidor = await ServidorEmail.findByPk(id, {
-        attributes: {
-          exclude: ['senha'], // Não retornar a senha
-        },
-      });
+      const servidor = await ServidorEmailService.getById(id, { excludePassword: true });
 
       if (!servidor) {
         res.status(404).json({
@@ -89,14 +82,14 @@ export class ServidorEmailController {
 
       // Se estiver criando um servidor ativo, desativar outros
       if (servidorData.ativo !== false) {
-        await ServidorEmail.update(
-          { ativo: false },
-          { where: { ativo: true } }
+        await ServidorEmailService.updateBulk(
+          { ativo: true },
+          { ativo: false }
         );
         servidorData.ativo = true;
       }
 
-      const servidor = await ServidorEmail.create(servidorData);
+      const servidor = await ServidorEmailService.create(servidorData);
 
       await registrarCriacao(
         req as AuthenticatedRequest,
@@ -137,7 +130,7 @@ export class ServidorEmailController {
       const { id } = req.params;
       const servidorData = req.body;
 
-      const servidor = await ServidorEmail.findByPk(id);
+      const servidor = await ServidorEmailService.getById(id);
 
       if (!servidor) {
         res.status(404).json({
@@ -149,15 +142,14 @@ export class ServidorEmailController {
 
       // Se estiver ativando este servidor, desativar outros
       if (servidorData.ativo === true) {
-        await ServidorEmail.update(
-          { ativo: false },
-          { where: { ativo: true, id: { [Op.ne]: id } } }
+        await ServidorEmailService.updateBulk(
+          { ativo: true, id: { [Op.ne]: id } },
+          { ativo: false }
         );
       }
 
       const dadosAnteriores = servidor.toJSON();
-      await servidor.update(servidorData);
-      await servidor.reload();
+      await ServidorEmailService.updateInstance(servidor, servidorData);
 
       await registrarAtualizacao(
         req as AuthenticatedRequest,
@@ -198,7 +190,7 @@ export class ServidorEmailController {
     try {
       const { id } = req.params;
 
-      const servidor = await ServidorEmail.findByPk(id);
+      const servidor = await ServidorEmailService.getById(id);
 
       if (!servidor) {
         res.status(404).json({
@@ -209,7 +201,7 @@ export class ServidorEmailController {
       }
 
       const dadosAnteriores = servidor.toJSON();
-      await servidor.destroy();
+      await ServidorEmailService.delete(servidor.id);
 
       await registrarExclusao(
         req as AuthenticatedRequest,
@@ -238,7 +230,7 @@ export class ServidorEmailController {
     try {
       const { id } = req.params;
 
-      const servidor = await ServidorEmail.findByPk(id);
+      const servidor = await ServidorEmailService.getById(id);
 
       if (!servidor) {
         res.status(404).json({
@@ -287,7 +279,7 @@ export class ServidorEmailController {
         return;
       }
 
-      const servidor = await ServidorEmail.findByPk(id);
+      const servidor = await ServidorEmailService.getById(id);
       if (!servidor) {
         res.status(404).json({
           success: false,
@@ -362,7 +354,7 @@ export class ServidorEmailController {
    */
   static async getActive(req: Request, res: Response): Promise<void> {
     try {
-      const servidor = await ServidorEmail.findOne({
+      const servidor = await ServidorEmailService.findOne({
         where: { ativo: true },
         attributes: {
           exclude: ['senha'], // Não retornar a senha
@@ -399,7 +391,7 @@ export class ServidorEmailController {
       const servidorData = req.body;
 
       // Buscar servidor existente
-      const servidor = await ServidorEmail.findOne({
+      const servidor = await ServidorEmailService.findOne({
         where: { ativo: true }
       });
 
@@ -420,14 +412,7 @@ export class ServidorEmailController {
         }
 
         const dadosAnteriores = servidor.toJSON();
-        await servidor.update(servidorData);
-        
-        // Recarregar o servidor para pegar os dados atualizados
-        await servidor.reload({
-          attributes: {
-            exclude: ['senha'], // Não retornar a senha
-          },
-        });
+        await ServidorEmailService.updateInstance(servidor, servidorData);
         
         await registrarAtualizacao(
           req as AuthenticatedRequest,
@@ -454,7 +439,7 @@ export class ServidorEmailController {
         }
 
         servidorData.ativo = true;
-        const novoServidor = await ServidorEmail.create(servidorData);
+        const novoServidor = await ServidorEmailService.create(servidorData);
         
         // Recarregar sem a senha
         await novoServidor.reload({
@@ -503,9 +488,7 @@ export class ServidorEmailController {
       const { tipo } = req.params;
       logger.info('Buscando mensagem Email por tipo:', { tipo });
 
-      const mensagem = await MensagemEmail.findOne({
-        where: { tipo }
-      });
+      const mensagem = await MensagemEmailService.findByTipo(tipo);
 
       if (!mensagem) {
         logger.info('Mensagem não encontrada para o tipo:', { tipo });
@@ -538,16 +521,7 @@ export class ServidorEmailController {
     try {
       const { tipo, tipo_envio, mensagem_padrao, mensagem_manual, ativo } = req.body;
 
-      logger.info('Salvando mensagem Email:', { 
-        tipo, 
-        tipo_envio, 
-        temMensagemPadrao: !!mensagem_padrao,
-        temMensagemManual: !!mensagem_manual,
-        ativo 
-      });
-
       if (!tipo || !tipo_envio) {
-        logger.warn('Validação falhou: tipo ou tipo_envio ausente', { tipo, tipo_envio });
         res.status(400).json({
           success: false,
           message: 'Tipo e tipo de envio são obrigatórios'
@@ -555,9 +529,7 @@ export class ServidorEmailController {
         return;
       }
 
-      // Para envio_manual, mensagem_padrao ou mensagem_manual deve estar preenchida
       if (tipo === 'envio_manual' && !mensagem_padrao && !mensagem_manual) {
-        logger.warn('Validação falhou: mensagem_padrao ou mensagem_manual obrigatória para envio_manual', { tipo });
         res.status(400).json({
           success: false,
           message: 'Mensagem padrão ou mensagem manual é obrigatória para envio manual'
@@ -565,9 +537,7 @@ export class ServidorEmailController {
         return;
       }
 
-      // Para outros tipos, mensagem_padrao é obrigatória
       if (tipo !== 'envio_manual' && !mensagem_padrao) {
-        logger.warn('Validação falhou: mensagem_padrao obrigatória', { tipo });
         res.status(400).json({
           success: false,
           message: 'Mensagem padrão é obrigatória'
@@ -575,18 +545,9 @@ export class ServidorEmailController {
         return;
       }
 
-      // Para envio_manual, se não houver mensagem_padrao, usar mensagem_manual como fallback
-      // (o campo mensagem_padrao é obrigatório no modelo)
       const mensagemPadraoFinal = tipo === 'envio_manual' && !mensagem_padrao && mensagem_manual 
         ? mensagem_manual 
         : (mensagem_padrao || '');
-
-      logger.info('Dados finais para salvar:', { 
-        tipo, 
-        tipo_envio, 
-        mensagemPadraoLength: mensagemPadraoFinal.length,
-        mensagemManualLength: mensagem_manual?.length || 0
-      });
 
       const mensagemData = {
         tipo,
@@ -596,21 +557,12 @@ export class ServidorEmailController {
         ativo
       };
 
-      // Buscar mensagem existente
-      let mensagem = await MensagemEmail.findOne({
-        where: { tipo }
-      });
-
-      logger.info('Mensagem existente encontrada:', { tipo, existe: !!mensagem, id: mensagem?.id });
+      let mensagem = await MensagemEmailService.findByTipo(tipo);
 
       try {
         if (mensagem) {
-          // Atualizar existente
-          logger.info('Atualizando mensagem existente:', { id: mensagem.id, tipo });
           const dadosAnteriores = mensagem.toJSON();
-          await mensagem.update(mensagemData);
-          await mensagem.reload();
-          logger.info('Mensagem atualizada com sucesso:', { id: mensagem.id });
+          mensagem = await MensagemEmailService.update(mensagem.id, mensagemData);
           
           await registrarAtualizacao(
             req as AuthenticatedRequest,
@@ -620,10 +572,7 @@ export class ServidorEmailController {
             mensagem.toJSON() as unknown as Record<string, unknown>
           );
         } else {
-          // Criar novo
-          logger.info('Criando nova mensagem:', { tipo });
-          mensagem = await MensagemEmail.create(mensagemData);
-          logger.info('Mensagem criada com sucesso:', { id: mensagem.id, tipo });
+          mensagem = await MensagemEmailService.create(mensagemData);
           
           await registrarCriacao(
             req as AuthenticatedRequest,
@@ -634,17 +583,9 @@ export class ServidorEmailController {
         }
       } catch (dbError) {
         const dbErrorMessage = dbError instanceof Error ? dbError.message : 'Erro desconhecido no banco';
-        const dbErrorStack = dbError instanceof Error ? dbError.stack : undefined;
         logger.error('Erro ao salvar/atualizar mensagem no banco:', { 
           tipo, 
-          error: dbErrorMessage, 
-          stack: dbErrorStack,
-          mensagemData: {
-            tipo: mensagemData.tipo,
-            tipo_envio: mensagemData.tipo_envio,
-            temMensagemPadrao: !!mensagemData.mensagem_padrao,
-            temMensagemManual: !!mensagemData.mensagem_manual
-          }
+          error: dbErrorMessage
         });
         throw new Error(`Erro ao salvar mensagem: ${dbErrorMessage}`);
       }
@@ -656,8 +597,7 @@ export class ServidorEmailController {
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao salvar mensagem:', { error: errorMessage, stack: errorStack });
+      logger.error('Erro ao salvar mensagem:', error);
       res.status(500).json({
         success: false,
         message: errorMessage || 'Erro interno do servidor'

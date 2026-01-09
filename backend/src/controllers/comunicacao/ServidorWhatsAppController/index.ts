@@ -2,10 +2,11 @@ import { Request, Response as ExpressResponse } from 'express';
 import { ValidationError } from 'sequelize';
 import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
 import { MensagemWhatsApp } from '../../../models/comunicacao/MensagemWhatsApp';
+import { MensagemWhatsAppService } from '../../../services/comunicacao/MensagemWhatsAppService';
+import { ServidorWhatsAppService } from '../../../services/comunicacao/ServidorWhatsAppService';
 import { logger } from '../../../utils/logger';
-
 import { WhatsAppCloudService } from '../../../services/comunicacao/WhatsAppCloudService';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 export class ServidorWhatsAppController {
@@ -14,16 +15,11 @@ export class ServidorWhatsAppController {
    */
   static async list(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const servidores = await ServidorWhatsApp.findAll({
-        order: [['created_at', 'DESC']],
-        attributes: {
-          exclude: ['evolution_api_key', 'whatsapp_cloud_token'], // Não retornar tokens na listagem
-        },
-      });
+      const result = await ServidorWhatsAppService.list();
 
       res.json({
-        success: true,
-        data: servidores,
+        success: result.success,
+        data: result.data,
         message: 'Servidores de WhatsApp listados com sucesso'
       });
     } catch (error) {
@@ -42,11 +38,7 @@ export class ServidorWhatsAppController {
     try {
       const { id } = req.params;
 
-      const servidor = await ServidorWhatsApp.findByPk(id, {
-        attributes: {
-          exclude: ['evolution_api_key', 'whatsapp_cloud_token'], // Não retornar tokens
-        },
-      });
+      const servidor = await ServidorWhatsAppService.getById(id, { excludeTokens: true });
 
       if (!servidor) {
         res.status(404).json({
@@ -98,7 +90,7 @@ export class ServidorWhatsAppController {
         }
       }
 
-      const servidor = await ServidorWhatsApp.create(servidorData);
+      const servidor = await ServidorWhatsAppService.create(servidorData);
 
       await registrarCriacao(
         req as AuthenticatedRequest,
@@ -139,7 +131,7 @@ export class ServidorWhatsAppController {
       const { id } = req.params;
       const servidorData = req.body;
 
-      const servidor = await ServidorWhatsApp.findByPk(id);
+      const servidor = await ServidorWhatsAppService.getById(id);
 
       if (!servidor) {
         res.status(404).json({
@@ -150,8 +142,7 @@ export class ServidorWhatsAppController {
       }
 
       const dadosAnteriores = servidor.toJSON();
-      await servidor.update(servidorData);
-      await servidor.reload();
+      await ServidorWhatsAppService.updateInstance(servidor, servidorData);
 
       await registrarAtualizacao(
         req as AuthenticatedRequest,
@@ -192,7 +183,7 @@ export class ServidorWhatsAppController {
     try {
       const { id } = req.params;
 
-      const servidor = await ServidorWhatsApp.findByPk(id);
+      const servidor = await ServidorWhatsAppService.getById(id);
 
       if (!servidor) {
         res.status(404).json({
@@ -203,7 +194,7 @@ export class ServidorWhatsAppController {
       }
 
       const dadosAnteriores = servidor.toJSON();
-      await servidor.destroy();
+      await ServidorWhatsAppService.delete(servidor.id);
 
       await registrarExclusao(
         req as AuthenticatedRequest,
@@ -232,7 +223,7 @@ export class ServidorWhatsAppController {
     try {
       const { id } = req.params;
 
-      const servidor = await ServidorWhatsApp.findByPk(id);
+      const servidor = await ServidorWhatsAppService.getById(id);
 
       if (!servidor) {
         res.status(404).json({
@@ -272,12 +263,7 @@ export class ServidorWhatsAppController {
    */
   static async getActive(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const servidor = await ServidorWhatsApp.findOne({
-        where: { ativo: true },
-        attributes: {
-          exclude: ['evolution_api_key', 'whatsapp_cloud_token'], // Não retornar tokens
-        },
-      });
+      const servidor = await ServidorWhatsAppService.findOne({ ativo: true });
 
       if (!servidor) {
         res.status(404).json({
@@ -309,13 +295,14 @@ export class ServidorWhatsAppController {
       const servidorData = req.body;
 
       // Buscar servidor existente
-      const servidor = await ServidorWhatsApp.findOne({
-        where: { ativo: true }
-      });
+      const servidor = await ServidorWhatsAppService.findOne({ ativo: true });
 
       if (servidor) {
         // Atualizar servidor existente
         const tipoApi = servidorData.tipo_api || servidor.tipo_api || 'evolution';
+        
+        // Remover campos que não devem ser atualizados
+        delete servidorData.ativo; // O campo ativo não deve ser alterado durante atualização
         
         // Validar dados baseado no tipo de API
         if (tipoApi === 'evolution') {
@@ -352,14 +339,7 @@ export class ServidorWhatsAppController {
         }
 
         const dadosAnteriores = servidor.toJSON();
-        await servidor.update(servidorData);
-        
-        // Recarregar o servidor para pegar os dados atualizados
-        await servidor.reload({
-          attributes: {
-            exclude: ['evolution_api_key', 'whatsapp_cloud_token'], // Não retornar tokens
-          },
-        });
+        await ServidorWhatsAppService.updateInstance(servidor, servidorData);
         
         await registrarAtualizacao(
           req as AuthenticatedRequest,
@@ -398,6 +378,85 @@ export class ServidorWhatsAppController {
           }
         }
 
+        // Garantir que nenhum outro servidor esteja ativo antes de criar um novo
+        // Buscar novamente para garantir que não há servidor ativo (pode ter mudado entre requisições)
+        const servidorAtivoExistente = await ServidorWhatsAppService.findOne({ ativo: true });
+        
+        if (servidorAtivoExistente) {
+          // Se encontrou um servidor ativo, atualizar ao invés de criar
+          const tipoApiAtual = servidorData.tipo_api || servidorAtivoExistente.tipo_api || 'evolution';
+          
+          // Remover campos que não devem ser atualizados
+          delete servidorData.ativo; // O campo ativo não deve ser alterado durante atualização
+          
+          if (tipoApiAtual === 'evolution') {
+            if (!servidorData.evolution_api_url || !servidorData.instance_name) {
+              res.status(400).json({
+                success: false,
+                message: 'Para Evolution API: URL da Evolution API e nome da instância são obrigatórios'
+              });
+              return;
+            }
+            
+            if (!servidorData.evolution_api_key || servidorData.evolution_api_key.trim() === '') {
+              delete servidorData.evolution_api_key;
+            }
+          } else if (tipoApiAtual === 'whatsapp_cloud') {
+            if (!servidorData.whatsapp_cloud_phone_number_id) {
+              res.status(400).json({
+                success: false,
+                message: 'Para WhatsApp Cloud API: Phone Number ID é obrigatório'
+              });
+              return;
+            }
+            
+            if (!servidorData.whatsapp_cloud_token || servidorData.whatsapp_cloud_token.trim() === '') {
+              delete servidorData.whatsapp_cloud_token;
+            }
+          }
+
+          if (servidorData.webhook_url && servidorData.webhook_url.trim() === '') {
+            servidorData.webhook_url = null;
+          }
+
+          const dadosAnteriores = servidorAtivoExistente.toJSON();
+          await ServidorWhatsAppService.updateInstance(servidorAtivoExistente, servidorData);
+          
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'ServidorWhatsApp',
+            servidorAtivoExistente.id,
+            dadosAnteriores as unknown as Record<string, unknown>,
+            servidorAtivoExistente.toJSON() as unknown as Record<string, unknown>
+          );
+          
+          await servidorAtivoExistente.reload({
+            attributes: {
+              exclude: ['evolution_api_key', 'whatsapp_cloud_token'],
+            },
+          });
+          
+          res.json({
+            success: true,
+            data: servidorAtivoExistente,
+            message: 'Servidor de WhatsApp atualizado com sucesso'
+          });
+          return;
+        }
+
+        // Desativar todos os outros servidores antes de criar um novo com ativo=true
+        // Isso evita violação do índice único que permite apenas um servidor ativo
+        await ServidorWhatsAppService.updateBulk(
+          { ativo: true },
+          { ativo: false }
+        );
+        
+        // Verificar novamente se ainda há algum servidor ativo (pode ter mudado durante race condition)
+        const servidorAindaAtivo = await ServidorWhatsAppService.findOne({ ativo: true });
+        if (servidorAindaAtivo) {
+          await servidorAindaAtivo.update({ ativo: false });
+        }
+        
         servidorData.ativo = true;
         servidorData.status_conexao = 'disconnected';
         
@@ -406,7 +465,7 @@ export class ServidorWhatsAppController {
           servidorData.webhook_url = null;
         }
         
-        const novoServidor = await ServidorWhatsApp.create(servidorData);
+        const novoServidor = await ServidorWhatsAppService.create(servidorData);
         
         // Recarregar sem os tokens
         await novoServidor.reload({
@@ -432,17 +491,19 @@ export class ServidorWhatsAppController {
       logger.error('Erro ao criar/atualizar servidor de WhatsApp:', error);
       
       if (error instanceof ValidationError) {
+        const errorMessages = error.errors.map((err) => err.message).join(', ');
         res.status(400).json({
           success: false,
-          message: 'Dados inválidos',
+          message: errorMessages || 'Dados inválidos',
           errors: error.errors.map((err) => err.message)
         });
         return;
       }
 
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       res.status(500).json({
         success: false,
-        message: 'Erro interno do servidor'
+        message: errorMessage || 'Erro interno do servidor'
       });
     }
   }
@@ -454,7 +515,7 @@ export class ServidorWhatsAppController {
     try {
       const { id } = req.params;
 
-      const servidor = await ServidorWhatsApp.findByPk(id);
+      const servidor = await ServidorWhatsAppService.getById(id);
       if (!servidor) {
         res.status(404).json({
           success: false,
@@ -465,12 +526,12 @@ export class ServidorWhatsAppController {
 
       // Aqui você implementaria a chamada para a Evolution API para conectar a instância
       // Por enquanto, vamos simular a resposta
-      await servidor.update({ status_conexao: 'connecting' });
+      await ServidorWhatsAppService.updateInstance(servidor, { status_conexao: 'connecting' });
 
       // Simular delay de conexão
       setTimeout(async () => {
         try {
-          await servidor.update({ status_conexao: 'qr_required' });
+          await ServidorWhatsAppService.updateInstance(servidor, { status_conexao: 'qr_required' });
           logger.info(`Instância ${servidor.instance_name} requer QR Code`);
         } catch (error) {
           logger.error('Erro ao atualizar status:', error);
@@ -509,7 +570,7 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      const servidor = await ServidorWhatsApp.findByPk(id);
+      const servidor = await ServidorWhatsAppService.getById(id);
       if (!servidor) {
         res.status(404).json({
           success: false,
@@ -531,7 +592,6 @@ export class ServidorWhatsAppController {
         }
         
         result = { success: true };
-        logger.info(`Mensagem de teste enviada via WhatsApp Cloud API para: ${phone}`);
       } else {
         // Evolution API
         const baseUrl = servidor.evolution_api_url.replace(/\/$/, '');
@@ -677,9 +737,7 @@ export class ServidorWhatsAppController {
       const { tipo } = req.params;
       logger.info('Buscando mensagem WhatsApp por tipo:', { tipo });
 
-      const mensagem = await MensagemWhatsApp.findOne({
-        where: { tipo }
-      });
+      const mensagem = await MensagemWhatsAppService.findByTipo(tipo);
 
       if (!mensagem) {
         logger.info('Mensagem não encontrada para o tipo:', { tipo });
@@ -779,9 +837,7 @@ export class ServidorWhatsAppController {
       };
 
       // Buscar mensagem existente
-      let mensagem = await MensagemWhatsApp.findOne({
-        where: { tipo }
-      });
+      let mensagem = await MensagemWhatsAppService.findByTipo(tipo);
 
       logger.info('Mensagem existente encontrada:', { tipo, existe: !!mensagem, id: mensagem?.id });
 
@@ -790,8 +846,7 @@ export class ServidorWhatsAppController {
           // Atualizar existente
           logger.info('Atualizando mensagem existente:', { id: mensagem.id, tipo });
           const dadosAnteriores = mensagem.toJSON();
-          await mensagem.update(mensagemData);
-          await mensagem.reload();
+          mensagem = await MensagemWhatsAppService.update(mensagem.id, mensagemData);
           logger.info('Mensagem atualizada com sucesso:', { id: mensagem.id });
           
           await registrarAtualizacao(
@@ -804,7 +859,7 @@ export class ServidorWhatsAppController {
         } else {
           // Criar novo
           logger.info('Criando nova mensagem:', { tipo });
-          mensagem = await MensagemWhatsApp.create(mensagemData);
+          mensagem = await MensagemWhatsAppService.create(mensagemData);
           logger.info('Mensagem criada com sucesso:', { id: mensagem.id, tipo });
           
           await registrarCriacao(
@@ -852,7 +907,7 @@ export class ServidorWhatsAppController {
    */
   static async getTemplates(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });
+      const servidor = await ServidorWhatsAppService.findOne({ ativo: true });
 
       if (!servidor) {
         logger.warn('Tentativa de buscar templates sem servidor ativo');

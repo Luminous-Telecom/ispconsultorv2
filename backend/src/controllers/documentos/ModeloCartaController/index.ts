@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { ModeloCarta } from '../../../models/documentos/ModeloCarta';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
+import { ModeloCartaService } from '../../../services/documentos/ModeloCartaService';
+import { ClienteService } from '../../../services/clientes/ClienteService';
+import { ContratoService } from '../../../services/contratos/ContratoService';
 import { Plano } from '../../../models/cadastros/Plano';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
@@ -13,13 +14,10 @@ export class ModeloCartaController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const cartas = await ModeloCarta.findAll({
-        order: [['created_at', 'DESC']],
-      });
+      const result = await ModeloCartaService.list();
 
       res.json({
-        success: true,
-        data: cartas,
+        ...result,
         message: 'Cartas de cobrança listadas com sucesso'
       });
     } catch (error) {
@@ -38,7 +36,7 @@ export class ModeloCartaController {
     try {
       const { id } = req.params;
 
-      const carta = await ModeloCarta.findByPk(id);
+      const carta = await ModeloCartaService.getById(id);
 
       if (!carta) {
         res.status(404).json({
@@ -69,7 +67,7 @@ export class ModeloCartaController {
     try {
       const { nome, conteudo, descricao, ativo, tamanho_maximo, tipos_permitidos, retencao_dias, auto_backup, criptografia } = req.body;
 
-      const carta = await ModeloCarta.create({
+      const carta = await ModeloCartaService.create({
         nome,
         conteudo,
         descricao,
@@ -103,7 +101,7 @@ export class ModeloCartaController {
       const { id } = req.params;
       const updateData = req.body;
 
-      const carta = await ModeloCarta.findByPk(id);
+      const carta = await ModeloCartaService.getById(id);
 
       if (!carta) {
         res.status(404).json({
@@ -113,7 +111,7 @@ export class ModeloCartaController {
         return;
       }
 
-      await carta.update(updateData);
+      await ModeloCartaService.update(id, updateData);
 
       res.json({
         success: true,
@@ -136,7 +134,7 @@ export class ModeloCartaController {
     try {
       const { id } = req.params;
 
-      const carta = await ModeloCarta.findByPk(id);
+      const carta = await ModeloCartaService.getById(id);
 
       if (!carta) {
         res.status(404).json({
@@ -146,7 +144,7 @@ export class ModeloCartaController {
         return;
       }
 
-      await carta.destroy();
+      await ModeloCartaService.delete(id);
 
       res.json({
         success: true,
@@ -168,7 +166,7 @@ export class ModeloCartaController {
     try {
       const { id } = req.params;
 
-      const carta = await ModeloCarta.findByPk(id);
+      const carta = await ModeloCartaService.getById(id);
 
       if (!carta) {
         res.status(404).json({
@@ -337,7 +335,7 @@ export class ModeloCartaController {
       const { id } = req.params;
       const { cliente_id } = req.query;
 
-      const carta = await ModeloCarta.findByPk(id);
+      const carta = await ModeloCartaService.getById(id);
 
       if (!carta) {
         res.status(404).json({
@@ -351,7 +349,7 @@ export class ModeloCartaController {
       let conteudoProcessado = carta.conteudo;
       
       if (cliente_id) {
-        const cliente = await Cliente.findByPk(cliente_id as string);
+        const cliente = await ClienteService.getById(cliente_id as string);
         
         if (!cliente) {
           res.status(404).json({
@@ -362,10 +360,7 @@ export class ModeloCartaController {
         }
 
         // Buscar contrato ativo do cliente
-        const contrato = await Contrato.findOne({
-          where: { cliente_id: cliente.id, status: 'ativo' },
-          include: [{ model: Plano, as: 'plano' }]
-        });
+        const contrato = await ContratoService.findAtivoByCliente(cliente.id);
 
         // Processar variáveis do documento
         conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(

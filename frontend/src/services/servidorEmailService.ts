@@ -123,6 +123,7 @@ export class ServidorEmailService {
   static async getMensagemByTipo(mensagemType: string): Promise<MensagemEmail | null> {
     try {
       const response = await apiService.get<MensagemEmail>(`/mensagens-email/tipo/${mensagemType}`);
+      // apiService.get já retorna ApiResponse<T>, então response.data é a MensagemEmail diretamente
       return response.data ?? null;
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string; type?: string }> & { type?: string };

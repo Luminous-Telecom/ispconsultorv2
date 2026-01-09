@@ -151,6 +151,22 @@ const TituloModal: React.FC<TituloModalProps> = ({
         formHook.handleInputChange('desconto_valor', contratoData.desconto_valor);
       }
       
+      // Para título avulso, preencher valor automaticamente
+      if (isAvulso) {
+        // Prioridade: valor_final do contrato > valor_mensal do plano
+        if (contratoData.valor_final && parseFloat(String(contratoData.valor_final)) > 0) {
+          formHook.handleInputChange('valor', parseFloat(String(contratoData.valor_final)));
+        } else if (planos?.data) {
+          const planoSelecionado = planos.data.find((p: Plano) => p.id === contratoData.plano_id);
+          if (planoSelecionado && planoSelecionado.valor_mensal) {
+            const valorMensal = parseFloat(String(planoSelecionado.valor_mensal));
+            if (valorMensal > 0) {
+              formHook.handleInputChange('valor', valorMensal);
+            }
+          }
+        }
+      }
+      
       hasInitializedRef.current = true;
     } else if (!contratoId && clienteData?.contratos && clienteData.contratos.length > 0 && formData.plano_id === 0) {
       const contratoAtivo = clienteData.contratos.find((contrato: Contrato) => contrato.status === 'ativo');
@@ -164,11 +180,40 @@ const TituloModal: React.FC<TituloModalProps> = ({
         }
         formHook.handleInputChange('data_vencimento', dataVencimento);
         
+        // Para título avulso, preencher valor automaticamente
+        if (isAvulso && planos?.data) {
+          const planoSelecionado = planos.data.find((p: Plano) => p.id === contratoAtivo.plano_id);
+          if (planoSelecionado && planoSelecionado.valor_mensal) {
+            const valorMensal = parseFloat(String(planoSelecionado.valor_mensal));
+            if (valorMensal > 0) {
+              formHook.handleInputChange('valor', valorMensal);
+            }
+          }
+        }
+        
         hasInitializedRef.current = true;
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [show, isEditMode, contratoData, clienteData, contratoId, formData.plano_id]);
+  }, [show, isEditMode, contratoData, clienteData, contratoId, formData.plano_id, isAvulso, planos]);
+
+  // Preencher valor automaticamente quando plano for selecionado (apenas para título avulso)
+  useEffect(() => {
+    if (!show || isEditMode || !isAvulso || !formData.plano_id || (formData.valor && formData.valor > 0)) {
+      return;
+    }
+    
+    if (planos?.data) {
+      const planoSelecionado = planos.data.find((p: Plano) => p.id === formData.plano_id);
+      if (planoSelecionado && planoSelecionado.valor_mensal) {
+        const valorMensal = parseFloat(String(planoSelecionado.valor_mensal));
+        if (valorMensal > 0) {
+          formHook.handleInputChange('valor', valorMensal);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, isEditMode, isAvulso, formData.plano_id, formData.valor, planos]);
 
   // Resetar ref quando modal fechar
   useEffect(() => {
@@ -388,8 +433,11 @@ const TituloModal: React.FC<TituloModalProps> = ({
                     label="Valor"
                     required={true}
                     size="sm"
-                    value={formData.valor || valorTitulo}
-                    onChange={(value: FormValue) => handleInputChange('valor', parseFloat(String(value)) || 0)}
+                    value={formData.valor && formData.valor > 0 ? formData.valor : (valorTitulo > 0 ? valorTitulo : '')}
+                    onChange={(value: FormValue) => {
+                      const numValue = parseFloat(String(value));
+                      handleInputChange('valor', !isNaN(numValue) && numValue > 0 ? numValue : 0);
+                    }}
                     error={errors.valor}
                     isInvalid={!!errors.valor}
                     disabled={isPending}
@@ -400,7 +448,27 @@ const TituloModal: React.FC<TituloModalProps> = ({
               </div>
             </div>
           )}
-          <div className={isEditMode ? "col-md-6" : "col-md-6"}>
+          {!isEditMode && isAvulso && (
+            <div className="col-md-6">
+              <div className="mb-3">
+                <FormField
+                  name="valor"
+                  type="number"
+                  label="Valor"
+                  required={true}
+                  size="sm"
+                  value={formData.valor || ''}
+                  onChange={(value: FormValue) => handleInputChange('valor', parseFloat(String(value)) || 0)}
+                  error={errors.valor}
+                  isInvalid={!!errors.valor}
+                  disabled={isPending}
+                  min={0.01}
+                  step={0.01}
+                />
+              </div>
+            </div>
+          )}
+          <div className={isEditMode ? "col-md-6" : (isAvulso ? "col-md-6" : "col-md-6")}>
             <div className="mb-3">
               <FormField
                 name="data_vencimento"
@@ -418,7 +486,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
               {tituloRegistradoNoBanco && <small className="text-muted">Data de vencimento não pode ser alterada após registro no banco emissor</small>}
             </div>
           </div>
-          {!isEditMode && (
+          {!isEditMode && !isAvulso && (
             <div className="col-md-6">
               <div className="mb-3">
                 <FormField
@@ -435,6 +503,25 @@ const TituloModal: React.FC<TituloModalProps> = ({
             </div>
           )}
         </div>
+        
+        {!isEditMode && isAvulso && (
+          <div className="row">
+            <div className="col-md-6">
+              <div className="mb-3">
+                <FormField
+                  name="descricao"
+                  type="text"
+                  label="Descrição"
+                  placeholder="Descrição do título..."
+                  size="sm"
+                  value={formData.descricao}
+                  onChange={(value: FormValue) => handleInputChange('descricao', value as string)}
+                  disabled={isPending}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {!isEditMode && (
           <>

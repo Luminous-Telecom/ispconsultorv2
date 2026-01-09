@@ -1,6 +1,4 @@
 import { Request, Response } from 'express';
-import { Titulo } from '../../../models/financeiro/Titulo';
-import { Banco } from '../../../models/cadastros/Banco';
 import { AsaasWebhookService } from '../../../services/webhooks/AsaasWebhookService';
 import { logger } from '../../../utils/logger';
 import { JsonValue } from '../../../types/index';
@@ -91,29 +89,21 @@ export class AsaasWebhookController {
 
       // Processar webhook em background (sem await)
       if (payment && payment.id) {
-        const chargeId = String(payment.id);
-        const titulo = await Titulo.findOne({
-          where: { charge_id: chargeId },
-          include: [{ model: Banco, as: 'banco' }]
-        }) as (Titulo & { banco?: Banco | null }) | null;
-
-        if (titulo) {
-          AsaasWebhookService.processWebhook(payment, titulo, req).catch(error => {
-            const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-            logger.error('Erro ao processar webhook Asaas (payment) em background', {
-              charge_id: chargeId,
-              titulo_id: titulo.id,
-              error: errorMessage,
-              stack: error instanceof Error ? error.stack : undefined
-            });
+        AsaasWebhookService.processWebhook(payment, req).catch(error => {
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          logger.error('Erro ao processar webhook Asaas (payment) em background', {
+            payment_id: payment.id,
+            error: errorMessage,
+            stack: error instanceof Error ? error.stack : undefined
           });
-        }
+        });
       } else if (invoice && invoice.id) {
         // Processar webhook de invoice (NFS-e)
-        AsaasWebhookService.processInvoiceWebhook(invoice, req).catch(error => {
+        AsaasWebhookService.processInvoiceWebhook(invoice, eventType, req).catch(error => {
           const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
           logger.error('Erro ao processar webhook Asaas (invoice) em background', {
             invoice_id: invoice.id,
+            event: eventType,
             error: errorMessage,
             stack: error instanceof Error ? error.stack : undefined
           });

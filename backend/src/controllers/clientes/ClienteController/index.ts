@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Titulo } from '../../../models/financeiro/Titulo';
-import { Op, WhereOptions } from 'sequelize';
+import { ClienteService } from '../../../services/clientes/ClienteService';
 import Joi from 'joi';
 import axios from 'axios';
 import { logger } from '../../../utils/logger';
 import { formatCEP } from '../../../utils/dateUtils';
 import { setAuditData } from '../../../middleware/auditMiddleware';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 
 export class ClienteController {
   // Schema de validação para criação
@@ -107,64 +107,17 @@ export class ClienteController {
       const cidade = req.query.cidade as string;
       const estado = req.query.estado as string;
 
-      const offset = (page - 1) * limit;
-
-      // Construir filtros
-      const where: WhereOptions = {};
-      
-      if (search) {
-        const searchPattern = `%${search}%`;
-        // Sempre buscar no campo específico selecionado
-        if (searchField) {
-          const allowedFields = ['id', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'whatsapp', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'];
-          if (allowedFields.includes(searchField)) {
-            where[searchField as keyof typeof where] = { [Op.like]: searchPattern };
-          }
-        }
-      }
-
-      if (ativo !== undefined) {
-        where.ativo = ativo === 'true';
-      }
-
-      if (cidade) {
-        where.cidade = { [Op.like]: `%${cidade}%` };
-      }
-
-      if (estado) {
-        where.estado = estado.toUpperCase();
-      }
-
-      // Contar total de clientes sem includes para evitar duplicatas
-      const count = await Cliente.count({ where });
-      
-      // Buscar clientes com includes
-      const clientes = await Cliente.findAll({
-        where,
-        include: [
-          { association: 'planos', attributes: ['id', 'nome_plano', 'valor_mensal', 'status'] },
-          { association: 'titulos', attributes: ['id', 'numero_titulo', 'status', 'valor'] },
-          { association: 'contratos' }
-        ],
-        order: [['id', 'DESC']], // Maior ID para o menor
+      const result = await ClienteService.list({
+        page,
         limit,
-        offset
+        search,
+        searchField,
+        ativo,
+        cidade,
+        estado
       });
 
-      const totalPages = Math.ceil(count / limit);
-
-      res.json({
-        success: true,
-        data: clientes,
-        pagination: {
-          current_page: page,
-          per_page: limit,
-          total: count,
-          last_page: totalPages,
-          from: offset + 1,
-          to: Math.min(offset + limit, count)
-        }
-      });
+      res.json(result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
@@ -188,25 +141,7 @@ export class ClienteController {
     try {
       const { id } = req.params;
 
-      const cliente = await Cliente.findByPk(id, {
-        include: [
-          { 
-            association: 'planos',
-            include: [{ association: 'clientes', attributes: ['id', 'razao_social'] }]
-          },
-          { 
-            association: 'titulos',
-            include: [
-              { association: 'plano', attributes: ['id', 'nome_plano'] },
-              { 
-                association: 'banco', 
-                attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao'] 
-              }
-            ]
-          },
-          { association: 'contratos' }
-        ]
-      });
+      const cliente = await ClienteService.getById(id);
 
       if (!cliente) {
         res.status(404).json({
@@ -283,9 +218,7 @@ export class ClienteController {
       }
 
       // Verificar se CNPJ já existe
-      const clienteExistente = await Cliente.findOne({
-        where: { cnpj: value.cnpj }
-      });
+      const clienteExistente = await ClienteService.existsByCnpj(value.cnpj);
 
       if (clienteExistente) {
         res.status(409).json({
@@ -297,15 +230,10 @@ export class ClienteController {
       }
 
       // Criar cliente
-      const cliente = await Cliente.create(value);
+      const cliente = await ClienteService.create(value);
 
       // Buscar cliente criado com relacionamentos
-      const clienteCriado = await Cliente.findByPk(cliente.id, {
-        include: [
-          { association: 'planos' },
-          { association: 'titulos' },
-        ]
-      });
+      const clienteCriado = await ClienteService.getById(cliente.id);
 
       // Registrar auditoria
       if (clienteCriado) {
@@ -402,7 +330,7 @@ export class ClienteController {
         clienteId: id
       });
 
-      const cliente = await Cliente.findByPk(id);
+      const cliente = await ClienteService.getById(id);
       
       if (!cliente) {
         logger.warn('Cliente não encontrado para atualização', {
@@ -435,20 +363,14 @@ export class ClienteController {
           cnpj: value.cnpj
         });
 
-        const clienteExistente = await Cliente.findOne({
-          where: { 
-            cnpj: value.cnpj,
-            id: { [Op.ne]: id }
-          }
-        });
+        const clienteExistente = await ClienteService.existsByCnpj(value.cnpj, cliente.id);
 
         if (clienteExistente) {
           logger.warn('CNPJ já cadastrado em outro cliente', {
             context: 'ClienteController',
             action: 'update',
             clienteId: id,
-            cnpj: value.cnpj,
-            clienteExistenteId: clienteExistente.id
+            cnpj: value.cnpj
           });
           
           res.status(409).json({
@@ -471,13 +393,10 @@ export class ClienteController {
         camposAtualizados: Object.keys(value)
       });
 
-      await cliente.update(value);
-      
-      // Recarregar cliente para obter dados atualizados
-      await cliente.reload();
+      const clienteAtualizado = await ClienteService.update(id, value);
       
       // Capturar dados novos para auditoria
-      const dadosNovos = cliente.toJSON() as Record<string, unknown>;
+      const dadosNovos = clienteAtualizado.toJSON() as Record<string, unknown>;
       
       // Registrar dados para auditoria
       setAuditData(req, dadosAnteriores, dadosNovos);
@@ -486,7 +405,7 @@ export class ClienteController {
       await registrarAtualizacao(
         req,
         'Cliente',
-        cliente.id,
+        clienteAtualizado.id,
         dadosAnteriores,
         dadosNovos
       );
@@ -498,14 +417,9 @@ export class ClienteController {
       });
 
       // Buscar cliente atualizado com relacionamentos
-      const clienteAtualizado = await Cliente.findByPk(id, {
-        include: [
-          { association: 'planos' },
-          { association: 'titulos' },
-        ]
-      });
+      const clienteComRelacionamentos = await ClienteService.getById(id);
 
-      if (!clienteAtualizado) {
+      if (!clienteComRelacionamentos) {
         logger.error('Cliente não encontrado após atualização', {
           context: 'ClienteController',
           action: 'update',
@@ -521,19 +435,17 @@ export class ClienteController {
       }
 
       // Serializar títulos relacionados usando toJSON()
-      // Primeiro, obter as instâncias dos títulos ANTES de serializar o cliente
       interface ClienteWithTitulos extends Cliente {
         titulos?: Titulo[];
       }
       
-      const clienteWithTitulos = clienteAtualizado as ClienteWithTitulos;
+      const clienteWithTitulos = clienteComRelacionamentos as ClienteWithTitulos;
       const titulosInstances = clienteWithTitulos.titulos;
       
       // Serializar o cliente
-      const clienteData = clienteAtualizado.toJSON() as Record<string, unknown>;
+      const clienteData = clienteComRelacionamentos.toJSON() as Record<string, unknown>;
       
       // Serializar títulos relacionados explicitamente usando toJSON()
-      // Se temos instâncias de modelo, usar toJSON() customizado
       if (titulosInstances && Array.isArray(titulosInstances) && clienteData) {
         clienteData.titulos = titulosInstances.map((titulo: Titulo) => {
           if (titulo && typeof titulo.toJSON === 'function') {
@@ -551,7 +463,7 @@ export class ClienteController {
 
       res.json({
         success: true,
-        data: clienteData || clienteAtualizado,
+        data: clienteData || clienteComRelacionamentos,
         message: 'Cliente atualizado com sucesso'
       });
     } catch (error) {
@@ -580,7 +492,7 @@ export class ClienteController {
     try {
       const { id } = req.params;
 
-      const cliente = await Cliente.findByPk(id);
+      const cliente = await ClienteService.getById(id);
       
       if (!cliente) {
         res.status(404).json({
@@ -590,33 +502,32 @@ export class ClienteController {
         return;
       }
 
-      // Verificar se cliente tem títulos associados
-      const titulosCount = await cliente.countTitulos();
-
-      if (titulosCount > 0) {
-        res.status(409).json({
-          success: false,
-          error: 'Não é possível excluir cliente',
-          message: `Cliente possui ${titulosCount} título(s) associado(s). Remova os títulos antes de excluir o cliente.`
-        });
-        return;
-      }
-
-      // Verificar se cliente tem contratos de planos associados
-      const contratosCount = await cliente.countPlanos();
-
-      if (contratosCount > 0) {
-        res.status(409).json({
-          success: false,
-          error: 'Não é possível excluir cliente',
-          message: `Cliente possui ${contratosCount} contrato(s) de plano(s) associado(s). Remova os contratos antes de excluir o cliente.`
-        });
-        return;
-      }
-
       // Capturar dados anteriores para auditoria
       const dadosAnteriores = cliente.toJSON() as Record<string, unknown>;
       setAuditData(req, dadosAnteriores);
+      
+      try {
+        await ClienteService.delete(id);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        if (errorMessage.includes('título(s) associado(s)')) {
+          res.status(409).json({
+            success: false,
+            error: 'Não é possível excluir cliente',
+            message: errorMessage
+          });
+          return;
+        }
+        if (errorMessage.includes('contrato(s)')) {
+          res.status(409).json({
+            success: false,
+            error: 'Não é possível excluir cliente',
+            message: errorMessage
+          });
+          return;
+        }
+        throw error;
+      }
       
       // Registrar auditoria
       await registrarExclusao(
@@ -625,9 +536,6 @@ export class ClienteController {
         cliente.id,
         dadosAnteriores
       );
-
-      // Excluir cliente
-      await cliente.destroy();
 
       res.json({
         success: true,

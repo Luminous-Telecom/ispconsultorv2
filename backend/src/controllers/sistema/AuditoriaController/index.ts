@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { getElasticsearchService } from '../../../services/elasticsearch/ElasticsearchService';
+import { AuditoriaService } from '../../../services/sistema/AuditoriaService';
 import { logger } from '../../../utils/logger';
 import { Auditoria } from '../../../models/sistema/Auditoria';
 import { Usuario } from '../../../models/cadastros/Usuario';
@@ -193,119 +194,18 @@ export class AuditoriaController {
       const dataInicio = req.query.data_inicio as string;
       const dataFim = req.query.data_fim as string;
 
-      const offset = (page - 1) * limit;
-
-      // Construir condições WHERE
-      const where: WhereOptions = {};
-
-      if (acao) {
-        where.acao = acao as any;
-      }
-
-      if (entidade) {
-        where.entidade = entidade;
-      }
-
-      if (usuario_id) {
-        where.usuario_id = usuario_id;
-      }
-
-      if (dataInicio || dataFim) {
-        where.created_at = {};
-        if (dataInicio) {
-          where.created_at[Op.gte] = new Date(dataInicio);
-        }
-        if (dataFim) {
-          where.created_at[Op.lte] = new Date(dataFim);
-        }
-      }
-
-      // Buscar logs com usuário incluído
-      const { count, rows } = await Auditoria.findAndCountAll({
-        where,
-        include: [{
-          model: Usuario,
-          as: 'usuario',
-          required: false,
-          attributes: ['id', 'nome', 'email']
-        }],
-        order: [['created_at', 'DESC']],
+      const result = await AuditoriaService.listFromDatabase({
+        page,
         limit,
-        offset
+        search,
+        acao,
+        entidade,
+        usuario_id,
+        data_inicio: dataInicio,
+        data_fim: dataFim
       });
 
-      // Filtrar por busca se fornecido
-      let filteredRows = rows;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        const isRoute = search.startsWith('/api/');
-        const isEmail = search.includes('@');
-        const isEntity = /^[A-Z][a-zA-Z]*$/.test(search.trim()) && search.trim().length > 2 && !search.includes(' ');
-
-        filteredRows = rows.filter((log: any) => {
-          if (isRoute) {
-            const dadosAnterioresStr = JSON.stringify(log.dados_anteriores || {}).toLowerCase();
-            const dadosNovosStr = JSON.stringify(log.dados_novos || {}).toLowerCase();
-            return dadosAnterioresStr.includes(searchLower) || dadosNovosStr.includes(searchLower);
-          }
-          
-          if (isEmail) {
-            const usuarioEmail = log.usuario?.email?.toLowerCase() || '';
-            return usuarioEmail.includes(searchLower);
-          }
-          
-          if (isEntity) {
-            const entidadeNome = log.entidade?.toLowerCase() || '';
-            return entidadeNome === searchLower;
-          }
-
-          const observacoes = log.observacoes?.toLowerCase() || '';
-          const entidadeNome = log.entidade?.toLowerCase() || '';
-          const usuarioNome = log.usuario?.nome?.toLowerCase() || '';
-          const usuarioEmail = log.usuario?.email?.toLowerCase() || '';
-          const ipAddress = log.ip_address?.toLowerCase() || '';
-          
-          return observacoes.includes(searchLower) ||
-                 entidadeNome.includes(searchLower) ||
-                 usuarioNome.includes(searchLower) ||
-                 usuarioEmail.includes(searchLower) ||
-                 ipAddress.includes(searchLower);
-        });
-      }
-
-      // Mapear para formato esperado pelo frontend
-      const logs = filteredRows.map((log: any) => ({
-        id: log.id.toString(),
-        usuario_id: log.usuario_id,
-        usuario_nome: log.usuario?.nome || null,
-        usuario_email: log.usuario?.email || null,
-        acao: log.acao,
-        entidade: log.entidade,
-        entidade_id: log.entidade_id,
-        dados_anteriores: log.dados_anteriores,
-        dados_novos: log.dados_novos,
-        ip_address: log.ip_address,
-        user_agent: log.user_agent,
-        rota: null,
-        metodo_http: null,
-        observacoes: log.observacoes,
-        timestamp: log.created_at.toISOString()
-      }));
-
-      const total = search ? filteredRows.length : count;
-
-      res.json({
-        success: true,
-        data: logs,
-        pagination: {
-          current_page: page,
-          last_page: Math.ceil(total / limit),
-          per_page: limit,
-          total,
-          from: total > 0 ? (page - 1) * limit + 1 : 0,
-          to: Math.min(page * limit, total)
-        }
-      });
+      res.json(result);
     } catch (error) {
       logger.error('Erro ao buscar logs de auditoria do banco de dados', {
         context: 'AuditoriaController',
@@ -589,8 +489,8 @@ export class AuditoriaController {
         return;
       }
 
-      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
-      const dadosEmpresa = await DadosEmpresa.findOne();
+      const { DadosEmpresaService } = await import('../../../services/sistema/DadosEmpresaService');
+      const dadosEmpresa = await DadosEmpresaService.findOne();
 
       const html = AuditoriaController.generateAuditPdfHtml(logs, entidade as string, dadosEmpresa);
       const { PDFGenerationService } = await import('../../../services/pdf-generation/PDFGenerationService');
@@ -677,17 +577,103 @@ export class AuditoriaController {
       'descricao_completa', 'observacoes', 'observacoes_completas'
     ];
     
-    const gerarCamposHtml = (dados: any): string => {
-      if (!dados || typeof dados !== 'object') return '';
+    const gerarCamposHtml = (dadosAnteriores: any, dadosNovos: any): string => {
+      // Parsear se for string JSON
+      let dadosAnt: Record<string, unknown> | null = null;
+      let dadosNov: Record<string, unknown> | null = null;
       
-      return Object.entries(dados)
-        .filter(([key]) => !camposExcluir.includes(key))
-        .map(([key, value]) => `
-          <tr>
-            <td>${escapeHtml(key)}</td>
-            <td>${escapeHtml(formatarValor(value))}</td>
-          </tr>
-        `).join('');
+      try {
+        if (dadosAnteriores) {
+          dadosAnt = typeof dadosAnteriores === 'string' 
+            ? JSON.parse(dadosAnteriores) 
+            : dadosAnteriores;
+        }
+        if (dadosNovos) {
+          dadosNov = typeof dadosNovos === 'string' 
+            ? JSON.parse(dadosNovos) 
+            : dadosNovos;
+        }
+      } catch (e) {
+        // Se falhar o parse, usar os dados originais
+        dadosAnt = dadosAnteriores;
+        dadosNov = dadosNovos;
+      }
+      
+      // Validar se são objetos válidos
+      if (dadosAnt && typeof dadosAnt !== 'object') dadosAnt = null;
+      if (dadosNov && typeof dadosNov !== 'object') dadosNov = null;
+      
+      if ((!dadosAnt || Object.keys(dadosAnt).length === 0) && 
+          (!dadosNov || Object.keys(dadosNov).length === 0)) {
+        return '';
+      }
+      
+      // Se for update, mostrar TODOS os campos (não apenas os alterados) para garantir visibilidade
+      // Se for create ou delete, mostrar todos os campos disponíveis
+      const dadosParaExibir: Record<string, { anterior: unknown; novo: unknown }> = {};
+      
+      if (dadosAnt && dadosNov) {
+        // Mostrar TODOS os campos para update
+        const todosCampos = new Set([
+          ...Object.keys(dadosAnt || {}),
+          ...Object.keys(dadosNov || {})
+        ]);
+        
+        for (const campo of todosCampos) {
+          if (camposExcluir.includes(campo)) continue;
+          
+          const valorAnterior = dadosAnt[campo];
+          const valorNovo = dadosNov[campo];
+          
+          // Mostrar todos os campos, mesmo se não mudaram
+          dadosParaExibir[campo] = { anterior: valorAnterior, novo: valorNovo };
+        }
+      } else {
+        // Para create ou delete, mostrar todos os campos disponíveis
+        const dados = dadosNov || dadosAnt || {};
+        if (dados && typeof dados === 'object' && Object.keys(dados).length > 0) {
+          for (const [key, value] of Object.entries(dados)) {
+            if (camposExcluir.includes(key)) continue;
+            dadosParaExibir[key] = { anterior: undefined, novo: value };
+          }
+        }
+      }
+      
+      if (Object.keys(dadosParaExibir).length === 0) return '';
+      
+      return Object.entries(dadosParaExibir)
+        .map(([key, valores]) => {
+          const valorAnterior = valores.anterior !== undefined ? formatarValor(valores.anterior) : '';
+          const valorNovo = valores.novo !== undefined ? formatarValor(valores.novo) : '';
+          
+          // Se for update, mostrar ambos os valores (ou apenas o novo se anterior não existir)
+          if (valores.anterior !== undefined && valores.novo !== undefined) {
+            // Se os valores são iguais, mostrar apenas um
+            if (JSON.stringify(valores.anterior) === JSON.stringify(valores.novo)) {
+              return `
+                <tr>
+                  <td>${escapeHtml(key)}</td>
+                  <td>${escapeHtml(valorNovo)}</td>
+                </tr>
+              `;
+            } else {
+              return `
+                <tr>
+                  <td>${escapeHtml(key)}</td>
+                  <td>${escapeHtml(valorAnterior)} → ${escapeHtml(valorNovo)}</td>
+                </tr>
+              `;
+            }
+          } else {
+            // Para create ou delete, mostrar apenas o valor disponível
+            return `
+              <tr>
+                <td>${escapeHtml(key)}</td>
+                <td>${escapeHtml(valorNovo || valorAnterior)}</td>
+              </tr>
+            `;
+          }
+        }).join('');
     };
 
     const empresaNome = escapeHtml(dadosEmpresa?.razao_social || dadosEmpresa?.nome_fantasia || 'Empresa');
@@ -825,8 +811,7 @@ export class AuditoriaController {
       const acaoFormatada = formatAcao(log.acao);
       const dataFormatada = formatDate(log.timestamp);
       const usuarioNome = log.usuario_nome || log.usuario_email || 'N/A';
-      const dadosLog = log.dados_novos || log.dados_anteriores || {};
-      const dadosHtml = gerarCamposHtml(dadosLog);
+      const dadosHtml = gerarCamposHtml(log.dados_anteriores, log.dados_novos);
       const marginTop = index > 0 ? 'margin-top: 10px;' : '';
 
       return `

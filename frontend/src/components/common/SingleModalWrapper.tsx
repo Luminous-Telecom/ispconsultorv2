@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { useModal } from '@/contexts/ModalContext';
 import Loading from './Loading';
 import DraggableModal from './DraggableModal';
@@ -67,6 +67,11 @@ const MODAL_CONFIGS: Record<string, ModalConfig> = {
 const SingleModalWrapper: React.FC = () => {
   const { activeModal, closeModal } = useModal();
   const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
+
+  // Limpar headerActions quando o modal ativo mudar
+  useEffect(() => {
+    setHeaderActions(null);
+  }, [activeModal]);
 
   if (!activeModal) return null;
 

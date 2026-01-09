@@ -8,6 +8,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   tipoEnvio,
   mensagemTexto,
   mensagemManual = '<p></p>',
+  editorKey = 0,
   onMensagemTypeChange,
   onTipoEnvioChange,
   onMensagemTextoChange,
@@ -89,7 +90,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <RichTextEditor
-                  key={`mensagem-manual-email-${mensagemType || 'none'}`}
+                  key={`mensagem-manual-email-${mensagemType || 'none'}-${editorKey}`}
                   id="mensagem_manual_email"
                   name="mensagem_manual_email"
                   ariaLabelledBy="mensagem-manual-label"
@@ -108,7 +109,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <RichTextEditor
-                  key={`mensagem-email-${mensagemType || 'none'}`}
+                  key={`mensagem-email-${mensagemType || 'none'}-${editorKey}`}
                   id="mensagem_texto_email"
                   name="mensagem_texto_email"
                   ariaLabelledBy="mensagem-label"

@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
 import { ModeloContrato } from '../../../models/contratos/ModeloContrato';
-import { Cliente } from '../../../models/clientes/Cliente';
-import { Contrato } from '../../../models/contratos/Contrato';
+import { ModeloContratoService } from '../../../services/contratos/ModeloContratoService';
+import { ClienteService } from '../../../services/clientes/ClienteService';
+import { ContratoService } from '../../../services/contratos/ContratoService';
 import { Plano } from '../../../models/cadastros/Plano';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
 import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
 import * as fs from 'fs/promises';
 import { ValidationError } from 'sequelize';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 export class ModeloContratoController {
@@ -24,14 +25,12 @@ export class ModeloContratoController {
         whereClause.tipo = tipo as string;
       }
 
-      const documentos = await ModeloContrato.findAll({
-        where: whereClause,
-        order: [['created_at', 'DESC']],
+      const result = await ModeloContratoService.list({
+        tipo: tipo as string
       });
 
       res.json({
-        success: true,
-        data: documentos,
+        ...result,
         message: 'Documentos do sistema listados com sucesso'
       });
     } catch (error) {
@@ -50,7 +49,7 @@ export class ModeloContratoController {
     try {
       const { id } = req.params;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -90,7 +89,7 @@ export class ModeloContratoController {
         return;
       }
 
-      const documento = await ModeloContrato.create(documentoData);
+      const documento = await ModeloContratoService.create(documentoData);
 
       await registrarCriacao(
         req as AuthenticatedRequest,
@@ -131,7 +130,7 @@ export class ModeloContratoController {
       const { id } = req.params;
       const documentoData = req.body;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -142,7 +141,7 @@ export class ModeloContratoController {
       }
 
       const dadosAnteriores = documento.toJSON();
-      await documento.update(documentoData);
+      await ModeloContratoService.update(id, documentoData);
       await documento.reload();
 
       await registrarAtualizacao(
@@ -184,7 +183,7 @@ export class ModeloContratoController {
     try {
       const { id } = req.params;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -195,7 +194,7 @@ export class ModeloContratoController {
       }
 
       const dadosAnteriores = documento.toJSON();
-      await documento.destroy();
+      await ModeloContratoService.delete(id);
 
       await registrarExclusao(
         req as AuthenticatedRequest,
@@ -224,14 +223,12 @@ export class ModeloContratoController {
     try {
       const { tipo } = req.params;
 
-      const documentos = await ModeloContrato.findAll({
-        where: { tipo, ativo: true },
-        order: [['nome', 'ASC']],
+      const result = await ModeloContratoService.list({
+        tipo: tipo as string
       });
 
       res.json({
-        success: true,
-        data: documentos,
+        ...result,
         message: `Documentos do tipo ${tipo} listados com sucesso`
       });
     } catch (error) {
@@ -250,10 +247,7 @@ export class ModeloContratoController {
     try {
       const { tipo } = req.params;
 
-      const documento = await ModeloContrato.findOne({
-        where: { tipo, ativo: true },
-        order: [['created_at', 'ASC']], // Pega o primeiro criado como padrão
-      });
+      const documento = await ModeloContratoService.getByTipo(tipo, true);
 
       if (!documento) {
         res.status(404).json({
@@ -282,14 +276,7 @@ export class ModeloContratoController {
    */
   static async getTypes(req: Request, res: Response): Promise<void> {
     try {
-      const tipos = await ModeloContrato.findAll({
-        attributes: ['tipo'],
-        group: ['tipo'],
-        where: { ativo: true },
-        order: [['tipo', 'ASC']],
-      });
-
-      const tiposList = tipos.map((doc) => doc.tipo);
+      const tiposList = await ModeloContratoService.getTypes();
 
       res.json({
         success: true,
@@ -312,7 +299,7 @@ export class ModeloContratoController {
     try {
       const { id } = req.params;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -353,7 +340,7 @@ export class ModeloContratoController {
       const { id } = req.params;
       const { cliente_id } = req.query;
 
-      const documento = await ModeloContrato.findByPk(id);
+      const documento = await ModeloContratoService.getById(id);
 
       if (!documento) {
         res.status(404).json({
@@ -367,7 +354,7 @@ export class ModeloContratoController {
       let conteudoProcessado = documento.conteudo;
       
       if (cliente_id) {
-        const cliente = await Cliente.findByPk(cliente_id as string);
+        const cliente = await ClienteService.getById(cliente_id as string);
         
         if (!cliente) {
           res.status(404).json({
@@ -378,10 +365,7 @@ export class ModeloContratoController {
         }
 
         // Buscar contrato ativo do cliente
-        const contrato = await Contrato.findOne({
-          where: { cliente_id: cliente.id, status: 'ativo' },
-          include: [{ model: Plano, as: 'plano' }]
-        });
+        const contrato = await ContratoService.findAtivoByCliente(cliente.id);
 
         // Processar variáveis do documento
         conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(

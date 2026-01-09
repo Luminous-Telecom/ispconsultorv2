@@ -1,0 +1,205 @@
+import { Banco } from '../../../models/cadastros/Banco';
+import { Op, WhereOptions } from 'sequelize';
+import { cache } from '../../../utils/cache';
+import { logger } from '../../../utils/logger';
+
+export interface ListBancosFilters {
+  search?: string;
+  status?: string;
+  tipo_banco?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface ListBancosResponse {
+  success: boolean;
+  data: Banco[];
+  pagination?: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+    from: number;
+    to: number;
+  };
+}
+
+export class BancoService {
+  /**
+   * Buscar bancos ativos
+   */
+  static async findAtivos(): Promise<{ success: boolean; data: Banco[] }> {
+    const cacheKey = 'bancos:ativos';
+    const cached = cache.get(cacheKey);
+    
+    if (cached) {
+      return cached as { success: boolean; data: Banco[] };
+    }
+
+    const bancos = await Banco.findAll({
+      where: { ativo: true },
+      include: [
+        { association: 'titulos' }
+      ],
+      order: [['nome', 'ASC']]
+    });
+
+    const response = {
+      success: true,
+      data: bancos
+    };
+
+    cache.set(cacheKey, response, 600000);
+    return response;
+  }
+
+  /**
+   * Listar bancos com filtros e paginação
+   */
+  static async list(filters: ListBancosFilters): Promise<ListBancosResponse> {
+    const { search, status, tipo_banco, page = 1, limit = 15 } = filters;
+    
+    const where: WhereOptions<Banco> = {};
+    
+    if (search) {
+      (where as Record<symbol, unknown>)[Op.or] = [
+        { id: { [Op.like]: `%${search}%` } },
+        { nome: { [Op.like]: `%${search}%` } },
+        { descricao: { [Op.like]: `%${search}%` } },
+        { tipo_banco: { [Op.like]: `%${search}%` } },
+        { sandbox: { [Op.like]: `%${search}%` } },
+        { ativo: { [Op.like]: `%${search}%` } }
+      ];
+    }
+    
+    if (status) {
+      where.ativo = status === 'ativo';
+    }
+    
+    if (tipo_banco) {
+      where.tipo_banco = tipo_banco as 'efi' | 'asaas' | 'bancario' | 'outros';
+    }
+    
+    const offset = (Number(page) - 1) * Number(limit);
+    
+    const count = await Banco.count({ where });
+    
+    const bancos = await Banco.findAll({
+      where,
+      order: [['id', 'DESC']],
+      limit: Number(limit),
+      offset,
+      include: [
+        { association: 'titulos' }
+      ]
+    });
+    
+    return {
+      success: true,
+      data: bancos,
+      pagination: {
+        current_page: Number(page),
+        per_page: Number(limit),
+        total: count,
+        last_page: Math.ceil(count / Number(limit)),
+        from: offset + 1,
+        to: Math.min(offset + Number(limit), count)
+      }
+    };
+  }
+
+  /**
+   * Buscar banco por ID
+   */
+  static async getById(id: string | number): Promise<Banco | null> {
+    return await Banco.findByPk(id, {
+      include: [
+        { association: 'titulos' }
+      ]
+    });
+  }
+
+  /**
+   * Buscar primeiro banco ativo
+   */
+  static async findFirstAtivo(): Promise<Banco | null> {
+    return await Banco.findOne({
+      where: { ativo: true },
+      order: [['id', 'DESC']]
+    });
+  }
+
+  /**
+   * Verificar se existe banco com nome
+   */
+  static async existsByName(nome: string, excludeId?: number): Promise<boolean> {
+    const where: WhereOptions<Banco> = { nome };
+    
+    if (excludeId) {
+      where.id = { [Op.ne]: excludeId } as unknown as number;
+    }
+    
+    const banco = await Banco.findOne({ where });
+    return !!banco;
+  }
+
+  /**
+   * Criar banco
+   */
+  static async create(dadosBanco: Partial<Banco>): Promise<Banco> {
+    return await Banco.create(dadosBanco as any);
+  }
+
+  /**
+   * Atualizar banco
+   */
+  static async update(id: string | number, dadosBanco: Partial<Banco>): Promise<Banco> {
+    const banco = await Banco.findByPk(id);
+    
+    if (!banco) {
+      throw new Error('Banco não encontrado');
+    }
+    
+    await banco.update(dadosBanco);
+    await banco.reload();
+    
+    // Invalidar cache se status mudou
+    if (dadosBanco.ativo !== undefined) {
+      cache.delete('bancos:ativos');
+    }
+    
+    return banco;
+  }
+
+  /**
+   * Deletar banco
+   */
+  static async delete(id: string | number): Promise<Banco> {
+    const banco = await Banco.findByPk(id);
+    
+    if (!banco) {
+      throw new Error('Banco não encontrado');
+    }
+    
+    const titulosCount = await banco.countTitulos();
+    
+    if (titulosCount > 0) {
+      throw new Error('Não é possível excluir banco com títulos associados.');
+    }
+    
+    await banco.destroy();
+    
+    // Invalidar cache
+    cache.delete('bancos:ativos');
+    
+    return banco;
+  }
+
+  /**
+   * Contar bancos com filtros (para dashboard)
+   */
+  static async count(where?: WhereOptions): Promise<number> {
+    return await Banco.count({ where });
+  }
+}
+

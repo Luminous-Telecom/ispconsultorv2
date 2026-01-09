@@ -15,43 +15,40 @@ export function converterLogoParaBase64(logo: string): string {
   }
   
   try {
-    // Lógica de conversão para base64 (mantida a original)
-    // Se for URL absoluta, extrair pathname; caso contrário, usar como está
     let cleanPath = logo;
     if (logo.startsWith('http://') || logo.startsWith('https://')) {
       try {
         cleanPath = new URL(logo).pathname;
       } catch {
-        // Se falhar ao criar URL, usar logo original
         cleanPath = logo;
       }
     }
     const fileName = cleanPath.split('/').pop() || '';
     
-    if (fileName.includes('efi.png')) return getLogoBancoPadrao('efi');
-    if (fileName.includes('asaas.png')) return getLogoBancoPadrao('asaas');
-    if (fileName.includes('boletoproprio.png')) return getLogoBancoPadrao('bancario');
+    if (fileName.includes('efi.png')) {
+      return getLogoBancoPadrao('efi');
+    }
+    if (fileName.includes('asaas.png')) {
+      return getLogoBancoPadrao('asaas');
+    }
+    if (fileName.includes('boletoproprio.png')) {
+      return getLogoBancoPadrao('bancario');
+    }
     
     if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
     
-    // Caminho relativo a partir da raiz do backend
-    // Tentar primeiro como caminho absoluto, depois relativo
     let imagePath: string;
     if (path.isAbsolute(cleanPath)) {
       imagePath = cleanPath;
     } else {
-      // Para arquivos, usar resolveArquivosPath que detecta ambiente automaticamente
       if (cleanPath.startsWith('arquivos/')) {
-        // Remover prefixo 'arquivos/' e usar resolveArquivosPath
         const pathParts = cleanPath.substring('arquivos/'.length).split('/');
         imagePath = resolveArquivosPath(...pathParts);
       } else {
-        // Para outros caminhos, usar resolveImagePath quando possível
         const pathParts = cleanPath.split('/');
         if (pathParts[0] === 'arquivos' && pathParts[1] === 'images') {
           imagePath = resolveImagePath(...pathParts.slice(2));
         } else if (pathParts[0] === 'images') {
-          // Compatibilidade: se ainda houver referências antigas a images/, redirecionar para arquivos/images/
           imagePath = resolveImagePath(...pathParts.slice(1));
         } else {
           imagePath = path.join(process.cwd(), cleanPath);
@@ -67,7 +64,9 @@ export function converterLogoParaBase64(logo: string): string {
       return `data:${mimeType};base64,${base64Image}`;
     }
   } catch (error) {
-    logger.warn('Erro ao converter logo para base64', { logo, error });
+    logger.error('Erro ao converter logo para base64', {
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
   
   return logo;
@@ -86,8 +85,9 @@ export function getLogoBancoPadrao(tipoBanco: string): string {
     };
     
     const fileName = logosPadrao[tipoBanco] || logosPadrao['outros'];
-    // Usar resolveImagePath para funcionar tanto em dev quanto em produção
-    const imagePath = resolveImagePath('bancos', fileName);
+    
+    // Usar resolveArquivosPath que funciona corretamente em dev e produção
+    const imagePath = resolveArquivosPath('images', 'bancos', fileName);
     
     if (fs.existsSync(imagePath)) {
       const imageBuffer = fs.readFileSync(imagePath);
@@ -97,6 +97,7 @@ export function getLogoBancoPadrao(tipoBanco: string): string {
 
       return `data:${mimeType};base64,${base64Image}`;
     }
+    
     return '';
   } catch (error) {
     logger.error('Erro ao carregar logo do banco', { error, tipoBanco });

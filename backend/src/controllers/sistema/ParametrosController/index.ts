@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import Parametros from '../../../models/sistema/Parametros';
+import { ParametrosService } from '../../../services/sistema/ParametrosService';
 import Joi from 'joi';
 import { logger } from '../../../utils/logger';
 import { cache } from '../../../utils/cache';
-import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 export class ParametrosController {
@@ -28,22 +29,7 @@ export class ParametrosController {
         return res.json(cached);
       }
 
-      let parametros = await Parametros.findOne({
-        // Selecionar apenas as colunas que existem no modelo
-        attributes: ['id', 'validar_cpf_cnpj', 'validar_cep', 'titulos_vence_sabado', 'titulos_vence_domingo', 'auto_lancamento_titulos', 'total_titulos_financeiro', 'created_at', 'updated_at']
-      });
-
-      // Se não existir, criar com valores padrão
-      if (!parametros) {
-        parametros = await Parametros.create({
-          validar_cpf_cnpj: true,
-          validar_cep: false,
-          titulos_vence_sabado: false,
-          titulos_vence_domingo: false,
-          auto_lancamento_titulos: false,
-          total_titulos_financeiro: 12
-        });
-      }
+      const parametros = await ParametrosService.get();
 
       // Garantir que apenas os campos do modelo sejam retornados
       const response = {
@@ -116,19 +102,13 @@ export class ParametrosController {
         });
       }
 
-      let parametros = await Parametros.findOne();
-      const dadosAnteriores = parametros ? parametros.toJSON() : null;
-
-      // Se não existir, criar
-      if (!parametros) {
-        parametros = await Parametros.create({
-          validar_cpf_cnpj: req.body.validar_cpf_cnpj ?? true,
-          validar_cep: req.body.validar_cep ?? false,
-          titulos_vence_sabado: req.body.titulos_vence_sabado ?? false,
-          titulos_vence_domingo: req.body.titulos_vence_domingo ?? false,
-          auto_lancamento_titulos: req.body.auto_lancamento_titulos ?? false,
-          total_titulos_financeiro: req.body.total_titulos_financeiro ?? 12
-        });
+      const parametrosAntes = await ParametrosService.get();
+      const dadosAnteriores = parametrosAntes.toJSON();
+      
+      const parametros = await ParametrosService.update(value);
+      
+      // Registrar auditoria
+      if (parametrosAntes.created_at.getTime() === parametrosAntes.updated_at.getTime()) {
         await registrarCriacao(
           req as AuthenticatedRequest,
           'Parametros',
@@ -136,11 +116,8 @@ export class ParametrosController {
           parametros.toJSON() as unknown as Record<string, unknown>
         );
       } else {
-        // Atualizar
-        await parametros.update(req.body);
-        await parametros.reload();
         logger.info('Parâmetros atualizados', {
-          camposAtualizados: Object.keys(req.body)
+          camposAtualizados: Object.keys(value)
         });
         await registrarAtualizacao(
           req as AuthenticatedRequest,

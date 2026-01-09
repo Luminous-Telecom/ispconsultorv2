@@ -79,6 +79,20 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   useEffect(() => {
     setPage(1);
   }, [showCancelados, dataVencimentoInicio, dataVencimentoFim, setPage]);
+
+  // Limpar seleção de itens cancelados quando o filtro de ocultar cancelados for ativado
+  useEffect(() => {
+    if (!showCancelados && selectedItems.length > 0) {
+      const canceladosSelecionados = selectedItems.filter(item => item.status?.toLowerCase() === 'cancelado');
+      
+      if (canceladosSelecionados.length > 0) {
+        // Remover apenas os cancelados, mantendo os outros selecionados
+        const itensNaoCancelados = selectedItems.filter(item => item.status?.toLowerCase() !== 'cancelado');
+        setSelectedItems(itensNaoCancelados);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCancelados]);
   
   const filters: TituloFilters = {
     page: tableFilters.page,
@@ -165,6 +179,22 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       setSelectedItems([]);
     }
   }, [show, clearSearch, setPage]);
+
+  // Limpar seleção quando os dados mudarem e houver itens inválidos
+  useEffect(() => {
+    if (titulosData?.data && selectedItems.length > 0) {
+      // Verificar se algum item selecionado não existe mais nos dados
+      const selectedIds = selectedItems.map(item => item.id);
+      const currentIds = titulosData.data.map((titulo: Titulo) => titulo.id);
+      const hasInvalidSelection = selectedIds.some(id => !currentIds.includes(id));
+      
+      if (hasInvalidSelection) {
+        // Limpar seleção apenas se houver itens inválidos
+        setSelectedItems([]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [titulosData?.data]);
 
   // Dados filtrados para usar no resumo financeiro (já filtrados pelo backend)
   const filteredData = sortedData;
@@ -547,6 +577,9 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                 
                 // Aguardar invalidação e refetch completarem antes de mostrar mensagem
                 await handleRefreshData();
+                
+                // Limpar seleção após cancelamento
+                setSelectedItems([]);
                 
                 if (successCount > 0) {
                   const message = successCount === 1 

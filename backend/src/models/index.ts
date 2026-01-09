@@ -45,7 +45,7 @@ import { Auditoria } from './sistema/Auditoria';
 // Comunicação
 import { ServidorEmail } from './comunicacao/ServidorEmail';
 import { ServidorWhatsApp } from './comunicacao/ServidorWhatsApp';
-//
+
 // Importar associações específicas
 import './associations';
 
@@ -94,8 +94,6 @@ Plano.hasMany(Titulo, {
 });
 
 // Banco
-
-
 Banco.hasMany(Titulo, {
   foreignKey: 'banco_id',
   as: 'titulos'
@@ -117,6 +115,11 @@ Titulo.belongsTo(Plano, {
 Titulo.belongsTo(Banco, {
   foreignKey: 'banco_id',
   as: 'banco'
+});
+
+Titulo.belongsTo(Contrato, {
+  foreignKey: 'contrato_id',
+  as: 'contrato'
 });
 
 // Contrato

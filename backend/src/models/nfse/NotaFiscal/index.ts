@@ -160,8 +160,8 @@ NotaFiscal.init(
     },
     data_emissao: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
+      allowNull: false
+      // Sem defaultValue para usar a data fornecida no código
     },
     data_vencimento: {
       type: DataTypes.DATE,

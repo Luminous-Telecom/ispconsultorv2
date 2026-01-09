@@ -4,7 +4,8 @@ import jwt, { JwtPayload, Secret, SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { logger } from '../../utils/logger';
 import { Usuario } from '../../models/cadastros/Usuario';
-import { registrarLogin } from '../../services/sistema/AuditoriaService';
+import { UsuarioService } from '../../services/cadastros/UsuarioService';
+import { registrarLogin } from '../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest as AuthRequest } from '../../types/auth';
 
 interface AuthenticatedRequest extends Request {
@@ -64,12 +65,7 @@ export class AuthController {
         return;
       }
 
-      const usuario = await Usuario.scope('withPassword').findOne({
-        where: {
-          email: value.email.toLowerCase(),
-          ativo: true,
-        },
-      });
+      const usuario = await UsuarioService.findByEmailWithPassword(value.email, true);
 
       if (!usuario) {
         res.status(401).json({
@@ -95,12 +91,7 @@ export class AuthController {
         role: usuario.role,
       });
 
-      await usuario.update(
-        {
-          ultimo_login: new Date(),
-        },
-        { fields: ['ultimo_login'] }
-      );
+      await UsuarioService.updateUltimoLogin(usuario.id);
 
       // Registrar login na auditoria
       const authReq = req as unknown as AuthRequest;
@@ -155,7 +146,7 @@ export class AuthController {
         return;
       }
 
-      const usuario = await Usuario.findByPk(userPayload.sub);
+      const usuario = await UsuarioService.getById(userPayload.sub);
 
       if (!usuario) {
         res.status(404).json({

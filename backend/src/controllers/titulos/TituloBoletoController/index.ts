@@ -1,12 +1,13 @@
 import { Request, Response } from 'express';
 import { Titulo } from '../../../models/financeiro/Titulo';
+import { TituloService } from '../../../services/financeiro/TituloService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Plano } from '../../../models/cadastros/Plano';
 import { Banco } from '../../../models/cadastros/Banco';
 import { logger } from '../../../utils/logger';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { TituloComRelacoes } from '../TituloHelpers/types';
-import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
+import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 export class TituloBoletoController {
@@ -19,7 +20,7 @@ export class TituloBoletoController {
       const { id } = req.params;
       const { valor_pago, data_pagamento } = req.body;
 
-      const titulo = await Titulo.findByPk(id);
+      const titulo = await TituloService.getById(id);
       if (!titulo) {
         res.status(404).json({ success: false, message: 'Título não encontrado' });
         return;
@@ -62,7 +63,7 @@ export class TituloBoletoController {
     try {
       const { id } = req.params;
 
-      const titulo = await Titulo.findByPk(id);
+      const titulo = await TituloService.getById(id);
       if (!titulo) {
         res.status(404).json({ success: false, message: 'Título não encontrado' });
         return;
@@ -94,7 +95,7 @@ export class TituloBoletoController {
     try {
       const { id } = req.params;
 
-      const titulo = await Titulo.findByPk(id, { include: [{ model: Cliente, as: 'cliente' }, { model: Plano, as: 'plano' }, { model: Banco, as: 'banco' }] });
+      const titulo = await TituloService.getById(id);
 
       if (!titulo) {
         res.status(404).json({ success: false, message: 'Título não encontrado' });
@@ -154,7 +155,7 @@ export class TituloBoletoController {
     try {
       const { id } = req.params;
 
-      const titulo = await Titulo.findByPk(id);
+      const titulo = await TituloService.getById(id);
       if (!titulo) {
         res.status(404).json({ success: false, message: 'Título não encontrado' });
         return;

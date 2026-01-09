@@ -33,6 +33,31 @@ export class Auditoria extends Model<
 
   // Relacionamentos
   declare getUsuario: BelongsToGetAssociationMixin<Usuario>;
+
+  /**
+   * Sobrescrever toJSON para garantir que dados_anteriores e dados_novos sejam retornados corretamente
+   */
+  toJSON(): Record<string, unknown> {
+    const json = this.get({ plain: true }) as Record<string, unknown>;
+    
+    // Garantir que dados_anteriores e dados_novos sejam objetos válidos
+    if (json.dados_anteriores && typeof json.dados_anteriores === 'string') {
+      try {
+        json.dados_anteriores = JSON.parse(json.dados_anteriores);
+      } catch {
+        json.dados_anteriores = null;
+      }
+    }
+    if (json.dados_novos && typeof json.dados_novos === 'string') {
+      try {
+        json.dados_novos = JSON.parse(json.dados_novos);
+      } catch {
+        json.dados_novos = null;
+      }
+    }
+    
+    return json;
+  }
 }
 
 Auditoria.init(
@@ -96,6 +121,47 @@ Auditoria.init(
     tableName: 'auditoria',
     timestamps: false, // Usamos created_at manualmente
     underscored: true,
+    hooks: {
+      beforeSave: (auditoria: Auditoria) => {
+        // Garantir que dados_anteriores e dados_novos sejam objetos válidos
+        if (auditoria.dados_anteriores && typeof auditoria.dados_anteriores === 'object') {
+          // Converter para JSON string se necessário para garantir serialização completa
+          try {
+            JSON.stringify(auditoria.dados_anteriores);
+          } catch (e) {
+            // Se não puder serializar, limpar campos problemáticos
+            const cleaned: Record<string, unknown> = {};
+            for (const [key, value] of Object.entries(auditoria.dados_anteriores)) {
+              try {
+                JSON.stringify(value);
+                cleaned[key] = value;
+              } catch {
+                // Ignorar campos que não podem ser serializados
+              }
+            }
+            auditoria.dados_anteriores = cleaned;
+          }
+        }
+        if (auditoria.dados_novos && typeof auditoria.dados_novos === 'object') {
+          // Converter para JSON string se necessário para garantir serialização completa
+          try {
+            JSON.stringify(auditoria.dados_novos);
+          } catch (e) {
+            // Se não puder serializar, limpar campos problemáticos
+            const cleaned: Record<string, unknown> = {};
+            for (const [key, value] of Object.entries(auditoria.dados_novos)) {
+              try {
+                JSON.stringify(value);
+                cleaned[key] = value;
+              } catch {
+                // Ignorar campos que não podem ser serializados
+              }
+            }
+            auditoria.dados_novos = cleaned;
+          }
+        }
+      }
+    },
     indexes: [
       { fields: ['usuario_id'] },
       { fields: ['acao'] },

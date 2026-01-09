@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { ClienteArquivoService, CreateClienteArquivoData, UpdateClienteArquivoData } from '../../../services/cadastros';
 import { logger } from '../../../utils/logger';
 import Joi from 'joi';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { ClienteArquivo } from '../../../models/clientes/ClienteArquivo';
@@ -163,7 +163,7 @@ export class ClienteArquivoController {
         return;
       }
 
-      const arquivoAntes = await ClienteArquivo.findByPk(Number(id));
+      const arquivoAntes = await ClienteArquivoService.getById(Number(id));
       const dadosAnteriores = arquivoAntes ? arquivoAntes.toJSON() : null;
 
       const arquivo = await ClienteArquivoService.update(Number(id), value as UpdateClienteArquivoData);
@@ -201,7 +201,7 @@ export class ClienteArquivoController {
   static async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const arquivo = await ClienteArquivo.findByPk(Number(id));
+      const arquivo = await ClienteArquivoService.getById(Number(id));
       const dadosAnteriores = arquivo ? arquivo.toJSON() : null;
 
       await ClienteArquivoService.delete(Number(id));

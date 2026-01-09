@@ -50,7 +50,9 @@ export class ContratoPlanoAdicionalService {
   }
 
   static async create(contratoId: number, data: CreateContratoPlanoAdicional): Promise<{ success: boolean; message: string; data: ContratoPlanoAdicional }> {
-    const response = await defaultApiClient.post<{ success: boolean; message: string; data: ContratoPlanoAdicional }>(`/contratos/${contratoId}/servicos-adicionais`, data);
+    // Remover contrato_id do body pois ele vem da URL
+    const { contrato_id: _contrato_id, ...bodyData } = data;
+    const response = await defaultApiClient.post<{ success: boolean; message: string; data: ContratoPlanoAdicional }>(`/contratos/${contratoId}/servicos-adicionais`, bodyData);
     if (response.success && response.data) {
       return response.data as { success: boolean; message: string; data: ContratoPlanoAdicional };
     }

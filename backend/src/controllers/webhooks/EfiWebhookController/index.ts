@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { EfiWebhookService } from '../../../services/webhooks/EfiWebhookService';
-import { PaymentCommonService } from '../../../services/webhooks/PaymentCommonService';
 import { logger } from '../../../utils/logger';
 import { JsonValue } from '../../../types/index';
 import {

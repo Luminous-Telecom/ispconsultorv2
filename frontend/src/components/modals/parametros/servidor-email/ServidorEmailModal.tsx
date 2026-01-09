@@ -1,13 +1,27 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { ServidorEmailService } from '@/services/servidorEmailService';
+import { ServidorEmailService, MensagemEmail } from '@/services/servidorEmailService';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
+
+const INITIAL_FORM_DATA: ServidorEmailForm = {
+  host: '',
+  porta: 587,
+  usuario: '',
+  senha: '',
+  ssl: false,
+  tls: true,
+  nome_remetente: '',
+  email_remetente: '',
+  timeout: 30000,
+  tentativas: 3,
+  intervalo_tentativas: 5000
+};
 
 const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const isMobile = useIsMobile();
@@ -15,26 +29,36 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens'>('servidor');
   const [emailTeste, setEmailTeste] = useState<string>('');
-
-  const initialFormData: ServidorEmailForm = useMemo(() => ({
-    host: '',
-    porta: 587,
-    usuario: '',
-    senha: '',
-    ssl: false,
-    tls: true,
-    nome_remetente: '',
-    email_remetente: '',
-    timeout: 30000,
-    tentativas: 3,
-    intervalo_tentativas: 5000
-  }), []);
-
-  const [formData, setFormData] = useState<ServidorEmailForm>(() => initialFormData);
+  const [formData, setFormData] = useState<ServidorEmailForm>(INITIAL_FORM_DATA);
   const [mensagemTexto, setMensagemTexto] = useState<string>('<p></p>');
   const [mensagemManual, setMensagemManual] = useState<string>('<p></p>');
   const [tipoEnvio, setTipoEnvio] = useState<'desativado' | 'pdf'>('pdf');
   const [mensagemType, setMensagemType] = useState<string>('');
+  const mensagemTypeRef = useRef<string>('');
+  const mensagemTextoRef = useRef<string>('<p></p>');
+  const mensagemManualRef = useRef<string>('<p></p>');
+  const tipoEnvioRef = useRef<'desativado' | 'pdf'>('pdf');
+  const lastLoadedMensagemIdRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    mensagemTypeRef.current = mensagemType;
+    if (mensagemType) {
+      lastLoadedMensagemIdRef.current = undefined;
+    }
+  }, [mensagemType]);
+
+  useEffect(() => {
+    mensagemTextoRef.current = mensagemTexto;
+  }, [mensagemTexto]);
+
+  useEffect(() => {
+    mensagemManualRef.current = mensagemManual;
+  }, [mensagemManual]);
+
+  useEffect(() => {
+    tipoEnvioRef.current = tipoEnvio;
+  }, [tipoEnvio]);
+  const [editorKey, setEditorKey] = useState<number>(0);
 
   // Buscar mensagem quando tipo for selecionado
   const { data: mensagemData } = useQuery({
@@ -75,8 +99,22 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
 
   const saveMensagemMutation = useMutation({
     mutationFn: ServidorEmailService.saveMensagem,
-    onSuccess: () => success('Mensagem salva!'),
-    onError: () => showError('Erro ao salvar')
+    onSuccess: (response) => {
+      if (response.success) {
+        success('Mensagem salva!');
+        const currentMensagemType = mensagemTypeRef.current;
+        
+        if (currentMensagemType && response.data) {
+          lastLoadedMensagemIdRef.current = response.data.id;
+          queryClient.setQueryData(['mensagem-email', currentMensagemType], response.data);
+        }
+      } else {
+        showError(response.message || 'Erro ao salvar');
+      }
+    },
+    onError: () => {
+      showError('Erro ao salvar');
+    }
   });
 
   const sendTestEmailMutation = useMutation({
@@ -100,39 +138,76 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
         tentativas: servidorAtivo.data.tentativas,
         intervalo_tentativas: servidorAtivo.data.intervalo_tentativas
       });
-    } else if (!servidorAtivo) {
-      setFormData(initialFormData);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [servidorAtivo?.data?.id, initialFormData]);
+  }, [servidorAtivo?.data?.id]);
 
   useEffect(() => {
-    if (mensagemData) {
-      setTipoEnvio(mensagemData.tipo_envio);
-      setMensagemTexto(mensagemData.mensagem_padrao || '<p></p>');
-      setMensagemManual(mensagemData.mensagem_manual || '<p></p>');
-    } else {
+    if (!mensagemType) {
       setTipoEnvio('pdf');
       setMensagemTexto('<p></p>');
       setMensagemManual('<p></p>');
+      lastLoadedMensagemIdRef.current = undefined;
+      return;
     }
-  }, [mensagemData]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    if (mensagemData?.id && mensagemData.id !== lastLoadedMensagemIdRef.current) {
+      setTipoEnvio(mensagemData.tipo_envio);
+      setMensagemTexto(mensagemData.mensagem_padrao || '<p></p>');
+      setMensagemManual(mensagemData.mensagem_manual || '<p></p>');
+      setEditorKey(prev => prev + 1);
+      lastLoadedMensagemIdRef.current = mensagemData.id;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mensagemData?.id, mensagemType]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    await saveServidorMutation.mutateAsync(formData);
+    saveServidorMutation.mutate(formData);
   };
 
   const handleSaveMensagem = useCallback(() => {
-    if (!mensagemType) return showError('Selecione um tipo');
-    saveMensagemMutation.mutate({ 
-      tipo: mensagemType, 
-      tipo_envio: tipoEnvio, 
-      mensagem_padrao: mensagemTexto,
-      mensagem_manual: mensagemManual || undefined,
-      ativo: true 
-    });
-  }, [mensagemType, tipoEnvio, mensagemTexto, mensagemManual, saveMensagemMutation, showError]);
+    const currentMensagemType = mensagemTypeRef.current;
+    const currentMensagemTexto = mensagemTextoRef.current;
+    const currentMensagemManual = mensagemManualRef.current;
+    const currentTipoEnvio = tipoEnvioRef.current;
+
+    if (!currentMensagemType) {
+      showError('Selecione um tipo');
+      return;
+    }
+
+    if (currentTipoEnvio === 'pdf' && !currentMensagemTexto?.trim() && currentMensagemType !== 'envio_manual') {
+      showError('Preencha a mensagem');
+      return;
+    }
+
+    if (currentMensagemType === 'envio_manual' && !currentMensagemManual?.trim() && !currentMensagemTexto?.trim()) {
+      showError('Preencha a mensagem manual ou padrão');
+      return;
+    }
+    
+    const dataToSave: MensagemEmail = {
+      tipo: currentMensagemType,
+      tipo_envio: currentTipoEnvio,
+      mensagem_padrao: currentMensagemTexto || '<p></p>',
+      mensagem_manual: currentMensagemManual && currentMensagemManual.trim() ? currentMensagemManual : undefined,
+      ativo: true
+    };
+    
+    saveMensagemMutation.mutate(dataToSave);
+  }, [saveMensagemMutation, showError]);
+
+  const resetForm = useCallback(() => {
+    setFormData(INITIAL_FORM_DATA);
+    setMensagemType('');
+    setMensagemTexto('<p></p>');
+    setMensagemManual('<p></p>');
+    setTipoEnvio('pdf');
+    setActiveTab('servidor');
+    setEmailTeste('');
+    lastLoadedMensagemIdRef.current = undefined;
+  }, []);
 
   const handleReset = useCallback(() => {
     if (servidorAtivo?.data?.id) {
@@ -141,16 +216,19 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
         queryClient.invalidateQueries({ queryKey: ['servidor-email-ativo'] });
       });
     }
-    setFormData(initialFormData);
-  }, [servidorAtivo?.data?.id, success, queryClient, initialFormData]);
+    resetForm();
+  }, [servidorAtivo?.data?.id, success, queryClient, resetForm]);
 
   const handleClose = useCallback(() => {
-    setFormData(initialFormData);
-    setMensagemType('');
-    setMensagemTexto('<p></p>');
-    setTipoEnvio('pdf');
+    resetForm();
     onClose();
-  }, [onClose, initialFormData]);
+  }, [onClose, resetForm]);
+
+  useEffect(() => {
+    if (!show) {
+      resetForm();
+    }
+  }, [show, resetForm]);
 
   const handleSendTestEmail = () => {
     if (!emailTeste.trim()) return showError('Digite um e-mail');
@@ -162,20 +240,22 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleSaveClick = useCallback(() => {
+    if (activeTab === 'servidor') {
+      const form = document.getElementById('servidor-email-form') as HTMLFormElement;
+      form?.requestSubmit();
+    } else {
+      handleSaveMensagem();
+    }
+  }, [activeTab, handleSaveMensagem]);
+
   const headerActionsContent = useMemo(() => (
     <div className="d-flex gap-2">
       <Button
         type="button"
         variant="primary"
         size="sm"
-        onClick={() => {
-          if (activeTab === 'servidor') {
-            const form = document.getElementById('servidor-email-form') as HTMLFormElement;
-            form?.requestSubmit();
-          } else {
-            handleSaveMensagem();
-          }
-        }}
+        onClick={handleSaveClick}
         isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
       >
         Salvar
@@ -187,7 +267,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
         onClick={handleReset}
         disabled={saveServidorMutation.isPending}
       >
-        {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
+        {(show && servidorAtivo?.data) ? 'Remover Servidor' : 'Limpar'}
       </Button>
       <Button
         type="button"
@@ -199,14 +279,28 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
         Fechar
       </Button>
     </div>
-  ), [activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, handleClose, handleReset, handleSaveMensagem]);
+  ), [handleSaveClick, saveServidorMutation.isPending, saveMensagemMutation.isPending, show, servidorAtivo?.data, handleReset, handleClose]);
 
-  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
+  const headerActionsContentRef = useRef(headerActionsContent);
+  headerActionsContentRef.current = headerActionsContent;
+
   useEffect(() => {
     if (skipWrapper && onHeaderActionsReady) {
-      onHeaderActionsReady(headerActionsContent);
+      if (!show) {
+        onHeaderActionsReady(null);
+      } else {
+        onHeaderActionsReady(headerActionsContentRef.current);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipWrapper, onHeaderActionsReady, activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, show]);
+
+  useEffect(() => {
+    return () => {
+      if (skipWrapper && onHeaderActionsReady) {
+        onHeaderActionsReady(null);
+      }
+    };
   }, [skipWrapper, onHeaderActionsReady]);
 
   const modalContent = (
@@ -287,6 +381,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
                 tipoEnvio={tipoEnvio}
                 mensagemTexto={mensagemTexto}
                 mensagemManual={mensagemManual}
+                editorKey={editorKey}
                 onMensagemTypeChange={setMensagemType}
                 onTipoEnvioChange={setTipoEnvio}
                 onMensagemTextoChange={setMensagemTexto}

@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { ModeloRecibo } from '../../../models/documentos/ModeloRecibo';
-import { Cliente } from '../../../models/clientes/Cliente';
+import { ModeloReciboService } from '../../../services/documentos/ModeloReciboService';
+import { ClienteService } from '../../../services/clientes/ClienteService';
 import { Contrato } from '../../../models/contratos/Contrato';
+import { ContratoService } from '../../../services/contratos/ContratoService';
 import { Plano } from '../../../models/cadastros/Plano';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../../services/documentos/VariaveisDocumentoService';
@@ -13,13 +15,10 @@ export class ModeloReciboController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const recibos = await ModeloRecibo.findAll({
-        order: [['created_at', 'DESC']],
-      });
+      const result = await ModeloReciboService.list();
 
       res.json({
-        success: true,
-        data: recibos,
+        ...result,
         message: 'Recibos listados com sucesso'
       });
     } catch (error) {
@@ -38,7 +37,7 @@ export class ModeloReciboController {
     try {
       const { id } = req.params;
 
-      const recibo = await ModeloRecibo.findByPk(id);
+      const recibo = await ModeloReciboService.getById(id);
 
       if (!recibo) {
         res.status(404).json({
@@ -69,7 +68,7 @@ export class ModeloReciboController {
     try {
       const { nome, conteudo, descricao, ativo, tamanho_maximo, tipos_permitidos, retencao_dias, auto_backup, criptografia } = req.body;
 
-      const recibo = await ModeloRecibo.create({
+      const recibo = await ModeloReciboService.create({
         nome,
         conteudo,
         descricao,
@@ -103,7 +102,7 @@ export class ModeloReciboController {
       const { id } = req.params;
       const updateData = req.body;
 
-      const recibo = await ModeloRecibo.findByPk(id);
+      const recibo = await ModeloReciboService.getById(id);
 
       if (!recibo) {
         res.status(404).json({
@@ -113,7 +112,7 @@ export class ModeloReciboController {
         return;
       }
 
-      await recibo.update(updateData);
+      await ModeloReciboService.update(id, updateData);
 
       res.json({
         success: true,
@@ -136,7 +135,7 @@ export class ModeloReciboController {
     try {
       const { id } = req.params;
 
-      const recibo = await ModeloRecibo.findByPk(id);
+      const recibo = await ModeloReciboService.getById(id);
 
       if (!recibo) {
         res.status(404).json({
@@ -146,7 +145,7 @@ export class ModeloReciboController {
         return;
       }
 
-      await recibo.destroy();
+      await ModeloReciboService.delete(id);
 
       res.json({
         success: true,
@@ -168,7 +167,7 @@ export class ModeloReciboController {
     try {
       const { id } = req.params;
 
-      const recibo = await ModeloRecibo.findByPk(id);
+      const recibo = await ModeloReciboService.getById(id);
 
       if (!recibo) {
         res.status(404).json({
@@ -337,7 +336,7 @@ export class ModeloReciboController {
       const { id } = req.params;
       const { cliente_id } = req.query;
 
-      const recibo = await ModeloRecibo.findByPk(id);
+      const recibo = await ModeloReciboService.getById(id);
 
       if (!recibo) {
         res.status(404).json({
@@ -351,7 +350,7 @@ export class ModeloReciboController {
       let conteudoProcessado = recibo.conteudo;
       
       if (cliente_id) {
-        const cliente = await Cliente.findByPk(cliente_id as string);
+        const cliente = await ClienteService.getById(cliente_id as string);
         
         if (!cliente) {
           res.status(404).json({
@@ -362,10 +361,7 @@ export class ModeloReciboController {
         }
 
         // Buscar contrato ativo do cliente
-        const contrato = await Contrato.findOne({
-          where: { cliente_id: cliente.id, status: 'ativo' },
-          include: [{ model: Plano, as: 'plano' }]
-        });
+        const contrato = await ContratoService.findAtivoByCliente(cliente.id);
 
         // Processar variáveis do documento
         conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(

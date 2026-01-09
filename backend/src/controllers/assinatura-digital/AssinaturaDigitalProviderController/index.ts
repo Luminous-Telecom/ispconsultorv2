@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { logger } from '../../../utils/logger';
 import AssinaturaDigitalProvider from '../../../models/assinatura-digital/AssinaturaDigitalProvider';
-import { Op } from 'sequelize';
+import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from '../../../services/assinatura-digital/AssinaturaDigitalProviderService';
 import Joi from 'joi';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 
 export class AssinaturaDigitalProviderController {
@@ -38,15 +38,7 @@ export class AssinaturaDigitalProviderController {
 
   private static async disableOtherProviders(provider: string): Promise<void> {
     if (AssinaturaDigitalProviderController.isValidProvider(provider)) {
-      await AssinaturaDigitalProvider.update(
-        { habilitado: false },
-        {
-          where: {
-            habilitado: true,
-            provider: { [Op.ne]: provider }
-          }
-        }
-      );
+      await AssinaturaDigitalProviderService.disableOtherProviders(provider);
     }
   }
 
@@ -55,9 +47,7 @@ export class AssinaturaDigitalProviderController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const providers = await AssinaturaDigitalProvider.findAll({
-        order: [['provider', 'ASC']]
-      });
+      const providers = await AssinaturaDigitalProviderService.list();
 
       res.status(200).json({
         success: true,
@@ -87,9 +77,7 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
-      const providerConfig = await AssinaturaDigitalProvider.findOne({
-        where: { provider: provider as 'assinafy' | 'zapsign' }
-      });
+      const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType);
 
       if (!providerConfig) {
         res.status(200).json({
@@ -118,9 +106,7 @@ export class AssinaturaDigitalProviderController {
    */
   static async getEnabled(req: Request, res: Response): Promise<void> {
     try {
-      const provider = await AssinaturaDigitalProvider.findOne({
-        where: { habilitado: true }
-      });
+      const provider = await AssinaturaDigitalProviderService.getEnabled();
 
       if (!provider) {
         res.status(404).json({
@@ -177,24 +163,29 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
-      const updateData = AssinaturaDigitalProviderController.prepareUpdateData(value);
+      // Buscar dados anteriores antes do upsert (se existir)
+      const providerConfigAntes = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType);
+      const dadosAnteriores = providerConfigAntes ? providerConfigAntes.toJSON() : null;
 
-      const [providerConfig, created] = await AssinaturaDigitalProvider.findOrCreate({
-        where: { provider },
-        defaults: {
-          provider,
-          habilitado: value.habilitado ?? false,
-          api_key: value.api_key || null,
-          account_id: value.account_id || null,
-          dias_expiracao_padrao: value.dias_expiracao_padrao ?? 30,
-          configuracao_extra: value.configuracao_extra || null
+      const { provider: providerConfig, created } = await AssinaturaDigitalProviderService.upsert(
+        provider as AssinaturaDigitalProviderType,
+        {
+          habilitado: value.habilitado,
+          api_key: value.api_key,
+          account_id: value.account_id,
+          dias_expiracao_padrao: value.dias_expiracao_padrao,
+          configuracao_extra: value.configuracao_extra
         }
-      });
+      );
 
-      if (!created && Object.keys(updateData).length > 0) {
-        const dadosAnteriores = providerConfig.toJSON();
-        await providerConfig.update(updateData);
-        await providerConfig.reload();
+      if (created) {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'AssinaturaDigitalProvider',
+          providerConfig.id,
+          providerConfig.toJSON() as unknown as Record<string, unknown>
+        );
+      } else if (dadosAnteriores) {
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'AssinaturaDigitalProvider',
@@ -202,20 +193,7 @@ export class AssinaturaDigitalProviderController {
           dadosAnteriores as unknown as Record<string, unknown>,
           providerConfig.toJSON() as unknown as Record<string, unknown>
         );
-      } else if (created) {
-        await registrarCriacao(
-          req as AuthenticatedRequest,
-          'AssinaturaDigitalProvider',
-          providerConfig.id,
-          providerConfig.toJSON() as unknown as Record<string, unknown>
-        );
       }
-
-      if (value.habilitado === true) {
-        await AssinaturaDigitalProviderController.disableOtherProviders(provider);
-      }
-
-      await providerConfig.reload();
 
       res.status(200).json({
         success: true,
@@ -265,9 +243,7 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
-      const providerConfig = await AssinaturaDigitalProvider.findOne({
-        where: { provider }
-      });
+      const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider);
 
       if (!providerConfig) {
         res.status(404).json({
@@ -279,26 +255,21 @@ export class AssinaturaDigitalProviderController {
 
       const dadosAnteriores = providerConfig.toJSON();
       const updateData = AssinaturaDigitalProviderController.prepareUpdateData(value);
-      await providerConfig.update(updateData);
-
-      if (value.habilitado === true) {
-        await AssinaturaDigitalProviderController.disableOtherProviders(provider);
-      }
-
-      await providerConfig.reload();
+      
+      const providerAtualizado = await AssinaturaDigitalProviderService.update(provider, updateData);
 
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'AssinaturaDigitalProvider',
-        providerConfig.id,
+        providerAtualizado.id,
         dadosAnteriores as unknown as Record<string, unknown>,
-        providerConfig.toJSON() as unknown as Record<string, unknown>
+        providerAtualizado.toJSON() as unknown as Record<string, unknown>
       );
 
       res.status(200).json({
         success: true,
         message: 'Provider atualizado com sucesso',
-        data: providerConfig
+        data: providerAtualizado
       });
     } catch (error) {
       logger.error('Erro ao atualizar provider de assinatura digital:', error);
@@ -324,9 +295,7 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
-      const providerConfig = await AssinaturaDigitalProvider.findOne({
-        where: { provider }
-      });
+      const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType);
 
       if (!providerConfig) {
         res.status(404).json({
@@ -337,7 +306,7 @@ export class AssinaturaDigitalProviderController {
       }
 
       const dadosAnteriores = providerConfig.toJSON();
-      await providerConfig.destroy();
+      await AssinaturaDigitalProviderService.delete(provider as AssinaturaDigitalProviderType);
 
       await registrarExclusao(
         req as AuthenticatedRequest,

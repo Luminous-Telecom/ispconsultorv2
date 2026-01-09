@@ -4,14 +4,19 @@ import { Cliente } from '../../../models/clientes/Cliente';
 import { Contrato } from '../../../models/contratos/Contrato';
 import { Plano } from '../../../models/cadastros/Plano';
 import { Banco } from '../../../models/cadastros/Banco';
-import { Op, WhereOptions } from 'sequelize';
+import { TituloService } from '../../../services/financeiro/TituloService';
+import { ClienteService } from '../../../services/clientes/ClienteService';
+import { ContratoService } from '../../../services/contratos/ContratoService';
+import { PlanoService } from '../../../services/cadastros/PlanoService';
+import { BancoService } from '../../../services/cadastros/BancoService';
+import { Op, WhereOptions, Transaction } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
+import { formatDateOnly } from '../../../utils/timezoneUtils';
 import { gerarLinkPagamentoPublico } from '../TituloHelpers';
 import { TituloBulkController } from '../TituloBulkController';
 import type { TituloComRelacoes } from '../TituloHelpers/types';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
-import { registrarCriacaoElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 
 export class TituloCRUDController {
@@ -147,37 +152,18 @@ export class TituloCRUDController {
         }
       }
 
-      const { NotaFiscal } = await import('../../../models/nfse/NotaFiscal');
-      
-      const include = [
-        { model: Cliente, as: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email'], required: false },
-        { model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'], required: false },
-        { model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco'], required: false },
-        { model: NotaFiscal, as: 'nota_fiscal', attributes: ['id', 'numero', 'nfse_status'], required: false }
-      ];
-
-      const { count, rows } = await Titulo.findAndCountAll({
-        where,
-        include,
-        order: [['id', 'DESC']],
+      const result = await TituloService.list({
+        page: pageNum,
         limit: limitNum,
-        offset,
-        distinct: true,
-        subQuery: false
+        status: status as string,
+        cliente_id: cliente_id as string | number,
+        data_vencimento_inicio: data_vencimento_inicio as string,
+        data_vencimento_fim: data_vencimento_fim as string,
+        search: search as string,
+        searchField: searchField as string
       });
 
-      const total = Number(count);
-      const perPage = limitNum;
-      const currentPage = pageNum;
-      const lastPage = total > 0 ? Math.ceil(total / perPage) : 1;
-      const from = total > 0 ? offset + 1 : 0;
-      const to = total > 0 ? Math.min(offset + perPage, total) : 0;
-
-      res.json({
-        success: true,
-        data: rows,
-        pagination: { current_page: currentPage, per_page: perPage, total, last_page: lastPage, from, to }
-      });
+      res.json(result);
     } catch (error: unknown) {
       const errorObj = error instanceof Error ? {
         name: error.name,
@@ -203,13 +189,7 @@ export class TituloCRUDController {
     try {
       const { id } = req.params;
 
-      const titulo = await Titulo.findByPk(id, {
-        include: [
-          { model: Cliente, as: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email', 'telefone', 'whatsapp'] },
-          { model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal', 'descricao'] },
-          { model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'codigo'] }
-        ]
-      });
+      const titulo = await TituloService.getById(id);
 
       if (!titulo) {
         res.status(404).json({ success: false, message: 'Título não encontrado' });
@@ -259,14 +239,14 @@ export class TituloCRUDController {
         return;
       }
 
-      const { cliente_id, plano_id, contrato_id, data_vencimento, observacoes, desconto_percentual: dp, desconto_valor: dv, acrescimo_percentual: ap, acrescimo_valor: av, descricao, banco_id, is_avulso } = value;
+      const { cliente_id, plano_id, contrato_id, data_vencimento, observacoes, desconto_percentual: dp, desconto_valor: dv, acrescimo_percentual: ap, acrescimo_valor: av, descricao, banco_id, is_avulso, valor: valorInformado } = value;
 
       const desconto_percentual = dp ? parseFloat(dp.toString()) : null;
       const desconto_valor = dv ? parseFloat(dv.toString()) : null;
       const acrescimo_percentual = ap ? parseFloat(ap.toString()) : null;
       const acrescimo_valor = av ? parseFloat(av.toString()) : null;
 
-      const cliente = await Cliente.findByPk(cliente_id);
+      const cliente = await ClienteService.getById(cliente_id);
       if (!cliente || !cliente.ativo) {
         res.status(404).json({ success: false, message: 'Cliente não encontrado ou inativo' });
         return;
@@ -274,18 +254,22 @@ export class TituloCRUDController {
 
       let contratoReferencia: Contrato | null = null;
       if (contrato_id) {
-        contratoReferencia = await Contrato.findOne({ where: { id: contrato_id, cliente_id: cliente.id } });
+        contratoReferencia = await ContratoService.getById(contrato_id);
+        if (contratoReferencia && contratoReferencia.cliente_id !== cliente.id) {
+          contratoReferencia = null;
+        }
         if (!contratoReferencia) {
           res.status(404).json({ success: false, message: 'Contrato informado não encontrado para este cliente' });
           return;
         }
       } else {
-        contratoReferencia = await Contrato.findOne({ where: { cliente_id: cliente.id, status: 'ativo' }, order: [['id', 'DESC']] });
+        const contratosAtivos = await ContratoService.list({ page: 1, limit: 1, status: 'ativo' });
+        contratoReferencia = contratosAtivos.data.find(c => c.cliente_id === cliente.id) || null;
       }
 
       let plano;
       if (plano_id) {
-        plano = await Plano.findByPk(plano_id);
+        plano = await PlanoService.getById(plano_id);
         if (!plano) {
           res.status(404).json({ success: false, message: 'Plano não encontrado' });
           return;
@@ -310,13 +294,13 @@ export class TituloCRUDController {
       const bancoIdToFind = banco_id || contratoReferencia?.conta_boleto;
       
       if (bancoIdToFind) {
-        banco = await Banco.findByPk(bancoIdToFind);
+        banco = await BancoService.getById(bancoIdToFind);
         if (!banco || !banco.ativo) {
           res.status(400).json({ success: false, message: 'Banco configurado não está ativo' });
           return;
         }
       } else {
-        banco = await Banco.findOne({ where: { ativo: true }, order: [['id', 'DESC']] });
+        banco = await BancoService.findFirstAtivo();
         if (!banco) {
           res.status(400).json({ success: false, message: 'Nenhum banco ativo encontrado' });
           return;
@@ -327,8 +311,19 @@ export class TituloCRUDController {
 
       const { FinancialCalculationsService } = await import('../../../services/FinancialCalculationsService');
       
+      // Para título avulso, valor é obrigatório
+      if (is_avulso && (!valorInformado || parseFloat(valorInformado.toString()) <= 0)) {
+        res.status(400).json({ success: false, message: 'Valor é obrigatório para títulos avulsos e deve ser maior que zero' });
+        return;
+      }
+      
+      // Para título avulso, usar valor informado se disponível, senão usar valor do plano
+      const valorBase = is_avulso && valorInformado && parseFloat(valorInformado.toString()) > 0
+        ? parseFloat(valorInformado.toString())
+        : parseFloat(plano.valor_mensal.toString());
+      
       const valorFinal = FinancialCalculationsService.calcularValorFinal(
-        parseFloat(plano.valor_mensal.toString()),
+        valorBase,
         {
           desconto_valor,
           desconto_percentual
@@ -346,7 +341,7 @@ export class TituloCRUDController {
 
       const { withTransaction } = await import('../../../utils/transaction');
       const titulo = await withTransaction(async (transaction) => {
-        return await Titulo.create({
+        return await TituloService.create({
           cliente_id,
           plano_id: plano.id,
           banco_id: banco.id,
@@ -365,18 +360,12 @@ export class TituloCRUDController {
           status: 'pendente',
           pago: false,
           is_avulso: is_avulso === true
-        }, { transaction });
+        }, transaction);
       });
 
-      // Registrar auditoria
+      // Registrar auditoria (já registra no Elasticsearch internamente)
       const tituloData = titulo.toJSON() as Record<string, unknown>;
       await registrarCriacao(
-        req,
-        'Titulo',
-        titulo.id,
-        tituloData
-      );
-      await registrarCriacaoElasticsearch(
         req,
         'Titulo',
         titulo.id,
@@ -405,7 +394,7 @@ export class TituloCRUDController {
       const { id } = req.params;
       const { status, data_vencimento, observacoes, valor } = req.body;
 
-      const titulo = await Titulo.findByPk(id, { include: [{ model: Cliente, as: 'cliente' }, { model: Banco, as: 'banco' }] }) as TituloComRelacoes | null;
+      const titulo = await TituloService.getById(id) as TituloComRelacoes | null;
 
       if (!titulo) {
         res.status(404).json({ success: false, message: 'Título não encontrado' });
@@ -469,8 +458,8 @@ export class TituloCRUDController {
       // Lógica de alteração de vencimento
       let dataVencimentoParaUpdate: Date | undefined;
       if (data_vencimento) {
-        const dataVencimentoOriginal = new Date(titulo.data_vencimento).toISOString().split('T')[0];
-        const dataVencimentoNova = new Date(data_vencimento).toISOString().split('T')[0];
+        const dataVencimentoOriginal = formatDateOnly(titulo.data_vencimento) || '';
+        const dataVencimentoNova = formatDateOnly(data_vencimento) || '';
         
         if (dataVencimentoNova !== dataVencimentoOriginal) {
           if (titulo.status === 'cancelado') {
@@ -517,27 +506,31 @@ export class TituloCRUDController {
       }
 
       // Atualizar título
-      const tituloModelUpdateStatus = titulo as unknown as Titulo;
-      await tituloModelUpdateStatus.update(dadosParaUpdate);
-
-      // Recarregar título para obter dados atualizados
-      await tituloModelUpdateStatus.reload();
+      const tituloAtualizado = await TituloService.update(id, dadosParaUpdate);
       
       // Registrar auditoria
-      const dadosNovos = tituloModelUpdateStatus.toJSON() as Record<string, unknown>;
+      const dadosNovos = tituloAtualizado.toJSON() as Record<string, unknown>;
       
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
       
-      await registrarAtualizacao(
-        req,
-        'Titulo',
-        titulo.id,
-        dadosAnteriores,
-        dadosNovos
-      );
+      try {
+        await registrarAtualizacao(
+          req,
+          'Titulo',
+          titulo.id,
+          dadosAnteriores,
+          dadosNovos
+        );
+      } catch (auditError) {
+        // Não bloquear o fluxo se a auditoria falhar
+        logger.warn('Erro ao registrar auditoria (não crítico)', {
+          titulo_id: titulo.id,
+          error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
+        });
+      }
 
-      res.json({ success: true, message: 'Título atualizado com sucesso', data: titulo });
+      res.json({ success: true, message: 'Título atualizado com sucesso', data: tituloAtualizado });
     } catch (error: unknown) {
       logger.error('Erro ao atualizar título', { error });
       res.status(500).json({ success: false, message: 'Erro interno do servidor' });
@@ -551,7 +544,7 @@ export class TituloCRUDController {
     try {
       const { id } = req.params;
 
-      const titulo = await Titulo.findByPk(id, { include: [{ model: Banco, as: 'banco' }] }) as TituloComRelacoes | null;
+      const titulo = await TituloService.getById(id) as TituloComRelacoes | null;
 
       if (!titulo) {
         res.status(404).json({ success: false, message: 'Título não encontrado' });
@@ -582,8 +575,7 @@ export class TituloCRUDController {
       );
 
       // Deletar título
-      const tituloModelDelete = titulo as unknown as Titulo;
-      await tituloModelDelete.destroy();
+      await TituloService.delete(id);
 
       res.json({ success: true, message: 'Título deletado com sucesso' });
     } catch (error: unknown) {
@@ -599,20 +591,23 @@ export class TituloCRUDController {
     try {
       const { contratoId } = req.params;
 
-      const contrato = await Contrato.findByPk(contratoId);
+      const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
         res.status(404).json({ success: false, message: 'Contrato não encontrado' });
         return;
       }
 
-      const titulos = await Titulo.findAll({
-        where: { contrato_id: contratoId, is_avulso: false },
-        include: [
-          { model: Cliente, as: 'cliente', where: { id: contrato.cliente_id }, attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj'] },
-          { model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'] },
-          { model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
-        ],
-        order: [['data_vencimento', 'DESC']]
+      const result = await TituloService.list({
+        page: 1,
+        limit: 1000,
+        search: contratoId,
+        searchField: 'contrato_id'
+      });
+
+      const titulos = result.data.filter(t => !t.is_avulso).sort((a, b) => {
+        const dateA = a.data_vencimento ? new Date(a.data_vencimento).getTime() : 0;
+        const dateB = b.data_vencimento ? new Date(b.data_vencimento).getTime() : 0;
+        return dateB - dateA; // DESC
       });
 
       res.json({ success: true, data: titulos });
@@ -629,20 +624,23 @@ export class TituloCRUDController {
     try {
       const { contratoId } = req.params;
 
-      const contrato = await Contrato.findByPk(contratoId);
+      const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
         res.status(404).json({ success: false, message: 'Contrato não encontrado' });
         return;
       }
 
-      const titulos = await Titulo.findAll({
-        where: { contrato_id: contratoId, is_avulso: true },
-        include: [
-          { model: Cliente, as: 'cliente', where: { id: contrato.cliente_id }, attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj'] },
-          { model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'] },
-          { model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
-        ],
-        order: [['data_vencimento', 'DESC']]
+      const result = await TituloService.list({
+        page: 1,
+        limit: 1000,
+        search: contratoId,
+        searchField: 'contrato_id'
+      });
+
+      const titulos = result.data.filter(t => t.is_avulso).sort((a, b) => {
+        const dateA = a.data_vencimento ? new Date(a.data_vencimento).getTime() : 0;
+        const dateB = b.data_vencimento ? new Date(b.data_vencimento).getTime() : 0;
+        return dateB - dateA; // DESC
       });
 
       res.json({ success: true, data: titulos });
@@ -663,11 +661,11 @@ export class TituloCRUDController {
       if (cliente_id) where.cliente_id = cliente_id;
 
       const [totalTitulos, titulosPendentes, titulosPagos, titulosVencidos, titulosCancelados] = await Promise.all([
-        Titulo.count({ where }),
-        Titulo.count({ where: { ...where, status: 'pendente' } }),
-        Titulo.count({ where: { ...where, status: 'pago' } }),
-        Titulo.count({ where: { ...where, status: 'vencido' } }),
-        Titulo.count({ where: { ...where, status: 'cancelado' } })
+        TituloService.count(where),
+        TituloService.count({ ...where, status: 'pendente' }),
+        TituloService.count({ ...where, status: 'pago' }),
+        TituloService.count({ ...where, status: 'vencido' }),
+        TituloService.count({ ...where, status: 'cancelado' })
       ]);
 
       const [valorTotal, valorPendente, valorPago, valorVencido, valorCancelado] = await Promise.all([
@@ -702,7 +700,7 @@ export class TituloCRUDController {
         return;
       }
 
-      const titulo = await Titulo.findByPk(tituloId);
+      const titulo = await TituloService.getById(tituloId);
       if (!titulo) {
         res.status(404).json({ success: false, message: 'Título não encontrado' });
         return;

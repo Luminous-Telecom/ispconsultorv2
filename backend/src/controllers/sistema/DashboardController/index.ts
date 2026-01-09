@@ -4,10 +4,16 @@ import { Plano } from '../../../models/cadastros/Plano';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Contrato } from '../../../models/contratos/Contrato';
+import { DashboardService } from '../../../services/sistema/DashboardService';
+import { TituloService } from '../../../services/financeiro/TituloService';
+import { ClienteService } from '../../../services/clientes/ClienteService';
+import { PlanoService } from '../../../services/cadastros/PlanoService';
+import { BancoService } from '../../../services/cadastros/BancoService';
 import { Op } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
+import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
 
 interface TituloWithCliente extends Titulo {
   cliente?: Cliente | null;
@@ -52,78 +58,19 @@ export class DashboardController {
       const fimPeriodo = new Date(parsedEnd);
       fimPeriodo.setHours(23, 59, 59, 999);
 
-      // Buscar contratos do período para análises do período
-      const contratos = await Contrato.findAll({ 
-        attributes: ['id', 'status', 'plano_id', 'cliente_id', 'valor_final', 'data_inicio', 'data_fim', 'created_at'],
-        where: {
-          [Op.and]: [
-            {
-              data_inicio: {
-                [Op.lte]: fimPeriodo
-              }
-            },
-            {
-              [Op.or]: [
-                {
-                  data_fim: {
-                    [Op.gte]: inicioPeriodo
-                  }
-                },
-                {
-                  data_fim: null
-                }
-              ]
-            }
-          ]
-        }
-      });
-      
-      // Buscar todos os contratos ativos para o gráfico "Clientes por Plano" (como na listagem de planos)
-      const contratosAtivosTodos = await Contrato.findAll({
-        attributes: ['id', 'status', 'plano_id', 'cliente_id'],
-        where: { status: 'ativo' }
-      });
-      
       // Buscar todas as estatísticas e dados em paralelo
-      const [statsData, titulosRecentes, titulosVencidos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos] = await Promise.all([
+      const [statsData, titulosRecentes, titulosVencidos, contratos, contratosAtivosTodos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos] = await Promise.all([
         DashboardController.getStatsData(inicioPeriodo, fimPeriodo),
         DashboardController.getTitulosRecentesData(5),
         DashboardController.getTitulosVencidosData(10),
-        // Clientes do período (para outras análises)
-        Cliente.findAll({ 
-          attributes: ['id', 'ativo', 'created_at'],
-          where: {
-            created_at: {
-              [Op.between]: [inicioPeriodo, fimPeriodo]
-            }
-          }
-        }),
-        // Buscar todos os planos ativos (para gráficos de status e distribuição)
-        Plano.findAll({ 
-          attributes: ['id', 'status', 'nome_plano', 'tipo_servico'],
-          where: { status: 'ativo' }
-        }),
-        // Títulos do período (para análises do período)
-        Titulo.findAll({ 
-          attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'],
-          where: {
-            data_vencimento: {
-              [Op.between]: [inicioPeriodo, fimPeriodo]
-            }
-          }
-        }),
-        // TODOS os clientes (para gráfico de status de clientes)
-        Cliente.findAll({ 
-          attributes: ['id', 'ativo', 'created_at']
-        }),
-        // TODOS os títulos (para gráfico de status de pagamento)
-        Titulo.findAll({ 
-          attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at']
-        }),
-        // TODOS os contratos (para gráfico de status de contratos)
-        Contrato.findAll({ 
-          attributes: ['id', 'status', 'plano_id', 'cliente_id']
-        })
+        DashboardService.getContratosPeriodo(inicioPeriodo, fimPeriodo),
+        DashboardService.getContratosAtivos(),
+        DashboardService.getClientesPeriodo(inicioPeriodo, fimPeriodo),
+        DashboardService.getPlanosAtivos(),
+        DashboardService.getTitulosPeriodo(inicioPeriodo, fimPeriodo),
+        DashboardService.getAllClientes(),
+        DashboardService.getAllTitulos(),
+        DashboardService.getAllContratos()
       ]);
 
       const [aReceberPeriodo, recebidosPeriodo, resumoPeriodo] = await Promise.all([
@@ -154,8 +101,8 @@ export class DashboardController {
         aReceberPeriodo,
         recebidosPeriodo,
         filtros: {
-          startDate: parsedStart.toISOString(),
-          endDate: parsedEnd.toISOString()
+          startDate: formatDateISOForAPI(parsedStart) || '',
+          endDate: formatDateISOForAPI(parsedEnd) || ''
         },
         resumoPeriodo
       };
@@ -222,22 +169,20 @@ export class DashboardController {
       _titulosPagos,
       _carnesPendentes
     ] = await Promise.all([
-      Cliente.count({ where: clienteWhere }),
-      Cliente.count({ where: { ...clienteWhere, ativo: true } }),
-      Plano.count({ where: planoWhere }),
-      Plano.count({ where: { ...planoWhere, status: 'ativo' } }),
-      Banco.count(),
-      Banco.count({ where: { ativo: true } }),
-      Titulo.count({ where: tituloWhere }),
-      Titulo.count({ where: { ...tituloWhere, status: 'vencido' } }),
-      Titulo.count({ where: { ...tituloWhere, status: 'pago' } }),
-      Titulo.count({ where: { ...tituloWhere, status: 'pendente' } })
+      ClienteService.count(clienteWhere),
+      ClienteService.count({ ...clienteWhere, ativo: true }),
+        PlanoService.count(planoWhere),
+        PlanoService.count({ ...planoWhere, status: 'ativo' }),
+        BancoService.count(),
+        BancoService.count({ ativo: true }),
+      TituloService.count(tituloWhere),
+      TituloService.count({ ...tituloWhere, status: 'vencido' }),
+      TituloService.count({ ...tituloWhere, status: 'pago' }),
+      TituloService.count({ ...tituloWhere, status: 'pendente' })
     ]);
 
     // Calcular valores monetários - filtrar por período se fornecido
-    const titulos = await Titulo.findAll({
-      where: tituloWhere
-    });
+    const titulos = await TituloService.findAllWithFilters(tituloWhere);
 
     let _valorTotalTitulos = 0;
     let valorTotalPago = 0;
@@ -278,10 +223,7 @@ export class DashboardController {
       ]
     } : {};
 
-    const contratos = await Contrato.findAll({ 
-      attributes: ['cliente_id', 'valor_final'],
-      where: contratoWhere
-    });
+    const contratos = await DashboardService.getContratosAtivos();
     const totalValorContratos = contratos.reduce((acumulado, contrato) => {
       return acumulado + parseFloat(String(contrato.valor_final || 0));
     }, 0);
@@ -308,9 +250,7 @@ export class DashboardController {
       clientesAtivos: clientesAtivos,
       planosAtivos: planosAtivos,
       titulosAtivos: titulosAtivos,
-      titulosVencidos: await Titulo.count({
-        where: titulosVencidosWhere
-      }),
+      titulosVencidos: await TituloService.count(titulosVencidosWhere),
       valorTotalReceber: valorTotalPendente,
       valorTotalRecebido: valorTotalPago,
       receitaMensal: valorTotalPago, // Simplificado
@@ -323,14 +263,14 @@ export class DashboardController {
 
   // Método auxiliar para obter títulos recentes
   private static async getTitulosRecentesData(limit: number) {
-    const titulos = await Titulo.findAll({
+    const titulos = await DashboardService.getTitulosWithIncludes({}, {
+      limit,
+      order: [['created_at', 'DESC']],
       include: [
         { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia'] },
         { association: 'plano', attributes: ['id', 'nome_plano'] },
         { association: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
-      ],
-      order: [['created_at', 'DESC']],
-      limit
+      ]
     });
 
     return titulos.map(titulo => {
@@ -351,11 +291,10 @@ export class DashboardController {
     const hoje = new Date();
     hoje.setHours(23, 59, 59, 999);
 
-    const titulos = await Titulo.findAll({
-      where: {
-        data_vencimento: { [Op.lte]: hoje },
-        status: 'pendente'
-      },
+    const titulos = await TituloService.findAllWithFilters({
+      data_vencimento: { [Op.lte]: hoje },
+      status: 'pendente'
+    }, {
       include: [
         { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email'] }
       ],
@@ -392,20 +331,20 @@ export class DashboardController {
         titulosPagos,
         titulosPendentes
       ] = await Promise.all([
-        Cliente.count(),
-        Cliente.count({ where: { ativo: true } }),
+        ClienteService.count(),
+        ClienteService.count({ ativo: true }),
         Plano.count(),
         Plano.count({ where: { status: 'ativo' } }),
         Banco.count(),
         Banco.count({ where: { ativo: true } }),
-        Titulo.count(),
-        Titulo.count({ where: { status: 'vencido' } }),
-        Titulo.count({ where: { status: 'pago' } }),
-        Titulo.count({ where: { status: 'pendente' } })
+        TituloService.count(),
+        TituloService.count({ status: 'vencido' }),
+        TituloService.count({ status: 'pago' }),
+        TituloService.count({ status: 'pendente' })
       ]);
 
       // Calcular valores monetários
-      const titulos = await Titulo.findAll();
+      const titulos = await TituloService.findAllWithFilters();
 
       let valorTotalTitulos = 0;
       let valorTotalPago = 0;
@@ -466,7 +405,7 @@ export class DashboardController {
     try {
       const limit = parseInt(req.query.limit as string) || 15;
 
-      const titulos = await Titulo.findAll({
+      const titulos = await TituloService.findAllWithFilters(undefined, {
         include: [
           { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia'] },
           { association: 'plano', attributes: ['id', 'nome_plano'] },
@@ -503,13 +442,12 @@ export class DashboardController {
       const hoje = new Date();
       hoje.setHours(23, 59, 59, 999);
 
-      const titulos = await Titulo.findAll({
-        where: {
-          data_vencimento: {
-            [Op.lte]: hoje
-          },
-          status: 'pendente'
+      const titulos = await TituloService.findAllWithFilters({
+        data_vencimento: {
+          [Op.lte]: hoje
         },
+        status: 'pendente'
+      }, {
         include: [
           { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'] },
           { association: 'plano', attributes: ['id', 'nome_plano'] },
@@ -546,13 +484,12 @@ export class DashboardController {
       const proximos7Dias = new Date();
       proximos7Dias.setDate(hoje.getDate() + 7);
 
-      const titulos = await Titulo.findAll({
-        where: {
-          data_vencimento: {
-            [Op.between]: [hoje, proximos7Dias]
-          },
-          status: 'pendente'
+      const titulos = await TituloService.findAllWithFilters({
+        data_vencimento: {
+          [Op.between]: [hoje, proximos7Dias]
         },
+        status: 'pendente'
+      }, {
         include: [
           { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'] },
           { association: 'plano', attributes: ['id', 'nome_plano'] },
@@ -700,7 +637,7 @@ export class DashboardController {
       const fimMes = new Date(anoAtual, mesAtual, 0, 23, 59, 59, 999);
 
       // Títulos criados no mês
-      const titulosCriados = await Titulo.count({
+      const titulosCriados = await TituloService.count({
         where: {
           created_at: {
             [Op.between]: [inicioMes, fimMes]
@@ -709,7 +646,7 @@ export class DashboardController {
       });
 
       // Títulos pagos no mês
-      const titulosPagos = await Titulo.count({
+      const titulosPagos = await TituloService.count({
         where: {
           data_pagamento: {
             [Op.between]: [inicioMes, fimMes]
@@ -719,13 +656,11 @@ export class DashboardController {
       });
 
       // Valor total pago no mês
-      const titulosPagasMes = await Titulo.findAll({
-        where: {
-          data_pagamento: {
-            [Op.between]: [inicioMes, fimMes]
-          },
-          pago: true
-        }
+      const titulosPagasMes = await TituloService.findAllWithFilters({
+        data_pagamento: {
+          [Op.between]: [inicioMes, fimMes]
+        },
+        pago: true
       });
 
       const valorTotalPago = titulosPagasMes.reduce((total, titulo) => {
@@ -733,11 +668,9 @@ export class DashboardController {
       }, 0);
 
       // Clientes novos no mês
-      const clientesNovos = await Cliente.count({
-        where: {
-          created_at: {
-            [Op.between]: [inicioMes, fimMes]
-          }
+      const clientesNovos = await ClienteService.count({
+        created_at: {
+          [Op.between]: [inicioMes, fimMes]
         }
       });
 
@@ -815,16 +748,15 @@ export class DashboardController {
     const diffTime = fim.getTime() - inicio.getTime();
     const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-    const titulosPeriodo = await Titulo.findAll({
-      attributes: ['valor', 'data_vencimento'],
-      where: {
-        data_vencimento: {
-          [Op.between]: [inicio, fim]
-        },
-        status: {
-          [Op.in]: ['pendente', 'vencido']
-        }
+    const titulosPeriodo = await TituloService.findAllWithFilters({
+      data_vencimento: {
+        [Op.between]: [inicio, fim]
+      },
+      status: {
+        [Op.in]: ['pendente', 'vencido']
       }
+    }, {
+      attributes: ['valor', 'data_vencimento']
     });
 
     const valoresPorDia = new Array(Math.max(dias, 0)).fill(0);
@@ -868,16 +800,15 @@ export class DashboardController {
     const diffTime = fim.getTime() - inicio.getTime();
     const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-    const titulosPeriodo = await Titulo.findAll({
-      attributes: ['valor', 'valor_pago', 'status', 'data_pagamento'],
-      where: {
-        data_pagamento: {
-          [Op.between]: [inicio, fim]
-        },
-        status: {
-          [Op.in]: ['pago', 'pago_atraso', 'parcial']
-        }
+    const titulosPeriodo = await TituloService.findAllWithFilters({
+      data_pagamento: {
+        [Op.between]: [inicio, fim]
+      },
+      status: {
+        [Op.in]: ['pago', 'pago_atraso', 'parcial']
       }
+    }, {
+      attributes: ['valor', 'valor_pago', 'status', 'data_pagamento']
     });
 
     const valoresPorDia = new Array(Math.max(dias, 0)).fill(0);
@@ -922,13 +853,12 @@ export class DashboardController {
     const fim = new Date(endDate);
     fim.setHours(23, 59, 59, 999);
 
-    const titulosPeriodo = await Titulo.findAll({
-      attributes: ['valor', 'valor_pago', 'status', 'cliente_id', 'data_vencimento'],
-      where: {
-        data_vencimento: {
-          [Op.between]: [inicio, fim]
-        }
+    const titulosPeriodo = await TituloService.findAllWithFilters({
+      data_vencimento: {
+        [Op.between]: [inicio, fim]
       }
+    }, {
+      attributes: ['valor', 'valor_pago', 'status', 'cliente_id', 'data_vencimento']
     });
 
     let totalPrevisto = 0;
@@ -978,23 +908,7 @@ export class DashboardController {
     }
 
     // Calcular ticket médio: soma dos valores dos planos com clientes / quantidade de clientes ativos com planos
-    const contratosAtivos = await Contrato.findAll({
-      attributes: ['id', 'cliente_id', 'valor_final', 'plano_id'],
-      include: [
-        {
-          association: 'plano',
-          attributes: ['id', 'valor_mensal']
-        },
-        {
-          association: 'cliente',
-          attributes: ['id', 'ativo'],
-          where: { ativo: true }
-        }
-      ],
-      where: {
-        status: 'ativo'
-      }
-    });
+    const contratosAtivos = await DashboardService.getContratosAtivos();
 
     let valorTotalPlanos = 0;
     const clientesComPlanos = new Set<number>();
@@ -1055,16 +969,15 @@ export class DashboardController {
     const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
     const inicioPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1, 0, 0, 0, 0);
 
-    const titulos = await Titulo.findAll({
-      attributes: ['valor', 'valor_pago', 'status', 'data_pagamento', 'data_vencimento'],
-      where: {
-        data_vencimento: {
-          [Op.between]: [inicioPeriodo, fimPeriodo]
-        },
-        status: {
-          [Op.in]: ['pago', 'pago_atraso', 'parcial']
-        }
+    const titulos = await TituloService.findAllWithFilters({
+      data_vencimento: {
+        [Op.between]: [inicioPeriodo, fimPeriodo]
+      },
+      status: {
+        [Op.in]: ['pago', 'pago_atraso', 'parcial']
       }
+    }, {
+      attributes: ['valor', 'valor_pago', 'status', 'data_pagamento', 'data_vencimento']
     });
 
     const labels: string[] = [];
