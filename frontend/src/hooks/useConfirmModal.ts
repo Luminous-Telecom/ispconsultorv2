@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import ConfirmModal, { ConfirmModalProps, ConfirmVariant } from '@/components/modals/ConfirmModal';
+import React from 'react';
+import ConfirmModal, { ConfirmVariant } from '@/components/modals/ConfirmModal';
 
 export interface ConfirmConfig {
   /**
@@ -33,13 +34,42 @@ export interface ConfirmConfig {
   centered?: boolean;
 }
 
+export interface UseConfirmModalReturn {
+  /**
+   * Função para mostrar modal de confirmação
+   * Retorna Promise<boolean> que resolve com true se confirmado, false se cancelado
+   */
+  confirm: (config: ConfirmConfig) => Promise<boolean>;
+  
+  /**
+   * Função para controlar loading do botão de confirmação
+   */
+  setLoading: (loading: boolean) => void;
+  
+  /**
+   * Props para renderizar o ConfirmModal
+   */
+  modalProps: {
+    show: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    title?: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: ConfirmVariant;
+    centered?: boolean;
+    isLoading: boolean;
+  } | null;
+}
+
 /**
  * Hook para facilitar o uso do ConfirmModal
  * Retorna uma Promise<boolean> que resolve com true se confirmado, false se cancelado
  * 
  * @example
  * ```tsx
- * const confirm = useConfirmModal();
+ * const { confirm, modalProps } = useConfirmModal();
  * 
  * const handleDelete = async () => {
  *   const confirmed = await confirm({
@@ -51,9 +81,16 @@ export interface ConfirmConfig {
  *     // Executar ação
  *   }
  * };
+ * 
+ * return (
+ *   <>
+ *     {/* seu componente */}
+ *     {modalProps && <ConfirmModal {...modalProps} />}
+ *   </>
+ * );
  * ```
  */
-export const useConfirmModal = () => {
+export const useConfirmModal = (): UseConfirmModalReturn => {
   const [isOpen, setIsOpen] = useState(false);
   const [config, setConfig] = useState<ConfirmConfig | null>(null);
   const [resolvePromise, setResolvePromise] = useState<((value: boolean) => void) | null>(null);
@@ -92,38 +129,24 @@ export const useConfirmModal = () => {
     setIsLoading(loading);
   }, []);
 
-  // Renderizar modal apenas quando necessário
-  const ConfirmModalComponent = isOpen && config ? (
-    <ConfirmModal
-      show={isOpen}
-      onClose={handleClose}
-      onConfirm={handleConfirm}
-      title={config.title}
-      message={config.message}
-      confirmText={config.confirmText}
-      cancelText={config.cancelText}
-      variant={config.variant}
-      centered={config.centered}
-      isLoading={isLoading}
-    />
-  ) : null;
+  // Retornar props para renderizar o modal
+  const modalProps = isOpen && config ? {
+    show: isOpen,
+    onClose: handleClose,
+    onConfirm: handleConfirm,
+    title: config.title,
+    message: config.message,
+    confirmText: config.confirmText,
+    cancelText: config.cancelText,
+    variant: config.variant,
+    centered: config.centered,
+    isLoading,
+  } : null;
 
   return {
-    /**
-     * Função para mostrar modal de confirmação
-     * Retorna Promise<boolean> que resolve com true se confirmado, false se cancelado
-     */
     confirm,
-    
-    /**
-     * Função para controlar loading do botão de confirmação
-     */
     setLoading,
-    
-    /**
-     * Componente ConfirmModal (deve ser renderizado no componente que usa o hook)
-     */
-    ConfirmModal: ConfirmModalComponent,
+    modalProps,
   };
 };
 

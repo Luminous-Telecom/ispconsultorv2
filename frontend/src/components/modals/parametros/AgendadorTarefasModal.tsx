@@ -12,6 +12,7 @@ import RotinaAgendadaModal from './RotinaAgendadaModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
@@ -25,7 +26,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
   const auditoria = useAuditoria();
-  const { confirm, ConfirmModal } = useConfirmModal();
+  const { confirm, modalProps } = useConfirmModal();
 
   const handleAudit = (rotina: RotinaAgendada) => {
     auditoria.handleAudit('ScheduledRoutine', rotina.id);
@@ -358,7 +359,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       />
 
       {/* ConfirmModal */}
-      {ConfirmModal}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

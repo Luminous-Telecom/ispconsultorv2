@@ -29,7 +29,7 @@ interface TituloPublico {
 const PagamentoPublico: React.FC = () => {
   const { id, token } = useParams<{ id: string; token: string }>();
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const { error } = useNotificationContext();
+  const { error: showError } = useNotificationContext();
 
   const { data: titulo, isLoading, error } = useQuery<TituloPublico>({
     queryKey: ['pagamento-publico', id, token],
@@ -66,7 +66,7 @@ const PagamentoPublico: React.FC = () => {
         setCopiedField(fieldName);
         setTimeout(() => setCopiedField(null), 2000);
       } catch (err) {
-        error('Erro ao copiar. Por favor, selecione o texto manualmente.');
+        showError('Erro ao copiar. Por favor, selecione o texto manualmente.');
       }
       document.body.removeChild(textArea);
     }
