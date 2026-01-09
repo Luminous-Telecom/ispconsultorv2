@@ -81,7 +81,7 @@ export class AssinaturaConsultaService {
 
     const pdfBuffer = await (signatureService as unknown as ISignatureService).baixarPdfAssinado(
       assinatura.api_document_id,
-      assinatura.url_pdf_assinado || undefined
+      assinatura.pdf_assinado_url || undefined
     );
 
     if (!pdfBuffer) {

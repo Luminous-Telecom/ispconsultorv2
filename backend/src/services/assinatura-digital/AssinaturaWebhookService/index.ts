@@ -23,7 +23,7 @@ export class AssinaturaWebhookService {
       throw new Error('ID do documento não encontrado no webhook');
     }
 
-    const assinatura = await AssinaturaDigitalService.findByDocumentId(documentId);
+    const assinatura = await AssinaturaDigitalService.getByApiDocumentId(documentId);
     if (!assinatura) {
       logger.warn('Assinatura não encontrada para documentId', { documentId });
       return;
@@ -37,7 +37,7 @@ export class AssinaturaWebhookService {
       'document.expired': 'expirado'
     };
 
-    const novoStatus = statusMap[event] || assinatura.status;
+    const novoStatus = (statusMap[event] || assinatura.status) as 'pendente' | 'enviado' | 'assinado' | 'cancelado' | 'expirado' | 'erro';
 
     if (novoStatus !== assinatura.status) {
       await assinatura.update({ status: novoStatus });
@@ -69,16 +69,9 @@ export class AssinaturaWebhookService {
       }
 
       if (novoStatus === 'assinado') {
-        try {
-          const assinafyService = await AssinafyService.createFromDatabase();
-          if (assinafyService) {
-            await assinafyService.processarDocumentoEmBackground(documentId, {
-              signers: document.signers || []
-            });
-          }
-        } catch (error) {
-          logger.error('Erro ao processar documento assinado em background', { error });
-        }
+        // No contexto de webhook, o documento já foi processado
+        // Apenas o status foi atualizado acima
+        logger.info('Documento assinado via webhook - status atualizado', { documentId });
       }
     }
   }
@@ -98,7 +91,7 @@ export class AssinaturaWebhookService {
       throw new Error('ID do documento não encontrado no webhook');
     }
 
-    const assinatura = await AssinaturaDigitalService.findByDocumentId(documentId);
+    const assinatura = await AssinaturaDigitalService.getByApiDocumentId(documentId);
     if (!assinatura) {
       logger.warn('Assinatura não encontrada para documentId', { documentId });
       return;
@@ -112,7 +105,7 @@ export class AssinaturaWebhookService {
       'document.expired': 'expirado'
     };
 
-    const novoStatus = statusMap[event] || assinatura.status;
+    const novoStatus = (statusMap[event] || assinatura.status) as 'pendente' | 'enviado' | 'assinado' | 'cancelado' | 'expirado' | 'erro';
 
     if (novoStatus !== assinatura.status) {
       await assinatura.update({ status: novoStatus });
@@ -144,16 +137,9 @@ export class AssinaturaWebhookService {
       }
 
       if (novoStatus === 'assinado') {
-        try {
-          const zapsignService = await ZapsignService.createFromDatabase();
-          if (zapsignService) {
-            await zapsignService.processarDocumentoEmBackground?.(documentId, {
-              signers: document.signers || []
-            });
-          }
-        } catch (error) {
-          logger.error('Erro ao processar documento assinado em background', { error });
-        }
+        // No contexto de webhook, o documento já foi processado
+        // Apenas o status foi atualizado acima
+        logger.info('Documento assinado via webhook Zapsign - status atualizado', { documentId });
       }
     }
   }
@@ -174,7 +160,7 @@ export class AssinaturaWebhookService {
         // Formato Assinafy/Zapsign
         const documentId = req.body.document.id || req.body.document.document_id;
         if (documentId) {
-          const assinatura = await AssinaturaDigitalService.findByDocumentId(documentId);
+          const assinatura = await AssinaturaDigitalService.getByApiDocumentId(documentId);
           if (assinatura) {
             // Tentar ambos os providers
             try {

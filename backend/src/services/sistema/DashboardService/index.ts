@@ -251,7 +251,14 @@ export class DashboardService {
   /**
    * Obter títulos recentes formatados
    */
-  static async getTitulosRecentesData(limit: number) {
+  static async getTitulosRecentesData(limit: number): Promise<Array<{
+    id: number;
+    numero_titulo: string;
+    cliente: string;
+    valor: number;
+    status: string;
+    data: string;
+  }>> {
     const { formatDate } = await import('../../../utils/dateUtils');
     const titulos = await this.getTitulosWithIncludes({}, {
       limit,
@@ -279,7 +286,15 @@ export class DashboardService {
   /**
    * Obter títulos vencidos formatados
    */
-  static async getTitulosVencidosData(limit: number) {
+  static async getTitulosVencidosData(limit: number): Promise<Array<{
+    id: number;
+    numero_titulo: string;
+    cliente: string;
+    valor: number;
+    status: string;
+    data_vencimento: string;
+    dias_atraso: number;
+  }>> {
     const { TituloService } = await import('../../financeiro/TituloService');
     const hoje = new Date();
     hoje.setHours(23, 59, 59, 999);
@@ -295,15 +310,21 @@ export class DashboardService {
       limit
     });
 
+    const { formatDate } = await import('../../../utils/dateUtils');
+    
     return titulos.map(titulo => {
       const tituloWithCliente = titulo as any;
+      const dataVencimento = titulo.data_vencimento ? new Date(titulo.data_vencimento) : new Date();
+      const diasAtraso = Math.floor((hoje.getTime() - dataVencimento.getTime()) / (1000 * 60 * 60 * 24));
+      
       return {
-        id: titulo.id,
+        id: Number(titulo.id),
         numero_titulo: titulo.numero_titulo,
-        valor: titulo.valor,
-        data_vencimento: titulo.data_vencimento,
+        valor: Number(titulo.valor),
+        data_vencimento: formatDate(dataVencimento) || 'N/A',
         cliente: tituloWithCliente.cliente?.razao_social || 'N/A',
-        status: titulo.status
+        status: titulo.status,
+        dias_atraso: Math.max(0, diasAtraso)
       };
     });
   }
