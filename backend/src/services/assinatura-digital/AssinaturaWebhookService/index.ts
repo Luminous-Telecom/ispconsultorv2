@@ -97,10 +97,10 @@ export class AssinaturaWebhookService {
       return;
     }
 
-    const statusMap: Record<string, string> = {
+    const statusMap: Record<string, 'pendente' | 'enviado' | 'assinado' | 'cancelado' | 'expirado' | 'erro'> = {
       'document.created': 'pendente',
       'document.signed': 'assinado',
-      'document.refused': 'recusado',
+      'document.refused': 'erro',
       'document.cancelled': 'cancelado',
       'document.expired': 'expirado'
     };
