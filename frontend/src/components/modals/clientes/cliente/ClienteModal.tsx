@@ -18,6 +18,7 @@ import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
 import ContratoModal from '../contrato/ContratoModal';
 import GerarNFeModal from '@/components/modals/notas-fiscais/GerarNFeModal';
 import { Button } from '@/components/ui';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 // Componentes de abas
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import ContatoTab from './abas/ContatoTab';
@@ -665,6 +666,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           }}
         />
 
+        {/* ConfirmModal */}
+        {bulkActionsHook.modalProps && <ConfirmModal {...bulkActionsHook.modalProps} />}
       </>
     );
   };

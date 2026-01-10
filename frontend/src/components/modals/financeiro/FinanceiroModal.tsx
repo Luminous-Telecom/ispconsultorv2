@@ -7,7 +7,7 @@ import { useNotificationContext } from '@/components/notifications/NotificationP
 import { useSorting } from '@/hooks/useSorting';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { TituloService } from '@/services/tituloService';
-import { formatDate, formatDateTime } from '@/utils/formatters';
+import { formatDate, formatDateTime, formatCurrency } from '@/utils/formatters';
 import DraggableModal from '@/components/common/DraggableModal';
 import Table from '@/components/tables/Table';
 import { TableConfig, BulkAction } from '@/components/tables/types';
@@ -17,6 +17,8 @@ import ImprimirModal from '@/components/common/ImprimirModal';
 import GerarNFeModal from '@/components/modals/notas-fiscais/GerarNFeModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface FinanceiroModalProps {
   show: boolean;
@@ -70,6 +72,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   const auditoria = useAuditoria();
+  const { confirm, modalProps } = useConfirmModal();
 
   const handleAudit = (titulo: Titulo) => {
     auditoria.handleAudit('Titulo', titulo.id);
@@ -556,12 +559,21 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         label: 'Cancelar',
         variant: 'danger' as const,
         onClick: async (selectedItems: Titulo[]) => {
-          if (selectedItems.length > 0) {
-            const confirmMessage = selectedItems.length === 1 
-              ? 'Tem certeza que deseja cancelar este título?'
-              : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
-              
-            if (window.confirm(confirmMessage)) {
+          if (selectedItems.length === 0) return;
+          
+          const confirmMessage = selectedItems.length === 1 
+            ? 'Tem certeza que deseja cancelar este título?'
+            : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+            
+          const confirmed = await confirm({
+            message: confirmMessage,
+            variant: 'warning',
+            title: 'Cancelar títulos',
+            confirmText: 'Cancelar',
+            cancelText: 'Voltar',
+          });
+          
+          if (confirmed) {
               try {
                 let successCount = 0;
                 let errorCount = 0;
@@ -598,7 +610,6 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                 error('Erro ao cancelar títulos');
               }
             }
-          }
         },
         disabled: (selectedItems: Titulo[]): boolean => {
           if (selectedItems.length === 0) return true;
@@ -610,16 +621,25 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         label: 'Estornar',
         variant: 'warning' as const,
         onClick: async (selectedItems: Titulo[]) => {
-          if (selectedItems.length > 0) {
-            const item = selectedItems[0];
-            if (item.status === 'pago') {
-              const confirmar = window.confirm(
-                `Tem certeza que deseja estornar o título ${item.numero_titulo || item.id}?\n\n` +
-                `Valor: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
-                `O título voltará para status PENDENTE.`
-              );
-              
-              if (confirmar) {
+          if (selectedItems.length === 0) return;
+          
+          const item = selectedItems[0];
+          if (item.status !== 'pago') {
+            error('Só é possível estornar títulos que estão pagos');
+            return;
+          }
+          
+          const confirmed = await confirm({
+            message: `Tem certeza que deseja estornar o título ${item.numero_titulo || item.id}?\n\n` +
+              `Valor: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
+              `O título voltará para status PENDENTE.`,
+            variant: 'warning',
+            title: 'Estornar título',
+            confirmText: 'Estornar',
+            cancelText: 'Cancelar',
+          });
+          
+          if (confirmed) {
                 try {
                   await TituloService.estornar(item.id);
                   success('Título estornado com sucesso!');
@@ -629,10 +649,6 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                   error(errorMessage);
                 }
               }
-            } else {
-              error('Só é possível estornar títulos que estão pagos');
-            }
-          }
         },
         disabled: (selectedItems: Titulo[]): boolean => {
           if (selectedItems.length === 0) return true;
@@ -1056,6 +1072,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         }}
       />
 
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

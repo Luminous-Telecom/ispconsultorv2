@@ -8,6 +8,7 @@ import { TituloItem } from '../types/cliente';
 import { CarneParcela, PaginatedResponse } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { BulkAction } from '../components/modals/clientes/cliente/types';
+import { useConfirmModal } from './useConfirmModal';
 
 interface UseClienteBulkActionsParams {
   clienteId: number | null;
@@ -50,6 +51,20 @@ interface UseClienteBulkActionsReturn {
   handleEnviarWhatsApp: (selectedItems: CarneParcela[]) => Promise<void>;
   handleEnviarEmail: (selectedItems: CarneParcela[]) => Promise<void>;
   handleDeletarContratos: (selectedItems: Contrato[]) => Promise<void>;
+  
+  // Props do ConfirmModal (deve ser renderizado no componente que usa o hook)
+  modalProps: {
+    show: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    title?: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: 'danger' | 'warning' | 'info' | 'success';
+    centered?: boolean;
+    isLoading: boolean;
+  } | null;
 }
 
 export const useClienteBulkActions = ({
@@ -76,6 +91,7 @@ export const useClienteBulkActions = ({
   const { success, error, info } = useNotificationContext();
   const queryClient = useQueryClient();
   const deleteContratoMutation = useDeleteContrato();
+  const { confirm, modalProps } = useConfirmModal();
 
   const [selectedItems, setSelectedItems] = useState<TituloItem[]>([]);
   const [selectedContratosItems, setSelectedContratosItems] = useState<Contrato[]>([]);
@@ -93,12 +109,21 @@ export const useClienteBulkActions = ({
   }, [getItemsCompletos]);
 
   const handleCancelarTitulos = async (items: CarneParcela[]) => {
-    if (items.length > 0) {
-      const confirmMessage = items.length === 1 
-        ? 'Tem certeza que deseja cancelar este título?'
-        : `Tem certeza que deseja cancelar ${items.length} títulos?`;
-        
-      if (window.confirm(confirmMessage)) {
+    if (items.length === 0) return;
+    
+    const confirmMessage = items.length === 1 
+      ? 'Tem certeza que deseja cancelar este título?'
+      : `Tem certeza que deseja cancelar ${items.length} títulos?`;
+      
+    const confirmed = await confirm({
+      message: confirmMessage,
+      variant: 'warning',
+      title: 'Cancelar títulos',
+      confirmText: 'Cancelar',
+      cancelText: 'Voltar',
+    });
+    
+    if (confirmed) {
         try {
           let successCount = 0;
           let errorCount = 0;
@@ -138,18 +163,25 @@ export const useClienteBulkActions = ({
           error('Erro ao cancelar títulos');
         }
       }
-    }
   };
 
   const handleEstornarTitulo = async (titulo: CarneParcela) => {
-    if (titulo.status === 'pago') {
-      const confirmar = window.confirm(
-        `Tem certeza que deseja estornar o título ${titulo.numero_titulo || titulo.id}?\n\n` +
+    if (titulo.status !== 'pago') {
+      info('Só é possível estornar títulos que estão pagos');
+      return;
+    }
+    
+    const confirmed = await confirm({
+      message: `Tem certeza que deseja estornar o título ${titulo.numero_titulo || titulo.id}?\n\n` +
         `Valor: ${formatCurrency(titulo.valor_pago || titulo.valor || 0)}\n` +
-        `O título voltará para status PENDENTE.`
-      );
-      
-      if (confirmar) {
+        `O título voltará para status PENDENTE.`,
+      variant: 'warning',
+      title: 'Estornar título',
+      confirmText: 'Estornar',
+      cancelText: 'Cancelar',
+    });
+    
+    if (confirmed) {
         try {
           await TituloService.estornar(titulo.id);
           success('Título estornado com sucesso!');
@@ -160,9 +192,6 @@ export const useClienteBulkActions = ({
           error(errorObj.message || 'Erro ao estornar título.');
         }
       }
-    } else {
-      info('Só é possível estornar títulos que estão pagos');
-    }
   };
 
   const handleEnviarWhatsApp = async (items: CarneParcela[]) => {
@@ -266,12 +295,21 @@ export const useClienteBulkActions = ({
   };
 
   const handleDeletarContratos = async (items: Contrato[]) => {
-    if (items.length > 0) {
-      const confirmMessage = items.length === 1
-        ? 'Tem certeza que deseja deletar este contrato?'
-        : `Tem certeza que deseja deletar ${items.length} contratos?`;
-      
-      if (window.confirm(confirmMessage)) {
+    if (items.length === 0) return;
+    
+    const confirmMessage = items.length === 1
+      ? 'Tem certeza que deseja deletar este contrato?'
+      : `Tem certeza que deseja deletar ${items.length} contratos?`;
+    
+    const confirmed = await confirm({
+      message: confirmMessage,
+      variant: 'danger',
+      title: 'Deletar contratos',
+      confirmText: 'Deletar',
+      cancelText: 'Cancelar',
+    });
+    
+    if (confirmed) {
         try {
           for (const item of items) {
             try {
@@ -290,7 +328,6 @@ export const useClienteBulkActions = ({
           error('Erro ao deletar contratos');
         }
       }
-    }
   };
 
   const handleImprimirRecibosWrapper = async (items: CarneParcela[]) => {
@@ -515,7 +552,8 @@ export const useClienteBulkActions = ({
     handleEstornarTitulo,
     handleEnviarWhatsApp,
     handleEnviarEmail,
-    handleDeletarContratos
+    handleDeletarContratos,
+    modalProps
   };
 };
 
