@@ -795,8 +795,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                     <input
                       type="date"
                       id="dataVencimentoInicio"
-                      className="form-control form-control-sm"
-                      className="financeiro-col-fixed"
+                      className="form-control form-control-sm financeiro-col-fixed"
                       value={dataVencimentoInicio}
                       onChange={(e) => setDataVencimentoInicio(e.target.value)}
                     />
@@ -804,8 +803,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                     <input
                       type="date"
                       id="dataVencimentoFim"
-                      className="form-control form-control-sm"
-                      className="financeiro-col-fixed"
+                      className="form-control form-control-sm financeiro-col-fixed"
                       value={dataVencimentoFim}
                       onChange={(e) => setDataVencimentoFim(e.target.value)}
                     />
