@@ -34,6 +34,7 @@ import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import { formatCurrency } from '@/utils/formatters';
 import '../../contratos/ContratoModals.css';
+import './ContratoModal.css';
 import ContratoTab from './abas/ContratoTab';
 import EnderecoTab from './abas/EnderecoTab';
 import TermosTab from './abas/TermosTab';
@@ -1704,22 +1705,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     >
       <form id="contrato-form" onSubmit={handleSubmit}>
         {/* Sempre mostrar estrutura com abas */}
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="contrato-modal-content">
           {/* Navegação por Abas */}
-          <ul className="nav nav-tabs" id="contratoTab" role="tablist" style={{ 
-            flexShrink: 0, 
-            marginBottom: isMobile ? '1rem' : 0, 
-            marginTop: isMobile ? '0' : '1rem', 
-            marginLeft: isMobile ? '0' : '1rem', 
-            marginRight: isMobile ? '0' : '1rem',
-            ...(isMobile && {
-              display: 'flex',
-              flexWrap: 'nowrap',
-              overflowX: 'auto',
-              overflowY: 'hidden',
-              WebkitOverflowScrolling: 'touch'
-            })
-          }}>
+          <ul
+            className={`nav nav-tabs ${isMobile ? 'contrato-tabs-mobile' : 'contrato-tabs'}`}
+            id="contratoTab"
+            role="tablist"
+          >
             <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
@@ -1740,7 +1732,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             </li>
             <li className="nav-item" role="presentation">
               <button
-                className={`nav-link ${activeTab === 'termos' ? 'active' : ''}`}
+                className={`nav-link ${activeTab === 'termos' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
                 type="button"
                 onClick={() => {
                   if (isEditMode) {
@@ -1748,14 +1740,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   }
                 }}
                 disabled={!isEditMode}
-                style={{ cursor: !isEditMode ? 'not-allowed' : 'pointer', opacity: !isEditMode ? 0.6 : 1 }}
               >
                 Termos
               </button>
             </li>
             <li className="nav-item" role="presentation">
               <button
-                className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
+                className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
                 type="button"
                 onClick={() => {
                   if (isEditMode) {
@@ -1763,14 +1754,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   }
                 }}
                 disabled={!isEditMode}
-                style={{ cursor: !isEditMode ? 'not-allowed' : 'pointer', opacity: !isEditMode ? 0.6 : 1 }}
               >
                 Financeiro
               </button>
             </li>
             <li className="nav-item" role="presentation">
               <button
-                className={`nav-link ${activeTab === 'financeiro-avulso' ? 'active' : ''}`}
+                className={`nav-link ${activeTab === 'financeiro-avulso' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
                 type="button"
                 onClick={() => {
                   if (isEditMode) {
@@ -1778,14 +1768,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   }
                 }}
                 disabled={!isEditMode}
-                style={{ cursor: !isEditMode ? 'not-allowed' : 'pointer', opacity: !isEditMode ? 0.6 : 1 }}
               >
                 Financeiro Avulso
               </button>
             </li>
             <li className="nav-item" role="presentation">
               <button
-                className={`nav-link ${activeTab === 'servicos-adicionais' ? 'active' : ''}`}
+                className={`nav-link ${activeTab === 'servicos-adicionais' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
                 type="button"
                 onClick={() => {
                   if (isEditMode) {
@@ -1793,7 +1782,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   }
                 }}
                 disabled={!isEditMode}
-                style={{ cursor: !isEditMode ? 'not-allowed' : 'pointer', opacity: !isEditMode ? 0.6 : 1 }}
               >
                 Serviços Adicionais
               </button>
@@ -1801,17 +1789,12 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
           </ul>
 
           {/* Conteúdo das Abas */}
-          <div 
-            className="tab-content" 
-            style={{ 
-              flex: 1, 
-              overflow: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'financeiro-avulso' || activeTab === 'servicos-adicionais') ? 'hidden' : 'auto', 
-              // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
-              padding: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'financeiro-avulso' || activeTab === 'servicos-adicionais') ? '0' : (isMobile ? '0' : '16px'),
-              minHeight: 0,
-              display: 'flex',
-              flexDirection: 'column'
-            }}
+          <div
+            className={`tab-content contrato-tab-content ${
+              (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'financeiro-avulso' || activeTab === 'servicos-adicionais')
+                ? 'contrato-tab-content-scrollable'
+                : 'contrato-tab-content-padded'
+            }`}
           >
             {/* Aba Contrato */}
             {activeTab === 'contrato' && (
@@ -1863,7 +1846,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   auditEntity="TermoContrato"
                 />
               ) : (
-                <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
+                <div className="d-flex align-items-center justify-content-center contrato-placeholder">
                   <div className="text-center">
                     <p className="text-muted">Crie o contrato primeiro para gerenciar termos.</p>
                   </div>
@@ -1892,7 +1875,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   auditEntity="Titulo"
                 />
               ) : (
-                <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
+                <div className="d-flex align-items-center justify-content-center contrato-placeholder">
                   <div className="text-center">
                     <p className="text-muted">Crie o contrato primeiro para gerenciar títulos financeiros.</p>
                   </div>
@@ -1921,7 +1904,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   auditEntity="Titulo"
                 />
               ) : (
-                <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
+                <div className="d-flex align-items-center justify-content-center contrato-placeholder">
                   <div className="text-center">
                     <p className="text-muted">Crie o contrato primeiro para gerenciar títulos avulsos.</p>
                   </div>
@@ -1948,7 +1931,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   auditEntity="ContratoPlanoAdicional"
                 />
               ) : (
-                <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
+                <div className="d-flex align-items-center justify-content-center contrato-placeholder">
                   <div className="text-center">
                     <p className="text-muted">Crie o contrato primeiro para gerenciar serviços adicionais.</p>
                   </div>
