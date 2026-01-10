@@ -209,7 +209,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       { key: 'origem', label: 'Origem' }
     ],
     emptyMessage: 'Nenhum arquivo encontrado'
-  }), [arquivos, deleteMutation, handleDownload, handleView]);
+  }), [arquivos, deleteMutation, handleDownload, handleView, confirm]);
 
   if (!clienteId) {
     return (

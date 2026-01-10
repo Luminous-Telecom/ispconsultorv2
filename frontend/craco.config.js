@@ -60,6 +60,36 @@ module.exports = {
         },
       },
     ],
+    configure: (webpackConfig) => {
+      // Encontrar e modificar a regra do sass-loader
+      const sassRule = webpackConfig.module.rules.find(
+        rule => rule.oneOf && rule.oneOf.some(
+          loader => typeof loader.test === 'object' &&
+                   loader.test.toString().includes('scss')
+        )
+      );
+
+      if (sassRule) {
+        sassRule.oneOf.forEach(loader => {
+          if (loader.use && loader.use.some(u => u.loader && u.loader.includes('sass-loader'))) {
+            loader.use.forEach(use => {
+              if (use.loader && use.loader.includes('sass-loader')) {
+                use.options = {
+                  ...use.options,
+                  implementation: require('sass'),
+                  sassOptions: {
+                    ...use.options?.sassOptions,
+                    fiber: false,
+                  },
+                };
+              }
+            });
+          }
+        });
+      }
+
+      return webpackConfig;
+    },
   },
   devServer: {
     open: false,

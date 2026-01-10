@@ -7,7 +7,7 @@ import { useNotificationContext } from '@/components/notifications/NotificationP
 import { useSorting } from '@/hooks/useSorting';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { TituloService } from '@/services/tituloService';
-import { formatDate, formatDateTime, formatCurrency } from '@/utils/formatters';
+import { formatDate, formatDateTime } from '@/utils/formatters';
 import DraggableModal from '@/components/common/DraggableModal';
 import Table from '@/components/tables/Table';
 import { TableConfig, BulkAction } from '@/components/tables/types';
@@ -712,7 +712,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         ]
       }
     ];
-  }, [success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe]);
+  }, [success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, confirm]);
 
   const modalContent = (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>

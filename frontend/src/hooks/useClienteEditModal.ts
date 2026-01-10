@@ -6,10 +6,12 @@ import { useNotificationContext } from '../components/notifications/Notification
 import { ClienteFormData, ClienteFormErrors, ContratoItem, TituloItem, ApiError } from '../types';
 import { validateClienteForm } from '../utils/validators';
 import { FormValue } from '../types/common';
+import { useConfirmModal } from './useConfirmModal';
 
 export const useClienteEditModal = (clienteId: number | null) => {
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
+  const { confirm, modalProps } = useConfirmModal();
   
   const [formData, setFormData] = useState<ClienteFormData>({
     cnpj: '',
@@ -135,58 +137,70 @@ export const useClienteEditModal = (clienteId: number | null) => {
   
   const handleCancelarTitulos = useCallback(async (selectedItems: TituloItem[]) => {
     if (selectedItems.length === 0) return;
-    
-    const confirmar = window.confirm(
-      `Tem certeza que deseja cancelar ${selectedItems.length} título(s)?`
-    );
-    
-    if (confirmar) {
-      try {
-        // Como não existe método cancelar, vamos usar update para marcar como cancelado
-        const promises = selectedItems.map(item => 
-          TituloService.update(item.id, { status: 'cancelado' })
-        );
-        const results = await Promise.allSettled(promises);
-        
-        const successCount = results.filter(r => r.status === 'fulfilled').length;
-        const errorCount = results.length - successCount;
-        
-        if (successCount > 0) {
-          const message = errorCount === 0 
-            ? `${successCount} título(s) cancelado(s) com sucesso!`
-            : `${successCount} título(s) cancelado(s), ${errorCount} não puderam ser cancelados`;
-          showNotification(message, errorCount > 0 ? 'error' : 'success');
-        }
-        
-        queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
-        queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
-      } catch (err) {
-        showNotification('Erro ao cancelar títulos', 'error');
+
+    const confirmMessage = selectedItems.length === 1
+      ? 'Tem certeza que deseja cancelar este título?'
+      : `Tem certeza que deseja cancelar ${selectedItems.length} título(s)?`;
+
+    const confirmed = await confirm({
+      message: confirmMessage,
+      variant: 'warning',
+      title: 'Cancelar títulos',
+      confirmText: 'Cancelar',
+      cancelText: 'Voltar'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const promises = selectedItems.map(item =>
+        TituloService.update(item.id, { status: 'cancelado' })
+      );
+      const results = await Promise.allSettled(promises);
+
+      const successCount = results.filter(r => r.status === 'fulfilled').length;
+      const errorCount = results.length - successCount;
+
+      if (successCount > 0) {
+        const message = errorCount === 0
+          ? `${successCount} título(s) cancelado(s) com sucesso!`
+          : `${successCount} título(s) cancelado(s), ${errorCount} não puderam ser cancelados`;
+        showNotification(message, errorCount > 0 ? 'error' : 'success');
       }
+
+      queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
+      queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
+    } catch (err) {
+      showNotification('Erro ao cancelar títulos', 'error');
     }
-  }, [showNotification, queryClient, clienteId]);
+  }, [showNotification, queryClient, clienteId, confirm]);
   
   const handleEstornarTitulo = useCallback(async (item: TituloItem) => {
-    if (item.status === 'pago' || item.status === 'pago_atraso') {
-      const confirmar = window.confirm(
-        `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
-        `Valor: R$ ${item.valor_pago || item.valor}\n` +
-        `O título voltará para status PENDENTE.`
-      );
-      
-      if (confirmar) {
-        try {
-          await TituloService.estornar(item.id);
-          showNotification('Título estornado com sucesso!', 'success');
-          queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
-        } catch (err) {
-          showNotification('Erro ao estornar título', 'error');
-        }
-      }
-    } else {
+    if (item.status !== 'pago' && item.status !== 'pago_atraso') {
       showNotification('Só é possível estornar títulos que estão pagos', 'info');
+      return;
     }
-  }, [showNotification, queryClient, clienteId]);
+
+    const confirmed = await confirm({
+      message: `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
+        `Valor: R$ ${item.valor_pago || item.valor}\n` +
+        `O título voltará para status PENDENTE.`,
+      variant: 'warning',
+      title: 'Estornar título',
+      confirmText: 'Estornar',
+      cancelText: 'Cancelar'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await TituloService.estornar(item.id);
+      showNotification('Título estornado com sucesso!', 'success');
+      queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
+    } catch (err) {
+      showNotification('Erro ao estornar título', 'error');
+    }
+  }, [showNotification, queryClient, clienteId, confirm]);
   
   return {
     // Estados
@@ -223,6 +237,7 @@ export const useClienteEditModal = (clienteId: number | null) => {
     handleCancelarTitulos,
     handleEstornarTitulo,
     showNotification,
+    modalProps,
     
     // Mutations
     updateClienteMutation

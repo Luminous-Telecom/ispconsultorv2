@@ -10,7 +10,7 @@ import { LoadingProvider } from './contexts/LoadingContext';
 import Loading from './components/common/Loading';
 import ProtectionLayer from './components/common/ProtectionLayer';
 import Layout from './components/layout/Layout';
-import './styles/themes.css';
+import './styles/themes.scss';
 import './styles/protection.css';
 
 // Pages com lazy loading (code splitting)

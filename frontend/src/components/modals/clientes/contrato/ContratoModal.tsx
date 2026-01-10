@@ -1184,43 +1184,42 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         });
         
         if (confirmed) {
-            try {
-              let successCount = 0;
-              let errorCount = 0;
-              
-              for (const item of selectedItems) {
-                try {
-                  await deleteServicoAdicionalMutation.mutateAsync(item.id);
-                  successCount++;
-                } catch (err: unknown) {
-                  errorCount++;
-                  const errorMessage = extractApiErrorMessageSync(err, {
-                    defaultMessage: CONTEXT_ERROR_MESSAGES.SERVICO_ADICIONAL_DELETE_ERROR
-                  });
-                  if (selectedItems.length === 1) {
-                    error(errorMessage);
-                  }
+          try {
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const item of selectedItems) {
+              try {
+                await deleteServicoAdicionalMutation.mutateAsync(item.id);
+                successCount++;
+              } catch (err: unknown) {
+                errorCount++;
+                const errorMessage = extractApiErrorMessageSync(err, {
+                  defaultMessage: CONTEXT_ERROR_MESSAGES.SERVICO_ADICIONAL_DELETE_ERROR
+                });
+                if (selectedItems.length === 1) {
+                  error(errorMessage);
                 }
               }
-              
-              if (successCount > 0) {
-                const message = successCount === 1 
-                  ? 'Serviço adicional deletado com sucesso!'
-                  : `${successCount} serviços adicionais deletados com sucesso!`;
-                success(message);
-              }
-              
-              if (errorCount > 0 && selectedItems.length > 1) {
-                error(`${errorCount} serviço(s) adicional(is) não puderam ser deletados`);
-              }
-              
-              queryClient.invalidateQueries({ queryKey: ['contrato-planos-adicionais', internalContratoId] });
-            } catch (err: unknown) {
-              const errorMessage = extractApiErrorMessageSync(err, {
-                defaultMessage: CONTEXT_ERROR_MESSAGES.SERVICOS_ADICIONAIS_DELETE_ERROR
-              });
-              error(errorMessage);
             }
+            
+            if (successCount > 0) {
+              const message = successCount === 1 
+                ? 'Serviço adicional deletado com sucesso!'
+                : `${successCount} serviços adicionais deletados com sucesso!`;
+              success(message);
+            }
+            
+            if (errorCount > 0 && selectedItems.length > 1) {
+              error(`${errorCount} serviço(s) adicional(is) não puderam ser deletados`);
+            }
+            
+            queryClient.invalidateQueries({ queryKey: ['contrato-planos-adicionais', internalContratoId] });
+          } catch (err: unknown) {
+            const errorMessage = extractApiErrorMessageSync(err, {
+              defaultMessage: CONTEXT_ERROR_MESSAGES.SERVICOS_ADICIONAIS_DELETE_ERROR
+            });
+            error(errorMessage);
           }
         }
       },

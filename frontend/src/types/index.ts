@@ -96,7 +96,7 @@
  * ```
  */
 
-import { Cliente, Plano, Banco, Contrato, Carne, CarneParcela, Fornecedor, ContaPagar, NotaFiscal, CreateNotaFiscal } from './entities';
+import { Cliente, Plano, Banco, Contrato, Carne, CarneParcela, Fornecedor, ContaPagar, CreateNotaFiscal } from './entities';
 
 // Re-exportar tipos consolidados
 export * from './entities';
