@@ -19,6 +19,7 @@ import ContratoModal from '../contrato/ContratoModal';
 import GerarNFeModal from '@/components/modals/notas-fiscais/GerarNFeModal';
 import { Button } from '@/components/ui';
 import ConfirmModal from '@/components/modals/ConfirmModal';
+import './ClienteModal.css';
 // Componentes de abas
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import ContatoTab from './abas/ContatoTab';
@@ -375,26 +376,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     // Conteúdo normal do formulário
     return (
       <>
-        <div style={{ 
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
+        <div className="cliente-modal-content">
           {/* Navegação por Abas - Fixa */}
-          <ul className="nav nav-tabs" id="clienteTabs" role="tablist" style={{ 
-            flexShrink: 0, 
-            marginBottom: isMobile ? '1rem' : 0, 
-            marginTop: isMobile ? '0' : '1rem', 
-            marginLeft: isMobile ? '0' : '1rem', 
-            marginRight: isMobile ? '0' : '1rem',
-            ...(isMobile && {
-              display: 'flex',
-              flexWrap: 'nowrap',
-              overflowX: 'auto',
-              overflowY: 'hidden',
-              WebkitOverflowScrolling: 'touch'
-            })
-          }}>
+          <ul
+            className={`nav nav-tabs ${isMobile ? 'cliente-tabs-mobile' : 'cliente-tabs'}`}
+            id="clienteTabs"
+            role="tablist"
+          >
             <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'dados-basicos' ? 'active' : ''}`}
@@ -464,18 +452,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           </ul>
 
           {/* Conteúdo das Abas - Com Scroll */}
-          <div 
-            className="tab-content" 
-            id="clienteTabContent" 
-            style={{ 
-              flex: 1, 
-              overflow: (activeTab === 'contratos' || activeTab === 'financeiro' || activeTab === 'arquivos') ? 'hidden' : 'auto', 
-              // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
-              padding: (activeTab === 'contratos' || activeTab === 'financeiro' || activeTab === 'arquivos') ? '0' : (isMobile ? '0' : '16px'), 
-              minHeight: 0,
-              display: 'flex',
-              flexDirection: 'column'
-            }}
+          <div
+            className={`tab-content cliente-tab-content ${
+              (activeTab === 'contratos' || activeTab === 'financeiro' || activeTab === 'arquivos')
+                ? 'cliente-tab-content-scrollable'
+                : 'cliente-tab-content-padded'
+            }`}
+            id="clienteTabContent"
           >
             {/* Aba Cliente */}
             {activeTab === 'dados-basicos' && (
