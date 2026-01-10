@@ -9,6 +9,8 @@ import ListModal from '@/components/common/ListModal';
 import FornecedorModal from './FornecedorModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface FornecedorListModalProps {
   show: boolean;
@@ -32,6 +34,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   
   // Hook de auditoria
   const auditoria = useAuditoria();
+  const { confirm, modalProps } = useConfirmModal();
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -285,9 +288,19 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
       label: 'Excluir',
       variant: 'danger' as const,
       disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0,
-      action: (selectedItems: Fornecedor[]) => {
+      action: async (selectedItems: Fornecedor[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (item && window.confirm('Tem certeza que deseja excluir este fornecedor?')) {
+        if (!item) return;
+        
+        const confirmed = await confirm({
+          message: 'Tem certeza que deseja excluir este fornecedor?',
+          variant: 'danger',
+          title: 'Excluir fornecedor',
+          confirmText: 'Excluir',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
           handleDelete(item.id);
         }
       }
@@ -360,6 +373,9 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         title="Relatórios de logs"
         modalId="auditoria-fornecedor-modal"
       />
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

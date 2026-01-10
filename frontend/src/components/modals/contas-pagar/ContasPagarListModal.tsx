@@ -12,6 +12,8 @@ import ListModal from '@/components/common/ListModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import DraggableModal from '@/components/common/DraggableModal';
 import ContaPagarModal from './ContaPagarModal';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface ContasPagarListModalProps {
   show: boolean;
@@ -40,7 +42,8 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   
   // Hook de auditoria
   const auditoria = useAuditoria();
-  
+  const { confirm, modalProps } = useConfirmModal();
+
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters<ContaPagarFilters>({
     initialSearch: '',
@@ -506,9 +509,19 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       label: 'Excluir',
       variant: 'danger' as const,
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
-      action: (selectedItems: ContaPagar[]) => {
+      action: async (selectedItems: ContaPagar[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (item && window.confirm('Tem certeza que deseja excluir esta conta a pagar?')) {
+        if (!item) return;
+        
+        const confirmed = await confirm({
+          message: 'Tem certeza que deseja excluir esta conta a pagar?',
+          variant: 'danger',
+          title: 'Excluir conta a pagar',
+          confirmText: 'Excluir',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
           handleDelete(item.id);
         }
       }
@@ -717,6 +730,9 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         title="Relatórios de logs"
         modalId="auditoria-conta-pagar-modal"
       />
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };
