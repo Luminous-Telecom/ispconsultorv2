@@ -1,7 +1,16 @@
 @use './variables';
 @use './base';
+@use './sidebar';
+@use './layout';
+@use './components';
+@use './tables';
+@use './dashboard';
 
-/* Overlay do sidebar (mobile) */
+/* ============================================
+   TEMAS GERAIS - Regras restantes e específicas
+   ============================================ */
+
+/* Tema escuro - ajustes específicos para componentes não cobertos pelos módulos */
 .sidebar-overlay {
   position: fixed;
   top: 0;

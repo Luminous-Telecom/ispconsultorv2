@@ -1,0 +1,906 @@
+/* ============================================
+   TABELAS - Estilos para tabelas responsivas e mobile
+   ============================================ */
+
+/* Tabelas modernas e elegantes */
+.table {
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: none;
+  border-radius: 12px;
+  background: var(--bg-primary);
+}
+
+.table th,
+.table td {
+  border-radius: 0;
+  border-right: 1px solid var(--border-light);
+  padding: 1rem 1.25rem;
+  vertical-align: middle;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.table th:last-child,
+.table td:last-child {
+  border-right: none;
+}
+
+.table thead th {
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  border-bottom: 2px solid var(--btn-primary-color);
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1rem 1.25rem;
+}
+
+.table thead th:hover {
+  background: var(--bg-tertiary);
+}
+
+.table tbody td {
+  border-bottom: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table tbody td:last-child {
+  border-right: none;
+}
+
+.table thead th {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+}
+
+/* Hover padrão - será sobrescrito por regras específicas de tema */
+.table tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+.table tbody tr:nth-child(even) {
+  background: var(--bg-secondary);
+}
+
+.table tbody tr:nth-child(even):hover {
+  background: var(--bg-tertiary);
+}
+
+/* Garantir hover visível no modo claro */
+:root .table tbody tr:hover {
+  background: #f1f3f4;
+}
+
+:root .table tbody tr:nth-child(even):hover {
+  background: #e8eaed;
+}
+
+/* Linha selecionada - Deve sobrescrever todas as outras regras */
+.table tbody tr.table-active,
+.table tbody tr.table-active:nth-child(even),
+.table tbody tr.table-active:nth-child(odd) {
+  background-color: #6366f1 !important;
+}
+
+.table tbody tr.table-active td,
+.table tbody tr.table-active th,
+.table tbody tr.table-active:nth-child(even) td,
+.table tbody tr.table-active:nth-child(even) th,
+.table tbody tr.table-active:nth-child(odd) td,
+.table tbody tr.table-active:nth-child(odd) th {
+  background-color: #6366f1 !important;
+  color: white !important;
+}
+
+/* Hover em linha selecionada - tom mais claro para diferenciar */
+.table tbody tr.table-active:hover,
+.table tbody tr.table-active:nth-child(even):hover,
+.table tbody tr.table-active:nth-child(odd):hover {
+  background-color: #818cf8 !important;
+}
+
+.table tbody tr.table-active:hover td,
+.table tbody tr.table-active:hover th,
+.table tbody tr.table-active:nth-child(even):hover td,
+.table tbody tr.table-active:nth-child(even):hover th,
+.table tbody tr.table-active:nth-child(odd):hover td,
+.table tbody tr.table-active:nth-child(odd):hover th {
+  background-color: #818cf8 !important;
+  color: white !important;
+}
+
+/* Larguras específicas para colunas */
+.table th.col-id,
+.table td.col-id {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+}
+
+.table th.col-small,
+.table td.col-small {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+}
+
+.table th.col-medium,
+.table td.col-medium {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.table th.col-large,
+.table td.col-large {
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+}
+
+.table th.col-extra-large,
+.table td.col-extra-large {
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
+}
+
+.table th.col-flex,
+.table td.col-flex {
+  width: auto;
+  min-width: 150px;
+  flex: 1;
+}
+
+/* Modo escuro */
+[data-theme="dark"] .table tbody tr:hover {
+  background-color: #334155;
+}
+
+[data-theme="dark"] .table tbody tr:nth-child(even) {
+  background-color: #0f172a !important;
+}
+
+[data-theme="dark"] .table tbody tr:nth-child(even):hover {
+  background-color: #334155 !important;
+}
+
+/* Garantir que cabeçalhos de tabela tenham texto claro no tema escuro */
+[data-theme="dark"] .table th {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .table tbody tr:nth-child(even) {
+  background-color: #0f172a !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+  background-color: #334155 !important;
+}
+
+[data-theme="dark"] .table tbody tr:nth-child(even):hover {
+  background-color: #334155 !important;
+}
+
+/* Linhas selecionadas no tema dark - devem sobrescrever todas as outras regras */
+[data-theme="dark"] .table tbody tr.table-active,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even),
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd) {
+  background-color: #6366f1 !important;
+}
+
+[data-theme="dark"] .table tbody tr.table-active td,
+[data-theme="dark"] .table tbody tr.table-active th,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even) td,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even) th,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd) td,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd) th {
+  background-color: #6366f1 !important;
+  color: white !important;
+}
+
+/* Hover em linha selecionada no tema dark - tom mais claro para diferenciar */
+[data-theme="dark"] .table tbody tr.table-active:hover,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover {
+  background-color: #818cf8 !important;
+}
+
+[data-theme="dark"] .table tbody tr.table-active:hover td,
+[data-theme="dark"] .table tbody tr.table-active:hover th,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover td,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover th,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover td,
+[data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover th {
+  background-color: #818cf8 !important;
+  color: white !important;
+}
+
+/* Sobrescrever bg-light para tema escuro */
+[data-theme="dark"] .bg-light {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Sobrescrever text-dark para tema escuro */
+[data-theme="dark"] .text-dark {
+  color: var(--text-primary) !important;
+}
+
+/* Sobrescrever text-muted para tema escuro */
+[data-theme="dark"] .text-muted {
+  color: var(--text-secondary) !important;
+}
+
+/* Sobrescrever small para tema escuro */
+[data-theme="dark"] .small {
+  color: var(--text-secondary) !important;
+}
+
+/* Sobrescrever badges bg-light no tema escuro */
+[data-theme="dark"] .badge.bg-light {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Sobrescrever badge bg-primary para tema escuro */
+[data-theme="dark"] .badge.bg-primary {
+  background-color: #6366f1 !important;
+  color: #ffffff !important;
+}
+
+/* Sobrescrever badge bg-warning para tema escuro */
+[data-theme="dark"] .badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000000 !important;
+}
+
+/* Sobrescrever badge bg-success para tema escuro */
+[data-theme="dark"] .badge.bg-success {
+  background-color: #28a745 !important;
+  color: #ffffff !important;
+}
+
+/* Sobrescrever badge bg-danger para tema escuro */
+[data-theme="dark"] .badge.bg-danger {
+  background-color: #dc3545 !important;
+  color: #ffffff !important;
+}
+
+/* Sobrescrever badge bg-info para tema escuro */
+[data-theme="dark"] .badge.bg-info {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+/* Garantir que cards e table-responsive também tenham fundo correto */
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .table-responsive {
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table tbody td,
+[data-theme="dark"] .table tbody th {
+  background-color: inherit !important;
+  color: var(--text-primary) !important;
+}
+
+/* Borda na última linha da tabela igual ao cabeçalho */
+.table tbody tr:last-child td {
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.table tbody tr:hover {
+  background-color: #334155;
+}
+
+/* Garantir texto claro no modo escuro para linhas não selecionadas */
+[data-theme="dark"] .table tbody tr:not(.table-active) td {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .table tbody tr:not(.table-active) th {
+  color: var(--text-primary) !important;
+}
+
+/* Badges modernos */
+.badge {
+  border-radius: 12px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.badge-primary {
+  background: #6366f1;
+  color: white;
+}
+
+.badge-success {
+  background: #10b981;
+  color: white;
+}
+
+.badge-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.badge-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.badge-info {
+  background: #3b82f6;
+  color: white;
+}
+
+.badge-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease;
+}
+
+/* Notificações */
+.notification-container {
+  position: fixed;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  z-index: 9999;
+  max-width: 350px;
+}
+
+.notification {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.3s ease;
+  font-size: 0.875rem;
+}
+
+.notification-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Estilos específicos para alertas */
+.alert-success {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.alert-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.alert-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.alert-info {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Estilos para Mensagens WhatsApp */
+.whatsapp-messages-container textarea {
+  resize: vertical;
+  overflow: hidden;
+}
+
+/* Estilos para tabelas em modo mobile (cards) */
+.table-mobile-container {
+  padding: 0.5rem;
+  padding-bottom: 4.5rem; /* Espaço para a paginação fixa na parte inferior */
+  overflow: visible; /* Garantir que dropdown não seja cortado pelo container */
+}
+
+/* Remover padding-bottom do table-mobile-container dentro de modais */
+.modal-body .table-mobile-container,
+.modal-content .table-mobile-container,
+.responsive-dialog-mobile-content .table-mobile-container {
+  padding-bottom: 0 !important;
+}
+
+/* Mobile: remover padding-top do table-mobile-container para iniciar do topo */
+@media (max-width: 767.98px) {
+  .main-content .table-mobile-container {
+    padding-top: 0 !important;
+  }
+}
+
+.table-mobile-loading,
+.table-mobile-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.table-mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.table-mobile-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.table-mobile-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table-mobile-card.selected {
+  border-color: var(--btn-primary-color, #0d6efd);
+  background: rgba(13, 110, 253, 0.05);
+}
+
+.table-mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.table-mobile-card-header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.table-mobile-card-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.table-mobile-card-essential {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.table-mobile-field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.table-mobile-field.field-id {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.table-mobile-field.field-name .field-value {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+.field-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.field-value {
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.table-mobile-expand-btn,
+.table-mobile-menu-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.table-mobile-expand-btn:hover,
+.table-mobile-menu-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.table-mobile-card-details {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.table-mobile-card-details .table-mobile-field {
+  font-size: 0.75rem;
+}
+
+/* Header mobile da tabela */
+.table-mobile-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+  z-index: 100;
+}
+
+.table-mobile-search-container {
+  position: relative;
+  width: 100%;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 101;
+}
+
+/* Dropdown de ações mobile */
+.table-mobile-dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 99998 !important;
+}
+
+.table-mobile-dropdown {
+  position: fixed !important;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 140px;
+  z-index: 99999 !important;
+  overflow: hidden;
+}
+
+.table-mobile-dropdown.opens-up {
+  bottom: 6rem !important;
+  top: auto !important;
+}
+
+.table-mobile-card-header-right {
+  position: relative;
+  overflow: visible;
+  z-index: auto;
+}
+
+.table-mobile-card {
+  overflow: visible;
+  position: relative;
+  z-index: auto;
+}
+
+.table-mobile-dropdown-item {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.table-mobile-dropdown-item:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+}
+
+.table-mobile-dropdown-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.table-mobile-dropdown-item.danger {
+  color: var(--danger-color, #dc3545);
+}
+
+.table-mobile-dropdown-item.danger:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 0.1);
+}
+
+/* Paginação fixa na parte inferior (mobile) */
+.table-mobile-pagination {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  padding: 0;
+  z-index: 100000 !important;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.table-mobile-pagination > div {
+  width: 100%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Garantir que elementos de resumo tenham espaço suficiente acima da paginação no mobile */
+@media (max-width: 767.98px) {
+  /* Elementos de resumo (Resumo de contratos, Resumo Financeiro, etc) */
+  .financeiro-resumo {
+    margin-bottom: 3rem !important; /* Espaço suficiente para a paginação fixa */
+  }
+
+  /* Fallback para elementos com bg-light rounded */
+  div.bg-light.rounded.financeiro-resumo {
+    margin-bottom: 3rem !important;
+  }
+
+  /* Garantir que resumos dentro de tab-content e responsive-dialog também respeitem */
+  .responsive-dialog-mobile-content .financeiro-resumo,
+  .responsive-dialog-mobile-content .tab-content .financeiro-resumo,
+  .tab-content .financeiro-resumo,
+  [class*="col-"] .financeiro-resumo {
+    margin-bottom: 3rem !important;
+  }
+
+  /* Resumo de totais de contratos */
+  .contrato-totais-resumo {
+    margin-bottom: 3rem !important; /* Espaço suficiente para a paginação fixa */
+  }
+
+  /* Garantir que totais dentro de responsive-dialog também respeitem */
+  .responsive-dialog-mobile-content .contrato-totais-resumo {
+    margin-bottom: 3rem !important;
+  }
+
+  /* Adicionar padding-bottom ao conteúdo do modal para não ficar escondido atrás da paginação */
+  .responsive-dialog-mobile-content {
+    padding-bottom: 4rem !important;
+  }
+}
+
+.table-mobile-pagination .d-flex {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.table-mobile-pagination .btn-sm {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.table-mobile-pagination .btn-sm i {
+  font-size: 0.75rem;
+}
+
+.table-mobile-pagination .small {
+  font-size: 0.6875rem;
+  white-space: nowrap;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .table-mobile-pagination {
+    display: none;
+  }
+}
+
+/* Dropdown de ações desktop */
+.table-actions-desktop {
+  position: relative;
+  display: inline-block;
+}
+
+.table-action-menu-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.table-action-menu-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.table-dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 1048;
+}
+
+.table-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 140px;
+  z-index: 1049;
+  overflow: hidden;
+}
+
+.table-dropdown-item {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.table-dropdown-item:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+}
+
+.table-dropdown-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.table-dropdown-item.danger {
+  color: var(--danger-color, #dc3545);
+}
+
+.table-dropdown-item.danger:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 0.1);
+}
+
+@media (min-width: 768px) {
+  .table-mobile-container,
+  .table-mobile-cards,
+  .table-mobile-card {
+    display: none;
+  }
+}
+
+/* Classe customizada para 5 colunas em telas xl (>= 1200px) */
+@media (min-width: 1200px) {
+  .col-xl-5-custom {
+    flex: 0 0 auto;
+    width: 20%;
+  }
+}

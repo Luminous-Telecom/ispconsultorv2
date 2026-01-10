@@ -1,0 +1,738 @@
+/* ============================================
+   COMPONENTES - Cards, botões, tabelas e formulários
+   ============================================ */
+
+/* Cards modernos e elegantes */
+.card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+}
+
+.card-header h1,
+.card-header h2,
+.card-header h3,
+.card-header h4,
+.card-header h5,
+.card-header h6,
+.card-title {
+  color: var(--text-primary);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Botões modernos e elegantes */
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  transition: box-shadow 0.2s ease;
+}
+
+.btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.btn-lg {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Botão FAB suspenso no canto inferior direito (mobile) */
+.table-mobile-fab-container {
+  position: fixed;
+  bottom: 4.5rem; /* Valor inicial ajustado para 72px (mais próximo do real com paginação) */
+  right: 1rem;
+  z-index: 100001; /* Acima da paginação (100000) e do dropdown de ações */
+  transition: bottom 0.2s ease-out; /* Transição mais rápida para ajuste imperceptível */
+}
+
+.table-mobile-fab-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--btn-primary-color, #0d6efd);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 0;
+}
+
+.table-mobile-fab-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.table-mobile-fab-btn:active {
+  transform: scale(0.95);
+}
+
+.table-mobile-fab-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.table-mobile-fab-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 200px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.375rem 0;
+  z-index: 100003 !important;
+  position: fixed !important;
+}
+
+.table-mobile-fab-dropdown .dropdown-item {
+  min-height: 40px;
+  padding: 0.5rem 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.table-mobile-fab-dropdown .dropdown-item:hover:not(:disabled) {
+  background-color: var(--bg-tertiary);
+}
+
+.table-mobile-fab-dropdown .dropdown-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (min-width: 768px) {
+  .table-mobile-fab-container {
+    display: none;
+  }
+}
+
+/* Padronizar tamanho dos botões no mobile */
+@media (max-width: 767.98px) {
+  /* Remover width: 100% padrão dos botões no mobile */
+  .btn:not(.btn-link):not(.btn-sm):not(.btn-lg):not(.table-mobile-fab-btn):not(.mobile-menu-btn):not([style*="width"]) {
+    width: auto !important;
+  }
+
+  /* Todos os botões padrão terão o mesmo tamanho */
+  .btn:not(.btn-sm):not(.btn-lg):not(.btn-link):not(.table-mobile-fab-btn):not(.mobile-menu-btn) {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    min-height: 44px;
+    min-width: 80px;
+    white-space: nowrap;
+    flex: 1 1 auto;
+  }
+
+  /* Botões grandes */
+  .btn-lg:not(.btn-link) {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    min-height: 44px;
+    min-width: 80px;
+    white-space: nowrap;
+    flex: 1 1 auto;
+  }
+
+  /* Garantir que botões em grupos (rodapés de modais) tenham tamanhos iguais */
+  .d-flex.gap-2 > .btn:not(.btn-link):not([style*="width"]),
+  .d-flex[style*="gap"] > .btn:not(.btn-link):not([style*="width"]),
+  .justify-content-end > .btn:not(.btn-link):not([style*="width"]),
+  .justify-content-between > .btn:not(.btn-link):not([style*="width"]),
+  .modal-footer > .btn:not(.btn-link):not([style*="width"]),
+  .card-footer > .btn:not(.btn-link):not([style*="width"]),
+  .col-12 > .d-flex > .btn:not(.btn-link):not([style*="width"]),
+  .mt-3 > .d-flex > .btn:not(.btn-link):not([style*="width"]),
+  .mb-3 > .d-flex > .btn:not(.btn-link):not([style*="width"]) {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
+
+  /* Quando há 2 botões lado a lado, dividir igualmente */
+  .d-flex.gap-2 > .btn:not(.btn-link):not([style*="width"]):nth-child(1):nth-last-child(2),
+  .d-flex.gap-2 > .btn:not(.btn-link):not([style*="width"]):nth-child(2):nth-last-child(1),
+  .d-flex[style*="gap"] > .btn:not(.btn-link):not([style*="width"]):nth-child(1):nth-last-child(2),
+  .d-flex[style*="gap"] > .btn:not(.btn-link):not([style*="width"]):nth-child(2):nth-last-child(1) {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  /* Quando há mais de 2 botões, manter flexível mas com tamanho mínimo */
+  .d-flex.gap-2 > .btn:not(.btn-link):not([style*="width"]):nth-child(n+3),
+  .d-flex[style*="gap"] > .btn:not(.btn-link):not([style*="width"]):nth-child(n+3) {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  /* Reduzir espaçamento entre botões */
+  .d-flex.gap-2 > .btn,
+  .d-flex[style*="gap"] > .btn {
+    margin-right: 0.25rem;
+  }
+
+  /* Garantir que botões em modais tenham tamanho igual */
+  .responsive-dialog-mobile-content .btn:not(.btn-link):not(.mobile-menu-btn):not(.table-mobile-fab-btn),
+  .modal-body .btn:not(.btn-link),
+  .card-body .btn:not(.btn-link) {
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  /* Padronizar estilo dos dropdown-items no dropdown do header mobile */
+  .responsive-dialog-mobile .dropdown-menu .dropdown-item {
+    min-height: 40px;
+    padding: 0.5rem 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: background-color 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+
+  .responsive-dialog-mobile .dropdown-menu .dropdown-item:hover:not(:disabled) {
+    background-color: var(--bg-tertiary);
+  }
+
+  .responsive-dialog-mobile .dropdown-menu .dropdown-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .responsive-dialog-mobile .dropdown-menu .dropdown-item i {
+    font-size: 0.9375rem;
+    width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .responsive-dialog-mobile .dropdown-menu .dropdown-item span {
+    white-space: nowrap;
+  }
+
+  /* Garantir que o dropdown possa escapar do container */
+  .responsive-dialog-mobile > div:first-child {
+    overflow: visible !important;
+  }
+
+  .responsive-dialog-mobile .position-relative[style*="z-index"] {
+    overflow: visible !important;
+  }
+}
+
+/* Variantes de botões */
+.btn-primary {
+  background-color: var(--btn-primary-color);
+  color: white;
+  border: 1px solid var(--btn-primary-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-color);
+}
+
+.btn-success {
+  background: #10b981;
+  color: white;
+  border: 1px solid #10b981;
+}
+
+.btn-success:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  border: 1px solid #ef4444;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.btn-info {
+  background: #3b82f6;
+  color: white;
+  border: 1px solid #3b82f6;
+}
+
+.btn-info:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.btn-warning {
+  background: #f59e0b;
+  color: white;
+  border: 1px solid #f59e0b;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+  border-color: #d97706;
+}
+
+/* Formulários */
+.form-label {
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.form-check-label {
+  color: var(--text-primary);
+  font-weight: 400;
+  font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
+  margin-left: 0.5rem;
+}
+
+.form-check-input {
+  width: 1em;
+  height: 1em;
+  margin-top: 0.25em;
+  vertical-align: top;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+}
+
+.form-check-input[type="checkbox"] {
+  border-radius: 0.25em;
+}
+
+.form-check-input[type="checkbox"]:checked {
+  background-color: var(--btn-primary-color);
+  border-color: var(--btn-primary-color);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.form-switch {
+  padding-left: 2.5em;
+}
+
+.form-switch .form-check-input {
+  width: 2em;
+  height: 1.25em;
+  margin-left: -2.5em;
+  background-image: none;
+  background-position: left center;
+  border-radius: 2em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  background-color: #6b7280;
+  border-color: #6b7280;
+}
+
+.form-switch .form-check-input::before {
+  content: '';
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background-color: #ffffff;
+  top: 50%;
+  left: 0.125rem;
+  transform: translateY(-50%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.form-switch .form-check-input:checked {
+  background-color: #10b981;
+  border-color: #10b981;
+  background-image: none;
+}
+
+.form-switch .form-check-input:checked::before {
+  left: calc(100% - 1.125rem);
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.form-switch .form-check-input:checked:hover:not(:disabled) {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+/* Modo escuro - ajustes específicos */
+[data-theme="dark"] .form-check-input {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-check-input:hover:not(:disabled) {
+  border-color: var(--btn-primary-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="dark"] .form-switch .form-check-input {
+  background-color: #4b5563;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .form-switch .form-check-input:not(:checked) {
+  background-color: #4b5563;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .form-switch .form-check-input:checked {
+  background-color: #10b981;
+  border-color: #10b981;
+}
+
+[data-theme="dark"] .form-switch .form-check-input::before {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.form-select {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  padding: 0.5rem 0.875rem;
+  height: auto;
+  line-height: 1.25;
+}
+
+.form-select:focus {
+  border-color: var(--btn-primary-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  outline: none;
+  background: var(--bg-primary);
+  transform: translateY(-1px);
+}
+
+.form-select option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Dropdown Menu */
+.dropdown-menu-container {
+  position: relative;
+}
+
+.dropdown-toggle:not(.btn) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-size: 0.75rem;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.dropdown-toggle:not(.btn) i {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+/* Ocultar ::after de dropdown-toggle */
+.dropdown-toggle::after {
+  display: none !important;
+}
+
+.dropdown-toggle:not(.btn):hover {
+  background: var(--sidebar-hover) !important;
+  color: var(--sidebar-text) !important;
+}
+
+.dropdown-toggle:not(.btn).active {
+  background: var(--sidebar-active) !important;
+  color: #ffffff !important;
+}
+
+.dropdown-arrow {
+  margin-left: auto;
+  font-size: 0.7rem;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  box-shadow: var(--shadow);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.75rem;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.dropdown-item i {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.dropdown-item span {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.dropdown-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dropdown-item.disabled:hover {
+  background: transparent;
+}
+
+/* Estilos para tema escuro */
+[data-theme="dark"] .dropdown-content {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dropdown-item {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Melhorar contraste de textos no modo escuro */
+[data-theme="dark"] .text-secondary {
+  color: #b8c1c8 !important;
+}
+
+[data-theme="dark"] .small,
+[data-theme="dark"] small {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .form-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: #6366f1;
+}
+
+[data-theme="dark"] .card {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .card-header {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Padronizar altura de todos os inputs e selects com os botões */
+.form-control,
+.form-control-sm,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="date"],
+textarea {
+  padding: 0.5rem 0.875rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25 !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--border-color) !important;
+  resize: vertical !important;
+}
+
+/* Reduzir padding de todos os inputs no mobile (deve vir depois da regra geral) */
+@media (max-width: 767.98px) {
+  .form-control,
+  .form-control-sm,
+  .form-select,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="date"],
+  textarea {
+    padding: 0.375rem 0.5rem !important;
+    min-height: 30px !important;
+  }
+}
+
+.form-control:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+input[type="date"]:focus,
+textarea:focus {
+  border-color: var(--btn-primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  outline: none !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Estilos para form-control nos temas - Simplificado */
+[data-theme="light"] .form-control,
+[data-theme="light"] .form-control-sm {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #ced4da;
+}
+
+[data-theme="light"] .form-control::placeholder {
+  color: #6c757d;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-control-sm {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+  color: var(--text-muted);
+}
+
+.form-control:focus,
+.form-control-sm:focus {
+  border-color: var(--btn-primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-control-sm:focus {
+  background-color: var(--bg-tertiary);
+}

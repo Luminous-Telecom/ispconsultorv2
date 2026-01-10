@@ -1,0 +1,517 @@
+/* ============================================
+   LAYOUT - Header responsivo e layout principal
+   ============================================ */
+
+/* ============================================
+   HEADER - MOBILE-FIRST RESPONSIVE DESIGN
+   ============================================ */
+
+/* Base Mobile Styles (< 768px) */
+.main-header {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.875rem 1rem; /* Mobile: padding reduzido */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 100%;
+  overflow-x: visible; /* Permitir que dropdown apareça */
+  overflow-y: visible;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .main-header {
+  background: var(--bg-secondary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Container do header - Mobile: coluna */
+.header-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem; /* Mobile: gap menor */
+  width: 100%;
+  max-width: 100%;
+  overflow-x: visible; /* Permitir que dropdown apareça */
+  overflow-y: visible;
+  box-sizing: border-box;
+}
+
+/* Linha 1: Controles principais - Layout: Esquerda | Centro | Direita */
+.header-row-1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: visible; /* Permitir que dropdown apareça */
+  overflow-y: visible;
+  box-sizing: border-box;
+  min-width: 0;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .header-row-1 {
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+}
+
+/* Esquerda: Menu hamburger */
+.header-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 0;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+/* Centro: Título Dashboard - Centralizado perfeitamente (mobile) */
+.header-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* Permitir clique através do título */
+}
+
+/* Desktop: Filtros de data na mesma linha */
+.header-dates-desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .header-center {
+    position: static !important;
+    left: auto !important;
+    transform: none !important;
+    margin-right: 0;
+    pointer-events: auto;
+    flex-shrink: 0;
+  }
+
+  .header-dates-desktop {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: 0;
+    margin-right: 0;
+    flex-shrink: 0;
+    order: 2;
+  }
+
+  .header-dates-desktop .date-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .header-dates-desktop .date-label {
+    font-size: 0.875rem;
+    white-space: nowrap;
+    margin: 0;
+  }
+
+  .header-dates-desktop .dashboard-date-input {
+    width: auto;
+    min-width: 140px;
+  }
+
+  .header-right {
+    margin-left: auto;
+    order: 3;
+  }
+
+  .header-row-1 {
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+}
+
+.header-title {
+  font-size: 0.8rem; /* Mobile: tamanho reduzido (12.8px) */
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+/* Direita: Menu de ações */
+.header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  margin-left: auto; /* Empurrar para direita */
+  overflow: visible; /* Permitir que dropdown apareça */
+  position: relative;
+}
+
+/* Hamburger button - Mesmo estilo do menu de 3 pontos */
+.hamburger-btn {
+  padding: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  font-size: 1.25rem;
+  line-height: 1;
+  margin: 0;
+  border: none;
+  background-color: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  box-shadow: none;
+}
+
+.hamburger-btn:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.hamburger-btn i {
+  color: var(--text-primary);
+  font-size: 1.25rem;
+}
+
+/* Menu de 3 pontos - Mobile: visível */
+.mobile-menu-dropdown {
+  position: relative;
+  flex-shrink: 0;
+  margin: 0;
+  min-width: auto;
+  z-index: 1001; /* Garantir que o dropdown apareça acima */
+}
+
+.mobile-menu-btn {
+  padding: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  font-size: 1.25rem;
+  line-height: 1;
+  margin: 0;
+  border: none;
+  background-color: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.mobile-menu-btn span {
+  font-size: 1.25rem !important;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.mobile-menu-btn i,
+.mobile-menu-btn .bi {
+  font-size: 1.25rem !important;
+}
+
+.mobile-menu-btn:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.mobile-menu-btn span {
+  display: inline-block;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+/* Dropdown menu - Mobile */
+.mobile-dropdown-menu {
+  position: absolute;
+  right: 0;
+  left: auto;
+  top: 100%;
+  margin-top: 0.5rem;
+  z-index: 1001;
+  min-width: 160px;
+  max-width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background: var(--bg-primary);
+  padding: 0.375rem 0;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.mobile-dropdown-menu .dropdown-item {
+  min-height: 40px; /* Touch target adequado mas menor */
+  padding: 0.5rem 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-dropdown-menu .dropdown-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.mobile-dropdown-menu .dropdown-item i {
+  font-size: 0.9375rem;
+  width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobile-dropdown-menu .dropdown-item span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-dropdown-menu .dropdown-divider {
+  margin: 0.375rem 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.mobile-dropdown-menu .dropdown-item.text-danger {
+  color: var(--danger-color, #dc3545);
+}
+
+.mobile-dropdown-menu .dropdown-item.text-danger:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Botões desktop - Mobile: escondido */
+.desktop-buttons {
+  display: none; /* Mobile: escondido */
+}
+
+.desktop-buttons .btn {
+  min-height: 44px; /* Touch target mínimo */
+  min-width: 44px;
+}
+
+.desktop-buttons .btn-outline-secondary i,
+.desktop-buttons .btn-outline-secondary .bi {
+  color: var(--text-primary) !important;
+}
+
+.desktop-buttons .btn-outline-danger i,
+.desktop-buttons .btn-outline-danger .bi {
+  color: var(--danger-color, #dc3545) !important;
+}
+
+/* Linha 2: Filtros de data - Mobile: coluna/linha flexível */
+.header-row-2 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.date-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.date-label {
+  font-size: 0.8125rem; /* Mobile: fonte menor */
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dashboard-date-input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 16px; /* Previne zoom no iOS */
+  padding: 0.5rem 0.75rem;
+  box-sizing: border-box;
+}
+
+/* Reduzir min-height do dashboard-date-input no mobile */
+@media (max-width: 767.98px) {
+  .dashboard-date-input {
+    min-height: 30px !important;
+  }
+}
+
+/* Main content */
+.main-content {
+  background: var(--bg-primary);
+  min-height: calc(100vh - 64px);
+  padding: 0;
+}
+
+/* Container do dashboard - margens laterais consistentes */
+.dashboard-container {
+  padding: 0.5rem;
+  animation: fadeIn 0.4s ease;
+}
+
+/* Mobile: remover padding-top do dashboard */
+@media (max-width: 767.98px) {
+  .dashboard-container {
+    padding-top: 0 !important;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* Remover padding do container-fluid dentro do dashboard - o padding já está no dashboard-container */
+.dashboard-container .container-fluid {
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.dashboard-container .row {
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0.375rem;
+}
+
+.dashboard-container .row:last-child {
+  margin-bottom: 0;
+}
+
+.dashboard-container .row.g-3 {
+  --bs-gutter-x: 0.375rem;
+  --bs-gutter-y: 0.375rem;
+  margin-left: calc(var(--bs-gutter-x) * -0.5);
+  margin-right: calc(var(--bs-gutter-x) * -0.5);
+}
+
+.dashboard-container .row.g-3 > [class*="col-"] {
+  padding-left: calc(var(--bs-gutter-x) * 0.5) !important;
+  padding-right: calc(var(--bs-gutter-x) * 0.5) !important;
+}
+
+.dashboard-container .row:not(.g-3) > [class*="col-"] {
+  padding-left: calc(var(--bs-gutter-x) * 0.5) !important;
+  padding-right: calc(var(--bs-gutter-x) * 0.5) !important;
+}
+
+/* Botão de tema */
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.375rem;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-color);
+}
+
+/* Dashboard Filters Card */
+.dashboard-container .card.border-0.shadow-sm {
+  border-radius: 16px !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.dashboard-container .card.border-0.shadow-sm:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-theme="dark"] .dashboard-container .card.border-0.shadow-sm {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Dashboard Card Body */
+.dashboard-container .card-body {
+  padding: 0.75rem;
+}
+
+/* Dashboard Animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-container .chart-card,
+.dashboard-container .metric-card,
+.dashboard-container .dashboard-hero,
+.dashboard-container .dashboard-section {
+  animation: slideUp 0.4s ease backwards;
+}
+
+.dashboard-container .chart-card:nth-child(1) { animation-delay: 0.05s; }
+.dashboard-container .chart-card:nth-child(2) { animation-delay: 0.1s; }
+.dashboard-container .chart-card:nth-child(3) { animation-delay: 0.15s; }
+.dashboard-container .chart-card:nth-child(4) { animation-delay: 0.2s; }
+.dashboard-container .chart-card:nth-child(5) { animation-delay: 0.25s; }
+.dashboard-container .chart-card:nth-child(6) { animation-delay: 0.3s; }
+
+/* Desktop Large (>= 1024px) */
+@media (min-width: 1024px) {
+  .main-header {
+    padding: 1rem 2.5rem; /* Desktop grande: padding ainda maior */
+  }
+
+  .header-container {
+    gap: 2rem;
+  }
+
+  .header-title {
+    font-size: 1.375rem; /* Desktop grande: título ainda maior */
+  }
+
+  .dashboard-date-input {
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
+  }
+}
