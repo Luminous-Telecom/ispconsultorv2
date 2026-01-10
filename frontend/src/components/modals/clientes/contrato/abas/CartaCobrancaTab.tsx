@@ -9,6 +9,8 @@ import { TableConfig } from '@/components/tables/types';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import DocumentoModal from '@/components/modals/parametros/documento/DocumentoModal';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface CartaCobrancaTabProps {
   contratoId?: number | null;
@@ -19,6 +21,7 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
   const { success, error: showError } = useNotificationContext();
   const [_selectedItems, setSelectedItems] = useState<ModeloCarta[]>([]);
   const auditoria = useAuditoria();
+  const { confirm, modalProps } = useConfirmModal();
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
   const [documentoModalMode, setDocumentoModalMode] = useState<'create' | 'edit'>('create');
   const [selectedDocumentoId, setSelectedDocumentoId] = useState<number | null>(null);
@@ -167,7 +170,17 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
       label: 'Deletar',
       variant: 'danger' as const,
       onClick: async (selectedItems: ModeloCarta[]) => {
-        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} carta(s) de cobrança?`)) {
+        if (selectedItems.length === 0) return;
+        
+        const confirmed = await confirm({
+          message: `Tem certeza que deseja deletar ${selectedItems.length} carta(s) de cobrança?`,
+          variant: 'danger',
+          title: 'Deletar cartas de cobrança',
+          confirmText: 'Deletar',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
           try {
             await Promise.all(selectedItems.map(item => deleteDocumentoMutation.mutateAsync(item.id)));
             refetch();
@@ -246,6 +259,9 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
         title="Relatórios de logs"
         modalId="auditoria-modelo-carta-modal"
       />
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

@@ -6,6 +6,8 @@ import Table from '@/components/tables/Table';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import ImageViewerModal from '@/components/common/ImageViewerModal';
 import AdicionarArquivoModal from './AdicionarArquivoModal';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface ArquivosTabProps {
   clienteId?: number | null;
@@ -24,6 +26,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
   const { arquivos, isLoading, refetch, deleteMutation } = useClienteArquivos({
     clienteId: clienteId || undefined
   });
+  const { confirm, modalProps } = useConfirmModal();
 
   const isImageFile = useCallback((arquivo: ClienteArquivo): boolean => {
     const mimeType = (arquivo.mime_type || '').toLowerCase();
@@ -180,7 +183,17 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
         variant: 'danger' as const,
         disabled: (selectedItems: ClienteArquivo[]) => selectedItems.length === 0 || deleteMutation.isPending,
         onClick: async (selectedItems: ClienteArquivo[]) => {
-          if (window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} arquivo(s)?`)) {
+          if (selectedItems.length === 0) return;
+          
+          const confirmed = await confirm({
+            message: `Tem certeza que deseja deletar ${selectedItems.length} arquivo(s)?`,
+            variant: 'danger',
+            title: 'Deletar arquivos',
+            confirmText: 'Deletar',
+            cancelText: 'Cancelar',
+          });
+          
+          if (confirmed) {
             for (const item of selectedItems) {
               await deleteMutation.mutateAsync(item.id);
             }
@@ -251,6 +264,9 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
         title={previewTitle}
         modalId="image-viewer-modal"
       />
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </div>
   );
 };
