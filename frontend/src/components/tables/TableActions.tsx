@@ -1,6 +1,8 @@
 import React, { useMemo, useCallback } from 'react';
 import { TableAction, BulkAction } from './types';
 import Button from '../ui/Button';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface TableActionsProps<T = Record<string, unknown>> {
   item?: T;
@@ -23,6 +25,8 @@ const TableActions = <T extends { id: number | string }>({
   onBulkActionClick,
   className = '',
 }: TableActionsProps<T>) => {
+  const { confirm, modalProps } = useConfirmModal();
+  
   // Memoizar ações visíveis para evitar recálculo desnecessário
   const visibleActions = useMemo(() => {
     if (!item || actions.length === 0) return [];
@@ -49,30 +53,44 @@ const TableActions = <T extends { id: number | string }>({
   }, [bulkActions, selectedItems]);
 
   // Callback memoizado para ações individuais
-  const handleActionClick = useCallback((action: TableAction<T>) => {
+  const handleActionClick = useCallback(async (action: TableAction<T>) => {
     if (!item || index === undefined) return;
     
     if (action.confirm) {
-      // TODO: Implementar modal de confirmação
-      if (window.confirm(action.confirm.message)) {
+      const confirmed = await confirm({
+        message: action.confirm.message,
+        title: action.confirm.title || 'Confirmar ação',
+        variant: action.variant === 'danger' ? 'danger' : 'warning',
+        confirmText: action.confirm.confirmText || 'Confirmar',
+        cancelText: action.confirm.cancelText || 'Cancelar',
+      });
+      
+      if (confirmed) {
         onActionClick?.(action, item, index);
       }
     } else {
       onActionClick?.(action, item, index);
     }
-  }, [item, index, onActionClick]);
+  }, [item, index, onActionClick, confirm]);
 
   // Callback memoizado para ações em massa
-  const handleBulkActionClick = useCallback((action: BulkAction<T>) => {
+  const handleBulkActionClick = useCallback(async (action: BulkAction<T>) => {
     if (action.confirm) {
-      // TODO: Implementar modal de confirmação
-      if (window.confirm(action.confirm.message)) {
+      const confirmed = await confirm({
+        message: action.confirm.message,
+        title: action.confirm.title || 'Confirmar ação',
+        variant: action.variant === 'danger' ? 'danger' : 'warning',
+        confirmText: action.confirm.confirmText || 'Confirmar',
+        cancelText: action.confirm.cancelText || 'Cancelar',
+      });
+      
+      if (confirmed) {
         onBulkActionClick?.(action, selectedItems);
       }
     } else {
       onBulkActionClick?.(action, selectedItems);
     }
-  }, [selectedItems, onBulkActionClick]);
+  }, [selectedItems, onBulkActionClick, confirm]);
 
   // Renderizar ações individuais
   const renderItemActions = () => {
@@ -141,10 +159,15 @@ const TableActions = <T extends { id: number | string }>({
   }
 
   return (
-    <div className={`table-actions-container ${className}`}>
-      {renderItemActions()}
-      {renderBulkActions()}
-    </div>
+    <>
+      <div className={`table-actions-container ${className}`}>
+        {renderItemActions()}
+        {renderBulkActions()}
+      </div>
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
+    </>
   );
 };
 

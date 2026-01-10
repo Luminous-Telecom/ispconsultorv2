@@ -14,6 +14,8 @@ import ContratoModal from '@/components/modals/clientes/contrato/ContratoModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface ContratoListModalProps {
   show: boolean;
@@ -42,6 +44,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   
   const { success, error } = useNotificationContext();
   const auditoria = useAuditoria();
+  const { confirm, modalProps } = useConfirmModal();
 
   // Hook para impressão de contratos
   const impressaoHook = useImpressaoContrato({});
@@ -328,9 +331,18 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     },
     {
       label: 'Excluir',
-      action: (selectedItems: Contrato[]) => {
-        if (selectedItems.length > 0 && 
-            window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} contrato(s)?`)) {
+      action: async (selectedItems: Contrato[]) => {
+        if (selectedItems.length === 0) return;
+        
+        const confirmed = await confirm({
+          message: `Tem certeza que deseja excluir ${selectedItems.length} contrato(s)?`,
+          variant: 'danger',
+          title: 'Excluir contratos',
+          confirmText: 'Excluir',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
           selectedItems.forEach(item => handleDelete(item.id));
         }
       },
@@ -620,6 +632,9 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         title="Relatórios de logs"
         modalId="auditoria-contrato-modal"
       />
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 
