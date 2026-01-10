@@ -8,6 +8,8 @@ import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
 import { ApiResponse } from '@/types/api';
 import { API_CONFIG } from '@/config/api';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface Atualizacao {
   versao: string;
@@ -28,6 +30,7 @@ interface AtualizacoesModalProps {
 const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
+  const { confirm, modalProps } = useConfirmModal();
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<string>('');
   const [updateProgressPercent, setUpdateProgressPercent] = useState<number>(0);
@@ -159,8 +162,16 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
     },
   });
 
-  const handleUpdate = () => {
-    if (!window.confirm('Tem certeza que deseja atualizar o sistema? Esta ação irá:\n\n1. Baixar as últimas alterações do repositório\n2. Atualizar dependências\n3. Compilar o código\n4. Executar migrations do banco de dados\n5. Reiniciar a aplicação\n\nO processo pode levar alguns minutos.')) {
+  const handleUpdate = async () => {
+    const confirmed = await confirm({
+      message: 'Tem certeza que deseja atualizar o sistema? Esta ação irá:\n\n1. Baixar as últimas alterações do repositório\n2. Atualizar dependências\n3. Compilar o código\n4. Executar migrations do banco de dados\n5. Reiniciar a aplicação\n\nO processo pode levar alguns minutos.',
+      variant: 'warning',
+      title: 'Atualizar sistema',
+      confirmText: 'Atualizar',
+      cancelText: 'Cancelar',
+    });
+    
+    if (!confirmed) {
       return;
     }
 
@@ -387,6 +398,9 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
           </div>
         )}
       </div>
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </DraggableModal>
   );
 };

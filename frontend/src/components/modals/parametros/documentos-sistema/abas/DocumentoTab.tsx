@@ -13,6 +13,8 @@ import { DocumentoUnion } from '../types';
 import { DocumentoTabProps } from '../types';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 const DocumentoTab: React.FC<DocumentoTabProps> = ({
   tipo,
@@ -26,6 +28,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   const { success, error: showError } = useNotificationContext();
   const [, setSelectedItems] = useState<DocumentoUnion[]>([]);
   const auditoria = useAuditoria();
+  const { confirm, modalProps } = useConfirmModal();
   const onDocumentosLoadedRef = useRef(onDocumentosLoaded);
   
   // Atualizar ref quando a função mudar
@@ -212,7 +215,17 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
       label: 'Deletar',
       variant: 'primary' as const,
       onClick: async (selectedItems: DocumentoUnion[]) => {
-        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} documento(s)?`)) {
+        if (selectedItems.length === 0) return;
+        
+        const confirmed = await confirm({
+          message: `Tem certeza que deseja deletar ${selectedItems.length} documento(s)?`,
+          variant: 'danger',
+          title: 'Deletar documentos',
+          confirmText: 'Deletar',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
           try {
             await Promise.all(selectedItems.map(item => deleteDocumentoMutation.mutateAsync(item.id)));
             refetch();
@@ -268,6 +281,9 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
           modalId={`auditoria-modelo-documento-${tipo}-modal`}
         />
       )}
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };
