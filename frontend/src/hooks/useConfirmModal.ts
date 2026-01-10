@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import React from 'react';
-import ConfirmModal, { ConfirmVariant } from '@/components/modals/ConfirmModal';
+import { ConfirmVariant } from '@/components/modals/ConfirmModal';
 
 export interface ConfirmConfig {
   /**
@@ -143,6 +142,3 @@ export const useConfirmModal = (): UseConfirmModalReturn => {
     modalProps,
   };
 };
-
-export { useConfirmModal };
-export default useConfirmModal;
