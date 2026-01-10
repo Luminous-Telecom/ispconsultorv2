@@ -1,0 +1,42 @@
+/* FinanceiroModal.css - Estilos específicos para FinanceiroModal */
+
+/* Layout principal */
+.financeiro-modal-content {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.financeiro-modal-col {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.financeiro-modal-table-container {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+/* Colunas fixas */
+.financeiro-col-fixed {
+  width: 150px;
+}
+
+/* Resumo financeiro */
+.financeiro-resumo-container {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.financeiro-resumo-container-mobile {
+  margin-top: 0.25rem;
+  margin-bottom: 3rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}

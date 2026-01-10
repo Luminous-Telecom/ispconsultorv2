@@ -19,6 +19,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
+import './FinanceiroModal.css';
 
 interface FinanceiroModalProps {
   show: boolean;
@@ -715,9 +716,9 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   }, [success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, confirm]);
 
   const modalContent = (
-    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+    <div className="row financeiro-modal-content">
+      <div className="col-12 financeiro-modal-col">
+        <div className="financeiro-modal-table-container">
           <Table
               config={{
                 columns,
@@ -795,7 +796,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                       type="date"
                       id="dataVencimentoInicio"
                       className="form-control form-control-sm"
-                      style={{ width: '150px' }}
+                      className="financeiro-col-fixed"
                       value={dataVencimentoInicio}
                       onChange={(e) => setDataVencimentoInicio(e.target.value)}
                     />
@@ -804,7 +805,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                       type="date"
                       id="dataVencimentoFim"
                       className="form-control form-control-sm"
-                      style={{ width: '150px' }}
+                      className="financeiro-col-fixed"
                       value={dataVencimentoFim}
                       onChange={(e) => setDataVencimentoFim(e.target.value)}
                     />
@@ -839,7 +840,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
 
         {/* Resumo Financeiro */}
         {filteredData.length > 0 && (
-          <div className="d-flex justify-content-end align-items-center p-3 bg-light rounded financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+          <div className={`d-flex justify-content-end align-items-center p-3 bg-light rounded financeiro-resumo ${isMobile ? 'financeiro-resumo-container-mobile' : 'financeiro-resumo-container'}`}>
             <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
               <div className="text-end">
                 <div className="small text-muted">Valor:</div>
