@@ -9,6 +9,8 @@ import ListModal from '@/components/common/ListModal';
 import BancoModal from './BancoModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 interface BancoListModalProps {
   show: boolean;
   onClose: () => void;
@@ -28,6 +30,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
+  const { confirm, modalProps } = useConfirmModal();
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -231,9 +234,19 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       label: 'Excluir',
       variant: 'danger' as const,
       disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
-      action: (selectedItems: Banco[]) => {
+      action: async (selectedItems: Banco[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
-        if (item && window.confirm('Tem certeza que deseja excluir este banco?')) {
+        if (!item) return;
+        
+        const confirmed = await confirm({
+          message: 'Tem certeza que deseja excluir este banco?',
+          variant: 'danger',
+          title: 'Excluir banco',
+          confirmText: 'Excluir',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
           handleDelete(item.id);
         }
       }
@@ -294,6 +307,9 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         title="Relatórios de logs"
         modalId="auditoria-banco-modal"
       />
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

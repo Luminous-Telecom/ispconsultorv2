@@ -9,6 +9,8 @@ import ListModal from '@/components/common/ListModal';
 import ClienteModal from './cliente/ClienteModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { Cliente } from '@/types';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface ClienteListModalProps {
   show: boolean;
@@ -31,6 +33,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const [searchField, setSearchField] = useState<string>('razao_social');
   
   const auditoria = useAuditoria();
+  const { confirm, modalProps } = useConfirmModal();
 
   const handleAudit = useCallback((cliente: Cliente) => {
     auditoria.handleAudit('Cliente', cliente.id);
@@ -237,12 +240,22 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     }
   }, [selectedItem]);
 
-  const handleEditDelete = useCallback((selectedItems: Cliente[]) => {
+  const handleEditDelete = useCallback(async (selectedItems: Cliente[]) => {
     const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-    if (item && window.confirm('Tem certeza que deseja excluir este cliente?')) {
+    if (!item) return;
+    
+    const confirmed = await confirm({
+      message: 'Tem certeza que deseja excluir este cliente?',
+      variant: 'danger',
+      title: 'Excluir cliente',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+    });
+    
+    if (confirmed) {
       handleDelete(item.id);
     }
-  }, [selectedItem, handleDelete]);
+  }, [selectedItem, handleDelete, confirm]);
 
   // Paginação do backend - usar valores do backend quando disponíveis
   const pagination = clientesData?.pagination ? {
@@ -359,6 +372,9 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         title="Relatórios de logs"
         modalId="auditoria-cliente-modal"
       />
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };

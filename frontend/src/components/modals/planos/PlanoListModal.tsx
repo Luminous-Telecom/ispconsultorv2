@@ -10,6 +10,8 @@ import ListModal from '@/components/common/ListModal';
 import PlanoModal from './PlanoModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface PlanoListModalProps {
   show: boolean;
@@ -32,6 +34,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
+  const { confirm, modalProps } = useConfirmModal();
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -267,9 +270,19 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       label: 'Excluir',
       variant: 'danger' as const,
       disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
-      action: (selectedItems: Plano[]) => {
+      action: async (selectedItems: Plano[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (item && window.confirm('Tem certeza que deseja excluir este plano?')) {
+        if (!item) return;
+        
+        const confirmed = await confirm({
+          message: 'Tem certeza que deseja excluir este plano?',
+          variant: 'danger',
+          title: 'Excluir plano',
+          confirmText: 'Excluir',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
           handleDelete(item.id);
         }
       }
@@ -334,6 +347,9 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         title="Relatórios de logs"
         modalId="auditoria-plano-modal"
       />
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };
