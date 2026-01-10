@@ -30,6 +30,9 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ModeloContratoSelectModal from '@/components/modals/parametros/ModeloContratoSelectModal';
 import { Button } from '@/components/ui';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
+import { formatCurrency } from '@/utils/formatters';
 import '../../contratos/ContratoModals.css';
 import ContratoTab from './abas/ContratoTab';
 import EnderecoTab from './abas/EnderecoTab';
@@ -147,6 +150,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [showCanceladosAvulsos, setShowCanceladosAvulsos] = useState(false);
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
+  const { confirm, modalProps } = useConfirmModal();
 
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
@@ -533,48 +537,56 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: 'Cancelar',
       variant: 'danger',
       action: async (selectedItems: Titulo[]) => {
-        if (selectedItems.length > 0) {
-          const confirmMessage = selectedItems.length === 1 
-            ? 'Tem certeza que deseja cancelar este título?'
-            : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+        if (selectedItems.length === 0) return;
+        
+        const confirmMessage = selectedItems.length === 1 
+          ? 'Tem certeza que deseja cancelar este título?'
+          : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+          
+        const confirmed = await confirm({
+          message: confirmMessage,
+          variant: 'warning',
+          title: 'Cancelar títulos',
+          confirmText: 'Cancelar',
+          cancelText: 'Voltar',
+        });
+        
+        if (confirmed) {
+          try {
+            let successCount = 0;
+            let errorCount = 0;
             
-          if (window.confirm(confirmMessage)) {
-            try {
-              let successCount = 0;
-              let errorCount = 0;
-              
-              for (const item of selectedItems) {
-                try {
-                  await TituloService.update(item.id, { status: 'cancelado' });
-                  successCount++;
-                } catch (err) {
-                  errorCount++;
-                }
+            for (const item of selectedItems) {
+              try {
+                await TituloService.update(item.id, { status: 'cancelado' });
+                successCount++;
+              } catch (err) {
+                errorCount++;
               }
-              
-              // Aguardar invalidação e refetch completarem antes de mostrar mensagem
-              await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
-              await refetchTitulos();
-              
-              // Limpar seleção após cancelamento
-              setSelectedItems([]);
-              
-              if (successCount > 0) {
-                const message = successCount === 1 
-                  ? 'Título cancelado com sucesso!'
-                  : `${successCount} títulos cancelados com sucesso!`;
-                success(message);
-              }
-              
-              if (errorCount > 0) {
-                const message = errorCount === 1 
-                  ? '1 título não pôde ser cancelado'
-                  : `${errorCount} títulos não puderam ser cancelados`;
-                error(message);
-              }
-            } catch (err) {
-              error('Erro ao cancelar títulos');
             }
+            
+            // Aguardar invalidação e refetch completarem antes de mostrar mensagem
+            await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
+            await refetchTitulos();
+            
+            // Limpar seleção após cancelamento
+            setSelectedItems([]);
+            
+            if (successCount > 0) {
+              const message = successCount === 1 
+                ? 'Título cancelado com sucesso!'
+                : `${successCount} títulos cancelados com sucesso!`;
+              success(message);
+            }
+            
+            if (errorCount > 0) {
+              const message = errorCount === 1 
+                ? '1 título não pôde ser cancelado'
+                : `${errorCount} títulos não puderam ser cancelados`;
+              error(message);
+            }
+          } catch (err) {
+            error('Erro ao cancelar títulos');
           }
         }
       },
@@ -587,27 +599,32 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: 'Estornar',
       variant: 'warning',
       action: async (selectedItems: Titulo[]) => {
-        if (selectedItems.length > 0) {
-          const item = selectedItems[0];
-          if (item.status === 'pago') {
-            const confirmar = window.confirm(
-              `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
-              `Valor: R$ ${item.valor_pago || item.valor}\n` +
-              `O título voltará para status PENDENTE.`
-            );
-            
-            if (confirmar) {
-              try {
-                await TituloService.estornar(item.id);
-                success('Título estornado com sucesso!');
-                queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
-              } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
-                error(errorMessage);
-              }
-            }
-          } else {
-            success('Só é possível estornar títulos que estão pagos');
+        if (selectedItems.length === 0) return;
+        
+        const item = selectedItems[0];
+        if (item.status !== 'pago') {
+          error('Só é possível estornar títulos que estão pagos');
+          return;
+        }
+        
+        const confirmed = await confirm({
+          message: `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
+            `Valor: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
+            `O título voltará para status PENDENTE.`,
+          variant: 'warning',
+          title: 'Estornar título',
+          confirmText: 'Estornar',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
+          try {
+            await TituloService.estornar(item.id);
+            success('Título estornado com sucesso!');
+            queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
+          } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
+            error(errorMessage);
           }
         }
       },
@@ -788,48 +805,56 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: 'Cancelar',
       variant: 'danger',
       action: async (selectedItems: Titulo[]) => {
-        if (selectedItems.length > 0) {
-          const confirmMessage = selectedItems.length === 1 
-            ? 'Tem certeza que deseja cancelar este título?'
-            : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+        if (selectedItems.length === 0) return;
+        
+        const confirmMessage = selectedItems.length === 1 
+          ? 'Tem certeza que deseja cancelar este título?'
+          : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+          
+        const confirmed = await confirm({
+          message: confirmMessage,
+          variant: 'warning',
+          title: 'Cancelar títulos',
+          confirmText: 'Cancelar',
+          cancelText: 'Voltar',
+        });
+        
+        if (confirmed) {
+          try {
+            let successCount = 0;
+            let errorCount = 0;
             
-          if (window.confirm(confirmMessage)) {
-            try {
-              let successCount = 0;
-              let errorCount = 0;
-              
-              for (const item of selectedItems) {
-                try {
-                  await TituloService.update(item.id, { status: 'cancelado' });
-                  successCount++;
-                } catch (err) {
-                  errorCount++;
-                }
+            for (const item of selectedItems) {
+              try {
+                await TituloService.update(item.id, { status: 'cancelado' });
+                successCount++;
+              } catch (err) {
+                errorCount++;
               }
-              
-              // Aguardar invalidação e refetch completarem antes de mostrar mensagem
-              await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
-              await refetchTitulosAvulsos();
-              
-              // Limpar seleção após cancelamento
-              setSelectedAvulsosItems([]);
-              
-              if (successCount > 0) {
-                const message = successCount === 1 
-                  ? 'Título cancelado com sucesso!'
-                  : `${successCount} títulos cancelados com sucesso!`;
-                success(message);
-              }
-              
-              if (errorCount > 0) {
-                const message = errorCount === 1 
-                  ? '1 título não pôde ser cancelado'
-                  : `${errorCount} títulos não puderam ser cancelados`;
-                error(message);
-              }
-            } catch (err) {
-              error('Erro ao cancelar títulos');
             }
+            
+            // Aguardar invalidação e refetch completarem antes de mostrar mensagem
+            await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
+            await refetchTitulosAvulsos();
+            
+            // Limpar seleção após cancelamento
+            setSelectedAvulsosItems([]);
+            
+            if (successCount > 0) {
+              const message = successCount === 1 
+                ? 'Título cancelado com sucesso!'
+                : `${successCount} títulos cancelados com sucesso!`;
+              success(message);
+            }
+            
+            if (errorCount > 0) {
+              const message = errorCount === 1 
+                ? '1 título não pôde ser cancelado'
+                : `${errorCount} títulos não puderam ser cancelados`;
+              error(message);
+            }
+          } catch (err) {
+            error('Erro ao cancelar títulos');
           }
         }
       },
@@ -842,27 +867,32 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: 'Estornar',
       variant: 'warning',
       action: async (selectedItems: Titulo[]) => {
-        if (selectedItems.length > 0) {
-          const item = selectedItems[0];
-          if (item.status === 'pago') {
-            const confirmar = window.confirm(
-              `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
-              `Valor: R$ ${item.valor_pago || item.valor}\n` +
-              `O título voltará para status PENDENTE.`
-            );
-            
-            if (confirmar) {
-              try {
-                await TituloService.estornar(item.id);
-                success('Título estornado com sucesso!');
-                queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
-              } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
-                error(errorMessage);
-              }
-            }
-          } else {
-            success('Só é possível estornar títulos que estão pagos');
+        if (selectedItems.length === 0) return;
+        
+        const item = selectedItems[0];
+        if (item.status !== 'pago') {
+          error('Só é possível estornar títulos que estão pagos');
+          return;
+        }
+        
+        const confirmed = await confirm({
+          message: `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
+            `Valor: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
+            `O título voltará para status PENDENTE.`,
+          variant: 'warning',
+          title: 'Estornar título',
+          confirmText: 'Estornar',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
+          try {
+            await TituloService.estornar(item.id);
+            success('Título estornado com sucesso!');
+            queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
+          } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
+            error(errorMessage);
           }
         }
       },
@@ -1037,21 +1067,29 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       variant: 'danger',
       action: async (selectedItems: TermoContrato[]) => {
         const items = selectedItems && selectedItems.length > 0 ? selectedItems : selectedTermosItems;
-        if (items.length > 0) {
-          const confirmMessage = items.length === 1 
-            ? 'Tem certeza que deseja deletar este termo?'
-            : `Tem certeza que deseja deletar ${items.length} termos?`;
-            
-          if (window.confirm(confirmMessage)) {
-            try {
-              for (const item of items) {
-                await deleteTermoMutation.mutateAsync(item.id);
-              }
-              success('Termo(s) deletado(s) com sucesso!');
-              queryClient.invalidateQueries({ queryKey: ['termos-contrato', internalContratoId] });
-            } catch (err) {
-              error('Erro ao deletar termo(s)');
+        if (items.length === 0) return;
+        
+        const confirmMessage = items.length === 1 
+          ? 'Tem certeza que deseja deletar este termo?'
+          : `Tem certeza que deseja deletar ${items.length} termos?`;
+          
+        const confirmed = await confirm({
+          message: confirmMessage,
+          variant: 'danger',
+          title: 'Deletar termos',
+          confirmText: 'Deletar',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
+          try {
+            for (const item of items) {
+              await deleteTermoMutation.mutateAsync(item.id);
             }
+            success('Termo(s) deletado(s) com sucesso!');
+            queryClient.invalidateQueries({ queryKey: ['termos-contrato', internalContratoId] });
+          } catch (err) {
+            error('Erro ao deletar termo(s)');
           }
         }
       },
@@ -1131,12 +1169,21 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: 'Deletar',
       variant: 'danger',
       action: async (selectedItems: ContratoPlanoAdicional[]) => {
-        if (selectedItems.length > 0) {
-          const confirmMessage = selectedItems.length === 1 
-            ? 'Tem certeza que deseja deletar este serviço adicional?'
-            : `Tem certeza que deseja deletar ${selectedItems.length} serviços adicionais?`;
-            
-          if (window.confirm(confirmMessage)) {
+        if (selectedItems.length === 0) return;
+        
+        const confirmMessage = selectedItems.length === 1 
+          ? 'Tem certeza que deseja deletar este serviço adicional?'
+          : `Tem certeza que deseja deletar ${selectedItems.length} serviços adicionais?`;
+          
+        const confirmed = await confirm({
+          message: confirmMessage,
+          variant: 'danger',
+          title: 'Deletar serviços adicionais',
+          confirmText: 'Deletar',
+          cancelText: 'Cancelar',
+        });
+        
+        if (confirmed) {
             try {
               let successCount = 0;
               let errorCount = 0;
@@ -2080,6 +2127,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         onSelect={handleModeloContratoSelect}
         title="Selecionar Modelo de Contrato"
       />
+
+      {/* ConfirmModal */}
+      {modalProps && <ConfirmModal {...modalProps} />}
     </>
   );
 };
