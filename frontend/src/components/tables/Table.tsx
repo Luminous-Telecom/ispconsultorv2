@@ -38,6 +38,7 @@ interface TableProps<T = Record<string, unknown>> {
   onActionClick?: (action: TableAction<T>, item: T, index: number) => void;
   onBulkActionClick?: (action: BulkAction<T>, selectedItems: T[]) => void;
   onRowClick?: (item: T, index: number) => void;
+  onRowDoubleClick?: (item: T, index: number) => void;
   onSelectionChange?: (selectedItems: T[]) => void;
   onSort?: (column: string, direction: SortDirection) => void;
   onFilter?: (filters: Record<string, FilterValue>) => void;
@@ -59,6 +60,7 @@ function Table<T extends { id: number | string }>({
   onActionClick,
   onBulkActionClick,
   onRowClick,
+  onRowDoubleClick,
   onSelectionChange,
   onSort,
   onFilter,
@@ -155,6 +157,7 @@ function Table<T extends { id: number | string }>({
   const buttonRefs = useRef<Map<number | string, HTMLButtonElement>>(new Map());
   const fabDropdownRef = useRef<HTMLDivElement | null>(null);
   const fabContainerRef = useRef<HTMLDivElement | null>(null);
+  const searchFieldSelectRef = useRef<HTMLSelectElement | null>(null);
 
   // Ajustar posição do FAB dinamicamente quando há legendas visíveis
   useEffect(() => {
@@ -453,6 +456,38 @@ function Table<T extends { id: number | string }>({
     tableActionsRef.current = tableActions;
     selectedSearchFieldRef.current = selectedSearchField;
   }, [onRefresh, onSearch, tableActions, selectedSearchField]);
+
+  // Ajustar largura do select de campo de busca baseado no texto selecionado
+  useEffect(() => {
+    if (searchFieldSelectRef.current && configSearchFields) {
+      const select = searchFieldSelectRef.current;
+      const selectedOption = configSearchFields.find(field => field.key === selectedSearchField);
+
+      if (selectedOption) {
+        // Criar um elemento temporário para medir a largura do texto
+        const tempSpan = document.createElement('span');
+        tempSpan.style.visibility = 'hidden';
+        tempSpan.style.position = 'absolute';
+        tempSpan.style.whiteSpace = 'nowrap';
+        tempSpan.style.fontSize = window.getComputedStyle(select).fontSize;
+        tempSpan.style.fontFamily = window.getComputedStyle(select).fontFamily;
+        tempSpan.style.fontWeight = window.getComputedStyle(select).fontWeight;
+        tempSpan.style.padding = '0 8px'; // Mesmo padding do select
+        tempSpan.textContent = selectedOption.label;
+
+        document.body.appendChild(tempSpan);
+        const textWidth = tempSpan.offsetWidth + 24; // +24px para o ícone do dropdown
+        document.body.removeChild(tempSpan);
+
+        // Aplicar largura com limites
+        const minWidth = 42;
+        const maxWidth = 120;
+        const finalWidth = Math.max(minWidth, Math.min(maxWidth, textWidth));
+
+        select.style.width = `${finalWidth}px`;
+      }
+    }
+  }, [selectedSearchField, configSearchFields]);
 
   // Handler para o botão de auditar com gerenciamento de loading
   const handleAuditClick = useCallback(async () => {
@@ -1273,6 +1308,10 @@ function Table<T extends { id: number | string }>({
                 // Chamar callback de clique na linha se existir
                 onRowClick?.(item, index);
               }}
+              onDoubleClick={() => {
+                // Chamar callback de double-click na linha se existir
+                onRowDoubleClick?.(item, index);
+              }}
             >
               {/* Checkbox de seleção */}
               {selectable && (
@@ -1573,7 +1612,7 @@ function Table<T extends { id: number | string }>({
                   <div key={index} className="dropdown table-dropdown-relative">
                     <button
                       type="button"
-                      className="btn btn-sm btn-primary table-flex-shrink-0"
+                      className={`btn btn-sm btn-${bulkAction.variant || 'primary'} table-flex-shrink-0`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1650,36 +1689,35 @@ function Table<T extends { id: number | string }>({
           <div className="d-flex align-items-center gap-3">
             {/* Campo de busca local - apenas quando searchable estiver habilitado */}
             {searchable && (
-              <div className="d-flex align-items-center gap-2">
+              <div className="table-search-combined">
                 {/* Seletor de campo de busca - apenas quando houver múltiplos campos */}
                 {configSearchFields && configSearchFields.length > 1 && (
-                  <div className="d-flex align-items-center gap-1">
-                    <select
-                      id={`${uniqueTableId}-search-field`}
-                      className="form-select form-select-sm"
-                      value={selectedSearchField}
-                      onChange={(e) => {
-                        const newField = e.target.value;
-                        if (headerSearchField) {
-                          // Se estiver usando o header, atualizar lá
-                          setHeaderSearchField?.(newField);
-                        } else {
-                          // Caso contrário, atualizar estado local
-                          setLocalSearchField(newField);
-                        }
-                        // Disparar busca quando mudar o campo
-                        if (onSearchFieldChange) {
-                          onSearchFieldChange(newField);
-                        }
-                      }}
-                    >
-                      {configSearchFields.map(field => (
-                        <option key={field.key} value={field.key}>
-                          {field.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <select
+                    ref={searchFieldSelectRef}
+                    id={`${uniqueTableId}-search-field`}
+                    className="form-select form-select-sm table-search-field-select"
+                    value={selectedSearchField}
+                    onChange={(e) => {
+                      const newField = e.target.value;
+                      if (headerSearchField) {
+                        // Se estiver usando o header, atualizar lá
+                        setHeaderSearchField?.(newField);
+                      } else {
+                        // Caso contrário, atualizar estado local
+                        setLocalSearchField(newField);
+                      }
+                      // Disparar busca quando mudar o campo
+                      if (onSearchFieldChange) {
+                        onSearchFieldChange(newField);
+                      }
+                    }}
+                  >
+                    {configSearchFields.map(field => (
+                      <option key={field.key} value={field.key}>
+                        {field.label}
+                      </option>
+                    ))}
+                  </select>
                 )}
 
                 {/* Input de busca */}
@@ -1687,8 +1725,7 @@ function Table<T extends { id: number | string }>({
                   <input
                     type="search"
                     id={`${uniqueTableId}-search`}
-                    className="form-control form-control-sm"
-                    style={{ width: '220px', minWidth: '180px' }}
+                    className="form-control form-control-sm table-search-input"
                     placeholder={searchPlaceholder || 'Buscar...'}
                     value={search}
                     onChange={(e) => {
@@ -1705,20 +1742,17 @@ function Table<T extends { id: number | string }>({
                     }}
                   />
                   {/* Ícone de busca */}
-                  <div className="position-absolute d-flex align-items-center justify-content-center"
-                       style={{
-                         top: '50%',
-                         right: '8px',
-                         transform: 'translateY(-50%)',
-                         height: '100%',
-                         pointerEvents: 'none'
-                       }}>
-                    <i className="bi bi-search text-muted" style={{ fontSize: '0.7rem' }}></i>
+                  <div className="table-search-icon">
+                    <i className="bi bi-search text-muted"></i>
                   </div>
                 </div>
               </div>
             )}
-            {customControls}
+            {customControls && (
+              <div className="table-custom-controls">
+                {customControls}
+              </div>
+            )}
           </div>
 
           {/* Paginação centralizada - Ocultar no mobile */}
