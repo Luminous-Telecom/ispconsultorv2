@@ -6,11 +6,17 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDashboardCharts } from '@/hooks/useDashboardCharts';
 import { useChartHiddenItems } from '@/hooks/useChartHiddenItems';
 import { BarChart, ValueChart, ResponsiveLineChart, ResponsivePieChart } from '@/components/charts';
+import { Spinner } from '@/components/ui';
+import { useTableHeader } from '@/contexts/TableHeaderContext';
+import DashboardSearchResult from '../dashboard/DashboardSearchResult';
 
 const Dashboard: React.FC = () => {
+  const { searchValue, searchField } = useTableHeader();
   const {
     startDate,
     endDate,
+    setStartDate,
+    setEndDate,
     periodoInicioLabel,
     periodoFimLabel,
   } = useDashboardFilters();
@@ -57,9 +63,18 @@ const Dashboard: React.FC = () => {
     return (
       <div className="dashboard-container">
         <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
+        </div>
+      </div>
+    );
+  }
+
+  // Se houver busca no header, mostrar resultados da busca em vez do dashboard
+  if (searchValue) {
+    return (
+      <div className="dashboard-container">
+        <div className="container-fluid px-0 px-md-0">
+          <DashboardSearchResult searchTerm={searchValue} searchField={searchField} />
         </div>
       </div>
     );
@@ -70,11 +85,44 @@ const Dashboard: React.FC = () => {
       <div className="container-fluid px-0 px-md-0">
         <div className="dashboard-hero card border-0 shadow-sm mb-1">
           <div className="dashboard-hero-body">
-            <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2">
+            <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
               <div className="w-100 w-lg-auto">
                 <span className="dashboard-badge text-uppercase">Visão geral</span>
-                <h2 className="dashboard-hero-title mb-1">Painel financeiro e operacional</h2>
-                <p className="dashboard-hero-subtitle mb-0">
+                <h2 className="dashboard-hero-title mb-2">Painel financeiro e operacional</h2>
+
+                {/* Filtros de Data Integrados */}
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="bg-transparent border-0 text-custom-primary px-1"
+                  style={{
+                    width: '120px',
+                    fontSize: '0.85rem',
+                    background: 'var(--bg-custom-secondary)',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid var(--border-custom)',
+                    color: 'var(--text-custom-primary)'
+                  }}
+                />
+                <span className="text-custom-secondary small mx-2">até</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="bg-transparent border-0 text-custom-primary px-1"
+                  style={{
+                    width: '120px',
+                    fontSize: '0.85rem',
+                    background: 'var(--bg-custom-secondary)',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid var(--border-custom)',
+                    color: 'var(--text-custom-primary)'
+                  }}
+                />
+                <p className="dashboard-hero-subtitle mt-2 mb-0">
                   Atualizado em {lastUpdatedDate} às {lastUpdatedTime}
                 </p>
               </div>

@@ -47,7 +47,6 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   const { setPage, clearSearch } = tableFilters;
   
   const [selectedItems, setSelectedItems] = useState<Titulo[]>([]);
-  const [searchField, setSearchField] = useState<string>('numero_titulo');
   const [showCancelados, setShowCancelados] = useState(false);
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>('');
   const [dataVencimentoFim, setDataVencimentoFim] = useState<string>('');
@@ -102,7 +101,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     page: tableFilters.page,
     limit: tableFilters.limit,
     search: tableFilters.debouncedSearch || undefined,
-    searchField: searchField || undefined,
+    searchField: tableFilters.searchField || undefined,
     // Aplicar filtro de status no backend quando não mostrar cancelados
     ...(showCancelados ? {} : { status: '!cancelado' }),
     // Aplicar filtros de data de vencimento se preenchidos
@@ -323,12 +322,14 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     }
   }, [titulos, error, success, openPrintModal]);
 
-  const columns: TableConfig<Titulo>['columns'] = [
+  const columns: TableConfig<Titulo>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: 'ID',
       sortable: true,
       searchable: true,
+      width: 42,
+      resizable: true,
       render: (item: Titulo) => <span>{item.id}</span>
     },
     {
@@ -336,6 +337,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Cliente',
       sortable: true,
       searchable: true,
+      width: 220,
+      resizable: true,
       render: (item: Titulo) => {
         if (item.cliente) {
           return item.cliente.razao_social || item.cliente.nome_fantasia || '-';
@@ -348,6 +351,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Contrato',
       sortable: true,
       searchable: true,
+      width: 90,
+      resizable: true,
       render: (item: Titulo) => item.contrato_id || '-'
     },
     {
@@ -355,6 +360,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Status',
       sortable: true,
       searchable: true,
+      width: 100,
+      resizable: true,
       render: (item: Titulo) => getStatusBadge(item.status)
     },
     {
@@ -362,6 +369,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Plano',
       sortable: true,
       searchable: true,
+      width: 150,
+      resizable: true,
       render: (item: Titulo) => item.plano?.nome_plano || '-'
     },
     {
@@ -369,6 +378,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Nº Título',
       sortable: true,
       searchable: true,
+      width: 120,
+      resizable: true,
       render: (item: Titulo) => <div className="fw-bold">{item.numero_titulo || '-'}</div>
     },
     {
@@ -376,6 +387,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Vencimento',
       sortable: true,
       searchable: false,
+      width: 110,
+      resizable: true,
       render: (item: Titulo) => formatDate(item.data_vencimento)
     },
     {
@@ -383,6 +396,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Valor',
       sortable: true,
       searchable: true,
+      width: 100,
+      resizable: true,
       render: (item: Titulo) => formatCurrency(item.valor_final || item.valor)
     },
     {
@@ -390,6 +405,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Valor baixado',
       sortable: true,
       searchable: true,
+      width: 120,
+      resizable: true,
       render: (item: Titulo) => {
         return item.status === 'pago' ? formatCurrency(item.valor_pago || item.valor || 0) : formatCurrency(0);
       }
@@ -470,7 +487,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         return item.created_at ? formatDateTime(item.created_at) : '-';
       }
     }
-  ];
+  ], []);
 
   // Verificar se há títulos com NFS-e emitida
   const hasNFSeEmitida = useMemo(() => {
@@ -715,119 +732,152 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     ];
   }, [success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, confirm]);
 
+  const handleSearch = useCallback((term: string, field?: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(term);
+      if (field) {
+        tableFilters.setSearchField(field);
+      }
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch, tableFilters.setSearchField]);
+
+  const handleSearchFieldChange = useCallback((field: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearchField(field);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearchField]);
+
+  const handleShowCanceladosChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setShowCancelados(e.target.checked);
+  }, []);
+
+  const handleDataVencimentoInicioChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setDataVencimentoInicio(e.target.value);
+  }, []);
+
+  const handleDataVencimentoFimChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setDataVencimentoFim(e.target.value);
+  }, []);
+
+  const customControls = useMemo(() => (
+    <div className="form-check">
+      <input
+        className="form-check-input"
+        type="checkbox"
+        id="showCanceladosFinanceiro"
+        checked={showCancelados}
+        onChange={handleShowCanceladosChange}
+      />
+      <label className="form-check-label" htmlFor="showCanceladosFinanceiro">
+        Mostrar cancelados
+      </label>
+    </div>
+  ), [showCancelados, handleShowCanceladosChange]);
+
+  const customControlsAfterActions = useMemo(() => (
+    <div className="d-flex align-items-center gap-2">
+      <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
+      <input
+        type="date"
+        id="dataVencimentoInicio"
+        className="form-control form-control-sm financeiro-col-fixed"
+        value={dataVencimentoInicio}
+        onChange={handleDataVencimentoInicioChange}
+      />
+      <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
+      <input
+        type="date"
+        id="dataVencimentoFim"
+        className="form-control form-control-sm financeiro-col-fixed"
+        value={dataVencimentoFim}
+        onChange={handleDataVencimentoFimChange}
+      />
+    </div>
+  ), [dataVencimentoInicio, dataVencimentoFim, handleDataVencimentoInicioChange, handleDataVencimentoFimChange]);
+
+  const tableConfig = useMemo(() => ({
+    columns,
+    data: sortedData,
+    loading: isLoading,
+    searchable: true,
+    searchPlaceholder: '',
+    searchField: 'numero_titulo',
+    searchFields: [
+      { key: 'id', label: 'ID' },
+      { key: 'numero_titulo', label: 'Número Título' },
+      { key: 'cliente', label: 'Cliente' },
+      { key: 'plano_nome', label: 'Plano' },
+      { key: 'contrato_id', label: 'Contrato' },
+      { key: 'status', label: 'Status' },
+      { key: 'valor', label: 'Valor' },
+      { key: 'valor_pago', label: 'Valor Pago' },
+      { key: 'charge_id', label: 'Charge ID' },
+      { key: 'nosso_numero', label: 'Nosso Número' }
+    ],
+    sortable: true,
+    striped: true,
+    hover: true,
+    responsive: true,
+    selectable: true,
+    multiSelect: !onSelectTitulo,
+    bulkActions: memoizedBulkActions.map((action: BulkAction<Titulo>) => {
+      let disabledFunc: ((selectedItems: Titulo[]) => boolean) | undefined;
+      if (action.disabled !== undefined) {
+        if (typeof action.disabled === 'function') {
+          disabledFunc = action.disabled;
+        } else if (typeof action.disabled === 'boolean') {
+          const disabledValue = action.disabled;
+          disabledFunc = () => disabledValue;
+        }
+      }
+      
+      return {
+        key: action.key,
+        label: action.label,
+        variant: action.variant,
+        onClick: action.onClick,
+        disabled: disabledFunc,
+        dropdown: action.dropdown
+      };
+    }),
+    emptyMessage: 'Nenhum título encontrado',
+    pagination: pagination ? {
+      current_page: pagination.current_page,
+      last_page: pagination.last_page,
+      per_page: pagination.per_page,
+      total: pagination.total,
+      from: pagination.from,
+      to: pagination.to
+    } : undefined,
+    customControls,
+    customControlsAfterActions
+  }), [
+    columns, 
+    sortedData, 
+    isLoading, 
+    onSelectTitulo, 
+    memoizedBulkActions, 
+    pagination, 
+    customControls, 
+    customControlsAfterActions
+  ]);
+
   const modalContent = (
     <div className="row financeiro-modal-content">
       <div className="col-12 financeiro-modal-col">
         <div className="financeiro-modal-table-container">
           <Table
-              config={{
-                columns,
-                data: sortedData,
-                loading: isLoading,
-                searchable: true,
-                searchPlaceholder: 'Buscar por número, cliente ou observações...',
-                searchFields: [
-                  { key: 'id', label: 'ID' },
-                  { key: 'numero_titulo', label: 'Número Título' },
-                  { key: 'cliente', label: 'Cliente' },
-                  { key: 'plano_nome', label: 'Plano' },
-                  { key: 'contrato_id', label: 'Contrato' },
-                  { key: 'status', label: 'Status' },
-                  { key: 'valor', label: 'Valor' },
-                  { key: 'valor_pago', label: 'Valor Pago' },
-                  { key: 'charge_id', label: 'Charge ID' },
-                  { key: 'nosso_numero', label: 'Nosso Número' }
-                ],
-                sortable: true,
-                striped: true,
-                hover: true,
-                responsive: true,
-                selectable: true,
-                multiSelect: !onSelectTitulo,
-                bulkActions: memoizedBulkActions.map((action: BulkAction<Titulo>) => {
-                  let disabledFunc: ((selectedItems: Titulo[]) => boolean) | undefined;
-                  if (action.disabled !== undefined) {
-                    if (typeof action.disabled === 'function') {
-                      disabledFunc = action.disabled;
-                    } else if (typeof action.disabled === 'boolean') {
-                      const disabledValue = action.disabled;
-                      disabledFunc = () => disabledValue;
-                    }
-                  }
-                  
-                  return {
-                    key: action.key,
-                    label: action.label,
-                    variant: action.variant,
-                    onClick: action.onClick,
-                    disabled: disabledFunc,
-                    dropdown: action.dropdown
-                  };
-                }),
-                emptyMessage: 'Nenhum título encontrado',
-                pagination: pagination ? {
-                  current_page: pagination.current_page,
-                  last_page: pagination.last_page,
-                  per_page: pagination.per_page,
-                  total: pagination.total,
-                  from: pagination.from,
-                  to: pagination.to
-                } : undefined,
-                customControls: (
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="showCanceladosFinanceiro"
-                      checked={showCancelados}
-                      onChange={(e) => {
-                        setShowCancelados(e.target.checked);
-                      }}
-                    />
-                    <label className="form-check-label" htmlFor="showCanceladosFinanceiro">
-                      Mostrar cancelados
-                    </label>
-                  </div>
-                ),
-                customControlsAfterActions: (
-                  <div className="d-flex align-items-center gap-2">
-                    <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
-                    <input
-                      type="date"
-                      id="dataVencimentoInicio"
-                      className="form-control form-control-sm financeiro-col-fixed"
-                      value={dataVencimentoInicio}
-                      onChange={(e) => setDataVencimentoInicio(e.target.value)}
-                    />
-                    <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
-                    <input
-                      type="date"
-                      id="dataVencimentoFim"
-                      className="form-control form-control-sm financeiro-col-fixed"
-                      value={dataVencimentoFim}
-                      onChange={(e) => setDataVencimentoFim(e.target.value)}
-                    />
-                  </div>
-                )
-              }}
+              title="Financeiro - Títulos"
+              config={tableConfig}
               tableId="financeiro-modal"
-              onSelectionChange={(items) => {
-                setSelectedItems(items);
-                if (onSelectTitulo && items.length > 0) {
-                  onSelectTitulo(items[items.length - 1]);
-                  onClose();
-                }
-              }}
+              onSelectionChange={setSelectedItems}
               onSort={tableFilters.setSort}
-              onSearch={(term, field) => {
-                tableFilters.setSearch(term);
-                if (field) {
-                  setSearchField(field);
-                }
-              }}
-              onSearchFieldChange={(field) => {
-                setSearchField(field);
-              }}
+              onSearch={handleSearch}
+              onSearchFieldChange={handleSearchFieldChange}
               onPageChange={tableFilters.setPage}
               onPageSizeChange={tableFilters.setLimit}
               onRefresh={refetch}

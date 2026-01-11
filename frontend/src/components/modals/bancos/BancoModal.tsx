@@ -8,7 +8,7 @@ import { useBancoForm } from '@/hooks/useBancoForm';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Banco } from '@/types';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 import { BancoForm } from './banco/types';
 import AsaasForm from './banco/especificos/AsaasForm';
@@ -209,9 +209,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
     if (isEdit && isLoading) {
       return (
         <div className="text-center p-4">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
           <p className="mt-2">Carregando dados do banco...</p>
         </div>
       );

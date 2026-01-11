@@ -93,6 +93,8 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
       key: 'id',
       label: 'ID',
       sortable: true,
+      width: 42,
+      resizable: true,
       render: (item: ModeloCarta) => (
         <div>{item.id}</div>
       )
@@ -200,6 +202,7 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
           <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
             <Table
               key="carta-cobranca-tab-table"
+              title="Cartas de Cobrança"
               config={{
                 columns,
                 data: cartas?.data || [],

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useBancos, useDeleteBanco } from '@/hooks/useBancos';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
@@ -19,9 +19,9 @@ interface BancoListModalProps {
   skipWrapper?: boolean;
 }
 
-const BancoListModal: React.FC<BancoListModalProps> = ({ 
-  show, 
-  onClose, 
+const BancoListModal: React.FC<BancoListModalProps> = ({
+  show,
+  onClose,
   onSelectBanco,
   title = "Selecionar Banco",
   skipWrapper = false
@@ -53,81 +53,91 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     } : undefined
   );
 
+  // Configurar colunas memoizadas
+  const columns = useMemo(() => [
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      width: '42px',
+      render: (item: Banco) => <span>{item.id}</span>
+    },
+    {
+      key: 'nome',
+      label: 'Nome',
+      sortable: true,
+      width: '180px',
+      render: (item: Banco) => <strong>{item.nome}</strong>
+    },
+    {
+      key: 'descricao',
+      label: 'Descrição',
+      sortable: true,
+      width: '200px',
+      render: (item: Banco) => item.descricao || '-'
+    },
+    {
+      key: 'tipo',
+      label: 'Tipo',
+      sortable: true,
+      width: '90px',
+      render: (item: Banco) => {
+        const tipos: Record<string, string> = {
+          'efi': 'EFI',
+          'asaas': 'Asaas',
+          'bancario': 'Bancário',
+          'outros': 'Outros'
+        };
+        return (
+          <span className="badge bg-info">
+            {tipos[item.tipo_banco] || 'N/A'}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'sandbox',
+      label: 'Sandbox',
+      sortable: true,
+      width: '80px',
+      render: (item: Banco) => (
+        <span className={`badge ${item.sandbox ? 'bg-warning' : 'bg-primary'}`}>
+          {item.sandbox ? 'Sim' : 'Não'}
+        </span>
+      )
+    },
+    {
+      key: 'ativo',
+      label: 'Status',
+      sortable: true,
+      width: '80px',
+      render: (item: Banco) => (
+        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+          {item.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      )
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      width: '130px',
+      render: (item: Banco & { created_at?: string; created_at_formatada?: string | null }) => {
+        // Usar created_at_formatada se disponível (vem do backend já formatada)
+        if (item.created_at_formatada) {
+          return item.created_at_formatada;
+        }
+        // Fallback para formatDateTime se não tiver formato do backend
+        return item.created_at ? formatDateTime(item.created_at) : '-';
+      }
+    }
+  ], []);
+
   // Configurar modal centralizado
   const modal = useListModal({
     title,
-    columns: [
-      {
-        key: 'id',
-        label: 'ID',
-        sortable: true,
-        render: (item: Banco) => <span>{item.id}</span>
-      },
-      {
-        key: 'nome',
-        label: 'Nome',
-        sortable: true,
-        render: (item: Banco) => <strong>{item.nome}</strong>
-      },
-      {
-        key: 'descricao',
-        label: 'Descrição',
-        sortable: false,
-        render: (item: Banco) => item.descricao || '-'
-      },
-      {
-        key: 'tipo',
-        label: 'Tipo',
-        sortable: true,
-        render: (item: Banco) => {
-          const tipos: Record<string, string> = {
-            'efi': 'EFI',
-            'asaas': 'Asaas',
-            'bancario': 'Bancário',
-            'outros': 'Outros'
-          };
-          return (
-            <span className="badge bg-info">
-              {tipos[item.tipo_banco] || 'N/A'}
-            </span>
-          );
-        }
-      },
-      {
-        key: 'sandbox',
-        label: 'Sandbox',
-        sortable: true,
-        render: (item: Banco) => (
-          <span className={`badge ${item.sandbox ? 'bg-warning' : 'bg-primary'}`}>
-            {item.sandbox ? 'Sim' : 'Não'}
-          </span>
-        )
-      },
-      {
-        key: 'ativo',
-        label: 'Status',
-        sortable: true,
-        render: (item: Banco) => (
-          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-            {item.ativo ? 'Ativo' : 'Inativo'}
-          </span>
-        )
-      },
-      {
-        key: 'created_at',
-        label: 'Criado em',
-        sortable: true,
-        render: (item: Banco & { created_at?: string; created_at_formatada?: string | null }) => {
-          // Usar created_at_formatada se disponível (vem do backend já formatada)
-          if (item.created_at_formatada) {
-            return item.created_at_formatada;
-          }
-          // Fallback para formatDateTime se não tiver formato do backend
-          return item.created_at ? formatDateTime(item.created_at) : '-';
-        }
-      }
-    ],
-    searchPlaceholder: 'Buscar por nome do banco...',
+    columns,
+    searchPlaceholder: '',
     searchFields: [
       { key: 'id', label: 'ID' },
       { key: 'nome', label: 'Nome' },
@@ -136,15 +146,13 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       { key: 'sandbox', label: 'Sandbox' },
       { key: 'ativo', label: 'Status' }
     ],
-    multiSelect: false
+    multiSelect: true
   });
-
-  const [searchField, setSearchField] = useState<string>('nome');
 
   // Hook para buscar bancos usando parâmetros do useTableFilters
   const { data: bancosData, isLoading, refetch } = useBancos({
     search: tableFilters.debouncedSearch || undefined,
-    searchField: searchField || undefined,
+    searchField: tableFilters.searchField || undefined,
     tipo_banco: undefined,
     page: tableFilters.page,
     limit: tableFilters.limit
@@ -153,23 +161,41 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const deleteBancoMutation = useDeleteBanco();
 
   // Paginação do backend - usar valores do backend quando disponíveis
-  const pagination = bancosData?.pagination ? {
-    current_page: bancosData.pagination.current_page,
-    last_page: bancosData.pagination.last_page,
-    per_page: bancosData.pagination.per_page,
-    total: bancosData.pagination.total,
-    from: bancosData.pagination.from,
-    to: bancosData.pagination.to
-  } : {
-    current_page: tableFilters.page,
-    last_page: 1,
-    per_page: tableFilters.limit,
-    total: 0,
-    from: 0,
-    to: 0
-  };
+  const pagination = useMemo(() => {
+    if (bancosData?.pagination && typeof bancosData.pagination === 'object') {
+      const pag = bancosData.pagination;
+      const total = pag.total ?? 0;
+      const perPage = pag.per_page ?? tableFilters.limit;
+      const currentPage = pag.current_page ?? tableFilters.page;
+      
+      // Calcular last_page se não estiver definido
+      let lastPage = pag.last_page;
+      if (!lastPage && total > 0) {
+        lastPage = Math.max(1, Math.ceil(total / perPage));
+      } else if (!lastPage) {
+        lastPage = 1;
+      }
+      
+      return {
+        current_page: currentPage,
+        last_page: lastPage,
+        per_page: perPage,
+        total: total,
+        from: pag.from ?? ((currentPage - 1) * perPage) + 1,
+        to: pag.to ?? Math.min(currentPage * perPage, total)
+      };
+    }
+    return {
+      current_page: tableFilters.page,
+      last_page: 1,
+      per_page: tableFilters.limit,
+      total: 0,
+      from: 0,
+      to: 0
+    };
+  }, [bancosData?.pagination, tableFilters.page, tableFilters.limit]);
 
-  const handleSelect = (selectedItems?: Banco[]) => {
+  const handleSelect = useCallback((selectedItems?: Banco[]) => {
     const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
     if (item) {
       clearSelection();
@@ -178,23 +204,23 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         onClose();
       }
     }
-  };
+  }, [selectedBanco, clearSelection, onSelectBanco, onClose]);
 
-  const handleDelete = async (bancoId: number) => {
+  const handleDelete = useCallback(async (bancoId: number) => {
     try {
       await deleteBancoMutation.mutateAsync(bancoId);
       refetch();
     } catch (error) {
       // Erro tratado pelo useNotificationContext
     }
-  };
+  }, [deleteBancoMutation, refetch]);
 
-  const handleAudit = (banco: Banco) => {
+  const handleAudit = useCallback((banco: Banco) => {
     auditoria.handleAudit('Banco', banco.id);
-  };
+  }, [auditoria]);
 
-  // Bulk actions
-  const bulkActions = onSelectBanco ? [
+  // Bulk actions memoizados
+  const bulkActions = useMemo(() => onSelectBanco ? [
     {
       label: 'Cancelar',
       variant: 'secondary' as const,
@@ -251,7 +277,36 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         }
       }
     }
-  ];
+  ], [onSelectBanco, selectedBanco, clearSelection, onClose, handleSelect, handleDelete, confirm]);
+
+  const handleSearchChange = useCallback((search: string, field?: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+      if (field) tableFilters.setSearchField(field);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch, tableFilters.setSearchField]);
+
+  const handleSearchFieldChange = useCallback((field: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearchField(field);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearchField]);
+
+  const handlePageChange = useCallback((page: number) => {
+    tableFilters.setPage(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setPage]);
+
+  const handleLimitChange = useCallback((limit: number) => {
+    tableFilters.setLimit(limit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setLimit]);
+
+  const modalData = useMemo(() => bancosData?.data || [], [bancosData?.data]);
 
   return (
     <>
@@ -262,20 +317,17 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
           onClose();
         }}
         config={modal.config}
-        data={bancosData?.data || []}
+        data={modalData}
         loading={isLoading}
         selectedItems={selectedBanco ? [selectedBanco] : []}
         onSelectionChange={handleSelectionChange}
         search={tableFilters.search}
-        onSearchChange={(search, field) => {
-          tableFilters.setSearch(search);
-          setSearchField(field);
-        }}
-        onSearchFieldChange={setSearchField}
+        onSearchChange={handleSearchChange}
+        onSearchFieldChange={handleSearchFieldChange}
         pagination={pagination}
-        onPageChange={tableFilters.setPage}
+        onPageChange={handlePageChange}
         limit={tableFilters.limit}
-        onLimitChange={tableFilters.setLimit}
+        onLimitChange={handleLimitChange}
         refreshQueryKeys={['bancos']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}

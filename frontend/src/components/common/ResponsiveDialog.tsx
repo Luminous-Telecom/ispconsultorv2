@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 
 interface ResponsiveDialogProps {
   isOpen: boolean;
@@ -82,61 +82,17 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
 
   return (
     <div
-      className="responsive-dialog-mobile"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'var(--bg-primary)',
-        color: 'var(--text-primary)',
-        zIndex: 99999,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        animation: 'slideInRight 0.3s ease',
-      }}
+      className="responsive-dialog-mobile responsive-dialog-mobile-custom"
     >
       {/* Header fixo com botão voltar */}
       <div
-        className="d-flex align-items-center border-bottom"
-        style={{
-          backgroundColor: 'var(--bg-secondary)',
-          borderColor: 'var(--border-color)',
-          padding: '12px 16px',
-          minHeight: '56px',
-          flexShrink: 0,
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-          overflow: 'visible',
-        }}
+        className="d-flex align-items-center border-bottom responsive-dialog-header-custom"
       >
         {/* Botão voltar */}
         <button
           type="button"
-          className="btn btn-link p-0 me-3"
+          className="btn btn-link p-0 me-3 responsive-dialog-back-btn responsive-dialog-btn-auto"
           onClick={onClose}
-          style={{
-            color: 'var(--text-primary)',
-            textDecoration: 'none',
-            border: 'none',
-            background: 'none',
-            fontSize: '1.25rem',
-            lineHeight: 1,
-            padding: '4px 8px',
-            minWidth: '36px',
-            width: 'auto', // Override global .btn width: 100% on mobile
-            minHeight: '36px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            cursor: 'pointer',
-            flexShrink: 0,
-            alignSelf: 'flex-start',
-            marginTop: '2px',
-          }}
           aria-label="Voltar"
         >
           <svg
@@ -155,49 +111,21 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
 
         {/* Título */}
         <h5
-          className="mb-0 text-truncate"
-          style={{
-            color: 'var(--text-primary)',
-            fontSize: '0.8rem', // 12.8px - reduzido para mobile
-            fontWeight: 600,
-            margin: 0,
-            textAlign: 'center',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            flex: 1, // Força o título a ocupar o espaço restante mas respeitando o shrink
-            minWidth: 0, // Crítico para o truncate funcionar em flexbox
-          }}
+          className="mb-0 text-truncate responsive-dialog-title-custom"
         >
           {title}
         </h5>
 
         {/* Menu de Ações (Três Pontos) */}
         {hasActions && (
-          <div 
-            className="d-flex align-items-center flex-shrink-0 position-relative" 
+          <div
+            className="d-flex align-items-center flex-shrink-0 position-relative responsive-dialog-menu-container"
             ref={menuRef}
-            style={{
-              zIndex: 101,
-            }}
           >
             <button
               type="button"
-              className="btn btn-link p-0"
+              className="btn btn-link p-0 responsive-dialog-menu-btn responsive-dialog-btn-auto"
               onClick={() => setShowMenu(!showMenu)}
-              style={{
-                color: 'var(--text-primary)',
-                border: 'none',
-                background: 'none',
-                fontSize: '1.25rem',
-                minWidth: '36px',
-                width: 'auto', // Override global .btn width: 100% on mobile
-                minHeight: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0.5rem',
-              }}
             >
               <i className="bi bi-three-dots-vertical"></i>
             </button>
@@ -205,29 +133,22 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
             {/* Dropdown Menu */}
             {showMenu && (
               <div
-                className="dropdown-menu show"
+                className="dropdown-menu show responsive-dialog-menu-dropdown"
                 style={{
-                  position: 'absolute',
-                  right: 0,
                   top: 'calc(100% + 0.5rem)',
                   minWidth: '200px',
                   maxWidth: 'calc(100vw - 32px)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  borderRadius: '0.5rem',
                   zIndex: 100001,
-                  backgroundColor: 'var(--bg-primary)',
-                  border: '1px solid var(--border-color)',
                 }}
               >
                 {/* Search Action */}
                 {tableHeader.showSearch && (
                   <button
-                    className="dropdown-item d-flex align-items-center gap-2 py-2"
+                    className="dropdown-item d-flex align-items-center gap-2 py-2 responsive-dialog-text-primary"
                     onClick={() => {
                       tableHeader.setShowMobileSearch(!tableHeader.showMobileSearch);
                       setShowMenu(false);
                     }}
-                    style={{ color: 'var(--text-primary)' }}
                   >
                     <i className="bi bi-search"></i>
                     <span>Buscar</span>
@@ -237,7 +158,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                 {/* Reload Action */}
                 {tableHeader.showReload && (
                   <button
-                    className="dropdown-item d-flex align-items-center gap-2 py-2"
+                    className="dropdown-item d-flex align-items-center gap-2 py-2 responsive-dialog-text-primary"
                     onClick={() => {
                       if (tableHeader.onReloadClick) {
                         tableHeader.onReloadClick();
@@ -245,7 +166,6 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                       setShowMenu(false);
                     }}
                     disabled={tableHeader.loading}
-                    style={{ color: 'var(--text-primary)' }}
                   >
                     <i className="bi bi-arrow-clockwise"></i>
                     <span>Atualizar</span>
@@ -284,9 +204,8 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                               key={props.key || Math.random()}
                               type="submit"
                               form={props.form}
-                              className="dropdown-item d-flex align-items-center gap-2 py-2"
+                              className="dropdown-item d-flex align-items-center gap-2 py-2 responsive-dialog-text-primary"
                               disabled={isLoading || props.disabled}
-                              style={{ color: 'var(--text-primary)' }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Fechar o menu após processar o evento
@@ -297,7 +216,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                             >
                               {isLoading ? (
                                 <>
-                                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                  <Spinner size="sm" variant="primary" className="me-2" />
                                   <span>{props.children}</span>
                                 </>
                               ) : (
@@ -315,7 +234,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                           <button
                             key={props.key || Math.random()}
                             type={buttonType}
-                            className="dropdown-item d-flex align-items-center gap-2 py-2"
+                            className="dropdown-item d-flex align-items-center gap-2 py-2 responsive-dialog-text-primary"
                             onClick={(e) => {
                               e.stopPropagation();
                               // Processar o evento antes de fechar o menu
@@ -329,11 +248,10 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                               }, 0);
                             }}
                             disabled={isLoading || props.disabled}
-                            style={{ color: 'var(--text-primary)' }}
                           >
                             {isLoading ? (
                               <>
-                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <Spinner size="sm" variant="primary" className="me-2" />
                                 <span>{props.children}</span>
                               </>
                             ) : (
@@ -379,11 +297,8 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
 
       {/* Mobile Search Field (expandable) */}
       {tableHeader.showMobileSearch && tableHeader.showSearch && (
-        <div 
-          className="p-2 border-bottom d-flex align-items-center gap-2 bg-light"
-          style={{
-            animation: 'slideDown 0.2s ease-out'
-          }}
+        <div
+          className="p-2 border-bottom d-flex align-items-center gap-2 bg-light responsive-dialog-mobile-search"
         >
           <input
             type="text"
@@ -395,9 +310,8 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
           />
           <button
             type="button"
-            className="btn btn-sm btn-link text-danger p-1"
+            className="btn btn-sm btn-link text-danger p-1 responsive-dialog-btn-auto"
             onClick={() => tableHeader.setShowMobileSearch(false)}
-            style={{ width: 'auto' }} // Override global .btn width: 100%
           >
             <i className="bi bi-x-lg"></i>
           </button>
@@ -406,14 +320,10 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
 
       {/* Conteúdo com scroll */}
       <div
-        className={`responsive-dialog-mobile-content ${className}`}
+        className={`responsive-dialog-mobile-content responsive-dialog-content-custom ${className}`}
         style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           padding: className?.includes('no-padding') ? 0 : '0.5rem',
-          minHeight: 0,
           position: 'relative',
           zIndex: 1,
         }}

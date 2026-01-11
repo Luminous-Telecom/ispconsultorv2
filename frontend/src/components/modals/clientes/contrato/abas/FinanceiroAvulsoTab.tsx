@@ -125,6 +125,7 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key={`financeiro-avulso-tab-table-${showCancelados}`}
+            title="Financeiro Avulso"
             config={{
               columns: columns,
               data: sortedData,
@@ -139,7 +140,7 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
               selectable: true,
               multiSelect: true,
               searchable: true,
-              searchPlaceholder: 'Buscar por ID, valor, vencimento...',
+              searchPlaceholder: '',
               sortable: true,
               striped: true,
               hover: true,

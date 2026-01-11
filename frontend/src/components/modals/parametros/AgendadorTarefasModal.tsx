@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useModalSelect } from '@/hooks/useModalSelect';
@@ -41,6 +41,14 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     resetPageOnFilterChange: true,
   });
 
+  const handleSearchChange = useCallback((search: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch]);
+
   const {
     selectedItem,
     handleSelectionChange,
@@ -54,6 +62,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         key: 'id',
         label: 'ID',
         sortable: true,
+        width: '42px',
         render: (item: RotinaAgendada) => <span>{item.id}</span>
       },
       {
@@ -130,7 +139,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         }
       }
     ],
-    searchPlaceholder: 'Buscar por tipo ou descrição...',
+    searchPlaceholder: '',
     searchFields: [
       { key: 'id', label: 'ID' },
       { key: 'tipo', label: 'Tipo' },
@@ -138,7 +147,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       { key: 'frequencia', label: 'Frequência' },
       { key: 'hora_execucao', label: 'Horário' }
     ],
-    multiSelect: false
+    multiSelect: true
   });
 
   const { data: rotinasData, isLoading, refetch } = useQuery({
@@ -326,7 +335,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
         search={tableFilters.search}
-        onSearchChange={tableFilters.setSearch}
+        onSearchChange={handleSearchChange}
         pagination={pagination}
         onPageChange={tableFilters.setPage}
         limit={tableFilters.limit}

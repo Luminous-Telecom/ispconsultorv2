@@ -119,6 +119,10 @@ export interface UseTableFiltersReturn<
   setPage: (page: number) => void;
   setLimit: (limit: number) => void;
   
+  // Campo de busca (field)
+  searchField: string;
+  setSearchField: (field: string) => void;
+  
   // Utilitários
   resetAll: () => void;
   hasActiveFiltersOrSearch: boolean;
@@ -190,6 +194,13 @@ export const useTableFilters = <
     onSearchChange,
     immediate: immediateSearch,
   });
+
+  // Campo de busca (field)
+  const [searchField, setSearchFieldState] = useState<string>('');
+
+  const setSearchField = useCallback((field: string) => {
+    setSearchFieldState(field);
+  }, []);
 
   // Hook de filtros
   const filtersHook = useFilters<TFilters>({
@@ -333,6 +344,10 @@ export const useTableFilters = <
     limit,
     setPage,
     setLimit,
+    
+    // Campo de busca
+    searchField,
+    setSearchField,
     
     // Utilitários
     resetAll,

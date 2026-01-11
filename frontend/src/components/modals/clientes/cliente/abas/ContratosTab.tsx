@@ -24,9 +24,10 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="cliente-contratos-tab-table"
+            title="Contratos"
             config={{
             columns: [
-              { key: 'id', label: 'ID', sortable: true, searchable: true, render: (contrato: Contrato) => contrato.id },
+              { key: 'id', label: 'ID', sortable: true, searchable: true, width: 42, resizable: true, render: (contrato: Contrato) => contrato.id },
               { 
                 key: 'plano_nome', 
                 label: 'Plano', 
@@ -88,10 +89,10 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                   <span>{contrato.estado || '-'}</span>
                 )
               },
-              { 
-                key: 'valor_mensal', 
-                label: 'Valor Plano', 
-                sortable: false, 
+              {
+                key: 'valor_mensal',
+                label: 'Valor Plano',
+                sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => {
                   const valor = contrato.plano?.valor_mensal;
@@ -223,9 +224,9 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
             },
             loading: isLoadingContratos,
             selectable: true,
-            multiSelect: false,
+            multiSelect: true,
             searchable: true,
-            searchPlaceholder: 'Buscar por plano, status, valor...',
+            searchPlaceholder: '',
             searchFields: [
               { key: 'id', label: 'ID' },
               { key: 'plano_nome', label: 'Plano' },

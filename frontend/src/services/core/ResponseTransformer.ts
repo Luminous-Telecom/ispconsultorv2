@@ -41,12 +41,12 @@ export class ResponseTransformer {
           success: true,
           data: (resp.data || []) as T[],
           pagination: {
-            current_page: pagination.current_page || 1,
-            per_page: pagination.per_page || 15,
-            total: pagination.total || 0,
-            last_page: pagination.last_page || 0,
-            from: pagination.from || 0,
-            to: pagination.to || 0,
+            current_page: pagination.current_page ?? 1,
+            per_page: pagination.per_page ?? 15,
+            total: pagination.total ?? 0,
+            last_page: pagination.last_page ?? 0,
+            from: pagination.from ?? 0,
+            to: pagination.to ?? 0,
           },
         } as PaginatedResponse<T>;
       }

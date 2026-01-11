@@ -11,7 +11,7 @@ import { FormValue } from '@/types/common';
 import { useEntitySelectField } from '@/hooks/useEntitySelectField';
 import { useTituloForm } from '@/hooks/useTituloForm';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 import EntitySelectField from '@/components/ui/EntitySelectField';
 import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
@@ -236,9 +236,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
     return (
       <DraggableModal show={show} onClose={handleCancel} title="Título">
         <div className="d-flex justify-content-center p-4">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
         </div>
       </DraggableModal>
     );

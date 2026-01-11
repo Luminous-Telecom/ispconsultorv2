@@ -3,15 +3,15 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './components/notifications/NotificationProvider';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { I18nProvider } from './contexts/I18nContext';
 import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
 import { TableHeaderProvider } from './contexts/TableHeaderContext';
 import { ModalProvider } from './contexts/ModalContext';
 import { LoadingProvider } from './contexts/LoadingContext';
 import Loading from './components/common/Loading';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectionLayer from './components/common/ProtectionLayer';
 import Layout from './components/layout/Layout';
-import './styles/themes.scss';
-import './styles/protection.css';
 
 // Pages com lazy loading (code splitting)
 const Home = lazy(() => import('./components/pages/Home'));
@@ -46,57 +46,77 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <ProtectionLayer>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <NotificationProvider>
-            <Router>
-              <Suspense fallback={<Loading message="Carregando página..." />}>
-                <Routes>
-                  <Route path="/" element={
-                    <Suspense fallback={<Loading message="Carregando página inicial..." />}>
-                      <Home />
-                    </Suspense>
-                  } />
-                  <Route path="/login" element={
-                    <Suspense fallback={<Loading message="Carregando login..." />}>
-                      <Login />
-                    </Suspense>
-                  } />
-                  <Route path="/pagamento/:id/:token" element={
-                    <Suspense fallback={<Loading message="Carregando página de pagamento..." />}>
-                      <PagamentoPublico />
-                    </Suspense>
-                  } />
-                  <Route path="/adm" element={
-                    <DashboardFiltersProvider>
-                      <TableHeaderProvider>
-                        <ModalProvider>
-                          <LoadingProvider>
-                            <Layout />
-                          </LoadingProvider>
-                        </ModalProvider>
-                      </TableHeaderProvider>
-                    </DashboardFiltersProvider>
-                  }>
-                    <Route index element={
-                      <Suspense fallback={<Loading message="Carregando dashboard..." />}>
-                        <Dashboard />
+    <ErrorBoundary
+      fallback={
+        <div className="container-fluid d-flex align-items-center justify-content-center min-vh-100">
+          <div className="text-center">
+            <i className="bi bi-exclamation-triangle text-danger" style={{ fontSize: '4rem' }}></i>
+            <h2 className="mt-3 text-danger">Erro na aplicação</h2>
+            <p className="text-muted">Ocorreu um erro crítico. Recarregue a página.</p>
+            <button
+              className="btn btn-primary mt-3"
+              onClick={() => window.location.reload()}
+            >
+              Recarregar página
+            </button>
+          </div>
+        </div>
+      }
+    >
+      <ProtectionLayer>
+        <I18nProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+              <NotificationProvider>
+              <Router>
+                <Suspense fallback={<Loading message="Carregando aplicação..." />}>
+                  <Routes>
+                    <Route path="/" element={
+                      <Suspense fallback={<Loading message="Carregando página inicial..." />}>
+                        <Home />
                       </Suspense>
                     } />
-                    <Route path="dashboard" element={
-                      <Suspense fallback={<Loading message="Carregando dashboard..." />}>
-                        <Dashboard />
+                    <Route path="/login" element={
+                      <Suspense fallback={<Loading message="Carregando login..." />}>
+                        <Login />
                       </Suspense>
                     } />
-                  </Route>
-                </Routes>
-              </Suspense>
-            </Router>
-          </NotificationProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </ProtectionLayer>
+                    <Route path="/pagamento/:id/:token" element={
+                      <Suspense fallback={<Loading message="Carregando página de pagamento..." />}>
+                        <PagamentoPublico />
+                      </Suspense>
+                    } />
+                    <Route path="/adm" element={
+                      <DashboardFiltersProvider>
+                        <TableHeaderProvider>
+                          <ModalProvider>
+                            <LoadingProvider>
+                              <Layout />
+                            </LoadingProvider>
+                          </ModalProvider>
+                        </TableHeaderProvider>
+                      </DashboardFiltersProvider>
+                    }>
+                      <Route index element={
+                        <Suspense fallback={<Loading message="Carregando dashboard..." />}>
+                          <Dashboard />
+                        </Suspense>
+                      } />
+                      <Route path="dashboard" element={
+                        <Suspense fallback={<Loading message="Carregando dashboard..." />}>
+                          <Dashboard />
+                        </Suspense>
+                      } />
+                    </Route>
+                  </Routes>
+                </Suspense>
+              </Router>
+              </NotificationProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </I18nProvider>
+      </ProtectionLayer>
+    </ErrorBoundary>
   );
 }
 

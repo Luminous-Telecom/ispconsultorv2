@@ -70,6 +70,8 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
         label: 'ID',
         sortable: true,
         searchable: true,
+        width: 42,
+        resizable: true,
         render: (item: ClienteArquivo) => item.id
       },
       {
@@ -226,6 +228,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="cliente-arquivos-tab-table"
+            title="Arquivos"
             config={{ ...tableConfig, loading: isLoading }}
             onRefresh={refetch}
             onSelectionChange={setSelectedItems}

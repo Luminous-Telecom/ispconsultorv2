@@ -137,6 +137,8 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
+      width: 42,
+      resizable: true,
       render: (item: DocumentoUnion) => (
         <div>{item.id}</div>
       )
@@ -244,6 +246,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
     <>
       <Table
         key={`documentos-table-${tipo}`}
+        title={getTipoLabel(tipo)}
         config={{
           columns,
           data: documentos?.data as DocumentoUnion[] || [],

@@ -4,7 +4,7 @@ import { useFornecedores } from '@/hooks/useFornecedores';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useEntitySelectField } from '@/hooks/useEntitySelectField';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 import EntitySelectField from '@/components/ui/EntitySelectField';
 import FornecedorListModal from '@/components/modals/fornecedores/FornecedorListModal';
@@ -283,9 +283,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
     if (isLoadingContaPagar && isEditing) {
       return (
         <div className="text-center p-4">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
           <p className="mt-2">Carregando dados da conta...</p>
         </div>
       );

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { defaultApiClient } from '@/services/core';
 import { formatDate } from '@/utils/formatters';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { Spinner } from '@/components/ui';
 import './PagamentoPublico.css';
 
 interface TituloPublico {
@@ -100,9 +101,7 @@ const PagamentoPublico: React.FC = () => {
     return (
       <div className="pagamento-publico-container">
         <div className="pagamento-publico-loading">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
         </div>
       </div>
     );

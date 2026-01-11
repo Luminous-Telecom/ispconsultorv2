@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { Spinner } from '@/components/ui';
 
 interface Variavel {
   variavel: string;
@@ -50,9 +51,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
   if (isLoading) {
     return (
       <div className="text-center p-3">
-        <div className="spinner-border spinner-border-sm" role="status">
-          <span className="visually-hidden">Carregando...</span>
-        </div>
+        <Spinner size="sm" variant="primary" aria-label="Carregando..." />
       </div>
     );
   }

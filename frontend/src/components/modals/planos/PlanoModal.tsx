@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { usePlanoForm } from '@/hooks/usePlanoForm';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import { InformacoesBasicasTab, ServicosObservacoesTab } from './plano';
 
 interface PlanoModalProps {
@@ -46,9 +46,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
     if (formHook.isLoadingPlano && formHook.isEditing) {
       return (
         <div className="text-center p-4">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
           <p className="mt-2">Carregando dados do plano...</p>
         </div>
       );

@@ -54,13 +54,13 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   return (
     <div className={`dropdown-menu-container ${className}`} ref={dropdownRef}>
       <button
-        className={`sidebar-nav-link dropdown-toggle ${isActive ? 'active' : ''}`}
+        className={`dropdown-toggle w-100 text-start d-flex align-items-center gap-2 ${isActive ? 'active' : ''}`}
         onClick={handleToggle}
         type="button"
       >
         <i className={`bi ${icon}`}></i>
-        <span>{label}</span>
-        <i className={`bi bi-chevron-down dropdown-arrow ${isOpen ? 'open' : ''}`}></i>
+        <span className="flex-grow-1">{label}</span>
+        <i className={`bi bi-chevron-down ms-auto dropdown-arrow ${isOpen ? 'open' : ''}`}></i>
       </button>
       
       {isOpen && (
@@ -68,7 +68,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
           {items.map((item) => (
             <button
               key={item.id}
-              className={`dropdown-item ${item.disabled ? 'disabled' : ''}`}
+              className={`dropdown-item ${item.disabled ? 'disabled opacity-50' : ''}`}
               onClick={() => handleItemClick(item)}
               disabled={item.disabled}
             >

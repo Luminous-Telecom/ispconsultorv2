@@ -156,6 +156,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'ID',
       sortable: true,
       searchable: true,
+      width: 42,
+      resizable: true,
       render: (item: Contrato) => <span>{item.id}</span>
     },
     {
@@ -163,6 +165,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Cliente',
       sortable: true,
       searchable: true,
+      width: 200,
+      resizable: true,
       render: (item: Contrato & { cliente_razao_social?: string }) => (
         <div className="fw-bold">{item.cliente?.razao_social || item.cliente_razao_social || '-'}</div>
       )
@@ -172,6 +176,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Endereço',
       sortable: true,
       searchable: false,
+      width: 180,
+      resizable: true,
       render: (item: Contrato) => (
         <span>{item.endereco || '-'}</span>
       )
@@ -180,6 +186,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       key: 'numero',
       label: 'Número',
       sortable: true,
+      width: 90,
+      resizable: true,
       searchable: false,
       render: (item: Contrato) => (
         <span>{item.numero || '-'}</span>
@@ -190,6 +198,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Complemento',
       sortable: true,
       searchable: false,
+      width: 120,
+      resizable: true,
       render: (item: Contrato) => (
         <span>{item.complemento || '-'}</span>
       )
@@ -199,6 +209,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Bairro',
       sortable: true,
       searchable: false,
+      width: 120,
+      resizable: true,
       render: (item: Contrato) => (
         <span>{item.bairro || '-'}</span>
       )
@@ -208,6 +220,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Cidade',
       sortable: true,
       searchable: false,
+      width: 130,
+      resizable: true,
       render: (item: Contrato) => (
         <span>{item.cidade || '-'}</span>
       )
@@ -217,6 +231,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Estado',
       sortable: true,
       searchable: false,
+      width: 80,
+      resizable: true,
       render: (item: Contrato) => (
         <span>{item.estado || '-'}</span>
       )
@@ -226,6 +242,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Plano',
       sortable: true,
       searchable: true,
+      width: 140,
+      resizable: true,
       render: (item: Contrato & { plano_nome?: string }) => item.plano?.nome_plano || item.plano_nome || '-'
     },
     {
@@ -233,7 +251,9 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Valor Plano',
       sortable: true,
       searchable: true,
-      render: (item: Contrato) => 
+      width: 110,
+      resizable: true,
+      render: (item: Contrato) =>
         item.plano?.valor_mensal ? `R$ ${Number(item.plano.valor_mensal).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '-'
     },
     {
@@ -241,6 +261,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Desconto',
       sortable: true,
       searchable: false,
+      width: 100,
+      resizable: true,
       render: (item: Contrato) => {
         // Priorizar desconto em valor
         if (item.desconto_valor && Number(item.desconto_valor) > 0) {
@@ -516,12 +538,13 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
+            title={title}
             config={{
               columns,
               data: dataWithVirtualFields,
               loading: isLoading,
               searchable: true,
-              searchPlaceholder: 'Buscar por cliente ou plano...',
+              searchPlaceholder: '',
               searchFields: [
                 { key: 'id', label: 'ID' },
                 { key: 'cliente_razao_social', label: 'Cliente' },
@@ -537,7 +560,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               hover: true,
               responsive: true,
               selectable: true,
-              multiSelect: false,
+              multiSelect: true,
               bulkActions: bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,

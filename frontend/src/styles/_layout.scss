@@ -3,377 +3,212 @@
    ============================================ */
 
 /* ============================================
-   HEADER - MOBILE-FIRST RESPONSIVE DESIGN
+   ESTILOS INLINE DO LAYOUT.TSX - SUBSTITUTOS CSS
    ============================================ */
 
-/* Base Mobile Styles (< 768px) */
-.main-header {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-color);
-  padding: 0.875rem 1rem; /* Mobile: padding reduzido */
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  width: 100%;
-  max-width: 100%;
-  overflow-x: visible; /* Permitir que dropdown apareça */
-  overflow-y: visible;
-  box-sizing: border-box;
+/* Sidebar nav button */
+.sidebar-nav-button {
+  background: none !important;
+  border: none !important;
+  width: 100% !important;
+  text-align: left !important;
+  padding: 0.5rem 1rem !important;
+  color: inherit !important;
 }
 
-[data-theme="dark"] .main-header {
-  background: var(--bg-secondary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+/* Loading bar */
+.layout-loading-bar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 3px !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: var(--bg-primary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
-/* Container do header - Mobile: coluna */
-.header-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem; /* Mobile: gap menor */
-  width: 100%;
-  max-width: 100%;
-  overflow-x: visible; /* Permitir que dropdown apareça */
-  overflow-y: visible;
-  box-sizing: border-box;
+/* Mobile search input */
+.layout-mobile-search-input {
+  flex: 1 !important;
 }
 
-/* Linha 1: Controles principais - Layout: Esquerda | Centro | Direita */
-.header-row-1 {
+/* Mobile search close button */
+.layout-mobile-search-close {
+  color: var(--text-primary) !important;
+  border: none !important;
+  background: none !important;
+  font-size: 1rem !important;
+  padding: 0.25rem !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+}
+
+.layout-mobile-search-close:hover {
+  background: var(--bg-tertiary) !important;
+}
+
+/* ============================================
+   HEADER - BOOTSTRAP NAVBAR STYLE
+   ============================================ */
+
+.main-navbar {
+  background-color: var(--navbar-bg);
+  border-bottom: 1px solid var(--navbar-border);
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  transition: all 0.3s ease;
+  min-height: 64px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+}
+
+.navbar-brand {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.form-control-navbar {
+  background-color: var(--navbar-input-bg) !important;
+  border: 1px solid var(--navbar-border) !important;
+  color: var(--navbar-input-text) !important;
+}
+
+.form-control-navbar:focus {
+  background-color: var(--navbar-input-bg) !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25) !important;
+  color: var(--navbar-input-text) !important;
+}
+
+.form-control-navbar::placeholder {
+  color: var(--text-muted);
+}
+
+.nav-link-custom {
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.nav-link-custom:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary);
+}
+
+.nav-link-custom.active {
+  background-color: var(--bg-tertiary);
+  color: var(--primary-color) !important;
+}
+
+/* Custom styles for dropdowns */
+.dropdown-menu-custom {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+  padding: 0.5rem 0;
+  box-shadow: var(--shadow-lg) !important;
+  z-index: 1100;
+}
+
+.dropdown-item-custom {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+  background: transparent !important;
+  padding: 0.6rem 1rem;
+  border: none;
   width: 100%;
-  max-width: 100%;
-  overflow-x: visible; /* Permitir que dropdown apareça */
-  overflow-y: visible;
-  box-sizing: border-box;
-  min-width: 0;
-  position: relative;
-}
-
-@media (min-width: 768px) {
-  .header-row-1 {
-    justify-content: flex-start;
-    gap: 1rem;
-  }
-}
-
-/* Esquerda: Menu hamburger */
-.header-left {
+  text-align: left;
   display: flex;
   align-items: center;
-  flex-shrink: 0;
-  min-width: 0;
-  width: auto;
-  margin: 0;
+  gap: 0.6rem;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.dropdown-item-custom:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dropdown-item-custom.active {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--primary-color) !important;
+  font-weight: 600;
+}
+
+/* Fix for LanguageSelector and other nested elements */
+.dropdown-menu-custom li,
+.dropdown-menu-custom button,
+.dropdown-menu-custom div {
+  background-color: transparent !important;
+}
+
+.dropdown-menu-custom .dropdown-item-custom:hover,
+.dropdown-menu-custom .dropdown-item-custom:hover * {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dropdown-menu-custom .btn-link {
+  color: var(--text-primary) !important;
+  text-decoration: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  width: 100%;
   padding: 0;
 }
 
-/* Centro: Título Dashboard - Centralizado perfeitamente (mobile) */
-.header-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none; /* Permitir clique através do título */
+/* Remove default bootstrap arrow from nested language dropdown */
+.dropdown-item-custom.dropdown-toggle::after {
+  display: none !important;
 }
 
-/* Desktop: Filtros de data na mesma linha */
-.header-dates-desktop {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .header-center {
-    position: static !important;
-    left: auto !important;
-    transform: none !important;
-    margin-right: 0;
-    pointer-events: auto;
-    flex-shrink: 0;
-  }
-
-  .header-dates-desktop {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-left: 0;
-    margin-right: 0;
-    flex-shrink: 0;
-    order: 2;
-  }
-
-  .header-dates-desktop .date-filter-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-  }
-
-  .header-dates-desktop .date-label {
-    font-size: 0.875rem;
-    white-space: nowrap;
-    margin: 0;
-  }
-
-  .header-dates-desktop .dashboard-date-input {
-    width: auto;
-    min-width: 140px;
-  }
-
-  .header-right {
-    margin-left: auto;
-    order: 3;
-  }
-
-  .header-row-1 {
-    justify-content: flex-start;
-    gap: 1rem;
-  }
-}
-
-.header-title {
-  font-size: 0.8rem; /* Mobile: tamanho reduzido (12.8px) */
-  font-weight: 600;
-  margin: 0;
-  color: var(--text-primary);
-  white-space: nowrap;
-  letter-spacing: -0.01em;
-}
-
-/* Direita: Menu de ações */
-.header-right {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-shrink: 0;
-  margin-left: auto; /* Empurrar para direita */
-  overflow: visible; /* Permitir que dropdown apareça */
-  position: relative;
-}
-
-/* Hamburger button - Mesmo estilo do menu de 3 pontos */
-.hamburger-btn {
-  padding: 0.625rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  width: 44px;
-  height: 44px;
-  font-size: 1.25rem;
-  line-height: 1;
-  margin: 0;
-  border: none;
-  background-color: transparent;
-  color: var(--text-primary);
-  cursor: pointer;
-  border-radius: 0.375rem;
-  transition: background-color 0.2s ease;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  box-shadow: none;
-}
-
-.hamburger-btn:hover {
-  background-color: var(--bg-tertiary);
-}
-
-.hamburger-btn i {
-  color: var(--text-primary);
-  font-size: 1.25rem;
-}
-
-/* Menu de 3 pontos - Mobile: visível */
-.mobile-menu-dropdown {
-  position: relative;
-  flex-shrink: 0;
-  margin: 0;
-  min-width: auto;
-  z-index: 1001; /* Garantir que o dropdown apareça acima */
-}
-
-.mobile-menu-btn {
-  padding: 0.625rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  width: 44px;
-  height: 44px;
-  font-size: 1.25rem;
-  line-height: 1;
-  margin: 0;
-  border: none;
-  background-color: transparent;
-  color: var(--text-primary);
-  cursor: pointer;
-  border-radius: 0.375rem;
-  transition: background-color 0.2s ease;
-  box-sizing: border-box;
-}
-
-.mobile-menu-btn span {
-  font-size: 1.25rem !important;
-  letter-spacing: 2px;
-  line-height: 1;
-}
-
-.mobile-menu-btn i,
-.mobile-menu-btn .bi {
-  font-size: 1.25rem !important;
-}
-
-.mobile-menu-btn:hover {
-  background-color: var(--bg-tertiary);
-}
-
-.mobile-menu-btn span {
-  display: inline-block;
-  letter-spacing: 2px;
-  line-height: 1;
-}
-
-/* Dropdown menu - Mobile */
-.mobile-dropdown-menu {
-  position: absolute;
-  right: 0;
-  left: auto;
-  top: 100%;
-  margin-top: 0.5rem;
-  z-index: 1001;
-  min-width: 160px;
-  max-width: 180px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  background: var(--bg-primary);
-  padding: 0.375rem 0;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-.mobile-dropdown-menu .dropdown-item {
-  min-height: 40px; /* Touch target adequado mas menor */
-  padding: 0.5rem 0.875rem;
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-  transition: background-color 0.2s ease;
-}
-
-.mobile-dropdown-menu .dropdown-item:hover {
-  background-color: var(--bg-tertiary);
-}
-
-.mobile-dropdown-menu .dropdown-item i {
-  font-size: 0.9375rem;
-  width: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.mobile-dropdown-menu .dropdown-item span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mobile-dropdown-menu .dropdown-divider {
-  margin: 0.375rem 0;
+.dropdown-menu-custom .dropdown-divider {
   border-top: 1px solid var(--border-color);
+  opacity: 1;
+  margin: 0.5rem 0;
 }
 
-.mobile-dropdown-menu .dropdown-item.text-danger {
-  color: var(--danger-color, #dc3545);
-}
-
-.mobile-dropdown-menu .dropdown-item.text-danger:hover {
-  background-color: rgba(220, 53, 69, 0.1);
-}
-
-/* Botões desktop - Mobile: escondido */
-.desktop-buttons {
-  display: none; /* Mobile: escondido */
-}
-
-.desktop-buttons .btn {
-  min-height: 44px; /* Touch target mínimo */
-  min-width: 44px;
-}
-
-.desktop-buttons .btn-outline-secondary i,
-.desktop-buttons .btn-outline-secondary .bi {
+.link-theme-toggle {
   color: var(--text-primary) !important;
 }
 
-.desktop-buttons .btn-outline-danger i,
-.desktop-buttons .btn-outline-danger .bi {
-  color: var(--danger-color, #dc3545) !important;
+/* Spinner animation for reload button */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* Linha 2: Filtros de data - Mobile: coluna/linha flexível */
-.header-row-2 {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+.spin {
+  animation: spin 1s linear infinite;
+  display: inline-block;
 }
 
-.date-filter-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.date-label {
-  font-size: 0.8125rem; /* Mobile: fonte menor */
-  color: var(--text-secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.dashboard-date-input {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  font-size: 16px; /* Previne zoom no iOS */
-  padding: 0.5rem 0.75rem;
-  box-sizing: border-box;
-}
-
-/* Reduzir min-height do dashboard-date-input no mobile */
 @media (max-width: 767.98px) {
-  .dashboard-date-input {
-    min-height: 30px !important;
+  .main-content {
+    padding: 0.5rem;
   }
 }
 
-/* Main content */
-.main-content {
-  background: var(--bg-primary);
-  min-height: calc(100vh - 64px);
-  padding: 0;
+/* Esconder sidebar por padrão no mobile quando o header navbar é usado */
+@media (max-width: 767.98px) {
+  .sidebar {
+    top: 0;
+    height: 100vh;
+  }
 }
+
 
 /* Container do dashboard - margens laterais consistentes */
 .dashboard-container {

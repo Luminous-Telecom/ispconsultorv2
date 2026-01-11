@@ -77,6 +77,12 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   iconOnlyOnMobile?: boolean;
   
   /**
+   * Se true, sempre exibe o ícone mesmo no desktop
+   * @default false
+   */
+  alwaysShowIcon?: boolean;
+
+  /**
    * Tooltip do botão (compatibilidade com código legado)
    * Será usado como title e aria-label
    */
@@ -96,7 +102,7 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
  *   Cancelar
  * </Button>
  * 
- * <Button variant="danger" rightIcon={<i className="bi bi-trash"></i>}>
+ * <Button variant="danger" rightIcon={<i className="bi bi-trash"></i>} alwaysShowIcon>
  *   Excluir
  * </Button>
  * ```
@@ -111,6 +117,7 @@ const Button: React.FC<ButtonProps> = ({
   icon,
   children,
   iconOnlyOnMobile = false,
+  alwaysShowIcon = false,
   className = '',
   disabled = false,
   tooltip,
@@ -211,16 +218,25 @@ const Button: React.FC<ButtonProps> = ({
     
     // Renderizar com ícones
     if (resolvedLeftIcon || rightIcon) {
+      // Se for desktop e não tiver texto, permitir ícone para o botão não ficar vazio
+      const childrenArray = React.Children.toArray(children);
+      const hasText = childrenArray.length > 0 && childrenArray.some(child => {
+        if (typeof child === 'string') return child.trim().length > 0;
+        if (typeof child === 'number') return true;
+        return !!child;
+      });
+      const showIcons = isMobile || !hasText || alwaysShowIcon;
+
       return (
         <>
-          {resolvedLeftIcon && (
-            <span className={isMobile ? 'me-2' : 'me-1'}>
+          {(resolvedLeftIcon && showIcons) && (
+            <span className={hasText ? 'me-2' : ''}>
               {resolvedLeftIcon}
             </span>
           )}
-          <span>{children}</span>
-          {rightIcon && (
-            <span className={isMobile ? 'ms-2' : 'ms-1'}>
+          {hasText && <span>{children}</span>}
+          {(rightIcon && showIcons) && (
+            <span className={hasText ? 'ms-2' : ''}>
               {rightIcon}
             </span>
           )}

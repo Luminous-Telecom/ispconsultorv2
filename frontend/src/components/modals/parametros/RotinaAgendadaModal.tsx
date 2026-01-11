@@ -5,7 +5,7 @@ import { SchedulerService, CreateRotinaData, UpdateRotinaData } from '@/services
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 
 interface RotinaAgendadaModalProps {
@@ -123,9 +123,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
     return (
       <DraggableModal show={show} onClose={handleClose} title={isEditMode ? 'Editar Rotina' : 'Nova Rotina'}>
         <div className="text-center p-4">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
         </div>
       </DraggableModal>
     );

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useListModal } from '@/hooks/useListModal';
 import { useModalSelect } from '@/hooks/useModalSelect';
@@ -33,7 +33,15 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
   });
-  
+
+  const handleSearchChange = useCallback((search: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch]);
+
   const { data: termosSistema, isLoading: isLoadingTermos } = useModelosTermo();
 
   // Usar hook customizado para gerenciar seleção
@@ -56,6 +64,7 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
         key: 'id',
         label: 'ID',
         sortable: true,
+        width: '42px',
         render: (termo: Termo) => <span>{termo.id}</span>
       },
       {
@@ -151,7 +160,7 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
       selectedItems={termoSelecionado ? [termoSelecionado] : []}
       onSelectionChange={handleSelectionChange}
       search={tableFilters.search}
-      onSearchChange={tableFilters.setSearch}
+      onSearchChange={handleSearchChange}
       pagination={paginationTermos}
       onPageChange={tableFilters.setPage}
       limit={tableFilters.limit}

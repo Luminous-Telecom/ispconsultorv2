@@ -93,6 +93,8 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
       key: 'id',
       label: 'ID',
       sortable: true,
+      width: 42,
+      resizable: true,
       render: (item: ModeloRecibo) => (
         <div>{item.id}</div>
       )
@@ -200,6 +202,7 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
           <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
             <Table
               key="recibos-tab-table"
+              title="Recibos"
               config={{
                 columns,
                 data: recibos?.data || [],

@@ -118,6 +118,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="financeiro-tab-table"
+            title="Financeiro"
             config={{
               columns: columns,
               data: sortedData,
@@ -132,7 +133,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
               selectable: true,
               multiSelect: true,
               searchable: true,
-              searchPlaceholder: 'Buscar por ID, valor, vencimento...',
+              searchPlaceholder: '',
               sortable: true,
               striped: true,
               hover: true,

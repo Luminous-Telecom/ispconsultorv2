@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { defaultApiClient } from '@/services/core';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 
 interface Template {
   name: string;
@@ -186,9 +186,7 @@ Atenção: Faltam apenas *{{4}}* para o vencimento!`}
 
         {isLoading && (
           <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Carregando templates...</span>
-            </div>
+            <Spinner size="md" variant="primary" aria-label="Carregando templates..." />
           </div>
         )}
 

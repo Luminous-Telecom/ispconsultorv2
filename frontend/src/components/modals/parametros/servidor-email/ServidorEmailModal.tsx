@@ -4,7 +4,7 @@ import { useNotificationContext } from '@/components/notifications/NotificationP
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { ServidorEmailService, MensagemEmail } from '@/services/servidorEmailService';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
@@ -307,9 +307,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
     <>
       {isLoading ? (
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
         </div>
       ) : (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

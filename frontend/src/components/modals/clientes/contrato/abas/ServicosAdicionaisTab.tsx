@@ -41,12 +41,13 @@ const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="servicos-adicionais-tab-table"
+            title="Serviços Adicionais"
             config={{
             columns: columns,
             data: sortedData,
             loading: isLoading,
             selectable: true,
-            multiSelect: false,
+            multiSelect: true,
             emptyMessage: 'Este contrato ainda não possui serviços adicionais cadastrados.',
             className: 'no-padding',
             pagination: {

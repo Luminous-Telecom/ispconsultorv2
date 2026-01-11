@@ -2,23 +2,159 @@
    TABELAS - Estilos para tabelas responsivas e mobile
    ============================================ */
 
+/* Tabelas Bootstrap padrão */
+.table th.sortable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.table th.sortable:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Redimensionamento Bootstrap-style */
+.table-resizable {
+  table-layout: fixed;
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Classe específica para tabelas com redimensionamento habilitado */
+.table-resizable-enabled {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table-resizable-enabled th {
+  position: relative;
+  min-width: 80px;
+  max-width: 400px;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.table-resizable-enabled th:last-child .resize-handle {
+  display: none; /* Última coluna não pode ser redimensionada */
+}
+
+.table-resizable th {
+  position: relative;
+  min-width: 30px; /* Muito reduzido para permitir colunas minúsculas */
+  max-width: 400px;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.table-resizable th:last-child .resize-handle {
+  display: none; /* Última coluna não pode ser redimensionada */
+}
+
+.table-resizable.resizing {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+.table-resizable.resizing * {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+/* Handle para redimensionamento */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 8px;
+  background-color: transparent;
+  cursor: col-resize;
+  transition: all 0.2s ease;
+  z-index: 2;
+  margin-right: -4px;
+  opacity: 0;
+  border-right: 2px solid transparent;
+}
+
+.table-resizable th:hover .resize-handle {
+  opacity: 1;
+  background-color: rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.1);
+  border-right-color: var(--btn-primary-color);
+  box-shadow: 0 0 4px rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.3);
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+  opacity: 1;
+  background-color: rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.2);
+  border-right-color: var(--btn-primary-color);
+  box-shadow: 0 0 8px rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.5);
+  width: 10px;
+  margin-right: -5px;
+}
+
+/* Indicador visual durante redimensionamento */
+.table-resizable.resizing .resize-handle {
+  opacity: 1;
+  background-color: var(--btn-primary-color);
+  border-right-color: var(--btn-primary-color);
+  box-shadow: 0 0 12px rgba(var(--btn-primary-color-rgb, 13, 110, 253), 0.6);
+}
+
+/* Cursor global durante redimensionamento */
+body.resizing-columns {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body.resizing-columns * {
+  cursor: col-resize !important;
+}
+
+/* Cursor pointer para elementos interativos */
+.form-select {
+  cursor: pointer !important;
+}
+
+.form-select:hover {
+  cursor: pointer !important;
+}
+
+.form-select:focus {
+  cursor: pointer !important;
+}
+
+label {
+  cursor: pointer;
+}
+
+/* Cursor pointer específico para tabelas */
+.table-pagination-header .form-select,
+.table-pagination-header label {
+  cursor: pointer !important;
+}
+
+.table-resizable.resizing .column-resize-handle.active {
+  pointer-events: auto;
+}
+
 /* Tabelas modernas e elegantes */
 .table {
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: none;
-  border-radius: 12px;
   background: var(--bg-primary);
+  margin: 0;
+  border-collapse: collapse;
 }
 
 .table th,
 .table td {
   border-radius: 0;
   border-right: 1px solid var(--border-light);
-  padding: 1rem 1.25rem;
+  padding: 0.25rem 0.5rem;
   vertical-align: middle;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 400;
 }
 
 .table th:last-child,
@@ -26,13 +162,33 @@
   border-right: none;
 }
 
+
+.table tbody td {
+  border-bottom: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.table tbody tr {
+  height: 2rem; /* Altura fixa das linhas ainda menor */
+}
+
+.table tbody td:last-child {
+  border-right: none;
+}
+
 .table thead th {
-  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+  background: var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--border-color);
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.01em;
   text-transform: none;
-  border-bottom: 2px solid var(--btn-primary-color);
   cursor: pointer;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -41,33 +197,32 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 1rem 1.25rem;
+  padding: 0.375rem 0.5rem;
+  height: 2.25rem;
+  line-height: 1.1;
+  margin: 0;
 }
 
-.table thead th:hover {
-  background: var(--bg-tertiary);
-}
-
+/* Truncamento de texto nas células da tabela */
 .table tbody td {
-  border-bottom: 1px solid var(--border-light);
-  border-right: 1px solid var(--border-light);
-  color: var(--text-primary);
-  font-size: 0.875rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 0; /* Permite que o width da coluna controle o tamanho */
 }
 
-.table tbody td:last-child {
-  border-right: none;
+/* Para células que precisam de quebra de linha (como descrições longas) */
+.table tbody td.text-wrap {
+  white-space: normal;
+  word-wrap: break-word;
+  text-overflow: clip;
 }
 
-.table thead th {
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
-  font-weight: 600;
-  padding: 1rem 1.25rem;
-  font-size: 0.875rem;
+/* Estilos específicos para células de dados */
+.table-data-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Hover padrão - será sobrescrito por regras específicas de tema */
@@ -126,12 +281,40 @@
   color: white !important;
 }
 
-/* Larguras específicas para colunas */
+/* Larguras específicas para colunas (ajustadas para serem ultra compactas) */
 .table th.col-id,
 .table td.col-id {
-  width: 60px;
-  min-width: 60px;
-  max-width: 60px;
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+}
+
+.table th.col-checkbox,
+.table td.col-checkbox {
+  width: 35px !important;
+  min-width: 35px !important;
+  max-width: 35px !important;
+}
+
+.table th.col-status,
+.table td.col-status {
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
+}
+
+.table th.col-numero,
+.table td.col-numero {
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+}
+
+.table th.col-estado,
+.table td.col-estado {
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
 }
 
 .table th.col-small,
@@ -150,16 +333,16 @@
 
 .table th.col-large,
 .table td.col-large {
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
+  width: 180px; /* Reduzido de 200px */
+  min-width: 180px;
+  max-width: 180px;
 }
 
 .table th.col-extra-large,
 .table td.col-extra-large {
-  width: 300px;
-  min-width: 300px;
-  max-width: 300px;
+  width: 250px; /* Reduzido de 300px */
+  min-width: 250px;
+  max-width: 250px;
 }
 
 .table th.col-flex,
@@ -302,9 +485,9 @@
   color: var(--text-primary) !important;
 }
 
-/* Borda na última linha da tabela igual ao cabeçalho */
+/* Última linha da tabela com borda normal */
 .table tbody tr:last-child td {
-  border-bottom: 2px solid var(--primary-color);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .table tbody tr:hover {
@@ -322,7 +505,6 @@
 
 /* Badges modernos */
 .badge {
-  border-radius: 12px;
   padding: 0.125rem 0.5rem;
   font-size: 0.6875rem;
   font-weight: 500;
@@ -681,7 +863,7 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   transition: background-color 0.2s ease;
 }
 
@@ -712,7 +894,7 @@
   border-top: 1px solid var(--border-color);
   padding: 0;
   z-index: 100000 !important;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -773,20 +955,20 @@
 }
 
 .table-mobile-pagination .btn-sm {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .table-mobile-pagination .btn-sm i {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
 }
 
 .table-mobile-pagination .small {
@@ -817,15 +999,16 @@
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  padding: 0.25rem;
+  padding: 0.0625rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 3px;
   transition: all 0.2s ease;
-  min-width: 28px;
-  min-height: 28px;
+  min-width: 20px;
+  min-height: 20px;
+  font-size: 0.7rem;
 }
 
 .table-action-menu-btn:hover {
@@ -903,4 +1086,233 @@
     flex: 0 0 auto;
     width: 20%;
   }
+}
+
+/* ============================================
+   ESTILOS INLINE DO TABLE.TSX - SUBSTITUTOS CSS
+   ============================================ */
+
+/* Checkbox header column */
+.table-checkbox-header {
+  font-size: 0.75rem !important;
+  padding: 0.5rem !important;
+  width: 40px !important;
+  text-transform: none !important;
+}
+
+/* Actions header column */
+.table-actions-header {
+  font-size: 0.75rem !important;
+  padding: 0.5rem !important;
+  width: 150px !important;
+  text-align: right !important;
+  text-transform: none !important;
+}
+
+/* Checkbox cell */
+.table-checkbox-cell {
+  font-size: 0.75rem !important;
+  padding: 0.5rem !important;
+  width: 40px !important;
+}
+
+/* Data cell */
+.table-data-cell {
+  font-size: 0.75rem !important;
+  padding: 0.5rem !important;
+}
+
+/* Actions cell */
+.table-actions-cell {
+  font-size: 0.75rem !important;
+  padding: 0.5rem !important;
+  text-align: right !important;
+}
+
+/* Clickable row */
+.table-row-clickable {
+  cursor: pointer !important;
+}
+
+/* Table container */
+.table-container-custom {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Table header container */
+.table-header-custom {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+/* Table header content */
+.table-header-content {
+  padding: 0.5rem 1rem !important;
+}
+
+/* Table header flex */
+.table-header-flex {
+  gap: 8px !important;
+}
+
+/* Table responsive container */
+.table-responsive-custom {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: auto !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+}
+
+/* Garantir que a tabela não tenha espaço extra no topo */
+.table-responsive-custom .table {
+  margin-top: 0 !important;
+}
+
+.table-responsive-custom .table thead {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Remover borda inferior do header da tabela que causa linha branca */
+.table-header-custom.border-bottom {
+  border-bottom: none !important;
+}
+
+.border-bottom.table-header-custom {
+  border-bottom: none !important;
+}
+
+/* Table custom */
+.table-custom {
+  width: 100% !important;
+  table-layout: auto !important;
+  margin: 0 !important;
+}
+
+/* Table pagination header */
+.table-pagination-header {
+  padding: 0 1rem 0.5rem 1rem !important;
+}
+
+/* Table pagination flex */
+.table-pagination-flex {
+  gap: 0.5rem !important;
+}
+
+/* Search box container */
+.table-search-box {
+  min-width: 300px !important;
+}
+
+/* Select auto width */
+.table-select-auto {
+  width: auto !important;
+  min-width: 150px !important;
+  height: 32px !important;
+}
+
+/* Input width 400px */
+.table-input-400 {
+  width: 400px !important;
+  height: 32px !important;
+}
+
+/* Button width 80px */
+.table-btn-80 {
+  width: 80px !important;
+  height: 32px !important;
+  cursor: pointer !important;
+}
+
+/* Flex container */
+.table-flex-container {
+  flex: 1 !important;
+}
+
+/* Flex shrink 0 */
+.table-flex-shrink-0 {
+  flex-shrink: 0 !important;
+}
+
+/* Dropdown relative */
+.table-dropdown-relative {
+  flex-shrink: 0 !important;
+  position: relative !important;
+}
+
+/* Dropdown menu absolute */
+.table-dropdown-menu {
+  position: absolute !important;
+  top: 100% !important;
+  z-index: 1050 !important;
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  min-width: 140px !important;
+  overflow: hidden !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.table-dropdown-menu.table-dropdown-menu-left {
+  left: 0 !important;
+}
+
+.table-dropdown-menu.table-dropdown-menu-right {
+  right: 0 !important;
+}
+
+.table-dropdown-menu .dropdown-item {
+  font-size: 0.75rem !important;
+  padding: 0.375rem 0.75rem !important;
+}
+
+/* Text primary color */
+.table-text-primary {
+  color: var(--text-primary) !important;
+}
+
+/* Larguras dinâmicas baseadas em data attributes */
+.table-resizable-enabled th[data-column-width]:not([data-column-width=""]) {
+  width: attr(data-column-width px) !important;
+  min-width: attr(data-column-width px) !important;
+  max-width: attr(data-column-width px) !important;
+}
+
+/* Selected cell */
+.table-selected-cell {
+  background-color: #0d6efd !important;
+  color: white !important;
+}
+
+/* Pagination info span */
+.table-pagination-info {
+  flex: 1 !important;
+  text-align: center !important;
+}
+
+/* Actions cell fixed width */
+.table-actions-cell-fixed {
+  width: 50px !important;
+  position: relative !important;
+}
+
+/* Text primary color */
+.table-text-primary {
+  color: var(--text-primary) !important;
+}
+
+/* Larguras dinâmicas baseadas em data attributes */
+.table-resizable-enabled th[data-column-width]:not([data-column-width=""]) {
+  width: attr(data-column-width px) !important;
+  min-width: attr(data-column-width px) !important;
+  max-width: attr(data-column-width px) !important;
 }

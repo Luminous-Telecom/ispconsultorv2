@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useClientes, useDeleteCliente } from '@/hooks/useClientes';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
@@ -30,7 +30,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
-  const [searchField, setSearchField] = useState<string>('razao_social');
   
   const auditoria = useAuditoria();
   const { confirm, modalProps } = useConfirmModal();
@@ -60,131 +59,139 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     } : undefined
   );
 
+  // Configurar colunas memoizadas
+  const columns = useMemo(() => [
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      width: '42px',
+      render: (item: Cliente) => <span>{item.id}</span>
+    },
+    {
+      key: 'cnpj',
+      label: 'CNPJ',
+      sortable: true,
+      width: '130px',
+      render: (item: Cliente) => (
+        <span className="text-nowrap">{item.cnpj}</span>
+      )
+    },
+    {
+      key: 'razao_social',
+      label: 'Razão Social',
+      sortable: true,
+      width: '200px',
+      render: (item: Cliente) => (
+        <strong>{item.razao_social}</strong>
+      )
+    },
+    {
+      key: 'nome_fantasia',
+      label: 'Nome Fantasia',
+      sortable: true,
+      width: '180px',
+      render: (item: Cliente) => (
+        <span className="text-muted">{item.nome_fantasia || '-'}</span>
+      )
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      sortable: true,
+      width: '200px',
+      render: (item: Cliente) => (
+        <span className="text-nowrap">{item.email}</span>
+      )
+    },
+    {
+      key: 'whatsapp',
+      label: 'WhatsApp',
+      sortable: true,
+      width: '130px',
+      render: (item: Cliente) => (
+        <span className="text-nowrap">{item.whatsapp || '-'}</span>
+      )
+    },
+    {
+      key: 'endereco',
+      width: '180px',
+      label: 'Endereço',
+      sortable: true,
+      render: (item: Cliente) => (
+        <span>{item.endereco || '-'}</span>
+      )
+    },
+    {
+      key: 'numero',
+      label: 'Número',
+      sortable: true,
+      render: (item: Cliente) => (
+        <span>{item.numero || '-'}</span>
+      )
+    },
+    {
+      key: 'complemento',
+      label: 'Complemento',
+      sortable: true,
+      render: (item: Cliente) => (
+        <span>{item.complemento || '-'}</span>
+      )
+    },
+    {
+      key: 'bairro',
+      label: 'Bairro',
+      sortable: true,
+      render: (item: Cliente) => (
+        <span>{item.bairro || '-'}</span>
+      )
+    },
+    {
+      key: 'cidade',
+      label: 'Cidade',
+      sortable: true,
+      render: (item: Cliente) => (
+        <span>{item.cidade || '-'}</span>
+      )
+    },
+    {
+      key: 'estado',
+      label: 'Estado',
+      sortable: true,
+      render: (item: Cliente) => (
+        <span>{item.estado || '-'}</span>
+      )
+    },
+    {
+      key: 'ativo',
+      label: 'Status',
+      sortable: true,
+      width: '100px',
+      render: (item: Cliente) => (
+        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+          {item.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      )
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      render: (item: Cliente & { created_at?: string; created_at_formatada?: string | null }) => {
+        // Usar created_at_formatada se disponível (vem do backend já formatada)
+        if (item.created_at_formatada) {
+          return item.created_at_formatada;
+        }
+        // Fallback para formatDateTime se não tiver formato do backend
+        return item.created_at ? formatDateTime(item.created_at) : '-';
+      }
+    }
+  ], []);
+
   // Configurar modal centralizado
   const modal = useListModal({
     title,
-    columns: [
-      {
-        key: 'id',
-        label: 'ID',
-        sortable: true,
-        width: '80px',
-        render: (item: Cliente) => <span>{item.id}</span>
-      },
-      {
-        key: 'cnpj',
-        label: 'CNPJ',
-        sortable: true,
-        width: '150px',
-        render: (item: Cliente) => (
-          <span className="text-nowrap">{item.cnpj}</span>
-        )
-      },
-      {
-        key: 'razao_social',
-        label: 'Razão Social',
-        sortable: true,
-        render: (item: Cliente) => (
-          <strong>{item.razao_social}</strong>
-        )
-      },
-      {
-        key: 'nome_fantasia',
-        label: 'Nome Fantasia',
-        sortable: true,
-        render: (item: Cliente) => (
-          <span className="text-muted">{item.nome_fantasia || '-'}</span>
-        )
-      },
-      {
-        key: 'email',
-        label: 'Email',
-        sortable: true,
-        render: (item: Cliente) => (
-          <span className="text-nowrap">{item.email}</span>
-        )
-      },
-      {
-        key: 'whatsapp',
-        label: 'WhatsApp',
-        sortable: false,
-        render: (item: Cliente) => (
-          <span className="text-nowrap">{item.whatsapp || '-'}</span>
-        )
-      },
-      {
-        key: 'endereco',
-        label: 'Endereço',
-        sortable: true,
-        render: (item: Cliente) => (
-          <span>{item.endereco || '-'}</span>
-        )
-      },
-      {
-        key: 'numero',
-        label: 'Número',
-        sortable: true,
-        render: (item: Cliente) => (
-          <span>{item.numero || '-'}</span>
-        )
-      },
-      {
-        key: 'complemento',
-        label: 'Complemento',
-        sortable: true,
-        render: (item: Cliente) => (
-          <span>{item.complemento || '-'}</span>
-        )
-      },
-      {
-        key: 'bairro',
-        label: 'Bairro',
-        sortable: true,
-        render: (item: Cliente) => (
-          <span>{item.bairro || '-'}</span>
-        )
-      },
-      {
-        key: 'cidade',
-        label: 'Cidade',
-        sortable: true,
-        render: (item: Cliente) => (
-          <span>{item.cidade || '-'}</span>
-        )
-      },
-      {
-        key: 'estado',
-        label: 'Estado',
-        sortable: true,
-        render: (item: Cliente) => (
-          <span>{item.estado || '-'}</span>
-        )
-      },
-      {
-        key: 'ativo',
-        label: 'Status',
-        sortable: true,
-        width: '100px',
-        render: (item: Cliente) => (
-          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-            {item.ativo ? 'Ativo' : 'Inativo'}
-          </span>
-        )
-      },
-      {
-        key: 'created_at',
-        label: 'Criado em',
-        sortable: true,
-        render: (item: Cliente & { created_at?: string; created_at_formatada?: string | null }) => {
-          // Usar created_at_formatada se disponível (vem do backend já formatada)
-          if (item.created_at_formatada) {
-            return item.created_at_formatada;
-          }
-          // Fallback para formatDateTime se não tiver formato do backend
-          return item.created_at ? formatDateTime(item.created_at) : '-';
-        }
-      }
-    ],
+    columns,
     searchPlaceholder: 'Buscar...',
     searchFields: [
       { key: 'id', label: 'ID' },
@@ -200,13 +207,13 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       { key: 'cidade', label: 'Cidade' },
       { key: 'estado', label: 'Estado' }
     ],
-    multiSelect: false // Sempre permitir apenas 1 seleção
+    multiSelect: true // Permitir seleção múltipla
   });
 
   // Hook para buscar clientes usando parâmetros do useTableFilters
   const { data: clientesData, isLoading, refetch } = useClientes({
     search: tableFilters.debouncedSearch || undefined,
-    searchField: searchField || undefined,
+    searchField: tableFilters.searchField || undefined,
     page: tableFilters.page,
     limit: tableFilters.limit
   });
@@ -258,57 +265,107 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   }, [selectedItem, handleDelete, confirm]);
 
   // Paginação do backend - usar valores do backend quando disponíveis
-  const pagination = clientesData?.pagination ? {
-    current_page: clientesData.pagination.current_page,
-    last_page: clientesData.pagination.last_page,
-    per_page: clientesData.pagination.per_page,
-    total: clientesData.pagination.total,
-    from: clientesData.pagination.from,
-    to: clientesData.pagination.to
-  } : {
-    current_page: tableFilters.page,
-    last_page: 1,
-    per_page: tableFilters.limit,
-    total: 0,
-    from: 0,
-    to: 0
-  };
-
-  // Bulk actions
-  const bulkActions = onSelectClient ? [
-    {
-      label: 'Cancelar',
-      variant: 'secondary' as const,
-      action: () => {
-        clearSelection();
-        onClose();
+  const pagination = useMemo(() => {
+    if (clientesData?.pagination && typeof clientesData.pagination === 'object') {
+      const pag = clientesData.pagination;
+      const total = pag.total ?? 0;
+      const perPage = pag.per_page ?? tableFilters.limit;
+      const currentPage = pag.current_page ?? tableFilters.page;
+      
+      // Calcular last_page se não estiver definido
+      let lastPage = pag.last_page;
+      if (!lastPage && total > 0) {
+        lastPage = Math.max(1, Math.ceil(total / perPage));
+      } else if (!lastPage) {
+        lastPage = 1;
       }
-    },
-    {
-      label: 'Inserir',
-      variant: 'primary' as const,
-      disabled: (selectedItems: Cliente[]) => selectedItems.length === 0 && !selectedItem,
-      action: handleSelect
+      
+      return {
+        current_page: currentPage,
+        last_page: lastPage,
+        per_page: perPage,
+        total: total,
+        from: pag.from ?? ((currentPage - 1) * perPage) + 1,
+        to: pag.to ?? Math.min(currentPage * perPage, total)
+      };
     }
-  ] : [
-    {
-      label: 'Novo',
-      variant: 'primary' as const,
-      action: () => setShowCreateModal(true)
-    },
-    {
-      label: 'Editar',
-      variant: 'primary' as const,
-      disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
-      action: handleEdit
-    },
-    {
-      label: 'Excluir',
-      variant: 'danger' as const,
-      disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
-      action: handleEditDelete
-    }
-  ];
+    return {
+      current_page: tableFilters.page,
+      last_page: 1,
+      per_page: tableFilters.limit,
+      total: 0,
+      from: 0,
+      to: 0
+    };
+  }, [clientesData?.pagination, tableFilters.page, tableFilters.limit]);
+
+  // Bulk actions memoizados
+  const bulkActions = useMemo(() => {
+    return onSelectClient ? [
+      {
+        label: 'Cancelar',
+        variant: 'secondary' as const,
+        action: () => {
+          clearSelection();
+          onClose();
+        }
+      },
+      {
+        label: 'Inserir',
+        variant: 'primary' as const,
+        disabled: (selectedItems: Cliente[]) => selectedItems.length === 0 && !selectedItem,
+        action: handleSelect
+      }
+    ] : [
+      {
+        label: 'Novo',
+        variant: 'primary' as const,
+        action: () => setShowCreateModal(true)
+      },
+      {
+        label: 'Editar',
+        variant: 'primary' as const,
+        disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
+        action: handleEdit
+      },
+      {
+        label: 'Excluir',
+        variant: 'danger' as const,
+        disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
+        action: handleEditDelete
+      }
+    ];
+  }, [onSelectClient, selectedItem, clearSelection, onClose, handleSelect, handleEdit, handleEditDelete]);
+
+  const modalData = useMemo(() => clientesData?.data || [], [clientesData?.data]);
+
+  const handleSearchChange = useCallback((search: string, field?: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+      if (field) tableFilters.setSearchField(field);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch, tableFilters.setSearchField]);
+
+  const handleSearchFieldChange = useCallback((field: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearchField(field);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearchField]);
+
+  const handlePageChange = useCallback((page: number) => {
+    tableFilters.setPage(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setPage]);
+
+  const handleLimitChange = useCallback((limit: number) => {
+    tableFilters.setLimit(limit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setLimit]);
+
   return (
     <>
       <ListModal
@@ -318,20 +375,17 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
           onClose();
         }}
         config={modal.config}
-        data={clientesData?.data || []}
+        data={modalData}
         loading={isLoading}
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
         search={tableFilters.search}
-        onSearchChange={(search, field) => {
-          tableFilters.setSearch(search);
-          setSearchField(field);
-        }}
-        onSearchFieldChange={setSearchField}
+        onSearchChange={handleSearchChange}
+        onSearchFieldChange={handleSearchFieldChange}
         pagination={pagination}
-        onPageChange={tableFilters.setPage}
+        onPageChange={handlePageChange}
         limit={tableFilters.limit}
-        onLimitChange={tableFilters.setLimit}
+        onLimitChange={handleLimitChange}
         refreshQueryKeys={['clientes']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}

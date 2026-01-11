@@ -226,188 +226,30 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
   const modalContent = (
     <>
-      {/* Estilos CSS para diferenciação de campos */}
-      <style>{`
-        /* Estilos para modo claro */
-        [data-theme="light"] .modal-content .form-control:not(:disabled):not(textarea) {
-          background-color: #ffffff !important;
-          border-color: #ced4da !important;
-          color: #000000 !important;
-          height: 30px !important;
-          padding: 4px 8px !important;
-          font-size: 13px !important;
-        }
-        
-        [data-theme="light"] .modal-content .form-select:not(:disabled) {
-          background-color: #ffffff !important;
-          border-color: #ced4da !important;
-          color: #000000 !important;
-          height: 30px !important;
-          padding: 4px 2.5rem 4px 8px !important;
-          font-size: 13px !important;
-          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 0.75rem center !important;
-          background-size: 16px 12px !important;
-        }
-        
-        [data-theme="light"] .modal-content textarea.form-control:not(:disabled) {
-          background-color: #ffffff !important;
-          border-color: #ced4da !important;
-          color: #000000 !important;
-          min-height: 30px !important;
-          padding: 4px 8px !important;
-          font-size: 13px !important;
-          resize: vertical !important;
-        }
-        
-        /* Estilos para modo escuro */
-        [data-theme="dark"] .modal-content .form-control:not(:disabled):not(textarea) {
-          background-color: #2d3748 !important;
-          border-color: #4a5568 !important;
-          color: #ffffff !important;
-          height: 30px !important;
-          padding: 4px 8px !important;
-          font-size: 13px !important;
-        }
-        
-        [data-theme="dark"] .modal-content .form-select:not(:disabled) {
-          background-color: #2d3748 !important;
-          border-color: #4a5568 !important;
-          color: #ffffff !important;
-          height: 30px !important;
-          padding: 4px 2.5rem 4px 8px !important;
-          font-size: 13px !important;
-          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 0.75rem center !important;
-          background-size: 16px 12px !important;
-        }
-        
-        [data-theme="dark"] .modal-content textarea.form-control:not(:disabled) {
-          background-color: #2d3748 !important;
-          border-color: #4a5568 !important;
-          color: #ffffff !important;
-          min-height: 30px !important;
-          padding: 4px 8px !important;
-          font-size: 13px !important;
-          resize: vertical !important;
-        }
-        
-        .modal-content .form-control:disabled:not(textarea) {
-          background-color: #1a202c !important;
-          border-color: #2d3748 !important;
-          color: #718096 !important;
-          cursor: not-allowed !important;
-          height: 30px !important;
-          padding: 4px 8px !important;
-          font-size: 13px !important;
-        }
-        
-        .modal-content textarea.form-control:disabled {
-          background-color: #1a202c !important;
-          border-color: #2d3748 !important;
-          color: #718096 !important;
-          cursor: not-allowed !important;
-          min-height: 30px !important;
-          padding: 4px 8px !important;
-          font-size: 13px !important;
-          resize: vertical !important;
-        }
-        
-        /* Estilos para inputs readOnly no modo escuro */
-        [data-theme="dark"] .modal-content .form-control[readonly]:not(textarea) {
-          background-color: #1a202c !important;
-          border-color: #2d3748 !important;
-          color: #718096 !important;
-          cursor: not-allowed !important;
-        }
-        
-        [data-theme="dark"] .modal-content textarea.form-control[readonly] {
-          background-color: #1a202c !important;
-          border-color: #2d3748 !important;
-          color: #718096 !important;
-          cursor: not-allowed !important;
-        }
-        
-        /* Estilos para inputs readOnly no modo claro */
-        [data-theme="light"] .modal-content .form-control[readonly]:not(textarea) {
-          background-color: #e9ecef !important;
-          border-color: #ced4da !important;
-          color: #495057 !important;
-          cursor: not-allowed !important;
-        }
-        
-        [data-theme="light"] .modal-content textarea.form-control[readonly] {
-          background-color: #e9ecef !important;
-          border-color: #ced4da !important;
-          color: #495057 !important;
-          cursor: not-allowed !important;
-        }
-        
-        /* Reduzir espaçamento em modais - compacto mas confortável */
-        .modal-content .form-label {
-          margin-bottom: 0.25rem !important;
-        }
-        
-        .modal-content .form-field {
-          margin-bottom: 0.5rem !important;
-        }
-        
-        .modal-content .mb-0 .form-label,
-        .modal-content .mb-0 label {
-          margin-bottom: 0.25rem !important;
-        }
-      `}</style>
 
       {/* Backdrop customizado - não cobre a sidebar */}
       <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: '240px',
-          width: 'calc(100% - 240px)',
-          height: '100%',
-          backgroundColor: 'transparent',
-          zIndex: zIndex - 1,
-          pointerEvents: 'none'
-        }}
+        className="draggable-modal-backdrop"
+        style={{ zIndex: zIndex - 1 }}
       />
 
       {/* Overlay para manter eventos de arraste mesmo sobre iframes/PDFs */}
       <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          pointerEvents: isDragging ? 'auto' : 'none',
-          cursor: isDragging ? 'grabbing' : 'default',
-          zIndex: isDragging ? zIndex + 100 : -1
-        }}
+        className={`draggable-modal-overlay ${isDragging ? 'dragging' : ''}`}
+        style={{ zIndex: isDragging ? zIndex + 100 : -1 }}
       />
 
       {/* Modal */}
       <div
         ref={modalRef}
-        className={`modal-content draggable-modal-container ${className}`}
+        className={`modal-content draggable-modal-container draggable-modal-container-custom ${className}`}
         style={{
-          position: 'fixed',
           left: `${position.x}px`,
           top: `${position.y}px`,
           width: `${modalSize.width}px`,
           height: modalSize.height > 0 ? `${modalSize.height}px` : 'auto',
           maxHeight: `${window.innerHeight - 100}px`,
-          backgroundColor: 'var(--bg-primary)',
-          color: 'var(--text-primary)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '8px',
-          boxShadow: '0 6px 12px 10px rgba(0, 0, 0, 0.3)',
           zIndex,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? 'scale(1)' : 'scale(0.95)',
         }}
@@ -415,33 +257,14 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         {/* Header arrastável */}
         <div
           ref={headerRef}
-          className="modal-header-draggable"
-          style={{
-            backgroundColor: 'var(--bg-secondary)',
-            borderBottom: '1px solid var(--border-color)',
-            padding: '16px',
-            userSelect: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            minHeight: '48px',
-            position: 'relative'
-          }}
+          className="modal-header-draggable draggable-modal-header-custom"
           onMouseDown={handleMouseDown}
         >
           {/* Título centralizado */}
-          <h5 
-            className="modal-title mb-0" 
-            style={{ 
-              color: 'var(--text-primary)',
-              fontSize: '0.85rem',
-              fontWeight: '500',
-              textAlign: 'center',
-              margin: 0,
-              paddingRight: '40px', // Espaço para o botão X
-              paddingLeft: '40px',  // Espaço simétrico
-              marginBottom: headerActions ? '8px' : '0',
-              cursor: isDragging ? 'grabbing' : 'grab',
-              userSelect: 'none'
+          <h5
+            className={`modal-title mb-0 draggable-modal-title-custom ${isDragging ? 'dragging' : ''} ${headerActions ? 'with-actions' : ''}`}
+            style={{
+              marginBottom: headerActions ? '8px' : '0'
             }}
           >
             {title}
@@ -450,27 +273,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           {/* Botão fechar à extrema direita */}
           <button
             type="button"
-            className="btn-close"
+            className="btn-close draggable-modal-close-custom"
             onClick={onClose}
             onMouseDown={(e) => e.stopPropagation()}
-            style={{ 
-              filter: 'var(--btn-close-filter)',
-              background: 'none',
-              border: 'none',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              padding: '0',
-              width: '24px',
-              height: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'absolute',
-              right: '12px',
-              top: '12px',
-              zIndex: 10,
-              userSelect: 'none'
-            }}
           >
             ×
           </button>
@@ -484,15 +289,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         </div>
 
         {/* Body com scroll */}
-        <div 
-          className="modal-body"
-          style={{
-            flex: 1,
-            overflow: className?.includes('no-padding') ? 'hidden' : 'auto',
-            padding: 0,
-            minHeight: 0,
-            height: 'calc(100% - 48px)' // Altura total menos header
-          }}
+        <div
+          className={`modal-body draggable-modal-body-custom ${className?.includes('no-padding') ? 'no-scroll' : ''}`}
         >
           {children}
         </div>

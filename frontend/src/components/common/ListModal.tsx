@@ -109,6 +109,7 @@ function ListModal<T extends { id: number | string }>({
           }, [bulkActions]),
           customControlsAfterActions
         }}
+        search={_search}
         onSelectionChange={onSelectionChange}
         onSearch={(search, field) => {
           onSearchChange?.(search, field);

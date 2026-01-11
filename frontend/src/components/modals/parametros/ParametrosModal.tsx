@@ -6,7 +6,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { ParametrosService } from '@/services/parametrosService';
 import { useFormReset } from '@/hooks/useFormReset';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 interface ParametrosModalProps {
   show: boolean;
   onClose: () => void;

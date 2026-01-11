@@ -29,7 +29,7 @@ import { useImpressaoContrato } from '@/hooks/useImpressaoContrato';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ModeloContratoSelectModal from '@/components/modals/parametros/ModeloContratoSelectModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import { formatCurrency } from '@/utils/formatters';
@@ -1230,11 +1230,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   // Colunas para a tabela de títulos
   const columns = [
-    { 
-      key: 'id', 
-      label: 'ID', 
-      sortable: true, 
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
       searchable: true,
+      width: 42,
+      resizable: true,
       render: (item: Titulo) => item.id 
     },
     {
@@ -1366,11 +1368,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   // Colunas para a tabela de títulos avulsos (sem endereço)
   const columnsAvulsos = [
-    { 
-      key: 'id', 
-      label: 'ID', 
-      sortable: true, 
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
       searchable: true,
+      width: 42,
+      resizable: true,
       render: (item: Titulo) => item.id 
     },
     {
@@ -1473,11 +1477,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   // Colunas para a tabela de serviços adicionais
   const servicosAdicionaisColumns = [
-    { 
-      key: 'id', 
-      label: 'ID', 
+    {
+      key: 'id',
+      label: 'ID',
       sortable: true,
       searchable: true,
+      width: 42,
+      resizable: true,
       render: (item: ContratoPlanoAdicional) => item.id 
     },
     {
@@ -1500,7 +1506,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     {
       key: 'desconto',
       label: 'Desconto',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: ContratoPlanoAdicional) => {
         if (item.desconto_valor && parseFloat(item.desconto_valor.toString()) > 0) {
@@ -1546,7 +1552,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     {
       key: 'observacoes',
       label: 'Observações',
-      sortable: false,
+      sortable: true,
       searchable: true,
       render: (item: ContratoPlanoAdicional) => item.observacoes || '-'
     }
@@ -1554,7 +1560,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   // Colunas para a tabela de termos
   const termosColumns = [
-    { key: 'id', label: 'ID', sortable: true },
+    { key: 'id', label: 'ID', sortable: true, width: 42, resizable: true },
     { key: 'nome_termo', label: 'Nome do Termo', sortable: true, render: (item: TermoContrato) => item.modeloDocumento?.nome || '-' },
     {
       key: 'assinado',
@@ -1648,9 +1654,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         modalId="contrato-modal-loading"
       >
         <div className="text-center p-4">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
         </div>
       </DraggableModal>
     );

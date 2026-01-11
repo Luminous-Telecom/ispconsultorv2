@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useListModal } from '@/hooks/useListModal';
 import { useModalSelect } from '@/hooks/useModalSelect';
@@ -29,6 +29,14 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     resetPageOnFilterChange: true,
   });
 
+  const handleSearchChange = useCallback((search: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch]);
+
   // Usar hook customizado para gerenciar seleção
   const {
     selectedItem,
@@ -49,6 +57,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
         key: 'id',
         label: 'ID',
         sortable: true,
+        width: '42px',
         render: (item: DocumentoSistema) => <span>{item.id}</span>
       },
       {
@@ -60,7 +69,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
       {
         key: 'descricao',
         label: 'Descrição',
-        sortable: false,
+        sortable: true,
         render: (item: DocumentoSistema) => (
           <span className="text-truncate" style={{ maxWidth: '300px' }} title={item.descricao || ''}>
             {item.descricao || '-'}
@@ -77,7 +86,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
         )
       }
     ],
-    searchPlaceholder: 'Buscar por nome do modelo...',
+    searchPlaceholder: '',
     multiSelect: false
   });
 
@@ -131,7 +140,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
         search={tableFilters.search}
-        onSearchChange={tableFilters.setSearch}
+        onSearchChange={handleSearchChange}
         limit={tableFilters.limit}
         onLimitChange={tableFilters.setLimit}
       onRefresh={refetch}

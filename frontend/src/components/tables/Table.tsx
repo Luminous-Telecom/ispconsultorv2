@@ -1,15 +1,17 @@
+/* eslint-disable no-console */
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { TableConfig, TableAction, BulkAction, SortDirection, TablePagination } from './types';
 import { FilterValue } from '@/types/common';
 import { useTable } from './useTable';
+import { useColumnResizing } from '@/hooks/useColumnResizing';
 import TableColumn from './TableColumn';
 import TableActions from './TableActions';
-import FormField from '../ui/FormField';
 import Button from '../ui/Button';
+import Spinner from '../ui/Spinner';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
-import { debounce } from '@/utils/helpers';
+import { useTranslation } from '@/contexts/I18nContext';
 
 // Helper para normalizar paginação (aceita snake_case da API ou camelCase interno)
 const normalizePagination = (pagination: TableConfig<unknown>['pagination']): TablePagination | undefined => {
@@ -39,6 +41,7 @@ interface TableProps<T = Record<string, unknown>> {
   onSelectionChange?: (selectedItems: T[]) => void;
   onSort?: (column: string, direction: SortDirection) => void;
   onFilter?: (filters: Record<string, FilterValue>) => void;
+  search?: string;
   onSearch?: (term: string, field: string) => void;
   onSearchFieldChange?: (field: string) => void;
   onPageChange?: (page: number) => void;
@@ -59,6 +62,7 @@ function Table<T extends { id: number | string }>({
   onSelectionChange,
   onSort,
   onFilter,
+  search = '',
   onSearch,
   onPageChange,
   onPageSizeChange,
@@ -75,20 +79,51 @@ function Table<T extends { id: number | string }>({
   
   // Detectar mobile
   const isMobile = useIsMobile();
-  
+
+  // Hook para redimensionamento de colunas
+  const {
+    columnWidths,
+    handleResizeStart,
+    isResizing
+  } = useColumnResizing({
+    tableId: uniqueTableId,
+    columns: config.columns,
+    getMinWidthForColumn: (columnKey: string) => {
+      // Encontrar a coluna correspondente
+      const column = config.columns.find(col => col.key === columnKey);
+      if (!column?.label) return 40; // Largura mínima padrão com espaço para ícone
+
+      // Estimativa precisa: ~7px por caractere + 40px para padding, ícone de ordenação e espaçamento
+      const titleWidth = column.label.length * 7;
+      const iconAndPaddingWidth = 40; // 16px ícone + 16px padding esquerdo + 8px margem direita
+
+      return Math.max(40, titleWidth + iconAndPaddingWidth);
+    },
+    onResizeEnd: () => {
+      // Quando o redimensionamento termina, não fazer nada aqui
+      // A limpeza da flag é feita no componente TableColumn
+    }
+  });
+
   // Table header context (para botões no header do Layout)
   const {
     setTitle: setHeaderTitle,
     setShowSearch: setHeaderShowSearch,
     setShowReload: setHeaderShowReload,
+    setOnSearchClick: setHeaderOnSearchClick,
     setSearchPlaceholder: setHeaderSearchPlaceholder,
     setOnReloadClick: setHeaderOnReloadClick,
     setSearchValue: setHeaderSearchValue,
-    setLoading: setHeaderLoading,
-    setShowMobileSearch: setHeaderShowMobileSearch,
     searchValue: headerSearchValue,
+    searchField: headerSearchField,
+    setSearchField: setHeaderSearchField,
+    availableSearchFields: headerAvailableSearchFields,
+    setAvailableSearchFields: setHeaderAvailableSearchFields,
   } = useTableHeader();
-  
+
+  // Internationalization
+  const { t } = useTranslation();
+
   // Estado para controlar abertura do menu FAB
   const [isFabOpen, setIsFabOpen] = useState(false);
   
@@ -331,8 +366,6 @@ function Table<T extends { id: number | string }>({
     bulkActions = [],
     searchable = true,
     searchPlaceholder = 'Buscar...',
-    searchField: configSearchField = '',
-    searchFields: configSearchFields,
     sortable = true,
     selectable = true,
     multiSelect = false,
@@ -350,14 +383,19 @@ function Table<T extends { id: number | string }>({
     customControls,
     customControlsAfterActions,
     customFilters,
+    searchField: configSearchField = '',
+    searchFields: configSearchFields,
   } = config;
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSearchField, setSelectedSearchField] = useState<string>(
-    configSearchField || (configSearchFields && configSearchFields.length > 0 ? configSearchFields[0].key : '')
-  );
+  // Se houver contexto, usar o campo de busca do contexto, senão usar estado local
+  const [localSearchField, setLocalSearchField] = useState<string>(() => {
+    return configSearchField || (configSearchFields && configSearchFields.length > 0 ? configSearchFields[0].key : '');
+  });
+
+  // Determinar qual campo e função usar, priorizando o header se estiver disponível
+  const selectedSearchField = headerSearchField || localSearchField;
+
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-  const _tableRef = useRef<HTMLTableElement>(null);
 
   // Normalizar paginação
   const normalizedPagination = useMemo(() => normalizePagination(configPagination), [configPagination]);
@@ -379,7 +417,7 @@ function Table<T extends { id: number | string }>({
     actions: tableActions,
     paginatedData,
     totalPages,
-    hasNextPage,
+    hasNextPage: _hasNextPage,
     hasPreviousPage: _hasPreviousPage,
     isAllSelected: _isAllSelected,
     isPartiallySelected: _isPartiallySelected,
@@ -406,6 +444,7 @@ function Table<T extends { id: number | string }>({
   const onSearchRef = useRef(onSearch);
   const tableActionsRef = useRef(tableActions);
   const selectedSearchFieldRef = useRef(selectedSearchField);
+  const tableContainerRef = useRef<HTMLDivElement | null>(null);
   
   // Atualizar refs quando mudarem
   useEffect(() => {
@@ -414,17 +453,6 @@ function Table<T extends { id: number | string }>({
     tableActionsRef.current = tableActions;
     selectedSearchFieldRef.current = selectedSearchField;
   }, [onRefresh, onSearch, tableActions, selectedSearchField]);
-
-  // Função debounced para busca (300ms de delay)
-  const debouncedSearch = useMemo(
-    () =>
-      debounce((value: string, field: string) => {
-        if (onSearchRef.current) {
-          onSearchRef.current(value, field);
-        }
-      }, 300),
-    []
-  );
 
   // Handler para o botão de auditar com gerenciamento de loading
   const handleAuditClick = useCallback(async () => {
@@ -468,99 +496,358 @@ function Table<T extends { id: number | string }>({
     }
   }, []);
 
-  // Registrar botões no contexto do header quando for mobile
+  // Refs para valores atuais de busca (usado para callbacks estáveis)
+  const currentSearchTermRef = useRef(state.searchTerm);
+  const currentSelectedSearchFieldRef = useRef(selectedSearchField);
+
+  // Calcular valores de paginação
+  // Calcular linhas por página baseado no tamanho do modal/container
+  const calculateRowsPerPage = useCallback(() => {
+    // Verificar se estamos dentro de um modal - múltiplas possibilidades
+    const possibleSelectors = [
+      '.modal-content',
+      '.responsive-dialog-mobile-content',
+      '.cliente-modal-content',
+      '.contrato-modal-content',
+      '.financeiro-modal-content',
+      '[role="dialog"]',
+      '.modal',
+      '.offcanvas',
+      '.modal-dialog',
+      '.card'
+    ];
+
+    // Procurar por modais no documento
+    let modalElement: Element | null = null;
+    for (const selector of possibleSelectors) {
+      // Procurar todos os elementos que correspondem ao seletor
+      const elements = document.querySelectorAll(selector);
+      const elementsArray = Array.from(elements);
+      for (const element of elementsArray) {
+        // Verificar se este modal contém nossa tabela (através do container)
+        if (tableContainerRef.current && element.contains(tableContainerRef.current as Node)) {
+          modalElement = element;
+          break;
+        }
+      }
+      if (modalElement) break;
+    }
+
+    // Fallback: se não encontrou modal contendo a tabela, pegar o último modal aberto
+    if (!modalElement) {
+      for (const selector of possibleSelectors) {
+        const element = document.querySelector(selector);
+        if (element) {
+          modalElement = element;
+          break;
+        }
+      }
+    }
+
+    if (!modalElement) {
+      return null; // Não está em modal, usar padrão
+    }
+
+    const modalRect = modalElement.getBoundingClientRect();
+    const tableRect = tableContainerRef.current?.getBoundingClientRect();
+
+    if (!tableRect) {
+      return null;
+    }
+
+    // Procurar por elementos de resumo/estatísticas acima da tabela
+    const summaryElements = modalElement.querySelectorAll('.financeiro-resumo, .contrato-totais-resumo, .card, .alert, .summary-card, [class*="resumo"], [class*="summary"]');
+    let summaryHeight = 0;
+
+    summaryElements.forEach(element => {
+      const rect = element.getBoundingClientRect();
+      // Verificar se o elemento está acima da tabela e dentro do modal
+      if (rect.top < tableRect.top && rect.bottom > modalRect.top) {
+        summaryHeight += rect.height;
+      }
+    });
+
+    // Calcular altura disponível para o corpo da tabela
+    // Considerar: elementos de resumo + header da tabela + footer/padding
+    const availableHeight = modalRect.height - (tableRect.top - modalRect.top) - summaryHeight - 200;
+
+    // Estimar altura de cada linha (aproximadamente 40px por linha)
+    const rowHeight = 40; // pixels por linha - reduzido
+
+    const availableRows = Math.max(3, Math.floor(availableHeight / rowHeight)); // Mínimo 3
+    const finalRows = Math.min(30, Math.max(3, availableRows)); // Máximo 30
+
+    return finalRows;
+  }, []);
+
+  const paginationValues = useMemo(() => {
+    const currentPage = normalizedPagination?.currentPage ?? state.currentPage;
+    const perPage = normalizedPagination?.perPage ?? state.pageSize;
+    const total = normalizedPagination?.total ?? data.length;
+
+    // Calcular linhas por página automaticamente se estiver em modal
+    let effectivePerPage = perPage;
+    if (!normalizedPagination) {
+      const autoRows = calculateRowsPerPage();
+      if (autoRows) {
+        effectivePerPage = autoRows;
+      }
+    }
+
+    // Calcular lastPage corretamente
+    let lastPage: number = normalizedPagination?.lastPage ?? 1;
+    if (!normalizedPagination?.lastPage) {
+      if (normalizedPagination && normalizedPagination.total !== undefined) {
+        // Se temos total do servidor, calcular lastPage
+        lastPage = Math.max(1, Math.ceil(total / effectivePerPage));
+      } else {
+        // Paginação local
+        lastPage = totalPages || Math.max(1, Math.ceil(data.length / effectivePerPage));
+      }
+    }
+    lastPage = Math.max(1, lastPage); // Garantir que seja pelo menos 1
+
+    const from = normalizedPagination?.from ?? ((currentPage - 1) * effectivePerPage) + 1;
+    const to = normalizedPagination?.to ?? Math.min(currentPage * effectivePerPage, total);
+
+    // Calcular páginas visíveis
+    const getVisiblePages = () => {
+      if (lastPage <= 1) return [1]; // Sempre mostrar pelo menos a página 1
+      
+      const delta = 2;
+      const range: (number | string)[] = [];
+      const rangeWithDots: (number | string)[] = [];
+
+      for (let i = Math.max(2, currentPage - delta); i <= Math.min(lastPage - 1, currentPage + delta); i++) {
+        range.push(i);
+      }
+
+      if (currentPage - delta > 2) {
+        rangeWithDots.push(1, '...');
+      } else {
+        rangeWithDots.push(1);
+      }
+
+      rangeWithDots.push(...range);
+
+      if (currentPage + delta < lastPage - 1) {
+        rangeWithDots.push('...', lastPage);
+      } else if (lastPage > 1) {
+        rangeWithDots.push(lastPage);
+      }
+
+      return rangeWithDots;
+    };
+
+    return {
+      currentPage,
+      lastPage: lastPage as number,
+      perPage: effectivePerPage,
+      total,
+      from,
+      to,
+      visiblePages: getVisiblePages()
+    };
+  }, [normalizedPagination, state.currentPage, state.pageSize, totalPages, data.length, calculateRowsPerPage]);
+
+  // Aplicar paginação automática quando em modal
   useEffect(() => {
-    if (isMobile) {
+    // Pequeno delay para garantir que o DOM está pronto
+    const timeoutId = setTimeout(() => {
+      const autoRows = calculateRowsPerPage();
+
+      if (autoRows && autoRows !== (normalizedPagination?.perPage || state.pageSize)) {
+        if (normalizedPagination) {
+          // Paginação do servidor - ajustar o limite da requisição
+          onPageSizeChange?.(autoRows);
+        } else {
+          // Paginação local - ajustar o state
+          tableActions.setPageSize(autoRows);
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [normalizedPagination, calculateRowsPerPage, state.pageSize, tableActions, onPageSizeChange]);
+
+  // Recalcular linhas por página quando o modal for redimensionado
+  useEffect(() => {
+    const handleResize = () => {
+      const autoRows = calculateRowsPerPage();
+      if (autoRows && autoRows !== (normalizedPagination?.perPage || state.pageSize)) {
+        if (normalizedPagination) {
+          // Paginação do servidor
+          onPageSizeChange?.(autoRows);
+        } else {
+          // Paginação local
+          tableActions.setPageSize(autoRows);
+        }
+      }
+    };
+
+    // Usar ResizeObserver se disponível para detectar mudanças no modal
+    const modalElement = tableContainerRef.current?.closest('.modal-content, .responsive-dialog-mobile-content');
+    if (modalElement && window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(handleResize);
+      resizeObserver.observe(modalElement);
+
+      return () => {
+        resizeObserver.disconnect();
+      };
+    } else {
+      // Fallback para window resize
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [normalizedPagination, state.pageSize, calculateRowsPerPage, tableActions, onPageSizeChange]);
+
+  // Recalcular linhas por página quando o modal for redimensionado
+  useEffect(() => {
+    const handleResize = () => {
+      const autoRows = calculateRowsPerPage();
+      if (autoRows && autoRows !== (normalizedPagination?.perPage || state.pageSize)) {
+        if (normalizedPagination) {
+          // Paginação do servidor
+          onPageSizeChange?.(autoRows);
+        } else {
+          // Paginação local
+          tableActions.setPageSize(autoRows);
+        }
+      }
+    };
+
+    // Usar ResizeObserver se disponível para detectar mudanças no modal
+    const modalElement = tableContainerRef.current?.closest('.modal-content, .responsive-dialog-mobile-content');
+    if (modalElement && window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(handleResize);
+      resizeObserver.observe(modalElement);
+
+      return () => {
+        resizeObserver.disconnect();
+      };
+    } else {
+      // Fallback para window resize
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [normalizedPagination, state.pageSize, calculateRowsPerPage, tableActions, onPageSizeChange]);
+
+  useEffect(() => {
+    currentSearchTermRef.current = state.searchTerm;
+    currentSelectedSearchFieldRef.current = selectedSearchField;
+  }, [state.searchTerm, selectedSearchField]);
+
+  // Callback estável para o clique de busca no header
+  const handleHeaderSearchClick = useCallback(() => {
+    if (onSearchRef.current) {
+      onSearchRef.current(currentSearchTermRef.current, currentSelectedSearchFieldRef.current);
+    }
+  }, []);
+
+  // Estabilizar configSearchFields para evitar loops de renderização
+  const stableSearchFields = useMemo(() => {
+    return JSON.stringify(configSearchFields);
+  }, [configSearchFields]);
+
+  // Ref para controlar se esta tabela deve sincronizar seu estado inicial com o header
+  const initialSyncRef = useRef(false);
+
+  // Registrar botões no contexto do header
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
       setHeaderTitle(title || 'Lista');
       setHeaderShowSearch(searchable || false);
       setHeaderShowReload(true);
+      setHeaderOnSearchClick(handleHeaderSearchClick);
       setHeaderSearchPlaceholder(searchPlaceholder || 'Buscar...');
       setHeaderOnReloadClick(handleReloadClick);
       
-      // Inicializar busca se houver valor inicial (uma única vez ao montar/entrar mobile)
-      // Usamos apenas se houver valor, mas não sincronizamos o tempo todo aqui
-      if (searchTerm && headerSearchValue !== searchTerm) {
-         setHeaderSearchValue(searchTerm);
+      const parsedFields = configSearchFields || [];
+      
+      // Configurar campos de busca disponíveis
+      if (parsedFields.length > 0) {
+        const fields = parsedFields.map(f => ({ id: f.key, label: f.label }));
+        const currentFieldsJson = JSON.stringify(headerAvailableSearchFields);
+        const newFieldsJson = JSON.stringify(fields);
+        
+        if (currentFieldsJson !== newFieldsJson) {
+          setHeaderAvailableSearchFields(fields);
+        }
+
+        // Sincronizar campo de busca inicial: Tabela -> Header
+        const initialField = configSearchField || parsedFields[0].key;
+        if (initialField && headerSearchField !== initialField) {
+          setHeaderSearchField(initialField);
+        }
+      } else {
+        const defaults = [
+          { id: 'nome', label: 'Nome Cliente' },
+          { id: 'cnpj_cpf', label: 'CNPJ/CPF' },
+          { id: 'whatsapp', label: 'WhatsApp' },
+          { id: 'email', label: 'Email' }
+        ];
+
+        const currentFieldsJson = JSON.stringify(headerAvailableSearchFields);
+        const defaultsJson = JSON.stringify(defaults);
+
+        if (currentFieldsJson !== defaultsJson) {
+          setHeaderAvailableSearchFields(defaults);
+        }
       }
-    }
+
+      // Lógica de sincronização inicial de valor de busca
+      if (!initialSyncRef.current) {
+        if (headerSearchValue && !state.searchTerm) {
+          tableActions.setSearchTerm(headerSearchValue);
+        } else if (state.searchTerm && !headerSearchValue) {
+          setHeaderSearchValue(state.searchTerm);
+        }
+        initialSyncRef.current = true;
+      }
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isMobile, 
-    title, 
-    searchable, 
-    searchPlaceholder, 
-    handleReloadClick,
-    // Incluir setters do header que são estáveis
-    setHeaderTitle,
-    setHeaderShowSearch,
-    setHeaderShowReload,
-    setHeaderSearchPlaceholder,
-    setHeaderOnReloadClick,
-    setHeaderSearchValue
-  ]);
+  }, [title, searchable, stableSearchFields]);
 
-  // Limpar quando sair do mobile
-  useEffect(() => {
-    if (!isMobile) {
-      setHeaderTitle(null);
-      setHeaderShowSearch(false);
-      setHeaderShowReload(false);
-      setHeaderOnReloadClick(null);
-      setHeaderShowMobileSearch(false);
-    }
-  }, [
-    isMobile, 
-    setHeaderTitle,
-    setHeaderShowSearch,
-    setHeaderShowReload,
-    setHeaderOnReloadClick,
-    setHeaderShowMobileSearch
-  ]);
-
-  // Sincronizar loading separadamente para evitar re-configuração completa do header
-  useEffect(() => {
-    if (isMobile) {
-      setHeaderLoading(loading || false);
-    }
-  }, [isMobile, loading, setHeaderLoading]);
-  
-  // Limpar ao desmontar
+  // Limpar quando desmontar
   useEffect(() => {
     return () => {
-      // Limpar apenas ao desmontar o componente
-      setHeaderTitle(null);
-      setHeaderShowSearch(false);
-      setHeaderShowReload(false);
+      // Apenas resetamos callbacks que pertencem a esta instância.
+      setHeaderOnSearchClick(null);
       setHeaderOnReloadClick(null);
-      setHeaderShowMobileSearch(false);
-      setHeaderSearchValue('');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
-  // Sincronizar busca local com o hook
-  useEffect(() => {
-    if (searchTerm !== state.searchTerm) {
-      tableActions.setSearchTerm(searchTerm);
-    }
-  }, [searchTerm, state.searchTerm, tableActions]);
-  
-  // Sincronizar busca do contexto com busca local
-  useEffect(() => {
-    // Apenas sincronizar se for mobile e os valores forem diferentes
-    if (isMobile && headerSearchValue !== searchTerm) {
-      // Atualizar busca local (que vai disparar o efeito acima para atualizar o hook)
-      setSearchTerm(headerSearchValue);
-      
-      // Propagar para callback externo imediatamente se necessário
-      // Não chamamos tableActions aqui para evitar race condition com o efeito acima
-      if (onSearchRef.current) {
-        onSearchRef.current(headerSearchValue, selectedSearchField);
-      }
-    }
-  }, [isMobile, headerSearchValue, searchTerm, selectedSearchField]);
 
-  // Conectar busca com callback externo (removido - agora usa debounce direto no onChange)
+  // Sincronizar busca: Header -> Table
+  useEffect(() => {
+    if (initialSyncRef.current && headerSearchValue !== state.searchTerm) {
+      // Usar setTimeout para evitar atualização durante render cycle
+      const timeoutId = setTimeout(() => {
+        tableActions.setSearchTerm(headerSearchValue);
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [headerSearchValue, state.searchTerm, tableActions, title]);
+
+  // Propagar mudança de campo para o componente pai e estado local
+  useEffect(() => {
+    if (headerSearchField && headerSearchField !== localSearchField) {
+      // Usar setTimeout para evitar "Cannot update a component while rendering a different component"
+      const timeoutId = setTimeout(() => {
+        setLocalSearchField(headerSearchField);
+        onSearchFieldChange?.(headerSearchField);
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [headerSearchField, localSearchField, onSearchFieldChange]);
 
   // Fechar dropdown quando clicar fora (callback memoizado)
   const handleClickOutside = useCallback(() => {
@@ -601,7 +888,10 @@ function Table<T extends { id: number | string }>({
     if (_borderless) {
       classes.push('table-borderless');
     }
-    
+
+    // Adicionar classe para redimensionamento Bootstrap-style
+    classes.push('table-resizable');
+
     return classes.join(' ');
   };
 
@@ -631,7 +921,7 @@ function Table<T extends { id: number | string }>({
         <tr>
           {/* Checkbox de seleção - renderiza sempre que selectable for true */}
           {selectable && (
-            <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem', width: '40px', textTransform: 'none' }}>
+            <th className="text-center" style={{ width: '50px' }}>
               <input
                 className="form-check-input"
                 type="checkbox"
@@ -652,19 +942,31 @@ function Table<T extends { id: number | string }>({
           {/* Colunas */}
           {columns
             .filter(col => !col.hidden)
-            .map(column => (
+            .map((column, index) => (
               <TableColumn
                 key={column.key}
                 column={column}
                 sortColumn={state.sortColumn}
                 sortDirection={state.sortDirection}
                 onSort={tableActions.setSort}
+                columnWidth={columnWidths[column.key]}
+                onResizeStart={handleResizeStart}
+                onResizeEnd={() => {
+                  // Callback chamado quando redimensionamento termina
+                }}
+                getMinWidthForColumn={(columnKey: string) => {
+                  const col = config.columns.find(c => c.key === columnKey);
+                  if (!col?.label) return 30;
+                  return Math.max(30, col.label.length * 7 + 20);
+                }}
+                isResizing={isResizing}
+                isLastColumn={index === columns.filter(col => !col.hidden).length - 1}
               />
             ))}
           
           {/* Coluna de ações */}
           {_actions.length > 0 && (
-            <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem', width: '150px', textAlign: 'right', textTransform: 'none' }}>
+            <th className="text-center" style={{ width: '120px' }}>
               Ações
             </th>
           )}
@@ -690,9 +992,7 @@ function Table<T extends { id: number | string }>({
     if (loading) {
       return (
         <div className="table-mobile-loading">
-          <div className="spinner-border spinner-border-sm" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="sm" variant="primary" aria-label="Carregando..." />
         </div>
       );
     }
@@ -937,9 +1237,7 @@ function Table<T extends { id: number | string }>({
         <tbody>
           <tr>
             <td colSpan={columns.length + (selectable ? 1 : 0) + (_actions.length > 0 ? 1 : 0)} className="text-center">
-              <div className="spinner-border spinner-border-sm" role="status">
-                <span className="visually-hidden">Carregando...</span>
-              </div>
+              <Spinner size="sm" variant="primary" aria-label="Carregando..." />
             </td>
           </tr>
         </tbody>
@@ -966,7 +1264,7 @@ function Table<T extends { id: number | string }>({
           return (
             <tr
               key={item.id}
-              className={isSelected ? 'table-active' : ''}
+              className={`${isSelected ? 'table-active' : ''} table-row-clickable`}
               onClick={() => {
                 // Selecionar/deselecionar item ao clicar na linha
                 if (selectable) {
@@ -975,21 +1273,10 @@ function Table<T extends { id: number | string }>({
                 // Chamar callback de clique na linha se existir
                 onRowClick?.(item, index);
               }}
-              style={{ 
-                cursor: 'pointer'
-              }}
             >
               {/* Checkbox de seleção */}
               {selectable && (
-                <td 
-                  className="py-1 px-2"
-                  style={{ 
-                    fontSize: '0.75rem', 
-                    padding: '0.5rem',
-                    width: '40px'
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <td className="text-center" onClick={(e) => e.stopPropagation()}>
                   <input
                     className="form-check-input"
                     type="checkbox"
@@ -1011,16 +1298,11 @@ function Table<T extends { id: number | string }>({
                 .map(column => (
                   <td
                     key={column.key}
-                    className="py-1 px-2"
+                    className={`${column.align ? `text-${column.align}` : ''}`}
                     style={{
-                      fontSize: '0.75rem', 
-                      padding: '0.5rem',
-                      backgroundColor: isSelected ? '#0d6efd' : 'inherit',
-                      color: isSelected ? 'white' : 'inherit',
                       width: column.width,
                       minWidth: column.minWidth,
                       maxWidth: column.maxWidth,
-                      textAlign: column.align,
                     }}
                   >
                     {column.render ? column.render(item, index) : String(item[column.key as keyof T] || '')}
@@ -1029,19 +1311,7 @@ function Table<T extends { id: number | string }>({
               
               {/* Coluna de ações */}
               {_actions.length > 0 && (
-                <td 
-                  className="py-1 px-2"
-                  style={{
-                    fontSize: '0.75rem',
-                    padding: '0.5rem',
-                    backgroundColor: isSelected ? '#0d6efd' : 'inherit',
-                    color: isSelected ? 'white' : 'inherit',
-                    width: '50px',
-                    textAlign: 'right',
-                    position: 'relative',
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <td className="text-center" onClick={(e) => e.stopPropagation()}>
                   <div className="table-actions-desktop">
                     <button
                       type="button"
@@ -1111,17 +1381,8 @@ function Table<T extends { id: number | string }>({
               
               {/* Coluna de ações - mobile dropdown */}
               {isMobile && (
-                <td 
-                  className="py-1 px-2"
-                  style={{
-                    fontSize: '0.75rem',
-                    padding: '0.5rem',
-                    backgroundColor: isSelected ? '#0d6efd' : 'inherit',
-                    color: isSelected ? 'white' : 'inherit',
-                    width: '50px',
-                    textAlign: 'right',
-                    position: 'relative',
-                  }}
+                <td
+                  className={`table-actions-cell table-actions-cell-fixed ${isSelected ? 'table-selected-cell' : ''}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="table-actions-desktop">
@@ -1231,49 +1492,13 @@ function Table<T extends { id: number | string }>({
     );
   };
 
+
   // Renderizar barra de ferramentas
   const _renderToolbar = () => {
     return (
       <div className="table-toolbar d-flex justify-content-between align-items-center mb-3">
         <div className="d-flex align-items-center gap-3">
-          {/* Busca */}
-          {searchable && (
-            <div className="search-box d-flex align-items-center gap-2" style={{ minWidth: '300px' }}>
-              {configSearchFields && configSearchFields.length > 0 && (
-                <select
-                  className="form-select form-select-sm"
-                  value={selectedSearchField}
-                  onChange={(e) => {
-                    const field = e.target.value;
-                    setSelectedSearchField(field);
-                    onSearchFieldChange?.(field);
-                  }}
-                  style={{ width: 'auto', minWidth: '150px' }}
-                >
-                  {configSearchFields.map((field) => (
-                    <option key={field.key} value={field.key}>
-                      {field.label}
-                    </option>
-                  ))}
-                </select>
-              )}
-              <div style={{ flex: 1 }}>
-                <FormField
-                  type="text"
-                  name="search"
-                  value={searchTerm}
-                  onChange={(val) => {
-                    const newValue = val as string;
-                    setSearchTerm(newValue);
-                    debouncedSearch(newValue, selectedSearchFieldRef.current);
-                  }}
-                  placeholder={searchPlaceholder}
-                  icon="search"
-                  size="sm"
-                />
-              </div>
-            </div>
-          )}
+          {/* Busca removida do toolbar pois foi para o header */}
           
           {/* Ações em massa */}
           {bulkActions.length > 0 && state.selectedItems.length > 0 && (
@@ -1286,15 +1511,15 @@ function Table<T extends { id: number | string }>({
         </div>
         
         <div className="d-flex align-items-center gap-2">
-          {/* Botão de auditar (apenas quando há 1 item selecionado) */}
-          {onAudit && auditEntity && state.selectedItems.length === 1 && (
+          {/* Botão de auditar (sempre visível, mas inativo quando não há 1 item selecionado) */}
+          {onAudit && auditEntity && (
             <Button
               variant="outline-info"
               size="sm"
               icon="shield-check"
               onClick={handleAuditClick}
-              disabled={loading}
-              tooltip="Auditar registro selecionado"
+              disabled={loading || state.selectedItems.length !== 1}
+              tooltip={state.selectedItems.length === 1 ? "Auditar registro selecionado" : "Selecione exatamente 1 registro para auditar"}
             >
               Auditar
             </Button>
@@ -1316,15 +1541,15 @@ function Table<T extends { id: number | string }>({
   };
 
   return (
-    <div className={className} style={{ width: '100%', margin: 0, padding: 0, boxSizing: 'border-box' }}>
+    <div ref={tableContainerRef} className={`${className} table-container-custom`}>
       
       {/* Header com botões de ação e filtros - Oculto no mobile */}
           {!isMobile && (bulkActions.length > 0 || searchable || normalizedPagination || (!normalizedPagination && data.length > 0)) && (
-        <div className="border-bottom" style={{ margin: 0, padding: 0, background: 'transparent' }}>
+        <div className="border-bottom table-header-custom">
           {/* Primeira linha: Botões de ação */}
           {(bulkActions.length > 0 || customControlsAfterActions) && (
-            <div className="d-flex align-items-center justify-content-between mb-2" style={{ padding: '0.5rem 1rem' }}>
-              <div className="d-flex" style={{ gap: '8px' }}>
+            <div className="d-flex align-items-center justify-content-between mb-2 table-header-content">
+              <div className="d-flex table-header-flex">
                 {bulkActions.map((bulkAction, index) => {
               // Novo sempre habilitado, outros só quando há seleção
               const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
@@ -1345,30 +1570,28 @@ function Table<T extends { id: number | string }>({
               // Se tem dropdown, renderizar dropdown
               if (bulkAction.dropdown) {
                 return (
-                  <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
+                  <div key={index} className="dropdown table-dropdown-relative">
                     <button
                       type="button"
-                      className="btn btn-sm btn-primary"
+                      className="btn btn-sm btn-primary table-flex-shrink-0"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         setOpenDropdown(openDropdown === index ? null : index);
                       }}
                       disabled={isDisabled}
-                      style={{ flexShrink: 0 }}
                     >
-                      {bulkAction.label} <i className="bi bi-chevron-down ms-1"></i>
+                      {bulkAction.label} {isMobile && <i className="bi bi-chevron-down ms-1"></i>}
                     </button>
                     {openDropdown === index && (
-                      <ul 
-                        className="dropdown-menu show" 
-                        style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
+                      <ul
+                        className="dropdown-menu show table-dropdown-menu"
                       >
                         {bulkAction.dropdown.map((item, itemIndex) => {
-                          const isItemDisabled = typeof item.disabled === 'function' 
-                            ? item.disabled(state.selectedItems) 
+                          const isItemDisabled = typeof item.disabled === 'function'
+                            ? item.disabled(state.selectedItems)
                             : item.disabled || false;
-                          
+
                           return (
                             <li key={itemIndex}>
                               <button
@@ -1400,14 +1623,13 @@ function Table<T extends { id: number | string }>({
                 <button
                   type="button"
                   key={index}
-                  className="btn btn-sm btn-primary"
+                  className="btn btn-sm btn-primary table-flex-shrink-0"
                   onClick={(_event) => {
                     if (!isDisabled && bulkAction.onClick) {
                       bulkAction.onClick(state.selectedItems);
                     }
                   }}
                   disabled={isDisabled}
-                  style={{ flexShrink: 0 }}
                 >
                   {bulkAction.label}
                 </button>
@@ -1422,44 +1644,78 @@ function Table<T extends { id: number | string }>({
             </div>
           )}
 
-        {/* Segunda linha: Busca + Paginação + Reload */}
-        <div className="d-flex align-items-center justify-content-between" style={{ padding: '0 1rem 0.5rem 1rem' }}>
-          {/* Busca e controles customizados à esquerda */}
+        {/* Botões de reload e auditar + paginação no header */}
+        <div className="d-flex align-items-center justify-content-between table-pagination-header">
+          {/* Controles customizados à esquerda */}
           <div className="d-flex align-items-center gap-3">
+            {/* Campo de busca local - apenas quando searchable estiver habilitado */}
             {searchable && (
               <div className="d-flex align-items-center gap-2">
-                {configSearchFields && configSearchFields.length > 0 && (
-                  <select
-                    className="form-select form-select-sm"
-                    value={selectedSearchField}
-                    onChange={(e) => {
-                      const field = e.target.value;
-                      setSelectedSearchField(field);
-                      onSearchFieldChange?.(field);
-                    }}
-                    style={{ width: 'auto', minWidth: '150px', height: '32px' }}
-                  >
-                    {configSearchFields.map((field) => (
-                      <option key={field.key} value={field.key}>
-                        {field.label}
-                      </option>
-                    ))}
-                  </select>
+                {/* Seletor de campo de busca - apenas quando houver múltiplos campos */}
+                {configSearchFields && configSearchFields.length > 1 && (
+                  <div className="d-flex align-items-center gap-1">
+                    <select
+                      id={`${uniqueTableId}-search-field`}
+                      className="form-select form-select-sm"
+                      value={selectedSearchField}
+                      onChange={(e) => {
+                        const newField = e.target.value;
+                        if (headerSearchField) {
+                          // Se estiver usando o header, atualizar lá
+                          setHeaderSearchField?.(newField);
+                        } else {
+                          // Caso contrário, atualizar estado local
+                          setLocalSearchField(newField);
+                        }
+                        // Disparar busca quando mudar o campo
+                        if (onSearchFieldChange) {
+                          onSearchFieldChange(newField);
+                        }
+                      }}
+                    >
+                      {configSearchFields.map(field => (
+                        <option key={field.key} value={field.key}>
+                          {field.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 )}
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  id={`search-${Math.random().toString(36).substr(2, 9)}`}
-                  name="search"
-                  placeholder={searchPlaceholder}
-                  value={searchTerm}
-                  onChange={(e) => {
-                    const newValue = e.target.value;
-                    setSearchTerm(newValue);
-                    debouncedSearch(newValue, selectedSearchFieldRef.current);
-                  }}
-                  style={{ width: '400px', height: '32px' }}
-                />
+
+                {/* Input de busca */}
+                <div className="position-relative">
+                  <input
+                    type="search"
+                    id={`${uniqueTableId}-search`}
+                    className="form-control form-control-sm"
+                    style={{ width: '220px', minWidth: '180px' }}
+                    placeholder={searchPlaceholder || 'Buscar...'}
+                    value={search}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Usar callback de busca se disponível
+                      if (onSearch) {
+                        onSearch(value, selectedSearchField);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && onSearch) {
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                  {/* Ícone de busca */}
+                  <div className="position-absolute d-flex align-items-center justify-content-center"
+                       style={{
+                         top: '50%',
+                         right: '8px',
+                         transform: 'translateY(-50%)',
+                         height: '100%',
+                         pointerEvents: 'none'
+                       }}>
+                    <i className="bi bi-search text-muted" style={{ fontSize: '0.7rem' }}></i>
+                  </div>
+                </div>
               </div>
             )}
             {customControls}
@@ -1467,118 +1723,146 @@ function Table<T extends { id: number | string }>({
 
           {/* Paginação centralizada - Ocultar no mobile */}
           {(normalizedPagination || (!normalizedPagination && data.length > 0)) && !isMobile && (
-            <div className="d-flex align-items-center gap-2">
-              {/* Seletor de linhas por página */}
-              <select 
-                className="form-select form-select-sm" 
-                id={`${uniqueTableId}-limit`}
-                name="dataTableLimit"
-                value={normalizedPagination?.perPage || state.pageSize}
-                onChange={(e) => {
-                  const newPageSize = parseInt(e.target.value);
-                  if (normalizedPagination) {
-                    // Quando há paginação do servidor, resetar página para 1 ao mudar limite
-                    onPageChange?.(1);
-                    onPageSizeChange?.(newPageSize);
-                  } else {
-                    tableActions.setPageSize(newPageSize);
-                  }
-                }}
-                style={{ width: '80px', height: '32px', cursor: 'pointer' }}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-
-              {/* Paginação compacta */}
-              <div className="d-flex align-items-center gap-1">
-                <button 
-                  type="button"
-                  className="btn btn-outline-secondary btn-sm" 
-                  onClick={() => {
-                    if (configPagination) {
-                      onPageChange?.(1);
-                    } else {
-                      tableActions.setPage(1);
-                    }
-                  }}
-                  disabled={normalizedPagination ? normalizedPagination.currentPage <= 1 : state.currentPage <= 1}
-                >
-                  <i className="bi bi-chevron-double-left"></i>
-                </button>
-                <button 
-                  type="button"
-                  className="btn btn-outline-secondary btn-sm" 
-                  onClick={() => {
-                    if (normalizedPagination) {
-                      onPageChange?.(normalizedPagination.currentPage - 1);
-                    } else {
-                      tableActions.setPage(state.currentPage - 1);
-                    }
-                  }}
-                  disabled={normalizedPagination ? normalizedPagination.currentPage <= 1 : state.currentPage <= 1}
-                >
-                  <i className="bi bi-chevron-left"></i>
-                </button>
-                
-                <span className="small text-muted mx-2">
-                  {normalizedPagination ? (
-                    `${normalizedPagination.from || 0} - ${normalizedPagination.to || 0} / ${normalizedPagination.total || 0}`
-                  ) : (
-                    `${((state.currentPage - 1) * state.pageSize) + 1}-${Math.min(state.currentPage * state.pageSize, data.length)} de ${data.length}`
-                  )}
+            <div className="d-flex align-items-center gap-3">
+              {/* Informações da página */}
+              <div className="d-flex align-items-center gap-2">
+                <span className="text-muted small">
+                  <strong>{paginationValues.from}</strong> {t('pagination.to')} <strong>{paginationValues.to}</strong> {t('pagination.of')} <strong>{paginationValues.total}</strong>
                 </span>
-                
-                <button 
-                  type="button"
-                  className="btn btn-outline-secondary btn-sm" 
-                  onClick={() => {
-                    if (normalizedPagination) {
-                      onPageChange?.(normalizedPagination.currentPage + 1);
-                    } else {
-                      tableActions.setPage(state.currentPage + 1);
-                    }
-                  }}
-                  disabled={normalizedPagination ? normalizedPagination.currentPage >= normalizedPagination.lastPage : !hasNextPage}
-                >
-                  <i className="bi bi-chevron-right"></i>
-                </button>
-                <button 
-                  type="button"
-                  className="btn btn-outline-secondary btn-sm" 
-                  onClick={() => {
-                    if (normalizedPagination) {
-                      onPageChange?.(normalizedPagination.lastPage);
-                    } else {
-                      tableActions.setPage(totalPages);
-                    }
-                  }}
-                  disabled={normalizedPagination ? normalizedPagination.currentPage >= normalizedPagination.lastPage : !hasNextPage}
-                >
-                  <i className="bi bi-chevron-double-right"></i>
-                </button>
+
               </div>
+
+              {/* Paginação Bootstrap estilosa */}
+              <nav aria-label="Paginação da tabela">
+                <ul className="pagination pagination-sm mb-0">
+                    {/* Primeira página */}
+                    <li className={`page-item ${paginationValues.currentPage === 1 ? 'disabled' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        onClick={() => {
+                          if (normalizedPagination) {
+                            onPageChange?.(1);
+                          } else {
+                            tableActions.setPage(1);
+                          }
+                        }}
+                        disabled={paginationValues.currentPage === 1}
+                        aria-label="Primeira página"
+                      >
+                        <i className="bi bi-chevron-double-left"></i>
+                      </button>
+                    </li>
+
+                    {/* Página anterior */}
+                    <li className={`page-item ${paginationValues.currentPage === 1 ? 'disabled' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        onClick={() => {
+                          if (normalizedPagination) {
+                            onPageChange?.(paginationValues.currentPage - 1);
+                          } else {
+                            tableActions.setPage(state.currentPage - 1);
+                          }
+                        }}
+                        disabled={paginationValues.currentPage === 1}
+                        aria-label="Página anterior"
+                      >
+                        <i className="bi bi-chevron-left"></i>
+                      </button>
+                    </li>
+
+                    {/* Páginas numeradas */}
+                    {paginationValues.visiblePages.map((page, index) => {
+                      if (page === '...') {
+                        return (
+                          <li key={`dots-${index}`} className="page-item disabled">
+                            <span className="page-link">...</span>
+                          </li>
+                        );
+                      }
+
+                      const pageNumber = page as number;
+                      const isActive = pageNumber === paginationValues.currentPage;
+
+                      return (
+                        <li key={pageNumber} className={`page-item ${isActive ? 'active' : ''}`}>
+                          <button
+                            type="button"
+                            className="page-link"
+                            onClick={() => {
+                              if (normalizedPagination) {
+                                onPageChange?.(pageNumber);
+                              } else {
+                                tableActions.setPage(pageNumber);
+                              }
+                            }}
+                            aria-label={`Página ${pageNumber}`}
+                            aria-current={isActive ? 'page' : undefined}
+                          >
+                            {pageNumber}
+                          </button>
+                        </li>
+                      );
+                    })}
+
+                    {/* Próxima página */}
+                    <li className={`page-item ${paginationValues.currentPage >= paginationValues.lastPage ? 'disabled' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        onClick={() => {
+                          if (normalizedPagination) {
+                            onPageChange?.(paginationValues.currentPage + 1);
+                          } else {
+                            tableActions.setPage(state.currentPage + 1);
+                          }
+                        }}
+                        disabled={paginationValues.currentPage >= paginationValues.lastPage}
+                        aria-label="Próxima página"
+                      >
+                        <i className="bi bi-chevron-right"></i>
+                      </button>
+                    </li>
+
+                    {/* Última página */}
+                    <li className={`page-item ${paginationValues.currentPage >= paginationValues.lastPage ? 'disabled' : ''}`}>
+                      <button
+                        type="button"
+                        className="page-link"
+                        onClick={() => {
+                          if (normalizedPagination) {
+                            onPageChange?.(paginationValues.lastPage);
+                          } else {
+                            tableActions.setPage(totalPages);
+                          }
+                        }}
+                        disabled={paginationValues.currentPage >= paginationValues.lastPage}
+                        aria-label="Última página"
+                      >
+                        <i className="bi bi-chevron-double-right"></i>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
             </div>
           )}
 
           {/* Botões de reload e auditar à direita */}
           <div className="d-flex align-items-center gap-2">
-            {onAudit && auditEntity && state.selectedItems.length === 1 && (
-              <button 
+            {onAudit && auditEntity && (
+              <button
                 type="button"
                 className="btn btn-outline-info btn-sm"
                 onClick={handleAuditClick}
-                disabled={loading}
-                title="Auditar registro selecionado"
+                disabled={loading || state.selectedItems.length !== 1}
+                title={state.selectedItems.length === 1 ? "Auditar registro selecionado" : "Selecione exatamente 1 registro para auditar"}
               >
-                <i className="bi bi-shield-check"></i> Auditar
+                {isMobile && <i className="bi bi-shield-check"></i>} Auditar
               </button>
             )}
-            <button 
+            <button
               type="button"
               className="btn btn-outline-secondary btn-sm"
               onClick={onRefresh}
@@ -1597,90 +1881,113 @@ function Table<T extends { id: number | string }>({
           {renderTableBody()}
         </div>
       ) : (
-        <div className="table-responsive" style={{ margin: 0, padding: 0, overflowX: 'auto', width: '100%', boxSizing: 'border-box', maxWidth: '100%' }}>
-          <table className="table table-striped table-sm" style={{ width: '100%', tableLayout: 'auto', margin: 0 }}>
+        <div className="table-responsive table-responsive-custom">
+          <table className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''}`}>
             {renderTableHeader()}
             {renderTableBody()}
           </table>
         </div>
       )}
-      
+
+
       {/* Paginação fixa na parte inferior (mobile) */}
       {isMobile && (normalizedPagination || (!normalizedPagination && data.length > 0)) && (
         <div className="table-mobile-pagination">
-          <div className="d-flex align-items-center justify-content-between w-100" style={{ gap: '0.5rem' }}>
-            {/* Botões de navegação esquerda */}
-            <div className="d-flex align-items-center gap-1">
-              <button 
-                type="button"
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={() => {
-                  if (normalizedPagination) {
-                    onPageChange?.(1);
-                  } else {
-                    tableActions.setPage(1);
-                  }
-                }}
-                disabled={normalizedPagination ? normalizedPagination.currentPage <= 1 : state.currentPage <= 1}
-              >
-                <i className="bi bi-chevron-double-left"></i>
-              </button>
-              <button 
-                type="button"
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={() => {
-                  if (normalizedPagination) {
-                    onPageChange?.(normalizedPagination.currentPage - 1);
-                  } else {
-                    tableActions.setPage(state.currentPage - 1);
-                  }
-                }}
-                disabled={normalizedPagination ? normalizedPagination.currentPage <= 1 : state.currentPage <= 1}
-              >
-                <i className="bi bi-chevron-left"></i>
-              </button>
-            </div>
-            
+          <div className="d-flex flex-column gap-2 w-100">
             {/* Informação da página */}
-            <span className="small text-muted text-center text-nowrap" style={{ flex: 1, textAlign: 'center' }}>
-              {normalizedPagination ? (
-                `${normalizedPagination.from || 0} - ${normalizedPagination.to || 0} / ${normalizedPagination.total || 0} registros`
-              ) : (
-                `${((state.currentPage - 1) * state.pageSize) + 1}-${Math.min(state.currentPage * state.pageSize, data.length)} de ${data.length}`
-              )}
-            </span>
-            
-            {/* Botões de navegação direita */}
-            <div className="d-flex align-items-center gap-1">
-              <button 
-                type="button"
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={() => {
-                  if (normalizedPagination) {
-                    onPageChange?.(normalizedPagination.currentPage + 1);
-                  } else {
-                    tableActions.setPage(state.currentPage + 1);
-                  }
-                }}
-                disabled={normalizedPagination ? normalizedPagination.currentPage >= normalizedPagination.lastPage : !hasNextPage}
-              >
-                <i className="bi bi-chevron-right"></i>
-              </button>
-              <button 
-                type="button"
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={() => {
-                  if (normalizedPagination) {
-                    onPageChange?.(normalizedPagination.lastPage);
-                  } else {
-                    tableActions.setPage(totalPages);
-                  }
-                }}
-                disabled={normalizedPagination ? normalizedPagination.currentPage >= normalizedPagination.lastPage : !hasNextPage}
-              >
-                <i className="bi bi-chevron-double-right"></i>
-              </button>
+            <div className="text-center">
+              <span className="small text-muted">
+                <strong>{paginationValues.from}</strong> {t('pagination.to')} <strong>{paginationValues.to}</strong> {t('pagination.of')} <strong>{paginationValues.total}</strong>
+              </span>
             </div>
+
+            {/* Paginação Bootstrap compacta */}
+            <nav aria-label="Paginação da tabela" className="d-flex justify-content-center">
+              <ul className="pagination pagination-sm mb-0">
+                {/* Primeira página */}
+                <li className={`page-item ${paginationValues.currentPage === 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    onClick={() => {
+                      if (normalizedPagination) {
+                        onPageChange?.(1);
+                      } else {
+                        tableActions.setPage(1);
+                      }
+                    }}
+                    disabled={paginationValues.currentPage === 1}
+                    aria-label="Primeira página"
+                  >
+                    <i className="bi bi-chevron-double-left"></i>
+                  </button>
+                </li>
+
+                {/* Página anterior */}
+                <li className={`page-item ${paginationValues.currentPage === 1 ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    onClick={() => {
+                      if (normalizedPagination) {
+                        onPageChange?.(paginationValues.currentPage - 1);
+                      } else {
+                        tableActions.setPage(state.currentPage - 1);
+                      }
+                    }}
+                    disabled={paginationValues.currentPage === 1}
+                    aria-label="Página anterior"
+                  >
+                    <i className="bi bi-chevron-left"></i>
+                  </button>
+                </li>
+
+                {/* Página atual */}
+                <li className="page-item active">
+                  <span className="page-link">
+                    {paginationValues.currentPage} / {paginationValues.lastPage}
+                  </span>
+                </li>
+
+                {/* Próxima página */}
+                <li className={`page-item ${paginationValues.currentPage >= paginationValues.lastPage ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    onClick={() => {
+                      if (normalizedPagination) {
+                        onPageChange?.(paginationValues.currentPage + 1);
+                      } else {
+                        tableActions.setPage(state.currentPage + 1);
+                      }
+                    }}
+                    disabled={paginationValues.currentPage >= paginationValues.lastPage}
+                    aria-label="Próxima página"
+                  >
+                    <i className="bi bi-chevron-right"></i>
+                  </button>
+                </li>
+
+                {/* Última página */}
+                <li className={`page-item ${paginationValues.currentPage >= paginationValues.lastPage ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="page-link"
+                    onClick={() => {
+                      if (normalizedPagination) {
+                        onPageChange?.(paginationValues.lastPage);
+                      } else {
+                        tableActions.setPage(totalPages);
+                      }
+                    }}
+                    disabled={paginationValues.currentPage >= paginationValues.lastPage}
+                    aria-label="Última página"
+                  >
+                    <i className="bi bi-chevron-double-right"></i>
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
       )}
@@ -1732,7 +2039,7 @@ function Table<T extends { id: number | string }>({
                       <button
                         key={index}
                         type="button"
-                        className="dropdown-item d-flex align-items-center gap-2 py-2"
+                        className="dropdown-item d-flex align-items-center gap-2 py-2 table-text-primary"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -1742,7 +2049,6 @@ function Table<T extends { id: number | string }>({
                           }
                         }}
                         disabled={isDisabled}
-                        style={{ color: 'var(--text-primary)' }}
                       >
                         <i className={`bi bi-${icon}`}></i>
                         <span>{bulkAction.label}</span>

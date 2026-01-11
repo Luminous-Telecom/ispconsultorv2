@@ -6,7 +6,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { ServidorWhatsAppService, MensagemWhatsApp } from '@/services/servidorWhatsAppService';
 import { defaultApiClient } from '@/services/core';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
@@ -370,9 +370,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     <>
       {isLoading ? (
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
         </div>
       ) : (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

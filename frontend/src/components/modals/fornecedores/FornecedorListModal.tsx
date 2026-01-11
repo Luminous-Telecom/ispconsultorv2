@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/* eslint-disable no-console */
+import React, { useState, useCallback, useMemo } from 'react';
 import { useFornecedores, useDeleteFornecedor } from '@/hooks/useFornecedores';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
@@ -30,7 +31,6 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedFornecedorId, setSelectedFornecedorId] = useState<number | null>(null);
-  const [searchField, setSearchField] = useState<string>('nome_razao_social');
   
   // Hook de auditoria
   const auditoria = useAuditoria();
@@ -57,133 +57,138 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     } : undefined
   );
 
+  // Configurar colunas memoizadas
+  const columns = useMemo(() => [
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      width: '42px',
+      render: (item: Fornecedor) => <span className="text-nowrap">{item.id ?? '-'}</span>
+    },
+    {
+      key: 'tipo_pessoa',
+      label: 'Tipo',
+      sortable: true,
+      width: '90px',
+      render: (item: Fornecedor) => (
+        <span className={`badge ${item.tipo_pessoa === 'JURIDICA' ? 'bg-info' : 'bg-primary'}`}>
+          {item.tipo_pessoa === 'JURIDICA' ? 'Jurídica' : 'Física'}
+        </span>
+      )
+    },
+    {
+      key: 'nome_razao_social',
+      label: 'Nome/Razão Social',
+      sortable: true,
+      width: '200px',
+      render: (item: Fornecedor) => (
+        <strong>{item.nome_razao_social}</strong>
+      )
+    },
+    {
+      key: 'nome_fantasia',
+      label: 'Nome Fantasia',
+      width: '180px',
+      sortable: true,
+      render: (item: Fornecedor) => (
+        <span className="text-muted">{item.nome_fantasia || '-'}</span>
+      )
+    },
+    {
+      key: 'cpf_cnpj',
+      label: 'CPF/CNPJ',
+      sortable: true,
+      width: '150px',
+      render: (item: Fornecedor) => (
+        <span className="text-nowrap">{item.cpf_cnpj}</span>
+      )
+    },
+    {
+      key: 'cep',
+      label: 'CEP',
+      sortable: true,
+      width: '120px',
+      render: (item: Fornecedor) => (
+        <span className="text-nowrap">{item.cep || '-'}</span>
+      )
+    },
+    {
+      key: 'logradouro',
+      label: 'Logradouro',
+      sortable: true,
+      render: (item: Fornecedor) => (
+        <span>{item.logradouro || '-'}</span>
+      )
+    },
+    {
+      key: 'numero',
+      label: 'Número',
+      sortable: true,
+      width: '100px',
+      render: (item: Fornecedor) => (
+        <span>{item.numero || '-'}</span>
+      )
+    },
+    {
+      key: 'complemento',
+      label: 'Complemento',
+      sortable: true,
+      render: (item: Fornecedor) => (
+        <span>{item.complemento || '-'}</span>
+      )
+    },
+    {
+      key: 'bairro',
+      label: 'Bairro',
+      sortable: true,
+      render: (item: Fornecedor) => (
+        <span>{item.bairro || '-'}</span>
+      )
+    },
+    {
+      key: 'cidade',
+      label: 'Cidade',
+      sortable: true,
+      render: (item: Fornecedor) => (
+        <span>{item.cidade || '-'}</span>
+      )
+    },
+    {
+      key: 'estado',
+      label: 'Estado',
+      sortable: true,
+      width: '80px',
+      render: (item: Fornecedor) => (
+        <span>{item.estado || '-'}</span>
+      )
+    },
+    {
+      key: 'pais',
+      label: 'País',
+      sortable: true,
+      width: '100px',
+      render: (item: Fornecedor) => (
+        <span>{item.pais || '-'}</span>
+      )
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      render: (item: Fornecedor & { created_at?: string; created_at_formatada?: string | null }) => {
+        if (item.created_at_formatada) {
+          return item.created_at_formatada;
+        }
+        return item.created_at ? formatDateTime(item.created_at) : '-';
+      }
+    }
+  ], []);
+
   // Configurar modal centralizado
   const modal = useListModal({
     title,
-    columns: [
-      {
-        key: 'id',
-        label: 'ID',
-        sortable: true,
-        width: '120px',
-        render: (item: Fornecedor) => <span className="text-nowrap">{item.id ?? '-'}</span>
-      },
-      {
-        key: 'tipo_pessoa',
-        label: 'Tipo',
-        sortable: true,
-        width: '100px',
-        render: (item: Fornecedor) => (
-          <span className={`badge ${item.tipo_pessoa === 'JURIDICA' ? 'bg-info' : 'bg-primary'}`}>
-            {item.tipo_pessoa === 'JURIDICA' ? 'Jurídica' : 'Física'}
-          </span>
-        )
-      },
-      {
-        key: 'nome_razao_social',
-        label: 'Nome/Razão Social',
-        sortable: true,
-        render: (item: Fornecedor) => (
-          <strong>{item.nome_razao_social}</strong>
-        )
-      },
-      {
-        key: 'nome_fantasia',
-        label: 'Nome Fantasia',
-        sortable: true,
-        render: (item: Fornecedor) => (
-          <span className="text-muted">{item.nome_fantasia || '-'}</span>
-        )
-      },
-      {
-        key: 'cpf_cnpj',
-        label: 'CPF/CNPJ',
-        sortable: true,
-        width: '150px',
-        render: (item: Fornecedor) => (
-          <span className="text-nowrap">{item.cpf_cnpj}</span>
-        )
-      },
-      {
-        key: 'cep',
-        label: 'CEP',
-        sortable: true,
-        width: '120px',
-        render: (item: Fornecedor) => (
-          <span className="text-nowrap">{item.cep || '-'}</span>
-        )
-      },
-      {
-        key: 'logradouro',
-        label: 'Logradouro',
-        sortable: true,
-        render: (item: Fornecedor) => (
-          <span>{item.logradouro || '-'}</span>
-        )
-      },
-      {
-        key: 'numero',
-        label: 'Número',
-        sortable: true,
-        width: '100px',
-        render: (item: Fornecedor) => (
-          <span>{item.numero || '-'}</span>
-        )
-      },
-      {
-        key: 'complemento',
-        label: 'Complemento',
-        sortable: true,
-        render: (item: Fornecedor) => (
-          <span>{item.complemento || '-'}</span>
-        )
-      },
-      {
-        key: 'bairro',
-        label: 'Bairro',
-        sortable: true,
-        render: (item: Fornecedor) => (
-          <span>{item.bairro || '-'}</span>
-        )
-      },
-      {
-        key: 'cidade',
-        label: 'Cidade',
-        sortable: true,
-        render: (item: Fornecedor) => (
-          <span>{item.cidade || '-'}</span>
-        )
-      },
-      {
-        key: 'estado',
-        label: 'Estado',
-        sortable: true,
-        width: '80px',
-        render: (item: Fornecedor) => (
-          <span>{item.estado || '-'}</span>
-        )
-      },
-      {
-        key: 'pais',
-        label: 'País',
-        sortable: true,
-        width: '100px',
-        render: (item: Fornecedor) => (
-          <span>{item.pais || '-'}</span>
-        )
-      },
-      {
-        key: 'created_at',
-        label: 'Criado em',
-        sortable: true,
-        render: (item: Fornecedor & { created_at?: string; created_at_formatada?: string | null }) => {
-          if (item.created_at_formatada) {
-            return item.created_at_formatada;
-          }
-          return item.created_at ? formatDateTime(item.created_at) : '-';
-        }
-      }
-    ],
+    columns,
     searchPlaceholder: 'Buscar...',
     searchFields: [
       { key: 'nome_razao_social', label: 'Nome/Razão Social' },
@@ -196,20 +201,20 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
       { key: 'estado', label: 'Estado' },
       { key: 'pais', label: 'País' }
     ],
-    multiSelect: false
+    multiSelect: true
   });
 
   // Hook para buscar fornecedores usando parâmetros do useTableFilters
   const { data: fornecedoresData, isLoading, refetch } = useFornecedores({
     search: tableFilters.debouncedSearch || undefined,
-    searchField: searchField || undefined,
+    searchField: tableFilters.searchField || undefined,
     page: tableFilters.page,
     limit: tableFilters.limit
   });
 
   const deleteFornecedorMutation = useDeleteFornecedor();
 
-  const handleSelect = (selectedItems?: Fornecedor[]) => {
+  const handleSelect = useCallback((selectedItems?: Fornecedor[]) => {
     const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
     if (item) {
       clearSelection();
@@ -218,40 +223,58 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         onClose();
       }
     }
-  };
+  }, [selectedItem, clearSelection, onSelectFornecedor, onClose]);
 
-  const handleDelete = async (fornecedorId: number) => {
+  const handleDelete = useCallback(async (fornecedorId: number) => {
     try {
       await deleteFornecedorMutation.mutateAsync(fornecedorId);
       refetch();
     } catch (error) {
       // Erro já tratado pelo hook
     }
-  };
+  }, [deleteFornecedorMutation, refetch]);
 
-  const handleAudit = (fornecedor: Fornecedor) => {
+  const handleAudit = useCallback((fornecedor: Fornecedor) => {
     auditoria.handleAudit('Fornecedor', fornecedor.id);
-  };
+  }, [auditoria]);
 
   // Paginação do backend
-  const pagination = fornecedoresData?.pagination ? {
-    current_page: fornecedoresData.pagination.current_page,
-    last_page: fornecedoresData.pagination.last_page,
-    per_page: fornecedoresData.pagination.per_page,
-    total: fornecedoresData.pagination.total,
-    from: fornecedoresData.pagination.from,
-    to: fornecedoresData.pagination.to
-  } : {
-    current_page: tableFilters.page,
-    last_page: 1,
-    per_page: tableFilters.limit,
-    total: 0,
-    from: 0,
-    to: 0
-  };
+  const pagination = useMemo(() => {
+    if (fornecedoresData?.pagination && typeof fornecedoresData.pagination === 'object') {
+      const pag = fornecedoresData.pagination;
+      const total = pag.total ?? 0;
+      const perPage = pag.per_page ?? tableFilters.limit;
+      const currentPage = pag.current_page ?? tableFilters.page;
+      
+      // Calcular last_page se não estiver definido
+      let lastPage = pag.last_page;
+      if (!lastPage && total > 0) {
+        lastPage = Math.max(1, Math.ceil(total / perPage));
+      } else if (!lastPage) {
+        lastPage = 1;
+      }
+      
+      return {
+        current_page: currentPage,
+        last_page: lastPage,
+        per_page: perPage,
+        total: total,
+        from: pag.from ?? ((currentPage - 1) * perPage) + 1,
+        to: pag.to ?? Math.min(currentPage * perPage, total)
+      };
+    }
+    return {
+      current_page: tableFilters.page,
+      last_page: 1,
+      per_page: tableFilters.limit,
+      total: 0,
+      from: 0,
+      to: 0
+    };
+  }, [fornecedoresData?.pagination, tableFilters.page, tableFilters.limit]);
 
-  // Bulk actions
-  const bulkActions = onSelectFornecedor ? [
+  // Bulk actions memoizados
+  const bulkActions = useMemo(() => onSelectFornecedor ? [
     {
       label: 'Cancelar',
       variant: 'secondary' as const,
@@ -305,7 +328,36 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         }
       }
     }
-  ];
+  ], [onSelectFornecedor, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm]);
+
+  const handleSearchChange = useCallback((search: string, field?: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+      if (field) tableFilters.setSearchField(field);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch, tableFilters.setSearchField]);
+
+  const handleSearchFieldChange = useCallback((field: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearchField(field);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearchField]);
+
+  const handlePageChange = useCallback((page: number) => {
+    tableFilters.setPage(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setPage]);
+
+  const handleLimitChange = useCallback((limit: number) => {
+    tableFilters.setLimit(limit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setLimit]);
+
+  const modalData = useMemo(() => (fornecedoresData?.data || []).filter(item => item.id != null), [fornecedoresData?.data]);
 
   return (
     <>
@@ -316,20 +368,17 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
           onClose();
         }}
         config={modal.config}
-        data={(fornecedoresData?.data || []).filter(item => item.id != null)}
+        data={modalData}
         loading={isLoading}
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
         search={tableFilters.search}
-        onSearchChange={(search, field) => {
-          tableFilters.setSearch(search);
-          setSearchField(field);
-        }}
-        onSearchFieldChange={setSearchField}
+        onSearchChange={handleSearchChange}
+        onSearchFieldChange={handleSearchFieldChange}
         pagination={pagination}
-        onPageChange={tableFilters.setPage}
+        onPageChange={handlePageChange}
         limit={tableFilters.limit}
-        onLimitChange={tableFilters.setLimit}
+        onLimitChange={handleLimitChange}
         refreshQueryKeys={['fornecedores']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}

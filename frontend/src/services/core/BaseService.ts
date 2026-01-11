@@ -33,20 +33,16 @@ export abstract class BaseService<TEntity, TCreateData, TUpdateData, TFilters ex
     try {
       const queryString = this.apiClient.buildQueryString(filters || {});
       const url = `${this.baseEndpoint}${queryString}`;
-      // O backend pode retornar PaginatedResponse diretamente ou dentro de ApiResponse
-      // Passamos o tipo esperado do backend (que pode ser objeto com data e pagination)
-      // ApiClient.get sempre retorna ApiResponse<T>, então se T for PaginatedResponse,
-      // a resposta será ApiResponse<PaginatedResponse<TEntity>>
       const response = await this.apiClient.get<PaginatedResponse<TEntity>>(url);
       
-      // ApiClient.get retorna ApiResponse<T>
-      // O interceptor do axios retorna response.data diretamente
-      // O ResponseTransformer.normalize envolve em ApiResponse
-      // Então response é { success: true, data: { success: true, data: [...], pagination: {...} } }
+      // O ApiClient.get retorna ApiResponse<T>
+      // Mas quando T é PaginatedResponse, o backend já retorna { success: true, data: [...], pagination: {...} }
+      // E o ResponseTransformer.normalize vê que já tem 'success', então retorna como está
+      // Então response pode ser PaginatedResponse diretamente OU ApiResponse<PaginatedResponse>
       
       // Verificar se response já é PaginatedResponse (tem success, data, pagination)
       if (response && typeof response === 'object' && 'success' in response && 'data' in response && 'pagination' in response) {
-        // response já é PaginatedResponse
+        // response já é PaginatedResponse completo
         return response as PaginatedResponse<TEntity>;
       }
       
@@ -56,15 +52,35 @@ export abstract class BaseService<TEntity, TCreateData, TUpdateData, TFilters ex
         if ('data' in response.data && 'pagination' in response.data) {
           // Verificar se tem success também (ApiResponse<PaginatedResponse>)
           if ('success' in response.data) {
-            // É ApiResponse<PaginatedResponse>, extrair o inner data
-            const innerData = (response.data as { data?: TEntity[]; pagination?: Record<string, unknown> });
+            // É ApiResponse<PaginatedResponse>, extrair o inner data mantendo success
+            const innerData = response.data as PaginatedResponse<TEntity>;
             return {
+              success: true,
               data: innerData.data || [],
-              pagination: innerData.pagination || {}
+              pagination: innerData.pagination || {
+                current_page: 1,
+                per_page: 15,
+                total: 0,
+                last_page: 0,
+                from: 0,
+                to: 0,
+              }
             } as PaginatedResponse<TEntity>;
           }
-          // É PaginatedResponse direto
-          return response.data as PaginatedResponse<TEntity>;
+          // É PaginatedResponse direto sem success wrapper
+          const paginatedData = response.data as PaginatedResponse<TEntity>;
+          return {
+            success: paginatedData.success ?? true,
+            data: paginatedData.data || [],
+            pagination: paginatedData.pagination || {
+              current_page: 1,
+              per_page: 15,
+              total: 0,
+              last_page: 0,
+              from: 0,
+              to: 0,
+            }
+          } as PaginatedResponse<TEntity>;
         }
       }
       
@@ -77,7 +93,10 @@ export abstract class BaseService<TEntity, TCreateData, TUpdateData, TFilters ex
         // Se innerData tem 'data' e 'pagination', é PaginatedResponse
         if ('data' in innerData && 'pagination' in innerData) {
           data = (innerData as PaginatedResponse<TEntity>).data || [];
-          pagination = (innerData as PaginatedResponse<TEntity>).pagination || {};
+          const pag = (innerData as PaginatedResponse<TEntity>).pagination;
+          if (pag && typeof pag === 'object') {
+            pagination = pag;
+          }
         } 
         // Se innerData é um array, usar diretamente
         else if (Array.isArray(innerData)) {

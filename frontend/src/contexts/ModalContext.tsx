@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
-export type ModalType = 
+export type ModalType =
   | 'clientes'
   | 'planos'
   | 'bancos'

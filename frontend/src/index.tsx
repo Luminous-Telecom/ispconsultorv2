@@ -1,11 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
-import './styles/custom-select.css';
-import './components/ui/ui.css';
-import './components/notifications/notifications.css';
-import './index.css';
+import './styles/index.scss';
 import App from './App';
 
 window.addEventListener('error', (event) => {
@@ -15,6 +10,21 @@ window.addEventListener('error', (event) => {
 window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault();
 });
+
+// Registrar Service Worker para PWA
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then((registration) => {
+        // eslint-disable-next-line no-console
+        console.log('SW registered: ', registration);
+      })
+      .catch((registrationError) => {
+        // eslint-disable-next-line no-console
+        console.log('SW registration failed: ', registrationError);
+      });
+  });
+}
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import DraggableModal from './DraggableModal';
 import Table from '../tables/Table';
 import { formatDateTime } from '@/utils/formatters';
+import { Spinner } from '@/components/ui';
 
 interface LogsModalProps {
   show: boolean;
@@ -156,9 +157,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
     >
       {loading ? (
         <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
           <p className="mt-2">Carregando logs de execução...</p>
         </div>
       ) : logs.length === 0 ? (
@@ -189,12 +188,14 @@ const LogsModal: React.FC<LogsModalProps> = ({
           )}
           
           <Table
+            title={`Logs de Execução - ${routineName}`}
             config={{
               columns: [
                 {
                   key: 'status',
                   label: 'Status',
                   sortable: true,
+                  width: '90px',
                   render: (log: LogEntry) => (
                     <span className={`badge ${
                       log.status === 'sucesso' ? 'bg-success' :
@@ -211,18 +212,21 @@ const LogsModal: React.FC<LogsModalProps> = ({
                   key: 'data_inicio',
                   label: 'Data/Hora',
                   sortable: true,
+                  width: '130px',
                   render: (log: LogEntry) => log.data_inicio ? formatDateTime(log.data_inicio) : '-'
                 },
                 {
                   key: 'duracao_ms',
                   label: 'Duração',
                   sortable: true,
+                  width: '90px',
                   render: (log: LogEntry) => log.duracao_ms ? `${log.duracao_ms}ms` : '-'
                 },
                 {
                   key: 'resultado',
                   label: 'Resultado',
                   sortable: false,
+                  width: '200px',
                   render: (log: LogEntry) => {
                     if (log.resultado) {
                       return (

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useContasPagar, useDeleteContaPagar, useDuplicarContaPagar } from '@/hooks/useContasPagar';
 import { useFornecedores } from '@/hooks/useFornecedores';
 import { useModalSelect } from '@/hooks/useModalSelect';
@@ -170,13 +170,13 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         key: 'id',
         label: 'ID',
         sortable: true,
-        width: '80px',
+        width: '42px',
         render: (item: ContaPagar) => <span className="text-nowrap">{item.id ?? '-'}</span>
       },
       {
         key: 'fornecedor',
         label: 'Fornecedor',
-        sortable: false,
+        sortable: true,
         render: (item: ContaPagar) => (
           <strong>{item.fornecedor?.nome_razao_social || '-'}</strong>
         )
@@ -213,7 +213,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       {
         key: 'saldo_devedor',
         label: 'Saldo Devedor',
-        sortable: false,
+        sortable: true,
         width: '130px',
         render: (item: ContaPagar) => {
           const valor = typeof item.valor === 'number' ? item.valor : parseFloat(String(item.valor || 0));
@@ -296,7 +296,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       { key: 'status', label: 'Status' },
       { key: 'tipo', label: 'Tipo' }
     ],
-    multiSelect: false
+    multiSelect: true
   });
 
   // Resetar página quando filtros de data mudarem
@@ -414,21 +414,39 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   };
 
   // Paginação do backend
-  const pagination = contasPagarData?.pagination ? {
-    current_page: contasPagarData.pagination.current_page,
-    last_page: contasPagarData.pagination.last_page,
-    per_page: contasPagarData.pagination.per_page,
-    total: contasPagarData.pagination.total,
-    from: contasPagarData.pagination.from,
-    to: contasPagarData.pagination.to
-  } : {
-    current_page: tableFilters.page,
-    last_page: 1,
-    per_page: tableFilters.limit,
-    total: 0,
-    from: 0,
-    to: 0
-  };
+  const pagination = useMemo(() => {
+    if (contasPagarData?.pagination && typeof contasPagarData.pagination === 'object') {
+      const pag = contasPagarData.pagination;
+      const total = pag.total ?? 0;
+      const perPage = pag.per_page ?? tableFilters.limit;
+      const currentPage = pag.current_page ?? tableFilters.page;
+      
+      // Calcular last_page se não estiver definido
+      let lastPage = pag.last_page;
+      if (!lastPage && total > 0) {
+        lastPage = Math.max(1, Math.ceil(total / perPage));
+      } else if (!lastPage) {
+        lastPage = 1;
+      }
+      
+      return {
+        current_page: currentPage,
+        last_page: lastPage,
+        per_page: perPage,
+        total: total,
+        from: pag.from ?? ((currentPage - 1) * perPage) + 1,
+        to: pag.to ?? Math.min(currentPage * perPage, total)
+      };
+    }
+    return {
+      current_page: tableFilters.page,
+      last_page: 1,
+      per_page: tableFilters.limit,
+      total: 0,
+      from: 0,
+      to: 0
+    };
+  }, [contasPagarData?.pagination, tableFilters.page, tableFilters.limit]);
 
   // Bulk actions
   const bulkActions = onSelectContaPagar ? [
@@ -528,6 +546,15 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     }
   ];
 
+  const handleSearchChange = useCallback((search: string, field?: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+      if (field) setSearchField(field);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch]);
+
   const modalContent = (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0 }}>
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
@@ -544,10 +571,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
             selectedItems={selectedItem ? [selectedItem] : []}
             onSelectionChange={handleSelectionChange}
             search={tableFilters.search}
-            onSearchChange={(search, field) => {
-              tableFilters.setSearch(search);
-              setSearchField(field);
-            }}
+            onSearchChange={handleSearchChange}
             onSearchFieldChange={setSearchField}
             filters={modal.config.filters}
             filterValues={tableFilters.filters}

@@ -13,10 +13,10 @@ export const useClientes = (filters: ClienteFilters = {}) => {
   return useQuery({
     queryKey: ['clientes', filters],
     queryFn: () => ClienteService.list(filters),
-    staleTime: 30 * 1000, // 30 segundos - dados ficam fresh por 30s
+    staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual
     gcTime: DEFAULT_CACHE_TIME,
     refetchOnWindowFocus: false,
-    refetchOnMount: false, // Não refetch automático ao montar
+    refetchOnMount: true, // Refetch ao montar para garantir dados atualizados
   });
 };
 

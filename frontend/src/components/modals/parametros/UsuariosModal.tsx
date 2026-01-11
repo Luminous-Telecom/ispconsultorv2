@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { AxiosError } from 'axios';
 import { useUsuarios, useDeleteUsuario } from '@/hooks/useUsuarios';
 import { Usuario } from '@/types';
@@ -46,6 +46,15 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
     resetPageOnFilterChange: true,
   });
 
+  const handleSearch = useCallback((term: string, field?: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(term);
+      if (field) setSearchField(field);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch]);
+
   const [searchField, setSearchField] = useState<string>('nome');
   
   const { data: usuariosData, isLoading, refetch } = useUsuarios({
@@ -56,14 +65,39 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
   });
 
   const usuarios = usuariosData?.data || [];
-  const pagination = usuariosData?.pagination ? {
-    current_page: usuariosData.pagination.current_page,
-    last_page: usuariosData.pagination.last_page,
-    per_page: usuariosData.pagination.per_page,
-    total: usuariosData.pagination.total,
-    from: usuariosData.pagination.from,
-    to: usuariosData.pagination.to
-  } : undefined;
+  const pagination = useMemo(() => {
+    if (usuariosData?.pagination && typeof usuariosData.pagination === 'object') {
+      const pag = usuariosData.pagination;
+      const total = pag.total ?? 0;
+      const perPage = pag.per_page ?? 15;
+      const currentPage = pag.current_page ?? 1;
+      
+      // Calcular last_page se não estiver definido
+      let lastPage = pag.last_page;
+      if (!lastPage && total > 0) {
+        lastPage = Math.max(1, Math.ceil(total / perPage));
+      } else if (!lastPage) {
+        lastPage = 1;
+      }
+      
+      return {
+        current_page: currentPage,
+        last_page: lastPage,
+        per_page: perPage,
+        total: total,
+        from: pag.from ?? ((currentPage - 1) * perPage) + 1,
+        to: pag.to ?? Math.min(currentPage * perPage, total)
+      };
+    }
+    return {
+      current_page: 1,
+      last_page: 1,
+      per_page: 15,
+      total: 0,
+      from: 0,
+      to: 0
+    };
+  }, [usuariosData?.pagination]);
 
   const deleteUsuarioMutation = useDeleteUsuario();
 
@@ -97,6 +131,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       label: 'ID',
       sortable: true,
       searchable: true,
+      width: 42,
+      resizable: true,
       render: (item: Usuario) => <span>{item.id}</span>
     },
     {
@@ -104,6 +140,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       label: 'Nome',
       sortable: true,
       searchable: true,
+      width: 180,
+      resizable: true,
       render: (item: Usuario) => <div className="fw-bold">{item.nome}</div>
     },
     {
@@ -111,6 +149,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       label: 'Email',
       sortable: true,
       searchable: true,
+      width: 200,
+      resizable: true,
       render: (item: Usuario) => item.email
     },
     {
@@ -118,6 +158,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       label: 'Perfil',
       sortable: true,
       searchable: true,
+      width: 120,
+      resizable: true,
       render: (item: Usuario) => {
         const roleLabels: Record<string, string> = {
           'admin': 'Administrador',
@@ -209,12 +251,13 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ flex: 1, overflow: 'auto' }}>
           <Table
+            title="Usuários"
             config={{
               columns,
               data: sortedData,
               loading: isLoading,
               searchable: true,
-              searchPlaceholder: 'Buscar por nome ou email...',
+              searchPlaceholder: '',
               searchFields: [
                 { key: 'id', label: 'ID' },
                 { key: 'nome', label: 'Nome' },
@@ -227,7 +270,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
               hover: true,
               responsive: true,
               selectable: true,
-              multiSelect: false,
+              multiSelect: true,
               bulkActions: bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,
@@ -242,10 +285,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
               setSelectedItems(items);
             }}
             onSort={tableFilters.setSort}
-            onSearch={(term, field) => {
-              tableFilters.setSearch(term);
-              setSearchField(field);
-            }}
+            onSearch={handleSearch}
             onSearchFieldChange={setSearchField}
             onPageChange={tableFilters.setPage}
             onPageSizeChange={tableFilters.setLimit}

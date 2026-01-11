@@ -6,7 +6,7 @@ import { useCep } from '@/hooks/useCep';
 import { formatCPF, formatCNPJ, formatCEP } from '@/utils/formatters';
 import { isValidCPF, isValidCNPJ } from '@/utils/validators';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 import { CreateFornecedor } from '@/types';
 import { FornecedorService } from '@/services/fornecedorService';
@@ -305,9 +305,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
     if (isLoadingFornecedor && isEditing) {
       return (
         <div className="text-center p-4">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
+          <Spinner size="md" variant="primary" aria-label="Carregando..." />
           <p className="mt-2">Carregando dados do fornecedor...</p>
         </div>
       );

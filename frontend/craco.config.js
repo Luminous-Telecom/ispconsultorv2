@@ -1,4 +1,5 @@
 const path = require('path');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 // Interceptar TODAS as saídas, incluindo process.stdout.write
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -59,6 +60,12 @@ module.exports = {
           });
         },
       },
+      // Bundle Analyzer - só ativa quando ANALYZE=true
+      ...(process.env.ANALYZE === 'true' ? [new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        openAnalyzer: false,
+        reportFilename: 'bundle-report.html',
+      })] : []),
     ],
     configure: (webpackConfig) => {
       // Encontrar e modificar a regra do sass-loader
@@ -80,6 +87,8 @@ module.exports = {
                   sassOptions: {
                     ...use.options?.sassOptions,
                     fiber: false,
+                    quietDeps: true,
+                    silenceDeprecations: ['import', 'legacy-js-api', 'global-builtin', 'color-functions', 'if-function'],
                   },
                 };
               }

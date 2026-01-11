@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useListModal } from '@/hooks/useListModal';
 import { useModalSelect } from '@/hooks/useModalSelect';
@@ -25,6 +25,26 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
   });
+
+  const handleSearchChange = useCallback((value: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(value);
+      tableFilters.setPage(1);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch, tableFilters.setPage]);
+
+  const handleClearFilters = useCallback(() => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch('');
+      setAcaoFilter('');
+      setEntidadeFilter('');
+      tableFilters.setPage(1);
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setSearch, tableFilters.setPage]);
 
   const [acaoFilter, setAcaoFilter] = useState<string>('');
   const [entidadeFilter, setEntidadeFilter] = useState<string>('');
@@ -98,7 +118,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
         key: 'id',
         label: 'ID',
         sortable: true,
-        width: '80px',
+        width: '42px',
         render: (log: AuditoriaLog) => (
           <span className="text-muted small">{String(log.id).substring(0, 8)}...</span>
         )
@@ -135,7 +155,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       {
         key: 'usuario_email',
         label: 'Usuário',
-        sortable: false,
+        sortable: true,
         width: '180px',
         render: (log: AuditoriaLog) => (
           <span className="small">{log.usuario_email || 'N/A'}</span>
@@ -144,7 +164,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       {
         key: 'usuario_nome',
         label: 'Nome',
-        sortable: false,
+        sortable: true,
         width: '150px',
         render: (log: AuditoriaLog) => (
           <span className="small text-muted">{log.usuario_nome || '-'}</span>
@@ -153,7 +173,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       {
         key: 'metodo_http',
         label: 'Método',
-        sortable: false,
+        sortable: true,
         width: '80px',
         render: (log: AuditoriaLog) => (
           <code className="text-primary small">{log.metodo_http || '-'}</code>
@@ -162,7 +182,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       {
         key: 'rota',
         label: 'Rota',
-        sortable: false,
+        sortable: true,
         width: '200px',
         render: (log: AuditoriaLog) => (
           <span className="small">{log.rota || '-'}</span>
@@ -171,7 +191,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       {
         key: 'ip_address',
         label: 'IP',
-        sortable: false,
+        sortable: true,
         width: '120px',
         render: (log: AuditoriaLog) => (
           <span className="small text-muted">{log.ip_address || '-'}</span>
@@ -180,7 +200,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       {
         key: 'observacoes',
         label: 'Observações',
-        sortable: false,
+        sortable: true,
         render: (log: AuditoriaLog) => (
           <span className="small">{log.observacoes || '-'}</span>
         )
@@ -193,21 +213,39 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
     setShowDetailsModal(true);
   };
 
-  const pagination = data?.pagination ? {
-    current_page: data.pagination.current_page,
-    last_page: data.pagination.last_page,
-    per_page: data.pagination.per_page,
-    total: data.pagination.total,
-    from: data.pagination.from,
-    to: data.pagination.to
-  } : {
-    current_page: 1,
-    last_page: 1,
-    per_page: tableFilters.limit,
-    total: 0,
-    from: 0,
-    to: 0
-  };
+  const pagination = useMemo(() => {
+    if (data?.pagination && typeof data.pagination === 'object') {
+      const pag = data.pagination;
+      const total = pag.total ?? 0;
+      const perPage = pag.per_page ?? tableFilters.limit;
+      const currentPage = pag.current_page ?? 1;
+      
+      // Calcular last_page se não estiver definido
+      let lastPage = pag.last_page;
+      if (!lastPage && total > 0) {
+        lastPage = Math.max(1, Math.ceil(total / perPage));
+      } else if (!lastPage) {
+        lastPage = 1;
+      }
+      
+      return {
+        current_page: currentPage,
+        last_page: lastPage,
+        per_page: perPage,
+        total: total,
+        from: pag.from ?? ((currentPage - 1) * perPage) + 1,
+        to: pag.to ?? Math.min(currentPage * perPage, total)
+      };
+    }
+    return {
+      current_page: 1,
+      last_page: 1,
+      per_page: tableFilters.limit,
+      total: 0,
+      from: 0,
+      to: 0
+    };
+  }, [data?.pagination, tableFilters.limit]);
 
   // Bulk actions
   const bulkActions = [
@@ -232,12 +270,9 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
         <input
           type="text"
           className="form-control form-control-sm"
-          placeholder="Buscar por observações, rota, usuário..."
+          placeholder=""
           value={tableFilters.search}
-          onChange={(e) => {
-            tableFilters.setSearch(e.target.value);
-            tableFilters.setPage(1);
-          }}
+          onChange={(e) => handleSearchChange(e.target.value)}
         />
       </div>
       <div className="col-md-3">
@@ -281,12 +316,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       <div className="col-md-2 d-flex align-items-end">
         <button
           className="btn btn-sm btn-outline-secondary w-100"
-          onClick={() => {
-            tableFilters.setSearch('');
-            setAcaoFilter('');
-            setEntidadeFilter('');
-            tableFilters.setPage(1);
-          }}
+          onClick={handleClearFilters}
         >
           Limpar
         </button>
