@@ -33,8 +33,6 @@ import { Button, Spinner } from '@/components/ui';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import { formatCurrency } from '@/utils/formatters';
-import '../../contratos/ContratoModals.css';
-import './ContratoModal.css';
 import ContratoTab from './abas/ContratoTab';
 import EnderecoTab from './abas/EnderecoTab';
 import TermosTab from './abas/TermosTab';
@@ -1484,7 +1482,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       searchable: true,
       width: 42,
       resizable: true,
-      render: (item: ContratoPlanoAdicional) => item.id 
+      render: (item: ContratoPlanoAdicional) => item.id
     },
     {
       key: 'plano',
@@ -1665,133 +1663,146 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={isEditMode ? `Contrato - ${contratoData?.plano?.nome_plano || 'Carregando...'}` : 'Criar Contrato'}
+      title="Contrato"
       size="xl"
       modalId="contrato-modal"
       headerActions={
-        <div className="d-flex gap-2">
-          {isEditMode && (
-            <Button 
-              type="button" 
-              variant="info"
-              size="sm" 
-              leftIcon={<i className="bi bi-printer"></i>}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleImprimirContrato();
-              }}
-            >
-              Imprimir
-            </Button>
-          )}
-          <Button 
-            type="button" 
-            variant="secondary"
-            size="sm" 
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={onClose}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            type="submit" 
-            form="contrato-form"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            isLoading={formHook.isSubmitting}
-          >
-            {isEditMode ? 'Salvar' : 'Criar Contrato'}
-          </Button>
-        </div>
+        // Mostrar headerActions apenas quando não estiver carregando
+        !isLoading ? (
+          <div className="contrato-header-unified">
+            {/* Botões à direita */}
+            <div className="contrato-header-buttons">
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="info"
+                  size="sm"
+                  leftIcon={<i className="bi bi-printer"></i>}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleImprimirContrato();
+                  }}
+                >
+                  Imprimir
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                leftIcon={<i className="bi bi-x-lg"></i>}
+                onClick={onClose}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                form="contrato-form"
+                variant="primary"
+                size="sm"
+                leftIcon={<i className="bi bi-check-lg"></i>}
+                isLoading={formHook.isSubmitting}
+              >
+                {isEditMode ? 'Salvar' : 'Criar Contrato'}
+              </Button>
+            </div>
+
+            {/* Abas na parte inferior do header */}
+            <div className="contrato-header-tabs">
+              <ul
+                className={`nav nav-tabs contrato-tabs-unified ${isMobile ? 'contrato-tabs-mobile' : ''}`}
+                id="contratoTab"
+                role="tablist"
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  borderBottom: 'none',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link modal-tab-hover ${activeTab === 'contrato' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => handleTabChange('contrato')}
+                  >
+                    Contrato
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link modal-tab-hover ${activeTab === 'endereco' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => handleTabChange('endereco')}
+                  >
+                    Endereço
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link modal-tab-hover ${activeTab === 'termos' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
+                    type="button"
+                    onClick={() => {
+                      if (isEditMode) {
+                        handleTabChange('termos');
+                      }
+                    }}
+                    disabled={!isEditMode}
+                  >
+                    Termos
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link modal-tab-hover ${activeTab === 'financeiro' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
+                    type="button"
+                    onClick={() => {
+                      if (isEditMode) {
+                        handleTabChange('financeiro');
+                      }
+                    }}
+                    disabled={!isEditMode}
+                  >
+                    Financeiro
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link modal-tab-hover ${activeTab === 'financeiro-avulso' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
+                    type="button"
+                    onClick={() => {
+                      if (isEditMode) {
+                        handleTabChange('financeiro-avulso');
+                      }
+                    }}
+                    disabled={!isEditMode}
+                  >
+                    Financeiro Avulso
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link ${activeTab === 'servicos-adicionais' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
+                    type="button"
+                    onClick={() => {
+                      if (isEditMode) {
+                        handleTabChange('servicos-adicionais');
+                      }
+                    }}
+                    disabled={!isEditMode}
+                  >
+                    Serviços Adicionais
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        ) : undefined
       }
     >
       <form id="contrato-form" onSubmit={handleSubmit}>
-        {/* Sempre mostrar estrutura com abas */}
         <div className="contrato-modal-content">
-          {/* Navegação por Abas */}
-          <ul
-            className={`nav nav-tabs ${isMobile ? 'contrato-tabs-mobile' : 'contrato-tabs'}`}
-            id="contratoTab"
-            role="tablist"
-          >
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
-                type="button"
-                onClick={() => handleTabChange('contrato')}
-              >
-                Contrato
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
-                type="button"
-                onClick={() => handleTabChange('endereco')}
-              >
-                Endereço
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'termos' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
-                type="button"
-                onClick={() => {
-                  if (isEditMode) {
-                    handleTabChange('termos');
-                  }
-                }}
-                disabled={!isEditMode}
-              >
-                Termos
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
-                type="button"
-                onClick={() => {
-                  if (isEditMode) {
-                    handleTabChange('financeiro');
-                  }
-                }}
-                disabled={!isEditMode}
-              >
-                Financeiro
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'financeiro-avulso' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
-                type="button"
-                onClick={() => {
-                  if (isEditMode) {
-                    handleTabChange('financeiro-avulso');
-                  }
-                }}
-                disabled={!isEditMode}
-              >
-                Financeiro Avulso
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'servicos-adicionais' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
-                type="button"
-                onClick={() => {
-                  if (isEditMode) {
-                    handleTabChange('servicos-adicionais');
-                  }
-                }}
-                disabled={!isEditMode}
-              >
-                Serviços Adicionais
-              </button>
-            </li>
-          </ul>
-
           {/* Conteúdo das Abas */}
           <div
             className={`tab-content contrato-tab-content ${

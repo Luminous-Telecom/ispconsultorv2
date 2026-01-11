@@ -58,15 +58,36 @@
   position: relative !important;
 }
 
+/* Container do título e botão X */
+.draggable-modal-header-custom > .d-flex {
+  width: 100% !important;
+  position: relative !important;
+}
+
+/* Botão fechar Bootstrap nos modais */
+.draggable-modal-header-custom .btn-close {
+  margin: 0 !important;
+  padding: 0.125rem !important;
+  width: 0.75rem !important;
+  height: 0.75rem !important;
+  background-size: 0.75rem 0.75rem !important;
+  opacity: 1 !important;
+  transition: opacity 0.2s ease !important;
+  filter: brightness(0) invert(1) !important; /* Força cor branca */
+}
+
+.draggable-modal-header-custom .btn-close:hover {
+  opacity: 0.8 !important;
+  filter: brightness(0) invert(1) !important; /* Mantém branco no hover */
+}
+
 /* Título do modal */
 .draggable-modal-title-custom {
   color: var(--text-primary) !important;
-  font-size: var(--font-size-sm) !important;
+  font-size: var(--font-size-xs) !important;
   font-weight: 600 !important;
   text-align: center !important;
   margin: 0 !important;
-  padding-right: 40px !important; /* Espaço para o botão X */
-  padding-left: 40px !important;  /* Espaço simétrico */
   cursor: grab !important;
   user-select: none !important;
 }
@@ -79,21 +100,6 @@
   margin-bottom: 8px !important;
 }
 
-/* Botão fechar */
-.draggable-modal-close-custom {
-  filter: var(--btn-close-filter) !important;
-  background: none !important;
-  border: none !important;
-  font-size: 1.5rem !important;
-  cursor: pointer !important;
-  padding: 0 !important;
-  width: 24px !important;
-  height: 24px !important;
-  position: absolute !important;
-  top: 12px !important;
-  right: 16px !important;
-  z-index: 10 !important;
-}
 
 /* Body do modal */
 .draggable-modal-body-custom {
@@ -359,10 +365,6 @@
   padding: 1.5rem;
 }
 
-/* Sobrescrever classes de fonte do Bootstrap */
-.fw-bold {
-  font-weight: 400 !important;
-}
 
 /* Botões modernos e elegantes */
 .btn {
@@ -748,20 +750,75 @@ button,
   font-size: var(--font-size-sm);
 }
 
+.form-check {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+/* Centralizar checkboxes em tabelas (como "Mostrar inativos") */
+.table-custom-controls .form-check {
+  margin-bottom: 0;
+  height: 100%;
+  align-items: center;
+}
+
+.table-custom-controls .form-check-input {
+  margin-top: 0;
+}
+
+.table-custom-controls .form-check-label {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+/* Centralizar checkboxes em formulários (como "Cliente Ativo" com inputs) */
+.col-md-6 .form-check,
+.col-lg-6 .form-check,
+.col-sm-6 .form-check,
+.col-6 .form-check {
+  height: 100%;
+  align-items: center;
+  margin-bottom: 0;
+  padding-top: 1.5rem; /* Alinhar com o label do input */
+  padding-bottom: 1.5rem; /* Compensar o padding-top */
+}
+
+.col-md-6 .form-check-input,
+.col-lg-6 .form-check-input,
+.col-sm-6 .form-check-input,
+.col-6 .form-check-input {
+  margin-top: 0;
+}
+
+.col-md-6 .form-check-label,
+.col-lg-6 .form-check-label,
+.col-sm-6 .form-check-label,
+.col-6 .form-check-label {
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
+.form-check-input {
+  flex-shrink: 0;
+}
+
 .form-check-label {
   color: var(--text-primary);
   font-weight: 400;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   cursor: pointer;
   user-select: none;
   margin-left: 0.5rem;
+  margin-bottom: 0;
+  line-height: 1.2;
 }
 
 .form-check-input {
   width: 1em;
   height: 1em;
-  margin-top: 0.25em;
-  vertical-align: top;
+  margin-top: 0;
+  vertical-align: middle;
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   appearance: none;
@@ -869,9 +926,140 @@ button,
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: var(--font-size-sm);
-  padding: 0.5rem 0.875rem;
-  height: auto;
+  padding: 0.25rem 0.5rem !important;
+  height: 33px; /* Mesma altura dos inputs */
   line-height: 1.25;
+}
+
+
+
+/* Container combinado para busca (select + input) */
+.table-search-combined {
+  display: flex !important;
+  align-items: stretch !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius) !important;
+  overflow: hidden !important;
+  background: var(--bg-primary) !important;
+}
+
+.table-search-combined .table-search-field-select {
+  border: none !important;
+  border-radius: 0 !important;
+  border-right: 1px solid var(--border-color) !important;
+  background: transparent !important;
+  height: 28px !important;
+  flex-shrink: 0 !important;
+  padding: 0 8px 0 8px !important;
+  font-size: 0.75rem !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  /* Largura controlada dinamicamente por JavaScript */
+}
+
+.table-search-combined .table-search-input {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  flex: 1 !important;
+  min-width: 180px !important;
+}
+
+.table-search-combined .table-search-input:focus,
+.table-search-combined .table-search-field-select:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.table-search-combined:focus-within {
+  border-color: var(--btn-primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Filtros na linha de paginação */
+.table-pagination-filter {
+  width: 140px !important;
+  height: 28px !important;
+}
+
+/* Ícone de busca na tabela */
+.table-search-icon {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: none !important;
+  font-size: 0.7rem !important;
+}
+
+/* Botões de ação no header do modal */
+.modal-header-actions {
+  padding: 10px !important;
+}
+
+/* Loading component */
+.loading-container {
+  min-height: 200px !important;
+}
+
+/* Chart empty state */
+.chart-empty-state {
+  width: 100% !important;
+  height: 220px !important;
+  min-width: 200px !important;
+  min-height: 220px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Entity select field */
+.entity-select-input {
+  border-right: none !important;
+}
+
+.entity-select-icon {
+  transform: rotate(90deg) !important;
+}
+
+.entity-select-error {
+  display: block !important;
+}
+
+/* Layout components */
+.layout-search-field {
+  width: auto !important;
+  min-width: 120px !important;
+  border-right: none !important;
+}
+
+.layout-notifications-dropdown {
+  width: 200px !important;
+}
+
+.layout-user-avatar {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.layout-table-dropdown {
+  overflow: visible !important;
+}
+
+.layout-user-name {
+  max-width: 150px !important;
+  font-size: 0.625rem !important;
+}
+
+/* App error icon */
+.app-error-icon {
+  font-size: 4rem !important;
 }
 
 .form-select:focus {
@@ -897,7 +1085,7 @@ button,
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1rem;
   background: transparent;
   border: none;
   color: var(--sidebar-text);
@@ -960,24 +1148,27 @@ button,
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 0.375rem 0.75rem;
+  padding: 0.625rem 1rem;
   background: transparent;
   border: none;
-  color: var(--text-primary);
+  color: var(--sidebar-text);
   text-decoration: none;
   font-size: 0.75rem;
+  font-weight: 400;
   cursor: pointer;
-  gap: 0.625rem;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
 }
 
 .dropdown-item i {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .dropdown-item span {
@@ -986,8 +1177,8 @@ button,
 }
 
 .dropdown-item:hover {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text) !important;
 }
 
 .dropdown-item.disabled {
@@ -1054,6 +1245,11 @@ button,
   color: var(--text-primary);
 }
 
+/* Remover negrito dos cabeçalhos de tabela */
+th {
+  font-weight: 400 !important;
+}
+
 /* Padronizar altura de todos os inputs e selects com os botões */
 .form-control,
 .form-control-sm,
@@ -1076,7 +1272,6 @@ textarea {
 @media (max-width: 767.98px) {
   .form-control,
   .form-control-sm,
-  .form-select,
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -1086,6 +1281,21 @@ textarea {
   textarea {
     padding: 0.375rem 0.5rem !important;
     min-height: 30px !important;
+  }
+
+  /* Selects em filtros mantêm padding reduzido */
+  .form-select {
+    padding: 0.375rem 0.5rem !important;
+    min-height: 30px !important;
+  }
+
+  /* Selects em formulários modais têm padding maior mesmo no mobile */
+  .modal .form-select,
+  .modal-body .form-select,
+  .draggable-modal-container .form-select,
+  [data-modal] .form-select {
+    padding: 0.375rem 0.5rem !important;
+    height: 28px !important; /* Altura consistente no mobile */
   }
 }
 
@@ -1136,6 +1346,1812 @@ textarea:focus {
 [data-theme="dark"] .form-control-sm:focus {
   background-color: var(--bg-tertiary);
 }
+/* ============================================
+   CONTRATO MODAL - Estilos específicos
+   ============================================ */
+
+.contrato-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.contrato-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.contrato-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+}
+
+/* Espaçamento entre abas */
+.contrato-tabs .nav-item {
+  margin-right: 0.25rem;
+}
+
+.contrato-tabs .nav-item:last-child {
+  margin-right: 0;
+}
+
+.contrato-tabs-mobile .nav-item {
+  flex: 1;
+  margin-right: 0.125rem;
+}
+
+.contrato-tabs-mobile .nav-item:last-child {
+  margin-right: 0;
+}
+
+/* Estilos para abas no modo escuro */
+[data-theme="dark"] .contrato-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .contrato-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .contrato-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+[data-theme="dark"] .contrato-tabs-mobile .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .contrato-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .contrato-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+.contrato-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.contrato-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.contrato-tab-content-padded {
+  padding: 16px;
+}
+
+.contrato-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+.contrato-filters-container {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+}
+
+/* Layout do header com abas */
+.contrato-header-layout {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  flex: 1 !important;
+  margin-left: 1rem !important;
+}
+
+.contrato-header-tabs {
+  flex: 1 !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.contrato-header-buttons {
+  display: flex !important;
+  gap: 0.5rem !important;
+  flex-shrink: 0 !important;
+}
+
+/* Layout unificado do header com abas */
+.contrato-header-unified {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 1rem;
+  padding: 0 8px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.contrato-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* Estilo das abas no header unificado */
+.contrato-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link,
+  .nav-link:hover,
+  .nav-link:focus,
+  .nav-link:active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    outline: none !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* Para mobile */
+.contrato-tabs-mobile.contrato-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
+/* ============================================
+   PLANO MODAL - Estilos específicos
+   ============================================ */
+
+.plano-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.plano-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.plano-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+}
+
+/* Espaçamento entre abas */
+.plano-tabs .nav-item {
+  margin-right: 0.25rem;
+}
+
+.plano-tabs .nav-item:last-child {
+  margin-right: 0;
+}
+
+.plano-tabs-mobile .nav-item {
+  flex: 1;
+  margin-right: 0.125rem;
+}
+
+.plano-tabs-mobile .nav-item:last-child {
+  margin-right: 0;
+}
+
+/* Estilos para abas no modo escuro */
+[data-theme="dark"] .plano-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .plano-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .plano-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+[data-theme="dark"] .plano-tabs-mobile .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .plano-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .plano-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+.plano-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.plano-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.plano-tab-content-padded {
+  padding: 16px;
+}
+
+.plano-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* Layout unificado do header com abas */
+.plano-header-unified {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 1rem;
+  padding: 0 8px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.plano-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* Estilo das abas no header unificado */
+.plano-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* Para mobile */
+.plano-tabs-mobile.plano-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
+/* ============================================
+   FORNECEDOR MODAL - Estilos específicos
+   ============================================ */
+
+.fornecedor-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.fornecedor-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.fornecedor-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+}
+
+/* Espaçamento entre abas */
+.fornecedor-tabs .nav-item {
+  margin-right: 0.25rem;
+}
+
+.fornecedor-tabs .nav-item:last-child {
+  margin-right: 0;
+}
+
+.fornecedor-tabs-mobile .nav-item {
+  flex: 1;
+  margin-right: 0.125rem;
+}
+
+.fornecedor-tabs-mobile .nav-item:last-child {
+  margin-right: 0;
+}
+
+/* Estilos para abas no modo escuro */
+[data-theme="dark"] .fornecedor-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .fornecedor-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .fornecedor-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+[data-theme="dark"] .fornecedor-tabs-mobile .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .fornecedor-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .fornecedor-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+.fornecedor-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fornecedor-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.fornecedor-tab-content-padded {
+  padding: 16px;
+}
+
+.fornecedor-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* Layout unificado do header com abas */
+.fornecedor-header-unified {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 1rem;
+  padding: 0 8px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.fornecedor-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* Estilo das abas no header unificado */
+.fornecedor-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* Para mobile */
+.fornecedor-tabs-mobile.fornecedor-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
+/* ============================================
+   BANCO MODAL - Estilos específicos
+   ============================================ */
+
+.banco-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.banco-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.banco-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+}
+
+/* Espaçamento entre abas */
+.banco-tabs .nav-item {
+  margin-right: 0.25rem;
+}
+
+.banco-tabs .nav-item:last-child {
+  margin-right: 0;
+}
+
+.banco-tabs-mobile .nav-item {
+  flex: 1;
+  margin-right: 0.125rem;
+}
+
+.banco-tabs-mobile .nav-item:last-child {
+  margin-right: 0;
+}
+
+/* Estilos para abas no modo escuro */
+[data-theme="dark"] .banco-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .banco-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .banco-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+[data-theme="dark"] .banco-tabs-mobile .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .banco-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .banco-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+.banco-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.banco-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.banco-tab-content-padded {
+  padding: 16px;
+}
+
+.banco-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* Layout unificado do header com abas */
+.banco-header-unified {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 1rem;
+  padding: 0 8px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.banco-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* Estilo das abas no header unificado */
+.banco-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* Para mobile */
+.banco-tabs-mobile.banco-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
+/* ============================================
+   DOCUMENTO MODAL - Estilos específicos
+   ============================================ */
+
+.documento-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.documento-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.documento-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+}
+
+/* Espaçamento entre abas */
+.documento-tabs .nav-item {
+  margin-right: 0.25rem;
+}
+
+.documento-tabs .nav-item:last-child {
+  margin-right: 0;
+}
+
+.documento-tabs-mobile .nav-item {
+  flex: 1;
+  margin-right: 0.125rem;
+}
+
+.documento-tabs-mobile .nav-item:last-child {
+  margin-right: 0;
+}
+
+/* Estilos para abas no modo escuro */
+[data-theme="dark"] .documento-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .documento-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .documento-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+[data-theme="dark"] .documento-tabs-mobile .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .documento-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .documento-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+.documento-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.documento-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.documento-tab-content-padded {
+  padding: 16px;
+}
+
+.documento-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* Layout unificado do header com abas */
+.documento-header-unified {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 1rem;
+  padding: 0 8px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.documento-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* Estilo das abas no header unificado */
+.documento-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* Para mobile */
+.documento-tabs-mobile.documento-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
+/* ============================================
+   EMPRESA MODAL - Estilos específicos
+   ============================================ */
+
+.empresa-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.empresa-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.empresa-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+}
+
+/* Espaçamento entre abas */
+.empresa-tabs .nav-item {
+  margin-right: 0.25rem;
+}
+
+.empresa-tabs .nav-item:last-child {
+  margin-right: 0;
+}
+
+.empresa-tabs-mobile .nav-item {
+  flex: 1;
+  margin-right: 0.125rem;
+}
+
+.empresa-tabs-mobile .nav-item:last-child {
+  margin-right: 0;
+}
+
+/* Estilos para abas no modo escuro */
+[data-theme="dark"] .empresa-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .empresa-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .empresa-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+[data-theme="dark"] .empresa-tabs-mobile .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .empresa-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .empresa-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+.empresa-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.empresa-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.empresa-tab-content-padded {
+  padding: 16px;
+}
+
+.empresa-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* Layout unificado do header com abas */
+.empresa-header-unified {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 1rem;
+  padding: 0 8px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.empresa-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* Estilo das abas no header unificado */
+.empresa-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* Para mobile */
+.empresa-tabs-mobile.empresa-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
+/* ============================================
+   WHATSAPP MODAL - Estilos específicos
+   ============================================ */
+
+.whatsapp-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.whatsapp-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.whatsapp-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+}
+
+/* Espaçamento entre abas */
+.whatsapp-tabs .nav-item {
+  margin-right: 0.25rem;
+}
+
+.whatsapp-tabs .nav-item:last-child {
+  margin-right: 0;
+}
+
+.whatsapp-tabs-mobile .nav-item {
+  flex: 1;
+  margin-right: 0.125rem;
+}
+
+.whatsapp-tabs-mobile .nav-item:last-child {
+  margin-right: 0;
+}
+
+/* Estilos para abas no modo escuro */
+[data-theme="dark"] .whatsapp-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .whatsapp-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .whatsapp-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+[data-theme="dark"] .whatsapp-tabs-mobile .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .whatsapp-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .whatsapp-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+.whatsapp-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.whatsapp-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.whatsapp-tab-content-padded {
+  padding: 16px;
+}
+
+.whatsapp-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* Layout unificado do header com abas */
+.whatsapp-header-unified {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 1rem;
+  padding: 0 8px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.whatsapp-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* Estilo das abas no header unificado */
+.whatsapp-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* Para mobile */
+.whatsapp-tabs-mobile.whatsapp-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
+/* ============================================
+   EMAIL MODAL - Estilos específicos
+   ============================================ */
+
+.email-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.email-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.email-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+}
+
+/* Espaçamento entre abas */
+.email-tabs .nav-item {
+  margin-right: 0.25rem;
+}
+
+.email-tabs .nav-item:last-child {
+  margin-right: 0;
+}
+
+.email-tabs-mobile .nav-item {
+  flex: 1;
+  margin-right: 0.125rem;
+}
+
+.email-tabs-mobile .nav-item:last-child {
+  margin-right: 0;
+}
+
+/* Estilos para abas no modo escuro */
+[data-theme="dark"] .email-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .email-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .email-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+[data-theme="dark"] .email-tabs-mobile .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .email-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .email-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+.email-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.email-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.email-tab-content-padded {
+  padding: 16px;
+}
+
+.email-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* Layout unificado do header com abas */
+.email-header-unified {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 1rem;
+  padding: 0 8px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.email-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* Estilo das abas no header unificado */
+.email-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* Para mobile */
+.email-tabs-mobile.email-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
+/* ============================================
+   SISTEMA MODAL - Estilos específicos
+   ============================================ */
+
+.sistema-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.sistema-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.sistema-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+}
+
+/* Espaçamento entre abas */
+.sistema-tabs .nav-item {
+  margin-right: 0.25rem;
+}
+
+.sistema-tabs .nav-item:last-child {
+  margin-right: 0;
+}
+
+.sistema-tabs-mobile .nav-item {
+  flex: 1;
+  margin-right: 0.125rem;
+}
+
+.sistema-tabs-mobile .nav-item:last-child {
+  margin-right: 0;
+}
+
+/* Estilos para abas no modo escuro */
+[data-theme="dark"] .sistema-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .sistema-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .sistema-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+[data-theme="dark"] .sistema-tabs-mobile .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .sistema-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .sistema-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+.sistema-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sistema-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.sistema-tab-content-padded {
+  padding: 16px;
+}
+
+.sistema-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* Layout unificado do header com abas */
+.sistema-header-unified {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 1rem;
+  padding: 0 8px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.sistema-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* Estilo das abas no header unificado */
+.sistema-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* Para mobile */
+.sistema-tabs-mobile.sistema-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
 /* ============================================
    CLIENTE MODAL - Estilos específicos
    ============================================ */
@@ -1318,11 +3334,14 @@ textarea:focus {
     border-radius: 0.25rem 0.25rem 0 0 !important;
     transition: all 0.2s ease !important;
     white-space: nowrap !important;
+    cursor: pointer !important;
   }
 
-  .nav-link:hover {
+  .nav-link:hover,
+  .nav-link:focus {
     background-color: rgba(255, 255, 255, 0.15) !important;
     color: var(--text-primary) !important;
+    cursor: pointer !important;
   }
 
   .nav-link.active {
@@ -1332,8 +3351,16 @@ textarea:focus {
     border-bottom: none !important;
   }
 
-  .nav-link:disabled {
+  .nav-link:disabled,
+  .nav-link.disabled {
     opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
 }
@@ -1352,12 +3379,1063 @@ textarea:focus {
   }
 }
 
-/* Estilo das abas no header (removido) */
-.cliente-tabs-header {
-  justify-content: center !important;
+/* Hover unificado para abas de modais */
+.modal-tab-hover:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
-.cliente-tabs-header .nav-item {
-  margin-right: 0.125rem !important;
+/* FinanceiroModal - Layout principal */
+.financeiro-modal-content {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.financeiro-modal-col {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.financeiro-modal-table-container {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+/* FinanceiroModal - Resumo financeiro */
+.financeiro-resumo-container {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.financeiro-resumo-container-mobile {
+  margin-top: 0.25rem;
+  margin-bottom: 3rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+/* ContratoModal - Layout principal */
+.contrato-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ContratoModal - Navegação por abas */
+.contrato-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.contrato-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ContratoModal - Conteúdo das abas */
+.contrato-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.contrato-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.contrato-tab-content-padded {
+  padding: 16px;
+}
+
+/* ContratoModal - Estados dos botões desabilitados */
+.contrato-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* ContratoModal - Mensagens de placeholder */
+.contrato-placeholder {
+  height: 100%;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ContratoModals - Estilos gerais */
+.input-group .search-button {
+  border: 1px solid #4a5568;
+  border-left: none;
+  border-radius: 0 0.375rem 0.375rem 0;
+  color: #4a5568;
+  padding: 0.375rem 0.75rem;
+  background-color: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-group .id-field {
+  max-width: 60px;
+  min-width: 50px;
+}
+
+/* Sistema de notificações unificado */
+.notification-container {
+  display: flex;
+  flex-direction: column;
+  max-width: 280px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.notification-container * {
+  pointer-events: auto;
+}
+
+/* Posicionamento dos containers */
+.notification-container-top-left {
+  align-items: flex-start;
+}
+
+.notification-container-top-center {
+  align-items: center;
+}
+
+.notification-container-top-right {
+  align-items: flex-end;
+}
+
+.notification-container-bottom-left {
+  align-items: flex-start;
+  flex-direction: column-reverse;
+}
+
+.notification-container-bottom-center {
+  align-items: center;
+  flex-direction: column-reverse;
+}
+
+.notification-container-bottom-right {
+  align-items: flex-end;
+  flex-direction: column-reverse;
+}
+
+/* Notificação base */
+.notification {
+  background: var(--bs-white, white);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 280px;
+}
+
+.notification:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.notification-clickable {
+  cursor: pointer;
+}
+
+.notification-clickable:hover {
+  transform: translateY(-2px);
+}
+
+/* Conteúdo da notificação */
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  padding: 0.5rem;
+  gap: 0.4rem;
+}
+
+/* Ícone da notificação */
+.notification-icon {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  line-height: 1;
+  margin-top: 0.125rem;
+}
+
+.notification-loading-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Corpo da notificação */
+.notification-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  margin-bottom: 0.125rem;
+  color: #212529;
+}
+
+.notification-message {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #212529;
+  word-wrap: break-word;
+}
+
+.notification-description {
+  font-size: 0.7rem;
+  line-height: 1.3;
+  color: var(--bs-secondary);
+  margin-top: 0.125rem;
+}
+
+/* Ações da notificação */
+.notification-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Botão de fechar */
+.notification-close {
+  flex-shrink: 0;
+  margin-top: -0.25rem;
+  margin-right: -0.25rem;
+}
+
+/* Imagem da notificação */
+.notification-image {
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+}
+
+.notification-image img {
+  width: 48px;
+  height: 48px;
+  border-radius: 0.25rem;
+  object-fit: cover;
+}
+
+/* Barra de progresso */
+.notification-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.notification-progress-bar {
+  height: 100%;
+  background-color: var(--bs-primary);
+  transition: width 0.1s linear;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* Tipos de notificação */
+.notification-success {
+  border-left: 4px solid #28a745 !important;
+  background-color: #d4edda !important;
+}
+
+.notification-success .notification-icon {
+  color: #28a745;
+}
+
+.notification-success .notification-progress-bar {
+  background-color: #28a745;
+}
+
+.notification-error {
+  border-left: 4px solid #dc3545 !important;
+  background-color: #f8d7da !important;
+}
+
+.notification-error .notification-icon {
+  color: #dc3545;
+}
+
+.notification-error .notification-progress-bar {
+  background-color: #dc3545;
+}
+
+.notification-warning {
+  border-left: 4px solid #ffc107 !important;
+  background-color: #fff3cd !important;
+}
+
+.notification-warning .notification-icon {
+  color: #856404;
+}
+
+.notification-warning .notification-progress-bar {
+  background-color: #ffc107;
+}
+
+.notification-info {
+  border-left: 4px solid #17a2b8 !important;
+  background-color: #d1ecf1 !important;
+}
+
+.notification-info .notification-icon {
+  color: #17a2b8;
+}
+
+.notification-info .notification-progress-bar {
+  background-color: #17a2b8;
+}
+
+.notification-loading {
+  border-left: 4px solid var(--bs-primary);
+}
+
+.notification-loading .notification-icon {
+  color: var(--bs-primary);
+}
+
+.notification-loading .notification-progress-bar {
+  background-color: var(--bs-primary);
+}
+
+/* Tamanhos */
+.notification-sm {
+  max-width: 300px;
+}
+
+.notification-sm .notification-content {
+  padding: 0.75rem;
+}
+
+.notification-sm .notification-icon {
+  font-size: 1rem;
+}
+
+.notification-sm .notification-title {
+  font-size: 0.75rem;
+}
+
+.notification-sm .notification-message {
+  font-size: 0.75rem;
+}
+
+.notification-lg {
+  max-width: 500px;
+}
+
+.notification-lg .notification-content {
+  padding: 1.25rem;
+}
+
+.notification-lg .notification-icon {
+  font-size: 1.5rem;
+}
+
+.notification-lg .notification-title {
+  font-size: 1rem;
+}
+
+.notification-lg .notification-message {
+  font-size: 1rem;
+}
+
+/* Animações */
+.notification-slide {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.notification-slide.notification-visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.notification-fade {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.notification-fade.notification-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.notification-zoom {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.notification-zoom.notification-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.notification-bounce {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.notification-bounce.notification-visible {
+  opacity: 1;
+  transform: translateY(0);
+  animation: bounceIn 0.5s ease;
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estados */
+.notification-paused {
+  opacity: 0.7;
+}
+
+.notification-paused .notification-progress-bar {
+  animation-play-state: paused;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .notification-container {
+    max-width: calc(100vw - 2rem);
+  }
+
+  /* Ajustar posicionamento apenas para containers que não têm posição específica definida */
+  .notification-container-bottom-right {
+    left: auto !important;
+    right: 1rem !important;
+    transform: none !important;
+  }
+
+  .notification-container-bottom-left {
+    left: 1rem !important;
+    right: auto !important;
+    transform: none !important;
+  }
+
+  .notification-container-bottom-center {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .notification-container-top-right {
+    left: auto !important;
+    right: 1rem !important;
+    transform: none !important;
+  }
+
+  .notification-container-top-left {
+    left: 1rem !important;
+    right: auto !important;
+    transform: none !important;
+  }
+
+  .notification-container-top-center {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .notification {
+    max-width: none;
+  }
+
+  .notification-content {
+    padding: 0.75rem;
+  }
+
+  .notification-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .notification-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .notification-container {
+    max-width: calc(100vw - 1rem);
+  }
+
+  .notification-container-bottom-right {
+    left: auto !important;
+    right: 0.5rem !important;
+  }
+
+  .notification-container-bottom-left {
+    left: 0.5rem !important;
+    right: auto !important;
+  }
+
+  .notification-container-bottom-center {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .notification-container-top-right {
+    left: auto !important;
+    right: 0.5rem !important;
+  }
+
+  .notification-container-top-left {
+    left: 0.5rem !important;
+    right: auto !important;
+  }
+
+  .notification-container-top-center {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .notification-content {
+    padding: 0.5rem;
+  }
+
+  .notification-icon {
+    font-size: 1rem;
+  }
+
+  .notification-title {
+    font-size: 0.75rem;
+  }
+
+  .notification-message {
+    font-size: 0.75rem;
+  }
+}
+
+/* Dark mode - manter cores definidas */
+@media (prefers-color-scheme: dark) {
+  .notification-success {
+    background-color: #d4edda;
+  }
+
+  .notification-error {
+    background-color: #f8d7da;
+  }
+
+  .notification-warning {
+    background-color: #fff3cd;
+  }
+
+  .notification-info {
+    background-color: #d1ecf1;
+  }
+}
+
+/* Acessibilidade */
+.notification:focus {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+.notification[role="alert"] {
+  position: relative;
+}
+
+/* Animações de entrada e saída */
+.notification-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.notification-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.notification-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification-exit-active {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Utilitários */
+.notification-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notification-group {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.notification-group .notification {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--bs-border-color);
+  margin-bottom: 0;
+}
+
+.notification-group .notification:last-child {
+  border-bottom: none;
+}
+
+/* Componentes UI base */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  z-index: 3;
+  color: #6c757d;
+  pointer-events: none;
+}
+
+.input-icon-left .input-icon {
+  left: 12px;
+}
+
+.input-icon-right .input-icon {
+  right: 12px;
+}
+
+.input-icon-left .form-control {
+  padding-left: 2.5rem;
+}
+
+.input-icon-right .form-control {
+  padding-right: 2.5rem;
+}
+
+/* Reduzir padding de inputs com ícones no mobile */
+@media (max-width: 767.98px) {
+  .input-icon-left .form-control {
+    padding-left: 2rem;
+  }
+
+  .input-icon-right .form-control {
+    padding-right: 2rem;
+  }
+}
+
+/* FormField */
+.form-field {
+  margin-bottom: 0.5rem;
+}
+
+.form-field .form-label {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: #495057;
+}
+
+.form-field .form-text {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* Reduzir espaçamento em modais */
+.modal-content .form-label {
+  margin-bottom: 0.25rem !important;
+}
+
+.modal-content .form-field {
+  margin-bottom: 0.5rem !important;
+}
+
+/* Botão com loading */
+.btn .spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Animação do spinner */
+@keyframes spinner-border {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-border {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  vertical-align: text-bottom;
+  border: 0.25em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border 0.75s linear infinite;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.2em;
+}
+
+/* Checkbox inline */
+.form-check-inline {
+  margin-right: 1rem;
+}
+
+/* Switch personalizado */
+.form-switch .form-check-input {
+  width: 2.5rem;
+  height: 1.25rem;
+}
+
+.form-switch .form-check-input:focus {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input:checked {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+/* Validação - Remover ícones de check (V) do Bootstrap */
+.was-validated .form-control:valid,
+.was-validated .form-select:valid,
+.was-validated .form-check-input:valid,
+.form-control.is-valid,
+.form-select.is-valid,
+.form-check-input.is-valid {
+  border-color: #198754;
+  background-image: none !important;
+  padding-right: 0.75rem !important;
+  background-position: unset !important;
+}
+
+.was-validated .form-control:valid::after,
+.was-validated .form-select:valid::after,
+.was-validated .form-check-input:valid::after,
+.form-control.is-valid::after,
+.form-select.is-valid::after,
+.form-check-input.is-valid::after {
+  display: none !important;
+  content: none !important;
+}
+
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid,
+.was-validated .form-check-input:invalid,
+.form-control.is-invalid,
+.form-select.is-invalid,
+.form-check-input.is-invalid {
+  border-color: #dc3545;
+  background-image: none !important;
+  padding-right: 0.75rem !important;
+  background-position: unset !important;
+}
+
+.was-validated .form-control:invalid::after,
+.was-validated .form-select:invalid::after,
+.was-validated .form-check-input:invalid::after,
+.form-control.is-invalid::after,
+.form-select.is-invalid::after,
+.form-check-input.is-invalid::after {
+  display: none !important;
+  content: none !important;
+}
+
+.form-text.text-success {
+  color: #198754 !important;
+}
+
+.form-text.text-danger {
+  color: #dc3545 !important;
+}
+
+/* Tooltip */
+[data-bs-toggle="tooltip"] {
+  cursor: help;
+}
+
+/* Responsividade */
+@media (max-width: 576px) {
+  .form-field {
+    margin-bottom: 0.5rem;
+  }
+
+  .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .btn:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Estados de foco */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Animações */
+.btn {
+  transition: all 0.15s ease-in-out;
+}
+
+.form-control,
+.form-select {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Acessibilidade */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Estados de loading */
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Garantir que spinner seja visível mesmo quando botão está desabilitado */
+.btn:disabled .spinner-border {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+}
+
+/* Campos de data (calendários) - cursor pointer */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"],
+input[type="week"] {
+  cursor: pointer !important;
+  color-scheme: light;
+}
+
+input[type="date"]:hover,
+input[type="datetime-local"]:hover,
+input[type="time"]:hover,
+input[type="month"]:hover,
+input[type="week"]:hover {
+  cursor: pointer !important;
+}
+
+/* Ícone de calendário - Modo claro (ícone escuro) */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="week"]::-webkit-calendar-picker-indicator {
+  filter: brightness(0) saturate(100%);
+  cursor: pointer !important;
+  opacity: 0.6;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover,
+input[type="week"]::-webkit-calendar-picker-indicator:hover {
+  cursor: pointer !important;
+  opacity: 1;
+}
+
+/* Ícone de calendário - Modo escuro (ícone claro) */
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="month"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="week"]::-webkit-calendar-picker-indicator {
+  filter: brightness(0) invert(1);
+  cursor: pointer !important;
+  opacity: 0.8;
+}
+
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator:hover,
+[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator:hover,
+[data-theme="dark"] input[type="month"]::-webkit-calendar-picker-indicator:hover,
+[data-theme="dark"] input[type="week"]::-webkit-calendar-picker-indicator:hover {
+  cursor: pointer !important;
+  opacity: 1;
+}
+
+/* Para Firefox - Modo claro */
+input[type="date"]::-moz-calendar-picker-indicator,
+input[type="datetime-local"]::-moz-calendar-picker-indicator,
+input[type="time"]::-moz-calendar-picker-indicator,
+input[type="month"]::-moz-calendar-picker-indicator,
+input[type="week"]::-moz-calendar-picker-indicator {
+  filter: brightness(0) saturate(100%);
+  cursor: pointer !important;
+  opacity: 0.6;
+}
+
+/* Para Firefox - Modo escuro */
+[data-theme="dark"] input[type="date"]::-moz-calendar-picker-indicator,
+[data-theme="dark"] input[type="datetime-local"]::-moz-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-moz-calendar-picker-indicator,
+[data-theme="dark"] input[type="month"]::-moz-calendar-picker-indicator,
+[data-theme="dark"] input[type="week"]::-moz-calendar-picker-indicator {
+  filter: brightness(0) invert(1);
+  cursor: pointer !important;
+  opacity: 0.8;
+}
+
+/* Paginação responsiva */
+.table-pagination {
+  gap: 1rem;
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pagination-nav .btn.active {
+  pointer-events: none;
+}
+
+@media (max-width: 767.98px) {
+  .table-pagination {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .table-pagination .pagination-info {
+    width: 100%;
+  }
+
+  .table-pagination .page-size-selector {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .table-pagination .page-size-selector select {
+    flex: 1;
+  }
+}
+
+.table-pagination-mobile {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.75rem 1rem;
+  background-color: #ffffff;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 1050;
+  gap: 0.75rem;
+}
+
+.table-pagination-mobile .pagination-nav {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pagination-nav-wrapper {
+  width: 100%;
+}
+
+.mobile-pagination-meta {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.mobile-pagination-placeholder {
+  height: 74px;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .table-pagination-mobile,
+  .mobile-pagination-placeholder {
+    display: none !important;
+  }
 }
 

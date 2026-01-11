@@ -19,7 +19,6 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
-import './FinanceiroModal.css';
 
 interface FinanceiroModalProps {
   show: boolean;
