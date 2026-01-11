@@ -83,39 +83,40 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       <div className="container-fluid px-0 px-md-0">
-        {/* Header Minimalista */}
+        {/* Header Minimalista com Gráficos Filtrados */}
         <div className="dashboard-header-clean">
-          <div className="d-flex justify-content-between align-items-center">
+          <div className="d-flex justify-content-between align-items-start">
             <div className="dashboard-title-section">
               <h1 className="dashboard-title-minimal">Visão Geral</h1>
               <div className="dashboard-subtitle-minimal">
                 Atualizado em {lastUpdatedDate} às {lastUpdatedTime}
               </div>
-            </div>
 
-            <div className="dashboard-filters-minimal">
-              <div className="d-flex align-items-center gap-2">
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="form-control form-control-sm"
-                  style={{ width: '110px' }}
-                />
-                <span className="text-muted small">—</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="form-control form-control-sm"
-                  style={{ width: '110px' }}
-                />
+              {/* Filtros de Data */}
+              <div className="dashboard-filters-minimal mt-2">
+                <div className="d-flex align-items-center gap-2">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="form-control form-control-sm"
+                    style={{ width: '110px' }}
+                  />
+                  <span className="text-muted small">—</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="form-control form-control-sm"
+                    style={{ width: '110px' }}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Métricas Compactas */}
-          <div className="dashboard-metrics-compact mt-3">
+          <div className="dashboard-metrics-compact mt-2">
             <div className="row g-2">
               <div className="col-lg-3 col-md-6">
                 <div className="metric-compact">
@@ -140,6 +141,30 @@ const Dashboard: React.FC = () => {
                   <div className="metric-compact-label">Clientes</div>
                   <div className="metric-compact-value text-success">{formatNumber(stats.clientesAtivosPeriodo)}</div>
                   <div className="metric-compact-subtext">{formatNumber(stats.clientesComTitulosPeriodo)} no período</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Gráficos Filtrados por Data */}
+          <div className="dashboard-filtered-charts mt-2">
+            <div className="row g-2">
+              <div className="col-lg-6">
+                <div className="chart-compact-container">
+                  <ResponsiveLineChart
+                    data={charts.recebidosPeriodoChartData}
+                    title={`Recebidos (${periodoInicioLabel} - ${periodoFimLabel})`}
+                    format="currency"
+                  />
+                </div>
+              </div>
+              <div className="col-lg-6">
+                <div className="chart-compact-container">
+                  <ResponsiveLineChart
+                    data={charts.receberPeriodoChartData}
+                    title={`A Receber (${periodoInicioLabel} - ${periodoFimLabel})`}
+                    format="currency"
+                  />
                 </div>
               </div>
             </div>
@@ -242,26 +267,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="row g-3">
-          <div className="col-xl-6 col-lg-6">
-            <div className="chart-card chart-card-line">
-              <ResponsiveLineChart
-                data={charts.recebidosPeriodoChartData}
-                title={`Recebidos no período (${periodoInicioLabel} - ${periodoFimLabel}) · Total ${formatCurrency(charts.totalRecebidosPeriodo)}`}
-                format="currency"
-              />
-            </div>
-          </div>
-          <div className="col-xl-6 col-lg-6">
-            <div className="chart-card chart-card-line">
-              <ResponsiveLineChart
-                data={charts.receberPeriodoChartData}
-                title={`A Receber no período (${periodoInicioLabel} - ${periodoFimLabel}) · Total ${formatCurrency(charts.totalReceberPeriodo)}`}
-                format="currency"
-              />
-            </div>
-          </div>
-        </div>
 
         <div className="row g-3">
           <div className="col-xl-12 col-lg-12">
