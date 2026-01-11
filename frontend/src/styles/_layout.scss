@@ -537,9 +537,9 @@
   border-radius: var(--border-radius);
   overflow: hidden;
   transition: all 0.2s ease;
-  min-width: 380px;
-  max-width: 520px;
-  height: 44px;
+  min-width: 480px;
+  max-width: 650px;
+  height: 46px;
 }
 
 .navbar-search-container:hover {
@@ -558,11 +558,11 @@
   border: none;
   border-right: 1px solid var(--border-light);
   border-radius: 0;
-  padding: 0.75rem 1rem;
+  padding: 0.8125rem 1.125rem;
   font-size: 0.875rem;
   color: var(--text-secondary);
-  min-width: 140px;
-  max-width: 160px;
+  min-width: 160px;
+  max-width: 180px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -582,7 +582,7 @@
   flex: 1;
   background: transparent;
   border: none;
-  padding: 0.75rem 1rem;
+  padding: 0.8125rem 1.125rem;
   font-size: 0.875rem;
   color: var(--text-primary);
   min-width: 0;
@@ -601,11 +601,11 @@
 /* Ícone de busca elegante */
 .navbar-search-icon {
   position: absolute;
-  right: 1rem;
+  right: 1.125rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   pointer-events: none;
   transition: color 0.2s ease;
 }
@@ -740,26 +740,26 @@
 /* Responsividade */
 @media (max-width: 991.98px) {
   .navbar-search-container {
-    min-width: 320px;
-    max-width: 420px;
-    height: 40px;
+    min-width: 400px;
+    max-width: 520px;
+    height: 42px;
   }
 
   .navbar-search-field {
-    min-width: 120px;
-    max-width: 140px;
-    padding: 0.625rem 0.875rem;
+    min-width: 140px;
+    max-width: 160px;
+    padding: 0.6875rem 0.9375rem;
     font-size: 0.8125rem;
   }
 
   .navbar-search-input {
-    padding: 0.625rem 0.875rem;
+    padding: 0.6875rem 0.9375rem;
     font-size: 0.8125rem;
   }
 
   .navbar-search-icon {
-    right: 0.875rem;
-    font-size: 0.9375rem;
+    right: 0.9375rem;
+    font-size: 1rem;
   }
 }
 
@@ -779,13 +779,13 @@
   }
 
   .navbar-mobile-search-field {
-    min-width: 110px;
-    padding: 0.5rem 0.625rem;
+    min-width: 130px;
+    padding: 0.5625rem 0.6875rem;
     font-size: 0.8125rem;
   }
 
   .navbar-mobile-search-input {
-    padding: 0.5rem 0.75rem;
+    padding: 0.5625rem 0.8125rem;
     font-size: 0.8125rem;
   }
 
