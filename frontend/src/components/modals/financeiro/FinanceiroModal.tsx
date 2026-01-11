@@ -537,7 +537,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       {
         key: 'editar',
         label: 'Editar',
-        variant: 'secondary' as const,
+        variant: 'primary' as const,
         onClick: (selectedItems: Titulo[]) => {
           if (selectedItems.length > 0) {
             const item = selectedItems[0];
@@ -550,7 +550,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       {
         key: 'receber',
         label: 'Receber',
-        variant: 'secondary' as const,
+        variant: 'success' as const,
         onClick: (selectedItems: Titulo[]) => {
           if (selectedItems.length > 0) {
             const item = selectedItems[0];
@@ -574,7 +574,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       {
         key: 'cancelar',
         label: 'Cancelar',
-        variant: 'secondary' as const,
+        variant: 'danger' as const,
         onClick: async (selectedItems: Titulo[]) => {
           if (selectedItems.length === 0) return;
           
@@ -636,7 +636,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       {
         key: 'estornar',
         label: 'Estornar',
-        variant: 'secondary' as const,
+        variant: 'warning' as const,
         onClick: async (selectedItems: Titulo[]) => {
           if (selectedItems.length === 0) return;
           
@@ -675,7 +675,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       {
         key: 'imprimir',
         label: 'Imprimir',
-        variant: 'secondary' as const,
+        variant: 'primary' as const,
         dropdown: [
           {
             label: 'Selecionados',
@@ -708,7 +708,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       {
         key: 'nfse',
         label: 'NFS-e',
-        variant: 'secondary' as const,
+        variant: 'primary' as const,
         disabled: (selectedItems: Titulo[]): boolean => selectedItems.length === 0,
         dropdown: [
           {
