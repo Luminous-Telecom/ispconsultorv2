@@ -31,7 +31,6 @@ function ListModal<T extends { id: number | string }>({
   onFilterChange: _onFilterChange,
   onFiltersChange,
   onClearFilters: _onClearFilters,
-  customControls,
   customControlsAfterActions
 }: ListModalProps<T> & {
   filters?: Array<{
@@ -52,8 +51,7 @@ function ListModal<T extends { id: number | string }>({
     searchPlaceholder = 'Buscar...',
     searchFields,
     emptyMessage = 'Nenhum item encontrado',
-    multiSelect = false,
-    customControls: configCustomControls
+    multiSelect = false
   } = config;
 
   const tableColumns = useMemo(() => {
@@ -110,7 +108,6 @@ function ListModal<T extends { id: number | string }>({
               })) : undefined
             }));
           }, [bulkActions]),
-          customControls: customControls || configCustomControls,
           customControlsAfterActions
         }}
         search={_search}

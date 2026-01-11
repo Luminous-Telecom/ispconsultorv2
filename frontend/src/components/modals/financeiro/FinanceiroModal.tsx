@@ -764,39 +764,40 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   }, []);
 
   const customControls = useMemo(() => (
-    <div className="d-flex align-items-center gap-3">
-      <div className="form-check">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          id="showCanceladosFinanceiro"
-          checked={showCancelados}
-          onChange={handleShowCanceladosChange}
-        />
-        <label className="form-check-label" htmlFor="showCanceladosFinanceiro">
-          Mostrar cancelados
-        </label>
-      </div>
-      <div className="d-flex align-items-center gap-2">
-        <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
-        <input
-          type="date"
-          id="dataVencimentoInicio"
-          className="form-control form-control-sm financeiro-col-fixed"
-          value={dataVencimentoInicio}
-          onChange={handleDataVencimentoInicioChange}
-        />
-        <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
-        <input
-          type="date"
-          id="dataVencimentoFim"
-          className="form-control form-control-sm financeiro-col-fixed"
-          value={dataVencimentoFim}
-          onChange={handleDataVencimentoFimChange}
-        />
-      </div>
+    <div className="form-check">
+      <input
+        className="form-check-input"
+        type="checkbox"
+        id="showCanceladosFinanceiro"
+        checked={showCancelados}
+        onChange={handleShowCanceladosChange}
+      />
+      <label className="form-check-label" htmlFor="showCanceladosFinanceiro">
+        Mostrar cancelados
+      </label>
     </div>
-  ), [showCancelados, handleShowCanceladosChange, dataVencimentoInicio, dataVencimentoFim, handleDataVencimentoInicioChange, handleDataVencimentoFimChange]);
+  ), [showCancelados, handleShowCanceladosChange]);
+
+  const customControlsAfterActions = useMemo(() => (
+    <div className="d-flex align-items-center gap-2">
+      <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
+      <input
+        type="date"
+        id="dataVencimentoInicio"
+        className="form-control form-control-sm financeiro-col-fixed"
+        value={dataVencimentoInicio}
+        onChange={handleDataVencimentoInicioChange}
+      />
+      <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
+      <input
+        type="date"
+        id="dataVencimentoFim"
+        className="form-control form-control-sm financeiro-col-fixed"
+        value={dataVencimentoFim}
+        onChange={handleDataVencimentoFimChange}
+      />
+    </div>
+  ), [dataVencimentoInicio, dataVencimentoFim, handleDataVencimentoInicioChange, handleDataVencimentoFimChange]);
 
   const tableConfig = useMemo(() => ({
     columns,
@@ -852,7 +853,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       from: pagination.from,
       to: pagination.to
     } : undefined,
-    customControls
+    customControls,
+    customControlsAfterActions
   }), [
     columns,
     sortedData,
@@ -860,7 +862,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     onSelectTitulo,
     memoizedBulkActions,
     pagination,
-    customControls
+    customControls,
+    customControlsAfterActions
   ]);
 
   const modalContent = (

@@ -165,26 +165,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         placeholder: 'Selecione o tipo'
       }
     ],
-    customControls: (
-      <div className="d-flex align-items-center gap-2">
-        <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
-        <input
-          type="date"
-          id="dataVencimentoInicio"
-          className="form-control form-control-sm table-pagination-filter"
-          value={dataVencimentoInicio}
-          onChange={(e) => setDataVencimentoInicio(e.target.value)}
-        />
-        <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
-        <input
-          type="date"
-          id="dataVencimentoFim"
-          className="form-control form-control-sm table-pagination-filter"
-          value={dataVencimentoFim}
-          onChange={(e) => setDataVencimentoFim(e.target.value)}
-        />
-      </div>
-    ),
     columns: [
       {
         key: 'id',
@@ -604,6 +584,26 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
             onAudit={handleAudit}
             auditEntity="ContaPagar"
             skipWrapper={true}
+            customControlsAfterActions={
+              <div className="d-flex align-items-center gap-2">
+                <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
+                <input
+                  type="date"
+                  id="dataVencimentoInicio"
+                  className="form-control form-control-sm table-pagination-filter"
+                  value={dataVencimentoInicio}
+                  onChange={(e) => setDataVencimentoInicio(e.target.value)}
+                />
+                <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
+                <input
+                  type="date"
+                  id="dataVencimentoFim"
+                  className="form-control form-control-sm table-pagination-filter"
+                  value={dataVencimentoFim}
+                  onChange={(e) => setDataVencimentoFim(e.target.value)}
+                />
+              </div>
+            }
           />
         </div>
 
