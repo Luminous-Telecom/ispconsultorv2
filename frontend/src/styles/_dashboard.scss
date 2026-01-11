@@ -76,28 +76,28 @@
   flex-direction: column;
 }
 
-/* Reduzir elementos internos dos gráficos compactos */
+/* Ajustar elementos internos dos gráficos compactos para o novo tamanho */
 .chart-compact-container .chart-title-pie {
-  font-size: 0.6875rem !important;
+  font-size: 0.75rem !important;
   font-weight: 600 !important;
-  margin-bottom: 0.125rem !important;
-  line-height: 1.1 !important;
+  margin-bottom: 0.25rem !important;
+  line-height: 1.2 !important;
 }
 
-/* Reduzir canvas e elementos do gráfico */
+/* Ajustar canvas para o novo tamanho do container */
 .chart-compact-container canvas {
-  max-height: 120px !important;
+  max-height: 160px !important;
 }
 
-/* Reduzir legendas */
+/* Ajustar legendas para o novo tamanho */
 .chart-compact-container .pie-legend-item {
-  font-size: 0.5625rem !important;
-  padding: 0.0625rem 0.125rem !important;
+  font-size: 0.625rem !important;
+  padding: 0.125rem 0.1875rem !important;
 }
 
 .chart-compact-container .pie-legend-color {
-  width: 6px !important;
-  height: 6px !important;
+  width: 8px !important;
+  height: 8px !important;
 }
 
 .metric-compact {
@@ -163,11 +163,15 @@
   }
 
   .chart-compact-container .chart-title-pie {
-    font-size: 0.625rem !important;
+    font-size: 0.6875rem !important;
   }
 
   .chart-compact-container canvas {
-    max-height: 100px !important;
+    max-height: 120px !important;
+  }
+
+  .chart-compact-container .pie-legend-item {
+    font-size: 0.5625rem !important;
   }
 }
 
@@ -207,15 +211,15 @@
   }
 
   .chart-compact-container .chart-title-pie {
-    font-size: 0.5625rem !important;
+    font-size: 0.625rem !important;
   }
 
   .chart-compact-container canvas {
-    max-height: 80px !important;
+    max-height: 100px !important;
   }
 
   .chart-compact-container .pie-legend-item {
-    font-size: 0.5rem !important;
+    font-size: 0.5625rem !important;
   }
 
   .dashboard-filtered-charts .row {
