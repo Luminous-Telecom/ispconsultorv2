@@ -7,12 +7,12 @@
    ============================================ */
 
 .dashboard-header-clean {
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-light);
-  border-radius: var(--border-radius);
-  padding: 1rem 1.25rem;
+  border-radius: var(--border-radius-sm);
+  padding: 0.75rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .dashboard-title-section {
@@ -101,7 +101,7 @@
 /* Responsividade */
 @media (max-width: 992px) {
   .dashboard-header-clean {
-    padding: 0.875rem 1rem;
+    padding: 0.625rem 0.75rem;
   }
 
   .dashboard-title-minimal {
@@ -119,7 +119,7 @@
 
 @media (max-width: 768px) {
   .dashboard-header-clean {
-    padding: 0.75rem 0.875rem;
+    padding: 0.5rem 0.625rem;
   }
 
   .dashboard-title-minimal {
