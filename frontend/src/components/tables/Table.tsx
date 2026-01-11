@@ -1662,7 +1662,7 @@ function Table<T extends { id: number | string }>({
                 <button
                   type="button"
                   key={index}
-                  className="btn btn-sm btn-primary table-flex-shrink-0"
+                  className={`btn btn-sm btn-${bulkAction.variant || 'primary'} table-flex-shrink-0`}
                   onClick={(_event) => {
                     if (!isDisabled && bulkAction.onClick) {
                       bulkAction.onClick(state.selectedItems);
