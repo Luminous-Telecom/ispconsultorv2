@@ -543,6 +543,10 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+.navbar-search-container:focus-within {
+  border: 1px solid var(--border-light);
+}
+
 /* Efeitos de hover e focus removidos para manter consistência */
 
 /* Seletor de campo elegante */
@@ -558,6 +562,12 @@
   max-width: 180px;
   cursor: pointer;
   /* Transições removidas para manter consistência visual */
+}
+
+.navbar-search-field:focus {
+  outline: none;
+  border: none;
+  border-right: 1px solid var(--border-light);
 }
 
 /* Efeitos de hover e focus removidos para manter consistência */
@@ -576,6 +586,7 @@
 
 .navbar-search-input:focus {
   outline: none;
+  border: none;
 }
 
 .navbar-search-input::placeholder {
@@ -677,6 +688,8 @@
 
 .navbar-mobile-search-field:focus {
   outline: none;
+  border: none;
+  border-right: 1px solid var(--border-light);
 }
 
 .navbar-mobile-search-input {
@@ -692,6 +705,7 @@
 
 .navbar-mobile-search-input:focus {
   outline: none;
+  border: none;
 }
 
 .navbar-mobile-search-input::placeholder {
