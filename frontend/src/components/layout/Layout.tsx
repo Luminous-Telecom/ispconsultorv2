@@ -320,24 +320,23 @@ const Layout: React.FC = () => {
 
               {/* Direita: Search e User Profile */}
               <div className="d-flex align-items-center gap-3">
-                {/* Search Bar - Sempre visível se não estiver no dashboard ou conforme configuração */}
-                {(!isMobile || tableHeader.showMobileSearch) && (
-                  <div className="d-flex align-items-center gap-0">
-                    {/* Seletor de Campo de Pesquisa */}
-                    {!isMobile && (
-                      <select
-                        className="form-select form-select-sm bg-custom-secondary border-custom text-custom-primary rounded-end-0 layout-search-field"
-                        value={tableHeader.searchField}
-                        onChange={(e) => tableHeader.setSearchField(e.target.value)}
-                      >
-                        {tableHeader.availableSearchFields.map(field => (
-                          <option key={field.id} value={field.id}>{field.label}</option>
-                        ))}
-                      </select>
-                    )}
-                    
-                    <div className="position-relative">
-                      <form className="mb-0" role="search" onSubmit={(e) => {
+                {/* Search Bar Elegante */}
+                {!isMobile && (
+                  <div className="navbar-search-container">
+                    <select
+                      className="navbar-search-field"
+                      value={tableHeader.searchField}
+                      onChange={(e) => tableHeader.setSearchField(e.target.value)}
+                    >
+                      {tableHeader.availableSearchFields.map(field => (
+                        <option key={field.id} value={field.id}>{field.label}</option>
+                      ))}
+                    </select>
+
+                    <form
+                      className="mb-0 flex-grow-1"
+                      role="search"
+                      onSubmit={(e) => {
                         e.preventDefault();
                         if (tableHeader.onSearchClick) {
                           tableHeader.onSearchClick();
@@ -346,36 +345,30 @@ const Layout: React.FC = () => {
                           handleOpenModal('clientes');
                         }
                         // No Dashboard, o próprio componente Dashboard.tsx reage ao searchValue
-                      }}>
-                        <input
-                          type="search"
-                          className={`form-control form-control-navbar ${!isMobile ? 'rounded-start-0' : ''} ${isMobile ? 'w-100' : ''}`}
-                          placeholder={tableHeader.searchPlaceholder || "Buscar..."}
-                          aria-label="Search"
-                          value={tableHeader.searchValue}
-                          onChange={(e) => tableHeader.setSearchValue(e.target.value)}
-                        />
-                      </form>
-                      {isMobile && (
-                        <button
-                          type="button"
-                          className="btn btn-link position-absolute end-0 top-50 translate-middle-y text-secondary p-2"
-                          onClick={() => tableHeader.setShowMobileSearch(false)}
-                        >
-                          <i className="bi bi-x-lg"></i>
-                        </button>
-                      )}
-                    </div>
+                      }}
+                    >
+                      <input
+                        type="search"
+                        className="navbar-search-input"
+                        placeholder={tableHeader.searchPlaceholder || "Buscar..."}
+                        aria-label="Search"
+                        value={tableHeader.searchValue}
+                        onChange={(e) => tableHeader.setSearchValue(e.target.value)}
+                      />
+                    </form>
+
+                    <i className="bi bi-search navbar-search-icon"></i>
                   </div>
                 )}
 
-                {/* Mobile: Botão de busca se o input estiver escondido */}
+                {/* Mobile: Botão de busca elegante se o input estiver escondido */}
                 {isMobile && !tableHeader.showMobileSearch && (
-                  <button 
-                    className="btn btn-link text-custom-primary p-0" 
+                  <button
+                    className="navbar-mobile-search-btn"
                     onClick={() => tableHeader.setShowMobileSearch(true)}
+                    aria-label="Abrir busca"
                   >
-                    <i className="bi bi-search fs-5"></i>
+                    <i className="bi bi-search"></i>
                   </button>
                 )}
 
@@ -432,40 +425,38 @@ const Layout: React.FC = () => {
           </div>
         )}
 
-        {/* Campo de busca mobile - aparece quando showMobileSearch é true */}
+        {/* Campo de busca mobile elegante */}
         {isMobile && tableHeader.showMobileSearch && tableHeader.showSearch && (
-          <div className="table-mobile-search-container d-flex align-items-center gap-2 px-2 py-2 border-bottom bg-custom-primary" style={{ position: 'fixed', top: '64px', left: 0, right: 0, zIndex: 1040 }}>
-            {/* Seletor de Campo de Pesquisa no Mobile */}
-            <select 
-              className="form-select form-select-sm bg-custom-secondary border-custom text-custom-primary"
-              style={{ width: 'auto', minWidth: '100px' }}
-              value={tableHeader.searchField}
-              onChange={(e) => tableHeader.setSearchField(e.target.value)}
-            >
-              {tableHeader.availableSearchFields.map(field => (
-                <option key={field.id} value={field.id}>{field.label}</option>
-              ))}
-            </select>
+          <div className="navbar-mobile-search-container">
+            <div className="navbar-mobile-search-wrapper">
+              <select
+                className="navbar-mobile-search-field"
+                value={tableHeader.searchField}
+                onChange={(e) => tableHeader.setSearchField(e.target.value)}
+              >
+                {tableHeader.availableSearchFields.map(field => (
+                  <option key={field.id} value={field.id}>{field.label}</option>
+                ))}
+              </select>
 
-            <div className="flex-grow-1 position-relative">
               <input
                 type="text"
-                className="form-control form-control-sm layout-mobile-search-input"
-                placeholder={tableHeader.searchPlaceholder}
+                className="navbar-mobile-search-input"
+                placeholder={tableHeader.searchPlaceholder || "Buscar..."}
                 value={tableHeader.searchValue}
-                onChange={(e) => {
-                  tableHeader.setSearchValue(e.target.value);
-                }}
+                onChange={(e) => tableHeader.setSearchValue(e.target.value)}
                 autoFocus
               />
+
+              <button
+                type="button"
+                className="navbar-mobile-search-close"
+                onClick={() => tableHeader.setShowMobileSearch(false)}
+                aria-label="Fechar busca"
+              >
+                <i className="bi bi-x"></i>
+              </button>
             </div>
-            <button
-              type="button"
-              className="btn btn-link p-0 layout-mobile-search-close text-custom-primary"
-              onClick={() => tableHeader.setShowMobileSearch(false)}
-            >
-              <i className="bi bi-x-lg"></i>
-            </button>
           </div>
         )}
 
