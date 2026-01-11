@@ -23,6 +23,7 @@ export interface ListModalConfig<T> {
     options?: Array<{ value: string | number; label: string }>;
     placeholder?: string;
   }>;
+  customControls?: React.ReactNode;
 }
 
 export interface ListModalProps<T> {
@@ -33,6 +34,7 @@ export interface ListModalProps<T> {
   loading?: boolean;
   selectedItems?: T[];
   onSelectionChange?: (items: T[]) => void;
+  onRowDoubleClick?: (item: T) => void;
   search?: string;
   onSearchChange?: (search: string, field: string) => void;
   onSearchFieldChange?: (field: string) => void;
@@ -63,5 +65,6 @@ export interface ListModalProps<T> {
   onAudit?: (item: T) => void | Promise<void>;
   auditEntity?: string;
   skipWrapper?: boolean;
+  customControls?: React.ReactNode;
   customControlsAfterActions?: React.ReactNode;
 }

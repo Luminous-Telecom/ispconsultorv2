@@ -165,6 +165,26 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         placeholder: 'Selecione o tipo'
       }
     ],
+    customControls: (
+      <div className="d-flex align-items-center gap-2">
+        <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
+        <input
+          type="date"
+          id="dataVencimentoInicio"
+          className="form-control form-control-sm table-pagination-filter"
+          value={dataVencimentoInicio}
+          onChange={(e) => setDataVencimentoInicio(e.target.value)}
+        />
+        <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
+        <input
+          type="date"
+          id="dataVencimentoFim"
+          className="form-control form-control-sm table-pagination-filter"
+          value={dataVencimentoFim}
+          onChange={(e) => setDataVencimentoFim(e.target.value)}
+        />
+      </div>
+    ),
     columns: [
       {
         key: 'id',
@@ -178,7 +198,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         label: 'Fornecedor',
         sortable: true,
         render: (item: ContaPagar) => (
-          <strong>{item.fornecedor?.nome_razao_social || '-'}</strong>
+          item.fornecedor?.nome_razao_social || '-'
         )
       },
       {
@@ -296,7 +316,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       { key: 'status', label: 'Status' },
       { key: 'tipo', label: 'Tipo' }
     ],
-    multiSelect: true
+    multiSelect: false
   });
 
   // Resetar página quando filtros de data mudarem
@@ -490,27 +510,12 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         return !item || item.status === 'PAGO' || item.status === 'CANCELADO';
       },
       action: (selectedItems: ContaPagar[]) => {
-        // Esta ação nunca será chamada quando há dropdown
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
         if (item) {
           setSelectedContaPagarId(item.id);
           setShowPagamentoModal(true);
         }
-      },
-      dropdown: [
-        {
-          label: 'Pagar Manualmente',
-          action: (selectedItems?: ContaPagar[]) => {
-            const items = selectedItems || (selectedItem ? [selectedItem] : []);
-            const item = items.length > 0 ? items[0] : selectedItem;
-            
-            if (item) {
-              setSelectedContaPagarId(item.id);
-              setShowPagamentoModal(true);
-            }
-          }
-        }
-      ]
+      }
     },
     {
       label: 'Duplicar',
@@ -599,34 +604,12 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
             onAudit={handleAudit}
             auditEntity="ContaPagar"
             skipWrapper={true}
-            customControlsAfterActions={
-              <div className="d-flex align-items-center gap-2">
-                <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
-                <input
-                  type="date"
-                  id="dataVencimentoInicio"
-                  className="form-control form-control-sm"
-                  style={{ width: '150px' }}
-                  value={dataVencimentoInicio}
-                  onChange={(e) => setDataVencimentoInicio(e.target.value)}
-                />
-                <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
-                <input
-                  type="date"
-                  id="dataVencimentoFim"
-                  className="form-control form-control-sm"
-                  style={{ width: '150px' }}
-                  value={dataVencimentoFim}
-                  onChange={(e) => setDataVencimentoFim(e.target.value)}
-                />
-              </div>
-            }
           />
         </div>
 
         {/* Resumo Financeiro - Fora do container com scroll, fixo no final */}
         {show && (contasPagarData?.data || []).filter(item => item.id != null).length > 0 && (
-          <div className="d-flex justify-content-end align-items-center p-3 bg-light rounded financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+          <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
             <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
               <div className="text-end">
                 <div className="small text-muted">Valor:</div>

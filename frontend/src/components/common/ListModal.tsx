@@ -12,6 +12,7 @@ function ListModal<T extends { id: number | string }>({
   loading = false,
   selectedItems: _selectedItems = [],
   onSelectionChange,
+  onRowDoubleClick,
   search: _search = '',
   onSearchChange,
   onSearchFieldChange,
@@ -30,6 +31,7 @@ function ListModal<T extends { id: number | string }>({
   onFilterChange: _onFilterChange,
   onFiltersChange,
   onClearFilters: _onClearFilters,
+  customControls,
   customControlsAfterActions
 }: ListModalProps<T> & {
   filters?: Array<{
@@ -50,7 +52,8 @@ function ListModal<T extends { id: number | string }>({
     searchPlaceholder = 'Buscar...',
     searchFields,
     emptyMessage = 'Nenhum item encontrado',
-    multiSelect = false
+    multiSelect = false,
+    customControls: configCustomControls
   } = config;
 
   const tableColumns = useMemo(() => {
@@ -107,6 +110,7 @@ function ListModal<T extends { id: number | string }>({
               })) : undefined
             }));
           }, [bulkActions]),
+          customControls: customControls || configCustomControls,
           customControlsAfterActions
         }}
         search={_search}
@@ -125,6 +129,7 @@ function ListModal<T extends { id: number | string }>({
         onRefresh={onRefresh || refreshQueryFn}
         onAudit={onAudit}
         auditEntity={auditEntity}
+        onRowDoubleClick={onRowDoubleClick}
       />
     </div>
   );
