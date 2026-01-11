@@ -304,11 +304,11 @@ const Layout: React.FC = () => {
           <div className="container-fluid">
             <div className="d-flex flex-wrap align-items-center justify-content-between w-100">
 
-              {/* Esquerda: Toggle Sidebar + Search */}
-              <div className="d-flex align-items-center gap-3">
+              {/* Esquerda: Toggle Sidebar */}
+              <div className="d-flex align-items-center">
                 {isMobile && (
                   <button
-                    className="navbar-toggler d-block border-0 p-0" 
+                    className="navbar-toggler d-block border-0 p-0"
                     type="button"
                     onClick={() => setSidebarOpen(!sidebarOpen)}
                     aria-label="Abrir menu lateral"
@@ -316,8 +316,11 @@ const Layout: React.FC = () => {
                     <span className="navbar-toggler-icon"></span>
                   </button>
                 )}
+              </div>
 
-                {/* Search Bar Elegante */}
+              {/* Centro: Search Bar */}
+              <div className="d-flex justify-content-center flex-grow-1">
+                {/* Search Bar Elegante Centralizada */}
                 {!isMobile && (
                   <div className="navbar-search-container">
                     <select
@@ -358,7 +361,7 @@ const Layout: React.FC = () => {
                   </div>
                 )}
 
-                {/* Mobile: Botão de busca elegante se o input estiver escondido */}
+                {/* Mobile: Botão de busca centralizado */}
                 {isMobile && !tableHeader.showMobileSearch && (
                   <button
                     className="navbar-mobile-search-btn"
@@ -371,7 +374,7 @@ const Layout: React.FC = () => {
               </div>
 
               {/* Direita: User Profile */}
-              <div className="d-flex align-items-center">
+              <div className="d-flex align-items-center justify-content-end">
                 {/* User Dropdown */}
                 <div className="dropdown text-end" ref={userMenuRef}>
                   <button
