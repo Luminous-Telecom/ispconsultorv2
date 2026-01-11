@@ -303,23 +303,20 @@ const Layout: React.FC = () => {
         <header className="navbar navbar-expand-md sticky-top main-navbar">
           <div className="container-fluid">
             <div className="d-flex flex-wrap align-items-center justify-content-between w-100">
-              
-              {/* Esquerda: Toggle Sidebar (Mobile) */}
-              <div className="d-flex align-items-center">
+
+              {/* Esquerda: Toggle Sidebar + Search */}
+              <div className="d-flex align-items-center gap-3">
                 {isMobile && (
-                  <button 
-                    className="navbar-toggler d-block border-0 p-0 me-3" 
-                    type="button" 
+                  <button
+                    className="navbar-toggler d-block border-0 p-0" 
+                    type="button"
                     onClick={() => setSidebarOpen(!sidebarOpen)}
                     aria-label="Abrir menu lateral"
                   >
                     <span className="navbar-toggler-icon"></span>
                   </button>
                 )}
-              </div>
 
-              {/* Direita: Search e User Profile */}
-              <div className="d-flex align-items-center gap-3">
                 {/* Search Bar Elegante */}
                 {!isMobile && (
                   <div className="navbar-search-container">
@@ -371,11 +368,14 @@ const Layout: React.FC = () => {
                     <i className="bi bi-search"></i>
                   </button>
                 )}
+              </div>
 
+              {/* Direita: User Profile */}
+              <div className="d-flex align-items-center">
                 {/* User Dropdown */}
                 <div className="dropdown text-end" ref={userMenuRef}>
-                  <button 
-                    className="d-block link-theme-toggle text-decoration-none dropdown-toggle bg-transparent border-0 p-0" 
+                  <button
+                    className="d-block link-theme-toggle text-decoration-none dropdown-toggle bg-transparent border-0 p-0"
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     aria-expanded={showUserMenu}
                   >
