@@ -2,6 +2,157 @@
    DASHBOARD - Cards, gráficos e métricas
    ============================================ */
 
+/* ============================================
+   DASHBOARD HEADER MINIMALISTA
+   ============================================ */
+
+.dashboard-header-clean {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--border-radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-title-section {
+  flex: 1;
+}
+
+.dashboard-title-minimal {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.125rem 0;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.dashboard-subtitle-minimal {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin: 0;
+}
+
+.dashboard-filters-minimal {
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-filters-minimal .form-control {
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.5rem;
+  border-color: var(--border-light);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dashboard-filters-minimal .form-control:focus {
+  border-color: var(--btn-primary-color);
+  box-shadow: 0 0 0 0.125rem rgba(13, 110, 253, 0.1);
+}
+
+/* Métricas Compactas */
+.dashboard-metrics-compact {
+  border-top: 1px solid var(--border-light);
+  padding-top: 1rem;
+}
+
+.metric-compact {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--border-radius-sm);
+  padding: 0.75rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.metric-compact:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-color: var(--border-color);
+}
+
+.metric-compact-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+}
+
+.metric-compact-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 0.125rem;
+}
+
+.metric-compact-subtext {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+  .dashboard-header-clean {
+    padding: 0.875rem 1rem;
+  }
+
+  .dashboard-title-minimal {
+    font-size: 0.9375rem;
+  }
+
+  .metric-compact {
+    padding: 0.625rem;
+  }
+
+  .metric-compact-value {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header-clean {
+    padding: 0.75rem 0.875rem;
+  }
+
+  .dashboard-title-minimal {
+    font-size: 0.875rem;
+  }
+
+  .dashboard-subtitle-minimal {
+    font-size: 0.6875rem;
+  }
+
+  .metric-compact {
+    padding: 0.5rem;
+    text-align: left;
+  }
+
+  .metric-compact-label {
+    font-size: 0.6875rem;
+  }
+
+  .metric-compact-value {
+    font-size: 0.875rem;
+  }
+
+  .metric-compact-subtext {
+    font-size: 0.625rem;
+  }
+}
+
 /* Dashboard - Estilo Minimalista */
 
 /* Cards de Métricas */

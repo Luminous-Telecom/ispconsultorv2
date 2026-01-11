@@ -83,50 +83,63 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       <div className="container-fluid px-0 px-md-0">
-        <div className="dashboard-hero card border-0 shadow-sm mb-1">
-          <div className="dashboard-hero-body">
-            <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-              <div className="w-100 w-lg-auto">
-                <span className="dashboard-badge text-uppercase">Visão geral</span>
-                <h2 className="dashboard-hero-title mb-2">Painel financeiro e operacional</h2>
-
-                {/* Filtros de Data Integrados */}
-                <div className="dashboard-filters-group">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="dashboard-date-input"
-                  />
-                  <span className="dashboard-date-separator">até</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="dashboard-date-input"
-                  />
-                </div>
-                <p className="dashboard-hero-subtitle mt-2 mb-0">
-                  Atualizado em {lastUpdatedDate} às {lastUpdatedTime}
-                </p>
+        {/* Header Minimalista */}
+        <div className="dashboard-header-clean">
+          <div className="d-flex justify-content-between align-items-center">
+            <div className="dashboard-title-section">
+              <h1 className="dashboard-title-minimal">Visão Geral</h1>
+              <div className="dashboard-subtitle-minimal">
+                Atualizado em {lastUpdatedDate} às {lastUpdatedTime}
               </div>
-            <div className="dashboard-hero-stats w-100">
-                <div className="dashboard-hero-stat">
-                  <span className="dashboard-hero-label">Faturamento total</span>
-                  <strong className="dashboard-hero-value">{formatCurrency(stats.receitaPagaPeriodo)}</strong>
+            </div>
+
+            <div className="dashboard-filters-minimal">
+              <div className="d-flex align-items-center gap-2">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="form-control form-control-sm"
+                  style={{ width: '110px' }}
+                />
+                <span className="text-muted small">—</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="form-control form-control-sm"
+                  style={{ width: '110px' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Métricas Compactas */}
+          <div className="dashboard-metrics-compact mt-3">
+            <div className="row g-2">
+              <div className="col-lg-3 col-md-6">
+                <div className="metric-compact">
+                  <div className="metric-compact-label">Faturamento</div>
+                  <div className="metric-compact-value">{formatCurrency(stats.receitaPagaPeriodo)}</div>
                 </div>
-                <div className="dashboard-hero-stat">
-                  <span className="dashboard-hero-label">Receita prevista</span>
-                  <strong className="dashboard-hero-value">{formatCurrency(stats.receitaPrevistaPeriodo)}</strong>
+              </div>
+              <div className="col-lg-3 col-md-6">
+                <div className="metric-compact">
+                  <div className="metric-compact-label">Previsto</div>
+                  <div className="metric-compact-value text-info">{formatCurrency(stats.receitaPrevistaPeriodo)}</div>
                 </div>
-                <div className="dashboard-hero-stat">
-                  <span className="dashboard-hero-label">Receita pendente</span>
-                  <strong className="dashboard-hero-value">{formatCurrency(stats.receitaPendentePeriodo)}</strong>
+              </div>
+              <div className="col-lg-3 col-md-6">
+                <div className="metric-compact">
+                  <div className="metric-compact-label">Pendente</div>
+                  <div className="metric-compact-value text-warning">{formatCurrency(stats.receitaPendentePeriodo)}</div>
                 </div>
-                <div className="dashboard-hero-stat">
-                  <span className="dashboard-hero-label">Clientes ativos</span>
-                  <strong className="dashboard-hero-value">{formatNumber(stats.clientesAtivosPeriodo)}</strong>
-                  <small className="dashboard-hero-label d-block">Clientes no período: {formatNumber(stats.clientesComTitulosPeriodo)}</small>
+              </div>
+              <div className="col-lg-3 col-md-6">
+                <div className="metric-compact">
+                  <div className="metric-compact-label">Clientes</div>
+                  <div className="metric-compact-value text-success">{formatNumber(stats.clientesAtivosPeriodo)}</div>
+                  <div className="metric-compact-subtext">{formatNumber(stats.clientesComTitulosPeriodo)} no período</div>
                 </div>
               </div>
             </div>
