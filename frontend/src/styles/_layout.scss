@@ -532,39 +532,37 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
   border-radius: var(--border-radius);
   overflow: hidden;
   transition: all 0.2s ease;
   min-width: 480px;
   max-width: 650px;
   height: 46px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .navbar-search-container:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-color: var(--border-color);
 }
 
 .navbar-search-container:focus-within {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 0 0.125rem rgba(255, 255, 255, 0.15);
+  border-color: var(--btn-primary-color);
+  box-shadow: 0 0 0 0.125rem rgba(13, 110, 253, 0.1);
 }
 
 /* Seletor de campo elegante */
 .navbar-search-field {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-secondary);
   border: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid var(--border-light);
   border-radius: 0;
   padding: 0.8125rem 1.125rem;
   font-size: 0.875rem;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   min-width: 160px;
   max-width: 180px;
   cursor: pointer;
@@ -573,19 +571,20 @@
 
 .navbar-search-field:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-primary);
   color: var(--text-primary);
-  border-right-color: rgba(255, 255, 255, 0.2);
+  border-right-color: var(--border-color);
 }
 
 .navbar-search-field:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 /* Campo de busca elegante */
 .navbar-search-input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-secondary);
   border: none;
   padding: 0.8125rem 1.125rem;
   font-size: 0.875rem;
@@ -596,7 +595,7 @@
 
 .navbar-search-input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--bg-primary);
 }
 
 .navbar-search-input::placeholder {
@@ -610,7 +609,7 @@
   right: 1.125rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-size: 1.0625rem;
   pointer-events: none;
   transition: color 0.2s ease;
@@ -687,12 +686,12 @@
 }
 
 .navbar-mobile-search-field {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-secondary);
   border: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid var(--border-light);
   padding: 0.5625rem 0.6875rem;
   font-size: 0.8125rem;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   min-width: 130px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -700,14 +699,14 @@
 
 .navbar-mobile-search-field:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-primary);
   color: var(--text-primary);
-  border-right-color: rgba(255, 255, 255, 0.2);
+  border-right-color: var(--border-color);
 }
 
 .navbar-mobile-search-input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-secondary);
   border: none;
   padding: 0.5625rem 0.8125rem;
   font-size: 0.8125rem;
@@ -718,7 +717,7 @@
 
 .navbar-mobile-search-input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--bg-primary);
 }
 
 .navbar-mobile-search-input::placeholder {
@@ -758,27 +757,27 @@
     max-width: 160px;
     padding: 0.6875rem 0.9375rem;
     font-size: 0.8125rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-right-color: rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
+    border-right-color: var(--border-light);
   }
 
   .navbar-search-field:focus {
-    background: rgba(255, 255, 255, 0.15);
-    border-right-color: rgba(255, 255, 255, 0.2);
+    background: var(--bg-primary);
+    border-right-color: var(--border-color);
   }
 
   .navbar-search-field:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-tertiary);
   }
 
   .navbar-search-input {
     padding: 0.6875rem 0.9375rem;
     font-size: 0.8125rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-secondary);
   }
 
   .navbar-search-input:focus {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--bg-primary);
   }
 
   .navbar-search-icon {
@@ -833,46 +832,47 @@
 /* Tema escuro */
 [data-theme="dark"] .navbar-search-container,
 [data-theme="dark"] .navbar-mobile-search-wrapper {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
 }
 
 [data-theme="dark"] .navbar-search-container:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: var(--border-color);
 }
 
 [data-theme="dark"] .navbar-search-container:focus-within {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--btn-primary-color);
+  box-shadow: 0 0 0 0.125rem rgba(13, 110, 253, 0.15);
 }
 
 [data-theme="dark"] .navbar-search-field,
 [data-theme="dark"] .navbar-mobile-search-field {
-  border-right-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-primary);
+  border-right-color: var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .navbar-search-input,
 [data-theme="dark"] .navbar-mobile-search-input {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .navbar-search-field:focus,
 [data-theme="dark"] .navbar-mobile-search-field:focus {
-  background: rgba(255, 255, 255, 0.12);
-  border-right-color: rgba(255, 255, 255, 0.2);
+  background: var(--bg-primary);
+  border-right-color: var(--border-color);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .navbar-search-field:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .navbar-search-input:focus,
 [data-theme="dark"] .navbar-mobile-search-input:focus {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-primary);
 }
 
 [data-theme="dark"] .navbar-search-container:hover,
