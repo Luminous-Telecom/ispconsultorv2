@@ -532,7 +532,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: var(--bg-secondary);
+  background: transparent;
   border: 1px solid var(--border-light);
   border-radius: var(--border-radius);
   overflow: hidden;
@@ -560,7 +560,7 @@
   border-radius: 0;
   padding: 0.8125rem 1.125rem;
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   min-width: 160px;
   max-width: 180px;
   cursor: pointer;
@@ -569,12 +569,12 @@
 
 .navbar-search-field:focus {
   outline: none;
-  background: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
 }
 
 .navbar-search-field:hover {
-  background: var(--bg-tertiary);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 /* Campo de busca elegante */
@@ -590,7 +590,7 @@
 
 .navbar-search-input:focus {
   outline: none;
-  background: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .navbar-search-input::placeholder {
@@ -684,17 +684,17 @@
   background: transparent;
   border: none;
   border-right: 1px solid var(--border-light);
-  padding: 0.5rem 0.625rem;
+  padding: 0.5625rem 0.6875rem;
   font-size: 0.8125rem;
-  color: var(--text-secondary);
-  min-width: 100px;
+  color: var(--text-primary);
+  min-width: 130px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .navbar-mobile-search-field:focus {
   outline: none;
-  background: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
 }
 
@@ -702,7 +702,7 @@
   flex: 1;
   background: transparent;
   border: none;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5625rem 0.8125rem;
   font-size: 0.8125rem;
   color: var(--text-primary);
   min-width: 0;
@@ -710,7 +710,7 @@
 
 .navbar-mobile-search-input:focus {
   outline: none;
-  background: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .navbar-mobile-search-input::placeholder {
@@ -750,11 +750,25 @@
     max-width: 160px;
     padding: 0.6875rem 0.9375rem;
     font-size: 0.8125rem;
+    background: transparent;
+  }
+
+  .navbar-search-field:focus {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .navbar-search-field:hover {
+    background: rgba(255, 255, 255, 0.03);
   }
 
   .navbar-search-input {
     padding: 0.6875rem 0.9375rem;
     font-size: 0.8125rem;
+    background: transparent;
+  }
+
+  .navbar-search-input:focus {
+    background: rgba(255, 255, 255, 0.05);
   }
 
   .navbar-search-icon {
@@ -809,14 +823,26 @@
 /* Tema escuro */
 [data-theme="dark"] .navbar-search-container,
 [data-theme="dark"] .navbar-mobile-search-wrapper {
-  background: var(--bg-tertiary);
+  background: transparent;
   border-color: var(--border-color);
 }
 
 [data-theme="dark"] .navbar-search-field,
 [data-theme="dark"] .navbar-mobile-search-field {
   border-right-color: var(--border-color);
-  background: var(--bg-secondary);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .navbar-search-field:focus,
+[data-theme="dark"] .navbar-mobile-search-field:focus,
+[data-theme="dark"] .navbar-search-input:focus,
+[data-theme="dark"] .navbar-mobile-search-input:focus {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .navbar-search-field:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 [data-theme="dark"] .navbar-search-container:hover,
