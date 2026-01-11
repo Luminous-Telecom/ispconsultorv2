@@ -69,8 +69,8 @@
   background: var(--bg-primary);
   border: 1px solid var(--border-light);
   border-radius: var(--border-radius-sm);
-  padding: 0.25rem;
-  height: 180px;
+  padding: 0.1875rem;
+  height: 140px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -134,8 +134,8 @@
   }
 
   .chart-compact-container {
-    height: 160px;
-    padding: 0.25rem;
+    height: 120px;
+    padding: 0.1875rem;
   }
 }
 
@@ -170,8 +170,8 @@
   }
 
   .chart-compact-container {
-    height: 140px;
-    padding: 0.1875rem;
+    height: 100px;
+    padding: 0.125rem;
   }
 
   .dashboard-filtered-charts .row {
