@@ -464,7 +464,7 @@ export class AssinafyService {
    */
   static async gerarPdfBase64(
     conteudoHtml: string,
-    nomeArquivo: string = 'documento.pdf'
+    nomeArquivo = 'documento.pdf'
   ): Promise<string> {
     try {
       const pdfBuffer = await PDFGenerationService.generateFromContent(

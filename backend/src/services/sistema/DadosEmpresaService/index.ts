@@ -30,7 +30,7 @@ export class DadosEmpresaService {
    * Atualizar dados da empresa
    */
   static async update(dados: Partial<DadosEmpresa>): Promise<DadosEmpresa> {
-    let dadosEmpresa = await DadosEmpresa.findOne();
+    const dadosEmpresa = await DadosEmpresa.findOne();
     
     if (!dadosEmpresa) {
       throw new Error('Dados da empresa não encontrados');

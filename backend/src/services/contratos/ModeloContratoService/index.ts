@@ -38,7 +38,7 @@ export class ModeloContratoService {
   /**
    * Buscar modelo por tipo (primeiro ativo)
    */
-  static async getByTipo(tipo: string, ativo: boolean = true): Promise<ModeloContrato | null> {
+  static async getByTipo(tipo: string, ativo = true): Promise<ModeloContrato | null> {
     return await ModeloContrato.findOne({
       where: { tipo, ativo },
       order: [['created_at', 'ASC']]

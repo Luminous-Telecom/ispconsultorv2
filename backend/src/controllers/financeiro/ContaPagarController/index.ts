@@ -42,7 +42,7 @@ export class ContaPagarController {
         sortDirection
       });
 
-      sendSuccess(res, result.data, undefined, result.success ? 200 : 500);
+      sendSuccess(res, result);
     } catch (error) {
       sendError(res, error, 'Erro ao listar contas a pagar', 500, true, {
         context: 'ContaPagarController',

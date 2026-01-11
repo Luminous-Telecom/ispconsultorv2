@@ -372,7 +372,7 @@ export class AsaasNFSeService {
     // O número da NFS-e pode não estar disponível imediatamente após criação/autorização
     // O Asaas pode demorar alguns segundos para emitir a nota e gerar o número
     // O webhook atualizará quando o número estiver disponível
-    let numero = dados.number || 
+    const numero = dados.number || 
                  dados.rpsNumber || 
                  dados.invoiceNumber || 
                  dados.numero || 

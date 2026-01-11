@@ -35,7 +35,7 @@ export class ModeloDocumentoService {
   /**
    * Buscar modelos por tipo
    */
-  static async getByType(tipo: string, ativo: boolean = true): Promise<ModeloDocumento[]> {
+  static async getByType(tipo: string, ativo = true): Promise<ModeloDocumento[]> {
     return await ModeloDocumento.findAll({
       where: { 
         tipo: tipo as any, 

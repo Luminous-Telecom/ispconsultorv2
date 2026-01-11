@@ -11,7 +11,7 @@ export class HealthCheckService {
   /**
    * Aguarda o backend estar pronto após PM2 reload
    */
-  async waitForBackendReady(maxAttempts: number = 30, delayMs: number = 1000): Promise<boolean> {
+  async waitForBackendReady(maxAttempts = 30, delayMs = 1000): Promise<boolean> {
     logger.info('Aguardando backend estar pronto após PM2 reload', {
       maxAttempts,
       delayMs,
@@ -20,7 +20,7 @@ export class HealthCheckService {
 
     for (let i = 0; i < maxAttempts; i++) {
       const healthEndpoints = [`${this.backendUrl}/health`, `${this.backendUrl}/api/health`];
-      let healthCheckSuccess = false;
+      const healthCheckSuccess = false;
       
       for (const healthUrl of healthEndpoints) {
         try {

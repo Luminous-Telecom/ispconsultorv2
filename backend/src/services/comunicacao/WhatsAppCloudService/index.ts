@@ -129,7 +129,7 @@ export class WhatsAppCloudService {
     servidor: ServidorWhatsApp,
     telefone: string,
     templateName: string,
-    languageCode: string = 'pt_BR',
+    languageCode = 'pt_BR',
     components?: WhatsAppCloudTemplateComponent[]
   ): Promise<boolean> {
     try {
@@ -199,7 +199,7 @@ export class WhatsAppCloudService {
     servidor: ServidorWhatsApp,
     telefone: string,
     documentUrlOrBase64: string,
-    filename: string = 'boleto.pdf',
+    filename = 'boleto.pdf',
     caption?: string
   ): Promise<boolean> {
     try {

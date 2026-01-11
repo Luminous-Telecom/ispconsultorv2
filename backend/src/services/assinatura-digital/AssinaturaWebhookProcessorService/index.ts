@@ -26,7 +26,7 @@ export class AssinaturaWebhookProcessorService {
     provider?: 'assinafy' | 'zapsign',
     req?: Request
   ): Promise<void> {
-    let assinatura = await AssinaturaDigitalService.getByApiDocumentId(documentId);
+    const assinatura = await AssinaturaDigitalService.getByApiDocumentId(documentId);
     if (!assinatura) {
       return;
     }

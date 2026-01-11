@@ -253,7 +253,7 @@ export class FinancialCalculationsService {
    * @param valorMinimo - Valor mínimo permitido (padrão: 0.01)
    * @returns true se válido, false caso contrário
    */
-  static validarValor(valor: number, valorMinimo: number = 0.01): boolean {
+  static validarValor(valor: number, valorMinimo = 0.01): boolean {
     if (isNaN(valor) || !isFinite(valor)) {
       return false;
     }

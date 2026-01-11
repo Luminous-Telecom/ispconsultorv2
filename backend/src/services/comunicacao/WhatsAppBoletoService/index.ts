@@ -95,7 +95,9 @@ export class WhatsAppBoletoService {
       },
       include: [
         { model: Cliente, as: 'cliente', required: true, where: { ativo: true, recebe_whatsapp: true } },
-        { association: 'contrato', required: false }
+        { association: 'contrato', required: false },
+        { association: 'banco', required: false },
+        { association: 'plano', required: false }
       ],
       order: [['data_vencimento', 'ASC'], ['id', 'ASC']]
     });

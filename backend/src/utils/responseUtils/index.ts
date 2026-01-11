@@ -31,7 +31,7 @@ export function sendSuccess<T>(
   res: Response,
   data?: T,
   message?: string,
-  statusCode: number = 200
+  statusCode = 200
 ): void {
   const response: SuccessResponse<T> = {
     success: true,
@@ -54,9 +54,9 @@ export function sendSuccess<T>(
 export function sendError(
   res: Response,
   error: unknown,
-  defaultMessage: string = 'Erro interno do servidor',
-  statusCode: number = 500,
-  logError: boolean = true,
+  defaultMessage = 'Erro interno do servidor',
+  statusCode = 500,
+  logError = true,
   context?: { [key: string]: unknown }
 ): void {
   const errorMessage = getErrorMessage(error);
@@ -104,7 +104,7 @@ export function sendValidationError(
  */
 export function sendNotFound(
   res: Response,
-  message: string = 'Recurso não encontrado'
+  message = 'Recurso não encontrado'
 ): void {
   res.status(404).json({
     success: false,
@@ -119,7 +119,7 @@ export function sendNotFound(
  */
 export function sendForbidden(
   res: Response,
-  message: string = 'Acesso negado'
+  message = 'Acesso negado'
 ): void {
   res.status(403).json({
     success: false,
@@ -134,7 +134,7 @@ export function sendForbidden(
  */
 export function sendUnauthorized(
   res: Response,
-  message: string = 'Não autorizado'
+  message = 'Não autorizado'
 ): void {
   res.status(401).json({
     success: false,

@@ -142,7 +142,7 @@ export class PDFGenerationService {
     content: string,
     engine: PDFEngine = 'html-pdf-node',
     options: PDFOptions = {},
-    styleName: string = 'document'
+    styleName = 'document'
   ): Promise<Buffer> {
     // Garantir que imagens e recursos relativos funcionem no PDF
     const baseHref = process.env.APP_URL || process.env.BASE_URL || '';
@@ -172,7 +172,7 @@ export class PDFGenerationService {
     content: string,
     engine: PDFEngine = 'html-pdf-node',
     options: PDFOptions = {},
-    styleName: string = 'document'
+    styleName = 'document'
   ): Promise<string> {
     const pdfBuffer = await this.generateFromContent(content, engine, options, styleName);
     return pdfBuffer.toString('base64');

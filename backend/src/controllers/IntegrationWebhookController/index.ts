@@ -117,7 +117,7 @@ export class IntegrationWebhookController {
       
       res.end(entry.buffer);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const _errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       sendError(res, error, 'Erro interno ao servir PDF', 500, true, {
         context: 'IntegrationWebhookController',
         action: 'servePdf'

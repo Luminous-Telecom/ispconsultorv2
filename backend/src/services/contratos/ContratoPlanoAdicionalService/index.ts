@@ -21,7 +21,7 @@ export class ContratoPlanoAdicionalService {
   /**
    * Buscar plano adicional por ID
    */
-  static async getById(id: string | number, includePlano: boolean = false): Promise<ContratoPlanoAdicional | null> {
+  static async getById(id: string | number, includePlano = false): Promise<ContratoPlanoAdicional | null> {
     const include = includePlano ? [
       {
         association: 'plano',

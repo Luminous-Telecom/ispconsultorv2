@@ -96,7 +96,7 @@ export class FornecedorService {
   /**
    * Buscar fornecedor por ID
    */
-  static async getById(id: string | number, includeAssociations: boolean = true): Promise<Fornecedor | null> {
+  static async getById(id: string | number, includeAssociations = true): Promise<Fornecedor | null> {
     if (includeAssociations) {
       return await Fornecedor.findByPk(id, {
         include: [

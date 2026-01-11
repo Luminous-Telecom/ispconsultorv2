@@ -34,7 +34,7 @@ interface CacheEntry<T> {
 
 class SimpleCache {
   private cache: Map<string, CacheEntry<unknown>> = new Map();
-  private defaultTTL: number = 300000; // 5 minutos em milissegundos
+  private defaultTTL = 300000; // 5 minutos em milissegundos
 
   /**
    * Obter valor do cache

@@ -122,7 +122,7 @@ export class Titulo extends Model<
     });
   }
 
-  async marcarComoPago(valorPago?: number, dataPagamento?: Date, skipLiquidacaoBanco: boolean = false): Promise<void> {
+  async marcarComoPago(valorPago?: number, dataPagamento?: Date, skipLiquidacaoBanco = false): Promise<void> {
     const valor = valorPago || this.valor;
     const agora = new Date();
 

@@ -80,7 +80,7 @@ export class UsuarioService {
   /**
    * Buscar usuário por email com senha (para autenticação)
    */
-  static async findByEmailWithPassword(email: string, ativo: boolean = true): Promise<Usuario | null> {
+  static async findByEmailWithPassword(email: string, ativo = true): Promise<Usuario | null> {
     return await Usuario.scope('withPassword').findOne({
       where: {
         email: email.toLowerCase(),

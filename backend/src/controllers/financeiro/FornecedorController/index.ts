@@ -28,7 +28,7 @@ export class FornecedorController {
         ativo: req.query.ativo as string
       });
 
-      sendSuccess(res, result.data, undefined, result.success ? 200 : 500);
+      sendSuccess(res, result);
     } catch (error) {
       sendError(res, error, 'Erro ao listar fornecedores', 500, true, {
         context: 'FornecedorController',

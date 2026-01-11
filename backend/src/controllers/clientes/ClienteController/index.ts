@@ -118,7 +118,7 @@ export class ClienteController {
         estado
       });
 
-      sendSuccess(res, result.data, undefined, result.success ? 200 : 500);
+      sendSuccess(res, result);
     } catch (error) {
       sendError(res, error, 'Erro ao listar clientes', 500, true, {
         context: 'ClienteController',

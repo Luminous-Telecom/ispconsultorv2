@@ -161,7 +161,7 @@ export class GitUpdateService {
   /**
    * Executa git pull na branch especificada
    */
-  async pull(branch: string = 'main'): Promise<CommandResult> {
+  async pull(branch = 'main'): Promise<CommandResult> {
     const currentDir = __dirname;
     const directoriesToTry = [
       currentDir,

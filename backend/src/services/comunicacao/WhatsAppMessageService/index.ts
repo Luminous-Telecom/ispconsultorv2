@@ -19,7 +19,9 @@ export class WhatsAppMessageService {
       const titulo = await Titulo.findByPk(tituloId, {
         include: [
           { model: Cliente, as: 'cliente' },
-          { model: Contrato, as: 'contrato' }
+          { model: Contrato, as: 'contrato' },
+          { association: 'banco' },
+          { association: 'plano' }
         ]
       });
 

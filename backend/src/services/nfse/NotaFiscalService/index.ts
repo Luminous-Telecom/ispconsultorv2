@@ -186,7 +186,7 @@ export class NotaFiscalService {
   /**
    * Buscar notas fiscais por cliente com paginação
    */
-  static async findByCliente(cliente_id: number, page: number = 1, limit: number = 15): Promise<ListNotasFiscaisResponse> {
+  static async findByCliente(cliente_id: number, page = 1, limit = 15): Promise<ListNotasFiscaisResponse> {
     const pageNumber = parseInt(String(page), 10);
     const limitNumber = parseInt(String(limit), 10);
     const offset = (pageNumber - 1) * limitNumber;

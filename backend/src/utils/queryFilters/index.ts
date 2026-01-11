@@ -11,7 +11,7 @@ import { normalizeDateForDb } from '../dateUtils';
 export function buildDateFilter(
   startDate?: string | Date | null,
   endDate?: string | Date | null,
-  field: string = 'data_vencimento'
+  field = 'data_vencimento'
 ): WhereOptions | null {
   if (!startDate && !endDate) {
     return null;
@@ -110,7 +110,7 @@ export function buildSearchFilter(
 export function buildNumericSearchFilter(
   searchTerm: string | null | undefined,
   field: string,
-  tolerance: number = 0.1
+  tolerance = 0.1
 ): WhereOptions | null {
   if (!searchTerm || !searchTerm.trim()) {
     return null;
@@ -144,7 +144,7 @@ export function buildNumericSearchFilter(
  */
 export function buildDateSearchFilter(
   searchTerm: string | null | undefined,
-  field: string = 'data_vencimento'
+  field = 'data_vencimento'
 ): WhereOptions | null {
   if (!searchTerm || !searchTerm.trim()) {
     return null;

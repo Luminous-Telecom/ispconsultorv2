@@ -3,7 +3,6 @@ import Joi from 'joi';
 import jwt, { JwtPayload, Secret, SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { logger } from '../../utils/logger';
-import { Usuario } from '../../models/cadastros/Usuario';
 import { UsuarioService } from '../../services/cadastros/UsuarioService';
 import { registrarLogin } from '../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest as AuthRequest } from '../../types/auth';

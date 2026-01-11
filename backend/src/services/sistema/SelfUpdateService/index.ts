@@ -130,7 +130,7 @@ export class SelfUpdateService {
    * Executa o processo completo de atualização
    */
   async executeUpdate(
-    branch: string = 'main',
+    branch = 'main',
     onProgress?: (progress: { step: string; progress: number; message: string; logs?: string[] }) => void
   ): Promise<UpdateResult> {
     const commandCheck = await this.verifyCommands();
