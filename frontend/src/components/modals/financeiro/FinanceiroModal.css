@@ -21,11 +21,6 @@
   min-height: 0;
 }
 
-/* Colunas fixas */
-.financeiro-col-fixed {
-  width: 140px;
-  height: 28px;
-}
 
 /* Resumo financeiro */
 .financeiro-resumo-container {
