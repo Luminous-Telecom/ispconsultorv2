@@ -350,3 +350,182 @@
     max-width: 160px;
   }
 }
+
+/* ============================================
+   NAVBAR MINIMALISTA
+   ============================================ */
+
+/* Navbar principal - estilos minimalistas */
+.main-navbar {
+  background-color: var(--navbar-bg) !important;
+  border-bottom: 1px solid var(--navbar-border) !important;
+  padding-top: 0.375rem !important;
+  padding-bottom: 0.375rem !important;
+  min-height: 56px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Toggler button - mais compacto */
+.navbar-toggler {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.875rem !important;
+  border-radius: var(--border-radius-sm) !important;
+}
+
+/* Form controls - fontes menores */
+.form-control-navbar {
+  font-size: 0.8125rem !important;
+  padding: 0.375rem 0.75rem !important;
+  border-radius: var(--border-radius-sm) !important;
+  height: auto !important;
+  min-height: 32px !important;
+}
+
+.layout-search-field {
+  font-size: 0.8125rem !important;
+  padding: 0.375rem 0.5rem !important;
+  border-radius: 0 !important;
+  height: auto !important;
+  min-height: 32px !important;
+  max-width: 140px !important;
+}
+
+/* Select dropdowns - mais compactos */
+.form-select-sm {
+  font-size: 0.8125rem !important;
+  padding: 0.375rem 0.5rem !important;
+  border-radius: var(--border-radius-sm) !important;
+  height: auto !important;
+  min-height: 32px !important;
+}
+
+/* Avatar do usuário - mais compacto */
+.layout-user-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 0.875rem !important;
+  border-radius: 50% !important;
+}
+
+/* Ícones - tamanhos reduzidos */
+.bi-search,
+.bi-person,
+.bi-x-lg,
+.navbar-toggler-icon {
+  font-size: 0.875rem !important;
+}
+
+/* Botões - mais compactos */
+.btn-link {
+  padding: 0.25rem !important;
+  font-size: 0.8125rem !important;
+}
+
+/* Dropdown menu - mais compacto */
+.table-dropdown-menu {
+  min-width: 180px !important;
+  padding: 0.25rem 0 !important;
+  border-radius: var(--border-radius-sm) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Itens do dropdown - espaçamento reduzido */
+.table-dropdown-item {
+  padding: 0.5rem 0.875rem !important;
+  font-size: 0.8125rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.table-dropdown-item i {
+  font-size: 0.875rem !important;
+  width: 16px !important;
+  text-align: center !important;
+}
+
+/* Nome do usuário no dropdown */
+.layout-user-name {
+  font-size: 0.875rem !important;
+  margin-bottom: 0.125rem !important;
+}
+
+/* Separador do dropdown */
+.dropdown-divider {
+  margin: 0.25rem 0 !important;
+}
+
+/* Container de busca mobile */
+.table-mobile-search-container {
+  padding: 0.5rem 0.75rem !important;
+  gap: 0.5rem !important;
+  border-bottom: 1px solid var(--border-light) !important;
+}
+
+/* Responsividade mobile */
+@media (max-width: 767.98px) {
+  .main-navbar {
+    min-height: 48px !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+  }
+
+  .form-control-navbar {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .layout-search-field {
+    font-size: 0.75rem !important;
+    max-width: 120px !important;
+  }
+
+  .layout-user-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .bi-search,
+  .bi-person,
+  .bi-x-lg {
+    font-size: 0.75rem !important;
+  }
+
+  .table-dropdown-menu {
+    min-width: 160px !important;
+  }
+
+  .table-dropdown-item {
+    padding: 0.375rem 0.625rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .layout-user-name {
+    font-size: 0.8125rem !important;
+  }
+
+  .table-mobile-search-container {
+    padding: 0.375rem 0.625rem !important;
+    top: 48px !important; /* Ajustar para navbar menor */
+  }
+}
+
+/* Desktop pequeno */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .main-navbar {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+  }
+
+  .form-control-navbar {
+    max-width: 200px !important;
+  }
+}
+
+/* Tema escuro */
+[data-theme="dark"] .main-navbar {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
