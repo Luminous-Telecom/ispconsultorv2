@@ -537,8 +537,7 @@
   border-radius: var(--border-radius);
   overflow: hidden;
   /* Transições removidas para manter consistência visual */
-  min-width: 480px;
-  max-width: 650px;
+  width: 100%;
   height: 46px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -566,8 +565,8 @@
   padding: 0.8125rem 1.125rem;
   font-size: 0.875rem;
   color: var(--text-secondary);
-  min-width: 160px;
-  max-width: 180px;
+  min-width: 140px;
+  max-width: 160px;
   cursor: pointer;
   /* Transições removidas para manter consistência visual */
 }
@@ -755,14 +754,13 @@
 /* Responsividade */
 @media (max-width: 991.98px) {
   .navbar-search-container {
-    min-width: 400px;
-    max-width: 520px;
+    width: 100%;
     height: 42px;
   }
 
   .navbar-search-field {
-    min-width: 140px;
-    max-width: 160px;
+    min-width: 120px;
+    max-width: 140px;
     padding: 0.6875rem 0.9375rem;
     font-size: 0.8125rem;
     background: var(--bg-secondary);
