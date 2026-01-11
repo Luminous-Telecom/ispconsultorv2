@@ -65,18 +65,13 @@
   border-radius: var(--border-radius-sm);
   padding: 0.75rem;
   text-align: center;
-  transition: all 0.2s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-.metric-compact:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border-color: var(--border-color);
-}
+/* Efeitos de hover removidos para manter consistência */
 
 .metric-compact-label {
   font-size: 0.75rem;
@@ -169,9 +164,7 @@
   justify-content: center;
 }
 
-.stat-card:hover {
-  box-shadow: var(--shadow);
-}
+/* Efeitos de hover removidos para manter consistência */
 
 .stat-number {
   font-size: 3rem;
@@ -354,10 +347,8 @@
   margin: 0 !important;
 }
 
-.chart-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  border-color: var(--btn-primary-color);
-}
+/* Efeitos de hover removidos para manter consistência */
+/* Efeitos de hover removidos para manter consistência */
 
 [data-theme="dark"] .chart-card {
   background: var(--bg-secondary);
@@ -373,10 +364,7 @@
   padding: 0.5rem;
 }
 
-.chart-card-line:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  border-color: var(--btn-primary-color);
-}
+/* Efeitos de hover removidos para manter consistência */
 
 [data-theme="dark"] .chart-card-line {
   background: var(--bg-secondary);
@@ -689,9 +677,9 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.pie-legend-item:hover {
-  background: var(--bg-tertiary);
-}
+/* Efeitos de hover e transições removidos para manter consistência */
+
+/* Efeitos de hover removidos para manter consistência */
 
 .pie-legend-color {
   width: 10px;
@@ -748,9 +736,7 @@
   margin-bottom: 1.5rem;
 }
 
-.dashboard-hero:hover {
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-}
+/* Efeitos de hover removidos para manter consistência */
 
 [data-theme="dark"] .dashboard-hero {
   background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
@@ -817,15 +803,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  transition: all 0.2s ease;
   position: relative;
 }
 
-.dashboard-hero-stat:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  border-color: var(--border-color);
-}
+/* Efeitos de hover removidos para manter consistência */
 
 [data-theme="dark"] .dashboard-hero-stat {
   border-color: var(--border-color);
@@ -858,10 +839,7 @@
   height: 100%;
 }
 
-.metric-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  border-color: var(--btn-primary-color);
-}
+/* Efeitos de hover removidos para manter consistência */
 
 [data-theme="dark"] .metric-card {
   background: var(--bg-secondary);
@@ -904,10 +882,8 @@
   margin: 0 !important;
 }
 
-.chart-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  border-color: var(--btn-primary-color);
-}
+/* Efeitos de hover removidos para manter consistência */
+/* Efeitos de hover removidos para manter consistência */
 
 [data-theme="dark"] .chart-card {
   background: var(--bg-secondary);
@@ -943,7 +919,7 @@
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 0.8125rem;
-  transition: border-color 0.2s ease;
+/* Transições removidas para manter consistência visual */
 }
 
 .dashboard-date-input:focus {
@@ -1134,9 +1110,7 @@
   overflow: hidden;
 }
 
-.dashboard-section:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-}
+/* Efeitos de hover removidos para manter consistência */
 
 .dashboard-section .card-body {
   padding: 1rem;
@@ -1164,9 +1138,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 
-.dashboard-container .card.border-0.shadow-sm:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
-}
+/* Efeitos de hover removidos para manter consistência */
 
 [data-theme="dark"] .dashboard-container .card.border-0.shadow-sm {
   background: var(--bg-secondary) !important;
