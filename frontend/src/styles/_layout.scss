@@ -547,6 +547,14 @@
   border: 1px solid var(--border-light);
 }
 
+.navbar-search-container:hover,
+.navbar-search-container:focus,
+.navbar-search-container:active {
+  border: 1px solid var(--border-light) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  outline: none !important;
+}
+
 /* Efeitos de hover e focus removidos para manter consistência */
 
 /* Seletor de campo elegante */
@@ -564,10 +572,13 @@
   /* Transições removidas para manter consistência visual */
 }
 
-.navbar-search-field:focus {
-  outline: none;
-  border: none;
-  border-right: 1px solid var(--border-light);
+.navbar-search-field:focus,
+.navbar-search-field:hover,
+.navbar-search-field:active {
+  outline: none !important;
+  border: none !important;
+  border-right: 1px solid var(--border-light) !important;
+  box-shadow: none !important;
 }
 
 /* Efeitos de hover e focus removidos para manter consistência */
@@ -584,9 +595,12 @@
   /* Transições removidas para manter consistência visual */
 }
 
-.navbar-search-input:focus {
-  outline: none;
-  border: none;
+.navbar-search-input:focus,
+.navbar-search-input:hover,
+.navbar-search-input:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .navbar-search-input::placeholder {
@@ -686,10 +700,13 @@
   /* Transições removidas para manter consistência visual */
 }
 
-.navbar-mobile-search-field:focus {
-  outline: none;
-  border: none;
-  border-right: 1px solid var(--border-light);
+.navbar-mobile-search-field:focus,
+.navbar-mobile-search-field:hover,
+.navbar-mobile-search-field:active {
+  outline: none !important;
+  border: none !important;
+  border-right: 1px solid var(--border-light) !important;
+  box-shadow: none !important;
 }
 
 .navbar-mobile-search-input {
@@ -703,9 +720,12 @@
   /* Transições removidas para manter consistência visual */
 }
 
-.navbar-mobile-search-input:focus {
-  outline: none;
-  border: none;
+.navbar-mobile-search-input:focus,
+.navbar-mobile-search-input:hover,
+.navbar-mobile-search-input:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .navbar-mobile-search-input::placeholder {
@@ -847,6 +867,40 @@
 [data-theme="dark"] .navbar-mobile-search-btn:hover {
   background: var(--bg-secondary);
   color: var(--text-primary);
+}
+
+/* ============================================
+   REMOÇÃO COMPLETA DE BORDAS AZUIS
+   ============================================ */
+
+/* Garantir que nenhum elemento tenha bordas azuis ou box-shadow */
+.navbar-search-container *,
+.navbar-search-field,
+.navbar-search-input,
+.navbar-mobile-search-field,
+.navbar-mobile-search-input,
+.navbar-search-container:hover *,
+.navbar-search-container:focus *,
+.navbar-search-container:focus-within *,
+.navbar-search-container:active * {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.navbar-search-field:hover,
+.navbar-search-input:hover,
+.navbar-mobile-search-field:hover,
+.navbar-mobile-search-input:hover {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.navbar-search-field:active,
+.navbar-search-input:active,
+.navbar-mobile-search-field:active,
+.navbar-mobile-search-input:active {
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 /* Tema escuro */
