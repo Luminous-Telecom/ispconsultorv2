@@ -304,44 +304,81 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   };
 
   const headerActionsContent = useMemo(() => (
-    <div className="d-flex gap-2">
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        onClick={(e) => {
-          if (activeTab === 'servidor') {
-            const form = document.getElementById('servidor-whatsapp-form') as HTMLFormElement;
-            form?.requestSubmit();
-          } else {
-            e.preventDefault();
-            handleSaveMensagem();
-          }
-        }}
-        isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
-      >
-        Salvar
-      </Button>
-      <Button
-        type="button"
-        variant="outline-danger"
-        size="sm"
-        onClick={handleReset}
-        disabled={saveServidorMutation.isPending}
-      >
-        {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
-      </Button>
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        onClick={handleClose}
-        disabled={saveServidorMutation.isPending}
-      >
-        Fechar
-      </Button>
+    <div className="whatsapp-header-unified">
+      {/* Botões à direita */}
+      <div className="whatsapp-header-buttons">
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={(e) => {
+            if (activeTab === 'servidor') {
+              const form = document.getElementById('servidor-whatsapp-form') as HTMLFormElement;
+              form?.requestSubmit();
+            } else {
+              e.preventDefault();
+              handleSaveMensagem();
+            }
+          }}
+          isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
+        >
+          Salvar
+        </Button>
+        <Button
+          type="button"
+          variant="outline-danger"
+          size="sm"
+          onClick={handleReset}
+          disabled={saveServidorMutation.isPending}
+        >
+          {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={handleClose}
+          disabled={saveServidorMutation.isPending}
+        >
+          Fechar
+        </Button>
+      </div>
+
+      {/* Abas na parte inferior do header */}
+      <div className="whatsapp-header-tabs">
+        <ul
+          className={`nav nav-tabs whatsapp-tabs-unified ${isMobile ? 'whatsapp-tabs-mobile' : ''}`}
+          id="whatsappTab"
+          role="tablist"
+          style={{
+            margin: 0,
+            padding: 0,
+            borderBottom: 'none',
+            backgroundColor: 'transparent'
+          }}
+        >
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link modal-tab-hover ${activeTab === 'servidor' ? 'active' : ''}`}
+              onClick={() => setActiveTab('servidor')}
+              type="button"
+            >
+              Servidor
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'mensagens' ? 'active' : ''}`}
+              onClick={() => setActiveTab('mensagens')}
+              type="button"
+            >
+              Mensagens
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
-  ), [activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, handleClose, handleReset, handleSaveMensagem]);
+  ), [activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, handleClose, handleReset, handleSaveMensagem, isMobile]);
 
   const headerActionsContentRef = useRef(headerActionsContent);
   headerActionsContentRef.current = headerActionsContent;
@@ -373,52 +410,11 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
           <Spinner size="md" variant="primary" aria-label="Carregando..." />
         </div>
       ) : (
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Navegação de Abas */}
-        <ul className="nav nav-tabs" role="tablist" style={{ 
-          flexShrink: 0, 
-          marginBottom: isMobile ? '1rem' : 0, 
-          marginTop: isMobile ? '0' : '1rem', 
-          marginLeft: isMobile ? '0' : '1rem', 
-          marginRight: isMobile ? '0' : '1rem',
-          ...(isMobile && {
-            display: 'flex',
-            flexWrap: 'nowrap',
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            WebkitOverflowScrolling: 'touch'
-          })
-        }}>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'servidor' ? 'active' : ''}`}
-              onClick={() => setActiveTab('servidor')}
-              type="button"
-            >
-              Servidor
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'mensagens' ? 'active' : ''}`}
-              onClick={() => setActiveTab('mensagens')}
-              type="button"
-            >
-              Mensagens
-            </button>
-          </li>
-        </ul>
-
+      <div className="whatsapp-modal-content">
         {/* Conteúdo das Abas */}
-        <div 
-          className="tab-content" 
-          style={{ 
-            flex: 1, 
-            overflow: 'auto', 
-            // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
-            padding: isMobile ? '0' : '16px',
-            minHeight: 0
-          }}
+        <div
+          className={`tab-content whatsapp-tab-content whatsapp-tab-content-padded`}
+          id="whatsappTabContent"
         >
           {activeTab === 'servidor' && (
             <form id="servidor-whatsapp-form" onSubmit={handleSubmit}>

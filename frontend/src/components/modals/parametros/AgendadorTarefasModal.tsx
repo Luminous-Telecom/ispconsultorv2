@@ -147,7 +147,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       { key: 'frequencia', label: 'Frequência' },
       { key: 'hora_execucao', label: 'Horário' }
     ],
-    multiSelect: true
+    multiSelect: false
   });
 
   const { data: rotinasData, isLoading, refetch } = useQuery({

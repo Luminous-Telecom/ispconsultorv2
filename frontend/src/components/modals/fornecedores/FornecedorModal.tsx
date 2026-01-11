@@ -297,9 +297,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
     }
   };
 
-  const modalTitle = isLoadingFornecedor && isEditing 
-    ? 'Fornecedor' 
-    : (isEditing ? 'Editar Fornecedor' : 'Novo Fornecedor');
+  const modalTitle = 'Fornecedor';
 
   const renderContent = () => {
     if (isLoadingFornecedor && isEditing) {
@@ -313,58 +311,16 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
 
     return (
       <form id={isEditing ? 'fornecedor-edit-form' : 'fornecedor-create-form'} onSubmit={handleSubmit}>
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          {/* Navegação por Abas */}
-          <ul className="nav nav-tabs" role="tablist" style={{ 
-            flexShrink: 0, 
-            marginBottom: isMobile ? '1rem' : 0, 
-            marginTop: isMobile ? '0' : '1rem', 
-            marginLeft: isMobile ? '0' : '1rem', 
-            marginRight: isMobile ? '0' : '1rem'
-          }}>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'dados-basicos' ? 'active' : ''}`}
-                type="button"
-                onClick={() => setActiveTab('dados-basicos')}
-              >
-                Dados Básicos
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
-                type="button"
-                onClick={() => setActiveTab('endereco')}
-              >
-                Endereço
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'observacoes' ? 'active' : ''}`}
-                type="button"
-                onClick={() => setActiveTab('observacoes')}
-              >
-                Observações
-              </button>
-            </li>
-          </ul>
-
+        <div className="fornecedor-modal-content">
           {/* Conteúdo das Abas */}
-          <div 
-            className="tab-content" 
-            style={{ 
-              flex: 1, 
-              overflow: 'auto', 
-              padding: isMobile ? '0' : '16px',
-              minHeight: 0
-            }}
+          <div
+            className={`tab-content fornecedor-tab-content fornecedor-tab-content-padded`}
+            id="fornecedorTabContent"
           >
             {/* Aba Dados Básicos */}
             {activeTab === 'dados-basicos' && (
-              <div className="row">
-                <div className="col-md-6 mb-1">
+              <div className="d-flex flex-column gap-2">
+                <div>
                   <label className="form-label">
                     Tipo de Pessoa:
                     <span className="text-danger ms-1">*</span>
@@ -379,8 +335,8 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                         value="FISICA"
                         checked={formData.tipo_pessoa === 'FISICA'}
                         onChange={() => {
-                          setFormData(prev => ({ 
-                            ...prev, 
+                          setFormData(prev => ({
+                            ...prev,
                             tipo_pessoa: 'FISICA',
                             cpf_cnpj: '' // Limpar CPF/CNPJ ao mudar tipo
                           }));
@@ -407,8 +363,8 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                         value="JURIDICA"
                         checked={formData.tipo_pessoa === 'JURIDICA'}
                         onChange={() => {
-                          setFormData(prev => ({ 
-                            ...prev, 
+                          setFormData(prev => ({
+                            ...prev,
                             tipo_pessoa: 'JURIDICA',
                             cpf_cnpj: '' // Limpar CPF/CNPJ ao mudar tipo
                           }));
@@ -432,147 +388,136 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   )}
                 </div>
 
-                <div className="col-md-6 mb-1">
-                  <FormField
-                    name="cpf_cnpj"
-                    type="text"
-                    label={formData.tipo_pessoa === 'FISICA' ? 'CPF' : 'CNPJ'}
-                    value={formData.cpf_cnpj}
-                    onChange={(value) => handleInputChange('cpf_cnpj', value as string)}
-                    placeholder={formData.tipo_pessoa === 'FISICA' ? '000.000.000-00' : '00.000.000/0000-00'}
-                    required
-                    error={errors.cpf_cnpj}
-                    formPrefix={formPrefix}
-                  />
-                </div>
+                <FormField
+                  name="cpf_cnpj"
+                  type="text"
+                  label={formData.tipo_pessoa === 'FISICA' ? 'CPF' : 'CNPJ'}
+                  value={formData.cpf_cnpj}
+                  onChange={(value) => handleInputChange('cpf_cnpj', value as string)}
+                  placeholder={formData.tipo_pessoa === 'FISICA' ? '000.000.000-00' : '00.000.000/0000-00'}
+                  required
+                  error={errors.cpf_cnpj}
+                  formPrefix={formPrefix}
+                />
 
-                <div className="col-md-8 mb-1">
-                  <FormField
-                    name="nome_razao_social"
-                    type="text"
-                    label={formData.tipo_pessoa === 'FISICA' ? 'Nome' : 'Razão Social'}
-                    value={formData.nome_razao_social}
-                    onChange={(value) => handleInputChange('nome_razao_social', value as string)}
-                    required
-                    error={errors.nome_razao_social}
-                    formPrefix={formPrefix}
-                  />
-                </div>
+                <FormField
+                  name="nome_razao_social"
+                  type="text"
+                  label={formData.tipo_pessoa === 'FISICA' ? 'Nome' : 'Razão Social'}
+                  value={formData.nome_razao_social}
+                  onChange={(value) => handleInputChange('nome_razao_social', value as string)}
+                  required
+                  error={errors.nome_razao_social}
+                  formPrefix={formPrefix}
+                />
 
-                <div className="col-md-4 mb-1">
-                  <FormField
-                    name="nome_fantasia"
-                    type="text"
-                    label="Nome Fantasia"
-                    value={formData.nome_fantasia}
-                    onChange={(value) => handleInputChange('nome_fantasia', value as string)}
-                    error={errors.nome_fantasia}
-                    formPrefix={formPrefix}
-                  />
-                </div>
+                <FormField
+                  name="nome_fantasia"
+                  type="text"
+                  label="Nome Fantasia"
+                  value={formData.nome_fantasia}
+                  onChange={(value) => handleInputChange('nome_fantasia', value as string)}
+                  error={errors.nome_fantasia}
+                  formPrefix={formPrefix}
+                />
               </div>
             )}
 
             {/* Aba Endereço */}
             {activeTab === 'endereco' && (
-              <div className="row">
-                <div className="col-md-3 mb-1">
-                  <FormField
-                    name="cep"
-                    type="text"
-                    label="CEP"
-                    value={formData.cep}
-                    onChange={(value) => handleInputChange('cep', value as string)}
-                    placeholder="00000-000"
-                    error={errors.cep}
-                    formPrefix={formPrefix}
-                  />
+              <div className="d-flex flex-column gap-2">
+                <FormField
+                  name="cep"
+                  type="text"
+                  label="CEP"
+                  value={formData.cep}
+                  onChange={(value) => handleInputChange('cep', value as string)}
+                  placeholder="00000-000"
+                  error={errors.cep}
+                  formPrefix={formPrefix}
+                />
+
+                <FormField
+                  name="logradouro"
+                  type="text"
+                  label="Logradouro"
+                  value={formData.logradouro}
+                  onChange={(value) => handleInputChange('logradouro', value as string)}
+                  error={errors.logradouro}
+                  formPrefix={formPrefix}
+                />
+
+                <div className="d-flex gap-2">
+                  <div className="flex-fill">
+                    <FormField
+                      name="numero"
+                      type="text"
+                      label="Número"
+                      value={formData.numero}
+                      onChange={(value) => handleInputChange('numero', value as string)}
+                      error={errors.numero}
+                      formPrefix={formPrefix}
+                    />
+                  </div>
+                  <div className="flex-fill">
+                    <FormField
+                      name="complemento"
+                      type="text"
+                      label="Complemento"
+                      value={formData.complemento}
+                      onChange={(value) => handleInputChange('complemento', value as string)}
+                      error={errors.complemento}
+                      formPrefix={formPrefix}
+                    />
+                  </div>
                 </div>
 
-                <div className="col-md-7 mb-1">
-                  <FormField
-                    name="logradouro"
-                    type="text"
-                    label="Logradouro"
-                    value={formData.logradouro}
-                    onChange={(value) => handleInputChange('logradouro', value as string)}
-                    error={errors.logradouro}
-                    formPrefix={formPrefix}
-                  />
+                <div className="d-flex gap-2">
+                  <div className="flex-fill">
+                    <FormField
+                      name="bairro"
+                      type="text"
+                      label="Bairro"
+                      value={formData.bairro}
+                      onChange={(value) => handleInputChange('bairro', value as string)}
+                      error={errors.bairro}
+                      formPrefix={formPrefix}
+                    />
+                  </div>
+                  <div className="flex-fill">
+                    <FormField
+                      name="cidade"
+                      type="text"
+                      label="Cidade"
+                      value={formData.cidade}
+                      onChange={(value) => handleInputChange('cidade', value as string)}
+                      error={errors.cidade}
+                      formPrefix={formPrefix}
+                    />
+                  </div>
+                  <div style={{ width: '80px' }}>
+                    <FormField
+                      name="estado"
+                      type="text"
+                      label="UF"
+                      value={formData.estado}
+                      onChange={(value) => handleInputChange('estado', (value as string).toUpperCase())}
+                      maxLength={2}
+                      error={errors.estado}
+                      formPrefix={formPrefix}
+                    />
+                  </div>
                 </div>
 
-                <div className="col-md-2 mb-1">
-                  <FormField
-                    name="numero"
-                    type="text"
-                    label="Número"
-                    value={formData.numero}
-                    onChange={(value) => handleInputChange('numero', value as string)}
-                    error={errors.numero}
-                    formPrefix={formPrefix}
-                  />
-                </div>
-
-                <div className="col-md-4 mb-1">
-                  <FormField
-                    name="complemento"
-                    type="text"
-                    label="Complemento"
-                    value={formData.complemento}
-                    onChange={(value) => handleInputChange('complemento', value as string)}
-                    error={errors.complemento}
-                    formPrefix={formPrefix}
-                  />
-                </div>
-
-                <div className="col-md-4 mb-1">
-                  <FormField
-                    name="bairro"
-                    type="text"
-                    label="Bairro"
-                    value={formData.bairro}
-                    onChange={(value) => handleInputChange('bairro', value as string)}
-                    error={errors.bairro}
-                    formPrefix={formPrefix}
-                  />
-                </div>
-
-                <div className="col-md-3 mb-1">
-                  <FormField
-                    name="cidade"
-                    type="text"
-                    label="Cidade"
-                    value={formData.cidade}
-                    onChange={(value) => handleInputChange('cidade', value as string)}
-                    error={errors.cidade}
-                    formPrefix={formPrefix}
-                  />
-                </div>
-
-                <div className="col-md-1 mb-1">
-                  <FormField
-                    name="estado"
-                    type="text"
-                    label="UF"
-                    value={formData.estado}
-                    onChange={(value) => handleInputChange('estado', (value as string).toUpperCase())}
-                    maxLength={2}
-                    error={errors.estado}
-                    formPrefix={formPrefix}
-                  />
-                </div>
-
-                <div className="col-md-12 mb-1">
-                  <FormField
-                    name="pais"
-                    type="text"
-                    label="País"
-                    value={formData.pais}
-                    onChange={(value) => handleInputChange('pais', value as string)}
-                    error={errors.pais}
-                    formPrefix={formPrefix}
-                  />
-                </div>
+                <FormField
+                  name="pais"
+                  type="text"
+                  label="País"
+                  value={formData.pais}
+                  onChange={(value) => handleInputChange('pais', value as string)}
+                  error={errors.pais}
+                  formPrefix={formPrefix}
+                />
               </div>
             )}
 
@@ -610,25 +555,71 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
       modalId={isEditing ? 'fornecedor-edit-modal' : 'fornecedor-create-modal'}
       headerActions={
         !(isLoadingFornecedor && isEditing) ? (
-          <div className="d-flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              form={isEditing ? 'fornecedor-edit-form' : 'fornecedor-create-form'}
-              variant="primary"
-              size="sm"
-              isLoading={isSubmitting}
-            >
-              Salvar
-            </Button>
+          <div className="fornecedor-header-unified">
+            {/* Botões à direita */}
+            <div className="fornecedor-header-buttons">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                form={isEditing ? 'fornecedor-edit-form' : 'fornecedor-create-form'}
+                variant="primary"
+                size="sm"
+                isLoading={isSubmitting}
+              >
+                Salvar
+              </Button>
+            </div>
+
+            {/* Abas na parte inferior do header */}
+            <div className="fornecedor-header-tabs">
+              <ul
+                className={`nav nav-tabs fornecedor-tabs-unified ${isMobile ? 'fornecedor-tabs-mobile' : ''}`}
+                id="fornecedorTab"
+                role="tablist"
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  borderBottom: 'none',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link modal-tab-hover ${activeTab === 'dados-basicos' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('dados-basicos')}
+                  >
+                    Dados Básicos
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link modal-tab-hover ${activeTab === 'endereco' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('endereco')}
+                  >
+                    Endereço
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link modal-tab-hover ${activeTab === 'observacoes' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('observacoes')}
+                  >
+                    Observações
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         ) : undefined
       }

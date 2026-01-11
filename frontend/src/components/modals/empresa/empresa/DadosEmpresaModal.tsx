@@ -134,98 +134,90 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       size="xl"
       modalId="dados-empresa-modal"
       headerActions={
-        <div className="d-flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={handleCancel}
-            disabled={updateDadosMutation.isPending}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            form="empresa-form"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            isLoading={updateDadosMutation.isPending}
-          >
-            Salvar
-          </Button>
+        <div className="empresa-header-unified">
+          {/* Botões à direita */}
+          <div className="empresa-header-buttons">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              leftIcon={<i className="bi bi-x-lg"></i>}
+              onClick={handleCancel}
+              disabled={updateDadosMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="empresa-form"
+              variant="primary"
+              size="sm"
+              leftIcon={<i className="bi bi-check-lg"></i>}
+              isLoading={updateDadosMutation.isPending}
+            >
+              Salvar
+            </Button>
+          </div>
+
+            {/* Abas na parte inferior do header */}
+            <div className="empresa-header-tabs">
+              <ul
+                className={`nav nav-tabs empresa-tabs-unified ${isMobile ? 'empresa-tabs-mobile' : ''}`}
+                id="empresaTab"
+                role="tablist"
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  borderBottom: 'none',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link modal-tab-hover ${activeTab === 'basico' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('basico')}
+                  >
+                    Empresa
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('endereco')}
+                  >
+                    Endereço
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link ${activeTab === 'contato' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('contato')}
+                  >
+                    Contato
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link ${activeTab === 'responsavel' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('responsavel')}
+                  >
+                    Responsável
+                  </button>
+                </li>
+              </ul>
+            </div>
         </div>
       }
     >
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Navegação de Abas */}
-        <ul className="nav nav-tabs" role="tablist" style={{ 
-          flexShrink: 0, 
-          marginBottom: isMobile ? '1rem' : 0, 
-          marginTop: isMobile ? '0' : '1rem', 
-          marginLeft: isMobile ? '0' : '1rem', 
-          marginRight: isMobile ? '0' : '1rem',
-          ...(isMobile && {
-            display: 'flex',
-            flexWrap: 'nowrap',
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            WebkitOverflowScrolling: 'touch'
-          })
-        }}>
-          <li className="nav-item" role="presentation">
-            <button
-              type="button"
-              className={`nav-link ${activeTab === 'basico' ? 'active' : ''}`}
-              onClick={() => setActiveTab('basico')}
-            >
-              <i className="bi bi-building me-2"></i>
-              Empresa
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              type="button"
-              className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
-              onClick={() => setActiveTab('endereco')}
-            >
-              <i className="bi bi-geo-alt me-2"></i>
-              Endereço
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              type="button"
-              className={`nav-link ${activeTab === 'contato' ? 'active' : ''}`}
-              onClick={() => setActiveTab('contato')}
-            >
-              <i className="bi bi-telephone me-2"></i>
-              Contato
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              type="button"
-              className={`nav-link ${activeTab === 'responsavel' ? 'active' : ''}`}
-              onClick={() => setActiveTab('responsavel')}
-            >
-              <i className="bi bi-person me-2"></i>
-              Responsável
-            </button>
-          </li>
-        </ul>
-
+      <div className="empresa-modal-content">
         {/* Conteúdo das Abas */}
-        <div 
-          className="tab-content" 
-          style={{ 
-            flex: 1, 
-            overflow: 'auto', 
-            // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
-            padding: isMobile ? '0' : '16px',
-            minHeight: 0
-          }}
+        <div
+          className={`tab-content empresa-tab-content empresa-tab-content-padded`}
+          id="empresaTabContent"
         >
           <form id="empresa-form" onSubmit={handleSubmit}>
             {activeTab === 'basico' && (

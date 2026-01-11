@@ -147,107 +147,85 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
       headerActions={headerActions}
     >
       <form id="enviar-assinatura-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
-        <div className="row">
-          <div className="col-md-12">
-            <div className="mb-3">
-              <label className="form-label">Termo</label>
-              <input
-                type="text"
-                className="form-control"
-                value={termo ? `Termo #${termo.id} - ${termo.modeloDocumento?.nome || 'Sem nome'}` : ''}
-                disabled
-              />
-            </div>
+        <div className="d-flex flex-column gap-2">
+          <div>
+            <label className="form-label">Termo</label>
+            <input
+              type="text"
+              className="form-control"
+              value={termo ? `Termo #${termo.id} - ${termo.modeloDocumento?.nome || 'Sem nome'}` : ''}
+              disabled
+            />
           </div>
-        </div>
 
-        <div className="row">
-          <div className="col-md-12">
-            <div className="mb-3">
-              <label className="form-label">
-                Email do Assinante <span className="text-danger">*</span>
-              </label>
-              <input
-                type="email"
-                name="email_assinante"
-                className="form-control"
-                value={formData.email_assinante}
-                onChange={handleInputChange}
-                required
-                disabled={isSubmitting}
-              />
-            </div>
+          <div>
+            <label className="form-label">
+              Email do Assinante <span className="text-danger">*</span>
+            </label>
+            <input
+              type="email"
+              name="email_assinante"
+              className="form-control"
+              value={formData.email_assinante}
+              onChange={handleInputChange}
+              required
+              disabled={isSubmitting}
+            />
           </div>
-        </div>
 
-        <div className="row">
-          <div className="col-md-12">
-            <div className="mb-3">
-              <label className="form-label">
-                Nome do Assinante <span className="text-danger">*</span>
-              </label>
-              <input
-                type="text"
-                name="nome_assinante"
-                className="form-control"
-                value={formData.nome_assinante}
-                onChange={handleInputChange}
-                required
-                disabled={isSubmitting}
-              />
-            </div>
+          <div>
+            <label className="form-label">
+              Nome do Assinante <span className="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              name="nome_assinante"
+              className="form-control"
+              value={formData.nome_assinante}
+              onChange={handleInputChange}
+              required
+              disabled={isSubmitting}
+            />
           </div>
-        </div>
 
-        <div className="row">
-          <div className="col-md-12">
-            <div className="mb-3">
-              <label className="form-label">CPF/CNPJ do Assinante</label>
-              <input
-                type="text"
-                name="cpf_cnpj_assinante"
-                className="form-control"
-                value={formData.cpf_cnpj_assinante}
-                onChange={handleInputChange}
-                placeholder="11 dígitos para CPF ou 14 dígitos para CNPJ"
-                disabled={isSubmitting}
-              />
-            </div>
+          <div>
+            <label className="form-label">CPF/CNPJ do Assinante</label>
+            <input
+              type="text"
+              name="cpf_cnpj_assinante"
+              className="form-control"
+              value={formData.cpf_cnpj_assinante}
+              onChange={handleInputChange}
+              placeholder="11 dígitos para CPF ou 14 dígitos para CNPJ"
+              disabled={isSubmitting}
+            />
           </div>
-        </div>
 
-        <div className="row">
-          <div className="col-md-12">
-            <div className="mb-3">
-              <label className="form-label">Mensagem</label>
-              <textarea
-                name="mensagem"
-                className="form-control"
-                rows={3}
-                value={formData.mensagem}
-                onChange={handleInputChange}
-                disabled={isSubmitting}
-              />
-            </div>
+          <div>
+            <label className="form-label">Mensagem</label>
+            <textarea
+              name="mensagem"
+              className="form-control"
+              rows={3}
+              value={formData.mensagem}
+              onChange={handleInputChange}
+              disabled={isSubmitting}
+            />
           </div>
-        </div>
 
-        <div className="row">
-          <div className="col-md-12">
-            <div className="mb-3">
-              <label className="form-label">Dias para Expiração</label>
-              <input
-                type="number"
-                name="dias_expiracao"
-                className="form-control"
-                value={formData.dias_expiracao}
-                onChange={handleInputChange}
-                min={1}
-                max={365}
-                disabled={isSubmitting}
-              />
-              <small className="form-text text-muted">Padrão: 30 dias</small>
-            </div>
+          <div>
+            <label className="form-label">Dias para Expiração</label>
+            <input
+              type="number"
+              name="dias_expiracao"
+              className="form-control"
+              value={formData.dias_expiracao}
+              onChange={handleInputChange}
+              min={1}
+              max={365}
+              disabled={isSubmitting}
+            />
+            <small className="form-text text-muted">Padrão: 30 dias</small>
           </div>
         </div>
       </form>

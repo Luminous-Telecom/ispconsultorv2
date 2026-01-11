@@ -168,7 +168,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={isEditing ? 'Editar Usuário' : 'Novo Usuário'}
+      title="Usuário"
       size="md"
       modalId="usuario-form-modal"
       headerActions={

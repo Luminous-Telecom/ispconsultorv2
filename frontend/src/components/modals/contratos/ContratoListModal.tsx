@@ -168,7 +168,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       width: 200,
       resizable: true,
       render: (item: Contrato & { cliente_razao_social?: string }) => (
-        <div className="fw-bold">{item.cliente?.razao_social || item.cliente_razao_social || '-'}</div>
+        <div>{item.cliente?.razao_social || item.cliente_razao_social || '-'}</div>
       )
     },
     {
@@ -186,7 +186,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       key: 'numero',
       label: 'Número',
       sortable: true,
-      width: 90,
+      width: 70,
       resizable: true,
       searchable: false,
       render: (item: Contrato) => (
@@ -231,7 +231,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Estado',
       sortable: true,
       searchable: false,
-      width: 80,
+      width: 63,
       resizable: true,
       render: (item: Contrato) => (
         <span>{item.estado || '-'}</span>
@@ -251,7 +251,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Valor Plano',
       sortable: true,
       searchable: true,
-      width: 110,
+      width: 90,
       resizable: true,
       render: (item: Contrato) =>
         item.plano?.valor_mensal ? `R$ ${Number(item.plano.valor_mensal).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '-'
@@ -261,7 +261,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Desconto',
       sortable: true,
       searchable: false,
-      width: 100,
+      width: 80,
       resizable: true,
       render: (item: Contrato) => {
         // Priorizar desconto em valor
@@ -282,6 +282,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Valor Final',
       sortable: true,
       searchable: true,
+      width: 82,
       render: (item: Contrato) => 
         item.valor_final ? `R$ ${Number(item.valor_final).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '-'
     },
@@ -290,6 +291,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Status',
       sortable: true,
       searchable: true,
+      width: 60,
       render: (item: Contrato) => {
         const getStatusColor = (status: string) => {
           switch (status?.toLowerCase()) {
@@ -317,6 +319,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Data Início',
       sortable: true,
       searchable: false,
+      width: 85,
       render: (item: Contrato) => 
         formatDate(item.data_inicio)
     },
@@ -325,6 +328,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Criado em',
       sortable: true,
       searchable: false,
+      width: 140,
       render: (item: Contrato & { created_at?: string; created_at_formatada?: string | null }) => {
         // Usar created_at_formatada se disponível (vem do backend já formatada)
         if (item.created_at_formatada) {
@@ -560,7 +564,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               hover: true,
               responsive: true,
               selectable: true,
-              multiSelect: true,
+              multiSelect: false,
               bulkActions: bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,

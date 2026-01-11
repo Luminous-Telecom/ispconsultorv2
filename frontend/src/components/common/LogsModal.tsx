@@ -263,6 +263,13 @@ const LogsModal: React.FC<LogsModalProps> = ({
               loading,
               searchable: true,
               searchPlaceholder: 'Buscar logs...',
+              searchFields: [
+                { key: 'id', label: 'ID' },
+                { key: 'acao', label: 'Ação' },
+                { key: 'usuario', label: 'Usuário' },
+                { key: 'entidade', label: 'Entidade' },
+                { key: 'entidade_id', label: 'ID Entidade' }
+              ],
               sortable: true,
               striped: true,
               hover: true,

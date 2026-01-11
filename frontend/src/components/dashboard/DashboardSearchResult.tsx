@@ -46,7 +46,7 @@ const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTer
       width: '200px',
       sortable: true,
       render: (item: Cliente) => (
-        <strong>{item.razao_social}</strong>
+        item.razao_social
       )
     },
     {
@@ -140,6 +140,14 @@ const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTer
             selectable: false,
             searchable: true, // Isso permitirá que a tabela se registre no header
             searchPlaceholder: 'Refinar busca...',
+            searchFields: [
+              { key: 'id', label: 'ID' },
+              { key: 'cnpj', label: 'CNPJ' },
+              { key: 'razao_social', label: 'Razão Social' },
+              { key: 'nome_fantasia', label: 'Nome Fantasia' },
+              { key: 'email', label: 'Email' },
+              { key: 'status', label: 'Status' }
+            ],
             emptyMessage: 'Nenhum cliente encontrado para esta busca.',
           }}
           onRowClick={handleRowClick}

@@ -87,7 +87,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       label: 'Nome do Plano',
       sortable: true,
       width: '180px',
-      render: (item: Plano) => <strong>{item.nome_plano}</strong>
+      render: (item: Plano) => item.nome_plano
     },
     {
       key: 'descricao',
@@ -112,7 +112,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       label: 'Valor Mensal',
       sortable: true,
       render: (item: Plano) => (
-        <span className="fw-bold text-success">
+        <span className="text-success">
           R$ {Number(item.valor_mensal || 0).toFixed(2).replace('.', ',')}
         </span>
       )
@@ -183,7 +183,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       { key: 'periodicidade', label: 'Periodicidade' },
       { key: 'status', label: 'Status' }
     ],
-    multiSelect: true
+    multiSelect: false
   });
 
   // Hook para buscar planos usando parâmetros do useTableFilters
@@ -354,6 +354,13 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         loading={isLoading}
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
+        onRowDoubleClick={(plano) => {
+          // Double-click seleciona o item e fecha o modal
+          if (onSelectPlano) {
+            onSelectPlano(plano);
+            onClose();
+          }
+        }}
         search={tableFilters.search}
         onSearchChange={handleSearchChange}
         onSearchFieldChange={handleSearchFieldChange}

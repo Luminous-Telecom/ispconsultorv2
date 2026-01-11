@@ -148,7 +148,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
       label: 'Nome',
       sortable: true,
       render: (item: DocumentoUnion) => (
-        <div className="fw-medium">{item.nome || '-'}</div>
+        <div>{item.nome || '-'}</div>
       )
     },
     {
@@ -253,6 +253,12 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
           loading: isLoading,
           searchable: true,
           searchPlaceholder: `Buscar ${getTipoLabel(tipo).toLowerCase()}...`,
+          searchFields: [
+            { key: 'id', label: 'ID' },
+            { key: 'nome', label: 'Nome' },
+            { key: 'tipo', label: 'Tipo' },
+            { key: 'status', label: 'Status' }
+          ],
           sortable: true,
           striped: true,
           hover: true,

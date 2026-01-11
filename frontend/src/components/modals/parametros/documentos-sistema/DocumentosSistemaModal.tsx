@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSelectedEntity } from '@/hooks/useSelectedEntity';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
 import DocumentoTab from './abas/DocumentoTab';
 
-const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose: _onClose, skipWrapper: _skipWrapper }) => {
+const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose: _onClose, skipWrapper: _skipWrapper, onHeaderActionsReady }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
@@ -18,13 +18,73 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     documentosDisponiveis
   );
 
-  const handleTabChange = (newTab: TipoDocumento) => {
+  const handleTabChange = useCallback((newTab: TipoDocumento) => {
     setActiveTab(newTab);
     setSelectedDocumentoId(null);
     setSelectedDocumento(null);
     setDocumentosDisponiveis([]);
     setShowDocumentoModal(false);
-  };
+  }, [setSelectedDocumento, setDocumentosDisponiveis, setShowDocumentoModal]);
+
+  // Header actions com abas
+  const headerActionsContent = useMemo(() => (
+    <div className="sistema-header-unified">
+      {/* Abas na parte inferior do header */}
+      <div className="sistema-header-tabs">
+        <ul
+          className={`nav nav-tabs sistema-tabs-unified ${isMobile ? 'sistema-tabs-mobile' : ''}`}
+          id="sistemaTab"
+          role="tablist"
+          style={{
+            margin: 0,
+            padding: 0,
+            borderBottom: 'none',
+            backgroundColor: 'transparent'
+          }}
+        >
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link modal-tab-hover ${activeTab === 'contrato' ? 'active' : ''}`}
+              onClick={() => handleTabChange('contrato')}
+              type="button"
+            >
+              <i className="bi bi-file-earmark-text me-2"></i>
+              Contratos
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'termo' ? 'active' : ''}`}
+              onClick={() => handleTabChange('termo')}
+              type="button"
+            >
+              <i className="bi bi-file-text me-2"></i>
+              Termos
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  ), [activeTab, handleTabChange, isMobile]);
+
+  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
+  useEffect(() => {
+    if (_skipWrapper && onHeaderActionsReady) {
+      if (!show) {
+        onHeaderActionsReady(null);
+      } else {
+        onHeaderActionsReady(headerActionsContent);
+      }
+    }
+  }, [_skipWrapper, onHeaderActionsReady, show, headerActionsContent]);
+
+  useEffect(() => {
+    return () => {
+      if (_skipWrapper && onHeaderActionsReady) {
+        onHeaderActionsReady(null);
+      }
+    };
+  }, [_skipWrapper, onHeaderActionsReady]);
 
   const getTipoLabel = (tipo: TipoDocumento) => {
     const labels: Record<TipoDocumento, string> = {
@@ -62,50 +122,11 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
 
   return (
     <>
-      <div style={{ 
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        {/* Navegação por Abas */}
-        <ul className="nav nav-tabs" role="tablist" style={{ 
-          flexShrink: 0, 
-          marginBottom: isMobile ? '1rem' : 0, 
-          marginTop: isMobile ? '0' : '1rem', 
-          marginLeft: isMobile ? '0' : '1rem', 
-          marginRight: isMobile ? '0' : '1rem'
-        }}>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
-              onClick={() => handleTabChange('contrato')}
-              type="button"
-            >
-              <i className="bi bi-file-earmark-text me-2"></i>
-              Contratos
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'termo' ? 'active' : ''}`}
-              onClick={() => handleTabChange('termo')}
-              type="button"
-            >
-              <i className="bi bi-file-text me-2"></i>
-              Termos
-            </button>
-          </li>
-        </ul>
-
+      <div className="sistema-modal-content">
         {/* Conteúdo das Abas */}
-        <div 
-          className="tab-content" 
-          style={{ 
-            flex: 1, 
-            overflow: 'hidden', 
-            padding: 0, 
-            minHeight: 0 
-          }}
+        <div
+          className={`tab-content sistema-tab-content sistema-tab-content-padded`}
+          id="sistemaTabContent"
         >
           <DocumentoTab
             tipo={activeTab}

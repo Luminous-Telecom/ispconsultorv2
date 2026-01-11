@@ -83,7 +83,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
       sortable: true,
       width: '200px',
       render: (item: Fornecedor) => (
-        <strong>{item.nome_razao_social}</strong>
+        item.nome_razao_social
       )
     },
     {
@@ -201,7 +201,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
       { key: 'estado', label: 'Estado' },
       { key: 'pais', label: 'País' }
     ],
-    multiSelect: true
+    multiSelect: false
   });
 
   // Hook para buscar fornecedores usando parâmetros do useTableFilters
@@ -372,6 +372,13 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         loading={isLoading}
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
+        onRowDoubleClick={(fornecedor) => {
+          // Double-click seleciona o item e fecha o modal
+          if (onSelectFornecedor) {
+            onSelectFornecedor(fornecedor);
+            onClose();
+          }
+        }}
         search={tableFilters.search}
         onSearchChange={handleSearchChange}
         onSearchFieldChange={handleSearchFieldChange}

@@ -224,7 +224,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
             },
             loading: isLoadingContratos,
             selectable: true,
-            multiSelect: true,
+            multiSelect: false,
             searchable: true,
             searchPlaceholder: '',
             searchFields: [
@@ -287,7 +287,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
 
         {/* Resumo de Contratos */}
         {sortedContratosData.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+          <div className="d-flex justify-content-between align-items-center p-3 bg-light financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
             <div className="d-flex align-items-center">
               <i className="bi bi-info-circle text-muted me-2"></i>
               <span className="small text-muted">Resumo de contratos</span>

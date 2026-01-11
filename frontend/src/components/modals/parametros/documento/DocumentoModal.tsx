@@ -363,14 +363,126 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     }
   };
 
-  const headerActions = (
-    <div className="d-flex gap-2 align-items-center">
-      <div className="dropdown">
-        <Button 
+  const headerActions = tipo === 'contrato' ? (
+    <div className="documento-header-unified">
+      {/* Botões à direita */}
+      <div className="documento-header-buttons">
+        <div className="dropdown">
+          <Button
+            variant="info"
+            size="sm"
+            className="dropdown-toggle"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowImprimirDropdown(!showImprimirDropdown);
+            }}
+            disabled={!isEditing}
+          >
+            Imprimir
+          </Button>
+          {showImprimirDropdown && (
+            <ul className="dropdown-menu show" style={{ display: 'block', position: 'absolute', zIndex: 1050 }}>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('contrato'); }} disabled={!isEditing}>Modelo Contrato</button></li>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('adesao'); }} disabled={!isEditing}>Termo Adesão</button></li>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('permanencia'); }} disabled={!isEditing}>Contrato Permanência</button></li>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('recibo'); }} disabled={!isEditing}>Recibos</button></li>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('carta'); }} disabled={!isEditing}>Carta de Cobrança</button></li>
+            </ul>
+          )}
+        </div>
+
+        <Button
+          type="button"
           variant="primary"
           size="sm"
-          className="dropdown-toggle" 
-          type="button" 
+          leftIcon={<i className="bi bi-check-lg"></i>}
+          onClick={handleSubmit}
+          isLoading={createDocumentoMutation.isPending || updateDocumentoMutation.isPending}
+        >
+          Salvar
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          leftIcon={<i className="bi bi-x-lg"></i>}
+          onClick={handleClose}
+        >
+          Cancelar
+        </Button>
+      </div>
+
+      {/* Abas na parte inferior do header */}
+      <div className="documento-header-tabs">
+        <ul
+          className={`nav nav-tabs documento-tabs-unified ${isMobile ? 'documento-tabs-mobile' : ''}`}
+          id="documentoTab"
+          role="tablist"
+          style={{
+            margin: 0,
+            padding: 0,
+            borderBottom: 'none',
+            backgroundColor: 'transparent'
+          }}
+        >
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link modal-tab-hover ${activeTab === 'contrato' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('contrato')}
+            >
+              Modelo Contrato
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'adesao' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('adesao')}
+            >
+              Termo Adesão
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'permanencia' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('permanencia')}
+            >
+              Contrato Permanência
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'recibo' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('recibo')}
+            >
+              Recibos
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'carta' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('carta')}
+            >
+              Carta de Cobrança
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  ) : (
+    <div className="d-flex gap-2 align-items-center">
+      <div className="dropdown">
+        <Button
+          variant="primary"
+          size="sm"
+          className="dropdown-toggle"
+          type="button"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -382,35 +494,25 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         </Button>
         {showImprimirDropdown && (
           <ul className="dropdown-menu show" style={{ display: 'block', position: 'absolute', zIndex: 1050 }}>
-            {tipo === 'contrato' ? (
-              <>
-                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('contrato'); }} disabled={!isEditing}>Modelo Contrato</button></li>
-                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('adesao'); }} disabled={!isEditing}>Termo Adesão</button></li>
-                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('permanencia'); }} disabled={!isEditing}>Contrato Permanência</button></li>
-                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('recibo'); }} disabled={!isEditing}>Recibos</button></li>
-                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('carta'); }} disabled={!isEditing}>Carta de Cobrança</button></li>
-              </>
-            ) : (
-              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint(); }} disabled={!isEditing}>{getTipoLabel(tipo)}</button></li>
-            )}
+            <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint(); }} disabled={!isEditing}>{getTipoLabel(tipo)}</button></li>
           </ul>
         )}
       </div>
-      
-      <Button 
-        type="button" 
-        variant="primary" 
-        size="sm" 
+
+      <Button
+        type="button"
+        variant="primary"
+        size="sm"
         leftIcon={<i className="bi bi-check-lg"></i>}
-        onClick={handleSubmit} 
+        onClick={handleSubmit}
         isLoading={createDocumentoMutation.isPending || updateDocumentoMutation.isPending}
       >
         Salvar
       </Button>
-      <Button 
-        type="button" 
-        variant="secondary" 
-        size="sm" 
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
         leftIcon={<i className="bi bi-x-lg"></i>}
         onClick={handleClose}
       >
@@ -421,7 +523,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
 
   return (
     <>
-      <DraggableModal show={show} onClose={handleClose} title={`${isEditing ? 'Editar' : 'Novo'} ${getTipoLabel(tipo)}`} size="xl" headerActions={headerActions}>
+      <DraggableModal show={show} onClose={handleClose} title={getTipoLabel(tipo)} size="xl" headerActions={headerActions}>
         <div style={{ padding: isMobile ? '0' : '16px' }}>
           <form onSubmit={handleSubmit}>
             <div className="row g-2 mb-0">
@@ -456,25 +558,6 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                 </span>
               </div>
               
-              {tipo === 'contrato' && (
-                <ul className="nav nav-tabs mb-2" role="tablist">
-                  <li className="nav-item" role="presentation">
-                    <button className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('contrato')}>Modelo Contrato</button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button className={`nav-link ${activeTab === 'adesao' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('adesao')}>Termo Adesão</button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button className={`nav-link ${activeTab === 'permanencia' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('permanencia')}>Contrato Permanência</button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button className={`nav-link ${activeTab === 'recibo' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('recibo')}>Recibos</button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button className={`nav-link ${activeTab === 'carta' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('carta')}>Carta de Cobrança</button>
-                  </li>
-                </ul>
-              )}
               
               {tipo === 'contrato' ? (
                 <>

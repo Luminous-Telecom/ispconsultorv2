@@ -142,7 +142,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       searchable: true,
       width: 180,
       resizable: true,
-      render: (item: Usuario) => <div className="fw-bold">{item.nome}</div>
+      render: (item: Usuario) => <div>{item.nome}</div>
     },
     {
       key: 'email',
@@ -270,7 +270,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
               hover: true,
               responsive: true,
               selectable: true,
-              multiSelect: true,
+              multiSelect: false,
               bulkActions: bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,

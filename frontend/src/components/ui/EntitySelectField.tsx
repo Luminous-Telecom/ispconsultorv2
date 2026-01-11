@@ -62,10 +62,9 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
           autoComplete="off"
           tabIndex={-1}
           type="text"
-          className="form-control"
+          className="form-control entity-select-input"
           name={`${label.toLowerCase().replace(/\s+/g, '_')}_nome_field`}
           value={selectedEntity?.nome || ''}
-          style={{ borderRight: 'none' }}
         />
         <button
           type="button"
@@ -73,12 +72,12 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
           title={searchButtonTitle}
           className="search-button"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="entity-select-icon">
             <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
           </svg>
         </button>
       </div>
-      {error && <div className="invalid-feedback" style={{ display: 'block' }}>{error}</div>}
+      {error && <div className="invalid-feedback entity-select-error">{error}</div>}
       {helpText && (
         <small className="form-text text-muted">
           {helpText}

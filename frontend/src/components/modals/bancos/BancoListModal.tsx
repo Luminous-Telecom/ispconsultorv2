@@ -67,7 +67,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       label: 'Nome',
       sortable: true,
       width: '180px',
-      render: (item: Banco) => <strong>{item.nome}</strong>
+      render: (item: Banco) => item.nome
     },
     {
       key: 'descricao',
@@ -146,7 +146,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       { key: 'sandbox', label: 'Sandbox' },
       { key: 'ativo', label: 'Status' }
     ],
-    multiSelect: true
+    multiSelect: false
   });
 
   // Hook para buscar bancos usando parâmetros do useTableFilters
@@ -321,6 +321,13 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         loading={isLoading}
         selectedItems={selectedBanco ? [selectedBanco] : []}
         onSelectionChange={handleSelectionChange}
+        onRowDoubleClick={(banco) => {
+          // Double-click seleciona o item e fecha o modal
+          if (onSelectBanco) {
+            onSelectBanco(banco);
+            onClose();
+          }
+        }}
         search={tableFilters.search}
         onSearchChange={handleSearchChange}
         onSearchFieldChange={handleSearchFieldChange}

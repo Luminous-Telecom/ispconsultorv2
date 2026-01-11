@@ -346,11 +346,7 @@ const ClienteModal = ({
   };
 
   // Determinar título dinamicamente
-  const modalTitle = formHook.isLoadingCliente && formHook.isEditing
-    ? 'Cliente'
-    : (!formHook.cliente && formHook.isEditing)
-    ? 'Cliente'
-    : (formHook.isEditing ? 'Editar Cliente' : 'Novo Cliente');
+  const modalTitle = 'Cliente';
 
 
   // Renderizar conteúdo baseado no estado
@@ -536,7 +532,7 @@ const ClienteModal = ({
                 >
                   <li className="nav-item" role="presentation">
                     <button
-                      className={`nav-link ${activeTab === 'dados-basicos' ? 'active' : ''}`}
+                      className={`nav-link modal-tab-hover ${activeTab === 'dados-basicos' ? 'active' : ''}`}
                       onClick={() => setActiveTab('dados-basicos')}
                       type="button"
                     >

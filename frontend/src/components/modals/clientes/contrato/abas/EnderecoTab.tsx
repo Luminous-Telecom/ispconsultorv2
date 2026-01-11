@@ -28,103 +28,97 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
   }, [formData.usar_endereco_cliente, clienteData]);
 
   return (
-    <div className="row">
+    <div className="d-flex flex-column gap-2">
       {/* Usar Endereço do Cliente */}
-      <div className="col-12 mb-1">
-        <div className="form-check">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id="usar_endereco_cliente"
-            name="usar_endereco_cliente"
-            checked={formData.usar_endereco_cliente || false}
-            onChange={(e) => {
-              handleInputChange('usar_endereco_cliente', e.target.checked);
-            }}
-          />
-          <label className="form-check-label" htmlFor="usar_endereco_cliente">
-            Usar endereço do cadastro do cliente
-          </label>
-        </div>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="usar_endereco_cliente"
+          name="usar_endereco_cliente"
+          checked={formData.usar_endereco_cliente || false}
+          onChange={(e) => {
+            handleInputChange('usar_endereco_cliente', e.target.checked);
+          }}
+        />
+        <label className="form-check-label" htmlFor="usar_endereco_cliente">
+          Usar endereço do cadastro do cliente
+        </label>
       </div>
 
       {/* Endereço */}
-      <div className="col-md-8 mb-1">
-        <FormField
-          name="endereco"
-          type="text"
-          label="Endereço"
-          size="md"
-          value={formData.endereco || ''}
-          onChange={(value) => handleInputChange('endereco', value as string)}
-          disabled={formData.usar_endereco_cliente}
-        />
-      </div>
+      <FormField
+        name="endereco"
+        type="text"
+        label="Endereço"
+        size="md"
+        value={formData.endereco || ''}
+        onChange={(value) => handleInputChange('endereco', value as string)}
+        disabled={formData.usar_endereco_cliente}
+      />
 
-      {/* Número */}
-      <div className="col-md-4 mb-1">
-        <FormField
-          name="numero"
-          type="text"
-          label="Número"
-          size="md"
-          value={formData.numero || ''}
-          onChange={(value) => handleInputChange('numero', value as string)}
-          disabled={formData.usar_endereco_cliente}
-        />
-      </div>
-
-      {/* Complemento */}
-      <div className="col-md-6 mb-1">
-        <FormField
-          name="complemento"
-          type="text"
-          label="Complemento"
-          size="md"
-          value={formData.complemento || ''}
-          onChange={(value) => handleInputChange('complemento', value as string)}
-          disabled={formData.usar_endereco_cliente}
-        />
+      {/* Número e Complemento lado a lado */}
+      <div className="d-flex gap-2">
+        <div className="flex-fill">
+          <FormField
+            name="numero"
+            type="text"
+            label="Número"
+            size="md"
+            value={formData.numero || ''}
+            onChange={(value) => handleInputChange('numero', value as string)}
+            disabled={formData.usar_endereco_cliente}
+          />
+        </div>
+        <div className="flex-fill">
+          <FormField
+            name="complemento"
+            type="text"
+            label="Complemento"
+            size="md"
+            value={formData.complemento || ''}
+            onChange={(value) => handleInputChange('complemento', value as string)}
+            disabled={formData.usar_endereco_cliente}
+          />
+        </div>
       </div>
 
       {/* Bairro */}
-      <div className="col-md-6 mb-1">
-        <FormField
-          name="bairro"
-          type="text"
-          label="Bairro"
-          size="md"
-          value={formData.bairro || ''}
-          onChange={(value) => handleInputChange('bairro', value as string)}
-          disabled={formData.usar_endereco_cliente}
-        />
-      </div>
+      <FormField
+        name="bairro"
+        type="text"
+        label="Bairro"
+        size="md"
+        value={formData.bairro || ''}
+        onChange={(value) => handleInputChange('bairro', value as string)}
+        disabled={formData.usar_endereco_cliente}
+      />
 
-      {/* Cidade */}
-      <div className="col-md-8 mb-1">
-        <FormField
-          name="cidade"
-          type="text"
-          label="Cidade"
-          size="md"
-          value={formData.cidade || ''}
-          onChange={(value) => handleInputChange('cidade', value as string)}
-          disabled={formData.usar_endereco_cliente}
-        />
-      </div>
-
-      {/* Estado */}
-      <div className="col-md-4 mb-1">
-        <FormField
-          name="estado"
-          type="text"
-          label="Estado"
-          size="md"
-          value={formData.estado || ''}
-          onChange={(value) => handleInputChange('estado', value as string)}
-          disabled={formData.usar_endereco_cliente}
-          maxLength={2}
-        />
+      {/* Cidade e Estado lado a lado */}
+      <div className="d-flex gap-2">
+        <div className="flex-fill">
+          <FormField
+            name="cidade"
+            type="text"
+            label="Cidade"
+            size="md"
+            value={formData.cidade || ''}
+            onChange={(value) => handleInputChange('cidade', value as string)}
+            disabled={formData.usar_endereco_cliente}
+          />
+        </div>
+        <div style={{ width: '100px' }}>
+          <FormField
+            name="estado"
+            type="text"
+            label="UF"
+            size="md"
+            value={formData.estado || ''}
+            onChange={(value) => handleInputChange('estado', value as string)}
+            disabled={formData.usar_endereco_cliente}
+            maxLength={2}
+          />
+        </div>
       </div>
     </div>
   );

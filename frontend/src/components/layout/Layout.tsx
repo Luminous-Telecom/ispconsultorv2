@@ -3,7 +3,6 @@ import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useNotificationContext } from '../notifications/NotificationProvider';
 import NotificationContainer from '../notifications/NotificationContainer';
 import { useTheme } from '@/contexts/ThemeContext';
-import DropdownMenu from '../common/DropdownMenu';
 import { authService, CurrentUser } from '@/services/authService';
 import { getAuthToken } from '@/services/core';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -31,8 +30,10 @@ const Layout: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showTableMenu, setShowTableMenu] = useState(false);
+  const [showParametrosDropdown, setShowParametrosDropdown] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
+  const parametrosDropdownRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   
   // Responsividade: Mobile-First
@@ -81,6 +82,22 @@ const Layout: React.FC = () => {
       };
     }
   }, [showTableMenu]);
+
+  // Fechar dropdown de parâmetros ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (parametrosDropdownRef.current && !parametrosDropdownRef.current.contains(event.target as Node)) {
+        setShowParametrosDropdown(false);
+      }
+    };
+
+    if (showParametrosDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showParametrosDropdown]);
 
   // Fechar sidebar ao clicar fora (apenas no mobile)
   useEffect(() => {
@@ -249,13 +266,33 @@ const Layout: React.FC = () => {
           <div className="nav-divider my-2 border-top mx-2"></div>
 
           {/* Menu Dropdown para Parâmetros */}
-          <div className="nav-item">
-            <DropdownMenu
-              label="Parâmetros"
-              icon="bi-gear"
-              items={parametrosDropdownItems}
-              className="w-100"
-            />
+          <div className="nav-item mb-1" ref={parametrosDropdownRef}>
+            <button
+              className="nav-link text-start w-100 d-flex align-items-center gap-2"
+              onClick={() => setShowParametrosDropdown(!showParametrosDropdown)}
+              type="button"
+            >
+              <i className="bi bi-gear"></i>
+              <span>Parâmetros</span>
+            </button>
+            {showParametrosDropdown && (
+              <div className="dropdown-menu show">
+                {parametrosDropdownItems.map((item) => (
+                  <div key={item.id} className="nav-item mb-1">
+                    <button
+                      className="nav-link text-start w-100 d-flex align-items-center gap-2"
+                      onClick={() => {
+                        item.onClick();
+                        setShowParametrosDropdown(false);
+                      }}
+                    >
+                      <i className={`bi ${item.icon}`}></i>
+                      <span>{item.label}</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </nav>
       </aside>
@@ -288,9 +325,8 @@ const Layout: React.FC = () => {
                   <div className="d-flex align-items-center gap-0">
                     {/* Seletor de Campo de Pesquisa */}
                     {!isMobile && (
-                      <select 
-                        className="form-select form-select-sm bg-custom-secondary border-custom text-custom-primary rounded-end-0"
-                        style={{ width: 'auto', minWidth: '120px', borderRight: 'none' }}
+                      <select
+                        className="form-select form-select-sm bg-custom-secondary border-custom text-custom-primary rounded-end-0 layout-search-field"
                         value={tableHeader.searchField}
                         onChange={(e) => tableHeader.setSearchField(e.target.value)}
                       >
@@ -311,14 +347,13 @@ const Layout: React.FC = () => {
                         }
                         // No Dashboard, o próprio componente Dashboard.tsx reage ao searchValue
                       }}>
-                        <input 
-                          type="search" 
-                          className={`form-control form-control-navbar ${!isMobile ? 'rounded-start-0' : ''}`} 
-                          placeholder={tableHeader.searchPlaceholder || "Buscar..."} 
+                        <input
+                          type="search"
+                          className={`form-control form-control-navbar ${!isMobile ? 'rounded-start-0' : ''} ${isMobile ? 'w-100' : ''}`}
+                          placeholder={tableHeader.searchPlaceholder || "Buscar..."}
                           aria-label="Search"
                           value={tableHeader.searchValue}
                           onChange={(e) => tableHeader.setSearchValue(e.target.value)}
-                          style={{ width: isMobile ? '100%' : '200px' }}
                         />
                       </form>
                       {isMobile && (
@@ -351,14 +386,14 @@ const Layout: React.FC = () => {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     aria-expanded={showUserMenu}
                   >
-                    <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" style={{ width: '32px', height: '32px' }}>
+                    <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white layout-user-avatar">
                       <i className="bi bi-person"></i>
                     </div>
                   </button>
                   {showUserMenu && (
-                    <ul className="table-dropdown-menu table-dropdown-menu-right shadow position-absolute mt-2" style={{ overflow: 'visible' }}>
+                    <ul className="table-dropdown-menu table-dropdown-menu-right shadow position-absolute mt-2 layout-table-dropdown">
                       <li className="px-3 py-2 border-bottom border-custom mb-1">
-                        <div className="fw-bold text-truncate text-custom-primary" style={{ maxWidth: '150px', fontSize: '0.625rem' }}>{currentUser?.nome || 'Usuário'}</div>
+                        <div className="fw-bold text-truncate text-custom-primary layout-user-name">{currentUser?.nome || 'Usuário'}</div>
                         <small className="text-custom-secondary text-truncate d-block" style={{ maxWidth: '150px' }}>{currentUser?.email}</small>
                       </li>
                       <li

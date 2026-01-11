@@ -275,9 +275,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
     }
   };
 
-  const modalTitle = isLoadingContaPagar && isEditing 
-    ? 'Conta a Pagar' 
-    : (isEditing ? 'Editar Conta a Pagar' : 'Nova Conta a Pagar');
+  const modalTitle = 'Conta a Pagar';
 
   const renderContent = () => {
     if (isLoadingContaPagar && isEditing) {
@@ -291,71 +289,65 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
 
     return (
       <form id={isEditing ? 'conta-pagar-edit-form' : 'conta-pagar-create-form'} onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
-        <div className="row">
-          <div className="col-md-12 mb-1">
-            <EntitySelectField
-              value={formData.fornecedor_id}
-              onChange={(value) => {
-                fornecedorSelect.setSelectedId(value);
-                setFormData(prev => ({ ...prev, fornecedor_id: value }));
-                setErrors(prev => ({ ...prev, fornecedor_id: undefined }));
-              }}
-              onShowModal={fornecedorSelect.openModal}
-              entities={(fornecedoresData?.data || []).map((f) => ({
-                id: f.id,
-                nome: f.nome_razao_social
-              }))}
-              label="Fornecedor"
-              idFieldTitle="Digite o ID do fornecedor"
-              required
-              error={errors.fornecedor_id}
-            />
-          </div>
+        <div className="d-flex flex-column gap-2">
+          <EntitySelectField
+            value={formData.fornecedor_id}
+            onChange={(value) => {
+              fornecedorSelect.setSelectedId(value);
+              setFormData(prev => ({ ...prev, fornecedor_id: value }));
+              setErrors(prev => ({ ...prev, fornecedor_id: undefined }));
+            }}
+            onShowModal={fornecedorSelect.openModal}
+            entities={(fornecedoresData?.data || []).map((f) => ({
+              id: f.id,
+              nome: f.nome_razao_social
+            }))}
+            label="Fornecedor"
+            idFieldTitle="Digite o ID do fornecedor"
+            required
+            error={errors.fornecedor_id}
+          />
 
           {!isEditing && (
-            <div className="col-md-12 mb-1">
-              <FormField
-                name="tipo_criacao"
-                type="select"
-                label="Tipo de Criação"
-                value={formData.tipo_criacao}
-                onChange={(value) => {
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    tipo_criacao: value as 'unica' | 'lote',
-                    data_vencimento: value === 'lote' ? '' : prev.data_vencimento,
-                    data_vencimento_inicial: value === 'unica' ? '' : prev.data_vencimento_inicial,
-                    data_vencimento_final: value === 'unica' ? '' : prev.data_vencimento_final
-                  }));
-                }}
-                options={[
-                  { value: 'unica', label: 'Única' },
-                  { value: 'lote', label: 'Lote' }
-                ]}
-                size="sm"
-              />
-            </div>
+            <FormField
+              name="tipo_criacao"
+              type="select"
+              label="Tipo de Criação"
+              value={formData.tipo_criacao}
+              onChange={(value) => {
+                setFormData(prev => ({
+                  ...prev,
+                  tipo_criacao: value as 'unica' | 'lote',
+                  data_vencimento: value === 'lote' ? '' : prev.data_vencimento,
+                  data_vencimento_inicial: value === 'unica' ? '' : prev.data_vencimento_inicial,
+                  data_vencimento_final: value === 'unica' ? '' : prev.data_vencimento_final
+                }));
+              }}
+              options={[
+                { value: 'unica', label: 'Única' },
+                { value: 'lote', label: 'Lote' }
+              ]}
+              size="sm"
+            />
           )}
 
           {formData.tipo_criacao === 'unica' || isEditing ? (
-            <div className="col-md-6 mb-1">
-              <FormField
-                name="data_vencimento"
-                type="date"
-                label="Data de Vencimento"
-                value={formData.data_vencimento}
-                onChange={(value) => {
-                  setFormData(prev => ({ ...prev, data_vencimento: String(value || '') }));
-                  setErrors(prev => ({ ...prev, data_vencimento: undefined }));
-                }}
-                required
-                size="sm"
-                error={errors.data_vencimento}
-              />
-            </div>
+            <FormField
+              name="data_vencimento"
+              type="date"
+              label="Data de Vencimento"
+              value={formData.data_vencimento}
+              onChange={(value) => {
+                setFormData(prev => ({ ...prev, data_vencimento: String(value || '') }));
+                setErrors(prev => ({ ...prev, data_vencimento: undefined }));
+              }}
+              required
+              size="sm"
+              error={errors.data_vencimento}
+            />
           ) : (
-            <>
-              <div className="col-md-6 mb-1">
+            <div className="d-flex gap-2">
+              <div className="flex-fill">
                 <FormField
                   name="data_vencimento_inicial"
                   type="date"
@@ -370,7 +362,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                   error={errors.data_vencimento_inicial}
                 />
               </div>
-              <div className="col-md-6 mb-1">
+              <div className="flex-fill">
                 <FormField
                   name="data_vencimento_final"
                   type="date"
@@ -385,91 +377,90 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                   error={errors.data_vencimento_final}
                 />
               </div>
-            </>
-          )}
-
-          <div className="col-md-6 mb-0">
-            <FormField
-              name="valor"
-              type="text"
-              label="Valor"
-              value={formData.valor}
-              onChange={(value) => {
-                const cleaned = String(value || '').replace(/\D/g, '');
-                if (cleaned === '') {
-                  setFormData(prev => ({ ...prev, valor: '' }));
-                  return;
-                }
-                const num = parseInt(cleaned, 10) / 100;
-                const formatted = formatCurrency(num, false);
-                setFormData(prev => ({ ...prev, valor: formatted }));
-                setErrors(prev => ({ ...prev, valor: undefined }));
-              }}
-              placeholder="0,00"
-              required
-              size="sm"
-              error={errors.valor}
-            />
-          </div>
-
-          <div className="col-md-6 mb-0">
-            <FormField
-              name="tipo_pagamento"
-              type="select"
-              label="Tipo de Pagamento"
-              value={formData.tipo_pagamento}
-              onChange={(value) => {
-                setFormData(prev => ({ 
-                  ...prev, 
-                  tipo_pagamento: value as ContaPagarFormData['tipo_pagamento'],
-                  linha_digitavel: value !== 'BOLETO' ? '' : prev.linha_digitavel,
-                  tipo_chave_pix: value !== 'PIX' ? '' : prev.tipo_chave_pix,
-                  chave_pix: value !== 'PIX' ? '' : prev.chave_pix
-                }));
-              }}
-              options={[
-                { value: 'PIX', label: 'PIX' },
-                { value: 'DINHEIRO', label: 'Dinheiro' },
-                { value: 'BOLETO', label: 'Boleto' },
-                { value: 'CARTAO', label: 'Cartão' },
-                { value: 'DEPOSITO', label: 'Depósito' },
-                { value: 'DEBITO_CONTA', label: 'Débito em Conta' },
-                { value: 'TRANSFERENCIA', label: 'Transferência' }
-              ]}
-              size="sm"
-            />
-          </div>
-
-          {formData.tipo_pagamento === 'BOLETO' && (
-            <div className="col-md-12 mb-1">
-              <FormField
-                name="linha_digitavel"
-                type="text"
-                label="Linha Digitável do Boleto"
-                value={formData.linha_digitavel}
-                onChange={(value) => {
-                  const cleaned = String(value || '').replace(/\D/g, '');
-                  const limited = cleaned.slice(0, 47);
-                  const formatted = formatLinhaDigitavel(limited);
-                  setFormData(prev => ({ ...prev, linha_digitavel: formatted }));
-                }}
-                placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
-                size="sm"
-              />
             </div>
           )}
 
+          <div className="d-flex gap-2">
+            <div className="flex-fill">
+              <FormField
+                name="valor"
+                type="text"
+                label="Valor"
+                value={formData.valor}
+                onChange={(value) => {
+                  const cleaned = String(value || '').replace(/\D/g, '');
+                  if (cleaned === '') {
+                    setFormData(prev => ({ ...prev, valor: '' }));
+                    return;
+                  }
+                  const num = parseInt(cleaned, 10) / 100;
+                  const formatted = formatCurrency(num, false);
+                  setFormData(prev => ({ ...prev, valor: formatted }));
+                  setErrors(prev => ({ ...prev, valor: undefined }));
+                }}
+                placeholder="0,00"
+                required
+                size="sm"
+                error={errors.valor}
+              />
+            </div>
+            <div className="flex-fill">
+              <FormField
+                name="tipo_pagamento"
+                type="select"
+                label="Tipo de Pagamento"
+                value={formData.tipo_pagamento}
+                onChange={(value) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    tipo_pagamento: value as ContaPagarFormData['tipo_pagamento'],
+                    linha_digitavel: value !== 'BOLETO' ? '' : prev.linha_digitavel,
+                    tipo_chave_pix: value !== 'PIX' ? '' : prev.tipo_chave_pix,
+                    chave_pix: value !== 'PIX' ? '' : prev.chave_pix
+                  }));
+                }}
+                options={[
+                  { value: 'PIX', label: 'PIX' },
+                  { value: 'DINHEIRO', label: 'Dinheiro' },
+                  { value: 'BOLETO', label: 'Boleto' },
+                  { value: 'CARTAO', label: 'Cartão' },
+                  { value: 'DEPOSITO', label: 'Depósito' },
+                  { value: 'DEBITO_CONTA', label: 'Débito em Conta' },
+                  { value: 'TRANSFERENCIA', label: 'Transferência' }
+                ]}
+                size="sm"
+              />
+            </div>
+          </div>
+
+          {formData.tipo_pagamento === 'BOLETO' && (
+            <FormField
+              name="linha_digitavel"
+              type="text"
+              label="Linha Digitável do Boleto"
+              value={formData.linha_digitavel}
+              onChange={(value) => {
+                const cleaned = String(value || '').replace(/\D/g, '');
+                const limited = cleaned.slice(0, 47);
+                const formatted = formatLinhaDigitavel(limited);
+                setFormData(prev => ({ ...prev, linha_digitavel: formatted }));
+              }}
+              placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
+              size="sm"
+            />
+          )}
+
           {formData.tipo_pagamento === 'PIX' && (
-            <>
-              <div className="col-md-6 mb-1">
+            <div className="d-flex gap-2">
+              <div className="flex-fill">
                 <FormField
                   name="tipo_chave_pix"
                   type="select"
                   label="Tipo de Chave PIX"
                   value={formData.tipo_chave_pix}
                   onChange={(value) => {
-                    setFormData(prev => ({ 
-                      ...prev, 
+                    setFormData(prev => ({
+                      ...prev,
                       tipo_chave_pix: value as ContaPagarFormData['tipo_chave_pix'],
                       chave_pix: ''
                     }));
@@ -484,7 +475,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                   size="sm"
                 />
               </div>
-              <div className="col-md-6 mb-1">
+              <div className="flex-fill">
                 <FormField
                   name="chave_pix"
                   type="text"
@@ -517,66 +508,63 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                   size="sm"
                 />
               </div>
-            </>
+            </div>
           )}
 
-          <div className="col-md-6 mb-0">
-            <FormField
-              name="numero_documento"
-              type="text"
-              label="Nº Documento"
-              value={formData.numero_documento}
-              onChange={(value) => {
-                setFormData(prev => ({ ...prev, numero_documento: String(value || '') }));
-              }}
-              placeholder="Número do documento"
-              size="sm"
-            />
+          <div className="d-flex gap-2">
+            <div className="flex-fill">
+              <FormField
+                name="numero_documento"
+                type="text"
+                label="Nº Documento"
+                value={formData.numero_documento}
+                onChange={(value) => {
+                  setFormData(prev => ({ ...prev, numero_documento: String(value || '') }));
+                }}
+                placeholder="Número do documento"
+                size="sm"
+              />
+            </div>
+            <div className="flex-fill">
+              <FormField
+                name="nota_fiscal"
+                type="text"
+                label="Nota Fiscal"
+                value={formData.nota_fiscal}
+                onChange={(value) => {
+                  setFormData(prev => ({ ...prev, nota_fiscal: String(value || '') }));
+                }}
+                placeholder="Número da nota fiscal"
+                size="sm"
+              />
+            </div>
           </div>
 
-          <div className="col-md-6 mb-0">
-            <FormField
-              name="nota_fiscal"
-              type="text"
-              label="Nota Fiscal"
-              value={formData.nota_fiscal}
-              onChange={(value) => {
-                setFormData(prev => ({ ...prev, nota_fiscal: String(value || '') }));
-              }}
-              placeholder="Número da nota fiscal"
-              size="sm"
-            />
-          </div>
+          <FormField
+            name="descricao"
+            type="textarea"
+            label="Descrição"
+            value={formData.descricao}
+            onChange={(value) => {
+              setFormData(prev => ({ ...prev, descricao: String(value || '') }));
+            }}
+            placeholder="Descrição da conta a pagar"
+            rows={3}
+            size="sm"
+          />
 
-          <div className="col-md-12 mb-1">
-            <FormField
-              name="descricao"
-              type="textarea"
-              label="Descrição"
-              value={formData.descricao}
-              onChange={(value) => {
-                setFormData(prev => ({ ...prev, descricao: String(value || '') }));
-              }}
-              placeholder="Descrição da conta a pagar"
-              rows={3}
-              size="sm"
-            />
-          </div>
-
-          <div className="col-md-12 mb-1">
-            <FormField
-              name="observacoes"
-              type="textarea"
-              label="Observações"
-              value={formData.observacoes}
-              onChange={(value) => {
-                setFormData(prev => ({ ...prev, observacoes: String(value || '') }));
-              }}
-              placeholder="Observações adicionais"
-              rows={4}
-              size="sm"
-            />
-          </div>
+          <FormField
+            name="observacoes"
+            type="textarea"
+            label="Observações"
+            value={formData.observacoes}
+            onChange={(value) => {
+              setFormData(prev => ({ ...prev, observacoes: String(value || '') }));
+            }}
+            placeholder="Observações adicionais"
+            rows={4}
+            size="sm"
+          />
         </div>
       </form>
     );

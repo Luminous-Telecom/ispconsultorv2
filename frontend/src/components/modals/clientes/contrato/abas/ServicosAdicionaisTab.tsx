@@ -48,6 +48,14 @@ const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
             loading: isLoading,
             selectable: true,
             multiSelect: true,
+            searchable: true,
+            searchPlaceholder: 'Buscar serviços...',
+            searchFields: [
+              { key: 'id', label: 'ID' },
+              { key: 'plano', label: 'Plano' },
+              { key: 'status', label: 'Status' },
+              { key: 'observacoes', label: 'Observações' }
+            ],
             emptyMessage: 'Este contrato ainda não possui serviços adicionais cadastrados.',
             className: 'no-padding',
             pagination: {

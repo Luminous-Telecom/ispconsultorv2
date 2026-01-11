@@ -76,7 +76,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
       label: 'Valor Total',
       sortable: true,
       render: (item: NotaFiscal) => (
-        <span className="fw-bold text-success">
+        <span className="text-success">
           {formatCurrency(item.valor_total || 0)}
         </span>
       )
@@ -193,7 +193,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
       { key: 'titulo_id', label: 'Título ID' },
       { key: 'cliente', label: 'Cliente' }
     ],
-    multiSelect: true
+    multiSelect: false
   });
 
   // Hook para buscar notas fiscais

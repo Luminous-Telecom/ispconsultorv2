@@ -16,7 +16,7 @@ const Loading: React.FC<LoadingProps> = ({
   };
 
   return (
-    <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '200px' }}>
+    <div className="d-flex flex-column align-items-center justify-content-center loading-container">
       <div className={`spinner-border text-primary ${spinnerSize[size]}`} role="status">
         <span className="visually-hidden">{message}</span>
       </div>

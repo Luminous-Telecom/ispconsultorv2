@@ -104,7 +104,7 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
       label: 'Nome',
       sortable: true,
       render: (item: ModeloRecibo) => (
-        <div className="fw-medium">{item.nome || '-'}</div>
+        <div>{item.nome || '-'}</div>
       )
     },
     {
@@ -209,6 +209,13 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
                 loading: isLoading,
                 searchable: true,
                 searchPlaceholder: 'Buscar recibos...',
+                searchFields: [
+                  { key: 'id', label: 'ID' },
+                  { key: 'numero_recibo', label: 'Nº Recibo' },
+                  { key: 'cliente', label: 'Cliente' },
+                  { key: 'valor', label: 'Valor' },
+                  { key: 'status', label: 'Status' }
+                ],
                 sortable: true,
                 striped: true,
                 hover: true,

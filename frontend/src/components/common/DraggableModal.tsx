@@ -260,25 +260,27 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           className="modal-header-draggable draggable-modal-header-custom"
           onMouseDown={handleMouseDown}
         >
-          {/* Título centralizado */}
-          <h5
-            className={`modal-title mb-0 draggable-modal-title-custom ${isDragging ? 'dragging' : ''} ${headerActions ? 'with-actions' : ''}`}
-            style={{
-              marginBottom: headerActions ? '8px' : '0'
-            }}
-          >
-            {title}
-          </h5>
-          
-          {/* Botão fechar à extrema direita */}
-          <button
-            type="button"
-            className="btn-close draggable-modal-close-custom"
-            onClick={onClose}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            ×
-          </button>
+          {/* Container flex para título e botão */}
+          <div className="d-flex align-items-center justify-content-center position-relative">
+            {/* Título centralizado */}
+            <h5
+              className={`modal-title mb-0 draggable-modal-title-custom ${isDragging ? 'dragging' : ''} ${headerActions ? 'with-actions' : ''}`}
+              style={{
+                marginBottom: headerActions ? '8px' : '0'
+              }}
+            >
+              {title}
+            </h5>
+
+            {/* Botão fechar à extrema direita */}
+            <button
+              type="button"
+              className="btn-close position-absolute end-0 top-50 translate-middle-y"
+              onClick={onClose}
+              onMouseDown={(e) => e.stopPropagation()}
+              aria-label="Fechar"
+            ></button>
+          </div>
 
           {/* Ações do header (botões e filtros) */}
           {headerActions && (

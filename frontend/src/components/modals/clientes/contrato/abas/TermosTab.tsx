@@ -47,7 +47,16 @@ const TermosTab: React.FC<TermosTabProps> = ({
               data: sortedData,
               loading: isLoading,
               selectable: true,
-              multiSelect: true,
+              multiSelect: false,
+              searchable: true,
+              searchPlaceholder: 'Buscar termos...',
+              searchFields: [
+                { key: 'id', label: 'ID' },
+                { key: 'nome_termo', label: 'Nome do Termo' },
+                { key: 'assinado', label: 'Assinado' },
+                { key: 'aceito_por', label: 'Aceito Por' },
+                { key: 'ativo', label: 'Status' }
+              ],
               emptyMessage: 'Este contrato ainda não possui termos cadastrados.',
               className: 'no-padding',
               pagination: {

@@ -64,7 +64,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
         key: 'nome',
         label: 'Nome',
         sortable: true,
-        render: (item: DocumentoSistema) => <strong>{item.nome}</strong>
+        render: (item: DocumentoSistema) => item.nome
       },
       {
         key: 'descricao',

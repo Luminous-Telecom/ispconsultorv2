@@ -50,7 +50,7 @@ function App() {
       fallback={
         <div className="container-fluid d-flex align-items-center justify-content-center min-vh-100">
           <div className="text-center">
-            <i className="bi bi-exclamation-triangle text-danger" style={{ fontSize: '4rem' }}></i>
+            <i className="bi bi-exclamation-triangle text-danger app-error-icon"></i>
             <h2 className="mt-3 text-danger">Erro na aplicação</h2>
             <p className="text-muted">Ocorreu um erro crítico. Recarregue a página.</p>
             <button

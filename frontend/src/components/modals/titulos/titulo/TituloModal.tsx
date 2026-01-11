@@ -343,279 +343,239 @@ const TituloModal: React.FC<TituloModalProps> = ({
             </ul>
           </div>
         )}
-        <div className="row">
+        <div className="d-flex flex-column gap-2">
           {isEditMode && (
             <>
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label">Cliente</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={(() => {
-                      // Tentar usar o cliente que vem diretamente no título (backend já retorna)
-                      const tituloWithCliente = tituloData?.data as CarneParcela & { 
-                        cliente?: { id: number; razao_social?: string; nome_fantasia?: string; cnpj?: string };
-                      };
-                      
-                      if (tituloWithCliente?.cliente) {
-                        return `${tituloWithCliente.cliente.nome_fantasia || tituloWithCliente.cliente.razao_social} - ${tituloWithCliente.cliente.cnpj}`;
-                      }
-                      
-                      // Fallback: buscar na lista de clientes
-                      if (!formData.cliente_id) return 'Cliente não encontrado';
-                      if (!clientes?.data || clientes.data.length === 0) return 'Carregando...';
-                      const cliente = clientes.data.find((c) => c.id === formData.cliente_id);
-                      if (!cliente) return 'Cliente não encontrado';
-                      return `${cliente.nome_fantasia || cliente.razao_social} - ${cliente.cnpj}`;
-                    })()}
-                    readOnly
-                    style={{ cursor: 'not-allowed' }}
-                  />
-                  <small className="text-muted">Cliente não pode ser alterado</small>
-                </div>
+              <div>
+                <label className="form-label">Cliente</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  value={(() => {
+                    // Tentar usar o cliente que vem diretamente no título (backend já retorna)
+                    const tituloWithCliente = tituloData?.data as CarneParcela & {
+                      cliente?: { id: number; razao_social?: string; nome_fantasia?: string; cnpj?: string };
+                    };
+
+                    if (tituloWithCliente?.cliente) {
+                      return `${tituloWithCliente.cliente.nome_fantasia || tituloWithCliente.cliente.razao_social} - ${tituloWithCliente.cliente.cnpj}`;
+                    }
+
+                    // Fallback: buscar na lista de clientes
+                    if (!formData.cliente_id) return 'Cliente não encontrado';
+                    if (!clientes?.data || clientes.data.length === 0) return 'Carregando...';
+                    const cliente = clientes.data.find((c) => c.id === formData.cliente_id);
+                    if (!cliente) return 'Cliente não encontrado';
+                    return `${cliente.nome_fantasia || cliente.razao_social} - ${cliente.cnpj}`;
+                  })()}
+                  readOnly
+                  style={{ cursor: 'not-allowed' }}
+                />
+                <small className="text-muted">Cliente não pode ser alterado</small>
               </div>
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label className="form-label">Plano</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={planos?.data?.find((p: Plano) => p.id === formData.plano_id)?.nome_plano || 'Carregando...'}
-                    readOnly
-                    style={{ cursor: 'not-allowed' }}
-                  />
-                  <small className="text-muted">Plano não pode ser alterado</small>
-                </div>
+              <div>
+                <label className="form-label">Plano</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  value={planos?.data?.find((p: Plano) => p.id === formData.plano_id)?.nome_plano || 'Carregando...'}
+                  readOnly
+                  style={{ cursor: 'not-allowed' }}
+                />
+                <small className="text-muted">Plano não pode ser alterado</small>
               </div>
             </>
           )}
           {!isEditMode && (
-            <div className="col-md-12">
-              <EntitySelectField
-                value={formData.plano_id}
-                onChange={(value) => handleInputChange('plano_id', value)}
-                onShowModal={planoSelect.openModal}
-                entities={planos?.data?.map((plano: Plano) => ({
-                  id: plano.id,
-                  nome: plano.nome_plano
-                })) || []}
-                label="Plano"
-                error={errors.plano_id}
-                required
-              />
-            </div>
+            <EntitySelectField
+              value={formData.plano_id}
+              onChange={(value) => handleInputChange('plano_id', value)}
+              onShowModal={planoSelect.openModal}
+              entities={planos?.data?.map((plano: Plano) => ({
+                id: plano.id,
+                nome: plano.nome_plano
+              })) || []}
+              label="Plano"
+              error={errors.plano_id}
+              required
+            />
           )}
         </div>
 
-        <div className="row">
+        <div className="d-flex flex-column gap-2">
           {isEditMode && (
-            <div className="col-md-6">
-              <div className="mb-3">
-                {tituloRegistradoNoBanco ? (
-                  <>
-                    <label className="form-label">Valor</label>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTitulo)}
-                      readOnly
-                      style={{ cursor: 'not-allowed' }}
-                    />
-                    <small className="text-muted">Valor não pode ser alterado após registro no banco emissor</small>
-                  </>
-                ) : (
-                  <FormField
-                    name="valor"
-                    type="number"
-                    label="Valor"
-                    required={true}
-                    size="sm"
-                    value={formData.valor && formData.valor > 0 ? formData.valor : (valorTitulo > 0 ? valorTitulo : '')}
-                    onChange={(value: FormValue) => {
-                      const numValue = parseFloat(String(value));
-                      handleInputChange('valor', !isNaN(numValue) && numValue > 0 ? numValue : 0);
-                    }}
-                    error={errors.valor}
-                    isInvalid={!!errors.valor}
-                    disabled={isPending}
-                    min={0.01}
-                    step={0.01}
+            <div>
+              {tituloRegistradoNoBanco ? (
+                <>
+                  <label className="form-label">Valor</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTitulo)}
+                    readOnly
+                    style={{ cursor: 'not-allowed' }}
                   />
-                )}
-              </div>
-            </div>
-          )}
-          {!isEditMode && isAvulso && (
-            <div className="col-md-6">
-              <div className="mb-3">
+                  <small className="text-muted">Valor não pode ser alterado após registro no banco emissor</small>
+                </>
+              ) : (
                 <FormField
                   name="valor"
                   type="number"
                   label="Valor"
                   required={true}
                   size="sm"
-                  value={formData.valor || ''}
-                  onChange={(value: FormValue) => handleInputChange('valor', parseFloat(String(value)) || 0)}
+                  value={formData.valor && formData.valor > 0 ? formData.valor : (valorTitulo > 0 ? valorTitulo : '')}
+                  onChange={(value: FormValue) => {
+                    const numValue = parseFloat(String(value));
+                    handleInputChange('valor', !isNaN(numValue) && numValue > 0 ? numValue : 0);
+                  }}
                   error={errors.valor}
                   isInvalid={!!errors.valor}
                   disabled={isPending}
                   min={0.01}
                   step={0.01}
                 />
-              </div>
+              )}
             </div>
           )}
-          <div className={isEditMode ? "col-md-6" : (isAvulso ? "col-md-6" : "col-md-6")}>
-            <div className="mb-3">
-              <FormField
-                name="data_vencimento"
-                type="date"
-                label="Data de Vencimento"
-                required={true}
-                size="sm"
-                value={formData.data_vencimento}
-                onChange={(value: FormValue) => handleInputChange('data_vencimento', value as string)}
-                error={errors.data_vencimento}
-                isInvalid={!!errors.data_vencimento}
-                disabled={isPending || tituloRegistradoNoBanco}
-                readOnly={tituloRegistradoNoBanco}
-              />
-              {tituloRegistradoNoBanco && <small className="text-muted">Data de vencimento não pode ser alterada após registro no banco emissor</small>}
-            </div>
-          </div>
+          {!isEditMode && isAvulso && (
+            <FormField
+              name="valor"
+              type="number"
+              label="Valor"
+              required={true}
+              size="sm"
+              value={formData.valor || ''}
+              onChange={(value: FormValue) => handleInputChange('valor', parseFloat(String(value)) || 0)}
+              error={errors.valor}
+              isInvalid={!!errors.valor}
+              disabled={isPending}
+              min={0.01}
+              step={0.01}
+            />
+          )}
+          <FormField
+            name="data_vencimento"
+            type="date"
+            label="Data de Vencimento"
+            required={true}
+            size="sm"
+            value={formData.data_vencimento}
+            onChange={(value: FormValue) => handleInputChange('data_vencimento', value as string)}
+            error={errors.data_vencimento}
+            isInvalid={!!errors.data_vencimento}
+            disabled={isPending || tituloRegistradoNoBanco}
+            readOnly={tituloRegistradoNoBanco}
+          />
+          {tituloRegistradoNoBanco && <small className="text-muted">Data de vencimento não pode ser alterada após registro no banco emissor</small>}
           {!isEditMode && !isAvulso && (
-            <div className="col-md-6">
-              <div className="mb-3">
-                <FormField
-                  name="descricao"
-                  type="text"
-                  label="Descrição"
-                  placeholder="Descrição do título..."
-                  size="sm"
-                  value={formData.descricao}
-                  onChange={(value: FormValue) => handleInputChange('descricao', value as string)}
-                  disabled={isPending}
-                />
-              </div>
-            </div>
+            <FormField
+              name="descricao"
+              type="text"
+              label="Descrição"
+              placeholder="Descrição do título..."
+              size="sm"
+              value={formData.descricao}
+              onChange={(value: FormValue) => handleInputChange('descricao', value as string)}
+              disabled={isPending}
+            />
           )}
         </div>
         
         {!isEditMode && isAvulso && (
-          <div className="row">
-            <div className="col-md-6">
-              <div className="mb-3">
-                <FormField
-                  name="descricao"
-                  type="text"
-                  label="Descrição"
-                  placeholder="Descrição do título..."
-                  size="sm"
-                  value={formData.descricao}
-                  onChange={(value: FormValue) => handleInputChange('descricao', value as string)}
-                  disabled={isPending}
-                />
-              </div>
-            </div>
-          </div>
+          <FormField
+            name="descricao"
+            type="text"
+            label="Descrição"
+            placeholder="Descrição do título..."
+            size="sm"
+            value={formData.descricao}
+            onChange={(value: FormValue) => handleInputChange('descricao', value as string)}
+            disabled={isPending}
+          />
         )}
 
         {!isEditMode && (
           <>
             {/* Campos de Desconto */}
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <FormField
-                    name="desconto_percentual"
-                    type="number"
-                    label="Desconto (%)"
-                    placeholder="0.00"
-                    size="sm"
-                    value={formData.desconto_percentual}
-                    onChange={(value: FormValue) => handleInputChange('desconto_percentual', parseFloat(String(value)) || 0)}
-                    disabled={isPending}
-                    min={0}
-                    max={100}
-                    step={0.01}
-                  />
-                </div>
+            <div className="d-flex gap-2">
+              <div className="flex-fill">
+                <FormField
+                  name="desconto_percentual"
+                  type="number"
+                  label="Desconto (%)"
+                  placeholder="0.00"
+                  size="sm"
+                  value={formData.desconto_percentual}
+                  onChange={(value: FormValue) => handleInputChange('desconto_percentual', parseFloat(String(value)) || 0)}
+                  disabled={isPending}
+                  min={0}
+                  max={100}
+                  step={0.01}
+                />
               </div>
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <FormField
-                    name="desconto_valor"
-                    type="number"
-                    label="Desconto (R$)"
-                    placeholder="0.00"
-                    size="sm"
-                    value={formData.desconto_valor}
-                    onChange={(value: FormValue) => handleInputChange('desconto_valor', parseFloat(String(value)) || 0)}
-                    disabled={isPending}
-                    min={0}
-                    step={0.01}
-                  />
-                </div>
+              <div className="flex-fill">
+                <FormField
+                  name="desconto_valor"
+                  type="number"
+                  label="Desconto (R$)"
+                  placeholder="0.00"
+                  size="sm"
+                  value={formData.desconto_valor}
+                  onChange={(value: FormValue) => handleInputChange('desconto_valor', parseFloat(String(value)) || 0)}
+                  disabled={isPending}
+                  min={0}
+                  step={0.01}
+                />
               </div>
             </div>
 
             {/* Campos de Acréscimo */}
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <FormField
-                    name="acrescimo_percentual"
-                    type="number"
-                    label="Acréscimo (%)"
-                    placeholder="0.00"
-                    size="sm"
-                    value={formData.acrescimo_percentual}
-                    onChange={(value: FormValue) => handleInputChange('acrescimo_percentual', parseFloat(String(value)) || 0)}
-                    disabled={isPending}
-                    min={0}
-                    max={100}
-                    step={0.01}
-                  />
-                </div>
+            <div className="d-flex gap-2">
+              <div className="flex-fill">
+                <FormField
+                  name="acrescimo_percentual"
+                  type="number"
+                  label="Acréscimo (%)"
+                  placeholder="0.00"
+                  size="sm"
+                  value={formData.acrescimo_percentual}
+                  onChange={(value: FormValue) => handleInputChange('acrescimo_percentual', parseFloat(String(value)) || 0)}
+                  disabled={isPending}
+                  min={0}
+                  max={100}
+                  step={0.01}
+                />
               </div>
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <FormField
-                    name="acrescimo_valor"
-                    type="number"
-                    label="Acréscimo (R$)"
-                    placeholder="0.00"
-                    size="sm"
-                    value={formData.acrescimo_valor}
-                    onChange={(value: FormValue) => handleInputChange('acrescimo_valor', parseFloat(String(value)) || 0)}
-                    disabled={isPending}
-                    min={0}
-                    step={0.01}
-                  />
-                </div>
+              <div className="flex-fill">
+                <FormField
+                  name="acrescimo_valor"
+                  type="number"
+                  label="Acréscimo (R$)"
+                  placeholder="0.00"
+                  size="sm"
+                  value={formData.acrescimo_valor}
+                  onChange={(value: FormValue) => handleInputChange('acrescimo_valor', parseFloat(String(value)) || 0)}
+                  disabled={isPending}
+                  min={0}
+                  step={0.01}
+                />
               </div>
             </div>
           </>
         )}
 
-        <div className="row">
-          <div className="col-12">
-            <div className="mb-3">
-              <FormField
-                name="observacoes"
-                type="textarea"
-                label="Observações"
-                placeholder="Observações sobre a parcela..."
-                size="sm"
-                value={formData.observacoes}
-                onChange={(value: FormValue) => handleInputChange('observacoes', value as string)}
-                disabled={isPending}
-                rows={3}
-              />
-            </div>
-          </div>
-        </div>
+        <FormField
+          name="observacoes"
+          type="textarea"
+          label="Observações"
+          placeholder="Observações sobre a parcela..."
+          size="sm"
+          value={formData.observacoes}
+          onChange={(value: FormValue) => handleInputChange('observacoes', value as string)}
+          disabled={isPending}
+          rows={3}
+        />
       </form>
       
       {/* Modais de seleção */}

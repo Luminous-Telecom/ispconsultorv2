@@ -350,7 +350,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Contrato',
       sortable: true,
       searchable: true,
-      width: 90,
+      width: 75,
       resizable: true,
       render: (item: Titulo) => item.contrato_id || '-'
     },
@@ -359,7 +359,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Status',
       sortable: true,
       searchable: true,
-      width: 100,
+      width: 80,
       resizable: true,
       render: (item: Titulo) => getStatusBadge(item.status)
     },
@@ -379,14 +379,14 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       searchable: true,
       width: 120,
       resizable: true,
-      render: (item: Titulo) => <div className="fw-bold">{item.numero_titulo || '-'}</div>
+      render: (item: Titulo) => item.numero_titulo || '-'
     },
     {
       key: 'data_vencimento',
       label: 'Vencimento',
       sortable: true,
       searchable: false,
-      width: 110,
+      width: 90,
       resizable: true,
       render: (item: Titulo) => formatDate(item.data_vencimento)
     },
@@ -395,7 +395,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Valor',
       sortable: true,
       searchable: true,
-      width: 100,
+      width: 75,
       resizable: true,
       render: (item: Titulo) => formatCurrency(item.valor_final || item.valor)
     },
@@ -404,7 +404,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Valor baixado',
       sortable: true,
       searchable: true,
-      width: 120,
+      width: 100,
       resizable: true,
       render: (item: Titulo) => {
         return item.status === 'pago' ? formatCurrency(item.valor_pago || item.valor || 0) : formatCurrency(0);
@@ -415,6 +415,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Valor aberto',
       sortable: true,
       searchable: true,
+      width: 93,
       render: (item: Titulo) => {
         return (item.status === 'pago' || item.status === 'cancelado') ? formatCurrency(0) : formatCurrency(item.valor_final || item.valor || 0);
       }
@@ -445,6 +446,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Nosso Número',
       sortable: true,
       searchable: true,
+      width: 108,
       render: (item: Titulo) => item.nosso_numero || '-'
     },
     {
@@ -452,6 +454,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'NF',
       sortable: true,
       searchable: true,
+      width: 60,
       render: (item: Titulo) => item.nfse_numero || '-'
     },
     {
@@ -459,6 +462,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Status NF',
       sortable: true,
       searchable: true,
+      width: 85,
       render: (item: Titulo) => {
         if (!item.nfse_status) return '-';
         const statusMap: Record<string, { label: string; color: string }> = {
@@ -550,7 +554,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       {
         key: 'receber',
         label: 'Receber',
-        variant: 'success' as const,
+        variant: 'primary' as const,
         onClick: (selectedItems: Titulo[]) => {
           if (selectedItems.length > 0) {
             const item = selectedItems[0];
@@ -574,7 +578,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       {
         key: 'cancelar',
         label: 'Cancelar',
-        variant: 'danger' as const,
+        variant: 'primary' as const,
         onClick: async (selectedItems: Titulo[]) => {
           if (selectedItems.length === 0) return;
           
@@ -636,7 +640,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       {
         key: 'estornar',
         label: 'Estornar',
-        variant: 'warning' as const,
+        variant: 'primary' as const,
         onClick: async (selectedItems: Titulo[]) => {
           if (selectedItems.length === 0) return;
           

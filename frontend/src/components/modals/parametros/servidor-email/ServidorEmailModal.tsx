@@ -250,36 +250,73 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
   }, [activeTab, handleSaveMensagem]);
 
   const headerActionsContent = useMemo(() => (
-    <div className="d-flex gap-2">
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        onClick={handleSaveClick}
-        isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
-      >
-        Salvar
-      </Button>
-      <Button
-        type="button"
-        variant="outline-danger"
-        size="sm"
-        onClick={handleReset}
-        disabled={saveServidorMutation.isPending}
-      >
-        {(show && servidorAtivo?.data) ? 'Remover Servidor' : 'Limpar'}
-      </Button>
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        onClick={handleClose}
-        disabled={saveServidorMutation.isPending}
-      >
-        Fechar
-      </Button>
+    <div className="email-header-unified">
+      {/* Botões à direita */}
+      <div className="email-header-buttons">
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={handleSaveClick}
+          isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
+        >
+          Salvar
+        </Button>
+        <Button
+          type="button"
+          variant="outline-danger"
+          size="sm"
+          onClick={handleReset}
+          disabled={saveServidorMutation.isPending}
+        >
+          {(show && servidorAtivo?.data) ? 'Remover Servidor' : 'Limpar'}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={handleClose}
+          disabled={saveServidorMutation.isPending}
+        >
+          Fechar
+        </Button>
+      </div>
+
+      {/* Abas na parte inferior do header */}
+      <div className="email-header-tabs">
+        <ul
+          className={`nav nav-tabs email-tabs-unified ${isMobile ? 'email-tabs-mobile' : ''}`}
+          id="emailTab"
+          role="tablist"
+          style={{
+            margin: 0,
+            padding: 0,
+            borderBottom: 'none',
+            backgroundColor: 'transparent'
+          }}
+        >
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link modal-tab-hover ${activeTab === 'servidor' ? 'active' : ''}`}
+              onClick={() => setActiveTab('servidor')}
+              type="button"
+            >
+              Servidor
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'mensagens' ? 'active' : ''}`}
+              onClick={() => setActiveTab('mensagens')}
+              type="button"
+            >
+              Mensagens
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
-  ), [handleSaveClick, saveServidorMutation.isPending, saveMensagemMutation.isPending, show, servidorAtivo?.data, handleReset, handleClose]);
+  ), [handleSaveClick, saveServidorMutation.isPending, saveMensagemMutation.isPending, show, servidorAtivo?.data, handleReset, handleClose, activeTab, isMobile]);
 
   const headerActionsContentRef = useRef(headerActionsContent);
   headerActionsContentRef.current = headerActionsContent;
@@ -310,52 +347,11 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
           <Spinner size="md" variant="primary" aria-label="Carregando..." />
         </div>
       ) : (
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Navegação de Abas */}
-        <ul className="nav nav-tabs" role="tablist" style={{ 
-          flexShrink: 0, 
-          marginBottom: isMobile ? '1rem' : 0, 
-          marginTop: isMobile ? '0' : '1rem', 
-          marginLeft: isMobile ? '0' : '1rem', 
-          marginRight: isMobile ? '0' : '1rem',
-          ...(isMobile && {
-            display: 'flex',
-            flexWrap: 'nowrap',
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            WebkitOverflowScrolling: 'touch'
-          })
-        }}>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'servidor' ? 'active' : ''}`}
-              onClick={() => setActiveTab('servidor')}
-              type="button"
-            >
-              Servidor
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'mensagens' ? 'active' : ''}`}
-              onClick={() => setActiveTab('mensagens')}
-              type="button"
-            >
-              Mensagens
-            </button>
-          </li>
-        </ul>
-
+      <div className="email-modal-content">
         {/* Conteúdo das Abas */}
-        <div 
-          className="tab-content" 
-          style={{ 
-            flex: 1, 
-            overflow: 'auto', 
-            // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
-            padding: isMobile ? '0' : '16px',
-            minHeight: 0
-          }}
+        <div
+          className={`tab-content email-tab-content email-tab-content-padded`}
+          id="emailTabContent"
         >
           <form id="servidor-email-form" onSubmit={handleSubmit}>
             {/* Conteúdo da Aba Servidor */}

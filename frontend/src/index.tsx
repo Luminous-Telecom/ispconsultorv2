@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles/index.scss';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import App from './App';
 
 window.addEventListener('error', (event) => {

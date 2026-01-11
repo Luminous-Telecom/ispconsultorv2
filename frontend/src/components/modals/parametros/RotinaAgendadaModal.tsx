@@ -121,7 +121,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
 
   if (isLoading) {
     return (
-      <DraggableModal show={show} onClose={handleClose} title={isEditMode ? 'Editar Rotina' : 'Nova Rotina'}>
+      <DraggableModal show={show} onClose={handleClose} title="Rotina">
         <div className="text-center p-4">
           <Spinner size="md" variant="primary" aria-label="Carregando..." />
         </div>
@@ -133,7 +133,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleClose}
-      title={isEditMode ? 'Editar Rotina' : 'Nova Rotina'}
+      title="Rotina"
       size="lg"
       headerActions={
         <div className="d-flex gap-2">

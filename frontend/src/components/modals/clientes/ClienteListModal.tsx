@@ -83,7 +83,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       sortable: true,
       width: '200px',
       render: (item: Cliente) => (
-        <strong>{item.razao_social}</strong>
+        item.razao_social
       )
     },
     {
@@ -108,7 +108,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       key: 'whatsapp',
       label: 'WhatsApp',
       sortable: true,
-      width: '130px',
+      width: '120px',
       render: (item: Cliente) => (
         <span className="text-nowrap">{item.whatsapp || '-'}</span>
       )
@@ -126,6 +126,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       key: 'numero',
       label: 'Número',
       sortable: true,
+      width: '70px',
       render: (item: Cliente) => (
         <span>{item.numero || '-'}</span>
       )
@@ -134,6 +135,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       key: 'complemento',
       label: 'Complemento',
       sortable: true,
+      width: '120px',
       render: (item: Cliente) => (
         <span>{item.complemento || '-'}</span>
       )
@@ -142,6 +144,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       key: 'bairro',
       label: 'Bairro',
       sortable: true,
+      width: '120px',
       render: (item: Cliente) => (
         <span>{item.bairro || '-'}</span>
       )
@@ -150,6 +153,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       key: 'cidade',
       label: 'Cidade',
       sortable: true,
+      width: '130px',
       render: (item: Cliente) => (
         <span>{item.cidade || '-'}</span>
       )
@@ -158,6 +162,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       key: 'estado',
       label: 'Estado',
       sortable: true,
+      width: '63px',
       render: (item: Cliente) => (
         <span>{item.estado || '-'}</span>
       )
@@ -166,7 +171,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       key: 'ativo',
       label: 'Status',
       sortable: true,
-      width: '100px',
+      width: '60px',
       render: (item: Cliente) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
           {item.ativo ? 'Ativo' : 'Inativo'}
@@ -177,6 +182,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       key: 'created_at',
       label: 'Criado em',
       sortable: true,
+      width: '145px',
       render: (item: Cliente & { created_at?: string; created_at_formatada?: string | null }) => {
         // Usar created_at_formatada se disponível (vem do backend já formatada)
         if (item.created_at_formatada) {
@@ -206,8 +212,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       { key: 'bairro', label: 'Bairro' },
       { key: 'cidade', label: 'Cidade' },
       { key: 'estado', label: 'Estado' }
-    ],
-    multiSelect: true // Permitir seleção múltipla
+    ]
   });
 
   // Hook para buscar clientes usando parâmetros do useTableFilters
@@ -379,6 +384,13 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         loading={isLoading}
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
+        onRowDoubleClick={(cliente) => {
+          // Double-click seleciona o item e fecha o modal
+          if (onSelectClient) {
+            onSelectClient(cliente);
+            onClose();
+          }
+        }}
         search={tableFilters.search}
         onSearchChange={handleSearchChange}
         onSearchFieldChange={handleSearchFieldChange}

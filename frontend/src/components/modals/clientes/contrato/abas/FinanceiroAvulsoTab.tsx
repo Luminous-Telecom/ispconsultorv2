@@ -140,7 +140,15 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
               selectable: true,
               multiSelect: true,
               searchable: true,
-              searchPlaceholder: '',
+              searchPlaceholder: 'Buscar títulos avulsos...',
+              searchFields: [
+                { key: 'id', label: 'ID' },
+                { key: 'numero_titulo', label: 'Nº Título' },
+                { key: 'status', label: 'Status' },
+                { key: 'cliente', label: 'Cliente' },
+                { key: 'valor', label: 'Valor' },
+                { key: 'nfse_numero', label: 'NF' }
+              ],
               sortable: true,
               striped: true,
               hover: true,
@@ -177,7 +185,7 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
 
         {/* Resumo Financeiro */}
         {filteredData.length > 0 && (
-          <div className="d-flex justify-content-end align-items-center p-3 bg-light rounded financeiro-resumo" style={{ flexShrink: 0, marginBottom: isMobile ? '3rem' : '1rem', marginTop: isMobile ? '0.25rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+          <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginBottom: isMobile ? '3rem' : '1rem', marginTop: isMobile ? '0.25rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
             <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
               <div className="text-end">
                 <div className="small text-muted">Valor:</div>

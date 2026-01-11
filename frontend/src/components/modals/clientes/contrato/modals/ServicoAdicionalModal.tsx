@@ -144,7 +144,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
   };
 
   const headerActions = (
-    <div className="d-flex gap-2">
+    <div className="d-flex gap-2 modal-header-actions">
       <Button
         type="button"
         variant="secondary"
@@ -171,94 +171,87 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
       <DraggableModal
         show={show}
         onClose={onClose}
-        title={editingServico ? 'Editar Serviço Adicional' : 'Novo Serviço Adicional'}
+        title="Serviço Adicional"
         size="lg"
         headerActions={headerActions}
       >
         <form id="servico-adicional-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
-          <div className="row">
-            <div className="col-md-12 mb-1">
-              <EntitySelectField
-                value={planoId}
-                onChange={(value) => {
-                  const plano = planos.find((p: Plano) => p.id === value);
-                  if (plano) {
-                    handlePlanoSelect(plano);
-                  }
-                }}
-                onShowModal={() => setShowPlanoModal(true)}
-                entities={planos.map((p: Plano) => ({
-                  id: p.id,
-                  nome: p.nome_plano
-                }))}
-                label="Plano"
-                idFieldTitle="Digite o ID do plano"
-                helpText="Selecione um plano para vincular ao contrato"
-                required
-              />
-            </div>
+          <div className="d-flex flex-column gap-2">
+            <EntitySelectField
+              value={planoId}
+              onChange={(value) => {
+                const plano = planos.find((p: Plano) => p.id === value);
+                if (plano) {
+                  handlePlanoSelect(plano);
+                }
+              }}
+              onShowModal={() => setShowPlanoModal(true)}
+              entities={planos.map((p: Plano) => ({
+                id: p.id,
+                nome: p.nome_plano
+              }))}
+              label="Plano"
+              idFieldTitle="Digite o ID do plano"
+              helpText="Selecione um plano para vincular ao contrato"
+              required
+            />
 
             {planoSelecionado && (
-              <div className="col-md-12 mb-1">
-                <div className="alert alert-info mb-0">
-                  <strong>Plano selecionado:</strong> {planoSelecionado.nome_plano} - R$ {(parseFloat(planoSelecionado.valor_mensal?.toString() || '0') || 0).toFixed(2).replace('.', ',')}
-                </div>
+              <div className="alert alert-info p-2 small mb-2">
+                <strong>Plano selecionado:</strong> {planoSelecionado.nome_plano} - R$ {(parseFloat(planoSelecionado.valor_mensal?.toString() || '0') || 0).toFixed(2).replace('.', ',')}
               </div>
             )}
 
-            <div className="col-md-6 mb-1">
-              <FormField
-                name="desconto_percentual"
-                type="number"
-                label="Desconto (%)"
-                size="md"
-                value={descontoPercentual}
-                onChange={(value) => handleDescontoPercentualChange(value as number)}
-                step="any"
-                min={0}
-                max={100}
-              />
+            <div className="d-flex gap-2">
+              <div className="flex-fill">
+                <FormField
+                  name="desconto_percentual"
+                  type="number"
+                  label="Desconto (%)"
+                  size="md"
+                  value={descontoPercentual}
+                  onChange={(value) => handleDescontoPercentualChange(value as number)}
+                  step="any"
+                  min={0}
+                  max={100}
+                />
+              </div>
+              <div className="flex-fill">
+                <FormField
+                  name="desconto_valor"
+                  type="number"
+                  label="Desconto (R$)"
+                  size="md"
+                  value={descontoValor}
+                  onChange={(value) => handleDescontoValorChange(value as number)}
+                  step={0.01}
+                  min={0}
+                />
+              </div>
             </div>
 
-            <div className="col-md-6 mb-1">
-              <FormField
-                name="desconto_valor"
-                type="number"
-                label="Desconto (R$)"
-                size="md"
-                value={descontoValor}
-                onChange={(value) => handleDescontoValorChange(value as number)}
-                step={0.01}
-                min={0}
-              />
-            </div>
+            <FormField
+              name="status"
+              type="select"
+              label="Status"
+              size="md"
+              value={status}
+              onChange={(value) => setStatus(value as 'ativo' | 'inativo' | 'suspenso')}
+              options={[
+                { value: 'ativo', label: 'Ativo' },
+                { value: 'inativo', label: 'Inativo' },
+                { value: 'suspenso', label: 'Suspenso' }
+              ]}
+            />
 
-            <div className="col-md-6 mb-1">
-              <FormField
-                name="status"
-                type="select"
-                label="Status"
-                size="md"
-                value={status}
-                onChange={(value) => setStatus(value as 'ativo' | 'inativo' | 'suspenso')}
-                options={[
-                  { value: 'ativo', label: 'Ativo' },
-                  { value: 'inativo', label: 'Inativo' },
-                  { value: 'suspenso', label: 'Suspenso' }
-                ]}
-              />
-            </div>
-
-            <div className="col-md-12 mb-1">
-              <FormField
-                name="observacoes"
-                type="textarea"
-                label="Observações"
-                size="md"
-                value={observacoes}
-                onChange={(value) => setObservacoes(value as string)}
-              />
-            </div>
+            <FormField
+              name="observacoes"
+              type="textarea"
+              label="Observações"
+              size="md"
+              value={observacoes}
+              onChange={(value) => setObservacoes(value as string)}
+            />
           </div>
         </form>
       </DraggableModal>

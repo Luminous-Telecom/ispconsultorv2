@@ -237,13 +237,14 @@ $card-box-shadow: $box-shadow !default;
 // Sobrescrever estilos padrão do Bootstrap para paginação
 .pagination {
   margin-bottom: 0 !important;
+  border-radius: $border-radius !important;
 }
 
 .page-link {
   color: var(--text-primary) !important;
   background-color: var(--bg-primary) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: var(--border-radius) !important;
+  border-radius: 0 !important;
   padding: 0.25rem 0.5rem !important;
   font-size: var(--font-size-sm) !important;
   line-height: 1.25 !important;
@@ -285,6 +286,17 @@ $card-box-shadow: $box-shadow !default;
   color: white !important;
   background-color: var(--btn-primary-hover) !important;
   border-color: var(--btn-primary-hover) !important;
+}
+
+// Ajustar bordas dos botões extremos para funcionar com border-radius do container
+.page-item:first-child .page-link {
+  border-top-left-radius: $border-radius !important;
+  border-bottom-left-radius: $border-radius !important;
+}
+
+.page-item:last-child .page-link {
+  border-top-right-radius: $border-radius !important;
+  border-bottom-right-radius: $border-radius !important;
 }
 
 // ===== RESPONSIVIDADE CUSTOMIZADA =====

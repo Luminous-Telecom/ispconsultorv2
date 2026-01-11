@@ -104,7 +104,7 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
       label: 'Nome',
       sortable: true,
       render: (item: ModeloCarta) => (
-        <div className="fw-medium">{item.nome || '-'}</div>
+        <div>{item.nome || '-'}</div>
       )
     },
     {
@@ -209,6 +209,13 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
                 loading: isLoading,
                 searchable: true,
                 searchPlaceholder: 'Buscar cartas de cobrança...',
+                searchFields: [
+                  { key: 'id', label: 'ID' },
+                  { key: 'numero_carta', label: 'Nº Carta' },
+                  { key: 'cliente', label: 'Cliente' },
+                  { key: 'valor', label: 'Valor' },
+                  { key: 'status', label: 'Status' }
+                ],
                 sortable: true,
                 striped: true,
                 hover: true,

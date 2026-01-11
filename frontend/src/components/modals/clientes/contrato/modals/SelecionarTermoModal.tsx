@@ -71,7 +71,7 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
         key: 'nome',
         label: 'Nome',
         sortable: true,
-        render: (termo: Termo) => <strong>{termo.nome}</strong>
+        render: (termo: Termo) => termo.nome
       },
       {
         key: 'ativo',
