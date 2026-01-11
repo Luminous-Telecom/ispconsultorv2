@@ -91,37 +91,21 @@ const Dashboard: React.FC = () => {
                 <h2 className="dashboard-hero-title mb-2">Painel financeiro e operacional</h2>
 
                 {/* Filtros de Data Integrados */}
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-transparent border-0 text-custom-primary px-1"
-                  style={{
-                    width: '120px',
-                    fontSize: '0.85rem',
-                    background: 'var(--bg-custom-secondary)',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '0.375rem',
-                    border: '1px solid var(--border-custom)',
-                    color: 'var(--text-custom-primary)'
-                  }}
-                />
-                <span className="text-custom-secondary small mx-2">até</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-transparent border-0 text-custom-primary px-1"
-                  style={{
-                    width: '120px',
-                    fontSize: '0.85rem',
-                    background: 'var(--bg-custom-secondary)',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '0.375rem',
-                    border: '1px solid var(--border-custom)',
-                    color: 'var(--text-custom-primary)'
-                  }}
-                />
+                <div className="dashboard-filters-group">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="dashboard-date-input"
+                  />
+                  <span className="dashboard-date-separator">até</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="dashboard-date-input"
+                  />
+                </div>
                 <p className="dashboard-hero-subtitle mt-2 mb-0">
                   Atualizado em {lastUpdatedDate} às {lastUpdatedTime}
                 </p>
