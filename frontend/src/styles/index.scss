@@ -1,0 +1,40 @@
+/* ============================================
+   INDEX SCSS - Importa todos os arquivos de estilo
+   ============================================ */
+
+/* Variáveis e mixins (sempre primeiro) */
+@import 'variables';
+@import 'mixins';
+@import 'bootstrap-custom';
+
+/* Bootstrap CSS */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* Estilos base */
+@import 'base';
+
+/* Sidebar */
+@import 'sidebar';
+
+/* Layout */
+@import 'layout';
+
+/* Componentes */
+@import 'components';
+
+/* Tabelas */
+@import 'tables';
+
+/* Dashboard */
+@import 'dashboard';
+
+/* Tema */
+@import 'themes';
+
+/* CSS customizado adicional legível */
+@import 'custom-select.css';
+@import '../components/ui/ui.css';
+@import '../components/notifications/notifications.css';
+@import '../index.css';
+@import 'protection.css';
