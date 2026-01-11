@@ -537,8 +537,10 @@
   border-radius: var(--border-radius);
   overflow: hidden;
   /* Transições removidas para manter consistência visual */
-  width: 100%;
+  flex: 1;
   height: 46px;
+  max-width: none;
+  margin-right: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -754,8 +756,10 @@
 /* Responsividade */
 @media (max-width: 991.98px) {
   .navbar-search-container {
-    width: 100%;
+    flex: 1;
     height: 42px;
+    max-width: none;
+    margin-right: 0.75rem;
   }
 
   .navbar-search-field {
