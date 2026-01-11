@@ -17,8 +17,6 @@ const Dashboard: React.FC = () => {
     endDate,
     setStartDate,
     setEndDate,
-    _periodoInicioLabel,
-    _periodoFimLabel,
   } = useDashboardFilters();
 
   // Gerenciar itens ocultos dos gráficos usando hook customizado
