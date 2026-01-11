@@ -153,7 +153,7 @@ const Dashboard: React.FC = () => {
                 <div className="chart-compact-container">
                   <ResponsiveLineChart
                     data={charts.recebidosPeriodoChartData}
-                    title={`Recebidos (${periodoInicioLabel} - ${periodoFimLabel})`}
+                    title="Recebidos"
                     format="currency"
                   />
                 </div>
@@ -162,7 +162,7 @@ const Dashboard: React.FC = () => {
                 <div className="chart-compact-container">
                   <ResponsiveLineChart
                     data={charts.receberPeriodoChartData}
-                    title={`A Receber (${periodoInicioLabel} - ${periodoFimLabel})`}
+                    title="A Receber"
                     format="currency"
                   />
                 </div>
