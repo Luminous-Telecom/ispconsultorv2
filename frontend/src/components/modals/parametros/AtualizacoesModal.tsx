@@ -40,15 +40,24 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
   const { data: atualizacoes, isLoading, error } = useQuery<Atualizacao[]>({
     queryKey: ['atualizacoes'],
     queryFn: async (): Promise<Atualizacao[]> => {
-      const response = await apiService.get<Atualizacao[]>('/atualizacoes') as ApiResponseWithVersao;
-      
-      if (response.success) {
-        const atualizacoesArray = Array.isArray(response.data) ? response.data : [];
-        const versao = response.versao_atual || 'N/A';
-        setVersaoAtual(versao);
-        return atualizacoesArray;
+
+      try {
+        const response = await apiService.get('/atualizacoes') as ApiResponseWithVersao;
+
+
+        if (response.success && response.data) {
+          // A resposta tem estrutura { data: { data: [...], versao_atual: "..." } }
+          const responseData = response.data as { data?: Atualizacao[]; versao_atual?: string };
+          const atualizacoesArray = Array.isArray(responseData.data) ? responseData.data : [];
+          const versao = responseData.versao_atual || 'N/A';
+          setVersaoAtual(versao);
+
+          return atualizacoesArray;
+        }
+        return [];
+      } catch (err) {
+        throw err;
       }
-      return [];
     },
     enabled: show,
     refetchOnWindowFocus: false,
@@ -57,6 +66,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
   const executeUpdateWithSSE = async (branch: string = 'main'): Promise<void> => {
     return new Promise((resolve, reject) => {
+
       setIsUpdating(true);
       setUpdateProgress('Iniciando atualização...');
       setUpdateProgressPercent(0);
@@ -69,35 +79,41 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       }
 
       const url = `${API_CONFIG.BASE_URL}/atualizacoes/update-stream?branch=${encodeURIComponent(branch)}`;
-      
+
+
       fetch(url, {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${token}` },
       })
         .then(response => {
+
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          
+
           const reader = response.body?.getReader();
           if (!reader) {
             throw new Error('Response body não disponível');
           }
 
+
           const decoder = new TextDecoder();
+
           const processStream = async () => {
             try {
               while (true) {
                 const { done, value } = await reader.read();
-                if (done) break;
+                if (done) {
+                  break;
+                }
 
                 const lines = decoder.decode(value, { stream: true }).split('\n');
                 for (const line of lines) {
                   if (!line.startsWith('data: ')) continue;
-                  
+
                   try {
                     const data = JSON.parse(line.substring(6));
-                    
+
                     if (data.error) {
                       setIsUpdating(false);
                       setUpdateLogs(prev => [...prev, `✗ Erro: ${data.error}`]);
@@ -120,7 +136,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                       resolve();
                       return;
                     }
-                  } catch {
+                  } catch (parseError) {
                     // Ignorar erros de parsing
                   }
                 }
@@ -163,6 +179,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
   });
 
   const handleUpdate = async () => {
+
     const confirmed = await confirm({
       message: 'Tem certeza que deseja atualizar o sistema? Esta ação irá:\n\n1. Baixar as últimas alterações do repositório\n2. Atualizar dependências\n3. Compilar o código\n4. Executar migrations do banco de dados\n5. Reiniciar a aplicação\n\nO processo pode levar alguns minutos.',
       variant: 'warning',
@@ -170,7 +187,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       confirmText: 'Atualizar',
       cancelText: 'Cancelar',
     });
-    
+
     if (!confirmed) {
       return;
     }
