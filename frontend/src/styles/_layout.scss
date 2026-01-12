@@ -61,16 +61,6 @@
    HEADER - BOOTSTRAP NAVBAR STYLE
    ============================================ */
 
-.main-navbar {
-  background-color: var(--navbar-bg);
-  border-bottom: 1px solid var(--navbar-border);
-  padding-top: 0.5rem !important;
-  padding-bottom: 0.5rem !important;
-  transition: all 0.3s ease;
-  min-height: 64px;
-  display: flex;
-  align-items: center;
-}
 
 .navbar-brand {
   padding-top: 0;
@@ -209,10 +199,19 @@
   }
 }
 
+.container, 
+.container-fluid, 
+.container-lg, 
+.container-md, 
+.container-sm, 
+.container-xl, 
+.container-xxl {
+  --bs-gutter-x: 1.0rem;
+}
 
 /* Container do dashboard - margens laterais consistentes */
 .dashboard-container {
-  padding: 0.5rem;
+  padding: 0 0.5rem 0.5rem;
   animation: fadeIn 0.4s ease;
 }
 
@@ -349,20 +348,6 @@
     min-width: 160px;
     max-width: 160px;
   }
-}
-
-/* ============================================
-   NAVBAR MINIMALISTA
-   ============================================ */
-
-/* Navbar principal - estilos minimalistas */
-.main-navbar {
-  background-color: var(--navbar-bg) !important;
-  border-bottom: 1px solid var(--navbar-border) !important;
-  padding-top: 0.375rem !important;
-  padding-bottom: 0.375rem !important;
-  min-height: 56px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Toggler button - mais compacto */
@@ -536,11 +521,10 @@
   border: 1px solid var(--border-light);
   border-radius: var(--border-radius);
   overflow: hidden;
-  /* Transições removidas para manter consistência visual */
   flex: 1;
   height: 46px;
   max-width: none;
-  margin-right: 1rem;
+  margin-right: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
