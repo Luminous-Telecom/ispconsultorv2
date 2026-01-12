@@ -278,7 +278,6 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     },
     {
       label: 'Cancelar Nota Fiscal',
-      variant: 'danger' as const,
       disabled: (selectedItems: NotaFiscal[]) => {
         if (selectedItems.length !== 1) return true;
         const notaFiscal = selectedItems[0];

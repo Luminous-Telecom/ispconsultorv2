@@ -170,7 +170,6 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
     },
     {
       label: 'Deletar',
-      variant: 'danger' as const,
       onClick: async (selectedItems: ModeloRecibo[]) => {
         if (selectedItems.length === 0) return;
         

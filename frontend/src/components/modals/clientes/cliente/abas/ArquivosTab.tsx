@@ -150,7 +150,6 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       {
         key: 'view',
         label: 'Visualizar',
-        variant: 'info' as const,
         disabled: (items: ClienteArquivo[]) => {
           if (items.length === 0) return true;
           const extensoesVisiveis = /\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg|ico|mp4|webm|ogg|mov|avi|txt|csv|json|xml|html|css|js|md)$/i;
@@ -182,7 +181,6 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       {
         key: 'delete-selected',
         label: 'Excluir',
-        variant: 'danger' as const,
         disabled: (selectedItems: ClienteArquivo[]) => selectedItems.length === 0 || deleteMutation.isPending,
         onClick: async (selectedItems: ClienteArquivo[]) => {
           if (selectedItems.length === 0) return;

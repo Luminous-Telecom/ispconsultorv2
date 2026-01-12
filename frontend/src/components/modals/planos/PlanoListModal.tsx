@@ -291,7 +291,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       label: 'Excluir',
-      variant: 'danger' as const,
       disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: Plano[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;

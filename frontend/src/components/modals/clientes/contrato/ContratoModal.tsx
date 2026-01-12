@@ -519,7 +519,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Receber',
-      variant: 'success',
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -534,7 +533,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Cancelar',
-      variant: 'danger',
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
@@ -596,7 +594,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Estornar',
-      variant: 'warning',
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
@@ -649,7 +646,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Enviar',
-      variant: 'info',
       disabled: (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'cancelado');
@@ -787,7 +783,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Receber',
-      variant: 'success',
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -802,7 +797,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Cancelar',
-      variant: 'danger',
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
@@ -864,7 +858,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Estornar',
-      variant: 'warning',
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
@@ -917,7 +910,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Enviar',
-      variant: 'info',
       disabled: (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'cancelado');
@@ -1063,7 +1055,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Deletar',
-      variant: 'danger',
       action: async (selectedItems: TermoContrato[]) => {
         const items = selectedItems && selectedItems.length > 0 ? selectedItems : selectedTermosItems;
         if (items.length === 0) return;
@@ -1128,7 +1119,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Enviar para Assinatura',
-      variant: 'info',
       disabled: (selectedItems: TermoContrato[]) => {
         const items = selectedItems && selectedItems.length > 0 ? selectedItems : selectedTermosItems;
         return items.length === 0 || items[0]?.assinado === 'SIM';
@@ -1166,7 +1156,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       label: 'Deletar',
-      variant: 'danger',
       action: async (selectedItems: ContratoPlanoAdicional[]) => {
         if (selectedItems.length === 0) return;
         

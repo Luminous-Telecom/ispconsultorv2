@@ -310,7 +310,6 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     },
     {
       label: 'Excluir',
-      variant: 'danger' as const,
       disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
       action: (selectedItems: RotinaAgendada[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;

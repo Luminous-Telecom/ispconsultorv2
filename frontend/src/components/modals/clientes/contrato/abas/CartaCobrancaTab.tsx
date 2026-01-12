@@ -170,7 +170,6 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
     },
     {
       label: 'Deletar',
-      variant: 'danger' as const,
       onClick: async (selectedItems: ModeloCarta[]) => {
         if (selectedItems.length === 0) return;
         

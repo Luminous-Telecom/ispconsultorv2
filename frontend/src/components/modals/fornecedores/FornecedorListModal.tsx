@@ -309,7 +309,6 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       label: 'Excluir',
-      variant: 'danger' as const,
       disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0,
       action: async (selectedItems: Fornecedor[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;

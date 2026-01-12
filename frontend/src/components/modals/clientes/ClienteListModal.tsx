@@ -335,7 +335,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       },
       {
         label: 'Excluir',
-        variant: 'danger' as const,
         disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
         action: handleEditDelete
       }

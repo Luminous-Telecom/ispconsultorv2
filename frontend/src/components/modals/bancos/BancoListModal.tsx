@@ -258,7 +258,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     },
     {
       label: 'Excluir',
-      variant: 'danger' as const,
       disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
       action: async (selectedItems: Banco[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;

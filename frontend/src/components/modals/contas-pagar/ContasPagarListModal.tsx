@@ -510,7 +510,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     },
     {
       label: 'Excluir',
-      variant: 'danger' as const,
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
       action: async (selectedItems: ContaPagar[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
