@@ -1202,6 +1202,19 @@ label {
   padding: 0 1rem 0.5rem 1rem !important;
 }
 
+/* Garantir altura consistente na barra de paginação */
+.table-pagination-header .form-select,
+.table-pagination-header .form-control,
+.table-pagination-header .btn,
+.table-pagination-header .page-link,
+.table-pagination-header .table-search-combined {
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  line-height: 1.25 !important;
+  box-sizing: border-box !important;
+}
+
 /* Table pagination flex */
 .table-pagination-flex {
   gap: 0.5rem !important;
