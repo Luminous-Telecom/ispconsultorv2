@@ -153,7 +153,7 @@ label {
   border-right: 1px solid var(--border-light);
   padding: 0.25rem 0.5rem;
   vertical-align: middle;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 400;
 }
 
@@ -167,7 +167,7 @@ label {
   border-bottom: 1px solid var(--border-light);
   border-right: 1px solid var(--border-light);
   color: var(--text-primary);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -185,8 +185,8 @@ label {
 .table thead th {
   background: var(--bg-secondary) !important;
   border-bottom: 1px solid var(--border-color);
-  font-weight: 600;
-  font-size: 0.8125rem;
+  font-weight: 700;
+  font-size: 0.75rem;
   letter-spacing: 0.01em;
   text-transform: none;
   cursor: pointer;
@@ -730,7 +730,7 @@ label {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   line-height: 1.4;
 }
 
@@ -859,7 +859,7 @@ label {
   border: none;
   text-align: left;
   color: var(--text-primary);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1047,7 +1047,7 @@ label {
   border: none;
   text-align: left;
   color: var(--text-primary);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1094,7 +1094,8 @@ label {
 
 /* Checkbox header column */
 .table-checkbox-header {
-  font-size: 0.75rem !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
   padding: 0.5rem !important;
   width: 40px !important;
   text-transform: none !important;
@@ -1102,7 +1103,8 @@ label {
 
 /* Actions header column */
 .table-actions-header {
-  font-size: 0.75rem !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
   padding: 0.5rem !important;
   width: 150px !important;
   text-align: right !important;
@@ -1111,20 +1113,20 @@ label {
 
 /* Checkbox cell */
 .table-checkbox-cell {
-  font-size: 0.75rem !important;
+  font-size: 0.7rem !important;
   padding: 0.5rem !important;
   width: 40px !important;
 }
 
 /* Data cell */
 .table-data-cell {
-  font-size: 0.75rem !important;
+  font-size: 0.7rem !important;
   padding: 0.5rem !important;
 }
 
 /* Actions cell */
 .table-actions-cell {
-  font-size: 0.75rem !important;
+  font-size: 0.7rem !important;
   padding: 0.5rem !important;
   text-align: right !important;
 }
