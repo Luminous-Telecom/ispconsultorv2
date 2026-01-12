@@ -326,7 +326,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         </Button>
         <Button
           type="button"
-          variant="outline-danger"
+          variant="outline-primary"
           size="sm"
           onClick={handleReset}
           disabled={saveServidorMutation.isPending}
@@ -335,7 +335,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         </Button>
         <Button
           type="button"
-          variant="secondary"
+          variant="primary"
           size="sm"
           onClick={handleClose}
           disabled={saveServidorMutation.isPending}

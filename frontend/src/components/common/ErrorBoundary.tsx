@@ -52,7 +52,7 @@ class ErrorBoundary extends Component<Props, State> {
               Recarregar Página
             </Button>
             <Button
-              variant="outline-secondary"
+              variant="outline-primary"
               onClick={() => this.setState({ hasError: false, error: undefined })}
             >
               Tentar Novamente

@@ -283,7 +283,7 @@ const Notification: React.FC<NotificationProps> = ({
         {config.dismissible !== false && (
           <div className="notification-close">
             <Button
-              variant="outline-secondary"
+              variant="outline-primary"
               size="sm"
               icon="x"
               onClick={handleClose}

@@ -147,7 +147,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
     <div className="d-flex gap-2 modal-header-actions">
       <Button
         type="button"
-        variant="secondary"
+        variant="primary"
         size="sm"
         onClick={onClose}
         disabled={createMutation.isPending || updateMutation.isPending}

@@ -99,7 +99,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
   const headerActions = (
     <>
       <Button
-        variant="secondary"
+        variant="primary"
         onClick={onClose}
         disabled={isSubmitting}
       >

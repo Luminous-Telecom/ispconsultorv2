@@ -560,7 +560,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
             <div className="fornecedor-header-buttons">
               <Button
                 type="button"
-                variant="secondary"
+                variant="primary"
                 size="sm"
                 onClick={onClose}
                 disabled={isSubmitting}

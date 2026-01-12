@@ -585,7 +585,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
               <div className="d-flex gap-2">
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="primary"
                   size="sm"
                   onClick={onClose}
                   disabled={createMutation.isPending || updateMutation.isPending || pagarMutation.isPending}
@@ -634,7 +634,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             <div className="d-flex gap-2">
               <Button
                 type="button"
-                variant="secondary"
+                variant="primary"
                 size="sm"
                 onClick={() => {
                   setShowPagamentoModal(false);

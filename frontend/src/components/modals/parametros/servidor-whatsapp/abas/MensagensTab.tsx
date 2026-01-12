@@ -169,7 +169,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                           checked={tipoEnvio === 'desativado'}
                           onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
                         />
-                        <label className="btn btn-outline-secondary" htmlFor="envio-desativado">
+                        <label className="btn btn-outline-primary" htmlFor="envio-desativado">
                           <i className="bi bi-x-circle me-1"></i>
                           Desativar
                         </label>
@@ -183,7 +183,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                           checked={tipoEnvio === 'pdf'}
                           onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
                         />
-                        <label className="btn btn-outline-secondary" htmlFor="envio-pdf">
+                        <label className="btn btn-outline-primary" htmlFor="envio-pdf">
                           <i className="bi bi-file-pdf me-1"></i>
                           Anexa PDF
                         </label>

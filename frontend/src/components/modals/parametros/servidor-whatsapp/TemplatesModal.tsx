@@ -90,7 +90,7 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({ show, onClose }) => {
         <div className="d-flex gap-2">
           <Button
             type="button"
-            variant="info"
+            variant="primary"
             size="sm"
             leftIcon={<i className="bi bi-question-circle"></i>}
             data-bs-toggle="collapse"
@@ -112,7 +112,7 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({ show, onClose }) => {
           </Button>
           <Button
             type="button"
-            variant="secondary"
+            variant="primary"
             size="sm"
             leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}
@@ -263,7 +263,7 @@ Atenção: Faltam apenas *{{4}}* para o vencimento!`}
                             </Button>
                             <Button
                               type="button"
-                              variant="outline-success"
+                              variant="outline-primary"
                               size="sm"
                               leftIcon={<i className="bi bi-code-square"></i>}
                               iconOnlyOnMobile

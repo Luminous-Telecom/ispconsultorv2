@@ -264,7 +264,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
         </Button>
         <Button
           type="button"
-          variant="outline-danger"
+          variant="outline-primary"
           size="sm"
           onClick={handleReset}
           disabled={saveServidorMutation.isPending}
@@ -273,7 +273,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
         </Button>
         <Button
           type="button"
-          variant="secondary"
+          variant="primary"
           size="sm"
           onClick={handleClose}
           disabled={saveServidorMutation.isPending}

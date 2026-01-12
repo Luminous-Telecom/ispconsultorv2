@@ -139,7 +139,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
         <div className="d-flex gap-2">
           <Button
             type="button"
-            variant="secondary"
+            variant="primary"
             size="sm"
             onClick={handleClose}
             disabled={isSaving}

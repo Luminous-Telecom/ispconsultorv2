@@ -103,7 +103,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
             <div className="plano-header-buttons">
               <Button
                 type="button"
-                variant="secondary"
+                variant="primary"
                 size="sm"
                 leftIcon={<i className="bi bi-x-lg"></i>}
                 onClick={onClose}

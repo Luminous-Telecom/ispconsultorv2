@@ -272,7 +272,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
             <div className="banco-header-buttons">
               <Button
                 type="button"
-                variant="secondary"
+                variant="primary"
                 size="sm"
                 leftIcon={<i className="bi bi-x-lg"></i>}
                 onClick={handleCancel}

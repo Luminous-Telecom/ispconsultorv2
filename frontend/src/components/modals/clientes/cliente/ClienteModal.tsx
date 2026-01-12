@@ -498,7 +498,7 @@ const ClienteModal = ({
               <div className="cliente-header-buttons">
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="primary"
                   size="sm"
                   leftIcon={<i className="bi bi-x-lg"></i>}
                   onClick={handleClose}

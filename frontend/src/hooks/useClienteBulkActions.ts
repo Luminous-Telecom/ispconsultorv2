@@ -363,7 +363,7 @@ export const useClienteBulkActions = ({
     {
       key: 'receber',
       label: 'Receber',
-      variant: 'success',
+      variant: 'primary',
       disabled: (selectedItems) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
@@ -381,7 +381,7 @@ export const useClienteBulkActions = ({
     {
       key: 'cancelar',
       label: 'Cancelar',
-      variant: 'danger',
+      variant: 'primary',
       disabled: (selectedItems) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
@@ -391,7 +391,7 @@ export const useClienteBulkActions = ({
     {
       key: 'estornar',
       label: 'Estornar',
-      variant: 'warning',
+      variant: 'primary',
       disabled: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status !== 'pago');
@@ -441,7 +441,7 @@ export const useClienteBulkActions = ({
     {
       key: 'enviar',
       label: 'Enviar',
-      variant: 'info',
+      variant: 'primary',
       disabled: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'cancelado');

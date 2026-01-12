@@ -208,7 +208,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
             <div className="d-flex gap-2">
               <Button
                 type="button"
-                variant="outline-success"
+                variant="outline-primary"
                 leftIcon={<i className="bi bi-send"></i>}
                 onClick={onSendTestMessage}
                 isLoading={isSendingTest}

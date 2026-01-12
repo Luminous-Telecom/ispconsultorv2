@@ -315,7 +315,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       </div>
       <div className="col-md-2 d-flex align-items-end">
         <button
-          className="btn btn-sm btn-outline-secondary w-100"
+          className="btn btn-sm btn-outline-primary w-100"
           onClick={handleClearFilters}
         >
           Limpar

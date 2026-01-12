@@ -98,7 +98,7 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
  *   Salvar
  * </Button>
  * 
- * <Button variant="secondary" leftIcon={<i className="bi bi-x-lg"></i>} isLoading={isSubmitting}>
+ * <Button variant="primary" leftIcon={<i className="bi bi-x-lg"></i>} isLoading={isSubmitting}>
  *   Cancelar
  * </Button>
  * 

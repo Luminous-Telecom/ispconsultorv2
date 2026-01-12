@@ -175,7 +175,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         <div className="d-flex gap-2">
           <Button
             type="button"
-            variant="secondary"
+            variant="primary"
             size="sm"
             leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}
@@ -290,7 +290,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
                   <div className="d-flex flex-wrap gap-2 mt-2">
                     <Button
                       type="button"
-                      variant="outline-secondary"
+                      variant="outline-primary"
                       size="sm"
                       onClick={handleGenerateWebhookSecret}
                       isLoading={isGeneratingSecret}

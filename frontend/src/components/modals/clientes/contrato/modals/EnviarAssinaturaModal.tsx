@@ -118,7 +118,7 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
     <div className="d-flex gap-2">
       <Button
         type="button"
-        variant="secondary"
+        variant="primary"
         size="sm"
         onClick={onClose}
         disabled={isSubmitting}

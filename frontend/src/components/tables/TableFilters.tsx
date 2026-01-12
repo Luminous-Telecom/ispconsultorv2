@@ -174,7 +174,7 @@ const TableFilters: React.FC<TableFiltersProps> = ({
         
         {showClearButton && (
           <Button
-            variant="outline-secondary"
+            variant="outline-primary"
             size="sm"
             onClick={clearFilters}
             disabled={!hasActiveFilters}
@@ -202,7 +202,7 @@ const TableFilters: React.FC<TableFiltersProps> = ({
         
         {collapsible && (
             <Button
-              variant="outline-secondary"
+              variant="outline-primary"
               size="sm"
               icon={isExpanded ? 'chevron-up' : 'chevron-down'}
               onClick={() => setIsExpanded(!isExpanded)}

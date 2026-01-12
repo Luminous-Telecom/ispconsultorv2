@@ -187,7 +187,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           {/* Footer */}
           <div className="modal-footer">
             <Button
-              variant="outline-secondary"
+              variant="outline-primary"
               onClick={onClose}
               disabled={isLoading}
             >

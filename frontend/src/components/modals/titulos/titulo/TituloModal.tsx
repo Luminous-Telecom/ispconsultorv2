@@ -253,7 +253,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
             <div className="btn-group">
               <button
                 type="button"
-                className="btn btn-info btn-sm dropdown-toggle"
+                className="btn btn-primary btn-sm dropdown-toggle"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
                 disabled={isPending}
@@ -310,7 +310,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
           )}
           <Button
             type="button"
-            variant="secondary"
+            variant="primary"
             size="sm"
             leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={handleCancel}

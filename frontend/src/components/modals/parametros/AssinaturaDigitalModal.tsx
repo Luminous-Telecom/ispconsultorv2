@@ -158,7 +158,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
     <div className="d-flex gap-2">
       <Button
         type="button"
-        variant="secondary"
+        variant="primary"
         size="sm"
         onClick={onClose}
         disabled={updateMutation.isPending || isLoading || isLoadingEnabled}
@@ -282,7 +282,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                 />
                 <button
                   type="button"
-                  className="btn btn-outline-secondary"
+                  className="btn btn-outline-primary"
                   onClick={() => setShowApiKey(!showApiKey)}
                   disabled={updateMutation.isPending}
                 >

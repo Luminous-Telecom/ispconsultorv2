@@ -6,7 +6,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { ParametrosService } from '@/services/parametrosService';
 import { useFormReset } from '@/hooks/useFormReset';
 import DraggableModal from '@/components/common/DraggableModal';
-import { Button, Spinner } from '@/components/ui';
+import { Button } from '@/components/ui';
 interface ParametrosModalProps {
   show: boolean;
   onClose: () => void;
@@ -118,7 +118,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
         <div className="d-flex gap-2">
           <Button
             type="button"
-            variant="secondary"
+            variant="primary"
             size="sm"
             leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={handleCancel}

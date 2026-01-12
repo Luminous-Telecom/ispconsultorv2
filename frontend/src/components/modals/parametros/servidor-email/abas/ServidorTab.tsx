@@ -158,7 +158,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                   />
                   <Button
                     type="button"
-                    variant="outline-success"
+                    variant="outline-primary"
                     leftIcon={<i className="bi bi-send"></i>}
                     onClick={onSendTestEmail}
                     isLoading={isSendingTest}

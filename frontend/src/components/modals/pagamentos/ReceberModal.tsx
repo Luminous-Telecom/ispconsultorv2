@@ -189,7 +189,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
         <div className="d-flex justify-content-end gap-2 mt-4">
           <Button
             type="button"
-            variant="secondary"
+            variant="primary"
             leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}
             disabled={marcarPagoMutation.isPending}
@@ -198,7 +198,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
           </Button>
           <Button
             type="submit"
-            variant="success"
+            variant="primary"
             leftIcon={<i className="bi bi-check-lg"></i>}
             isLoading={marcarPagoMutation.isPending}
           >

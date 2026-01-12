@@ -64,7 +64,7 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
           <div className="d-flex flex-wrap gap-2 mt-2">
             <Button
               type="button"
-              variant="outline-secondary"
+              variant="outline-primary"
               size="sm"
               onClick={onGenerateWebhookSecret}
               isLoading={isGeneratingSecret}

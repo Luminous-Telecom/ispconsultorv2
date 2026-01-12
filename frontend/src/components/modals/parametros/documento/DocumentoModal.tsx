@@ -369,7 +369,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       <div className="documento-header-buttons">
         <div className="dropdown">
           <Button
-            variant="info"
+            variant="primary"
             size="sm"
             className="dropdown-toggle"
             type="button"
@@ -405,7 +405,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         </Button>
         <Button
           type="button"
-          variant="secondary"
+          variant="primary"
           size="sm"
           leftIcon={<i className="bi bi-x-lg"></i>}
           onClick={handleClose}
@@ -511,7 +511,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       </Button>
       <Button
         type="button"
-        variant="secondary"
+        variant="primary"
         size="sm"
         leftIcon={<i className="bi bi-x-lg"></i>}
         onClick={handleClose}

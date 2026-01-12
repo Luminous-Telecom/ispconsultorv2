@@ -108,7 +108,7 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
     <div className="d-flex gap-2">
       <Button
         type="button"
-        variant="secondary"
+        variant="primary"
         size="sm"
         onClick={onClose}
         disabled={updateParametrosMutation.isPending}

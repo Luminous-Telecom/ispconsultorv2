@@ -76,7 +76,7 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
     <div className="d-flex gap-2">
       <Button
         type="button"
-        variant="secondary"
+        variant="primary"
         size="sm"
         onClick={onClose}
         disabled={createTermoMutation.isPending || updateTermoMutation.isPending}

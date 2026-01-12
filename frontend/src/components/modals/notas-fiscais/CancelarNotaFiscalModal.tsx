@@ -104,7 +104,7 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
     <div className="d-flex gap-2">
       <Button
         type="button"
-        variant="secondary"
+        variant="primary"
         size="sm"
         onClick={handleClose}
         disabled={isSubmitting}
@@ -114,7 +114,7 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
       <Button
         type="submit"
         form="cancelar-nf-form"
-        variant="danger"
+        variant="primary"
         size="sm"
         disabled={!isFormValid || isSubmitting}
         isLoading={isSubmitting}

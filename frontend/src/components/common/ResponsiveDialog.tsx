@@ -310,7 +310,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
           />
           <button
             type="button"
-            className="btn btn-sm btn-link text-danger p-1 responsive-dialog-btn-auto"
+            className="btn btn-sm btn-link text-primary p-1 responsive-dialog-btn-auto"
             onClick={() => tableHeader.setShowMobileSearch(false)}
           >
             <i className="bi bi-x-lg"></i>

@@ -1553,7 +1553,7 @@ function Table<T extends { id: number | string }>({
           {/* Botão de auditar (sempre visível, mas inativo quando não há 1 item selecionado) */}
           {onAudit && auditEntity && (
             <Button
-              variant="outline-info"
+              variant="outline-primary"
               size="sm"
               icon="shield-check"
               onClick={handleAuditClick}
@@ -1565,7 +1565,7 @@ function Table<T extends { id: number | string }>({
           )}
           {/* Botão de refresh */}
           <Button
-            variant="outline-secondary"
+            variant="outline-primary"
             size="sm"
             icon="arrow-clockwise"
             onClick={tableActions.refresh}
@@ -1888,7 +1888,7 @@ function Table<T extends { id: number | string }>({
             {onAudit && auditEntity && (
               <button
                 type="button"
-                className="btn btn-outline-info btn-sm"
+                className="btn btn-outline-primary btn-sm"
                 onClick={handleAuditClick}
                 disabled={loading || state.selectedItems.length !== 1}
                 title={state.selectedItems.length === 1 ? "Auditar registro selecionado" : "Selecione exatamente 1 registro para auditar"}
@@ -1898,7 +1898,7 @@ function Table<T extends { id: number | string }>({
             )}
             <button
               type="button"
-              className="btn btn-outline-secondary btn-sm"
+              className="btn btn-outline-primary btn-sm"
               onClick={onRefresh}
               title="Recarregar dados"
             >

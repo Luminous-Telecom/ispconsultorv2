@@ -1675,7 +1675,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               {isEditMode && (
                 <Button
                   type="button"
-                  variant="info"
+                  variant="primary"
                   size="sm"
                   leftIcon={<i className="bi bi-printer"></i>}
                   onClick={(e) => {
@@ -1689,7 +1689,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               )}
               <Button
                 type="button"
-                variant="secondary"
+                variant="primary"
                 size="sm"
                 leftIcon={<i className="bi bi-x-lg"></i>}
                 onClick={onClose}

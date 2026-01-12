@@ -58,7 +58,7 @@ const NFSeModal: React.FC<NFSeModalProps> = ({
           {hasTestButton && (
             <Button
               type="button"
-              variant="outline-secondary"
+              variant="outline-primary"
               size="sm"
               onClick={handleTestClick}
               disabled={!canTest || isTesting || !handleTestRef.current}
@@ -80,7 +80,7 @@ const NFSeModal: React.FC<NFSeModalProps> = ({
           </Button>
           <Button
             type="button"
-            variant="secondary"
+            variant="primary"
             size="sm"
             leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}

@@ -180,7 +180,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
         <div style={{ display: 'flex', gap: '8px' }}>
           <Button
             type="button"
-            variant="secondary"
+            variant="primary"
             size="sm"
             onClick={onClose}
             disabled={isSubmitting}
