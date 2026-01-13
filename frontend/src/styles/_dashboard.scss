@@ -78,6 +78,16 @@
   position: relative;
 }
 
+/* Garantir que ambos os containers compactos tenham aparência idêntica */
+.chart-compact-container-recebidos,
+.chart-compact-container-receber {
+  background: var(--bg-primary) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--border-radius-sm) !important;
+  height: 280px !important;
+  overflow: hidden !important;
+}
+
 /* Ajustar elementos internos dos gráficos compactos para o novo tamanho */
 .chart-compact-container .chart-title-pie {
   font-size: 0.8125rem !important;

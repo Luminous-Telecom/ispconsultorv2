@@ -141,7 +141,7 @@ const Dashboard: React.FC = () => {
           <div className="dashboard-filtered-charts mt-2">
             <div className="row g-2">
               <div className="col-lg-6">
-                <div className="chart-compact-container">
+                <div className="chart-compact-container chart-compact-container-recebidos">
                   <ResponsiveLineChart
                     data={charts.recebidosPeriodoChartData}
                     title={`Recebidos: ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
@@ -150,7 +150,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
               <div className="col-lg-6">
-                <div className="chart-compact-container">
+                <div className="chart-compact-container chart-compact-container-receber">
                   <ResponsiveLineChart
                     data={charts.receberPeriodoChartData}
                     title={`A Receber: ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
