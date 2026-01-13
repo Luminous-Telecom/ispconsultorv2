@@ -79,9 +79,9 @@ const Dashboard: React.FC = () => {
 
               {/* Filtros de Data */}
               <div className="dashboard-filters-minimal mt-2">
-                <div className="row g-2">
-                  <div className="col-auto">
-                    <label className="form-label small fw-bold text-secondary mb-1">Data Inicial</label>
+                <div className="d-flex align-items-center gap-2">
+                  <div className="d-flex align-items-center gap-1">
+                    <label className="form-label small fw-bold text-secondary mb-0">Data Inicial:</label>
                     <input
                       type="date"
                       value={startDate}
@@ -90,11 +90,9 @@ const Dashboard: React.FC = () => {
                       style={{ width: '110px' }}
                     />
                   </div>
-                  <div className="col-auto d-flex align-items-end">
-                    <span className="text-muted mb-2">—</span>
-                  </div>
-                  <div className="col-auto">
-                    <label className="form-label small fw-bold text-secondary mb-1">Data Final</label>
+                  <span className="text-muted small">—</span>
+                  <div className="d-flex align-items-center gap-1">
+                    <label className="form-label small fw-bold text-secondary mb-0">Data Final:</label>
                     <input
                       type="date"
                       value={endDate}
