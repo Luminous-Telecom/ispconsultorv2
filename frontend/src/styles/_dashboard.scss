@@ -81,9 +81,9 @@
 /* Garantir que ambos os containers compactos tenham aparência idêntica */
 .chart-compact-container-recebidos,
 .chart-compact-container-receber {
-  background: #ffffff !important;
-  border: 1px solid #dee2e6 !important;
-  border-radius: 4px !important;
+  background: var(--bg-primary) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--border-radius-sm) !important;
   height: 280px !important;
   overflow: hidden !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
