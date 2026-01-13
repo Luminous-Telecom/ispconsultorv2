@@ -169,29 +169,29 @@ const Layout: React.FC = () => {
   };
 
   const menuItems = [
-    { path: '/clientes', icon: 'bi-people', label: 'Clientes', isModal: true, modalHandler: () => handleOpenModal('clientes') },
-    { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => handleOpenModal('planos') },
-    { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => handleOpenModal('bancos') },
-    { path: '/contratos', icon: 'bi-file-earmark-text', label: 'Contratos', isModal: true, modalHandler: () => handleOpenModal('contratos') },
-    { path: '/financeiro', icon: 'bi-cash-coin', label: 'Financeiro', isModal: true, modalHandler: () => handleOpenModal('financeiro') },
-    { path: '/fornecedores', icon: 'bi-truck', label: 'Fornecedores', isModal: true, modalHandler: () => handleOpenModal('fornecedores') },
-    { path: '/contas-pagar', icon: 'bi-receipt-cutoff', label: 'Contas a Pagar', isModal: true, modalHandler: () => handleOpenModal('contas-pagar') },
-    { path: '/notas-fiscais', icon: 'bi-file-earmark-text', label: 'Notas Fiscais', isModal: true, modalHandler: () => handleOpenModal('notas-fiscais') },
-    { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa', isModal: true, modalHandler: () => handleOpenModal('dados-empresa') },
+    { path: '/clientes', label: 'Clientes', isModal: true, modalHandler: () => handleOpenModal('clientes') },
+    { path: '/planos', label: 'Planos', isModal: true, modalHandler: () => handleOpenModal('planos') },
+    { path: '/bancos', label: 'Bancos', isModal: true, modalHandler: () => handleOpenModal('bancos') },
+    { path: '/contratos', label: 'Contratos', isModal: true, modalHandler: () => handleOpenModal('contratos') },
+    { path: '/financeiro', label: 'Financeiro', isModal: true, modalHandler: () => handleOpenModal('financeiro') },
+    { path: '/fornecedores', label: 'Fornecedores', isModal: true, modalHandler: () => handleOpenModal('fornecedores') },
+    { path: '/contas-pagar', label: 'Contas a Pagar', isModal: true, modalHandler: () => handleOpenModal('contas-pagar') },
+    { path: '/notas-fiscais', label: 'Notas Fiscais', isModal: true, modalHandler: () => handleOpenModal('notas-fiscais') },
+    { path: '/dados-empresa', label: 'Dados da Empresa', isModal: true, modalHandler: () => handleOpenModal('dados-empresa') },
   ];
 
   const parametrosDropdownItems = [
-    { id: 'usuarios', label: 'Usuários', icon: 'bi-people', onClick: () => handleOpenModal('usuarios') },
-    { id: 'auditoria', label: 'Logs de Auditoria', icon: 'bi-shield-check', onClick: () => handleOpenModal('auditoria') },
-    { id: 'recursos-sistema', label: 'Recursos do Sistema', icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
-    { id: 'agendador-tarefas', label: 'Agendador de Tarefas', icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
-    { id: 'servidor-email', label: 'Servidor de E-Mail', icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
-    { id: 'servidor-whatsapp', label: 'Servidor de WhatsApp', icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
-    { id: 'nfse', label: 'NFS-e', icon: 'bi-receipt', onClick: () => handleOpenModal('nfse') },
-    { id: 'documentos-sistema', label: 'Documentos do Sistema', icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('documentos-sistema') },
-    { id: 'assinatura-digital', label: 'Assinatura Digital', icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
-    { id: 'dias-vencimento', label: 'Dias de Vencimento', icon: 'bi-calendar', onClick: () => handleOpenModal('dias-vencimento') },
-    { id: 'atualizacoes', label: 'Atualizações', icon: 'bi-arrow-up-circle', onClick: () => handleOpenModal('atualizacoes') },
+    { id: 'usuarios', label: 'Usuários', onClick: () => handleOpenModal('usuarios') },
+    { id: 'auditoria', label: 'Logs de Auditoria', onClick: () => handleOpenModal('auditoria') },
+    { id: 'recursos-sistema', label: 'Recursos do Sistema', onClick: () => handleOpenModal('recursos-sistema') },
+    { id: 'agendador-tarefas', label: 'Agendador de Tarefas', onClick: () => handleOpenModal('agendador-tarefas') },
+    { id: 'servidor-email', label: 'Servidor de E-Mail', onClick: () => handleOpenModal('servidor-email') },
+    { id: 'servidor-whatsapp', label: 'Servidor de WhatsApp', onClick: () => handleOpenModal('servidor-whatsapp') },
+    { id: 'nfse', label: 'NFS-e', onClick: () => handleOpenModal('nfse') },
+    { id: 'documentos-sistema', label: 'Documentos do Sistema', onClick: () => handleOpenModal('documentos-sistema') },
+    { id: 'assinatura-digital', label: 'Assinatura Digital', onClick: () => handleOpenModal('assinatura-digital') },
+    { id: 'dias-vencimento', label: 'Dias de Vencimento', onClick: () => handleOpenModal('dias-vencimento') },
+    { id: 'atualizacoes', label: 'Atualizações', onClick: () => handleOpenModal('atualizacoes') },
   ];
 
   return (
@@ -244,22 +244,20 @@ const Layout: React.FC = () => {
                 {item.isModal ? (
                   <button
                     type="button"
-                    className={`nav-link text-start w-100 d-flex align-items-center gap-2 ${isActive(item.path) ? 'active' : ''}`}
+                    className={`nav-link text-start w-100 ${isActive(item.path) ? 'active' : ''}`}
                     onClick={() => {
                       item.modalHandler?.();
                       setSidebarOpen(false);
                     }}
                   >
-                    <i className={`bi ${item.icon}`}></i>
                     <span>{item.label}</span>
                   </button>
                 ) : (
                   <Link
                     to={item.path}
-                    className={`nav-link d-flex align-items-center gap-2 ${isActive(item.path) ? 'active' : ''}`}
+                    className={`nav-link ${isActive(item.path) ? 'active' : ''}`}
                     onClick={() => setSidebarOpen(false)}
                   >
-                    <i className={`bi ${item.icon}`}></i>
                     <span>{item.label}</span>
                   </Link>
                 )}
@@ -271,11 +269,10 @@ const Layout: React.FC = () => {
             {/* Menu Dropdown para Parâmetros */}
             <div className="nav-item mb-1" ref={parametrosDropdownRef}>
               <button
-                className="nav-link text-start w-100 d-flex align-items-center gap-2"
+                className="nav-link text-start w-100"
                 onClick={() => setShowParametrosDropdown(!showParametrosDropdown)}
                 type="button"
               >
-                <i className="bi bi-gear"></i>
                 <span>Parâmetros</span>
               </button>
               {showParametrosDropdown && (
@@ -283,13 +280,12 @@ const Layout: React.FC = () => {
                   {parametrosDropdownItems.map((item) => (
                     <div key={item.id} className="nav-item mb-1">
                       <button
-                        className="nav-link text-start w-100 d-flex align-items-center gap-2"
+                        className="nav-link text-start w-100"
                         onClick={() => {
                           item.onClick();
                           setShowParametrosDropdown(false);
                         }}
                       >
-                        <i className={`bi ${item.icon}`}></i>
                         <span>{item.label}</span>
                       </button>
                     </div>
