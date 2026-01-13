@@ -1,7 +1,6 @@
 /**
  * Tipos compartilhados para componentes de gráficos
  */
-import React from 'react';
 
 /**
  * Interface para dados de gráfico
@@ -22,7 +21,7 @@ export type ChartFormat = 'currency' | 'number' | 'percentage';
 
 export interface LineChartProps {
   data: ChartDataItem[];
-  title: string | React.ReactNode;
+  title: string;
   format?: 'currency' | 'number';
 }
 

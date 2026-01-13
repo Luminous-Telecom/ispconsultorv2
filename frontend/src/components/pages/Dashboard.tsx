@@ -151,14 +151,7 @@ const Dashboard: React.FC = () => {
                 <div className="chart-compact-container">
                   <ResponsiveLineChart
                     data={charts.recebidosPeriodoChartData}
-                    title={
-                      <span>
-                        Recebidos
-                        <div className="chart-value-display">
-                          <span className="chart-value-number">{formatCurrency(charts.totalRecebidosPeriodo || 0)}</span>
-                        </div>
-                      </span>
-                    }
+                    title={`Recebidos: ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
                     format="currency"
                   />
                 </div>
@@ -167,14 +160,7 @@ const Dashboard: React.FC = () => {
                 <div className="chart-compact-container">
                   <ResponsiveLineChart
                     data={charts.receberPeriodoChartData}
-                    title={
-                      <span>
-                        A Receber
-                        <div className="chart-value-display">
-                          <span className="chart-value-number">{formatCurrency(charts.totalReceberPeriodo || 0)}</span>
-                        </div>
-                      </span>
-                    }
+                    title={`A Receber: ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
                     format="currency"
                   />
                 </div>
@@ -262,16 +248,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.receitaMensalChartData}
-                title={
-                  <span>
-                    Faturamento Mensal R$
-                    <div className="chart-value-display">
-                      <span className="chart-value-number">{formatCurrency(charts.totalReceitaMensal || 0)}</span>
-                    </div>
-                    <br />
-                    <small>(12 meses)</small>
-                  </span>
-                }
+                title={`Faturamento Mensal: ${formatCurrency(charts.totalReceitaMensal || 0)} (12 meses)`}
                 format="currency"
               />
             </div>
@@ -281,16 +258,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.crescimentoClientes}
-                title={
-                  <span>
-                    Novos Clientes
-                    <div className="chart-value-display">
-                      <span className="chart-value-number">{formatNumber(charts.totalNovosClientes || 0)}</span>
-                    </div>
-                    <br />
-                    <small>(12 meses)</small>
-                  </span>
-                }
+                title={`Novos Clientes: ${formatNumber(charts.totalNovosClientes || 0)} (12 meses)`}
                 format="number"
               />
             </div>

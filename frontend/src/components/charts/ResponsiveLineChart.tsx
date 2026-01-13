@@ -229,7 +229,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
   }, []);
 
   if (!data || data.length === 0) {
-    return <ChartEmptyState title={typeof title === 'string' ? title : 'Gráfico'} />;
+    return <ChartEmptyState title={title} />;
   }
 
   return (
