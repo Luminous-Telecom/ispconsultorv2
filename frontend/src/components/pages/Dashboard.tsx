@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency, formatDateLong, formatNumber } from '@/utils/formatters';
+import { formatCurrency, formatNumber } from '@/utils/formatters';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
@@ -47,16 +47,6 @@ const Dashboard: React.FC = () => {
   // Preparar dados dos gráficos usando hook customizado
   const charts = useDashboardCharts(dashboardData, stats);
 
-  // Formatar data e hora de atualização
-  const agora = new Date();
-  const lastUpdatedDate = formatDateLong(agora);
-  const lastUpdatedTime = agora.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
-
-
   if (loadingDashboard) {
     return (
       <div className="dashboard-container">
@@ -86,9 +76,6 @@ const Dashboard: React.FC = () => {
           <div className="d-flex justify-content-between align-items-start">
             <div className="dashboard-title-section">
               <h1 className="dashboard-title-minimal">Visão Geral</h1>
-              <div className="dashboard-subtitle-minimal">
-                Atualizado em {lastUpdatedDate} às {lastUpdatedTime}
-              </div>
 
               {/* Filtros de Data */}
               <div className="dashboard-filters-minimal mt-2">
