@@ -3,6 +3,11 @@ import { DashboardData } from '../services/dashboardService';
 import { ChartDataItem } from '../components/charts/types';
 import type { useDashboardStats } from './useDashboardStats';
 
+interface DualChartDataItem extends ChartDataItem {
+  receber: number;
+  pagar: number;
+}
+
 interface DashboardCharts {
   // Gráficos de pizza
   clientesChartData: ChartDataItem[];
@@ -22,8 +27,8 @@ interface DashboardCharts {
   // Gráfico de barras
   clientesPorPlano: ChartDataItem[];
 
-  // Gráfico de linhas
-  contasReceberPagarChartData: ChartDataItem[];
+  // Gráfico de linhas duplas
+  contasReceberPagarChartData: DualChartDataItem[];
 
   // Totais para exibição
   totalRecebidosPeriodo: number;
