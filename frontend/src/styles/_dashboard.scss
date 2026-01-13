@@ -74,6 +74,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 /* Ajustar elementos internos dos gráficos compactos para o novo tamanho */
@@ -442,6 +443,7 @@
   border-radius: var(--border-radius);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 0.5rem;
+  position: relative;
 }
 
 /* Efeitos de hover removidos para manter consistência */
@@ -1276,13 +1278,14 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.95);
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.98);
   border: 1px solid var(--border-light);
   border-radius: var(--border-radius-sm);
   padding: 0.25rem 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
 }
 
 .chart-value-number {
@@ -1290,6 +1293,8 @@
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
+  display: block;
+  text-align: center;
 }
 
 /* Para containers compactos */
@@ -1301,6 +1306,14 @@
 
 .chart-compact-container .chart-value-number {
   font-size: 0.625rem;
+}
+
+/* Para chart-card-line */
+.chart-card-line .chart-value-display {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 100;
 }
 
 /* ============================================

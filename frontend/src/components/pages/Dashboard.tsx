@@ -150,7 +150,7 @@ const Dashboard: React.FC = () => {
               <div className="col-lg-6">
                 <div className="chart-compact-container">
                   <div className="chart-value-display">
-                    <span className="chart-value-number">{formatCurrency(charts.totalRecebidosPeriodo)}</span>
+                    <span className="chart-value-number">{formatCurrency(charts.totalRecebidosPeriodo || 0)}</span>
                   </div>
                   <ResponsiveLineChart
                     data={charts.recebidosPeriodoChartData}
@@ -162,7 +162,7 @@ const Dashboard: React.FC = () => {
               <div className="col-lg-6">
                 <div className="chart-compact-container">
                   <div className="chart-value-display">
-                    <span className="chart-value-number">{formatCurrency(charts.totalReceberPeriodo)}</span>
+                    <span className="chart-value-number">{formatCurrency(charts.totalReceberPeriodo || 0)}</span>
                   </div>
                   <ResponsiveLineChart
                     data={charts.receberPeriodoChartData}
@@ -253,7 +253,7 @@ const Dashboard: React.FC = () => {
           <div className="col-xl-6 col-lg-6">
             <div className="chart-card chart-card-line">
               <div className="chart-value-display">
-                <span className="chart-value-number">{formatCurrency(charts.totalReceitaMensal)}</span>
+                <span className="chart-value-number">{formatCurrency(charts.totalReceitaMensal || 0)}</span>
               </div>
               <ResponsiveLineChart
                 data={charts.receitaMensalChartData}
@@ -266,7 +266,7 @@ const Dashboard: React.FC = () => {
           <div className="col-xl-6 col-lg-6">
             <div className="chart-card chart-card-line">
               <div className="chart-value-display">
-                <span className="chart-value-number">{formatNumber(charts.totalNovosClientes)}</span>
+                <span className="chart-value-number">{formatNumber(charts.totalNovosClientes || 0)}</span>
               </div>
               <ResponsiveLineChart
                 data={charts.crescimentoClientes}

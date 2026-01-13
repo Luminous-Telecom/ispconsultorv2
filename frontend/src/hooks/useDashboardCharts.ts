@@ -209,7 +209,7 @@ export const useDashboardCharts = (
   }, [receitaUltimosMeses, contasPagarUltimosMeses]);
 
   // Totais para exibição
-  const totalRecebidosPeriodo = useMemo(() => 
+  const totalRecebidosPeriodo = useMemo(() =>
     recebidosPeriodoChartData.reduce((acc, item) => acc + (item.valor || 0), 0),
     [recebidosPeriodoChartData]
   );
