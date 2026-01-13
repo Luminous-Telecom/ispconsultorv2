@@ -46,8 +46,8 @@ export const useDashboardCharts = (
   const planos = useMemo(() => dashboardData?.planos || [], [dashboardData?.planos]);
   const contratos = useMemo(() => dashboardData?.contratos || [], [dashboardData?.contratos]);
   const titulosTodos = useMemo(() => dashboardData?.titulosTodos || [], [dashboardData?.titulosTodos]);
-  const contasPagarPeriodo = useMemo(() => dashboardData?.contasPagarPeriodo || { labels: [], data: [] }, [dashboardData?.contasPagarPeriodo]);
-  const aReceberPeriodo = useMemo(() => dashboardData?.aReceberPeriodo || { labels: [], data: [] }, [dashboardData?.aReceberPeriodo]);
+  const contasPagarUltimosMeses = useMemo(() => dashboardData?.contasPagarUltimosMeses || { labels: [], data: [] }, [dashboardData?.contasPagarUltimosMeses]);
+  const receitaUltimosMeses = useMemo(() => dashboardData?.receitaUltimosMeses || { labels: [], data: [] }, [dashboardData?.receitaUltimosMeses]);
 
   // Gráficos de pizza - memoizados
   const clientesChartData = useMemo(() => [
@@ -193,17 +193,17 @@ export const useDashboardCharts = (
     })).sort((a, b) => b.value - a.value);
   }, [dashboardData?.contratosAtivosTodos, contratos, planos]);
 
-  // Gráfico de barras duplas - contas a receber vs contas a pagar
+  // Gráfico de barras duplas - contas a receber vs contas a pagar (últimos 12 meses)
   const contasReceberPagarChartData = useMemo(() => {
-    const receberData = aReceberPeriodo.labels?.map((label, index) => ({
+    const receberData = receitaUltimosMeses.labels?.map((label: string, index: number) => ({
       mes: label,
-      valor: aReceberPeriodo.data?.[index] ?? 0,
+      valor: receitaUltimosMeses.data?.[index] ?? 0,
       color: '#28a745'
     })) || [];
 
-    const pagarData = contasPagarPeriodo.labels?.map((label, index) => ({
+    const pagarData = contasPagarUltimosMeses.labels?.map((label: string, index: number) => ({
       mes: label,
-      valor: contasPagarPeriodo.data?.[index] ?? 0,
+      valor: contasPagarUltimosMeses.data?.[index] ?? 0,
       color: '#dc3545'
     })) || [];
 
@@ -211,7 +211,7 @@ export const useDashboardCharts = (
       receber: receberData,
       pagar: pagarData
     };
-  }, [aReceberPeriodo, contasPagarPeriodo]);
+  }, [receitaUltimosMeses, contasPagarUltimosMeses]);
 
   // Totais para exibição
   const totalRecebidosPeriodo = useMemo(() => 

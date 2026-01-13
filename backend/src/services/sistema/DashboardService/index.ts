@@ -613,6 +613,56 @@ export class DashboardService {
   }
 
   /**
+   * Obter contas a pagar dos últimos 12 meses
+   */
+  static async getContasPagarUltimos12Meses() {
+    const { ContaPagarService } = await import('../../financeiro/ContaPagarService');
+    const { parseDateFromDb } = await import('../../../utils/dateUtils');
+
+    const hoje = new Date();
+    const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
+    const inicioPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1, 0, 0, 0, 0);
+
+    const contasPagar = await ContaPagarService.findAllWithAttributes(['valor', 'data_vencimento', 'data_pagamento', 'status']);
+
+    const labels: string[] = [];
+    const data: number[] = [];
+
+    for (let i = 11; i >= 0; i--) {
+      const mes = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1, 0, 0, 0, 0);
+      const proxMes = new Date(hoje.getFullYear(), hoje.getMonth() - i + 1, 1, 0, 0, 0, 0);
+
+      const totalMes = contasPagar.reduce((acumulado, conta) => {
+        if (!conta.data_vencimento) {
+          return acumulado;
+        }
+
+        const dataVencimento = parseDateFromDb(conta.data_vencimento);
+        if (!dataVencimento) {
+          return acumulado;
+        }
+
+        if (dataVencimento >= mes && dataVencimento < proxMes) {
+          const valorConta = parseFloat(conta.valor.toString());
+          return acumulado + valorConta;
+        }
+
+        return acumulado;
+      }, 0);
+
+      const month = String(mes.getMonth() + 1).padStart(2, '0');
+      const year = String(mes.getFullYear()).slice(-2);
+      labels.push(`${month}/${year}`);
+      data.push(totalMes);
+    }
+
+    return {
+      labels,
+      data
+    };
+  }
+
+  /**
    * Obter receita dos últimos 12 meses
    */
   static async getReceitaUltimos12Meses() {

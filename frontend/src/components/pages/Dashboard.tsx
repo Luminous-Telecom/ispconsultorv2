@@ -271,7 +271,7 @@ const Dashboard: React.FC = () => {
               <DualBarChart
                 receberData={charts.contasReceberPagarChartData.receber}
                 pagarData={charts.contasReceberPagarChartData.pagar}
-                title="Contas a Receber vs Contas a Pagar (Período)"
+                title="Contas a Receber vs Contas a Pagar (12 meses)"
                 format="currency"
               />
             </div>

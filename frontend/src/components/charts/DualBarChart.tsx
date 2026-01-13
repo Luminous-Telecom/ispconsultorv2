@@ -47,8 +47,8 @@ export const DualBarChart: React.FC<DualBarChartProps> = ({
       }))
       .sort((a, b) => {
         // Tentar ordenar por data se for formato MM/YY
-        const dateA = a.label.includes('/') ? new Date(`20${a.label.split('/')[1]}`, parseInt(a.label.split('/')[0]) - 1) : new Date();
-        const dateB = b.label.includes('/') ? new Date(`20${b.label.split('/')[1]}`, parseInt(b.label.split('/')[0]) - 1) : new Date();
+        const dateA = a.label.includes('/') ? new Date(2020 + parseInt(a.label.split('/')[1]), parseInt(a.label.split('/')[0]) - 1) : new Date();
+        const dateB = b.label.includes('/') ? new Date(2020 + parseInt(b.label.split('/')[1]), parseInt(b.label.split('/')[0]) - 1) : new Date();
         return dateB.getTime() - dateA.getTime(); // Mais recente primeiro
       });
 
