@@ -265,8 +265,9 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
+
         <div className="row g-3">
-          <div className="col-xl-12 col-lg-12">
+          <div className="col-xl-6 col-lg-6">
             <div className="chart-card">
               <DualLineChart
                 data={charts.contasReceberPagarChartData}
@@ -275,10 +276,8 @@ const Dashboard: React.FC = () => {
               />
             </div>
           </div>
-        </div>
 
-        <div className="row g-3">
-          <div className="col-xl-12 col-lg-12">
+          <div className="col-xl-6 col-lg-6">
             <div className="chart-card">
               <BarChart data={charts.clientesPorPlano} title="Clientes por Plano" format="number" />
             </div>
