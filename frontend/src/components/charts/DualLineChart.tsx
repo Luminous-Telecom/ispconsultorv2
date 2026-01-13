@@ -289,8 +289,14 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
             }}
           >
             <p className="label text-light mb-1">{tooltip.label}</p>
-            <p className="intro text-success mb-0">Receber: {formatValue(tooltip.receber)}</p>
-            <p className="intro text-danger mb-0">Pagar: {formatValue(tooltip.pagar)}</p>
+            <p className="intro mb-0">
+              <span className="tooltip-color-indicator" style={{ backgroundColor: '#28a745' }}></span>
+              Receber: {formatValue(tooltip.receber)}
+            </p>
+            <p className="intro mb-0">
+              <span className="tooltip-color-indicator" style={{ backgroundColor: '#dc3545' }}></span>
+              Pagar: {formatValue(tooltip.pagar)}
+            </p>
           </div>
         )}
       </div>
