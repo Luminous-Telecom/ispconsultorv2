@@ -79,22 +79,30 @@ const Dashboard: React.FC = () => {
 
               {/* Filtros de Data */}
               <div className="dashboard-filters-minimal mt-2">
-                <div className="d-flex align-items-center gap-2">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="form-control form-control-sm"
-                    style={{ width: '110px' }}
-                  />
-                  <span className="text-muted small">—</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="form-control form-control-sm"
-                    style={{ width: '110px' }}
-                  />
+                <div className="row g-2">
+                  <div className="col-auto">
+                    <label className="form-label small fw-bold text-secondary mb-1">Data Inicial</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="form-control form-control-sm"
+                      style={{ width: '110px' }}
+                    />
+                  </div>
+                  <div className="col-auto d-flex align-items-end">
+                    <span className="text-muted mb-2">—</span>
+                  </div>
+                  <div className="col-auto">
+                    <label className="form-label small fw-bold text-secondary mb-1">Data Final</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="form-control form-control-sm"
+                      style={{ width: '110px' }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
