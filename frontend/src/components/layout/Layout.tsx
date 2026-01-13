@@ -205,11 +205,12 @@ const Layout: React.FC = () => {
       )}
       
       {/* Sidebar */}
-      <aside 
-        ref={sidebarRef} 
+      <aside
+        ref={sidebarRef}
         className={`d-flex flex-column flex-shrink-0 sidebar ${sidebarOpen ? 'open' : ''}`}
       >
-        <div className="sidebar-header d-flex align-items-center p-3 mb-2 border-bottom">
+        {/* Header fixo no topo */}
+        <div className="sidebar-header-fixed d-flex align-items-center p-3 mb-0 border-bottom">
           <div className="sidebar-logo me-2">
             <i className="bi bi-broadcast"></i>
           </div>
@@ -234,67 +235,70 @@ const Layout: React.FC = () => {
             </button>
           )}
         </div>
-        
-        <nav className="sidebar-nav nav nav-pills flex-column mb-auto px-2">
-          {menuItems.map((item) => (
-            <div key={item.path} className="nav-item mb-1">
-              {item.isModal ? (
-                <button
-                  type="button"
-                  className={`nav-link text-start w-100 d-flex align-items-center gap-2 ${isActive(item.path) ? 'active' : ''}`}
-                  onClick={() => {
-                    item.modalHandler?.();
-                    setSidebarOpen(false);
-                  }}
-                >
-                  <i className={`bi ${item.icon}`}></i>
-                  <span>{item.label}</span>
-                </button>
-              ) : (
-                <Link 
-                  to={item.path}
-                  className={`nav-link d-flex align-items-center gap-2 ${isActive(item.path) ? 'active' : ''}`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <i className={`bi ${item.icon}`}></i>
-                  <span>{item.label}</span>
-                </Link>
+
+        {/* Área rolável com a navegação */}
+        <div className="sidebar-nav-scrollable flex-grow-1">
+          <nav className="sidebar-nav nav nav-pills flex-column mb-auto px-2">
+            {menuItems.map((item) => (
+              <div key={item.path} className="nav-item mb-1">
+                {item.isModal ? (
+                  <button
+                    type="button"
+                    className={`nav-link text-start w-100 d-flex align-items-center gap-2 ${isActive(item.path) ? 'active' : ''}`}
+                    onClick={() => {
+                      item.modalHandler?.();
+                      setSidebarOpen(false);
+                    }}
+                  >
+                    <i className={`bi ${item.icon}`}></i>
+                    <span>{item.label}</span>
+                  </button>
+                ) : (
+                  <Link
+                    to={item.path}
+                    className={`nav-link d-flex align-items-center gap-2 ${isActive(item.path) ? 'active' : ''}`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <i className={`bi ${item.icon}`}></i>
+                    <span>{item.label}</span>
+                  </Link>
+                )}
+              </div>
+            ))}
+
+            <div className="nav-divider my-2 border-top mx-2"></div>
+
+            {/* Menu Dropdown para Parâmetros */}
+            <div className="nav-item mb-1" ref={parametrosDropdownRef}>
+              <button
+                className="nav-link text-start w-100 d-flex align-items-center gap-2"
+                onClick={() => setShowParametrosDropdown(!showParametrosDropdown)}
+                type="button"
+              >
+                <i className="bi bi-gear"></i>
+                <span>Parâmetros</span>
+              </button>
+              {showParametrosDropdown && (
+                <div className="dropdown-menu show">
+                  {parametrosDropdownItems.map((item) => (
+                    <div key={item.id} className="nav-item mb-1">
+                      <button
+                        className="nav-link text-start w-100 d-flex align-items-center gap-2"
+                        onClick={() => {
+                          item.onClick();
+                          setShowParametrosDropdown(false);
+                        }}
+                      >
+                        <i className={`bi ${item.icon}`}></i>
+                        <span>{item.label}</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-          ))}
-          
-          <div className="nav-divider my-2 border-top mx-2"></div>
-
-          {/* Menu Dropdown para Parâmetros */}
-          <div className="nav-item mb-1" ref={parametrosDropdownRef}>
-            <button
-              className="nav-link text-start w-100 d-flex align-items-center gap-2"
-              onClick={() => setShowParametrosDropdown(!showParametrosDropdown)}
-              type="button"
-            >
-              <i className="bi bi-gear"></i>
-              <span>Parâmetros</span>
-            </button>
-            {showParametrosDropdown && (
-              <div className="dropdown-menu show">
-                {parametrosDropdownItems.map((item) => (
-                  <div key={item.id} className="nav-item mb-1">
-                    <button
-                      className="nav-link text-start w-100 d-flex align-items-center gap-2"
-                      onClick={() => {
-                        item.onClick();
-                        setShowParametrosDropdown(false);
-                      }}
-                    >
-                      <i className={`bi ${item.icon}`}></i>
-                      <span>{item.label}</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </nav>
+          </nav>
+        </div>
       </aside>
 
       {/* Main Layout */}
