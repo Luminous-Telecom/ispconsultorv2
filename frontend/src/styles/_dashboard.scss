@@ -81,11 +81,28 @@
 /* Garantir que ambos os containers compactos tenham aparência idêntica */
 .chart-compact-container-recebidos,
 .chart-compact-container-receber {
-  background: var(--bg-primary) !important;
-  border: 1px solid var(--border-light) !important;
-  border-radius: var(--border-radius-sm) !important;
+  background: #ffffff !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 4px !important;
   height: 280px !important;
   overflow: hidden !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  padding: 0.5rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+}
+
+/* Forçar canvas dos gráficos compactos a ter aparência idêntica */
+.chart-compact-container-recebidos canvas,
+.chart-compact-container-receber canvas {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Ajustar elementos internos dos gráficos compactos para o novo tamanho */
