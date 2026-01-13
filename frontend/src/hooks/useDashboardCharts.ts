@@ -33,6 +33,8 @@ interface DashboardCharts {
   // Totais para exibição
   totalRecebidosPeriodo: number;
   totalReceberPeriodo: number;
+  totalReceitaMensal: number;
+  totalNovosClientes: number;
 }
 
 /**
@@ -212,9 +214,19 @@ export const useDashboardCharts = (
     [recebidosPeriodoChartData]
   );
 
-  const totalReceberPeriodo = useMemo(() => 
+  const totalReceberPeriodo = useMemo(() =>
     receberPeriodoChartData.reduce((acc, item) => acc + (item.valor || 0), 0),
     [receberPeriodoChartData]
+  );
+
+  const totalReceitaMensal = useMemo(() =>
+    receitaMensalChartData.reduce((acc, item) => acc + (item.valor || 0), 0),
+    [receitaMensalChartData]
+  );
+
+  const totalNovosClientes = useMemo(() =>
+    crescimentoClientes.reduce((acc, item) => acc + (item.valor || 0), 0),
+    [crescimentoClientes]
   );
 
   return {
@@ -233,6 +245,8 @@ export const useDashboardCharts = (
     contasReceberPagarChartData,
     totalRecebidosPeriodo,
     totalReceberPeriodo,
+    totalReceitaMensal,
+    totalNovosClientes,
   };
 };
 

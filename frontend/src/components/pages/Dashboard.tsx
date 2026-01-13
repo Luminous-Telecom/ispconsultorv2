@@ -149,6 +149,9 @@ const Dashboard: React.FC = () => {
             <div className="row g-2">
               <div className="col-lg-6">
                 <div className="chart-compact-container">
+                  <div className="chart-value-display">
+                    <span className="chart-value-number">{formatCurrency(charts.totalRecebidosPeriodo)}</span>
+                  </div>
                   <ResponsiveLineChart
                     data={charts.recebidosPeriodoChartData}
                     title="Recebidos"
@@ -158,6 +161,9 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="col-lg-6">
                 <div className="chart-compact-container">
+                  <div className="chart-value-display">
+                    <span className="chart-value-number">{formatCurrency(charts.totalReceberPeriodo)}</span>
+                  </div>
                   <ResponsiveLineChart
                     data={charts.receberPeriodoChartData}
                     title="A Receber"
@@ -246,20 +252,26 @@ const Dashboard: React.FC = () => {
         <div className="row g-3">
           <div className="col-xl-6 col-lg-6">
             <div className="chart-card chart-card-line">
-              <ResponsiveLineChart 
-                data={charts.receitaMensalChartData} 
-                title="Faturamento Mensal R$ (12 meses)" 
-                format="currency" 
+              <div className="chart-value-display">
+                <span className="chart-value-number">{formatCurrency(charts.totalReceitaMensal)}</span>
+              </div>
+              <ResponsiveLineChart
+                data={charts.receitaMensalChartData}
+                title="Faturamento Mensal R$ (12 meses)"
+                format="currency"
               />
             </div>
           </div>
 
           <div className="col-xl-6 col-lg-6">
             <div className="chart-card chart-card-line">
-              <ResponsiveLineChart 
-                data={charts.crescimentoClientes} 
-                title="Novos Clientes (12 meses)" 
-                format="number" 
+              <div className="chart-value-display">
+                <span className="chart-value-number">{formatNumber(charts.totalNovosClientes)}</span>
+              </div>
+              <ResponsiveLineChart
+                data={charts.crescimentoClientes}
+                title="Novos Clientes (12 meses)"
+                format="number"
               />
             </div>
           </div>
