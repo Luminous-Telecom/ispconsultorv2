@@ -1226,6 +1226,167 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
+/* ============================================
+   DUAL BAR CHART - Gráfico de barras duplas
+   ============================================ */
+
+.dual-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.dual-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 30px;
+}
+
+.dual-bar-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 60px;
+  max-width: 80px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+}
+
+.dual-bar-container {
+  flex: 1;
+  display: flex;
+  gap: 0.25rem;
+  height: 24px;
+  align-items: center;
+}
+
+.dual-bar-section {
+  flex: 1;
+  height: 100%;
+  background: var(--bg-tertiary);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.dual-bar {
+  height: 100%;
+  min-width: 40px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.2s ease;
+}
+
+.dual-bar-receber {
+  background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+}
+
+.dual-bar-pagar {
+  background: linear-gradient(90deg, #dc3545 0%, #fd7e14 100%);
+}
+
+.dual-bar-value {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Legenda do gráfico duplo */
+.dual-bar-legend {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.dual-bar-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.dual-bar-legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--border-radius-sm);
+  flex-shrink: 0;
+}
+
+.dual-bar-legend-receber {
+  background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+}
+
+.dual-bar-legend-pagar {
+  background: linear-gradient(90deg, #dc3545 0%, #fd7e14 100%);
+}
+
+.dual-bar-legend-text {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .dual-bar-item {
+    gap: 0.5rem;
+    min-height: 28px;
+  }
+
+  .dual-bar-label {
+    font-size: 0.6875rem;
+    min-width: 50px;
+    max-width: 70px;
+  }
+
+  .dual-bar-container {
+    height: 20px;
+    gap: 0.1875rem;
+  }
+
+  .dual-bar-section {
+    height: 100%;
+  }
+
+  .dual-bar {
+    min-width: 30px;
+    padding: 0 0.375rem;
+  }
+
+  .dual-bar-value {
+    font-size: 0.625rem;
+  }
+
+  .dual-bar-legend {
+    gap: 1rem;
+  }
+
+  .dual-bar-legend-text {
+    font-size: 0.625rem;
+  }
+}
+
 /* Dashboard Card Body */
 .dashboard-container .card-body {
   padding: 0.75rem;

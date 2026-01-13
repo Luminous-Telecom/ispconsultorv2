@@ -12,16 +12,22 @@ interface DashboardCharts {
   taxaPagamentoChartData: ChartDataItem[];
   contratosChartData: ChartDataItem[];
   ticketMedioChartData: ChartDataItem[];
-  
+
   // Gráficos de linha
   receitaMensalChartData: ChartDataItem[];
   recebidosPeriodoChartData: ChartDataItem[];
   receberPeriodoChartData: ChartDataItem[];
   crescimentoClientes: ChartDataItem[];
-  
+
   // Gráfico de barras
   clientesPorPlano: ChartDataItem[];
-  
+
+  // Gráfico de barras duplas
+  contasReceberPagarChartData: {
+    receber: ChartDataItem[];
+    pagar: ChartDataItem[];
+  };
+
   // Totais para exibição
   totalRecebidosPeriodo: number;
   totalReceberPeriodo: number;
@@ -40,6 +46,8 @@ export const useDashboardCharts = (
   const planos = useMemo(() => dashboardData?.planos || [], [dashboardData?.planos]);
   const contratos = useMemo(() => dashboardData?.contratos || [], [dashboardData?.contratos]);
   const titulosTodos = useMemo(() => dashboardData?.titulosTodos || [], [dashboardData?.titulosTodos]);
+  const contasPagarPeriodo = useMemo(() => dashboardData?.contasPagarPeriodo || { labels: [], data: [] }, [dashboardData?.contasPagarPeriodo]);
+  const aReceberPeriodo = useMemo(() => dashboardData?.aReceberPeriodo || { labels: [], data: [] }, [dashboardData?.aReceberPeriodo]);
 
   // Gráficos de pizza - memoizados
   const clientesChartData = useMemo(() => [
@@ -165,7 +173,7 @@ export const useDashboardCharts = (
   const clientesPorPlano = useMemo(() => {
     const contratosParaContar = dashboardData?.contratosAtivosTodos || contratos;
     const contratosAtivos = contratosParaContar.filter(c => c.status === 'ativo');
-    
+
     const contagem = contratosAtivos.reduce((acc, contrato) => {
       if (contrato.plano_id && contrato.cliente_id) {
         const planoId = contrato.plano_id;
@@ -176,7 +184,7 @@ export const useDashboardCharts = (
       }
       return acc;
     }, {} as Record<number, Set<number>>);
-    
+
     const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#17a2b8'];
     return planos.map((plano, index) => ({
       label: plano.nome_plano,
@@ -184,6 +192,26 @@ export const useDashboardCharts = (
       color: cores[index % cores.length]
     })).sort((a, b) => b.value - a.value);
   }, [dashboardData?.contratosAtivosTodos, contratos, planos]);
+
+  // Gráfico de barras duplas - contas a receber vs contas a pagar
+  const contasReceberPagarChartData = useMemo(() => {
+    const receberData = aReceberPeriodo.labels?.map((label, index) => ({
+      mes: label,
+      valor: aReceberPeriodo.data?.[index] ?? 0,
+      color: '#28a745'
+    })) || [];
+
+    const pagarData = contasPagarPeriodo.labels?.map((label, index) => ({
+      mes: label,
+      valor: contasPagarPeriodo.data?.[index] ?? 0,
+      color: '#dc3545'
+    })) || [];
+
+    return {
+      receber: receberData,
+      pagar: pagarData
+    };
+  }, [aReceberPeriodo, contasPagarPeriodo]);
 
   // Totais para exibição
   const totalRecebidosPeriodo = useMemo(() => 
@@ -209,6 +237,7 @@ export const useDashboardCharts = (
     receberPeriodoChartData,
     crescimentoClientes,
     clientesPorPlano,
+    contasReceberPagarChartData,
     totalRecebidosPeriodo,
     totalReceberPeriodo,
   };

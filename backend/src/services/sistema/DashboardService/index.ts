@@ -2,6 +2,7 @@ import { Cliente } from '../../../models/clientes/Cliente';
 import { Plano } from '../../../models/cadastros/Plano';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Contrato } from '../../../models/contratos/Contrato';
+import { ContaPagar } from '../../../models/financeiro/ContaPagar';
 import { Op } from 'sequelize';
 
 export class DashboardService {
@@ -560,6 +561,54 @@ export class DashboardService {
       totalPendente,
       clientesComTitulos: clientesPeriodo.size,
       ticketMedio
+    };
+  }
+
+  /**
+   * Obter contas a pagar por período
+   */
+  static async getContasPagarPorPeriodoData(startDate: Date, endDate: Date) {
+    const { ContaPagarService } = await import('../../financeiro/ContaPagarService');
+    const { formatDate, parseDateFromDb } = await import('../../../utils/dateUtils');
+
+    const inicio = new Date(startDate);
+    inicio.setHours(0, 0, 0, 0);
+    const fim = new Date(endDate);
+    fim.setHours(23, 59, 59, 999);
+
+    const diffTime = fim.getTime() - inicio.getTime();
+    const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    const contasPagarPeriodo = await ContaPagarService.findAllWithAttributes(['valor', 'data_vencimento', 'data_pagamento', 'status']);
+
+    const valoresPorDia = new Array(Math.max(dias, 0)).fill(0);
+    const MS_POR_DIA = 1000 * 60 * 60 * 24;
+
+    for (const conta of contasPagarPeriodo) {
+      if (!conta.data_vencimento) {
+        continue;
+      }
+      const dataConta = parseDateFromDb(conta.data_vencimento);
+      if (!dataConta) continue;
+
+      dataConta.setHours(0, 0, 0, 0);
+      const diff = dataConta.getTime() - inicio.getTime();
+      const indice = Math.floor(diff / MS_POR_DIA);
+      if (indice >= 0 && indice < valoresPorDia.length) {
+        const valorConta = parseFloat(conta.valor.toString());
+        valoresPorDia[indice] += valorConta;
+      }
+    }
+
+    const labels = valoresPorDia.map((_, index) => {
+      const data = new Date(inicio);
+      data.setDate(inicio.getDate() + index);
+      return formatDate(data) || '';
+    });
+
+    return {
+      labels,
+      data: valoresPorDia
     };
   }
 

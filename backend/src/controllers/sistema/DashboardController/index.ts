@@ -60,7 +60,7 @@ export class DashboardController {
       fimPeriodo.setHours(23, 59, 59, 999);
 
       // Buscar todas as estatísticas e dados em paralelo
-      const [statsData, titulosRecentes, titulosVencidos, contratos, contratosAtivosTodos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos, aReceberPeriodo, recebidosPeriodo, resumoPeriodo, receitaUltimosMeses] = await Promise.all([
+      const [statsData, titulosRecentes, titulosVencidos, contratos, contratosAtivosTodos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos, aReceberPeriodo, recebidosPeriodo, resumoPeriodo, receitaUltimosMeses, contasPagarPeriodo] = await Promise.all([
         DashboardService.getStatsData(inicioPeriodo, fimPeriodo),
         DashboardService.getTitulosRecentesData(5),
         DashboardService.getTitulosVencidosData(10),
@@ -75,7 +75,8 @@ export class DashboardController {
         DashboardService.getReceberPorPeriodoData(parsedStart, parsedEnd),
         DashboardService.getRecebidosPorPeriodoData(parsedStart, parsedEnd),
         DashboardService.getResumoFinanceiroPeriodo(parsedStart, parsedEnd),
-        DashboardService.getReceitaUltimos12Meses()
+        DashboardService.getReceitaUltimos12Meses(),
+        DashboardService.getContasPagarPorPeriodoData(parsedStart, parsedEnd)
       ]);
 
       const dashboardData = {
@@ -97,6 +98,7 @@ export class DashboardController {
         },
         aReceberPeriodo,
         recebidosPeriodo,
+        contasPagarPeriodo,
         filtros: {
           startDate: formatDateISOForAPI(parsedStart) || '',
           endDate: formatDateISOForAPI(parsedEnd) || ''

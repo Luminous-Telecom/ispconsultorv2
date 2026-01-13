@@ -3,6 +3,7 @@
  */
 
 export { BarChart } from './BarChart';
+export { DualBarChart } from './DualBarChart';
 export { ValueChart } from './ValueChart';
 export { ChartEmptyState } from './ChartEmptyState';
 export { default as ResponsiveLineChart } from './ResponsiveLineChart';
