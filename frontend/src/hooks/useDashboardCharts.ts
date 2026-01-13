@@ -22,11 +22,8 @@ interface DashboardCharts {
   // Gráfico de barras
   clientesPorPlano: ChartDataItem[];
 
-  // Gráfico de barras duplas
-  contasReceberPagarChartData: {
-    receber: ChartDataItem[];
-    pagar: ChartDataItem[];
-  };
+  // Gráfico de linhas
+  contasReceberPagarChartData: ChartDataItem[];
 
   // Totais para exibição
   totalRecebidosPeriodo: number;
@@ -193,24 +190,15 @@ export const useDashboardCharts = (
     })).sort((a, b) => b.value - a.value);
   }, [dashboardData?.contratosAtivosTodos, contratos, planos]);
 
-  // Gráfico de barras duplas - contas a receber vs contas a pagar (últimos 12 meses)
+  // Gráfico de linhas - contas a receber vs contas a pagar (últimos 12 meses)
   const contasReceberPagarChartData = useMemo(() => {
-    const receberData = receitaUltimosMeses.labels?.map((label: string, index: number) => ({
-      mes: label,
-      valor: receitaUltimosMeses.data?.[index] ?? 0,
-      color: '#28a745'
-    })) || [];
+    if (!receitaUltimosMeses.labels || !contasPagarUltimosMeses.labels) return [];
 
-    const pagarData = contasPagarUltimosMeses.labels?.map((label: string, index: number) => ({
+    return receitaUltimosMeses.labels.map((label: string, index: number) => ({
       mes: label,
-      valor: contasPagarUltimosMeses.data?.[index] ?? 0,
-      color: '#dc3545'
-    })) || [];
-
-    return {
-      receber: receberData,
-      pagar: pagarData
-    };
+      receber: receitaUltimosMeses.data?.[index] ?? 0,
+      pagar: contasPagarUltimosMeses.data?.[index] ?? 0
+    }));
   }, [receitaUltimosMeses, contasPagarUltimosMeses]);
 
   // Totais para exibição

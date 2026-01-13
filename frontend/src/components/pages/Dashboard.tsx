@@ -5,7 +5,7 @@ import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDashboardCharts } from '@/hooks/useDashboardCharts';
 import { useChartHiddenItems } from '@/hooks/useChartHiddenItems';
-import { BarChart, DualBarChart, ValueChart, ResponsiveLineChart, ResponsivePieChart } from '@/components/charts';
+import { BarChart, ValueChart, ResponsiveLineChart, ResponsivePieChart } from '@/components/charts';
 import { Spinner } from '@/components/ui';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
 import DashboardSearchResult from '../dashboard/DashboardSearchResult';
@@ -268,9 +268,8 @@ const Dashboard: React.FC = () => {
         <div className="row g-3">
           <div className="col-xl-12 col-lg-12">
             <div className="chart-card">
-              <DualBarChart
-                receberData={charts.contasReceberPagarChartData.receber}
-                pagarData={charts.contasReceberPagarChartData.pagar}
+              <ResponsiveLineChart
+                data={charts.contasReceberPagarChartData}
                 title="Contas a Receber vs Contas a Pagar (12 meses)"
                 format="currency"
               />
