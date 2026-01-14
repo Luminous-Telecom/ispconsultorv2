@@ -12,6 +12,38 @@ export class BancoApiAuthService {
    * Obtém token de autenticação do banco
    */
   static async obterToken(banco: Banco, config: BancoConfig): Promise<string | null> {
+    // Asaas não usa OAuth, retorna API key diretamente
+    if (banco.tipo_banco === 'asaas') {
+      let apiKey = banco.api_key;
+
+      // Banco pode vir como instância do Sequelize Model ou como objeto simples
+      interface BancoModelLike {
+        dataValues?: { api_key?: string | null };
+        getDataValue?: (key: string) => string | null;
+      }
+      const bancoModel = banco as BancoModelLike;
+
+      if (!apiKey && bancoModel.dataValues) {
+        apiKey = bancoModel.dataValues.api_key || null;
+      }
+
+      if (!apiKey && typeof bancoModel.getDataValue === 'function') {
+        const value = bancoModel.getDataValue('api_key');
+        apiKey = value || null;
+      }
+
+      if (!apiKey) {
+        logger.error('API Key não configurada para Asaas', {
+          banco_id: banco.id,
+          banco_nome: banco.nome
+        });
+        return null;
+      }
+
+      return apiKey;
+    }
+
+    // Para outros bancos (EFI, etc), usa OAuth
     const cacheKey = banco.id;
     const cached = this.tokenCache.get(cacheKey);
     
