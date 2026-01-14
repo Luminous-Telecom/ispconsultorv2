@@ -5,6 +5,7 @@ import DraggableModal from './DraggableModal';
 
 // Lazy load dos modais (code splitting)
 const ClienteListModal = lazy(() => import('../modals/clientes').then(m => ({ default: m.ClienteListModal })));
+const ClienteModal = lazy(() => import('../modals/clientes').then(m => ({ default: m.ClienteModal })));
 const PlanoListModal = lazy(() => import('../modals/planos').then(m => ({ default: m.PlanoListModal })));
 const BancoListModal = lazy(() => import('../modals/bancos').then(m => ({ default: m.BancoListModal })));
 const DadosEmpresaModal = lazy(() => import('../modals/empresa/empresa').then(m => ({ default: m.DadosEmpresaModal })));
@@ -43,6 +44,7 @@ interface ModalConfig {
 
 const MODAL_CONFIGS: Record<string, ModalConfig> = {
   clientes: { component: ClienteListModal, title: 'Clientes', loadingMessage: 'Carregando clientes...' },
+  'cliente-modal': { component: ClienteModal, title: 'Editar Cliente', loadingMessage: 'Carregando cliente...' },
   planos: { component: PlanoListModal, title: 'Planos', loadingMessage: 'Carregando planos...' },
   bancos: { component: BancoListModal, title: 'Bancos', loadingMessage: 'Carregando bancos...' },
   contratos: { component: ContratoListModal, title: 'Contratos', loadingMessage: 'Carregando contratos...' },
@@ -65,7 +67,7 @@ const MODAL_CONFIGS: Record<string, ModalConfig> = {
 };
 
 const SingleModalWrapper: React.FC = () => {
-  const { activeModal, closeModal } = useModal();
+  const { activeModal, modalData, closeModal } = useModal();
   const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
 
   // Limpar headerActions quando o modal ativo mudar
@@ -85,6 +87,7 @@ const SingleModalWrapper: React.FC = () => {
     skipWrapper: true,
     onHeaderActionsReady: setHeaderActions,
     ...(['clientes', 'planos', 'bancos', 'contratos'].includes(activeModal) && { title: modalConfig.title }),
+    ...(modalData && modalData), // Passa os dados adicionais do modal
   };
 
   return (

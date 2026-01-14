@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 
 export type ModalType =
   | 'clientes'
+  | 'cliente-modal'
   | 'planos'
   | 'bancos'
   | 'contratos'
@@ -25,7 +26,8 @@ export type ModalType =
 
 interface ModalContextType {
   activeModal: ModalType;
-  openModal: (modalName: ModalType) => void;
+  modalData: Record<string, unknown> | null;
+  openModal: (modalName: ModalType, data?: Record<string, unknown>) => void;
   closeModal: () => void;
 }
 
@@ -33,17 +35,20 @@ const ModalContext = createContext<ModalContextType | undefined>(undefined);
 
 export const ModalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [modalData, setModalData] = useState<Record<string, unknown> | null>(null);
 
-  const openModal = useCallback((modalName: ModalType) => {
+  const openModal = useCallback((modalName: ModalType, data?: Record<string, unknown>) => {
     setActiveModal(modalName);
+    setModalData(data || null);
   }, []);
 
   const closeModal = useCallback(() => {
     setActiveModal(null);
+    setModalData(null);
   }, []);
 
   return (
-    <ModalContext.Provider value={{ activeModal, openModal, closeModal }}>
+    <ModalContext.Provider value={{ activeModal, modalData, openModal, closeModal }}>
       {children}
     </ModalContext.Provider>
   );

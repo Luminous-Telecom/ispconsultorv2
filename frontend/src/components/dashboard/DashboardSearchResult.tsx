@@ -95,13 +95,15 @@ const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTer
     }
   ];
 
-  const handleRowClick = useCallback((_cliente: Cliente) => {
-    // Ao clicar no cliente, podemos abrir o modal de edição dele
-    // ou apenas selecionar se estivéssemos em um contexto de seleção
-    // Por enquanto, vamos abrir o modal de clientes já na edição desse cliente
-    // Mas o ModalContext atual não suporta passar props facilmente para o modal de Clientes
-    // Então vamos apenas abrir o ClientesModal por enquanto
-    openModal('clientes');
+  const handleRowClick = useCallback((cliente: Cliente) => {
+    console.log('DashboardSearchResult: handleRowClick chamado', cliente);
+    console.log('DashboardSearchResult: cliente.id:', cliente.id);
+
+    // Ao clicar no cliente, abrimos o modal de edição diretamente
+    // passando o clienteId como parâmetro para o ModalContext
+    console.log('DashboardSearchResult: chamando openModal cliente-modal');
+    openModal('cliente-modal', { clienteId: cliente.id });
+    console.log('DashboardSearchResult: modal cliente-modal aberto');
   }, [openModal]);
 
   return (
