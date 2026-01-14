@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
   const stats = useDashboardStats(dashboardData);
 
   // Preparar dados dos gráficos usando hook customizado
-  const charts = useDashboardCharts(dashboardData, stats);
+  const charts = useDashboardCharts(dashboardData, stats, t);
 
   if (loadingDashboard) {
     return (

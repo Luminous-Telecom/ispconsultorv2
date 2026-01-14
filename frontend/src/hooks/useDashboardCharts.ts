@@ -2,13 +2,12 @@ import { useMemo } from 'react';
 import { DashboardData } from '../services/dashboardService';
 import { ChartDataItem } from '../components/charts/types';
 import type { useDashboardStats } from './useDashboardStats';
+import type { TranslationKeys } from '../contexts/I18nContext';
 
 interface DualChartDataItem extends ChartDataItem {
   receber: number;
   pagar: number;
 }
-
-type TranslationKey = string; // Type alias para compatibilidade
 
 interface DashboardCharts {
   // Gráficos de pizza
@@ -46,7 +45,7 @@ interface DashboardCharts {
 export const useDashboardCharts = (
   dashboardData: DashboardData | undefined,
   stats: ReturnType<typeof useDashboardStats>,
-  t: (key: TranslationKey, params?: Record<string, unknown>) => string
+  t: (key: keyof TranslationKeys, params?: Record<string, unknown>) => string
 ): DashboardCharts => {
   // Memoizar arrays para evitar recriação
   const clientes = useMemo(() => dashboardData?.clientes || [], [dashboardData?.clientes]);
