@@ -153,7 +153,7 @@ export const useClienteForm = ({
   // Dados customizados do cliente (quando editando)
   const customFormData = useMemo(() => {
     if (!cliente || typeof cliente !== 'object') return undefined;
-    
+
     return {
       cnpj: cliente.cnpj || '',
       razao_social: cliente.razao_social || '',
@@ -175,9 +175,9 @@ export const useClienteForm = ({
       recebe_whatsapp: cliente.recebe_whatsapp ?? true,
       observacoes: cliente.observacoes || ''
     } as ZodClienteFormData;
-  }, [cliente]);
+  }, [cliente, clienteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Resetar formulário quando modal abrir/fechar ou quando cliente carregar
+  // Resetar formulário quando modal abrir/fechar
   useEffect(() => {
     if (!show) {
       reset(initialFormData as ZodClienteFormData);
@@ -185,12 +185,18 @@ export const useClienteForm = ({
       return;
     }
 
-    if (isEditing && customFormData) {
-      reset(customFormData);
-    } else if (!isEditing) {
+    // Só reset quando o modal abre, não quando os dados mudam
+    if (!isEditing) {
       reset(initialFormData as ZodClienteFormData);
     }
-  }, [show, customFormData, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [show, isEditing, reset]);
+
+  // Reset separado quando os dados do cliente carregam
+  useEffect(() => {
+    if (show && isEditing && customFormData && cliente) {
+      reset(customFormData);
+    }
+  }, [cliente, show, isEditing]); // Só depende de cliente, não de customFormData
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({

@@ -84,7 +84,7 @@ const SingleModalWrapper: React.FC = () => {
 
   // Para o modal de cliente, extraímos o clienteId dos modalData
   const isClienteModal = activeModal === 'cliente-modal';
-  const clienteId = isClienteModal && modalData?.clienteId ? modalData.clienteId as number : undefined;
+  const clienteId = isClienteModal && modalData?.clienteId ? modalData.clienteId as number : null;
 
   const modalProps: ModalComponentProps = {
     show: true,
