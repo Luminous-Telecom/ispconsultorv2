@@ -190,7 +190,7 @@ export const useClienteForm = ({
     } else if (!isEditing) {
       reset(initialFormData as ZodClienteFormData);
     }
-  }, [show, customFormData, isEditing, reset]);
+  }, [show, customFormData, isEditing]); // Removido 'reset' das dependências pois é estável
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
