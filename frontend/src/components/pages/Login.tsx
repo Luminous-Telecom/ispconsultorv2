@@ -9,7 +9,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [clientIp, setClientIp] = useState<string>('');
-  const { info, success, error } = useNotificationContext();
+  const { success, error } = useNotificationContext();
 
   useEffect(() => {
     const fetchClientIp = async () => {
