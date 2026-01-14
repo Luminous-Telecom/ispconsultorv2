@@ -141,16 +141,6 @@ const Login: React.FC = () => {
                   </button>
                 </form>
 
-                <div className="text-center mb-3">
-                  <button
-                    type="button"
-                    className="btn btn-link p-0 text-muted small"
-                    onClick={() => info('Funcionalidade em desenvolvimento')}
-                  >
-                    Esqueceu sua senha?
-                  </button>
-                </div>
-
                 <div className="card-footer bg-transparent border-top text-center pt-3">
                   {clientIp && (
                     <p className="text-muted small mb-2">
