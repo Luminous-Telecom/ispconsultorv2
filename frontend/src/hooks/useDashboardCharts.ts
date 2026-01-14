@@ -8,6 +8,8 @@ interface DualChartDataItem extends ChartDataItem {
   pagar: number;
 }
 
+type TranslationKey = string; // Type alias para compatibilidade
+
 interface DashboardCharts {
   // Gráficos de pizza
   clientesChartData: ChartDataItem[];
@@ -44,7 +46,7 @@ interface DashboardCharts {
 export const useDashboardCharts = (
   dashboardData: DashboardData | undefined,
   stats: ReturnType<typeof useDashboardStats>,
-  t: (key: string | number | symbol, params?: Record<string, unknown>) => string
+  t: (key: TranslationKey, params?: Record<string, unknown>) => string
 ): DashboardCharts => {
   // Memoizar arrays para evitar recriação
   const clientes = useMemo(() => dashboardData?.clientes || [], [dashboardData?.clientes]);
