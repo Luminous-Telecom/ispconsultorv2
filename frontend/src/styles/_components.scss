@@ -1052,6 +1052,17 @@ button,
   overflow: visible !important;
 }
 
+.layout-language-dropdown-menu {
+  position: fixed !important;
+  z-index: 10001 !important;
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
 .layout-user-name {
   max-width: 150px !important;
   font-size: 0.625rem !important;

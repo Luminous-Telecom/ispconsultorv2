@@ -14,7 +14,6 @@ import { useLoading } from '@/contexts/LoadingContext';
 import { useApiLoading } from '@/hooks/useApiLoading';
 import LoadingDots from '../common/LoadingDots';
 import SingleModalWrapper from '../common/SingleModalWrapper';
-import LanguageSelector from '../common/LanguageSelector';
 import BackNetLogo from '../common/BackNetLogo';
 import { DadosEmpresaService, type DadosEmpresa } from '@/services/dadosEmpresaService';
 
@@ -30,15 +29,19 @@ const Layout: React.FC = () => {
     
   } = useNotificationContext();
   const { theme, toggleTheme } = useTheme();
-  const { t } = useI18n();
+  const { t, language, setLanguage, availableLanguages } = useI18n();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showTableMenu, setShowTableMenu] = useState(false);
   const [showParametrosDropdown, setShowParametrosDropdown] = useState(false);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [languageDropdownPosition, setLanguageDropdownPosition] = useState({ top: 0, left: 0 });
   const userMenuRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
   const parametrosDropdownRef = useRef<HTMLDivElement>(null);
+  const languageTriggerRef = useRef<HTMLDivElement>(null);
+  const languageDropdownRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   
   // Responsividade: Mobile-First
@@ -74,19 +77,21 @@ const Layout: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      
+
       // Não fechar se clicou no menu ou em elementos relacionados (como o dropdown de idioma)
       if (userMenuRef.current?.contains(target)) {
         return;
       }
-      
-      // Não fechar se clicou em um dropdown de idioma (que está em um portal)
+
+      // Não fechar se clicou em um dropdown de idioma
       const languageDropdown = document.querySelector('[data-language-dropdown]');
       if (languageDropdown?.contains(target)) {
         return;
       }
 
+      // Fechar ambos os dropdowns quando clicar fora
       setShowUserMenu(false);
+      setShowLanguageDropdown(false);
     };
 
     if (showUserMenu) {
@@ -94,13 +99,13 @@ const Layout: React.FC = () => {
       const timeoutId = setTimeout(() => {
         document.addEventListener('click', handleClickOutside);
       }, 0);
-      
+
       return () => {
         clearTimeout(timeoutId);
         document.removeEventListener('click', handleClickOutside);
       };
     }
-  }, [showUserMenu]);
+  }, [showUserMenu, showLanguageDropdown]);
 
   // Fechar menu da tabela ao clicar fora
   useEffect(() => {
@@ -133,6 +138,38 @@ const Layout: React.FC = () => {
       };
     }
   }, [showParametrosDropdown]);
+
+  // Calcular posição do dropdown de idioma
+  useEffect(() => {
+    if (showLanguageDropdown && languageTriggerRef.current) {
+      const triggerRect = languageTriggerRef.current.getBoundingClientRect();
+      setLanguageDropdownPosition({
+        top: triggerRect.bottom + 2,
+        left: triggerRect.left
+      });
+    }
+  }, [showLanguageDropdown]);
+
+  // Fechar dropdown de idioma ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (languageTriggerRef.current?.contains(target)) {
+        return;
+      }
+      if (languageDropdownRef.current?.contains(target)) {
+        return;
+      }
+      setShowLanguageDropdown(false);
+    };
+
+    if (showLanguageDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showLanguageDropdown]);
 
   // Fechar sidebar ao clicar fora (apenas no mobile)
   useEffect(() => {
@@ -436,14 +473,19 @@ const Layout: React.FC = () => {
                         <i className={`bi bi-${theme === 'light' ? 'moon' : 'sun'}`}></i>
                         <span>{theme === 'light' ? t('layout.darkMode') : t('layout.lightMode')}</span>
                       </li>
-                      <li 
-                        className="table-dropdown-item"
-                        onClick={(e) => {
-                          // Não fechar o menu do usuário quando clicar no LanguageSelector
-                          e.stopPropagation();
-                        }}
-                      >
-                        <LanguageSelector />
+                      <li>
+                        <div
+                          ref={languageTriggerRef}
+                          className="table-dropdown-item"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowLanguageDropdown(!showLanguageDropdown);
+                          }}
+                        >
+                          <i className="bi bi-translate"></i>
+                          <span>{t('layout.language')}</span>
+                          <i className="bi bi-chevron-down ms-auto" style={{ fontSize: '0.75rem', opacity: 0.6 }}></i>
+                        </div>
                       </li>
                       <li><hr className="dropdown-divider" /></li>
                       <li
@@ -454,6 +496,44 @@ const Layout: React.FC = () => {
                         <span>{t('nav.logout')}</span>
                       </li>
                     </ul>
+                  )}
+                  {showLanguageDropdown && (
+                    <div
+                      ref={languageDropdownRef}
+                      data-language-dropdown
+                      className="layout-language-dropdown-menu shadow"
+                      style={{
+                        top: `${languageDropdownPosition.top}px`,
+                        left: `${languageDropdownPosition.left}px`,
+                        minWidth: '160px',
+                        zIndex: 10001
+                      }}
+                    >
+                      {availableLanguages.map((lang) => (
+                        <div key={lang.code}>
+                          <button
+                            className={`table-dropdown-item d-flex align-items-center w-100 ${
+                              language === lang.code ? 'active' : ''
+                            }`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (language !== lang.code) {
+                                setLanguage(lang.code);
+                              }
+                              setShowLanguageDropdown(false);
+                            }}
+                            style={{ border: 'none', background: 'none' }}
+                          >
+                            <span className="me-2">{lang.flag}</span>
+                            <span>{lang.name}</span>
+                            {language === lang.code && (
+                              <i className="bi bi-check-lg ms-auto text-primary"></i>
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
@@ -521,6 +601,7 @@ const Layout: React.FC = () => {
       {/* Single Modal Wrapper - Mantém o shell do modal sempre montado */}
       {/* Elimina flickering ao trocar entre modais, pois apenas o conteúdo interno muda */}
       <SingleModalWrapper />
+
 
     </div>
   </div>

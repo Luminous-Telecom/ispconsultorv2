@@ -82,6 +82,7 @@ export interface TranslationKeys {
   'layout.user': string;
   'layout.darkMode': string;
   'layout.lightMode': string;
+  'layout.language': string;
   'layout.parameters': string;
   'layout.search': string;
   'layout.searchPlaceholder': string;
@@ -544,6 +545,7 @@ const translations: Translations = {
     'layout.user': 'Usuário',
     'layout.darkMode': 'Modo Escuro',
     'layout.lightMode': 'Modo Claro',
+    'layout.language': 'Idioma',
     'layout.parameters': 'Parâmetros',
     'layout.search': 'Buscar',
     'layout.searchPlaceholder': 'Buscar...',
@@ -1002,6 +1004,7 @@ const translations: Translations = {
     'layout.user': 'User',
     'layout.darkMode': 'Dark Mode',
     'layout.lightMode': 'Light Mode',
+    'layout.language': 'Language',
     'layout.parameters': 'Parameters',
     'layout.search': 'Search',
     'layout.searchPlaceholder': 'Search...',
@@ -1460,6 +1463,7 @@ const translations: Translations = {
     'layout.user': 'Usuario',
     'layout.darkMode': 'Modo Oscuro',
     'layout.lightMode': 'Modo Claro',
+    'layout.language': 'Idioma',
     'layout.parameters': 'Parámetros',
     'layout.search': 'Buscar',
     'layout.searchPlaceholder': 'Buscar...',
