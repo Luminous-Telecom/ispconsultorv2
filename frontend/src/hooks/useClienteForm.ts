@@ -190,7 +190,7 @@ export const useClienteForm = ({
     } else if (!isEditing) {
       reset(initialFormData as ZodClienteFormData);
     }
-  }, [show, customFormData, isEditing]); // Removido 'reset' das dependências pois é estável
+  }, [show, customFormData, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
