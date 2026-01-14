@@ -6,6 +6,7 @@ import { getBrandLogo } from '@/utils/brandLogos';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui';
 import { throttle } from '@/utils/helpers';
+import BackNetLogo from '@/components/common/BackNetLogo';
 import './Home.css';
 
 const Home: React.FC = () => {
@@ -95,7 +96,7 @@ const Home: React.FC = () => {
                 />
               ) : (
                 <div className="brand-icon">
-                  <i className="bi bi-broadcast-tower"></i>
+                  <BackNetLogo width={40} height={40} />
                 </div>
               )}
               <span className="brand-name">{companyName}</span>
@@ -213,7 +214,7 @@ const Home: React.FC = () => {
                       height="200"
                     />
                   ) : (
-                    <i className="bi bi-broadcast-tower"></i>
+                    <BackNetLogo width={200} height={200} />
                   )}
                 </div>
               </div>
@@ -505,7 +506,7 @@ const Home: React.FC = () => {
                   />
                 ) : (
                   <div className="footer-icon">
-                    <i className="bi bi-broadcast-tower"></i>
+                    <BackNetLogo width={40} height={40} />
                   </div>
                 )}
                 <div>

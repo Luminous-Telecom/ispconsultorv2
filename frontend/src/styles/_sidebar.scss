@@ -59,16 +59,15 @@
   padding-top: 0.5rem;
 }
 
-.sidebar-logo {
-  width: 32px;
-  height: 32px;
-  background: var(--primary-color);
-  border-radius: 8px;
+.sidebar-logo-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white !important;
-  font-size: 1rem;
+  
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 .sidebar-title {

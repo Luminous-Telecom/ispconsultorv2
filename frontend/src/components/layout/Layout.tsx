@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useNotificationContext } from '../notifications/NotificationProvider';
 import NotificationContainer from '../notifications/NotificationContainer';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -13,6 +14,8 @@ import { useApiLoading } from '@/hooks/useApiLoading';
 import LoadingDots from '../common/LoadingDots';
 import SingleModalWrapper from '../common/SingleModalWrapper';
 import LanguageSelector from '../common/LanguageSelector';
+import BackNetLogo from '../common/BackNetLogo';
+import { DadosEmpresaService, type DadosEmpresa } from '@/services/dadosEmpresaService';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -38,6 +41,20 @@ const Layout: React.FC = () => {
   
   // Responsividade: Mobile-First
   const isMobile = useIsMobile();
+  
+  // Buscar dados da empresa
+  const { data: dadosEmpresa } = useQuery<DadosEmpresa>({
+    queryKey: ['dados-empresa'],
+    queryFn: () => DadosEmpresaService.get(),
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+    retry: false,
+    throwOnError: false,
+  });
+
+  const companyName = useMemo(
+    () => dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || '',
+    [dadosEmpresa]
+  );
   
   // Table header context (para botões de busca e reload)
   const tableHeader = useTableHeader();
@@ -210,21 +227,20 @@ const Layout: React.FC = () => {
         className={`d-flex flex-column flex-shrink-0 sidebar ${sidebarOpen ? 'open' : ''}`}
       >
         {/* Header fixo no topo */}
-        <div className="sidebar-header-fixed d-flex align-items-center p-3 mb-0 border-bottom">
-          <div className="sidebar-logo me-2">
-            <i className="bi bi-broadcast"></i>
-          </div>
-          <div className="sidebar-title-wrapper overflow-hidden">
-            <span className="fs-5 fw-semibold sidebar-title text-nowrap">BackNet</span>
-            {currentUser?.nome && (
-              <small className="sidebar-user-name text-muted text-truncate d-block">{currentUser.nome}</small>
+        <div className="sidebar-header-fixed d-flex flex-column align-items-center justify-content-center p-3 mb-0 border-bottom position-relative">
+          <div className="sidebar-logo-wrapper w-100 d-flex flex-column align-items-center">
+            <BackNetLogo width={380} height={140} />
+            {companyName && (
+              <div className="sidebar-title-wrapper overflow-hidden w-100 text-center" style={{ marginTop: 0 }}>
+                <small className="sidebar-user-name text-muted text-truncate d-block">{companyName}</small>
+              </div>
             )}
           </div>
           {/* Botão Voltar - Recolher menu (apenas mobile) */}
           {isMobile && (
             <button
               type="button"
-              className="btn btn-link p-0 ms-auto sidebar-header-back-btn"
+              className="btn btn-link p-0 position-absolute top-0 end-0 m-2 sidebar-header-back-btn"
               onClick={() => {
                 setSidebarOpen(false);
               }}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { authService } from '@/services/authService';
 import { removeAuthToken } from '@/services/core';
+import BackNetLogo from '@/components/common/BackNetLogo';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -83,7 +84,9 @@ const Login: React.FC = () => {
             <div className="card shadow">
               <div className="card-body p-4">
                 <div className="text-center mb-4">
-                  <i className="bi bi-shield-lock fs-1 text-primary mb-2"></i>
+                  <div className="mb-3">
+                    <BackNetLogo width={120} height={120} />
+                  </div>
                   <h1 className="h3 mb-2 text-dark">BackNet</h1>
                   <p className="text-muted small mb-0">Acesse o painel administrativo</p>
                 </div>
