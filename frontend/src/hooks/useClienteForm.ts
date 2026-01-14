@@ -196,7 +196,7 @@ export const useClienteForm = ({
     if (show && isEditing && customFormData && cliente) {
       reset(customFormData);
     }
-  }, [cliente, show, isEditing]); // Só depende de cliente, não de customFormData
+  }, [cliente, show, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
