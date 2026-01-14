@@ -535,6 +535,13 @@ function Table<T extends { id: number | string }>({
   const currentSearchTermRef = useRef(state.searchTerm);
   const currentSelectedSearchFieldRef = useRef(selectedSearchField);
 
+  // Aplicar prop search quando ela mudar (tem prioridade sobre contexto)
+  useEffect(() => {
+    if (search !== undefined && search !== state.searchTerm) {
+      tableActions.setSearchTerm(search);
+    }
+  }, [search, state.searchTerm, tableActions]);
+
   // Calcular valores de paginação
   // Calcular linhas por página baseado no tamanho do modal/container
   const calculateRowsPerPage = useCallback(() => {
@@ -836,7 +843,10 @@ function Table<T extends { id: number | string }>({
 
       // Lógica de sincronização inicial de valor de busca
       if (!initialSyncRef.current) {
-        if (headerSearchValue && !state.searchTerm) {
+        if (search !== undefined) {
+          // Prop search tem prioridade sobre contexto
+          tableActions.setSearchTerm(search);
+        } else if (headerSearchValue && !state.searchTerm) {
           tableActions.setSearchTerm(headerSearchValue);
         } else if (state.searchTerm && !headerSearchValue) {
           setHeaderSearchValue(state.searchTerm);
@@ -861,16 +871,15 @@ function Table<T extends { id: number | string }>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sincronizar busca: Header -> Table
+  // Sincronizar busca: Header -> Table (apenas se search prop não foi passado)
   useEffect(() => {
-    if (initialSyncRef.current && headerSearchValue !== state.searchTerm) {
-      // Usar setTimeout para evitar atualização durante render cycle
+    if (initialSyncRef.current && search === undefined && headerSearchValue !== state.searchTerm) {
       const timeoutId = setTimeout(() => {
         tableActions.setSearchTerm(headerSearchValue);
       }, 0);
       return () => clearTimeout(timeoutId);
     }
-  }, [headerSearchValue, state.searchTerm, tableActions, title]);
+  }, [headerSearchValue, state.searchTerm, tableActions, search]);
 
   // Propagar mudança de campo para o componente pai e estado local
   useEffect(() => {

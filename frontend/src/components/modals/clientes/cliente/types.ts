@@ -51,6 +51,7 @@ export interface ClienteTabProps {
 }
 
 export interface ContratosTabProps {
+  clienteId?: number;
   isLoadingContratos: boolean;
   sortedContratosData: Contrato[];
   selectedContratosItems: Contrato[];

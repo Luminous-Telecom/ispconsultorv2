@@ -8,10 +8,12 @@ import { useChartHiddenItems } from '@/hooks/useChartHiddenItems';
 import { BarChart, ValueChart, ResponsiveLineChart, DualLineChart, ResponsivePieChart } from '@/components/charts';
 import { Spinner } from '@/components/ui';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
+import { useModal } from '@/contexts/ModalContext';
 import DashboardSearchResult from '../dashboard/DashboardSearchResult';
 
 const Dashboard: React.FC = () => {
   const { searchValue, searchField } = useTableHeader();
+  const { activeModal } = useModal();
   const {
     startDate,
     endDate,
@@ -57,8 +59,8 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // Se houver busca no header, mostrar resultados da busca em vez do dashboard
-  if (searchValue) {
+  // Se houver busca no header E não houver modal aberto, mostrar resultados da busca
+  if (searchValue && !activeModal) {
     return (
       <div className="dashboard-container">
         <div className="container-fluid px-0 px-md-0">

@@ -6,6 +6,7 @@ import { ContratosTabProps } from '../types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 const ContratosTab: React.FC<ContratosTabProps> = ({
+  clienteId,
   isLoadingContratos,
   sortedContratosData,
   setSelectedContratosItems,
@@ -18,13 +19,28 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
+  const mappedData = (sortedContratosData || []).map((contrato: Contrato) => ({
+    ...contrato,
+    plano_nome: contrato.plano?.nome_plano || '',
+    banco_nome: contrato.bancoBoleto?.nome || '',
+    plano_valor_mensal: contrato.plano?.valor_mensal || 0,
+    endereco: contrato.endereco || '',
+    numero: contrato.numero || '',
+    complemento: contrato.complemento || '',
+    bairro: contrato.bairro || '',
+    cidade: contrato.cidade || '',
+    estado: contrato.estado || '',
+    status_label: contrato.status === 'ativo' ? 'Ativo' : 'Inativo'
+  }));
+  
   return (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            key="cliente-contratos-tab-table"
+            key={`cliente-contratos-${clienteId || 'new'}`}
             title="Contratos"
+            search=""
             config={{
             columns: [
               { key: 'id', label: 'ID', sortable: true, searchable: true, width: 42, resizable: true, render: (contrato: Contrato) => contrato.id },
@@ -199,29 +215,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 }
               }
             ],
-            data: (sortedContratosData || []).map((contrato: Contrato) => ({
-              ...contrato,
-              // Adicionar campos virtuais para busca funcionar com campos aninhados
-              plano_nome: contrato.plano?.nome_plano || '',
-              banco_nome: contrato.bancoBoleto?.nome || '',
-              plano_valor_mensal: contrato.plano?.valor_mensal || 0,
-              // Campos de endereço para ordenação (usando endereço do contrato)
-              endereco: contrato.endereco || '',
-              numero: contrato.numero || '',
-              complemento: contrato.complemento || '',
-              bairro: contrato.bairro || '',
-              cidade: contrato.cidade || '',
-              estado: contrato.estado || ''
-            })),
-            customFilters: (data: (Contrato & { plano_nome?: string; banco_nome?: string })[]) => {
-              // Filtrar inativos se necessário (a busca e ordenação serão feitas pelo Table internamente)
-              return data.filter((contrato) => {
-                if (contrato.status === 'inativo' && !showInativosContratos) {
-                  return false;
-                }
-                return true;
-              });
-            },
+            data: mappedData,
             loading: isLoadingContratos,
             selectable: true,
             multiSelect: false,

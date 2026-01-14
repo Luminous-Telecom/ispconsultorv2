@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TituloService } from '@/services/tituloService';
 import { useFormPrefix } from '@/hooks/useFormId';
@@ -45,6 +45,7 @@ const ClienteModal = ({
   const formPrefix = useFormPrefix('ClienteEditModal');
   const isMobile = useIsMobile();
   
+  
   // Estados de modais aninhados
   const [activeTab, setActiveTab] = useState('dados-basicos');
   const [showCancelados, setShowCancelados] = useState(false);
@@ -71,6 +72,7 @@ const ClienteModal = ({
     show,
     onSuccess
   });
+
 
   // Hook de contratos
   const contratosHook = useClienteContratos({
@@ -341,9 +343,9 @@ const ClienteModal = ({
   ];
 
   // Handler para limpar estado ao fechar
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onClose();
-  };
+  }, [onClose]);
 
   // Determinar título dinamicamente
   const modalTitle = 'Cliente';
@@ -419,6 +421,7 @@ const ClienteModal = ({
             {/* Aba Contratos */}
             {activeTab === 'contratos' && (
               <ContratosTab
+                clienteId={clienteId || formHook.createdClienteId || undefined}
                 isLoadingContratos={contratosHook.isLoadingContratos}
                 sortedContratosData={contratosHook.sortedContratosData}
                 selectedContratosItems={bulkActionsHook.selectedContratosItems}
@@ -480,20 +483,16 @@ const ClienteModal = ({
     );
   };
 
-  const renderModalContent = () => {
+  // Construir headerActions
+  const headerActionsContent = useMemo(() => {
+    const condition1 = !(formHook.isLoadingCliente && formHook.isEditing);
+    const condition2 = !(!formHook.cliente && formHook.isEditing);
+    const shouldRender = condition1 && condition2;
+    
+    if (!shouldRender) return undefined;
+
     return (
-    <>
-      <DraggableModal
-        show={show}
-        onClose={handleClose}
-        title={modalTitle}
-        size="xl"
-        modalId={formHook.isEditing ? "cliente-edit-modal" : "cliente-create-modal"}
-        headerActions={
-          // Mostrar headerActions apenas quando não estiver carregando ou em erro
-          !(formHook.isLoadingCliente && formHook.isEditing) &&
-          !(!formHook.cliente && formHook.isEditing) ? (
-            <div className="cliente-header-unified">
+      <div className="cliente-header-unified">
               {/* Botões à direita */}
               <div className="cliente-header-buttons">
                 <Button
@@ -599,117 +598,126 @@ const ClienteModal = ({
                 </ul>
               </div>
             </div>
-          ) : undefined
-        }
+    );
+  }, [formHook.isLoadingCliente, formHook.isEditing, formHook.cliente, formHook.isSubmitting, formHook.handleSubmit, canEditContratosFinanceiro, activeTab, isMobile, handleClose]);
+
+
+  const renderModalContent = () => {
+    // Renderizar com DraggableModal (modo standalone)
+    return (
+    <>
+      <DraggableModal
+        show={show}
+        onClose={handleClose}
+        title={modalTitle}
+        size="xl"
+        modalId={formHook.isEditing ? "cliente-edit-modal" : "cliente-create-modal"}
+        headerActions={headerActionsContent}
       >
-        {/* Conteúdo do modal */}
-        <div style={{
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: 'var(--bg-primary)'
-        }}>
-          {renderContent()}
-        </div>
+        {renderContent()}
       </DraggableModal>
 
-      {/* Modal de edição de título */}
+      {/* Modais aninhados */}
       <TituloModal
-        show={showTituloEditModal}
-        tituloId={selectedTituloId || null}
-        onClose={() => {
-          setShowTituloEditModal(false);
-          setSelectedTituloId(null);
-          refetchParcelas();
-        }}
-        onSuccess={() => {
-          setShowTituloEditModal(false);
-          setSelectedTituloId(null);
-          refetchParcelas();
-        }}
-      />
+            show={showTituloEditModal}
+            tituloId={selectedTituloId || null}
+            onClose={() => {
+              setShowTituloEditModal(false);
+              setSelectedTituloId(null);
+              refetchParcelas();
+            }}
+            onSuccess={() => {
+              setShowTituloEditModal(false);
+              setSelectedTituloId(null);
+              refetchParcelas();
+            }}
+          />
 
-      {/* Modal para receber */}
-      <ReceberModal
-        isOpen={showReceberModal}
-        onClose={() => {
-          setShowReceberModal(false);
-          setSelectedParcela(null);
-        }}
-        parcela={selectedParcela ? {
-          id: selectedParcela!.id,
-          numero_titulo: (selectedParcela!.numero_titulo || selectedParcela!.numero_parcela || `Título ${selectedParcela!.id}`).toString(),
-          valor_parcela: selectedParcela!.valor || selectedParcela!.valor_parcela,
-          data_vencimento: selectedParcela!.data_vencimento,
-          cliente: (selectedParcela!.cliente as { razao_social?: string })?.razao_social ? { razao_social: (selectedParcela!.cliente as { razao_social?: string }).razao_social! } : undefined
-        } : null}
-        onSuccess={() => {
-          setShowReceberModal(false);
-          setSelectedParcela(null);
-          refetchParcelas();
-        }}
-      />
+          {/* Modal para receber */}
+          <ReceberModal
+            isOpen={showReceberModal}
+            onClose={() => {
+              setShowReceberModal(false);
+              setSelectedParcela(null);
+            }}
+            parcela={selectedParcela ? {
+              id: selectedParcela!.id,
+              numero_titulo: (selectedParcela!.numero_titulo || selectedParcela!.numero_parcela || `Título ${selectedParcela!.id}`).toString(),
+              valor_parcela: selectedParcela!.valor || selectedParcela!.valor_parcela,
+              data_vencimento: selectedParcela!.data_vencimento,
+              cliente: (selectedParcela!.cliente as { razao_social?: string })?.razao_social ? { razao_social: (selectedParcela!.cliente as { razao_social?: string }).razao_social! } : undefined
+            } : null}
+            onSuccess={() => {
+              setShowReceberModal(false);
+              setSelectedParcela(null);
+              refetchParcelas();
+            }}
+          />
 
-      {/* Modal de contrato (criação e edição unificados) */}
-      <ContratoModal
-        show={showContratoCreateModal || showContratoEditModal}
-        clienteId={formHook.cliente?.id || formHook.createdClienteId || undefined}
-        contratoId={showContratoEditModal ? selectedContratoId : null}
-        onClose={() => {
-          setShowContratoCreateModal(false);
-          setShowContratoEditModal(false);
-          setSelectedContratoId(null);
-        }}
-        onSuccess={() => {
-          // Não fechar o modal automaticamente - permitir criar múltiplos contratos
-        }}
-      />
+          {/* Modal de contrato (criação e edição unificados) */}
+          <ContratoModal
+            show={showContratoCreateModal || showContratoEditModal}
+            clienteId={formHook.cliente?.id || formHook.createdClienteId || undefined}
+            contratoId={showContratoEditModal ? selectedContratoId : null}
+            onClose={() => {
+              setShowContratoCreateModal(false);
+              setShowContratoEditModal(false);
+              setSelectedContratoId(null);
+            }}
+            onSuccess={() => {
+              // Não fechar o modal automaticamente - permitir criar múltiplos contratos
+            }}
+          />
 
-      {/* Modal de impressão */}
-      <ImprimirModal
-        show={impressaoHook.showImprimirModal}
-        onClose={impressaoHook.handleCloseImprimirModal}
-        pdfUrl={impressaoHook.pdfUrl}
-        isGenerating={impressaoHook.isGeneratingPdf}
-        title="Visualizar Documento"
-        modalId="cliente-imprimir-modal"
-      />
+          {/* Modal de impressão */}
+          <ImprimirModal
+            show={impressaoHook.showImprimirModal}
+            onClose={impressaoHook.handleCloseImprimirModal}
+            pdfUrl={impressaoHook.pdfUrl}
+            isGenerating={impressaoHook.isGeneratingPdf}
+            title="Visualizar Documento"
+            modalId="cliente-imprimir-modal"
+          />
 
-      {/* Modal de Visualização de PDF de Auditoria */}
-      <ImprimirModal
-        show={auditoria.showPreview}
-        onClose={auditoria.handleClosePreview}
-        pdfUrl={auditoria.pdfUrl}
-        isGenerating={auditoria.isGeneratingPdf}
-        title="Relatórios de logs"
-        modalId="auditoria-cliente-modal"
-      />
+          {/* Modal de Visualização de PDF de Auditoria */}
+          <ImprimirModal
+            show={auditoria.showPreview}
+            onClose={auditoria.handleClosePreview}
+            pdfUrl={auditoria.pdfUrl}
+            isGenerating={auditoria.isGeneratingPdf}
+            title="Relatórios de logs"
+            modalId="auditoria-cliente-modal"
+          />
 
-      {/* Modal de Gerar NFS-e Avulsa */}
-      <GerarNFeModal
-        show={showGerarNFeModal}
-        onClose={() => {
-          setShowGerarNFeModal(false);
-          setSelectedTituloForNFe(null);
-        }}
-        cliente={formHook.cliente || undefined}
-        titulo={selectedTituloForNFe || undefined}
-        onSuccess={() => {
-          refetchParcelas();
-          setShowGerarNFeModal(false);
-          setSelectedTituloForNFe(null);
-        }}
-      />
+          {/* Modal de Gerar NFS-e Avulsa */}
+          <GerarNFeModal
+            show={showGerarNFeModal}
+            onClose={() => {
+              setShowGerarNFeModal(false);
+              setSelectedTituloForNFe(null);
+            }}
+            cliente={formHook.cliente || undefined}
+            titulo={selectedTituloForNFe || undefined}
+            onSuccess={() => {
+              refetchParcelas();
+              setShowGerarNFeModal(false);
+              setSelectedTituloForNFe(null);
+            }}
+          />
 
-      {/* ConfirmModal */}
-      {bulkActionsHook.modalProps && (
-        <ConfirmModal {...(bulkActionsHook.modalProps as Omit<ConfirmModalProps, 'show'> & { show: boolean })} />
-      )}
+          {/* ConfirmModal */}
+          {bulkActionsHook.modalProps && (
+            <ConfirmModal {...(bulkActionsHook.modalProps as Omit<ConfirmModalProps, 'show'> & { show: boolean })} />
+          )}
     </>
-  );
+    );
   };
 
-  return renderModalContent();
+  return (
+    <>
+      {renderModalContent()}
+    </>
+  );
 };
 
 export default ClienteModal;
