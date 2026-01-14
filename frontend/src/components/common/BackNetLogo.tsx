@@ -69,12 +69,6 @@ const BackNetLogo: React.FC<BackNetLogoProps> = ({
           <rect x="-6" y="-4" width="12" height="8" fill="white"/>
           <ellipse cx="0" cy="4" rx="6" ry="3" fill="white"/>
         </g>
-        
-        {/* Pulso/onda de sincronização */}
-        <circle cx="35" cy="35" r="20" fill="none" stroke="url(#secondaryGrad)" strokeWidth="2" opacity="0.4">
-          <animate attributeName="r" from="20" to="28" dur="2s" repeatCount="indefinite"/>
-          <animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/>
-        </circle>
       </g>
       
       {/* Texto BACKNET */}
