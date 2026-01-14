@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { DashboardData } from '../services/dashboardService';
 import { ChartDataItem } from '../components/charts/types';
 import type { useDashboardStats } from './useDashboardStats';
+import type { TranslationKeys } from '../contexts/I18nContext';
 
 interface DualChartDataItem extends ChartDataItem {
   receber: number;
@@ -43,7 +44,8 @@ interface DashboardCharts {
  */
 export const useDashboardCharts = (
   dashboardData: DashboardData | undefined,
-  stats: ReturnType<typeof useDashboardStats>
+  stats: ReturnType<typeof useDashboardStats>,
+  t: (key: keyof TranslationKeys, params?: Record<string, unknown>) => string
 ): DashboardCharts => {
   // Memoizar arrays para evitar recriação
   const clientes = useMemo(() => dashboardData?.clientes || [], [dashboardData?.clientes]);
@@ -55,14 +57,14 @@ export const useDashboardCharts = (
 
   // Gráficos de pizza - memoizados
   const clientesChartData = useMemo(() => [
-    { label: 'Ativos', value: stats.clientesAtivos, color: '#28a745' },
-    { label: 'Inativos', value: stats.clientesInativos, color: '#dc3545' }
-  ], [stats.clientesAtivos, stats.clientesInativos]);
+    { label: t('status.active'), value: stats.clientesAtivos, color: '#28a745' },
+    { label: t('status.inactive'), value: stats.clientesInativos, color: '#dc3545' }
+  ], [stats.clientesAtivos, stats.clientesInativos, t]);
 
   const planosChartData = useMemo(() => [
-    { label: 'Ativos', value: stats.planosAtivos, color: '#007bff' },
-    { label: 'Inativos', value: stats.planosInativos, color: '#6c757d' }
-  ], [stats.planosAtivos, stats.planosInativos]);
+    { label: t('status.active'), value: stats.planosAtivos, color: '#007bff' },
+    { label: t('status.inactive'), value: stats.planosInativos, color: '#6c757d' }
+  ], [stats.planosAtivos, stats.planosInativos, t]);
 
   const statusPagamentoData = useMemo(() => {
     if (!titulosTodos || titulosTodos.length === 0) return [];
@@ -81,12 +83,12 @@ export const useDashboardCharts = (
     }, { pagos: 0, pendentes: 0, vencidos: 0, cancelados: 0 });
     
     return [
-      { label: 'Pagos', value: counts.pagos, color: '#28a745' },
-      { label: 'Pendentes', value: counts.pendentes, color: '#17a2b8' },
-      { label: 'Vencidos', value: counts.vencidos, color: '#ffc107' },
-      { label: 'Cancelados', value: counts.cancelados, color: '#dc3545' }
+      { label: t('status.paid'), value: counts.pagos, color: '#28a745' },
+      { label: t('status.pending'), value: counts.pendentes, color: '#17a2b8' },
+      { label: t('status.overdue'), value: counts.vencidos, color: '#ffc107' },
+      { label: t('status.cancelled'), value: counts.cancelados, color: '#dc3545' }
     ].filter(item => item.value > 0);
-  }, [titulosTodos]);
+  }, [titulosTodos, t]);
 
   const distribuicaoPlanos = useMemo(() => {
     const tipos = planos.reduce((acc, plano) => {
@@ -104,15 +106,15 @@ export const useDashboardCharts = (
   }, [planos]);
 
   const taxaPagamentoChartData = useMemo(() => [
-    { label: 'Pago', value: stats.taxaPagamento, color: '#28a745' },
-    { label: 'Pendente', value: 100 - stats.taxaPagamento, color: '#ffc107' }
-  ], [stats.taxaPagamento]);
+    { label: t('status.paid'), value: stats.taxaPagamento, color: '#28a745' },
+    { label: t('status.pending'), value: 100 - stats.taxaPagamento, color: '#ffc107' }
+  ], [stats.taxaPagamento, t]);
 
   const contratosChartData = useMemo(() => [
-    { label: 'Ativos', value: stats.contratosAtivos, color: '#28a745' },
-    { label: 'Inativos', value: stats.contratosInativos, color: '#dc3545' },
-    { label: 'Suspensos', value: stats.contratosSuspensos, color: '#ffc107' }
-  ], [stats.contratosAtivos, stats.contratosInativos, stats.contratosSuspensos]);
+    { label: t('status.active'), value: stats.contratosAtivos, color: '#28a745' },
+    { label: t('status.inactive'), value: stats.contratosInativos, color: '#dc3545' },
+    { label: t('status.suspended'), value: stats.contratosSuspensos, color: '#ffc107' }
+  ], [stats.contratosAtivos, stats.contratosInativos, stats.contratosSuspensos, t]);
 
   const ticketMedioChartData = useMemo(() => [
     { label: 'Ticket Médio', value: stats.ticketMedio, color: '#6f42c1' }

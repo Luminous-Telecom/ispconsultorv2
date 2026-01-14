@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 export type Language = 'pt-BR' | 'en-US' | 'es-ES';
 
-interface TranslationKeys {
+export interface TranslationKeys {
   // Navegação
   'nav.dashboard': string;
   'nav.clients': string;
@@ -420,6 +420,7 @@ interface TranslationKeys {
   'status.active': string;
   'status.inactive': string;
   'status.suspended': string;
+  'status.overdue': string;
 
   // Placeholders
   'placeholder.cnpj': string;
@@ -881,6 +882,7 @@ const translations: Translations = {
     'status.active': 'Ativo',
     'status.inactive': 'Inativo',
     'status.suspended': 'Suspenso',
+    'status.overdue': 'Vencido',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -1338,6 +1340,7 @@ const translations: Translations = {
     'status.active': 'Active',
     'status.inactive': 'Inactive',
     'status.suspended': 'Suspended',
+    'status.overdue': 'Overdue',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -1795,6 +1798,7 @@ const translations: Translations = {
     'status.active': 'Activo',
     'status.inactive': 'Inactivo',
     'status.suspended': 'Suspendido',
+    'status.overdue': 'Vencido',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
