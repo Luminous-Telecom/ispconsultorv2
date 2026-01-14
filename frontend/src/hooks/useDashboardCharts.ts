@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { DashboardData } from '../services/dashboardService';
 import { ChartDataItem } from '../components/charts/types';
 import type { useDashboardStats } from './useDashboardStats';
-import type { TranslationKeys } from '../contexts/I18nContext';
 
 interface DualChartDataItem extends ChartDataItem {
   receber: number;
