@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useI18n } from '@/contexts/I18nContext';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { NotaFiscalService } from '@/services/notaFiscalService';
 import { NFSeConfigService } from '@/services/nfseConfigService';
@@ -25,6 +26,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
   titulo,
   onSuccess
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -173,7 +175,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Gerar Nota Fiscal de Serviços Eletrônica (NFS-e)"
+      title={t('modal.generateNFe')}
       size="lg"
       modalId="gerar-nfe-modal-financeiro"
       headerActions={
@@ -185,7 +187,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
             onClick={onClose}
             disabled={isSubmitting}
           >
-            Cancelar
+            {t('buttons.cancel')}
           </Button>
           <Button
             type="submit"
@@ -194,7 +196,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
             size="sm"
             isLoading={isSubmitting}
           >
-            Gerar NFS-e
+            {t('buttons.generate')} NFS-e
           </Button>
         </div>
       }
@@ -202,7 +204,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
       <form id="nfe-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
         {Object.keys(formErrors).length > 0 && (
           <div className="alert alert-danger mb-3" role="alert">
-            <strong>Erros de validação:</strong>
+            <strong>{t('form.validationErrors')}</strong>
             <ul className="mb-0 mt-2">
               {Object.entries(formErrors).map(([field, message]) => (
                 <li key={field}>{message}</li>
@@ -213,7 +215,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 
         {cliente && (
           <div className="mb-3">
-            <label className="form-label">Cliente</label>
+            <label className="form-label">{t('form.client')}</label>
             <input
               type="text"
               className="form-control"
@@ -225,7 +227,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 
         <div className="row">
           <div className="col-md-6 mb-3">
-            <label className="form-label">Natureza da Operação *</label>
+            <label className="form-label">{t('form.operationNature')} *</label>
             <input
               type="text"
               className={`form-control ${formErrors.natureza_operacao ? 'is-invalid' : ''}`}
@@ -252,7 +254,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 
         <div className="row">
           <div className="col-md-6 mb-3">
-            <label className="form-label">Data de Emissão</label>
+            <label className="form-label">{t('form.issueDate')}</label>
             <input
               type="date"
               className="form-control"
@@ -274,7 +276,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 
         <div className="row">
           <div className="col-md-6 mb-3">
-            <label className="form-label">Valor Total *</label>
+            <label className="form-label">{t('form.totalValue')} *</label>
             <input
               type="text"
               className={`form-control ${formErrors.valor_total ? 'is-invalid' : ''}`}
@@ -300,7 +302,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 
         <div className="row">
           <div className="col-md-6 mb-3">
-            <label className="form-label">Valor dos Produtos</label>
+            <label className="form-label">{t('form.productsValue')}</label>
             <input
               type="text"
               className="form-control"
@@ -349,7 +351,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Observações</label>
+          <label className="form-label">{t('form.observations')}</label>
           <textarea
             className="form-control"
             rows={3}

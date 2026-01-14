@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { Button } from '@/components/ui';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useI18n } from '@/contexts/I18nContext';
 
 export type ConfirmVariant = 'danger' | 'warning' | 'info' | 'success';
 
@@ -87,15 +88,20 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   show,
   onClose,
   onConfirm,
-  title = 'Confirmar ação',
+  title,
   message,
-  confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
+  confirmText,
+  cancelText,
   variant = 'danger',
   centered = true,
   isLoading = false,
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
+  
+  const defaultTitle = title || t('ui.confirmAction');
+  const defaultConfirmText = confirmText || t('ui.confirm');
+  const defaultCancelText = cancelText || t('actions.cancel');
 
   // Prevenir scroll do body quando modal estiver aberto
   useEffect(() => {
@@ -167,14 +173,14 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           {/* Header */}
           <div className="modal-header">
             <h5 className="modal-title" id="confirmModalTitle">
-              {title}
+              {defaultTitle}
             </h5>
             {!isLoading && (
               <button
                 type="button"
                 className="btn-close"
                 onClick={onClose}
-                aria-label="Fechar"
+                aria-label={t('actions.cancel')}
               />
             )}
           </div>
@@ -191,7 +197,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
               onClick={onClose}
               disabled={isLoading}
             >
-              {cancelText}
+              {defaultCancelText}
             </Button>
             <Button
               variant={confirmButtonVariant}
@@ -199,7 +205,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
               disabled={isLoading}
               isLoading={isLoading}
             >
-              {confirmText}
+              {defaultConfirmText}
             </Button>
           </div>
         </div>

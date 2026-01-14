@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePlanoForm } from '@/hooks/usePlanoForm';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useI18n } from '@/contexts/I18nContext';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button, Spinner } from '@/components/ui';
 import { InformacoesBasicasTab, ServicosObservacoesTab } from './plano';
@@ -18,6 +19,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
   onSuccess,
   planoId 
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
 
@@ -36,7 +38,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
   }, [show]);
 
   // Determinar título dinamicamente
-  const modalTitle = 'Plano';
+  const modalTitle = formHook.isEditing ? t('modal.editPlan') : t('modal.createPlan');
 
   // Renderizar conteúdo baseado no estado
   const renderContent = () => {
@@ -109,7 +111,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                 onClick={onClose}
                 disabled={formHook.isSubmitting}
               >
-                Cancelar
+                {t('buttons.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -119,7 +121,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                 leftIcon={<i className="bi bi-check-lg"></i>}
                 isLoading={formHook.isSubmitting}
               >
-                Salvar
+                {t('buttons.save')}
               </Button>
             </div>
 
@@ -142,7 +144,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                     type="button"
                     onClick={() => setActiveTab('informacoes-basicas')}
                   >
-                    Plano de Venda
+                    {t('tabs.salePlan')}
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -151,7 +153,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                     type="button"
                     onClick={() => setActiveTab('servicos-observacoes')}
                   >
-                    Observações
+                    {t('tabs.servicesObservations')}
                   </button>
                 </li>
               </ul>

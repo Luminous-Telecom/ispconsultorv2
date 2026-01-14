@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormValue } from '@/types/common';
+import { useI18n } from '@/contexts/I18nContext';
 import FormField from '@/components/ui/FormField';
 import { ClienteTabProps } from '../types';
 
@@ -10,13 +11,14 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
   isSubmitting,
   formPrefix
 }) => {
+  const { t } = useI18n();
   return (
     <div className="d-flex flex-column gap-2">
       <FormField
         name="cnpj"
         type="text"
-        label="CNPJ"
-        placeholder="00.000.000/0000-00"
+        label={t('form.cnpj')}
+        placeholder={t('placeholder.cnpj')}
         required={true}
         size="md"
         value={formData.cnpj || ''}
@@ -28,8 +30,8 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
       <FormField
         name="razao_social"
         type="text"
-        label="Razão Social"
-        placeholder="Razão social da empresa"
+        label={t('form.companyName')}
+        placeholder={t('placeholder.companyName')}
         required={true}
         size="md"
         value={formData.razao_social || ''}
@@ -41,8 +43,8 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
       <FormField
         name="nome_fantasia"
         type="text"
-        label="Nome Fantasia"
-        placeholder="Nome fantasia da empresa"
+        label={t('form.tradeName')}
+        placeholder={t('placeholder.tradeName')}
         size="md"
         value={formData.nome_fantasia || ''}
         onChange={(value: FormValue) => handleInputChange('nome_fantasia', value as string)}
@@ -53,7 +55,7 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
       <FormField
         name="ativo"
         type="checkbox"
-        label="Cliente Ativo"
+        label={t('form.active')}
         value={formData.ativo}
         onChange={(value: FormValue) => handleInputChange('ativo', value as boolean)}
         disabled={isSubmitting}

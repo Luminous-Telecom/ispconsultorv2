@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { useClienteArquivos } from '@/hooks/useClienteArquivos';
 import { ClienteArquivo } from '@/services/clienteArquivoService';
 import { formatDateTime } from '@/utils/formatters';
@@ -16,6 +17,7 @@ interface ArquivosTabProps {
 }
 
 const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEntity }) => {
+  const { t } = useI18n();
   const [_selectedItems, setSelectedItems] = useState<ClienteArquivo[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
@@ -76,7 +78,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       },
       {
         key: 'nome',
-        label: 'Nome',
+        label: t('table.fileName'),
         sortable: true,
         searchable: true,
         render: (item: ClienteArquivo) => (
@@ -118,7 +120,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       },
       {
         key: 'tamanho',
-        label: 'Tamanho',
+        label: t('table.fileSize'),
         sortable: true,
         searchable: false,
         render: (item: ClienteArquivo) => {
@@ -140,7 +142,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
     bulkActions: [
       {
         key: 'new',
-        label: 'Novo',
+        label: t('actions.create'),
         variant: 'primary' as const,
         disabled: () => false,
         onClick: async () => {
@@ -209,7 +211,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       { key: 'origem', label: 'Origem' }
     ],
     emptyMessage: 'Nenhum arquivo encontrado'
-  }), [arquivos, deleteMutation, handleDownload, handleView, confirm]);
+  }), [arquivos, deleteMutation, handleDownload, handleView, confirm, t]);
 
   if (!clienteId) {
     return (
@@ -226,7 +228,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="cliente-arquivos-tab-table"
-            title="Arquivos"
+            title={t('tabs.files')}
             config={{ ...tableConfig, loading: isLoading }}
             onRefresh={refetch}
             onSelectionChange={setSelectedItems}

@@ -6,6 +6,7 @@ import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime, formatDate, formatCurrency } from '@/utils/formatters';
 import { ContaPagar, ContaPagarFilters } from '@/types';
 import ListModal from '@/components/common/ListModal';
@@ -27,9 +28,11 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   show, 
   onClose, 
   onSelectContaPagar,
-  title = "Contas a Pagar",
+  title,
   skipWrapper: _skipWrapper 
 }) => {
+  const { t } = useI18n();
+  const defaultTitle = title || t('financial.accountsPayable');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
@@ -87,10 +90,10 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   // Função para obter badge de status
   const getStatusBadge = (status: ContaPagar['status']) => {
     const statusMap = {
-      'A_PAGAR': { label: 'A Pagar', className: 'bg-warning' },
-      'PAGO': { label: 'Pago', className: 'bg-success' },
-      'PARCIAL': { label: 'Parcial', className: 'bg-info' },
-      'CANCELADO': { label: 'Cancelado', className: 'bg-secondary' }
+      'A_PAGAR': { label: t('financial.toPay'), className: 'bg-warning' },
+      'PAGO': { label: t('financial.paid'), className: 'bg-success' },
+      'PARCIAL': { label: t('status.pending'), className: 'bg-info' },
+      'CANCELADO': { label: t('status.rejected'), className: 'bg-secondary' }
     };
     const statusInfo = statusMap[status] || { label: status, className: 'bg-secondary' };
     return (
@@ -116,7 +119,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
 
   // Configurar modal centralizado
   const modal = useListModal({
-    title,
+    title: defaultTitle,
     filters: [
       {
         key: 'fornecedor_id',
@@ -142,12 +145,12 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         label: 'Status',
         type: 'select',
         options: [
-          { value: 'A_PAGAR', label: 'A Pagar' },
-          { value: 'PAGO', label: 'Pago' },
-          { value: 'PARCIAL', label: 'Parcial' },
+          { value: 'A_PAGAR', label: t('financial.toPay') },
+          { value: 'PAGO', label: t('financial.paid') },
+          { value: 'PARCIAL', label: t('status.pending') },
           { value: 'CANCELADO', label: 'Cancelado' }
         ],
-        placeholder: 'Selecione o status'
+        placeholder: t('ui.selectOption')
       },
       {
         key: 'tipo_pagamento',
@@ -689,7 +692,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
           onClose={auditoria.handleClosePreview}
           pdfUrl={auditoria.pdfUrl}
           isGenerating={auditoria.isGeneratingPdf}
-          title="Relatórios de logs"
+          title={t('financial.executionLogs')}
           modalId="auditoria-conta-pagar-modal"
         />
       </>
@@ -704,7 +707,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
           clearSelection();
           onClose();
         }}
-        title={title}
+        title={defaultTitle}
         size="lg"
         className="no-padding"
       >

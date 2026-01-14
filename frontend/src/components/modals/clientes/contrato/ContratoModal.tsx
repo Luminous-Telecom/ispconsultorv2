@@ -24,15 +24,15 @@ import { useContratoPlanosAdicionais, useDeleteContratoPlanoAdicional } from '@/
 import { ContratoPlanoAdicional } from '@/services/contratoPlanoAdicionalService';
 import { extractApiErrorMessageSync } from '@/utils/apiErrorHelper';
 import { CONTEXT_ERROR_MESSAGES } from '@/constants/ErrorMessages';
-import { formatDate, formatDateTime } from '@/utils/formatters';
+import { formatDate, formatDateTime, formatCurrency } from '@/utils/formatters';
 import { useImpressaoContrato } from '@/hooks/useImpressaoContrato';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
+import { useI18n } from '@/contexts/I18nContext';
 import ModeloContratoSelectModal from '@/components/modals/parametros/ModeloContratoSelectModal';
 import { Button, Spinner } from '@/components/ui';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
-import { formatCurrency } from '@/utils/formatters';
 import ContratoTab from './abas/ContratoTab';
 import EnderecoTab from './abas/EnderecoTab';
 import TermosTab from './abas/TermosTab';
@@ -57,6 +57,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   contratoId = null,
   clienteId
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const auditoria = useAuditoria();
   // Estado interno para controlar o contratoId após criação
@@ -630,7 +631,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: 'Imprimir',
+      label: t('buttons.print'),
       variant: 'primary',
       disabled: () => false,
       dropdown: [
@@ -652,7 +653,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       },
       dropdown: [
         {
-          label: 'Via WhatsApp',
+          label: t('other.viaWhatsApp'),
           action: async (selectedItems?: Titulo[]) => {
             const items = selectedItems || [];
             if (items.length > 0) {
@@ -765,7 +766,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Apenas títulos avulsos podem ser criados manualmente (títulos normais são gerados pelo scheduler)
   const bulkActionsAvulsos: BulkAction<Titulo>[] = isEditMode ? [
     {
-      label: 'Novo Título Avulso',
+      label: t('other.newMiscTitle'),
       action: () => {
         setShowTituloCreateModal(true);
       }
@@ -894,7 +895,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: 'Imprimir',
+      label: t('buttons.print'),
       variant: 'primary',
       disabled: () => false,
       dropdown: [
@@ -916,7 +917,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       },
       dropdown: [
         {
-          label: 'Via WhatsApp',
+          label: t('other.viaWhatsApp'),
           action: async (selectedItems?: Titulo[]) => {
             const items = selectedItems || [];
             if (items.length > 0) {
@@ -1060,15 +1061,15 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         if (items.length === 0) return;
         
         const confirmMessage = items.length === 1 
-          ? 'Tem certeza que deseja deletar este termo?'
-          : `Tem certeza que deseja deletar ${items.length} termos?`;
+          ? t('messages.confirmDelete')
+          : `${t('messages.confirmDelete')} (${items.length} termos)`;
           
         const confirmed = await confirm({
           message: confirmMessage,
           variant: 'danger',
-          title: 'Deletar termos',
-          confirmText: 'Deletar',
-          cancelText: 'Cancelar',
+          title: t('other.deleteTerms'),
+          confirmText: t('actions.delete'),
+          cancelText: t('actions.cancel'),
         });
         
         if (confirmed) {
@@ -1086,7 +1087,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: (selectedItems: TermoContrato[]) => selectedItems.length === 0 && selectedTermosItems.length === 0
     },
     {
-      label: 'Imprimir',
+      label: t('buttons.print'),
       variant: 'primary',
       disabled: () => selectedTermosItems.length === 0,
       action: async () => {
@@ -1118,7 +1119,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: 'Enviar para Assinatura',
+      label: t('modal.sendSignature'),
       disabled: (selectedItems: TermoContrato[]) => {
         const items = selectedItems && selectedItems.length > 0 ? selectedItems : selectedTermosItems;
         return items.length === 0 || items[0]?.assinado === 'SIM';
@@ -1244,7 +1245,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     { 
       key: 'plano', 
-      label: 'Plano', 
+      label: t('table.plan'), 
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.plano?.nome_plano || '-' 
@@ -1258,7 +1259,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'data_vencimento',
-      label: 'Vencimento',
+      label: t('table.dueDate'),
       sortable: true,
       searchable: false,
       render: (item: Titulo) => formatDate(item.data_vencimento)
@@ -1279,7 +1280,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'valor_aberto',
-      label: 'Valor aberto',
+      label: t('table.openValue'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`
@@ -1325,7 +1326,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     { 
       key: 'charge_id', 
-      label: 'Charge ID', 
+      label: t('table.chargeId'), 
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.charge_id || '-' 
@@ -1382,7 +1383,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     { 
       key: 'plano', 
-      label: 'Plano', 
+      label: t('table.plan'), 
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.plano?.nome_plano || '-' 
@@ -1396,7 +1397,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'data_vencimento',
-      label: 'Vencimento',
+      label: t('table.dueDate'),
       sortable: true,
       searchable: false,
       render: (item: Titulo) => formatDate(item.data_vencimento)
@@ -1417,7 +1418,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'valor_aberto',
-      label: 'Valor aberto',
+      label: t('table.openValue'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`
@@ -1436,7 +1437,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     { 
       key: 'charge_id', 
-      label: 'Charge ID', 
+      label: t('table.chargeId'), 
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.charge_id || '-' 
@@ -1475,7 +1476,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'plano',
-      label: 'Plano',
+      label: t('table.plan'),
       sortable: true,
       searchable: true,
       render: (item: ContratoPlanoAdicional) => item.plano?.nome_plano || 'N/A'
@@ -1492,7 +1493,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'desconto',
-      label: 'Desconto',
+      label: t('form.discount'),
       sortable: true,
       searchable: false,
       render: (item: ContratoPlanoAdicional) => {
@@ -1636,7 +1637,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       <DraggableModal
         show={show}
         onClose={onClose}
-        title="Carregando..."
+        title={t('messages.loading')}
         size="lg"
         modalId="contrato-modal-loading"
       >
@@ -1652,7 +1653,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Contrato"
+      title={isEditMode ? t('modal.editContract') : t('modal.createContract')}
       size="xl"
       modalId="contrato-modal"
       headerActions={
@@ -1673,7 +1674,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                     handleImprimirContrato();
                   }}
                 >
-                  Imprimir
+                  {t('buttons.print')}
                 </Button>
               )}
               <Button
@@ -1683,7 +1684,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 leftIcon={<i className="bi bi-x-lg"></i>}
                 onClick={onClose}
               >
-                Cancelar
+                {t('buttons.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -1693,7 +1694,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 leftIcon={<i className="bi bi-check-lg"></i>}
                 isLoading={formHook.isSubmitting}
               >
-                {isEditMode ? 'Salvar' : 'Criar Contrato'}
+                {isEditMode ? t('buttons.save') : t('modal.createContract')}
               </Button>
             </div>
 
@@ -1716,7 +1717,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                     type="button"
                     onClick={() => handleTabChange('contrato')}
                   >
-                    Contrato
+                    {t('tabs.contractData')}
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -1725,7 +1726,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                     type="button"
                     onClick={() => handleTabChange('endereco')}
                   >
-                    Endereço
+                    {t('tabs.address')}
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -1739,7 +1740,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                     }}
                     disabled={!isEditMode}
                   >
-                    Termos
+                    {t('tabs.terms')}
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -1753,7 +1754,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                     }}
                     disabled={!isEditMode}
                   >
-                    Financeiro
+                    {t('tabs.financial')}
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -1767,7 +1768,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                     }}
                     disabled={!isEditMode}
                   >
-                    Financeiro Avulso
+                    {t('tabs.financialMisc')}
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -1781,7 +1782,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                     }}
                     disabled={!isEditMode}
                   >
-                    Serviços Adicionais
+                    {t('tabs.additionalServices')}
                   </button>
                 </li>
               </ul>

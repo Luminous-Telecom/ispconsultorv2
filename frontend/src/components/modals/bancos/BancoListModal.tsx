@@ -4,6 +4,7 @@ import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { Banco } from '@/types';
+import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
 import BancoModal from './BancoModal';
@@ -26,6 +27,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   title = "Selecionar Banco",
   skipWrapper = false
 }) => {
+  const { t } = useI18n();
   const [showBancoModal, setShowBancoModal] = useState(false);
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
   
@@ -57,28 +59,28 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const columns = useMemo(() => [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       width: '42px',
       render: (item: Banco) => <span>{item.id}</span>
     },
     {
       key: 'nome',
-      label: 'Nome',
+      label: t('form.name'),
       sortable: true,
       width: '180px',
       render: (item: Banco) => item.nome
     },
     {
       key: 'descricao',
-      label: 'Descrição',
+      label: t('form.description'),
       sortable: true,
       width: '200px',
       render: (item: Banco) => item.descricao || '-'
     },
     {
       key: 'tipo',
-      label: 'Tipo',
+      label: t('table.bankType'),
       sortable: true,
       width: '90px',
       render: (item: Banco) => {
@@ -97,12 +99,12 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     },
     {
       key: 'sandbox',
-      label: 'Sandbox',
+      label: t('table.sandbox'),
       sortable: true,
       width: '80px',
       render: (item: Banco) => (
         <span className={`badge ${item.sandbox ? 'bg-warning' : 'bg-primary'}`}>
-          {item.sandbox ? 'Sim' : 'Não'}
+          {item.sandbox ? t('ui.yes') : t('ui.no')}
         </span>
       )
     },
@@ -119,7 +121,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: t('table.createdAt'),
       sortable: true,
       width: '130px',
       render: (item: Banco & { created_at?: string; created_at_formatada?: string | null }) => {
@@ -131,20 +133,21 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         return item.created_at ? formatDateTime(item.created_at) : '-';
       }
     }
-  ], []);
+  ], [t]);
 
   // Configurar modal centralizado
+  const defaultTitle = title || (onSelectBanco ? t('ui.selectBank') : t('menu.banks'));
   const modal = useListModal({
-    title,
+    title: defaultTitle,
     columns,
-    searchPlaceholder: '',
+    searchPlaceholder: t('layout.searchPlaceholder'),
     searchFields: [
-      { key: 'id', label: 'ID' },
-      { key: 'nome', label: 'Nome' },
-      { key: 'descricao', label: 'Descrição' },
-      { key: 'tipo_banco', label: 'Tipo de Banco' },
-      { key: 'sandbox', label: 'Sandbox' },
-      { key: 'ativo', label: 'Status' }
+      { key: 'id', label: t('table.id') },
+      { key: 'nome', label: t('form.name') },
+      { key: 'descricao', label: t('form.description') },
+      { key: 'tipo_banco', label: t('table.bankType') },
+      { key: 'sandbox', label: t('table.sandbox') },
+      { key: 'ativo', label: t('table.status') }
     ],
     multiSelect: false
   });
@@ -222,61 +225,61 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   // Bulk actions memoizados
   const bulkActions = useMemo(() => onSelectBanco ? [
     {
-      label: 'Cancelar',
-      variant: 'secondary' as const,
-      action: () => {
-        clearSelection();
-        onClose();
+        label: t('buttons.cancel'),
+        variant: 'secondary' as const,
+        action: () => {
+          clearSelection();
+          onClose();
+        }
+      },
+      {
+        label: t('buttons.select'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
+        action: (selectedItems: Banco[]) => handleSelect(selectedItems)
       }
-    },
-    {
-      label: 'Inserir',
-      variant: 'primary' as const,
-      disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
-      action: (selectedItems: Banco[]) => handleSelect(selectedItems)
-    }
-  ] : [
-    {
-      label: 'Novo',
-      variant: 'primary' as const,
-      action: () => {
-        setSelectedBancoId(null);
-        setShowBancoModal(true);
-      }
-    },
-    {
-      label: 'Editar',
-      variant: 'primary' as const,
-      disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
-      action: (selectedItems: Banco[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
-        if (item) {
-          setSelectedBancoId(item.id);
+    ] : [
+      {
+        label: t('actions.create'),
+        variant: 'primary' as const,
+        action: () => {
+          setSelectedBancoId(null);
           setShowBancoModal(true);
         }
-      }
-    },
-    {
-      label: 'Excluir',
-      disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
-      action: async (selectedItems: Banco[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
-        if (!item) return;
-        
-        const confirmed = await confirm({
-          message: 'Tem certeza que deseja excluir este banco?',
-          variant: 'danger',
-          title: 'Excluir banco',
-          confirmText: 'Excluir',
-          cancelText: 'Cancelar',
-        });
+      },
+      {
+        label: t('actions.edit'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
+        action: (selectedItems: Banco[]) => {
+          const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
+          if (item) {
+            setSelectedBancoId(item.id);
+            setShowBancoModal(true);
+          }
+        }
+      },
+      {
+        label: t('actions.delete'),
+        disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
+        action: async (selectedItems: Banco[]) => {
+          const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
+          if (!item) return;
+          
+          const confirmed = await confirm({
+            message: t('messages.confirmDelete'),
+            variant: 'danger',
+            title: t('modal.deleteBank'),
+            confirmText: t('actions.delete'),
+            cancelText: t('actions.cancel'),
+          });
         
         if (confirmed) {
           handleDelete(item.id);
         }
       }
     }
-  ], [onSelectBanco, selectedBanco, clearSelection, onClose, handleSelect, handleDelete, confirm]);
+  ], [onSelectBanco, selectedBanco, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
 
   const handleSearchChange = useCallback((search: string, field?: string) => {
     // Usar setTimeout para evitar atualização durante render cycle

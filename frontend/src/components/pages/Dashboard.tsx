@@ -9,9 +9,11 @@ import { BarChart, ValueChart, ResponsiveLineChart, DualLineChart, ResponsivePie
 import { Spinner } from '@/components/ui';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
 import { useModal } from '@/contexts/ModalContext';
+import { useI18n } from '@/contexts/I18nContext';
 import DashboardSearchResult from '../dashboard/DashboardSearchResult';
 
 const Dashboard: React.FC = () => {
+  const { t } = useI18n();
   const { searchValue, searchField } = useTableHeader();
   const { activeModal } = useModal();
   const {
@@ -53,7 +55,7 @@ const Dashboard: React.FC = () => {
     return (
       <div className="dashboard-container">
         <div className="text-center">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
+          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
         </div>
       </div>
     );
@@ -77,13 +79,13 @@ const Dashboard: React.FC = () => {
         <div className="dashboard-header-clean">
           <div className="d-flex justify-content-between align-items-start">
             <div className="dashboard-title-section">
-              <h1 className="dashboard-title-minimal">Visão Geral</h1>
+              <h1 className="dashboard-title-minimal">{t('dashboard.title')}</h1>
 
               {/* Filtros de Data */}
               <div className="dashboard-filters-minimal mt-2">
                 <div className="d-flex align-items-center gap-2">
                   <div className="d-flex align-items-center gap-1">
-                    <label className="form-label small fw-bold text-secondary mb-0">Data Inicial:</label>
+                    <label className="form-label small fw-bold text-secondary mb-0">{t('dashboard.startDate')}:</label>
                     <input
                       type="date"
                       value={startDate}
@@ -94,7 +96,7 @@ const Dashboard: React.FC = () => {
                   </div>
                   <span className="text-muted small">—</span>
                   <div className="d-flex align-items-center gap-1">
-                    <label className="form-label small fw-bold text-secondary mb-0">Data Final:</label>
+                    <label className="form-label small fw-bold text-secondary mb-0">{t('dashboard.endDate')}:</label>
                     <input
                       type="date"
                       value={endDate}
@@ -113,27 +115,27 @@ const Dashboard: React.FC = () => {
             <div className="row g-2">
               <div className="col-lg-3 col-md-6">
                 <div className="metric-compact">
-                  <div className="metric-compact-label">Faturamento</div>
+                  <div className="metric-compact-label">{t('dashboard.revenue')}</div>
                   <div className="metric-compact-value">{formatCurrency(stats.receitaPagaPeriodo)}</div>
                 </div>
               </div>
               <div className="col-lg-3 col-md-6">
                 <div className="metric-compact">
-                  <div className="metric-compact-label">Previsto</div>
+                  <div className="metric-compact-label">{t('dashboard.expected')}</div>
                   <div className="metric-compact-value text-info">{formatCurrency(stats.receitaPrevistaPeriodo)}</div>
                 </div>
               </div>
               <div className="col-lg-3 col-md-6">
                 <div className="metric-compact">
-                  <div className="metric-compact-label">Pendente</div>
+                  <div className="metric-compact-label">{t('dashboard.pending')}</div>
                   <div className="metric-compact-value text-warning">{formatCurrency(stats.receitaPendentePeriodo)}</div>
                 </div>
               </div>
               <div className="col-lg-3 col-md-6">
                 <div className="metric-compact">
-                  <div className="metric-compact-label">Clientes</div>
+                  <div className="metric-compact-label">{t('dashboard.clients')}</div>
                   <div className="metric-compact-value text-success">{formatNumber(stats.clientesAtivosPeriodo)}</div>
-                  <div className="metric-compact-subtext">{formatNumber(stats.clientesComTitulosPeriodo)} no período</div>
+                  <div className="metric-compact-subtext">{formatNumber(stats.clientesComTitulosPeriodo)} {t('dashboard.inPeriod')}</div>
                 </div>
               </div>
             </div>
@@ -146,7 +148,7 @@ const Dashboard: React.FC = () => {
                 <div className="chart-compact-container chart-compact-container-recebidos">
                   <ResponsiveLineChart
                     data={charts.recebidosPeriodoChartData}
-                    title={`Recebidos: ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
+                    title={`${t('dashboard.received')}: ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
                     format="currency"
                   />
                 </div>
@@ -155,7 +157,7 @@ const Dashboard: React.FC = () => {
                 <div className="chart-compact-container chart-compact-container-receber">
                   <ResponsiveLineChart
                     data={charts.receberPeriodoChartData}
-                    title={`A Receber: ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
+                    title={`${t('dashboard.toReceive')}: ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
                     format="currency"
                   />
                 </div>
@@ -169,7 +171,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.clientesChartData}
-                title="Status dos Clientes"
+                title={t('dashboard.clientStatus')}
                 hiddenItems={hiddenClientes}
                 onToggleItem={toggleCliente}
               />
@@ -180,7 +182,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.planosChartData}
-                title="Status dos Planos"
+                title={t('dashboard.planStatus')}
                 hiddenItems={hiddenPlanos}
                 onToggleItem={togglePlano}
               />
@@ -191,7 +193,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.statusPagamentoData}
-                title="Status dos Pagamentos"
+                title={t('dashboard.paymentStatus')}
                 hiddenItems={hiddenPagamentos}
                 onToggleItem={togglePagamento}
               />
@@ -202,7 +204,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.distribuicaoPlanos}
-                title="Distribuição por Tipo de Plano"
+                title={t('dashboard.planDistribution')}
                 hiddenItems={hiddenDistribuicao}
                 onToggleItem={toggleDistribuicao}
               />
@@ -213,7 +215,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.taxaPagamentoChartData}
-                title="Taxa de Pagamento"
+                title={t('dashboard.paymentRate')}
                 hiddenItems={hiddenTaxaPagamento}
                 onToggleItem={toggleTaxaPagamento}
               />
@@ -224,7 +226,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.contratosChartData}
-                title="Status dos Contratos"
+                title={t('dashboard.contractStatus')}
                 hiddenItems={hiddenContratos}
                 onToggleItem={toggleContratos}
               />
@@ -233,7 +235,7 @@ const Dashboard: React.FC = () => {
 
           <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
-              <ValueChart data={charts.ticketMedioChartData} title="Ticket Médio R$" format="currency" />
+              <ValueChart data={charts.ticketMedioChartData} title={t('dashboard.averageTicket')} format="currency" />
             </div>
           </div>
         </div>
@@ -243,7 +245,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.receitaMensalChartData}
-                title={`Faturamento Mensal: ${formatCurrency(charts.totalReceitaMensal || 0)} (12 meses)`}
+                title={`${t('dashboard.monthlyRevenueTitle')}: ${formatCurrency(charts.totalReceitaMensal || 0)} (${t('dashboard.months12')})`}
                 format="currency"
               />
             </div>
@@ -253,7 +255,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.crescimentoClientes}
-                title={`Novos Clientes: ${formatNumber(charts.totalNovosClientes || 0)} (12 meses)`}
+                title={`${t('dashboard.newClients')}: ${formatNumber(charts.totalNovosClientes || 0)} (${t('dashboard.months12')})`}
                 format="number"
               />
             </div>
@@ -266,7 +268,7 @@ const Dashboard: React.FC = () => {
             <div className="chart-card">
               <DualLineChart
                 data={charts.contasReceberPagarChartData}
-                title="Contas a Receber vs Contas a Pagar (12 meses)"
+                title={`${t('dashboard.receivablesVsPayables')} (${t('dashboard.months12')})`}
                 format="currency"
               />
             </div>
@@ -274,7 +276,7 @@ const Dashboard: React.FC = () => {
 
           <div className="col-xl-6 col-lg-6">
             <div className="chart-card">
-              <BarChart data={charts.clientesPorPlano} title="Clientes por Plano" format="number" />
+              <BarChart data={charts.clientesPorPlano} title={t('dashboard.clientsByPlan')} format="number" />
             </div>
           </div>
         </div>

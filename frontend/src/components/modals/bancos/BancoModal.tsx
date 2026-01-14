@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
+import { useI18n } from '@/contexts/I18nContext';
 import { BancoService } from '@/services/bancoService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useFormPrefix } from '@/hooks/useFormId';
@@ -27,6 +28,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
   bancoId,
   onSuccess 
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const isEdit = !!bancoId;
   const formPrefix = useFormPrefix(isEdit ? 'BancoEditModal' : 'BancoCreateModal');
@@ -209,8 +211,8 @@ const BancoModal: React.FC<BancoModalProps> = ({
     if (isEdit && isLoading) {
       return (
         <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
-          <p className="mt-2">Carregando dados do banco...</p>
+          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
+          <p className="mt-2">{t('messages.loading')}</p>
         </div>
       );
     }
@@ -311,7 +313,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
                     type="button"
                     onClick={() => setActiveTab('informacoes-basicas')}
                   >
-                    Banco
+                    {t('tabs.basicInfo')}
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -320,7 +322,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
                     type="button"
                     onClick={() => setActiveTab('configuracoes-api')}
                   >
-                    Configurações API
+                    {t('tabs.apiConfig')}
                   </button>
                 </li>
               </ul>

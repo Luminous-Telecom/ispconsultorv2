@@ -18,6 +18,7 @@ import GerarNFeModal from '@/components/modals/notas-fiscais/GerarNFeModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { useI18n } from '@/contexts/I18nContext';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface FinanceiroModalProps {
@@ -33,6 +34,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   onSelectTitulo,
   skipWrapper = false
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -589,9 +591,9 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           const confirmed = await confirm({
             message: confirmMessage,
             variant: 'warning',
-            title: 'Cancelar títulos',
-            confirmText: 'Cancelar',
-            cancelText: 'Voltar',
+            title: t('financial.cancelTitles'),
+            confirmText: t('actions.delete'),
+            cancelText: t('ui.back'),
           });
           
           if (confirmed) {
@@ -616,19 +618,19 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                 
                 if (successCount > 0) {
                   const message = successCount === 1 
-                    ? 'Título cancelado com sucesso!'
-                    : `${successCount} títulos cancelados com sucesso!`;
+                    ? t('financial.titleCanceled')
+                    : `${successCount} ${t('financial.titlesCanceled')}`;
                   success(message);
                 }
                 
                 if (errorCount > 0) {
                   const message = errorCount === 1 
-                    ? '1 título não pôde ser cancelado'
-                    : `${errorCount} títulos não puderam ser cancelados`;
+                    ? t('financial.titleNotCanceled')
+                    : `${errorCount} ${t('financial.titlesNotCanceled')}`;
                   error(message);
                 }
               } catch (err) {
-                error('Erro ao cancelar títulos');
+                error(t('financial.errorCanceling'));
               }
             }
         },
@@ -646,27 +648,28 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           
           const item = selectedItems[0];
           if (item.status !== 'pago') {
-            error('Só é possível estornar títulos que estão pagos');
+            error(t('financial.canOnlyReversePaid'));
             return;
           }
           
           const confirmed = await confirm({
-            message: `Tem certeza que deseja estornar o título ${item.numero_titulo || item.id}?\n\n` +
-              `Valor: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
-              `O título voltará para status PENDENTE.`,
+            message: `${t('messages.confirmDelete')}\n\n` +
+              `Título: ${item.numero_titulo || item.id}\n` +
+              `Valor: ${formatCurrency(item.valor_pago || item.valor || 0)}\n\n` +
+              t('financial.titleWillReturnPending'),
             variant: 'warning',
-            title: 'Estornar título',
-            confirmText: 'Estornar',
-            cancelText: 'Cancelar',
+            title: t('financial.reverseTitle'),
+            confirmText: t('financial.reverse'),
+            cancelText: t('actions.cancel'),
           });
           
           if (confirmed) {
                 try {
                   await TituloService.estornar(item.id);
-                  success('Título estornado com sucesso!');
+                  success(t('financial.titleReversed'));
                   handleRefreshData();
                 } catch (err) {
-                  const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
+                  const errorMessage = err instanceof Error ? err.message : t('financial.errorReversing');
                   error(errorMessage);
                 }
               }
@@ -733,7 +736,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         ]
       }
     ];
-  }, [success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, confirm]);
+  }, [success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, confirm, t]);
 
   const handleSearch = useCallback((term: string, field?: string) => {
     // Usar setTimeout para evitar atualização durante render cycle
@@ -874,7 +877,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       <div className="col-12 financeiro-modal-col">
         <div className="financeiro-modal-table-container">
           <Table
-              title="Financeiro - Títulos"
+              title={t('financial.title')}
               config={tableConfig}
               tableId="financeiro-modal"
               onSelectionChange={setSelectedItems}
@@ -983,7 +986,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           }}
           pdfUrl={pdfUrl}
           isGenerating={isGeneratingPdf}
-          title="Visualizar Documento"
+          title={t('financial.viewDocument')}
           modalId="financeiro-imprimir-modal"
         />
 
@@ -993,7 +996,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           onClose={auditoria.handleClosePreview}
           pdfUrl={auditoria.pdfUrl}
           isGenerating={auditoria.isGeneratingPdf}
-          title="Relatórios de logs"
+          title={t('financial.executionLogs')}
           modalId="auditoria-titulo-modal"
         />
 

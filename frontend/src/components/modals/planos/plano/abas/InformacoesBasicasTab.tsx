@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormValue } from '@/types/common';
+import { useI18n } from '@/contexts/I18nContext';
 import FormField from '@/components/ui/FormField';
 import { PlanoTabProps } from '../types';
 
@@ -9,6 +10,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
   handleInputChange,
   isSubmitting
 }) => {
+  const { t } = useI18n();
   return (
     <>
       <div className="row g-2">
@@ -17,8 +19,8 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="nome_plano"
               type="text"
-              label="Nome do Plano"
-              placeholder="Ex: Plano Premium"
+              label={t('table.planName')}
+              placeholder={t('form.planNamePlaceholder')}
               required={true}
               size="sm"
               value={formData.nome_plano}
@@ -173,13 +175,13 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
               }}
               disabled={isSubmitting}
               options={[
-                { value: 'mensal', label: 'Mensal' },
-                { value: 'trimestral', label: 'Trimestral' },
-                { value: 'semestral', label: 'Semestral' },
-                { value: 'anual', label: 'Anual' },
-                { value: 'bimestral', label: 'Bimestral' },
-                { value: 'quinzenal', label: 'Quinzenal' },
-                { value: 'semanal', label: 'Semanal' }
+                { value: 'mensal', label: t('form.periodicityMonthly') },
+                { value: 'trimestral', label: t('form.periodicityQuarterly') },
+                { value: 'semestral', label: t('form.periodicitySemiannual') },
+                { value: 'anual', label: t('form.periodicityAnnual') },
+                { value: 'bimestral', label: t('form.periodicityBimonthly') },
+                { value: 'quinzenal', label: t('form.periodicityBiweekly') },
+                { value: 'semanal', label: t('form.periodicityWeekly') }
               ]}
             />
           </div>

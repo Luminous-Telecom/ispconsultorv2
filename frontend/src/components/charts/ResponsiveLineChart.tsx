@@ -1,8 +1,10 @@
 import React, { useState, useLayoutEffect, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { LineChartProps } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
+import { useI18n } from '@/contexts/I18nContext';
 
 const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, format = 'number' }) => {
+  const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
@@ -261,7 +263,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
             }}
           >
             <p className="label text-light mb-0">{tooltip.label}</p>
-            <p className="intro text-info mb-0">Valor: {formatValue(tooltip.value)}</p>
+            <p className="intro text-info mb-0">{t('financial.value')}: {formatValue(tooltip.value)}</p>
           </div>
         )}
       </div>

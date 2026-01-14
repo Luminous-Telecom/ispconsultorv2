@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormValue } from '@/types/common';
+import { useI18n } from '@/contexts/I18nContext';
 import FormField from '@/components/ui/FormField';
 import ContactFields from '@/components/forms/ContactFields';
 import { ClienteTabProps } from '../types';
@@ -10,6 +11,7 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
   handleInputChange,
   formPrefix
 }) => {
+  const { t } = useI18n();
   return (
     <div className="d-flex flex-column gap-2">
       <ContactFields
@@ -26,13 +28,13 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
       />
 
       <div>
-        <h6 className="text-primary mb-2">Preferências de Comunicação</h6>
+        <h6 className="text-primary mb-2">{t('tabs.communicationPreferences')}</h6>
 
         <div className="d-flex flex-column gap-2">
           <FormField
             name="recebe_email"
             type="checkbox"
-            label="Recebe Email"
+            label={t('form.receivesEmail')}
             value={formData.recebe_email}
             onChange={(value: FormValue) => handleInputChange('recebe_email', value as boolean)}
             formPrefix={formPrefix}
@@ -41,7 +43,7 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
           <FormField
             name="recebe_whatsapp"
             type="checkbox"
-            label="Recebe WhatsApp"
+            label={t('form.receivesWhatsApp')}
             value={formData.recebe_whatsapp}
             onChange={(value: FormValue) => handleInputChange('recebe_whatsapp', value as boolean)}
             formPrefix={formPrefix}

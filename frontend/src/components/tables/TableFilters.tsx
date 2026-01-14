@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TableFilter } from './types';
 import { FilterValue } from '@/types/common';
+import { useI18n } from '@/contexts/I18nContext';
 import FormField from '../ui/FormField';
 import Button from '../ui/Button';
 
@@ -27,6 +28,7 @@ const TableFilters: React.FC<TableFiltersProps> = ({
   showClearButton = true,
   showApplyButton = false,
 }) => {
+  const { t } = useI18n();
   const [isExpanded, setIsExpanded] = useState(!collapsible);
   const [pendingFilters, setPendingFilters] = useState<Record<string, FilterValue>>(values);
 
@@ -206,7 +208,7 @@ const TableFilters: React.FC<TableFiltersProps> = ({
               size="sm"
               icon={isExpanded ? 'chevron-up' : 'chevron-down'}
               onClick={() => setIsExpanded(!isExpanded)}
-              tooltip={isExpanded ? 'Ocultar filtros' : 'Mostrar filtros'}
+              tooltip={isExpanded ? t('ui.hideFilters') : t('ui.showFilters')}
             >
               {''}
             </Button>

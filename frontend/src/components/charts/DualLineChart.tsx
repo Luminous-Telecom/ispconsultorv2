@@ -1,6 +1,7 @@
 import React, { useState, useLayoutEffect, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface DualChartDataItem extends ChartDataItem {
   receber: number;
@@ -14,6 +15,7 @@ interface DualLineChartProps {
 }
 
 const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format = 'currency' }) => {
+  const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
@@ -291,11 +293,11 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
             <p className="label text-light mb-1">{tooltip.label}</p>
             <p className="intro mb-0">
               <span className="tooltip-color-indicator" style={{ backgroundColor: '#28a745' }}></span>
-              Receber: {formatValue(tooltip.receber)}
+              {t('financial.receive')}: {formatValue(tooltip.receber)}
             </p>
             <p className="intro mb-0">
               <span className="tooltip-color-indicator" style={{ backgroundColor: '#dc3545' }}></span>
-              Pagar: {formatValue(tooltip.pagar)}
+              {t('financial.pay')}: {formatValue(tooltip.pagar)}
             </p>
           </div>
         )}
@@ -305,11 +307,11 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       <div className="dual-line-legend">
         <div className="dual-line-legend-item">
           <div className="dual-line-legend-color" style={{ backgroundColor: '#28a745' }}></div>
-          <span className="dual-line-legend-text">A Receber</span>
+          <span className="dual-line-legend-text">{t('financial.toReceive')}</span>
         </div>
         <div className="dual-line-legend-item">
           <div className="dual-line-legend-color" style={{ backgroundColor: '#dc3545' }}></div>
-          <span className="dual-line-legend-text">A Pagar</span>
+          <span className="dual-line-legend-text">{t('financial.toPayLabel')}</span>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { CarneParcela } from '@/types';
 import { TituloItem } from '@/types/cliente';
+import { useI18n } from '@/contexts/I18nContext';
 import Table from '@/components/tables/Table';
 import { FinanceiroTabProps } from '../types';
 import { TableColumn } from '@/components/tables/types';
@@ -18,6 +19,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   onAudit,
   auditEntity
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
 
   return (
@@ -26,7 +28,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="cliente-financeiro-tab-table"
-            title="Financeiro"
+            title={t('tabs.financial')}
             config={{
             columns: columns as TableColumn<CarneParcela>[],
             data: sortedData,
@@ -46,7 +48,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             searchPlaceholder: '',
             searchFields: [
               { key: 'id', label: 'ID' },
-              { key: 'numero_titulo', label: 'Número Título' },
+              { key: 'numero_titulo', label: t('table.titleNumber') },
               { key: 'status', label: 'Status' },
               { key: 'valor', label: 'Valor' },
               { key: 'valor_pago', label: 'Valor Pago' },

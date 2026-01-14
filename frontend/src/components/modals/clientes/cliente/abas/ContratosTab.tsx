@@ -1,5 +1,6 @@
 import React from 'react';
 import { Contrato } from '@/hooks/useContratos';
+import { useI18n } from '@/contexts/I18nContext';
 import { formatDate, formatDateTime } from '@/utils/formatters';
 import Table from '@/components/tables/Table';
 import { ContratosTabProps } from '../types';
@@ -17,6 +18,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
   onAudit,
   auditEntity
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   
   const mappedData = (sortedContratosData || []).map((contrato: Contrato) => ({
@@ -30,7 +32,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
     bairro: contrato.bairro || '',
     cidade: contrato.cidade || '',
     estado: contrato.estado || '',
-    status_label: contrato.status === 'ativo' ? 'Ativo' : 'Inativo'
+    status_label: contrato.status === 'ativo' ? t('status.active') : t('status.inactive')
   }));
   
   return (
@@ -46,7 +48,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               { key: 'id', label: 'ID', sortable: true, searchable: true, width: 42, resizable: true, render: (contrato: Contrato) => contrato.id },
               { 
                 key: 'plano_nome', 
-                label: 'Plano', 
+                label: t('table.plan'), 
                 sortable: true, 
                 searchable: true,
                 render: (contrato: Contrato & { plano_nome?: string }) => contrato.plano?.nome_plano || contrato.plano_nome || '-' 
@@ -62,7 +64,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               {
                 key: 'numero',
-                label: 'Número',
+                label: t('form.number'),
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
@@ -80,7 +82,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               {
                 key: 'bairro',
-                label: 'Bairro',
+                label: t('form.neighborhood'),
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
@@ -107,7 +109,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               {
                 key: 'valor_mensal',
-                label: 'Valor Plano',
+                label: t('table.planValue'),
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => {
@@ -149,7 +151,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               { 
                 key: 'valor_final', 
-                label: 'Valor Final', 
+                label: t('table.finalValue'), 
                 sortable: true, 
                 searchable: true,
                 render: (contrato: Contrato) => {
@@ -159,7 +161,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               { 
                 key: 'data_inicio', 
-                label: 'Data Início', 
+                label: t('table.contractStartDate'), 
                 sortable: true, 
                 searchable: false,
                 render: (contrato: Contrato) => {
@@ -188,7 +190,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               { 
                 key: 'dia_vencimento_id', 
-                label: 'Dia Venc.', 
+                label: t('table.dueDay'), 
                 sortable: true, 
                 searchable: true,
                 render: (contrato: Contrato) => contrato.dia_vencimento_id || '-' 

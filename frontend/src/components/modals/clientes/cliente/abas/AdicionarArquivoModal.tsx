@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useClienteArquivos } from '@/hooks/useClienteArquivos';
@@ -20,6 +21,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
   clienteId,
   onSuccess
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error } = useNotificationContext();
   const { createMutation } = useClienteArquivos({ clienteId });
@@ -121,7 +123,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Adicionar Arquivo"
+      title={t('modal.addFile')}
       size="md"
       headerActions={headerActions}
       modalId="adicionar-arquivo-modal"
@@ -155,14 +157,14 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
               <FormField
                 name="tipo"
                 type="select"
-                label="Tipo"
+                label={t('form.fileType')}
                 value={tipo}
                 onChange={(value) => setTipo(value as 'documento' | 'foto' | 'assinatura' | 'outro')}
                 options={[
-                  { value: 'documento', label: 'Documento' },
-                  { value: 'foto', label: 'Foto' },
-                  { value: 'assinatura', label: 'Assinatura' },
-                  { value: 'outro', label: 'Outro' }
+                  { value: 'documento', label: t('form.fileTypeDocument') },
+                  { value: 'foto', label: t('form.fileTypePhoto') },
+                  { value: 'assinatura', label: t('form.fileTypeSignature') },
+                  { value: 'outro', label: t('form.fileTypeOther') }
                 ]}
                 disabled={isSubmitting}
               />
@@ -170,10 +172,10 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
               <FormField
                 name="descricao"
                 type="textarea"
-                label="Descrição"
+                label={t('form.description')}
                 value={descricao}
                 onChange={(value) => setDescricao(String(value || ''))}
-                placeholder="Descrição do arquivo (opcional)"
+                placeholder={t('placeholder.fileDescription')}
                 rows={3}
                 disabled={isSubmitting}
               />

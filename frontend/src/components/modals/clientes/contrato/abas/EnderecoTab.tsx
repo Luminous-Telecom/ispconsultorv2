@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Cliente } from '@/types';
+import { useI18n } from '@/contexts/I18nContext';
 import FormField from '@/components/ui/FormField';
 import { ContratoForm } from '../types';
 
@@ -14,6 +15,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
   handleInputChange,
   clienteData
 }) => {
+  const { t } = useI18n();
   // Quando checkbox usar_endereco_cliente for marcado, copiar endereço do cliente
   useEffect(() => {
     if (formData.usar_endereco_cliente && clienteData) {
@@ -42,7 +44,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           }}
         />
         <label className="form-check-label" htmlFor="usar_endereco_cliente">
-          Usar endereço do cadastro do cliente
+          {t('form.useClientAddress')}
         </label>
       </div>
 
@@ -63,7 +65,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           <FormField
             name="numero"
             type="text"
-            label="Número"
+            label={t('form.number')}
             size="md"
             value={formData.numero || ''}
             onChange={(value) => handleInputChange('numero', value as string)}
@@ -87,7 +89,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
       <FormField
         name="bairro"
         type="text"
-        label="Bairro"
+        label={t('form.neighborhood')}
         size="md"
         value={formData.bairro || ''}
         onChange={(value) => handleInputChange('bairro', value as string)}
@@ -111,7 +113,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           <FormField
             name="estado"
             type="text"
-            label="UF"
+            label={t('form.state')}
             size="md"
             value={formData.estado || ''}
             onChange={(value) => handleInputChange('estado', value as string)}

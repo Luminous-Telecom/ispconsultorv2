@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormValue } from '@/types/common';
+import { useI18n } from '@/contexts/I18nContext';
 import FormField from '@/components/ui/FormField';
 import { PlanoTabProps } from '../types';
 
@@ -8,14 +9,15 @@ const ServicosObservacoesTab: React.FC<PlanoTabProps> = ({
   handleInputChange,
   isSubmitting
 }) => {
+  const { t } = useI18n();
   return (
     <>
       <div className="mb-0">
         <FormField
           name="observacoes"
           type="textarea"
-          label="Observações"
-          placeholder="Observações adicionais sobre o plano"
+          label={t('form.observations')}
+          placeholder={t('form.planObservationsPlaceholder')}
           size="sm"
           value={formData.observacoes}
           onChange={(value: FormValue) => {

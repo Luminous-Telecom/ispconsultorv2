@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormValue } from '@/types/common';
+import { useI18n } from '@/contexts/I18nContext';
 import FormField from '@/components/ui/FormField';
 import { PlanoTabProps } from '../types';
 
@@ -8,6 +9,7 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
   handleInputChange,
   isSubmitting
 }) => {
+  const { t } = useI18n();
   return (
     <>
       <div className="row">
@@ -42,7 +44,7 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="status"
               type="select"
-              label="Status"
+              label={t('form.status')}
               size="sm"
               value={formData.status}
               onChange={(value: FormValue) => {
@@ -64,7 +66,7 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="renovacao_automatica"
               type="checkbox"
-              label="Renovação Automática"
+              label={t('form.autoRenewal')}
               value={formData.renovacao_automatica}
               onChange={(value: FormValue) => handleInputChange('renovacao_automatica', !!value)}
               disabled={isSubmitting}

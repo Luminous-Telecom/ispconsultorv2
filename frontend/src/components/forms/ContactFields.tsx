@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormValue } from '@/types/common';
+import { useI18n } from '@/contexts/I18nContext';
 import FormField from '../ui/FormField';
 
 interface ContactFieldsProps {
@@ -23,6 +24,7 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
   onChange,
   errors = {}
 }) => {
+  const { t } = useI18n();
   const getFieldName = (field: string) => prefix ? `${prefix}_${field}` : field;
   const getFieldValue = (field: string) => formData[getFieldName(field)] || '';
   const getFieldError = (field: string) => errors[getFieldName(field)] || '';
@@ -55,13 +57,13 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
   contactFields.push({
     name: 'telefone',
     type: 'tel' as const,
-    label: 'Telefone',
+    label: t('form.phone'),
     placeholder: '(11) 99999-9999',
     validation: required ? [
-      { type: 'required', message: 'Telefone é obrigatório' },
-      { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: 'Telefone inválido' }
+      { type: 'required', message: t('form.required') },
+      { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: t('form.invalidPhone') }
     ] : [
-      { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: 'Telefone inválido' }
+      { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: t('form.invalidPhone') }
     ]
   });
 
@@ -70,10 +72,10 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
     contactFields.push({
       name: 'whatsapp',
       type: 'tel' as const,
-      label: 'WhatsApp',
+      label: t('form.phone'),
       placeholder: '(11) 99999-9999',
       validation: [
-        { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: 'WhatsApp inválido' }
+        { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: t('form.invalidWhatsApp') }
       ]
     });
   }

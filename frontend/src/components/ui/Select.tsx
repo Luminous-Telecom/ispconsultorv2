@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { BaseComponentProps, ValidationProps, TooltipProps, InputSize, ChangeEvent, SelectOption } from './types';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SelectProps extends BaseComponentProps, ValidationProps, TooltipProps {
   size?: InputSize;
@@ -39,7 +40,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   onBlur,
   onFocus,
   options = [],
-  placeholder = 'Selecione uma opção',
+  placeholder,
   multiple = false,
   required = false,
   autoFocus = false,
@@ -47,11 +48,16 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   searchable: _searchable = false,
   clearable: _clearable = false,
   loading = false,
-  loadingText = 'Carregando...',
-  emptyText = 'Nenhuma opção disponível',
+  loadingText,
+  emptyText,
   id,
   'data-testid': dataTestId,
 }, ref) => {
+  const { t } = useI18n();
+  
+  const defaultPlaceholder = placeholder || t('ui.selectOption');
+  const defaultLoadingText = loadingText || t('messages.loading');
+  const defaultEmptyText = emptyText || t('ui.noOptionsAvailable');
   // Construir classes CSS
   const getSelectClasses = () => {
     const classes = ['form-select'];
@@ -110,7 +116,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
     if (loading) {
       return (
         <option value="" disabled>
-          {loadingText}
+          {defaultLoadingText}
         </option>
       );
     }
@@ -118,7 +124,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
     if (options.length === 0) {
       return (
         <option value="" disabled>
-          {emptyText}
+          {defaultEmptyText}
         </option>
       );
     }
@@ -193,7 +199,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
       >
         {!multiple && !value && (
           <option value="" disabled>
-            {placeholder}
+            {defaultPlaceholder}
           </option>
         )}
         {renderOptions()}

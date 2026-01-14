@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FormValue } from '@/types/common';
+import { useI18n } from '@/contexts/I18nContext';
 import FormField from '../ui/FormField';
 import { ParametrosService } from '@/services/parametrosService';
 import { ClienteService } from '@/services/clienteService';
@@ -22,6 +23,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
   onChange,
   errors = {}
 }) => {
+  const { t } = useI18n();
   const getFieldName = (field: string) => prefix ? `${prefix}_${field}` : field;
   const getFieldValue = (field: string) => formData[getFieldName(field)] || '';
   const getFieldError = (field: string) => errors[getFieldName(field)] || '';
@@ -84,66 +86,66 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
   const addressFields = [
     {
       name: 'cep',
-      label: 'CEP',
+      label: t('form.zipCode'),
       placeholder: '00000-000',
       fieldRequired: true,
       validation: [
-        { type: 'required', message: 'CEP é obrigatório' },
-        { type: 'pattern', value: /^\d{5}-?\d{3}$/, message: 'CEP inválido' }
+        { type: 'required', message: t('form.required') },
+        { type: 'pattern', value: /^\d{5}-?\d{3}$/, message: t('form.invalidZipCode') }
       ]
     },
     {
       name: 'endereco',
-      label: 'Endereço',
+      label: t('form.address'),
       placeholder: 'Rua, Avenida...',
       fieldRequired: true,
       validation: [
-        { type: 'required', message: 'Endereço é obrigatório' }
+        { type: 'required', message: t('form.required') }
       ]
     },
     {
       name: 'numero',
-      label: 'Número',
+      label: t('form.number'),
       placeholder: '123',
       fieldRequired: true,
       validation: [
-        { type: 'required', message: 'Número é obrigatório' }
+        { type: 'required', message: t('form.required') }
       ]
     },
     {
       name: 'complemento',
-      label: 'Complemento',
+      label: t('form.complement'),
       placeholder: 'Apto, Sala...',
       fieldRequired: false,
       validation: []
     },
     {
       name: 'bairro',
-      label: 'Bairro',
+      label: t('form.neighborhood'),
       placeholder: 'Nome do bairro',
       fieldRequired: true,
       validation: [
-        { type: 'required', message: 'Bairro é obrigatório' }
+        { type: 'required', message: t('form.required') }
       ]
     },
     {
       name: 'cidade',
-      label: 'Cidade',
+      label: t('form.city'),
       placeholder: 'Nome da cidade',
       fieldRequired: true,
       validation: [
-        { type: 'required', message: 'Cidade é obrigatória' }
+        { type: 'required', message: t('form.required') }
       ]
     },
     {
       name: 'estado',
-      label: 'Estado',
+      label: t('form.state'),
       placeholder: 'SP',
       fieldRequired: true,
       validation: [
-        { type: 'required', message: 'Estado é obrigatório' },
-        { type: 'minLength', value: 2, message: 'Estado deve ter pelo menos 2 caracteres' },
-        { type: 'maxLength', value: 2, message: 'Estado deve ter no máximo 2 caracteres' }
+        { type: 'required', message: t('form.required') },
+        { type: 'minLength', value: 2, message: t('form.invalidState') },
+        { type: 'maxLength', value: 2, message: t('form.invalidState') }
       ]
     }
   ];

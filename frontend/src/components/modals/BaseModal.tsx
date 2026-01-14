@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Modal } from 'bootstrap';
+import { useI18n } from '@/contexts/I18nContext';
 
 export interface BaseModalProps {
   /**
@@ -86,6 +87,7 @@ const BaseModal: React.FC<BaseModalProps> = ({
   className = '',
   noPadding = false,
 }) => {
+  const { t } = useI18n();
   const modalRef = useRef<HTMLDivElement>(null);
   const bsModalRef = useRef<Modal | null>(null);
 
@@ -142,7 +144,7 @@ const BaseModal: React.FC<BaseModalProps> = ({
                   type="button"
                   className="btn-close shadow-none"
                   onClick={onHide}
-                  aria-label="Fechar"
+                  aria-label={t('buttons.close')}
                 ></button>
               </div>
             </div>

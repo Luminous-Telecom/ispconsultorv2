@@ -4,6 +4,7 @@ import { useFornecedores, useDeleteFornecedor } from '@/hooks/useFornecedores';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
+import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime } from '@/utils/formatters';
 import { Fornecedor } from '@/types';
 import ListModal from '@/components/common/ListModal';
@@ -28,6 +29,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   title = "Fornecedores",
   skipWrapper: _skipWrapper 
 }) => {
+  const { t } = useI18n();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedFornecedorId, setSelectedFornecedorId] = useState<number | null>(null);
@@ -276,58 +278,58 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   // Bulk actions memoizados
   const bulkActions = useMemo(() => onSelectFornecedor ? [
     {
-      label: 'Cancelar',
-      variant: 'secondary' as const,
-      action: () => {
-        clearSelection();
-        onClose();
-      }
-    },
-    {
-      label: 'Inserir',
-      variant: 'primary' as const,
-      disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0 && !selectedItem,
-      action: (selectedItems: Fornecedor[]) => handleSelect(selectedItems)
-    }
-  ] : [
-    {
-      label: 'Novo',
-      variant: 'primary' as const,
-      action: () => setShowCreateModal(true)
-    },
-    {
-      label: 'Editar',
-      variant: 'primary' as const,
-      disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0,
-      action: (selectedItems: Fornecedor[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (item) {
-          setSelectedFornecedorId(item.id);
-          setShowEditModal(true);
+        label: t('buttons.cancel'),
+        variant: 'secondary' as const,
+        action: () => {
+          clearSelection();
+          onClose();
         }
+      },
+      {
+        label: t('buttons.select'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0 && !selectedItem,
+        action: (selectedItems: Fornecedor[]) => handleSelect(selectedItems)
       }
-    },
-    {
-      label: 'Excluir',
-      disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0,
-      action: async (selectedItems: Fornecedor[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (!item) return;
-        
-        const confirmed = await confirm({
-          message: 'Tem certeza que deseja excluir este fornecedor?',
-          variant: 'danger',
-          title: 'Excluir fornecedor',
-          confirmText: 'Excluir',
-          cancelText: 'Cancelar',
-        });
+    ] : [
+      {
+        label: t('actions.create'),
+        variant: 'primary' as const,
+        action: () => setShowCreateModal(true)
+      },
+      {
+        label: t('actions.edit'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0,
+        action: (selectedItems: Fornecedor[]) => {
+          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+          if (item) {
+            setSelectedFornecedorId(item.id);
+            setShowEditModal(true);
+          }
+        }
+      },
+      {
+        label: t('actions.delete'),
+        disabled: (selectedItems: Fornecedor[]) => selectedItems.length === 0,
+        action: async (selectedItems: Fornecedor[]) => {
+          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+          if (!item) return;
+          
+          const confirmed = await confirm({
+            message: t('messages.confirmDelete'),
+            variant: 'danger',
+            title: t('modal.deleteSupplier'),
+            confirmText: t('actions.delete'),
+            cancelText: t('actions.cancel'),
+          });
         
         if (confirmed) {
           handleDelete(item.id);
         }
       }
     }
-  ], [onSelectFornecedor, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm]);
+  ], [onSelectFornecedor, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
 
   const handleSearchChange = useCallback((search: string, field?: string) => {
     // Usar setTimeout para evitar atualização durante render cycle

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BaseComponentProps, ValidationProps, TooltipProps } from './types';
 import { FormValue, ChangeHandler } from '@/types/common';
+import { useI18n } from '@/contexts/I18nContext';
 import Input from './Input';
 import Select from './Select';
 import Checkbox from './Checkbox';
@@ -80,8 +81,8 @@ const FormField: React.FC<FormFieldProps> = ({
   searchable = false,
   clearable = false,
   loading = false,
-  loadingText = 'Carregando...',
-  emptyText = 'Nenhuma opção disponível',
+  loadingText,
+  emptyText,
   inline = false,
   switch: isSwitch = false,
   indeterminate = false,
@@ -101,6 +102,11 @@ const FormField: React.FC<FormFieldProps> = ({
   iconSize = 'md',
   formPrefix,
 }) => {
+  const { t } = useI18n();
+  
+  const defaultLoadingText = loadingText || t('messages.loading');
+  const defaultEmptyText = emptyText || t('ui.noOptionsAvailable');
+  
   // Gerar ID único usando prefixo do formulário
   const fieldId = id || `${formPrefix ? `${formPrefix}-` : ''}field-${name}`;
 
@@ -235,8 +241,8 @@ const FormField: React.FC<FormFieldProps> = ({
             searchable={searchable}
             clearable={clearable}
             loading={loading}
-            loadingText={loadingText}
-            emptyText={emptyText}
+            loadingText={defaultLoadingText}
+            emptyText={defaultEmptyText}
           />
         );
 

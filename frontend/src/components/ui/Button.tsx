@@ -1,6 +1,7 @@
 import React from 'react';
 import { ButtonHTMLAttributes } from 'react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useI18n } from '@/contexts/I18nContext';
 
 export type ButtonVariant = 
   | 'primary' 
@@ -126,6 +127,7 @@ const Button: React.FC<ButtonProps> = ({
   ...rest
 }) => {
   const isMobile = useIsMobile();
+  const { t } = useI18n();
   
   // Converter prop icon (string) para leftIcon (ReactNode) se necessário
   const resolvedLeftIcon = leftIcon || (icon ? <i className={`bi bi-${icon}`}></i> : null);
@@ -268,7 +270,7 @@ const Button: React.FC<ButtonProps> = ({
   
   // Se estiver carregando e não houver texto visível, garantir aria-label
   if (isLoading && shouldShowIconOnly && !resolvedAriaLabel) {
-    ariaProps['aria-label'] = typeof children === 'string' ? children : 'Carregando...';
+    ariaProps['aria-label'] = typeof children === 'string' ? children : t('messages.loading');
   }
   
   return (

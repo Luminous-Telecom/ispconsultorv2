@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { useFornecedor, useCreateFornecedor, useUpdateFornecedor } from '@/hooks/useFornecedores';
 import { useFormPrefix } from '@/hooks/useFormId';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -58,6 +59,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
   fornecedorId = null,
   onSuccess 
 }) => {
+  const { t } = useI18n();
   const formPrefix = useFormPrefix('FornecedorModal');
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('dados-basicos');
@@ -303,8 +305,8 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
     if (isLoadingFornecedor && isEditing) {
       return (
         <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
-          <p className="mt-2">Carregando dados do fornecedor...</p>
+          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
+          <p className="mt-2">{t('messages.loading')}</p>
         </div>
       );
     }
@@ -391,10 +393,10 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                 <FormField
                   name="cpf_cnpj"
                   type="text"
-                  label={formData.tipo_pessoa === 'FISICA' ? 'CPF' : 'CNPJ'}
+                  label={formData.tipo_pessoa === 'FISICA' ? t('form.cpf') : t('form.cnpj')}
                   value={formData.cpf_cnpj}
                   onChange={(value) => handleInputChange('cpf_cnpj', value as string)}
-                  placeholder={formData.tipo_pessoa === 'FISICA' ? '000.000.000-00' : '00.000.000/0000-00'}
+                  placeholder={formData.tipo_pessoa === 'FISICA' ? '000.000.000-00' : t('placeholder.cnpj')}
                   required
                   error={errors.cpf_cnpj}
                   formPrefix={formPrefix}
@@ -403,7 +405,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                 <FormField
                   name="nome_razao_social"
                   type="text"
-                  label={formData.tipo_pessoa === 'FISICA' ? 'Nome' : 'Razão Social'}
+                  label={formData.tipo_pessoa === 'FISICA' ? t('form.name') : t('form.companyName')}
                   value={formData.nome_razao_social}
                   onChange={(value) => handleInputChange('nome_razao_social', value as string)}
                   required
@@ -528,7 +530,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   <FormField
                     name="observacoes"
                     type="textarea"
-                    label="Observações"
+                    label={t('form.observations')}
                     value={formData.observacoes}
                     onChange={(value) => handleInputChange('observacoes', value as string)}
                     rows={8}

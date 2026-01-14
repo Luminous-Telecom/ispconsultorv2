@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plano, Banco, PaginatedResponse } from '@/types';
 import { FormValue } from '@/types/common';
+import { useI18n } from '@/contexts/I18nContext';
 import { DocumentoSistema } from '@/services/documentoSistemaService';
 import { DiasVencimento } from '@/services/diasVencimentoService';
 import EntitySelectField from '@/components/ui/EntitySelectField';
@@ -44,6 +45,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   onShowBancoModal,
   onShowModeloContratoModal
 }) => {
+  const { t } = useI18n();
   const [descontoPercentualDisplay, setDescontoPercentualDisplay] = React.useState<string>(
     formData.desconto_percentual > 0 ? formData.desconto_percentual.toString() : ''
   );
@@ -140,8 +142,8 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           id: p.id,
           nome: p.nome_plano
         }))}
-        label="Plano"
-        idFieldTitle="Digite o ID do plano"
+        label={t('form.plan')}
+        idFieldTitle={t('form.enterClientId')}
         error={errors.plano_id}
         required
       />
@@ -171,7 +173,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           <FormField
             name="data_inicio"
             type="date"
-            label="Data de Início"
+            label={t('form.startDate')}
             required={true}
             size="md"
             value={formData.data_inicio}
@@ -196,7 +198,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       <div className="d-flex gap-2">
         <div className="flex-fill">
           <label htmlFor="dia_vencimento_id" className="form-label">
-            Dia de Vencimento <span className="text-danger ms-1">*</span>
+            {t('form.dueDay')} <span className="text-danger ms-1">*</span>
           </label>
           <select
             id="dia_vencimento_id"
@@ -205,12 +207,12 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
             value={formData.dia_vencimento_id || 0}
             onChange={(e) => handleInputChange('dia_vencimento_id', parseInt(e.target.value))}
           >
-            <option value={0}>Selecione</option>
+            <option value={0}>{t('ui.selectOption')}</option>
             {diasVencimento
               .filter((item) => item.ativo)
               .map((item) => (
                 <option key={item.id} value={item.id}>
-                  Dia {String(item.dia).padStart(2, '0')}
+                  {t('other.day')} {String(item.dia).padStart(2, '0')}
                 </option>
               ))}
           </select>
@@ -230,8 +232,8 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
               id: b.id,
               nome: b.nome
             }))}
-            label="Banco para Boleto"
-            idFieldTitle="Digite o ID do banco"
+            label={t('form.bank')}
+            idFieldTitle={t('form.enterBankId')}
             error={errors.conta_boleto}
             required
           />
@@ -260,8 +262,8 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           <FormField
             name="desconto_valor"
             type="number"
-            label="Desconto Valor (R$)"
-            placeholder="0.00"
+            label={t('form.discountValue')}
+            placeholder={t('placeholder.discountValue')}
             size="md"
             value={descontoValorDisplay}
             onChange={handleDescontoValorChange}
@@ -296,7 +298,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
               onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
             />
             <label className="form-check-label" htmlFor="isento_mensalidade">
-              Isento de Mensalidade
+              {t('form.exemptFromMonthlyFee')}
             </label>
           </div>
         </div>
@@ -327,7 +329,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       <FormField
         name="observacoes"
         type="textarea"
-        label="Observações"
+        label={t('form.observations')}
         size="md"
         value={formData.observacoes}
         onChange={(value) => handleInputChange('observacoes', value as string)}

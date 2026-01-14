@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNotificationContext } from '../notifications/NotificationProvider';
 import NotificationContainer from '../notifications/NotificationContainer';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { authService, CurrentUser } from '@/services/authService';
 import { getAuthToken } from '@/services/core';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -29,6 +30,7 @@ const Layout: React.FC = () => {
     
   } = useNotificationContext();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useI18n();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -202,29 +204,29 @@ const Layout: React.FC = () => {
   };
 
   const menuItems = [
-    { path: '/clientes', label: 'Clientes', isModal: true, modalHandler: () => handleOpenModal('clientes') },
-    { path: '/planos', label: 'Planos', isModal: true, modalHandler: () => handleOpenModal('planos') },
-    { path: '/bancos', label: 'Bancos', isModal: true, modalHandler: () => handleOpenModal('bancos') },
-    { path: '/contratos', label: 'Contratos', isModal: true, modalHandler: () => handleOpenModal('contratos') },
-    { path: '/financeiro', label: 'Financeiro', isModal: true, modalHandler: () => handleOpenModal('financeiro') },
-    { path: '/fornecedores', label: 'Fornecedores', isModal: true, modalHandler: () => handleOpenModal('fornecedores') },
-    { path: '/contas-pagar', label: 'Contas a Pagar', isModal: true, modalHandler: () => handleOpenModal('contas-pagar') },
-    { path: '/notas-fiscais', label: 'Notas Fiscais', isModal: true, modalHandler: () => handleOpenModal('notas-fiscais') },
-    { path: '/dados-empresa', label: 'Dados da Empresa', isModal: true, modalHandler: () => handleOpenModal('dados-empresa') },
+    { path: '/clientes', label: t('menu.clients'), isModal: true, modalHandler: () => handleOpenModal('clientes') },
+    { path: '/planos', label: t('menu.plans'), isModal: true, modalHandler: () => handleOpenModal('planos') },
+    { path: '/bancos', label: t('menu.banks'), isModal: true, modalHandler: () => handleOpenModal('bancos') },
+    { path: '/contratos', label: t('menu.contracts'), isModal: true, modalHandler: () => handleOpenModal('contratos') },
+    { path: '/financeiro', label: t('menu.financial'), isModal: true, modalHandler: () => handleOpenModal('financeiro') },
+    { path: '/fornecedores', label: t('menu.suppliers'), isModal: true, modalHandler: () => handleOpenModal('fornecedores') },
+    { path: '/contas-pagar', label: t('menu.accountsPayable'), isModal: true, modalHandler: () => handleOpenModal('contas-pagar') },
+    { path: '/notas-fiscais', label: t('menu.invoices'), isModal: true, modalHandler: () => handleOpenModal('notas-fiscais') },
+    { path: '/dados-empresa', label: t('menu.companyData'), isModal: true, modalHandler: () => handleOpenModal('dados-empresa') },
   ];
 
   const parametrosDropdownItems = [
-    { id: 'usuarios', label: 'Usuários', onClick: () => handleOpenModal('usuarios') },
-    { id: 'auditoria', label: 'Logs de Auditoria', onClick: () => handleOpenModal('auditoria') },
-    { id: 'recursos-sistema', label: 'Recursos do Sistema', onClick: () => handleOpenModal('recursos-sistema') },
-    { id: 'agendador-tarefas', label: 'Agendador de Tarefas', onClick: () => handleOpenModal('agendador-tarefas') },
-    { id: 'servidor-email', label: 'Servidor de E-Mail', onClick: () => handleOpenModal('servidor-email') },
-    { id: 'servidor-whatsapp', label: 'Servidor de WhatsApp', onClick: () => handleOpenModal('servidor-whatsapp') },
-    { id: 'nfse', label: 'NFS-e', onClick: () => handleOpenModal('nfse') },
-    { id: 'documentos-sistema', label: 'Documentos do Sistema', onClick: () => handleOpenModal('documentos-sistema') },
-    { id: 'assinatura-digital', label: 'Assinatura Digital', onClick: () => handleOpenModal('assinatura-digital') },
-    { id: 'dias-vencimento', label: 'Dias de Vencimento', onClick: () => handleOpenModal('dias-vencimento') },
-    { id: 'atualizacoes', label: 'Atualizações', onClick: () => handleOpenModal('atualizacoes') },
+    { id: 'usuarios', label: t('params.users'), onClick: () => handleOpenModal('usuarios') },
+    { id: 'auditoria', label: t('params.auditLogs'), onClick: () => handleOpenModal('auditoria') },
+    { id: 'recursos-sistema', label: t('params.systemResources'), onClick: () => handleOpenModal('recursos-sistema') },
+    { id: 'agendador-tarefas', label: t('params.taskScheduler'), onClick: () => handleOpenModal('agendador-tarefas') },
+    { id: 'servidor-email', label: t('params.emailServer'), onClick: () => handleOpenModal('servidor-email') },
+    { id: 'servidor-whatsapp', label: t('params.whatsappServer'), onClick: () => handleOpenModal('servidor-whatsapp') },
+    { id: 'nfse', label: t('params.nfse'), onClick: () => handleOpenModal('nfse') },
+    { id: 'documentos-sistema', label: t('params.systemDocuments'), onClick: () => handleOpenModal('documentos-sistema') },
+    { id: 'assinatura-digital', label: t('params.digitalSignature'), onClick: () => handleOpenModal('assinatura-digital') },
+    { id: 'dias-vencimento', label: t('params.dueDays'), onClick: () => handleOpenModal('dias-vencimento') },
+    { id: 'atualizacoes', label: t('params.updates'), onClick: () => handleOpenModal('atualizacoes') },
   ];
 
   return (
@@ -257,11 +259,11 @@ const Layout: React.FC = () => {
             <button
               type="button"
               className="btn btn-link p-0 position-absolute top-0 end-0 m-2 sidebar-header-back-btn"
-              onClick={() => {
-                setSidebarOpen(false);
-              }}
-              title="Recolher menu"
-              aria-label="Recolher menu"
+                    onClick={() => {
+                      setSidebarOpen(false);
+                    }}
+                    title={t('layout.closeMenu')}
+                    aria-label={t('layout.closeMenu')}
             >
               <i className="bi bi-arrow-left fs-4"></i>
             </button>
@@ -305,7 +307,7 @@ const Layout: React.FC = () => {
                 onClick={() => setShowParametrosDropdown(!showParametrosDropdown)}
                 type="button"
               >
-                <span>Parâmetros</span>
+                <span>{t('layout.parameters')}</span>
               </button>
               {showParametrosDropdown && (
                 <div className="dropdown-menu show">
@@ -343,7 +345,7 @@ const Layout: React.FC = () => {
                     className="navbar-toggler d-block border-0 p-0"
                     type="button"
                     onClick={() => setSidebarOpen(!sidebarOpen)}
-                    aria-label="Abrir menu lateral"
+                    aria-label={t('layout.openMenu')}
                   >
                     <span className="navbar-toggler-icon"></span>
                   </button>
@@ -382,8 +384,8 @@ const Layout: React.FC = () => {
                       <input
                         type="search"
                         className="navbar-search-input"
-                        placeholder={tableHeader.searchPlaceholder || "Buscar..."}
-                        aria-label="Search"
+                        placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
+                        aria-label={t('layout.search')}
                         value={tableHeader.searchValue}
                         onChange={(e) => tableHeader.setSearchValue(e.target.value)}
                       />
@@ -398,7 +400,7 @@ const Layout: React.FC = () => {
                   <button
                     className="navbar-mobile-search-btn"
                     onClick={() => tableHeader.setShowMobileSearch(true)}
-                    aria-label="Abrir busca"
+                    aria-label={t('layout.search')}
                   >
                     <i className="bi bi-search"></i>
                   </button>
@@ -421,7 +423,7 @@ const Layout: React.FC = () => {
                   {showUserMenu && (
                     <ul className="table-dropdown-menu table-dropdown-menu-right shadow position-absolute mt-2 layout-table-dropdown">
                       <li className="px-3 py-2 border-bottom border-custom mb-1">
-                        <div className="fw-bold text-truncate text-custom-primary layout-user-name">{currentUser?.nome || 'Usuário'}</div>
+                        <div className="fw-bold text-truncate text-custom-primary layout-user-name">{currentUser?.nome || t('layout.user')}</div>
                         <small className="text-custom-secondary text-truncate d-block" style={{ maxWidth: '150px' }}>{currentUser?.email}</small>
                       </li>
                       <li
@@ -432,7 +434,7 @@ const Layout: React.FC = () => {
                         }}
                       >
                         <i className={`bi bi-${theme === 'light' ? 'moon' : 'sun'}`}></i>
-                        <span>{theme === 'light' ? 'Modo Escuro' : 'Modo Claro'}</span>
+                        <span>{theme === 'light' ? t('layout.darkMode') : t('layout.lightMode')}</span>
                       </li>
                       <li 
                         className="table-dropdown-item"
@@ -449,7 +451,7 @@ const Layout: React.FC = () => {
                         onClick={handleLogout}
                       >
                         <i className="bi bi-box-arrow-right"></i>
-                        <span>Sair</span>
+                        <span>{t('nav.logout')}</span>
                       </li>
                     </ul>
                   )}

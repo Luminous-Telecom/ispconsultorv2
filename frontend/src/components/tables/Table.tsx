@@ -11,7 +11,7 @@ import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
-import { useTranslation } from '@/contexts/I18nContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 // Helper para normalizar paginação (aceita snake_case da API ou camelCase interno)
 const normalizePagination = (pagination: TableConfig<unknown>['pagination']): TablePagination | undefined => {
@@ -81,6 +81,9 @@ function Table<T extends { id: number | string }>({
   
   // Detectar mobile
   const isMobile = useIsMobile();
+  
+  // Internationalization
+  const { t } = useI18n();
 
   // Hook para redimensionamento de colunas
   const {
@@ -122,9 +125,6 @@ function Table<T extends { id: number | string }>({
     availableSearchFields: headerAvailableSearchFields,
     setAvailableSearchFields: setHeaderAvailableSearchFields,
   } = useTableHeader();
-
-  // Internationalization
-  const { t } = useTranslation();
 
   // Estado para controlar abertura do menu FAB
   const [isFabOpen, setIsFabOpen] = useState(false);
@@ -368,12 +368,12 @@ function Table<T extends { id: number | string }>({
     actions: _actions = [],
     bulkActions = [],
     searchable = true,
-    searchPlaceholder = 'Buscar...',
+    searchPlaceholder,
     sortable = true,
     selectable = true,
     multiSelect = false,
-    emptyMessage = 'Nenhum dado encontrado',
-    loadingMessage: _loadingMessage = 'Carregando...',
+    emptyMessage,
+    loadingMessage: _loadingMessage,
     size: _size = 'md',
     variant: _variant = 'default',
     striped: _striped = false,
@@ -389,6 +389,11 @@ function Table<T extends { id: number | string }>({
     searchField: configSearchField = '',
     searchFields: configSearchFields,
   } = config;
+
+  // Valores padrão traduzidos
+  const defaultSearchPlaceholder = searchPlaceholder || t('layout.searchPlaceholder');
+  const defaultEmptyMessage = emptyMessage || t('messages.noData');
+  const defaultLoadingMessage = _loadingMessage || t('messages.loading');
 
   // Se houver contexto, usar o campo de busca do contexto, senão usar estado local
   const [localSearchField, setLocalSearchField] = useState<string>(() => {
@@ -805,7 +810,7 @@ function Table<T extends { id: number | string }>({
       setHeaderShowSearch(searchable || false);
       setHeaderShowReload(true);
       setHeaderOnSearchClick(handleHeaderSearchClick);
-      setHeaderSearchPlaceholder(searchPlaceholder || 'Buscar...');
+      setHeaderSearchPlaceholder(defaultSearchPlaceholder);
       setHeaderOnReloadClick(handleReloadClick);
       
       const parsedFields = configSearchFields || [];
@@ -827,10 +832,10 @@ function Table<T extends { id: number | string }>({
         }
       } else {
         const defaults = [
-          { id: 'nome', label: 'Nome Cliente' },
-          { id: 'cnpj_cpf', label: 'CNPJ/CPF' },
-          { id: 'whatsapp', label: 'WhatsApp' },
-          { id: 'email', label: 'Email' }
+          { id: 'nome', label: t('table.clientName') },
+          { id: 'cnpj_cpf', label: t('form.cnpj') + '/CPF' },
+          { id: 'whatsapp', label: t('form.phone') },
+          { id: 'email', label: t('form.email') }
         ];
 
         const currentFieldsJson = JSON.stringify(headerAvailableSearchFields);
@@ -1036,7 +1041,7 @@ function Table<T extends { id: number | string }>({
     if (loading) {
       return (
         <div className="table-mobile-loading">
-          <Spinner size="sm" variant="primary" aria-label="Carregando..." />
+          <Spinner size="sm" variant="primary" aria-label={defaultLoadingMessage} />
         </div>
       );
     }
@@ -1044,7 +1049,7 @@ function Table<T extends { id: number | string }>({
     if (paginatedData.length === 0) {
       return (
         <div className="table-mobile-empty">
-          {emptyMessage}
+          {defaultEmptyMessage}
         </div>
       );
     }
@@ -1116,7 +1121,7 @@ function Table<T extends { id: number | string }>({
                       type="button"
                       className="table-mobile-expand-btn"
                       onClick={toggleExpand}
-                      aria-label={isExpanded ? 'Recolher' : 'Expandir'}
+                      aria-label={isExpanded ? t('ui.hide') : t('ui.show')}
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         {isExpanded ? (
@@ -1281,7 +1286,7 @@ function Table<T extends { id: number | string }>({
         <tbody>
           <tr>
             <td colSpan={columns.length + (selectable ? 1 : 0) + (_actions.length > 0 ? 1 : 0)} className="text-center">
-              <Spinner size="sm" variant="primary" aria-label="Carregando..." />
+              <Spinner size="sm" variant="primary" aria-label={defaultLoadingMessage} />
             </td>
           </tr>
         </tbody>
@@ -1293,7 +1298,7 @@ function Table<T extends { id: number | string }>({
         <tbody>
           <tr>
             <td colSpan={columns.length + (selectable ? 1 : 0) + (_actions.length > 0 ? 1 : 0)} className="text-center">
-              {emptyMessage}
+              {defaultEmptyMessage}
             </td>
           </tr>
         </tbody>
@@ -1735,7 +1740,7 @@ function Table<T extends { id: number | string }>({
                     type="search"
                     id={`${uniqueTableId}-search`}
                     className="form-control form-control-sm table-search-input"
-                    placeholder={searchPlaceholder || 'Buscar...'}
+                    placeholder={defaultSearchPlaceholder}
                     value={search}
                     onChange={(e) => {
                       const value = e.target.value;

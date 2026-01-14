@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { TableColumn as TableColumnType, SortDirection } from './types';
 
 interface TableColumnProps<T = Record<string, unknown>> {
@@ -28,6 +29,7 @@ const TableColumn = <T extends { id: number | string }>({
   isLastColumn = false,
   getMinWidthForColumn: _getMinWidthForColumn,
 }: TableColumnProps<T>) => {
+  const { t } = useI18n();
   const isSorted = sortColumn === column.key;
   const isSortable = column.sortable !== false && onSort && column.key !== 'acoes' && column.key !== 'actions';
 
@@ -222,7 +224,7 @@ const TableColumn = <T extends { id: number | string }>({
         <div
           className="resize-handle"
           onMouseDown={handleResizeMouseDown}
-          title="Redimensionar coluna"
+          title={t('other.resizeColumn')}
         />
       )}
     </th>

@@ -5,6 +5,7 @@ import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { Plano } from '@/types';
+import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
 import PlanoModal from './PlanoModal';
@@ -25,9 +26,10 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   show, 
   onClose, 
   onSelectPlano,
-  title = "Selecionar Plano",
+  title,
   skipWrapper = false
 }) => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -84,21 +86,21 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       key: 'nome_plano',
-      label: 'Nome do Plano',
+      label: t('table.planName'),
       sortable: true,
       width: '180px',
       render: (item: Plano) => item.nome_plano
     },
     {
       key: 'descricao',
-      label: 'Descrição',
+      label: t('form.description'),
       sortable: true,
       width: '200px',
       render: (item: Plano) => item.descricao || '-'
     },
     {
       key: 'tipo_servico',
-      label: 'Tipo de Serviço',
+      label: t('table.serviceType'),
       sortable: true,
       width: '130px',
       render: (item: Plano) => (
@@ -109,7 +111,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       key: 'valor_mensal',
-      label: 'Valor Mensal',
+      label: t('table.monthlyValue'),
       sortable: true,
       render: (item: Plano) => (
         <span className="text-success">
@@ -119,7 +121,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       key: 'quantidade_usuarios',
-      label: 'Usuários',
+      label: t('table.users'),
       sortable: true,
       render: (item: Plano) => (
         <span>{item.quantidade_usuarios || '-'}</span>
@@ -127,7 +129,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       key: 'quantidade_clientes',
-      label: 'Clientes',
+      label: t('table.clients'),
       sortable: true,
       render: (item: Plano) => (
         <span className="badge bg-primary">
@@ -137,7 +139,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       key: 'periodicidade',
-      label: 'Periodicidade',
+      label: t('table.periodicity'),
       sortable: true,
       render: (item: Plano) => (
         <span className="text-capitalize">{item.periodicidade || '-'}</span>
@@ -145,7 +147,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('table.status'),
       sortable: true,
       render: (item: Plano) => (
         <span className={`badge ${getStatusBadgeClass(item.status)}`}>
@@ -155,7 +157,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: t('table.createdAt'),
       sortable: true,
       render: (item: Plano & { created_at?: string; created_at_formatada?: string | null }) => {
         // Usar created_at_formatada se disponível (vem do backend já formatada)
@@ -166,22 +168,23 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         return item.created_at ? formatDateTime(item.created_at) : '-';
       }
     }
-  ], [getTipoServicoLabel, getStatusBadgeClass]);
+  ], [getTipoServicoLabel, getStatusBadgeClass, t]);
 
   // Configurar modal centralizado
+  const defaultTitle = title || (onSelectPlano ? t('ui.selectPlan') : t('menu.plans'));
   const modal = useListModal({
-    title,
+    title: defaultTitle,
     columns,
     searchPlaceholder: '',
     searchFields: [
-      { key: 'id', label: 'ID' },
-      { key: 'nome_plano', label: 'Nome do Plano' },
-      { key: 'descricao', label: 'Descrição' },
-      { key: 'tipo_servico', label: 'Tipo de Serviço' },
-      { key: 'valor_mensal', label: 'Valor Mensal' },
-      { key: 'quantidade_usuarios', label: 'Quantidade Usuários' },
-      { key: 'periodicidade', label: 'Periodicidade' },
-      { key: 'status', label: 'Status' }
+      { key: 'id', label: t('table.id') },
+      { key: 'nome_plano', label: t('table.planName') },
+      { key: 'descricao', label: t('form.description') },
+      { key: 'tipo_servico', label: t('table.serviceType') },
+      { key: 'valor_mensal', label: t('table.monthlyValue') },
+      { key: 'quantidade_usuarios', label: t('table.users') },
+      { key: 'periodicidade', label: t('table.periodicity') },
+      { key: 'status', label: t('table.status') }
     ],
     multiSelect: false
   });
@@ -266,50 +269,50 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       }
     },
     {
-      label: 'Inserir',
-      variant: 'primary' as const,
-      disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
-      action: (selectedItems: Plano[]) => handleSelect(selectedItems)
-    }
-  ] : [
-    {
-      label: 'Novo',
-      variant: 'primary' as const,
-      action: () => setShowCreateModal(true)
-    },
-    {
-      label: 'Editar',
-      variant: 'primary' as const,
-      disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
-      action: (selectedItems: Plano[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (item) {
-          setSelectedPlanoId(item.id);
-          setShowEditModal(true);
-        }
+      label: t('buttons.select'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
+        action: (selectedItems: Plano[]) => handleSelect(selectedItems)
       }
-    },
-    {
-      label: 'Excluir',
-      disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
-      action: async (selectedItems: Plano[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (!item) return;
-        
-        const confirmed = await confirm({
-          message: 'Tem certeza que deseja excluir este plano?',
-          variant: 'danger',
-          title: 'Excluir plano',
-          confirmText: 'Excluir',
-          cancelText: 'Cancelar',
-        });
+    ] : [
+      {
+        label: t('actions.create'),
+        variant: 'primary' as const,
+        action: () => setShowCreateModal(true)
+      },
+      {
+        label: t('actions.edit'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
+        action: (selectedItems: Plano[]) => {
+          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+          if (item) {
+            setSelectedPlanoId(item.id);
+            setShowEditModal(true);
+          }
+        }
+      },
+      {
+        label: t('actions.delete'),
+        disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
+        action: async (selectedItems: Plano[]) => {
+          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+          if (!item) return;
+          
+          const confirmed = await confirm({
+            message: t('messages.confirmDelete'),
+            variant: 'danger',
+            title: t('modal.deletePlan'),
+            confirmText: t('actions.delete'),
+            cancelText: t('actions.cancel'),
+          });
         
         if (confirmed) {
           handleDelete(item.id);
         }
       }
     }
-  ], [onSelectPlano, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm]);
+  ], [onSelectPlano, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
 
   const handleSearchChange = useCallback((search: string, field?: string) => {
     // Usar setTimeout para evitar atualização durante render cycle

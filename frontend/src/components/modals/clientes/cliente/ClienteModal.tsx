@@ -8,6 +8,7 @@ import { useClienteImpressao } from '@/hooks/useClienteImpressao';
 import { useClienteBulkActions } from '@/hooks/useClienteBulkActions';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
+import { useI18n } from '@/contexts/I18nContext';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
 import { CarneParcela } from '@/types';
 import { TituloItem } from '@/types/cliente';
@@ -42,6 +43,7 @@ const ClienteModal = ({
   clienteId = null,
   onSuccess
 }: ClienteModalProps) => {
+  const { t } = useI18n();
   const formPrefix = useFormPrefix('ClienteEditModal');
   const isMobile = useIsMobile();
   
@@ -203,7 +205,7 @@ const ClienteModal = ({
   const columns = [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       searchable: true,
       width: 42,
@@ -212,7 +214,7 @@ const ClienteModal = ({
     },
     {
       key: 'contrato_id',
-      label: 'Contrato',
+      label: t('table.contract'),
       sortable: true,
       searchable: true,
       render: (item: CarneParcela) => {
@@ -223,7 +225,7 @@ const ClienteModal = ({
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('table.status'),
       sortable: true,
       searchable: true,
       render: (item: CarneParcela) => {
@@ -236,7 +238,7 @@ const ClienteModal = ({
     },
     {
       key: 'plano_nome',
-      label: 'Plano',
+      label: t('table.plan'),
       sortable: true,
       searchable: true,
       render: (item: CarneParcela & { plano_nome?: string }) => {
@@ -245,7 +247,7 @@ const ClienteModal = ({
     },
     {
       key: 'data_vencimento',
-      label: 'Vencimento',
+      label: t('table.dueDate'),
       sortable: true,
       searchable: false,
       render: (item: CarneParcela) => {
@@ -254,7 +256,7 @@ const ClienteModal = ({
     },
     {
       key: 'valor',
-      label: 'Valor',
+      label: t('table.value'),
       sortable: true,
       searchable: true,
       render: (item: CarneParcela) => {
@@ -263,7 +265,7 @@ const ClienteModal = ({
     },
     {
       key: 'valor_pago',
-      label: 'Valor baixado',
+      label: t('table.paidValue'),
       sortable: true,
       searchable: true,
       render: (item: CarneParcela) => {
@@ -272,7 +274,7 @@ const ClienteModal = ({
     },
     {
       key: 'valor_aberto',
-      label: 'Valor aberto',
+      label: t('table.openValue'),
       sortable: true,
       searchable: false,
       render: (item: CarneParcela) => {
@@ -281,24 +283,24 @@ const ClienteModal = ({
     },
     {
       key: 'nfse_numero',
-      label: 'NF',
+      label: t('table.invoice'),
       sortable: true,
       searchable: true,
       render: (item: CarneParcela & { nfse_numero?: string | null }) => item.nfse_numero || '-'
     },
     {
       key: 'nfse_status',
-      label: 'Status NF',
+      label: t('table.invoiceStatus'),
       sortable: true,
       searchable: true,
       render: (item: CarneParcela & { nfse_status?: 'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro' | null }) => {
         if (!item.nfse_status) return '-';
         const statusMap: Record<string, { label: string; color: string }> = {
-          'agendado': { label: 'Agendado', color: 'info' },
-          'emitida': { label: 'Emitida', color: 'success' },
-          'cancelada': { label: 'Cancelada', color: 'danger' },
-          'rejeitada': { label: 'Rejeitada', color: 'warning' },
-          'erro': { label: 'Erro', color: 'danger' }
+          'agendado': { label: t('status.scheduled'), color: 'info' },
+          'emitida': { label: t('status.issued'), color: 'success' },
+          'cancelada': { label: t('status.cancelled'), color: 'danger' },
+          'rejeitada': { label: t('status.rejected'), color: 'warning' },
+          'erro': { label: t('status.error'), color: 'danger' }
         };
         const status = statusMap[item.nfse_status] || { label: item.nfse_status, color: 'secondary' };
         return <span className={`badge bg-${status.color}`}>{status.label}</span>;
@@ -348,7 +350,7 @@ const ClienteModal = ({
   }, [onClose]);
 
   // Determinar título dinamicamente
-  const modalTitle = 'Cliente';
+  const modalTitle = formHook.isEditing ? t('modal.editClient') : t('modal.createClient');
 
 
   // Renderizar conteúdo baseado no estado
@@ -367,7 +369,7 @@ const ClienteModal = ({
     if (!formHook.cliente && formHook.isEditing) {
       return (
         <div className="text-center p-4">
-          <p>Cliente não encontrado.</p>
+          <p>{t('messages.noData')}</p>
         </div>
       );
     }
@@ -502,7 +504,7 @@ const ClienteModal = ({
                   leftIcon={<i className="bi bi-x-lg"></i>}
                   onClick={handleClose}
                 >
-                  Cancelar
+                  {t('buttons.cancel')}
                 </Button>
                 <Button
                   type="button"
@@ -512,7 +514,7 @@ const ClienteModal = ({
                   isLoading={formHook.isSubmitting}
                   onClick={formHook.handleSubmit}
                 >
-                  Salvar
+                  {t('buttons.save')}
                 </Button>
               </div>
 
@@ -535,7 +537,7 @@ const ClienteModal = ({
                       onClick={() => setActiveTab('dados-basicos')}
                       type="button"
                     >
-                      Cliente
+                      {t('tabs.basicData')}
                     </button>
                   </li>
                   <li className="nav-item" role="presentation">
@@ -544,7 +546,7 @@ const ClienteModal = ({
                       onClick={() => setActiveTab('contato')}
                       type="button"
                     >
-                      Contato
+                      {t('tabs.contact')}
                     </button>
                   </li>
                   <li className="nav-item" role="presentation">
@@ -553,7 +555,7 @@ const ClienteModal = ({
                       onClick={() => setActiveTab('endereco')}
                       type="button"
                     >
-                      Endereço
+                      {t('tabs.address')}
                     </button>
                   </li>
                   <li className="nav-item" role="presentation">
@@ -563,7 +565,7 @@ const ClienteModal = ({
                       type="button"
                       disabled={!canEditContratosFinanceiro}
                     >
-                      Contratos
+                      {t('tabs.contracts')}
                     </button>
                   </li>
                   <li className="nav-item" role="presentation">
@@ -573,7 +575,7 @@ const ClienteModal = ({
                       type="button"
                       disabled={!canEditContratosFinanceiro}
                     >
-                      Financeiro
+                      {t('tabs.financial')}
                     </button>
                   </li>
                   <li className="nav-item" role="presentation">
@@ -582,7 +584,7 @@ const ClienteModal = ({
                       onClick={() => setActiveTab('observacoes')}
                       type="button"
                     >
-                      Observações
+                      {t('tabs.observations')}
                     </button>
                   </li>
                   <li className="nav-item" role="presentation">
@@ -592,14 +594,14 @@ const ClienteModal = ({
                       type="button"
                       disabled={!canEditContratosFinanceiro}
                     >
-                      Arquivos
+                      {t('tabs.files')}
                     </button>
                   </li>
                 </ul>
               </div>
             </div>
     );
-  }, [formHook.isLoadingCliente, formHook.isEditing, formHook.cliente, formHook.isSubmitting, formHook.handleSubmit, canEditContratosFinanceiro, activeTab, isMobile, handleClose]);
+  }, [formHook.isLoadingCliente, formHook.isEditing, formHook.cliente, formHook.isSubmitting, formHook.handleSubmit, canEditContratosFinanceiro, activeTab, isMobile, handleClose, t]);
 
 
   const renderModalContent = () => {
