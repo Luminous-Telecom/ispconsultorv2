@@ -42,9 +42,6 @@ const ClienteModal = ({
   clienteId = null,
   onSuccess
 }: ClienteModalProps) => {
-  // Debug logs
-  console.log('ClienteModal: render', { show, clienteId, onSuccess });
-
   const formPrefix = useFormPrefix('ClienteEditModal');
   const isMobile = useIsMobile();
   
@@ -69,7 +66,6 @@ const ClienteModal = ({
   }, [show]);
 
   // Hook de formulário
-  console.log('ClienteModal: chamando useClienteForm com clienteId:', clienteId);
   const formHook = useClienteForm({
     clienteId,
     show,
@@ -77,7 +73,6 @@ const ClienteModal = ({
   });
 
   // Hook de contratos
-  console.log('ClienteModal: chamando useClienteContratos com clienteId:', clienteId, 'createdClienteId:', formHook.createdClienteId);
   const contratosHook = useClienteContratos({
     clienteId,
     createdClienteId: formHook.createdClienteId
