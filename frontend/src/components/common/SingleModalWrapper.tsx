@@ -81,13 +81,21 @@ const SingleModalWrapper: React.FC = () => {
   if (!modalConfig) return null;
 
   const ModalComponent = modalConfig.component;
+
+  // Para o modal de cliente, extraímos o clienteId dos modalData
+  const isClienteModal = activeModal === 'cliente-modal';
+  const clienteId = isClienteModal && modalData?.clienteId ? modalData.clienteId as number : undefined;
+
   const modalProps: ModalComponentProps = {
     show: true,
     onClose: closeModal,
     skipWrapper: true,
     onHeaderActionsReady: setHeaderActions,
     ...(['clientes', 'planos', 'bancos', 'contratos'].includes(activeModal) && { title: modalConfig.title }),
-    ...(modalData && modalData), // Passa os dados adicionais do modal
+    // Para o cliente-modal, passamos clienteId como prop específica
+    ...(isClienteModal && { clienteId }),
+    // Para outros modais, passamos os dados adicionais normalmente
+    ...(!isClienteModal && modalData && modalData),
   };
 
   return (
