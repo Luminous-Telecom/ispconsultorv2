@@ -41,12 +41,14 @@ export const TableHeaderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [onReloadClick, setOnReloadClick] = useState<(() => void) | null>(null);
   const [searchPlaceholder, setSearchPlaceholder] = useState('Buscar...');
   const [searchValue, setSearchValue] = useState('');
-  const [searchField, setSearchField] = useState('nome');
+  const [searchField, setSearchField] = useState('razao_social');
   const [availableSearchFields, setAvailableSearchFields] = useState<SearchField[]>([
-    { id: 'nome', label: 'Nome Cliente' },
-    { id: 'cnpj_cpf', label: 'CNPJ/CPF' },
-    { id: 'whatsapp', label: 'WhatsApp' },
-    { id: 'email', label: 'Email' }
+    { id: 'id', label: 'ID' },
+    { id: 'cnpj', label: 'CNPJ' },
+    { id: 'razao_social', label: 'Razão Social' },
+    { id: 'nome_fantasia', label: 'Nome Fantasia' },
+    { id: 'email', label: 'Email' },
+    { id: 'status', label: 'Status' }
   ]);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -160,12 +162,15 @@ export const useTableHeader = () => {
       setSearchPlaceholder: () => {},
       searchValue: '',
       setSearchValue: () => {},
-      searchField: 'nome',
+      searchField: 'razao_social',
       setSearchField: () => {},
       availableSearchFields: [
-        { id: 'nome', label: 'Nome' },
-        { id: 'cnpj_cpf', label: 'CNPJ/CPF' },
-        { id: 'whatsapp', label: 'WhatsApp' }
+        { id: 'id', label: 'ID' },
+        { id: 'cnpj', label: 'CNPJ' },
+        { id: 'razao_social', label: 'Razão Social' },
+        { id: 'nome_fantasia', label: 'Nome Fantasia' },
+        { id: 'email', label: 'Email' },
+        { id: 'status', label: 'Status' }
       ],
       setAvailableSearchFields: () => {},
       showMobileSearch: false,

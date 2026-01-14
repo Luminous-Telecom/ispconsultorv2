@@ -140,6 +140,7 @@ const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTer
             selectable: false,
             searchable: true, // Isso permitirá que a tabela se registre no header
             searchPlaceholder: 'Refinar busca...',
+            searchField: searchField, // Manter o campo selecionado pelo usuário
             searchFields: [
               { key: 'id', label: 'ID' },
               { key: 'cnpj', label: 'CNPJ' },
