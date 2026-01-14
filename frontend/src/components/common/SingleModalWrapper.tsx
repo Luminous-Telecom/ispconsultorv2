@@ -1,7 +1,6 @@
-import React, { Suspense, lazy, useState, useEffect } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { useModal } from '@/contexts/ModalContext';
 import Loading from './Loading';
-import DraggableModal from './DraggableModal';
 
 // Lazy load dos modais (code splitting)
 const ClienteListModal = lazy(() => import('../modals/clientes').then(m => ({ default: m.ClienteListModal })));
@@ -68,12 +67,6 @@ const MODAL_CONFIGS: Record<string, ModalConfig> = {
 
 const SingleModalWrapper: React.FC = () => {
   const { activeModal, modalData, closeModal } = useModal();
-  const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
-
-  // Limpar headerActions quando o modal ativo mudar
-  useEffect(() => {
-    setHeaderActions(null);
-  }, [activeModal]);
 
   if (!activeModal) return null;
 
@@ -86,11 +79,11 @@ const SingleModalWrapper: React.FC = () => {
   const isClienteModal = activeModal === 'cliente-modal';
   const clienteId = isClienteModal && modalData?.clienteId ? modalData.clienteId as number : null;
 
+
   const modalProps: ModalComponentProps = {
     show: true,
     onClose: closeModal,
-    skipWrapper: true,
-    onHeaderActionsReady: setHeaderActions,
+    skipWrapper: false, // Desabilitar skipWrapper para evitar re-renders
     ...(['clientes', 'planos', 'bancos', 'contratos'].includes(activeModal) && { title: modalConfig.title }),
     // Para o cliente-modal, passamos clienteId como prop específica
     ...(isClienteModal && { clienteId }),
@@ -99,19 +92,9 @@ const SingleModalWrapper: React.FC = () => {
   };
 
   return (
-    <DraggableModal
-      show={true}
-      onClose={closeModal}
-      title={modalConfig.title}
-      size="xl"
-      modalId={`single-modal-${activeModal}`}
-      className={modalConfig.className || ''}
-      headerActions={headerActions}
-    >
-      <Suspense fallback={<Loading message={modalConfig.loadingMessage} />}>
-        <ModalComponent {...modalProps} />
-      </Suspense>
-    </DraggableModal>
+    <Suspense fallback={<Loading message={modalConfig.loadingMessage} />}>
+      <ModalComponent {...modalProps} />
+    </Suspense>
   );
 };
 
