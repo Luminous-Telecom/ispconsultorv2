@@ -229,7 +229,7 @@ const Layout: React.FC = () => {
         {/* Header fixo no topo */}
         <div className="sidebar-header-fixed d-flex flex-column align-items-center justify-content-center p-3 mb-0 border-bottom position-relative">
           <div className="sidebar-logo-wrapper w-100 d-flex flex-column align-items-center">
-            <BackNetLogo width={380} height={140} />
+            <BackNetLogo width={480} height={140} />
             {companyName && (
               <div className="sidebar-title-wrapper overflow-hidden w-100 text-center" style={{ marginTop: 0 }}>
                 <small className="sidebar-user-name text-muted text-truncate d-block">{companyName}</small>

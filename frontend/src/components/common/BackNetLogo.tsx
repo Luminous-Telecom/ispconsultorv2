@@ -13,7 +13,7 @@ const BackNetLogo: React.FC<BackNetLogoProps> = ({
 }) => {
   return (
     <svg 
-      viewBox="38 15 365 90" 
+      viewBox="38 18 365 85" 
       xmlns="http://www.w3.org/2000/svg"
       width={width}
       height={height}
