@@ -663,12 +663,12 @@ export class DashboardService {
   }
 
   /**
-   * Obter receita dos últimos 12 meses
+   * Obter receita dos últimos 12 meses (faturamento total)
    */
   static async getReceitaUltimos12Meses() {
     const { TituloService } = await import('../../financeiro/TituloService');
     const { parseDateFromDb } = await import('../../../utils/dateUtils');
-    
+
     const hoje = new Date();
     const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
     const inicioPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1, 0, 0, 0, 0);
@@ -676,9 +676,6 @@ export class DashboardService {
     const titulos = await TituloService.findAllWithFilters({
       data_vencimento: {
         [Op.between]: [inicioPeriodo, fimPeriodo]
-      },
-      status: {
-        [Op.in]: ['pago', 'pago_atraso', 'parcial']
       }
     }, {
       attributes: ['valor', 'valor_pago', 'status', 'data_pagamento', 'data_vencimento']
@@ -692,24 +689,15 @@ export class DashboardService {
       const proxMes = new Date(hoje.getFullYear(), hoje.getMonth() - i + 1, 1, 0, 0, 0, 0);
 
       const totalMes = titulos.reduce((acumulado, titulo) => {
-        const refRaw = titulo.data_pagamento ?? titulo.data_vencimento;
-        const referencia = parseDateFromDb(refRaw);
-        
+        const referencia = parseDateFromDb(titulo.data_vencimento);
+
         if (!referencia) {
           return acumulado;
         }
 
         if (referencia >= mes && referencia < proxMes) {
-          if (titulo.status === 'parcial') {
-            const valorPago = titulo.valor_pago !== null && titulo.valor_pago !== undefined
-              ? parseFloat(titulo.valor_pago.toString())
-              : 0;
-            return acumulado + valorPago;
-          }
-
-          const valorTitulo = titulo.valor_pago !== null && titulo.valor_pago !== undefined
-            ? parseFloat(titulo.valor_pago.toString())
-            : parseFloat(titulo.valor.toString());
+          // Soma o valor total do título (faturamento total do mês, independente se foi pago ou não)
+          const valorTitulo = parseFloat(titulo.valor.toString());
           return acumulado + valorTitulo;
         }
 
