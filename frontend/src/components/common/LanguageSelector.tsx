@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useI18n } from '@/contexts/I18nContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -15,12 +15,17 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
   const triggerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Fechar dropdown quando o idioma mudar
+  useEffect(() => {
+    setShowDropdown(false);
+  }, [language]);
+
   // Calcular posição do dropdown
   const calculatePosition = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + window.scrollY,
+        top: rect.bottom + window.scrollY + 4,
         left: rect.left + window.scrollX
       });
     }
@@ -37,30 +42,33 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
   };
 
   // Fechar dropdown ao clicar fora
-  const handleClickOutside = useCallback((event: MouseEvent) => {
-    const target = event.target as Element;
-
-    // Não fechar se clicou em um botão do dropdown
-    if (target && target.closest('.table-dropdown-item')) {
-      return;
-    }
-
-    const isOutsideTrigger = triggerRef.current && !triggerRef.current.contains(target);
-    const isOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(target);
-
-    if (isOutsideTrigger && isOutsideDropdown) {
-      setShowDropdown(false);
-    }
-  }, []);
-
   useEffect(() => {
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [showDropdown, handleClickOutside]);
+    if (!showDropdown) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      
+      // Não fechar se clicou no trigger ou no dropdown
+      if (
+        triggerRef.current?.contains(target) ||
+        dropdownRef.current?.contains(target)
+      ) {
+        return;
+      }
+
+      setShowDropdown(false);
+    };
+
+    // Usar timeout para garantir que o onClick do botão seja processado primeiro
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showDropdown]);
 
   const dropdownContent = (
     <ul className="table-dropdown-menu shadow position-absolute mt-1" style={{ minWidth: '160px' }}>
@@ -71,9 +79,15 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
               language === lang.code ? 'active' : ''
             }`}
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
-              setLanguage(lang.code);
-              setShowDropdown(false);
+              if (language !== lang.code) {
+                setLanguage(lang.code);
+              }
+              // Usar setTimeout para garantir que o setLanguage seja processado antes de fechar
+              setTimeout(() => {
+                setShowDropdown(false);
+              }, 0);
             }}
             style={{ border: 'none', background: 'none' }}
           >
@@ -105,22 +119,33 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
         </div>
         <i className="bi bi-chevron-down" style={{ fontSize: '0.75rem', opacity: 0.6 }}></i>
       </div>
-      {usePortal && createPortal(
-        showDropdown && (
-          <div
-            ref={dropdownRef}
-            style={{
-              position: 'fixed',
-              top: `${dropdownPosition.top + 4}px`,
-              left: `${dropdownPosition.left}px`,
-              zIndex: 10000,
-              pointerEvents: 'auto'
-            }}
-          >
-            {dropdownContent}
-          </div>
-        ),
+      {showDropdown && usePortal && createPortal(
+        <div
+          ref={dropdownRef}
+          data-language-dropdown
+          style={{
+            position: 'fixed',
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            zIndex: 10001
+          }}
+        >
+          {dropdownContent}
+        </div>,
         document.body
+      )}
+      {showDropdown && !usePortal && (
+        <div
+          ref={dropdownRef}
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            zIndex: 10001
+          }}
+        >
+          {dropdownContent}
+        </div>
       )}
     </div>
   );

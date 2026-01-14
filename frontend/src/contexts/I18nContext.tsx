@@ -231,19 +231,49 @@ const availableLanguages = [
   { code: 'es-ES' as Language, name: 'Español', flag: '🇪🇸' },
 ];
 
+// Normalizar código de idioma do navegador
+const normalizeLanguage = (lang: string): Language => {
+  const langLower = lang.toLowerCase();
+  if (langLower.startsWith('pt')) return 'pt-BR';
+  if (langLower.startsWith('en')) return 'en-US';
+  if (langLower.startsWith('es')) return 'es-ES';
+  return 'pt-BR';
+};
+
+// Função para obter o idioma inicial
+const getInitialLanguage = (): Language => {
+  if (typeof window === 'undefined') return 'pt-BR';
+  
+  const savedLang = localStorage.getItem('app-language') as Language | null;
+  if (savedLang && availableLanguages.some(lang => lang.code === savedLang)) {
+    return savedLang;
+  }
+  
+  const browserLang = navigator.language || navigator.languages?.[0] || 'pt-BR';
+  const normalizedLang = normalizeLanguage(browserLang);
+  localStorage.setItem('app-language', normalizedLang);
+  return normalizedLang;
+};
+
 export const I18nProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>('pt-BR');
+  // Usar lazy initialization para getInitialLanguage ser chamado apenas uma vez
+  const [language, setLanguageState] = useState<Language>(() => getInitialLanguage());
 
-  // Detectar idioma do navegador/localStorage
+  // Sincronizar com localStorage quando mudar externamente (ex: outra aba)
   useEffect(() => {
-    const savedLang = localStorage.getItem('app-language') as Language;
-    const browserLang = navigator.language as Language;
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'app-language' && e.newValue) {
+        const newLang = e.newValue as Language;
+        if (availableLanguages.some(lang => lang.code === newLang)) {
+          setLanguageState(newLang);
+        }
+      }
+    };
 
-    if (savedLang && availableLanguages.some(lang => lang.code === savedLang)) {
-      setLanguageState(savedLang);
-    } else if (browserLang && availableLanguages.some(lang => lang.code === browserLang)) {
-      setLanguageState(browserLang);
-    }
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const setLanguage = (lang: Language) => {
@@ -254,7 +284,6 @@ export const I18nProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const t = (key: keyof TranslationKeys, params?: Record<string, unknown>): string => {
     let translation = translations[language][key] || translations['pt-BR'][key] || key;
 
-    // Substituir parâmetros na tradução
     if (params) {
       Object.entries(params).forEach(([param, value]) => {
         translation = translation.replace(new RegExp(`\\$\\{${param}\\}`, 'g'), String(value));
@@ -265,12 +294,7 @@ export const I18nProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <I18nContext.Provider value={{
-      language,
-      setLanguage,
-      t,
-      availableLanguages,
-    }}>
+    <I18nContext.Provider value={{ language, setLanguage, t, availableLanguages }}>
       {children}
     </I18nContext.Provider>
   );

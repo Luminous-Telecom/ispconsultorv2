@@ -71,15 +71,31 @@ const Layout: React.FC = () => {
   // Fechar menu de usuário ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setShowUserMenu(false);
+      const target = event.target as Node;
+      
+      // Não fechar se clicou no menu ou em elementos relacionados (como o dropdown de idioma)
+      if (userMenuRef.current?.contains(target)) {
+        return;
       }
+      
+      // Não fechar se clicou em um dropdown de idioma (que está em um portal)
+      const languageDropdown = document.querySelector('[data-language-dropdown]');
+      if (languageDropdown?.contains(target)) {
+        return;
+      }
+
+      setShowUserMenu(false);
     };
 
     if (showUserMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
+      // Usar click ao invés de mousedown para não interferir com outros eventos
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('click', handleClickOutside);
+      }, 0);
+      
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        clearTimeout(timeoutId);
+        document.removeEventListener('click', handleClickOutside);
       };
     }
   }, [showUserMenu]);
@@ -418,7 +434,13 @@ const Layout: React.FC = () => {
                         <i className={`bi bi-${theme === 'light' ? 'moon' : 'sun'}`}></i>
                         <span>{theme === 'light' ? 'Modo Escuro' : 'Modo Claro'}</span>
                       </li>
-                      <li className="table-dropdown-item">
+                      <li 
+                        className="table-dropdown-item"
+                        onClick={(e) => {
+                          // Não fechar o menu do usuário quando clicar no LanguageSelector
+                          e.stopPropagation();
+                        }}
+                      >
                         <LanguageSelector />
                       </li>
                       <li><hr className="dropdown-divider" /></li>
