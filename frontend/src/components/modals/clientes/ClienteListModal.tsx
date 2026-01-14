@@ -4,6 +4,7 @@ import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { formatDateTime } from '@/utils/formatters';
+import { useI18n } from '@/contexts/I18nContext';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ListModal from '@/components/common/ListModal';
 import ClienteModal from './cliente/ClienteModal';
@@ -24,9 +25,10 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   show, 
   onClose, 
   onSelectClient,
-  title = "Selecionar Cliente",
+  title,
   skipWrapper = false
 }) => {
+  const { t } = useI18n();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
@@ -63,14 +65,14 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const columns = useMemo(() => [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       width: '42px',
       render: (item: Cliente) => <span>{item.id}</span>
     },
     {
       key: 'cnpj',
-      label: 'CNPJ',
+      label: t('form.cnpj'),
       sortable: true,
       width: '130px',
       render: (item: Cliente) => (
@@ -79,7 +81,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       key: 'razao_social',
-      label: 'Razão Social',
+      label: t('form.companyName'),
       sortable: true,
       width: '200px',
       render: (item: Cliente) => (
@@ -88,7 +90,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       key: 'nome_fantasia',
-      label: 'Nome Fantasia',
+      label: t('form.tradeName'),
       sortable: true,
       width: '180px',
       render: (item: Cliente) => (
@@ -97,7 +99,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       key: 'email',
-      label: 'Email',
+      label: t('form.email'),
       sortable: true,
       width: '200px',
       render: (item: Cliente) => (
@@ -106,7 +108,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       key: 'whatsapp',
-      label: 'WhatsApp',
+      label: t('form.phone'),
       sortable: true,
       width: '120px',
       render: (item: Cliente) => (
@@ -116,7 +118,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     {
       key: 'endereco',
       width: '180px',
-      label: 'Endereço',
+      label: t('form.address'),
       sortable: true,
       render: (item: Cliente) => (
         <span>{item.endereco || '-'}</span>
@@ -124,7 +126,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       key: 'numero',
-      label: 'Número',
+      label: t('form.number'),
       sortable: true,
       width: '70px',
       render: (item: Cliente) => (
@@ -133,7 +135,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       key: 'complemento',
-      label: 'Complemento',
+      label: t('form.complement'),
       sortable: true,
       width: '120px',
       render: (item: Cliente) => (
@@ -142,7 +144,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       key: 'bairro',
-      label: 'Bairro',
+      label: t('form.neighborhood'),
       sortable: true,
       width: '120px',
       render: (item: Cliente) => (
@@ -151,7 +153,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       key: 'cidade',
-      label: 'Cidade',
+      label: t('form.city'),
       sortable: true,
       width: '130px',
       render: (item: Cliente) => (
@@ -160,7 +162,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       key: 'estado',
-      label: 'Estado',
+      label: t('form.state'),
       sortable: true,
       width: '63px',
       render: (item: Cliente) => (
@@ -169,18 +171,18 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       key: 'ativo',
-      label: 'Status',
+      label: t('table.status'),
       sortable: true,
       width: '60px',
       render: (item: Cliente) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-          {item.ativo ? 'Ativo' : 'Inativo'}
+          {item.ativo ? t('status.active') : t('status.inactive')}
         </span>
       )
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: t('table.createdAt'),
       sortable: true,
       width: '145px',
       render: (item: Cliente & { created_at?: string; created_at_formatada?: string | null }) => {
@@ -192,26 +194,27 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         return item.created_at ? formatDateTime(item.created_at) : '-';
       }
     }
-  ], []);
+  ], [t]);
 
   // Configurar modal centralizado
+  const defaultTitle = title || (onSelectClient ? t('ui.selectClient') : t('menu.clients'));
   const modal = useListModal({
-    title,
+    title: defaultTitle,
     columns,
-    searchPlaceholder: 'Buscar...',
+    searchPlaceholder: t('layout.searchPlaceholder'),
     searchFields: [
-      { key: 'id', label: 'ID' },
-      { key: 'cnpj', label: 'CNPJ' },
-      { key: 'razao_social', label: 'Razão Social' },
-      { key: 'nome_fantasia', label: 'Nome Fantasia' },
-      { key: 'email', label: 'Email' },
-      { key: 'whatsapp', label: 'WhatsApp' },
-      { key: 'endereco', label: 'Endereço' },
-      { key: 'numero', label: 'Número' },
-      { key: 'complemento', label: 'Complemento' },
-      { key: 'bairro', label: 'Bairro' },
-      { key: 'cidade', label: 'Cidade' },
-      { key: 'estado', label: 'Estado' }
+      { key: 'id', label: t('table.id') },
+      { key: 'cnpj', label: t('form.cnpj') },
+      { key: 'razao_social', label: t('form.companyName') },
+      { key: 'nome_fantasia', label: t('form.tradeName') },
+      { key: 'email', label: t('form.email') },
+      { key: 'whatsapp', label: t('form.phone') },
+      { key: 'endereco', label: t('form.address') },
+      { key: 'numero', label: t('form.number') },
+      { key: 'complemento', label: t('form.complement') },
+      { key: 'bairro', label: t('form.neighborhood') },
+      { key: 'cidade', label: t('form.city') },
+      { key: 'estado', label: t('form.state') }
     ]
   });
 
@@ -257,17 +260,17 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     if (!item) return;
     
     const confirmed = await confirm({
-      message: 'Tem certeza que deseja excluir este cliente?',
+      message: t('messages.confirmDelete'),
       variant: 'danger',
-      title: 'Excluir cliente',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('modal.deleteClient'),
+      confirmText: t('actions.delete'),
+      cancelText: t('actions.cancel'),
     });
     
     if (confirmed) {
       handleDelete(item.id);
     }
-  }, [selectedItem, handleDelete, confirm]);
+  }, [selectedItem, handleDelete, confirm, t]);
 
   // Paginação do backend - usar valores do backend quando disponíveis
   const pagination = useMemo(() => {
@@ -308,7 +311,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const bulkActions = useMemo(() => {
     return onSelectClient ? [
       {
-        label: 'Cancelar',
+        label: t('buttons.cancel'),
         variant: 'secondary' as const,
         action: () => {
           clearSelection();
@@ -316,30 +319,30 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         }
       },
       {
-        label: 'Inserir',
+        label: t('buttons.select'),
         variant: 'primary' as const,
         disabled: (selectedItems: Cliente[]) => selectedItems.length === 0 && !selectedItem,
         action: handleSelect
       }
     ] : [
       {
-        label: 'Novo',
+        label: t('actions.create'),
         variant: 'primary' as const,
         action: () => setShowCreateModal(true)
       },
       {
-        label: 'Editar',
+        label: t('actions.edit'),
         variant: 'primary' as const,
         disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
         action: handleEdit
       },
       {
-        label: 'Excluir',
+        label: t('actions.delete'),
         disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
         action: handleEditDelete
       }
     ];
-  }, [onSelectClient, selectedItem, clearSelection, onClose, handleSelect, handleEdit, handleEditDelete]);
+  }, [onSelectClient, selectedItem, clearSelection, onClose, handleSelect, handleEdit, handleEditDelete, t]);
 
   const modalData = useMemo(() => clientesData?.data || [], [clientesData?.data]);
 

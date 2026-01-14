@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 
 export interface EntityItem {
   id: number;
@@ -25,13 +26,15 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
   onShowModal,
   entities = [],
   label,
-  placeholder = "Buscar...",
+  placeholder,
   error,
   required = false,
   idFieldTitle = "Digite o ID",
   searchButtonTitle = "Abrir listagem de registros",
   helpText
 }) => {
+  const { t } = useI18n();
+  const defaultPlaceholder = placeholder || t('layout.searchPlaceholder');
   const selectedEntity = entities.find((e) => e.id === value);
 
   const fieldId = `${label.toLowerCase().replace(/\s+/g, '_')}_id_field`;
@@ -48,7 +51,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
           autoComplete="off"
           type="text"
           className="form-control text-center id-field"
-          placeholder="ID"
+          placeholder={t('table.id')}
           name={fieldId}
           onChange={(e) => {
             const id = parseInt(e.target.value) || 0;
@@ -57,7 +60,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
           defaultValue={value || ''}
         />
         <input
-          placeholder={placeholder}
+          placeholder={defaultPlaceholder}
           readOnly
           autoComplete="off"
           tabIndex={-1}

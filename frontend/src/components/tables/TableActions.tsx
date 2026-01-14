@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { TableAction, BulkAction } from './types';
 import Button from '../ui/Button';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
@@ -25,6 +26,7 @@ const TableActions = <T extends { id: number | string }>({
   onBulkActionClick,
   className = '',
 }: TableActionsProps<T>) => {
+  const { t } = useI18n();
   const { confirm, modalProps } = useConfirmModal();
   
   // Memoizar ações visíveis para evitar recálculo desnecessário
@@ -59,7 +61,7 @@ const TableActions = <T extends { id: number | string }>({
     if (action.confirm) {
       const confirmed = await confirm({
         message: action.confirm.message,
-        title: action.confirm.title || 'Confirmar ação',
+        title: action.confirm.title || t('other.confirmAction'),
         variant: action.variant === 'danger' ? 'danger' : 'warning',
         confirmText: action.confirm.confirmText || 'Confirmar',
         cancelText: action.confirm.cancelText || 'Cancelar',
@@ -71,14 +73,14 @@ const TableActions = <T extends { id: number | string }>({
     } else {
       onActionClick?.(action, item, index);
     }
-  }, [item, index, onActionClick, confirm]);
+  }, [item, index, onActionClick, confirm, t]);
 
   // Callback memoizado para ações em massa
   const handleBulkActionClick = useCallback(async (action: BulkAction<T>) => {
     if (action.confirm) {
       const confirmed = await confirm({
         message: action.confirm.message,
-        title: action.confirm.title || 'Confirmar ação',
+        title: action.confirm.title || t('other.confirmAction'),
         variant: action.variant === 'danger' ? 'danger' : 'warning',
         confirmText: action.confirm.confirmText || 'Confirmar',
         cancelText: action.confirm.cancelText || 'Cancelar',
@@ -90,7 +92,7 @@ const TableActions = <T extends { id: number | string }>({
     } else {
       onBulkActionClick?.(action, selectedItems);
     }
-  }, [selectedItems, onBulkActionClick, confirm]);
+  }, [selectedItems, onBulkActionClick, confirm, t]);
 
   // Renderizar ações individuais
   const renderItemActions = () => {
