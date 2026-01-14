@@ -85,9 +85,8 @@ const Login: React.FC = () => {
               <div className="card-body p-4">
                 <div className="text-center mb-4">
                   <div className="mb-3">
-                    <BackNetLogo width={120} height={120} />
+                    <BackNetLogo width={280} height={100} />
                   </div>
-                  <h1 className="h3 mb-2 text-dark">BackNet</h1>
                   <p className="text-muted small mb-0">Acesse o painel administrativo</p>
                 </div>
 
