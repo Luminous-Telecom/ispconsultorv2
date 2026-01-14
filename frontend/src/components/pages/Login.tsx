@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { authService } from '@/services/authService';
 import { removeAuthToken } from '@/services/core';
-import './Login.css';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -77,81 +76,91 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <div className="login-card">
-          <div className="login-header">
-            <div className="login-logo">
-              <i className="bi bi-shield-lock"></i>
+    <div className="container-fluid vh-100 d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-12 col-sm-8 col-md-6" style={{ maxWidth: '380px' }}>
+            <div className="card shadow">
+              <div className="card-body p-4">
+                <div className="text-center mb-4">
+                  <i className="bi bi-shield-lock fs-1 text-primary mb-2"></i>
+                  <h1 className="h3 mb-2 text-dark">BackNet</h1>
+                  <p className="text-muted small mb-0">Acesse o painel administrativo</p>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      name="email"
+                      autoComplete="username email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="seu@email.com"
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="password" className="form-label">
+                      Senha
+                    </label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="password"
+                      name="password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      placeholder="Sua senha"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-100 mb-3"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Entrando...
+                      </>
+                    ) : (
+                      'Entrar'
+                    )}
+                  </button>
+                </form>
+
+                <div className="text-center mb-3">
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 text-muted small"
+                    onClick={() => info('Funcionalidade em desenvolvimento')}
+                  >
+                    Esqueceu sua senha?
+                  </button>
+                </div>
+
+                <div className="card-footer bg-transparent border-top text-center pt-3">
+                  {clientIp && (
+                    <p className="text-muted small mb-2">
+                      <i className="bi bi-globe me-1"></i> IP: {clientIp}
+                    </p>
+                  )}
+                  <p className="text-muted mb-0" style={{ fontSize: '0.75rem' }}>
+                    © {new Date().getFullYear()} BackNet. Todos os direitos reservados.
+                  </p>
+                </div>
+              </div>
             </div>
-            <h1 className="login-title">BackNet</h1>
-            <p className="login-subtitle">Acesse o painel administrativo</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="login-form">
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">
-                Email
-              </label>
-              <input
-                type="email"
-                className="form-control"
-                id="email"
-                name="email"
-                autoComplete="username email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="seu@email.com"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">
-                Senha
-              </label>
-              <input
-                type="password"
-                className="form-control"
-                id="password"
-                name="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Sua senha"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className={`login-button ${isLoading ? 'loading' : ''}`}
-              disabled={isLoading}
-              aria-busy={isLoading}
-            >
-              <span>{isLoading ? 'Entrando...' : 'Entrar'}</span>
-            </button>
-          </form>
-
-          <div className="forgot-password">
-            <button
-              type="button"
-              className="forgot-password-button"
-              onClick={() => info('Funcionalidade em desenvolvimento')}
-            >
-              Esqueceu sua senha?
-            </button>
-          </div>
-
-          <div className="login-footer">
-            {clientIp && (
-              <p className="login-ip-text">
-                <i className="bi bi-globe"></i> IP: {clientIp}
-              </p>
-            )}
-            <p className="login-footer-text">
-              © {new Date().getFullYear()} BackNet. Todos os direitos reservados.
-            </p>
           </div>
         </div>
       </div>
