@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useI18n } from '@/contexts/I18nContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -21,15 +21,18 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
   }, [language]);
 
   // Calcular posição do dropdown
-  const calculatePosition = () => {
+  const calculatePosition = useCallback(() => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
+
+      // Para elementos com position: fixed, usar apenas a posição do viewport
+      // O portal já está no body, então não precisamos adicionar scroll
       setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX
+        top: rect.bottom + 4,
+        left: rect.left
       });
     }
-  };
+  }, []);
 
   // Abrir/fechar dropdown
   const handleToggleDropdown = (e: React.MouseEvent) => {
@@ -41,13 +44,13 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
     setShowDropdown(!showDropdown);
   };
 
-  // Fechar dropdown ao clicar fora
+  // Fechar dropdown ao clicar fora e recalcular posição durante scroll/resize
   useEffect(() => {
     if (!showDropdown) return;
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      
+
       // Não fechar se clicou no trigger ou no dropdown
       if (
         triggerRef.current?.contains(target) ||
@@ -59,16 +62,24 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
       setShowDropdown(false);
     };
 
+    const handleScrollOrResize = () => {
+      calculatePosition();
+    };
+
     // Usar timeout para garantir que o onClick do botão seja processado primeiro
     const timeoutId = setTimeout(() => {
       document.addEventListener('click', handleClickOutside);
+      window.addEventListener('scroll', handleScrollOrResize);
+      window.addEventListener('resize', handleScrollOrResize);
     }, 0);
 
     return () => {
       clearTimeout(timeoutId);
       document.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('scroll', handleScrollOrResize);
+      window.removeEventListener('resize', handleScrollOrResize);
     };
-  }, [showDropdown]);
+  }, [showDropdown, calculatePosition]);
 
   const dropdownContent = (
     <ul className="table-dropdown-menu shadow position-absolute mt-1" style={{ minWidth: '160px' }}>
@@ -127,7 +138,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
             position: 'fixed',
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
-            zIndex: 10001
+            zIndex: 99999,
+            transform: 'translateZ(0)', // Forçar novo stacking context
+            willChange: 'transform' // Otimização de performance
           }}
         >
           {dropdownContent}
@@ -141,7 +154,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ usePortal = true })
             position: 'absolute',
             top: '100%',
             left: 0,
-            zIndex: 10001
+            zIndex: 99999
           }}
         >
           {dropdownContent}
