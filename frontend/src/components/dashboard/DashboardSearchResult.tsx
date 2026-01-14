@@ -96,14 +96,9 @@ const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTer
   ];
 
   const handleRowClick = useCallback((cliente: Cliente) => {
-    console.log('DashboardSearchResult: handleRowClick chamado', cliente);
-    console.log('DashboardSearchResult: cliente.id:', cliente.id);
-
     // Ao clicar no cliente, abrimos o modal de edição diretamente
     // passando o clienteId como parâmetro para o ModalContext
-    console.log('DashboardSearchResult: chamando openModal cliente-modal');
     openModal('cliente-modal', { clienteId: cliente.id });
-    console.log('DashboardSearchResult: modal cliente-modal aberto');
   }, [openModal]);
 
   return (
