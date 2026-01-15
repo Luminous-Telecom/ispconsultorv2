@@ -95,9 +95,9 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     ctx.clearRect(0, 0, rect.width, rect.height);
 
     // Margens otimizadas para melhor aproveitamento do espaço
-    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
+    const margin = { top: 10, right: 15, left: 40, bottom: 60 };
     const chartWidth = dimensions.width - margin.left - margin.right;
-    const chartHeight = dimensions.height - margin.top - margin.bottom;
+    const chartHeight = dimensions.height - margin.top - margin.bottom - 30; // 30px extra para legenda
 
     // Calcular valores para ambas as linhas com melhor escala automática
     const receberValues = chartData.map(d => d.receber);
@@ -280,7 +280,35 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       ctx.fill();
     }
 
-  }, [chartData, dimensions, formatYAxis, hoveredIndex]);
+    // Desenhar legenda no canvas
+    const legendY = dimensions.height - 15;
+    const legendItemWidth = 100;
+    const totalLegendWidth = legendItemWidth * 2;
+    const startLegendX = (dimensions.width - totalLegendWidth) / 2;
+
+    // Item Receber
+    ctx.beginPath();
+    ctx.rect(startLegendX, legendY - 5, 12, 3); // Linha/Retângulo representando a cor
+    ctx.fillStyle = receberLineColor;
+    ctx.fill();
+    
+    ctx.fillStyle = axisColor; // Usar mesma cor dos eixos para texto da legenda
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.font = '10px system-ui, -apple-system, sans-serif';
+    ctx.fillText(t('financial.toReceive').toUpperCase(), startLegendX + 16, legendY - 3);
+
+    // Item Pagar
+    const pagarX = startLegendX + legendItemWidth;
+    ctx.beginPath();
+    ctx.rect(pagarX, legendY - 5, 12, 3);
+    ctx.fillStyle = pagarLineColor;
+    ctx.fill();
+
+    ctx.fillStyle = axisColor;
+    ctx.fillText(t('financial.toPayLabel').toUpperCase(), pagarX + 16, legendY - 3);
+
+  }, [chartData, dimensions, formatYAxis, hoveredIndex, t]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -367,18 +395,6 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
             </p>
           </div>
         )}
-      </div>
-
-      {/* Legenda */}
-      <div className="dual-line-legend">
-        <div className="dual-line-legend-item">
-          <div className="dual-line-legend-color" style={{ backgroundColor: '#28a745' }}></div>
-          <span className="dual-line-legend-text">{t('financial.toReceive')}</span>
-        </div>
-        <div className="dual-line-legend-item">
-          <div className="dual-line-legend-color" style={{ backgroundColor: '#dc3545' }}></div>
-          <span className="dual-line-legend-text">{t('financial.toPayLabel')}</span>
-        </div>
       </div>
     </div>
   );
