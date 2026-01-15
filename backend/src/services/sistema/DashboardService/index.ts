@@ -585,7 +585,7 @@ export class DashboardService {
     const MS_POR_DIA = 1000 * 60 * 60 * 24;
 
     for (const conta of contasPagarPeriodo) {
-      if (!conta.data_vencimento) {
+      if (!conta.data_vencimento || conta.status === 'CANCELADO') {
         continue;
       }
       const dataConta = parseDateFromDb(conta.data_vencimento);
@@ -633,7 +633,7 @@ export class DashboardService {
       const proxMes = new Date(hoje.getFullYear(), hoje.getMonth() - i + 1, 1, 0, 0, 0, 0);
 
       const totalMes = contasPagar.reduce((acumulado, conta) => {
-        if (!conta.data_vencimento) {
+        if (!conta.data_vencimento || conta.status === 'CANCELADO') {
           return acumulado;
         }
 
@@ -689,6 +689,10 @@ export class DashboardService {
       const proxMes = new Date(hoje.getFullYear(), hoje.getMonth() - i + 1, 1, 0, 0, 0, 0);
 
       const totalMes = titulos.reduce((acumulado, titulo) => {
+        if (titulo.status === 'cancelado') {
+          return acumulado;
+        }
+
         const referencia = parseDateFromDb(titulo.data_vencimento);
 
         if (!referencia) {
