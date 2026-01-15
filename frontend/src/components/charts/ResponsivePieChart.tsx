@@ -8,7 +8,7 @@ const formatPieValue = (value: number, title: string): string | number => {
   return value.toLocaleString('pt-BR');
 };
 
-const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenItems, onToggleItem }) => {
+const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenItems }) => {
   // Simplificação: removendo referências complexas de estado
   // Manteremos apenas a lógica essencial de renderização do canvas
   const visibleData = useMemo(() => 
