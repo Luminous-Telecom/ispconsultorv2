@@ -584,7 +584,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
           modalId={isEditing ? 'conta-pagar-edit-modal' : 'conta-pagar-create-modal'}
           headerActions={
             !(isLoadingContaPagar && isEditing) ? (
-              <div className="d-flex gap-2">
+              <div className="d-flex gap-2 modal-header-actions">
                 <Button
                   type="button"
                   variant="primary"
@@ -633,7 +633,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             size="lg"
             modalId="conta-pagar-pagamento-modal"
           headerActions={
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 modal-header-actions">
               <Button
                 type="button"
                 variant="primary"

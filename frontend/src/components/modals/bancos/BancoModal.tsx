@@ -273,7 +273,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
         !(isEdit && isLoading) ? (
           <div className="banco-header-unified">
             {/* Botões à direita */}
-            <div className="banco-header-buttons">
+            <div className="banco-header-buttons modal-header-actions">
               <Button
                 type="button"
                 variant="primary"

@@ -136,7 +136,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
       title="Rotina"
       size="lg"
       headerActions={
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 modal-header-actions">
           <Button
             type="button"
             variant="primary"

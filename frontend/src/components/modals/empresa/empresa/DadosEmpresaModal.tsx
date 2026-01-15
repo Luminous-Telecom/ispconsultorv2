@@ -136,7 +136,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       headerActions={
         <div className="empresa-header-unified">
           {/* Botões à direita */}
-          <div className="empresa-header-buttons">
+          <div className="empresa-header-buttons modal-header-actions">
             <Button
               type="button"
               variant="primary"

@@ -252,7 +252,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
   const headerActionsContent = useMemo(() => (
     <div className="email-header-unified">
       {/* Botões à direita */}
-      <div className="email-header-buttons">
+      <div className="email-header-buttons modal-header-actions">
         <Button
           type="button"
           variant="primary"

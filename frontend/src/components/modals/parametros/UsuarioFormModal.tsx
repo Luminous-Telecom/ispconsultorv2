@@ -174,7 +174,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
       size="md"
       modalId="usuario-form-modal"
       headerActions={
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 modal-header-actions">
           <Button
             type="button"
             variant="primary"

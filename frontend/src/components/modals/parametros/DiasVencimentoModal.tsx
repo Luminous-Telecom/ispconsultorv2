@@ -59,15 +59,17 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
       size="xl"
       modalId="dias-vencimento-modal"
       headerActions={
-        <Button 
-          type="button" 
-          variant="primary" 
-          size="sm" 
-          leftIcon={<i className="bi bi-check-lg"></i>}
-          onClick={handleSave}
-        >
-          Salvar
-        </Button>
+        <div className="d-flex gap-2 modal-header-actions">
+          <Button 
+            type="button" 
+            variant="primary" 
+            size="sm" 
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            onClick={handleSave}
+          >
+            Salvar
+          </Button>
+        </div>
       }
     >
       <div style={{ padding: isMobile ? '0' : '16px' }}>

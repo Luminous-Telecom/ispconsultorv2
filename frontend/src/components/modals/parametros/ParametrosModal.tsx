@@ -117,7 +117,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       size="md"
       modalId="parametros-modal"
       headerActions={
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 modal-header-actions">
           <Button
             type="button"
             variant="primary"

@@ -250,7 +250,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
       onClose={handleCancel}
       title={t('titulo.title')}
       headerActions={
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 modal-header-actions">
           {isEditMode && internalTituloId && (
             <div className="btn-group">
               <button

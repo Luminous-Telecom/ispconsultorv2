@@ -73,7 +73,7 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
   };
 
   const headerActions = (
-    <div className="d-flex gap-2">
+    <div className="d-flex gap-2 modal-header-actions">
       <Button
         type="button"
         variant="primary"

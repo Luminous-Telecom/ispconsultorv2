@@ -54,7 +54,7 @@ const NFSeModal: React.FC<NFSeModalProps> = ({
       size="lg"
       modalId="nfse-modal"
       headerActions={
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 modal-header-actions">
           {hasTestButton && (
             <Button
               type="button"

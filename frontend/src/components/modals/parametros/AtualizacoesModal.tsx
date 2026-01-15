@@ -217,7 +217,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       size="md"
       modalId="atualizacoes-modal"
       headerActions={
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 modal-header-actions">
           {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
             <Button
               type="button"

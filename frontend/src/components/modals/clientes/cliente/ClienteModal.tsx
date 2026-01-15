@@ -502,7 +502,7 @@ const ClienteModal = ({
     return (
       <div className="cliente-header-unified">
               {/* Botões à direita */}
-              <div className="cliente-header-buttons">
+              <div className="cliente-header-buttons modal-header-actions">
                 <Button
                   type="button"
                   variant="primary"

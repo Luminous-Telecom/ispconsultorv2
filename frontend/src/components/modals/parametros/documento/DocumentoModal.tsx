@@ -378,7 +378,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   const headerActions = tipo === 'contrato' ? (
     <div className="documento-header-unified">
       {/* Botões à direita */}
-      <div className="documento-header-buttons">
+      <div className="documento-header-buttons modal-header-actions">
         <div className="dropdown">
           <Button
             variant="primary"

@@ -308,7 +308,7 @@ const saveMensagemMutation = useMutation({
   const headerActionsContent = useMemo(() => (
     <div className="whatsapp-header-unified">
       {/* Botões à direita */}
-      <div className="whatsapp-header-buttons">
+      <div className="whatsapp-header-buttons modal-header-actions">
         <Button
           type="button"
           variant="primary"

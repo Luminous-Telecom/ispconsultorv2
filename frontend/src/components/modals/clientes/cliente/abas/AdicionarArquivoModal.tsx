@@ -99,7 +99,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
   };
 
   const headerActions = (
-    <>
+    <div className="d-flex gap-2 modal-header-actions">
       <Button
         variant="primary"
         onClick={onClose}
@@ -116,7 +116,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
       >
         {t('actions.save')}
       </Button>
-    </>
+    </div>
   );
 
   return (

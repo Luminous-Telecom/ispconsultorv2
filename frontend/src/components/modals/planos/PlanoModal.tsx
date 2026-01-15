@@ -102,7 +102,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
         !(formHook.isLoadingPlano && formHook.isEditing) ? (
           <div className="plano-header-unified">
             {/* Botões à direita */}
-            <div className="plano-header-buttons">
+            <div className="plano-header-buttons modal-header-actions">
               <Button
                 type="button"
                 variant="primary"

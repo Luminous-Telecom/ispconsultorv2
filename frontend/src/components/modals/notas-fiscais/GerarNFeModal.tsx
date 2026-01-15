@@ -179,7 +179,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
       size="lg"
       modalId="gerar-nfe-modal-financeiro"
       headerActions={
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="d-flex gap-2 modal-header-actions">
           <Button
             type="button"
             variant="primary"

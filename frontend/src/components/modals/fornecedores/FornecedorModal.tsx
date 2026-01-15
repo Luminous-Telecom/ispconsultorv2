@@ -559,7 +559,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
         !(isLoadingFornecedor && isEditing) ? (
           <div className="fornecedor-header-unified">
             {/* Botões à direita */}
-            <div className="fornecedor-header-buttons">
+            <div className="fornecedor-header-buttons modal-header-actions">
               <Button
                 type="button"
                 variant="primary"

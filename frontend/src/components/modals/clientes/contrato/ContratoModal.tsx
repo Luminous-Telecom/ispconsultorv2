@@ -1694,7 +1694,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         !isLoading ? (
           <div className="contrato-header-unified">
             {/* Botões à direita */}
-            <div className="contrato-header-buttons">
+            <div className="contrato-header-buttons modal-header-actions">
               {isEditMode && (
                 <Button
                   type="button"

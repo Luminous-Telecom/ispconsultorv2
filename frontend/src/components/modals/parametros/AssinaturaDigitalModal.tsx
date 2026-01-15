@@ -157,7 +157,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
   };
 
   const headerActionsContent = useMemo(() => (
-    <div className="d-flex gap-2">
+    <div className="d-flex gap-2 modal-header-actions">
       <Button
         type="button"
         variant="primary"
