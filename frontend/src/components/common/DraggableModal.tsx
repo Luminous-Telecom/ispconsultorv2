@@ -3,7 +3,7 @@
  * Mantém a API original do DraggableModal para compatibilidade total
  * Agora usa ResponsiveDialog que adapta automaticamente para mobile/desktop
  */
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useI18n } from '@/contexts/I18nContext';
 import { modalStack } from '@/utils/modalStack';
@@ -66,6 +66,38 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
 
+  // Função para calcular dimensões e posição
+  const calculateDimensions = useCallback(() => {
+    if (typeof window === 'undefined') return;
+
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    
+    // Largura do menu lateral (260px)
+    const sidebarWidth = 260;
+    
+    // Em telas menores, o sidebar pode não estar lá ou ser sobreposto
+    // Mas mantemos a lógica original de descontar 240px se for desktop
+    // Se a tela for muito estreita mas > 768px, isso pode ser um problema
+    // Vamos garantir que availableWidth não seja negativo
+    const availableWidth = Math.max(0, screenWidth - sidebarWidth);
+    
+    // Modal ocupa 95% da largura e altura disponíveis
+    const modalWidth = Math.floor(availableWidth * 0.95);
+    const modalHeight = Math.floor(screenHeight * 0.95);
+    
+    // Centralizar na área restante (2.5% de margem em cada lado)
+    const centerX = sidebarWidth + Math.floor(availableWidth * 0.025);
+    const centerY = Math.floor(screenHeight * 0.025);
+    
+    setPosition({
+      x: centerX,
+      y: centerY
+    });
+    
+    setModalSize({ width: modalWidth, height: modalHeight });
+  }, []);
+
   // Gerenciar pilha de modais (apenas desktop)
   useEffect(() => {
     if (isMobile) return;
@@ -81,45 +113,48 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     };
   }, [show, modalId, isMobile]);
 
-  // Posicionar modal na área restante (excluindo menu) - 95% da dashboard (apenas desktop)
+  // Posicionar modal na área restante e lidar com resize
   useEffect(() => {
     if (isMobile) {
       setIsVisible(show);
       return;
     }
     
-    if (show && !isInitialized) {
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
+    if (show) {
+      // Sempre recalcular ao mostrar ou mudar modo (ex: sair do mobile)
+      // Isso garante que o modal tenha o tamanho correto e esteja centralizado
+      calculateDimensions();
       
-      // Largura do menu lateral (240px)
-      const sidebarWidth = 240;
-      const availableWidth = screenWidth - sidebarWidth;
-      
-      // Modal ocupa 95% da largura e altura disponíveis
-      const modalWidth = Math.floor(availableWidth * 0.95);
-      const modalHeight = Math.floor(screenHeight * 0.95);
-      
-      // Centralizar na área restante (2.5% de margem em cada lado)
-      const centerX = sidebarWidth + Math.floor(availableWidth * 0.025);
-      const centerY = Math.floor(screenHeight * 0.025);
-      
-      setPosition({
-        x: centerX,
-        y: centerY
-      });
-      
-      setModalSize({ width: modalWidth, height: modalHeight });
-      setIsInitialized(true);
+      if (!isInitialized) {
+        setIsInitialized(true);
+      }
       setIsVisible(true);
-    } else if (!show && isInitialized) {
-      setIsInitialized(false);
-      setIsVisible(false);
-    } else if (show && isInitialized) {
-      setIsVisible(true);
+    } else {
+      if (isInitialized) {
+        setIsInitialized(false);
+        setIsVisible(false);
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [show, isInitialized, isMobile]);
+  }, [show, isInitialized, isMobile, calculateDimensions]);
+
+  // Listener para resize
+  useEffect(() => {
+    if (!show || isMobile) return;
+
+    const handleResize = () => {
+      calculateDimensions();
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    // Também recalcular quando a orientação muda
+    window.addEventListener('orientationchange', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, [show, isMobile, calculateDimensions]);
 
   // Funções de drag - só permite arrastar pelo título (apenas desktop)
   const handleMouseDown = (e: React.MouseEvent) => {
