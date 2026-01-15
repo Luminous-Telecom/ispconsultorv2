@@ -47,9 +47,9 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     const updateDimensions = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        setDimensions({ 
-          width: rect.width || 200, 
-          height: rect.height || 260 
+        setDimensions({
+          width: rect.width || 200,
+          height: rect.height || 300
         });
       }
     };
@@ -84,24 +84,51 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     // Limpar canvas (usar dimensões originais após escala)
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Margens - aumentar bottom para acomodar labels rotacionadas
-    const margin = { top: 15, right: 30, left: 50, bottom: 80 };
+    // Margens otimizadas para melhor aproveitamento do espaço
+    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
     const chartWidth = dimensions.width - margin.left - margin.right;
     const chartHeight = dimensions.height - margin.top - margin.bottom;
 
-    // Valores para cálculo
+    // Valores para cálculo com melhor escala automática
     const values = chartData.map(d => d.value);
     const maxValue = Math.max(...values, 0);
-    const minValue = 0;
-    const valueRange = maxValue - minValue || 1;
 
-    // Número de ticks no eixo Y
-    const numYTicks = 5;
+    // Melhorar escala automática: se o valor máximo for muito baixo, ajustar a escala
+    let minValue = 0;
+    let scaleFactor = 1;
+
+    if (maxValue > 0 && maxValue < 10) {
+      // Para valores muito pequenos, usar escala de 0.1
+      scaleFactor = 0.1;
+      minValue = 0;
+    } else if (maxValue > 0 && maxValue < 100) {
+      // Para valores pequenos, usar escala de 1
+      scaleFactor = 1;
+      minValue = 0;
+    } else {
+      // Para valores maiores, arredondar para cima
+      const magnitude = Math.pow(10, Math.floor(Math.log10(maxValue)));
+      scaleFactor = magnitude;
+      minValue = 0;
+    }
+
+    // Ajustar o máximo para ter uma margem superior
+    const adjustedMaxValue = Math.ceil(maxValue / scaleFactor) * scaleFactor;
+    const valueRange = adjustedMaxValue - minValue || 1;
+
+    // Número de ticks no eixo Y otimizado baseado no range de valores
+    let numYTicks = 5;
+    if (valueRange < 10) {
+      numYTicks = 4; // Menos ticks para valores pequenos
+    } else if (valueRange > 1000000) {
+      numYTicks = 6; // Mais ticks para valores grandes
+    }
+
     const yTickStep = valueRange / (numYTicks - 1);
 
     // Cores
     const gridColor = '#2f3844';
-    const axisColor = '#6c757d';
+    const axisColor = '#ced4da'; // Mais claro para melhor contraste
     const lineColor = '#007bff';
 
     // Desenhar grid
@@ -151,7 +178,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     const xStep = chartWidth / (chartData.length - 1 || 1);
     chartData.forEach((item, index) => {
       const x = margin.left + xStep * index;
-      const y = margin.top + chartHeight + 15;
+      const y = margin.top + chartHeight + 10;
       
       // Rotacionar o texto verticalmente
       ctx.save();
@@ -226,7 +253,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
 
-    const margin = { top: 15, right: 30, left: 50, bottom: 80 };
+    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
     const chartWidth = dimensions.width - margin.left - margin.right;
     const xStep = chartWidth / (chartData.length - 1 || 1);
 
@@ -269,7 +296,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
   return (
     <div className="chart-container">
       <h6 className="chart-title">{title}</h6>
-      <div ref={containerRef} style={{ width: '100%', height: '260px', minWidth: '200px', minHeight: '260px', position: 'relative', overflow: 'visible' }}>
+      <div ref={containerRef} style={{ width: '100%', height: '300px', minWidth: '200px', minHeight: '300px', position: 'relative', overflow: 'visible' }}>
         <canvas
           ref={canvasRef}
           onMouseMove={handleMouseMove}

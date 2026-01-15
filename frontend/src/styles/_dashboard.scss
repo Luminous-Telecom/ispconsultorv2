@@ -71,7 +71,7 @@
   border: 1px solid var(--border-light);
   border-radius: var(--border-radius-sm);
   padding: 0.5rem;
-  height: 280px;
+  height: 320px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -84,7 +84,7 @@
   background: var(--bg-secondary) !important;
   border: 1px solid var(--border-light) !important;
   border-radius: var(--border-radius-sm) !important;
-  height: 280px !important;
+  height: 320px !important;
   overflow: hidden !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
   opacity: 1 !important;
@@ -114,7 +114,7 @@
 
 /* Ajustar canvas para o novo tamanho do container */
 .chart-compact-container canvas {
-  max-height: 240px !important;
+  max-height: 280px !important;
 }
 
 /* Ajustar legendas para o novo tamanho */
@@ -187,7 +187,7 @@
   }
 
   .chart-compact-container {
-    height: 220px;
+    height: 280px;
     padding: 0.5rem;
   }
 
@@ -196,7 +196,7 @@
   }
 
   .chart-compact-container canvas {
-    max-height: 180px !important;
+    max-height: 240px !important;
   }
 
   .chart-compact-container .pie-legend-item {
@@ -235,7 +235,7 @@
   }
 
   .chart-compact-container {
-    height: 200px;
+    height: 240px;
     padding: 0.5rem;
   }
 
@@ -244,7 +244,7 @@
   }
 
   .chart-compact-container canvas {
-    max-height: 150px !important;
+    max-height: 200px !important;
   }
 
   .chart-compact-container .pie-legend-item {
