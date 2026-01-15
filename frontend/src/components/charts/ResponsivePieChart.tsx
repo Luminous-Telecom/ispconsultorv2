@@ -242,8 +242,6 @@ const PieLegendCanvas: React.FC<PieLegendCanvasProps> = memo(({ data, title, hid
     <div ref={containerRef} className="pie-legend-box" style={{ position: 'relative' }}>
       <canvas
         ref={canvasRef}
-        width={dimensions.width}
-        height={dimensions.height}
         onClick={handleClick}
         style={{
           display: 'block',
@@ -407,8 +405,6 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         <div ref={pieContainerRef} className="pie-chart-box">
           <canvas
             ref={canvasRef}
-            width={pieDimensions.width}
-            height={pieDimensions.height}
             style={{
               display: 'block',
               width: '100%',

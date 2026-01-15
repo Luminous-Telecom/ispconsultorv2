@@ -101,8 +101,7 @@
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  width: 100% !important;
-  height: 100% !important;
+  /* Remover width/height fixos para permitir controle JavaScript */
 }
 
 /* Ajustar elementos internos dos gráficos compactos para o novo tamanho */

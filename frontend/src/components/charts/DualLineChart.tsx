@@ -279,8 +279,6 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       <div ref={containerRef} style={{ width: '100%', height: '260px', minWidth: '200px', minHeight: '260px', position: 'relative', overflow: 'visible' }}>
         <canvas
           ref={canvasRef}
-          width={dimensions.width}
-          height={dimensions.height}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           style={{
