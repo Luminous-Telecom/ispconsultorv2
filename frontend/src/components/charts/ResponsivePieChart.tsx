@@ -80,31 +80,28 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
 
-    // Ajustar tamanho real do canvas
+    // Ajustar tamanho real do canvas para alta resolução
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
 
-    // Escalar contexto para compensar o device pixel ratio
-    ctx.scale(dpr, dpr);
-
-    // Configurações para renderização nítida
+    // Configurar contexto para renderização nítida
     ctx.imageSmoothingEnabled = false;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
 
-    // Limpar canvas
-    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+    // Limpar canvas usando coordenadas originais
+    ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Layout
-    const isSmall = dimensions.width < 300;
+    // Layout (trabalhar com coordenadas originais)
+    const isSmall = rect.width < 300;
     const padding = 10;
-    
+
     // Área da Pizza (lado esquerdo ou topo)
-    const pieAreaWidth = isSmall ? dimensions.width * 0.5 : dimensions.width * 0.4;
+    const pieAreaWidth = isSmall ? rect.width * 0.5 : rect.width * 0.4;
     const centerX = pieAreaWidth / 2 + padding;
-    const centerY = dimensions.height / 2;
-    const minDimension = Math.min(pieAreaWidth, dimensions.height);
-    
+    const centerY = rect.height / 2;
+    const minDimension = Math.min(pieAreaWidth, rect.height);
+
     // Raios
     const outerRadius = (minDimension / 2) - padding;
     const innerRadius = outerRadius * 0.6;
@@ -196,7 +193,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         const text = `${item.label}: ${formatPieValue(item.value || 0, title)}`;
 
         // Truncar texto se muito longo
-        const maxWidth = dimensions.width - legendX - boxSize - 5 - padding;
+        const maxWidth = rect.width - legendX - boxSize - 5 - padding;
         let displayText = text;
         if (ctx.measureText(text).width > maxWidth) {
             // Lógica simples de truncagem

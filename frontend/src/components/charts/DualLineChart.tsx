@@ -86,25 +86,22 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
 
-    // Ajustar tamanho real do canvas
+    // Ajustar tamanho real do canvas para alta resolução
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
 
-    // Escalar contexto para compensar o device pixel ratio
-    ctx.scale(dpr, dpr);
-
-    // Configurações para renderização nítida
+    // Configurar contexto para renderização nítida
     ctx.imageSmoothingEnabled = false;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
 
-    // Limpar canvas (usar dimensões originais após escala)
+    // Limpar canvas usando coordenadas originais
     ctx.clearRect(0, 0, rect.width, rect.height);
 
     // Margens otimizadas para melhor aproveitamento do espaço
     const margin = { top: 10, right: 15, left: 40, bottom: 60 };
-    const chartWidth = dimensions.width - margin.left - margin.right;
-    const chartHeight = dimensions.height - margin.top - margin.bottom - 30; // 30px extra para legenda
+    const chartWidth = rect.width - margin.left - margin.right;
+    const chartHeight = rect.height - margin.top - margin.bottom - 30; // 30px extra para legenda
 
     // Calcular valores para ambas as linhas com melhor escala automática
     const receberValues = chartData.map(d => d.receber);
@@ -288,10 +285,10 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     }
 
     // Desenhar legenda no canvas
-    const legendY = dimensions.height - 15;
+    const legendY = rect.height - 15;
     const legendItemWidth = 100;
     const totalLegendWidth = legendItemWidth * 2;
-    const startLegendX = (dimensions.width - totalLegendWidth) / 2;
+    const startLegendX = (rect.width - totalLegendWidth) / 2;
 
     // Item Receber
     ctx.beginPath();
