@@ -170,7 +170,30 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
       return { x, y, value: item.value, label: item.name };
     });
 
-    // Desenhar linha
+    // Desenhar área preenchida abaixo da linha
+    ctx.fillStyle = `${lineColor}20`; // Adicionar transparência de 20%
+    ctx.beginPath();
+    points.forEach((point, index) => {
+      if (index === 0) {
+        ctx.moveTo(point.x, point.y);
+      } else {
+        const prevPoint = points[index - 1];
+        const cp1x = prevPoint.x + (point.x - prevPoint.x) / 3;
+        const cp1y = prevPoint.y;
+        const cp2x = prevPoint.x + (point.x - prevPoint.x) * 2 / 3;
+        const cp2y = point.y;
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, point.x, point.y);
+      }
+    });
+
+    // Completar o caminho até o eixo X (base do gráfico)
+    const lastPoint = points[points.length - 1];
+    ctx.lineTo(lastPoint.x, margin.top + chartHeight); // Ir até a base do gráfico
+    ctx.lineTo(points[0].x, margin.top + chartHeight); // Voltar ao início na base
+    ctx.closePath();
+    ctx.fill();
+
+    // Desenhar linha por cima da área preenchida
     ctx.strokeStyle = lineColor;
     ctx.lineWidth = 2;
     ctx.beginPath();
