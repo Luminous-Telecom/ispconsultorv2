@@ -787,10 +787,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   /* Permitir quebra de linha se necessário, mas preferir ellipsis se couber em uma linha */
-  white-space: nowrap; 
+  white-space: nowrap;
   /* Otimizações de performance */
   transform: translateZ(0);
   contain: layout style paint;
+}
+
+/* Modo escuro - Legenda branca para melhor contraste */
+[data-theme="dark"] .pie-legend-text {
+  color: #ffffff !important;
 }
 
 /* Permitir quebra de linha quando o espaço for muito pequeno */
