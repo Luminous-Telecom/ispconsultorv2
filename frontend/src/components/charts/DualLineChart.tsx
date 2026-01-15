@@ -91,8 +91,8 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     // Escalar contexto para compensar o device pixel ratio
     ctx.scale(dpr, dpr);
 
-    // Limpar canvas
-    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+    // Limpar canvas (usar dimensões originais após escala)
+    ctx.clearRect(0, 0, rect.width, rect.height);
 
     // Margens
     const margin = { top: 15, right: 30, left: 50, bottom: 60 };

@@ -88,8 +88,8 @@ const PieLegendCanvas: React.FC<PieLegendCanvasProps> = memo(({ data, title, hid
     // Escalar contexto para compensar o device pixel ratio
     ctx.scale(dpr, dpr);
 
-    // Limpar canvas
-    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+    // Limpar canvas (usar dimensões originais após escala)
+    ctx.clearRect(0, 0, rect.width, dimensions.height);
 
     // Configurações de estilo
     const itemHeight = 22;
@@ -158,8 +158,8 @@ const PieLegendCanvas: React.FC<PieLegendCanvasProps> = memo(({ data, title, hid
         // Escalar contexto para compensar o device pixel ratio
         ctx.scale(dpr, dpr);
 
-        // Limpar canvas
-        ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+        // Limpar canvas (usar dimensões originais após escala)
+        ctx.clearRect(0, 0, rect.width, dimensions.height);
 
         // Configurações de estilo
         const itemHeight = 32;
