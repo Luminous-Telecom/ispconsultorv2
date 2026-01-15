@@ -395,9 +395,12 @@ const Layout: React.FC = () => {
                 {!isMobile && (
                   <div className="navbar-search-container">
                     <select
+                      id="desktop-search-field"
+                      name="searchField"
                       className="navbar-search-field"
                       value={tableHeader.searchField}
                       onChange={(e) => tableHeader.setSearchField(e.target.value)}
+                      aria-label={t('layout.search')}
                     >
                       {tableHeader.availableSearchFields.map(field => (
                         <option key={field.id} value={field.id}>{field.label}</option>
@@ -419,6 +422,8 @@ const Layout: React.FC = () => {
                       }}
                     >
                       <input
+                        id="desktop-search-input"
+                        name="search"
                         type="search"
                         className="navbar-search-input"
                         placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
@@ -553,9 +558,12 @@ const Layout: React.FC = () => {
           <div className="navbar-mobile-search-container">
             <div className="navbar-mobile-search-wrapper">
               <select
+                id="mobile-search-field"
+                name="mobileSearchField"
                 className="navbar-mobile-search-field"
                 value={tableHeader.searchField}
                 onChange={(e) => tableHeader.setSearchField(e.target.value)}
+                aria-label={t('layout.search')}
               >
                 {tableHeader.availableSearchFields.map(field => (
                   <option key={field.id} value={field.id}>{field.label}</option>
@@ -563,12 +571,15 @@ const Layout: React.FC = () => {
               </select>
 
               <input
+                id="mobile-search-input"
+                name="mobileSearch"
                 type="text"
                 className="navbar-mobile-search-input"
                 placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
                 value={tableHeader.searchValue}
                 onChange={(e) => tableHeader.setSearchValue(e.target.value)}
                 autoFocus
+                aria-label={t('layout.search')}
               />
 
               <button

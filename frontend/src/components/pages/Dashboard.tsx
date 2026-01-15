@@ -85,8 +85,10 @@ const Dashboard: React.FC = () => {
               <div className="dashboard-filters-minimal mt-2">
                 <div className="d-flex align-items-center gap-2">
                   <div className="d-flex align-items-center gap-1">
-                    <label className="form-label small fw-bold text-secondary mb-0">{t('dashboard.startDate')}:</label>
+                    <label htmlFor="dashboard-start-date" className="form-label small fw-bold text-secondary mb-0">{t('dashboard.startDate')}:</label>
                     <input
+                      id="dashboard-start-date"
+                      name="startDate"
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
@@ -96,8 +98,10 @@ const Dashboard: React.FC = () => {
                   </div>
                   <span className="text-muted small">—</span>
                   <div className="d-flex align-items-center gap-1">
-                    <label className="form-label small fw-bold text-secondary mb-0">{t('dashboard.endDate')}:</label>
+                    <label htmlFor="dashboard-end-date" className="form-label small fw-bold text-secondary mb-0">{t('dashboard.endDate')}:</label>
                     <input
+                      id="dashboard-end-date"
+                      name="endDate"
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
