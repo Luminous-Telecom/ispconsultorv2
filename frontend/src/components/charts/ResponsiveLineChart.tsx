@@ -85,7 +85,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     ctx.clearRect(0, 0, rect.width, rect.height);
 
     // Margens - aumentar bottom para acomodar labels rotacionadas
-    const margin = { top: 15, right: 30, left: 50, bottom: 60 };
+    const margin = { top: 15, right: 30, left: 50, bottom: 80 };
     const chartWidth = dimensions.width - margin.left - margin.right;
     const chartHeight = dimensions.height - margin.top - margin.bottom;
 
@@ -205,7 +205,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
 
-    const margin = { top: 15, right: 30, left: 50, bottom: 30 };
+    const margin = { top: 15, right: 30, left: 50, bottom: 80 };
     const chartWidth = dimensions.width - margin.left - margin.right;
     const xStep = chartWidth / (chartData.length - 1 || 1);
 

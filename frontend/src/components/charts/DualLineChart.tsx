@@ -94,8 +94,8 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     // Limpar canvas (usar dimensões originais após escala)
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Margens
-    const margin = { top: 15, right: 30, left: 50, bottom: 60 };
+    // Margens - aumentar bottom para acomodar datas rotacionadas
+    const margin = { top: 15, right: 30, left: 50, bottom: 80 };
     const chartWidth = dimensions.width - margin.left - margin.right;
     const chartHeight = dimensions.height - margin.top - margin.bottom;
 
@@ -232,7 +232,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
 
-    const margin = { top: 15, right: 30, left: 50, bottom: 30 };
+    const margin = { top: 15, right: 30, left: 50, bottom: 80 };
     const chartWidth = dimensions.width - margin.left - margin.right;
     const xStep = chartWidth / (chartData.length - 1 || 1);
 
