@@ -87,6 +87,11 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
     // Escalar contexto para compensar o device pixel ratio
     ctx.scale(dpr, dpr);
 
+    // Configurações para renderização nítida
+    ctx.imageSmoothingEnabled = false;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+
     // Limpar canvas
     ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
@@ -167,6 +172,8 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
     ctx.textBaseline = 'middle';
     const fontSize = 10;
     ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
+    // Otimizações para texto nítido
+    ctx.imageSmoothingEnabled = false;
 
     data.forEach((item, index) => {
         const isHidden = hiddenItems.has(index);
@@ -187,7 +194,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
           ? '#ced4da'
           : theme === 'dark' ? '#ffffff' : '#868e96'; // Branco no modo escuro, cinza claro no modo claro
         const text = `${item.label}: ${formatPieValue(item.value || 0, title)}`;
-        
+
         // Truncar texto se muito longo
         const maxWidth = dimensions.width - legendX - boxSize - 5 - padding;
         let displayText = text;
@@ -198,8 +205,11 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
             }
             displayText += '...';
         }
-        
-        ctx.fillText(displayText, legendX + boxSize + 5, y);
+
+        // Renderizar texto em coordenadas inteiras para evitar antialiasing
+        const textX = Math.round(legendX + boxSize + 5);
+        const textY = Math.round(y);
+        ctx.fillText(displayText, textX, textY);
         
         // Linha riscada se oculto
         if (isHidden) {

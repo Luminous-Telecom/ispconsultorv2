@@ -93,6 +93,11 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     // Escalar contexto para compensar o device pixel ratio
     ctx.scale(dpr, dpr);
 
+    // Configurações para renderização nítida
+    ctx.imageSmoothingEnabled = false;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+
     // Limpar canvas (usar dimensões originais após escala)
     ctx.clearRect(0, 0, rect.width, rect.height);
 
@@ -298,7 +303,8 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.font = '10px system-ui, -apple-system, sans-serif';
-    ctx.fillText(t('financial.toReceive').toUpperCase(), startLegendX + 16, legendY - 3);
+    // Renderizar texto em coordenadas inteiras para evitar antialiasing
+    ctx.fillText(t('financial.toReceive').toUpperCase(), Math.round(startLegendX + 16), Math.round(legendY - 3));
 
     // Item Pagar
     const pagarX = startLegendX + legendItemWidth;
@@ -308,7 +314,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     ctx.fill();
 
     ctx.fillStyle = axisColor;
-    ctx.fillText(t('financial.toPayLabel').toUpperCase(), pagarX + 16, legendY - 3);
+    ctx.fillText(t('financial.toPayLabel').toUpperCase(), Math.round(pagarX + 16), Math.round(legendY - 3));
 
   }, [chartData, dimensions, formatYAxis, hoveredIndex, t, theme]);
 
