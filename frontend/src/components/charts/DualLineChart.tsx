@@ -2,6 +2,7 @@ import React, { useState, useLayoutEffect, useEffect, useRef, useCallback, useMe
 import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 import { useI18n } from '@/contexts/I18nContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface DualChartDataItem extends ChartDataItem {
   receber: number;
@@ -16,6 +17,7 @@ interface DualLineChartProps {
 
 const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format = 'currency' }) => {
   const { t } = useI18n();
+  const { theme } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
@@ -141,7 +143,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
 
     // Cores
     const gridColor = '#2f3844';
-    const axisColor = '#ced4da'; // Mais claro para melhor contraste
+    const axisColor = theme === 'dark' ? '#ffffff' : '#ced4da'; // Branco no modo escuro, cinza claro no modo claro
     const receberLineColor = '#28a745'; // Verde
     const pagarLineColor = '#dc3545'; // Vermelho
     const receberDotColor = '#28a745';
@@ -308,7 +310,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     ctx.fillStyle = axisColor;
     ctx.fillText(t('financial.toPayLabel').toUpperCase(), pagarX + 16, legendY - 3);
 
-  }, [chartData, dimensions, formatYAxis, hoveredIndex, t]);
+  }, [chartData, dimensions, formatYAxis, hoveredIndex, t, theme]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;

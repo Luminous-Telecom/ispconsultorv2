@@ -1,5 +1,6 @@
 import React, { useState, useLayoutEffect, useEffect, useRef, useMemo, memo } from 'react';
 import { PieChartProps } from './types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const formatPieValue = (value: number, title: string): string | number => {
   if (title === 'Taxa de Pagamento') {
@@ -9,9 +10,11 @@ const formatPieValue = (value: number, title: string): string | number => {
 };
 
 const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenItems, onToggleItem }) => {
+  const { theme } = useTheme();
+
   // Simplificação: removendo referências complexas de estado
   // Manteremos apenas a lógica essencial de renderização do canvas
-  const visibleData = useMemo(() => 
+  const visibleData = useMemo(() =>
     data && data.length > 0 ? data.filter((_, index) => !hiddenItems.has(index)) : [],
     [data, hiddenItems]
   );
@@ -179,8 +182,10 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         ctx.fillRect(legendX, y - boxSize/2, boxSize, boxSize);
         ctx.globalAlpha = 1;
 
-        // Texto
-        ctx.fillStyle = isHidden ? '#ced4da' : '#868e96'; // Cinza muito claro se oculto, cinza claro se visível
+        // Texto - Branco no modo escuro para melhor contraste
+        ctx.fillStyle = isHidden
+          ? '#ced4da'
+          : theme === 'dark' ? '#ffffff' : '#868e96'; // Branco no modo escuro, cinza claro no modo claro
         const text = `${item.label}: ${formatPieValue(item.value || 0, title)}`;
         
         // Truncar texto se muito longo
@@ -216,7 +221,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         });
     });
 
-  }, [data, dimensions, hiddenItems, title, total, visibleData]);
+  }, [data, dimensions, hiddenItems, title, total, visibleData, theme]);
 
   if (!data || data.length === 0) {
     return (
