@@ -241,7 +241,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       const receberY = margin.top + chartHeight - ((hoveredPoint.receber - minValue) / valueRange) * chartHeight;
       ctx.fillStyle = receberDotColor;
       ctx.beginPath();
-      ctx.arc(receberX, receberY, 6, 0, Math.PI * 2);
+      ctx.arc(receberX, receberY, 4, 0, Math.PI * 2);
       ctx.fill();
 
       // Desenhar ponto para linha "pagar"
@@ -249,7 +249,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       const pagarY = margin.top + chartHeight - ((hoveredPoint.pagar - minValue) / valueRange) * chartHeight;
       ctx.fillStyle = pagarDotColor;
       ctx.beginPath();
-      ctx.arc(pagarX, pagarY, 6, 0, Math.PI * 2);
+      ctx.arc(pagarX, pagarY, 4, 0, Math.PI * 2);
       ctx.fill();
     }
 

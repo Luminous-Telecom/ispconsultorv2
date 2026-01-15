@@ -214,7 +214,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
       const hoveredPoint = points[hoveredIndex];
       ctx.fillStyle = '#0056b3'; // Cor azul escura para o ponto ativo
       ctx.beginPath();
-      ctx.arc(hoveredPoint.x, hoveredPoint.y, 6, 0, Math.PI * 2);
+      ctx.arc(hoveredPoint.x, hoveredPoint.y, 4, 0, Math.PI * 2);
       ctx.fill();
     }
   }, [chartData, dimensions, formatYAxis, hoveredIndex]);
