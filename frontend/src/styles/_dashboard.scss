@@ -658,14 +658,14 @@
 
 .pie-chart-content {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 0.25rem;
+  flex-direction: column; /* conteúdos empilhados */
+  align-items: center; /* centralizar horizontalmente */
+  justify-content: flex-start; /* aproximar do topo */
+  gap: 0.25rem; /* reduzir espaçamento vertical */
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  overflow: visible;
+  overflow: hidden;
   flex: 1;
   min-height: 0;
 }
@@ -680,12 +680,13 @@
 .pie-chart-box {
   flex-shrink: 0;
   position: relative;
-  width: 100%;
-  max-width: 200px;
+  width: auto;
+  max-width: 140px;
   height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0 auto;
 }
 
 .pie-chart-box canvas {
@@ -697,90 +698,43 @@
   text-rendering: optimizeLegibility;
 }
 
-/* Telas médias e grandes - legenda ao lado */
-@media (min-width: 576px) {
-  .pie-chart-content:has(.pie-legend-box) {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: flex-start;
-  }
-
-  .pie-legend-box {
-    width: auto !important;
-    flex: 1 1 auto;
-    margin-left: 0.25rem;
-    min-width: 0;
-    max-width: calc(100% - clamp(120px, 40%, 160px) - 0.25rem);
-  }
-
-  .pie-legend-text {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
-/* Telas pequenas - legenda ao lado também */
-@media (max-width: 575.98px) {
-  .pie-chart-box {
-    width: clamp(120px, 40%, 180px) !important;
-    height: clamp(120px, 40%, 180px) !important;
-    min-width: 120px !important;
-    min-height: 120px !important;
-    max-width: 180px !important;
-    max-height: 160px !important;
-    max-height: 160px !important;
-  }
-
-  .pie-chart-content {
-    flex-direction: row !important;
-    align-items: flex-start !important;
-    justify-content: space-between !important;
-  }
-
-  .pie-legend-box {
-    width: auto !important;
-    flex: 1 1 auto !important;
-    margin-left: 0.25rem !important;
-    margin-top: 0 !important;
-    min-width: 0 !important;
-  }
-
-  .pie-legend-text {
-    white-space: normal !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-  }
-}
+/* Removido ajuste específico para telas médias para manter legenda vertical */
 
 .pie-legend-box {
   display: flex !important;
   flex-direction: column !important;
-  gap: 0;
-  width: auto !important;
-  align-items: flex-start;
+  gap: 0.25rem;
+  width: 100% !important;
+  align-items: center;
   padding: 0;
   margin: 0;
-  min-width: 0;
+  min-width: 100px;
   flex: 1 1 auto;
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 110px;
   visibility: visible !important;
   opacity: 1 !important;
   position: relative;
   z-index: 1;
+  padding-right: 4px;
 }
 
-/* Canvas para legenda - apenas o canvas será registrado como interativo */
+.pie-legend-box::-webkit-scrollbar {
+  width: 4px;
+}
+
+.pie-legend-box::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pie-legend-box::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 4px;
+}
+
 .pie-legend-box canvas {
-  display: block;
-  width: 100%;
-  cursor: pointer;
-  /* Garantir renderização nítida */
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  display: none;
 }
 
 .pie-legend-item {
@@ -789,10 +743,10 @@
   gap: 0.125rem;
   width: 100% !important;
   max-width: 100%;
-  padding: 0.03125rem 0.0625rem;
+  padding: 0.03125rem 0.125rem;
   border-radius: var(--border-radius);
   cursor: pointer;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -801,14 +755,12 @@
   overflow: hidden;
   visibility: visible !important;
   opacity: 1 !important;
-  /* Otimizações de performance */
   transform: translateZ(0);
   will-change: opacity, background-color;
   contain: layout style paint;
   touch-action: manipulation;
   pointer-events: auto;
   transition: opacity 0.1s ease-out, background-color 0.1s ease-out;
-  /* Reduzir latência de entrada */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -826,40 +778,27 @@
 
 .pie-legend-text {
   color: var(--text-primary);
-  font-weight: 400;
+  font-weight: 400 !important;
   line-height: 1.2;
   flex: 1;
   min-width: 0;
   max-width: 100%;
-  font-size: 0.6875rem;
+  font-size: 0.625rem; /* Reduzido de 0.6875rem */
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Permitir quebra de linha se necessário, mas preferir ellipsis se couber em uma linha */
+  white-space: nowrap; 
   /* Otimizações de performance */
   transform: translateZ(0);
   contain: layout style paint;
 }
 
-/* Telas grandes - Layout horizontal com texto em uma linha */
-@media (min-width: 992px) {
-  .pie-chart-content:has(.pie-legend-box) {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: flex-start;
-  }
-
-  .pie-legend-box {
-    width: auto !important;
-    flex: 1 1 auto;
-    margin-left: 0.25rem;
-    min-width: 0;
-    max-width: none;
-  }
-
-  .pie-legend-text {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+/* Permitir quebra de linha quando o espaço for muito pequeno */
+.pie-legend-box:hover .pie-legend-text,
+.pie-legend-item:hover .pie-legend-text {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow: visible;
 }
 
 /* Dashboard Hero Section */

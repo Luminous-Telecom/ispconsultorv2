@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react';
+import React, { useState, useLayoutEffect, useEffect, useRef, useMemo, memo } from 'react';
 import { ChartDataItem, PieChartProps } from './types';
 
 const formatPieValue = (value: number, title: string): string | number => {
@@ -8,7 +8,7 @@ const formatPieValue = (value: number, title: string): string | number => {
   return value.toLocaleString('pt-BR');
 };
 
-// Componente Canvas para renderizar legenda - similar ao exemplo fornecido
+// Componente HTML para renderizar legenda
 interface PieLegendCanvasProps {
   data: ChartDataItem[];
   title: string;
@@ -17,239 +17,31 @@ interface PieLegendCanvasProps {
 }
 
 const PieLegendCanvas: React.FC<PieLegendCanvasProps> = memo(({ data, title, hiddenItems, onToggleItem }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
-
-  // Função para obter cor do texto do CSS
-  const getTextColor = useCallback(() => {
-    const root = document.documentElement;
-    const rootStyle = window.getComputedStyle(root);
-    let textColor = rootStyle.getPropertyValue('--text-primary')?.trim();
-    
-    if (!textColor) {
-      const bodyStyle = window.getComputedStyle(document.body);
-      textColor = bodyStyle.getPropertyValue('--text-primary')?.trim();
-    }
-    
-    if (!textColor && containerRef.current) {
-      const containerStyle = window.getComputedStyle(containerRef.current);
-      textColor = containerStyle.getPropertyValue('--text-primary')?.trim();
-    }
-    
-    if (!textColor) {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      return isDark ? '#e2e8f0' : '#212529';
-    }
-    
-    return textColor;
-  }, []);
-
-  // Calcular dimensões do canvas
-  useLayoutEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        // Altura baseada no número de itens
-        const itemHeight = 22;
-        const calculatedHeight = data.length * itemHeight;
-        setDimensions({ 
-          width: rect.width || 200, 
-          height: calculatedHeight || itemHeight 
-        });
-      }
-    };
-
-    updateDimensions();
-    const resizeObserver = new ResizeObserver(updateDimensions);
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-
-    return () => resizeObserver.disconnect();
-  }, [data.length]);
-
-  // Renderizar no canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || dimensions.width === 0 || dimensions.height === 0) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Configurar para alta resolução (device pixel ratio)
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-
-    // Ajustar tamanho real do canvas
-    canvas.width = rect.width * dpr;
-    canvas.height = dimensions.height * dpr;
-
-    // Escalar contexto para compensar o device pixel ratio
-    ctx.scale(dpr, dpr);
-
-    // Limpar canvas (usar dimensões originais após escala)
-    ctx.clearRect(0, 0, rect.width, dimensions.height);
-
-    // Configurações de estilo
-    const itemHeight = 22;
-    const colorSize = 10;
-    const colorMargin = 8;
-    const fontSize = 10;
-    const fontFamily = 'system-ui, -apple-system, sans-serif';
-
-    ctx.font = `${fontSize}px ${fontFamily}`;
-    ctx.textBaseline = 'middle';
-
-    const textColor = getTextColor();
-    let y = itemHeight / 2;
-
-    data.forEach((item, index) => {
-      const isHidden = hiddenItems.has(index);
-      const opacity = isHidden ? 0.5 : 1;
-      const formattedValue = formatPieValue(item.value || 0, title);
-      const text = `${item.label}: ${formattedValue}`;
-
-      // Desenhar quadrado de cor
-      ctx.fillStyle = item.color || '#6c757d';
-      ctx.globalAlpha = opacity;
-      ctx.fillRect(colorMargin, y - colorSize / 2, colorSize, colorSize);
-
-      // Desenhar texto
-      ctx.fillStyle = textColor;
-      ctx.globalAlpha = opacity;
-      const textX = colorMargin + colorSize + 8;
-      ctx.fillText(text, textX, y);
-
-      // Desenhar linha através do texto se estiver oculto
-      if (isHidden) {
-        ctx.strokeStyle = textColor;
-        ctx.globalAlpha = opacity;
-        ctx.lineWidth = 1;
-        const textWidth = ctx.measureText(text).width;
-        ctx.beginPath();
-        ctx.moveTo(textX, y);
-        ctx.lineTo(textX + textWidth, y);
-        ctx.stroke();
-      }
-
-      ctx.globalAlpha = 1;
-      y += itemHeight;
-    });
-  }, [data, title, hiddenItems, dimensions, getTextColor]);
-
-  // Observar mudanças no tema para atualizar as cores
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      // Forçar re-renderização quando o tema mudar
-      if (canvasRef.current && dimensions.width > 0 && dimensions.height > 0) {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        // Configurar para alta resolução (device pixel ratio)
-        const dpr = window.devicePixelRatio || 1;
-        const rect = canvas.getBoundingClientRect();
-
-        // Ajustar tamanho real do canvas
-        canvas.width = rect.width * dpr;
-        canvas.height = dimensions.height * dpr;
-
-        // Escalar contexto para compensar o device pixel ratio
-        ctx.scale(dpr, dpr);
-
-        // Limpar canvas (usar dimensões originais após escala)
-        ctx.clearRect(0, 0, rect.width, dimensions.height);
-
-        // Configurações de estilo
-        const itemHeight = 32;
-        const gap = 8;
-        const colorSize = 12;
-        const colorMargin = 8;
-        const fontSize = 11;
-        const fontFamily = 'system-ui, -apple-system, sans-serif';
-
-        ctx.font = `${fontSize}px ${fontFamily}`;
-        ctx.textBaseline = 'middle';
-
-        const textColor = getTextColor();
-        let y = itemHeight / 2;
-
-        data.forEach((item, index) => {
-          const isHidden = hiddenItems.has(index);
-          const opacity = isHidden ? 0.5 : 1;
-          const formattedValue = formatPieValue(item.value || 0, title);
-          const text = `${item.label}: ${formattedValue}`;
-
-          // Desenhar quadrado de cor
-          ctx.fillStyle = item.color || '#6c757d';
-          ctx.globalAlpha = opacity;
-          ctx.fillRect(colorMargin, y - colorSize / 2, colorSize, colorSize);
-
-          // Desenhar texto
-          ctx.fillStyle = textColor;
-          ctx.globalAlpha = opacity;
-          const textX = colorMargin + colorSize + 8;
-          ctx.fillText(text, textX, y);
-
-          // Desenhar linha através do texto se estiver oculto
-          if (isHidden) {
-            ctx.strokeStyle = textColor;
-            ctx.globalAlpha = opacity;
-            ctx.lineWidth = 1;
-            const textWidth = ctx.measureText(text).width;
-            ctx.beginPath();
-            ctx.moveTo(textX, y);
-            ctx.lineTo(textX + textWidth, y);
-            ctx.stroke();
-          }
-
-          ctx.globalAlpha = 1;
-          y += itemHeight + gap;
-        });
-      }
-    });
-
-    // Observar mudanças no atributo data-theme
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme']
-    });
-
-    return () => observer.disconnect();
-  }, [data, title, hiddenItems, dimensions, getTextColor]);
-
-  // Calcular qual item foi clicado
-  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const clickY = e.clientY - rect.top;
-
-    const itemHeight = 22;
-    const totalItemHeight = itemHeight;
-
-    const clickedIndex = Math.floor(clickY / totalItemHeight);
-    if (clickedIndex >= 0 && clickedIndex < data.length) {
-      startTransition(() => {
-        onToggleItem(clickedIndex);
-      });
-    }
-  }, [data, onToggleItem]);
-
   return (
-    <div ref={containerRef} className="pie-legend-box" style={{ position: 'relative' }}>
-      <canvas
-        ref={canvasRef}
-        onClick={handleClick}
-        style={{
-          display: 'block',
-          width: '100%',
-          height: dimensions.height || 'auto',
-          cursor: 'pointer',
-        }}
-      />
+    <div className="pie-legend-box">
+      {data.map((item, index) => {
+        const isHidden = hiddenItems.has(index);
+        const opacity = isHidden ? 0.5 : 1;
+        
+        return (
+          <div 
+            key={index} 
+            className="pie-legend-item" 
+            onClick={() => onToggleItem(index)}
+            style={{ opacity }}
+            role="button"
+            aria-pressed={!isHidden}
+          >
+            <div 
+              className="pie-legend-color" 
+              style={{ backgroundColor: item.color || '#6c757d' }} 
+            />
+            <div className="pie-legend-text" style={{ textDecoration: isHidden ? 'line-through' : 'none' }}>
+              {item.label}: {formatPieValue(item.value || 0, title)}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 });
@@ -426,4 +218,3 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
 ResponsivePieChart.displayName = 'ResponsivePieChart';
 
 export default ResponsivePieChart;
-
