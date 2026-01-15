@@ -680,6 +680,12 @@
 .pie-chart-box {
   flex-shrink: 0;
   position: relative;
+  width: 100%;
+  max-width: 200px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pie-chart-box canvas {
@@ -717,11 +723,12 @@
 /* Telas pequenas - legenda ao lado também */
 @media (max-width: 575.98px) {
   .pie-chart-box {
-    width: clamp(120px, 50%, 160px) !important;
-    height: clamp(120px, 50%, 160px) !important;
+    width: clamp(120px, 40%, 180px) !important;
+    height: clamp(120px, 40%, 180px) !important;
     min-width: 120px !important;
     min-height: 120px !important;
-    max-width: 160px !important;
+    max-width: 180px !important;
+    max-height: 160px !important;
     max-height: 160px !important;
   }
 
@@ -1179,11 +1186,11 @@
   }
 
   .pie-chart-box {
-    width: clamp(120px, 50%, 160px) !important;
-    height: clamp(120px, 50%, 160px) !important;
+    width: clamp(120px, 40%, 180px) !important;
+    height: clamp(120px, 40%, 180px) !important;
     min-width: 120px !important;
     min-height: 120px !important;
-    max-width: 160px !important;
+    max-width: 180px !important;
     max-height: 160px !important;
   }
 
