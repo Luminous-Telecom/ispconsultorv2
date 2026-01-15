@@ -180,7 +180,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         ctx.globalAlpha = 1;
 
         // Texto
-        ctx.fillStyle = isHidden ? '#adb5bd' : '#6c757d'; // Cinza claro se oculto, cinza médio-claro se visível
+        ctx.fillStyle = isHidden ? '#ced4da' : '#868e96'; // Cinza muito claro se oculto, cinza claro se visível
         const text = `${item.label}: ${formatPieValue(item.value || 0, title)}`;
         
         // Truncar texto se muito longo
@@ -199,7 +199,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         // Linha riscada se oculto
         if (isHidden) {
             ctx.beginPath();
-            ctx.strokeStyle = '#adb5bd';
+            ctx.strokeStyle = '#ced4da';
             ctx.lineWidth = 1;
             ctx.moveTo(legendX + boxSize + 5, y);
             ctx.lineTo(legendX + boxSize + 5 + ctx.measureText(displayText).width, y);
