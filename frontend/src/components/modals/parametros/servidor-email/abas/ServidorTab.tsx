@@ -1,6 +1,7 @@
 import React from 'react';
 import { FormField, Checkbox, Button } from '@/components/ui';
 import { ServidorTabProps } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 const ServidorTab: React.FC<ServidorTabProps> = ({
   formData,
@@ -12,12 +13,13 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
   onSendTestEmail,
   isSendingTest
 }) => {
+  const { t } = useI18n();
   return (
     <>
       <div className="card">
         <div className="card-header py-1 px-2">
           <small className="fw-bold mb-0">
-            {servidorAtivo?.data ? 'Configurações do Servidor' : 'Configurar Servidor de E-Mail'}
+            {servidorAtivo?.data ? t('emailServer.serverSettings') : t('emailServer.configureServer')}
           </small>
         </div>
         <div className="card-body p-2">
@@ -26,7 +28,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               <FormField
                 name="host"
                 type="text"
-                label="Host SMTP"
+                label={t('emailServer.smtpHost')}
                 placeholder="smtp.gmail.com"
                 required={true}
                 size="sm"
@@ -38,7 +40,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               <FormField
                 name="porta"
                 type="number"
-                label="Porta"
+                label={t('emailServer.port')}
                 placeholder="587"
                 required={true}
                 size="sm"
@@ -53,7 +55,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               <FormField
                 name="usuario"
                 type="email"
-                label="Usuário/E-mail"
+                label={t('emailServer.userEmail')}
                 placeholder="usuario@gmail.com"
                 required={true}
                 size="sm"
@@ -66,8 +68,8 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               <FormField
                 name="senha"
                 type="password"
-                label={`Senha ${!servidorAtivo?.data ? '*' : ''}`}
-                placeholder={servidorAtivo?.data ? "Deixe em branco para manter a senha atual" : "Digite a senha do e-mail"}
+                label={`${t('form.password')} ${!servidorAtivo?.data ? '*' : ''}`}
+                placeholder={servidorAtivo?.data ? t('emailServer.passwordHelp') : t('emailServer.passwordPlaceholder')}
                 required={!servidorAtivo?.data}
                 size="sm"
                 value={formData.senha}
@@ -76,7 +78,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               />
               {servidorAtivo?.data && (
                 <small className="form-text text-secondary">
-                  Deixe em branco para manter a senha atual
+                  {t('emailServer.passwordHelp')}
                 </small>
               )}
             </div>
@@ -87,7 +89,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               <FormField
                 name="nome_remetente"
                 type="text"
-                label="Nome do Remetente"
+                label={t('emailServer.senderName')}
                 placeholder="BackNet"
                 required={true}
                 size="sm"
@@ -99,7 +101,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               <FormField
                 name="email_remetente"
                 type="email"
-                label="E-mail do Remetente"
+                label={t('emailServer.senderEmail')}
                 placeholder="contato@BackNettelecom.com"
                 required={true}
                 size="sm"
@@ -113,7 +115,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
             <div className="col-md-4">
               <Checkbox
                 name="ssl"
-                label="Usar SSL"
+                label={t('emailServer.useSsl')}
                 checked={formData.ssl}
                 onChange={(e) => onChange('ssl', e.value)}
               />
@@ -121,7 +123,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
             <div className="col-md-4">
               <Checkbox
                 name="tls"
-                label="Usar TLS"
+                label={t('emailServer.useTls')}
                 checked={formData.tls}
                 onChange={(e) => onChange('tls', e.value)}
               />
@@ -130,7 +132,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               <FormField
                 name="timeout"
                 type="number"
-                label="Timeout (ms)"
+                label={t('emailServer.timeout')}
                 size="sm"
                 value={formData.timeout.toString()}
                 onChange={(value) => onChange('timeout', parseInt(value as string) || 30000)}
@@ -144,13 +146,13 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
               <div className="col-12">
                 <small className="fw-bold text-primary mb-3">
                   <i className="bi bi-envelope-check me-2"></i>
-                  Enviar E-mail de Teste
+                  {t('emailServer.sendTestEmail')}
                 </small>
                 <div className="input-group">
                   <FormField
                     name="email_teste"
                     type="email"
-                    placeholder="Digite o e-mail para teste"
+                    placeholder={t('emailServer.testEmailPlaceholder')}
                     size="sm"
                     value={emailTeste}
                     onChange={(value) => onEmailTesteChange(value as string)}
@@ -163,11 +165,11 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                     onClick={onSendTestEmail}
                     isLoading={isSendingTest}
                   >
-                    Enviar Teste
+                    {t('emailServer.testEmailButton')}
                   </Button>
                 </div>
                 <small className="form-text text-secondary">
-                  Digite um e-mail válido para testar o envio através deste servidor
+                  {t('emailServer.testEmailHelp')}
                 </small>
               </div>
             </div>

@@ -31,24 +31,6 @@ export class UsuarioController {
       const { page = 1, limit = 10, search = '', ativo } = req.query;
       const pageNum = Number(page);
       const limitNum = Number(limit);
-      const offset = (pageNum - 1) * limitNum;
-
-      const whereClause: WhereOptions = {};
-      
-      if (search) {
-        // Buscar apenas nos campos que correspondem às colunas da tabela
-        (whereClause as Record<symbol, unknown>)[Op.or] = [
-          { id: { [Op.like]: `%${search}%` } },
-          { nome: { [Op.like]: `%${search}%` } },
-          { email: { [Op.like]: `%${search}%` } },
-          { role: { [Op.like]: `%${search}%` } },
-          { ativo: { [Op.like]: `%${search}%` } }
-        ];
-      }
-
-      if (ativo !== undefined) {
-        whereClause.ativo = ativo === 'true';
-      }
 
       const result = await UsuarioService.list({
         page: pageNum,

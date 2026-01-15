@@ -8,6 +8,7 @@ import { useUsuario, useGerarWebhookSecret } from '@/hooks/useUsuarios';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface UsuarioForm {
   nome: string;
@@ -30,6 +31,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
   onSuccess,
   usuarioId
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const isEditing = !!usuarioId;
   const initialFormData: UsuarioForm = {
@@ -74,12 +76,12 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
   const createUsuarioMutation = useMutation({
     mutationFn: (data: UsuarioForm) => UsuarioService.create(data),
     onSuccess: () => {
-      success('Usuário criado com sucesso!');
+      success(t('user.successCreate'));
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       onSuccess?.();
     },
     onError: (err: unknown) => {
-      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao criar usuário';
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('user.errorCreate');
       error(errorMessage);
     }
   });
@@ -87,13 +89,13 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
   const updateUsuarioMutation = useMutation({
     mutationFn: (data: Partial<UsuarioForm>) => UsuarioService.update(usuarioId!, data),
     onSuccess: () => {
-      success('Usuário atualizado com sucesso!');
+      success(t('user.successUpdate'));
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       queryClient.invalidateQueries({ queryKey: ['usuario', usuarioId] });
       onSuccess?.();
     },
     onError: (err: unknown) => {
-      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao atualizar usuário';
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('user.errorUpdate');
       error(errorMessage);
     }
   });
@@ -102,13 +104,13 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
     e.preventDefault();
     
     const newErrors: Partial<UsuarioForm> = {};
-    if (!formData.nome.trim()) newErrors.nome = 'Nome é obrigatório';
-    if (!formData.email.trim()) newErrors.email = 'Email é obrigatório';
+    if (!formData.nome.trim()) newErrors.nome = t('messages.nameRequired');
+    if (!formData.email.trim()) newErrors.email = t('messages.emailRequired');
     if (!isEditing && !formData.password.trim()) {
-      newErrors.password = 'Senha é obrigatória';
+      newErrors.password = t('messages.passwordRequired');
     }
     if (formData.password && formData.password.length < 6) {
-      newErrors.password = 'Senha deve ter no mínimo 6 caracteres';
+      newErrors.password = t('messages.passwordMinLength');
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -168,7 +170,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Usuário"
+      title={t('user.title')}
       size="md"
       modalId="usuario-form-modal"
       headerActions={
@@ -177,149 +179,146 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
             type="button"
             variant="primary"
             size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}
             disabled={isPending}
           >
-            Cancelar
+            {t('actions.cancel')}
           </Button>
           <Button
             type="submit"
             form="usuario-form"
             variant="primary"
             size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            isLoading={isPending}
+            disabled={isPending}
           >
-            Salvar
+            {t('actions.save')}
           </Button>
         </div>
       }
-    >
-      <form id="usuario-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
-        <div>
+  >
+    <form id="usuario-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+      <div>
+        <div className="row g-1 mb-0">
+          <div className="col-md-12">
+            <FormField
+              name="nome"
+              type="text"
+              label={t('form.name')}
+              value={formData.nome}
+              onChange={(value: unknown) => {
+                setFormData(prev => ({ ...prev, nome: String(value ?? '') }));
+                if (errors.nome) setErrors(prev => ({ ...prev, nome: undefined }));
+              }}
+              placeholder={t('placeholder.enterName')}
+              required
+              size="sm"
+              error={errors.nome}
+            />
+          </div>
+          <div className="col-md-12">
+            <FormField
+              name="email"
+              type="email"
+              label={t('form.email')}
+              value={formData.email}
+              onChange={(value: unknown) => {
+                setFormData(prev => ({ ...prev, email: String(value ?? '') }));
+                if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
+              }}
+              placeholder={t('placeholder.enterEmail')}
+              required
+              size="sm"
+              error={errors.email}
+            />
+          </div>
+          <div className="col-md-12">
+            <FormField
+              name="password"
+              type="password"
+              label={isEditing ? t('user.newPassword') : t('form.password')}
+              value={formData.password}
+              onChange={(value: unknown) => {
+                setFormData(prev => ({ ...prev, password: String(value ?? '') }));
+                if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
+              }}
+              placeholder={isEditing ? t('user.newPasswordPlaceholder') : t('user.passwordPlaceholder')}
+              required={!isEditing}
+              size="sm"
+              error={errors.password}
+            />
+          </div>
+          <div className="col-md-6">
+            <FormField
+              name="role"
+              type="select"
+              label={t('user.profile')}
+              value={formData.role}
+              onChange={(value) => setFormData(prev => ({ ...prev, role: value as 'admin' | 'user' }))}
+              options={[
+                { value: 'admin', label: t('user.admin') },
+                { value: 'user', label: t('user.user') }
+              ]}
+              size="sm"
+            />
+          </div>
+          <div className="col-md-6">
+            <FormField
+              name="ativo"
+              type="checkbox"
+              label={t('form.active')}
+              value={formData.ativo}
+              onChange={(value) => setFormData(prev => ({ ...prev, ativo: Boolean(value) }))}
+              size="sm"
+            />
+          </div>
+        </div>
+
+        {isEditing && (
           <div className="row g-1 mb-0">
             <div className="col-md-12">
-              <FormField
-                name="nome"
-                type="text"
-                label="Nome"
-                value={formData.nome}
-                onChange={(value: unknown) => {
-                  setFormData(prev => ({ ...prev, nome: String(value ?? '') }));
-                  if (errors.nome) setErrors(prev => ({ ...prev, nome: undefined }));
-                }}
-                placeholder="Nome completo do usuário"
-                required
-                size="sm"
-                error={errors.nome}
-              />
-            </div>
-            <div className="col-md-12">
-              <FormField
-                name="email"
-                type="email"
-                label="Email"
-                value={formData.email}
-                onChange={(value: unknown) => {
-                  setFormData(prev => ({ ...prev, email: String(value ?? '') }));
-                  if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
-                }}
-                placeholder="email@exemplo.com"
-                required
-                size="sm"
-                error={errors.email}
-              />
-            </div>
-            <div className="col-md-12">
-              <FormField
-                name="password"
-                type="password"
-                label={isEditing ? 'Nova Senha (deixe em branco para manter)' : 'Senha'}
-                value={formData.password}
-                onChange={(value: unknown) => {
-                  setFormData(prev => ({ ...prev, password: String(value ?? '') }));
-                  if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
-                }}
-                placeholder={isEditing ? 'Deixe em branco para manter a senha atual' : 'Mínimo 6 caracteres'}
-                required={!isEditing}
-                size="sm"
-                error={errors.password}
-              />
-            </div>
-            <div className="col-md-6">
-              <FormField
-                name="role"
-                type="select"
-                label="Perfil"
-                value={formData.role}
-                onChange={(value) => setFormData(prev => ({ ...prev, role: value as 'admin' | 'user' }))}
-                options={[
-                  { value: 'admin', label: 'Administrador' },
-                  { value: 'user', label: 'Usuário' }
-                ]}
-                size="sm"
-              />
-            </div>
-            <div className="col-md-6">
-              <FormField
-                name="ativo"
-                type="checkbox"
-                label="Ativo"
-                value={formData.ativo}
-                onChange={(value) => setFormData(prev => ({ ...prev, ativo: Boolean(value) }))}
-                size="sm"
-              />
-            </div>
-          </div>
-
-          {isEditing && (
-            <div className="row g-1 mb-0">
-              <div className="col-md-12">
-                <div className="mb-3">
-                  <FormField
-                    name="webhook_secret"
-                    type="text"
-                    label="Webhook Secret"
-                    placeholder="Clique em Gerar token para criar um segredo"
+              <div className="mb-3">
+                <FormField
+                  name="webhook_secret"
+                  type="text"
+                  label={t('user.webhookSecret')}
+                  placeholder={t('user.generateWebhookHelp')}
+                  size="sm"
+                  value={webhookSecret}
+                  readOnly
+                  autoComplete="off"
+                />
+                <div className="d-flex flex-wrap gap-2 mt-2">
+                  <Button
+                    type="button"
+                    variant="outline-primary"
                     size="sm"
-                    value={webhookSecret}
-                    readOnly
-                    autoComplete="off"
-                  />
-                  <div className="d-flex flex-wrap gap-2 mt-2">
-                    <Button
-                      type="button"
-                      variant="outline-primary"
-                      size="sm"
-                      onClick={handleGenerateWebhookSecret}
-                      isLoading={isGeneratingSecret}
-                      disabled={isPending || isGeneratingSecret}
-                    >
-                      Gerar token
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline-primary"
-                      size="sm"
-                      onClick={handleCopyWebhookSecret}
-                      disabled={!webhookSecret}
-                    >
-                      Copiar
-                    </Button>
-                  </div>
-                  <small className="text-secondary d-block mt-1">
-                    {webhookSecret
-                      ? 'Utilize este token para autenticação de webhooks.'
-                      : 'Clique em "Gerar token" para obter o segredo de webhook.'}
-                  </small>
+                    onClick={handleGenerateWebhookSecret}
+                    disabled={isPending || isGeneratingSecret}
+                  >
+                    {t('user.generateToken')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={handleCopyWebhookSecret}
+                    disabled={!webhookSecret}
+                  >
+                    {t('user.copy')}
+                  </Button>
                 </div>
+                <small className="text-secondary d-block mt-1">
+                  {webhookSecret
+                    ? t('user.webhookHelp')
+                    : t('user.generateWebhookHelp')}
+                </small>
               </div>
             </div>
-          )}
-        </div>
-      </form>
-    </DraggableModal>
+          </div>
+        )}
+      </div>
+    </form>
+  </DraggableModal>
   );
 };
 

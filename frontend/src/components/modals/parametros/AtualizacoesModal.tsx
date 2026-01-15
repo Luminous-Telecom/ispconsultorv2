@@ -10,6 +10,7 @@ import { ApiResponse } from '@/types/api';
 import { API_CONFIG } from '@/config/api';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Atualizacao {
   versao: string;
@@ -28,6 +29,7 @@ interface AtualizacoesModalProps {
 }
 
 const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const { confirm, modalProps } = useConfirmModal();
@@ -131,7 +133,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
                     if (data.success || (data.step === 'finalizado' && data.progress === 100)) {
                       setIsUpdating(false);
-                      setUpdateProgress('Atualização concluída!');
+                      setUpdateProgress(t('updates.concluded'));
                       setUpdateProgressPercent(100);
                       resolve();
                       return;
@@ -160,7 +162,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
   const updateMutation = useMutation({
     mutationFn: (branch: string = 'main') => executeUpdateWithSSE(branch),
     onSuccess: () => {
-      success('Atualização concluída com sucesso! A aplicação será reiniciada em breve.', {
+      success(t('updates.success'), {
         id: `update-success-${Date.now()}`,
         duration: 5000,
       });
@@ -173,7 +175,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
     onError: (err: unknown) => {
       setIsUpdating(false);
       setUpdateProgress('');
-      const error = err instanceof Error ? err.message : 'Erro ao executar atualização';
+      const error = err instanceof Error ? err.message : t('updates.error');
       showError(error);
     },
   });
@@ -181,11 +183,11 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
   const handleUpdate = async () => {
 
     const confirmed = await confirm({
-      message: 'Tem certeza que deseja atualizar o sistema? Esta ação irá:\n\n1. Baixar as últimas alterações do repositório\n2. Atualizar dependências\n3. Compilar o código\n4. Executar migrations do banco de dados\n5. Reiniciar a aplicação\n\nO processo pode levar alguns minutos.',
+      message: t('updates.confirmUpdate'),
       variant: 'warning',
-      title: 'Atualizar sistema',
-      confirmText: 'Atualizar',
-      cancelText: 'Cancelar',
+      title: t('updates.updateSystem'),
+      confirmText: t('updates.updateSystem'),
+      cancelText: t('actions.cancel'),
     });
 
     if (!confirmed) {
@@ -199,19 +201,19 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
   const getTipoBadge = (tipo: string) => {
     const badges = {
-      feature: { class: 'text-primary', bgClass: 'bg-primary bg-opacity-10', label: 'Nova', icon: 'bi-star-fill' },
-      bugfix: { class: 'text-danger', bgClass: 'bg-danger bg-opacity-10', label: 'Correção', icon: 'bi-bug-fill' },
-      security: { class: 'text-warning', bgClass: 'bg-warning bg-opacity-10', label: 'Segurança', icon: 'bi-shield-fill' },
-      melhoria: { class: 'text-info', bgClass: 'bg-info bg-opacity-10', label: 'Melhoria', icon: 'bi-arrow-up-circle-fill' }
+      feature: { class: 'text-primary', bgClass: 'bg-primary bg-opacity-10', label: t('updates.badges.new'), icon: 'bi-star-fill' },
+      bugfix: { class: 'text-danger', bgClass: 'bg-danger bg-opacity-10', label: t('updates.badges.bugfix'), icon: 'bi-bug-fill' },
+      security: { class: 'text-warning', bgClass: 'bg-warning bg-opacity-10', label: t('updates.badges.security'), icon: 'bi-shield-fill' },
+      melhoria: { class: 'text-info', bgClass: 'bg-info bg-opacity-10', label: t('updates.badges.improvement'), icon: 'bi-arrow-up-circle-fill' }
     };
-    return badges[tipo as keyof typeof badges] || { class: 'text-secondary', bgClass: 'bg-secondary bg-opacity-10', label: 'Outro', icon: 'bi-circle-fill' };
+    return badges[tipo as keyof typeof badges] || { class: 'text-secondary', bgClass: 'bg-secondary bg-opacity-10', label: t('updates.badges.other'), icon: 'bi-circle-fill' };
   };
 
   return (
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Atualizações do Sistema"
+      title={t('updates.title')}
       size="md"
       modalId="atualizacoes-modal"
       headerActions={
@@ -226,7 +228,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
               disabled={isUpdating || updateMutation.isPending}
               isLoading={isUpdating || updateMutation.isPending}
             >
-              Atualizar Sistema
+              {t('updates.updateSystem')}
             </Button>
           )}
           <Button
@@ -237,7 +239,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
             onClick={onClose}
             disabled={isUpdating || updateMutation.isPending}
           >
-            Fechar
+            {t('buttons.close')}
           </Button>
         </div>
       }
@@ -246,9 +248,9 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
         {isLoading && (
           <div className="text-center py-4">
             <div className="spinner-border spinner-border-sm text-primary" role="status">
-              <span className="visually-hidden">Carregando...</span>
+              <span className="visually-hidden">{t('messages.loading')}</span>
             </div>
-            <p className="mt-2 mb-0 small text-muted">Buscando atualizações...</p>
+            <p className="mt-2 mb-0 small text-muted">{t('updates.searching')}</p>
           </div>
         )}
 
@@ -257,11 +259,11 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
             <div className="d-flex align-items-center">
               <i className="bi bi-exclamation-triangle-fill me-2"></i>
               <div className="flex-grow-1">
-                <strong className="small">Erro ao buscar atualizações</strong>
+                <strong className="small">{t('updates.errorSearch')}</strong>
                 <p className="mb-0 small mt-1">
                   {error instanceof Error 
                     ? error.message 
-                    : 'Verifique a conexão ou configure o GitHub corretamente.'}
+                    : t('updates.errorSearch')}
                 </p>
               </div>
             </div>
@@ -273,8 +275,8 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
             <div className="d-flex align-items-center">
               <i className="bi bi-info-circle-fill me-2"></i>
               <div>
-                <strong className="small">Nenhuma atualização disponível</strong>
-                <p className="mb-0 small mt-1">O sistema está atualizado com a versão mais recente.</p>
+                <strong className="small">{t('updates.noUpdates')}</strong>
+                <p className="mb-0 small mt-1">{t('updates.systemUpdated')}</p>
               </div>
             </div>
           </div>
@@ -290,7 +292,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                 padding: '0.5rem 1rem',
                 minWidth: '180px'
               }}>
-                <span className="text-muted d-block mb-1" style={{ fontSize: '0.7rem' }}>Versão Atual</span>
+                <span className="text-muted d-block mb-1" style={{ fontSize: '0.7rem' }}>{t('updates.currentVersion')}</span>
                 <div className="fw-bold text-primary" style={{ fontSize: '0.9rem' }}>
                   <i className="bi bi-check-circle-fill text-success me-1" style={{ fontSize: '0.75rem' }}></i>
                   v{versaoAtual}
@@ -313,10 +315,10 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
               >
                 <div className="d-flex align-items-center mb-2">
                   <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-                    <span className="visually-hidden">Carregando...</span>
+                    <span className="visually-hidden">{t('messages.loading')}</span>
                   </div>
                   <div className="flex-grow-1">
-                    <strong className="small" style={{ color: 'var(--info-color)' }}>Atualizando sistema...</strong>
+                    <strong className="small" style={{ color: 'var(--info-color)' }}>{t('updates.updating')}</strong>
                     <p className="mb-0 small mt-1" style={{ color: 'var(--text-secondary)' }}>{updateProgress}</p>
                   </div>
                 </div>

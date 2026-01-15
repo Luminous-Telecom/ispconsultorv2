@@ -2,6 +2,7 @@ import React from 'react';
 import FormField from '@/components/ui/FormField';
 import { Button } from '@/components/ui';
 import { BancoTabProps } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
   formData,
@@ -12,6 +13,8 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
   handleTestConnection,
   testResult
 }) => {
+  const { t } = useI18n();
+
   return (
     <>
       {/* Campos específicos EFI */}
@@ -23,8 +26,8 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                 <FormField
                   name="client_id_producao"
                   type="text"
-                  label={formData.tipo_banco === 'efi' ? 'Client ID Produção' : 'Client ID'}
-                  placeholder="Client ID para produção"
+                  label={formData.tipo_banco === 'efi' ? t('form.clientIdProd') : t('form.clientId')}
+                  placeholder={t('placeholder.clientIdProd')}
                   size="sm"
                   value={formData.client_id_producao}
                   onChange={(value) => handleInputChange('client_id_producao', value)}
@@ -34,7 +37,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                 />
                 {!formData.client_id_producao && (
                   <small className="text-secondary d-block mt-1">
-                    Campo opcional. Preencha apenas se desejar atualizar o Client ID.
+                    {t('form.optionalUpdate')}
                   </small>
                 )}
               </div>
@@ -45,8 +48,8 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                 <FormField
                   name="client_secret_producao"
                   type="password"
-                  label={formData.tipo_banco === 'efi' ? 'Client Secret Produção' : 'Client Secret'}
-                  placeholder="Preencha o Client Secret"
+                  label={formData.tipo_banco === 'efi' ? t('form.clientSecretProd') : t('form.clientSecret')}
+                  placeholder={t('placeholder.fillClientSecret')}
                   size="sm"
                   value={formData.client_secret_producao}
                   onChange={(value) => handleInputChange('client_secret_producao', value)}
@@ -56,7 +59,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                 />
                 {!formData.client_secret_producao && (
                   <small className="text-secondary d-block mt-1">
-                    Campo opcional. Preencha apenas se desejar atualizar o Client Secret.
+                    {t('form.optionalUpdate')}
                   </small>
                 )}
               </div>
@@ -69,8 +72,8 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                 <FormField
                   name="url_retorno"
                   type="url"
-                  label="URL de Retorno (Webhook)"
-                  placeholder="URL para retorno de webhooks"
+                  label={t('form.webhookUrl')}
+                  placeholder={t('placeholder.webhookUrl')}
                   size="sm"
                   value={formData.url_retorno}
                   onChange={(value) => handleInputChange('url_retorno', value)}
@@ -78,7 +81,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   autoComplete="url"
                   formPrefix={formPrefix}
                 />
-                <small className="text-secondary">URL para receber notificações de pagamento</small>
+                <small className="text-secondary">{t('form.webhookUrlHelp')}</small>
               </div>
             </div>
           </div>
@@ -89,7 +92,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                 <FormField
                   name="sandbox"
                   type="checkbox"
-                  label="Modo Sandbox (Testes)"
+                  label={t('table.sandbox')}
                   value={formData.sandbox}
                   onChange={(value) => handleInputChange('sandbox', value as boolean)}
                   disabled={isPending}
@@ -97,7 +100,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   switch={true}
                 />
                 <small className="text-secondary">
-                  Ative para usar ambiente de testes. Desative para produção.
+                  {t('form.sandboxHelp')}
                 </small>
               </div>
             </div>
@@ -114,8 +117,8 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                 <FormField
                   name="url_retorno"
                   type="url"
-                  label="URL de Retorno (Webhook)"
-                  placeholder="URL para retorno de webhooks"
+                  label={t('form.webhookUrl')}
+                  placeholder={t('placeholder.webhookUrl')}
                   size="sm"
                   value={formData.url_retorno}
                   onChange={(value) => handleInputChange('url_retorno', value)}
@@ -123,7 +126,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   autoComplete="url"
                   formPrefix={formPrefix}
                 />
-                <small className="text-secondary">URL para receber notificações de pagamento</small>
+                <small className="text-secondary">{t('form.webhookUrlHelp')}</small>
               </div>
             </div>
           </div>
@@ -134,7 +137,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                 <FormField
                   name="sandbox"
                   type="checkbox"
-                  label="Modo Sandbox (Testes)"
+                  label={t('table.sandbox')}
                   value={formData.sandbox}
                   onChange={(value) => handleInputChange('sandbox', value as boolean)}
                   disabled={isPending}
@@ -142,7 +145,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   switch={true}
                 />
                 <small className="text-secondary">
-                  Ative para usar ambiente de testes. Desative para produção.
+                  {t('form.sandboxHelp')}
                 </small>
               </div>
             </div>
@@ -161,7 +164,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
           onClick={handleTestConnection}
           disabled={isPending}
         >
-          Testar Conexão
+          {t('buttons.testConnection')}
         </Button>
         {testResult && (
           <span className={`ms-2 badge ${testResult.includes('✅') ? 'bg-success' : 'bg-danger'}`}>

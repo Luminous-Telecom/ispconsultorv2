@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { AxiosError } from 'axios';
 import { useUsuarios, useDeleteUsuario } from '@/hooks/useUsuarios';
 import { Usuario } from '@/types';
@@ -26,12 +27,13 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
   onClose,
   skipWrapper = false
 }) => {
+  const { t } = useI18n();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<number | null>(null);
   const [, setSelectedItems] = useState<Usuario[]>([]);
   
-  const { success, error } = useNotificationContext();
+  const { success, error: _error } = useNotificationContext();
   const auditoria = useAuditoria();
   const { confirm, modalProps } = useConfirmModal();
   
@@ -112,9 +114,9 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
         const errorMessage = axiosError.response?.data?.message || 
                             axiosError.response?.data?.error ||
                             'Erro ao excluir usuário';
-        error(errorMessage);
+        _error(errorMessage);
       } else {
-        error('Erro ao excluir usuário');
+        _error('Erro ao excluir usuário');
       }
     }
   };
@@ -239,7 +241,9 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
         });
         
         if (confirmed) {
-          selectedItems.forEach(item => handleDelete(item.id));
+          for (const item of selectedItems) {
+            await handleDelete(item.id);
+          }
         }
       },
       disabled: (selectedItems: Usuario[]) => selectedItems.length === 0
@@ -251,7 +255,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ flex: 1, overflow: 'auto' }}>
           <Table
-            title="Usuários"
+            title={t('params.users')}
             config={{
               columns,
               data: sortedData,
@@ -275,7 +279,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,
                 onClick: action.action,
-                disabled: action.disabled
+                disabled: action.disabled,
+                variant: (action.label.toLowerCase().includes('excluir') || action.label.toLowerCase().includes('cancelar')) ? 'danger' : 'primary'
               })),
               emptyMessage: 'Nenhum usuário encontrado',
               pagination
@@ -332,7 +337,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Usuários"
+      title={t('params.users')}
       size="lg"
       modalId="usuarios-modal"
       className="no-padding"
@@ -343,4 +348,3 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
 };
 
 export default UsuariosModal;
-

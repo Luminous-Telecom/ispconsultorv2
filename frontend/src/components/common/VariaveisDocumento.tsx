@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Spinner } from '@/components/ui';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Variavel {
   variavel: string;
@@ -14,6 +15,7 @@ interface VariaveisDocumentoProps {
 }
 
 const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariavel }) => {
+  const { t } = useI18n();
   const [grupoExpandido, setGrupoExpandido] = useState<string | null>('cliente');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -51,7 +53,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
   if (isLoading) {
     return (
       <div className="text-center p-3">
-        <Spinner size="sm" variant="primary" aria-label="Carregando..." />
+        <Spinner size="sm" variant="primary" aria-label={t('messages.loading')} />
       </div>
     );
   }
@@ -59,16 +61,16 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
   return (
     <div className="variaveis-documento">
       <div className="mb-3">
-        <label className="form-label small fw-bold">Variáveis Disponíveis</label>
+        <label className="form-label small fw-bold">{t('variables.title')}</label>
         <input
           type="text"
           className="form-control form-control-sm"
-          placeholder="Buscar variável..."
+          placeholder={t('variables.searchPlaceholder')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <small className="form-text text-muted">
-          Clique em uma variável para {onInserirVariavel ? 'inserir' : 'copiar'}
+          {t('variables.tip')} {onInserirVariavel ? t('variables.clickToInsert') : t('variables.clickToCopy')}
         </small>
       </div>
 
@@ -121,7 +123,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
 
       <div className="alert alert-info mt-3 p-2 small">
         <i className="bi bi-info-circle me-1"></i>
-        <strong>Dica:</strong> As variáveis serão substituídas pelos valores reais ao gerar o documento.
+        <strong>{t('messages.warning')}:</strong> {t('variables.tip')}
       </div>
     </div>
   );

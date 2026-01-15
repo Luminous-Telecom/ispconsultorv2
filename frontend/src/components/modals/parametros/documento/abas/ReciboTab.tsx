@@ -1,12 +1,14 @@
 import React, { useRef } from 'react';
 import RichTextEditor, { type RichTextEditorRef } from '@/components/common/RichTextEditor';
 import { DocumentoTabProps } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 const ReciboTab: React.FC<DocumentoTabProps> = ({
   value,
   onChange,
   editorKey
 }) => {
+  const { t } = useI18n();
   const editorRef = useRef<RichTextEditorRef | null>(null);
 
   return (
@@ -18,7 +20,7 @@ const ReciboTab: React.FC<DocumentoTabProps> = ({
       ariaLabelledBy="conteudo-label"
       value={value}
       onChange={onChange}
-      placeholder="Digite o conteúdo do modelo de recibo..."
+      placeholder={t('placeholder.receiptContent')}
       height="100%"
     />
   );

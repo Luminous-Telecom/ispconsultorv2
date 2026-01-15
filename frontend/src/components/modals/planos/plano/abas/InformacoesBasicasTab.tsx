@@ -40,7 +40,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="tipo_servico"
               type="select"
-              label="Tipo de Serviço"
+              label={t('table.serviceType')}
               required={true}
               size="sm"
               value={formData.tipo_servico}
@@ -52,8 +52,8 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
               isInvalid={!!errors.tipo_servico}
               disabled={isSubmitting}
               options={[
-                { value: 'infraestrutura', label: 'Infraestrutura' },
-                { value: 'consultoria', label: 'Consultoria' }
+                { value: 'infraestrutura', label: t('form.serviceTypeInfrastructure') },
+                { value: 'consultoria', label: t('form.serviceTypeConsulting') }
               ]}
             />
           </div>
@@ -64,8 +64,8 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
         <FormField
           name="descricao"
           type="textarea"
-          label="Descrição"
-          placeholder="Descrição detalhada do plano"
+          label={t('form.description')}
+          placeholder={t('form.planDescriptionPlaceholder')}
           size="sm"
           value={formData.descricao}
           onChange={(value: FormValue) => {
@@ -83,8 +83,8 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="valor_mensal"
               type="number"
-              label="Valor Mensal"
-              placeholder="0.00"
+              label={t('table.monthlyValue')}
+              placeholder={t('form.monthlyValuePlaceholder')}
               required={true}
               size="md"
               value={formData.valor_mensal === 0 ? '' : formData.valor_mensal}
@@ -106,7 +106,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="quantidade_usuarios"
               type="number"
-              label="Quantidade de Usuários"
+              label={t('form.usersQuantity')}
               size="sm"
               value={formData.quantidade_usuarios === 0 ? '' : formData.quantidade_usuarios}
               onChange={(value: FormValue) => {
@@ -127,7 +127,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="data_inicio"
               type="date"
-              label="Data de Início"
+              label={t('form.startDate')}
               required={true}
               size="md"
               value={formData.data_inicio}
@@ -147,7 +147,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="data_fim"
               type="date"
-              label="Data de Fim"
+              label={t('form.endDate')}
               size="sm"
               value={formData.data_fim}
               onChange={(value: FormValue) => {
@@ -166,7 +166,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="periodicidade"
               type="select"
-              label="Periodicidade"
+              label={t('table.periodicity')}
               size="sm"
               value={formData.periodicidade}
               onChange={(value: FormValue) => {
@@ -192,7 +192,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="status"
               type="select"
-              label="Status"
+              label={t('table.status')}
               size="sm"
               value={formData.status}
               onChange={(value: FormValue) => {
@@ -201,8 +201,8 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
               }}
               disabled={isSubmitting}
               options={[
-                { value: 'ativo', label: 'Ativo' },
-                { value: 'inativo', label: 'Inativo' }
+                { value: 'ativo', label: t('status.active') },
+                { value: 'inativo', label: t('status.inactive') }
               ]}
             />
           </div>
@@ -213,7 +213,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
             <FormField
               name="renovacao_automatica"
               type="checkbox"
-              label="Renovação Automática"
+              label={t('form.autoRenewal')}
               value={formData.renovacao_automatica}
               onChange={(value: FormValue) => handleInputChange('renovacao_automatica', !!value)}
               disabled={isSubmitting}

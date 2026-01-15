@@ -94,15 +94,15 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
     const errors: Partial<Record<keyof CreateNotaFiscal, string>> = {};
 
     if (!formData.cliente_id || formData.cliente_id <= 0) {
-      errors.cliente_id = 'Cliente é obrigatório';
+      errors.cliente_id = t('messages.clientRequired');
     }
 
     if (!formData.valor_total || formData.valor_total <= 0) {
-      errors.valor_total = 'Valor total deve ser maior que zero';
+      errors.valor_total = t('messages.valueGreaterThanZero');
     }
 
     if (formData.aliquota_iss && (formData.aliquota_iss < 0 || formData.aliquota_iss > 100)) {
-      errors.aliquota_iss = 'Alíquota de ISS deve estar entre 0 e 100';
+      errors.aliquota_iss = t('messages.issRateRange');
     }
 
     setFormErrors(errors);
@@ -128,16 +128,16 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
       const response = await NotaFiscalService.gerar(payload);
 
       if (response.success && response.data) {
-        success('Nota Fiscal de Serviços Eletrônica gerada com sucesso!');
+        success(t('messages.invoiceGenerated'));
         queryClient.invalidateQueries({ queryKey: ['notas-fiscais'] });
         queryClient.invalidateQueries({ queryKey: ['notas-fiscais', formData.cliente_id] });
         onSuccess?.();
         onClose();
       } else {
-        error(response.message || 'Erro ao gerar Nota Fiscal de Serviços Eletrônica');
+        error(response.message || t('messages.errorGeneratingInvoice'));
       }
     } catch (err: unknown) {
-      let errorMessage = 'Erro ao gerar Nota Fiscal de Serviços Eletrônica';
+      let errorMessage = t('messages.errorGeneratingInvoice');
       
       if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
         errorMessage = err.message;
@@ -241,7 +241,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
           </div>
 
           <div className="col-md-6 mb-3">
-            <label className="form-label">Modelo</label>
+            <label className="form-label">{t('form.model')}</label>
             <select
               className="form-control"
               value={formData.modelo || 55}
@@ -264,7 +264,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
           </div>
 
           <div className="col-md-6 mb-3">
-            <label className="form-label">Data de Vencimento</label>
+            <label className="form-label">{t('form.dueDate')}</label>
             <input
               type="date"
               className="form-control"
@@ -290,7 +290,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
           </div>
 
           <div className="col-md-6 mb-3">
-            <label className="form-label">Valor dos Serviços</label>
+            <label className="form-label">{t('form.servicesValue')}</label>
             <input
               type="text"
               className="form-control"
@@ -312,7 +312,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
           </div>
 
           <div className="col-md-6 mb-3">
-            <label className="form-label">Valor do Desconto</label>
+            <label className="form-label">{t('form.discountValueInvoice')}</label>
             <input
               type="text"
               className="form-control"
@@ -324,7 +324,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
 
         <div className="row">
           <div className="col-md-6 mb-3">
-            <label className="form-label">Alíquota de ISS (%)</label>
+            <label className="form-label">{t('form.issRateShort')}</label>
             <input
               type="number"
               className={`form-control ${formErrors.aliquota_iss ? 'is-invalid' : ''}`}
@@ -341,7 +341,7 @@ const GerarNFeModal: React.FC<GerarNFeModalProps> = ({
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Descrição</label>
+          <label className="form-label">{t('table.description')}</label>
           <textarea
             className="form-control"
             rows={3}

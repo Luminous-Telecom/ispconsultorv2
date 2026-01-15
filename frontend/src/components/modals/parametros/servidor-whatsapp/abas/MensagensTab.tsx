@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { FormField, Button } from '@/components/ui';
 import { MensagensTabProps } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 const MensagensTab: React.FC<MensagensTabProps> = ({
   mensagemType,
@@ -27,6 +28,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   onInsertVariable,
   onShowTemplates
 }) => {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
@@ -78,7 +80,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
         <div className="card-header py-2 px-3">
           <h6 className="mb-0 d-flex align-items-center">
             <i className="bi bi-chat-dots me-2"></i>
-            Configuração de Mensagens
+            {t('settings.server.config')}
           </h6>
         </div>
         <div className="card-body p-3">
@@ -87,20 +89,20 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               <FormField
                 name="mensagemType"
                 type="select"
-                label="Mensagem"
+                label={t('settings.messages.type')}
                 required={true}
                 size="sm"
                 value={mensagemType}
                 onChange={(value) => onMensagemTypeChange(String(value ?? ''))}
                 options={[
-                  { value: '10_dias_antes_vencimento', label: '10 dias antes do vencimento' },
-                  { value: '05_dias_antes_vencimento', label: '05 dias antes do vencimento' },
-                  { value: 'mesmo_dia_vencimento', label: 'Mesmo dia do vencimento' },
-                  { value: '05_dias_depois_vencimento', label: '05 dias depois do vencimento' },
-                  { value: '10_dias_depois_vencimento', label: '10 dias depois do vencimento' },
-                  { value: '15_dias_depois_vencimento', label: '15 dias depois do vencimento' },
-                  { value: 'corte_cliente', label: 'Corte do cliente' },
-                  { value: 'envio_manual', label: 'Envio manual de cobrança' }
+                  { value: '10_dias_antes_vencimento', label: t('messages.types.10daysBefore') },
+                  { value: '05_dias_antes_vencimento', label: t('messages.types.05daysBefore') },
+                  { value: 'mesmo_dia_vencimento', label: t('messages.types.sameDay') },
+                  { value: '05_dias_depois_vencimento', label: t('messages.types.05daysAfter') },
+                  { value: '10_dias_depois_vencimento', label: t('messages.types.10daysAfter') },
+                  { value: '15_dias_depois_vencimento', label: t('messages.types.15daysAfter') },
+                  { value: 'corte_cliente', label: t('messages.types.clientCut') },
+                  { value: 'envio_manual', label: t('messages.types.manualSend') }
                 ]}
               />
             </div>
@@ -116,7 +118,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <label className="form-label mb-0">
                           <i className="bi bi-code-square me-2"></i>
-                          Configuração de Template (JSON) - WhatsApp Cloud API
+                          {t('settings.messages.templateConfig')}
                         </label>
                         {onShowTemplates && (
                           <Button
@@ -126,12 +128,12 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                             leftIcon={<i className="bi bi-list-ul"></i>}
                             onClick={onShowTemplates}
                           >
-                            Ver Templates Ativos
+                            {t('settings.messages.viewTemplates')}
                           </Button>
                         )}
                       </div>
                       <small className="text-muted d-block mt-1 mb-2">
-                        Configure o template e variáveis para WhatsApp Cloud API. Deixe vazio para usar mensagem de texto normal.
+                        {t('settings.messages.templateHelper')}
                       </small>
                       <FormField
                         name="templateMapping"
@@ -144,7 +146,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                         onChange={(value) => onTemplateMappingChange(String(value ?? ''))}
                       />
                       <small className="text-muted d-block mt-1">
-                        <strong>Formato:</strong> JSON com <code>name</code> (nome do template), <code>language</code> (idioma: en, pt_BR, etc) e <code>variables</code> (array com ordem das variáveis).
+                        {t('settings.messages.templateFormat')}
                       </small>
                     </div>
                   </div>
@@ -157,7 +159,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     <div className="col-12">
                       <label className="form-label mb-2">
                         <i className="bi bi-send me-2"></i>
-                        Tipo de Envio
+                        {t('settings.messages.sendType')}
                       </label>
                       <div className="btn-group w-100" role="group">
                         <input
@@ -171,7 +173,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                         />
                         <label className="btn btn-outline-primary" htmlFor="envio-desativado">
                           <i className="bi bi-x-circle me-1"></i>
-                          Desativar
+                          {t('messages.sendTypes.disabled')}
                         </label>
 
                         <input
@@ -185,7 +187,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                         />
                         <label className="btn btn-outline-primary" htmlFor="envio-pdf">
                           <i className="bi bi-file-pdf me-1"></i>
-                          Anexa PDF
+                          {t('messages.sendTypes.pdf')}
                         </label>
                       </div>
                     </div>
@@ -197,14 +199,14 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                       <div className="mb-2">
                         <label className="form-label">
                           <i className="bi bi-chat-text me-2"></i>
-                          Mensagem Padrão
+                          {t('settings.messages.defaultMessage')}
                         </label>
                       </div>
                       <FormField
                         name="mensagemPadrao"
                         type="textarea"
                         label=""
-                        placeholder="Digite a mensagem padrão que será enviada..."
+                        placeholder={t('placeholder.defaultMessage')}
                         rows={10}
                         size="sm"
                         value={mensagemPadrao}
@@ -220,15 +222,15 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                         <div className="mb-2">
                           <label className="form-label">
                             <i className="bi bi-send me-2"></i>
-                            Mensagem para Envio Manual
+                            {t('settings.messages.manualLabel')}
                           </label>
-                          <small className="text-muted d-block">Mensagem que será usada quando enviar título manualmente</small>
+                          <small className="text-muted d-block">{t('settings.messages.manualHelper')}</small>
                         </div>
                         <FormField
                           name="mensagemManual"
                           type="textarea"
                           label=""
-                          placeholder="Digite a mensagem para envio manual..."
+                          placeholder={t('placeholder.manualSend')}
                           rows={10}
                           size="sm"
                           value={mensagemManual}
@@ -244,15 +246,15 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                       <div className="mb-2">
                         <label className="form-label">
                           <i className="bi bi-chat-left-text me-2"></i>
-                          Interação 01
+                          {t('settings.messages.interaction1')}
                         </label>
-                        <small className="text-muted d-block">Mensagem opcional para primeira interação</small>
+                        <small className="text-muted d-block">{t('settings.messages.interaction1Helper')}</small>
                       </div>
                       <FormField
                         name="interacao1"
                         type="textarea"
                         label=""
-                        placeholder="Digite a primeira mensagem de interação..."
+                        placeholder={t('placeholder.firstInteraction')}
                         rows={3}
                         size="sm"
                         value={interacao1}
@@ -266,15 +268,15 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                       <div className="mb-2">
                         <label className="form-label">
                           <i className="bi bi-chat-left-text me-2"></i>
-                          Interação 02
+                          {t('settings.messages.interaction2')}
                         </label>
-                        <small className="text-muted d-block">Mensagem opcional para segunda interação</small>
+                        <small className="text-muted d-block">{t('settings.messages.interaction2Helper')}</small>
                       </div>
                       <FormField
                         name="interacao2"
                         type="textarea"
                         label=""
-                        placeholder="Digite a segunda mensagem de interação..."
+                        placeholder={t('placeholder.secondInteraction')}
                         rows={3}
                         size="sm"
                         value={interacao2}
@@ -288,15 +290,15 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                       <div className="mb-2">
                         <label className="form-label">
                           <i className="bi bi-chat-left-text me-2"></i>
-                          Interação 03
+                          {t('settings.messages.interaction3')}
                         </label>
-                        <small className="text-muted d-block">Mensagem opcional para terceira interação</small>
+                        <small className="text-muted d-block">{t('settings.messages.interaction3Helper')}</small>
                       </div>
                       <FormField
                         name="interacao3"
                         type="textarea"
                         label=""
-                        placeholder="Digite a terceira mensagem de interação..."
+                        placeholder={t('placeholder.thirdInteraction')}
                         rows={3}
                         size="sm"
                         value={interacao3}
@@ -313,10 +315,10 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                       <div className="card-header py-2 px-3 bg-primary bg-opacity-10">
                         <h6 className="mb-0 d-flex align-items-center">
                           <i className="bi bi-code-square me-2"></i>
-                          Variáveis Disponíveis para Mensagens
+                          {t('settings.messages.variablesTitle')}
                         </h6>
                         <small className="text-muted d-block mt-1">
-                          Clique nas variáveis para inserir na mensagem
+                          {t('settings.messages.variablesHelper')}
                         </small>
                       </div>
                       <div className="card-body p-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
@@ -359,7 +361,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                                         e.currentTarget.style.transform = 'scale(1)';
                                         e.currentTarget.style.backgroundColor = '';
                                       }}
-                                      title={`${variavel.descricao}. Clique para inserir.`}
+                                        title={`${variavel.descricao}. Clique para inserir.`}
                                     >
                                       {variavel.variavel}
                                     </span>
@@ -369,7 +371,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                                         type="button"
                                         className="btn btn-sm btn-link p-0 text-muted ms-auto"
                                         onClick={() => onCopyVariable(variavel.variavel)}
-                                        title="Copiar variável"
+                                        title={t('settings.messages.copyVariable')}
                                         style={{ fontSize: '0.75rem' }}
                                       >
                                         <i className="bi bi-clipboard"></i>

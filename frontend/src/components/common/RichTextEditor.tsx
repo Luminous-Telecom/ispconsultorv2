@@ -1,6 +1,7 @@
 import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import type { Editor as TinyMCEEditor } from 'tinymce';
+import { useI18n } from '../../contexts/I18nContext';
 import 'tinymce/tinymce';
 import 'tinymce/themes/silver';
 import 'tinymce/icons/default';
@@ -46,6 +47,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
   name: _name,
   ariaLabelledBy
 }, ref) => {
+  const { t } = useI18n();
   const editorRef = useRef<TinyMCEEditor | null>(null);
   
   const decodeHtmlEntities = (text: string): string => {
@@ -144,15 +146,15 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
                 return response.data;
               }
               
-              throw new Error(response.message || 'Não foi possível carregar variáveis');
+              throw new Error(response.message || t('variables.errorLoading'));
             };
 
             // Botão de variáveis
             editor.ui.registry.addMenuButton('variables', {
-              text: 'Variáveis',
-              tooltip: 'Inserir Variáveis',
+              text: t('user.variables') || 'Variáveis',
+              tooltip: t('variables.insert'),
               onSetup: () => {
-                const button = editor.editorContainer?.querySelector('.tox-tbtn[aria-label="Variáveis"]') as HTMLElement | null;
+                const button = editor.editorContainer?.querySelector(`.tox-tbtn[aria-label="${t('user.variables') || 'Variáveis'}"]`) as HTMLElement | null;
                 if (button) {
                   button.classList.add('tox-tbtn--select');
                 }
@@ -191,10 +193,10 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
                   callback([
                     {
                       type: 'menuitem',
-                      text: 'Erro ao carregar variáveis',
+                      text: t('variables.errorLoading'),
                       onAction: () => {
                         editor.notificationManager.open({
-                          text: error instanceof Error ? error.message : 'Erro desconhecido',
+                          text: error instanceof Error ? error.message : t('messages.error'),
                           type: 'error'
                         });
                       }

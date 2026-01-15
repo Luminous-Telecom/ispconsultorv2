@@ -2,6 +2,7 @@ import React from 'react';
 import { formatCPF } from '@/utils/formatters';
 import { FormField } from '@/components/ui';
 import { DadosEmpresaTabProps } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (file: File | null) => void }> = ({
   dados,
@@ -9,6 +10,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
   isPending,
   onAssinaturaChange
 }) => {
+  const { t } = useI18n();
   const handleInputChange = (field: keyof typeof dados, value: string) => {
     let formattedValue = value;
     if (field === 'responsavel_cpf' && typeof value === 'string') {
@@ -24,8 +26,8 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
           <FormField
             name="responsavel_nome"
             type="text"
-            label="Nome"
-            placeholder="Nome do responsável"
+            label={t('form.name')}
+            placeholder={t('placeholder.responsibleName')}
             size="md"
             value={dados.responsavel_nome}
             onChange={(value) => handleInputChange('responsavel_nome', String(value ?? ''))}
@@ -61,7 +63,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
       {/* Assinatura do Responsável */}
       <div className="row mt-4 pt-3 border-top">
         <div className="col-md-12">
-          <label htmlFor="assinatura" className="form-label small fw-bold">Assinatura do Responsável</label>
+          <label htmlFor="assinatura" className="form-label small fw-bold">{t('company.responsibleSignature')}</label>
           <div className="d-flex align-items-start gap-3">
             <div style={{ minWidth: '200px' }}>
               {dados.responsavel_assinatura ? (
@@ -78,7 +80,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
                 >
                   <div>
                     <i className="bi bi-image" style={{ fontSize: '2rem' }}></i>
-                    <div className="small">Sem assinatura</div>
+                    <div className="small">{t('company.noSignature')}</div>
                   </div>
                 </div>
               )}
@@ -98,7 +100,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
                 }}
                 disabled={isPending}
                 accept="image/png"
-                helpText="Apenas arquivos PNG são permitidos (máx. 10MB)"
+                helpText={t('company.pngOnly')}
               />
             </div>
           </div>

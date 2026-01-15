@@ -24,10 +24,11 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   show,
   onClose,
   onSelectBanco,
-  title = "Selecionar Banco",
+  title,
   skipWrapper = false
 }) => {
   const { t } = useI18n();
+  const defaultTitle = title || (onSelectBanco ? t('ui.selectBank') : t('menu.banks'));
   const [showBancoModal, setShowBancoModal] = useState(false);
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
   
@@ -110,12 +111,12 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     },
     {
       key: 'ativo',
-      label: 'Status',
+      label: t('table.status'),
       sortable: true,
       width: '80px',
       render: (item: Banco) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-          {item.ativo ? 'Ativo' : 'Inativo'}
+          {item.ativo ? t('status.active') : t('status.inactive')}
         </span>
       )
     },
@@ -136,7 +137,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   ], [t]);
 
   // Configurar modal centralizado
-  const defaultTitle = title || (onSelectBanco ? t('ui.selectBank') : t('menu.banks'));
   const modal = useListModal({
     title: defaultTitle,
     columns,
@@ -365,7 +365,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         onClose={auditoria.handleClosePreview}
         pdfUrl={auditoria.pdfUrl}
         isGenerating={auditoria.isGeneratingPdf}
-        title="Relatórios de logs"
+        title={t('financial.executionLogs')}
         modalId="auditoria-banco-modal"
       />
 

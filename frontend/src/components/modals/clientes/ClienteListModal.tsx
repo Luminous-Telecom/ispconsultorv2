@@ -437,7 +437,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         onClose={auditoria.handleClosePreview}
         pdfUrl={auditoria.pdfUrl}
         isGenerating={auditoria.isGeneratingPdf}
-        title="Relatórios de logs"
+        title={t('financial.executionLogs')}
         modalId="auditoria-cliente-modal"
       />
 

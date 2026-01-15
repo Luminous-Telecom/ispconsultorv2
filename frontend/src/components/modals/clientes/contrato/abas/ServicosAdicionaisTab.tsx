@@ -3,6 +3,7 @@ import { ContratoPlanoAdicional } from '@/services/contratoPlanoAdicionalService
 import Table from '@/components/tables/Table';
 import { BulkAction } from '../types';
 import { TableColumn } from '@/components/tables/types';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ServicosAdicionaisTabProps {
   isLoading: boolean;
@@ -35,13 +36,15 @@ const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
   onAudit,
   auditEntity,
 }) => {
+  const { t } = useI18n();
+
   return (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="servicos-adicionais-tab-table"
-            title="Serviços Adicionais"
+            title={t('tabs.additionalServices')}
             config={{
             columns: columns,
             data: sortedData,
@@ -49,14 +52,14 @@ const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
             selectable: true,
             multiSelect: true,
             searchable: true,
-            searchPlaceholder: 'Buscar serviços...',
+            searchPlaceholder: t('placeholder.searchServices'),
             searchFields: [
-              { key: 'id', label: 'ID' },
-              { key: 'plano', label: 'Plano' },
-              { key: 'status', label: 'Status' },
-              { key: 'observacoes', label: 'Observações' }
+              { key: 'id', label: t('table.id') },
+              { key: 'plano', label: t('table.plan') },
+              { key: 'status', label: t('table.status') },
+              { key: 'observacoes', label: t('table.observations') }
             ],
-            emptyMessage: 'Este contrato ainda não possui serviços adicionais cadastrados.',
+            emptyMessage: t('empty.noAdditionalServices'),
             className: 'no-padding',
             pagination: {
               current_page: page,

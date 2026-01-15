@@ -26,10 +26,11 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   show, 
   onClose, 
   onSelectFornecedor,
-  title = "Fornecedores",
+  title,
   skipWrapper: _skipWrapper 
 }) => {
   const { t } = useI18n();
+  const defaultTitle = title || t('menu.suppliers');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedFornecedorId, setSelectedFornecedorId] = useState<number | null>(null);
@@ -63,25 +64,25 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   const columns = useMemo(() => [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       width: '42px',
       render: (item: Fornecedor) => <span className="text-nowrap">{item.id ?? '-'}</span>
     },
     {
       key: 'tipo_pessoa',
-      label: 'Tipo',
+      label: t('table.personTypeShort'),
       sortable: true,
       width: '90px',
       render: (item: Fornecedor) => (
         <span className={`badge ${item.tipo_pessoa === 'JURIDICA' ? 'bg-info' : 'bg-primary'}`}>
-          {item.tipo_pessoa === 'JURIDICA' ? 'Jurídica' : 'Física'}
+          {item.tipo_pessoa === 'JURIDICA' ? t('table.personTypeLegalShort') : t('table.personTypePhysicalShort')}
         </span>
       )
     },
     {
       key: 'nome_razao_social',
-      label: 'Nome/Razão Social',
+      label: t('table.nameCompanyNameShort'),
       sortable: true,
       width: '200px',
       render: (item: Fornecedor) => (
@@ -90,7 +91,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'nome_fantasia',
-      label: 'Nome Fantasia',
+      label: t('table.tradeNameShort'),
       width: '180px',
       sortable: true,
       render: (item: Fornecedor) => (
@@ -99,7 +100,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'cpf_cnpj',
-      label: 'CPF/CNPJ',
+      label: t('table.cpfCnpj'),
       sortable: true,
       width: '150px',
       render: (item: Fornecedor) => (
@@ -108,7 +109,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'cep',
-      label: 'CEP',
+      label: t('table.zipCodeShort'),
       sortable: true,
       width: '120px',
       render: (item: Fornecedor) => (
@@ -117,7 +118,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'logradouro',
-      label: 'Logradouro',
+      label: t('table.streetShort'),
       sortable: true,
       render: (item: Fornecedor) => (
         <span>{item.logradouro || '-'}</span>
@@ -125,7 +126,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'numero',
-      label: 'Número',
+      label: t('table.number'),
       sortable: true,
       width: '100px',
       render: (item: Fornecedor) => (
@@ -134,7 +135,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'complemento',
-      label: 'Complemento',
+      label: t('table.complement'),
       sortable: true,
       render: (item: Fornecedor) => (
         <span>{item.complemento || '-'}</span>
@@ -142,7 +143,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'bairro',
-      label: 'Bairro',
+      label: t('table.neighborhood'),
       sortable: true,
       render: (item: Fornecedor) => (
         <span>{item.bairro || '-'}</span>
@@ -150,7 +151,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'cidade',
-      label: 'Cidade',
+      label: t('table.city'),
       sortable: true,
       render: (item: Fornecedor) => (
         <span>{item.cidade || '-'}</span>
@@ -158,7 +159,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'estado',
-      label: 'Estado',
+      label: t('table.state'),
       sortable: true,
       width: '80px',
       render: (item: Fornecedor) => (
@@ -167,7 +168,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'pais',
-      label: 'País',
+      label: t('table.country'),
       sortable: true,
       width: '100px',
       render: (item: Fornecedor) => (
@@ -176,7 +177,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: t('table.createdAt'),
       sortable: true,
       render: (item: Fornecedor & { created_at?: string; created_at_formatada?: string | null }) => {
         if (item.created_at_formatada) {
@@ -185,11 +186,11 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         return item.created_at ? formatDateTime(item.created_at) : '-';
       }
     }
-  ], []);
+  ], [t]);
 
   // Configurar modal centralizado
   const modal = useListModal({
-    title,
+    title: defaultTitle,
     columns,
     searchPlaceholder: 'Buscar...',
     searchFields: [
@@ -427,7 +428,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         onClose={auditoria.handleClosePreview}
         pdfUrl={auditoria.pdfUrl}
         isGenerating={auditoria.isGeneratingPdf}
-        title="Relatórios de logs"
+        title={t('financial.executionLogs')}
         modalId="auditoria-fornecedor-modal"
       />
 

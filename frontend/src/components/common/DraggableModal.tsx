@@ -5,6 +5,7 @@
  */
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ReactDOM from 'react-dom';
+import { useI18n } from '@/contexts/I18nContext';
 import { modalStack } from '@/utils/modalStack';
 import ResponsiveDialog from './ResponsiveDialog';
 
@@ -31,6 +32,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   modalId: propModalId,
   isLoading: _isLoading = false, // Mantido para compatibilidade, mas não usado
 }) => {
+  const { t } = useI18n();
   const checkIsMobile = (): boolean => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < 768;
@@ -278,7 +280,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
               className="btn-close position-absolute end-0 top-50 translate-middle-y"
               onClick={onClose}
               onMouseDown={(e) => e.stopPropagation()}
-              aria-label="Fechar"
+              aria-label={t('ui.close')}
             ></button>
           </div>
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { formatCNPJ } from '@/utils/formatters';
 import { FormField } from '@/components/ui';
 import { DadosEmpresaTabProps } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: File | null) => void }> = ({
   dados,
@@ -9,6 +10,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
   isPending,
   onLogoChange
 }) => {
+  const { t } = useI18n();
   const handleInputChange = (field: keyof typeof dados, value: string) => {
     // Aplicar formatação baseada no campo
     let formattedValue = value;
@@ -26,8 +28,8 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
           <FormField
             name="razao_social"
             type="text"
-            label="Razão Social"
-            placeholder="Nome da empresa"
+            label={t('company.razaoSocial')}
+            placeholder={t('company.razaoSocial')}
             required={true}
             size="md"
             value={dados.razao_social}
@@ -39,8 +41,8 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
           <FormField
             name="nome_fantasia"
             type="text"
-            label="Nome Fantasia"
-            placeholder="Nome fantasia da empresa"
+            label={t('company.nomeFantasia')}
+            placeholder={t('company.nomeFantasia')}
             size="md"
             value={dados.nome_fantasia}
             onChange={(value) => handleInputChange('nome_fantasia', String(value ?? ''))}
@@ -54,7 +56,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
           <FormField
             name="cnpj"
             type="text"
-            label="CNPJ"
+            label={t('company.cnpj')}
             placeholder="00.000.000/0000-00"
             required={true}
             size="md"
@@ -67,8 +69,8 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
           <FormField
             name="inscricao_estadual"
             type="text"
-            label="Inscrição Estadual"
-            placeholder="Inscrição estadual"
+            label={t('company.inscricaoEstadual')}
+            placeholder={t('company.inscricaoEstadual')}
             size="md"
             value={dados.inscricao_estadual}
             onChange={(value) => handleInputChange('inscricao_estadual', String(value ?? ''))}
@@ -79,8 +81,8 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
           <FormField
             name="inscricao_municipal"
             type="text"
-            label="Inscrição Municipal"
-            placeholder="Inscrição municipal"
+            label={t('company.inscricaoMunicipal')}
+            placeholder={t('company.inscricaoMunicipal')}
             size="md"
             value={dados.inscricao_municipal}
             onChange={(value) => handleInputChange('inscricao_municipal', String(value ?? ''))}
@@ -92,13 +94,13 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
       {/* Logo da Empresa */}
       <div className="row mt-4 pt-3 border-top">
         <div className="col-md-12">
-          <label htmlFor="logo" className="form-label small fw-bold">Logo da Empresa</label>
+          <label htmlFor="logo" className="form-label small fw-bold">{t('company.logo')}</label>
           <div className="d-flex align-items-start gap-3">
             <div style={{ minWidth: '200px' }}>
               {dados.logo ? (
                 <img 
                   src={dados.logo} 
-                  alt="Logo da empresa" 
+                  alt={t('company.logo')} 
                   style={{ maxWidth: '200px', maxHeight: '100px', objectFit: 'contain' }}
                   className="border rounded p-2 bg-light"
                 />
@@ -109,7 +111,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
                 >
                   <div>
                     <i className="bi bi-image" style={{ fontSize: '2rem' }}></i>
-                    <div className="small">Sem logo</div>
+                    <div className="small">{t('company.noLogo')}</div>
                   </div>
                 </div>
               )}
@@ -129,7 +131,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
                 }}
                 disabled={isPending}
                 accept="image/*"
-                helpText="Formatos aceitos: JPG, PNG, GIF (máx. 2MB)"
+                helpText={t('company.acceptedFormats')}
               />
             </div>
           </div>

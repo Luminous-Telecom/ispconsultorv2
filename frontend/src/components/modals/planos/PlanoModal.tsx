@@ -46,8 +46,8 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
     if (formHook.isLoadingPlano && formHook.isEditing) {
       return (
         <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
-          <p className="mt-2">Carregando dados do plano...</p>
+          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
+          <p className="mt-2">{t('messages.loadingPlanData')}</p>
         </div>
       );
     }
@@ -107,7 +107,6 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                 type="button"
                 variant="primary"
                 size="sm"
-                leftIcon={<i className="bi bi-x-lg"></i>}
                 onClick={onClose}
                 disabled={formHook.isSubmitting}
               >
@@ -118,7 +117,6 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                 form={formHook.isEditing ? 'plano-edit-form' : 'plano-create-form'}
                 variant="primary"
                 size="sm"
-                leftIcon={<i className="bi bi-check-lg"></i>}
                 isLoading={formHook.isSubmitting}
               >
                 {t('buttons.save')}

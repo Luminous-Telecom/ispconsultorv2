@@ -67,11 +67,11 @@ const BancoModal: React.FC<BancoModalProps> = ({
 
   const handleTestConnection = async () => {
     if (!bancoId) {
-      error('Salve o banco antes de testar a conexão');
+      error(t('messages.saveBankBeforeTest'));
       return;
     }
 
-    setTestResult('Testando conexão...');
+    setTestResult(t('messages.testingConnection'));
     try {
       // Preparar dados para salvar
       const dataToSave: BancoForm = { ...formData };
@@ -105,16 +105,16 @@ const BancoModal: React.FC<BancoModalProps> = ({
       const resultado = await BancoService.testarConexao(bancoId);
       
       if (resultado.success) {
-        setTestResult('✅ ' + (resultado.message || 'Conexão testada com sucesso!'));
-        success(resultado.message || 'Conexão testada com sucesso!');
+        setTestResult('✅ ' + (resultado.message || t('messages.connectionSuccess')));
+        success(resultado.message || t('messages.connectionSuccess'));
       } else {
-        let mensagemErro = resultado.message || 'Falha no teste de conexão';
+        let mensagemErro = resultado.message || t('messages.connectionFailed');
         
         // Melhorar mensagem se for erro de credenciais
         if (mensagemErro.includes('Credenciais do banco não configuradas')) {
           mensagemErro = formData.tipo_banco === 'asaas'
-            ? 'Credenciais não configuradas. Informe a API Key do Asaas antes de testar.'
-            : 'Credenciais não configuradas. Preencha o Client ID e Client Secret antes de testar.';
+            ? t('messages.credentialsNotConfiguredAsaas')
+            : t('messages.credentialsNotConfiguredEfi');
         }
         
         setTestResult('❌ ' + mensagemErro);
@@ -122,13 +122,13 @@ const BancoModal: React.FC<BancoModalProps> = ({
       }
     } catch (err) {
       const axiosError = err as AxiosError<{ message: string }>;
-      let errorMessage = axiosError?.response?.data?.message || axiosError?.message || 'Erro ao testar conexão';
+      let errorMessage = axiosError?.response?.data?.message || axiosError?.message || t('messages.error');
       
       // Melhorar mensagem se for erro de credenciais
       if (errorMessage.includes('Credenciais do banco não configuradas')) {
         errorMessage = formData.tipo_banco === 'asaas'
-          ? 'Credenciais não configuradas. Informe a API Key do Asaas antes de testar.'
-          : 'Credenciais não configuradas. Preencha o Client ID e Client Secret antes de testar.';
+          ? t('messages.credentialsNotConfiguredAsaas')
+          : t('messages.credentialsNotConfiguredEfi');
       }
       
       setTestResult('❌ ' + errorMessage);
@@ -138,7 +138,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
 
   const handleGenerateWebhookSecret = async () => {
     if (!bancoId) {
-      error('Salve o banco antes de gerar o token do webhook');
+      error(t('messages.saveBankBeforeWebhook'));
       return;
     }
 
@@ -150,13 +150,13 @@ const BancoModal: React.FC<BancoModalProps> = ({
         formHook.handleInputChange('webhook_secret', novoSecret);
         queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
         queryClient.invalidateQueries({ queryKey: ['bancos'] });
-        success('Token do webhook gerado com sucesso!');
+        success(t('messages.webhookTokenGenerated'));
       } else {
-        warning('Token não retornado pelo servidor. Tente novamente.');
+        warning(t('messages.webhookTokenNotReturned'));
       }
     } catch (err) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar token do webhook');
+      error(axiosError.response?.data?.message || axiosError.message || t('messages.error'));
     } finally {
       setIsGeneratingSecret(false);
     }
@@ -164,15 +164,15 @@ const BancoModal: React.FC<BancoModalProps> = ({
 
   const handleCopyWebhookSecret = async () => {
     if (!formData.webhook_secret) {
-      warning('Nenhum token disponível para copiar.');
+      warning(t('messages.noTokenToCopy'));
       return;
     }
 
     try {
       await navigator.clipboard.writeText(formData.webhook_secret);
-      success('Token do webhook copiado para a área de transferência!');
+      success(t('messages.webhookTokenCopied'));
     } catch {
-      warning('Não foi possível copiar automaticamente. Copie manualmente.');
+      warning(t('messages.copyManual'));
     }
   };
 
@@ -259,11 +259,13 @@ const BancoModal: React.FC<BancoModalProps> = ({
     );
   };
 
+  const modalTitle = isEdit ? t('modal.editBank') : t('modal.createBank');
+
   return (
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Banco"
+      title={modalTitle}
       size="xl"
       modalId="banco-modal"
       headerActions={
@@ -276,21 +278,19 @@ const BancoModal: React.FC<BancoModalProps> = ({
                 type="button"
                 variant="primary"
                 size="sm"
-                leftIcon={<i className="bi bi-x-lg"></i>}
                 onClick={handleCancel}
                 disabled={formHook.isSubmitting}
               >
-                Cancelar
+                {t('buttons.cancel')}
               </Button>
               <Button
                 type="submit"
                 form="banco-form"
                 variant="primary"
                 size="sm"
-                leftIcon={<i className="bi bi-check-lg"></i>}
                 isLoading={formHook.isSubmitting}
               >
-                Salvar
+                {t('buttons.save')}
               </Button>
             </div>
 

@@ -151,7 +151,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       {/* Status */}
       <div>
         <label htmlFor="status" className="form-label">
-          Status <span className="text-danger ms-1">*</span>
+          {t('form.status')} <span className="text-danger ms-1">*</span>
         </label>
         <select
           id="status"
@@ -160,9 +160,9 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           value={formData.status}
           onChange={(e) => handleInputChange('status', e.target.value as 'ativo' | 'inativo' | 'suspenso')}
         >
-          <option value="ativo">Ativo</option>
-          <option value="inativo">Inativo</option>
-          <option value="suspenso">Suspenso</option>
+          <option value="ativo">{t('status.active')}</option>
+          <option value="inativo">{t('status.inactive')}</option>
+          <option value="suspenso">{t('status.suspended')}</option>
         </select>
         {errors.status && <div className="invalid-feedback">{errors.status}</div>}
       </div>
@@ -186,7 +186,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           <FormField
             name="data_fim"
             type="date"
-            label="Data de Fim"
+            label={t('form.endDate')}
             size="md"
             value={formData.data_fim}
             onChange={(value) => handleInputChange('data_fim', value as string)}
@@ -246,7 +246,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           <FormField
             name="desconto_percentual"
             type="number"
-            label="Desconto Percentual (%)"
+            label={t('form.discountPercent')}
             placeholder="0.00"
             size="md"
             value={descontoPercentualDisplay}
@@ -281,7 +281,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           <FormField
             name="data_validade_desconto"
             type="date"
-            label="Data Validade Desconto"
+            label={t('form.discountValidity')}
             size="md"
             value={formData.data_validade_desconto}
             onChange={(value) => handleInputChange('data_validade_desconto', value as string)}
@@ -318,9 +318,9 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           id: m.id,
           nome: m.nome
         }))}
-        label="Modelo de Contrato"
-        idFieldTitle="Digite o ID do modelo de contrato"
-        helpText="Selecione um modelo de contrato cadastrado no sistema"
+        label={t('form.contractModel')}
+        idFieldTitle={t('form.enterContractModelId')}
+        helpText={t('form.selectContractModelHelp')}
         error={errors.modelo_documento_id}
         required
       />

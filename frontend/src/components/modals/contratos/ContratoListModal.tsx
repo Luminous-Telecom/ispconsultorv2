@@ -13,6 +13,7 @@ import { TableConfig } from '@/components/tables/types';
 import ContratoModal from '@/components/modals/clientes/contrato/ContratoModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useI18n } from '@/contexts/I18nContext';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
@@ -32,6 +33,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   title = "Contratos",
   skipWrapper = false
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -607,11 +609,11 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         >
           <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
             <div className="text-end">
-              <div className="small text-muted">Valor Total Mensal:</div>
+              <div className="small text-muted">{t('summary.monthlyTotalValue')}</div>
               <strong>{formatCurrency(valorTotalMensal)}</strong>
             </div>
             <div className="text-end">
-              <div className="small text-muted">Valor Total Descontos:</div>
+              <div className="small text-muted">{t('summary.totalDiscountsValue')}</div>
               <strong>{formatCurrency(valorTotalDescontos)}</strong>
             </div>
           </div>

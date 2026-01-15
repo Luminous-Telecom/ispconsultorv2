@@ -42,13 +42,13 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
     contactFields.push({
       name: 'email',
       type: 'email' as const,
-      label: 'Email',
-      placeholder: 'email@empresa.com',
+      label: t('form.email'),
+      placeholder: t('placeholder.email'),
       validation: required ? [
-        { type: 'required', message: 'Email é obrigatório' },
-        { type: 'email', message: 'Email inválido' }
+        { type: 'required', message: t('form.required') },
+        { type: 'email', message: t('form.invalidEmail') }
       ] : [
-        { type: 'email', message: 'Email inválido' }
+        { type: 'email', message: t('form.invalidEmail') }
       ]
     });
   }
@@ -72,7 +72,7 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
     contactFields.push({
       name: 'whatsapp',
       type: 'tel' as const,
-      label: t('form.phone'),
+      label: t('form.whatsapp'),
       placeholder: '(11) 99999-9999',
       validation: [
         { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: t('form.invalidWhatsApp') }

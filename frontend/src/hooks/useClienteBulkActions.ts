@@ -9,6 +9,7 @@ import { CarneParcela, PaginatedResponse } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { BulkAction } from '../components/modals/clientes/cliente/types';
 import { useConfirmModal } from './useConfirmModal';
+import { useI18n } from '../contexts/I18nContext';
 
 interface UseClienteBulkActionsParams {
   clienteId: number | null;
@@ -89,6 +90,7 @@ export const useClienteBulkActions = ({
   handleImprimirNF
 }: UseClienteBulkActionsParams): UseClienteBulkActionsReturn => {
   const { success, error, info } = useNotificationContext();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const deleteContratoMutation = useDeleteContrato();
   const { confirm, modalProps } = useConfirmModal();
@@ -112,15 +114,15 @@ export const useClienteBulkActions = ({
     if (items.length === 0) return;
     
     const confirmMessage = items.length === 1 
-      ? 'Tem certeza que deseja cancelar este título?'
-      : `Tem certeza que deseja cancelar ${items.length} títulos?`;
+      ? t('messages.confirmCancelTitle')
+      : t('messages.confirmCancelTitles', { count: items.length });
       
     const confirmed = await confirm({
       message: confirmMessage,
       variant: 'warning',
-      title: 'Cancelar títulos',
-      confirmText: 'Cancelar',
-      cancelText: 'Voltar',
+      title: t('financial.cancelTitles'),
+      confirmText: t('actions.cancel'),
+      cancelText: t('ui.back'),
     });
     
     if (confirmed) {
@@ -148,48 +150,49 @@ export const useClienteBulkActions = ({
           
           if (successCount > 0) {
             const message = successCount === 1 
-              ? 'Título cancelado com sucesso!'
-              : `${successCount} títulos cancelados com sucesso!`;
+              ? t('messages.successCancelTitle')
+              : t('messages.successCancelTitles', { count: successCount });
             success(message);
           }
           
           if (errorCount > 0) {
             const message = errorCount === 1 
-              ? '1 título não pôde ser cancelado'
-              : `${errorCount} títulos não puderam ser cancelados`;
+              ? t('messages.errorCancelTitle')
+              : t('messages.errorCancelTitles', { count: errorCount });
             error(message);
           }
         } catch (err) {
-          error('Erro ao cancelar títulos');
+          error(t('messages.errorCancelTitlesGeneral'));
         }
       }
   };
 
   const handleEstornarTitulo = async (titulo: CarneParcela) => {
     if (titulo.status !== 'pago') {
-      info('Só é possível estornar títulos que estão pagos');
+      info(t('financial.canOnlyReversePaid'));
       return;
     }
     
     const confirmed = await confirm({
-      message: `Tem certeza que deseja estornar o título ${titulo.numero_titulo || titulo.id}?\n\n` +
-        `Valor: ${formatCurrency(titulo.valor_pago || titulo.valor || 0)}\n` +
-        `O título voltará para status PENDENTE.`,
+      message: `${t('messages.confirmDelete')}\n\n` +
+        `${t('contracts.title')} ${titulo.numero_titulo || titulo.id}\n` +
+        `${t('summary.value')} ${formatCurrency(titulo.valor_pago || titulo.valor || 0)}\n\n` +
+        t('financial.titleWillReturnPending'),
       variant: 'warning',
-      title: 'Estornar título',
-      confirmText: 'Estornar',
-      cancelText: 'Cancelar',
+      title: t('financial.reverseTitle'),
+      confirmText: t('financial.reverse'),
+      cancelText: t('actions.cancel'),
     });
     
     if (confirmed) {
         try {
           await TituloService.estornar(titulo.id);
-          success('Título estornado com sucesso!');
+          success(t('messages.successReverseTitle'));
           queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', effectiveClienteId] });
           onRefreshParcelas();
         } catch (err) {
           const errorObj = err as Error;
-          error(errorObj.message || 'Erro ao estornar título.');
+          error(errorObj.message || t('messages.errorReverseTitle'));
         }
       }
   };
@@ -227,19 +230,19 @@ export const useClienteBulkActions = ({
         
         if (successCount > 0) {
           const message = successCount === 1 
-            ? 'Mensagem enviada com sucesso!'
-            : `${successCount} mensagens enviadas com sucesso!`;
+            ? t('messages.successSendMessage')
+            : t('messages.successSendMessages', { count: successCount });
           success(message);
         }
         
         if (errorCount > 0) {
           const message = firstErrorMessage || (errorCount === 1 
-            ? '1 mensagem não pôde ser enviada'
-            : `${errorCount} mensagens não puderam ser enviadas`);
+            ? t('messages.errorSendMessage')
+            : t('messages.errorSendMessages', { count: errorCount }));
           error(message);
         }
       } catch (err) {
-        error('Erro ao enviar mensagens');
+        error(t('messages.errorSendMessagesGeneral'));
       }
     }
   };
@@ -277,19 +280,19 @@ export const useClienteBulkActions = ({
         
         if (successCount > 0) {
           const message = successCount === 1 
-            ? 'Email enviado com sucesso!'
-            : `${successCount} emails enviados com sucesso!`;
+            ? t('messages.successSendEmail')
+            : t('messages.successSendEmails', { count: successCount });
           success(message);
         }
         
         if (errorCount > 0) {
           const message = firstErrorMessage || (errorCount === 1 
-            ? '1 email não pôde ser enviado'
-            : `${errorCount} emails não puderam ser enviados`);
+            ? t('messages.errorSendEmail')
+            : t('messages.errorSendEmails', { count: errorCount }));
           error(message);
         }
       } catch (err) {
-        error('Erro ao enviar emails');
+        error(t('messages.errorSendEmailsGeneral'));
       }
     }
   };
@@ -298,15 +301,15 @@ export const useClienteBulkActions = ({
     if (items.length === 0) return;
     
     const confirmMessage = items.length === 1
-      ? 'Tem certeza que deseja deletar este contrato?'
-      : `Tem certeza que deseja deletar ${items.length} contratos?`;
+      ? t('messages.confirmDelete')
+      : t('messages.confirmDeleteAdditionalServices', { count: items.length });
     
     const confirmed = await confirm({
       message: confirmMessage,
       variant: 'danger',
-      title: 'Deletar contratos',
-      confirmText: 'Deletar',
-      cancelText: 'Cancelar',
+      title: t('contracts.confirmDelete'),
+      confirmText: t('actions.delete'),
+      cancelText: t('actions.cancel'),
     });
     
     if (confirmed) {
@@ -318,14 +321,14 @@ export const useClienteBulkActions = ({
               const axiosError = err as AxiosError<{ message: string; error?: string }>;
               const errorMessage = axiosError?.response?.data?.message || 
                                  axiosError?.response?.data?.error || 
-                                 `Erro ao deletar contrato ${item.id}`;
+                                 `${t('contracts.messages.deleteError')} ${item.id}`;
               error(errorMessage);
             }
           }
           onRefreshContratos();
           setSelectedContratosItems([]);
         } catch (err) {
-          error('Erro ao deletar contratos');
+          error(t('contracts.messages.deleteError'));
         }
       }
   };
@@ -350,7 +353,7 @@ export const useClienteBulkActions = ({
   const titulosBulkActions: BulkAction<CarneParcela>[] = [
     {
       key: 'editar',
-      label: 'Editar',
+      label: t('actions.edit'),
       variant: 'primary',
       disabled: (selectedItems) => selectedItems.length !== 1,
       onClick: (selectedItems: CarneParcela[]) => {
@@ -362,7 +365,7 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'receber',
-      label: 'Receber',
+      label: t('actions.receive'),
       variant: 'primary',
       disabled: (selectedItems) => {
         if (selectedItems.length === 0) return true;
@@ -380,7 +383,7 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'cancelar',
-      label: 'Cancelar',
+      label: t('actions.cancel'),
       variant: 'primary',
       disabled: (selectedItems) => {
         if (selectedItems.length === 0) return true;
@@ -390,7 +393,7 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'estornar',
-      label: 'Estornar',
+      label: t('actions.reverse'),
       variant: 'primary',
       disabled: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length === 0) return true;
@@ -404,19 +407,19 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'imprimir',
-      label: 'Imprimir',
+      label: t('actions.print'),
       variant: 'primary',
       dropdown: [
         {
-          label: 'Selecionados',
+          label: t('buttons.selected'),
           action: () => handleImprimirTitulosSelecionados(selectedItems as TituloItem[])
         },
         {
-          label: 'Abertos',
+          label: t('buttons.open'),
           action: handleImprimirTodosEmAberto
         },
         {
-          label: 'Recibo',
+          label: t('buttons.receipt'),
           action: () => {
             handleImprimirRecibosWrapper(getItemsCompletos);
           },
@@ -426,11 +429,11 @@ export const useClienteBulkActions = ({
           }
         },
         ...(hasNFSeEmitida ? [{
-          label: 'Imprimir NF',
+          label: t('buttons.printNF'),
           action: () => {
             const itensComNFSe = getItemsCompletos.filter(item => item.nfse_status === 'emitida' && item.nfse_numero);
             if (itensComNFSe.length === 0) {
-              error('Nenhum título selecionado possui NFS-e emitida');
+              error(t('messages.selectInvoiceToCancel')); // Usando uma mensagem existente ou adicionando nova
               return;
             }
             handleImprimirNF(itensComNFSe.map(item => item.id));
@@ -440,7 +443,7 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'enviar',
-      label: 'Enviar',
+      label: t('actions.send'),
       variant: 'primary',
       disabled: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length === 0) return true;
@@ -448,23 +451,23 @@ export const useClienteBulkActions = ({
       },
       dropdown: [
         {
-          label: 'Via WhatsApp',
+          label: t('buttons.viaWhatsApp'),
           action: () => handleEnviarWhatsApp(getItemsCompletos)
         },
         {
-          label: 'Via Email',
+          label: t('buttons.viaEmail'),
           action: () => handleEnviarEmail(getItemsCompletos)
         }
       ]
     },
     {
       key: 'nfse',
-      label: 'NFS-e',
+      label: t('actions.nfse'),
       variant: 'primary',
       disabled: (selectedItems: CarneParcela[]) => selectedItems.length === 0,
       dropdown: [
         {
-          label: 'Gerar NFS-e Avulsa',
+          label: t('buttons.generateNFSeAvulsa'),
           action: (selectedItems?: CarneParcela[]) => {
             if (selectedItems && selectedItems.length > 0) {
               onShowGerarNFeModal(selectedItems[0]);
@@ -479,13 +482,13 @@ export const useClienteBulkActions = ({
   const contratosBulkActions: BulkAction<Contrato>[] = [
     {
       key: 'novo',
-      label: 'Novo',
+      label: t('buttons.new'),
       variant: 'primary',
       onClick: () => onShowContratoCreateModal()
     },
     {
       key: 'editar',
-      label: 'Editar',
+      label: t('actions.edit'),
       variant: 'primary',
       disabled: (selectedItems) => selectedItems.length === 0,
       onClick: (selectedItems) => {
@@ -496,25 +499,25 @@ export const useClienteBulkActions = ({
     },
     {
       key: 'excluir',
-      label: 'Excluir',
+      label: t('actions.delete'),
       variant: 'primary',
       disabled: (selectedItems) => selectedItems.length === 0,
       onClick: handleDeletarContratos,
       confirm: {
-        title: 'Confirmar Exclusão',
-        message: 'Tem certeza que deseja deletar os contratos selecionados?',
-        confirmText: 'Confirmar',
-        cancelText: 'Cancelar'
+        title: t('contracts.confirmDelete'),
+        message: t('contracts.confirmDeleteMessage'),
+        confirmText: t('actions.delete'),
+        cancelText: t('actions.cancel')
       }
     },
     {
       key: 'imprimir',
-      label: 'Imprimir',
+      label: t('actions.print'),
       variant: 'primary',
       disabled: (selectedItems) => selectedItems.length === 0,
       dropdown: [
         {
-          label: 'Contrato',
+          label: t('contracts.title'),
           action: async () => {
             if (selectedContratosItems.length > 0) {
               await handleImprimirContrato(selectedContratosItems[0].id);
@@ -522,7 +525,7 @@ export const useClienteBulkActions = ({
           }
         },
         {
-          label: 'Termo de Adesão',
+          label: t('contracts.termAdesao'),
           action: async () => {
             if (selectedContratosItems.length > 0) {
               await handleImprimirTermoAdesao(selectedContratosItems[0].id);
@@ -530,7 +533,7 @@ export const useClienteBulkActions = ({
           }
         },
         {
-          label: 'Contrato Permanência',
+          label: t('contracts.permanencia'),
           action: async () => {
             if (selectedContratosItems.length > 0) {
               await handleImprimirContratoPermanencia(selectedContratosItems[0].id);

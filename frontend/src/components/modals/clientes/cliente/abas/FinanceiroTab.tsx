@@ -2,6 +2,7 @@ import React from 'react';
 import { CarneParcela } from '@/types';
 import { TituloItem } from '@/types/cliente';
 import { useI18n } from '@/contexts/I18nContext';
+import { formatCurrency } from '@/utils/formatters';
 import Table from '@/components/tables/Table';
 import { FinanceiroTabProps } from '../types';
 import { TableColumn } from '@/components/tables/types';
@@ -47,15 +48,15 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             searchable: true,
             searchPlaceholder: '',
             searchFields: [
-              { key: 'id', label: 'ID' },
+              { key: 'id', label: t('table.id') },
               { key: 'numero_titulo', label: t('table.titleNumber') },
-              { key: 'status', label: 'Status' },
-              { key: 'valor', label: 'Valor' },
-              { key: 'valor_pago', label: 'Valor Pago' },
-              { key: 'data_vencimento', label: 'Data Vencimento' },
-              { key: 'data_pagamento', label: 'Data Pagamento' },
-              { key: 'charge_id', label: 'Charge ID' },
-              { key: 'nosso_numero', label: 'Nosso Número' }
+              { key: 'status', label: t('form.status') },
+              { key: 'valor', label: t('form.value') },
+              { key: 'valor_pago', label: t('form.paidValue') },
+              { key: 'data_vencimento', label: t('form.dueDate') },
+              { key: 'data_pagamento', label: t('form.paymentDate') },
+              { key: 'charge_id', label: t('table.chargeId') },
+              { key: 'nosso_numero', label: t('table.ourNumber') }
             ],
             sortable: true,
             striped: true,
@@ -79,7 +80,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
                 dropdown: action.dropdown
               };
             }),
-            emptyMessage: 'Este cliente ainda não possui títulos cadastrados.',
+            emptyMessage: t('empty.noTitles'),
             className: 'no-padding',
             customControls: (
               <div className="form-check">
@@ -91,7 +92,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
                   onChange={(e) => setShowCancelados(e.target.checked)}
                 />
                 <label className="form-check-label" htmlFor="showCancelados">
-                  Mostrar cancelados
+                  {t('filter.showCanceled')}
                 </label>
               </div>
             )
@@ -122,33 +123,33 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
           <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
             <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
               <div className="text-end">
-                <div className="small text-muted">Valor:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
+                <div className="small text-muted">{t('summary.value')}</div>
+                <strong>{formatCurrency(sortedData.reduce((sum: number, item: CarneParcela) => {
                   return sum + Number(item.valor || item.valor_parcela || 0);
-                }, 0).toFixed(2)}</strong>
+                }, 0))}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor baixado:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
+                <div className="small text-muted">{t('summary.paidValue')}</div>
+                <strong>{formatCurrency(sortedData.reduce((sum: number, item: CarneParcela) => {
                   // Considerar apenas valor_pago se existir e for maior que 0
                   const valorPago = Number(item.valor_pago || 0);
                   if (valorPago > 0) {
                     return sum + valorPago;
                   }
                   return sum;
-                }, 0).toFixed(2)}</strong>
+                }, 0))}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor aberto:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
+                <div className="small text-muted">{t('summary.openValue')}</div>
+                <strong>{formatCurrency(sortedData.reduce((sum: number, item: CarneParcela) => {
                   return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || item.valor_parcela || 0));
-                }, 0).toFixed(2)}</strong>
+                }, 0))}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor cancelado:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
+                <div className="small text-muted">{t('summary.canceledValue')}</div>
+                <strong>{formatCurrency(sortedData.reduce((sum: number, item: CarneParcela) => {
                   return sum + (item.status === 'cancelado' ? Number(item.valor || item.valor_parcela || 0) : 0);
-                }, 0).toFixed(2)}</strong>
+                }, 0))}</strong>
               </div>
             </div>
           </div>

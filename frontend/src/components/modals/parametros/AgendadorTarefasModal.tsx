@@ -13,6 +13,7 @@ import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
@@ -23,6 +24,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   show, 
   onClose
 }) => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
   const auditoria = useAuditoria();
@@ -56,18 +58,18 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   } = useModalSelect<RotinaAgendada>();
 
   const modal = useListModal({
-    title: "Agendador de Tarefas",
+    title: t('scheduler.title'),
     columns: [
       {
         key: 'id',
-        label: 'ID',
+        label: t('table.id'),
         sortable: true,
         width: '42px',
         render: (item: RotinaAgendada) => <span>{item.id}</span>
       },
       {
         key: 'tipo',
-        label: 'Tipo',
+        label: t('scheduler.type'),
         sortable: true,
         render: (item: RotinaAgendada) => (
           <span className="badge bg-info">{item.tipo.replace(/_/g, ' ')}</span>
@@ -75,24 +77,24 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       },
       {
         key: 'frequencia',
-        label: 'Frequência',
+        label: t('scheduler.frequency'),
         sortable: true,
         render: (item: RotinaAgendada) => item.frequencia
       },
       {
         key: 'hora_execucao',
-        label: 'Horário',
+        label: t('scheduler.schedule'),
         sortable: true,
         render: (item: RotinaAgendada) => item.hora_execucao || '-'
       },
       {
         key: 'proxima_execucao',
-        label: 'Próxima Execução',
+        label: t('scheduler.nextRun'),
         render: (item: RotinaAgendada) => item.proxima_execucao ? formatDateTime(item.proxima_execucao) : '-'
       },
       {
         key: 'ultima_execucao',
-        label: 'Última Execução',
+        label: t('scheduler.lastRun'),
         sortable: true,
         render: (item: RotinaAgendada & { ultima_execucao_formatada?: string | null }) => {
           // Usar ultima_execucao_formatada se disponível (vem do backend já formatada)
@@ -105,29 +107,29 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       },
       {
         key: 'ativo',
-        label: 'Status',
+        label: t('table.status'),
         sortable: true,
         render: (item: RotinaAgendada) => (
           <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-            {item.ativo ? 'Ativo' : 'Inativo'}
+            {item.ativo ? t('status.active') : t('status.inactive')}
           </span>
         )
       },
       {
         key: 'total_execucoes',
-        label: 'Execuções',
+        label: t('scheduler.executions'),
         sortable: true,
         render: (item: RotinaAgendada) => item.total_execucoes
       },
       {
         key: 'execucoes_com_erro',
-        label: 'Erros',
+        label: t('scheduler.errors'),
         sortable: true,
         render: (item: RotinaAgendada) => item.execucoes_com_erro
       },
       {
         key: 'created_at',
-        label: 'Criado em',
+        label: t('table.createdAt'),
         sortable: true,
         render: (item: RotinaAgendada & { created_at?: string; created_at_formatada?: string | null }) => {
           // Usar created_at_formatada se disponível (vem do backend já formatada)
@@ -141,11 +143,11 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     ],
     searchPlaceholder: '',
     searchFields: [
-      { key: 'id', label: 'ID' },
-      { key: 'tipo', label: 'Tipo' },
-      { key: 'descricao', label: 'Descrição' },
-      { key: 'frequencia', label: 'Frequência' },
-      { key: 'hora_execucao', label: 'Horário' }
+      { key: 'id', label: t('table.id') },
+      { key: 'tipo', label: t('scheduler.type') },
+      { key: 'descricao', label: t('table.description') },
+      { key: 'frequencia', label: t('scheduler.frequency') },
+      { key: 'hora_execucao', label: t('scheduler.schedule') }
     ],
     multiSelect: false
   });
@@ -198,50 +200,50 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
 
   const handleExecute = async (rotina: RotinaAgendada) => {
     const confirmed = await confirm({
-      message: 'Deseja executar a rotina agora?',
+      message: t('scheduler.confirmExecute'),
       variant: 'info',
-      title: 'Executar rotina',
-      confirmText: 'Executar',
-      cancelText: 'Cancelar',
+      title: t('scheduler.executeRoutine'),
+      confirmText: t('scheduler.execute'),
+      cancelText: t('actions.cancel'),
     });
     
     if (!confirmed) return;
     
     try {
       await SchedulerService.executeRotina(rotina.id);
-      success('Rotina iniciada em background');
+      success(t('scheduler.routineStarted'));
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
     } catch (error: unknown) {
       if (error instanceof Error && 'response' in error) {
         const axiosError = error as AxiosError<{ message?: string }>;
-        showError(`Erro ao executar rotina: ${axiosError.response?.data?.message || 'Erro desconhecido'}`);
+        showError(`${t('messages.error')}: ${axiosError.response?.data?.message || t('messages.noData')}`);
       } else {
-        showError('Erro ao executar rotina: Erro desconhecido');
+        showError(`${t('messages.error')}: ${t('messages.noData')}`);
       }
     }
   };
 
   const handleDelete = async (rotina: RotinaAgendada) => {
     const confirmed = await confirm({
-      message: 'Tem certeza que deseja deletar esta rotina?',
+      message: t('scheduler.confirmDelete'),
       variant: 'danger',
-      title: 'Deletar rotina',
-      confirmText: 'Deletar',
-      cancelText: 'Cancelar',
+      title: t('scheduler.deleteRoutine'),
+      confirmText: t('actions.delete'),
+      cancelText: t('actions.cancel'),
     });
     
     if (!confirmed) return;
     
     try {
       await SchedulerService.deleteRotina(rotina.id);
-      success('Rotina deletada com sucesso');
+      success(t('scheduler.successDelete'));
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
     } catch (error: unknown) {
       if (error instanceof Error && 'response' in error) {
         const axiosError = error as AxiosError<{ message?: string }>;
-        showError(`Erro ao deletar rotina: ${axiosError.response?.data?.message || 'Erro desconhecido'}`);
+        showError(`${t('messages.error')}: ${axiosError.response?.data?.message || t('messages.noData')}`);
       } else {
-        showError('Erro ao deletar rotina: Erro desconhecido');
+        showError(`${t('messages.error')}: ${t('messages.noData')}`);
       }
     }
   };
@@ -273,18 +275,18 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
 
   const bulkActions = [
     {
-      label: 'Novo',
+      label: t('actions.new'),
       variant: 'primary' as const,
       action: handleCreate
     },
     {
-      label: 'Editar',
+      label: t('actions.edit'),
       variant: 'primary' as const,
       disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
       action: handleEdit
     },
     {
-      label: 'Executar',
+      label: t('scheduler.execute'),
       variant: 'primary' as const,
       disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
       action: (selectedItems: RotinaAgendada[]) => {
@@ -295,7 +297,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       }
     },
     {
-      label: 'Desativar',
+      label: t('scheduler.deactivate'),
       variant: 'secondary' as const,
       disabled: (selectedItems: RotinaAgendada[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
@@ -309,7 +311,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       }
     },
     {
-      label: 'Excluir',
+      label: t('actions.delete'),
       disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
       action: (selectedItems: RotinaAgendada[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;

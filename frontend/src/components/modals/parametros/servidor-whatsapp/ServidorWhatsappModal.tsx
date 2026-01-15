@@ -11,6 +11,7 @@ import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
 import TemplatesModal from './TemplatesModal';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface GrupoVariaveis {
   titulo: string;
@@ -18,6 +19,7 @@ interface GrupoVariaveis {
 }
 
 const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -72,107 +74,107 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     queryFn: async () => {
       const response = await defaultApiClient.get<Record<string, GrupoVariaveis>>('/modelos-documento/variaveis');
 
-      if (response.success && response.data) {
-        return response.data;
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new Error(response.message || t('messages.error'));
+  },
+  staleTime: 5 * 60 * 1000
+});
+
+// Carregar dados da mensagem quando buscar
+useEffect(() => {
+  if (mensagemData) {
+    setTipoEnvio(mensagemData.tipo_envio);
+    setMensagemPadrao(mensagemData.mensagem_padrao);
+    setMensagemManual(mensagemData.mensagem_manual || '');
+    setTemplateMapping(mensagemData.template_mapping || '');
+    setInteracao1(mensagemData.interacao1 || '');
+    setInteracao2(mensagemData.interacao2 || '');
+    setInteracao3(mensagemData.interacao3 || '');
+  } else {
+    setTipoEnvio('pdf');
+    setMensagemPadrao('');
+    setMensagemManual('');
+    setTemplateMapping('');
+    setInteracao1('');
+    setInteracao2('');
+    setInteracao3('');
+  }
+}, [mensagemData]);
+
+// Buscar servidor ativo
+const { data: servidorAtivo, isLoading, refetch: refetchServidorAtivo } = useQuery({
+  queryKey: ['servidor-whatsapp-ativo'],
+  queryFn: async () => {
+    try {
+      return await ServidorWhatsAppService.getActive();
+    } catch {
+      return null;
+    }
+  },
+  enabled: show,
+  retry: false,
+});
+
+// Mutation para criar/atualizar servidor único
+const saveServidorMutation = useMutation({
+  mutationFn: (data: ServidorWhatsAppForm) => {
+    return ServidorWhatsAppService.createOrUpdate(data);
+  },
+  onSuccess: async () => {
+    success(t('whatsappServer.successSave'));
+    queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
+    await refetchServidorAtivo();
+  },
+  onError: (err: unknown) => {
+    const error = err as AxiosError<{ message?: string; errors?: string[] }>;
+    let errorMessage = t('whatsappServer.errorSave');
+    
+    if (error?.response?.data) {
+      if (error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
+        errorMessage = error.response.data.errors.join(', ');
+      } else if (error.response.data.errors && typeof error.response.data.errors === 'object') {
+        errorMessage = Object.values(error.response.data.errors).flat().join(', ');
       }
-
-      throw new Error(response.message || 'Não foi possível carregar variáveis');
-    },
-    staleTime: 5 * 60 * 1000
-  });
-
-  // Carregar dados da mensagem quando buscar
-  useEffect(() => {
-    if (mensagemData) {
-      setTipoEnvio(mensagemData.tipo_envio);
-      setMensagemPadrao(mensagemData.mensagem_padrao);
-      setMensagemManual(mensagemData.mensagem_manual || '');
-      setTemplateMapping(mensagemData.template_mapping || '');
-      setInteracao1(mensagemData.interacao1 || '');
-      setInteracao2(mensagemData.interacao2 || '');
-      setInteracao3(mensagemData.interacao3 || '');
-    } else {
-      setTipoEnvio('pdf');
-      setMensagemPadrao('');
-      setMensagemManual('');
-      setTemplateMapping('');
-      setInteracao1('');
-      setInteracao2('');
-      setInteracao3('');
+    } else if (error?.message) {
+      errorMessage = error.message;
     }
-  }, [mensagemData]);
+    
+    showError(errorMessage);
+  }
+});
 
-  // Buscar servidor ativo
-  const { data: servidorAtivo, isLoading, refetch: refetchServidorAtivo } = useQuery({
-    queryKey: ['servidor-whatsapp-ativo'],
-    queryFn: async () => {
-      try {
-        return await ServidorWhatsAppService.getActive();
-      } catch {
-        return null;
-      }
-    },
-    enabled: show,
-    retry: false,
-  });
+// Mutation para enviar mensagem de teste
+const sendTestMessageMutation = useMutation({
+  mutationFn: async (data: { id: number; phone: string; message: string }) => {
+    return ServidorWhatsAppService.sendTestMessage(data.id, data.phone, data.message);
+  },
+  onSuccess: (response: { message: string }) => {
+    success(response.message);
+  },
+  onError: (_err: unknown) => {
+    // Sempre mostrar mensagem genérica, ignorando qualquer erro técnico
+    showError(t('whatsappServer.errorSendTest'));
+  }
+});
 
-  // Mutation para criar/atualizar servidor único
-  const saveServidorMutation = useMutation({
-    mutationFn: (data: ServidorWhatsAppForm) => {
-      return ServidorWhatsAppService.createOrUpdate(data);
-    },
-    onSuccess: async () => {
-      success('Configurações do servidor de WhatsApp salvas com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
-      await refetchServidorAtivo();
-    },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message?: string; errors?: string[] }>;
-      let errorMessage = 'Erro ao salvar configurações';
-      
-      if (error?.response?.data) {
-        if (error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
-          errorMessage = error.response.data.errors.join(', ');
-        } else if (error.response.data.errors && typeof error.response.data.errors === 'object') {
-          errorMessage = Object.values(error.response.data.errors).flat().join(', ');
-        }
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-      
-      showError(errorMessage);
-    }
-  });
-
-  // Mutation para enviar mensagem de teste
-  const sendTestMessageMutation = useMutation({
-    mutationFn: async (data: { id: number; phone: string; message: string }) => {
-      return ServidorWhatsAppService.sendTestMessage(data.id, data.phone, data.message);
-    },
-    onSuccess: (response: { message: string }) => {
-      success(response.message);
-    },
-    onError: (_err: unknown) => {
-      // Sempre mostrar mensagem genérica, ignorando qualquer erro técnico
-      showError('Não foi possível enviar a mensagem de teste. Verifique as configurações do servidor e tente novamente.');
-    }
-  });
-
-  // Mutation para salvar mensagem
-  const saveMensagemMutation = useMutation({
-    mutationFn: (data: MensagemWhatsApp) => {
-      return ServidorWhatsAppService.saveMensagem(data);
-    },
-    onSuccess: () => {
-      success('Mensagem salva com sucesso!');
-    },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      showError(error?.response?.data?.message || 'Erro ao salvar mensagem');
-    }
-  });
+// Mutation para salvar mensagem
+const saveMensagemMutation = useMutation({
+  mutationFn: (data: MensagemWhatsApp) => {
+    return ServidorWhatsAppService.saveMensagem(data);
+  },
+  onSuccess: () => {
+    success(t('whatsappServer.successMessageSave'));
+  },
+  onError: (err: unknown) => {
+    const error = err as AxiosError<{ message: string }>;
+    showError(error?.response?.data?.message || t('whatsappServer.errorMessageSave'));
+  }
+});
 
   // Carregar dados do servidor existente
   useEffect(() => {
@@ -212,7 +214,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
 
   const handleSaveMensagem = useCallback(async () => {
     if (!mensagemType) {
-      showError('Selecione um tipo de mensagem');
+      showError(t('whatsappServer.selectMessageType'));
       return;
     }
 
@@ -229,7 +231,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       mensagemPadraoFinal = mensagemManual;
     } else if (mensagemType !== 'envio_manual' && !mensagemPadraoFinal && !temTemplate && !isWhatsAppCloud) {
       // Para Evolution API sem template (exceto envio_manual), mensagem_padrao é obrigatória
-      showError('Mensagem padrão é obrigatória');
+      showError(t('whatsappServer.messageRequired'));
       return;
     }
 
@@ -244,21 +246,21 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       interacao3: interacao3 || undefined,
       ativo: true
     });
-  }, [mensagemType, tipoEnvio, mensagemPadrao, mensagemManual, templateMapping, interacao1, interacao2, interacao3, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showError]);
+  }, [mensagemType, tipoEnvio, mensagemPadrao, mensagemManual, templateMapping, interacao1, interacao2, interacao3, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showError, t]);
 
   const handleReset = useCallback(async () => {
     if (servidorAtivo?.data?.id) {
       try {
         await ServidorWhatsAppService.delete(servidorAtivo.data.id);
-        success('Servidor removido com sucesso!');
+        success(t('whatsappServer.successRemove'));
         queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
       } catch (err: unknown) {
         const error = err as AxiosError<{ message: string }>;
-        showError(error?.response?.data?.message || 'Erro ao remover servidor');
+        showError(error?.response?.data?.message || t('whatsappServer.errorRemove'));
       }
     }
     setFormData(initialFormData);
-  }, [servidorAtivo?.data?.id, success, queryClient, showError, initialFormData]);
+  }, [servidorAtivo?.data?.id, success, queryClient, showError, initialFormData, t]);
 
   const handleClose = useCallback(() => {
     setFormData(initialFormData);
@@ -267,17 +269,17 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
 
   const handleSendTestMessage = async () => {
     if (!testPhone.trim()) {
-      showError('Por favor, digite um número de telefone para teste');
+      showError(t('whatsappServer.testPhoneRequired'));
       return;
     }
 
     if (!testMessage.trim()) {
-      showError('Por favor, digite uma mensagem para teste');
+      showError(t('whatsappServer.testMessageRequired'));
       return;
     }
 
     if (!servidorAtivo?.data?.id) {
-      showError('Configure o servidor primeiro antes de enviar mensagem de teste');
+      showError(t('whatsappServer.configureFirst'));
       return;
     }
 
@@ -292,7 +294,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
 
   const handleCopyVariable = (variable: string) => {
     navigator.clipboard.writeText(variable);
-    success('Variável copiada!');
+    success(t('whatsappServer.variableCopied'));
   };
 
   const handleInsertVariable = (variable: string) => {
@@ -322,7 +324,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
           }}
           isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
         >
-          Salvar
+          {t('actions.save')}
         </Button>
         <Button
           type="button"
@@ -331,7 +333,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
           onClick={handleReset}
           disabled={saveServidorMutation.isPending}
         >
-          {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
+          {servidorAtivo?.data ? t('whatsappServer.removeServer') : t('buttons.clear')}
         </Button>
         <Button
           type="button"
@@ -340,7 +342,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
           onClick={handleClose}
           disabled={saveServidorMutation.isPending}
         >
-          Fechar
+          {t('buttons.close')}
         </Button>
       </div>
 
@@ -363,7 +365,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
               onClick={() => setActiveTab('servidor')}
               type="button"
             >
-              Servidor
+              {t('whatsappServer.server')}
             </button>
           </li>
           <li className="nav-item" role="presentation">
@@ -372,13 +374,13 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
               onClick={() => setActiveTab('mensagens')}
               type="button"
             >
-              Mensagens
+              {t('whatsappServer.messages')}
             </button>
           </li>
         </ul>
       </div>
     </div>
-  ), [activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, handleClose, handleReset, handleSaveMensagem, isMobile]);
+  ), [activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, handleClose, handleReset, handleSaveMensagem, isMobile, t]);
 
   const headerActionsContentRef = useRef(headerActionsContent);
   headerActionsContentRef.current = headerActionsContent;
@@ -407,7 +409,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     <>
       {isLoading ? (
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
+          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
         </div>
       ) : (
       <div className="whatsapp-modal-content">
@@ -481,7 +483,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       <DraggableModal
         show={show}
         onClose={handleClose}
-        title="Servidor de WhatsApp - Evolution API"
+        title={t('whatsappServer.title')}
         size="lg"
         modalId="servidor-whatsapp-modal"
         headerActions={headerActionsContent}

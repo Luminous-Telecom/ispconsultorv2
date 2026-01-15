@@ -1147,11 +1147,11 @@ function Table<T extends { id: number | string }>({
                       className="table-mobile-menu-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenActionDropdown(openActionDropdown === item.id ? null : item.id);
-                      }}
-                      aria-label="Menu de ações"
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      setOpenActionDropdown(openActionDropdown === item.id ? null : item.id);
+                    }}
+                    aria-label={t('ui.actionsMenu')}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="1"></circle>
                         <circle cx="12" cy="5" r="1"></circle>
                         <circle cx="12" cy="19" r="1"></circle>
@@ -1371,11 +1371,11 @@ function Table<T extends { id: number | string }>({
                       className="table-action-menu-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenActionDropdown(openActionDropdown === item.id ? null : item.id);
-                      }}
-                      aria-label="Menu de ações"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      setOpenActionDropdown(openActionDropdown === item.id ? null : item.id);
+                    }}
+                    aria-label={t('ui.actionsMenu')}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="1"></circle>
                         <circle cx="12" cy="5" r="1"></circle>
                         <circle cx="12" cy="19" r="1"></circle>
@@ -1444,11 +1444,11 @@ function Table<T extends { id: number | string }>({
                       className="table-action-menu-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenActionDropdown(openActionDropdown === item.id ? null : item.id);
-                      }}
-                      aria-label="Menu de ações"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      setOpenActionDropdown(openActionDropdown === item.id ? null : item.id);
+                    }}
+                    aria-label={t('ui.actionsMenu')}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="1"></circle>
                         <circle cx="12" cy="5" r="1"></circle>
                         <circle cx="12" cy="19" r="1"></circle>
@@ -1565,29 +1565,29 @@ function Table<T extends { id: number | string }>({
         
         <div className="d-flex align-items-center gap-2">
           {/* Botão de auditar (sempre visível, mas inativo quando não há 1 item selecionado) */}
-          {onAudit && auditEntity && (
-            <Button
-              variant="outline-primary"
-              size="sm"
-              icon="shield-check"
-              onClick={handleAuditClick}
-              disabled={loading || state.selectedItems.length !== 1}
-              tooltip={state.selectedItems.length === 1 ? "Auditar registro selecionado" : "Selecione exatamente 1 registro para auditar"}
-            >
-              Auditar
-            </Button>
-          )}
-          {/* Botão de refresh */}
-          <Button
-            variant="outline-primary"
-            size="sm"
-            icon="arrow-clockwise"
-            onClick={tableActions.refresh}
-            disabled={loading}
-            tooltip="Atualizar"
-          >
-            {''}
-          </Button>
+              {onAudit && auditEntity && (
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  icon="shield-check"
+                  onClick={handleAuditClick}
+                  disabled={loading || state.selectedItems.length !== 1}
+                  tooltip={state.selectedItems.length === 1 ? t('ui.auditSelected') : t('ui.selectOneToAudit')}
+                >
+                  {t('buttons.audit')}
+                </Button>
+              )}
+              {/* Botão de refresh */}
+              <Button
+                variant="outline-primary"
+                size="sm"
+                icon="arrow-clockwise"
+                onClick={tableActions.refresh}
+                disabled={loading}
+                tooltip={t('ui.refresh')}
+              >
+                {''}
+              </Button>
         </div>
       </div>
     );
@@ -1781,7 +1781,7 @@ function Table<T extends { id: number | string }>({
               </div>
 
               {/* Paginação Bootstrap estilosa */}
-              <nav aria-label="Paginação da tabela">
+              <nav aria-label={t('ui.actionsMenu')}>
                 <ul className="pagination pagination-sm mb-0">
                     {/* Primeira página */}
                     <li className={`page-item ${paginationValues.currentPage === 1 ? 'disabled' : ''}`}>
@@ -1796,7 +1796,7 @@ function Table<T extends { id: number | string }>({
                           }
                         }}
                         disabled={paginationValues.currentPage === 1}
-                        aria-label="Primeira página"
+                        aria-label={t('ui.firstPage')}
                       >
                         <i className="bi bi-chevron-double-left"></i>
                       </button>
@@ -1815,7 +1815,7 @@ function Table<T extends { id: number | string }>({
                           }
                         }}
                         disabled={paginationValues.currentPage === 1}
-                        aria-label="Página anterior"
+                        aria-label={t('ui.previousPage')}
                       >
                         <i className="bi bi-chevron-left"></i>
                       </button>
@@ -1846,7 +1846,7 @@ function Table<T extends { id: number | string }>({
                                 tableActions.setPage(pageNumber);
                               }
                             }}
-                            aria-label={`Página ${pageNumber}`}
+                            aria-label={`${t('ui.page')} ${pageNumber}`}
                             aria-current={isActive ? 'page' : undefined}
                           >
                             {pageNumber}
@@ -1868,7 +1868,7 @@ function Table<T extends { id: number | string }>({
                           }
                         }}
                         disabled={paginationValues.currentPage >= paginationValues.lastPage}
-                        aria-label="Próxima página"
+                        aria-label={t('ui.nextPage')}
                       >
                         <i className="bi bi-chevron-right"></i>
                       </button>
@@ -1887,7 +1887,7 @@ function Table<T extends { id: number | string }>({
                           }
                         }}
                         disabled={paginationValues.currentPage >= paginationValues.lastPage}
-                        aria-label="Última página"
+                        aria-label={t('ui.lastPage')}
                       >
                         <i className="bi bi-chevron-double-right"></i>
                       </button>
@@ -1950,7 +1950,7 @@ function Table<T extends { id: number | string }>({
             </div>
 
             {/* Paginação Bootstrap compacta */}
-            <nav aria-label="Paginação da tabela" className="d-flex justify-content-center">
+            <nav aria-label={t('ui.actionsMenu')} className="d-flex justify-content-center">
               <ul className="pagination pagination-sm mb-0">
                 {/* Primeira página */}
                 <li className={`page-item ${paginationValues.currentPage === 1 ? 'disabled' : ''}`}>
@@ -1965,7 +1965,7 @@ function Table<T extends { id: number | string }>({
                       }
                     }}
                     disabled={paginationValues.currentPage === 1}
-                    aria-label="Primeira página"
+                    aria-label={t('ui.firstPage')}
                   >
                     <i className="bi bi-chevron-double-left"></i>
                   </button>
@@ -1984,7 +1984,7 @@ function Table<T extends { id: number | string }>({
                       }
                     }}
                     disabled={paginationValues.currentPage === 1}
-                    aria-label="Página anterior"
+                    aria-label={t('ui.previousPage')}
                   >
                     <i className="bi bi-chevron-left"></i>
                   </button>
@@ -2010,7 +2010,7 @@ function Table<T extends { id: number | string }>({
                       }
                     }}
                     disabled={paginationValues.currentPage >= paginationValues.lastPage}
-                    aria-label="Próxima página"
+                    aria-label={t('ui.nextPage')}
                   >
                     <i className="bi bi-chevron-right"></i>
                   </button>
@@ -2029,7 +2029,7 @@ function Table<T extends { id: number | string }>({
                       }
                     }}
                     disabled={paginationValues.currentPage >= paginationValues.lastPage}
-                    aria-label="Última página"
+                    aria-label={t('ui.lastPage')}
                   >
                     <i className="bi bi-chevron-double-right"></i>
                   </button>
@@ -2060,7 +2060,7 @@ function Table<T extends { id: number | string }>({
                 e.stopPropagation();
                 setIsFabOpen(!isFabOpen);
               }}
-              aria-label="Menu de ações"
+              aria-label={t('ui.actionsMenu')}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="6" x2="21" y2="6"></line>

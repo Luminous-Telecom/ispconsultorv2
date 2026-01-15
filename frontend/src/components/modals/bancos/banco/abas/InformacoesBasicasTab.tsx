@@ -1,6 +1,7 @@
 import React from 'react';
 import FormField from '@/components/ui/FormField';
 import { BancoTabProps } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
   formData,
@@ -9,6 +10,8 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
   isPending,
   formPrefix
 }) => {
+  const { t } = useI18n();
+
   return (
     <>
       <div className="row">
@@ -17,8 +20,8 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
             <FormField
               name="nome"
               type="text"
-              label="Nome do Banco"
-              placeholder="Ex: EFI - Conta Principal"
+              label={t('table.bankName')}
+              placeholder={t('placeholder.bankName')}
               required={true}
               size="sm"
               value={formData.nome}
@@ -28,7 +31,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
               disabled={isPending}
               autoComplete="organization"
             />
-            <small className="text-secondary">Nome para identificar esta conta do banco</small>
+            <small className="text-secondary">{t('form.bankNameHelp')}</small>
           </div>
         </div>
       </div>
@@ -39,7 +42,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
             <FormField
               name="tipo_banco"
               type="select"
-              label="Tipo de Banco"
+              label={t('table.bankType')}
               size="sm"
               value={formData.tipo_banco}
               onChange={(value) => handleInputChange('tipo_banco', value)}
@@ -50,7 +53,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
                 { value: 'asaas', label: 'Asaas (Código: 461)' }
               ]}
             />
-            <small className="text-secondary">Código do banco é definido automaticamente</small>
+            <small className="text-secondary">{t('form.bankTypeHelp')}</small>
           </div>
         </div>
 
@@ -59,7 +62,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
             <FormField
               name="ativo"
               type="checkbox"
-              label={formData.ativo ? 'Ativo' : 'Inativo'}
+              label={formData.ativo ? t('status.active') : t('status.inactive')}
               value={formData.ativo}
               onChange={(value) => handleInputChange('ativo', value as boolean)}
               disabled={isPending}
@@ -74,8 +77,8 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
         <FormField
           name="descricao"
           type="textarea"
-          label="Descrição"
-          placeholder="Descrição do banco..."
+          label={t('table.description')}
+          placeholder={t('placeholder.bankDescription')}
           size="sm"
           value={formData.descricao}
           onChange={(value) => handleInputChange('descricao', value)}

@@ -5,7 +5,7 @@ import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { Plano } from '@/types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n, TranslationKeys } from '@/contexts/I18nContext';
 import { formatDateTime } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
 import PlanoModal from './PlanoModal';
@@ -69,17 +69,17 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
   const getTipoServicoLabel = useCallback((tipo: string) => {
     const tipos: { [key: string]: string } = {
-      infraestrutura: 'Infraestrutura',
-      consultoria: 'Consultoria'
+      infraestrutura: t('form.serviceTypeInfrastructure'),
+      consultoria: t('form.serviceTypeConsulting')
     };
     return tipos[tipo] || tipo;
-  }, []);
+  }, [t]);
 
   // Configurar colunas memoizadas
   const columns = useMemo(() => [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       width: '42px',
       render: (item: Plano) => <span>{item.id}</span>
@@ -121,7 +121,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       key: 'quantidade_usuarios',
-      label: t('table.users'),
+      label: t('form.usersQuantity'),
       sortable: true,
       render: (item: Plano) => (
         <span>{item.quantidade_usuarios || '-'}</span>
@@ -141,9 +141,20 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'periodicidade',
       label: t('table.periodicity'),
       sortable: true,
-      render: (item: Plano) => (
-        <span className="text-capitalize">{item.periodicidade || '-'}</span>
-      )
+      render: (item: Plano) => {
+        const periodicidades: { [key: string]: string } = {
+          mensal: t('form.periodicityMonthly'),
+          trimestral: t('form.periodicityQuarterly'),
+          semestral: t('form.periodicitySemiannual'),
+          anual: t('form.periodicityAnnual'),
+          bimestral: t('form.periodicityBimonthly'),
+          quinzenal: t('form.periodicityBiweekly'),
+          semanal: t('form.periodicityWeekly')
+        };
+        return (
+          <span className="text-capitalize">{item.periodicidade ? (periodicidades[item.periodicidade] || item.periodicidade) : '-'}</span>
+        );
+      }
     },
     {
       key: 'status',
@@ -151,7 +162,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       sortable: true,
       render: (item: Plano) => (
         <span className={`badge ${getStatusBadgeClass(item.status)}`}>
-          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+          {t(`status.${item.status}` as keyof TranslationKeys)}
         </span>
       )
     },
@@ -175,14 +186,14 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   const modal = useListModal({
     title: defaultTitle,
     columns,
-    searchPlaceholder: '',
+    searchPlaceholder: t('layout.searchPlaceholder'),
     searchFields: [
       { key: 'id', label: t('table.id') },
       { key: 'nome_plano', label: t('table.planName') },
       { key: 'descricao', label: t('form.description') },
       { key: 'tipo_servico', label: t('table.serviceType') },
       { key: 'valor_mensal', label: t('table.monthlyValue') },
-      { key: 'quantidade_usuarios', label: t('table.users') },
+      { key: 'quantidade_usuarios', label: t('form.usersQuantity') },
       { key: 'periodicidade', label: t('table.periodicity') },
       { key: 'status', label: t('table.status') }
     ],
@@ -261,7 +272,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   // Bulk actions memoizados
   const bulkActions = useMemo(() => onSelectPlano ? [
     {
-      label: 'Cancelar',
+      label: t('actions.cancel'),
       variant: 'secondary' as const,
       action: () => {
         clearSelection();
@@ -402,7 +413,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         onClose={auditoria.handleClosePreview}
         pdfUrl={auditoria.pdfUrl}
         isGenerating={auditoria.isGeneratingPdf}
-        title="Relatórios de logs"
+        title={t('financial.executionLogs')}
         modalId="auditoria-plano-modal"
       />
 

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './components/notifications/NotificationProvider';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { I18nProvider } from './contexts/I18nContext';
+import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
 import { TableHeaderProvider } from './contexts/TableHeaderContext';
 import { ModalProvider } from './contexts/ModalContext';
@@ -44,45 +44,46 @@ const queryClient = new QueryClient({
   },
 });
 
-function App() {
+function AppContent() {
+  const { t } = useI18n();
+  
   return (
     <ErrorBoundary
       fallback={
         <div className="container-fluid d-flex align-items-center justify-content-center min-vh-100">
           <div className="text-center">
             <i className="bi bi-exclamation-triangle text-danger app-error-icon"></i>
-            <h2 className="mt-3 text-danger">Erro na aplicação</h2>
-            <p className="text-muted">Ocorreu um erro crítico. Recarregue a página.</p>
+            <h2 className="mt-3 text-danger">{t('ui.appError')}</h2>
+            <p className="text-muted">{t('ui.criticalError')}</p>
             <button
               className="btn btn-primary mt-3"
               onClick={() => window.location.reload()}
             >
-              Recarregar página
+              {t('ui.reloadPage')}
             </button>
           </div>
         </div>
       }
     >
       <ProtectionLayer>
-        <I18nProvider>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider>
-              <NotificationProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <NotificationProvider>
               <Router>
-                <Suspense fallback={<Loading message="Carregando aplicação..." />}>
+                <Suspense fallback={<Loading message={t('ui.loadingApplication')} />}>
                   <Routes>
                     <Route path="/" element={
-                      <Suspense fallback={<Loading message="Carregando página inicial..." />}>
+                      <Suspense fallback={<Loading message={t('ui.loadingPage')} />}>
                         <Home />
                       </Suspense>
                     } />
                     <Route path="/login" element={
-                      <Suspense fallback={<Loading message="Carregando login..." />}>
+                      <Suspense fallback={<Loading message={t('ui.loadingLogin')} />}>
                         <Login />
                       </Suspense>
                     } />
                     <Route path="/pagamento/:id/:token" element={
-                      <Suspense fallback={<Loading message="Carregando página de pagamento..." />}>
+                      <Suspense fallback={<Loading message={t('ui.loadingPayment')} />}>
                         <PagamentoPublico />
                       </Suspense>
                     } />
@@ -98,12 +99,12 @@ function App() {
                       </DashboardFiltersProvider>
                     }>
                       <Route index element={
-                        <Suspense fallback={<Loading message="Carregando dashboard..." />}>
+                        <Suspense fallback={<Loading message={t('ui.loadingDashboard')} />}>
                           <Dashboard />
                         </Suspense>
                       } />
                       <Route path="dashboard" element={
-                        <Suspense fallback={<Loading message="Carregando dashboard..." />}>
+                        <Suspense fallback={<Loading message={t('ui.loadingDashboard')} />}>
                           <Dashboard />
                         </Suspense>
                       } />
@@ -111,12 +112,19 @@ function App() {
                   </Routes>
                 </Suspense>
               </Router>
-              </NotificationProvider>
-            </ThemeProvider>
-          </QueryClientProvider>
-        </I18nProvider>
+            </NotificationProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
       </ProtectionLayer>
     </ErrorBoundary>
+  );
+}
+
+function App() {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
   );
 }
 

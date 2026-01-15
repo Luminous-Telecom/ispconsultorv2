@@ -6,6 +6,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from '@/services/assinaturaDigitalProviderService';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface AssinaturaDigitalModalProps {
   show: boolean;
@@ -31,6 +32,7 @@ const initialFormData: AssinaturaDigitalForm = {
 };
 
 const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -140,12 +142,12 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
       );
     },
     onSuccess: () => {
-      success('Configurações de assinatura digital atualizadas com sucesso!');
+      success(t('digitalSignature.successUpdate'));
       queryClient.invalidateQueries({ queryKey: ['assinatura-digital-provider'] });
     },
     onError: (error: unknown) => {
       const axiosError = error as AxiosError<{ message?: string }>;
-      showError(axiosError?.response?.data?.message || 'Erro ao atualizar configurações');
+      showError(axiosError?.response?.data?.message || t('digitalSignature.errorUpdate'));
     }
   });
 
@@ -163,7 +165,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
         onClick={onClose}
         disabled={updateMutation.isPending || isLoading || isLoadingEnabled}
       >
-        Cancelar
+        {t('actions.cancel')}
       </Button>
       <Button
         type="submit"
@@ -173,10 +175,10 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
         isLoading={updateMutation.isPending}
         disabled={isLoading || isLoadingEnabled}
       >
-        Salvar
+        {t('actions.save')}
       </Button>
     </div>
-  ), [onClose, updateMutation.isPending, isLoading, isLoadingEnabled]);
+  ), [onClose, updateMutation.isPending, isLoading, isLoadingEnabled, t]);
 
   // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
   useEffect(() => {
@@ -190,14 +192,14 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
       {(isLoading || isLoadingEnabled) ? (
         <div className="text-center p-4">
           <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
+            <span className="visually-hidden">{t('ui.loading')}</span>
           </div>
         </div>
       ) : (
       <form id="assinatura-digital-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
         <div className="card mb-3">
           <div className="card-header">
-            <h6 className="mb-0">Configurações Gerais</h6>
+            <h6 className="mb-0">{t('digitalSignature.generalSettings')}</h6>
           </div>
           <div className="card-body">
             <div className="form-check mb-3">
@@ -210,16 +212,16 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                 disabled={updateMutation.isPending}
               />
               <label className="form-check-label" htmlFor="habilitado">
-                Habilitar Assinatura Digital
+                {t('digitalSignature.enable')}
               </label>
               <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                Ativa a funcionalidade de assinatura digital eletrônica no sistema
+                {t('digitalSignature.enableHelp')}
               </div>
             </div>
 
             <div className="mb-3">
               <label htmlFor="apiProvider" className="form-label">
-                Provedor de API
+                {t('digitalSignature.provider')}
               </label>
               <select
                 className="form-select"
@@ -236,13 +238,13 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                 <option value="zapsign">ZapSign (5 assinaturas/mês grátis)</option>
               </select>
               <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                Selecione o provedor de API para assinatura digital
+                {t('digitalSignature.providerHelp')}
               </div>
             </div>
 
             <div className="mb-3">
               <label htmlFor="diasExpiracaoPadrao" className="form-label">
-                Dias de Expiração Padrão
+                {t('digitalSignature.expirationDays')}
               </label>
               <input
                 type="number"
@@ -255,7 +257,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                 disabled={updateMutation.isPending}
               />
               <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                Número de dias padrão para expiração de documentos enviados para assinatura (1 a 365 dias)
+                {t('digitalSignature.expirationDaysHelp')}
               </div>
             </div>
           </div>
@@ -263,12 +265,12 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
 
         <div className="card mb-3">
           <div className="card-header">
-            <h6 className="mb-0">Configurações da API</h6>
+            <h6 className="mb-0">{t('digitalSignature.apiSettings')}</h6>
           </div>
           <div className="card-body">
             <div className="mb-3">
               <label htmlFor="apiKey" className="form-label">
-                API Key
+                {t('digitalSignature.apiKey')}
               </label>
               <div className="input-group">
                 <input
@@ -278,7 +280,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                   value={formData.apiKey}
                   onChange={(e) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
                   disabled={updateMutation.isPending}
-                  placeholder="Cole sua API Key aqui"
+                  placeholder={t('placeholder.apiKey')}
                 />
                 <button
                   type="button"
@@ -292,21 +294,21 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
               <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
                 {formData.apiProvider === 'assinafy' && (
                   <>
-                    Obtenha sua API Key gratuita em{' '}
+                    {t('digitalSignature.assinafyHelp').split('assinafy.com.br')[0]}
                     <a href="https://assinafy.com.br" target="_blank" rel="noopener noreferrer">
                       assinafy.com.br
                     </a>
-                    {' '}(100 assinaturas/mês grátis)
+                    {t('digitalSignature.assinafyHelp').split('assinafy.com.br')[1]}
                   </>
                 )}
-                {formData.apiProvider === 'zapsign' && 'Obtenha sua API Key no painel do ZapSign'}
+                {formData.apiProvider === 'zapsign' && t('digitalSignature.zapsignHelp')}
               </div>
             </div>
 
             {formData.apiProvider === 'assinafy' && (
               <div className="mb-3">
                 <label htmlFor="accountId" className="form-label">
-                  Workspace Account ID <span className="text-danger">*</span>
+                  {t('digitalSignature.workspaceId')} <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -315,11 +317,11 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                   value={formData.accountId}
                   onChange={(e) => setFormData(prev => ({ ...prev, accountId: e.target.value }))}
                   disabled={updateMutation.isPending}
-                  placeholder="ID do workspace (obtido em My Account > Workspaces)"
+                  placeholder={t('placeholder.workspaceId')}
                   required
                 />
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Workspace Account ID obtido no painel Assinafy: My Account &gt; Workspaces
+                  {t('digitalSignature.workspaceIdHelp')}
                 </div>
               </div>
             )}
@@ -328,8 +330,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
 
         {formData.apiProvider === 'assinafy' && (
           <div className="alert alert-info">
-            <strong>Assinafy:</strong> Plano gratuito com 100 assinaturas mensais. 
-            Ideal para começar a usar assinatura digital sem custos.
+            {t('digitalSignature.assinafyInfo')}
           </div>
         )}
       </form>

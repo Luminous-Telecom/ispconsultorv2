@@ -13,12 +13,12 @@ import Table from '@/components/tables/Table';
 import { TableConfig, BulkAction } from '@/components/tables/types';
 import { TituloModal } from '@/components/modals/titulos';
 import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
+import { useI18n } from '@/contexts/I18nContext';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import GerarNFeModal from '@/components/modals/notas-fiscais/GerarNFeModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
-import { useI18n } from '@/contexts/I18nContext';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface FinanceiroModalProps {
@@ -211,14 +211,14 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
 
 
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = useCallback((status: string) => {
     const statusConfig: Record<string, { label: string; className: string }> = {
-      'pendente': { label: 'Pendente', className: 'bg-warning' },
-      'pago': { label: 'Pago', className: 'bg-success' },
-      'vencido': { label: 'Vencido', className: 'bg-danger' },
-      'cancelado': { label: 'Cancelado', className: 'bg-secondary' },
-      'parcial': { label: 'Parcial', className: 'bg-info' },
-      'pago_atraso': { label: 'Pago em Atraso', className: 'bg-primary' }
+      'pendente': { label: t('status.pending'), className: 'bg-warning' },
+      'pago': { label: t('status.paid'), className: 'bg-success' },
+      'vencido': { label: t('status.overdue'), className: 'bg-danger' },
+      'cancelado': { label: t('status.cancelled'), className: 'bg-secondary' },
+      'parcial': { label: t('status.partial'), className: 'bg-info' },
+      'pago_atraso': { label: t('status.paidLate'), className: 'bg-primary' }
     };
 
     const config = statusConfig[status] || { label: status, className: 'bg-secondary' };
@@ -227,12 +227,12 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         {config.label}
       </span>
     );
-  };
+  }, [t]);
 
   // Funções para impressão
   const handleImprimirSelecionados = useCallback(async () => {
     if (selectedItems.length === 0) {
-      error('Nenhum título selecionado');
+      error(t('messages.noTitleSelected'));
       return;
     }
     openPrintModal();
@@ -245,17 +245,17 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       setPdfUrl(url);
       setIsGeneratingPdf(false);
       
-      success('Boletos selecionados gerados com sucesso!');
+      success(t('messages.successPrintSelected'));
     } catch (err) {
-      error('Erro ao gerar boletos selecionados');
+      error(t('messages.errorPrintSelected'));
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, error, success, openPrintModal]);
+  }, [selectedItems, error, success, openPrintModal, t]);
 
   const handleImprimirRecibos = useCallback(async () => {
     if (selectedItems.length === 0) {
-      error('Nenhum título selecionado');
+      error(t('messages.noTitleSelected'));
       return;
     }
 
@@ -263,7 +263,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     const itensPagos = selectedItems.filter(item => item.status === 'pago' || item.status === 'pago_atraso');
     
     if (itensPagos.length === 0) {
-      error('Nenhum título pago selecionado. Apenas títulos pagos podem ter recibo.');
+      error(t('messages.noPaidTitleSelected'));
       return;
     }
 
@@ -285,24 +285,24 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       const url = window.URL.createObjectURL(response.data);
       setPdfUrl(url);
       setIsGeneratingPdf(false);
-      success(`${itensPagos.length} recibo(s) gerado(s) com sucesso!`);
+      success(t('messages.receiptsGenerated', { count: itensPagos.length }));
     } catch (err) {
-      error('Erro ao gerar recibos');
+      error(t('messages.errorGeneratingReceipts'));
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [selectedItems, error, success, openPrintModal]);
+  }, [selectedItems, error, success, openPrintModal, t]);
 
   const handleImprimirTodosEmAberto = useCallback(async () => {
     if (!titulos || titulos.length === 0) {
-      error('Nenhum título encontrado');
+      error(t('messages.noTitlesFound'));
       return;
     }
     const titulosEmAberto = titulos.filter((titulo: Titulo) => 
       titulo.status === 'pendente' || titulo.status === 'vencido'
     );
     if (titulosEmAberto.length === 0) {
-      error('Nenhum título em aberto encontrado');
+      error(t('messages.noOpenTitlesFound'));
       return;
     }
     openPrintModal();
@@ -315,18 +315,18 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       setPdfUrl(url);
       setIsGeneratingPdf(false);
       
-      success('Boletos em aberto gerados com sucesso!');
+      success(t('messages.successPrintOpen'));
     } catch (err) {
-      error('Erro ao gerar boletos em aberto');
+      error(t('messages.errorPrintOpen'));
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [titulos, error, success, openPrintModal]);
+  }, [titulos, error, success, openPrintModal, t]);
 
   const columns: TableConfig<Titulo>['columns'] = useMemo(() => [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       searchable: true,
       width: 42,
@@ -335,7 +335,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'cliente',
-      label: 'Cliente',
+      label: t('table.client'),
       sortable: true,
       searchable: true,
       width: 220,
@@ -349,7 +349,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'contrato_id',
-      label: 'Contrato',
+      label: t('table.contract'),
       sortable: true,
       searchable: true,
       width: 75,
@@ -358,7 +358,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('table.status'),
       sortable: true,
       searchable: true,
       width: 80,
@@ -367,7 +367,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'plano_nome',
-      label: 'Plano',
+      label: t('table.plan'),
       sortable: true,
       searchable: true,
       width: 150,
@@ -376,7 +376,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'numero_titulo',
-      label: 'Nº Título',
+      label: t('table.titleNumber'),
       sortable: true,
       searchable: true,
       width: 120,
@@ -385,7 +385,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'data_vencimento',
-      label: 'Vencimento',
+      label: t('table.dueDate'),
       sortable: true,
       searchable: false,
       width: 90,
@@ -394,7 +394,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'valor',
-      label: 'Valor',
+      label: t('table.value'),
       sortable: true,
       searchable: true,
       width: 75,
@@ -403,7 +403,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'valor_pago',
-      label: 'Valor baixado',
+      label: t('table.paidValue'),
       sortable: true,
       searchable: true,
       width: 100,
@@ -414,7 +414,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'valor_aberto',
-      label: 'Valor aberto',
+      label: t('table.openValue'),
       sortable: true,
       searchable: true,
       width: 93,
@@ -424,7 +424,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'data_pagamento',
-      label: 'Data Pagamento',
+      label: t('table.paymentDate'),
       sortable: true,
       searchable: false,
       render: (item: Titulo) => {
@@ -438,14 +438,14 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'charge_id',
-      label: 'Charge ID',
+      label: t('table.chargeId'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.charge_id || '-'
     },
     {
       key: 'nosso_numero',
-      label: 'Nosso Número',
+      label: t('table.ourNumber'),
       sortable: true,
       searchable: true,
       width: 108,
@@ -453,7 +453,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'nfse_numero',
-      label: 'NF',
+      label: t('table.invoice'),
       sortable: true,
       searchable: true,
       width: 60,
@@ -461,18 +461,18 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'nfse_status',
-      label: 'Status NF',
+      label: t('table.invoiceStatus'),
       sortable: true,
       searchable: true,
       width: 85,
       render: (item: Titulo) => {
         if (!item.nfse_status) return '-';
         const statusMap: Record<string, { label: string; color: string }> = {
-          'agendado': { label: 'Agendado', color: 'info' },
-          'emitida': { label: 'Emitida', color: 'success' },
-          'cancelada': { label: 'Cancelada', color: 'danger' },
-          'rejeitada': { label: 'Rejeitada', color: 'warning' },
-          'erro': { label: 'Erro', color: 'danger' }
+          'agendado': { label: t('status.scheduled'), color: 'info' },
+          'emitida': { label: t('status.issued'), color: 'success' },
+          'cancelada': { label: t('status.cancelled'), color: 'danger' },
+          'rejeitada': { label: t('status.rejected'), color: 'warning' },
+          'erro': { label: t('status.error'), color: 'danger' }
         };
         const status = statusMap[item.nfse_status] || { label: item.nfse_status, color: 'secondary' };
         return <span className={`badge bg-${status.color}`}>{status.label}</span>;
@@ -480,7 +480,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: t('table.createdAt'),
       sortable: true,
       searchable: false,
       render: (item: Titulo) => {
@@ -492,7 +492,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         return item.created_at ? formatDateTime(item.created_at) : '-';
       }
     }
-  ], []);
+  ], [t, getStatusBadge]);
 
   // Verificar se há títulos com NFS-e emitida
   const hasNFSeEmitida = useMemo(() => {
@@ -502,12 +502,12 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   // Função para gerar PDF de NFS-e
   const handleImprimirNFSe = useCallback(async (selectedItems: Titulo[]) => {
     if (!selectedItems || selectedItems.length === 0) {
-      error('Nenhum título selecionado possui NFS-e emitida');
+      error(t('messages.noNFSeTitlesSelected'));
       return;
     }
     const itensComNFSe = getItensComNFSe(selectedItems);
     if (itensComNFSe.length === 0) {
-      error('Nenhum título selecionado possui NFS-e emitida');
+      error(t('messages.noNFSeTitlesSelected'));
       return;
     }
     
@@ -525,24 +525,24 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         const url = window.URL.createObjectURL(response.data);
         setPdfUrl(url);
         setIsGeneratingPdf(false);
-        success('NFS-e gerada com sucesso!');
+        success(t('messages.nfseGenerated'));
       } else {
-        throw new Error('Resposta inválida do servidor');
+        throw new Error(t('messages.error'));
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar PDF da NFS-e';
+      const errorMessage = err instanceof Error ? err.message : t('messages.errorGeneratingNFSe');
       error(errorMessage);
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [error, success, getItensComNFSe, openPrintModal]);
+  }, [error, success, getItensComNFSe, openPrintModal, t]);
 
   // Memoizar bulkActions
   const memoizedBulkActions = useMemo(() => {
     return [
       {
         key: 'editar',
-        label: 'Editar',
+        label: t('buttons.edit'),
         variant: 'primary' as const,
         onClick: (selectedItems: Titulo[]) => {
           if (selectedItems.length > 0) {
@@ -555,7 +555,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       },
       {
         key: 'receber',
-        label: 'Receber',
+        label: t('buttons.receive'),
         variant: 'primary' as const,
         onClick: (selectedItems: Titulo[]) => {
           if (selectedItems.length > 0) {
@@ -579,14 +579,14 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       },
       {
         key: 'cancelar',
-        label: 'Cancelar',
+        label: t('buttons.cancel'),
         variant: 'primary' as const,
         onClick: async (selectedItems: Titulo[]) => {
           if (selectedItems.length === 0) return;
           
           const confirmMessage = selectedItems.length === 1 
-            ? 'Tem certeza que deseja cancelar este título?'
-            : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+            ? t('messages.confirmCancelTitle')
+            : t('messages.confirmCancelTitles', { count: selectedItems.length });
             
           const confirmed = await confirm({
             message: confirmMessage,
@@ -641,7 +641,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       },
       {
         key: 'estornar',
-        label: 'Estornar',
+        label: t('buttons.reverse'),
         variant: 'primary' as const,
         onClick: async (selectedItems: Titulo[]) => {
           if (selectedItems.length === 0) return;
@@ -654,8 +654,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           
           const confirmed = await confirm({
             message: `${t('messages.confirmDelete')}\n\n` +
-              `Título: ${item.numero_titulo || item.id}\n` +
-              `Valor: ${formatCurrency(item.valor_pago || item.valor || 0)}\n\n` +
+              `${t('document.title')} ${item.numero_titulo || item.id}\n` +
+              `${t('summary.value')} ${formatCurrency(item.valor_pago || item.valor || 0)}\n\n` +
               t('financial.titleWillReturnPending'),
             variant: 'warning',
             title: t('financial.reverseTitle'),
@@ -681,19 +681,19 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       },
       {
         key: 'imprimir',
-        label: 'Imprimir',
+        label: t('buttons.print'),
         variant: 'primary' as const,
         dropdown: [
           {
-            label: 'Selecionados',
+            label: t('other.selected'),
             action: handleImprimirSelecionados
           },
           {
-            label: 'Abertos',
+            label: t('other.open'),
             action: handleImprimirTodosEmAberto
           },
           {
-            label: 'Recibo',
+            label: t('other.receipt'),
             action: handleImprimirRecibos,
             disabled: (selectedItems: Titulo[]) => {
               if (selectedItems.length === 0) return true;
@@ -703,7 +703,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           },
           // Mostrar "Imprimir NF" apenas se houver NFS-e emitida
           ...(hasNFSeEmitida ? [{
-            label: 'Imprimir NF',
+            label: t('other.printNF'),
             action: (selectedItems?: Titulo[]) => handleImprimirNFSe(selectedItems || []),
             disabled: (items: Titulo[]) => {
               if (items.length === 0) return true;
@@ -714,15 +714,15 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       },
       {
         key: 'nfse',
-        label: 'NFS-e',
+        label: t('actions.nfse'),
         variant: 'primary' as const,
         disabled: (selectedItems: Titulo[]): boolean => selectedItems.length === 0,
         dropdown: [
           {
-            label: 'Gerar NFS-e Avulsa',
+            label: t('other.generateNFSeStandalone'),
             action: (selectedItems?: Titulo[]) => {
               if (!selectedItems || selectedItems.length === 0) {
-                error('Selecione pelo menos um título');
+                error(t('messages.noTitleSelected'));
                 return;
               }
               const titulo = selectedItems[0];
@@ -779,14 +779,14 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         onChange={handleShowCanceladosChange}
       />
       <label className="form-check-label" htmlFor="showCanceladosFinanceiro">
-        Mostrar cancelados
+        {t('filter.showCanceled')}
       </label>
     </div>
-  ), [showCancelados, handleShowCanceladosChange]);
+  ), [showCancelados, handleShowCanceladosChange, t]);
 
   const customControlsAfterActions = useMemo(() => (
     <div className="d-flex align-items-center gap-2">
-      <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
+      <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">{t('filter.startDate')}</label>
       <input
         type="date"
         id="dataVencimentoInicio"
@@ -794,7 +794,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         value={dataVencimentoInicio}
         onChange={handleDataVencimentoInicioChange}
       />
-      <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
+      <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">{t('filter.endDate')}</label>
       <input
         type="date"
         id="dataVencimentoFim"
@@ -803,7 +803,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         onChange={handleDataVencimentoFimChange}
       />
     </div>
-  ), [dataVencimentoInicio, dataVencimentoFim, handleDataVencimentoInicioChange, handleDataVencimentoFimChange]);
+  ), [dataVencimentoInicio, dataVencimentoFim, handleDataVencimentoInicioChange, handleDataVencimentoFimChange, t]);
 
   const tableConfig = useMemo(() => ({
     columns,
@@ -813,16 +813,16 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     searchPlaceholder: '',
     searchField: 'numero_titulo',
     searchFields: [
-      { key: 'id', label: 'ID' },
-      { key: 'numero_titulo', label: 'Número Título' },
-      { key: 'cliente', label: 'Cliente' },
-      { key: 'plano_nome', label: 'Plano' },
-      { key: 'contrato_id', label: 'Contrato' },
-      { key: 'status', label: 'Status' },
-      { key: 'valor', label: 'Valor' },
-      { key: 'valor_pago', label: 'Valor Pago' },
-      { key: 'charge_id', label: 'Charge ID' },
-      { key: 'nosso_numero', label: 'Nosso Número' }
+      { key: 'id', label: t('table.id') },
+      { key: 'numero_titulo', label: t('table.titleNumber') },
+      { key: 'cliente', label: t('table.client') },
+      { key: 'plano_nome', label: t('table.plan') },
+      { key: 'contrato_id', label: t('table.contract') },
+      { key: 'status', label: t('table.status') },
+      { key: 'valor', label: t('table.value') },
+      { key: 'valor_pago', label: t('table.paidValue') },
+      { key: 'charge_id', label: t('table.chargeId') },
+      { key: 'nosso_numero', label: t('table.ourNumber') }
     ],
     sortable: true,
     striped: true,
@@ -850,7 +850,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         dropdown: action.dropdown
       };
     }),
-    emptyMessage: 'Nenhum título encontrado',
+    emptyMessage: t('empty.noTitles'),
     pagination: pagination ? {
       current_page: pagination.current_page,
       last_page: pagination.last_page,
@@ -869,7 +869,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     memoizedBulkActions,
     pagination,
     customControls,
-    customControlsAfterActions
+    customControlsAfterActions,
+    t
   ]);
 
   const modalContent = (
@@ -897,13 +898,13 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           <div className={`d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo ${isMobile ? 'financeiro-resumo-container-mobile' : 'financeiro-resumo-container'}`}>
             <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
               <div className="text-end">
-                <div className="small text-muted">Valor:</div>
+                <div className="small text-muted">{t('summary.value')}</div>
                 <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
                   return sum + Number(item.valor_final || item.valor || 0);
                 }, 0))}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor baixado:</div>
+                <div className="small text-muted">{t('summary.paidValue')}</div>
                 <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
                   // Considerar apenas valor_pago se existir e for maior que 0
                   const valorPago = Number(item.valor_pago || 0);
@@ -914,7 +915,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                 }, 0))}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor aberto:</div>
+                <div className="small text-muted">{t('summary.openValue')}</div>
                 <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
                   // Considerar apenas títulos pendentes ou vencidos (não pagos e não cancelados)
                   if (item.status === 'pago' || item.status === 'cancelado') {
@@ -929,7 +930,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
               </div>
               {showCancelados && (
                 <div className="text-end">
-                  <div className="small text-muted">Valor cancelado:</div>
+                  <div className="small text-muted">{t('summary.canceledValue')}</div>
                   <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
                     return sum + (item.status === 'cancelado' ? Number(item.valor_final || item.valor || 0) : 0);
                   }, 0))}</strong>
@@ -1038,7 +1039,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       <DraggableModal
         show={show}
         onClose={onClose}
-        title="Financeiro - Títulos"
+        title={t('financial.title')}
         size="xl"
         modalId="financeiro-modal"
         className="no-padding"
@@ -1086,7 +1087,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         }}
         pdfUrl={pdfUrl}
         isGenerating={isGeneratingPdf}
-        title="Visualizar Documento"
+        title={t('document.viewDocument')}
         modalId="financeiro-imprimir-modal"
       />
 
@@ -1095,7 +1096,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         show={auditoria.showPreview}
         onClose={auditoria.handleClosePreview}
         pdfUrl={auditoria.pdfUrl}
-        title="Relatórios de logs"
+        isGenerating={auditoria.isGeneratingPdf}
+        title={t('financial.executionLogs')}
         modalId="auditoria-titulo-modal"
       />
 

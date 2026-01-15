@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { NFSeConfigService, type NFSeConfigUpdate } from '@/services/nfseConfigService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface NFSeConfigSectionProps {
   disabled?: boolean;
@@ -14,6 +15,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
   onSaveReady,
   onTestReady
 }) => {
+  const { t } = useI18n();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -39,7 +41,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
     queryFn: async () => {
       const response = await NFSeConfigService.get();
       if (!response.success) {
-        throw new Error(response.message || 'Erro ao carregar configuração');
+        throw new Error(response.message || t('nfse.messages.loadingError'));
       }
       return response.data;
     },
@@ -73,7 +75,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
     mutationFn: async (data: typeof formData) => {
       if (data.provider === 'ASAAS') {
         if (!data.asaas_api_key) {
-          throw new Error('API Key do Asaas é obrigatória para testar conexão');
+          throw new Error(t('nfse.messages.apiKeyRequired'));
         }
 
         const response = await NFSeConfigService.testAuth({
@@ -83,14 +85,14 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
         });
         
         if (!response.success) {
-          const errorMessage = response.message || 'Erro ao testar conexão';
+          const errorMessage = response.message || t('nfse.messages.testError');
           throw new Error(errorMessage);
         }
         
         return response.data;
       } else if (data.provider === 'PORTAL_NACIONAL') {
         if (!data.portal_nacional_username || !data.portal_nacional_password) {
-          throw new Error('Usuário e senha são obrigatórios para testar autenticação');
+          throw new Error(t('nfse.messages.credentialsRequired'));
         }
 
         const response = await NFSeConfigService.testAuth({
@@ -101,22 +103,22 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
         });
         
         if (!response.success) {
-          const errorMessage = response.message || 'Erro ao testar autenticação';
+          const errorMessage = response.message || t('nfse.messages.testError');
           throw new Error(errorMessage);
         }
         
         return response.data;
       } else {
-        throw new Error('Selecione um provedor para testar a conexão');
+        throw new Error(t('nfse.messages.providerRequired'));
       }
     },
     onSuccess: () => {
       success(formData.provider === 'ASAAS' 
-        ? 'Conexão com Asaas testada com sucesso! A API Key está válida.'
-        : 'Autenticação testada com sucesso! As credenciais estão corretas.');
+        ? t('nfse.messages.testSuccessAsaas')
+        : t('nfse.messages.testSuccessPortal'));
     },
     onError: (error: Error) => {
-      const errorMessage = error?.message || 'Erro ao testar conexão';
+      const errorMessage = error?.message || t('nfse.messages.testError');
       showError(errorMessage);
     }
   });
@@ -142,19 +144,19 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
       const response = await NFSeConfigService.update(updateData);
       
       if (!response.success) {
-        const errorMessage = response.message || response.errors || 'Erro ao salvar configuração';
-        throw new Error(typeof errorMessage === 'string' ? errorMessage : 'Erro ao salvar configuração');
+        const errorMessage = response.message || response.errors || t('nfse.messages.saveError');
+        throw new Error(typeof errorMessage === 'string' ? errorMessage : t('nfse.messages.saveError'));
       }
       
       return response.data;
     },
     onSuccess: async () => {
-      success('Configurações de NFS-e salvas com sucesso!');
+      success(t('nfse.messages.saveSuccess'));
       await queryClient.invalidateQueries({ queryKey: ['nfse-config'] });
       await refetch();
     },
     onError: (error: Error) => {
-      const errorMessage = error?.message || 'Erro ao salvar configurações de NFS-e';
+      const errorMessage = error?.message || t('nfse.messages.saveError');
       showError(errorMessage);
     }
   });
@@ -197,12 +199,12 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
     return (
       <div className="card mb-3">
         <div className="card-header">
-          <h6 className="mb-0">NFS-e</h6>
+          <h6 className="mb-0">{t('nfse.title')}</h6>
         </div>
         <div className="card-body">
           <div className="text-center p-3">
             <div className="spinner-border spinner-border-sm text-primary" role="status">
-              <span className="visually-hidden">Carregando...</span>
+              <span className="visually-hidden">{t('ui.loading')}</span>
             </div>
           </div>
         </div>
@@ -213,14 +215,14 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
   return (
     <div className="card mb-3">
       <div className="card-header">
-        <h6 className="mb-0">NFS-e</h6>
+        <h6 className="mb-0">{t('nfse.title')}</h6>
       </div>
       <div className="card-body">
         <form id="nfse-config-form" onSubmit={handleSave}>
           <div className="row">
             <div className="col-md-6 mb-3">
               <label htmlFor="nfse_codigo_servico" className="form-label">
-                Código de Serviço Municipal
+                {t('nfse.municipalServiceCode')}
               </label>
               <input
                 type="text"
@@ -229,16 +231,16 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                 value={formData.codigo_servico_municipal}
                 onChange={(e) => handleInputChange('codigo_servico_municipal', e.target.value)}
                 disabled={disabled || saveMutation.isPending}
-                placeholder="Ex: 1401"
+                placeholder={t('placeholder.serviceCode')}
               />
               <small className="text-muted d-block mt-1">
-                Código da lista de serviços do município (ex: 1401 para serviços de TI)
+                {t('nfse.municipalServiceCodeHelp')}
               </small>
             </div>
 
             <div className="col-md-6 mb-3">
               <label htmlFor="nfse_aliquota_iss" className="form-label">
-                Alíquota de ISS (%)
+                {t('nfse.issRate')}
               </label>
               <input
                 type="number"
@@ -253,14 +255,14 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                 placeholder="0.00"
               />
               <small className="text-muted d-block mt-1">
-                Alíquota padrão de ISS para as notas fiscais (0 a 100)
+                {t('nfse.issRateHelp')}
               </small>
             </div>
           </div>
 
           <div className="mb-3">
             <label htmlFor="nfse_descricao_servico" className="form-label">
-              Descrição do Serviço
+              {t('nfse.serviceDescription')}
             </label>
             <textarea
               className="form-control"
@@ -272,14 +274,14 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
               placeholder="Ex: Prestação de serviços de desenvolvimento de software"
             />
             <small className="text-muted d-block mt-1">
-              Descrição padrão do serviço prestado nas notas fiscais
+              {t('nfse.serviceDescriptionHelp')}
             </small>
           </div>
 
           <div className="row">
             <div className="col-md-6 mb-3">
               <label htmlFor="nfse_serie_nf" className="form-label">
-                Série da NF
+                {t('nfse.nfSerie')}
               </label>
               <input
                 type="text"
@@ -292,13 +294,13 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                 maxLength={10}
               />
               <small className="text-muted d-block mt-1">
-                Série da NF (permitida: 80000 a 89999)
+                {t('nfse.nfSerieHelp')}
               </small>
             </div>
 
             <div className="col-md-6 mb-3">
               <label htmlFor="nfse_numero_dps" className="form-label">
-                Número do DPS
+                {t('nfse.dpsNumber')}
               </label>
               <input
                 type="number"
@@ -311,14 +313,14 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                 placeholder="1"
               />
               <small className="text-muted d-block mt-1">
-                Número do DPS (Documento de Prestação de Serviços)
+                {t('nfse.dpsNumberHelp')}
               </small>
             </div>
           </div>
 
           <div className="mb-3">
             <label htmlFor="nfse_provider" className="form-label">
-              Provedor de NFS-e
+              {t('nfse.provider')}
             </label>
             <select
               className="form-control"
@@ -331,7 +333,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
               <option value="PORTAL_NACIONAL">Portal Nacional</option>
             </select>
             <small className="text-muted d-block mt-1">
-              Selecione o provedor que será usado para emitir as notas fiscais
+              {t('nfse.providerHelp')}
             </small>
           </div>
 
@@ -339,7 +341,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
             <>
               <div className="mb-3">
                 <label htmlFor="nfse_asaas_api_key" className="form-label">
-                  API Key do Asaas
+                  {t('nfse.asaasApiKey')}
                 </label>
                 <input
                   type="password"
@@ -348,10 +350,10 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                   value={formData.asaas_api_key}
                   onChange={(e) => handleInputChange('asaas_api_key', e.target.value)}
                   disabled={disabled || saveMutation.isPending}
-                  placeholder="Token da API Asaas"
+                  placeholder={t('placeholder.apiToken')}
                 />
                 <small className="text-muted d-block mt-1">
-                  Token da API do Asaas disponível no painel administrativo (Configurações &gt; Integrações &gt; API Key)
+                  {t('nfse.asaasApiKeyHelp')}
                 </small>
               </div>
 
@@ -366,11 +368,11 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                     disabled={disabled || saveMutation.isPending}
                   />
                   <label className="form-check-label" htmlFor="nfse_asaas_sandbox">
-                    Usar ambiente Sandbox
+                    {t('nfse.useSandbox')}
                   </label>
                 </div>
                 <small className="text-muted d-block mt-1">
-                  Marque para usar o ambiente de testes do Asaas
+                  {t('nfse.useSandboxHelp')}
                 </small>
               </div>
             </>
@@ -381,7 +383,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
               <div className="row">
               <div className="col-md-6 mb-3">
                 <label htmlFor="nfse_portal_username" className="form-label">
-                  Usuário
+                  {t('nfse.username')}
                 </label>
                 <input
                   type="text"
@@ -390,13 +392,13 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                   value={formData.portal_nacional_username}
                   onChange={(e) => handleInputChange('portal_nacional_username', e.target.value)}
                   disabled={disabled || saveMutation.isPending}
-                  placeholder="Usuário do Portal Nacional"
+                  placeholder={t('nfse.username')}
                 />
               </div>
 
               <div className="col-md-6 mb-3">
                 <label htmlFor="nfse_portal_password" className="form-label">
-                  Senha
+                  {t('nfse.password')}
                 </label>
                 <input
                   type="password"
@@ -405,7 +407,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                   value={formData.portal_nacional_password}
                   onChange={(e) => handleInputChange('portal_nacional_password', e.target.value)}
                   disabled={disabled || saveMutation.isPending}
-                  placeholder="Senha do Portal Nacional"
+                  placeholder={t('nfse.password')}
                 />
               </div>
             </div>
@@ -413,7 +415,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
             <div className="row">
               <div className="col-md-8 mb-3">
                 <label htmlFor="nfse_portal_base_url" className="form-label">
-                  URL Base da API
+                  {t('nfse.baseUrl')}
                 </label>
                 <input
                   type="url"
@@ -428,7 +430,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
 
               <div className="col-md-4 mb-3">
                 <label htmlFor="nfse_portal_ambiente" className="form-label">
-                  Ambiente
+                  {t('nfse.environment')}
                 </label>
                 <select
                   className="form-control"
@@ -437,8 +439,8 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                   onChange={(e) => handleInputChange('portal_nacional_ambiente', e.target.value as 'HOMOLOGACAO' | 'PRODUCAO')}
                   disabled={disabled || saveMutation.isPending}
                 >
-                  <option value="HOMOLOGACAO">Homologação</option>
-                  <option value="PRODUCAO">Produção</option>
+                  <option value="HOMOLOGACAO">{t('nfse.homologation')}</option>
+                  <option value="PRODUCAO">{t('nfse.production')}</option>
                 </select>
               </div>
             </div>

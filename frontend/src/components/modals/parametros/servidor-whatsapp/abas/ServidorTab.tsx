@@ -1,6 +1,7 @@
 import React from 'react';
 import { FormField, Button } from '@/components/ui';
 import { ServidorTabProps } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 const ServidorTab: React.FC<ServidorTabProps> = ({
   formData,
@@ -14,6 +15,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
   onSendTestMessage,
   isSendingTest
 }) => {
+  const { t } = useI18n();
   const isEvolution = formData.tipo_api === 'evolution';
   const isWhatsAppCloud = formData.tipo_api === 'whatsapp_cloud';
 
@@ -22,7 +24,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
       <div className="card">
         <div className="card-header py-1 px-2">
           <small className="fw-bold mb-0">
-            {servidorAtivo?.data ? 'Configurações do Servidor WhatsApp' : 'Configurar Servidor WhatsApp'}
+            {servidorAtivo?.data ? t('settings.server.config') : t('settings.server.configure')}
           </small>
         </div>
         <div className="card-body p-2">
@@ -176,29 +178,29 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
           <div className="col-12">
             <small className="fw-bold text-primary mb-3">
               <i className="bi bi-chat-dots me-2"></i>
-              Enviar Mensagem de Teste
+              {t('settings.test.title')}
             </small>
             <div className="row g-2">
               <div className="col-md-6">
                 <FormField
                   name="testPhone"
                   type="text"
-                  label="Número do Telefone"
+                  label={t('settings.test.phone')}
                   placeholder="5511999999999"
                   size="sm"
                   value={testPhone}
                   onChange={(e) => onTestPhoneChange(String(e ?? ''))}
                 />
                 <small className="form-text text-secondary">
-                  Digite o número com código do país (ex: 5511999999999)
+                  {t('settings.test.helper')}
                 </small>
               </div>
               <div className="col-md-6">
                 <FormField
                   name="testMessage"
                   type="text"
-                  label="Mensagem"
-                  placeholder="Mensagem de teste do sistema BackNet"
+                  label={t('settings.test.message')}
+                  placeholder={t('placeholder.testMessage')}
                   size="sm"
                   value={testMessage}
                   onChange={(e) => onTestMessageChange(String(e ?? ''))}
@@ -213,7 +215,7 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 onClick={onSendTestMessage}
                 isLoading={isSendingTest}
               >
-                Enviar Teste
+                {t('settings.test.send')}
               </Button>
             </div>
           </div>

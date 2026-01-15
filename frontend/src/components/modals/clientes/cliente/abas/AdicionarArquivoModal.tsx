@@ -66,12 +66,12 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
     e.preventDefault();
 
     if (!arquivo) {
-      error('Selecione um arquivo');
+      error(t('messages.selectFile'));
       return;
     }
 
     if (!nome.trim()) {
-      error('Informe o nome do arquivo');
+      error(t('messages.enterFileName'));
       return;
     }
 
@@ -87,11 +87,11 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
         origem: 'manual'
       });
 
-      success('Arquivo adicionado com sucesso');
+      success(t('messages.fileAddedSuccess'));
       onSuccess?.();
       onClose();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao adicionar arquivo';
+      const errorMessage = err instanceof Error ? err.message : t('messages.fileAddedError');
       error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -105,7 +105,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
         onClick={onClose}
         disabled={isSubmitting}
       >
-        Cancelar
+        {t('actions.cancel')}
       </Button>
       <Button
         variant="primary"
@@ -114,7 +114,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
         isLoading={isSubmitting}
         form="adicionar-arquivo-form"
       >
-        Salvar
+        {t('actions.save')}
       </Button>
     </>
   );
@@ -135,21 +135,21 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
               <FormField
                 name="arquivo"
                 type="file"
-                label="Arquivo"
+                label={t('form.file')}
                 required
                 accept="*/*"
                 onChange={handleFileSelect}
                 disabled={isSubmitting}
-                helpText={nomeArquivo ? `Arquivo selecionado: ${nomeArquivo}` : undefined}
+                helpText={nomeArquivo ? `${t('form.fileSelected')}: ${nomeArquivo}` : undefined}
               />
 
               <FormField
                 name="nome"
                 type="text"
-                label="Nome"
+                label={t('form.name')}
                 value={nome}
                 onChange={(value) => setNome(String(value || ''))}
-                placeholder="Nome do arquivo"
+                placeholder={t('placeholder.fileName')}
                 required
                 disabled={isSubmitting}
               />
@@ -175,7 +175,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
                 label={t('form.description')}
                 value={descricao}
                 onChange={(value) => setDescricao(String(value || ''))}
-                placeholder={t('placeholder.fileDescription')}
+                placeholder={t('placeholder.description')}
                 rows={3}
                 disabled={isSubmitting}
               />

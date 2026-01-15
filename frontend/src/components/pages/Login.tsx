@@ -3,8 +3,10 @@ import { useNotificationContext } from '@/components/notifications/NotificationP
 import { authService } from '@/services/authService';
 import { removeAuthToken } from '@/services/core';
 import BackNetLogo from '@/components/common/BackNetLogo';
+import { useI18n } from '@/contexts/I18nContext';
 
 const Login: React.FC = () => {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +40,7 @@ const Login: React.FC = () => {
     try {
       // Revalidar email e senha ao submeter
       if (!email || !password) {
-        error('Informe email e senha para continuar.');
+        error(t('login.infoRequired'));
         setIsLoading(false);
         return;
       }
@@ -51,21 +53,21 @@ const Login: React.FC = () => {
         if (token) {
           // Salvar timestamp do login para evitar redirecionamento imediato em caso de erro 401
           sessionStorage.setItem('last_login_time', Date.now().toString());
-          success('Autenticação realizada com sucesso.');
-          // Usar window.location para forçar reload completo e evitar problemas de cache/SPA
+          success(t('login.success'));
+          // Usar window.location forçar reload completo e evitar problemas de cache/SPA
           window.location.href = '/adm';
         } else {
-          error('Erro ao salvar token de autenticação. Tente novamente.');
+          error(t('login.errorToken'));
           removeAuthToken();
         }
       } else {
         removeAuthToken();
-        error(response.message || 'Não foi possível autenticar. Verifique suas credenciais.');
+        error(response.message || t('login.errorCredentials'));
       }
     } catch (err) {
       removeAuthToken();
       // Verificar se é um erro de autenticação (credenciais inválidas)
-      const errorMessage = err instanceof Error ? err.message : 'Falha ao autenticar. Tente novamente.';
+      const errorMessage = err instanceof Error ? err.message : t('login.errorGeneral');
       // Não mostrar erro se o token foi salvo (login bem-sucedido apesar do erro)
       const token = localStorage.getItem('auth_token');
       if (!token) {
@@ -87,13 +89,13 @@ const Login: React.FC = () => {
                   <div className="mb-3">
                     <BackNetLogo width={280} height={100} />
                   </div>
-                  <p className="text-muted small mb-0">Acesse o painel administrativo</p>
+                  <p className="text-muted small mb-0">{t('login.title')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
                     <label htmlFor="email" className="form-label">
-                      Email
+                      {t('form.email')}
                     </label>
                     <input
                       type="email"
@@ -104,13 +106,13 @@ const Login: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      placeholder="seu@email.com"
+                      placeholder={t('login.emailPlaceholder')}
                     />
                   </div>
 
                   <div className="mb-3">
                     <label htmlFor="password" className="form-label">
-                      Senha
+                      {t('form.password')}
                     </label>
                     <input
                       type="password"
@@ -121,7 +123,7 @@ const Login: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      placeholder="Sua senha"
+                      placeholder={t('login.passwordPlaceholder')}
                     />
                   </div>
 
@@ -133,10 +135,10 @@ const Login: React.FC = () => {
                     {isLoading ? (
                       <>
                         <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Entrando...
+                        {t('login.entering')}
                       </>
                     ) : (
-                      'Entrar'
+                      t('login.enter')
                     )}
                   </button>
                 </form>
@@ -148,7 +150,7 @@ const Login: React.FC = () => {
                     </p>
                   )}
                   <p className="text-muted mb-0" style={{ fontSize: '0.75rem' }}>
-                    © {new Date().getFullYear()} BackNet. Todos os direitos reservados.
+                    © {new Date().getFullYear()} BackNet. {t('login.allRightsReserved')}
                   </p>
                 </div>
               </div>

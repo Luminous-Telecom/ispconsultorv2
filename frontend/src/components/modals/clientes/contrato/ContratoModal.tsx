@@ -380,9 +380,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       setPdfUrlLocal(url);
       setIsGeneratingPdfLocal(false);
       
-      success('Boletos selecionados gerados com sucesso!');
+      success(t('messages.successPrintSelected'));
     } catch (err) {
-      error('Erro ao gerar boletos selecionados');
+      error(t('messages.errorPrintSelected'));
       setShowPreview(false);
       setIsGeneratingPdfLocal(false);
     }
@@ -390,7 +390,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   const handleImprimirContrato = async () => {
     if (!contratoData?.cliente_id) {
-      error('Cliente não encontrado');
+      error(t('messages.clientNotFound'));
       return;
     }
     
@@ -402,14 +402,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   const handleImprimirTodosEmAberto = async () => {
     if (!titulosData?.data) {
-      success('Nenhum título encontrado');
+      success(t('messages.noData'));
       return;
     }
     const titulosEmAberto = titulosData.data.filter((titulo: Titulo) => 
       titulo.status === 'pendente' || titulo.status === 'vencido'
     );
     if (titulosEmAberto.length === 0) {
-      success('Nenhum título em aberto encontrado');
+      success(t('messages.noData'));
       return;
     }
     // Abrir modal imediatamente
@@ -430,9 +430,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       setPdfUrlLocal(url);
       setIsGeneratingPdfLocal(false);
       
-      success('Boletos em aberto gerados com sucesso!');
+      success(t('messages.successPrintOpen'));
     } catch (err) {
-      error('Erro ao gerar boletos em aberto');
+      error(t('messages.errorPrintOpen'));
       setShowPreview(false);
       setIsGeneratingPdfLocal(false);
     }
@@ -459,9 +459,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       setPdfUrlLocal(url);
       setIsGeneratingPdfLocal(false);
       
-      success('Boletos selecionados gerados com sucesso!');
+      success(t('messages.successPrintSelected'));
     } catch (err) {
-      error('Erro ao gerar boletos selecionados');
+      error(t('messages.errorPrintSelected'));
       setShowPreview(false);
       setIsGeneratingPdfLocal(false);
     }
@@ -469,14 +469,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   const handleImprimirTodosEmAbertoAvulsos = async () => {
     if (!titulosAvulsosData?.data) {
-      success('Nenhum título encontrado');
+      success(t('messages.noData'));
       return;
     }
     const titulosEmAberto = titulosAvulsosData.data.filter((titulo: Titulo) => 
       titulo.status === 'pendente' || titulo.status === 'vencido'
     );
     if (titulosEmAberto.length === 0) {
-      success('Nenhum título em aberto encontrado');
+      success(t('messages.noData'));
       return;
     }
     // Abrir modal imediatamente
@@ -497,9 +497,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       setPdfUrlLocal(url);
       setIsGeneratingPdfLocal(false);
       
-      success('Boletos em aberto gerados com sucesso!');
+      success(t('messages.successPrintOpen'));
     } catch (err) {
-      error('Erro ao gerar boletos em aberto');
+      error(t('messages.errorPrintOpen'));
       setShowPreview(false);
       setIsGeneratingPdfLocal(false);
     }
@@ -508,7 +508,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Bulk actions para títulos (apenas no modo edição)
   const bulkActions: BulkAction<Titulo>[] = isEditMode ? [
     {
-      label: 'Editar',
+      label: t('actions.edit'),
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -519,7 +519,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: (selectedItems: Titulo[]) => selectedItems.length !== 1
     },
     {
-      label: 'Receber',
+      label: t('actions.receive'),
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -533,20 +533,20 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: 'Cancelar',
+      label: t('actions.cancel'),
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
         const confirmMessage = selectedItems.length === 1 
-          ? 'Tem certeza que deseja cancelar este título?'
-          : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+          ? t('messages.confirmCancelTitle')
+          : t('messages.confirmCancelTitles', { count: selectedItems.length });
           
         const confirmed = await confirm({
           message: confirmMessage,
           variant: 'warning',
-          title: 'Cancelar títulos',
-          confirmText: 'Cancelar',
-          cancelText: 'Voltar',
+          title: t('financial.cancelTitles'),
+          confirmText: t('actions.cancel'),
+          cancelText: t('buttons.back'),
         });
         
         if (confirmed) {
@@ -572,19 +572,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             
             if (successCount > 0) {
               const message = successCount === 1 
-                ? 'Título cancelado com sucesso!'
-                : `${successCount} títulos cancelados com sucesso!`;
+                ? t('messages.successCancelTitle')
+                : t('messages.successCancelTitles', { count: successCount });
               success(message);
             }
             
             if (errorCount > 0) {
               const message = errorCount === 1 
-                ? '1 título não pôde ser cancelado'
-                : `${errorCount} títulos não puderam ser cancelados`;
+                ? t('messages.errorCancelTitle')
+                : t('messages.errorCancelTitles', { count: errorCount });
               error(message);
             }
           } catch (err) {
-            error('Erro ao cancelar títulos');
+            error(t('messages.errorCancelTitlesGeneral'));
           }
         }
       },
@@ -594,33 +594,33 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: 'Estornar',
+      label: t('actions.reverse'),
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
         const item = selectedItems[0];
         if (item.status !== 'pago') {
-          error('Só é possível estornar títulos que estão pagos');
+          error(t('financial.canOnlyReversePaid'));
           return;
         }
         
         const confirmed = await confirm({
-          message: `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
-            `Valor: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
-            `O título voltará para status PENDENTE.`,
+          message: `${t('financial.confirmReverse', { number: item.numero_titulo })}\n\n` +
+            `${t('form.value')}: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
+            `${t('financial.titleWillReturnPending')}`,
           variant: 'warning',
-          title: 'Estornar título',
-          confirmText: 'Estornar',
-          cancelText: 'Cancelar',
+          title: t('financial.reverseTitle'),
+          confirmText: t('actions.reverse'),
+          cancelText: t('actions.cancel'),
         });
         
         if (confirmed) {
           try {
             await TituloService.estornar(item.id);
-            success('Título estornado com sucesso!');
+            success(t('messages.successReverseTitle'));
             queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
           } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
+            const errorMessage = err instanceof Error ? err.message : t('messages.errorReverseTitle');
             error(errorMessage);
           }
         }
@@ -636,17 +636,17 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: () => false,
       dropdown: [
         {
-          label: 'Selecionados',
+          label: t('other.selected'),
           action: handleImprimirSelecionados
         },
         {
-          label: 'Abertos',
+          label: t('other.open'),
           action: handleImprimirTodosEmAberto
         }
       ]
     },
     {
-      label: 'Enviar',
+      label: t('buttons.send'),
       disabled: (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'cancelado');
@@ -688,25 +688,25 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 
                 if (successCount > 0) {
                   const message = successCount === 1 
-                    ? 'Mensagem enviada com sucesso!'
-                    : `${successCount} mensagens enviadas com sucesso!`;
+                    ? t('messages.successSendMessage')
+                    : t('messages.successSendMessages', { count: successCount });
                   success(message);
                 }
                 
                 if (errorCount > 0) {
                   const message = firstErrorMessage || (errorCount === 1 
-                    ? '1 mensagem não pôde ser enviada'
-                    : `${errorCount} mensagens não puderam ser enviadas`);
+                    ? t('messages.errorSendMessage')
+                    : t('messages.errorSendMessages', { count: errorCount }));
                   error(message);
                 }
               } catch (err) {
-                error('Erro ao enviar mensagens');
+                error(t('messages.errorSendMessagesGeneral'));
               }
             }
           }
         },
         {
-          label: 'Via Email',
+          label: t('other.viaEmail'),
           action: async (selectedItems?: Titulo[]) => {
             const items = selectedItems || [];
             if (items.length > 0) {
@@ -741,19 +741,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 
                 if (successCount > 0) {
                   const message = successCount === 1 
-                    ? 'Email enviado com sucesso!'
-                    : `${successCount} emails enviados com sucesso!`;
+                    ? t('messages.successSendEmail')
+                    : t('messages.successSendEmails', { count: successCount });
                   success(message);
                 }
                 
                 if (errorCount > 0) {
                   const message = firstErrorMessage || (errorCount === 1 
-                    ? '1 email não pôde ser enviado'
-                    : `${errorCount} emails não puderam ser enviados`);
+                    ? t('messages.errorSendEmail')
+                    : t('messages.errorSendEmails', { count: errorCount }));
                   error(message);
                 }
               } catch (err) {
-                error('Erro ao enviar emails');
+                error(t('messages.errorSendEmailsGeneral'));
               }
             }
           }
@@ -772,7 +772,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: 'Editar',
+      label: t('actions.edit'),
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -783,7 +783,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: (selectedItems: Titulo[]) => selectedItems.length !== 1
     },
     {
-      label: 'Receber',
+      label: t('actions.receive'),
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -797,20 +797,20 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: 'Cancelar',
+      label: t('actions.cancel'),
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
         const confirmMessage = selectedItems.length === 1 
-          ? 'Tem certeza que deseja cancelar este título?'
-          : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+          ? t('messages.confirmCancelTitle')
+          : t('messages.confirmCancelTitles', { count: selectedItems.length });
           
         const confirmed = await confirm({
           message: confirmMessage,
           variant: 'warning',
-          title: 'Cancelar títulos',
-          confirmText: 'Cancelar',
-          cancelText: 'Voltar',
+          title: t('financial.cancelTitles'),
+          confirmText: t('actions.cancel'),
+          cancelText: t('buttons.back'),
         });
         
         if (confirmed) {
@@ -836,19 +836,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             
             if (successCount > 0) {
               const message = successCount === 1 
-                ? 'Título cancelado com sucesso!'
-                : `${successCount} títulos cancelados com sucesso!`;
+                ? t('messages.successCancelTitle')
+                : t('messages.successCancelTitles', { count: successCount });
               success(message);
             }
             
             if (errorCount > 0) {
               const message = errorCount === 1 
-                ? '1 título não pôde ser cancelado'
-                : `${errorCount} títulos não puderam ser cancelados`;
+                ? t('messages.errorCancelTitle')
+                : t('messages.errorCancelTitles', { count: errorCount });
               error(message);
             }
           } catch (err) {
-            error('Erro ao cancelar títulos');
+            error(t('messages.errorCancelTitlesGeneral'));
           }
         }
       },
@@ -858,33 +858,33 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: 'Estornar',
+      label: t('actions.reverse'),
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return;
         
         const item = selectedItems[0];
         if (item.status !== 'pago') {
-          error('Só é possível estornar títulos que estão pagos');
+          error(t('financial.canOnlyReversePaid'));
           return;
         }
         
         const confirmed = await confirm({
-          message: `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
-            `Valor: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
-            `O título voltará para status PENDENTE.`,
+          message: `${t('financial.confirmReverse', { number: item.numero_titulo })}\n\n` +
+            `${t('form.value')}: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
+            `${t('financial.titleWillReturnPending')}`,
           variant: 'warning',
-          title: 'Estornar título',
-          confirmText: 'Estornar',
-          cancelText: 'Cancelar',
+          title: t('financial.reverseTitle'),
+          confirmText: t('actions.reverse'),
+          cancelText: t('actions.cancel'),
         });
         
         if (confirmed) {
           try {
             await TituloService.estornar(item.id);
-            success('Título estornado com sucesso!');
+            success(t('messages.successReverseTitle'));
             queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
           } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
+            const errorMessage = err instanceof Error ? err.message : t('messages.errorReverseTitle');
             error(errorMessage);
           }
         }
@@ -900,17 +900,17 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: () => false,
       dropdown: [
         {
-          label: 'Selecionados',
+          label: t('other.selected'),
           action: handleImprimirSelecionadosAvulsos
         },
         {
-          label: 'Abertos',
+          label: t('other.open'),
           action: handleImprimirTodosEmAbertoAvulsos
         }
       ]
     },
     {
-      label: 'Enviar',
+      label: t('buttons.send'),
       disabled: (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status === 'cancelado');
@@ -952,25 +952,25 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 
                 if (successCount > 0) {
                   const message = successCount === 1 
-                    ? 'Mensagem enviada com sucesso!'
-                    : `${successCount} mensagens enviadas com sucesso!`;
+                    ? t('messages.successSendMessage')
+                    : t('messages.successSendMessages', { count: successCount });
                   success(message);
                 }
                 
                 if (errorCount > 0) {
                   const message = firstErrorMessage || (errorCount === 1 
-                    ? '1 mensagem não pôde ser enviada'
-                    : `${errorCount} mensagens não puderam ser enviadas`);
+                    ? t('messages.errorSendMessage')
+                    : t('messages.errorSendMessages', { count: errorCount }));
                   error(message);
                 }
               } catch (err) {
-                error('Erro ao enviar mensagens');
+                error(t('messages.errorSendMessagesGeneral'));
               }
             }
           }
         },
         {
-          label: 'Via Email',
+          label: t('other.viaEmail'),
           action: async (selectedItems?: Titulo[]) => {
             const items = selectedItems || [];
             if (items.length > 0) {
@@ -1005,19 +1005,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 
                 if (successCount > 0) {
                   const message = successCount === 1 
-                    ? 'Email enviado com sucesso!'
-                    : `${successCount} emails enviados com sucesso!`;
+                    ? t('messages.successSendEmail')
+                    : t('messages.successSendEmails', { count: successCount });
                   success(message);
                 }
                 
                 if (errorCount > 0) {
                   const message = firstErrorMessage || (errorCount === 1 
-                    ? '1 email não pôde ser enviado'
-                    : `${errorCount} emails não puderam ser enviados`);
+                    ? t('messages.errorSendEmail')
+                    : t('messages.errorSendEmails', { count: errorCount }));
                   error(message);
                 }
               } catch (err) {
-                error('Erro ao enviar emails');
+                error(t('messages.errorSendEmailsGeneral'));
               }
             }
           }
@@ -1029,7 +1029,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Bulk actions para termos (apenas no modo edição)
   const termosBulkActions: BulkAction<TermoContrato>[] = isEditMode ? [
     {
-      label: 'Novo',
+      label: t('actions.create'),
       action: () => {
         setEditingTermo(null);
         setTermoFormData({
@@ -1040,7 +1040,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: 'Editar',
+      label: t('actions.edit'),
       action: (selectedItems: TermoContrato[]) => {
         const termo = selectedItems && selectedItems.length > 0 ? selectedItems[0] : (selectedTermosItems.length > 0 ? selectedTermosItems[0] : null);
         if (termo) {
@@ -1055,14 +1055,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: (selectedItems: TermoContrato[]) => selectedItems.length === 0 && selectedTermosItems.length === 0
     },
     {
-      label: 'Deletar',
+      label: t('actions.delete'),
       action: async (selectedItems: TermoContrato[]) => {
         const items = selectedItems && selectedItems.length > 0 ? selectedItems : selectedTermosItems;
         if (items.length === 0) return;
         
         const confirmMessage = items.length === 1 
           ? t('messages.confirmDelete')
-          : `${t('messages.confirmDelete')} (${items.length} termos)`;
+          : `${t('messages.confirmDelete')} (${items.length} ${t('tabs.terms').toLowerCase()})`;
           
         const confirmed = await confirm({
           message: confirmMessage,
@@ -1074,13 +1074,23 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         
         if (confirmed) {
           try {
+            let successCount = 0;
             for (const item of items) {
               await deleteTermoMutation.mutateAsync(item.id);
+              successCount++;
             }
-            success('Termo(s) deletado(s) com sucesso!');
+            if (successCount === 1) {
+              success(t('messages.successDeleteTerm'));
+            } else {
+              success(t('messages.successDeleteTerms'));
+            }
             queryClient.invalidateQueries({ queryKey: ['termos-contrato', internalContratoId] });
           } catch (err) {
-            error('Erro ao deletar termo(s)');
+            if (items.length === 1) {
+              error(t('messages.errorDeleteTerm'));
+            } else {
+              error(t('messages.errorDeleteTerms'));
+            }
           }
         }
       },
@@ -1138,14 +1148,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Bulk actions para serviços adicionais (apenas no modo edição)
   const servicosAdicionaisBulkActions: BulkAction<ContratoPlanoAdicional>[] = isEditMode ? [
     {
-      label: 'Novo',
+      label: t('actions.create'),
       action: () => {
         setEditingServicoAdicional(null);
         setShowServicoAdicionalModal(true);
       }
     },
     {
-      label: 'Editar',
+      label: t('actions.edit'),
       action: (selectedItems: ContratoPlanoAdicional[]) => {
         if (selectedItems.length > 0) {
           const servico = selectedItems[0];
@@ -1156,20 +1166,20 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       disabled: (selectedItems: ContratoPlanoAdicional[]) => selectedItems.length === 0
     },
     {
-      label: 'Deletar',
+      label: t('actions.delete'),
       action: async (selectedItems: ContratoPlanoAdicional[]) => {
         if (selectedItems.length === 0) return;
         
         const confirmMessage = selectedItems.length === 1 
-          ? 'Tem certeza que deseja deletar este serviço adicional?'
-          : `Tem certeza que deseja deletar ${selectedItems.length} serviços adicionais?`;
+          ? t('messages.confirmDeleteAdditionalService')
+          : t('messages.confirmDeleteAdditionalServices', { count: selectedItems.length });
           
         const confirmed = await confirm({
           message: confirmMessage,
           variant: 'danger',
-          title: 'Deletar serviços adicionais',
-          confirmText: 'Deletar',
-          cancelText: 'Cancelar',
+          title: t('modal.deleteAdditionalServices'),
+          confirmText: t('actions.delete'),
+          cancelText: t('actions.cancel'),
         });
         
         if (confirmed) {
@@ -1194,13 +1204,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             
             if (successCount > 0) {
               const message = successCount === 1 
-                ? 'Serviço adicional deletado com sucesso!'
-                : `${successCount} serviços adicionais deletados com sucesso!`;
+                ? t('messages.successDeleteAdditionalService')
+                : t('messages.successDeleteAdditionalServices', { count: successCount });
               success(message);
             }
             
             if (errorCount > 0 && selectedItems.length > 1) {
-              error(`${errorCount} serviço(s) adicional(is) não puderam ser deletados`);
+              error(t('messages.errorDeleteAdditionalServices', { count: errorCount }));
             }
             
             queryClient.invalidateQueries({ queryKey: ['contrato-planos-adicionais', internalContratoId] });
@@ -1220,7 +1230,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const columns = [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       searchable: true,
       width: 42,
@@ -1229,18 +1239,26 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'contrato_id',
-      label: 'Contrato',
+      label: t('table.contract'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.contrato_id || '-'
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('table.status'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => (
-        <span className={`badge bg-${getStatusColor(item.status)}`}>{item.status}</span>
+        <span className={`badge bg-${getStatusColor(item.status)}`}>
+          {item.status === 'pago' ? t('status.paid') :
+           item.status === 'pago_atraso' ? t('status.paidLate') :
+           item.status === 'pendente' ? t('status.pending') :
+           item.status === 'vencido' ? t('status.overdue') :
+           item.status === 'parcial' ? t('status.partial') :
+           item.status === 'cancelado' ? t('status.cancelled') :
+           item.status}
+        </span>
       )
     },
     { 
@@ -1252,7 +1270,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     { 
       key: 'numero_titulo', 
-      label: 'Nº Título', 
+      label: t('table.titleNumber'), 
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.numero_titulo || '-' 
@@ -1266,45 +1284,45 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'valor',
-      label: 'Valor',
+      label: t('form.value'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => `R$ ${Number(item.valor || 0).toFixed(2)}`
     },
     {
       key: 'valor_pago',
-      label: 'Valor baixado',
+      label: t('table.paidValueDownloaded'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00'
     },
     {
       key: 'valor_aberto',
-      label: t('table.openValue'),
+      label: t('table.openValueOpen'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`
     },
     {
       key: 'nfse_numero',
-      label: 'NF',
+      label: t('table.nf'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.nfse_numero || '-'
     },
     {
       key: 'nfse_status',
-      label: 'Status NF',
+      label: t('table.nfStatus'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => {
         if (!item.nfse_status) return '-';
         const statusMap: Record<string, { label: string; color: string }> = {
-          'agendado': { label: 'Agendado', color: 'info' },
-          'emitida': { label: 'Emitida', color: 'success' },
-          'cancelada': { label: 'Cancelada', color: 'danger' },
-          'rejeitada': { label: 'Rejeitada', color: 'warning' },
-          'erro': { label: 'Erro', color: 'danger' }
+          'agendado': { label: t('status.scheduled'), color: 'info' },
+          'emitida': { label: t('status.issued'), color: 'success' },
+          'cancelada': { label: t('status.cancelled'), color: 'danger' },
+          'rejeitada': { label: t('status.rejected'), color: 'warning' },
+          'erro': { label: t('status.error'), color: 'danger' }
         };
         const status = statusMap[item.nfse_status] || { label: item.nfse_status, color: 'secondary' };
         return <span className={`badge bg-${status.color}`}>{status.label}</span>;
@@ -1312,7 +1330,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'data_pagamento',
-      label: 'Data Pagamento',
+      label: t('table.paymentDate'),
       sortable: true,
       searchable: false,
       render: (item: Titulo) => {
@@ -1333,14 +1351,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     { 
       key: 'nosso_numero', 
-      label: 'Nosso Número', 
+      label: t('table.ourNumber'), 
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.nosso_numero || '-' 
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: t('table.createdAt'),
       sortable: true,
       searchable: false,
       render: (item: Titulo) => {
@@ -1358,7 +1376,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const columnsAvulsos = [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       searchable: true,
       width: 42,
@@ -1367,18 +1385,26 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'contrato_id',
-      label: 'Contrato',
+      label: t('table.contract'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.contrato_id || '-'
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('table.status'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => (
-        <span className={`badge bg-${getStatusColor(item.status)}`}>{item.status}</span>
+        <span className={`badge bg-${getStatusColor(item.status)}`}>
+          {item.status === 'pago' ? t('status.paid') :
+           item.status === 'pago_atraso' ? t('status.paidLate') :
+           item.status === 'pendente' ? t('status.pending') :
+           item.status === 'vencido' ? t('status.overdue') :
+           item.status === 'parcial' ? t('status.partial') :
+           item.status === 'cancelado' ? t('status.cancelled') :
+           item.status}
+        </span>
       )
     },
     { 
@@ -1390,7 +1416,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     { 
       key: 'numero_titulo', 
-      label: 'Nº Título', 
+      label: t('table.titleNumber'), 
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.numero_titulo || '-' 
@@ -1404,28 +1430,28 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'valor',
-      label: 'Valor',
+      label: t('form.value'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => `R$ ${Number(item.valor || 0).toFixed(2)}`
     },
     {
       key: 'valor_pago',
-      label: 'Valor baixado',
+      label: t('table.paidValueDownloaded'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00'
     },
     {
       key: 'valor_aberto',
-      label: t('table.openValue'),
+      label: t('table.openValueOpen'),
       sortable: true,
       searchable: true,
       render: (item: Titulo) => (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`
     },
     {
       key: 'data_pagamento',
-      label: 'Data Pagamento',
+      label: t('table.paymentDate'),
       sortable: true,
       searchable: false,
       render: (item: Titulo) => {
@@ -1444,14 +1470,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     { 
       key: 'nosso_numero', 
-      label: 'Nosso Número', 
+      label: t('table.ourNumber'), 
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.nosso_numero || '-' 
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: t('table.createdAt'),
       sortable: true,
       searchable: false,
       render: (item: Titulo) => {
@@ -1467,7 +1493,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const servicosAdicionaisColumns = [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       searchable: true,
       width: 42,
@@ -1483,7 +1509,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'valor_original',
-      label: 'Valor Original',
+      label: t('form.originalValue'),
       sortable: true,
       searchable: false,
       render: (item: ContratoPlanoAdicional) => {
@@ -1510,7 +1536,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'valor_final',
-      label: 'Valor Final',
+      label: t('table.finalValue'),
       sortable: true,
       searchable: false,
       render: (item: ContratoPlanoAdicional) => {
@@ -1520,7 +1546,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('table.status'),
       sortable: true,
       searchable: true,
       render: (item: ContratoPlanoAdicional) => {
@@ -1532,14 +1558,17 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         const color = statusColors[item.status] || 'secondary';
         return (
           <span className={`badge bg-${color}`}>
-            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+            {item.status === 'ativo' ? t('status.active') :
+             item.status === 'inativo' ? t('status.inactive') :
+             item.status === 'suspenso' ? t('status.suspended') :
+             item.status}
           </span>
         );
       }
     },
     {
       key: 'observacoes',
-      label: 'Observações',
+      label: t('form.observations'),
       sortable: true,
       searchable: true,
       render: (item: ContratoPlanoAdicional) => item.observacoes || '-'
@@ -1548,34 +1577,38 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   // Colunas para a tabela de termos
   const termosColumns = [
-    { key: 'id', label: 'ID', sortable: true, width: 42, resizable: true },
-    { key: 'nome_termo', label: 'Nome do Termo', sortable: true, render: (item: TermoContrato) => item.modeloDocumento?.nome || '-' },
+    { key: 'id', label: t('table.id'), sortable: true, width: 42, resizable: true },
+    { key: 'nome_termo', label: t('table.termName'), sortable: true, render: (item: TermoContrato) => item.modeloDocumento?.nome || '-' },
     {
       key: 'assinado',
-      label: 'Assinado',
+      label: t('table.accepted'),
       sortable: true,
       render: (item: TermoContrato) => (
-        <span className={`badge ${item.assinado === 'SIM' ? 'bg-success' : 'bg-secondary'}`}>{item.assinado}</span>
+        <span className={`badge ${item.assinado === 'SIM' ? 'bg-success' : 'bg-secondary'}`}>
+          {item.assinado === 'SIM' ? t('ui.yes') : t('ui.no')}
+        </span>
       )
     },
     {
       key: 'data_aceite',
-      label: 'Data Aceite',
+      label: t('table.acceptedDate'),
       sortable: true,
       render: (item: TermoContrato) => formatDateTime(item.data_aceite)
     },
-    { key: 'aceito_por', label: 'Aceito Por', sortable: true, render: (item: TermoContrato) => item.aceito_por || '-' },
+    { key: 'aceito_por', label: t('table.acceptedBy'), sortable: true, render: (item: TermoContrato) => item.aceito_por || '-' },
     {
       key: 'ativo',
-      label: 'Status',
+      label: t('table.status'),
       sortable: true,
       render: (item: TermoContrato) => (
-        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>{item.ativo ? 'Ativo' : 'Inativo'}</span>
+        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+          {item.ativo ? t('status.active') : t('status.inactive')}
+        </span>
       )
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: t('table.createdAt'),
       sortable: true,
       render: (item: TermoContrato) => formatDate(item.created_at)
     }
@@ -1853,7 +1886,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               ) : (
                 <div className="d-flex align-items-center justify-content-center contrato-placeholder">
                   <div className="text-center">
-                    <p className="text-muted">Crie o contrato primeiro para gerenciar termos.</p>
+                    <p className="text-muted">{t('placeholder.contractCreationHelp')}</p>
                   </div>
                 </div>
               )
@@ -1882,7 +1915,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               ) : (
                 <div className="d-flex align-items-center justify-content-center contrato-placeholder">
                   <div className="text-center">
-                    <p className="text-muted">Crie o contrato primeiro para gerenciar títulos financeiros.</p>
+                    <p className="text-muted">{t('placeholder.financialTitlesCreationHelp')}</p>
                   </div>
                 </div>
               )
@@ -1911,7 +1944,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               ) : (
                 <div className="d-flex align-items-center justify-content-center contrato-placeholder">
                   <div className="text-center">
-                    <p className="text-muted">Crie o contrato primeiro para gerenciar títulos avulsos.</p>
+                    <p className="text-muted">{t('placeholder.financialMiscCreationHelp')}</p>
                   </div>
                 </div>
               )
@@ -1938,7 +1971,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               ) : (
                 <div className="d-flex align-items-center justify-content-center contrato-placeholder">
                   <div className="text-center">
-                    <p className="text-muted">Crie o contrato primeiro para gerenciar serviços adicionais.</p>
+                    <p className="text-muted">{t('placeholder.additionalServicesCreationHelp')}</p>
                   </div>
                 </div>
               )
@@ -2078,7 +2111,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             }}
             pdfUrl={impressaoHook.pdfUrl || pdfUrlLocal}
             isGenerating={impressaoHook.isGeneratingPdf || isGeneratingPdfLocal}
-            title="Visualizar Documento"
+            title={t('modal.viewDocument')}
             modalId="contrato-imprimir-modal"
           />
 
@@ -2087,7 +2120,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             onClose={auditoria.handleClosePreview}
             pdfUrl={auditoria.pdfUrl}
             isGenerating={auditoria.isGeneratingPdf}
-            title="Relatórios de logs"
+            title={t('financial.executionLogs')}
             modalId="auditoria-contrato-modal"
           />
         </>
@@ -2098,21 +2131,21 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         show={showPlanoModal}
         onClose={() => setShowPlanoModal(false)}
         onSelectPlano={handlePlanoSelect}
-        title="Selecionar Plano"
+        title={t('ui.selectPlan')}
       />
 
       <BancoListModal
         show={showBancoModal}
         onClose={() => setShowBancoModal(false)}
         onSelectBanco={handleBancoSelect}
-        title="Selecionar Banco"
+        title={t('ui.selectBank')}
       />
 
       <ModeloContratoSelectModal
         show={showModeloContratoModal}
         onClose={() => setShowModeloContratoModal(false)}
         onSelect={handleModeloContratoSelect}
-        title="Selecionar Modelo de Contrato"
+        title={t('form.contractModel')}
       />
 
       {/* ConfirmModal */}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Contrato } from '@/hooks/useContratos';
 import { useI18n } from '@/contexts/I18nContext';
-import { formatDate, formatDateTime } from '@/utils/formatters';
+import { formatDate, formatDateTime, formatCurrency } from '@/utils/formatters';
 import Table from '@/components/tables/Table';
 import { ContratosTabProps } from '../types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -41,11 +41,11 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key={`cliente-contratos-${clienteId || 'new'}`}
-            title="Contratos"
+            title={t('nav.contracts')}
             search=""
             config={{
             columns: [
-              { key: 'id', label: 'ID', sortable: true, searchable: true, width: 42, resizable: true, render: (contrato: Contrato) => contrato.id },
+              { key: 'id', label: t('table.id'), sortable: true, searchable: true, width: 42, resizable: true, render: (contrato: Contrato) => contrato.id },
               { 
                 key: 'plano_nome', 
                 label: t('table.plan'), 
@@ -55,7 +55,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               {
                 key: 'endereco',
-                label: 'Endereço',
+                label: t('form.address'),
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
@@ -73,7 +73,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               {
                 key: 'complemento',
-                label: 'Complemento',
+                label: t('table.complement'),
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
@@ -91,7 +91,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               {
                 key: 'cidade',
-                label: 'Cidade',
+                label: t('table.city'),
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
@@ -100,7 +100,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               {
                 key: 'estado',
-                label: 'Estado',
+                label: t('table.state'),
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
@@ -114,12 +114,12 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 searchable: false,
                 render: (contrato: Contrato) => {
                   const valor = contrato.plano?.valor_mensal;
-                  return valor ? `R$ ${Number(valor).toFixed(2)}` : '-';
+                  return valor ? formatCurrency(valor) : '-';
                 }
               },
               {
                 key: 'status',
-                label: 'Status',
+                label: t('form.status'),
                 sortable: true,
                 searchable: true,
                 render: (contrato: Contrato) => (
@@ -128,20 +128,22 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                     contrato.status === 'inativo' ? 'bg-danger' :
                     'bg-warning'
                   }`}>
-                    {contrato.status}
+                    {contrato.status === 'ativo' ? t('status.active') : 
+                     contrato.status === 'inativo' ? t('status.inactive') : 
+                     contrato.status}
                   </span>
                 )
               },
               { 
                 key: 'desconto_percentual', 
-                label: 'Desconto %', 
+                label: t('table.discountPercent'), 
                 sortable: true, 
                 searchable: true,
                 render: (contrato: Contrato) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-' 
               },
               { 
                 key: 'desconto_valor', 
-                label: 'Desconto R$', 
+                label: t('table.discountValue'), 
                 sortable: true, 
                 searchable: true,
                 render: (contrato: Contrato) => {
@@ -170,7 +172,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               { 
                 key: 'data_fim', 
-                label: 'Data Fim', 
+                label: t('table.contractEndDate'), 
                 sortable: true, 
                 searchable: false,
                 render: (contrato: Contrato) => {
@@ -179,12 +181,12 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               {
                 key: 'isento_mensalidade',
-                label: 'Isento',
+                label: t('table.exempt'),
                 sortable: true,
                 searchable: true,
                 render: (contrato: Contrato) => (
                   <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
-                    {contrato.isento_mensalidade ? 'Sim' : 'Não'}
+                    {contrato.isento_mensalidade ? t('ui.yes') : t('ui.no')}
                   </span>
                 )
               },
@@ -197,14 +199,14 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               },
               { 
                 key: 'banco_nome', 
-                label: 'Banco', 
+                label: t('form.bank'), 
                 sortable: true, 
                 searchable: true,
                 render: (contrato: Contrato & { banco_nome?: string }) => contrato.bancoBoleto?.nome || contrato.banco_nome || '-' 
               },
               {
                 key: 'created_at',
-                label: 'Criado em',
+                label: t('table.createdAt'),
                 sortable: true,
                 searchable: false,
                 render: (contrato: Contrato & { created_at?: string; created_at_formatada?: string | null }) => {
@@ -224,16 +226,16 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
             searchable: true,
             searchPlaceholder: '',
             searchFields: [
-              { key: 'id', label: 'ID' },
-              { key: 'plano_nome', label: 'Plano' },
-              { key: 'status', label: 'Status' },
-              { key: 'valor_final', label: 'Valor Final' },
-              { key: 'desconto_percentual', label: 'Desconto %' },
-              { key: 'desconto_valor', label: 'Desconto R$' },
-              { key: 'banco_nome', label: 'Banco' },
-              { key: 'endereco', label: 'Endereço' },
-              { key: 'cidade', label: 'Cidade' },
-              { key: 'estado', label: 'Estado' }
+              { key: 'id', label: t('table.id') },
+              { key: 'plano_nome', label: t('table.plan') },
+              { key: 'status', label: t('form.status') },
+              { key: 'valor_final', label: t('table.finalValue') },
+              { key: 'desconto_percentual', label: t('table.discountPercent') },
+              { key: 'desconto_valor', label: t('table.discountValue') },
+              { key: 'banco_nome', label: t('form.bank') },
+              { key: 'endereco', label: t('form.address') },
+              { key: 'cidade', label: t('table.city') },
+              { key: 'estado', label: t('table.state') }
             ],
             sortable: true,
             striped: true,
@@ -257,7 +259,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 dropdown: action.dropdown
               };
             }),
-            emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
+            emptyMessage: t('empty.noContracts'),
             className: 'no-padding',
             customControls: (
               <div className="form-check">
@@ -269,7 +271,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                   onChange={(e) => setShowInativosContratos(e.target.checked)}
                 />
                 <label className="form-check-label" htmlFor="showInativosContratos">
-                  Mostrar inativos
+                  {t('filter.showInactive')}
                 </label>
               </div>
             )
@@ -286,22 +288,22 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
           <div className="d-flex justify-content-between align-items-center p-3 bg-light financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
             <div className="d-flex align-items-center">
               <i className="bi bi-info-circle text-muted me-2"></i>
-              <span className="small text-muted">Resumo de contratos</span>
+              <span className="small text-muted">{t('summary.contractSummary')}</span>
             </div>
             <div className="d-flex gap-4">
               <div className="text-end">
-                <div className="small text-muted">Total de contratos:</div>
+                <div className="small text-muted">{t('summary.totalContracts')}</div>
                 <strong>{sortedContratosData.length}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Contratos ativos:</div>
+                <div className="small text-muted">{t('summary.activeContracts')}</div>
                 <strong>{sortedContratosData.filter((c: Contrato) => c.status === 'ativo').length}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor total mensal:</div>
-                <strong>R$ {sortedContratosData.reduce((sum: number, contrato: Contrato) => {
+                <div className="small text-muted">{t('summary.monthlyTotalValue')}</div>
+                <strong>{formatCurrency(sortedContratosData.reduce((sum: number, contrato: Contrato) => {
                   return sum + Number(contrato.valor_final || 0);
-                }, 0).toFixed(2)}</strong>
+                }, 0))}</strong>
               </div>
             </div>
           </div>

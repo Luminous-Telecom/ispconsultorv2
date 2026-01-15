@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -22,6 +23,7 @@ interface ParametrosForm {
 }
 
 const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -111,7 +113,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Parâmetros"
+      title={t('layout.parameters')}
       size="md"
       modalId="parametros-modal"
       headerActions={

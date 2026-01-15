@@ -2,6 +2,7 @@ import React from 'react';
 import { FormField } from '@/components/ui';
 import RichTextEditor from '@/components/common/RichTextEditor';
 import { MensagensTabProps } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 const MensagensTab: React.FC<MensagensTabProps> = ({
   mensagemType,
@@ -16,6 +17,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   onSaveMensagem: _onSaveMensagem,
   isPending: _isPending
 }) => {
+  const { t } = useI18n();
+
   return (
     <div>
       <div className="row g-0 mb-0">
@@ -23,27 +26,27 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
           <FormField
             name="mensagemType"
             type="select"
-            label="Tipo de Mensagem"
+            label={t('settings.messages.type')}
             required={true}
             size="sm"
             value={mensagemType}
             onChange={(value) => onMensagemTypeChange(String(value ?? ''))}
             options={[
-              { value: '10_dias_antes_vencimento', label: '10 dias antes do vencimento' },
-              { value: '05_dias_antes_vencimento', label: '05 dias antes do vencimento' },
-              { value: 'mesmo_dia_vencimento', label: 'Mesmo dia do vencimento' },
-              { value: '05_dias_depois_vencimento', label: '05 dias depois do vencimento' },
-              { value: '10_dias_depois_vencimento', label: '10 dias depois do vencimento' },
-              { value: '15_dias_depois_vencimento', label: '15 dias depois do vencimento' },
-              { value: 'corte_cliente', label: 'Corte do cliente' },
-              { value: 'envio_manual', label: 'Envio manual de cobrança' }
+              { value: '10_dias_antes_vencimento', label: t('messages.types.10daysBefore') },
+              { value: '05_dias_antes_vencimento', label: t('messages.types.05daysBefore') },
+              { value: 'mesmo_dia_vencimento', label: t('messages.types.sameDay') },
+              { value: '05_dias_depois_vencimento', label: t('messages.types.05daysAfter') },
+              { value: '10_dias_depois_vencimento', label: t('messages.types.10daysAfter') },
+              { value: '15_dias_depois_vencimento', label: t('messages.types.15daysAfter') },
+              { value: 'corte_cliente', label: t('messages.types.clientCut') },
+              { value: 'envio_manual', label: t('messages.types.manualSend') }
             ]}
           />
         </div>
         <div className="col-md-6">
           {mensagemType && (
             <div>
-              <div className="form-label small">Tipo de Envio</div>
+              <div className="form-label small">{t('settings.messages.sendType')}</div>
               <div className="btn-group w-100" role="group">
                 <input
                   type="radio"
@@ -55,7 +58,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
                 />
                 <label className="btn btn-outline-primary" htmlFor="envio-desativado-email">
-                  Desativar
+                  {t('messages.sendTypes.disabled')}
                 </label>
 
                 <input
@@ -68,7 +71,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
                 />
                 <label className="btn btn-outline-primary" htmlFor="envio-pdf-email">
-                  Anexa PDF
+                  {t('messages.sendTypes.pdf')}
                 </label>
               </div>
             </div>
@@ -84,8 +87,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 300px)', minHeight: '400px' }}>
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <span id="mensagem-manual-label" className="form-label small mb-0">
-                  Mensagem para Envio Manual <span className="text-danger">*</span>
-                  <small className="text-muted d-block mt-1">Mensagem que será usada quando enviar título manualmente</small>
+                  {t('settings.messages.manualLabel')} <span className="text-danger">*</span>
+                  <small className="text-muted d-block mt-1">{t('settings.messages.manualHelper')}</small>
                 </span>
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
@@ -96,7 +99,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   ariaLabelledBy="mensagem-manual-label"
                   value={mensagemManual || '<p></p>'}
                   onChange={onMensagemManualChange || (() => {})}
-                  placeholder="Digite a mensagem para envio manual..."
+                  placeholder={t('placeholder.manualSend')}
                   height="100%"
                 />
               </div>
@@ -105,7 +108,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
             /* Mensagem Padrão - Para outros tipos */
             <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 300px)', minHeight: '400px' }}>
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <span id="mensagem-label" className="form-label small mb-0">Mensagem do E-mail <span className="text-danger">*</span></span>
+                <span id="mensagem-label" className="form-label small mb-0">{t('settings.messages.emailLabel')} <span className="text-danger">*</span></span>
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <RichTextEditor
@@ -115,7 +118,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   ariaLabelledBy="mensagem-label"
                   value={mensagemTexto || '<p></p>'}
                   onChange={onMensagemTextoChange}
-                  placeholder="Digite a mensagem padrão do e-mail..."
+                  placeholder={t('placeholder.defaultEmail')}
                   height="100%"
                 />
               </div>

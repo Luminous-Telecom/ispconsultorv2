@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useI18n } from '@/contexts/I18nContext';
 import { useNotasFiscais } from '@/hooks/useNotasFiscais';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
@@ -22,10 +23,12 @@ interface NotaFiscalListModalProps {
 const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({ 
   show, 
   onClose, 
-  title = "Notas Fiscais",
+  title,
   skipWrapper = false
 }) => {
+  const { t } = useI18n();
   const { error, success } = useNotificationContext();
+  const defaultTitle = title || t('menu.invoices');
   const auditoria = useAuditoria();
   const [showImprimirModal, setShowImprimirModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -46,20 +49,20 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
   const columns = useMemo(() => [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       width: '42px',
       render: (item: NotaFiscal) => <span>{item.id}</span>
     },
     {
       key: 'numero',
-      label: 'Número',
+      label: t('table.number'),
       sortable: true,
       render: (item: NotaFiscal) => item.numero || '-'
     },
     {
       key: 'cliente',
-      label: 'Cliente',
+      label: t('table.client'),
       sortable: true,
       render: (item: NotaFiscal) => (
         <span>{item.cliente?.razao_social || item.cliente?.nome_fantasia || '-'}</span>
@@ -67,13 +70,13 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     },
     {
       key: 'data_emissao',
-      label: 'Data Emissão',
+      label: t('table.issueDate'),
       sortable: true,
       render: (item: NotaFiscal) => item.data_emissao ? formatDate(item.data_emissao) : '-'
     },
     {
       key: 'valor_total',
-      label: 'Valor Total',
+      label: t('table.totalValue'),
       sortable: true,
       render: (item: NotaFiscal) => (
         <span className="text-success">
@@ -83,7 +86,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('table.status'),
       sortable: true,
       render: (item: NotaFiscal) => {
         const statusColors: Record<string, string> = {
@@ -95,12 +98,12 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
           'ERRO': 'bg-warning'
         };
         const statusLabels: Record<string, string> = {
-          'PENDENTE': 'Pendente',
-          'PROCESSANDO': 'Processando',
-          'AUTORIZADA': 'Autorizada',
-          'CANCELADA': 'Cancelada',
-          'REJEITADA': 'Rejeitada',
-          'ERRO': 'Erro'
+          'PENDENTE': t('status.pending'),
+          'PROCESSANDO': t('status.processing'),
+          'AUTORIZADA': t('status.authorized'),
+          'CANCELADA': t('status.cancelled'),
+          'REJEITADA': t('status.rejected'),
+          'ERRO': t('status.error')
         };
         return (
           <span className={`badge ${statusColors[item.status] || 'bg-secondary'}`}>
@@ -111,7 +114,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     },
     {
       key: 'nfse_status',
-      label: 'NFS-e Status',
+      label: t('params.nfse') + ' ' + t('table.status'),
       sortable: true,
       render: (item: NotaFiscal) => {
         if (!item.nfse_status) return '-';
@@ -123,11 +126,11 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
           'erro': 'bg-warning'
         };
         const statusLabels: Record<string, string> = {
-          'agendado': 'Agendado',
-          'emitida': 'Emitida',
-          'cancelada': 'Cancelada',
-          'rejeitada': 'Rejeitada',
-          'erro': 'Erro'
+          'agendado': t('status.scheduled'),
+          'emitida': t('status.issued'),
+          'cancelada': t('status.cancelled'),
+          'rejeitada': t('status.rejected'),
+          'erro': t('status.error')
         };
         return (
           <span className={`badge ${statusColors[item.nfse_status] || 'bg-secondary'}`}>
@@ -138,13 +141,13 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     },
     {
       key: 'titulo_id',
-      label: 'Título ID',
+      label: t('table.id') + ' ' + t('table.contract'),
       sortable: true,
       render: (item: NotaFiscal) => item.titulo_id || '-'
     },
     {
       key: 'chave_acesso',
-      label: 'Chave de Acesso',
+      label: t('table.accessKey'),
       sortable: true,
       render: (item: NotaFiscal) => (
         <span className="text-muted small">
@@ -154,19 +157,19 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     },
     {
       key: 'protocolo',
-      label: 'Protocolo',
+      label: t('table.protocol'),
       sortable: true,
       render: (item: NotaFiscal) => item.protocolo || '-'
     },
     {
       key: 'data_autorizacao',
-      label: 'Data Autorização',
+      label: t('table.authorizationDate'),
       sortable: true,
       render: (item: NotaFiscal) => item.data_autorizacao ? formatDateTime(item.data_autorizacao) : '-'
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: t('table.createdAt'),
       sortable: true,
       render: (item: NotaFiscal & { created_at_formatada?: string | null }) => {
         if (item.created_at_formatada) {
@@ -175,23 +178,23 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
         return item.created_at ? formatDateTime(item.created_at) : '-';
       }
     }
-  ], []);
+  ], [t]);
 
   // Configurar modal centralizado
   const modal = useListModal({
-    title,
+    title: defaultTitle,
     columns,
-    searchPlaceholder: '',
+    searchPlaceholder: t('layout.searchPlaceholder'),
     searchFields: [
-      { key: 'id', label: 'ID' },
-      { key: 'numero', label: 'Número' },
-      { key: 'chave_acesso', label: 'Chave de Acesso' },
-      { key: 'protocolo', label: 'Protocolo' },
-      { key: 'valor', label: 'Valor' },
-      { key: 'status', label: 'Status' },
-      { key: 'nfse_status', label: 'NFS-e Status' },
-      { key: 'titulo_id', label: 'Título ID' },
-      { key: 'cliente', label: 'Cliente' }
+      { key: 'id', label: t('table.id') },
+      { key: 'numero', label: t('table.number') },
+      { key: 'chave_acesso', label: t('table.accessKey') },
+      { key: 'protocolo', label: t('table.protocol') },
+      { key: 'valor', label: t('table.value') },
+      { key: 'status', label: t('table.status') },
+      { key: 'nfse_status', label: t('params.nfse') + ' ' + t('table.status') },
+      { key: 'titulo_id', label: t('table.id') + ' ' + t('table.contract') },
+      { key: 'cliente', label: t('table.client') }
     ],
     multiSelect: false
   });
@@ -214,7 +217,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
 
   const handleImprimir = useCallback(async (selectedItems?: NotaFiscal[]) => {
     if (!selectedItems || selectedItems.length === 0) {
-      error('Selecione pelo menos uma nota fiscal');
+      error(t('messages.selectAtLeastOneInvoice'));
       return;
     }
 
@@ -227,23 +230,23 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
       const url = window.URL.createObjectURL(blob);
       setPdfUrl(url);
       setIsGeneratingPdf(false);
-      success('PDF da nota fiscal gerado com sucesso!');
+      success(t('messages.invoicePdfGenerated'));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar PDF da nota fiscal';
+      const errorMessage = err instanceof Error ? err.message : t('messages.errorGeneratingInvoicePdf');
       error(errorMessage);
       setShowImprimirModal(false);
       setIsGeneratingPdf(false);
     }
-  }, [error, success]);
+  }, [error, success, t]);
 
   const handleCancelar = useCallback((selectedItems?: NotaFiscal[]) => {
     if (!selectedItems || selectedItems.length === 0) {
-      error('Selecione uma nota fiscal para cancelar');
+      error(t('messages.selectInvoiceToCancel'));
       return;
     }
 
     if (selectedItems.length > 1) {
-      error('Selecione apenas uma nota fiscal para cancelar');
+      error(t('messages.selectOnlyOneInvoiceToCancel'));
       return;
     }
 
@@ -252,16 +255,16 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     // Verificar se a nota fiscal pode ser cancelada
     if (notaFiscal.status !== 'AUTORIZADA') {
       if (notaFiscal.status === 'CANCELADA') {
-        error('Esta nota fiscal já foi cancelada');
+        error(t('messages.invoiceAlreadyCanceled'));
       } else {
-        error('Apenas notas fiscais autorizadas podem ser canceladas');
+        error(t('messages.onlyAuthorizedCanBeCanceled'));
       }
       return;
     }
 
     setNotaFiscalParaCancelar(notaFiscal);
     setShowCancelarModal(true);
-  }, [error]);
+  }, [error, t]);
 
   const handleCancelarSuccess = useCallback(() => {
     refetch();
@@ -271,13 +274,13 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
 
   const bulkActions = useMemo(() => [
     {
-      label: 'Imprimir',
+      label: t('buttons.print'),
       variant: 'primary' as const,
       disabled: (selectedItems: NotaFiscal[]) => selectedItems.length === 0,
       action: (selectedItems: NotaFiscal[]) => handleImprimir(selectedItems)
     },
     {
-      label: 'Cancelar Nota Fiscal',
+      label: t('modal.cancelInvoice'),
       disabled: (selectedItems: NotaFiscal[]) => {
         if (selectedItems.length !== 1) return true;
         const notaFiscal = selectedItems[0];
@@ -285,7 +288,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
       },
       action: (selectedItems: NotaFiscal[]) => handleCancelar(selectedItems)
     }
-  ], [handleImprimir, handleCancelar]);
+  ], [handleImprimir, handleCancelar, t]);
 
   const handleSearchChange = useCallback((search: string, field?: string) => {
     // Usar setTimeout para evitar atualização durante render cycle
@@ -379,7 +382,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
         onClose={auditoria.handleClosePreview}
         pdfUrl={auditoria.pdfUrl}
         isGenerating={auditoria.isGeneratingPdf}
-        title="Relatórios de logs"
+        title={t('financial.executionLogs')}
         modalId="auditoria-nota-fiscal-modal"
       />
 
@@ -395,7 +398,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
         }}
         pdfUrl={pdfUrl}
         isGenerating={isGeneratingPdf}
-        title="Visualizar Nota Fiscal"
+        title={t('modal.viewInvoice')}
         modalId="nota-fiscal-imprimir-modal"
       />
 

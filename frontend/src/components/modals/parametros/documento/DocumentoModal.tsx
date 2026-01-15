@@ -21,6 +21,7 @@ import CartaTab from './abas/CartaTab';
 import ConteudoTab from './abas/ConteudoTab';
 import { useCliente, useClientes } from '@/hooks/useClientes';
 import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
+import { useI18n } from '@/contexts/I18nContext';
 
 const emptyForm: DocumentoForm = {
   nome: '',
@@ -49,6 +50,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
 
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
+  const { t } = useI18n();
 
   const { data: clienteTeste } = useCliente(clienteTesteId || 0);
   const { data: clientesData } = useClientes({ limit: 9999 });
@@ -81,12 +83,22 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
 
   const getTipoLabel = (tipo: string) => {
     const labels: Record<string, string> = {
-      contrato: 'Contrato',
-      recibo: 'Recibo',
-      carta_cobranca: 'Carta de Cobrança',
-      termo: 'Termo',
+      contrato: t('contracts.title'),
+      recibo: t('document.labels.recibo'),
+      carta_cobranca: t('document.labels.carta_cobranca'),
+      termo: t('document.labels.termo'),
     };
-    return labels[tipo] || 'Documento';
+    return labels[tipo] || t('document.labels.documento');
+  };
+
+  const getContentPlaceholder = (tipo: string) => {
+    switch (tipo) {
+      case 'contrato': return t('placeholder.contractContent');
+      case 'recibo': return t('placeholder.receiptContent');
+      case 'carta_cobranca': return t('placeholder.letterContent');
+      case 'termo': return t('placeholder.termContent');
+      default: return t('placeholder.contractContent');
+    }
   };
 
   const getService = useCallback(() => {
@@ -196,7 +208,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       return response.data;
     },
     onSuccess: (createdDocumento) => {
-      success('Documento criado com sucesso');
+      success(t('document.successCreate'));
       setCurrentDocumento(createdDocumento);
       setActiveTab('contrato');
       setShowImprimirDropdown(false);
@@ -207,7 +219,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     },
     onError: (err: unknown) => {
       const axiosError = err as AxiosError<{ message: string }>;
-      const message = axiosError?.response?.data?.message || 'Erro ao criar documento';
+      const message = axiosError?.response?.data?.message || t('document.errorCreate');
       error(message);
     }
   });
@@ -252,7 +264,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       return updatedResponse.data;
     },
     onSuccess: (updatedDocumento) => {
-      success('Documento salvo com sucesso');
+      success(t('document.successUpdate'));
       setCurrentDocumento(updatedDocumento);
       setShowImprimirDropdown(false);
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
@@ -261,7 +273,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     },
     onError: (err: unknown) => {
       const axiosError = err as AxiosError<{ message: string }>;
-      const message = axiosError?.response?.data?.message || 'Erro ao salvar documento';
+      const message = axiosError?.response?.data?.message || t('document.errorUpdate');
       error(message);
     }
   });
@@ -270,12 +282,12 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     e.preventDefault();
     
     if (!formData.nome) {
-      error( 'Nome é obrigatório');
+      error(t('messages.nameRequired'));
       return;
     }
 
     if (tipo !== 'contrato' && !formData.conteudo) {
-      error( 'Conteúdo é obrigatório');
+      error(t('messages.contentRequired'));
       return;
     }
 
@@ -291,7 +303,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       }
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError?.response?.data?.message || 'Erro ao salvar documento');
+      error(axiosError?.response?.data?.message || t('document.errorUpdate'));
     }
   };
 
@@ -357,7 +369,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       setPdfUrl(url);
       setIsGeneratingPdf(false);
     } catch (err) {
-      error(err instanceof Error ? err.message : 'Erro ao gerar PDF');
+      error(err instanceof Error ? err.message : t('document.errorGeneratePdf'));
       setShowPreview(false);
       setIsGeneratingPdf(false);
     }
@@ -380,15 +392,15 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
             }}
             disabled={!isEditing}
           >
-            Imprimir
+            {t('document.print')}
           </Button>
           {showImprimirDropdown && (
             <ul className="dropdown-menu show" style={{ display: 'block', position: 'absolute', zIndex: 1050 }}>
-              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('contrato'); }} disabled={!isEditing}>Modelo Contrato</button></li>
-              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('adesao'); }} disabled={!isEditing}>Termo Adesão</button></li>
-              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('permanencia'); }} disabled={!isEditing}>Contrato Permanência</button></li>
-              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('recibo'); }} disabled={!isEditing}>Recibos</button></li>
-              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('carta'); }} disabled={!isEditing}>Carta de Cobrança</button></li>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('contrato'); }} disabled={!isEditing}>{t('document.modelContrato')}</button></li>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('adesao'); }} disabled={!isEditing}>{t('document.termAdesao')}</button></li>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('permanencia'); }} disabled={!isEditing}>{t('document.permanencia')}</button></li>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('recibo'); }} disabled={!isEditing}>{t('document.receipts')}</button></li>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('carta'); }} disabled={!isEditing}>{t('document.cartaCobranca')}</button></li>
             </ul>
           )}
         </div>
@@ -401,7 +413,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           onClick={handleSubmit}
           isLoading={createDocumentoMutation.isPending || updateDocumentoMutation.isPending}
         >
-          Salvar
+          {t('actions.save')}
         </Button>
         <Button
           type="button"
@@ -410,7 +422,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           leftIcon={<i className="bi bi-x-lg"></i>}
           onClick={handleClose}
         >
-          Cancelar
+          {t('actions.cancel')}
         </Button>
       </div>
 
@@ -433,7 +445,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
               type="button"
               onClick={() => setActiveTab('contrato')}
             >
-              Modelo Contrato
+              {t('document.modelContrato')}
             </button>
           </li>
           <li className="nav-item" role="presentation">
@@ -442,7 +454,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
               type="button"
               onClick={() => setActiveTab('adesao')}
             >
-              Termo Adesão
+              {t('document.termAdesao')}
             </button>
           </li>
           <li className="nav-item" role="presentation">
@@ -451,7 +463,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
               type="button"
               onClick={() => setActiveTab('permanencia')}
             >
-              Contrato Permanência
+              {t('document.permanencia')}
             </button>
           </li>
           <li className="nav-item" role="presentation">
@@ -460,7 +472,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
               type="button"
               onClick={() => setActiveTab('recibo')}
             >
-              Recibos
+              {t('document.receipts')}
             </button>
           </li>
           <li className="nav-item" role="presentation">
@@ -469,7 +481,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
               type="button"
               onClick={() => setActiveTab('carta')}
             >
-              Carta de Cobrança
+              {t('document.cartaCobranca')}
             </button>
           </li>
         </ul>
@@ -477,49 +489,49 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     </div>
   ) : (
     <div className="d-flex gap-2 align-items-center">
-      <div className="dropdown">
+        <div className="dropdown">
+          <Button
+            variant="primary"
+            size="sm"
+            className="dropdown-toggle"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowImprimirDropdown(!showImprimirDropdown);
+            }}
+            disabled={!isEditing}
+          >
+            {t('document.print')}
+          </Button>
+          {showImprimirDropdown && (
+            <ul className="dropdown-menu show" style={{ display: 'block', position: 'absolute', zIndex: 1050 }}>
+              <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint(); }} disabled={!isEditing}>{getTipoLabel(tipo)}</button></li>
+            </ul>
+          )}
+        </div>
+
         <Button
+          type="button"
           variant="primary"
           size="sm"
-          className="dropdown-toggle"
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setShowImprimirDropdown(!showImprimirDropdown);
-          }}
-          disabled={!isEditing}
+          leftIcon={<i className="bi bi-check-lg"></i>}
+          onClick={handleSubmit}
+          isLoading={createDocumentoMutation.isPending || updateDocumentoMutation.isPending}
         >
-          Imprimir
+          {t('actions.save')}
         </Button>
-        {showImprimirDropdown && (
-          <ul className="dropdown-menu show" style={{ display: 'block', position: 'absolute', zIndex: 1050 }}>
-            <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint(); }} disabled={!isEditing}>{getTipoLabel(tipo)}</button></li>
-          </ul>
-        )}
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          leftIcon={<i className="bi bi-x-lg"></i>}
+          onClick={handleClose}
+        >
+          {t('actions.cancel')}
+        </Button>
       </div>
-
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        leftIcon={<i className="bi bi-check-lg"></i>}
-        onClick={handleSubmit}
-        isLoading={createDocumentoMutation.isPending || updateDocumentoMutation.isPending}
-      >
-        Salvar
-      </Button>
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        leftIcon={<i className="bi bi-x-lg"></i>}
-        onClick={handleClose}
-      >
-        Cancelar
-      </Button>
-    </div>
-  );
+    );
 
   return (
     <>
@@ -528,10 +540,10 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           <form onSubmit={handleSubmit}>
             <div className="row g-2 mb-0">
               <div className="col-md-6">
-                <FormField name="nome" type="text" label="Nome" value={formData.nome} onChange={(value) => setFormData(prev => ({ ...prev, nome: String(value ?? '') }))} placeholder={isEditing ? undefined : `Ex: ${getTipoLabel(tipo)} Padrão`} required size="sm" />
+                <FormField name="nome" type="text" label={t('document.name')} value={formData.nome} onChange={(value) => setFormData(prev => ({ ...prev, nome: String(value ?? '') }))} placeholder={isEditing ? undefined : `Ex: ${getTipoLabel(tipo)} Padrão`} required size="sm" />
               </div>
               <div className="col-md-6">
-                <FormField name="descricao" type="text" label="Descrição" value={formData.descricao} onChange={(value) => setFormData(prev => ({ ...prev, descricao: String(value ?? '') }))} placeholder="Breve descrição" size="sm" />
+                <FormField name="descricao" type="text" label={t('document.description')} value={formData.descricao} onChange={(value) => setFormData(prev => ({ ...prev, descricao: String(value ?? '') }))} placeholder={t('placeholder.description')} size="sm" />
               </div>
               <div className="col-md-12">
                 <EntitySelectField
@@ -544,9 +556,9 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                     id: c.id,
                     nome: c.razao_social
                   }))}
-                  label="Cliente para Teste"
-                  idFieldTitle="Digite o ID do cliente"
-                  helpText="Selecione um cliente para visualizar o documento com dados reais"
+                  label={t('document.testClient')}
+                  idFieldTitle={t('document.idPlaceholder')}
+                  helpText={t('document.testClientHelp')}
                 />
               </div>
             </div>
@@ -554,7 +566,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
             <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)' }}>
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <span id="conteudo-label" className="form-label small mb-0">
-                  {tipo === 'contrato' ? 'Conteúdo do Contrato' : 'Conteúdo'} <span className="text-danger">*</span>
+                  {tipo === 'contrato' ? t('document.contractContent') : t('document.content')} <span className="text-danger">*</span>
                 </span>
               </div>
               
@@ -602,7 +614,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                   value={formData.conteudo}
                   onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
                   editorKey={`${isEditing ? currentDocumento?.id : 'create'}-conteudo`}
-                  placeholder={`Digite o conteúdo do ${getTipoLabel(tipo).toLowerCase()}...`}
+                  placeholder={getContentPlaceholder(tipo)}
                 />
               )}
             </div>
@@ -622,7 +634,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           }} 
           pdfUrl={pdfUrl} 
           isGenerating={isGeneratingPdf}
-          title="Visualizar Documento" 
+          title={t('document.viewDocument')} 
           modalId="documento-imprimir-modal" 
         />
       )}

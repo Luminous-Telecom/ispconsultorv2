@@ -5,6 +5,8 @@ import { BulkAction } from '../types';
 import { TableColumn } from '@/components/tables/types';
 import { SortDirection } from '@/components/tables/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useI18n } from '@/contexts/I18nContext';
+import { formatCurrency } from '@/utils/formatters';
 
 interface FinanceiroTabProps {
   isLoading: boolean;
@@ -42,7 +44,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   auditEntity,
 }) => {
   const isMobile = useIsMobile();
-  
+  const { t } = useI18n();
+
   // Resetar página quando o filtro mudar
   useEffect(() => {
     setPage(1);
@@ -118,7 +121,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="financeiro-tab-table"
-            title="Financeiro"
+            title={t('tabs.financial')}
             config={{
               columns: columns,
               data: sortedData,
@@ -133,21 +136,21 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
               selectable: true,
               multiSelect: true,
               searchable: true,
-              searchPlaceholder: 'Buscar títulos...',
+              searchPlaceholder: t('layout.searchPlaceholder'),
               searchFields: [
-                { key: 'id', label: 'ID' },
-                { key: 'numero_titulo', label: 'Nº Título' },
-                { key: 'status', label: 'Status' },
-                { key: 'plano', label: 'Plano' },
-                { key: 'cliente', label: 'Cliente' },
-                { key: 'valor', label: 'Valor' },
-                { key: 'nfse_numero', label: 'NF' }
+                { key: 'id', label: t('table.id') },
+                { key: 'numero_titulo', label: t('table.titleNumber') },
+                { key: 'status', label: t('table.status') },
+                { key: 'plano', label: t('table.plan') },
+                { key: 'cliente', label: t('table.client') },
+                { key: 'valor', label: t('form.value') },
+                { key: 'nfse_numero', label: t('table.nf') }
               ],
               sortable: true,
               striped: true,
               hover: true,
               responsive: true,
-              emptyMessage: 'Este contrato ainda não possui títulos cadastrados.',
+              emptyMessage: t('empty.noTitles'),
               className: 'no-padding',
               bulkActions: memoizedBulkActions,
               customControls: (
@@ -162,7 +165,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
                     }}
                   />
                   <label className="form-check-label" htmlFor="showCanceladosContrato">
-                    Mostrar cancelados
+                    {t('filter.showCanceled')}
                   </label>
                 </div>
               )
@@ -182,34 +185,34 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
           <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginBottom: isMobile ? '3rem' : '1rem', marginTop: isMobile ? '0.25rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
             <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
               <div className="text-end">
-                <div className="small text-muted">Valor:</div>
-                <strong>R$ {filteredData.reduce((sum: number, item: Titulo) => {
+                <div className="small text-muted">{t('summary.value')}</div>
+                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
                   return sum + Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0);
-                }, 0).toFixed(2)}</strong>
+                }, 0))}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor baixado:</div>
-                <strong>R$ {filteredData.reduce((sum: number, item: Titulo) => {
+                <div className="small text-muted">{t('summary.paidValue')}</div>
+                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
                   // Considerar apenas valor_pago se existir e for maior que 0
                   const valorPago = Number(item.valor_pago || 0);
                   if (valorPago > 0) {
                     return sum + valorPago;
                   }
                   return sum;
-                }, 0).toFixed(2)}</strong>
+                }, 0))}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor aberto:</div>
-                <strong>R$ {filteredData.reduce((sum: number, item: Titulo) => {
+                <div className="small text-muted">{t('summary.openValue')}</div>
+                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
                   return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0));
-                }, 0).toFixed(2)}</strong>
+                }, 0))}</strong>
               </div>
               {showCancelados && (
                 <div className="text-end">
-                  <div className="small text-muted">Valor cancelado:</div>
-                  <strong>R$ {filteredData.reduce((sum: number, item: Titulo) => {
+                  <div className="small text-muted">{t('summary.canceledValue')}</div>
+                  <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
                     return sum + (item.status === 'cancelado' ? Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0) : 0);
-                  }, 0).toFixed(2)}</strong>
+                  }, 0))}</strong>
                 </div>
               )}
             </div>

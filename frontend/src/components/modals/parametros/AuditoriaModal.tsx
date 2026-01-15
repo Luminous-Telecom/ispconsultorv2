@@ -7,6 +7,7 @@ import ListModal from '@/components/common/ListModal';
 import DraggableModal from '@/components/common/DraggableModal';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from '@/services/auditoriaService';
 import { formatDateTime } from '@/utils/formatters';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface AuditoriaModalProps {
   show: boolean;
@@ -14,6 +15,7 @@ interface AuditoriaModalProps {
 }
 
 const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
+  const { t } = useI18n();
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditoriaLog | null>(null);
 
@@ -78,13 +80,13 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
 
   const formatAcao = (acao: string) => {
     const acoes: Record<string, string> = {
-      create: 'Criar',
-      update: 'Atualizar',
-      delete: 'Excluir',
-      login: 'Login',
-      logout: 'Logout',
-      export: 'Exportar',
-      import: 'Importar'
+      create: t('audit.actions.create'),
+      update: t('audit.actions.update'),
+      delete: t('audit.actions.delete'),
+      login: t('audit.actions.login'),
+      logout: t('audit.actions.logout'),
+      export: t('audit.actions.export'),
+      import: t('audit.actions.import')
     };
     return acoes[acao] || acao;
   };
@@ -112,11 +114,11 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
 
   // Configurar modal centralizado
   const modal = useListModal({
-    title: 'Logs de Auditoria',
+    title: t('audit.title'),
     columns: [
       {
         key: 'id',
-        label: 'ID',
+        label: t('table.id'),
         sortable: true,
         width: '42px',
         render: (log: AuditoriaLog) => (
@@ -125,7 +127,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       },
       {
         key: 'timestamp',
-        label: 'Data/Hora',
+        label: t('audit.timestamp'),
         sortable: true,
         width: '150px',
         render: (log: AuditoriaLog) => (
@@ -134,7 +136,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       },
       {
         key: 'acao',
-        label: 'Ação',
+        label: t('table.action'),
         sortable: true,
         width: '100px',
         render: (log: AuditoriaLog) => (
@@ -145,7 +147,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       },
       {
         key: 'entidade',
-        label: 'Entidade',
+        label: t('audit.entity'),
         sortable: true,
         width: '120px',
         render: (log: AuditoriaLog) => (
@@ -154,7 +156,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       },
       {
         key: 'usuario_email',
-        label: 'Usuário',
+        label: t('audit.user'),
         sortable: true,
         width: '180px',
         render: (log: AuditoriaLog) => (
@@ -163,7 +165,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       },
       {
         key: 'usuario_nome',
-        label: 'Nome',
+        label: t('table.name'),
         sortable: true,
         width: '150px',
         render: (log: AuditoriaLog) => (
@@ -172,7 +174,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       },
       {
         key: 'metodo_http',
-        label: 'Método',
+        label: t('audit.method'),
         sortable: true,
         width: '80px',
         render: (log: AuditoriaLog) => (
@@ -181,7 +183,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       },
       {
         key: 'rota',
-        label: 'Rota',
+        label: t('audit.route'),
         sortable: true,
         width: '200px',
         render: (log: AuditoriaLog) => (
@@ -190,7 +192,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       },
       {
         key: 'ip_address',
-        label: 'IP',
+        label: t('audit.ip'),
         sortable: true,
         width: '120px',
         render: (log: AuditoriaLog) => (
@@ -199,7 +201,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
       },
       {
         key: 'observacoes',
-        label: 'Observações',
+        label: t('table.observations'),
         sortable: true,
         render: (log: AuditoriaLog) => (
           <span className="small">{log.observacoes || '-'}</span>
@@ -250,7 +252,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
   // Bulk actions
   const bulkActions = [
     {
-      label: 'Ver Detalhes',
+      label: t('audit.viewDetails'),
       variant: 'primary' as const,
       disabled: (selectedItems: AuditoriaLog[]) => selectedItems.length === 0 && !selectedItem,
       action: (selectedItems: AuditoriaLog[]) => {
@@ -266,7 +268,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
   const customFilters = (
     <div className="row mb-1">
       <div className="col-md-4">
-        <label className="form-label small">Buscar</label>
+        <label className="form-label small">{t('buttons.search')}</label>
         <input
           type="text"
           className="form-control form-control-sm"
@@ -276,7 +278,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
         />
       </div>
       <div className="col-md-3">
-        <label className="form-label small">Ação</label>
+        <label className="form-label small">{t('table.action')}</label>
         <select
           className="form-select form-select-sm"
           value={acaoFilter}
@@ -285,16 +287,16 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
             tableFilters.setPage(1);
           }}
         >
-          <option value="">Todas</option>
-          <option value="create">Criar</option>
-          <option value="update">Atualizar</option>
-          <option value="delete">Excluir</option>
-          <option value="login">Login</option>
-          <option value="logout">Logout</option>
+          <option value="">{t('audit.actions.all')}</option>
+          <option value="create">{t('audit.actions.create')}</option>
+          <option value="update">{t('audit.actions.update')}</option>
+          <option value="delete">{t('audit.actions.delete')}</option>
+          <option value="login">{t('audit.actions.login')}</option>
+          <option value="logout">{t('audit.actions.logout')}</option>
         </select>
       </div>
       <div className="col-md-3">
-        <label className="form-label small">Entidade</label>
+        <label className="form-label small">{t('audit.entity')}</label>
         <select
           className="form-select form-select-sm"
           value={entidadeFilter}
@@ -303,14 +305,14 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
             tableFilters.setPage(1);
           }}
         >
-          <option value="">Todas</option>
-          <option value="Cliente">Cliente</option>
-          <option value="Plano">Plano</option>
-          <option value="Contrato">Contrato</option>
-          <option value="Usuario">Usuário</option>
-          <option value="Titulo">Título</option>
-          <option value="Banco">Banco</option>
-          <option value="ScheduledRoutine">Rotina Agendada</option>
+          <option value="">{t('audit.entities.all')}</option>
+          <option value="Cliente">{t('table.client')}</option>
+          <option value="Plano">{t('table.plan')}</option>
+          <option value="Contrato">{t('table.contract')}</option>
+          <option value="Usuario">{t('audit.user')}</option>
+          <option value="Titulo">{t('form.title')}</option>
+          <option value="Banco">{t('table.bank')}</option>
+          <option value="ScheduledRoutine">{t('modal.scheduledRoutine')}</option>
         </select>
       </div>
       <div className="col-md-2 d-flex align-items-end">
@@ -318,7 +320,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
           className="btn btn-sm btn-outline-primary w-100"
           onClick={handleClearFilters}
         >
-          Limpar
+          {t('buttons.clear')}
         </button>
       </div>
     </div>
@@ -332,7 +334,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
           clearSelection();
           onClose();
         }}
-        title="Logs de Auditoria"
+        title={t('audit.title')}
         size="xl"
       >
         <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
@@ -372,57 +374,57 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
             setShowDetailsModal(false);
             setSelectedLog(null);
           }}
-          title="Detalhes do Log de Auditoria"
+          title={t('audit.detailsTitle')}
           size="lg"
         >
           <div style={{ padding: '16px' }}>
             <div className="mb-1">
-              <h6 className="mb-1">Informações Gerais</h6>
+              <h6 className="mb-1">{t('audit.generalInfo')}</h6>
               <div className="row g-1">
                 <div className="col-md-6">
-                  <small className="text-muted">Ação:</small><br />
+                  <small className="text-muted">{t('table.action')}:</small><br />
                   <span className={`badge bg-${getAcaoBadgeClass(selectedLog.acao)}`}>
                     {formatAcao(selectedLog.acao)}
                   </span>
                 </div>
                 <div className="col-md-6">
-                  <small className="text-muted">Entidade:</small><br />
+                  <small className="text-muted">{t('audit.entity')}:</small><br />
                   <span>{selectedLog.entidade}</span>
                 </div>
                 <div className="col-md-6">
-                  <small className="text-muted">ID da Entidade:</small><br />
+                  <small className="text-muted">{t('audit.entityId')}:</small><br />
                   <span>{selectedLog.entidade_id || 'N/A'}</span>
                 </div>
                 <div className="col-md-6">
-                  <small className="text-muted">Data/Hora:</small><br />
+                  <small className="text-muted">{t('audit.timestamp')}:</small><br />
                   <span>{formatTimestamp(selectedLog.timestamp)}</span>
                 </div>
                 <div className="col-md-6">
-                  <small className="text-muted">Usuário:</small><br />
+                  <small className="text-muted">{t('audit.user')}:</small><br />
                   <span>{selectedLog.usuario_email || 'N/A'}</span>
                   {selectedLog.usuario_nome && (
                     <div className="text-muted small">{selectedLog.usuario_nome}</div>
                   )}
                 </div>
                 <div className="col-md-6">
-                  <small className="text-muted">IP:</small><br />
+                  <small className="text-muted">{t('audit.ip')}:</small><br />
                   <span>{selectedLog.ip_address || 'N/A'}</span>
                 </div>
                 {selectedLog.rota && (
                   <div className="col-md-12">
-                    <small className="text-muted">Rota:</small><br />
+                    <small className="text-muted">{t('audit.route')}:</small><br />
                     <code>{selectedLog.metodo_http || 'N/A'} {selectedLog.rota}</code>
                   </div>
                 )}
                 {selectedLog.user_agent && (
                   <div className="col-md-12">
-                    <small className="text-muted">User-Agent:</small><br />
+                    <small className="text-muted">{t('audit.userAgent')}:</small><br />
                     <span className="small">{selectedLog.user_agent}</span>
                   </div>
                 )}
                 {selectedLog.observacoes && (
                   <div className="col-md-12">
-                    <small className="text-muted">Observações:</small><br />
+                    <small className="text-muted">{t('table.observations')}:</small><br />
                     <span>{selectedLog.observacoes}</span>
                   </div>
                 )}
@@ -431,7 +433,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
 
             {(selectedLog.dados_anteriores || selectedLog.dados_novos) && (
               <div className="mb-1">
-                <h6 className="mb-1">Dados</h6>
+                <h6 className="mb-1">{t('audit.data')}</h6>
                 <div className="card">
                   <div className="card-body" style={{ backgroundColor: 'var(--bg-secondary)' }}>
                     <pre 

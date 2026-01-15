@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Button, Spinner } from '@/components/ui';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ResponsiveDialogProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
   headerActions,
   isLoading: _isLoading = false, // Mantido para compatibilidade, mas não usado
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const tableHeader = useTableHeader();
   const [showMenu, setShowMenu] = useState(false);
@@ -93,7 +95,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
           type="button"
           className="btn btn-link p-0 me-3 responsive-dialog-back-btn responsive-dialog-btn-auto"
           onClick={onClose}
-          aria-label="Voltar"
+          aria-label={t('buttons.back')}
         >
           <svg
             width="20"
@@ -151,7 +153,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                     }}
                   >
                     <i className="bi bi-search"></i>
-                    <span>Buscar</span>
+                    <span>{t('buttons.search')}</span>
                   </button>
                 )}
 
@@ -168,7 +170,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                     disabled={tableHeader.loading}
                   >
                     <i className="bi bi-arrow-clockwise"></i>
-                    <span>Atualizar</span>
+                    <span>{t('buttons.reload')}</span>
                   </button>
                 )}
 

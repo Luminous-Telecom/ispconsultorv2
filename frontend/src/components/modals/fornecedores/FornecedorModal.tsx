@@ -169,18 +169,18 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                   estado: dados.estado || prev.estado
                 }));
 
-                success('Dados do CNPJ preenchidos automaticamente!');
+                success(t('messages.cnpjDataAutoFilled'));
               }
             } catch (err) {
               const axiosError = err as AxiosError<{ message?: string; error?: string }>;
               const status = axiosError?.response?.status;
               
               if (status === 404) {
-                info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
+                info(t('messages.cnpjNotFound'));
               } else {
                 const errorMessage = axiosError?.response?.data?.message || 
                                    axiosError?.response?.data?.error || 
-                                   'Erro ao consultar CNPJ. Tente novamente ou preencha os dados manualmente.';
+                                   t('messages.errorConsultingCnpj');
                 error(errorMessage);
               }
             }
@@ -240,20 +240,20 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
     const newErrors: Partial<Record<keyof FornecedorFormData, string>> = {};
 
     if (!formData.nome_razao_social.trim()) {
-      newErrors.nome_razao_social = 'Nome/Razão Social é obrigatório';
+      newErrors.nome_razao_social = t('messages.nameRequired');
     }
 
     if (!formData.cpf_cnpj.trim()) {
-      newErrors.cpf_cnpj = 'CPF/CNPJ é obrigatório';
+      newErrors.cpf_cnpj = t('messages.cpfCnpjRequired');
     } else {
       const cleaned = formData.cpf_cnpj.replace(/\D/g, '');
       if (formData.tipo_pessoa === 'FISICA') {
         if (cleaned.length !== 11 || !isValidCPF(formData.cpf_cnpj)) {
-          newErrors.cpf_cnpj = 'CPF inválido';
+          newErrors.cpf_cnpj = t('messages.invalidCpf');
         }
       } else {
         if (cleaned.length !== 14 || !isValidCNPJ(formData.cpf_cnpj)) {
-          newErrors.cpf_cnpj = 'CNPJ inválido';
+          newErrors.cpf_cnpj = t('messages.invalidCnpj');
         }
       }
     }
@@ -299,7 +299,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
     }
   };
 
-  const modalTitle = 'Fornecedor';
+  const modalTitle = t('menu.suppliers');
 
   const renderContent = () => {
     if (isLoadingFornecedor && isEditing) {
@@ -324,7 +324,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
               <div className="d-flex flex-column gap-2">
                 <div>
                   <label className="form-label">
-                    Tipo de Pessoa:
+                    {t('form.personType')}:
                     <span className="text-danger ms-1">*</span>
                   </label>
                   <div className="d-flex gap-3 mt-2">
@@ -353,7 +353,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                         }}
                       />
                       <label className="form-check-label" htmlFor={`${formPrefix}-tipo_pessoa_fisica`}>
-                        Física
+                        {t('form.personTypePhysical')}
                       </label>
                     </div>
                     <div className="form-check">
@@ -381,7 +381,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                         }}
                       />
                       <label className="form-check-label" htmlFor={`${formPrefix}-tipo_pessoa_juridica`}>
-                        Jurídica
+                        {t('form.personTypeLegal')}
                       </label>
                     </div>
                   </div>
@@ -416,7 +416,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                 <FormField
                   name="nome_fantasia"
                   type="text"
-                  label="Nome Fantasia"
+                  label={t('form.tradeName')}
                   value={formData.nome_fantasia}
                   onChange={(value) => handleInputChange('nome_fantasia', value as string)}
                   error={errors.nome_fantasia}
@@ -431,7 +431,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                 <FormField
                   name="cep"
                   type="text"
-                  label="CEP"
+                  label={t('form.zipCode')}
                   value={formData.cep}
                   onChange={(value) => handleInputChange('cep', value as string)}
                   placeholder="00000-000"
@@ -442,7 +442,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                 <FormField
                   name="logradouro"
                   type="text"
-                  label="Logradouro"
+                  label={t('form.address')}
                   value={formData.logradouro}
                   onChange={(value) => handleInputChange('logradouro', value as string)}
                   error={errors.logradouro}
@@ -454,7 +454,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                     <FormField
                       name="numero"
                       type="text"
-                      label="Número"
+                      label={t('form.number')}
                       value={formData.numero}
                       onChange={(value) => handleInputChange('numero', value as string)}
                       error={errors.numero}
@@ -465,7 +465,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                     <FormField
                       name="complemento"
                       type="text"
-                      label="Complemento"
+                      label={t('form.complement')}
                       value={formData.complemento}
                       onChange={(value) => handleInputChange('complemento', value as string)}
                       error={errors.complemento}
@@ -479,7 +479,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                     <FormField
                       name="bairro"
                       type="text"
-                      label="Bairro"
+                      label={t('form.neighborhood')}
                       value={formData.bairro}
                       onChange={(value) => handleInputChange('bairro', value as string)}
                       error={errors.bairro}
@@ -490,7 +490,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                     <FormField
                       name="cidade"
                       type="text"
-                      label="Cidade"
+                      label={t('form.city')}
                       value={formData.cidade}
                       onChange={(value) => handleInputChange('cidade', value as string)}
                       error={errors.cidade}
@@ -501,7 +501,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                     <FormField
                       name="estado"
                       type="text"
-                      label="UF"
+                      label={t('form.state')}
                       value={formData.estado}
                       onChange={(value) => handleInputChange('estado', (value as string).toUpperCase())}
                       maxLength={2}
@@ -514,7 +514,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                 <FormField
                   name="pais"
                   type="text"
-                  label="País"
+                  label={t('form.country')}
                   value={formData.pais}
                   onChange={(value) => handleInputChange('pais', value as string)}
                   error={errors.pais}
@@ -567,7 +567,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                 onClick={onClose}
                 disabled={isSubmitting}
               >
-                Cancelar
+                {t('buttons.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -576,7 +576,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                 size="sm"
                 isLoading={isSubmitting}
               >
-                Salvar
+                {t('buttons.save')}
               </Button>
             </div>
 
@@ -599,7 +599,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                     type="button"
                     onClick={() => setActiveTab('dados-basicos')}
                   >
-                    Dados Básicos
+                    {t('tabs.basicData')}
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -608,7 +608,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                     type="button"
                     onClick={() => setActiveTab('endereco')}
                   >
-                    Endereço
+                    {t('tabs.address')}
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -617,7 +617,7 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
                     type="button"
                     onClick={() => setActiveTab('observacoes')}
                   >
-                    Observações
+                    {t('tabs.observations')}
                   </button>
                 </li>
               </ul>

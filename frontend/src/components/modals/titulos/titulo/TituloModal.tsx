@@ -17,6 +17,7 @@ import EntitySelectField from '@/components/ui/EntitySelectField';
 import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
 import PlanoListModal from '@/components/modals/planos/PlanoListModal';
 import { TituloModalProps } from './types';
+import { useI18n } from '@/contexts/I18nContext';
 
 const TituloModal: React.FC<TituloModalProps> = ({ 
   show, 
@@ -27,6 +28,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
   contratoId,
   isAvulso = false
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   // Estado interno para controlar o tituloId após criação
   const [internalTituloId, setInternalTituloId] = useState<number | null>(tituloId);
@@ -234,9 +236,9 @@ const TituloModal: React.FC<TituloModalProps> = ({
 
   if (isEditMode && isLoadingTitulo) {
     return (
-      <DraggableModal show={show} onClose={handleCancel} title="Título">
+      <DraggableModal show={show} onClose={handleCancel} title={t('titulo.title')}>
         <div className="d-flex justify-content-center p-4">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
+          <Spinner size="md" variant="primary" aria-label={t('ui.loading')} />
         </div>
       </DraggableModal>
     );
@@ -246,7 +248,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Título"
+      title={t('titulo.title')}
       headerActions={
         <div className="d-flex gap-2">
           {isEditMode && internalTituloId && (
@@ -258,7 +260,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
                 aria-expanded="false"
                 disabled={isPending}
               >
-                Enviar
+                {t('titulo.send')}
               </button>
               <ul className="dropdown-menu">
                 <li>
@@ -270,17 +272,17 @@ const TituloModal: React.FC<TituloModalProps> = ({
                         try {
                           const response = await TituloService.enviarWhatsApp(internalTituloId);
                           if (response.success) {
-                            success(response.message || 'Mensagem enviada com sucesso!');
+                            success(response.message || t('titulo.messages.sendSuccess'));
                           } else {
-                            error(response.message || 'Erro ao enviar mensagem');
+                            error(response.message || t('titulo.messages.sendError'));
                           }
                         } catch (err) {
-                          error('Erro ao enviar mensagem via WhatsApp');
+                          error(t('titulo.messages.whatsappError'));
                         }
                       }
                     }}
                   >
-                    Via WhatsApp
+                    {t('titulo.sendViaWhatsApp')}
                   </button>
                 </li>
                 <li>
@@ -292,17 +294,17 @@ const TituloModal: React.FC<TituloModalProps> = ({
                         try {
                           const response = await TituloService.enviarEmail(internalTituloId);
                           if (response.success) {
-                            success(response.message || 'Email enviado com sucesso!');
+                            success(response.message || t('titulo.messages.sendSuccess'));
                           } else {
-                            error(response.message || 'Erro ao enviar email');
+                            error(response.message || t('titulo.messages.sendError'));
                           }
                         } catch (err) {
-                          error('Erro ao enviar email');
+                          error(t('titulo.messages.sendError'));
                         }
                       }
                     }}
                   >
-                    Via Email
+                    {t('titulo.sendViaEmail')}
                   </button>
                 </li>
               </ul>
@@ -316,7 +318,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
             onClick={handleCancel}
             disabled={isPending}
           >
-            Cancelar
+            {t('actions.cancel')}
           </Button>
           <Button
             type="submit"
@@ -326,7 +328,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
             leftIcon={<i className="bi bi-check-lg"></i>}
             isLoading={isPending}
           >
-            {isEditMode ? 'Salvar' : 'Criar Título'}
+            {isEditMode ? t('actions.save') : t('titulo.createTitle')}
           </Button>
         </div>
       }
@@ -335,7 +337,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
         {/* Mostrar erros de validação se houver */}
         {Object.keys(errors).length > 0 && (
           <div className="alert alert-danger mb-3" role="alert">
-            <strong>Erros de validação:</strong>
+            <strong>{t('titulo.validationErrors')}</strong>
             <ul className="mb-0 mt-2">
               {Object.entries(errors).map(([field, message]) => (
                 <li key={field}>{field}: {message}</li>
@@ -347,7 +349,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
           {isEditMode && (
             <>
               <div>
-                <label className="form-label">Cliente</label>
+                <label className="form-label">{t('table.client')}</label>
                 <input
                   type="text"
                   className="form-control form-control-sm"
@@ -362,27 +364,27 @@ const TituloModal: React.FC<TituloModalProps> = ({
                     }
 
                     // Fallback: buscar na lista de clientes
-                    if (!formData.cliente_id) return 'Cliente não encontrado';
-                    if (!clientes?.data || clientes.data.length === 0) return 'Carregando...';
+                    if (!formData.cliente_id) return t('titulo.clientNotFound');
+                    if (!clientes?.data || clientes.data.length === 0) return t('ui.loading');
                     const cliente = clientes.data.find((c) => c.id === formData.cliente_id);
-                    if (!cliente) return 'Cliente não encontrado';
+                    if (!cliente) return t('titulo.clientNotFound');
                     return `${cliente.nome_fantasia || cliente.razao_social} - ${cliente.cnpj}`;
                   })()}
                   readOnly
                   style={{ cursor: 'not-allowed' }}
                 />
-                <small className="text-muted">Cliente não pode ser alterado</small>
+                <small className="text-muted">{t('titulo.clientCannotBeChanged')}</small>
               </div>
               <div>
-                <label className="form-label">Plano</label>
+                <label className="form-label">{t('table.plan')}</label>
                 <input
                   type="text"
                   className="form-control form-control-sm"
-                  value={planos?.data?.find((p: Plano) => p.id === formData.plano_id)?.nome_plano || 'Carregando...'}
+                  value={planos?.data?.find((p: Plano) => p.id === formData.plano_id)?.nome_plano || t('ui.loading')}
                   readOnly
                   style={{ cursor: 'not-allowed' }}
                 />
-                <small className="text-muted">Plano não pode ser alterado</small>
+                <small className="text-muted">{t('titulo.planoCannotBeChanged')}</small>
               </div>
             </>
           )}
@@ -395,7 +397,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
                 id: plano.id,
                 nome: plano.nome_plano
               })) || []}
-              label="Plano"
+              label={t('table.plan')}
               error={errors.plano_id}
               required
             />
@@ -407,7 +409,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
             <div>
               {tituloRegistradoNoBanco ? (
                 <>
-                  <label className="form-label">Valor</label>
+                  <label className="form-label">{t('table.value')}</label>
                   <input
                     type="text"
                     className="form-control form-control-sm"
@@ -415,13 +417,13 @@ const TituloModal: React.FC<TituloModalProps> = ({
                     readOnly
                     style={{ cursor: 'not-allowed' }}
                   />
-                  <small className="text-muted">Valor não pode ser alterado após registro no banco emissor</small>
+                  <small className="text-muted">{t('titulo.valorCannotBeChanged')}</small>
                 </>
               ) : (
                 <FormField
                   name="valor"
                   type="number"
-                  label="Valor"
+                  label={t('table.value')}
                   required={true}
                   size="sm"
                   value={formData.valor && formData.valor > 0 ? formData.valor : (valorTitulo > 0 ? valorTitulo : '')}
@@ -442,7 +444,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
             <FormField
               name="valor"
               type="number"
-              label="Valor"
+              label={t('table.value')}
               required={true}
               size="sm"
               value={formData.valor || ''}
@@ -457,7 +459,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
           <FormField
             name="data_vencimento"
             type="date"
-            label="Data de Vencimento"
+            label={t('table.dueDate')}
             required={true}
             size="sm"
             value={formData.data_vencimento}
@@ -467,13 +469,13 @@ const TituloModal: React.FC<TituloModalProps> = ({
             disabled={isPending || tituloRegistradoNoBanco}
             readOnly={tituloRegistradoNoBanco}
           />
-          {tituloRegistradoNoBanco && <small className="text-muted">Data de vencimento não pode ser alterada após registro no banco emissor</small>}
+          {tituloRegistradoNoBanco && <small className="text-muted">{t('titulo.dataVencimentoCannotBeChanged')}</small>}
           {!isEditMode && !isAvulso && (
             <FormField
               name="descricao"
               type="text"
-              label="Descrição"
-              placeholder="Descrição do título..."
+              label={t('table.description')}
+              placeholder={t('titulo.descriptionPlaceholder')}
               size="sm"
               value={formData.descricao}
               onChange={(value: FormValue) => handleInputChange('descricao', value as string)}
@@ -486,8 +488,8 @@ const TituloModal: React.FC<TituloModalProps> = ({
           <FormField
             name="descricao"
             type="text"
-            label="Descrição"
-            placeholder="Descrição do título..."
+            label={t('table.description')}
+            placeholder={t('titulo.descriptionPlaceholder')}
             size="sm"
             value={formData.descricao}
             onChange={(value: FormValue) => handleInputChange('descricao', value as string)}
@@ -503,7 +505,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
                 <FormField
                   name="desconto_percentual"
                   type="number"
-                  label="Desconto (%)"
+                  label={t('titulo.discountPercent')}
                   placeholder="0.00"
                   size="sm"
                   value={formData.desconto_percentual}
@@ -518,7 +520,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
                 <FormField
                   name="desconto_valor"
                   type="number"
-                  label="Desconto (R$)"
+                  label={t('titulo.discountValue')}
                   placeholder="0.00"
                   size="sm"
                   value={formData.desconto_valor}
@@ -536,7 +538,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
                 <FormField
                   name="acrescimo_percentual"
                   type="number"
-                  label="Acréscimo (%)"
+                  label={t('titulo.additionPercent')}
                   placeholder="0.00"
                   size="sm"
                   value={formData.acrescimo_percentual}
@@ -551,7 +553,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
                 <FormField
                   name="acrescimo_valor"
                   type="number"
-                  label="Acréscimo (R$)"
+                  label={t('titulo.additionValue')}
                   placeholder="0.00"
                   size="sm"
                   value={formData.acrescimo_valor}
@@ -568,8 +570,8 @@ const TituloModal: React.FC<TituloModalProps> = ({
         <FormField
           name="observacoes"
           type="textarea"
-          label="Observações"
-          placeholder="Observações sobre a parcela..."
+          label={t('table.observations')}
+          placeholder={t('titulo.observationsPlaceholder')}
           size="sm"
           value={formData.observacoes}
           onChange={(value: FormValue) => handleInputChange('observacoes', value as string)}
@@ -587,7 +589,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
             handleInputChange('cliente_id', cliente.id);
             clienteSelect.handleSelect(cliente);
           }}
-          title="Selecionar Cliente"
+          title={t('titulo.selectClient')}
         />
       )}
       
@@ -598,7 +600,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
           handleInputChange('plano_id', plano.id);
           planoSelect.handleSelect(plano);
         }}
-        title="Selecionar Plano"
+        title={t('titulo.selectPlano')}
       />
     </DraggableModal>
   );

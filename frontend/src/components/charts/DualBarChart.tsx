@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { ChartDataItem, ChartFormat } from './types';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface DualBarChartProps {
   receberData: ChartDataItem[];
@@ -14,6 +15,7 @@ export const DualBarChart: React.FC<DualBarChartProps> = ({
   title,
   format = 'currency'
 }) => {
+  const { t } = useI18n();
   // Combinar dados de receber e pagar, mantendo labels únicas
   const combinedData = useMemo(() => {
     const dataMap = new Map<string, { receber: number; pagar: number }>();
@@ -129,11 +131,11 @@ export const DualBarChart: React.FC<DualBarChartProps> = ({
       <div className="dual-bar-legend">
         <div className="dual-bar-legend-item">
           <div className="dual-bar-legend-color dual-bar-legend-receber"></div>
-          <span className="dual-bar-legend-text">A Receber</span>
+          <span className="dual-bar-legend-text">{t('financial.toReceive')}</span>
         </div>
         <div className="dual-bar-legend-item">
           <div className="dual-bar-legend-color dual-bar-legend-pagar"></div>
-          <span className="dual-bar-legend-text">A Pagar</span>
+          <span className="dual-bar-legend-text">{t('financial.toPayLabel')}</span>
         </div>
       </div>
     </div>

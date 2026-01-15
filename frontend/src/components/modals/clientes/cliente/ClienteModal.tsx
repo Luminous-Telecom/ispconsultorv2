@@ -231,7 +231,13 @@ const ClienteModal = ({
       render: (item: CarneParcela) => {
         return (
           <span className={`badge bg-${getStatusColor(item.status)}`}>
-            {item.status}
+            {item.status === 'pago' ? t('status.paid') : 
+             item.status === 'pago_atraso' ? t('status.paidLate') : 
+             item.status === 'pendente' ? t('status.pending') : 
+             item.status === 'vencido' ? t('status.overdue') : 
+             item.status === 'parcial' ? t('status.partial') : 
+             item.status === 'cancelado' ? t('status.cancelled') : 
+             item.status}
           </span>
         );
       }
@@ -308,7 +314,7 @@ const ClienteModal = ({
     },
     {
       key: 'data_pagamento',
-      label: 'Data Pagamento',
+      label: t('table.paymentDate'),
       sortable: true,
       searchable: false,
       render: (item: CarneParcela) => {
@@ -320,7 +326,7 @@ const ClienteModal = ({
     },
     {
       key: 'charge_id',
-      label: 'Charge ID',
+      label: t('table.chargeId'),
       sortable: true,
       searchable: true,
       render: (item: CarneParcela) => {
@@ -329,14 +335,14 @@ const ClienteModal = ({
     },
     {
       key: 'nosso_numero',
-      label: 'Nosso Número',
+      label: t('table.ourNumber'),
       sortable: true,
       searchable: true,
       render: (item: CarneParcela) => item.nosso_numero || '-'
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: t('table.createdAt'),
       sortable: true,
       searchable: false,
       render: (item: CarneParcela & { created_at?: string }) => 
@@ -359,8 +365,8 @@ const ClienteModal = ({
     if (formHook.isLoadingCliente && formHook.isEditing) {
       return (
         <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
-          <p className="mt-2">Carregando dados do cliente...</p>
+          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
+          <p className="mt-2">{t('messages.loadingClientData')}</p>
         </div>
       );
     }
@@ -644,7 +650,7 @@ const ClienteModal = ({
             }}
             parcela={selectedParcela ? {
               id: selectedParcela!.id,
-              numero_titulo: (selectedParcela!.numero_titulo || selectedParcela!.numero_parcela || `Título ${selectedParcela!.id}`).toString(),
+              numero_titulo: (selectedParcela!.numero_titulo || selectedParcela!.numero_parcela || `${t('table.id')} ${selectedParcela!.id}`).toString(),
               valor_parcela: selectedParcela!.valor || selectedParcela!.valor_parcela,
               data_vencimento: selectedParcela!.data_vencimento,
               cliente: (selectedParcela!.cliente as { razao_social?: string })?.razao_social ? { razao_social: (selectedParcela!.cliente as { razao_social?: string }).razao_social! } : undefined
@@ -677,7 +683,7 @@ const ClienteModal = ({
             onClose={impressaoHook.handleCloseImprimirModal}
             pdfUrl={impressaoHook.pdfUrl}
             isGenerating={impressaoHook.isGeneratingPdf}
-            title="Visualizar Documento"
+            title={t('modal.viewDocument')}
             modalId="cliente-imprimir-modal"
           />
 
@@ -687,7 +693,7 @@ const ClienteModal = ({
             onClose={auditoria.handleClosePreview}
             pdfUrl={auditoria.pdfUrl}
             isGenerating={auditoria.isGeneratingPdf}
-            title="Relatórios de logs"
+            title={t('financial.executionLogs')}
             modalId="auditoria-cliente-modal"
           />
 

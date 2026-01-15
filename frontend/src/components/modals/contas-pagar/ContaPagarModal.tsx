@@ -3,6 +3,7 @@ import { useContaPagar, useCreateContaPagar, useUpdateContaPagar, usePagarContaP
 import { useFornecedores } from '@/hooks/useFornecedores';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useEntitySelectField } from '@/hooks/useEntitySelectField';
+import { useI18n } from '@/contexts/I18nContext';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button, Spinner } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
@@ -72,6 +73,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
   onSuccess,
   showPagamentoOnOpen = false
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const [formData, setFormData] = useState<ContaPagarFormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof ContaPagarFormData, string>>>({});
@@ -275,14 +277,14 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
     }
   };
 
-  const modalTitle = 'Conta a Pagar';
+  const modalTitle = isEditing ? t('modal.editAccountPayable') : t('modal.createAccountPayable');
 
   const renderContent = () => {
     if (isLoadingContaPagar && isEditing) {
       return (
         <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
-          <p className="mt-2">Carregando dados da conta...</p>
+          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
+          <p className="mt-2">{t('messages.loadingAccountData')}</p>
         </div>
       );
     }
@@ -302,8 +304,8 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
               id: f.id,
               nome: f.nome_razao_social
             }))}
-            label="Fornecedor"
-            idFieldTitle="Digite o ID do fornecedor"
+            label={t('form.supplier')}
+            idFieldTitle={t('placeholder.enterSupplierId')}
             required
             error={errors.fornecedor_id}
           />
@@ -312,7 +314,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             <FormField
               name="tipo_criacao"
               type="select"
-              label="Tipo de Criação"
+              label={t('form.creationType')}
               value={formData.tipo_criacao}
               onChange={(value) => {
                 setFormData(prev => ({
@@ -324,8 +326,8 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 }));
               }}
               options={[
-                { value: 'unica', label: 'Única' },
-                { value: 'lote', label: 'Lote' }
+                { value: 'unica', label: t('form.creationTypeUnique') },
+                { value: 'lote', label: t('form.creationTypeBatch') }
               ]}
               size="sm"
             />
@@ -335,7 +337,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             <FormField
               name="data_vencimento"
               type="date"
-              label="Data de Vencimento"
+              label={t('form.dueDate')}
               value={formData.data_vencimento}
               onChange={(value) => {
                 setFormData(prev => ({ ...prev, data_vencimento: String(value || '') }));
@@ -351,7 +353,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="data_vencimento_inicial"
                   type="date"
-                  label="Data Inicial de Vencimento"
+                  label={t('form.dueDateInitial')}
                   value={formData.data_vencimento_inicial}
                   onChange={(value) => {
                     setFormData(prev => ({ ...prev, data_vencimento_inicial: String(value || '') }));
@@ -366,7 +368,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="data_vencimento_final"
                   type="date"
-                  label="Data Final de Vencimento"
+                  label={t('form.dueDateFinal')}
                   value={formData.data_vencimento_final}
                   onChange={(value) => {
                     setFormData(prev => ({ ...prev, data_vencimento_final: String(value || '') }));
@@ -385,7 +387,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
               <FormField
                 name="valor"
                 type="text"
-                label="Valor"
+                label={t('form.value')}
                 value={formData.valor}
                 onChange={(value) => {
                   const cleaned = String(value || '').replace(/\D/g, '');
@@ -408,7 +410,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
               <FormField
                 name="tipo_pagamento"
                 type="select"
-                label="Tipo de Pagamento"
+                label={t('form.paymentType')}
                 value={formData.tipo_pagamento}
                 onChange={(value) => {
                   setFormData(prev => ({
@@ -420,13 +422,13 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                   }));
                 }}
                 options={[
-                  { value: 'PIX', label: 'PIX' },
-                  { value: 'DINHEIRO', label: 'Dinheiro' },
-                  { value: 'BOLETO', label: 'Boleto' },
-                  { value: 'CARTAO', label: 'Cartão' },
-                  { value: 'DEPOSITO', label: 'Depósito' },
-                  { value: 'DEBITO_CONTA', label: 'Débito em Conta' },
-                  { value: 'TRANSFERENCIA', label: 'Transferência' }
+                  { value: 'PIX', label: t('form.paymentTypePix') },
+                  { value: 'DINHEIRO', label: t('form.paymentTypeCash') },
+                  { value: 'BOLETO', label: t('form.paymentTypeBoleto') },
+                  { value: 'CARTAO', label: t('form.paymentTypeCard') },
+                  { value: 'DEPOSITO', label: t('form.paymentTypeDeposit') },
+                  { value: 'DEBITO_CONTA', label: t('form.paymentTypeDebit') },
+                  { value: 'TRANSFERENCIA', label: t('form.paymentTypeTransfer') }
                 ]}
                 size="sm"
               />
@@ -437,7 +439,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             <FormField
               name="linha_digitavel"
               type="text"
-              label="Linha Digitável do Boleto"
+              label={t('form.barcodeLine')}
               value={formData.linha_digitavel}
               onChange={(value) => {
                 const cleaned = String(value || '').replace(/\D/g, '');
@@ -456,7 +458,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="tipo_chave_pix"
                   type="select"
-                  label="Tipo de Chave PIX"
+                  label={t('form.pixKeyType')}
                   value={formData.tipo_chave_pix}
                   onChange={(value) => {
                     setFormData(prev => ({
@@ -467,10 +469,10 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                   }}
                   options={[
                     { value: 'CPF_CNPJ', label: 'CPF/CNPJ' },
-                    { value: 'CELULAR', label: 'Celular' },
-                    { value: 'EMAIL', label: 'E-mail' },
+                    { value: 'CELULAR', label: t('form.phone') },
+                    { value: 'EMAIL', label: t('form.email') },
                     { value: 'ALEATORIA', label: 'Aleatória' },
-                    { value: 'QRCODE', label: 'Código Copia e Cola (QR Code)' }
+                    { value: 'QRCODE', label: t('form.qrCodeCopiaECola') }
                   ]}
                   size="sm"
                 />
@@ -479,7 +481,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="chave_pix"
                   type="text"
-                  label={formData.tipo_chave_pix === 'QRCODE' ? 'Código Copia e Cola' : 'Chave PIX'}
+                  label={formData.tipo_chave_pix === 'QRCODE' ? t('form.qrCodeCopiaECola') : t('form.pixKey')}
                   value={formData.chave_pix}
                   onChange={(value) => {
                     const inputValue = String(value || '');
@@ -498,12 +500,12 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                     setFormData(prev => ({ ...prev, chave_pix: formatted }));
                   }}
                   placeholder={
-                    formData.tipo_chave_pix === 'CPF_CNPJ' ? 'Digite o CPF ou CNPJ' :
-                    formData.tipo_chave_pix === 'CELULAR' ? 'Digite o celular (ex: 11999999999)' :
-                    formData.tipo_chave_pix === 'EMAIL' ? 'Digite o e-mail' :
-                    formData.tipo_chave_pix === 'ALEATORIA' ? 'Digite a chave aleatória (UUID)' :
-                    formData.tipo_chave_pix === 'QRCODE' ? 'Cole o código copia e cola do PIX' :
-                    'Digite a chave PIX'
+                    formData.tipo_chave_pix === 'CPF_CNPJ' ? t('placeholder.enterCpfCnpj') :
+                    formData.tipo_chave_pix === 'CELULAR' ? t('placeholder.enterCellPhone') :
+                    formData.tipo_chave_pix === 'EMAIL' ? t('placeholder.enterEmail') :
+                    formData.tipo_chave_pix === 'ALEATORIA' ? t('placeholder.enterRandomKey') :
+                    formData.tipo_chave_pix === 'QRCODE' ? t('placeholder.pasteQrCode') :
+                    t('placeholder.enterPixKey')
                   }
                   size="sm"
                 />
@@ -516,12 +518,12 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
               <FormField
                 name="numero_documento"
                 type="text"
-                label="Nº Documento"
+                label={t('table.documentNumber')}
                 value={formData.numero_documento}
                 onChange={(value) => {
                   setFormData(prev => ({ ...prev, numero_documento: String(value || '') }));
                 }}
-                placeholder="Número do documento"
+                placeholder={t('table.documentNumber')}
                 size="sm"
               />
             </div>
@@ -529,12 +531,12 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
               <FormField
                 name="nota_fiscal"
                 type="text"
-                label="Nota Fiscal"
+                label={t('form.invoiceNumber')}
                 value={formData.nota_fiscal}
                 onChange={(value) => {
                   setFormData(prev => ({ ...prev, nota_fiscal: String(value || '') }));
                 }}
-                placeholder="Número da nota fiscal"
+                placeholder={t('form.invoiceNumber')}
                 size="sm"
               />
             </div>
@@ -543,12 +545,12 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
           <FormField
             name="descricao"
             type="textarea"
-            label="Descrição"
+            label={t('table.description')}
             value={formData.descricao}
             onChange={(value) => {
               setFormData(prev => ({ ...prev, descricao: String(value || '') }));
             }}
-            placeholder="Descrição da conta a pagar"
+            placeholder={t('table.description')}
             rows={3}
             size="sm"
           />
@@ -556,12 +558,12 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
           <FormField
             name="observacoes"
             type="textarea"
-            label="Observações"
+            label={t('table.observations')}
             value={formData.observacoes}
             onChange={(value) => {
               setFormData(prev => ({ ...prev, observacoes: String(value || '') }));
             }}
-            placeholder="Observações adicionais"
+            placeholder={t('table.observations')}
             rows={4}
             size="sm"
           />
@@ -590,7 +592,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                   onClick={onClose}
                   disabled={createMutation.isPending || updateMutation.isPending || pagarMutation.isPending}
                 >
-                  Cancelar
+                  {t('buttons.cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -599,7 +601,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                   size="sm"
                   isLoading={createMutation.isPending || updateMutation.isPending}
                 >
-                  Salvar
+                  {t('buttons.save')}
                 </Button>
               </div>
             ) : undefined
@@ -627,7 +629,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
             setShowPagamentoModal(false);
             setPagamentoData(getInitialPagamentoData());
           }}
-            title="Pagar Conta Manualmente"
+            title={t('modal.payAccountManually')}
             size="lg"
             modalId="conta-pagar-pagamento-modal"
           headerActions={
@@ -642,7 +644,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 }}
                 disabled={pagarMutation.isPending}
               >
-                Cancelar
+                {t('buttons.cancel')}
               </Button>
               <Button
                 type="button"
@@ -652,7 +654,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 isLoading={pagarMutation.isPending}
                 disabled={valorTotal <= 0}
               >
-                Confirmar Pagamento
+                {t('buttons.confirmPayment')}
               </Button>
             </div>
           }
@@ -663,7 +665,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="data_pagamento"
                   type="date"
-                  label="Data de Pagamento"
+                  label={t('table.paymentDate')}
                   value={pagamentoData.data_pagamento}
                   onChange={(value) => {
                     setPagamentoData(prev => ({ ...prev, data_pagamento: String(value || '') }));
@@ -677,19 +679,19 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="tipo_pagamento_pagamento"
                   type="select"
-                  label="Forma de Pagamento"
+                  label={t('form.paymentType')}
                   value={pagamentoData.tipo_pagamento}
                   onChange={(value) => {
                     setPagamentoData(prev => ({ ...prev, tipo_pagamento: value as typeof pagamentoData.tipo_pagamento }));
                   }}
                   options={[
-                    { value: 'PIX', label: 'PIX' },
-                    { value: 'DINHEIRO', label: 'Dinheiro' },
-                    { value: 'BOLETO', label: 'Boleto' },
-                    { value: 'CARTAO', label: 'Cartão' },
-                    { value: 'DEPOSITO', label: 'Depósito' },
-                    { value: 'DEBITO_CONTA', label: 'Débito em Conta' },
-                    { value: 'TRANSFERENCIA', label: 'Transferência' }
+                    { value: 'PIX', label: t('form.paymentTypePix') },
+                    { value: 'DINHEIRO', label: t('form.paymentTypeCash') },
+                    { value: 'BOLETO', label: t('form.paymentTypeBoleto') },
+                    { value: 'CARTAO', label: t('form.paymentTypeCard') },
+                    { value: 'DEPOSITO', label: t('form.paymentTypeDeposit') },
+                    { value: 'DEBITO_CONTA', label: t('form.paymentTypeDebit') },
+                    { value: 'TRANSFERENCIA', label: t('form.paymentTypeTransfer') }
                   ]}
                   required
                   size="sm"
@@ -700,7 +702,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="valor_aberto"
                   type="text"
-                  label="Valor Aberto"
+                  label={t('table.openValue')}
                   value={formatCurrency(valorAberto, false)}
                   onChange={() => {}}
                   disabled
@@ -712,7 +714,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="desconto_percentual"
                   type="text"
-                  label="Desconto (%)"
+                  label={t('form.discountPercentShort')}
                   value={pagamentoData.desconto_percentual}
                   onChange={(value) => {
                     const cleaned = String(value || '').replace(/[^\d,.]/g, '');
@@ -727,7 +729,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="desconto_valor"
                   type="text"
-                  label="Desconto (Valor)"
+                  label={t('form.discountValueShort')}
                   value={pagamentoData.desconto_valor}
                   onChange={(value) => {
                     const cleaned = String(value || '').replace(/\D/g, '');
@@ -748,7 +750,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="acrescimo_percentual"
                   type="text"
-                  label="Acréscimo (%)"
+                  label={t('form.increasePercentShort')}
                   value={pagamentoData.acrescimo_percentual}
                   onChange={(value) => {
                     const cleaned = String(value || '').replace(/[^\d,.]/g, '');
@@ -763,7 +765,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="acrescimo_valor"
                   type="text"
-                  label="Acréscimo (Valor)"
+                  label={t('form.increaseValueShort')}
                   value={pagamentoData.acrescimo_valor}
                   onChange={(value) => {
                     const cleaned = String(value || '').replace(/\D/g, '');
@@ -784,7 +786,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="valor_baixado"
                   type="text"
-                  label="Valor Baixado"
+                  label={t('form.baixadoValue')}
                   value={formatCurrency(valorTotal, false)}
                   onChange={() => {}}
                   disabled
@@ -796,7 +798,7 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="valor_total"
                   type="text"
-                  label="Valor Total a Ser Pago"
+                  label={t('form.totalToPay')}
                   value={pagamentoData.valor_total !== undefined ? pagamentoData.valor_total : formatCurrency(valorTotalCalculado, false)}
                   onChange={(value) => {
                     const inputValue = String(value || '');
@@ -823,12 +825,12 @@ const ContaPagarModal: React.FC<ContaPagarModalProps> = ({
                 <FormField
                   name="observacao_pagamento"
                   type="textarea"
-                  label="Observação"
+                  label={t('table.observations')}
                   value={pagamentoData.observacao}
                   onChange={(value) => {
                     setPagamentoData(prev => ({ ...prev, observacao: String(value || '') }));
                   }}
-                  placeholder="Observações sobre o pagamento"
+                  placeholder={t('table.observations')}
                   rows={3}
                   size="sm"
                 />

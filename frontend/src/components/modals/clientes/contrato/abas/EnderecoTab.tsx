@@ -52,7 +52,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
       <FormField
         name="endereco"
         type="text"
-        label="Endereço"
+        label={t('form.address')}
         size="md"
         value={formData.endereco || ''}
         onChange={(value) => handleInputChange('endereco', value as string)}
@@ -76,7 +76,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           <FormField
             name="complemento"
             type="text"
-            label="Complemento"
+            label={t('form.complement')}
             size="md"
             value={formData.complemento || ''}
             onChange={(value) => handleInputChange('complemento', value as string)}
@@ -102,7 +102,7 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
           <FormField
             name="cidade"
             type="text"
-            label="Cidade"
+            label={t('form.city')}
             size="md"
             value={formData.cidade || ''}
             onChange={(value) => handleInputChange('cidade', value as string)}

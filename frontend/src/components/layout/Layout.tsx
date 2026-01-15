@@ -231,7 +231,7 @@ const Layout: React.FC = () => {
 
   const handleLogout = () => {
     authService.logout();
-    success('Sessão encerrada com sucesso.');
+    success(t('layout.logoutSuccess'));
     navigate('/login');
   };
 
@@ -565,7 +565,7 @@ const Layout: React.FC = () => {
               <input
                 type="text"
                 className="navbar-mobile-search-input"
-                placeholder={tableHeader.searchPlaceholder || "Buscar..."}
+                placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
                 value={tableHeader.searchValue}
                 onChange={(e) => tableHeader.setSearchValue(e.target.value)}
                 autoFocus
@@ -575,7 +575,7 @@ const Layout: React.FC = () => {
                 type="button"
                 className="navbar-mobile-search-close"
                 onClick={() => tableHeader.setShowMobileSearch(false)}
-                aria-label="Fechar busca"
+                aria-label={t('layout.closeSearch')}
               >
                 <i className="bi bi-x"></i>
               </button>

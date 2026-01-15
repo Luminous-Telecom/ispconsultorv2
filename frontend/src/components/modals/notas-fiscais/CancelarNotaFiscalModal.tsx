@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -19,6 +20,7 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
   onSuccess,
   notaFiscal
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { error, success } = useNotificationContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,13 +30,13 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
   // Validação da justificativa
   const validateJustificativa = (value: string): string => {
     if (!value.trim()) {
-      return 'Justificativa é obrigatória';
+      return t('messages.justificationRequired');
     }
     if (value.trim().length < 15) {
-      return 'Justificativa deve ter pelo menos 15 caracteres';
+      return t('messages.justificationMinLength');
     }
     if (value.length > 500) {
-      return 'Justificativa deve ter no máximo 500 caracteres';
+      return t('messages.justificationMaxLength');
     }
     return '';
   };
@@ -75,14 +77,14 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
       const response = await NotaFiscalService.cancelar(notaFiscal.id, justificativa.trim());
 
       if (response.success) {
-        success('Nota fiscal cancelada com sucesso!');
+        success(t('messages.invoiceCanceled'));
         onSuccess?.();
         onClose();
       } else {
-        error(response.message || 'Erro ao cancelar nota fiscal');
+        error(response.message || t('messages.errorCancelingInvoice'));
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao cancelar nota fiscal';
+      const errorMessage = err instanceof Error ? err.message : t('messages.errorCancelingInvoice');
       error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -109,7 +111,7 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
         onClick={handleClose}
         disabled={isSubmitting}
       >
-        Cancelar
+        {t('buttons.cancel')}
       </Button>
       <Button
         type="submit"
@@ -119,10 +121,10 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
         disabled={!isFormValid || isSubmitting}
         isLoading={isSubmitting}
       >
-        {isSubmitting ? 'Cancelando...' : 'Confirmar Cancelamento'}
+        {isSubmitting ? t('buttons.canceling') : t('buttons.confirmCancellation')}
       </Button>
     </div>
-  ), [isFormValid, isSubmitting, handleClose]);
+  ), [isFormValid, isSubmitting, handleClose, t]);
 
   if (!notaFiscal) return null;
 
@@ -130,7 +132,7 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleClose}
-      title="Cancelar Nota Fiscal"
+      title={t('modal.cancelInvoice')}
       size="md"
       modalId="cancelar-nf-modal"
       headerActions={headerActionsContent}
@@ -138,37 +140,37 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
       <div style={{ padding: isMobile ? '0' : '16px' }}>
         <div className="alert alert-warning mb-3">
           <i className="fas fa-exclamation-triangle me-2"></i>
-          <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+          <strong>{t('messages.warning')}!</strong> {t('messages.actionCannotBeUndone')}
         </div>
 
         <div className="mb-3">
-          <h6>Detalhes da Nota Fiscal:</h6>
+          <h6>{t('other.invoiceDetails')}</h6>
           <div className="row">
             <div className="col-md-6">
-              <small className="text-muted">Número:</small>
-              <div className="fw-bold">{notaFiscal.numero || 'Não informado'}</div>
+              <small className="text-muted">{t('table.number')}:</small>
+              <div className="fw-bold">{notaFiscal.numero || t('messages.notInformed')}</div>
             </div>
             <div className="col-md-6">
-              <small className="text-muted">Cliente:</small>
+              <small className="text-muted">{t('table.client')}:</small>
               <div className="fw-bold">
-                {notaFiscal.cliente?.razao_social || notaFiscal.cliente?.nome_fantasia || 'Não informado'}
+                {notaFiscal.cliente?.razao_social || notaFiscal.cliente?.nome_fantasia || t('messages.notInformed')}
               </div>
             </div>
           </div>
           <div className="row mt-2">
             <div className="col-md-6">
-              <small className="text-muted">Valor Total:</small>
+              <small className="text-muted">{t('table.totalValue')}:</small>
               <div className="fw-bold text-success">
                 R$ {notaFiscal.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
               </div>
             </div>
             <div className="col-md-6">
-              <small className="text-muted">Status:</small>
+              <small className="text-muted">{t('table.status')}:</small>
               <div className="fw-bold">
                 <span className={`badge ${
                   notaFiscal.status === 'AUTORIZADA' ? 'bg-success' : 'bg-secondary'
                 }`}>
-                  {notaFiscal.status}
+                  {notaFiscal.status === 'AUTORIZADA' ? t('status.authorized') : notaFiscal.status}
                 </span>
               </div>
             </div>
@@ -178,14 +180,14 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
         <form id="cancelar-nf-form" onSubmit={handleSubmit}>
           <div className="mb-3">
             <label htmlFor="justificativa" className="form-label">
-              Justificativa do Cancelamento <span className="text-danger">*</span>
+              {t('form.justificationCancel')} <span className="text-danger">*</span>
             </label>
             <textarea
               id="justificativa"
               name="justificativa"
               className={`form-control ${justificativaError ? 'is-invalid' : ''}`}
               rows={4}
-              placeholder="Digite a justificativa para o cancelamento da nota fiscal (mínimo 15 caracteres)..."
+              placeholder={t('placeholder.enterJustification')}
               value={justificativa}
               onChange={handleJustificativaChange}
               disabled={isSubmitting}
@@ -194,7 +196,7 @@ const CancelarNotaFiscalModal: React.FC<CancelarNotaFiscalModalProps> = ({
               <div className="invalid-feedback">{justificativaError}</div>
             )}
             <div className="form-text">
-              {justificativa.length}/500 caracteres
+              {justificativa.length}/500 {t('other.characters')}
             </div>
           </div>
         </form>

@@ -97,7 +97,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
     {
       name: 'endereco',
       label: t('form.address'),
-      placeholder: 'Rua, Avenida...',
+      placeholder: t('placeholder.street'),
       fieldRequired: true,
       validation: [
         { type: 'required', message: t('form.required') }
@@ -106,7 +106,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
     {
       name: 'numero',
       label: t('form.number'),
-      placeholder: '123',
+      placeholder: t('placeholder.number'),
       fieldRequired: true,
       validation: [
         { type: 'required', message: t('form.required') }
@@ -115,14 +115,14 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
     {
       name: 'complemento',
       label: t('form.complement'),
-      placeholder: 'Apto, Sala...',
+      placeholder: t('placeholder.complement'),
       fieldRequired: false,
       validation: []
     },
     {
       name: 'bairro',
       label: t('form.neighborhood'),
-      placeholder: 'Nome do bairro',
+      placeholder: t('placeholder.neighborhood'),
       fieldRequired: true,
       validation: [
         { type: 'required', message: t('form.required') }
@@ -131,7 +131,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
     {
       name: 'cidade',
       label: t('form.city'),
-      placeholder: 'Nome da cidade',
+      placeholder: t('placeholder.city'),
       fieldRequired: true,
       validation: [
         { type: 'required', message: t('form.required') }
@@ -140,7 +140,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
     {
       name: 'estado',
       label: t('form.state'),
-      placeholder: 'SP',
+      placeholder: t('placeholder.state'),
       fieldRequired: true,
       validation: [
         { type: 'required', message: t('form.required') },

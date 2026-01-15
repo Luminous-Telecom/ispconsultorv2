@@ -106,13 +106,13 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   // Função para obter badge de tipo de pagamento
   const getTipoPagamentoBadge = (tipo: ContaPagar['tipo_pagamento']) => {
     const tipoMap: Record<string, string> = {
-      'DINHEIRO': 'Dinheiro',
-      'BOLETO': 'Boleto',
-      'CARTAO': 'Cartão',
-      'DEPOSITO': 'Depósito',
-      'DEBITO_CONTA': 'Débito em Conta',
-      'TRANSFERENCIA': 'Transferência',
-      'PIX': 'PIX'
+      'DINHEIRO': t('form.paymentTypeCash'),
+      'BOLETO': t('form.paymentTypeBoleto'),
+      'CARTAO': t('form.paymentTypeCard'),
+      'DEPOSITO': t('form.paymentTypeDeposit'),
+      'DEBITO_CONTA': t('form.paymentTypeDebit'),
+      'TRANSFERENCIA': t('form.paymentTypeTransfer'),
+      'PIX': t('form.paymentTypePix')
     };
     return tipoMap[tipo] || tipo;
   };
@@ -123,62 +123,62 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     filters: [
       {
         key: 'fornecedor_id',
-        label: 'Fornecedor',
+        label: t('table.supplier'),
         type: 'select',
         options: fornecedoresOptions,
-        placeholder: 'Selecione o fornecedor'
+        placeholder: t('placeholder.selectProvider')
       },
       {
         key: 'data_inicio',
-        label: 'Vencimento Inicial',
+        label: t('form.dueDateStart'),
         type: 'date',
-        placeholder: 'Data inicial'
+        placeholder: t('placeholder.startDate')
       },
       {
         key: 'data_fim',
-        label: 'Vencimento Final',
+        label: t('form.dueDateEnd'),
         type: 'date',
-        placeholder: 'Data final'
+        placeholder: t('placeholder.endDate')
       },
       {
         key: 'status',
-        label: 'Status',
+        label: t('table.status'),
         type: 'select',
         options: [
           { value: 'A_PAGAR', label: t('financial.toPay') },
           { value: 'PAGO', label: t('financial.paid') },
           { value: 'PARCIAL', label: t('status.pending') },
-          { value: 'CANCELADO', label: 'Cancelado' }
+          { value: 'CANCELADO', label: t('status.rejected') }
         ],
         placeholder: t('ui.selectOption')
       },
       {
         key: 'tipo_pagamento',
-        label: 'Tipo',
+        label: t('form.paymentType'),
         type: 'select',
         options: [
-          { value: 'DINHEIRO', label: 'Dinheiro' },
-          { value: 'BOLETO', label: 'Boleto' },
-          { value: 'CARTAO', label: 'Cartão' },
-          { value: 'DEPOSITO', label: 'Depósito' },
-          { value: 'DEBITO_CONTA', label: 'Débito em Conta' },
-          { value: 'TRANSFERENCIA', label: 'Transferência' },
-          { value: 'PIX', label: 'PIX' }
+          { value: 'DINHEIRO', label: t('form.paymentTypeCash') },
+          { value: 'BOLETO', label: t('form.paymentTypeBoleto') },
+          { value: 'CARTAO', label: t('form.paymentTypeCard') },
+          { value: 'DEPOSITO', label: t('form.paymentTypeDeposit') },
+          { value: 'DEBITO_CONTA', label: t('form.paymentTypeDebit') },
+          { value: 'TRANSFERENCIA', label: t('form.paymentTypeTransfer') },
+          { value: 'PIX', label: t('form.paymentTypePix') }
         ],
-        placeholder: 'Selecione o tipo'
+        placeholder: t('placeholder.selectType')
       }
     ],
     columns: [
       {
         key: 'id',
-        label: 'ID',
+        label: t('table.id'),
         sortable: true,
         width: '42px',
         render: (item: ContaPagar) => <span className="text-nowrap">{item.id ?? '-'}</span>
       },
       {
         key: 'fornecedor',
-        label: 'Fornecedor',
+        label: t('table.supplier'),
         sortable: true,
         render: (item: ContaPagar) => (
           item.fornecedor?.nome_razao_social || '-'
@@ -186,7 +186,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       },
       {
         key: 'data_vencimento',
-        label: 'Vencimento',
+        label: t('table.dueDate'),
         sortable: true,
         width: '130px',
         render: (item: ContaPagar) => (
@@ -197,7 +197,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       },
       {
         key: 'valor',
-        label: 'Valor',
+        label: t('table.value'),
         sortable: true,
         width: '130px',
         render: (item: ContaPagar) => (
@@ -206,7 +206,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       },
       {
         key: 'valor_pago',
-        label: 'Valor Pago',
+        label: t('table.paidValue'),
         sortable: true,
         width: '130px',
         render: (item: ContaPagar) => (
@@ -215,7 +215,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       },
       {
         key: 'saldo_devedor',
-        label: 'Saldo Devedor',
+        label: t('table.balanceDue'),
         sortable: true,
         width: '130px',
         render: (item: ContaPagar) => {
@@ -231,14 +231,14 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       },
       {
         key: 'status',
-        label: 'Status',
+        label: t('table.status'),
         sortable: true,
         width: '120px',
         render: (item: ContaPagar) => getStatusBadge(item.status)
       },
       {
         key: 'tipo_pagamento',
-        label: 'Tipo Pagamento',
+        label: t('table.paymentType'),
         sortable: true,
         width: '150px',
         render: (item: ContaPagar) => (
@@ -247,7 +247,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       },
       {
         key: 'numero_documento',
-        label: 'Nº Documento',
+        label: t('table.documentNumber'),
         sortable: true,
         width: '150px',
         render: (item: ContaPagar) => (
@@ -256,7 +256,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       },
       {
         key: 'descricao',
-        label: 'Descrição',
+        label: t('table.description'),
         sortable: true,
         width: '200px',
         render: (item: ContaPagar) => (
@@ -267,7 +267,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       },
       {
         key: 'data_pagamento',
-        label: 'Data Pagamento',
+        label: t('table.paymentDate'),
         sortable: true,
         width: '130px',
         render: (item: ContaPagar) => (
@@ -278,7 +278,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       },
       {
         key: 'created_at',
-        label: 'Criado em',
+        label: t('table.createdAt'),
         sortable: true,
         width: '150px',
         render: (item: ContaPagar & { created_at?: string; created_at_formatada?: string | null }) => {
@@ -289,15 +289,15 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         }
       }
     ],
-    searchPlaceholder: 'Buscar...',
+    searchPlaceholder: t('layout.searchPlaceholder'),
     searchFields: [
-      { key: 'numero_documento', label: 'Nº Documento' },
-      { key: 'nota_fiscal', label: 'Nota Fiscal' },
-      { key: 'fornecedor', label: 'Fornecedor' },
-      { key: 'vencimento', label: 'Vencimento' },
-      { key: 'valor', label: 'Valor' },
-      { key: 'status', label: 'Status' },
-      { key: 'tipo', label: 'Tipo' }
+      { key: 'numero_documento', label: t('table.documentNumber') },
+      { key: 'nota_fiscal', label: t('form.invoiceNumber') },
+      { key: 'fornecedor', label: t('table.supplier') },
+      { key: 'vencimento', label: t('table.dueDate') },
+      { key: 'valor', label: t('table.value') },
+      { key: 'status', label: t('table.status') },
+      { key: 'tipo', label: t('form.paymentType') }
     ],
     multiSelect: false
   });
@@ -454,7 +454,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   // Bulk actions
   const bulkActions = onSelectContaPagar ? [
     {
-      label: 'Cancelar',
+      label: t('buttons.cancel'),
       variant: 'secondary' as const,
       action: () => {
         clearSelection();
@@ -462,19 +462,19 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       }
     },
     {
-      label: 'Inserir',
+      label: t('actions.insert'),
       variant: 'primary' as const,
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0 && !selectedItem,
       action: (selectedItems: ContaPagar[]) => handleSelect(selectedItems)
     }
   ] : [
     {
-      label: 'Novo',
+      label: t('actions.new'),
       variant: 'primary' as const,
       action: () => setShowCreateModal(true)
     },
     {
-      label: 'Editar',
+      label: t('buttons.edit'),
       variant: 'primary' as const,
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
       action: (selectedItems: ContaPagar[]) => {
@@ -486,7 +486,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       }
     },
     {
-      label: 'Pagar',
+      label: t('actions.pay'),
       variant: 'primary' as const,
       disabled: (selectedItems: ContaPagar[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
@@ -501,7 +501,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       }
     },
     {
-      label: 'Duplicar',
+      label: t('actions.duplicate'),
       variant: 'secondary' as const,
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
       action: (selectedItems: ContaPagar[]) => {
@@ -512,18 +512,18 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       }
     },
     {
-      label: 'Excluir',
+      label: t('buttons.delete'),
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
       action: async (selectedItems: ContaPagar[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
         if (!item) return;
         
         const confirmed = await confirm({
-          message: 'Tem certeza que deseja excluir esta conta a pagar?',
+          message: t('messages.confirmDeleteAccountPayable'),
           variant: 'danger',
-          title: 'Excluir conta a pagar',
-          confirmText: 'Excluir',
-          cancelText: 'Cancelar',
+          title: t('modal.deleteAccountPayable'),
+          confirmText: t('buttons.delete'),
+          cancelText: t('buttons.cancel'),
         });
         
         if (confirmed) {
@@ -588,7 +588,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
             skipWrapper={true}
             customControlsAfterActions={
               <div className="d-flex align-items-center gap-2">
-                <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
+                <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">{t('filter.startDate')}</label>
                 <input
                   type="date"
                   id="dataVencimentoInicio"
@@ -596,7 +596,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
                   value={dataVencimentoInicio}
                   onChange={(e) => setDataVencimentoInicio(e.target.value)}
                 />
-                <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
+                <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">{t('filter.endDate')}</label>
                 <input
                   type="date"
                   id="dataVencimentoFim"
@@ -614,23 +614,23 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
           <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
             <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
               <div className="text-end">
-                <div className="small text-muted">Valor:</div>
+                <div className="small text-muted">{t('summary.value')}</div>
                 <strong>{formatCurrency(resumoFinanceiro.valorTotal)}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor baixado:</div>
+                <div className="small text-muted">{t('summary.paidValue')}</div>
                 <strong>{formatCurrency(resumoFinanceiro.valorBaixado)}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor aberto:</div>
+                <div className="small text-muted">{t('summary.openValue')}</div>
                 <strong>{formatCurrency(resumoFinanceiro.valorAberto)}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor total pago:</div>
+                <div className="small text-muted">{t('summary.totalPaidValue')}</div>
                 <strong>{formatCurrency(resumoFinanceiro.valorTotalPago)}</strong>
               </div>
               <div className="text-end">
-                <div className="small text-muted">Valor cancelado:</div>
+                <div className="small text-muted">{t('summary.canceledValue')}</div>
                 <strong>{formatCurrency(resumoFinanceiro.valorCancelado)}</strong>
               </div>
             </div>
@@ -736,7 +736,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         onClose={auditoria.handleClosePreview}
         pdfUrl={auditoria.pdfUrl}
         isGenerating={auditoria.isGeneratingPdf}
-        title="Relatórios de logs"
+        title={t('financial.executionLogs')}
         modalId="auditoria-conta-pagar-modal"
       />
 

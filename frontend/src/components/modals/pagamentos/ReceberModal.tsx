@@ -101,22 +101,22 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
       <form onSubmit={rhfHandleSubmit(handleSubmit)} style={{ padding: isMobile ? '0' : '16px' }}>
         <div className="card mb-3">
           <div className="card-header py-2">
-            <h6 className="mb-0">Informações da Parcela</h6>
+            <h6 className="mb-0">{t('financial.parcelInfo')}</h6>
           </div>
           <div className="card-body py-2">
             <div className="row g-0">
               <div className="col-md-6">
-                <small className="text-muted">Cliente:</small><br />
+                <small className="text-muted">{t('table.client')}:</small><br />
                 <span className="text-secondary">{parcela.cliente?.razao_social || 'N/A'}</span>
               </div>
               <div className="col-md-6">
-                <small className="text-muted">Vencimento:</small><br />
+                <small className="text-muted">{t('table.dueDate')}:</small><br />
                 <span className="text-secondary">{formatDate(parcela.data_vencimento)}</span>
               </div>
             </div>
             <div className="row g-2 mt-2">
               <div className="col-md-6">
-                <small className="text-muted">Valor Original:</small><br />
+                <small className="text-muted">{t('financial.originalValue')}:</small><br />
                 <span className="text-secondary">R$ {(Number(parcela.valor_parcela) || 0).toFixed(2)}</span>
               </div>
             </div>
@@ -129,7 +129,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
               <FormField
                 name="data_pagamento"
                 type="date"
-                label="Data de Pagamento"
+                label={t('financial.paymentDate')}
                 required={true}
                 size="md"
                 value={formData.data_pagamento || ''}
@@ -144,7 +144,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
           <div className="col-md-6">
             <div className="mb-3">
               <label htmlFor="valor_pago" className="form-label">
-                Valor Pago *
+                {t('financial.amountPaid')} *
               </label>
               <div className="input-group has-validation">
                 <span className="input-group-text" style={{ padding: '0 0.75rem' }}>R$</span>
@@ -173,8 +173,8 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
           <FormField
             name="observacoes"
             type="textarea"
-            label="Observações"
-            placeholder="Observações sobre o pagamento (opcional)"
+            label={t('form.observations')}
+            placeholder={t('placeholder.paymentObservations')}
             size="md"
             value={formData.observacoes || ''}
             onChange={(value) => setValue('observacoes', String(value ?? ''), { shouldValidate: true })}
@@ -184,7 +184,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
             rows={3}
           />
           <div className="text-secondary mt-2">
-            {(formData.observacoes || '').length}/500 caracteres
+            {(formData.observacoes || '').length}/500 {t('financial.characters')}
           </div>
         </div>
 
@@ -196,7 +196,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
             onClick={onClose}
             disabled={marcarPagoMutation.isPending}
           >
-            Cancelar
+            {t('actions.cancel')}
           </Button>
           <Button
             type="submit"
@@ -204,7 +204,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
             leftIcon={<i className="bi bi-check-lg"></i>}
             isLoading={marcarPagoMutation.isPending}
           >
-            Receber
+            {t('actions.receive')}
           </Button>
         </div>
       </form>

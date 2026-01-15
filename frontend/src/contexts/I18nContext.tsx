@@ -1,3 +1,4 @@
+/* eslint-disable no-template-curly-in-string */
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type Language = 'pt-BR' | 'en-US' | 'es-ES';
@@ -17,17 +18,122 @@ export interface TranslationKeys {
   'actions.edit': string;
   'actions.delete': string;
   'actions.create': string;
+  'actions.pay': string;
+  'actions.duplicate': string;
+  'actions.insert': string;
+  'actions.new': string;
   'actions.filter': string;
   'actions.export': string;
   'actions.import': string;
+  'actions.receive': string;
+  'actions.reverse': string;
+  'actions.nfse': string;
+  'actions.print': string;
+  'actions.send': string;
+
+  // Buttons
+  'buttons.selected': string;
+  'buttons.open': string;
+  'buttons.receipt': string;
+  'buttons.printNF': string;
+  'buttons.viaWhatsApp': string;
+  'buttons.viaEmail': string;
+  'buttons.generateNFSeAvulsa': string;
+  'buttons.new': string;
+
+  // Contracts
+  'contracts.title': string;
+  'contracts.confirmDelete': string;
+  'contracts.confirmDeleteMessage': string;
+  'contracts.termAdesao': string;
+  'contracts.permanencia': string;
+  'contracts.messages.deleteSuccess': string;
+  'contracts.messages.deleteError': string;
 
   // Mensagens
   'messages.confirmDelete': string;
   'messages.loading': string;
   'messages.noData': string;
   'messages.error': string;
+  'messages.cnpjDataAutoFilled': string;
+  'messages.cnpjNotFound': string;
+  'messages.errorConsultingCnpj': string;
+  'messages.nameRequired': string;
+  'messages.contentRequired': string;
+  'messages.cpfCnpjRequired': string;
+  'messages.invalidCpf': string;
+  'messages.invalidCnpj': string;
+  'messages.clientRequired': string;
+  'messages.justificationRequired': string;
+  'messages.justificationMinLength': string;
+  'messages.justificationMaxLength': string;
+  'messages.invoiceCanceled': string;
+  'messages.errorCancelingInvoice': string;
+  'messages.actionCannotBeUndone': string;
+  'messages.notInformed': string;
+  'messages.selectAtLeastOneInvoice': string;
+  'messages.invoiceGenerated': string;
+  'messages.errorGeneratingInvoice': string;
+  'messages.issRateRange': string;
+  'messages.invoicePdfGenerated': string;
+  'messages.errorGeneratingInvoicePdf': string;
+  'messages.selectInvoiceToCancel': string;
+  'messages.selectOnlyOneInvoiceToCancel': string;
+  'messages.invoiceAlreadyCanceled': string;
+  'messages.onlyAuthorizedCanBeCanceled': string;
   'messages.success': string;
   'messages.warning': string;
+  'messages.successPrintSelected': string;
+  'messages.errorPrintSelected': string;
+  'messages.clientNotFound': string;
+  'messages.successPrintOpen': string;
+  'messages.errorPrintOpen': string;
+  'messages.confirmCancelTitle': string;
+  'messages.confirmCancelTitles': string;
+  'messages.successCancelTitle': string;
+  'messages.successCancelTitles': string;
+  'messages.errorCancelTitle': string;
+  'messages.errorCancelTitles': string;
+  'messages.errorCancelTitlesGeneral': string;
+  'messages.successSendMessage': string;
+  'messages.successSendMessages': string;
+  'messages.errorSendMessage': string;
+  'messages.errorSendMessages': string;
+  'messages.errorSendMessagesGeneral': string;
+  'messages.successSendEmail': string;
+  'messages.successSendEmails': string;
+  'messages.errorSendEmail': string;
+  'messages.errorSendEmails': string;
+  'messages.errorSendEmailsGeneral': string;
+  'messages.successReverseTitle': string;
+  'messages.errorReverseTitle': string;
+  'messages.successDeleteTerm': string;
+  'messages.successDeleteTerms': string;
+  'messages.errorDeleteTerm': string;
+  'messages.errorDeleteTerms': string;
+  'messages.confirmDeleteAdditionalService': string;
+  'messages.confirmDeleteAdditionalServices': string;
+  'messages.successDeleteAdditionalService': string;
+  'messages.successDeleteAdditionalServices': string;
+  'messages.errorDeleteAdditionalService': string;
+  'messages.errorDeleteAdditionalServices': string;
+  'messages.errorDeleteAdditionalServicesGeneral': string;
+  'messages.loadingAccountData': string;
+  'messages.supplierRequired': string;
+  'messages.emailRequired': string;
+  'messages.passwordRequired': string;
+  'messages.passwordMinLength': string;
+  'messages.info': string;
+  'messages.confirmAction': string;
+  'messages.dueDateRequired': string;
+  'messages.startDateRequired': string;
+  'messages.endDateRequired': string;
+  'messages.endDateAfterStartDate': string;
+  'messages.valueRequired': string;
+  'messages.valueGreaterThanZero': string;
+  'messages.confirmDeleteAccountPayable': string;
+  'messages.successDeleteAccountPayable': string;
+  'messages.errorDeleteAccountPayable': string;
 
   // Formulários
   'form.required': string;
@@ -132,6 +238,93 @@ export interface TranslationKeys {
   'ui.selectBank': string;
   'ui.yes': string;
   'ui.no': string;
+  'ui.actionsMenu': string;
+  'ui.firstPage': string;
+  'ui.previousPage': string;
+  'ui.nextPage': string;
+  'ui.lastPage': string;
+  'ui.page': string;
+  'ui.refresh': string;
+  'ui.auditSelected': string;
+  'ui.selectOneToAudit': string;
+  'ui.loadingApplication': string;
+  'ui.loadingDashboard': string;
+  'ui.loadingLogin': string;
+  'ui.loadingPayment': string;
+  'ui.loadingPage': string;
+  'ui.appError': string;
+  'ui.criticalError': string;
+  'ui.reloadPage': string;
+  'ui.loading': string;
+
+  // Company Labels
+  'company.title': string;
+  'company.razaoSocial': string;
+  'company.nomeFantasia': string;
+  'company.cnpj': string;
+  'company.inscricaoEstadual': string;
+  'company.inscricaoMunicipal': string;
+  'company.logo': string;
+  'company.noLogo': string;
+  'company.acceptedFormats': string;
+
+  // NFSe Labels
+  'nfse.title': string;
+  'nfse.municipalServiceCode': string;
+  'nfse.municipalServiceCodeHelp': string;
+  'nfse.issRate': string;
+  'nfse.issRateHelp': string;
+  'nfse.serviceDescription': string;
+  'nfse.serviceDescriptionHelp': string;
+  'nfse.nfSerie': string;
+  'nfse.nfSerieHelp': string;
+  'nfse.dpsNumber': string;
+  'nfse.dpsNumberHelp': string;
+  'nfse.provider': string;
+  'nfse.providerHelp': string;
+  'nfse.asaasApiKey': string;
+  'nfse.asaasApiKeyHelp': string;
+  'nfse.useSandbox': string;
+  'nfse.useSandboxHelp': string;
+  'nfse.username': string;
+  'nfse.password': string;
+  'nfse.baseUrl': string;
+  'nfse.environment': string;
+  'nfse.homologation': string;
+  'nfse.production': string;
+  'nfse.messages.loadingError': string;
+  'nfse.messages.saveSuccess': string;
+  'nfse.messages.saveError': string;
+  'nfse.messages.testSuccessAsaas': string;
+  'nfse.messages.testSuccessPortal': string;
+  'nfse.messages.testError': string;
+  'nfse.messages.apiKeyRequired': string;
+  'nfse.messages.credentialsRequired': string;
+  'nfse.messages.providerRequired': string;
+
+  // Title Labels
+  'titulo.title': string;
+  'titulo.send': string;
+  'titulo.sendViaWhatsApp': string;
+  'titulo.sendViaEmail': string;
+  'titulo.createTitle': string;
+  'titulo.validationErrors': string;
+  'titulo.clientNotFound': string;
+  'titulo.clientCannotBeChanged': string;
+  'titulo.planoCannotBeChanged': string;
+  'titulo.valorCannotBeChanged': string;
+  'titulo.dataVencimentoCannotBeChanged': string;
+  'titulo.discountPercent': string;
+  'titulo.discountValue': string;
+  'titulo.additionPercent': string;
+  'titulo.additionValue': string;
+  'titulo.observationsPlaceholder': string;
+  'titulo.descriptionPlaceholder': string;
+  'titulo.selectClient': string;
+  'titulo.selectPlano': string;
+  'titulo.messages.sendSuccess': string;
+  'titulo.messages.sendError': string;
+  'titulo.messages.whatsappError': string;
 
   // Financial
   'financial.title': string;
@@ -140,6 +333,7 @@ export interface TranslationKeys {
   'financial.cancelTitles': string;
   'financial.reverseTitle': string;
   'financial.reverse': string;
+  'financial.confirmReverse': string;
   'financial.toPay': string;
   'financial.paid': string;
   'financial.pending': string;
@@ -162,6 +356,9 @@ export interface TranslationKeys {
   'financial.value': string;
 
   // Buttons
+  'buttons.confirmPayment': string;
+  'buttons.confirmCancellation': string;
+  'buttons.canceling': string;
   'buttons.save': string;
   'buttons.cancel': string;
   'buttons.close': string;
@@ -171,6 +368,7 @@ export interface TranslationKeys {
   'buttons.print': string;
   'buttons.generate': string;
   'buttons.view': string;
+  'buttons.download': string;
   'buttons.export': string;
   'buttons.import': string;
   'buttons.search': string;
@@ -186,12 +384,20 @@ export interface TranslationKeys {
   'buttons.reverse': string;
   'buttons.audit': string;
   'buttons.reload': string;
+  'buttons.testConnection': string;
+  'buttons.generateToken': string;
+  'buttons.copy': string;
   'buttons.select': string;
   'buttons.add': string;
   'buttons.remove': string;
 
   // Form Labels
   'form.name': string;
+  'form.role': string;
+  'form.clientId': string;
+  'form.clientIdProd': string;
+  'form.clientSecret': string;
+  'form.clientSecretProd': string;
   'form.description': string;
   'form.cnpj': string;
   'form.companyName': string;
@@ -231,6 +437,23 @@ export interface TranslationKeys {
   'form.originalValue': string;
   'form.discount': string;
   'form.useClientAddress': string;
+  'form.bankNameHelp': string;
+  'form.bankTypeHelp': string;
+  'form.optionalUpdate': string;
+  'form.webhookUrl': string;
+  'form.webhookUrlHelp': string;
+  'form.sandboxHelp': string;
+  'form.apiKey': string;
+  'form.apiKeyAsaasHelp': string;
+  'form.webhookSecret': string;
+  'form.webhookSecretAsaasHelp': string;
+  'form.generateWebhookSecretHelp': string;
+  'form.finePercent': string;
+  'form.interestPercent': string;
+  'form.includeFee': string;
+  'form.accountIdentifier': string;
+  'form.accountIdentifierEfiHelp': string;
+  'form.paymentLocation': string;
   'form.operationNature': string;
   'form.model': string;
   'form.issueDate': string;
@@ -238,6 +461,7 @@ export interface TranslationKeys {
   'form.servicesValue': string;
   'form.productsValue': string;
   'form.discountValueInvoice': string;
+  'form.issRateShort': string;
   'form.issRate': string;
   'form.fileSelected': string;
   'form.fileTypeDocument': string;
@@ -250,6 +474,25 @@ export interface TranslationKeys {
   'form.cpf': string;
   'form.country': string;
   'form.street': string;
+  'form.creationType': string;
+  'form.creationTypeUnique': string;
+  'form.creationTypeBatch': string;
+  'form.dueDateInitial': string;
+  'form.dueDateFinal': string;
+  'form.pixKeyType': string;
+  'form.pixKey': string;
+  'form.qrCodeCopiaECola': string;
+  'form.barcodeLine': string;
+  'form.discountPercentShort': string;
+  'form.discountValueShort': string;
+  'form.increasePercentShort': string;
+  'form.increaseValueShort': string;
+  'form.baixadoValue': string;
+  'form.totalToPay': string;
+  'form.justification': string;
+  'form.justificationCancel': string;
+  'form.title': string;
+  'form.password': string;
   'form.planNamePlaceholder': string;
   'form.planDescriptionPlaceholder': string;
   'form.monthlyValuePlaceholder': string;
@@ -289,6 +532,18 @@ export interface TranslationKeys {
   'table.titleNumber': string;
   'form.invoice': string;
   'form.invoiceStatus': string;
+  'form.invoiceNumber': string;
+  'form.paymentType': string;
+  'form.paymentTypeCash': string;
+  'form.paymentTypeBoleto': string;
+  'form.paymentTypeCard': string;
+  'form.paymentTypeDeposit': string;
+  'form.paymentTypeDebit': string;
+  'form.paymentTypeTransfer': string;
+  'form.paymentTypePix': string;
+  'form.balanceDue': string;
+  'form.dueDateStart': string;
+  'form.dueDateEnd': string;
   'form.testClient': string;
   'form.enterClientId': string;
   'form.enterPlanId': string;
@@ -304,6 +559,13 @@ export interface TranslationKeys {
   'form.optional': string;
 
   // Table Columns
+  'table.personTypeShort': string;
+  'table.personTypeLegalShort': string;
+  'table.personTypePhysicalShort': string;
+  'table.nameCompanyNameShort': string;
+  'table.tradeNameShort': string;
+  'table.zipCodeShort': string;
+  'table.streetShort': string;
   'table.id': string;
   'table.contract': string;
   'table.status': string;
@@ -315,12 +577,15 @@ export interface TranslationKeys {
   'table.invoice': string;
   'table.invoiceStatus': string;
   'table.actions': string;
+  'table.balanceDue': string;
   'table.createdAt': string;
   'table.updatedAt': string;
   'table.documentNumber': string;
   'table.supplier': string;
   'table.paymentType': string;
+  'table.client': string;
   'table.clientName': string;
+  'table.cpfCnpj': string;
   'table.contractNumber': string;
   'table.contractStartDate': string;
   'table.contractEndDate': string;
@@ -331,6 +596,7 @@ export interface TranslationKeys {
   'table.neighborhood': string;
   'table.city': string;
   'table.state': string;
+  'table.country': string;
   'table.planName': string;
   'table.description': string;
   'table.serviceType': string;
@@ -342,10 +608,59 @@ export interface TranslationKeys {
   'table.bankType': string;
   'table.sandbox': string;
   'table.paymentDate': string;
+  'table.issueDate': string;
+  'table.totalValue': string;
+  'table.accessKey': string;
+  'table.protocol': string;
+  'table.authorizationDate': string;
   'table.chargeId': string;
   'table.ourNumber': string;
+  'table.paidValueDownloaded': string;
+  'table.openValueOpen': string;
+  'table.nf': string;
+  'table.nfStatus': string;
+  'table.termName': string;
+  'table.accepted': string;
+  'table.acceptedDate': string;
+  'table.acceptedBy': string;
+  'table.observations': string;
+  'table.action': string;
+  'table.name': string;
+  'table.bank': string;
+  
+  // Filter Labels
+  'filter.startDate': string;
+  'filter.endDate': string;
+
+  // Document Labels
+  'document.title': string;
+  'document.viewDocument': string;
+  'document.print': string;
+  'document.modelContrato': string;
+  'document.termAdesao': string;
+  'document.permanencia': string;
+  'document.receipts': string;
+  'document.cartaCobranca': string;
+  'document.name': string;
+  'document.description': string;
+  'document.testClient': string;
+  'document.testClientHelp': string;
+  'document.idPlaceholder': string;
+  'document.content': string;
+  'document.contractContent': string;
+  'document.successCreate': string;
+  'document.successUpdate': string;
+  'document.errorCreate': string;
+  'document.errorUpdate': string;
+  'document.errorGeneratePdf': string;
+  'document.labels.recibo': string;
+  'document.labels.carta_cobranca': string;
+  'document.labels.termo': string;
+  'document.labels.documento': string;
 
   // Modal Titles
+  'modal.viewInvoice': string;
+  'modal.payAccountManually': string;
   'modal.createClient': string;
   'modal.editClient': string;
   'modal.createPlan': string;
@@ -377,6 +692,8 @@ export interface TranslationKeys {
   'modal.list': string;
   'modal.defaultDocument': string;
   'modal.deleteFiles': string;
+  'modal.deleteAdditionalServices': string;
+  'modal.scheduledRoutine': string;
 
   // Tabs
   'tabs.basicData': string;
@@ -409,6 +726,8 @@ export interface TranslationKeys {
   'tabs.communicationPreferences': string;
 
   // Status Labels
+  'status.processing': string;
+  'status.authorized': string;
   'status.scheduled': string;
   'status.issued': string;
   'status.cancelled': string;
@@ -422,6 +741,7 @@ export interface TranslationKeys {
   'status.inactive': string;
   'status.suspended': string;
   'status.overdue': string;
+  'status.paidLate': string;
 
   // Placeholders
   'placeholder.cnpj': string;
@@ -441,6 +761,32 @@ export interface TranslationKeys {
   'placeholder.selectClient': string;
   'placeholder.selectSupplier': string;
   'placeholder.enterClientId': string;
+  'placeholder.bankName': string;
+  'placeholder.bankDescription': string;
+  'placeholder.fillClientSecret': string;
+  'placeholder.webhookUrl': string;
+  'placeholder.apiKeyAsaas': string;
+  'placeholder.webhookSecretHelp': string;
+  'placeholder.accountIdentifierHelp': string;
+  'placeholder.paymentLocationDefault': string;
+  'placeholder.contractCreationHelp': string;
+  'placeholder.financialTitlesCreationHelp': string;
+  'placeholder.financialMiscCreationHelp': string;
+  'placeholder.additionalServicesCreationHelp': string;
+  'placeholder.enterJustification': string;
+  'placeholder.enterSupplierId': string;
+  'placeholder.enterPixKey': string;
+  'placeholder.enterCpfCnpj': string;
+  'placeholder.enterCellPhone': string;
+  'placeholder.enterEmail': string;
+  'placeholder.enterName': string;
+  'placeholder.enterRandomKey': string;
+  'placeholder.pasteQrCode': string;
+  'placeholder.selectProvider': string;
+  'placeholder.startDate': string;
+  'placeholder.endDate': string;
+  'placeholder.selectType': string;
+  'placeholder.searchServices': string;
 
   // Other
   'other.selectExactlyOne': string;
@@ -449,6 +795,8 @@ export interface TranslationKeys {
   'other.reloadData': string;
   'other.confirmAction': string;
   'other.selectAtLeastOne': string;
+  'other.characters': string;
+  'other.invoiceDetails': string;
   'other.selected': string;
   'other.open': string;
   'other.receipt': string;
@@ -460,6 +808,316 @@ export interface TranslationKeys {
   'other.newMiscTitle': string;
   'other.deleteTerms': string;
   'other.day': string;
+
+  // Financial Summary Labels
+  'summary.value': string;
+  'summary.paidValue': string;
+  'summary.openValue': string;
+  'summary.canceledValue': string;
+  'summary.totalPaidValue': string;
+  'summary.monthlyTotalValue': string;
+  'summary.totalDiscountsValue': string;
+  'summary.contractSummary': string;
+  'summary.totalContracts': string;
+  'summary.activeContracts': string;
+
+  // Audit
+  'audit.title': string;
+  'audit.detailsTitle': string;
+  'audit.generalInfo': string;
+  'audit.data': string;
+  'audit.entityId': string;
+  'audit.user': string;
+  'audit.ip': string;
+  'audit.route': string;
+  'audit.userAgent': string;
+  'audit.viewDetails': string;
+  'audit.method': string;
+  'audit.entity': string;
+  'audit.timestamp': string;
+  'audit.entities.all': string;
+  'audit.actions.all': string;
+  'audit.actions.create': string;
+  'audit.actions.update': string;
+  'audit.actions.delete': string;
+  'audit.actions.login': string;
+  'audit.actions.logout': string;
+  'audit.actions.export': string;
+  'audit.actions.import': string;
+
+  // Variables
+  'variables.title': string;
+  'variables.searchPlaceholder': string;
+  'variables.insert': string;
+  'variables.errorLoading': string;
+  'variables.tip': string;
+  'variables.clickToInsert': string;
+  'variables.clickToCopy': string;
+
+  // User Form
+  'user.title': string;
+  'user.profile': string;
+  'user.admin': string;
+  'user.user': string;
+  'user.newPassword': string;
+  'user.passwordPlaceholder': string;
+  'user.newPasswordPlaceholder': string;
+  'user.webhookHelp': string;
+  'user.generateWebhookHelp': string;
+  'user.webhookSecret': string;
+  'user.generateToken': string;
+  'user.copy': string;
+  'user.variables': string;
+  'user.successCreate': string;
+  'user.successUpdate': string;
+  'user.successGenerateSecret': string;
+  'user.successCopySecret': string;
+  'user.errorCreate': string;
+  'user.errorUpdate': string;
+
+  // Email Server
+  'emailServer.title': string;
+  'emailServer.serverSettings': string;
+  'emailServer.configureServer': string;
+  'emailServer.smtpHost': string;
+  'emailServer.port': string;
+  'emailServer.userEmail': string;
+  'emailServer.senderName': string;
+  'emailServer.senderEmail': string;
+  'emailServer.useSsl': string;
+  'emailServer.useTls': string;
+  'emailServer.timeout': string;
+  'emailServer.sendTestEmail': string;
+  'emailServer.testEmailPlaceholder': string;
+  'emailServer.testEmailButton': string;
+  'emailServer.testEmailHelp': string;
+  'emailServer.passwordHelp': string;
+  'emailServer.passwordPlaceholder': string;
+
+  // WhatsApp Server
+  'whatsappServer.title': string;
+  'whatsappServer.evolutionApi': string;
+  'whatsappServer.cloudApi': string;
+  'whatsappServer.successSave': string;
+  'whatsappServer.errorSave': string;
+  'whatsappServer.successMessageSave': string;
+  'whatsappServer.errorMessageSave': string;
+  'whatsappServer.successRemove': string;
+  'whatsappServer.errorRemove': string;
+  'whatsappServer.testPhoneRequired': string;
+  'whatsappServer.testMessageRequired': string;
+  'whatsappServer.configureFirst': string;
+  'whatsappServer.errorSendTest': string;
+  'whatsappServer.selectMessageType': string;
+  'whatsappServer.messageRequired': string;
+  'whatsappServer.removeServer': string;
+  'whatsappServer.variableCopied': string;
+  'whatsappServer.server': string;
+  'whatsappServer.messages': string;
+
+  // Scheduler
+  'scheduler.title': string;
+  'scheduler.frequency': string;
+  'scheduler.schedule': string;
+  'scheduler.nextRun': string;
+  'scheduler.lastRun': string;
+  'scheduler.executions': string;
+  'scheduler.errors': string;
+  'scheduler.confirmExecute': string;
+  'scheduler.executeRoutine': string;
+  'scheduler.execute': string;
+  'scheduler.routineStarted': string;
+  'scheduler.confirmDelete': string;
+  'scheduler.deleteRoutine': string;
+  'scheduler.successDelete': string;
+  'scheduler.deactivate': string;
+  'scheduler.type': string;
+  'scheduler.routine': string;
+
+  // Updates
+  'updates.title': string;
+  'updates.currentVersion': string;
+  'updates.searching': string;
+  'updates.errorSearch': string;
+  'updates.noUpdates': string;
+  'updates.systemUpdated': string;
+  'updates.updating': string;
+  'updates.success': string;
+  'updates.error': string;
+  'updates.confirmUpdate': string;
+  'updates.updateSystem': string;
+  'updates.badges.new': string;
+  'updates.badges.bugfix': string;
+  'updates.badges.security': string;
+  'updates.badges.improvement': string;
+  'updates.badges.other': string;
+  'updates.concluded': string;
+
+  // Login
+  'login.title': string;
+  'login.emailPlaceholder': string;
+  'login.passwordPlaceholder': string;
+  'login.entering': string;
+  'login.enter': string;
+  'login.success': string;
+  'login.errorCredentials': string;
+  'login.errorToken': string;
+  'login.errorGeneral': string;
+  'login.infoRequired': string;
+  'login.allRightsReserved': string;
+
+  // Layout
+  'layout.logoutSuccess': string;
+  'layout.closeSearch': string;
+
+  'empty.noContracts': string;
+  'empty.noTitles': string;
+  'empty.noFiles': string;
+  'empty.noTermsRegistered': string;
+  'empty.noAdditionalServices': string;
+  'filter.showInactive': string;
+  'filter.showCanceled': string;
+  'confirm.deleteFiles': string;
+  'confirm.deleteFilesTitle': string;
+  'messages.saveClientFirst': string;
+  'messages.saveBankBeforeTest': string;
+  'messages.testingConnection': string;
+  'messages.connectionSuccess': string;
+  'messages.connectionFailed': string;
+  'messages.credentialsNotConfiguredAsaas': string;
+  'messages.credentialsNotConfiguredEfi': string;
+  'messages.saveBankBeforeWebhook': string;
+  'messages.webhookTokenGenerated': string;
+  'messages.webhookTokenNotReturned': string;
+  'messages.noTokenToCopy': string;
+  'messages.webhookTokenCopied': string;
+  'messages.copyManual': string;
+  'messages.loadingClientData': string;
+  'messages.loadingPlanData': string;
+  'messages.noTitleSelected': string;
+  'messages.noPaidTitleSelected': string;
+  'messages.noTitlesFound': string;
+  'messages.noOpenTitlesFound': string;
+  'messages.noNFSeTitlesSelected': string;
+  'messages.receiptsGenerated': string;
+  'messages.errorGeneratingReceipts': string;
+  'messages.errorGeneratingNFSe': string;
+  'messages.nfseGenerated': string;
+  'fileType.document': string;
+  'fileType.photo': string;
+  'fileType.signature': string;
+  'fileType.manual': string;
+  'fileType.digitalSignature': string;
+  'fileType.system': string;
+  'placeholder.street': string;
+  'placeholder.number': string;
+  'placeholder.complement': string;
+  'placeholder.neighborhood': string;
+  'placeholder.city': string;
+  'placeholder.state': string;
+  'placeholder.email': string;
+  'form.whatsapp': string;
+
+  // New Placeholders
+  'placeholder.contractContent': string;
+  'placeholder.receiptContent': string;
+  'placeholder.letterContent': string;
+  'placeholder.description': string;
+  'placeholder.manualSend': string;
+  'placeholder.defaultEmail': string;
+  'placeholder.defaultMessage': string;
+  'placeholder.firstInteraction': string;
+  'placeholder.secondInteraction': string;
+  'placeholder.thirdInteraction': string;
+  'placeholder.clientIdProd': string;
+  'placeholder.serviceCode': string;
+  'placeholder.serviceDescription': string;
+  'placeholder.apiToken': string;
+  'placeholder.apiKey': string;
+  'placeholder.workspaceId': string;
+  'placeholder.responsibleName': string;
+  'placeholder.responsibleRole': string;
+  'placeholder.paymentObservations': string;
+  'placeholder.testMessage': string;
+  'placeholder.termContent': string;
+
+  // Message Types
+  'messages.types.10daysBefore': string;
+  'messages.types.05daysBefore': string;
+  'messages.types.sameDay': string;
+  'messages.types.05daysAfter': string;
+  'messages.types.10daysAfter': string;
+  'messages.types.15daysAfter': string;
+  'messages.types.clientCut': string;
+  'messages.types.manualSend': string;
+  
+  // Send Types
+  'messages.sendTypes.disabled': string;
+  'messages.sendTypes.pdf': string;
+
+  // Settings Server
+  'settings.server.config': string;
+  'settings.server.configure': string;
+  'settings.test.title': string;
+  'settings.test.phone': string;
+  'settings.test.message': string;
+  'settings.test.send': string;
+  'settings.test.helper': string;
+  'settings.messages.type': string;
+  'settings.messages.sendType': string;
+  'settings.messages.manualLabel': string;
+  'settings.messages.manualHelper': string;
+  'settings.messages.emailLabel': string;
+  'settings.messages.templateConfig': string;
+  'settings.messages.viewTemplates': string;
+  'settings.messages.templateHelper': string;
+  'settings.messages.templateFormat': string;
+  'settings.messages.defaultMessage': string;
+  'settings.messages.interaction1': string;
+  'settings.messages.interaction2': string;
+  'settings.messages.interaction3': string;
+  'settings.messages.interaction1Helper': string;
+  'settings.messages.interaction2Helper': string;
+  'settings.messages.interaction3Helper': string;
+  'settings.messages.variablesTitle': string;
+  'settings.messages.variablesHelper': string;
+  'settings.messages.copyVariable': string;
+
+  // File Modal
+  'messages.selectFile': string;
+  'messages.enterFileName': string;
+  'messages.fileAddedSuccess': string;
+  'messages.fileAddedError': string;
+
+  // Financial
+  'financial.parcelInfo': string;
+  'financial.originalValue': string;
+  'financial.paymentDate': string;
+  'financial.amountPaid': string;
+  'financial.characters': string;
+
+  // Company
+  'company.responsibleSignature': string;
+  'company.noSignature': string;
+  'company.pngOnly': string;
+
+  // Digital Signature
+  'digitalSignature.generalSettings': string;
+  'digitalSignature.enable': string;
+  'digitalSignature.enableHelp': string;
+  'digitalSignature.provider': string;
+  'digitalSignature.providerHelp': string;
+  'digitalSignature.expirationDays': string;
+  'digitalSignature.expirationDaysHelp': string;
+  'digitalSignature.apiSettings': string;
+  'digitalSignature.apiKey': string;
+  'digitalSignature.assinafyHelp': string;
+  'digitalSignature.zapsignHelp': string;
+  'digitalSignature.workspaceId': string;
+  'digitalSignature.workspaceIdHelp': string;
+  'digitalSignature.assinafyInfo': string;
+  'digitalSignature.successUpdate': string;
+  'digitalSignature.errorUpdate': string;
 }
 
 type Translations = Record<Language, TranslationKeys>;
@@ -480,17 +1138,122 @@ const translations: Translations = {
     'actions.edit': 'Editar',
     'actions.delete': 'Excluir',
     'actions.create': 'Criar',
+    'actions.pay': 'Pagar',
+    'actions.duplicate': 'Duplicar',
+    'actions.insert': 'Inserir',
+    'actions.new': 'Novo',
     'actions.filter': 'Filtrar',
     'actions.export': 'Exportar',
     'actions.import': 'Importar',
+    'actions.receive': 'Receber',
+    'actions.reverse': 'Estornar',
+    'actions.nfse': 'NFS-e',
+    'actions.print': 'Imprimir',
+    'actions.send': 'Enviar',
+
+    // Buttons
+    'buttons.selected': 'Selecionados',
+    'buttons.open': 'Abertos',
+    'buttons.receipt': 'Recibo',
+    'buttons.printNF': 'Imprimir NF',
+    'buttons.viaWhatsApp': 'Via WhatsApp',
+    'buttons.viaEmail': 'Via Email',
+    'buttons.generateNFSeAvulsa': 'Gerar NFS-e Avulsa',
+    'buttons.new': 'Novo',
+
+    // Contracts
+    'contracts.title': 'Contrato',
+    'contracts.confirmDelete': 'Deletar contratos',
+    'contracts.confirmDeleteMessage': 'Tem certeza que deseja deletar os contratos selecionados?',
+    'contracts.termAdesao': 'Termo de Adesão',
+    'contracts.permanencia': 'Contrato Permanência',
+    'contracts.messages.deleteSuccess': 'Contrato deletado com sucesso!',
+    'contracts.messages.deleteError': 'Erro ao deletar contrato',
 
     // Mensagens
     'messages.confirmDelete': 'Tem certeza que deseja excluir?',
     'messages.loading': 'Carregando...',
     'messages.noData': 'Nenhum dado encontrado',
+    'messages.cnpjDataAutoFilled': 'Dados do CNPJ preenchidos automaticamente!',
+    'messages.cnpjNotFound': 'CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.',
+    'messages.errorConsultingCnpj': 'Erro ao consultar CNPJ. Tente novamente ou preencha os dados manualmente.',
+    'messages.nameRequired': 'Nome/Razão Social é obrigatório',
+    'messages.contentRequired': 'Conteúdo é obrigatório',
+    'messages.cpfCnpjRequired': 'CPF/CNPJ é obrigatório',
+    'messages.invalidCpf': 'CPF inválido',
+    'messages.invalidCnpj': 'CNPJ inválido',
+    'messages.clientRequired': 'Cliente é obrigatório',
     'messages.error': 'Ocorreu um erro',
     'messages.success': 'Operação realizada com sucesso',
+    'messages.justificationRequired': 'Justificativa é obrigatória',
+    'messages.justificationMinLength': 'Justificativa deve ter pelo menos 15 caracteres',
+    'messages.justificationMaxLength': 'Justificativa deve ter no máximo 500 caracteres',
+    'messages.invoiceCanceled': 'Nota fiscal cancelada com sucesso!',
+    'messages.errorCancelingInvoice': 'Erro ao cancelar nota fiscal',
+    'messages.actionCannotBeUndone': 'Esta ação não pode ser desfeita.',
+    'messages.notInformed': 'Não informado',
+    'messages.selectAtLeastOneInvoice': 'Selecione pelo menos uma nota fiscal',
+    'messages.invoiceGenerated': 'Nota Fiscal de Serviços Eletrônica gerada com sucesso!',
+    'messages.errorGeneratingInvoice': 'Erro ao gerar Nota Fiscal de Serviços Eletrônica',
+    'messages.issRateRange': 'Alíquota de ISS deve estar entre 0 e 100',
+    'messages.invoicePdfGenerated': 'PDF da nota fiscal gerado com sucesso!',
+    'messages.errorGeneratingInvoicePdf': 'Erro ao gerar PDF da nota fiscal',
+    'messages.selectInvoiceToCancel': 'Selecione uma nota fiscal para cancelar',
+    'messages.selectOnlyOneInvoiceToCancel': 'Selecione apenas uma nota fiscal para cancelar',
+    'messages.invoiceAlreadyCanceled': 'Esta nota fiscal já foi cancelada',
+    'messages.onlyAuthorizedCanBeCanceled': 'Apenas notas fiscais autorizadas podem ser canceladas',
     'messages.warning': 'Atenção',
+    'messages.successPrintSelected': 'Boletos selecionados gerados com sucesso!',
+    'messages.errorPrintSelected': 'Erro ao gerar boletos selecionados',
+    'messages.clientNotFound': 'Cliente não encontrado',
+    'messages.successPrintOpen': 'Boletos em aberto gerados com sucesso!',
+    'messages.errorPrintOpen': 'Erro ao gerar boletos em aberto',
+    'messages.confirmCancelTitle': 'Tem certeza que deseja cancelar este título?',
+    'messages.confirmCancelTitles': 'Tem certeza que deseja cancelar ${count} títulos?',
+    'messages.successCancelTitle': 'Título cancelado com sucesso!',
+    'messages.successCancelTitles': '${count} títulos cancelados com sucesso!',
+    'messages.errorCancelTitle': '1 título não pôde ser cancelado',
+    'messages.errorCancelTitles': '${count} títulos não puderam ser cancelados',
+    'messages.errorCancelTitlesGeneral': 'Erro ao cancelar títulos',
+    'messages.successSendMessage': 'Mensagem enviada com sucesso!',
+    'messages.successSendMessages': '${count} mensagens enviadas com sucesso!',
+    'messages.errorSendMessage': 'A mensagem não pôde ser enviada',
+    'messages.errorSendMessages': '${count} mensagens não puderam ser enviadas',
+    'messages.errorSendMessagesGeneral': 'Erro ao enviar mensagens',
+    'messages.successSendEmail': 'Email enviado com sucesso!',
+    'messages.successSendEmails': '${count} emails enviados com sucesso!',
+    'messages.errorSendEmail': '1 email não pôde ser enviado',
+    'messages.errorSendEmails': '${count} emails não puderam ser enviados',
+    'messages.errorSendEmailsGeneral': 'Erro ao enviar emails',
+    'messages.successReverseTitle': 'Título estornado com sucesso!',
+    'messages.errorReverseTitle': 'Erro ao estornar título.',
+    'messages.successDeleteTerm': 'Termo deletado com sucesso!',
+    'messages.successDeleteTerms': 'Termo(s) deletado(s) com sucesso!',
+    'messages.errorDeleteTerm': 'Erro ao deletar termo',
+    'messages.errorDeleteTerms': 'Erro ao deletar termo(s)',
+    'messages.confirmDeleteAdditionalService': 'Tem certeza que deseja deletar este serviço adicional?',
+    'messages.confirmDeleteAdditionalServices': 'Tem certeza que deseja deletar ${count} serviços adicionais?',
+    'messages.successDeleteAdditionalService': 'Serviço adicional deletado com sucesso!',
+    'messages.successDeleteAdditionalServices': '${count} serviços adicionais deletados com sucesso!',
+    'messages.errorDeleteAdditionalService': 'O serviço adicional não pôde ser deletado',
+    'messages.errorDeleteAdditionalServices': '${count} serviço(s) adicional(is) não puderam ser deletados',
+    'messages.errorDeleteAdditionalServicesGeneral': 'Erro ao deletar serviços adicionais',
+    'messages.confirmDeleteAccountPayable': 'Tem certeza que deseja excluir esta conta a pagar?',
+    'messages.successDeleteAccountPayable': 'Conta a pagar excluída com sucesso!',
+    'messages.errorDeleteAccountPayable': 'Erro ao excluir conta a pagar.',
+    'messages.loadingAccountData': 'Carregando dados da conta...',
+    'messages.supplierRequired': 'Fornecedor é obrigatório',
+    'messages.emailRequired': 'Email é obrigatório',
+    'messages.passwordRequired': 'Senha é obrigatória',
+    'messages.passwordMinLength': 'Senha deve ter no mínimo 6 caracteres',
+    'messages.info': 'Informação',
+    'messages.confirmAction': 'Confirmar ação',
+    'messages.dueDateRequired': 'Data de vencimento é obrigatória',
+    'messages.startDateRequired': 'Data inicial é obrigatória',
+    'messages.endDateRequired': 'Data final é obrigatória',
+    'messages.endDateAfterStartDate': 'Data final deve ser posterior à data inicial',
+    'messages.valueRequired': 'Valor é obrigatório',
+    'messages.valueGreaterThanZero': 'Valor deve ser maior que zero',
 
     // Formulários
     'form.required': 'Campo obrigatório',
@@ -595,6 +1358,93 @@ const translations: Translations = {
     'ui.selectBank': 'Selecionar Banco',
     'ui.yes': 'Sim',
     'ui.no': 'Não',
+    'ui.actionsMenu': 'Menu de ações',
+    'ui.firstPage': 'Primeira página',
+    'ui.previousPage': 'Página anterior',
+    'ui.nextPage': 'Próxima página',
+    'ui.lastPage': 'Última página',
+    'ui.page': 'Página',
+    'ui.refresh': 'Atualizar',
+    'ui.auditSelected': 'Auditar registro selecionado',
+    'ui.selectOneToAudit': 'Selecione exatamente 1 registro para auditar',
+    'ui.loadingApplication': 'Carregando aplicação...',
+    'ui.loadingDashboard': 'Carregando dashboard...',
+    'ui.loadingLogin': 'Carregando login...',
+    'ui.loadingPayment': 'Carregando página de pagamento...',
+    'ui.loadingPage': 'Carregando página inicial...',
+    'ui.appError': 'Erro na aplicação',
+    'ui.criticalError': 'Ocorreu um erro crítico. Recarregue a página.',
+    'ui.reloadPage': 'Recarregar página',
+    'ui.loading': 'Carregando...',
+
+    // Company Labels
+    'company.title': 'Empresa',
+    'company.razaoSocial': 'Razão Social',
+    'company.nomeFantasia': 'Nome Fantasia',
+    'company.cnpj': 'CNPJ',
+    'company.inscricaoEstadual': 'Inscrição Estadual',
+    'company.inscricaoMunicipal': 'Inscrição Municipal',
+    'company.logo': 'Logo da Empresa',
+    'company.noLogo': 'Sem logo',
+    'company.acceptedFormats': 'Formatos aceitos: JPG, PNG, GIF (máx. 2MB)',
+
+    // NFSe Labels
+    'nfse.title': 'NFS-e',
+    'nfse.municipalServiceCode': 'Código de Serviço Municipal',
+    'nfse.municipalServiceCodeHelp': 'Código da lista de serviços do município (ex: 1401 para serviços de TI)',
+    'nfse.issRate': 'Alíquota de ISS (%)',
+    'nfse.issRateHelp': 'Alíquota padrão de ISS para as notas fiscais (0 a 100)',
+    'nfse.serviceDescription': 'Descrição do Serviço',
+    'nfse.serviceDescriptionHelp': 'Descrição padrão do serviço prestado nas notas fiscais',
+    'nfse.nfSerie': 'Série da NF',
+    'nfse.nfSerieHelp': 'Série da NF (permitida: 80000 a 89999)',
+    'nfse.dpsNumber': 'Número do DPS',
+    'nfse.dpsNumberHelp': 'Número do DPS (Documento de Prestação de Serviços)',
+    'nfse.provider': 'Provedor de NFS-e',
+    'nfse.providerHelp': 'Selecione o provedor que será usado para emitir as notas fiscais',
+    'nfse.asaasApiKey': 'API Key do Asaas',
+    'nfse.asaasApiKeyHelp': 'Token da API do Asaas disponível no painel administrativo (Configurações > Integrações > API Key)',
+    'nfse.useSandbox': 'Usar ambiente Sandbox',
+    'nfse.useSandboxHelp': 'Marque para usar o ambiente de testes do Asaas',
+    'nfse.username': 'Usuário',
+    'nfse.password': 'Senha',
+    'nfse.baseUrl': 'URL Base da API',
+    'nfse.environment': 'Ambiente',
+    'nfse.homologation': 'Homologação',
+    'nfse.production': 'Produção',
+    'nfse.messages.loadingError': 'Erro ao carregar configuração',
+    'nfse.messages.saveSuccess': 'Configurações de NFS-e salvas com sucesso!',
+    'nfse.messages.saveError': 'Erro ao salvar configuração',
+    'nfse.messages.testSuccessAsaas': 'Conexão com Asaas testada com sucesso! A API Key está válida.',
+    'nfse.messages.testSuccessPortal': 'Autenticação testada com sucesso! As credenciais estão corretas.',
+    'nfse.messages.testError': 'Erro ao testar conexão',
+    'nfse.messages.apiKeyRequired': 'API Key do Asaas é obrigatória para testar conexão',
+    'nfse.messages.credentialsRequired': 'Usuário e senha são obrigatórios para testar autenticação',
+    'nfse.messages.providerRequired': 'Selecione um provedor para testar a conexão',
+
+    // Title Labels
+    'titulo.title': 'Título',
+    'titulo.send': 'Enviar',
+    'titulo.sendViaWhatsApp': 'Via WhatsApp',
+    'titulo.sendViaEmail': 'Via Email',
+    'titulo.createTitle': 'Criar Título',
+    'titulo.validationErrors': 'Erros de validação:',
+    'titulo.clientNotFound': 'Cliente não encontrado',
+    'titulo.clientCannotBeChanged': 'Cliente não pode ser alterado',
+    'titulo.planoCannotBeChanged': 'Plano não pode ser alterado',
+    'titulo.valorCannotBeChanged': 'Valor não pode ser alterado após registro no banco emissor',
+    'titulo.dataVencimentoCannotBeChanged': 'Data de vencimento não pode ser alterada após registro no banco emissor',
+    'titulo.discountPercent': 'Desconto (%)',
+    'titulo.discountValue': 'Desconto (R$)',
+    'titulo.additionPercent': 'Acréscimo (%)',
+    'titulo.additionValue': 'Acréscimo (R$)',
+    'titulo.observationsPlaceholder': 'Observações sobre a parcela...',
+    'titulo.descriptionPlaceholder': 'Descrição do título...',
+    'titulo.selectClient': 'Selecionar Cliente',
+    'titulo.selectPlano': 'Selecionar Plano',
+    'titulo.messages.sendSuccess': 'Mensagem enviada com sucesso!',
+    'titulo.messages.sendError': 'Erro ao enviar mensagem',
+    'titulo.messages.whatsappError': 'Erro ao enviar mensagem via WhatsApp',
 
     // Financial
     'financial.title': 'Financeiro - Títulos',
@@ -603,6 +1453,7 @@ const translations: Translations = {
     'financial.cancelTitles': 'Cancelar títulos',
     'financial.reverseTitle': 'Estornar título',
     'financial.reverse': 'Estornar',
+    'financial.confirmReverse': 'Tem certeza que deseja estornar o pagamento do título ${number}?',
     'financial.toPay': 'A Pagar',
     'financial.paid': 'Pago',
     'financial.pending': 'Pendente',
@@ -625,6 +1476,9 @@ const translations: Translations = {
     'financial.value': 'Valor',
 
     // Buttons
+    'buttons.confirmPayment': 'Confirmar Pagamento',
+    'buttons.confirmCancellation': 'Confirmar Cancelamento',
+    'buttons.canceling': 'Cancelando...',
     'buttons.save': 'Salvar',
     'buttons.cancel': 'Cancelar',
     'buttons.close': 'Fechar',
@@ -634,6 +1488,7 @@ const translations: Translations = {
     'buttons.print': 'Imprimir',
     'buttons.generate': 'Gerar',
     'buttons.view': 'Visualizar',
+    'buttons.download': 'Baixar',
     'buttons.export': 'Exportar',
     'buttons.import': 'Importar',
     'buttons.search': 'Buscar',
@@ -649,12 +1504,20 @@ const translations: Translations = {
     'buttons.reverse': 'Estornar',
     'buttons.audit': 'Auditar',
     'buttons.reload': 'Recarregar',
+    'buttons.testConnection': 'Testar Conexão',
+    'buttons.generateToken': 'Gerar token',
+    'buttons.copy': 'Copiar',
     'buttons.select': 'Selecionar',
     'buttons.add': 'Adicionar',
     'buttons.remove': 'Remover',
 
     // Form Labels
     'form.name': 'Nome',
+    'form.role': 'Cargo',
+    'form.clientId': 'Client ID',
+    'form.clientIdProd': 'Client ID Produção',
+    'form.clientSecret': 'Client Secret',
+    'form.clientSecretProd': 'Client Secret Produção',
     'form.description': 'Descrição',
     'form.cnpj': 'CNPJ',
     'form.companyName': 'Razão Social',
@@ -694,6 +1557,23 @@ const translations: Translations = {
     'form.originalValue': 'Valor Original',
     'form.discount': 'Desconto',
     'form.useClientAddress': 'Usar endereço do cliente',
+    'form.bankNameHelp': 'Nome para identificar esta conta do banco',
+    'form.bankTypeHelp': 'Código do banco é definido automaticamente',
+    'form.optionalUpdate': 'Campo opcional. Preencha apenas se desejar atualizar.',
+    'form.webhookUrl': 'URL de Retorno (Webhook)',
+    'form.webhookUrlHelp': 'URL para receber notificações de pagamento',
+    'form.sandboxHelp': 'Ative para usar ambiente de testes. Desative para produção.',
+    'form.apiKey': 'API Key',
+    'form.apiKeyAsaasHelp': 'Disponível no painel administrativo da Asaas.',
+    'form.webhookSecret': 'Webhook Secret',
+    'form.webhookSecretAsaasHelp': 'Utilize este token ao configurar o webhook Asaas.',
+    'form.generateWebhookSecretHelp': 'Clique em "Gerar token" após salvar o banco para obter o segredo de webhook.',
+    'form.finePercent': 'Percentual de Multa (%)',
+    'form.interestPercent': 'Percentual de Juros (% ao dia)',
+    'form.includeFee': 'Incluir Taxa no Boleto',
+    'form.accountIdentifier': 'Identificador da Conta',
+    'form.accountIdentifierEfiHelp': 'Disponível nas configurações da API Efi',
+    'form.paymentLocation': 'Local de Pagamento',
     'form.operationNature': 'Natureza da Operação',
     'form.model': 'Modelo',
     'form.issueDate': 'Data de Emissão',
@@ -701,6 +1581,7 @@ const translations: Translations = {
     'form.servicesValue': 'Valor dos Serviços',
     'form.productsValue': 'Valor dos Produtos',
     'form.discountValueInvoice': 'Valor do Desconto',
+    'form.issRateShort': 'Alíquota de ISS (%)',
     'form.issRate': 'Alíquota ISS',
     'form.fileSelected': 'Arquivo Selecionado',
     'form.fileTypeDocument': 'Documento',
@@ -715,6 +1596,18 @@ const translations: Translations = {
     'form.street': 'Rua',
     'form.invoice': 'NF',
     'form.invoiceStatus': 'Status NF',
+    'form.invoiceNumber': 'Nota Fiscal',
+    'form.paymentType': 'Tipo de Pagamento',
+    'form.paymentTypeCash': 'Dinheiro',
+    'form.paymentTypeBoleto': 'Boleto',
+    'form.paymentTypeCard': 'Cartão',
+    'form.paymentTypeDeposit': 'Depósito',
+    'form.paymentTypeDebit': 'Débito em Conta',
+    'form.paymentTypeTransfer': 'Transferência',
+    'form.paymentTypePix': 'PIX',
+    'form.balanceDue': 'Saldo Devedor',
+    'form.dueDateStart': 'Vencimento Inicial',
+    'form.dueDateEnd': 'Vencimento Final',
     'form.testClient': 'Cliente para Teste',
     'form.enterClientId': 'Digite o ID do cliente',
     'form.enterPlanId': 'Digite o ID do plano',
@@ -728,6 +1621,25 @@ const translations: Translations = {
     'form.briefDescription': 'Breve descrição',
     'form.fileDescription': 'Descrição do arquivo (opcional)',
     'form.optional': 'Opcional',
+    'form.creationType': 'Tipo de Criação',
+    'form.creationTypeUnique': 'Única',
+    'form.creationTypeBatch': 'Lote',
+    'form.dueDateInitial': 'Data Inicial de Vencimento',
+    'form.dueDateFinal': 'Data Final de Vencimento',
+    'form.pixKeyType': 'Tipo de Chave PIX',
+    'form.pixKey': 'Chave PIX',
+    'form.qrCodeCopiaECola': 'Código Copia e Cola',
+    'form.barcodeLine': 'Linha Digitável do Boleto',
+    'form.discountPercentShort': 'Desconto (%)',
+    'form.discountValueShort': 'Desconto (Valor)',
+    'form.increasePercentShort': 'Acréscimo (%)',
+    'form.increaseValueShort': 'Acréscimo (Valor)',
+    'form.baixadoValue': 'Valor Baixado',
+    'form.totalToPay': 'Valor Total a Ser Pago',
+    'form.justification': 'Justificativa',
+    'form.justificationCancel': 'Justificativa para cancelamento',
+    'form.title': 'Título',
+    'form.password': 'Senha',
     'form.planNamePlaceholder': 'Nome do plano',
     'form.planDescriptionPlaceholder': 'Descrição do plano',
     'form.monthlyValuePlaceholder': 'Valor mensal',
@@ -755,6 +1667,13 @@ const translations: Translations = {
     'form.messageConfiguration': 'Configuração de mensagem',
 
     // Table Columns
+    'table.personTypeShort': 'Tipo',
+    'table.personTypeLegalShort': 'Jurídica',
+    'table.personTypePhysicalShort': 'Física',
+    'table.nameCompanyNameShort': 'Nome/Razão Social',
+    'table.tradeNameShort': 'Nome Fantasia',
+    'table.zipCodeShort': 'CEP',
+    'table.streetShort': 'Logradouro',
     'table.id': 'ID',
     'table.contract': 'Contrato',
     'table.status': 'Status',
@@ -766,12 +1685,15 @@ const translations: Translations = {
     'table.invoice': 'NF',
     'table.invoiceStatus': 'Status NF',
     'table.actions': 'Ações',
+    'table.balanceDue': 'Saldo Devedor',
     'table.createdAt': 'Criado em',
     'table.updatedAt': 'Atualizado em',
     'table.documentNumber': 'Número do Documento',
     'table.supplier': 'Fornecedor',
     'table.paymentType': 'Tipo de Pagamento',
+    'table.client': 'Cliente',
     'table.clientName': 'Cliente',
+    'table.cpfCnpj': 'CPF/CNPJ',
     'table.contractNumber': 'Número do Contrato',
     'table.contractStartDate': 'Data Início',
     'table.contractEndDate': 'Data Fim',
@@ -782,6 +1704,7 @@ const translations: Translations = {
     'table.neighborhood': 'Bairro',
     'table.city': 'Cidade',
     'table.state': 'Estado',
+    'table.country': 'País',
     'table.planName': 'Nome do Plano',
     'table.description': 'Descrição',
     'table.serviceType': 'Tipo de Serviço',
@@ -793,8 +1716,25 @@ const translations: Translations = {
     'table.bankType': 'Tipo de Banco',
     'table.sandbox': 'Sandbox',
     'table.paymentDate': 'Data de Pagamento',
+    'table.issueDate': 'Data de Emissão',
+    'table.totalValue': 'Valor Total',
+    'table.accessKey': 'Chave de Acesso',
+    'table.protocol': 'Protocolo',
+    'table.authorizationDate': 'Data de Autorização',
     'table.chargeId': 'ID da Cobrança',
     'table.ourNumber': 'Nosso Número',
+    'table.paidValueDownloaded': 'Valor baixado',
+    'table.openValueOpen': 'Valor aberto',
+    'table.nf': 'NF',
+    'table.nfStatus': 'Status NF',
+    'table.termName': 'Nome do Termo',
+    'table.accepted': 'Assinado',
+    'table.acceptedDate': 'Data Aceite',
+    'table.acceptedBy': 'Aceito Por',
+    'table.observations': 'Observações',
+    'table.action': 'Ação',
+    'table.name': 'Nome',
+    'table.bank': 'Banco',
     'table.planValue': 'Valor do Plano',
     'table.discountPercent': 'Desconto %',
     'table.discountValue': 'Valor do Desconto',
@@ -809,6 +1749,8 @@ const translations: Translations = {
     'table.titleNumber': 'Número do Título',
 
     // Modal Titles
+    'modal.payAccountManually': 'Pagar Conta Manualmente',
+    'modal.viewInvoice': 'Visualizar Nota Fiscal',
     'modal.createClient': 'Criar Cliente',
     'modal.editClient': 'Editar Cliente',
     'modal.createPlan': 'Criar Plano',
@@ -840,6 +1782,8 @@ const translations: Translations = {
     'modal.list': 'Lista',
     'modal.defaultDocument': 'Documento Padrão',
     'modal.deleteFiles': 'Deletar arquivos',
+    'modal.deleteAdditionalServices': 'Deletar serviços adicionais',
+    'modal.scheduledRoutine': 'Rotina Agendada',
 
     // Tabs
     'tabs.basicData': 'Dados Básicos',
@@ -872,6 +1816,8 @@ const translations: Translations = {
     'tabs.communicationPreferences': 'Preferências de Comunicação',
 
     // Status Labels
+    'status.processing': 'Processando',
+    'status.authorized': 'Autorizada',
     'status.scheduled': 'Agendado',
     'status.issued': 'Emitida',
     'status.cancelled': 'Cancelada',
@@ -885,6 +1831,7 @@ const translations: Translations = {
     'status.inactive': 'Inativo',
     'status.suspended': 'Suspenso',
     'status.overdue': 'Vencido',
+    'status.paidLate': 'Pago em Atraso',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -904,6 +1851,62 @@ const translations: Translations = {
     'placeholder.selectClient': 'Selecione o cliente',
     'placeholder.selectSupplier': 'Selecione o fornecedor',
     'placeholder.enterClientId': 'Digite o ID do cliente',
+    'placeholder.bankName': 'Nome do banco',
+    'placeholder.bankDescription': 'Descrição do banco...',
+    'placeholder.fillClientSecret': 'Preencha apenas para atualizar o segredo do cliente',
+    'placeholder.webhookUrl': 'URL para retorno do webhook',
+    'placeholder.apiKeyAsaas': 'Sua chave de API do Asaas',
+    'placeholder.webhookSecretHelp': 'Clique em Gerar token para criar um segredo',
+    'placeholder.accountIdentifierHelp': 'Disponível no menu de configurações da API',
+    'placeholder.paymentLocationDefault': 'Pagável em qualquer banco até o vencimento',
+    'placeholder.contractCreationHelp': 'Crie o contrato primeiro para gerenciar termos.',
+    'placeholder.financialTitlesCreationHelp': 'Crie o contrato primeiro para gerenciar títulos financeiros.',
+    'placeholder.financialMiscCreationHelp': 'Crie o contrato primeiro para gerenciar títulos avulsos.',
+    'placeholder.additionalServicesCreationHelp': 'Crie o contrato primeiro para gerenciar serviços adicionais.',
+    'placeholder.selectProvider': 'Selecione o fornecedor',
+    'placeholder.startDate': 'Data inicial',
+    'placeholder.endDate': 'Data final',
+    'placeholder.selectType': 'Selecione o tipo',
+    'placeholder.searchServices': 'Buscar serviços...',
+    'placeholder.enterJustification': 'Digite a justificativa para o cancelamento da nota fiscal (mínimo 15 caracteres)...',
+    'placeholder.enterSupplierId': 'Digite o ID do fornecedor',
+    'placeholder.enterPixKey': 'Digite a chave PIX',
+    'placeholder.enterCpfCnpj': 'Digite o CPF ou CNPJ',
+    'placeholder.enterCellPhone': 'Digite o celular (ex: 11999999999)',
+    'placeholder.enterEmail': 'Digite o e-mail',
+    'placeholder.enterName': 'Digite o nome',
+    'placeholder.enterRandomKey': 'Digite a chave aleatória (UUID)',
+    'placeholder.pasteQrCode': 'Cole o código copia e cola do PIX',
+
+    // Filter Labels
+    'filter.startDate': 'Data Inicial:',
+    'filter.endDate': 'Data Final:',
+
+    // Document Labels
+    'document.title': 'Título:',
+    'document.viewDocument': 'Visualizar Documento',
+    'document.print': 'Imprimir',
+    'document.modelContrato': 'Modelo Contrato',
+    'document.termAdesao': 'Termo Adesão',
+    'document.permanencia': 'Contrato Permanência',
+    'document.receipts': 'Recibos',
+    'document.cartaCobranca': 'Carta de Cobrança',
+    'document.name': 'Nome',
+    'document.description': 'Descrição',
+    'document.testClient': 'Cliente para Teste',
+    'document.testClientHelp': 'Selecione um cliente para visualizar o documento com dados reais',
+    'document.idPlaceholder': 'Digite o ID do cliente',
+    'document.content': 'Conteúdo',
+    'document.contractContent': 'Conteúdo do Contrato',
+    'document.successCreate': 'Documento criado com sucesso',
+    'document.successUpdate': 'Documento salvo com sucesso',
+    'document.errorCreate': 'Erro ao criar documento',
+    'document.errorUpdate': 'Erro ao salvar documento',
+    'document.errorGeneratePdf': 'Erro ao gerar PDF',
+    'document.labels.recibo': 'Recibo',
+    'document.labels.carta_cobranca': 'Carta de Cobrança',
+    'document.labels.termo': 'Termo',
+    'document.labels.documento': 'Documento',
 
     // Other
     'other.selectExactlyOne': 'Selecione exatamente 1 registro para auditar',
@@ -912,6 +1915,8 @@ const translations: Translations = {
     'other.reloadData': 'Recarregar dados',
     'other.confirmAction': 'Confirmar ação',
     'other.selectAtLeastOne': 'Selecione pelo menos um título',
+    'other.characters': 'caracteres',
+    'other.invoiceDetails': 'Detalhes da Nota Fiscal:',
     'other.selected': 'Selecionados',
     'other.open': 'Abertos',
     'other.receipt': 'Recibo',
@@ -923,6 +1928,315 @@ const translations: Translations = {
     'other.newMiscTitle': 'Novo Título Avulso',
     'other.deleteTerms': 'Deletar termos',
     'other.day': 'Dia',
+
+    // Financial Summary Labels
+    'summary.value': 'Valor:',
+    'summary.paidValue': 'Valor baixado:',
+    'summary.openValue': 'Valor aberto:',
+    'summary.canceledValue': 'Valor cancelado:',
+    'summary.totalPaidValue': 'Valor total pago:',
+    'summary.monthlyTotalValue': 'Valor Total Mensal:',
+    'summary.totalDiscountsValue': 'Valor Total Descontos:',
+    'summary.contractSummary': 'Resumo de contratos',
+    'summary.totalContracts': 'Total de contratos:',
+    'summary.activeContracts': 'Contratos ativos:',
+
+    // Audit
+    'audit.title': 'Logs de Auditoria',
+    'audit.detailsTitle': 'Detalhes do Log de Auditoria',
+    'audit.generalInfo': 'Informações Gerais',
+    'audit.data': 'Dados',
+    'audit.entityId': 'ID da Entidade',
+    'audit.user': 'Usuário',
+    'audit.ip': 'IP',
+    'audit.route': 'Rota',
+    'audit.userAgent': 'User-Agent',
+    'audit.viewDetails': 'Ver Detalhes',
+    'audit.method': 'Método',
+    'audit.entity': 'Entidade',
+    'audit.timestamp': 'Data/Hora',
+    'audit.entities.all': 'Todas',
+    'audit.actions.all': 'Todas',
+    'audit.actions.create': 'Criar',
+    'audit.actions.update': 'Atualizar',
+    'audit.actions.delete': 'Excluir',
+    'audit.actions.login': 'Login',
+    'audit.actions.logout': 'Logout',
+    'audit.actions.export': 'Exportar',
+    'audit.actions.import': 'Importar',
+
+    // Variables
+    'variables.title': 'Variáveis Disponíveis',
+    'variables.searchPlaceholder': 'Buscar variável...',
+    'variables.insert': 'Inserir Variáveis',
+    'variables.errorLoading': 'Erro ao carregar variáveis',
+    'variables.tip': 'Dica: As variáveis serão substituídas pelos valores reais ao gerar o documento.',
+    'variables.clickToInsert': 'Clique em uma variável para inserir',
+    'variables.clickToCopy': 'Clique em uma variável para copiar',
+
+    // User Form
+    'user.title': 'Usuário',
+    'user.profile': 'Perfil',
+    'user.admin': 'Administrador',
+    'user.user': 'Usuário',
+    'user.newPassword': 'Nova Senha (deixe em branco para manter)',
+    'user.passwordPlaceholder': 'Mínimo 6 caracteres',
+    'user.newPasswordPlaceholder': 'Deixe em branco para manter a senha atual',
+    'user.webhookHelp': 'Utilize este token para autenticação de webhooks.',
+    'user.generateWebhookHelp': 'Clique em "Gerar token" para obter o segredo de webhook.',
+    'user.webhookSecret': 'Webhook Secret',
+    'user.generateToken': 'Gerar Token',
+    'user.copy': 'Copiar',
+    'user.variables': 'Variáveis',
+    'user.successCreate': 'Usuário criado com sucesso!',
+    'user.successUpdate': 'Usuário atualizado com sucesso!',
+    'user.successGenerateSecret': 'Webhook secret gerado com sucesso!',
+    'user.successCopySecret': 'Webhook secret copiado!',
+    'user.errorCreate': 'Erro ao criar usuário',
+    'user.errorUpdate': 'Erro ao atualizar usuário',
+
+    // Email Server
+    'emailServer.title': 'Servidor de E-Mail',
+    'emailServer.serverSettings': 'Configurações do Servidor',
+    'emailServer.configureServer': 'Configurar Servidor de E-Mail',
+    'emailServer.smtpHost': 'Host SMTP',
+    'emailServer.port': 'Porta',
+    'emailServer.userEmail': 'Usuário/E-mail',
+    'emailServer.senderName': 'Nome do Remetente',
+    'emailServer.senderEmail': 'E-mail do Remetente',
+    'emailServer.useSsl': 'Usar SSL',
+    'emailServer.useTls': 'Usar TLS',
+    'emailServer.timeout': 'Timeout (ms)',
+    'emailServer.sendTestEmail': 'Enviar E-mail de Teste',
+    'emailServer.testEmailPlaceholder': 'Digite o e-mail para teste',
+    'emailServer.testEmailButton': 'Enviar Teste',
+    'emailServer.testEmailHelp': 'Digite um e-mail válido para testar o envio através deste servidor',
+    'emailServer.passwordHelp': 'Deixe em branco para manter a senha atual',
+    'emailServer.passwordPlaceholder': 'Digite a senha do e-mail',
+
+    // WhatsApp Server
+    'whatsappServer.title': 'Servidor de WhatsApp',
+    'whatsappServer.evolutionApi': 'Evolution API',
+    'whatsappServer.cloudApi': 'WhatsApp Cloud API',
+    'whatsappServer.successSave': 'Configurações do servidor de WhatsApp salvas com sucesso!',
+    'whatsappServer.errorSave': 'Erro ao salvar configurações',
+    'whatsappServer.successMessageSave': 'Mensagem salva com sucesso!',
+    'whatsappServer.errorMessageSave': 'Erro ao salvar mensagem',
+    'whatsappServer.successRemove': 'Servidor removido com sucesso!',
+    'whatsappServer.errorRemove': 'Erro ao remover servidor',
+    'whatsappServer.testPhoneRequired': 'Por favor, digite um número de telefone para teste',
+    'whatsappServer.testMessageRequired': 'Por favor, digite uma mensagem para teste',
+    'whatsappServer.configureFirst': 'Configure o servidor primeiro antes de enviar mensagem de teste',
+    'whatsappServer.errorSendTest': 'Não foi possível enviar a mensagem de teste. Verifique as configurações do servidor e tente novamente.',
+    'whatsappServer.selectMessageType': 'Selecione um tipo de mensagem',
+    'whatsappServer.messageRequired': 'Mensagem padrão é obrigatória',
+    'whatsappServer.removeServer': 'Remover Servidor',
+    'whatsappServer.variableCopied': 'Variável copiada!',
+    'whatsappServer.server': 'Servidor',
+    'whatsappServer.messages': 'Mensagens',
+
+    // Scheduler
+    'scheduler.title': 'Agendador de Tarefas',
+    'scheduler.frequency': 'Frequência',
+    'scheduler.schedule': 'Horário',
+    'scheduler.nextRun': 'Próxima Execução',
+    'scheduler.lastRun': 'Última Execução',
+    'scheduler.executions': 'Execuções',
+    'scheduler.errors': 'Erros',
+    'scheduler.confirmExecute': 'Deseja executar a rotina agora?',
+    'scheduler.executeRoutine': 'Executar rotina',
+    'scheduler.execute': 'Executar',
+    'scheduler.routineStarted': 'Rotina iniciada em background',
+    'scheduler.confirmDelete': 'Tem certeza que deseja deletar esta rotina?',
+    'scheduler.deleteRoutine': 'Deletar rotina',
+    'scheduler.successDelete': 'Rotina deletada com sucesso',
+    'scheduler.deactivate': 'Desativar',
+    'scheduler.type': 'Tipo',
+    'scheduler.routine': 'Rotina',
+
+    // Updates
+    'updates.title': 'Atualizações do Sistema',
+    'updates.currentVersion': 'Versão Atual',
+    'updates.searching': 'Buscando atualizações...',
+    'updates.errorSearch': 'Erro ao buscar atualizações',
+    'updates.noUpdates': 'Nenhuma atualização disponível',
+    'updates.systemUpdated': 'O sistema está atualizado com a versão mais recente.',
+    'updates.updating': 'Atualizando sistema...',
+    'updates.success': 'Atualização concluída com sucesso! A aplicação será reiniciada em breve.',
+    'updates.error': 'Erro ao executar atualização',
+    'updates.confirmUpdate': 'Tem certeza que deseja atualizar o sistema? Esta ação irá:\n\n1. Baixar as últimas alterações do repositório\n2. Atualizar dependências\n3. Compilar o código\n4. Executar migrations do banco de dados\n5. Reiniciar a aplicação\n\nO processo pode levar alguns minutos.',
+    'updates.updateSystem': 'Atualizar Sistema',
+    'updates.badges.new': 'Nova',
+    'updates.badges.bugfix': 'Correção',
+    'updates.badges.security': 'Segurança',
+    'updates.badges.improvement': 'Melhoria',
+    'updates.badges.other': 'Outro',
+    'updates.concluded': 'Atualização concluída!',
+
+    // Login
+    'login.title': 'Acesse o painel administrativo',
+    'login.emailPlaceholder': 'seu@email.com',
+    'login.passwordPlaceholder': 'Sua senha',
+    'login.entering': 'Entrando...',
+    'login.enter': 'Entrar',
+    'login.success': 'Autenticação realizada com sucesso.',
+    'login.errorCredentials': 'Não foi possível autenticar. Verifique suas credenciais.',
+    'login.errorToken': 'Erro ao salvar token de autenticação. Tente novamente.',
+    'login.errorGeneral': 'Falha ao autenticar. Tente novamente.',
+    'login.infoRequired': 'Informe email e senha para continuar.',
+    'login.allRightsReserved': 'Todos os direitos reservados.',
+
+    // Layout
+    'layout.logoutSuccess': 'Sessão encerrada com sucesso.',
+    'layout.closeSearch': 'Fechar busca',
+    'empty.noContracts': 'Este cliente ainda não possui contratos cadastrados.',
+    'empty.noTitles': 'Este cliente ainda não possui títulos cadastrados.',
+    'empty.noFiles': 'Nenhum arquivo encontrado',
+    'empty.noTermsRegistered': 'Este contrato ainda não possui termos cadastrados.',
+    'empty.noAdditionalServices': 'Este contrato ainda não possui serviços adicionais cadastrados.',
+    'filter.showInactive': 'Mostrar inativos',
+    'filter.showCanceled': 'Mostrar cancelados',
+    'confirm.deleteFiles': 'Tem certeza que deseja deletar ${count} arquivo(s)?',
+    'confirm.deleteFilesTitle': 'Deletar arquivos',
+    'messages.saveClientFirst': 'Salve o cliente primeiro para adicionar arquivos.',
+    'messages.saveBankBeforeTest': 'Salve o banco antes de testar a conexão',
+    'messages.testingConnection': 'Testando conexão...',
+    'messages.connectionSuccess': 'Conexão testada com sucesso!',
+    'messages.connectionFailed': 'Falha no teste de conexão',
+    'messages.credentialsNotConfiguredAsaas': 'Credenciais não configuradas. Informe a API Key do Asaas antes de testar.',
+    'messages.credentialsNotConfiguredEfi': 'Credenciais não configuradas. Preencha o Client ID e Client Secret antes de testar.',
+    'messages.saveBankBeforeWebhook': 'Salve o banco antes de gerar o token do webhook',
+    'messages.webhookTokenGenerated': 'Token do webhook gerado com sucesso!',
+    'messages.webhookTokenNotReturned': 'Token não retornado pelo servidor. Tente novamente.',
+    'messages.noTokenToCopy': 'Nenhum token disponível para copiar.',
+    'messages.webhookTokenCopied': 'Token do webhook copiado para a área de transferência!',
+    'messages.copyManual': 'Não foi possível copiar automaticamente. Copie manualmente.',
+    'messages.loadingClientData': 'Carregando dados do cliente...',
+    'messages.loadingPlanData': 'Carregando dados do plano...',
+    'messages.noTitleSelected': 'Nenhum título selecionado',
+    'messages.noPaidTitleSelected': 'Nenhum título pago selecionado. Apenas títulos pagos podem ter recibo.',
+    'messages.noTitlesFound': 'Nenhum título encontrado',
+    'messages.noOpenTitlesFound': 'Nenhum título em aberto encontrado',
+    'messages.noNFSeTitlesSelected': 'Nenhum título selecionado possui NFS-e emitida',
+    'messages.receiptsGenerated': '${count} recibo(s) gerado(s) com sucesso!',
+    'messages.errorGeneratingReceipts': 'Erro ao gerar recibos',
+    'messages.errorGeneratingNFSe': 'Erro ao gerar PDF da NFS-e',
+    'messages.nfseGenerated': 'NFS-e gerada com sucesso!',
+    'fileType.document': 'Documento',
+    'fileType.photo': 'Foto',
+    'fileType.signature': 'Assinatura',
+    'fileType.manual': 'Manual',
+    'fileType.digitalSignature': 'Assinatura Digital',
+    'fileType.system': 'Sistema',
+    'placeholder.street': 'Rua, Avenida...',
+    'placeholder.number': '123',
+    'placeholder.complement': 'Apto, Sala...',
+    'placeholder.neighborhood': 'Nome do bairro',
+    'placeholder.city': 'Nome da cidade',
+    'placeholder.state': 'SP',
+    'placeholder.email': 'email@empresa.com',
+    'form.whatsapp': 'WhatsApp',
+
+    // New Placeholders
+    'placeholder.contractContent': 'Digite o conteúdo do modelo de contrato...',
+    'placeholder.receiptContent': 'Digite o conteúdo do modelo de recibo...',
+    'placeholder.letterContent': 'Digite o conteúdo do modelo de carta de cobrança...',
+    'placeholder.description': 'Breve descrição',
+    'placeholder.manualSend': 'Digite a mensagem para envio manual...',
+    'placeholder.defaultEmail': 'Digite a mensagem padrão do e-mail...',
+    'placeholder.defaultMessage': 'Digite a mensagem padrão que será enviada...',
+    'placeholder.firstInteraction': 'Digite a primeira mensagem de interação...',
+    'placeholder.secondInteraction': 'Digite a segunda mensagem de interação...',
+    'placeholder.thirdInteraction': 'Digite a terceira mensagem de interação...',
+    'placeholder.clientIdProd': 'Client ID para produção',
+    'placeholder.serviceCode': 'Ex: 1401',
+    'placeholder.serviceDescription': 'Ex: Prestação de serviços de desenvolvimento de software',
+    'placeholder.apiToken': 'Token da API',
+    'placeholder.apiKey': 'Cole sua API Key aqui',
+    'placeholder.workspaceId': 'ID do workspace (obtido em My Account > Workspaces)',
+    'placeholder.responsibleName': 'Nome do responsável',
+    'placeholder.responsibleRole': 'Cargo do responsável',
+    'placeholder.paymentObservations': 'Observações sobre o pagamento (opcional)',
+    'placeholder.testMessage': 'Mensagem de teste do sistema BackNet',
+    'placeholder.termContent': 'Digite o conteúdo do termo...',
+
+    // Message Types
+    'messages.types.10daysBefore': '10 dias antes do vencimento',
+    'messages.types.05daysBefore': '05 dias antes do vencimento',
+    'messages.types.sameDay': 'Mesmo dia do vencimento',
+    'messages.types.05daysAfter': '05 dias depois do vencimento',
+    'messages.types.10daysAfter': '10 dias depois do vencimento',
+    'messages.types.15daysAfter': '15 dias depois do vencimento',
+    'messages.types.clientCut': 'Corte do cliente',
+    'messages.types.manualSend': 'Envio manual de cobrança',
+
+    // Send Types
+    'messages.sendTypes.disabled': 'Desativar',
+    'messages.sendTypes.pdf': 'Anexa PDF',
+
+    // Settings Server
+    'settings.server.config': 'Configurações do Servidor',
+    'settings.server.configure': 'Configurar Servidor',
+    'settings.test.title': 'Enviar Mensagem de Teste',
+    'settings.test.phone': 'Número do Telefone',
+    'settings.test.message': 'Mensagem',
+    'settings.test.send': 'Enviar Teste',
+    'settings.test.helper': 'Digite o número com código do país (ex: 5511999999999)',
+    'settings.messages.type': 'Tipo de Mensagem',
+    'settings.messages.sendType': 'Tipo de Envio',
+    'settings.messages.manualLabel': 'Mensagem para Envio Manual',
+    'settings.messages.manualHelper': 'Mensagem que será usada quando enviar título manualmente',
+    'settings.messages.emailLabel': 'Mensagem do E-mail',
+    'settings.messages.templateConfig': 'Configuração de Template (JSON) - WhatsApp Cloud API',
+    'settings.messages.viewTemplates': 'Ver Templates Ativos',
+    'settings.messages.templateHelper': 'Configure o template e variáveis para WhatsApp Cloud API. Deixe vazio para usar mensagem de texto normal.',
+    'settings.messages.templateFormat': 'Formato: JSON com name (nome do template), language (idioma: en, pt_BR, etc) e variables (array com ordem das variáveis).',
+    'settings.messages.defaultMessage': 'Mensagem Padrão',
+    'settings.messages.interaction1': 'Interação 01',
+    'settings.messages.interaction2': 'Interação 02',
+    'settings.messages.interaction3': 'Interação 03',
+    'settings.messages.interaction1Helper': 'Mensagem opcional para primeira interação',
+    'settings.messages.interaction2Helper': 'Mensagem opcional para segunda interação',
+    'settings.messages.interaction3Helper': 'Mensagem opcional para terceira interação',
+    'settings.messages.variablesTitle': 'Variáveis Disponíveis para Mensagens',
+    'settings.messages.variablesHelper': 'Clique nas variáveis para inserir na mensagem',
+    'settings.messages.copyVariable': 'Copiar variável',
+
+    // File Modal
+    'messages.selectFile': 'Selecione um arquivo',
+    'messages.enterFileName': 'Informe o nome do arquivo',
+    'messages.fileAddedSuccess': 'Arquivo adicionado com sucesso',
+    'messages.fileAddedError': 'Erro ao adicionar arquivo',
+
+    // Financial
+    'financial.parcelInfo': 'Informações da Parcela',
+    'financial.originalValue': 'Valor Original',
+    'financial.paymentDate': 'Data de Pagamento',
+    'financial.amountPaid': 'Valor Pago',
+    'financial.characters': 'caracteres',
+
+    // Company
+    'company.responsibleSignature': 'Assinatura do Responsável',
+    'company.noSignature': 'Sem assinatura',
+    'company.pngOnly': 'Apenas arquivos PNG são permitidos (máx. 10MB)',
+
+    // Digital Signature
+    'digitalSignature.generalSettings': 'Configurações Gerais',
+    'digitalSignature.enable': 'Habilitar Assinatura Digital',
+    'digitalSignature.enableHelp': 'Ativa a funcionalidade de assinatura digital eletrônica no sistema',
+    'digitalSignature.provider': 'Provedor de API',
+    'digitalSignature.providerHelp': 'Selecione o provedor de API para assinatura digital',
+    'digitalSignature.expirationDays': 'Dias de Expiração Padrão',
+    'digitalSignature.expirationDaysHelp': 'Número de dias padrão para expiração de documentos enviados para assinatura (1 a 365 dias)',
+    'digitalSignature.apiSettings': 'Configurações da API',
+    'digitalSignature.apiKey': 'API Key',
+    'digitalSignature.assinafyHelp': 'Obtenha sua API Key gratuita em assinafy.com.br (100 assinaturas/mês grátis)',
+    'digitalSignature.zapsignHelp': 'Obtenha sua API Key no painel do ZapSign',
+    'digitalSignature.workspaceId': 'Workspace Account ID',
+    'digitalSignature.workspaceIdHelp': 'Workspace Account ID obtido no painel Assinafy: My Account > Workspaces',
+    'digitalSignature.assinafyInfo': 'Assinafy: Plano gratuito com 100 assinaturas mensais. Ideal para começar a usar assinatura digital sem custos.',
+    'digitalSignature.successUpdate': 'Configurações de assinatura digital atualizadas com sucesso!',
+    'digitalSignature.errorUpdate': 'Erro ao atualizar configurações',
   },
   'en-US': {
     // Navigation
@@ -939,17 +2253,122 @@ const translations: Translations = {
     'actions.edit': 'Edit',
     'actions.delete': 'Delete',
     'actions.create': 'Create',
+    'actions.pay': 'Pay',
+    'actions.duplicate': 'Duplicate',
+    'actions.insert': 'Insert',
+    'actions.new': 'New',
     'actions.filter': 'Filter',
     'actions.export': 'Export',
     'actions.import': 'Import',
+    'actions.receive': 'Receive',
+    'actions.reverse': 'Reverse',
+    'actions.nfse': 'NFS-e',
+    'actions.print': 'Print',
+    'actions.send': 'Send',
+
+    // Buttons
+    'buttons.selected': 'Selected',
+    'buttons.open': 'Open',
+    'buttons.receipt': 'Receipt',
+    'buttons.printNF': 'Print NF',
+    'buttons.viaWhatsApp': 'Via WhatsApp',
+    'buttons.viaEmail': 'Via Email',
+    'buttons.generateNFSeAvulsa': 'Generate Standalone NFS-e',
+    'buttons.new': 'New',
+
+    // Contracts
+    'contracts.title': 'Contract',
+    'contracts.confirmDelete': 'Delete contracts',
+    'contracts.confirmDeleteMessage': 'Are you sure you want to delete the selected contracts?',
+    'contracts.termAdesao': 'Adhesion Term',
+    'contracts.permanencia': 'Permanence Contract',
+    'contracts.messages.deleteSuccess': 'Contract deleted successfully!',
+    'contracts.messages.deleteError': 'Error deleting contract',
 
     // Messages
     'messages.confirmDelete': 'Are you sure you want to delete?',
     'messages.loading': 'Loading...',
     'messages.noData': 'No data found',
     'messages.error': 'An error occurred',
+    'messages.cnpjDataAutoFilled': 'CNPJ data auto-filled successfully!',
+    'messages.cnpjNotFound': 'CNPJ not found. You can fill the data manually.',
+    'messages.errorConsultingCnpj': 'Error consulting CNPJ. Please try again or fill manually.',
+    'messages.nameRequired': 'Name/Company Name is required',
+    'messages.contentRequired': 'Content is required',
+    'messages.cpfCnpjRequired': 'CPF/CNPJ is required',
+    'messages.invalidCpf': 'Invalid CPF',
+    'messages.invalidCnpj': 'Invalid CNPJ',
+    'messages.clientRequired': 'Client is required',
+    'messages.justificationRequired': 'Justification is required',
+    'messages.justificationMinLength': 'Justification must be at least 15 characters long',
+    'messages.justificationMaxLength': 'Justification must be at most 500 characters long',
+    'messages.invoiceCanceled': 'Invoice canceled successfully!',
+    'messages.errorCancelingInvoice': 'Error canceling invoice',
+    'messages.actionCannotBeUndone': 'This action cannot be undone.',
+    'messages.notInformed': 'Not informed',
     'messages.success': 'Operation completed successfully',
+    'messages.selectAtLeastOneInvoice': 'Select at least one invoice',
+    'messages.invoiceGenerated': 'Electronic Service Invoice generated successfully!',
+    'messages.errorGeneratingInvoice': 'Error generating Electronic Service Invoice',
+    'messages.issRateRange': 'ISS rate must be between 0 and 100',
+    'messages.invoicePdfGenerated': 'Invoice PDF generated successfully!',
+    'messages.errorGeneratingInvoicePdf': 'Error generating invoice PDF',
+    'messages.selectInvoiceToCancel': 'Select an invoice to cancel',
+    'messages.selectOnlyOneInvoiceToCancel': 'Select only one invoice to cancel',
+    'messages.invoiceAlreadyCanceled': 'This invoice has already been canceled',
+    'messages.onlyAuthorizedCanBeCanceled': 'Only authorized invoices can be canceled',
     'messages.warning': 'Warning',
+    'messages.successPrintSelected': 'Selected boletos generated successfully!',
+    'messages.errorPrintSelected': 'Error generating selected boletos',
+    'messages.clientNotFound': 'Client not found',
+    'messages.successPrintOpen': 'Open boletos generated successfully!',
+    'messages.errorPrintOpen': 'Error generating open boletos',
+    'messages.confirmCancelTitle': 'Are you sure you want to cancel this title?',
+    'messages.confirmCancelTitles': 'Are you sure you want to cancel ${count} titles?',
+    'messages.successCancelTitle': 'Title canceled successfully!',
+    'messages.successCancelTitles': '${count} titles canceled successfully!',
+    'messages.errorCancelTitle': '1 title could not be canceled',
+    'messages.errorCancelTitles': '${count} titles could not be canceled',
+    'messages.errorCancelTitlesGeneral': 'Error canceling titles',
+    'messages.successSendMessage': 'Message sent successfully!',
+    'messages.successSendMessages': '${count} messages sent successfully!',
+    'messages.errorSendMessage': 'The message could not be sent',
+    'messages.errorSendMessages': '${count} messages could not be sent',
+    'messages.errorSendMessagesGeneral': 'Error sending messages',
+    'messages.successSendEmail': 'Email sent successfully!',
+    'messages.successSendEmails': '${count} emails sent successfully!',
+    'messages.errorSendEmail': '1 email could not be sent',
+    'messages.errorSendEmails': '${count} emails could not be sent',
+    'messages.errorSendEmailsGeneral': 'Error sending emails',
+    'messages.successReverseTitle': 'Title reversed successfully!',
+    'messages.errorReverseTitle': 'Error reversing title.',
+    'messages.successDeleteTerm': 'Term deleted successfully!',
+    'messages.successDeleteTerms': 'Term(s) deleted successfully!',
+    'messages.errorDeleteTerm': 'Error deleting term',
+    'messages.errorDeleteTerms': 'Error deleting term(s)',
+    'messages.confirmDeleteAdditionalService': 'Are you sure you want to delete this additional service?',
+    'messages.confirmDeleteAdditionalServices': 'Are you sure you want to delete ${count} additional services?',
+    'messages.successDeleteAdditionalService': 'Additional service deleted successfully!',
+    'messages.successDeleteAdditionalServices': '${count} additional services deleted successfully!',
+    'messages.errorDeleteAdditionalService': 'The additional service could not be deleted',
+    'messages.errorDeleteAdditionalServices': '${count} additional service(s) could not be deleted',
+    'messages.errorDeleteAdditionalServicesGeneral': 'Error deleting additional services',
+    'messages.confirmDeleteAccountPayable': 'Are you sure you want to delete this account payable?',
+    'messages.successDeleteAccountPayable': 'Account payable deleted successfully!',
+    'messages.errorDeleteAccountPayable': 'Error deleting account payable.',
+    'messages.loadingAccountData': 'Loading account data...',
+    'messages.supplierRequired': 'Supplier is required',
+    'messages.emailRequired': 'Email is required',
+    'messages.passwordRequired': 'Password is required',
+    'messages.passwordMinLength': 'Password must be at least 6 characters',
+    'messages.info': 'Information',
+    'messages.confirmAction': 'Confirm action',
+    'messages.dueDateRequired': 'Due date is required',
+    'messages.startDateRequired': 'Start date is required',
+    'messages.endDateRequired': 'Final date is required',
+    'messages.endDateAfterStartDate': 'Final date must be after start date',
+    'messages.valueRequired': 'Value is required',
+    'messages.valueGreaterThanZero': 'Value must be greater than zero',
 
     // Forms
     'form.required': 'Required field',
@@ -1054,6 +2473,93 @@ const translations: Translations = {
     'ui.selectBank': 'Select Bank',
     'ui.yes': 'Yes',
     'ui.no': 'No',
+    'ui.actionsMenu': 'Actions menu',
+    'ui.firstPage': 'First page',
+    'ui.previousPage': 'Previous page',
+    'ui.nextPage': 'Next page',
+    'ui.lastPage': 'Last page',
+    'ui.page': 'Page',
+    'ui.refresh': 'Refresh',
+    'ui.auditSelected': 'Audit selected record',
+    'ui.selectOneToAudit': 'Select exactly 1 record to audit',
+    'ui.loadingApplication': 'Loading application...',
+    'ui.loadingDashboard': 'Loading dashboard...',
+    'ui.loadingLogin': 'Loading login...',
+    'ui.loadingPayment': 'Loading payment page...',
+    'ui.loadingPage': 'Loading home page...',
+    'ui.appError': 'Application Error',
+    'ui.criticalError': 'A critical error occurred. Please reload the page.',
+    'ui.reloadPage': 'Reload page',
+    'ui.loading': 'Loading...',
+
+    // Company Labels
+    'company.title': 'Company',
+    'company.razaoSocial': 'Business Name',
+    'company.nomeFantasia': 'Trade Name',
+    'company.cnpj': 'Tax ID (CNPJ)',
+    'company.inscricaoEstadual': 'State Registration',
+    'company.inscricaoMunicipal': 'Municipal Registration',
+    'company.logo': 'Company Logo',
+    'company.noLogo': 'No logo',
+    'company.acceptedFormats': 'Accepted formats: JPG, PNG, GIF (max. 2MB)',
+
+    // NFSe Labels
+    'nfse.title': 'NFS-e',
+    'nfse.municipalServiceCode': 'Municipal Service Code',
+    'nfse.municipalServiceCodeHelp': 'Code from the municipality\'s service list (e.g., 1401 for IT services)',
+    'nfse.issRate': 'ISS Rate (%)',
+    'nfse.issRateHelp': 'Default ISS rate for invoices (0 to 100)',
+    'nfse.serviceDescription': 'Service Description',
+    'nfse.serviceDescriptionHelp': 'Default description of the service provided in the invoices',
+    'nfse.nfSerie': 'NF Series',
+    'nfse.nfSerieHelp': 'NF series (allowed: 80000 to 89999)',
+    'nfse.dpsNumber': 'DPS Number',
+    'nfse.dpsNumberHelp': 'DPS number (Service Provision Document)',
+    'nfse.provider': 'NFS-e Provider',
+    'nfse.providerHelp': 'Select the provider that will be used to issue the invoices',
+    'nfse.asaasApiKey': 'Asaas API Key',
+    'nfse.asaasApiKeyHelp': 'Asaas API token available in the admin panel (Settings > Integrations > API Key)',
+    'nfse.useSandbox': 'Use Sandbox Environment',
+    'nfse.useSandboxHelp': 'Check to use the Asaas testing environment',
+    'nfse.username': 'Username',
+    'nfse.password': 'Password',
+    'nfse.baseUrl': 'API Base URL',
+    'nfse.environment': 'Environment',
+    'nfse.homologation': 'Homologation',
+    'nfse.production': 'Production',
+    'nfse.messages.loadingError': 'Error loading configuration',
+    'nfse.messages.saveSuccess': 'NFS-e settings saved successfully!',
+    'nfse.messages.saveError': 'Error saving configuration',
+    'nfse.messages.testSuccessAsaas': 'Connection with Asaas tested successfully! The API Key is valid.',
+    'nfse.messages.testSuccessPortal': 'Authentication tested successfully! The credentials are correct.',
+    'nfse.messages.testError': 'Error testing connection',
+    'nfse.messages.apiKeyRequired': 'Asaas API Key is required to test connection',
+    'nfse.messages.credentialsRequired': 'Username and password are required to test authentication',
+    'nfse.messages.providerRequired': 'Select a provider to test the connection',
+
+    // Title Labels
+    'titulo.title': 'Invoice/Title',
+    'titulo.send': 'Send',
+    'titulo.sendViaWhatsApp': 'Via WhatsApp',
+    'titulo.sendViaEmail': 'Via Email',
+    'titulo.createTitle': 'Create Title',
+    'titulo.validationErrors': 'Validation errors:',
+    'titulo.clientNotFound': 'Client not found',
+    'titulo.clientCannotBeChanged': 'Client cannot be changed',
+    'titulo.planoCannotBeChanged': 'Plan cannot be changed',
+    'titulo.valorCannotBeChanged': 'Value cannot be changed after registration with the issuing bank',
+    'titulo.dataVencimentoCannotBeChanged': 'Due date cannot be changed after registration with the issuing bank',
+    'titulo.discountPercent': 'Discount (%)',
+    'titulo.discountValue': 'Discount (R$)',
+    'titulo.additionPercent': 'Addition (%)',
+    'titulo.additionValue': 'Addition (R$)',
+    'titulo.observationsPlaceholder': 'Observations about the installment...',
+    'titulo.descriptionPlaceholder': 'Description of the title...',
+    'titulo.selectClient': 'Select Client',
+    'titulo.selectPlano': 'Select Plan',
+    'titulo.messages.sendSuccess': 'Message sent successfully!',
+    'titulo.messages.sendError': 'Error sending message',
+    'titulo.messages.whatsappError': 'Error sending message via WhatsApp',
 
     // Financial
     'financial.title': 'Financial - Titles',
@@ -1062,6 +2568,7 @@ const translations: Translations = {
     'financial.cancelTitles': 'Cancel titles',
     'financial.reverseTitle': 'Reverse title',
     'financial.reverse': 'Reverse',
+    'financial.confirmReverse': 'Are you sure you want to reverse the payment for title ${number}?',
     'financial.toPay': 'To Pay',
     'financial.paid': 'Paid',
     'financial.pending': 'Pending',
@@ -1084,6 +2591,9 @@ const translations: Translations = {
     'financial.value': 'Value',
 
     // Buttons
+    'buttons.confirmPayment': 'Confirm Payment',
+    'buttons.confirmCancellation': 'Confirm Cancellation',
+    'buttons.canceling': 'Canceling...',
     'buttons.save': 'Save',
     'buttons.cancel': 'Cancel',
     'buttons.close': 'Close',
@@ -1093,6 +2603,7 @@ const translations: Translations = {
     'buttons.print': 'Print',
     'buttons.generate': 'Generate',
     'buttons.view': 'View',
+    'buttons.download': 'Download',
     'buttons.export': 'Export',
     'buttons.import': 'Import',
     'buttons.search': 'Search',
@@ -1108,12 +2619,20 @@ const translations: Translations = {
     'buttons.reverse': 'Reverse',
     'buttons.audit': 'Audit',
     'buttons.reload': 'Reload',
+    'buttons.testConnection': 'Test Connection',
+    'buttons.generateToken': 'Generate Token',
+    'buttons.copy': 'Copy',
     'buttons.select': 'Select',
     'buttons.add': 'Add',
     'buttons.remove': 'Remove',
 
     // Form Labels
     'form.name': 'Name',
+    'form.role': 'Role',
+    'form.clientId': 'Client ID',
+    'form.clientIdProd': 'Production Client ID',
+    'form.clientSecret': 'Client Secret',
+    'form.clientSecretProd': 'Production Client Secret',
     'form.description': 'Description',
     'form.cnpj': 'CNPJ',
     'form.companyName': 'Company Name',
@@ -1153,6 +2672,23 @@ const translations: Translations = {
     'form.originalValue': 'Original Value',
     'form.discount': 'Discount',
     'form.useClientAddress': 'Use client address',
+    'form.bankNameHelp': 'Name to identify this bank account',
+    'form.bankTypeHelp': 'Bank code is automatically defined',
+    'form.optionalUpdate': 'Optional field. Fill only if you want to update.',
+    'form.webhookUrl': 'Return URL (Webhook)',
+    'form.webhookUrlHelp': 'URL to receive payment notifications',
+    'form.sandboxHelp': 'Activate to use testing environment. Deactivate for production.',
+    'form.apiKey': 'API Key',
+    'form.apiKeyAsaasHelp': 'Available in Asaas administrative panel.',
+    'form.webhookSecret': 'Webhook Secret',
+    'form.webhookSecretAsaasHelp': 'Use this token when configuring the Asaas webhook.',
+    'form.generateWebhookSecretHelp': 'Click "Generate token" after saving the bank to get the webhook secret.',
+    'form.finePercent': 'Fine Percentage (%)',
+    'form.interestPercent': 'Interest Percentage (% per day)',
+    'form.includeFee': 'Include Fee in Boleto',
+    'form.accountIdentifier': 'Account Identifier',
+    'form.accountIdentifierEfiHelp': 'Available in Efi API settings',
+    'form.paymentLocation': 'Payment Location',
     'form.operationNature': 'Operation Nature',
     'form.model': 'Model',
     'form.issueDate': 'Issue Date',
@@ -1160,6 +2696,7 @@ const translations: Translations = {
     'form.servicesValue': 'Services Value',
     'form.productsValue': 'Products Value',
     'form.discountValueInvoice': 'Discount Value',
+    'form.issRateShort': 'ISS Rate (%)',
     'form.issRate': 'ISS Rate',
     'form.fileSelected': 'File Selected',
     'form.fileTypeDocument': 'Document',
@@ -1174,6 +2711,18 @@ const translations: Translations = {
     'form.street': 'Street',
     'form.invoice': 'Invoice',
     'form.invoiceStatus': 'Invoice Status',
+    'form.invoiceNumber': 'Invoice Number',
+    'form.paymentType': 'Payment Type',
+    'form.paymentTypeCash': 'Cash',
+    'form.paymentTypeBoleto': 'Boleto',
+    'form.paymentTypeCard': 'Card',
+    'form.paymentTypeDeposit': 'Deposit',
+    'form.paymentTypeDebit': 'Debit',
+    'form.paymentTypeTransfer': 'Transfer',
+    'form.paymentTypePix': 'PIX',
+    'form.balanceDue': 'Balance Due',
+    'form.dueDateStart': 'Due Date Start',
+    'form.dueDateEnd': 'Due Date End',
     'form.testClient': 'Test Client',
     'form.enterClientId': 'Enter client ID',
     'form.enterPlanId': 'Enter plan ID',
@@ -1187,6 +2736,25 @@ const translations: Translations = {
     'form.briefDescription': 'Brief description',
     'form.fileDescription': 'File description (optional)',
     'form.optional': 'Optional',
+    'form.creationType': 'Creation Type',
+    'form.creationTypeUnique': 'Unique',
+    'form.creationTypeBatch': 'Batch',
+    'form.dueDateInitial': 'Initial Due Date',
+    'form.dueDateFinal': 'Final Due Date',
+    'form.pixKeyType': 'PIX Key Type',
+    'form.pixKey': 'PIX Key',
+    'form.qrCodeCopiaECola': 'Copy and Paste Code',
+    'form.barcodeLine': 'Boleto Barcode Line',
+    'form.discountPercentShort': 'Discount (%)',
+    'form.discountValueShort': 'Discount (Value)',
+    'form.increasePercentShort': 'Increase (%)',
+    'form.increaseValueShort': 'Increase (Value)',
+    'form.baixadoValue': 'Paid Value',
+    'form.totalToPay': 'Total Value to Pay',
+    'form.justification': 'Justification',
+    'form.justificationCancel': 'Cancellation Justification',
+    'form.title': 'Title',
+    'form.password': 'Password',
     'form.planNamePlaceholder': 'Plan name',
     'form.planDescriptionPlaceholder': 'Plan description',
     'form.monthlyValuePlaceholder': 'Monthly value',
@@ -1214,6 +2782,13 @@ const translations: Translations = {
     'form.messageConfiguration': 'Message configuration',
 
     // Table Columns
+    'table.personTypeShort': 'Type',
+    'table.personTypeLegalShort': 'Legal',
+    'table.personTypePhysicalShort': 'Physical',
+    'table.nameCompanyNameShort': 'Name/Company Name',
+    'table.tradeNameShort': 'Trade Name',
+    'table.zipCodeShort': 'Zip Code',
+    'table.streetShort': 'Street',
     'table.id': 'ID',
     'table.contract': 'Contract',
     'table.status': 'Status',
@@ -1225,12 +2800,15 @@ const translations: Translations = {
     'table.invoice': 'Invoice',
     'table.invoiceStatus': 'Invoice Status',
     'table.actions': 'Actions',
+    'table.balanceDue': 'Balance Due',
     'table.createdAt': 'Created At',
     'table.updatedAt': 'Updated At',
     'table.documentNumber': 'Document Number',
     'table.supplier': 'Supplier',
     'table.paymentType': 'Payment Type',
+    'table.client': 'Client',
     'table.clientName': 'Client',
+    'table.cpfCnpj': 'CPF/CNPJ',
     'table.contractNumber': 'Contract Number',
     'table.contractStartDate': 'Start Date',
     'table.contractEndDate': 'End Date',
@@ -1241,6 +2819,7 @@ const translations: Translations = {
     'table.neighborhood': 'Neighborhood',
     'table.city': 'City',
     'table.state': 'State',
+    'table.country': 'Country',
     'table.planName': 'Plan Name',
     'table.description': 'Description',
     'table.serviceType': 'Service Type',
@@ -1252,8 +2831,25 @@ const translations: Translations = {
     'table.bankType': 'Bank Type',
     'table.sandbox': 'Sandbox',
     'table.paymentDate': 'Payment Date',
+    'table.issueDate': 'Issue Date',
+    'table.totalValue': 'Total Value',
+    'table.accessKey': 'Access Key',
+    'table.protocol': 'Protocol',
+    'table.authorizationDate': 'Authorization Date',
     'table.chargeId': 'Charge ID',
     'table.ourNumber': 'Our Number',
+    'table.paidValueDownloaded': 'Paid value',
+    'table.openValueOpen': 'Open value',
+    'table.nf': 'NF',
+    'table.nfStatus': 'NF Status',
+    'table.termName': 'Term Name',
+    'table.accepted': 'Signed',
+    'table.acceptedDate': 'Accepted Date',
+    'table.acceptedBy': 'Accepted By',
+    'table.observations': 'Observations',
+    'table.action': 'Action',
+    'table.name': 'Name',
+    'table.bank': 'Bank',
     'table.planValue': 'Plan Value',
     'table.discountPercent': 'Discount %',
     'table.discountValue': 'Discount Value',
@@ -1268,6 +2864,8 @@ const translations: Translations = {
     'table.titleNumber': 'Title Number',
 
     // Modal Titles
+    'modal.payAccountManually': 'Pay Account Manually',
+    'modal.viewInvoice': 'View Invoice',
     'modal.createClient': 'Create Client',
     'modal.editClient': 'Edit Client',
     'modal.createPlan': 'Create Plan',
@@ -1299,6 +2897,8 @@ const translations: Translations = {
     'modal.list': 'List',
     'modal.defaultDocument': 'Default Document',
     'modal.deleteFiles': 'Delete files',
+    'modal.deleteAdditionalServices': 'Delete additional services',
+    'modal.scheduledRoutine': 'Scheduled Routine',
 
     // Tabs
     'tabs.basicData': 'Basic Data',
@@ -1331,6 +2931,8 @@ const translations: Translations = {
     'tabs.communicationPreferences': 'Communication Preferences',
 
     // Status Labels
+    'status.processing': 'Processing',
+    'status.authorized': 'Authorized',
     'status.scheduled': 'Scheduled',
     'status.issued': 'Issued',
     'status.cancelled': 'Cancelled',
@@ -1344,6 +2946,7 @@ const translations: Translations = {
     'status.inactive': 'Inactive',
     'status.suspended': 'Suspended',
     'status.overdue': 'Overdue',
+    'status.paidLate': 'Paid Late',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -1363,6 +2966,62 @@ const translations: Translations = {
     'placeholder.selectClient': 'Select client',
     'placeholder.selectSupplier': 'Select supplier',
     'placeholder.enterClientId': 'Enter client ID',
+    'placeholder.bankName': 'Bank name',
+    'placeholder.bankDescription': 'Bank description...',
+    'placeholder.fillClientSecret': 'Fill only to update client secret',
+    'placeholder.webhookUrl': 'URL for webhook return',
+    'placeholder.apiKeyAsaas': 'Your Asaas API key',
+    'placeholder.webhookSecretHelp': 'Click on Generate token to create a secret',
+    'placeholder.accountIdentifierHelp': 'Provided in the API configuration menu',
+    'placeholder.paymentLocationDefault': 'Payable at any bank until the due date',
+    'placeholder.contractCreationHelp': 'Create the contract first to manage terms.',
+    'placeholder.financialTitlesCreationHelp': 'Create the contract first to manage financial titles.',
+    'placeholder.financialMiscCreationHelp': 'Create the contract first to manage miscellaneous titles.',
+    'placeholder.additionalServicesCreationHelp': 'Create the contract first to manage additional services.',
+    'placeholder.selectProvider': 'Select provider',
+    'placeholder.startDate': 'Start date',
+    'placeholder.endDate': 'End date',
+    'placeholder.selectType': 'Select type',
+    'placeholder.searchServices': 'Search services...',
+    'placeholder.enterJustification': 'Enter the justification for canceling the invoice (minimum 15 characters)...',
+    'placeholder.enterSupplierId': 'Enter supplier ID',
+    'placeholder.enterPixKey': 'Enter PIX key',
+    'placeholder.enterCpfCnpj': 'Enter CPF or CNPJ',
+    'placeholder.enterCellPhone': 'Enter cell phone',
+    'placeholder.enterEmail': 'Enter e-mail',
+    'placeholder.enterName': 'Enter name',
+    'placeholder.enterRandomKey': 'Enter random key (UUID)',
+    'placeholder.pasteQrCode': 'Paste PIX copy and paste code',
+
+    // Filter Labels
+    'filter.startDate': 'Start Date:',
+    'filter.endDate': 'End Date:',
+
+    // Document Labels
+    'document.title': 'Title:',
+    'document.viewDocument': 'View Document',
+    'document.print': 'Print',
+    'document.modelContrato': 'Contract Model',
+    'document.termAdesao': 'Adhesion Term',
+    'document.permanencia': 'Permanence Contract',
+    'document.receipts': 'Receipts',
+    'document.cartaCobranca': 'Collection Letter',
+    'document.name': 'Name',
+    'document.description': 'Description',
+    'document.testClient': 'Test Client',
+    'document.testClientHelp': 'Select a client to view the document with real data',
+    'document.idPlaceholder': 'Enter Client ID',
+    'document.content': 'Content',
+    'document.contractContent': 'Contract Content',
+    'document.successCreate': 'Document created successfully',
+    'document.successUpdate': 'Document saved successfully',
+    'document.errorCreate': 'Error creating document',
+    'document.errorUpdate': 'Error saving document',
+    'document.errorGeneratePdf': 'Error generating PDF',
+    'document.labels.recibo': 'Receipt',
+    'document.labels.carta_cobranca': 'Collection Letter',
+    'document.labels.termo': 'Term',
+    'document.labels.documento': 'Document',
 
     // Other
     'other.selectExactlyOne': 'Select exactly 1 record to audit',
@@ -1371,6 +3030,8 @@ const translations: Translations = {
     'other.reloadData': 'Reload data',
     'other.confirmAction': 'Confirm action',
     'other.selectAtLeastOne': 'Select at least one title',
+    'other.characters': 'characters',
+    'other.invoiceDetails': 'Invoice Details:',
     'other.selected': 'Selected',
     'other.open': 'Open',
     'other.receipt': 'Receipt',
@@ -1382,6 +3043,315 @@ const translations: Translations = {
     'other.newMiscTitle': 'New Misc Title',
     'other.deleteTerms': 'Delete terms',
     'other.day': 'Day',
+
+    // Financial Summary Labels
+    'summary.value': 'Value:',
+    'summary.paidValue': 'Paid Value:',
+    'summary.openValue': 'Open Value:',
+    'summary.canceledValue': 'Canceled Value:',
+    'summary.totalPaidValue': 'Total Paid Value:',
+    'summary.monthlyTotalValue': 'Monthly Total Value:',
+    'summary.totalDiscountsValue': 'Total Discounts Value:',
+    'summary.contractSummary': 'Contract summary',
+    'summary.totalContracts': 'Total contracts:',
+    'summary.activeContracts': 'Active contracts:',
+
+    // Audit
+    'audit.title': 'Audit Logs',
+    'audit.detailsTitle': 'Audit Log Details',
+    'audit.generalInfo': 'General Information',
+    'audit.data': 'Data',
+    'audit.entityId': 'Entity ID',
+    'audit.user': 'User',
+    'audit.ip': 'IP',
+    'audit.route': 'Route',
+    'audit.userAgent': 'User-Agent',
+    'audit.viewDetails': 'View Details',
+    'audit.method': 'Method',
+    'audit.entity': 'Entity',
+    'audit.timestamp': 'Date/Time',
+    'audit.entities.all': 'All',
+    'audit.actions.all': 'All',
+    'audit.actions.create': 'Create',
+    'audit.actions.update': 'Update',
+    'audit.actions.delete': 'Delete',
+    'audit.actions.login': 'Login',
+    'audit.actions.logout': 'Logout',
+    'audit.actions.export': 'Export',
+    'audit.actions.import': 'Import',
+
+    // Variables
+    'variables.title': 'Available Variables',
+    'variables.searchPlaceholder': 'Search variable...',
+    'variables.insert': 'Insert Variables',
+    'variables.errorLoading': 'Error loading variables',
+    'variables.tip': 'Tip: Variables will be replaced by actual values when generating the document.',
+    'variables.clickToInsert': 'Click on a variable to insert',
+    'variables.clickToCopy': 'Click on a variable to copy',
+
+    // User Form
+    'user.title': 'User',
+    'user.profile': 'Profile',
+    'user.admin': 'Administrator',
+    'user.user': 'User',
+    'user.newPassword': 'New Password (leave blank to keep)',
+    'user.passwordPlaceholder': 'Minimum 6 characters',
+    'user.newPasswordPlaceholder': 'Leave blank to keep current password',
+    'user.webhookHelp': 'Use this token for webhook authentication.',
+    'user.generateWebhookHelp': 'Click "Generate token" to get the webhook secret.',
+    'user.webhookSecret': 'Webhook Secret',
+    'user.generateToken': 'Generate Token',
+    'user.copy': 'Copy',
+    'user.variables': 'Variables',
+    'user.successCreate': 'User created successfully!',
+    'user.successUpdate': 'User updated successfully!',
+    'user.successGenerateSecret': 'Webhook secret generated successfully!',
+    'user.successCopySecret': 'Webhook secret copied!',
+    'user.errorCreate': 'Error creating user',
+    'user.errorUpdate': 'Error updating user',
+
+    // Email Server
+    'emailServer.title': 'Email Server',
+    'emailServer.serverSettings': 'Server Settings',
+    'emailServer.configureServer': 'Configure Email Server',
+    'emailServer.smtpHost': 'SMTP Host',
+    'emailServer.port': 'Port',
+    'emailServer.userEmail': 'User/Email',
+    'emailServer.senderName': 'Sender Name',
+    'emailServer.senderEmail': 'Sender Email',
+    'emailServer.useSsl': 'Use SSL',
+    'emailServer.useTls': 'Use TLS',
+    'emailServer.timeout': 'Timeout (ms)',
+    'emailServer.sendTestEmail': 'Send Test Email',
+    'emailServer.testEmailPlaceholder': 'Enter email for test',
+    'emailServer.testEmailButton': 'Send Test',
+    'emailServer.testEmailHelp': 'Enter a valid email to test sending through this server',
+    'emailServer.passwordHelp': 'Leave blank to keep current password',
+    'emailServer.passwordPlaceholder': 'Enter email password',
+
+    // WhatsApp Server
+    'whatsappServer.title': 'WhatsApp Server',
+    'whatsappServer.evolutionApi': 'Evolution API',
+    'whatsappServer.cloudApi': 'WhatsApp Cloud API',
+    'whatsappServer.successSave': 'WhatsApp server settings saved successfully!',
+    'whatsappServer.errorSave': 'Error saving settings',
+    'whatsappServer.successMessageSave': 'Message saved successfully!',
+    'whatsappServer.errorMessageSave': 'Error saving message',
+    'whatsappServer.successRemove': 'Server removed successfully!',
+    'whatsappServer.errorRemove': 'Error removing server',
+    'whatsappServer.testPhoneRequired': 'Please enter a phone number for test',
+    'whatsappServer.testMessageRequired': 'Please enter a message for test',
+    'whatsappServer.configureFirst': 'Configure the server first before sending a test message',
+    'whatsappServer.errorSendTest': 'Could not send test message. Check server settings and try again.',
+    'whatsappServer.selectMessageType': 'Select a message type',
+    'whatsappServer.messageRequired': 'Default message is required',
+    'whatsappServer.removeServer': 'Remove Server',
+    'whatsappServer.variableCopied': 'Variable copied!',
+    'whatsappServer.server': 'Server',
+    'whatsappServer.messages': 'Messages',
+
+    // Scheduler
+    'scheduler.title': 'Task Scheduler',
+    'scheduler.frequency': 'Frequency',
+    'scheduler.schedule': 'Schedule',
+    'scheduler.nextRun': 'Next Run',
+    'scheduler.lastRun': 'Last Run',
+    'scheduler.executions': 'Executions',
+    'scheduler.errors': 'Errors',
+    'scheduler.confirmExecute': 'Do you want to execute the routine now?',
+    'scheduler.executeRoutine': 'Execute routine',
+    'scheduler.execute': 'Execute',
+    'scheduler.routineStarted': 'Routine started in background',
+    'scheduler.confirmDelete': 'Are you sure you want to delete this routine?',
+    'scheduler.deleteRoutine': 'Delete routine',
+    'scheduler.successDelete': 'Routine deleted successfully',
+    'scheduler.deactivate': 'Deactivate',
+    'scheduler.type': 'Type',
+    'scheduler.routine': 'Routine',
+
+    // Updates
+    'updates.title': 'System Updates',
+    'updates.currentVersion': 'Current Version',
+    'updates.searching': 'Searching for updates...',
+    'updates.errorSearch': 'Error searching for updates',
+    'updates.noUpdates': 'No updates available',
+    'updates.systemUpdated': 'The system is up to date with the latest version.',
+    'updates.updating': 'Updating system...',
+    'updates.success': 'Update completed successfully! The application will restart soon.',
+    'updates.error': 'Error executing update',
+    'updates.confirmUpdate': 'Are you sure you want to update the system? This action will:\n\n1. Download the latest changes from the repository\n2. Update dependencies\n3. Compile the code\n4. Execute database migrations\n5. Restart the application\n\nThe process may take a few minutes.',
+    'updates.updateSystem': 'Update System',
+    'updates.badges.new': 'New',
+    'updates.badges.bugfix': 'Bugfix',
+    'updates.badges.security': 'Security',
+    'updates.badges.improvement': 'Improvement',
+    'updates.badges.other': 'Other',
+    'updates.concluded': 'Update concluded!',
+
+    // Login
+    'login.title': 'Access the administrative panel',
+    'login.emailPlaceholder': 'your@email.com',
+    'login.passwordPlaceholder': 'Your password',
+    'login.entering': 'Signing in...',
+    'login.enter': 'Sign In',
+    'login.success': 'Authentication successful.',
+    'login.errorCredentials': 'Could not authenticate. Check your credentials.',
+    'login.errorToken': 'Error saving authentication token. Try again.',
+    'login.errorGeneral': 'Failed to authenticate. Try again.',
+    'login.infoRequired': 'Please enter email and password to continue.',
+    'login.allRightsReserved': 'All rights reserved.',
+
+    // Layout
+    'layout.logoutSuccess': 'Logged out successfully.',
+    'layout.closeSearch': 'Close search',
+    'empty.noContracts': 'This client does not have any contracts registered yet.',
+    'empty.noTitles': 'This client does not have any titles registered yet.',
+    'empty.noFiles': 'No files found',
+    'empty.noTermsRegistered': 'This contract does not have any terms registered yet.',
+    'empty.noAdditionalServices': 'This contract does not have any additional services registered yet.',
+    'filter.showInactive': 'Show inactive',
+    'filter.showCanceled': 'Show canceled',
+    'confirm.deleteFiles': 'Are you sure you want to delete ${count} file(s)?',
+    'confirm.deleteFilesTitle': 'Delete files',
+    'messages.saveClientFirst': 'Save the client first to add files.',
+    'messages.saveBankBeforeTest': 'Save the bank before testing the connection',
+    'messages.testingConnection': 'Testing connection...',
+    'messages.connectionSuccess': 'Connection tested successfully!',
+    'messages.connectionFailed': 'Connection test failed',
+    'messages.credentialsNotConfiguredAsaas': 'Credentials not configured. Enter the Asaas API Key before testing.',
+    'messages.credentialsNotConfiguredEfi': 'Credentials not configured. Fill in Client ID and Client Secret before testing.',
+    'messages.saveBankBeforeWebhook': 'Save the bank before generating the webhook token',
+    'messages.webhookTokenGenerated': 'Webhook token generated successfully!',
+    'messages.webhookTokenNotReturned': 'Token not returned by the server. Try again.',
+    'messages.noTokenToCopy': 'No token available to copy.',
+    'messages.webhookTokenCopied': 'Webhook token copied to clipboard!',
+    'messages.copyManual': 'Could not copy automatically. Copy manually.',
+    'messages.loadingClientData': 'Loading client data...',
+    'messages.loadingPlanData': 'Loading plan data...',
+    'messages.noTitleSelected': 'No titles selected',
+    'messages.noPaidTitleSelected': 'No paid titles selected. Only paid titles can have a receipt.',
+    'messages.noTitlesFound': 'No titles found',
+    'messages.noOpenTitlesFound': 'No open titles found',
+    'messages.noNFSeTitlesSelected': 'None of the selected titles have an issued NFS-e',
+    'messages.receiptsGenerated': '${count} receipt(s) generated successfully!',
+    'messages.errorGeneratingReceipts': 'Error generating receipts',
+    'messages.errorGeneratingNFSe': 'Error generating NFS-e PDF',
+    'messages.nfseGenerated': 'NFS-e generated successfully!',
+    'fileType.document': 'Document',
+    'fileType.photo': 'Photo',
+    'fileType.signature': 'Signature',
+    'fileType.manual': 'Manual',
+    'fileType.digitalSignature': 'Digital Signature',
+    'fileType.system': 'System',
+    'placeholder.street': 'Street, Avenue...',
+    'placeholder.number': '123',
+    'placeholder.complement': 'Apt, Room...',
+    'placeholder.neighborhood': 'Neighborhood name',
+    'placeholder.city': 'City name',
+    'placeholder.state': 'NY',
+    'placeholder.email': 'email@company.com',
+    'form.whatsapp': 'WhatsApp',
+
+    // New Placeholders
+    'placeholder.contractContent': 'Enter contract model content...',
+    'placeholder.receiptContent': 'Enter receipt model content...',
+    'placeholder.letterContent': 'Enter collection letter model content...',
+    'placeholder.description': 'Brief description',
+    'placeholder.manualSend': 'Enter message for manual sending...',
+    'placeholder.defaultEmail': 'Enter default email message...',
+    'placeholder.defaultMessage': 'Enter default message to be sent...',
+    'placeholder.firstInteraction': 'Enter first interaction message...',
+    'placeholder.secondInteraction': 'Enter second interaction message...',
+    'placeholder.thirdInteraction': 'Enter third interaction message...',
+    'placeholder.clientIdProd': 'Production Client ID',
+    'placeholder.serviceCode': 'Ex: 1401',
+    'placeholder.serviceDescription': 'Ex: Software development services provision',
+    'placeholder.apiToken': 'API Token',
+    'placeholder.apiKey': 'Paste your API Key here',
+    'placeholder.workspaceId': 'Workspace ID (from My Account > Workspaces)',
+    'placeholder.responsibleName': 'Responsible name',
+    'placeholder.responsibleRole': 'Responsible role',
+    'placeholder.paymentObservations': 'Payment observations (optional)',
+    'placeholder.testMessage': 'BackNet system test message',
+    'placeholder.termContent': 'Enter term content...',
+
+    // Message Types
+    'messages.types.10daysBefore': '10 days before due date',
+    'messages.types.05daysBefore': '05 days before due date',
+    'messages.types.sameDay': 'Due date',
+    'messages.types.05daysAfter': '05 days after due date',
+    'messages.types.10daysAfter': '10 days after due date',
+    'messages.types.15daysAfter': '15 days after due date',
+    'messages.types.clientCut': 'Client suspension',
+    'messages.types.manualSend': 'Manual collection send',
+
+    // Send Types
+    'messages.sendTypes.disabled': 'Disable',
+    'messages.sendTypes.pdf': 'Attach PDF',
+
+    // Settings Server
+    'settings.server.config': 'Server Settings',
+    'settings.server.configure': 'Configure Server',
+    'settings.test.title': 'Send Test Message',
+    'settings.test.phone': 'Phone Number',
+    'settings.test.message': 'Message',
+    'settings.test.send': 'Send Test',
+    'settings.test.helper': 'Enter number with country code (ex: 5511999999999)',
+    'settings.messages.type': 'Message Type',
+    'settings.messages.sendType': 'Send Type',
+    'settings.messages.manualLabel': 'Manual Send Message',
+    'settings.messages.manualHelper': 'Message used when sending title manually',
+    'settings.messages.emailLabel': 'Email Message',
+    'settings.messages.templateConfig': 'Template Configuration (JSON) - WhatsApp Cloud API',
+    'settings.messages.viewTemplates': 'View Active Templates',
+    'settings.messages.templateHelper': 'Configure template and variables for WhatsApp Cloud API. Leave empty to use normal text message.',
+    'settings.messages.templateFormat': 'Format: JSON with name (template name), language (en, pt_BR, etc) and variables (array with variable order).',
+    'settings.messages.defaultMessage': 'Default Message',
+    'settings.messages.interaction1': 'Interaction 01',
+    'settings.messages.interaction2': 'Interaction 02',
+    'settings.messages.interaction3': 'Interaction 03',
+    'settings.messages.interaction1Helper': 'Optional message for first interaction',
+    'settings.messages.interaction2Helper': 'Optional message for second interaction',
+    'settings.messages.interaction3Helper': 'Optional message for third interaction',
+    'settings.messages.variablesTitle': 'Available Variables for Messages',
+    'settings.messages.variablesHelper': 'Click on variables to insert into message',
+    'settings.messages.copyVariable': 'Copy variable',
+
+    // File Modal
+    'messages.selectFile': 'Select a file',
+    'messages.enterFileName': 'Enter file name',
+    'messages.fileAddedSuccess': 'File added successfully',
+    'messages.fileAddedError': 'Error adding file',
+
+    // Financial
+    'financial.parcelInfo': 'Installment Information',
+    'financial.originalValue': 'Original Value',
+    'financial.paymentDate': 'Payment Date',
+    'financial.amountPaid': 'Amount Paid',
+    'financial.characters': 'characters',
+
+    // Company
+    'company.responsibleSignature': 'Responsible Signature',
+    'company.noSignature': 'No signature',
+    'company.pngOnly': 'Only PNG files allowed (max 10MB)',
+
+    // Digital Signature
+    'digitalSignature.generalSettings': 'General Settings',
+    'digitalSignature.enable': 'Enable Digital Signature',
+    'digitalSignature.enableHelp': 'Enables electronic digital signature functionality in the system',
+    'digitalSignature.provider': 'API Provider',
+    'digitalSignature.providerHelp': 'Select API provider for digital signature',
+    'digitalSignature.expirationDays': 'Default Expiration Days',
+    'digitalSignature.expirationDaysHelp': 'Default number of days for document expiration (1 to 365 days)',
+    'digitalSignature.apiSettings': 'API Settings',
+    'digitalSignature.apiKey': 'API Key',
+    'digitalSignature.assinafyHelp': 'Get your free API Key at assinafy.com.br (100 free signatures/month)',
+    'digitalSignature.zapsignHelp': 'Get your API Key at ZapSign dashboard',
+    'digitalSignature.workspaceId': 'Workspace Account ID',
+    'digitalSignature.workspaceIdHelp': 'Workspace Account ID from Assinafy dashboard: My Account > Workspaces',
+    'digitalSignature.assinafyInfo': 'Assinafy: Free plan with 100 monthly signatures. Ideal for starting with digital signatures at no cost.',
+    'digitalSignature.successUpdate': 'Digital signature settings updated successfully!',
+    'digitalSignature.errorUpdate': 'Error updating settings',
   },
   'es-ES': {
     // Navegación
@@ -1398,17 +3368,122 @@ const translations: Translations = {
     'actions.edit': 'Editar',
     'actions.delete': 'Eliminar',
     'actions.create': 'Crear',
+    'actions.pay': 'Pagar',
+    'actions.duplicate': 'Duplicar',
+    'actions.insert': 'Insertar',
+    'actions.new': 'Nuevo',
     'actions.filter': 'Filtrar',
     'actions.export': 'Exportar',
     'actions.import': 'Importar',
+    'actions.receive': 'Recibir',
+    'actions.reverse': 'Revertir',
+    'actions.nfse': 'NFS-e',
+    'actions.print': 'Imprimir',
+    'actions.send': 'Enviar',
+
+    // Buttons
+    'buttons.selected': 'Seleccionados',
+    'buttons.open': 'Abiertos',
+    'buttons.receipt': 'Recibo',
+    'buttons.printNF': 'Imprimir NF',
+    'buttons.viaWhatsApp': 'Vía WhatsApp',
+    'buttons.viaEmail': 'Vía Email',
+    'buttons.generateNFSeAvulsa': 'Generar NFS-e Independiente',
+    'buttons.new': 'Nuevo',
+
+    // Contracts
+    'contracts.title': 'Contrato',
+    'contracts.confirmDelete': 'Eliminar contratos',
+    'contracts.confirmDeleteMessage': '¿Está seguro de que desea eliminar los contratos seleccionados?',
+    'contracts.termAdesao': 'Término de Adhesión',
+    'contracts.permanencia': 'Contrato de Permanencia',
+    'contracts.messages.deleteSuccess': '¡Contrato eliminado con éxito!',
+    'contracts.messages.deleteError': 'Error al eliminar el contrato',
 
     // Mensajes
     'messages.confirmDelete': '¿Estás seguro de que quieres eliminar?',
     'messages.loading': 'Cargando...',
     'messages.noData': 'No se encontraron datos',
     'messages.error': 'Ocurrió un error',
+    'messages.cnpjDataAutoFilled': '¡Datos del CNPJ completados automáticamente!',
+    'messages.cnpjNotFound': 'CNPJ no encontrado. Puede completar los datos manualmente.',
+    'messages.errorConsultingCnpj': 'Error al consultar CNPJ. Intente nuevamente o complete los datos manualmente.',
+    'messages.nameRequired': 'El nombre/razón social es obligatorio',
+    'messages.contentRequired': 'El contenido es obligatorio',
+    'messages.cpfCnpjRequired': 'CPF/CNPJ es obligatorio',
+    'messages.invalidCpf': 'CPF inválido',
+    'messages.invalidCnpj': 'CNPJ inválido',
     'messages.success': 'Operación completada con éxito',
+    'messages.justificationRequired': 'La justificación es obligatoria',
+    'messages.justificationMinLength': 'La justificación debe tener al menos 15 caracteres',
+    'messages.justificationMaxLength': 'La justificación debe tener como máximo 500 caracteres',
+    'messages.invoiceCanceled': '¡Nota fiscal cancelada con éxito!',
+    'messages.errorCancelingInvoice': 'Error al cancelar la nota fiscal',
+    'messages.clientRequired': 'El cliente es obligatorio',
+    'messages.actionCannotBeUndone': 'Esta acción no se puede deshacer.',
+    'messages.invoiceGenerated': '¡Nota Fiscal de Servicios Electrónica generada con éxito!',
+    'messages.errorGeneratingInvoice': 'Error al generar la Nota Fiscal de Servicios Electrónica',
+    'messages.issRateRange': 'La alícuota de ISS debe estar entre 0 y 100',
+    'messages.selectAtLeastOneInvoice': 'Seleccione al menos una factura',
+    'messages.invoicePdfGenerated': '¡PDF de la factura generado con éxito!',
+    'messages.errorGeneratingInvoicePdf': 'Error al generar el PDF de la factura',
+    'messages.selectInvoiceToCancel': 'Seleccione una factura para cancelar',
+    'messages.selectOnlyOneInvoiceToCancel': 'Seleccione solo una factura para cancelar',
+    'messages.invoiceAlreadyCanceled': 'Esta factura ya ha sido cancelada',
+    'messages.onlyAuthorizedCanBeCanceled': 'Solo las facturas autorizadas pueden ser canceladas',
+    'messages.notInformed': 'No informado',
     'messages.warning': 'Advertencia',
+    'messages.successPrintSelected': '¡Boletos seleccionados generados con éxito!',
+    'messages.errorPrintSelected': 'Error al generar boletos seleccionados',
+    'messages.clientNotFound': 'Cliente no encontrado',
+    'messages.successPrintOpen': '¡Boletos pendientes generados con éxito!',
+    'messages.errorPrintOpen': 'Error al generar boletos pendientes',
+    'messages.confirmCancelTitle': '¿Estás seguro de que deseas cancelar este título?',
+    'messages.confirmCancelTitles': '¿Estás seguro de que deseas cancelar ${count} títulos?',
+    'messages.successCancelTitle': '¡Título cancelado con éxito!',
+    'messages.successCancelTitles': '¡${count} títulos cancelados con éxito!',
+    'messages.errorCancelTitle': '1 título no pudo ser cancelado',
+    'messages.errorCancelTitles': '${count} títulos no pudieron ser cancelados',
+    'messages.errorCancelTitlesGeneral': 'Error al cancelar títulos',
+    'messages.successSendMessage': '¡Mensaje enviado con éxito!',
+    'messages.successSendMessages': '¡${count} mensajes enviados con éxito!',
+    'messages.errorSendMessage': 'El mensaje no pudo ser enviado',
+    'messages.errorSendMessages': '${count} mensajes no pudieron ser enviados',
+    'messages.errorSendMessagesGeneral': 'Error al enviar mensajes',
+    'messages.successSendEmail': '¡Email enviado con éxito!',
+    'messages.successSendEmails': '¡${count} emails enviados con éxito!',
+    'messages.errorSendEmail': '1 email no pudo ser enviado',
+    'messages.errorSendEmails': '${count} emails no pudieron ser enviados',
+    'messages.errorSendEmailsGeneral': 'Error al enviar emails',
+    'messages.successReverseTitle': '¡Título revertido con éxito!',
+    'messages.errorReverseTitle': 'Error al revertir título.',
+    'messages.successDeleteTerm': '¡Término eliminado con éxito!',
+    'messages.successDeleteTerms': '¡Término(s) eliminado(s) con éxito!',
+    'messages.errorDeleteTerm': 'Error al eliminar término',
+    'messages.errorDeleteTerms': 'Error al eliminar término(s)',
+    'messages.confirmDeleteAdditionalService': '¿Estás seguro de que deseas eliminar este servicio adicional?',
+    'messages.confirmDeleteAdditionalServices': '¿Estás seguro de que deseas eliminar ${count} servicios adicionales?',
+    'messages.successDeleteAdditionalService': '¡Servicio adicional eliminado con éxito!',
+    'messages.successDeleteAdditionalServices': '¡${count} servicios adicionales eliminados con éxito!',
+    'messages.errorDeleteAdditionalService': 'El servicio adicional no pudo ser eliminado',
+    'messages.errorDeleteAdditionalServices': '${count} servicio(s) adicional(es) no pudieron ser eliminados',
+    'messages.errorDeleteAdditionalServicesGeneral': 'Error al eliminar servicios adicionales',
+    'messages.confirmDeleteAccountPayable': '¿Está seguro de que desea eliminar esta cuenta por pagar?',
+    'messages.successDeleteAccountPayable': '¡Cuenta por pagar eliminada con éxito!',
+    'messages.errorDeleteAccountPayable': 'Error al eliminar la cuenta por pagar.',
+    'messages.loadingAccountData': 'Cargando datos de la cuenta...',
+    'messages.supplierRequired': 'El proveedor es obligatorio',
+    'messages.emailRequired': 'El correo electrónico é obligatorio',
+    'messages.passwordRequired': 'La contraseña es obligatoria',
+    'messages.passwordMinLength': 'La contraseña debe tener al menos 6 caracteres',
+    'messages.info': 'Información',
+    'messages.confirmAction': 'Confirmar acción',
+    'messages.dueDateRequired': 'La fecha de vencimiento es obligatoria',
+    'messages.startDateRequired': 'La fecha inicial es obligatoria',
+    'messages.endDateRequired': 'La fecha final es obligatoria',
+    'messages.endDateAfterStartDate': 'La fecha final debe ser posterior a la fecha inicial',
+    'messages.valueRequired': 'El valor es obligatorio',
+    'messages.valueGreaterThanZero': 'El valor debe ser mayor que cero',
 
     // Formularios
     'form.required': 'Campo obligatorio',
@@ -1469,6 +3544,8 @@ const translations: Translations = {
     'layout.searchPlaceholder': 'Buscar...',
     'layout.openMenu': 'Abrir menú lateral',
     'layout.closeMenu': 'Cerrar menú',
+    'layout.logoutSuccess': 'Cerrado de sesión exitoso',
+    'layout.closeSearch': 'Cerrar búsqueda',
 
     // Menu Items
     'menu.clients': 'Clientes',
@@ -1513,6 +3590,93 @@ const translations: Translations = {
     'ui.selectBank': 'Seleccionar Banco',
     'ui.yes': 'Sí',
     'ui.no': 'No',
+    'ui.actionsMenu': 'Menú de acciones',
+    'ui.firstPage': 'Primera página',
+    'ui.previousPage': 'Página anterior',
+    'ui.nextPage': 'Próxima página',
+    'ui.lastPage': 'Última página',
+    'ui.page': 'Página',
+    'ui.refresh': 'Actualizar',
+    'ui.auditSelected': 'Auditar registro seleccionado',
+    'ui.selectOneToAudit': 'Seleccione exactamente 1 registro para auditar',
+    'ui.loadingApplication': 'Cargando aplicación...',
+    'ui.loadingDashboard': 'Cargando panel...',
+    'ui.loadingLogin': 'Cargando inicio de sesión...',
+    'ui.loadingPayment': 'Cargando página de pago...',
+    'ui.loadingPage': 'Cargando página de inicio...',
+    'ui.appError': 'Error en la aplicación',
+    'ui.criticalError': 'Ocurrió un error crítico. Por favor, recargue la página.',
+    'ui.reloadPage': 'Recargar página',
+    'ui.loading': 'Cargando...',
+
+    // Company Labels
+    'company.title': 'Empresa',
+    'company.razaoSocial': 'Razón Social',
+    'company.nomeFantasia': 'Nombre Fantasía',
+    'company.cnpj': 'ID Fiscal (CNPJ)',
+    'company.inscricaoEstadual': 'Inscripción Estatal',
+    'company.inscricaoMunicipal': 'Inscripción Municipal',
+    'company.logo': 'Logo de la Empresa',
+    'company.noLogo': 'Sin logo',
+    'company.acceptedFormats': 'Formatos aceptados: JPG, PNG, GIF (máx. 2MB)',
+
+    // NFSe Labels
+    'nfse.title': 'NFS-e',
+    'nfse.municipalServiceCode': 'Código de Servicio Municipal',
+    'nfse.municipalServiceCodeHelp': 'Código de la lista de servicios del municipio (ej: 1401 para servicios de TI)',
+    'nfse.issRate': 'Alícuota de ISS (%)',
+    'nfse.issRateHelp': 'Alícuota estándar de ISS para las facturas (0 a 100)',
+    'nfse.serviceDescription': 'Descripción del Servicio',
+    'nfse.serviceDescriptionHelp': 'Descripción estándar del servicio prestado en las facturas',
+    'nfse.nfSerie': 'Serie de la NF',
+    'nfse.nfSerieHelp': 'Serie de la NF (permitida: 80000 a 89999)',
+    'nfse.dpsNumber': 'Número de DPS',
+    'nfse.dpsNumberHelp': 'Número de DPS (Documento de Prestación de Servicios)',
+    'nfse.provider': 'Proveedor de NFS-e',
+    'nfse.providerHelp': 'Seleccione el proveedor que se utilizará para emitir las facturas',
+    'nfse.asaasApiKey': 'API Key de Asaas',
+    'nfse.asaasApiKeyHelp': 'Token de la API de Asaas disponible en el panel administrativo (Configuración > Integraciones > API Key)',
+    'nfse.useSandbox': 'Usar ambiente Sandbox',
+    'nfse.useSandboxHelp': 'Marque para usar el ambiente de pruebas de Asaas',
+    'nfse.username': 'Usuario',
+    'nfse.password': 'Contraseña',
+    'nfse.baseUrl': 'URL Base de la API',
+    'nfse.environment': 'Ambiente',
+    'nfse.homologation': 'Homologación',
+    'nfse.production': 'Producción',
+    'nfse.messages.loadingError': 'Error al cargar la configuración',
+    'nfse.messages.saveSuccess': '¡Configuraciones de NFS-e guardadas con éxito!',
+    'nfse.messages.saveError': 'Error al guardar la configuración',
+    'nfse.messages.testSuccessAsaas': '¡Conexión con Asaas probada con éxito! La API Key es válida.',
+    'nfse.messages.testSuccessPortal': '¡Autenticación probada con éxito! Las credenciales son correctas.',
+    'nfse.messages.testError': 'Error al probar la conexión',
+    'nfse.messages.apiKeyRequired': 'La API Key de Asaas é obligatoria para probar la conexión',
+    'nfse.messages.credentialsRequired': 'El usuario y la contraseña son obligatorios para probar la autenticación',
+    'nfse.messages.providerRequired': 'Seleccione un proveedor para probar la conexión',
+
+    // Title Labels
+    'titulo.title': 'Título/Factura',
+    'titulo.send': 'Enviar',
+    'titulo.sendViaWhatsApp': 'Vía WhatsApp',
+    'titulo.sendViaEmail': 'Vía Email',
+    'titulo.createTitle': 'Crear Título',
+    'titulo.validationErrors': 'Errores de validación:',
+    'titulo.clientNotFound': 'Cliente no encontrado',
+    'titulo.clientCannotBeChanged': 'El cliente no se puede cambiar',
+    'titulo.planoCannotBeChanged': 'El plan no se puede cambiar',
+    'titulo.valorCannotBeChanged': 'El valor no se puede cambiar después del registro en el banco emisor',
+    'titulo.dataVencimentoCannotBeChanged': 'La fecha de vencimiento no se puede cambiar después del registro en el banco emisor',
+    'titulo.discountPercent': 'Descuento (%)',
+    'titulo.discountValue': 'Descuento (R$)',
+    'titulo.additionPercent': 'Acrecentamiento (%)',
+    'titulo.additionValue': 'Acrecentamiento (R$)',
+    'titulo.observationsPlaceholder': 'Observaciones sobre la cuota...',
+    'titulo.descriptionPlaceholder': 'Descripción del título...',
+    'titulo.selectClient': 'Seleccionar Cliente',
+    'titulo.selectPlano': 'Seleccionar Plan',
+    'titulo.messages.sendSuccess': '¡Mensaje enviado con éxito!',
+    'titulo.messages.sendError': 'Error al enviar el mensaje',
+    'titulo.messages.whatsappError': 'Error al enviar mensaje vía WhatsApp',
 
     // Financial
     'financial.title': 'Financiero - Títulos',
@@ -1521,6 +3685,7 @@ const translations: Translations = {
     'financial.cancelTitles': 'Cancelar títulos',
     'financial.reverseTitle': 'Revertir título',
     'financial.reverse': 'Revertir',
+    'financial.confirmReverse': '¿Está seguro de que desea revertir el pago del título ${number}?',
     'financial.toPay': 'A Pagar',
     'financial.paid': 'Pagado',
     'financial.pending': 'Pendiente',
@@ -1543,6 +3708,9 @@ const translations: Translations = {
     'financial.value': 'Valor',
 
     // Buttons
+    'buttons.confirmPayment': 'Confirmar Pago',
+    'buttons.confirmCancellation': 'Confirmar Cancelación',
+    'buttons.canceling': 'Cancelando...',
     'buttons.save': 'Guardar',
     'buttons.cancel': 'Cancelar',
     'buttons.close': 'Cerrar',
@@ -1552,6 +3720,7 @@ const translations: Translations = {
     'buttons.print': 'Imprimir',
     'buttons.generate': 'Generar',
     'buttons.view': 'Ver',
+    'buttons.download': 'Descargar',
     'buttons.export': 'Exportar',
     'buttons.import': 'Importar',
     'buttons.search': 'Buscar',
@@ -1567,12 +3736,20 @@ const translations: Translations = {
     'buttons.reverse': 'Revertir',
     'buttons.audit': 'Auditar',
     'buttons.reload': 'Recargar',
+    'buttons.testConnection': 'Probar Conexión',
+    'buttons.generateToken': 'Generar Token',
+    'buttons.copy': 'Copiar',
     'buttons.select': 'Seleccionar',
     'buttons.add': 'Agregar',
     'buttons.remove': 'Remover',
 
     // Form Labels
     'form.name': 'Nombre',
+    'form.role': 'Cargo',
+    'form.clientId': 'ID de Cliente',
+    'form.clientIdProd': 'ID de Cliente Producción',
+    'form.clientSecret': 'Secreto de Cliente',
+    'form.clientSecretProd': 'Secreto de Cliente Producción',
     'form.description': 'Descripción',
     'form.cnpj': 'CNPJ',
     'form.companyName': 'Razón Social',
@@ -1612,6 +3789,23 @@ const translations: Translations = {
     'form.originalValue': 'Valor Original',
     'form.discount': 'Descuento',
     'form.useClientAddress': 'Usar dirección del cliente',
+    'form.bankNameHelp': 'Nombre para identificar esta cuenta bancaria',
+    'form.bankTypeHelp': 'El código del banco se define automáticamente',
+    'form.optionalUpdate': 'Campo opcional. Complete solo si desea actualizar.',
+    'form.webhookUrl': 'URL de Retorno (Webhook)',
+    'form.webhookUrlHelp': 'URL para recibir notificaciones de pago',
+    'form.sandboxHelp': 'Activar para usar el entorno de prueba. Desactivar para producción.',
+    'form.apiKey': 'API Key',
+    'form.apiKeyAsaasHelp': 'Disponible en el panel administrativo de Asaas.',
+    'form.webhookSecret': 'Webhook Secret',
+    'form.webhookSecretAsaasHelp': 'Utilice este token al configurar el webhook de Asaas.',
+    'form.generateWebhookSecretHelp': 'Haga clic en "Generar token" después de guardar el banco para obtener el secreto del webhook.',
+    'form.finePercent': 'Porcentaje de Multa (%)',
+    'form.interestPercent': 'Porcentaje de Interés (% por día)',
+    'form.includeFee': 'Incluir Tasa en el Boleto',
+    'form.accountIdentifier': 'Identificador de la Cuenta',
+    'form.accountIdentifierEfiHelp': 'Disponible en la configuración de la API de Efi',
+    'form.paymentLocation': 'Lugar de Pago',
     'form.operationNature': 'Naturaleza de la Operación',
     'form.model': 'Modelo',
     'form.issueDate': 'Fecha de Emisión',
@@ -1619,6 +3813,7 @@ const translations: Translations = {
     'form.servicesValue': 'Valor de los Servicios',
     'form.productsValue': 'Valor de los Productos',
     'form.discountValueInvoice': 'Valor del Descuento',
+    'form.issRateShort': 'Alícuota de ISS (%)',
     'form.issRate': 'Tasa ISS',
     'form.fileSelected': 'Archivo Seleccionado',
     'form.fileTypeDocument': 'Documento',
@@ -1633,6 +3828,18 @@ const translations: Translations = {
     'form.street': 'Calle',
     'form.invoice': 'Factura',
     'form.invoiceStatus': 'Estado Factura',
+    'form.invoiceNumber': 'Número de Factura',
+    'form.paymentType': 'Tipo de Pago',
+    'form.paymentTypeCash': 'Efectivo',
+    'form.paymentTypeBoleto': 'Boleto',
+    'form.paymentTypeCard': 'Tarjeta',
+    'form.paymentTypeDeposit': 'Depósito',
+    'form.paymentTypeDebit': 'Débito',
+    'form.paymentTypeTransfer': 'Transferencia',
+    'form.paymentTypePix': 'PIX',
+    'form.balanceDue': 'Saldo Deudor',
+    'form.dueDateStart': 'Vencimiento Inicial',
+    'form.dueDateEnd': 'Vencimiento Final',
     'form.testClient': 'Cliente para Prueba',
     'form.enterClientId': 'Ingrese el ID del cliente',
     'form.enterPlanId': 'Ingrese el ID del plan',
@@ -1646,6 +3853,25 @@ const translations: Translations = {
     'form.briefDescription': 'Breve descripción',
     'form.fileDescription': 'Descripción del archivo (opcional)',
     'form.optional': 'Opcional',
+    'form.creationType': 'Tipo de Creación',
+    'form.creationTypeUnique': 'Única',
+    'form.creationTypeBatch': 'Lote',
+    'form.dueDateInitial': 'Fecha de Vencimiento Inicial',
+    'form.dueDateFinal': 'Fecha de Vencimiento Final',
+    'form.pixKeyType': 'Tipo de Clave PIX',
+    'form.pixKey': 'Clave PIX',
+    'form.qrCodeCopiaECola': 'Código Copia y Pega',
+    'form.barcodeLine': 'Línea Digitável del Boleto',
+    'form.discountPercentShort': 'Descuento (%)',
+    'form.discountValueShort': 'Descuento (Valor)',
+    'form.increasePercentShort': 'Recargo (%)',
+    'form.increaseValueShort': 'Recargo (Valor)',
+    'form.baixadoValue': 'Valor Pagado',
+    'form.totalToPay': 'Valor Total a Pagar',
+    'form.justification': 'Justificación',
+    'form.justificationCancel': 'Justificación de Cancelación',
+    'form.title': 'Título',
+    'form.password': 'Contraseña',
     'form.planNamePlaceholder': 'Nombre del plan',
     'form.planDescriptionPlaceholder': 'Descripción del plan',
     'form.monthlyValuePlaceholder': 'Valor mensual',
@@ -1673,6 +3899,13 @@ const translations: Translations = {
     'form.messageConfiguration': 'Configuración de mensaje',
 
     // Table Columns
+    'table.personTypeShort': 'Tipo',
+    'table.personTypeLegalShort': 'Jurídica',
+    'table.personTypePhysicalShort': 'Física',
+    'table.nameCompanyNameShort': 'Nombre/Razón Social',
+    'table.tradeNameShort': 'Nombre Fantasía',
+    'table.zipCodeShort': 'Código Postal',
+    'table.streetShort': 'Calle',
     'table.id': 'ID',
     'table.contract': 'Contrato',
     'table.status': 'Estado',
@@ -1684,12 +3917,15 @@ const translations: Translations = {
     'table.invoice': 'Factura',
     'table.invoiceStatus': 'Estado Factura',
     'table.actions': 'Acciones',
+    'table.balanceDue': 'Saldo Deudor',
     'table.createdAt': 'Creado en',
     'table.updatedAt': 'Actualizado en',
     'table.documentNumber': 'Número de Documento',
     'table.supplier': 'Proveedor',
     'table.paymentType': 'Tipo de Pago',
+    'table.client': 'Cliente',
     'table.clientName': 'Cliente',
+    'table.cpfCnpj': 'CPF/CNPJ',
     'table.contractNumber': 'Número de Contrato',
     'table.contractStartDate': 'Fecha Inicio',
     'table.contractEndDate': 'Fecha Fin',
@@ -1700,6 +3936,7 @@ const translations: Translations = {
     'table.neighborhood': 'Barrio',
     'table.city': 'Ciudad',
     'table.state': 'Estado',
+    'table.country': 'País',
     'table.planName': 'Nombre del Plan',
     'table.description': 'Descripción',
     'table.serviceType': 'Tipo de Servicio',
@@ -1711,8 +3948,25 @@ const translations: Translations = {
     'table.bankType': 'Tipo de Banco',
     'table.sandbox': 'Sandbox',
     'table.paymentDate': 'Fecha de Pago',
+    'table.issueDate': 'Fecha de Emisión',
+    'table.totalValue': 'Valor Total',
+    'table.accessKey': 'Clave de Acceso',
+    'table.protocol': 'Protocolo',
+    'table.authorizationDate': 'Fecha de Autorización',
     'table.chargeId': 'ID de la Cobranza',
     'table.ourNumber': 'Nuestro Número',
+    'table.paidValueDownloaded': 'Valor pagado',
+    'table.openValueOpen': 'Valor abierto',
+    'table.nf': 'NF',
+    'table.nfStatus': 'Estado NF',
+    'table.termName': 'Nombre del Término',
+    'table.accepted': 'Firmado',
+    'table.acceptedDate': 'Fecha Aceptación',
+    'table.acceptedBy': 'Aceptado Por',
+    'table.observations': 'Observaciones',
+    'table.action': 'Acción',
+    'table.name': 'Nombre',
+    'table.bank': 'Banco',
     'table.planValue': 'Valor del Plan',
     'table.discountPercent': 'Descuento %',
     'table.discountValue': 'Valor del Descuento',
@@ -1727,6 +3981,8 @@ const translations: Translations = {
     'table.titleNumber': 'Número del Título',
 
     // Modal Titles
+    'modal.payAccountManually': 'Pagar Cuenta Manualmente',
+    'modal.viewInvoice': 'Visualizar Nota Fiscal',
     'modal.createClient': 'Crear Cliente',
     'modal.editClient': 'Editar Cliente',
     'modal.createPlan': 'Crear Plan',
@@ -1758,6 +4014,8 @@ const translations: Translations = {
     'modal.list': 'Lista',
     'modal.defaultDocument': 'Documento Predeterminado',
     'modal.deleteFiles': 'Eliminar archivos',
+    'modal.deleteAdditionalServices': 'Eliminar servicios adicionales',
+    'modal.scheduledRoutine': 'Rutina Programada',
 
     // Tabs
     'tabs.basicData': 'Datos Básicos',
@@ -1790,6 +4048,8 @@ const translations: Translations = {
     'tabs.communicationPreferences': 'Preferencias de Comunicación',
 
     // Status Labels
+    'status.processing': 'Procesando',
+    'status.authorized': 'Autorizada',
     'status.scheduled': 'Programado',
     'status.issued': 'Emitida',
     'status.cancelled': 'Cancelada',
@@ -1803,6 +4063,7 @@ const translations: Translations = {
     'status.inactive': 'Inactivo',
     'status.suspended': 'Suspendido',
     'status.overdue': 'Vencido',
+    'status.paidLate': 'Pagado con Retraso',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -1822,6 +4083,62 @@ const translations: Translations = {
     'placeholder.selectClient': 'Seleccione el cliente',
     'placeholder.selectSupplier': 'Seleccione el proveedor',
     'placeholder.enterClientId': 'Ingrese el ID del cliente',
+    'placeholder.bankName': 'Nombre del banco',
+    'placeholder.bankDescription': 'Descripción del banco...',
+    'placeholder.fillClientSecret': 'Complete solo para actualizar el secreto del cliente',
+    'placeholder.webhookUrl': 'URL para el retorno del webhook',
+    'placeholder.apiKeyAsaas': 'Su clave API de Asaas',
+    'placeholder.webhookSecretHelp': 'Haga clic en Generar token para crear un secreto',
+    'placeholder.accountIdentifierHelp': 'Disponible en el menú de configuración de la API',
+    'placeholder.paymentLocationDefault': 'Pagadero en cualquier banco hasta la fecha de vencimiento',
+    'placeholder.contractCreationHelp': 'Cree el contrato primero para gestionar los términos.',
+    'placeholder.financialTitlesCreationHelp': 'Cree el contrato primero para gestionar los títulos financieros.',
+    'placeholder.financialMiscCreationHelp': 'Cree el contrato primero para gestionar los títulos diversos.',
+    'placeholder.additionalServicesCreationHelp': 'Cree el contrato primero para gestionar los servicios adicionales.',
+    'placeholder.selectProvider': 'Seleccionar proveedor',
+    'placeholder.startDate': 'Fecha inicial',
+    'placeholder.endDate': 'Fecha final',
+    'placeholder.selectType': 'Seleccionar tipo',
+    'placeholder.searchServices': 'Buscar servicios...',
+    'placeholder.enterJustification': 'Ingrese la justificación para cancelar la nota fiscal (mínimo 15 caracteres)...',
+    'placeholder.enterSupplierId': 'Ingrese el ID del proveedor',
+    'placeholder.enterPixKey': 'Ingrese la clave PIX',
+    'placeholder.enterCpfCnpj': 'Ingrese el CPF o CNPJ',
+    'placeholder.enterCellPhone': 'Ingrese el celular',
+    'placeholder.enterEmail': 'Ingrese el e-mail',
+    'placeholder.enterName': 'Ingrese el nombre',
+    'placeholder.enterRandomKey': 'Ingrese la clave aleatoria (UUID)',
+    'placeholder.pasteQrCode': 'Pegue el código copia y pega de PIX',
+
+    // Filter Labels
+    'filter.startDate': 'Fecha Inicial:',
+    'filter.endDate': 'Fecha Final:',
+
+    // Document Labels
+    'document.title': 'Título:',
+    'document.viewDocument': 'Ver Documento',
+    'document.print': 'Imprimir',
+    'document.modelContrato': 'Modelo Contrato',
+    'document.termAdesao': 'Término de Adhesión',
+    'document.permanencia': 'Contrato de Permanencia',
+    'document.receipts': 'Recibos',
+    'document.cartaCobranca': 'Carta de Cobro',
+    'document.name': 'Nombre',
+    'document.description': 'Descripción',
+    'document.testClient': 'Cliente para Prueba',
+    'document.testClientHelp': 'Seleccione un cliente para ver el documento con datos reales',
+    'document.idPlaceholder': 'Ingrese el ID del cliente',
+    'document.content': 'Contenido',
+    'document.contractContent': 'Contenido del Contrato',
+    'document.successCreate': 'Documento creado con éxito',
+    'document.successUpdate': 'Documento guardado con éxito',
+    'document.errorCreate': 'Error al crear documento',
+    'document.errorUpdate': 'Error al guardar documento',
+    'document.errorGeneratePdf': 'Error al generar PDF',
+    'document.labels.recibo': 'Recibo',
+    'document.labels.carta_cobranca': 'Carta de Cobro',
+    'document.labels.termo': 'Término',
+    'document.labels.documento': 'Documento',
 
     // Other
     'other.selectExactlyOne': 'Seleccione exactamente 1 registro para auditar',
@@ -1830,6 +4147,8 @@ const translations: Translations = {
     'other.reloadData': 'Recargar datos',
     'other.confirmAction': 'Confirmar acción',
     'other.selectAtLeastOne': 'Seleccione al menos un título',
+    'other.characters': 'caracteres',
+    'other.invoiceDetails': 'Detalles de la Nota Fiscal:',
     'other.selected': 'Seleccionados',
     'other.open': 'Abiertos',
     'other.receipt': 'Recibo',
@@ -1841,6 +4160,311 @@ const translations: Translations = {
     'other.newMiscTitle': 'Nuevo Título Varios',
     'other.deleteTerms': 'Eliminar términos',
     'other.day': 'Día',
+
+    // Financial Summary Labels
+    'summary.value': 'Valor:',
+    'summary.paidValue': 'Valor pagado:',
+    'summary.openValue': 'Valor abierto:',
+    'summary.canceledValue': 'Valor cancelado:',
+    'summary.totalPaidValue': 'Valor total pagado:',
+    'summary.monthlyTotalValue': 'Valor Total Mensual:',
+    'summary.totalDiscountsValue': 'Valor Total Descuentos:',
+    'summary.contractSummary': 'Resumen de contratos',
+    'summary.totalContracts': 'Total de contratos:',
+    'summary.activeContracts': 'Contratos activos:',
+
+    // Audit
+    'audit.title': 'Logs de Auditoría',
+    'audit.detailsTitle': 'Detalles del Log de Auditoría',
+    'audit.generalInfo': 'Información General',
+    'audit.data': 'Datos',
+    'audit.entityId': 'ID de la Entidad',
+    'audit.user': 'Usuario',
+    'audit.ip': 'IP',
+    'audit.route': 'Ruta',
+    'audit.userAgent': 'User-Agent',
+    'audit.viewDetails': 'Ver Detalles',
+    'audit.method': 'Método',
+    'audit.entity': 'Entidad',
+    'audit.timestamp': 'Fecha/Hora',
+    'audit.entities.all': 'Todas',
+    'audit.actions.all': 'Todas',
+    'audit.actions.create': 'Crear',
+    'audit.actions.update': 'Actualizar',
+    'audit.actions.delete': 'Eliminar',
+    'audit.actions.login': 'Login',
+    'audit.actions.logout': 'Logout',
+    'audit.actions.export': 'Exportar',
+    'audit.actions.import': 'Importar',
+
+    // Variables
+    'variables.title': 'Variables Disponibles',
+    'variables.searchPlaceholder': 'Buscar variable...',
+    'variables.insert': 'Insertar Variables',
+    'variables.errorLoading': 'Error al cargar variables',
+    'variables.tip': 'Sugerencia: Las variables se reemplazarán por valores reales al generar el documento.',
+    'variables.clickToInsert': 'Haga clic en una variable para insertar',
+    'variables.clickToCopy': 'Haga clic en una variable para copiar',
+
+    // User Form
+    'user.title': 'Usuario',
+    'user.profile': 'Perfil',
+    'user.admin': 'Administrador',
+    'user.user': 'Usuario',
+    'user.newPassword': 'Nueva Contraseña (dejar en blanco para mantener)',
+    'user.passwordPlaceholder': 'Mínimo 6 caracteres',
+    'user.newPasswordPlaceholder': 'Dejar en blanco para mantener la contraseña actual',
+    'user.webhookHelp': 'Utilice este token para la autenticación de webhooks.',
+    'user.generateWebhookHelp': 'Haga clic en "Generar token" para obtener el secreto del webhook.',
+    'user.webhookSecret': 'Webhook Secret',
+    'user.generateToken': 'Generar Token',
+    'user.copy': 'Copiar',
+    'user.variables': 'Variables',
+    'user.successCreate': '¡Usuario creado con éxito!',
+    'user.successUpdate': '¡Usuario actualizado con éxito!',
+    'user.successGenerateSecret': '¡Secreto de webhook generado con éxito!',
+    'user.successCopySecret': '¡Secreto de webhook copiado!',
+    'user.errorCreate': 'Error al crear usuario',
+    'user.errorUpdate': 'Error al actualizar usuario',
+
+    // Email Server
+    'emailServer.title': 'Servidor de Correo Electrónico',
+    'emailServer.serverSettings': 'Configuración del Servidor',
+    'emailServer.configureServer': 'Configurar Servidor de Correo Electrónico',
+    'emailServer.smtpHost': 'Host SMTP',
+    'emailServer.port': 'Puerto',
+    'emailServer.userEmail': 'Usuario/Correo Electrónico',
+    'emailServer.senderName': 'Nombre del Remitente',
+    'emailServer.senderEmail': 'Correo Electrónico del Remitente',
+    'emailServer.useSsl': 'Usar SSL',
+    'emailServer.useTls': 'Usar TLS',
+    'emailServer.timeout': 'Timeout (ms)',
+    'emailServer.sendTestEmail': 'Enviar Correo Electrónico de Prueba',
+    'emailServer.testEmailPlaceholder': 'Ingrese el correo para la prueba',
+    'emailServer.testEmailButton': 'Enviar Prueba',
+    'emailServer.testEmailHelp': 'Ingrese um correo válido para probar el envío a través de este servidor',
+    'emailServer.passwordHelp': 'Dejar en blanco para mantener la contraseña actual',
+    'emailServer.passwordPlaceholder': 'Ingrese la contraseña del correo',
+
+    // WhatsApp Server
+    'whatsappServer.title': 'Servidor de WhatsApp',
+    'whatsappServer.evolutionApi': 'Evolution API',
+    'whatsappServer.cloudApi': 'WhatsApp Cloud API',
+    'whatsappServer.successSave': '¡Configuraciones del servidor de WhatsApp guardadas con éxito!',
+    'whatsappServer.errorSave': 'Error al guardar las configuraciones',
+    'whatsappServer.successMessageSave': '¡Mensaje guardado con éxito!',
+    'whatsappServer.errorMessageSave': 'Error al guardar el mensaje',
+    'whatsappServer.successRemove': '¡Servidor eliminado con éxito!',
+    'whatsappServer.errorRemove': 'Error al eliminar el servidor',
+    'whatsappServer.testPhoneRequired': 'Por favor, ingrese un número de teléfono para la prueba',
+    'whatsappServer.testMessageRequired': 'Por favor, ingrese un mensaje para la prueba',
+    'whatsappServer.configureFirst': 'Configure el servidor primero antes de enviar el mensaje de prueba',
+    'whatsappServer.errorSendTest': 'No se pudo enviar el mensaje de prueba. Verifique la configuración del servidor e intente nuevamente.',
+    'whatsappServer.selectMessageType': 'Seleccione un tipo de mensaje',
+    'whatsappServer.messageRequired': 'El mensaje predeterminado es obligatorio',
+    'whatsappServer.removeServer': 'Eliminar Servidor',
+    'whatsappServer.variableCopied': '¡Variable copiada!',
+    'whatsappServer.server': 'Servidor',
+    'whatsappServer.messages': 'Mensajes',
+
+    // Scheduler
+    'scheduler.title': 'Programador de Tareas',
+    'scheduler.frequency': 'Frecuencia',
+    'scheduler.schedule': 'Horario',
+    'scheduler.nextRun': 'Próxima Ejecución',
+    'scheduler.lastRun': 'Última Ejecución',
+    'scheduler.executions': 'Ejecuciones',
+    'scheduler.errors': 'Errores',
+    'scheduler.confirmExecute': '¿Desea ejecutar la rutina ahora?',
+    'scheduler.executeRoutine': 'Ejecutar rutina',
+    'scheduler.execute': 'Ejecutar',
+    'scheduler.routineStarted': 'Rutina iniciada en segundo plano',
+    'scheduler.confirmDelete': '¿Está seguro de que deseja eliminar esta rutina?',
+    'scheduler.deleteRoutine': 'Eliminar rutina',
+    'scheduler.successDelete': 'Rutina eliminada con éxito',
+    'scheduler.deactivate': 'Desactivar',
+    'scheduler.type': 'Tipo',
+    'scheduler.routine': 'Rutina',
+
+    // Updates
+    'updates.title': 'Actualizaciones del Sistema',
+    'updates.currentVersion': 'Versión Actual',
+    'updates.searching': 'Buscando actualizaciones...',
+    'updates.errorSearch': 'Error al buscar actualizaciones',
+    'updates.noUpdates': 'Ninguna actualización disponible',
+    'updates.systemUpdated': 'El sistema está actualizado con la versión más reciente.',
+    'updates.updating': 'Actualizando sistema...',
+    'updates.success': '¡Actualización completada con éxito! La aplicación se reiniciará pronto.',
+    'updates.error': 'Error al ejecutar la actualización',
+    'updates.confirmUpdate': '¿Está seguro de que deseja actualizar el sistema? Esta acción:\n\n1. Descargará los últimos cambios del repositorio\n2. Actualizará las dependencias\n3. Compilará el código\n4. Ejecutará las migraciones de la base de datos\n5. Reiniciará la aplicación\n\nEl proceso puede tardar unos minutos.',
+    'updates.updateSystem': 'Actualizar Sistema',
+    'updates.badges.new': 'Nueva',
+    'updates.badges.bugfix': 'Corrección',
+    'updates.badges.security': 'Seguridad',
+    'updates.badges.improvement': 'Mejora',
+    'updates.badges.other': 'Otro',
+    'updates.concluded': '¡Actualización concluida!',
+
+    // Login
+    'login.title': 'Acceda al panel administrativo',
+    'login.emailPlaceholder': 'su@correo.com',
+    'login.passwordPlaceholder': 'Su contraseña',
+    'login.entering': 'Entrando...',
+    'login.enter': 'Entrar',
+    'login.success': 'Autenticación realizada con éxito.',
+    'login.errorCredentials': 'No se pudo autenticar. Verifique sus credenciales.',
+    'login.errorToken': 'Error al guardar el token de autenticación. Inténtelo de nuevo.',
+    'login.errorGeneral': 'Error al autenticar. Inténtelo de nuevo.',
+    'login.infoRequired': 'Ingrese el correo y la contraseña para continuar.',
+    'login.allRightsReserved': 'Todos los derechos reservados.',
+    'empty.noContracts': 'Este cliente aún no tiene contratos registrados.',
+    'empty.noTitles': 'Este cliente aún no tiene títulos registrados.',
+    'empty.noFiles': 'No se encontraron archivos',
+    'empty.noTermsRegistered': 'Este contrato aún no tiene términos registrados.',
+    'empty.noAdditionalServices': 'Este contrato aún no tiene servicios adicionales registrados.',
+    'filter.showInactive': 'Mostrar inactivos',
+    'filter.showCanceled': 'Mostrar cancelados',
+    'confirm.deleteFiles': '¿Estás seguro de que deseas eliminar ${count} archivo(s)?',
+    'confirm.deleteFilesTitle': 'Eliminar archivos',
+    'messages.saveClientFirst': 'Guarde al cliente primero para agregar archivos.',
+    'messages.saveBankBeforeTest': 'Guarde el banco antes de probar la conexión',
+    'messages.testingConnection': 'Probando conexión...',
+    'messages.connectionSuccess': '¡Conexión probada con éxito!',
+    'messages.connectionFailed': 'Falló la prueba de conexión',
+    'messages.credentialsNotConfiguredAsaas': 'Credenciales no configuradas. Ingrese la API Key de Asaas antes de probar.',
+    'messages.credentialsNotConfiguredEfi': 'Credenciales no configuradas. Complete el Client ID y Client Secret antes de probar.',
+    'messages.saveBankBeforeWebhook': 'Guarde el banco antes de generar el token del webhook',
+    'messages.webhookTokenGenerated': '¡Token del webhook generado con éxito!',
+    'messages.webhookTokenNotReturned': 'El servidor no devolvió el token. Inténtalo de nuevo.',
+    'messages.noTokenToCopy': 'No hay ningún token disponible para copiar.',
+    'messages.webhookTokenCopied': '¡Token del webhook copiado al portapapeles!',
+    'messages.copyManual': 'No se pudo copiar automáticamente. Copie manualmente.',
+    'messages.loadingClientData': 'Cargando datos del cliente...',
+    'messages.loadingPlanData': 'Cargando datos del plan...',
+    'messages.noTitleSelected': 'No se seleccionaron títulos',
+    'messages.noPaidTitleSelected': 'No se seleccionaron títulos pagados. Solo los títulos pagados pueden tener recibo.',
+    'messages.noTitlesFound': 'No se encontraron títulos',
+    'messages.noOpenTitlesFound': 'No se encontraron títulos abiertos',
+    'messages.noNFSeTitlesSelected': 'Ninguno de los títulos seleccionados tiene una NFS-e emitida',
+    'messages.receiptsGenerated': '¡${count} recibo(s) generado(s) con éxito!',
+    'messages.errorGeneratingReceipts': 'Error al generar recibos',
+    'messages.errorGeneratingNFSe': 'Error al generar PDF de la NFS-e',
+    'messages.nfseGenerated': '¡NFS-e generada con éxito!',
+    'fileType.document': 'Documento',
+    'fileType.photo': 'Foto',
+    'fileType.signature': 'Firma',
+    'fileType.manual': 'Manual',
+    'fileType.digitalSignature': 'Firma Digital',
+    'fileType.system': 'Sistema',
+    'placeholder.street': 'Calle, Avenida...',
+    'placeholder.number': '123',
+    'placeholder.complement': 'Apto, Sala...',
+    'placeholder.neighborhood': 'Nombre del barrio',
+    'placeholder.city': 'Nombre de la ciudad',
+    'placeholder.state': 'SP',
+    'placeholder.email': 'email@empresa.com',
+    'form.whatsapp': 'WhatsApp',
+
+    // New Placeholders
+    'placeholder.contractContent': 'Ingrese el contenido del modelo de contrato...',
+    'placeholder.receiptContent': 'Ingrese el contenido del modelo de recibo...',
+    'placeholder.letterContent': 'Ingrese el contenido del modelo de carta de cobro...',
+    'placeholder.description': 'Breve descripción',
+    'placeholder.manualSend': 'Ingrese el mensaje para envío manual...',
+    'placeholder.defaultEmail': 'Ingrese el mensaje predeterminado del correo...',
+    'placeholder.defaultMessage': 'Ingrese el mensaje predeterminado que se enviará...',
+    'placeholder.firstInteraction': 'Ingrese el primer mensaje de interacción...',
+    'placeholder.secondInteraction': 'Ingrese el segundo mensaje de interacción...',
+    'placeholder.thirdInteraction': 'Ingrese el tercer mensaje de interacción...',
+    'placeholder.clientIdProd': 'Client ID para producción',
+    'placeholder.serviceCode': 'Ej: 1401',
+    'placeholder.serviceDescription': 'Ej: Prestación de servicios de desarrollo de software',
+    'placeholder.apiToken': 'Token de la API',
+    'placeholder.apiKey': 'Pegue su API Key aquí',
+    'placeholder.workspaceId': 'ID del workspace (obtenido en My Account > Workspaces)',
+    'placeholder.responsibleName': 'Nombre del responsable',
+    'placeholder.responsibleRole': 'Cargo del responsable',
+    'placeholder.paymentObservations': 'Observaciones sobre el pago (opcional)',
+    'placeholder.testMessage': 'Mensaje de prueba del sistema BackNet',
+    'placeholder.termContent': 'Ingrese el contenido del término...',
+
+    // Message Types
+    'messages.types.10daysBefore': '10 días antes del vencimiento',
+    'messages.types.05daysBefore': '05 días antes del vencimiento',
+    'messages.types.sameDay': 'Día del vencimiento',
+    'messages.types.05daysAfter': '05 días después del vencimiento',
+    'messages.types.10daysAfter': '10 días después del vencimiento',
+    'messages.types.15daysAfter': '15 días después del vencimiento',
+    'messages.types.clientCut': 'Suspensión del cliente',
+    'messages.types.manualSend': 'Envío manual de cobro',
+
+    // Send Types
+    'messages.sendTypes.disabled': 'Desactivar',
+    'messages.sendTypes.pdf': 'Adjuntar PDF',
+
+    // Settings Server
+    'settings.server.config': 'Configuraciones del Servidor',
+    'settings.server.configure': 'Configurar Servidor',
+    'settings.test.title': 'Enviar Mensaje de Prueba',
+    'settings.test.phone': 'Número de Teléfono',
+    'settings.test.message': 'Mensaje',
+    'settings.test.send': 'Enviar Prueba',
+    'settings.test.helper': 'Ingrese el número con código de país (ej: 5511999999999)',
+    'settings.messages.type': 'Tipo de Mensaje',
+    'settings.messages.sendType': 'Tipo de Envío',
+    'settings.messages.manualLabel': 'Mensaje para Envío Manual',
+    'settings.messages.manualHelper': 'Mensaje usado al enviar título manualmente',
+    'settings.messages.emailLabel': 'Mensaje del Correo',
+    'settings.messages.templateConfig': 'Configuración de Plantilla (JSON) - WhatsApp Cloud API',
+    'settings.messages.viewTemplates': 'Ver Plantillas Activas',
+    'settings.messages.templateHelper': 'Configure la plantilla y variables para WhatsApp Cloud API. Deje vacío para usar mensaje de texto normal.',
+    'settings.messages.templateFormat': 'Formato: JSON con name (nombre de plantilla), language (idioma: en, pt_BR, etc) y variables (array con orden de variables).',
+    'settings.messages.defaultMessage': 'Mensaje Predeterminado',
+    'settings.messages.interaction1': 'Interacción 01',
+    'settings.messages.interaction2': 'Interacción 02',
+    'settings.messages.interaction3': 'Interacción 03',
+    'settings.messages.interaction1Helper': 'Mensaje opcional para primera interacción',
+    'settings.messages.interaction2Helper': 'Mensaje opcional para segunda interacción',
+    'settings.messages.interaction3Helper': 'Mensaje opcional para tercera interacción',
+    'settings.messages.variablesTitle': 'Variables Disponibles para Mensajes',
+    'settings.messages.variablesHelper': 'Haga clic en las variables para insertar en el mensaje',
+    'settings.messages.copyVariable': 'Copiar variable',
+
+    // File Modal
+    'messages.selectFile': 'Seleccione un archivo',
+    'messages.enterFileName': 'Ingrese el nombre del archivo',
+    'messages.fileAddedSuccess': 'Archivo agregado con éxito',
+    'messages.fileAddedError': 'Error al agregar archivo',
+
+    // Financial
+    'financial.parcelInfo': 'Información de la Cuota',
+    'financial.originalValue': 'Valor Original',
+    'financial.paymentDate': 'Fecha de Pago',
+    'financial.amountPaid': 'Valor Pagado',
+    'financial.characters': 'caracteres',
+
+    // Company
+    'company.responsibleSignature': 'Firma del Responsable',
+    'company.noSignature': 'Sin firma',
+    'company.pngOnly': 'Solo archivos PNG permitidos (máx. 10MB)',
+
+    // Digital Signature
+    'digitalSignature.generalSettings': 'Configuración General',
+    'digitalSignature.enable': 'Habilitar Firma Digital',
+    'digitalSignature.enableHelp': 'Habilita la funcionalidad de firma digital electrónica en el sistema',
+    'digitalSignature.provider': 'Proveedor de API',
+    'digitalSignature.providerHelp': 'Seleccione el proveedor de API para firma digital',
+    'digitalSignature.expirationDays': 'Días de Expiración Predeterminado',
+    'digitalSignature.expirationDaysHelp': 'Número de días predeterminado para expiración de documentos (1 a 365 días)',
+    'digitalSignature.apiSettings': 'Configuración de la API',
+    'digitalSignature.apiKey': 'API Key',
+    'digitalSignature.assinafyHelp': 'Obtenga su API Key gratuita en assinafy.com.br (100 firmas/mes gratis)',
+    'digitalSignature.zapsignHelp': 'Obtenga su API Key en el panel de ZapSign',
+    'digitalSignature.workspaceId': 'Workspace Account ID',
+    'digitalSignature.workspaceIdHelp': 'Workspace Account ID obtenido en el panel de Assinafy: My Account > Workspaces',
+    'digitalSignature.assinafyInfo': 'Assinafy: Plan gratuito con 100 firmas mensuales. Ideal para comenzar a usar firma digital sin costos.',
+    'digitalSignature.successUpdate': '¡Configuración de firma digital actualizada con éxito!',
+    'digitalSignature.errorUpdate': 'Error al actualizar configuración',
   },
 };
 

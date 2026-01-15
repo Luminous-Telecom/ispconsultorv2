@@ -22,7 +22,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
   const [showPreview, setShowPreview] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [previewTitle, setPreviewTitle] = useState<string>('Visualizar Documento');
+  const [previewTitle, setPreviewTitle] = useState<string>(t('modal.viewDocument'));
   const [showAdicionarModal, setShowAdicionarModal] = useState(false);
 
   const { arquivos, isLoading, refetch, deleteMutation } = useClienteArquivos({
@@ -45,14 +45,14 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
     const isImage = isImageFile(arquivo);
     
     setPreviewUrl(url);
-    setPreviewTitle(isImage ? `Visualizar Imagem - ${arquivo.nome}` : `Visualizar Documento - ${arquivo.nome}`);
+    setPreviewTitle(isImage ? `${t('buttons.view')} ${t('form.fileTypePhoto')} - ${arquivo.nome}` : `${t('buttons.view')} ${t('form.fileTypeDocument')} - ${arquivo.nome}`);
     
     if (isImage) {
       setShowImagePreview(true);
     } else {
       setShowPreview(true);
     }
-  }, [isImageFile]);
+  }, [isImageFile, t]);
 
   const handleClosePreview = useCallback(() => {
     setShowPreview(false);
@@ -69,7 +69,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
     columns: [
       {
         key: 'id',
-        label: 'ID',
+        label: t('table.id'),
         sortable: true,
         searchable: true,
         width: 42,
@@ -87,7 +87,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       },
       {
         key: 'tipo',
-        label: 'Tipo',
+        label: t('table.fileType'),
         sortable: true,
         searchable: true,
         render: (item: ClienteArquivo) => (
@@ -97,13 +97,16 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
             item.tipo === 'assinatura' ? 'bg-success' :
             'bg-secondary'
           }`}>
-            {item.tipo}
+            {item.tipo === 'documento' ? t('fileType.document') :
+             item.tipo === 'foto' ? t('fileType.photo') :
+             item.tipo === 'assinatura' ? t('fileType.signature') :
+             item.tipo}
           </span>
         )
       },
       {
         key: 'origem',
-        label: 'Origem',
+        label: t('table.fileOrigin'),
         sortable: true,
         searchable: true,
         render: (item: ClienteArquivo) => (
@@ -112,9 +115,9 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
             item.origem === 'assinatura_digital' ? 'bg-success' :
             'bg-info'
           }`}>
-            {item.origem === 'manual' ? 'Manual' :
-             item.origem === 'assinatura_digital' ? 'Assinatura Digital' :
-             'Sistema'}
+            {item.origem === 'manual' ? t('fileType.manual') :
+             item.origem === 'assinatura_digital' ? t('fileType.digitalSignature') :
+             t('fileType.system')}
           </span>
         )
       },
@@ -133,7 +136,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       },
       {
         key: 'created_at',
-        label: 'Data',
+        label: t('table.fileDate'),
         sortable: true,
         searchable: false,
         render: (item: ClienteArquivo) => formatDateTime(item.created_at)
@@ -151,7 +154,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       },
       {
         key: 'view',
-        label: 'Visualizar',
+        label: t('buttons.view'),
         disabled: (items: ClienteArquivo[]) => {
           if (items.length === 0) return true;
           const extensoesVisiveis = /\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg|ico|mp4|webm|ogg|mov|avi|txt|csv|json|xml|html|css|js|md)$/i;
@@ -170,7 +173,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       },
       {
         key: 'download',
-        label: 'Baixar',
+        label: t('buttons.download'),
         variant: 'primary' as const,
         disabled: (selectedItems: ClienteArquivo[]) => selectedItems.length === 0,
         onClick: async (selectedItems: ClienteArquivo[]) => {
@@ -182,17 +185,17 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       },
       {
         key: 'delete-selected',
-        label: 'Excluir',
+        label: t('actions.delete'),
         disabled: (selectedItems: ClienteArquivo[]) => selectedItems.length === 0 || deleteMutation.isPending,
         onClick: async (selectedItems: ClienteArquivo[]) => {
           if (selectedItems.length === 0) return;
           
           const confirmed = await confirm({
-            message: `Tem certeza que deseja deletar ${selectedItems.length} arquivo(s)?`,
+            message: t('confirm.deleteFiles', { count: selectedItems.length }),
             variant: 'danger',
-            title: 'Deletar arquivos',
-            confirmText: 'Deletar',
-            cancelText: 'Cancelar',
+            title: t('confirm.deleteFilesTitle'),
+            confirmText: t('actions.delete'),
+            cancelText: t('actions.cancel'),
           });
           
           if (confirmed) {
@@ -203,20 +206,20 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
         }
       }
     ],
-    searchPlaceholder: 'Buscar arquivos...',
+    searchPlaceholder: t('layout.searchPlaceholder'),
     searchFields: [
-      { key: 'id', label: 'ID' },
-      { key: 'nome', label: 'Nome' },
-      { key: 'tipo', label: 'Tipo' },
-      { key: 'origem', label: 'Origem' }
+      { key: 'id', label: t('table.id') },
+      { key: 'nome', label: t('form.fileName') },
+      { key: 'tipo', label: t('table.fileType') },
+      { key: 'origem', label: t('table.fileOrigin') }
     ],
-    emptyMessage: 'Nenhum arquivo encontrado'
+    emptyMessage: t('empty.noFiles')
   }), [arquivos, deleteMutation, handleDownload, handleView, confirm, t]);
 
   if (!clienteId) {
     return (
       <div className="alert alert-info">
-        Salve o cliente primeiro para adicionar arquivos.
+        {t('messages.saveClientFirst')}
       </div>
     );
   }
