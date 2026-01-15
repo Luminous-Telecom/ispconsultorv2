@@ -70,6 +70,17 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Configurar para alta resolução (device pixel ratio)
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+
+    // Ajustar tamanho real do canvas
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+
+    // Escalar contexto para compensar o device pixel ratio
+    ctx.scale(dpr, dpr);
+
     // Limpar canvas
     ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 

@@ -683,6 +683,15 @@
   position: relative;
 }
 
+.pie-chart-box canvas {
+  /* Garantir renderização nítida */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
 /* Telas médias e grandes - legenda ao lado */
 @media (min-width: 576px) {
   .pie-chart-content:has(.pie-legend-box) {
@@ -760,6 +769,12 @@
   display: block;
   width: 100%;
   cursor: pointer;
+  /* Garantir renderização nítida */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .pie-legend-item {
@@ -1497,6 +1512,17 @@
 .dashboard-container .chart-card:nth-child(4) { animation-delay: 0.2s; }
 .dashboard-container .chart-card:nth-child(5) { animation-delay: 0.25s; }
 .dashboard-container .chart-card:nth-child(6) { animation-delay: 0.3s; }
+
+/* Canvas de gráficos - garantir renderização nítida */
+.chart-card canvas,
+.chart-compact-container canvas {
+  /* Garantir renderização nítida */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 
 /* ============================================
    TOOLTIPS DOS GRÁFICOS - ESTILO COMPACTO
