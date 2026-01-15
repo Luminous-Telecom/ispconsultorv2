@@ -81,8 +81,8 @@
 /* Garantir que ambos os containers compactos tenham aparência idêntica */
 .chart-compact-container-recebidos,
 .chart-compact-container-receber {
-  background: var(--bg-secondary) !important;
-  border: 1px solid var(--border-light) !important;
+  background: rgba(40, 167, 69, 0.05) !important; /* Tom verde claro para os gráficos de linha */
+  border: 1px solid rgba(40, 167, 69, 0.2) !important;
   border-radius: var(--border-radius-sm) !important;
   height: 280px !important;
   overflow: hidden !important;
