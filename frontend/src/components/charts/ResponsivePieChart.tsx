@@ -8,7 +8,7 @@ const formatPieValue = (value: number, title: string): string | number => {
   return value.toLocaleString('pt-BR');
 };
 
-const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenItems }) => {
+const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenItems, onToggleItem }) => {
   // Simplificação: removendo referências complexas de estado
   // Manteremos apenas a lógica essencial de renderização do canvas
   const visibleData = useMemo(() => 
@@ -25,6 +25,9 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
   
+  // Armazenar áreas clicáveis da legenda
+  const legendHitBoxes = useRef<{index: number, x: number, y: number, w: number, h: number}[]>([]);
+
   useLayoutEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -45,11 +48,23 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Remover handlers de mouse para evitar logs de interação excessivos
-  /* 
-  const handleMouseMove = ... (removido para otimização)
-  const handleCanvasClick = ... (removido para otimização)
-  */
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Verificar clique na legenda
+    const hit = legendHitBoxes.current.find(box => 
+      x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h
+    );
+
+    if (hit) {
+      onToggleItem(hit.index);
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -92,6 +107,8 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
     const legendItemHeight = 18;
     
     // Limpar hitboxes antigos
+    legendHitBoxes.current = [];
+    
     // Desenhar Pizza
     const totalValue = visibleData.reduce((sum, item) => sum + (item.value || 0), 0);
     
@@ -188,6 +205,15 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
             ctx.lineTo(legendX + boxSize + 5 + ctx.measureText(displayText).width, y);
             ctx.stroke();
         }
+
+        // Adicionar Hitbox para clique
+        legendHitBoxes.current.push({
+            index,
+            x: legendX,
+            y: y - legendItemHeight/2,
+            w: dimensions.width - legendX, // Clicável até o fim da largura
+            h: legendItemHeight
+        });
     });
 
   }, [data, dimensions, hiddenItems, title, total, visibleData]);
@@ -211,11 +237,12 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       <div ref={containerRef} style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
         <canvas
           ref={canvasRef}
+          onClick={handleCanvasClick}
           style={{
             display: 'block',
             width: '100%',
             height: '100%',
-            cursor: 'default' // Estático, sem pointer
+            cursor: 'default' // Estático, sem pointer para evitar logs de interação, mas clicável na legenda
           }}
         />
       </div>
