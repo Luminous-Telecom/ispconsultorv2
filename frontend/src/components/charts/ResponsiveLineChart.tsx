@@ -103,8 +103,6 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     const gridColor = '#2f3844';
     const axisColor = '#6c757d';
     const lineColor = '#007bff';
-    const dotColor = '#007bff';
-    const activeDotColor = '#0056b3';
 
     // Desenhar grid
     ctx.strokeStyle = gridColor;
@@ -214,7 +212,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     // Desenhar pontos apenas quando houver hover
     if (hoveredIndex !== null && hoveredIndex >= 0 && hoveredIndex < points.length) {
       const hoveredPoint = points[hoveredIndex];
-      ctx.fillStyle = activeDotColor;
+      ctx.fillStyle = '#0056b3'; // Cor azul escura para o ponto ativo
       ctx.beginPath();
       ctx.arc(hoveredPoint.x, hoveredPoint.y, 6, 0, Math.PI * 2);
       ctx.fill();

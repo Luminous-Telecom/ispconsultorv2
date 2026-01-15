@@ -119,7 +119,6 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     const pagarLineColor = '#dc3545'; // Vermelho
     const receberDotColor = '#28a745';
     const pagarDotColor = '#dc3545';
-    const activeDotColor = '#0056b3';
 
     // Desenhar grid
     ctx.strokeStyle = gridColor;
@@ -230,8 +229,8 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     };
 
     // Desenhar linhas
-    const receberPoints = drawLine(receberValues, receberLineColor);
-    const pagarPoints = drawLine(pagarValues, pagarLineColor);
+    drawLine(receberValues, receberLineColor);
+    drawLine(pagarValues, pagarLineColor);
 
     // Desenhar pontos apenas quando houver hover
     if (hoveredIndex !== null && hoveredIndex >= 0 && hoveredIndex < chartData.length) {
