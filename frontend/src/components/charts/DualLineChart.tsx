@@ -233,19 +233,26 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     const receberPoints = drawLine(receberValues, receberLineColor);
     const pagarPoints = drawLine(pagarValues, pagarLineColor);
 
-    // Desenhar pontos
-    const drawPoints = (points: { x: number; y: number; value: number }[], color: string) => {
-      points.forEach((point, index) => {
-        const isHovered = hoveredIndex === index;
-        ctx.fillStyle = isHovered ? activeDotColor : color;
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, isHovered ? 6 : 3, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    };
+    // Desenhar pontos apenas quando houver hover
+    if (hoveredIndex !== null && hoveredIndex >= 0 && hoveredIndex < chartData.length) {
+      const hoveredPoint = chartData[hoveredIndex];
 
-    drawPoints(receberPoints, receberDotColor);
-    drawPoints(pagarPoints, pagarDotColor);
+      // Desenhar ponto para linha "receber"
+      const receberX = margin.left + (chartWidth / (chartData.length - 1 || 1)) * hoveredIndex;
+      const receberY = margin.top + chartHeight - ((hoveredPoint.receber - minValue) / valueRange) * chartHeight;
+      ctx.fillStyle = receberDotColor;
+      ctx.beginPath();
+      ctx.arc(receberX, receberY, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Desenhar ponto para linha "pagar"
+      const pagarX = margin.left + (chartWidth / (chartData.length - 1 || 1)) * hoveredIndex;
+      const pagarY = margin.top + chartHeight - ((hoveredPoint.pagar - minValue) / valueRange) * chartHeight;
+      ctx.fillStyle = pagarDotColor;
+      ctx.beginPath();
+      ctx.arc(pagarX, pagarY, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
   }, [chartData, dimensions, formatYAxis, hoveredIndex]);
 

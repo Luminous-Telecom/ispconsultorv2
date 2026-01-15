@@ -211,14 +211,14 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     });
     ctx.stroke();
 
-    // Desenhar pontos
-    points.forEach((point, index) => {
-      const isHovered = hoveredIndex === index;
-      ctx.fillStyle = isHovered ? activeDotColor : dotColor;
+    // Desenhar pontos apenas quando houver hover
+    if (hoveredIndex !== null && hoveredIndex >= 0 && hoveredIndex < points.length) {
+      const hoveredPoint = points[hoveredIndex];
+      ctx.fillStyle = activeDotColor;
       ctx.beginPath();
-      ctx.arc(point.x, point.y, isHovered ? 6 : 3, 0, Math.PI * 2);
+      ctx.arc(hoveredPoint.x, hoveredPoint.y, 6, 0, Math.PI * 2);
       ctx.fill();
-    });
+    }
   }, [chartData, dimensions, formatYAxis, hoveredIndex]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
