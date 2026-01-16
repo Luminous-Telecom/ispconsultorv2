@@ -367,7 +367,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       setHoveredIndex(null);
       setTooltip(null);
     }
-  }, [chartData, dimensions]);
+  }, [chartData]);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredIndex(null);
