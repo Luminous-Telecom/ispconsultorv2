@@ -56,8 +56,10 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
     limit: tableFilters.limit,
     search: tableFilters.search || undefined,
     acao: acaoFilter || undefined,
-    entidade: entidadeFilter || undefined
-  }), [tableFilters.page, tableFilters.limit, tableFilters.search, acaoFilter, entidadeFilter]);
+    entidade: entidadeFilter || undefined,
+    sortColumn: tableFilters.sortColumn,
+    sortDirection: tableFilters.sortDirection
+  }), [tableFilters.page, tableFilters.limit, tableFilters.search, acaoFilter, entidadeFilter, tableFilters.sortColumn, tableFilters.sortDirection]);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['auditoria', filters],
@@ -355,8 +357,11 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
                 onSelectionChange={handleSelectionChange}
                 pagination={pagination}
                 onPageChange={tableFilters.setPage}
-                limit={tableFilters.limit}
+                onPageSizeChange={tableFilters.setLimit}
                 onLimitChange={tableFilters.setLimit}
+                sortColumn={tableFilters.sortColumn}
+                sortDirection={tableFilters.sortDirection}
+                onSortChange={tableFilters.setSort}
                 refreshQueryFn={refetch}
                 bulkActions={bulkActions}
                 skipWrapper={true}
