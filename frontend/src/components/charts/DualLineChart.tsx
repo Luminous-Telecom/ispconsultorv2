@@ -195,9 +195,12 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     // Desenhar labels do eixo X (rotacionados verticalmente)
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    const xStep = chartWidth / (chartData.length - 1 || 1);
+    const totalPoints = chartData.length;
+    const xStep = totalPoints === 1 ? 0 : chartWidth / (totalPoints - 1);
     chartData.forEach((item, index) => {
-      const x = margin.left + xStep * index;
+      const x = totalPoints === 1
+        ? margin.left + chartWidth / 2
+        : margin.left + xStep * index;
       const y = margin.top + chartHeight + 10;
       
       ctx.save();
@@ -210,7 +213,11 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     // Função auxiliar para desenhar linha com área preenchida
     const drawLine = (values: number[], color: string) => {
       const points = values.map((value, index) => {
-        const x = margin.left + (chartWidth / (chartData.length - 1 || 1)) * index;
+        // Melhor distribuição dos pontos ao longo do eixo X
+        const totalPoints = chartData.length;
+        const x = totalPoints === 1
+          ? margin.left + chartWidth / 2  // Centro se apenas 1 ponto
+          : margin.left + (chartWidth / (totalPoints - 1)) * index;  // Distribuição uniforme
         const y = margin.top + chartHeight - ((value - minValue) / valueRange) * chartHeight;
         return { x, y, value };
       });
@@ -268,7 +275,10 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       const hoveredPoint = chartData[hoveredIndex];
 
       // Desenhar ponto para linha "receber"
-      const receberX = margin.left + (chartWidth / (chartData.length - 1 || 1)) * hoveredIndex;
+      const totalPoints = chartData.length;
+      const receberX = totalPoints === 1
+        ? margin.left + chartWidth / 2  // Centro se apenas 1 ponto
+        : margin.left + (chartWidth / (totalPoints - 1)) * hoveredIndex;  // Distribuição uniforme
       const receberY = margin.top + chartHeight - ((hoveredPoint.receber - minValue) / valueRange) * chartHeight;
       ctx.fillStyle = receberDotColor;
       ctx.beginPath();
@@ -276,7 +286,9 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       ctx.fill();
 
       // Desenhar ponto para linha "pagar"
-      const pagarX = margin.left + (chartWidth / (chartData.length - 1 || 1)) * hoveredIndex;
+      const pagarX = totalPoints === 1
+        ? margin.left + chartWidth / 2  // Centro se apenas 1 ponto
+        : margin.left + (chartWidth / (totalPoints - 1)) * hoveredIndex;  // Distribuição uniforme
       const pagarY = margin.top + chartHeight - ((hoveredPoint.pagar - minValue) / valueRange) * chartHeight;
       ctx.fillStyle = pagarDotColor;
       ctx.beginPath();
@@ -323,14 +335,17 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     const x = e.clientX - rect.left;
 
     const margin = { top: 10, right: 15, left: 40, bottom: 85 };
-    const chartWidth = dimensions.width - margin.left - margin.right;
-    const xStep = chartWidth / (chartData.length - 1 || 1);
+    const chartWidth = rect.width - margin.left - margin.right;
+    const totalPoints = chartData.length;
+    const xStep = totalPoints === 1 ? 0 : chartWidth / (totalPoints - 1);
 
     let closestIndex = 0;
     let minDistance = Infinity;
 
     chartData.forEach((_, index) => {
-      const pointX = margin.left + xStep * index;
+      const pointX = totalPoints === 1
+        ? margin.left + chartWidth / 2
+        : margin.left + xStep * index;
       const distance = Math.abs(x - pointX);
       if (distance < minDistance) {
         minDistance = distance;
