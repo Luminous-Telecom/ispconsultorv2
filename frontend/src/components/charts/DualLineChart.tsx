@@ -99,9 +99,9 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     ctx.clearRect(0, 0, rect.width, rect.height);
 
     // Margens otimizadas para melhor aproveitamento do espaço
-    const margin = { top: 10, right: 15, left: 40, bottom: 60 };
+    const margin = { top: 10, right: 15, left: 40, bottom: 45 };
     const chartWidth = rect.width - margin.left - margin.right;
-    const chartHeight = rect.height - margin.top - margin.bottom - 30; // 30px extra para legenda
+    const chartHeight = rect.height - margin.top - margin.bottom;
 
     // Calcular valores para ambas as linhas com melhor escala automática
     const receberValues = chartData.map(d => d.receber);
@@ -297,7 +297,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     }
 
     // Desenhar legenda no canvas
-    const legendY = rect.height - 15;
+    const legendY = margin.top + chartHeight + 15;
     const legendItemWidth = 100;
     const totalLegendWidth = legendItemWidth * 2;
     const startLegendX = (rect.width - totalLegendWidth) / 2;
@@ -334,7 +334,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
 
-    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
+    const margin = { top: 10, right: 15, left: 40, bottom: 45 };
     const chartWidth = rect.width - margin.left - margin.right;
     const totalPoints = chartData.length;
     const xStep = totalPoints === 1 ? 0 : chartWidth / (totalPoints - 1);
