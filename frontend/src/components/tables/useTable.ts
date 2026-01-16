@@ -31,6 +31,8 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     filters: _filters = [],
     searchable = true,
     sortable = true,
+    sortColumn: propSortColumn,
+    sortDirection: propSortDirection,
     selectable = true,
     multiSelect = false,
     onDataChange,
@@ -83,15 +85,30 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     filteredData: data || [],
     selectedItems: [],
     searchTerm: '',
-    sortColumn: '',
-    sortDirection: 'asc',
+    sortColumn: propSortColumn || '',
+    sortDirection: propSortDirection || 'asc',
     filters: {},
     currentPage: normalizedPagination?.currentPage || 1,
     pageSize: normalizedPagination?.perPage || 15,
     isLoading: false,
     isFiltered: false,
-    isSorted: false,
+    isSorted: !!propSortColumn,
   });
+
+  // Atualizar estado de ordenação quando props mudarem (modo controlado)
+  useEffect(() => {
+    if (propSortColumn !== undefined) {
+      setState(prev => {
+        if (prev.sortColumn === propSortColumn && prev.sortDirection === propSortDirection) return prev;
+        return {
+          ...prev,
+          sortColumn: propSortColumn || '',
+          sortDirection: propSortDirection || 'asc',
+          isSorted: !!propSortColumn
+        };
+      });
+    }
+  }, [propSortColumn, propSortDirection]);
   
   // Estado para rastrear mudanças de seleção e chamar callback após render
   const [pendingSelectionChange, setPendingSelectionChange] = useState<T[] | null>(null);

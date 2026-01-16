@@ -106,6 +106,8 @@ export interface TableConfig<T = Record<string, unknown>> {
   searchFields?: Array<{ key: string; label: string }>;
   onSearchFieldChange?: (field: string) => void;
   sortable?: boolean;
+  sortColumn?: string;
+  sortDirection?: SortDirection;
   selectable?: boolean;
   multiSelect?: boolean;
   emptyMessage?: string;
@@ -173,6 +175,8 @@ export interface UseTableOptions<T = Record<string, unknown>> {
   filters?: TableFilter[];
   searchable?: boolean;
   sortable?: boolean;
+  sortColumn?: string;
+  sortDirection?: SortDirection;
   selectable?: boolean;
   multiSelect?: boolean;
   onDataChange?: (data: T[]) => void;

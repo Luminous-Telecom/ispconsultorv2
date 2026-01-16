@@ -16,6 +16,9 @@ function ListModal<T extends { id: number | string }>({
   search: _search = '',
   onSearchChange,
   onSearchFieldChange,
+  sortColumn,
+  sortDirection,
+  onSortChange,
   pagination,
   onPageChange,
   limit: _limit = 15,
@@ -79,6 +82,8 @@ function ListModal<T extends { id: number | string }>({
           searchable: !!onSearchChange,
           searchPlaceholder,
           searchFields,
+          sortColumn,
+          sortDirection,
           emptyMessage,
           className: 'no-padding',
           filters: filters || [],
@@ -112,6 +117,7 @@ function ListModal<T extends { id: number | string }>({
         }}
         search={_search}
         onSelectionChange={onSelectionChange}
+        onSort={onSortChange}
         onSearch={(search, field) => {
           onSearchChange?.(search, field);
         }}

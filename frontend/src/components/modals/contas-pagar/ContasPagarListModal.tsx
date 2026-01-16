@@ -320,6 +320,11 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     return filters;
   }, [tableFilters.filters, dataVencimentoInicio, dataVencimentoFim]);
 
+  const handleLimitChange = useCallback((limit: number) => {
+    tableFilters.setLimit(limit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableFilters.setLimit]);
+
   // Hook para buscar contas a pagar usando parâmetros do useTableFilters
   const { data: contasPagarData, isLoading, refetch } = useContasPagar({
     search: tableFilters.debouncedSearch || undefined,
@@ -577,9 +582,12 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
               tableFilters.resetFilters();
             }}
             pagination={pagination}
-            onPageChange={tableFilters.setPage}
-            limit={tableFilters.limit}
-            onLimitChange={tableFilters.setLimit}
+        onPageChange={tableFilters.setPage}
+        onPageSizeChange={handleLimitChange}
+        onLimitChange={handleLimitChange}
+            sortColumn={tableFilters.sortColumn}
+            sortDirection={tableFilters.sortDirection}
+            onSortChange={tableFilters.setSort}
             refreshQueryKeys={['contas-pagar']}
             refreshQueryFn={refetch}
             bulkActions={bulkActions}

@@ -32,6 +32,8 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
     initialLimit: 15,
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
+    initialSortColumn: 'id',
+    initialSortDirection: 'desc'
   });
 
   const handleSearchChange = useCallback((search: string) => {
@@ -101,9 +103,26 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
         t.id?.toString().includes(searchLower)
       );
     }
+
+    // Ordenação no front-end (já que buscamos todos)
+    if (tableFilters.sortColumn) {
+      filtered.sort((a, b) => {
+        const aValue = a[tableFilters.sortColumn as keyof Termo];
+        const bValue = b[tableFilters.sortColumn as keyof Termo];
+
+        if (aValue === bValue) return 0;
+        
+        const direction = tableFilters.sortDirection === 'asc' ? 1 : -1;
+        
+        if (aValue === null || aValue === undefined) return 1 * direction;
+        if (bValue === null || bValue === undefined) return -1 * direction;
+        
+        return aValue < bValue ? -1 * direction : 1 * direction;
+      });
+    }
     
     return filtered;
-  }, [termosSistema, tableFilters.debouncedSearch]);
+  }, [termosSistema, tableFilters.debouncedSearch, tableFilters.sortColumn, tableFilters.sortDirection]);
 
   // Paginar termos
   const paginatedTermos = useMemo(() => {
@@ -163,8 +182,11 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
       onSearchChange={handleSearchChange}
       pagination={paginationTermos}
       onPageChange={tableFilters.setPage}
-      limit={tableFilters.limit}
+      onPageSizeChange={tableFilters.setLimit}
       onLimitChange={tableFilters.setLimit}
+      sortColumn={tableFilters.sortColumn}
+      sortDirection={tableFilters.sortDirection}
+      onSortChange={tableFilters.setSort}
       onRefresh={() => {
         queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
       }}

@@ -9,7 +9,7 @@ import { Contrato, CreateContratoData, UpdateContratoData } from '../hooks/useCo
 /**
  * Filtros para listagem de contratos
  */
-interface ContratoFilters extends BaseFilters {
+export interface ContratoFilters extends BaseFilters {
   status?: string;
   cliente_id?: number;
 }

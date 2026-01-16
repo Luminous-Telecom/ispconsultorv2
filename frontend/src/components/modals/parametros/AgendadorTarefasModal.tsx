@@ -30,10 +30,6 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   const auditoria = useAuditoria();
   const { confirm, modalProps } = useConfirmModal();
 
-  const handleAudit = (rotina: RotinaAgendada) => {
-    auditoria.handleAudit('ScheduledRoutine', rotina.id);
-  };
-  
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -42,6 +38,10 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
   });
+
+  const handleAudit = (rotina: RotinaAgendada) => {
+    auditoria.handleAudit('ScheduledRoutine', rotina.id);
+  };
 
   const handleSearchChange = useCallback((search: string) => {
     // Usar setTimeout para evitar atualização durante render cycle
@@ -153,36 +153,45 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   });
 
   const { data: rotinasData, isLoading, refetch } = useQuery({
-    queryKey: ['agendador-tarefas'],
-    queryFn: () => SchedulerService.getRotinas({ page: 1, limit: 1000 }),
+    queryKey: ['agendador-tarefas', tableFilters.page, tableFilters.limit, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection],
+    queryFn: () => SchedulerService.getRotinas({ 
+      page: tableFilters.page, 
+      limit: tableFilters.limit,
+      search: tableFilters.search,
+      sort: tableFilters.sortColumn,
+      direction: tableFilters.sortDirection
+    }),
     enabled: show,
   });
 
+  // Não precisamos filtrar no front se o backend já filtra
   const filteredRotinas = useMemo(() => {
-    if (!rotinasData?.data) return [];
-    if (!tableFilters.debouncedSearch) return rotinasData.data;
-    
-    const searchLower = tableFilters.debouncedSearch.toLowerCase();
-    return rotinasData.data.filter(r => 
-      r.id?.toString().includes(searchLower) ||
-      r.tipo?.toLowerCase().includes(searchLower) ||
-      r.descricao?.toLowerCase().includes(searchLower)
-    );
-  }, [rotinasData, tableFilters.debouncedSearch]);
+    return rotinasData?.data || [];
+  }, [rotinasData]);
 
-  const paginatedRotinas = useMemo(() => {
-    const startIndex = (tableFilters.page - 1) * tableFilters.limit;
-    return filteredRotinas.slice(startIndex, startIndex + tableFilters.limit);
-  }, [filteredRotinas, tableFilters.page, tableFilters.limit]);
+  // Não precisamos paginar no front se o backend já pagina
+  const paginatedRotinas = filteredRotinas;
 
-  const pagination = {
-    from: (tableFilters.page - 1) * tableFilters.limit + 1,
-    to: Math.min(tableFilters.page * tableFilters.limit, filteredRotinas.length),
-    total: filteredRotinas.length,
-    current_page: tableFilters.page,
-    last_page: Math.ceil(filteredRotinas.length / tableFilters.limit),
-    per_page: tableFilters.limit
-  };
+  const pagination = useMemo(() => {
+    if (rotinasData?.pagination) {
+      return {
+        from: (rotinasData.pagination.page - 1) * rotinasData.pagination.limit + 1,
+        to: Math.min(rotinasData.pagination.page * rotinasData.pagination.limit, rotinasData.pagination.total),
+        total: rotinasData.pagination.total,
+        current_page: rotinasData.pagination.page,
+        last_page: rotinasData.pagination.pages || Math.ceil(rotinasData.pagination.total / rotinasData.pagination.limit),
+        per_page: rotinasData.pagination.limit
+      };
+    }
+    return {
+      from: 0,
+      to: 0,
+      total: 0,
+      current_page: 1,
+      last_page: 1,
+      per_page: 15
+    };
+  }, [rotinasData?.pagination]);
 
   const handleToggle = async (rotina: RotinaAgendada) => {
     try {
@@ -339,8 +348,11 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         onSearchChange={handleSearchChange}
         pagination={pagination}
         onPageChange={tableFilters.setPage}
-        limit={tableFilters.limit}
+        onPageSizeChange={tableFilters.setLimit}
         onLimitChange={tableFilters.setLimit}
+        sortColumn={tableFilters.sortColumn}
+        sortDirection={tableFilters.sortDirection}
+        onSortChange={tableFilters.setSort}
         refreshQueryKeys={['agendador-tarefas']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}

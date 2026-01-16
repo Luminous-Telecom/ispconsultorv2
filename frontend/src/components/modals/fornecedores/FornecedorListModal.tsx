@@ -212,7 +212,9 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     search: tableFilters.debouncedSearch || undefined,
     searchField: tableFilters.searchField || undefined,
     page: tableFilters.page,
-    limit: tableFilters.limit
+    limit: tableFilters.limit,
+    sortColumn: tableFilters.sortColumn,
+    sortDirection: tableFilters.sortDirection
   });
 
   const deleteFornecedorMutation = useDeleteFornecedor();
@@ -349,16 +351,6 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableFilters.setSearchField]);
 
-  const handlePageChange = useCallback((page: number) => {
-    tableFilters.setPage(page);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setPage]);
-
-  const handleLimitChange = useCallback((limit: number) => {
-    tableFilters.setLimit(limit);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setLimit]);
-
   const modalData = useMemo(() => (fornecedoresData?.data || []).filter(item => item.id != null), [fornecedoresData?.data]);
 
   return (
@@ -385,9 +377,12 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
         onSearchChange={handleSearchChange}
         onSearchFieldChange={handleSearchFieldChange}
         pagination={pagination}
-        onPageChange={handlePageChange}
-        limit={tableFilters.limit}
-        onLimitChange={handleLimitChange}
+        onPageChange={tableFilters.setPage}
+        onPageSizeChange={tableFilters.setLimit}
+        onLimitChange={tableFilters.setLimit}
+        sortColumn={tableFilters.sortColumn}
+        sortDirection={tableFilters.sortDirection}
+        onSortChange={tableFilters.setSort}
         refreshQueryKeys={['fornecedores']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}

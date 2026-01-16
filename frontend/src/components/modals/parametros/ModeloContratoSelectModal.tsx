@@ -97,8 +97,6 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     enabled: show,
   });
 
-  // Dados prontos para busca (não precisa filtrar/paginar manualmente - o Table faz isso)
-
   const handleSelect = (selectedItems?: DocumentoSistema[]) => {
     const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
     if (item) {
@@ -141,7 +139,8 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
         onSelectionChange={handleSelectionChange}
         search={tableFilters.search}
         onSearchChange={handleSearchChange}
-        limit={tableFilters.limit}
+        onPageChange={tableFilters.setPage}
+        onPageSizeChange={tableFilters.setLimit}
         onLimitChange={tableFilters.setLimit}
       onRefresh={refetch}
       bulkActions={bulkActions}

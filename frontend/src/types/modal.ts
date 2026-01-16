@@ -37,6 +37,9 @@ export interface ListModalProps<T> {
   search?: string;
   onSearchChange?: (search: string, field: string) => void;
   onSearchFieldChange?: (field: string) => void;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSortChange?: (column: string, direction: 'asc' | 'desc') => void;
   pagination?: {
     current_page: number;
     last_page: number;
@@ -46,6 +49,7 @@ export interface ListModalProps<T> {
     to: number;
   };
   onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
   limit?: number;
   onLimitChange?: (limit: number) => void;
   onRefresh?: () => void;

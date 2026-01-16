@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { extractApiErrorMessage } from '@/utils/apiErrorHelper';
 import { useDeleteContrato, Contrato } from '@/hooks/useContratos';
@@ -17,6 +17,8 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import { ContratoFilters } from '@/services/contratoService';
 
 interface ContratoListModalProps {
   show: boolean;
@@ -50,14 +52,34 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
 
   // Hook para impressão de contratos
   const impressaoHook = useImpressaoContrato({});
+
+  // Hook unificado para filtros, busca e paginação
+  const tableFilters = useTableFilters<ContratoFilters>({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 15,
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
   
-  // Buscar todos os contratos ativos
-  const { data: contratos, isLoading, refetch } = useQuery({
-    queryKey: ['contratos', 'ativos'],
-    queryFn: () => ContratoService.getAtivos(),
+  // Buscar contratos com paginação
+  const { data: contratosData, isLoading, refetch } = useQuery({
+    queryKey: ['contratos', 'list', tableFilters.page, tableFilters.limit, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection],
+    queryFn: () => ContratoService.list({
+      page: tableFilters.page,
+      limit: tableFilters.limit,
+      search: tableFilters.search,
+      sortColumn: tableFilters.sortColumn,
+      sortDirection: tableFilters.sortDirection,
+      status: 'ativo' // Filtrar apenas ativos por padrão, conforme comportamento anterior
+    }),
     staleTime: 30 * 1000, // 30 segundos
     refetchOnMount: false,
+    enabled: show,
   });
+
+  const contratos = useMemo(() => contratosData?.data || [], [contratosData]);
+
 
   const deleteContratoMutation = useDeleteContrato();
 
@@ -79,12 +101,35 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     auditoria.handleAudit('Contrato', contrato.id);
   };
 
-  // Adicionar campos virtuais para busca e ordenação funcionar com campos aninhados
+  // Paginação do backend
+  const pagination = useMemo(() => {
+    if (contratosData?.pagination) {
+      const pag = contratosData.pagination;
+      return {
+        current_page: pag.current_page || tableFilters.page,
+        last_page: pag.last_page || Math.ceil((pag.total || 0) / (pag.per_page || tableFilters.limit)),
+        per_page: pag.per_page || tableFilters.limit,
+        total: pag.total || 0,
+        from: pag.from || 0,
+        to: pag.to || 0
+      };
+    }
+    return {
+      current_page: 1,
+      last_page: 1,
+      per_page: 15,
+      total: 0,
+      from: 0,
+      to: 0
+    };
+  }, [contratosData?.pagination, tableFilters.page, tableFilters.limit]);
+
+  // Adicionar campos virtuais apenas para exibição (não para busca/ordenação que agora é backend)
   const dataWithVirtualFields = React.useMemo(() => {
     if (!contratos) return [];
     
     return contratos.map((c: Contrato) => {
-      // Calcular desconto para ordenação
+      // Calcular desconto para exibição
       let descontoValor = 0;
       if (c.desconto_valor && Number(c.desconto_valor) > 0) {
         descontoValor = Number(c.desconto_valor);
@@ -95,16 +140,14 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
 
       return {
         ...c,
-        // Adicionar campos virtuais para busca funcionar com campos aninhados
+        // Campos de exibição
         cliente_razao_social: c.cliente?.razao_social || '',
         plano_nome: c.plano?.nome_plano || '',
         valor_plano_str: (c.plano?.valor_mensal || 0).toString(),
         valor_final_str: (c.valor_final || 0).toString(),
-        // Campos numéricos para ordenação
         valor_plano_num: c.plano?.valor_mensal ? Number(c.plano.valor_mensal) : 0,
         desconto_num: descontoValor,
         valor_final_num: c.valor_final ? Number(c.valor_final) : 0,
-        // Campos de endereço para ordenação (usando endereço do contrato)
         endereco: c.endereco || '',
         numero: c.numero || '',
         complemento: c.complemento || '',
@@ -539,6 +582,14 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   ];
 
 
+  const handleSearchChange = useCallback((search: string, field?: string) => {
+    // Usar setTimeout para evitar atualização durante render cycle
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+      if (field) tableFilters.setSearchField(field);
+    }, 0);
+  }, [tableFilters]);
+
   const modalContent = (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -562,6 +613,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                 { key: 'estado', label: 'Estado' }
               ],
               sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
               striped: true,
               hover: true,
               responsive: true,
@@ -574,7 +627,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                 disabled: action.disabled,
                 dropdown: action.dropdown
               })),
-              emptyMessage: 'Nenhum contrato encontrado'
+              emptyMessage: 'Nenhum contrato encontrado',
+              pagination: pagination
             }}
             tableId="contrato-list-modal"
             onSelectionChange={(items) => {
@@ -594,6 +648,11 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
             onRefresh={refetch}
             onAudit={handleAudit}
             auditEntity="Contrato"
+            onPageChange={tableFilters.setPage}
+            onPageSizeChange={tableFilters.setLimit}
+            onSort={(column, direction) => tableFilters.setSort(column, direction)}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
           />
         </div>
         
@@ -609,11 +668,11 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         >
           <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
             <div className="text-end">
-              <div className="small text-muted">{t('summary.monthlyTotalValue')}</div>
+              <div className="small text-muted">{t('summary.monthlyTotalValue')} (Página)</div>
               <strong>{formatCurrency(valorTotalMensal)}</strong>
             </div>
             <div className="text-end">
-              <div className="small text-muted">{t('summary.totalDiscountsValue')}</div>
+              <div className="small text-muted">{t('summary.totalDiscountsValue')} (Página)</div>
               <strong>{formatCurrency(valorTotalDescontos)}</strong>
             </div>
           </div>

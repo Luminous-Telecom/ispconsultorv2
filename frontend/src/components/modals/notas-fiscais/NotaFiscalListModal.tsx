@@ -204,7 +204,9 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     search: tableFilters.debouncedSearch || undefined,
     searchField: tableFilters.searchField || undefined,
     page: tableFilters.page,
-    limit: tableFilters.limit
+    limit: tableFilters.limit,
+    sortColumn: tableFilters.sortColumn,
+    sortDirection: tableFilters.sortDirection
   });
 
   const handleRefresh = useCallback(() => {
@@ -307,16 +309,6 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableFilters.setSearchField]);
 
-  const handlePageChange = useCallback((page: number) => {
-    tableFilters.setPage(page);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setPage]);
-
-  const handleLimitChange = useCallback((limit: number) => {
-    tableFilters.setLimit(limit);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setLimit]);
-
   const modalData = useMemo(() => notasFiscaisData?.data || [], [notasFiscaisData?.data]);
 
   // Paginação do backend
@@ -366,9 +358,12 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
         onSearchChange={handleSearchChange}
         onSearchFieldChange={handleSearchFieldChange}
         pagination={pagination}
-        onPageChange={handlePageChange}
-        limit={tableFilters.limit}
-        onLimitChange={handleLimitChange}
+        onPageChange={tableFilters.setPage}
+        onPageSizeChange={tableFilters.setLimit}
+        onLimitChange={tableFilters.setLimit}
+        sortColumn={tableFilters.sortColumn}
+        sortDirection={tableFilters.sortDirection}
+        onSortChange={tableFilters.setSort}
         refreshQueryFn={handleRefresh}
         bulkActions={bulkActions}
         onAudit={handleAudit}

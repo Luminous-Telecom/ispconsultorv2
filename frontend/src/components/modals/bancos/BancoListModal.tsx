@@ -158,7 +158,9 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     searchField: tableFilters.searchField || undefined,
     tipo_banco: undefined,
     page: tableFilters.page,
-    limit: tableFilters.limit
+    limit: tableFilters.limit,
+    sortColumn: tableFilters.sortColumn,
+    sortDirection: tableFilters.sortDirection
   });
 
   const deleteBancoMutation = useDeleteBanco();
@@ -298,16 +300,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableFilters.setSearchField]);
 
-  const handlePageChange = useCallback((page: number) => {
-    tableFilters.setPage(page);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setPage]);
-
-  const handleLimitChange = useCallback((limit: number) => {
-    tableFilters.setLimit(limit);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setLimit]);
-
   const modalData = useMemo(() => bancosData?.data || [], [bancosData?.data]);
 
   return (
@@ -334,9 +326,12 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         onSearchChange={handleSearchChange}
         onSearchFieldChange={handleSearchFieldChange}
         pagination={pagination}
-        onPageChange={handlePageChange}
-        limit={tableFilters.limit}
-        onLimitChange={handleLimitChange}
+        onPageChange={tableFilters.setPage}
+        onPageSizeChange={tableFilters.setLimit}
+        onLimitChange={tableFilters.setLimit}
+        sortColumn={tableFilters.sortColumn}
+        sortDirection={tableFilters.sortDirection}
+        onSortChange={tableFilters.setSort}
         refreshQueryKeys={['bancos']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}
