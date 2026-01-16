@@ -2,9 +2,11 @@ import React, { useState, useLayoutEffect, useEffect, useRef, useCallback, useMe
 import { LineChartProps } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 import { useI18n } from '@/contexts/I18nContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, format = 'number' }) => {
   const { t } = useI18n();
+  const { theme } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
@@ -80,6 +82,9 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
 
     // Escalar contexto para compensar o device pixel ratio
     ctx.scale(dpr, dpr);
+    ctx.imageSmoothingEnabled = false;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
 
     // Limpar canvas (usar dimensões originais após escala)
     ctx.clearRect(0, 0, rect.width, rect.height);
@@ -128,12 +133,12 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
 
     // Cores
     const gridColor = '#2f3844';
-    const axisColor = '#ced4da'; // Mais claro para melhor contraste
+    const axisColor = theme === 'dark' ? '#ffffff' : '#ced4da'; // Branco no modo escuro, cinza claro no modo claro
     const lineColor = '#007bff';
 
     // Desenhar grid
     ctx.strokeStyle = gridColor;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1 / dpr; // Ajustar espessura para dpr
     ctx.setLineDash([3, 3]);
     for (let i = 0; i < numYTicks; i++) {
       const y = margin.top + (chartHeight / (numYTicks - 1)) * i;
@@ -146,7 +151,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
 
     // Desenhar eixos
     ctx.strokeStyle = axisColor;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1 / dpr; // Ajustar espessura para dpr
     
     // Eixo Y
     ctx.beginPath();
@@ -220,7 +225,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
 
     // Desenhar linha por cima da área preenchida
     ctx.strokeStyle = lineColor;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 / dpr; // Ajustar espessura para dpr
     ctx.beginPath();
     points.forEach((point, index) => {
       if (index === 0) {
@@ -244,7 +249,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
       ctx.arc(hoveredPoint.x, hoveredPoint.y, 4, 0, Math.PI * 2);
       ctx.fill();
     }
-  }, [chartData, dimensions, formatYAxis, hoveredIndex]);
+  }, [chartData, dimensions, formatYAxis, hoveredIndex, theme]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;

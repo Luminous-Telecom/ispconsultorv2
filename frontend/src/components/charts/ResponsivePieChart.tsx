@@ -86,13 +86,14 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
 
     // Configurar contexto para renderização nítida
     ctx.imageSmoothingEnabled = false;
+    ctx.scale(dpr, dpr);
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
 
-    // Limpar canvas usando coordenadas originais
+    // Limpar canvas usando coordenadas originais (agora escaladas)
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Layout (trabalhar com coordenadas originais)
+    // Layout (trabalhar com coordenadas lógicas)
     const isSmall = rect.width < 300;
     const padding = 10;
 
@@ -177,7 +178,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         const y = legendYStart + index * legendItemHeight;
         
         // Verificar se cabe na altura
-        if (y + legendItemHeight > dimensions.height) return;
+        if (y + legendItemHeight > rect.height) return;
 
         // Caixa de cor
         const boxSize = 10;
@@ -223,7 +224,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
             index,
             x: legendX,
             y: y - legendItemHeight/2,
-            w: dimensions.width - legendX, // Clicável até o fim da largura
+            w: rect.width - legendX, // Clicável até o fim da largura
             h: legendItemHeight
         });
     });

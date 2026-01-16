@@ -92,14 +92,15 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
 
     // Configurar contexto para renderização nítida
     ctx.imageSmoothingEnabled = false;
+    ctx.scale(dpr, dpr); // Reintroduzir scale para corrigir tamanho
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
 
-    // Limpar canvas usando coordenadas originais
+    // Limpar canvas usando coordenadas lógicas (já que estamos usando scale)
     ctx.clearRect(0, 0, rect.width, rect.height);
 
     // Margens otimizadas para melhor aproveitamento do espaço
-    const margin = { top: 10, right: 15, left: 40, bottom: 45 };
+    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
     const chartWidth = rect.width - margin.left - margin.right;
     const chartHeight = rect.height - margin.top - margin.bottom;
 
@@ -153,7 +154,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
 
     // Desenhar grid
     ctx.strokeStyle = gridColor;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1 / dpr; // Linha mais fina para compensar o scale
     ctx.setLineDash([3, 3]);
     for (let i = 0; i < numYTicks; i++) {
       const y = margin.top + (chartHeight / (numYTicks - 1)) * i;
@@ -166,7 +167,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
 
     // Desenhar eixos
     ctx.strokeStyle = axisColor;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1 / dpr; // Linha mais fina para compensar o scale
 
     // Eixo Y
     ctx.beginPath();
@@ -247,7 +248,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
 
       // Desenhar linha por cima da área preenchida
       ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 / dpr; // Ajustar espessura da linha
       ctx.beginPath();
       points.forEach((point, index) => {
         if (index === 0) {
@@ -297,7 +298,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     }
 
     // Desenhar legenda no canvas
-    const legendY = margin.top + chartHeight + 15;
+    const legendY = rect.height - 20;
     const legendItemWidth = 100;
     const totalLegendWidth = legendItemWidth * 2;
     const startLegendX = (rect.width - totalLegendWidth) / 2;
@@ -334,7 +335,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
 
-    const margin = { top: 10, right: 15, left: 40, bottom: 45 };
+    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
     const chartWidth = rect.width - margin.left - margin.right;
     const totalPoints = chartData.length;
     const xStep = totalPoints === 1 ? 0 : chartWidth / (totalPoints - 1);
