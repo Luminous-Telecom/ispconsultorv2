@@ -15,7 +15,7 @@ import { useApiLoading } from '@/hooks/useApiLoading';
 import LoadingDots from '../common/LoadingDots';
 import SingleModalWrapper from '../common/SingleModalWrapper';
 import BackNetLogo from '../common/BackNetLogo';
-import { DadosEmpresaService, type DadosEmpresa } from '@/services/dadosEmpresaService';
+import { DadosEmpresaService } from '@/services/dadosEmpresaService';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -47,13 +47,10 @@ const Layout: React.FC = () => {
   // Responsividade: Mobile-First
   const isMobile = useIsMobile();
   
-  // Buscar dados da empresa
-  const { data: dadosEmpresa } = useQuery<DadosEmpresa>({
-    queryKey: ['dados-empresa'],
-    queryFn: () => DadosEmpresaService.get(),
-    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
-    retry: false,
-    throwOnError: false,
+  // Buscar dados públicos da empresa (incluindo logo)
+  const { data: dadosEmpresa } = useQuery({
+    queryKey: ['dados-empresa-public'],
+    queryFn: () => DadosEmpresaService.getPublic(),
   });
 
   const companyName = useMemo(
@@ -284,7 +281,15 @@ const Layout: React.FC = () => {
         {/* Header fixo no topo */}
         <div className="sidebar-header-fixed d-flex flex-column align-items-center justify-content-center p-3 mb-0 border-bottom position-relative">
           <div className="sidebar-logo-wrapper w-100 d-flex flex-column align-items-center">
-            <BackNetLogo width={480} height={140} />
+            {dadosEmpresa?.logo ? (
+              <img
+                src={dadosEmpresa.logo}
+                alt={companyName}
+                className="sidebar-company-logo"
+              />
+            ) : (
+              <BackNetLogo width={480} height={140} />
+            )}
             {companyName && (
               <div className="sidebar-title-wrapper overflow-hidden w-100 text-center" style={{ marginTop: 0 }}>
                 <small className="sidebar-user-name text-muted text-truncate d-block">{companyName}</small>

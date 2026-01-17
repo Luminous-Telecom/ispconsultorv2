@@ -63,13 +63,8 @@ export interface UpdateDadosEmpresa {
 export class DadosEmpresaService {
   // Buscar dados públicos da empresa (para site público)
   static async getPublic(): Promise<Partial<DadosEmpresa>> {
-    try {
-      const response = await publicApiClient.get<Partial<DadosEmpresa>>('/dados-empresa/public');
-      return response.data || {};
-    } catch (error) {
-      // Retornar objeto vazio em caso de erro
-      return {};
-    }
+    const response = await publicApiClient.get<{ success: boolean; data: Partial<DadosEmpresa> }>('/dados-empresa/public');
+    return response.data.data || {};
   }
 
   // Buscar dados completos da empresa (exclusivo do sistema - requer autenticação)

@@ -844,6 +844,39 @@
   margin: 0;
 }
 
+/* Placeholder when no logo is configured */
+.hero-placeholder,
+.brand-placeholder,
+.footer-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+}
+
+.hero-placeholder {
+  width: 200px;
+  height: 200px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.brand-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.footer-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
 /* Responsive */
 @media (min-width: 768px) {
   .navbar-collapse {

@@ -6,7 +6,6 @@ import { getBrandLogo } from '@/utils/brandLogos';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui';
 import { throttle } from '@/utils/helpers';
-import BackNetLogo from '@/components/common/BackNetLogo';
 import './Home.css';
 
 const Home: React.FC = () => {
@@ -85,18 +84,16 @@ const Home: React.FC = () => {
           <div className="container">
             <Link to="/" className="navbar-brand">
               {dadosEmpresa?.logo ? (
-                <img 
-                  src={dadosEmpresa.logo} 
+                <img
+                  src={dadosEmpresa.logo}
                   alt={companyName}
                   className="brand-logo"
-                  loading="eager"
-                  fetchPriority="high"
                   width="40"
                   height="40"
                 />
               ) : (
                 <div className="brand-icon">
-                  <BackNetLogo width={40} height={40} />
+                  <div className="brand-placeholder">?</div>
                 </div>
               )}
               <span className="brand-name">{companyName}</span>
@@ -204,17 +201,17 @@ const Home: React.FC = () => {
                 <div className="hero-image-glow"></div>
                 <div className="hero-image-content">
                   {dadosEmpresa?.logo ? (
-                    <img 
-                      src={dadosEmpresa.logo} 
+                    <img
+                      src={dadosEmpresa.logo}
                       alt={companyName}
                       className="hero-logo"
-                      loading="eager"
-                      fetchPriority="high"
                       width="200"
                       height="200"
                     />
                   ) : (
-                    <BackNetLogo width={200} height={200} />
+                    <div className="hero-placeholder">
+                      Sem logo
+                    </div>
                   )}
                 </div>
               </div>
@@ -496,17 +493,16 @@ const Home: React.FC = () => {
             <div className="col-md-6">
               <div className="footer-brand">
                 {dadosEmpresa?.logo ? (
-                  <img 
-                    src={dadosEmpresa.logo} 
+                  <img
+                    src={dadosEmpresa.logo}
                     alt={companyName}
                     className="footer-logo"
-                    loading="lazy"
                     width="40"
                     height="40"
                   />
                 ) : (
                   <div className="footer-icon">
-                    <BackNetLogo width={40} height={40} />
+                    <div className="footer-placeholder">?</div>
                   </div>
                 )}
                 <div>
