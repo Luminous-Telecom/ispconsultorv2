@@ -87,7 +87,7 @@ const Login: React.FC = () => {
               <div className="card-body p-4">
                 <div className="text-center mb-4">
                   <div className="mb-3">
-                    <BackNetLogo width={280} height={100} />
+                    <BackNetLogo width={200} height={60} />
                   </div>
                   <p className="text-muted small mb-0">{t('login.title')}</p>
                 </div>
