@@ -477,54 +477,29 @@ const Home: React.FC = () => {
       {/* Footer */}
       <footer className="home-footer">
         <div className="container">
-          <div className="row align-items-center">
-            <div className="col-md-6">
-              <div className="footer-brand">
-                {dadosEmpresa?.logo ? (
-                  <img
-                    src={dadosEmpresa.logo}
-                    alt={companyName}
-                    className="footer-logo"
-                    width="40"
-                    height="40"
-                  />
-                ) : (
-                  <div className="footer-icon">
-                    <div className="footer-placeholder">?</div>
-                  </div>
+          <div className="row">
+            <div className="col-12">
+              <div className="footer-bottom-info">
+                <p className="footer-copyright mb-1">
+                  Copyright &copy; {new Date().getFullYear()} {dadosEmpresa?.razao_social || companyName}. Todos os direitos reservados.
+                </p>
+                
+                {(dadosEmpresa?.cnpj || dadosEmpresa?.endereco) && (
+                  <p className="footer-legal-info text-muted small mb-0">
+                    {[
+                      dadosEmpresa?.cnpj ? `CNPJ n.º ${dadosEmpresa.cnpj}` : null,
+                      [
+                        dadosEmpresa?.endereco,
+                        dadosEmpresa?.numero,
+                        dadosEmpresa?.complemento,
+                        dadosEmpresa?.bairro,
+                        dadosEmpresa?.cidade ? `${dadosEmpresa.cidade}/${dadosEmpresa.estado || ''}` : null,
+                        dadosEmpresa?.cep ? `CEP ${dadosEmpresa.cep}` : null
+                      ].filter(Boolean).join(', ')
+                    ].filter(Boolean).join(' / ')}
+                  </p>
                 )}
-                <div>
-                  <h5 className="footer-brand-name">{companyName}</h5>
-                  {dadosEmpresa?.razao_social && (
-                    <p className="footer-company-info mb-1">
-                      <strong>Razão Social:</strong> {dadosEmpresa.razao_social}
-                    </p>
-                  )}
-                  {dadosEmpresa?.cnpj && (
-                    <p className="footer-company-info mb-1">
-                      <strong>CNPJ:</strong> {dadosEmpresa.cnpj}
-                    </p>
-                  )}
-                  {(dadosEmpresa?.endereco || dadosEmpresa?.numero || dadosEmpresa?.bairro || dadosEmpresa?.cidade || dadosEmpresa?.estado || dadosEmpresa?.cep) && (
-                    <p className="footer-company-info mb-0">
-                      <strong>Endereço:</strong> {[
-                        dadosEmpresa.endereco,
-                        dadosEmpresa.numero,
-                        dadosEmpresa.complemento,
-                        dadosEmpresa.bairro,
-                        dadosEmpresa.cidade,
-                        dadosEmpresa.estado,
-                        dadosEmpresa.cep
-                      ].filter(Boolean).join(', ')}
-                    </p>
-                  )}
-                </div>
               </div>
-            </div>
-            <div className="col-md-6 text-md-end">
-              <p className="footer-copyright">
-                &copy; {new Date().getFullYear()} {companyName}. Todos os direitos reservados.
-              </p>
             </div>
           </div>
         </div>
