@@ -469,15 +469,6 @@ const Home: React.FC = () => {
                   </>
                 )}
               </div>
-              <div className="mt-5">
-                <Button 
-                  className="btn-primary-gradient" 
-                  size="lg" 
-                  onClick={() => scrollToSection('contato')}
-                >
-                  Solicitar Orçamento
-                </Button>
-              </div>
             </div>
           </div>
         </div>
