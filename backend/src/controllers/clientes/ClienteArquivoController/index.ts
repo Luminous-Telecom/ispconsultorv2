@@ -30,7 +30,7 @@ export class ClienteArquivoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { cliente_id } = req.params;
-      const { tipo, origem } = req.query;
+      const { tipo, origem, sortColumn, sortDirection } = req.query;
 
       if (!cliente_id) {
         sendValidationError(res, 'cliente_id é obrigatório');
@@ -39,7 +39,9 @@ export class ClienteArquivoController {
 
       const arquivos = await ClienteArquivoService.list(Number(cliente_id), {
         tipo: tipo as string | undefined,
-        origem: origem as string | undefined
+        origem: origem as string | undefined,
+        sortColumn: sortColumn as string | undefined,
+        sortDirection: sortDirection as string | undefined
       });
 
       sendSuccess(res, arquivos);

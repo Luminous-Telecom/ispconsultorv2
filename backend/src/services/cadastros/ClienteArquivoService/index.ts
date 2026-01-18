@@ -154,20 +154,42 @@ export class ClienteArquivoService {
   /**
    * Lista arquivos de um cliente
    */
-  static async list(clienteId: number, filters?: { tipo?: string; origem?: string }): Promise<ClienteArquivo[]> {
+  static async list(
+    clienteId: number,
+    filters?: { tipo?: string; origem?: string; sortColumn?: string; sortDirection?: string }
+  ): Promise<ClienteArquivo[]> {
+    const { tipo, origem, sortColumn, sortDirection } = filters || {};
     const where: any = { cliente_id: clienteId };
     
-    if (filters?.tipo) {
-      where.tipo = filters.tipo;
+    if (tipo) {
+      where.tipo = tipo;
     }
     
-    if (filters?.origem) {
-      where.origem = filters.origem;
+    if (origem) {
+      where.origem = origem;
+    }
+    
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['id', 'DESC']]; // Padrão
+    
+    if (sortColumn && sortDirection) {
+      const { SortHelper } = await import('../../../utils/sortHelper');
+      const { CLIENTE_ARQUIVO_SORT_CONFIG } = await import('../../../config/sortConfigs');
+      
+      const sortResult = SortHelper.buildOrder(
+        CLIENTE_ARQUIVO_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      }
     }
     
     return ClienteArquivo.findAll({
       where,
-      order: [['created_at', 'DESC']]
+      order
     });
   }
 

@@ -7,6 +7,8 @@ interface UseClienteArquivosOptions {
   filters?: {
     tipo?: string;
     origem?: string;
+    sortColumn?: string;
+    sortDirection?: string;
   };
 }
 

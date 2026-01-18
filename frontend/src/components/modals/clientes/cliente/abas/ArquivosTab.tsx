@@ -9,14 +9,25 @@ import ImageViewerModal from '@/components/common/ImageViewerModal';
 import AdicionarArquivoModal from './AdicionarArquivoModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useTableFilters } from '@/hooks/useTableFilters';
 
 interface ArquivosTabProps {
   clienteId?: number | null;
   onAudit?: (arquivo: ClienteArquivo) => void;
   auditEntity?: string;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (column: string, direction: 'asc' | 'desc') => void;
 }
 
-const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEntity }) => {
+const ArquivosTab: React.FC<ArquivosTabProps> = ({ 
+  clienteId, 
+  onAudit, 
+  auditEntity,
+  sortColumn,
+  sortDirection,
+  onSort
+}) => {
   const { t } = useI18n();
   const [_selectedItems, setSelectedItems] = useState<ClienteArquivo[]>([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -25,8 +36,21 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
   const [previewTitle, setPreviewTitle] = useState<string>(t('modal.viewDocument'));
   const [showAdicionarModal, setShowAdicionarModal] = useState(false);
 
+  const arquivosTableFilters = useTableFilters({ 
+    initialSortColumn: sortColumn || 'id', 
+    initialSortDirection: sortDirection || 'desc' 
+  });
+
+  const finalSortColumn = sortColumn || arquivosTableFilters.sortColumn;
+  const finalSortDirection = sortDirection || arquivosTableFilters.sortDirection;
+  const finalOnSort = onSort || arquivosTableFilters.setSort;
+
   const { arquivos, isLoading, refetch, deleteMutation } = useClienteArquivos({
-    clienteId: clienteId || undefined
+    clienteId: clienteId || undefined,
+    filters: {
+      sortColumn: finalSortColumn,
+      sortDirection: finalSortDirection
+    }
   });
   const { confirm, modalProps } = useConfirmModal();
 
@@ -66,6 +90,9 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
 
   const tableConfig = useMemo(() => ({
     data: arquivos,
+    sortable: true,
+    sortColumn: finalSortColumn,
+    sortDirection: finalSortDirection,
     columns: [
       {
         key: 'id',
@@ -214,7 +241,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       { key: 'origem', label: t('table.fileOrigin') }
     ],
     emptyMessage: t('empty.noFiles')
-  }), [arquivos, deleteMutation, handleDownload, handleView, confirm, t]);
+  }), [arquivos, deleteMutation, handleDownload, handleView, confirm, t, finalSortColumn, finalSortDirection]);
 
   if (!clienteId) {
     return (
@@ -237,6 +264,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
             onSelectionChange={setSelectedItems}
             onAudit={onAudit}
             auditEntity={auditEntity}
+            onSort={finalOnSort}
           />
         </div>
       </div>

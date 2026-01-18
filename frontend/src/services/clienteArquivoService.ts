@@ -47,10 +47,15 @@ class ClienteArquivoService {
   /**
    * Lista arquivos de um cliente
    */
-  static async list(clienteId: number, filters?: { tipo?: string; origem?: string }): Promise<ClienteArquivo[]> {
+  static async list(
+    clienteId: number,
+    filters?: { tipo?: string; origem?: string; sortColumn?: string; sortDirection?: string }
+  ): Promise<ClienteArquivo[]> {
     const params = new URLSearchParams();
     if (filters?.tipo) params.append('tipo', filters.tipo);
     if (filters?.origem) params.append('origem', filters.origem);
+    if (filters?.sortColumn) params.append('sortColumn', filters.sortColumn);
+    if (filters?.sortDirection) params.append('sortDirection', filters.sortDirection);
     
     const queryString = params.toString();
     const url = `/cliente-arquivos/cliente/${clienteId}${queryString ? `?${queryString}` : ''}`;

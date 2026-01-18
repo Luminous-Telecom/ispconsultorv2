@@ -9,6 +9,7 @@ import { ContaPagar } from '../models/financeiro/ContaPagar';
 import { Fornecedor } from '../models/financeiro/Fornecedor';
 import { TermoContrato } from '../models/contratos/TermoContrato';
 import { Auditoria } from '../models/sistema/Auditoria';
+import { ClienteArquivo } from '../models/clientes/ClienteArquivo';
 import { SortConfig } from '../utils/sortHelper';
 
 /**
@@ -236,4 +237,14 @@ export const AUDITORIA_SORT_CONFIG: SortConfig = {
       description: 'Email do usuário'
     }
   }
+};
+
+/**
+ * Configuração de ordenação para ClienteArquivo
+ */
+export const CLIENTE_ARQUIVO_SORT_CONFIG: SortConfig = {
+  model: ClienteArquivo,
+  tableName: 'cliente_arquivos',
+  virtualColumns: {},
+  relationshipColumns: {}
 };
