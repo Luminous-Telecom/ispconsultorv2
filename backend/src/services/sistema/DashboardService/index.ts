@@ -336,7 +336,7 @@ export class DashboardService {
   static async getReceberPorPeriodoData(startDate: Date, endDate: Date) {
     const { TituloService } = await import('../../financeiro/TituloService');
     const { formatDate, parseDateFromDb } = await import('../../../utils/dateUtils');
-    
+
     const inicio = new Date(startDate);
     inicio.setHours(0, 0, 0, 0);
     const fim = new Date(endDate);
@@ -393,7 +393,7 @@ export class DashboardService {
   static async getRecebidosPorPeriodoData(startDate: Date, endDate: Date) {
     const { TituloService } = await import('../../financeiro/TituloService');
     const { formatDate, parseDateFromDb } = await import('../../../utils/dateUtils');
-    
+
     const inicio = new Date(startDate);
     inicio.setHours(0, 0, 0, 0);
     const fim = new Date(endDate);
