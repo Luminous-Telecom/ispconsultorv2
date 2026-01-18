@@ -18,6 +18,7 @@ const ContasPagarListModal = lazy(() => import('../modals/contas-pagar').then(m 
 const NotaFiscalListModal = lazy(() => import('../modals/notas-fiscais/NotaFiscalListModal'));
 const UsuariosModal = lazy(() => import('../modals/parametros/UsuariosModal'));
 const RecursosSistemaModal = lazy(() => import('../modals/parametros/RecursosSistemaModal'));
+const HotsiteModal = lazy(() => import('../modals/parametros/HotsiteModal'));
 const DiasVencimentoModal = lazy(() => import('../modals/parametros/DiasVencimentoModal'));
 const AtualizacoesModal = lazy(() => import('../modals/parametros/AtualizacoesModal'));
 const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
@@ -56,6 +57,7 @@ const MODAL_CONFIGS: Record<string, ModalConfig> = {
   'dados-empresa': { component: DadosEmpresaModal, title: 'Dados da Empresa', loadingMessage: 'Carregando dados da empresa...' },
   usuarios: { component: UsuariosModal, title: 'Usuários', loadingMessage: 'Carregando usuários...' },
   'recursos-sistema': { component: RecursosSistemaModal, title: 'Recursos do Sistema', loadingMessage: 'Carregando recursos do sistema...' },
+  hotsite: { component: HotsiteModal, title: 'Hotsite', loadingMessage: 'Carregando hotsite...' },
   'servidor-email': { component: ServidorEmailModal, title: 'Servidor de E-Mail', loadingMessage: 'Carregando servidor de e-mail...' },
   'servidor-whatsapp': { component: ServidorWhatsappModal, title: 'Servidor de WhatsApp', loadingMessage: 'Carregando servidor de WhatsApp...' },
   nfse: { component: NFSeModal, title: 'NFS-e', loadingMessage: 'Carregando configurações de NFS-e...' },

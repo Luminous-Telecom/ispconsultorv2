@@ -339,7 +339,8 @@ export class ParametroController {
         { chave: 'geracao_automatica_carne', valor: 'false', tipo: 'boolean' as const, descricao: 'Geração automática de carnê', categoria: 'carne', ativo: true },
         { chave: 'auto_parcelas_carne', valor: 'true', tipo: 'boolean' as const, descricao: 'Auto parcelas de carnê', categoria: 'carne', ativo: true },
         { chave: 'numero_parcelas_padrao', valor: '12', tipo: 'number' as const, descricao: 'Número padrão de parcelas para auto geração', categoria: 'carne', ativo: true },
-        { chave: 'manter_carnes_cliente', valor: 'true', tipo: 'boolean' as const, descricao: 'Manter sempre um novo carnê para o cliente', categoria: 'carne', ativo: true }
+        { chave: 'manter_carnes_cliente', valor: 'true', tipo: 'boolean' as const, descricao: 'Manter sempre um novo carnê para o cliente', categoria: 'carne', ativo: true },
+
       ];
 
       const results = [];

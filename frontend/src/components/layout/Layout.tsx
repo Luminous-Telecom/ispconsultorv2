@@ -253,6 +253,7 @@ const Layout: React.FC = () => {
     { id: 'usuarios', label: t('params.users'), onClick: () => handleOpenModal('usuarios') },
     { id: 'auditoria', label: t('params.auditLogs'), onClick: () => handleOpenModal('auditoria') },
     { id: 'recursos-sistema', label: t('params.systemResources'), onClick: () => handleOpenModal('recursos-sistema') },
+    { id: 'hotsite', label: 'Hotsite', onClick: () => handleOpenModal('hotsite') },
     { id: 'agendador-tarefas', label: t('params.taskScheduler'), onClick: () => handleOpenModal('agendador-tarefas') },
     { id: 'servidor-email', label: t('params.emailServer'), onClick: () => handleOpenModal('servidor-email') },
     { id: 'servidor-whatsapp', label: t('params.whatsappServer'), onClick: () => handleOpenModal('servidor-whatsapp') },

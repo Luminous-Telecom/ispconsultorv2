@@ -38,6 +38,7 @@ import { DiasVencimento } from './cadastros/DiasVencimento';
 
 // Sistema
 import { DadosEmpresa } from './sistema/DadosEmpresa';
+import { Hotsite } from './sistema/Hotsite';
 import { ScheduledRoutine } from './sistema/ScheduledRoutine';
 import { RoutineExecutionLog } from './sistema/RoutineExecutionLog';
 import { Auditoria } from './sistema/Auditoria';
@@ -344,6 +345,7 @@ export {
   Contrato,
   ContratoPlanoAdicional,
   DadosEmpresa,
+  Hotsite,
   ScheduledRoutine,
   RoutineExecutionLog,
   ServidorEmail,

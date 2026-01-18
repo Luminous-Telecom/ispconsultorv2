@@ -21,6 +21,7 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { method: 'GET', path: /^\/api\/cliente-arquivos\/\d+\/download\/?$/i },
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET dados públicos da empresa (para site público)
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)
+  { method: 'GET', path: /^\/api\/hotsite\/public\/?$/i }, // GET hotsite público (HTML renderizado)
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+$/i }, // GET página pública de pagamento
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+\/pdf$/i }, // GET PDF do boleto (público)
   // Rotas auxiliares de clientes (usadas em formulários)

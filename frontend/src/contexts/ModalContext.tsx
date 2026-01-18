@@ -14,6 +14,7 @@ export type ModalType =
   | 'usuarios'
   | 'auditoria'
   | 'recursos-sistema'
+  | 'hotsite'
   | 'servidor-email'
   | 'servidor-whatsapp'
   | 'historico-whatsapp'

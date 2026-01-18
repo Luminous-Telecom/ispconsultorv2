@@ -195,6 +195,11 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   // Campos que não devem ter nenhuma sanitização (caminhos de arquivo gerados pelo sistema)
   // Apenas remover caracteres de controle perigosos, sem HTML encoding
   const noSanitizeFields = ['logo', 'responsavel_assinatura'];
+
+  // Campos que podem conter HTML completo (incluindo <head>, <style>, <script>)
+  // Para esses campos, preservamos o conteúdo e removemos apenas caracteres de controle perigosos.
+  // Observação: isso permite scripts; use apenas em endpoints/admin confiáveis.
+  const rawHtmlFields = ['html'];
   
   // Campos que não devem ter HTML encoding (CPF/CNPJ, códigos, nomes, etc)
   const noHtmlEncodeFields = [
@@ -232,6 +237,12 @@ export function sanitizeObject<T extends Record<string, unknown>>(
       const value = sanitized[key];
 
       if (typeof value === 'string') {
+        // HTML bruto (preservar tags e scripts; remover só caracteres de controle)
+        if (rawHtmlFields.includes(key.toLowerCase())) {
+          (sanitized as Record<string, unknown>)[key] = value.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+          continue;
+        }
+
         // Campos que não devem ter nenhuma sanitização
         if (noSanitizeFields.includes(key.toLowerCase())) {
           // Apenas remover caracteres de controle perigosos

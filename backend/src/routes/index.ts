@@ -35,6 +35,7 @@ import fornecedorRoutes from './fornecedorRoutes';
 import contaPagarRoutes from './contaPagarRoutes';
 import notaFiscalRoutes from './notaFiscalRoutes';
 import nfseConfigRoutes from './nfseConfigRoutes';
+import hotsiteRoutes from './hotsiteRoutes';
 
 const router = Router();
 
@@ -52,6 +53,7 @@ const routes = [
     { path: '/api/workers', route: workerRoutes },
     { path: '/api/parametro', route: parametroRoutes },
     { path: '/api/parametros', route: parametrosRoutes },
+    { path: '/api/hotsite', route: hotsiteRoutes },
     { path: '/boleto', route: boletoRoutes },
     
     // Rotas dos servidores e configurações
