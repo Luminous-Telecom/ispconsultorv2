@@ -40,7 +40,7 @@ const Home: React.FC = () => {
   // Atualizar título da página com o nome da empresa
   useEffect(() => {
     if (companyName) {
-      document.title = `${companyName} - Consultoria e Assessoria Técnica em Telecomunicações`;
+      document.title = companyName;
     }
   }, [companyName]);
 
@@ -171,9 +171,6 @@ const Home: React.FC = () => {
               <h1 className="hero-title">
                 <span className="hero-title-gradient">{companyName}</span>
               </h1>
-              <h2 className="h4 mb-0 hero-subtitle">
-                Consultoria e Assessoria Técnica em Telecomunicações
-              </h2>
               <p className="hero-description">
                 Soluções especializadas para empresas de telecomunicações.
                 Otimização de processos, gestão eficiente e suporte técnico especializado
