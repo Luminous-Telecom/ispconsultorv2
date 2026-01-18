@@ -826,7 +826,9 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       { key: 'charge_id', label: t('table.chargeId') },
       { key: 'nosso_numero', label: t('table.ourNumber') }
     ],
-    sortable: false,
+    sortable: true,
+    sortColumn: tableFilters.sortColumn,
+    sortDirection: tableFilters.sortDirection,
     striped: true,
     hover: true,
     responsive: true,
@@ -872,6 +874,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     pagination,
     customControls,
     customControlsAfterActions,
+    tableFilters.sortColumn,
+    tableFilters.sortDirection,
     t
   ]);
 

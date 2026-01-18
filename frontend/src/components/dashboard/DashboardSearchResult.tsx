@@ -1,9 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Table } from '../tables';
 import { useClientes } from '@/hooks/useClientes';
 import { Cliente } from '@/types';
 import { formatDateTime } from '@/utils/formatters';
 import { useModal } from '@/contexts/ModalContext';
+import { useTableFilters } from '@/hooks/useTableFilters';
 
 interface DashboardSearchResultProps {
   searchTerm: string;
@@ -13,12 +14,33 @@ interface DashboardSearchResultProps {
 const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTerm, searchField }) => {
   const { openModal } = useModal();
 
-  // Buscar clientes baseado no termo do header
+  // Hook unificado para filtros, busca, ordenação e paginação
+  const tableFilters = useTableFilters({
+    initialSearch: searchTerm,
+    initialPage: 1,
+    initialLimit: 20,
+    initialSortColumn: 'id',
+    initialSortDirection: 'desc',
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
+
+  // Atualizar search quando searchTerm mudar (vem do header)
+  useEffect(() => {
+    if (searchTerm !== tableFilters.search) {
+      tableFilters.setSearch(searchTerm);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
+
+  // Buscar clientes baseado no termo do header e ordenação
   const { data: clientesData, isLoading, refetch } = useClientes({
-    search: searchTerm,
+    search: tableFilters.debouncedSearch || searchTerm,
     searchField: searchField,
-    page: 1,
-    limit: 20
+    page: tableFilters.page,
+    limit: tableFilters.limit,
+    sortColumn: tableFilters.sortColumn,
+    sortDirection: tableFilters.sortDirection
   });
 
   const tableData = React.useMemo(() => clientesData?.data || [], [clientesData?.data]);
@@ -146,10 +168,16 @@ const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTer
               { key: 'email', label: 'Email' },
               { key: 'status', label: 'Status' }
             ],
+            sortable: true,
+            sortColumn: tableFilters.sortColumn,
+            sortDirection: tableFilters.sortDirection,
             emptyMessage: 'Nenhum cliente encontrado para esta busca.',
           }}
           onRowClick={handleRowClick}
           onRefresh={refetch}
+          onSort={(column: string, direction: 'asc' | 'desc') => {
+            tableFilters.setSort(column, direction);
+          }}
           onSearch={(_term, _field) => {
              // O header já atualiza o searchValue, o que causará o re-render deste componente
              // e disparará o useClientes novamente.
