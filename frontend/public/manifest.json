@@ -1,7 +1,7 @@
 {
-  "name": "BackNet ERP",
+  "name": "BackNet",
   "short_name": "BackNet",
-  "description": "Sistema ERP para assessoria técnica em provedores de internet",
+  "description": "Sistema para assessoria técnica em provedores de internet",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
