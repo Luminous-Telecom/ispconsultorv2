@@ -81,60 +81,38 @@ export async function registrarAuditoriaElasticsearch(
   dados: DadosAuditoria
 ): Promise<void> {
   // Executar de forma assíncrona sem bloquear
-  setImmediate(async () => {
-    try {
-      logger.debug('Iniciando registro de auditoria no Elasticsearch', {
-        acao: dados.acao,
-        entidade: dados.entidade,
-        entidade_id: dados.entidade_id
-      });
+    setImmediate(async () => {
+      try {
+        const elasticsearchService = getElasticsearchService();
+        const client = elasticsearchService.getClient();
 
-      const elasticsearchService = getElasticsearchService();
-      const client = elasticsearchService.getClient();
+        if (!client) {
+          // Cliente Elasticsearch não disponível
+          logger.warn('Cliente Elasticsearch não disponível', {
+            context: 'ElasticsearchAuditService',
+            action: 'registrarAuditoriaElasticsearch',
+            acao: dados.acao,
+            entidade: dados.entidade
+          });
+          return;
+        }
 
-      if (!client) {
-        // Cliente Elasticsearch não disponível
-        logger.warn('Cliente Elasticsearch não disponível', {
-          context: 'ElasticsearchAuditService',
-          action: 'registrarAuditoriaElasticsearch',
-          acao: dados.acao,
-          entidade: dados.entidade
-        });
-        return;
-      }
+        // Verificar conexão
+        const isConnected = await elasticsearchService.checkConnection();
+        
+        if (!isConnected) {
+          // Elasticsearch não disponível
+          logger.warn('Elasticsearch não disponível', {
+            context: 'ElasticsearchAuditService',
+            action: 'registrarAuditoriaElasticsearch',
+            acao: dados.acao,
+            entidade: dados.entidade
+          });
+          return;
+        }
 
-      logger.debug('Cliente Elasticsearch obtido, verificando conexão', {
-        acao: dados.acao,
-        entidade: dados.entidade
-      });
-
-      // Verificar conexão
-      const isConnected = await elasticsearchService.checkConnection();
-      
-      if (!isConnected) {
-        // Elasticsearch não disponível
-        logger.warn('Elasticsearch não disponível', {
-          context: 'ElasticsearchAuditService',
-          action: 'registrarAuditoriaElasticsearch',
-          acao: dados.acao,
-          entidade: dados.entidade
-        });
-        return;
-      }
-
-      logger.debug('Conexão com Elasticsearch verificada, garantindo índice', {
-        acao: dados.acao,
-        entidade: dados.entidade,
-        index: elasticsearchService.getIndexName()
-      });
-
-      // Garantir que o índice existe
-      await elasticsearchService.ensureIndex();
-      
-      logger.debug('Índice garantido, preparando documento', {
-        acao: dados.acao,
-        entidade: dados.entidade
-      });
+        // Garantir que o índice existe
+        await elasticsearchService.ensureIndex();
 
       // Obter dados do usuário
       const userData = getUserData(req);
@@ -303,20 +281,8 @@ export async function registrarAuditoriaElasticsearch(
       };
 
       // Validar se o documento pode ser serializado antes de enviar
-      logger.debug('Validando serialização do documento', {
-        acao: dados.acao,
-        entidade: dados.entidade,
-        tamanho_dados_anteriores: dadosAnterioresLimpos ? Object.keys(dadosAnterioresLimpos).length : 0,
-        tamanho_dados_novos: dadosNovosLimpos ? Object.keys(dadosNovosLimpos).length : 0
-      });
-
       try {
         const documentString = JSON.stringify(document);
-        logger.debug('Documento serializado com sucesso', {
-          acao: dados.acao,
-          entidade: dados.entidade,
-          tamanho_documento: documentString.length
-        });
       } catch (serializeError) {
         logger.warn('Documento não pode ser serializado para Elasticsearch', {
           context: 'ElasticsearchAuditService',
@@ -375,25 +341,12 @@ export async function registrarAuditoriaElasticsearch(
       if (error && typeof error === 'object') {
         const err = error as any;
         
-        console.error('--- Detalhes do objeto de erro ---');
-        console.error('Tipo:', typeof error);
-        console.error('Chaves:', Object.keys(err));
-        console.error('Tem response:', !!err.response);
-        console.error('Tem meta:', !!err.meta);
-        console.error('Tem cause:', !!err.cause);
-        console.error('Tem code:', !!err.code);
-        
         if (err.response) {
           errorDetails.elasticsearch_response = {
             status: err.response.status,
             statusText: err.response.statusText,
             data: typeof err.response.data === 'string' ? err.response.data.substring(0, 500) : err.response.data
           };
-          
-          console.error('--- Resposta do Elasticsearch ---');
-          console.error('Status:', err.response.status);
-          console.error('Status Text:', err.response.statusText);
-          console.error('Data:', typeof err.response.data === 'string' ? err.response.data : JSON.stringify(err.response.data, null, 2));
         }
         
         if (err.meta) {
@@ -406,46 +359,21 @@ export async function registrarAuditoriaElasticsearch(
               path: err.meta.request.path
             } : undefined
           };
-          
-          console.error('--- Metadados do erro Elasticsearch ---');
-          console.error('Status Code:', err.meta.statusCode);
-          console.error('Body:', typeof err.meta.body === 'string' ? err.meta.body : JSON.stringify(err.meta.body, null, 2));
-          console.error('Request Method:', err.meta.request?.method);
-          console.error('Request Path:', err.meta.request?.path);
         }
         
-        // Adicionar outras propriedades do erro que podem ser úteis
         if (err.name) {
           errorDetails.error_name = err.name;
-          console.error('Nome do erro:', err.name);
         }
         if (err.code) {
           errorDetails.error_code = err.code;
-          console.error('Código do erro:', err.code);
         }
         if (err.cause) {
           errorDetails.error_cause = err.cause;
-          console.error('Causa do erro:', err.cause);
         }
-      }
-      
-      // Log completo do erro
-      console.error('--- Erro completo ---');
-      console.error('String:', String(error));
-      if (error instanceof Error) {
-        console.error('JSON:', JSON.stringify({
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }, null, 2));
-      } else {
-        console.error('JSON:', JSON.stringify(error, null, 2));
       }
       
       // Log como warning em vez de error, já que não é crítico
       logger.warn('Falha ao registrar auditoria no Elasticsearch (não crítico)', errorDetails);
-      
-      console.error('=== FIM DO ERRO DE AUDITORIA ELASTICSEARCH ===');
     }
   });
 }

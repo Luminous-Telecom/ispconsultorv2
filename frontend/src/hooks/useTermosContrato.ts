@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { TermoContratoService, CreateTermoContratoData, UpdateTermoContratoData } from '../services/termoContratoService';
+import { TermoContratoService, CreateTermoContratoData, UpdateTermoContratoData, GetByContratoOptions } from '../services/termoContratoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { AxiosError } from 'axios';
 
-export const useTermosContrato = (contratoId?: number) => {
+export const useTermosContrato = (contratoId?: number, options?: GetByContratoOptions) => {
   return useQuery({
-    queryKey: ['termos-contrato', contratoId],
-    queryFn: () => contratoId ? TermoContratoService.getByContrato(contratoId) : TermoContratoService.getAtivos(),
+    queryKey: ['termos-contrato', contratoId, options?.sortColumn, options?.sortDirection],
+    queryFn: () => contratoId ? TermoContratoService.getByContrato(contratoId, options) : TermoContratoService.getAtivos(),
     enabled: !!contratoId,
   });
 };

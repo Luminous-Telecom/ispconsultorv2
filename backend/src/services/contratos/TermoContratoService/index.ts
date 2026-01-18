@@ -1,11 +1,50 @@
 import { TermoContrato } from '../../../models/contratos/TermoContrato';
+import { SortHelper } from '../../../utils/sortHelper';
+import { TERMO_CONTRATO_SORT_CONFIG } from '../../../config/sortConfigs';
+import { logger } from '../../../utils/logger';
+
+export interface GetByContratoOptions {
+  sortColumn?: string;
+  sortDirection?: 'ASC' | 'DESC';
+}
 
 export class TermoContratoService {
   /**
-   * Buscar termos por contrato
+   * Buscar termos por contrato com ordenação
    */
-  static async getByContrato(contratoId: number): Promise<TermoContrato[]> {
-    return await TermoContrato.findByContrato(contratoId);
+  static async getByContrato(contratoId: number, options?: GetByContratoOptions): Promise<TermoContrato[]> {
+    const { sortColumn, sortDirection } = options || {};
+
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['created_at', 'DESC']]; // Padrão
+    if (sortColumn && sortDirection) {
+      const sortResult = SortHelper.buildOrder(
+        TERMO_CONTRATO_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('TermoContratoService.getByContrato - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
+      }
+    }
+
+    return await TermoContrato.findAll({
+      where: { contrato_id: contratoId },
+      include: [
+        {
+          association: 'modeloDocumento',
+          attributes: ['id', 'nome', 'tipo']
+        }
+      ],
+      order
+    });
   }
 
   /**

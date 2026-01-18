@@ -28,15 +28,25 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
   /**
    * Buscar títulos por contrato (retorna Titulo, não CarneParcela)
    */
-  async findByContrato(contratoId: number): Promise<ApiResponse<Titulo[]>> {
-    return this.customGet<Titulo[]>(`/contrato/${contratoId}`);
+  async findByContrato(contratoId: number, options?: { sortColumn?: string; sortDirection?: string }): Promise<ApiResponse<Titulo[]>> {
+    const params = new URLSearchParams();
+    if (options?.sortColumn) params.append('sortColumn', options.sortColumn);
+    if (options?.sortDirection) params.append('sortDirection', options.sortDirection);
+    const queryString = params.toString();
+    const url = `/contrato/${contratoId}${queryString ? `?${queryString}` : ''}`;
+    return this.customGet<Titulo[]>(url);
   }
 
   /**
    * Buscar títulos avulsos por contrato (retorna Titulo[], não CarneParcela[])
    */
-  async findAvulsosByContrato(contratoId: number): Promise<ApiResponse<Titulo[]>> {
-    return this.customGet<Titulo[]>(`/contrato/${contratoId}/avulsos`);
+  async findAvulsosByContrato(contratoId: number, options?: { sortColumn?: string; sortDirection?: string }): Promise<ApiResponse<Titulo[]>> {
+    const params = new URLSearchParams();
+    if (options?.sortColumn) params.append('sortColumn', options.sortColumn);
+    if (options?.sortDirection) params.append('sortDirection', options.sortDirection);
+    const queryString = params.toString();
+    const url = `/contrato/${contratoId}/avulsos${queryString ? `?${queryString}` : ''}`;
+    return this.customGet<Titulo[]>(url);
   }
 
   /**
@@ -236,8 +246,8 @@ export class TituloService {
   /**
    * Buscar títulos por contrato (retorna Titulo[], não CarneParcela[])
    */
-  static async findByContrato(contratoId: number): Promise<Titulo[]> {
-    const response = await tituloServiceInstance.findByContrato(contratoId);
+  static async findByContrato(contratoId: number, options?: { sortColumn?: string; sortDirection?: string }): Promise<Titulo[]> {
+    const response = await tituloServiceInstance.findByContrato(contratoId, options);
     if (response.data && Array.isArray(response.data)) {
       return response.data;
     }
@@ -247,8 +257,8 @@ export class TituloService {
   /**
    * Buscar títulos avulsos por contrato (retorna Titulo[], não CarneParcela[])
    */
-  static async findAvulsosByContrato(contratoId: number): Promise<Titulo[]> {
-    const response = await tituloServiceInstance.findAvulsosByContrato(contratoId);
+  static async findAvulsosByContrato(contratoId: number, options?: { sortColumn?: string; sortDirection?: string }): Promise<Titulo[]> {
+    const response = await tituloServiceInstance.findAvulsosByContrato(contratoId, options);
     if (response.data && Array.isArray(response.data)) {
       return response.data;
     }

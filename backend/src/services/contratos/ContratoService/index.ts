@@ -5,6 +5,8 @@ import { Banco } from '../../../models/cadastros/Banco';
 import { Op, WhereOptions, Transaction } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
+import { SortHelper } from '../../../utils/sortHelper';
+import { CONTRATO_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListContratosFilters {
   page?: number;
@@ -12,6 +14,8 @@ export interface ListContratosFilters {
   search?: string;
   status?: string;
   searchField?: string;
+  sortColumn?: string;
+  sortDirection?: string;
 }
 
 export interface ListContratosResponse {
@@ -65,7 +69,7 @@ export class ContratoService {
    * Listar contratos com filtros e paginação
    */
   static async list(filters: ListContratosFilters): Promise<ListContratosResponse> {
-    const { page = 1, limit = 10, search = '', status, searchField } = filters;
+    const { page = 1, limit = 10, search = '', status, searchField, sortColumn, sortDirection } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
@@ -106,17 +110,55 @@ export class ContratoService {
       whereClause.status = status;
     }
 
-    const { count, rows } = await Contrato.findAndCountAll({
-      where: whereClause,
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['id', 'DESC']]; // Padrão
+    if (sortColumn && sortDirection) {
+      const sortResult = SortHelper.buildOrder(
+        CONTRATO_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('ContratoService.list - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
+      }
+    }
+
+    let count: number;
+    let rows: Contrato[];
+    try {
+      const result = await Contrato.findAndCountAll({
+        where: whereClause,
       include: [
         { model: Cliente, as: 'cliente' },
         { model: Plano, as: 'plano' },
         { model: Banco, as: 'bancoBoleto' }
       ],
-      order: [['id', 'DESC']],
+      order,
       limit: limitNum,
       offset
-    });
+      });
+      count = result.count as number;
+      rows = result.rows;
+    } catch (queryError: any) {
+      logger.error('ContratoService.list - Erro na query', {
+        error: queryError.message,
+        errorName: queryError.name,
+        sql: queryError.sql,
+        stack: queryError.stack,
+        sortColumn,
+        sortDirection,
+        where: JSON.stringify(whereClause).substring(0, 300),
+        order: JSON.stringify(order).substring(0, 300)
+      });
+      throw queryError;
+    }
 
     return {
       data: rows,

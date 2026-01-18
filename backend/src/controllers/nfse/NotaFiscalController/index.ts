@@ -51,7 +51,9 @@ export class NotaFiscalController {
         status,
         cliente_id,
         data_inicio,
-        data_fim
+        data_fim,
+        sortColumn,
+        sortDirection
       } = req.query;
 
       const pageNumber = parseInt(page as string, 10);
@@ -66,7 +68,9 @@ export class NotaFiscalController {
         status: status as string,
         cliente_id: cliente_id ? parseInt(String(cliente_id), 10) : undefined,
         data_inicio: data_inicio as string,
-        data_fim: data_fim as string
+        data_fim: data_fim as string,
+        sortColumn: sortColumn as string,
+        sortDirection: sortDirection as string
       });
 
       sendSuccess(res, result);

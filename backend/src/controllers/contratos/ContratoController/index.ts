@@ -95,7 +95,7 @@ export class ContratoController {
   // Listar todos os contratos com paginação
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 10, search = '', status, searchField } = req.query;
+      const { page = 1, limit = 10, search = '', status, searchField, sortColumn, sortDirection } = req.query;
       const pageNum = Number(page);
       const limitNum = Number(limit);
       const offset = (pageNum - 1) * limitNum;
@@ -144,7 +144,9 @@ export class ContratoController {
         limit: limitNum,
         search: search as string,
         status: status as string,
-        searchField: searchField as string
+        searchField: searchField as string,
+        sortColumn: sortColumn as string,
+        sortDirection: sortDirection as string
       });
 
       sendSuccess(res, result);
@@ -161,12 +163,15 @@ export class ContratoController {
   static async getByCliente(req: Request, res: Response): Promise<void> {
     try {
       const { clienteId } = req.params;
+      const { sortColumn, sortDirection } = req.query;
       
       const result = await ContratoService.list({
         page: 1,
         limit: 1000,
         search: clienteId,
-        searchField: 'cliente_id'
+        searchField: 'cliente_id',
+        sortColumn: sortColumn as string | undefined,
+        sortDirection: (sortDirection as 'asc' | 'desc') || undefined
       });
 
       sendSuccess(res, result.data);

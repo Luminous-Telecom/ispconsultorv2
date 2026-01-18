@@ -30,7 +30,7 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     pagination,
     filters: _filters = [],
     searchable = true,
-    sortable = true,
+    sortable: _sortable = true,
     sortColumn: propSortColumn,
     sortDirection: propSortDirection,
     selectable = true,
@@ -185,35 +185,14 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     return result;
   }, [state.data, state.searchTerm, state.filters, columns, searchable, pagination]);
 
-  // Ordenar dados
+  // TODA ordenação deve ser feita no backend
+  // Se há sortColumn/sortDirection, o backend deve ordenar antes de retornar os dados
+  // Se não há sortColumn mas há paginação, o backend já ordena por padrão (id DESC)
   const sortedData = useMemo(() => {
-    if (!sortable) return filteredData;
-
-    // Se não há coluna de ordenação especificada, usar ordenação padrão por ID decrescente
-    const sortColumn = state.sortColumn || 'id';
-    const sortDirection = state.sortColumn ? state.sortDirection : 'desc';
-
-    return [...filteredData].sort((a, b) => {
-      const aValue = a[sortColumn as keyof T];
-      const bValue = b[sortColumn as keyof T];
-
-      if (aValue === null || aValue === undefined) return 1;
-      if (bValue === null || bValue === undefined) return -1;
-
-      let comparison = 0;
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        comparison = aValue.localeCompare(bValue);
-      } else if (typeof aValue === 'number' && typeof bValue === 'number') {
-        comparison = aValue - bValue;
-      } else if (aValue instanceof Date && bValue instanceof Date) {
-        comparison = aValue.getTime() - bValue.getTime();
-      } else {
-        comparison = String(aValue).localeCompare(String(bValue));
-      }
-
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
-  }, [filteredData, state.sortColumn, state.sortDirection, sortable]);
+    // Se há ordenação especificada (sortColumn) ou paginação, assumir que dados já vêm ordenados do backend
+    // Não ordenar localmente em nenhum caso - sempre usar ordenação do backend
+    return filteredData;
+  }, [filteredData]);
 
   // Paginar dados
   // Se há paginação do servidor, os dados já vêm paginados, não fazer slice local

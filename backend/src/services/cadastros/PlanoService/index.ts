@@ -4,6 +4,8 @@ import { Op, WhereOptions, Order } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { cache } from '../../../utils/cache';
 import { logger } from '../../../utils/logger';
+import { SortHelper } from '../../../utils/sortHelper';
+import { PLANO_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListPlanosFilters {
   page?: number;
@@ -76,23 +78,40 @@ export class PlanoService {
       ? { [Op.and]: whereConditions } as WhereOptions<Plano>
       : {};
 
-    // Construir ordenação
-    let order: Order = [['id', 'DESC']];
-    if (sortColumn && sortDirection) {
-      const allowedColumns = [
-        'id', 'nome_plano', 'descricao', 'tipo_servico', 'quantidade_usuarios', 
-        'valor_mensal', 'periodicidade', 'status', 'created_at'
-      ];
-      
-      if (allowedColumns.includes(sortColumn)) {
-        const direction = sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-        order = [[sortColumn, direction]];
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    // Se for ordenar por quantidade_clientes, usar subquery especial
+    let order: Order = [['id', 'DESC']]; // Padrão
+    const isOrderingByQuantidadeClientes = sortColumn === 'quantidade_clientes' || sortColumn === 'clientes';
+    
+    if (sortColumn && sortDirection && !isOrderingByQuantidadeClientes) {
+      const sortResult = SortHelper.buildOrder(
+        PLANO_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('PlanoService.list - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
       }
+    } else if (isOrderingByQuantidadeClientes && sortDirection) {
+      // Ordenação especial por quantidade_clientes usando subquery
+      // IMPORTANTE: Usar o alias 'Plano' que o Sequelize gera para a tabela 'planos'
+      const upperDirection = sortDirection.toUpperCase() as 'ASC' | 'DESC';
+      const subquerySql = `(SELECT COUNT(DISTINCT contratos.cliente_id) FROM contratos WHERE contratos.plano_id = Plano.id AND contratos.status = 'ativo')`;
+      order = [[sequelize.literal(subquerySql), upperDirection]];
     }
 
     const count = await Plano.count({ where });
     
-    const planos = await Plano.findAll({
+    let planos;
+    try {
+      planos = await Plano.findAll({
       where,
       attributes: [
         'id', 'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',
@@ -113,7 +132,22 @@ export class PlanoService {
       limit,
       offset,
       raw: false
-    });
+      });
+      
+    } catch (queryError: any) {
+      logger.error('PlanoService.list - Erro na query', {
+        error: queryError.message,
+        errorName: queryError.name,
+        sql: queryError.sql,
+        stack: queryError.stack,
+        sortColumn,
+        sortDirection,
+        order: JSON.stringify(order).substring(0, 300),
+        where: JSON.stringify(where).substring(0, 300),
+        isOrderingByQuantidadeClientes
+      });
+      throw queryError;
+    }
 
     // Buscar quantidade de contratos ativos por plano
     const planoIds = planos.map(p => p.id);

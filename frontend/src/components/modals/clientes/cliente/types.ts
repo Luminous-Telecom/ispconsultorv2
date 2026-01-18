@@ -65,6 +65,9 @@ export interface ContratosTabProps {
   isGeneratingPdf: boolean;
   onAudit?: (contrato: Contrato) => void;
   auditEntity?: string;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (column: string, direction: 'asc' | 'desc') => void;
 }
 
 export interface FinanceiroTabProps {
@@ -85,5 +88,8 @@ export interface FinanceiroTabProps {
   }>;
   onAudit?: (titulo: CarneParcela) => void;
   auditEntity?: string;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (column: string, direction: 'asc' | 'desc') => void;
 }
 

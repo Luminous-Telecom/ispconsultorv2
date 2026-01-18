@@ -3,6 +3,7 @@ import { TermoContrato } from '@/services/termoContratoService';
 import Table from '@/components/tables/Table';
 import { BulkAction } from '../types';
 import { TableColumn } from '@/components/tables/types';
+import { SortDirection } from '@/components/tables/types';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface TermosTabProps {
@@ -19,6 +20,9 @@ interface TermosTabProps {
   onRefresh?: () => void;
   onAudit?: (item: TermoContrato) => void;
   auditEntity?: string;
+  sortColumn?: string;
+  sortDirection?: SortDirection;
+  onSort?: (column: string, direction: SortDirection) => void;
 }
 
 const TermosTab: React.FC<TermosTabProps> = ({
@@ -35,6 +39,9 @@ const TermosTab: React.FC<TermosTabProps> = ({
   onRefresh,
   onAudit,
   auditEntity,
+  sortColumn,
+  sortDirection,
+  onSort,
 }) => {
   const { t } = useI18n();
   return (
@@ -59,6 +66,9 @@ const TermosTab: React.FC<TermosTabProps> = ({
                 { key: 'aceito_por', label: t('table.acceptedBy') },
                 { key: 'ativo', label: t('table.status') }
               ],
+              sortable: true,
+              sortColumn,
+              sortDirection,
               emptyMessage: t('empty.noTermsRegistered'),
               className: 'no-padding',
               pagination: {
@@ -82,6 +92,7 @@ const TermosTab: React.FC<TermosTabProps> = ({
             onPageChange={setPage}
             onPageSizeChange={setLimit}
             onRefresh={onRefresh}
+            onSort={onSort}
             onAudit={onAudit}
             auditEntity={auditEntity}
           />

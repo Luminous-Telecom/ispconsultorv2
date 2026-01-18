@@ -56,13 +56,15 @@ alwaysApply: true
 />
 ```
 
-### Ordenação Local
-- SEMPRE implemente ordenação LOCAL, não no servidor
+### Ordenação Backend
+- SEMPRE implemente ordenação no BACKEND, não local
+- Backend ordena TODOS os dados antes da paginação
+- Controllers recebem `sortColumn` e `sortDirection` da query
+- Services aplicam ORDER BY antes do LIMIT/OFFSET
 - Estado inicial padrão: `sortColumn='id'` e `sortDirection='desc'`
 - Últimos registros (ID maior) aparecem primeiro por padrão
-- Use hook `useSorting` para ordenar dados
 - Suporte ordenação por: strings, números, datas
-- Trate valores `null` e `undefined` na ordenação
+- Valide colunas permitidas em allowedColumns
 
 ### Bulk Actions
 - Sempre valide se há itens selecionados

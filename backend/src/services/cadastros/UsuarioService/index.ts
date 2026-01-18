@@ -1,13 +1,18 @@
 import { Usuario } from '../../../models/cadastros/Usuario';
 import { Op, WhereOptions } from 'sequelize';
+import { sequelize } from '../../../config/database';
 import * as bcrypt from 'bcryptjs';
 import { logger } from '../../../utils/logger';
+import { SortHelper } from '../../../utils/sortHelper';
+import { USUARIO_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListUsuariosFilters {
   page?: number;
   limit?: number;
   search?: string;
   ativo?: string;
+  sortColumn?: string;
+  sortDirection?: string;
 }
 
 export interface ListUsuariosResponse {
@@ -28,7 +33,7 @@ export class UsuarioService {
    * Listar usuários com filtros e paginação
    */
   static async list(filters: ListUsuariosFilters): Promise<ListUsuariosResponse> {
-    const { page = 1, limit = 10, search = '', ativo } = filters;
+    const { page = 1, limit = 10, search = '', ativo, sortColumn, sortDirection } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
@@ -49,12 +54,46 @@ export class UsuarioService {
       whereClause.ativo = ativo === 'true';
     }
 
-    const { count, rows } = await Usuario.findAndCountAll({
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['id', 'DESC']]; // Padrão
+    if (sortColumn && sortDirection) {
+      const sortResult = SortHelper.buildOrder(
+        USUARIO_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('UsuarioService.list - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
+      }
+    }
+
+    let count: number;
+    let rows: any[];
+    try {
+      const result = await Usuario.findAndCountAll({
       where: whereClause,
-      order: [['id', 'DESC']],
+      order,
       limit: limitNum,
       offset
-    });
+      });
+      count = result.count as number;
+      rows = result.rows;
+    } catch (queryError: any) {
+      logger.error('UsuarioService.list - Erro na query', {
+        error: queryError.message,
+        stack: queryError.stack,
+        where: JSON.stringify(whereClause).substring(0, 200),
+        order: JSON.stringify(order).substring(0, 200)
+      });
+      throw queryError;
+    }
 
     return {
       success: true,

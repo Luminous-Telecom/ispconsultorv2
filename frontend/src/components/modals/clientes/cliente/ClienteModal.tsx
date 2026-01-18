@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TituloService } from '@/services/tituloService';
+import { useTableFilters } from '@/hooks/useTableFilters';
 import { useFormPrefix } from '@/hooks/useFormId';
 import { useClienteForm } from '@/hooks/useClienteForm';
 import { useClienteContratos } from '@/hooks/useClienteContratos';
@@ -76,17 +77,42 @@ const ClienteModal = ({
   });
 
 
+  // Gerenciar ordenação para contratos do cliente (backend ordena)
+  const contratosTableFilters = useTableFilters({
+    initialPage: 1,
+    initialLimit: 100,
+    initialSortColumn: 'id',
+    initialSortDirection: 'desc',
+    resetPageOnFilterChange: false,
+  });
+
   // Hook de contratos
   const contratosHook = useClienteContratos({
     clienteId,
-    createdClienteId: formHook.createdClienteId
+    createdClienteId: formHook.createdClienteId,
+    sortColumn: contratosTableFilters.sortColumn,
+    sortDirection: contratosTableFilters.sortDirection as 'asc' | 'desc' | undefined
   });
 
-  // Buscar parcelas do cliente
+  // Gerenciar ordenação para títulos do cliente (backend ordena)
+  const titulosTableFilters = useTableFilters({
+    initialPage: 1,
+    initialLimit: 100,
+    initialSortColumn: 'id',
+    initialSortDirection: 'desc',
+    resetPageOnFilterChange: false,
+  });
+
+  // Buscar parcelas do cliente - ordenação feita no backend
   const effectiveClienteIdForParcelas = clienteId || formHook.createdClienteId || undefined;
   const { data: parcelasData, isLoading: isLoadingParcelas, refetch: refetchParcelas } = useQuery({
-    queryKey: ['parcelas', 'cliente', effectiveClienteIdForParcelas],
-    queryFn: () => TituloService.list({ cliente_id: effectiveClienteIdForParcelas!, limit: 100 }),
+    queryKey: ['parcelas', 'cliente', effectiveClienteIdForParcelas, titulosTableFilters.sortColumn, titulosTableFilters.sortDirection],
+    queryFn: () => TituloService.list({ 
+      cliente_id: effectiveClienteIdForParcelas!, 
+      limit: 100,
+      sortColumn: titulosTableFilters.sortColumn,
+      sortDirection: titulosTableFilters.sortDirection
+    }),
     enabled: !!effectiveClienteIdForParcelas,
   });
 
@@ -446,6 +472,9 @@ const ClienteModal = ({
                 isGeneratingPdf={impressaoHook.isGeneratingPdf}
                 onAudit={(contrato) => auditoria.handleAudit('Contrato', contrato.id)}
                 auditEntity="Contrato"
+                sortColumn={contratosTableFilters.sortColumn}
+                sortDirection={contratosTableFilters.sortDirection}
+                onSort={contratosTableFilters.setSort}
               />
             )}
 
@@ -464,6 +493,9 @@ const ClienteModal = ({
                 columns={columns}
                 onAudit={(titulo) => auditoria.handleAudit('Titulo', titulo.id)}
                 auditEntity="Titulo"
+                sortColumn={titulosTableFilters.sortColumn}
+                sortDirection={titulosTableFilters.sortDirection}
+                onSort={titulosTableFilters.setSort}
               />
             )}
 

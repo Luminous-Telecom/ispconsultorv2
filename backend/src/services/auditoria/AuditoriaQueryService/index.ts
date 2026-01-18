@@ -2,6 +2,9 @@ import { Op, WhereOptions } from 'sequelize';
 import { Auditoria } from '../../../models/sistema/Auditoria';
 import { Usuario } from '../../../models/cadastros/Usuario';
 import { getElasticsearchService } from '../../elasticsearch/ElasticsearchService';
+import { SortHelper } from '../../../utils/sortHelper';
+import { AUDITORIA_SORT_CONFIG } from '../../../config/sortConfigs';
+import { logger } from '../../../utils/logger';
 
 export class AuditoriaQueryService {
   /**
@@ -148,6 +151,8 @@ export class AuditoriaQueryService {
     usuario_id?: number;
     dataInicio?: string;
     dataFim?: string;
+    sortColumn?: string;
+    sortDirection?: string;
   }): Promise<{ logs: any[]; total: number }> {
     const elasticsearchService = getElasticsearchService();
     const client = elasticsearchService.getClient();
@@ -156,8 +161,29 @@ export class AuditoriaQueryService {
       throw new Error('Elasticsearch client não disponível');
     }
 
-    const { page, limit, ...queryParams } = params;
+    const { page, limit, sortColumn, sortDirection, ...queryParams } = params;
     const { must } = this.buildElasticsearchQuery(queryParams);
+
+    // Construir ordenação para Elasticsearch
+    // Mapear colunas do frontend para campos do Elasticsearch
+    const sortFieldMap: Record<string, string> = {
+      'id': 'id',
+      'timestamp': 'timestamp',
+      'created_at': 'timestamp',
+      'acao': 'acao',
+      'entidade': 'entidade',
+      'usuario': 'usuario_nome',
+      'usuario_nome': 'usuario_nome',
+      'usuario_email': 'usuario_email',
+      'ip_address': 'ip_address',
+      'observacoes': 'observacoes',
+      'rota': 'rota',
+      'metodo_http': 'metodo_http'
+    };
+
+    const sortField = sortFieldMap[sortColumn || 'timestamp'] || 'timestamp';
+    const sortOrder = (sortDirection || 'desc').toLowerCase() === 'asc' ? 'asc' : 'desc';
+
 
     const query: any = {
       index: elasticsearchService.getIndexName(),
@@ -167,7 +193,7 @@ export class AuditoriaQueryService {
               must: must.length > 0 ? must : [{ match_all: {} }]
             }
           },
-          sort: [{ timestamp: { order: 'desc' } }],
+          sort: [{ [sortField]: { order: sortOrder } }],
           from: (page - 1) * limit,
           size: limit
         }
@@ -204,15 +230,37 @@ export class AuditoriaQueryService {
     usuario_id?: number;
     dataInicio?: string;
     dataFim?: string;
+    sortColumn?: string;
+    sortDirection?: string;
   }): Promise<{ logs: any[]; total: number }> {
-    const { page, limit, ...filterParams } = params;
+    const { page, limit, sortColumn, sortDirection, ...filterParams } = params;
     const where = this.buildDatabaseFilters(filterParams);
+
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['created_at', 'DESC']]; // Padrão
+    if (sortColumn && sortDirection) {
+      const sortResult = SortHelper.buildOrder(
+        AUDITORIA_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('AuditoriaQueryService.searchFromDatabase - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
+      }
+    }
 
     const { count, rows } = await Auditoria.findAndCountAll({
       where,
       limit,
       offset: (page - 1) * limit,
-      order: [['created_at', 'DESC']],
+      order,
       include: [
         {
           model: require('../../../models/cadastros/Usuario').Usuario,

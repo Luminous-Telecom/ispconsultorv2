@@ -27,8 +27,18 @@ class ContratoServiceClass extends BaseService<Contrato, CreateContratoData, Upd
   /**
    * Buscar contratos por cliente
    */
-  async getByCliente(clienteId: number): Promise<ApiResponse<Contrato[]>> {
-    return this.customGet<Contrato[]>(`/cliente/${clienteId}`);
+  async getByCliente(clienteId: number, options?: { sortColumn?: string; sortDirection?: 'asc' | 'desc' }): Promise<ApiResponse<Contrato[]>> {
+    const params = new URLSearchParams();
+    if (options?.sortColumn) {
+      params.append('sortColumn', options.sortColumn);
+    }
+    if (options?.sortDirection) {
+      params.append('sortDirection', options.sortDirection);
+    }
+    
+    const queryString = params.toString();
+    const url = `/cliente/${clienteId}${queryString ? `?${queryString}` : ''}`;
+    return this.customGet<Contrato[]>(url);
   }
 
   /**
@@ -68,8 +78,8 @@ export class ContratoService {
   /**
    * Buscar contratos por cliente
    */
-  static async getByCliente(clienteId: number): Promise<Contrato[]> {
-    const response = await contratoServiceInstance.getByCliente(clienteId);
+  static async getByCliente(clienteId: number, options?: { sortColumn?: string; sortDirection?: 'asc' | 'desc' }): Promise<Contrato[]> {
+    const response = await contratoServiceInstance.getByCliente(clienteId, options);
     if (response.data && Array.isArray(response.data)) {
       return response.data;
     }

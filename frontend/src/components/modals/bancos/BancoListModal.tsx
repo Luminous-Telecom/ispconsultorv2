@@ -80,7 +80,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       render: (item: Banco) => item.descricao || '-'
     },
     {
-      key: 'tipo',
+      key: 'tipo_banco',
       label: t('table.bankType'),
       sortable: true,
       width: '90px',

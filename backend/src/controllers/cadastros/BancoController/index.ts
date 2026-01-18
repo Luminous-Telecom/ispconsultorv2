@@ -24,14 +24,16 @@ export class BancoController {
 
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { search, status, tipo_banco, page = 1, limit = 15 } = req.query;
+      const { search, status, tipo_banco, page = 1, limit = 15, sortColumn, sortDirection } = req.query;
       
       const result = await BancoService.list({
         search: search as string | undefined,
         status: status as string | undefined,
         tipo_banco: tipo_banco as string | undefined,
         page: Number(page),
-        limit: Number(limit)
+        limit: Number(limit),
+        sortColumn: sortColumn as string | undefined,
+        sortDirection: sortDirection as string | undefined
       });
       
       sendSuccess(res, result);

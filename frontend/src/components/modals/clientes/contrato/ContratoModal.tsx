@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTableFilters } from '@/hooks/useTableFilters';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { usePlanos } from '@/hooks/usePlanos';
 import { useBancos } from '@/hooks/useBancos';
@@ -146,6 +147,34 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  
+  // Gerenciar ordenação para títulos do contrato (backend ordena)
+  const titulosTableFilters = useTableFilters({
+    initialPage: 1,
+    initialLimit: 100,
+    initialSortColumn: 'id',
+    initialSortDirection: 'desc',
+    resetPageOnFilterChange: false,
+  });
+  
+  // Gerenciar ordenação para títulos avulsos (backend ordena)
+  const titulosAvulsosTableFilters = useTableFilters({
+    initialPage: 1,
+    initialLimit: 100,
+    initialSortColumn: 'id',
+    initialSortDirection: 'desc',
+    resetPageOnFilterChange: false,
+  });
+
+  // Gerenciar ordenação para termos (backend ordena)
+  const termosTableFilters = useTableFilters({
+    initialPage: 1,
+    initialLimit: 100,
+    initialSortColumn: 'id',
+    initialSortDirection: 'desc',
+    resetPageOnFilterChange: false,
+  });
+  
   const [showCancelados, setShowCancelados] = useState(false);
   const [showCanceladosAvulsos, setShowCanceladosAvulsos] = useState(false);
   const { success, error } = useNotificationContext();
@@ -203,8 +232,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     }
   }, [formData.modelo_documento_id, modelosContrato, modeloContratoSelecionado, setModeloContratoSelecionado]);
 
-  // Hooks para termos (apenas no modo edição)
-  const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(isEditMode ? (internalContratoId || 0) : 0);
+  // Hooks para termos (apenas no modo edição) - ordenação no backend
+  const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(
+    isEditMode ? (internalContratoId || 0) : 0,
+    {
+      sortColumn: termosTableFilters.sortColumn,
+      sortDirection: termosTableFilters.sortDirection as 'asc' | 'desc' | undefined
+    }
+  );
   const deleteTermoMutation = useDeleteTermoContrato();
 
   // Hooks para serviços adicionais (apenas no modo edição)
@@ -231,11 +266,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     staleTime: 60 * 1000,
   });
 
-  // Buscar títulos/financeiros do contrato (apenas no modo edição)
+  // Buscar títulos/financeiros do contrato (apenas no modo edição) - ordenação no backend
   const { data: titulosData, isLoading: isLoadingTitulos, refetch: refetchTitulos } = useQuery({
-    queryKey: ['titulos', 'contrato', internalContratoId],
+    queryKey: ['titulos', 'contrato', internalContratoId, titulosTableFilters.sortColumn, titulosTableFilters.sortDirection],
     queryFn: async () => {
-      const titulos = await TituloService.findByContrato(internalContratoId!);
+      const titulos = await TituloService.findByContrato(internalContratoId!, {
+        sortColumn: titulosTableFilters.sortColumn,
+        sortDirection: titulosTableFilters.sortDirection
+      });
       return { data: titulos };
     },
     enabled: isEditMode && !!internalContratoId,
@@ -270,11 +308,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showCancelados]);
 
-  // Buscar títulos avulsos do contrato (apenas no modo edição)
+  // Buscar títulos avulsos do contrato (apenas no modo edição) - ordenação no backend
   const { data: titulosAvulsosData, isLoading: isLoadingTitulosAvulsos, refetch: refetchTitulosAvulsos } = useQuery({
-    queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'],
+    queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos', titulosAvulsosTableFilters.sortColumn, titulosAvulsosTableFilters.sortDirection],
     queryFn: async () => {
-      const titulos = await TituloService.findAvulsosByContrato(internalContratoId!);
+      const titulos = await TituloService.findAvulsosByContrato(internalContratoId!, {
+        sortColumn: titulosAvulsosTableFilters.sortColumn,
+        sortDirection: titulosAvulsosTableFilters.sortDirection
+      });
       return { data: titulos };
     },
     enabled: isEditMode && !!internalContratoId,
@@ -1646,14 +1687,15 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     return filteredData;
   }, [isEditMode, titulosAvulsosData?.data]);
   
+  // Backend já ordena termos e serviços adicionais por created_at DESC - não ordenar localmente
   const filteredTermosData = isEditMode && termosArray.length > 0
     ? termosArray.filter((termo: TermoContrato) => termo.ativo)
     : [];
-  const sortedTermosData = [...filteredTermosData].sort((a: TermoContrato, b: TermoContrato) => (b.id || 0) - (a.id || 0));
+  const sortedTermosData = filteredTermosData; // Backend já ordena
   
-  // Dados de serviços adicionais
+  // Dados de serviços adicionais - backend já ordena por created_at DESC
   const servicosAdicionaisArray = servicosAdicionaisData?.data || [];
-  const sortedServicosAdicionaisData = [...servicosAdicionaisArray].sort((a: ContratoPlanoAdicional, b: ContratoPlanoAdicional) => (b.id || 0) - (a.id || 0));
+  const sortedServicosAdicionaisData = servicosAdicionaisArray; // Backend já ordena
 
   // Atualizar internalContratoId quando contrato for criado
   useEffect(() => {
@@ -1882,6 +1924,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   onRefresh={refetchTermos}
                   onAudit={(termo) => auditoria.handleAudit('TermoContrato', termo.id)}
                   auditEntity="TermoContrato"
+                  sortColumn={termosTableFilters.sortColumn}
+                  sortDirection={termosTableFilters.sortDirection}
+                  onSort={termosTableFilters.setSort}
                 />
               ) : (
                 <div className="d-flex align-items-center justify-content-center contrato-placeholder">
@@ -1911,6 +1956,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   setShowCancelados={setShowCancelados}
                   onAudit={(titulo) => auditoria.handleAudit('Titulo', titulo.id)}
                   auditEntity="Titulo"
+                  sortColumn={titulosTableFilters.sortColumn}
+                  sortDirection={titulosTableFilters.sortDirection}
+                  onSort={titulosTableFilters.setSort}
                 />
               ) : (
                 <div className="d-flex align-items-center justify-content-center contrato-placeholder">
@@ -1940,6 +1988,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   setShowCancelados={setShowCanceladosAvulsos}
                   onAudit={(titulo) => auditoria.handleAudit('Titulo', titulo.id)}
                   auditEntity="Titulo"
+                  sortColumn={titulosAvulsosTableFilters.sortColumn}
+                  sortDirection={titulosAvulsosTableFilters.sortDirection}
+                  onSort={titulosAvulsosTableFilters.setSort}
                 />
               ) : (
                 <div className="d-flex align-items-center justify-content-center contrato-placeholder">

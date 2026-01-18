@@ -35,7 +35,9 @@ export class TituloCRUDController {
         data_vencimento_inicio,
         data_vencimento_fim,
         search,
-        searchField
+        searchField,
+        sortColumn,
+        sortDirection
       } = req.query;
 
       const limitNum = Number(limit);
@@ -50,11 +52,39 @@ export class TituloCRUDController {
         data_vencimento_inicio: data_vencimento_inicio as string,
         data_vencimento_fim: data_vencimento_fim as string,
         search: search as string,
-        searchField: searchField as string
+        searchField: searchField as string,
+        sortColumn: sortColumn as string,
+        sortDirection: sortDirection as string
       });
 
       sendSuccess(res, result);
     } catch (error: unknown) {
+      const logger = (await import('../../../utils/logger')).logger;
+      
+      // Log detalhado do erro antes de enviar resposta genérica
+      const sqlError = error as any;
+      const errorDetails: Record<string, unknown> = {
+        error: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : undefined,
+        query: req.query,
+        sortColumn: req.query.sortColumn,
+        sortDirection: req.query.sortDirection
+      };
+      
+      // Tentar extrair SQL do erro Sequelize
+      if (sqlError?.sql) {
+        errorDetails.sql = typeof sqlError.sql === 'string' ? sqlError.sql.substring(0, 1000) : sqlError.sql;
+      }
+      if (sqlError?.original?.sql) {
+        errorDetails.sql = typeof sqlError.original.sql === 'string' ? sqlError.original.sql.substring(0, 1000) : sqlError.original.sql;
+      }
+      if (sqlError?.original?.message) {
+        errorDetails.originalMessage = sqlError.original.message;
+      }
+      
+      logger.error('TituloCRUDController.list - Erro capturado no controller', errorDetails);
+      
       sendError(res, error, 'Erro ao listar títulos', 500, true, {
         query: req.query,
         search: req.query.search ? String(req.query.search) : null,
@@ -480,28 +510,59 @@ export class TituloCRUDController {
   public static async getByContrato(req: Request, res: Response): Promise<void> {
     try {
       const { contratoId } = req.params;
+      const { sortColumn, sortDirection } = req.query;
+
+      const logger = (await import('../../../utils/logger')).logger;
+      logger.info('TituloCRUDController.getByContrato - Iniciando', {
+        contratoId,
+        sortColumn,
+        sortDirection
+      });
 
       const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
+        logger.warn('TituloCRUDController.getByContrato - Contrato não encontrado', { contratoId });
         sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
+      const finalSortColumn = (sortColumn as string) || 'id';
+      const finalSortDirection = (sortDirection as string) || 'desc';
+
+      logger.debug('TituloCRUDController.getByContrato - Chamando TituloService.list', {
+        contratoId,
+        finalSortColumn,
+        finalSortDirection
+      });
+
+      // Usar TituloService.list com filtro de contrato_id e ordenação do backend
       const result = await TituloService.list({
         page: 1,
         limit: 1000,
-        search: contratoId,
-        searchField: 'contrato_id'
+        cliente_id: undefined, // Não filtrar por cliente
+        search: String(contratoId),
+        searchField: 'contrato_id',
+        sortColumn: finalSortColumn,
+        sortDirection: finalSortDirection
       });
 
-      const titulos = result.data.filter(t => !t.is_avulso).sort((a, b) => {
-        const dateA = a.data_vencimento ? new Date(a.data_vencimento).getTime() : 0;
-        const dateB = b.data_vencimento ? new Date(b.data_vencimento).getTime() : 0;
-        return dateB - dateA; // DESC
+      // Filtrar apenas não-avulsos - backend já ordena
+      const titulos = result.data.filter(t => !t.is_avulso);
+
+      logger.info('TituloCRUDController.getByContrato - Sucesso', {
+        contratoId,
+        totalTitulos: titulos.length,
+        totalEncontrados: result.data.length
       });
 
       sendSuccess(res, titulos);
     } catch (error: unknown) {
+      const logger = (await import('../../../utils/logger')).logger;
+      logger.error('TituloCRUDController.getByContrato - Erro', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        contratoId: req.params.contratoId
+      });
       sendError(res, error, 'Erro ao buscar títulos por contrato', 500, true);
     }
   }
@@ -512,28 +573,59 @@ export class TituloCRUDController {
   public static async getAvulsosByContrato(req: Request, res: Response): Promise<void> {
     try {
       const { contratoId } = req.params;
+      const { sortColumn, sortDirection } = req.query;
+
+      const logger = (await import('../../../utils/logger')).logger;
+      logger.info('TituloCRUDController.getAvulsosByContrato - Iniciando', {
+        contratoId,
+        sortColumn,
+        sortDirection
+      });
 
       const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
+        logger.warn('TituloCRUDController.getAvulsosByContrato - Contrato não encontrado', { contratoId });
         sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
+      const finalSortColumn = (sortColumn as string) || 'id';
+      const finalSortDirection = (sortDirection as string) || 'desc';
+
+      logger.debug('TituloCRUDController.getAvulsosByContrato - Chamando TituloService.list', {
+        contratoId,
+        finalSortColumn,
+        finalSortDirection
+      });
+
+      // Usar TituloService.list com filtro de contrato_id e ordenação do backend
       const result = await TituloService.list({
         page: 1,
         limit: 1000,
-        search: contratoId,
-        searchField: 'contrato_id'
+        cliente_id: undefined, // Não filtrar por cliente
+        search: String(contratoId),
+        searchField: 'contrato_id',
+        sortColumn: finalSortColumn,
+        sortDirection: finalSortDirection
       });
 
-      const titulos = result.data.filter(t => t.is_avulso).sort((a, b) => {
-        const dateA = a.data_vencimento ? new Date(a.data_vencimento).getTime() : 0;
-        const dateB = b.data_vencimento ? new Date(b.data_vencimento).getTime() : 0;
-        return dateB - dateA; // DESC
+      // Filtrar apenas avulsos - backend já ordena
+      const titulos = result.data.filter(t => t.is_avulso);
+
+      logger.info('TituloCRUDController.getAvulsosByContrato - Sucesso', {
+        contratoId,
+        totalTitulos: titulos.length,
+        totalEncontrados: result.data.length
       });
 
       sendSuccess(res, titulos);
     } catch (error: unknown) {
+      const logger = (await import('../../../utils/logger')).logger;
+      logger.error('TituloCRUDController.getAvulsosByContrato - Erro', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        contratoId: req.params.contratoId
+      });
       sendError(res, error, 'Erro ao buscar títulos avulsos por contrato', 500, true);
     }
   }

@@ -6,6 +6,8 @@ import { TableColumn } from '@/components/tables/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useI18n } from '@/contexts/I18nContext';
 
+import { SortDirection } from '@/components/tables/types';
+
 interface FinanceiroAvulsoTabProps {
   isLoading: boolean;
   bulkActions: BulkAction<Titulo>[];
@@ -22,6 +24,9 @@ interface FinanceiroAvulsoTabProps {
   setShowCancelados: (show: boolean) => void;
   onAudit?: (item: Titulo) => void;
   auditEntity?: string;
+  sortColumn?: string;
+  sortDirection?: SortDirection;
+  onSort?: (column: string, direction: SortDirection) => void;
 }
 
 const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
@@ -40,6 +45,9 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
   setShowCancelados,
   onAudit,
   auditEntity,
+  sortColumn,
+  sortDirection,
+  onSort,
 }) => {
   const isMobile = useIsMobile();
   const { t } = useI18n();
@@ -152,6 +160,8 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
                 { key: 'nfse_numero', label: t('table.nf') }
               ],
               sortable: true,
+              sortColumn,
+              sortDirection,
               striped: true,
               hover: true,
               responsive: true,
@@ -179,7 +189,7 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
             onPageChange={setPage}
             onPageSizeChange={setLimit}
             onRefresh={onRefresh}
-            onSort={() => {}}
+            onSort={onSort}
             onAudit={onAudit}
             auditEntity={auditEntity}
           />

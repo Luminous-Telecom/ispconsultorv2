@@ -4,11 +4,15 @@
  */
 
 import { useState, useMemo } from 'react';
-import { useContratos, Contrato } from './useContratos';
+import { useQuery } from '@tanstack/react-query';
+import { ContratoService } from '../services/contratoService';
+import { Contrato } from './useContratos';
 
 interface UseClienteContratosParams {
   clienteId: number | null;
   createdClienteId: number | null;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
 }
 
 interface UseClienteContratosReturn {
@@ -35,15 +39,21 @@ interface UseClienteContratosReturn {
 
 export const useClienteContratos = ({
   clienteId,
-  createdClienteId
+  createdClienteId,
+  sortColumn,
+  sortDirection
 }: UseClienteContratosParams): UseClienteContratosReturn => {
   const [showInativosContratos, setShowInativosContratos] = useState(false);
 
   // Determinar ID efetivo do cliente (usar clienteId quando editando, ou createdClienteId quando criou)
   const effectiveClienteId = clienteId || createdClienteId || undefined;
 
-  // Buscar contratos usando hook existente
-  const { data: contratosData, isLoading: isLoadingContratos, refetch: refetchContratos } = useContratos(effectiveClienteId);
+  // Buscar contratos com ordenação no backend
+  const { data: contratosData, isLoading: isLoadingContratos, refetch: refetchContratos } = useQuery({
+    queryKey: ['contratos', effectiveClienteId, sortColumn, sortDirection],
+    queryFn: () => effectiveClienteId ? ContratoService.getByCliente(effectiveClienteId, { sortColumn, sortDirection }) : ContratoService.getAtivos(),
+    enabled: !!effectiveClienteId,
+  });
 
   // Flag para habilitar edição de contratos
   const canEditContratos = useMemo(() => {

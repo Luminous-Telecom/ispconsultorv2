@@ -36,6 +36,9 @@ export class AuditoriaController {
       const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
       const dataInicio = req.query.data_inicio as string;
       const dataFim = req.query.data_fim as string;
+      const sortColumn = req.query.sortColumn as string;
+      const sortDirection = req.query.sortDirection as string;
+
 
       const { logs, total } = await AuditoriaQueryService.searchFromElasticsearch({
         page,
@@ -45,7 +48,9 @@ export class AuditoriaController {
         entidade,
         usuario_id,
         dataInicio,
-        dataFim
+        dataFim,
+        sortColumn,
+        sortDirection
       });
 
       sendSuccess(res, {
@@ -87,6 +92,9 @@ export class AuditoriaController {
       const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
       const dataInicio = req.query.data_inicio as string;
       const dataFim = req.query.data_fim as string;
+      const sortColumn = req.query.sortColumn as string;
+      const sortDirection = req.query.sortDirection as string;
+
 
       const { logs, total } = await AuditoriaQueryService.searchFromDatabase({
         page,
@@ -96,7 +104,9 @@ export class AuditoriaController {
         entidade,
         usuario_id,
         dataInicio,
-        dataFim
+        dataFim,
+        sortColumn,
+        sortDirection
       });
 
       sendSuccess(res, {

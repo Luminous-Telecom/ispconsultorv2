@@ -16,7 +16,10 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
   setShowInativosContratos,
   onRefresh,
   onAudit,
-  auditEntity
+  auditEntity,
+  sortColumn,
+  sortDirection,
+  onSort
 }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
@@ -238,6 +241,8 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               { key: 'estado', label: t('table.state') }
             ],
             sortable: true,
+            sortColumn,
+            sortDirection,
             striped: true,
             hover: true,
             responsive: true,
@@ -278,6 +283,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
           }}
           onSelectionChange={setSelectedContratosItems}
           onRefresh={onRefresh}
+          onSort={onSort}
           onAudit={onAudit}
           auditEntity={auditEntity}
         />

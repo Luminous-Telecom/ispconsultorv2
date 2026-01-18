@@ -31,9 +31,24 @@ export interface UpdateTermoContratoData extends Partial<CreateTermoContratoData
   ativo?: boolean;
 }
 
+export interface GetByContratoOptions {
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
+}
+
 export class TermoContratoService {
-  static async getByContrato(contratoId: number): Promise<TermoContrato[]> {
-    const response = await apiService.get<TermoContrato[]>(`/termos-contrato/contrato/${contratoId}`);
+  static async getByContrato(contratoId: number, options?: GetByContratoOptions): Promise<TermoContrato[]> {
+    const params = new URLSearchParams();
+    if (options?.sortColumn) {
+      params.append('sortColumn', options.sortColumn);
+    }
+    if (options?.sortDirection) {
+      params.append('sortDirection', options.sortDirection);
+    }
+    
+    const queryString = params.toString();
+    const url = `/termos-contrato/contrato/${contratoId}${queryString ? `?${queryString}` : ''}`;
+    const response = await apiService.get<TermoContrato[]>(url);
     return response.data ?? [];
   }
 

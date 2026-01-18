@@ -2,6 +2,8 @@ import { Cliente } from '../../../models/clientes/Cliente';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Op, WhereOptions } from 'sequelize';
 import { logger } from '../../../utils/logger';
+import { SortHelper } from '../../../utils/sortHelper';
+import { CLIENTE_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListClientesFilters {
   page?: number;
@@ -11,6 +13,8 @@ export interface ListClientesFilters {
   ativo?: string;
   cidade?: string;
   estado?: string;
+  sortColumn?: string;
+  sortDirection?: string;
 }
 
 export interface ListClientesResponse {
@@ -31,7 +35,7 @@ export class ClienteService {
    * Listar clientes com filtros e paginação
    */
   static async list(filters: ListClientesFilters): Promise<ListClientesResponse> {
-    const { page = 1, limit = 15, search, searchField, ativo, cidade, estado } = filters;
+    const { page = 1, limit = 15, search, searchField, ativo, cidade, estado, sortColumn, sortDirection } = filters;
     const offset = (page - 1) * limit;
 
     const where: WhereOptions = {};
@@ -58,19 +62,50 @@ export class ClienteService {
       where.estado = estado.toUpperCase();
     }
 
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['id', 'DESC']]; // Padrão
+    if (sortColumn && sortDirection) {
+      const sortResult = SortHelper.buildOrder(
+        CLIENTE_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('ClienteService.list - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
+      }
+    }
+
     const count = await Cliente.count({ where });
-    
-    const clientes = await Cliente.findAll({
-      where,
-      include: [
-        { association: 'planos', attributes: ['id', 'nome_plano', 'valor_mensal', 'status'] },
-        { association: 'titulos', attributes: ['id', 'numero_titulo', 'status', 'valor'] },
-        { association: 'contratos' }
-      ],
-      order: [['id', 'DESC']],
-      limit,
-      offset
-    });
+
+    let clientes;
+    try {
+      clientes = await Cliente.findAll({
+        where,
+        include: [
+          { association: 'planos', attributes: ['id', 'nome_plano', 'valor_mensal', 'status'] },
+          { association: 'titulos', attributes: ['id', 'numero_titulo', 'status', 'valor'] },
+          { association: 'contratos' }
+        ],
+        order,
+        limit,
+        offset
+      });
+    } catch (queryError: any) {
+      logger.error('ClienteService.list - Erro na query', {
+        error: queryError.message,
+        stack: queryError.stack,
+        where: JSON.stringify(where).substring(0, 200),
+        order: JSON.stringify(order).substring(0, 200)
+      });
+      throw queryError;
+    }
 
     const totalPages = Math.ceil(count / limit);
 

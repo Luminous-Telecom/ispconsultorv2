@@ -24,6 +24,9 @@ interface FinanceiroTabProps {
   setShowCancelados: (show: boolean) => void;
   onAudit?: (item: Titulo) => void;
   auditEntity?: string;
+  sortColumn?: string;
+  sortDirection?: SortDirection;
+  onSort?: (column: string, direction: SortDirection) => void;
 }
 
 const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
@@ -42,6 +45,9 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   setShowCancelados,
   onAudit,
   auditEntity,
+  sortColumn,
+  sortDirection,
+  onSort,
 }) => {
   const isMobile = useIsMobile();
   const { t } = useI18n();
@@ -65,11 +71,10 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showCancelados]);
 
-  // Callback para ordenação (o Table gerencia internamente)
-  const handleSort = useCallback((_column: string, _direction: SortDirection) => {
-    // Esta função será chamada pelo Table quando o usuário clicar em uma coluna
-    // Não precisamos fazer nada aqui, o Table gerencia internamente
-  }, []);
+  // Callback para ordenação - repassar para o handler do componente pai (que atualiza query)
+  const handleSort = useCallback((column: string, direction: SortDirection) => {
+    onSort?.(column, direction);
+  }, [onSort]);
 
 
   // Função para filtrar cancelados
@@ -147,6 +152,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
                 { key: 'nfse_numero', label: t('table.nf') }
               ],
               sortable: true,
+              sortColumn,
+              sortDirection,
               striped: true,
               hover: true,
               responsive: true,

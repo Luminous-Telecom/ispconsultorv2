@@ -2,8 +2,12 @@ import { ContaPagar } from '../../../models/financeiro/ContaPagar';
 import { ContaPagarPagamento } from '../../../models/financeiro/ContaPagarPagamento';
 import { Fornecedor } from '../../../models/financeiro/Fornecedor';
 import { Op, WhereOptions, Transaction } from 'sequelize';
+import { sequelize } from '../../../config/database';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
 import { buildDateFilter, buildNumericSearchFilter, buildDateSearchFilter, combineFilters } from '../../../utils/queryFilters';
+import { logger } from '../../../utils/logger';
+import { SortHelper } from '../../../utils/sortHelper';
+import { CONTA_PAGAR_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListContasPagarFilters {
   page?: number;
@@ -147,17 +151,25 @@ export class ContaPagarService {
       { association: 'arquivos', required: false, limit: 5 }
     ];
 
-    // Ordenação
-    let order: [string, string][] = [['data_vencimento', 'ASC'], ['created_at', 'DESC']]; // Padrão
+    // Ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['data_vencimento', 'ASC'], ['created_at', 'DESC']]; // Padrão
     if (sortColumn && sortDirection) {
-      const allowedColumns = [
-        'id', 'numero_documento', 'nota_fiscal', 'data_vencimento', 'valor', 
-        'valor_pago', 'status', 'tipo_pagamento', 'data_pagamento', 
-        'created_at', 'descricao'
-      ];
-      if (allowedColumns.includes(sortColumn)) {
-        const direction = sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-        order = [[sortColumn, direction]];
+      const sortResult = SortHelper.buildOrder(
+        CONTA_PAGAR_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('ContaPagarService.list - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error,
+          sortDirection,
+          order: JSON.stringify(sortResult.order)
+        });
+        // Manter ordenação padrão se coluna inválida
       }
     }
 

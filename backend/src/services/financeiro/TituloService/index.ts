@@ -4,8 +4,11 @@ import { Contrato } from '../../../models/contratos/Contrato';
 import { Plano } from '../../../models/cadastros/Plano';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Op, WhereOptions, Transaction } from 'sequelize';
+import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
 import { buildDateFilter, buildNumericSearchFilter, combineFilters } from '../../../utils/queryFilters';
+import { SortHelper } from '../../../utils/sortHelper';
+import { TITULO_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListTitulosFilters {
   page?: number;
@@ -16,6 +19,8 @@ export interface ListTitulosFilters {
   data_vencimento_fim?: string;
   search?: string;
   searchField?: string;
+  sortColumn?: string;
+  sortDirection?: string;
 }
 
 export interface ListTitulosResponse {
@@ -61,8 +66,12 @@ export class TituloService {
       data_vencimento_inicio,
       data_vencimento_fim,
       search,
-      searchField
+      searchField,
+      sortColumn,
+      sortDirection
     } = filters;
+
+
 
     const limitNum = Number(limit);
     const pageNum = Number(page);
@@ -177,6 +186,26 @@ export class TituloService {
     // Combinar todos os filtros
     const where = combineFilters(...whereConditions) || {};
 
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['id', 'DESC']]; // Padrão
+    if (sortColumn && sortDirection) {
+      const sortResult = SortHelper.buildOrder(
+        TITULO_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('TituloService.list - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
+      }
+    }
+
     const { NotaFiscal } = await import('../../../models/nfse/NotaFiscal');
     
     const include = [
@@ -186,15 +215,29 @@ export class TituloService {
       { model: NotaFiscal, as: 'nota_fiscal', attributes: ['id', 'numero', 'nfse_status'], required: false }
     ];
 
-    const { count, rows } = await Titulo.findAndCountAll({
-      where,
-      include,
-      order: [['id', 'DESC']],
-      limit: limitNum,
-      offset,
-      distinct: true,
-      subQuery: false
-    });
+    let count: number;
+    let rows: Titulo[];
+    try {
+      const result = await Titulo.findAndCountAll({
+        where,
+        include,
+        order,
+        limit: limitNum,
+        offset,
+        distinct: true,
+        subQuery: false
+      });
+      count = result.count as number;
+      rows = result.rows;
+    } catch (queryError: any) {
+      logger.error('TituloService.list - Erro na query', {
+        error: queryError.message,
+        sortColumn: filters.sortColumn,
+        sortDirection: filters.sortDirection
+      });
+      throw queryError;
+    }
+
 
     return {
       success: true,

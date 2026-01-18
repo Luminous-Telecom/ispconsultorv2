@@ -3,6 +3,9 @@ import { Cliente } from '../../../models/clientes/Cliente';
 import { Op, WhereOptions } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { buildDateFilter, buildNumericSearchFilter, combineFilters } from '../../../utils/queryFilters';
+import { logger } from '../../../utils/logger';
+import { SortHelper } from '../../../utils/sortHelper';
+import { NOTA_FISCAL_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListNotasFiscaisFilters {
   page?: number;
@@ -13,6 +16,8 @@ export interface ListNotasFiscaisFilters {
   cliente_id?: number;
   data_inicio?: string;
   data_fim?: string;
+  sortColumn?: string;
+  sortDirection?: string;
 }
 
 export interface ListNotasFiscaisResponse {
@@ -39,7 +44,9 @@ export class NotaFiscalService {
       status,
       cliente_id,
       data_inicio,
-      data_fim
+      data_fim,
+      sortColumn,
+      sortDirection
     } = filters;
 
     const pageNumber = parseInt(String(page), 10);
@@ -142,19 +149,53 @@ export class NotaFiscalService {
     // Combinar todos os filtros
     const where = combineFilters(...whereConditions) || {};
 
-    const { count, rows } = await NotaFiscal.findAndCountAll({
-      where,
-      include: [
-        {
-          model: Cliente,
-          as: 'cliente',
-          attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj']
-        }
-      ],
-      order: [['created_at', 'DESC']],
-      limit: limitNumber,
-      offset
-    });
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['id', 'DESC']]; // Padrão
+    if (sortColumn && sortDirection) {
+      const sortResult = SortHelper.buildOrder(
+        NOTA_FISCAL_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('NotaFiscalService.list - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
+      }
+    }
+
+    let count: number;
+    let rows: any[];
+    try {
+      const result = await NotaFiscal.findAndCountAll({
+        where,
+        include: [
+          {
+            model: Cliente,
+            as: 'cliente',
+            attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj']
+          }
+        ],
+        order,
+        limit: limitNumber,
+        offset
+      });
+      count = result.count as number;
+      rows = result.rows;
+    } catch (queryError: any) {
+      logger.error('NotaFiscalService.list - Erro na query', {
+        error: queryError.message,
+        stack: queryError.stack,
+        where: JSON.stringify(where).substring(0, 200),
+        order: JSON.stringify(order).substring(0, 200)
+      });
+      throw queryError;
+    }
 
     return {
       success: true,

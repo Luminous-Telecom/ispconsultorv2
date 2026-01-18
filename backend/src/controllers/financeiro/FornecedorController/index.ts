@@ -18,6 +18,8 @@ export class FornecedorController {
       const search = req.query.search as string;
       const searchField = req.query.searchField as string;
       const tipoPessoa = req.query.tipo_pessoa as string;
+      const sortColumn = req.query.sortColumn as string;
+      const sortDirection = req.query.sortDirection as string;
 
       const result = await FornecedorService.list({
         page,
@@ -25,7 +27,9 @@ export class FornecedorController {
         search,
         searchField,
         tipo_pessoa: tipoPessoa,
-        ativo: req.query.ativo as string
+        ativo: req.query.ativo as string,
+        sortColumn,
+        sortDirection
       });
 
       sendSuccess(res, result);

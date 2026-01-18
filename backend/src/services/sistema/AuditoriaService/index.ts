@@ -6,6 +6,8 @@ import { AuthenticatedRequest } from '../../../types/auth';
 import { logger } from '../../../utils/logger';
 import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
 import { registrarCriacaoElasticsearch, registrarAtualizacaoElasticsearch, registrarExclusaoElasticsearch, registrarLoginElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
+import { SortHelper } from '../../../utils/sortHelper';
+import { AUDITORIA_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListAuditoriaFilters {
   page?: number;
@@ -16,6 +18,8 @@ export interface ListAuditoriaFilters {
   usuario_id?: number;
   data_inicio?: string;
   data_fim?: string;
+  sortColumn?: string;
+  sortDirection?: string;
 }
 
 export interface ListAuditoriaResponse {
@@ -44,7 +48,9 @@ export class AuditoriaService {
       entidade,
       usuario_id,
       data_inicio,
-      data_fim
+      data_fim,
+      sortColumn,
+      sortDirection
     } = filters;
 
     const offset = (page - 1) * limit;
@@ -74,6 +80,26 @@ export class AuditoriaService {
       }
     }
 
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['created_at', 'DESC']]; // Padrão
+    if (sortColumn && sortDirection) {
+      const sortResult = SortHelper.buildOrder(
+        AUDITORIA_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('AuditoriaService.listFromDatabase - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
+      }
+    }
+
     // Buscar logs com usuário incluído
     const { count, rows } = await Auditoria.findAndCountAll({
       where,
@@ -83,7 +109,7 @@ export class AuditoriaService {
         required: false,
         attributes: ['id', 'nome', 'email']
       }],
-      order: [['created_at', 'DESC']],
+      order,
       limit,
       offset
     });

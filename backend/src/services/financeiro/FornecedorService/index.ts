@@ -1,5 +1,9 @@
 import { Fornecedor } from '../../../models/financeiro/Fornecedor';
 import { Op, WhereOptions } from 'sequelize';
+import { sequelize } from '../../../config/database';
+import { logger } from '../../../utils/logger';
+import { SortHelper } from '../../../utils/sortHelper';
+import { FORNECEDOR_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListFornecedoresFilters {
   page?: number;
@@ -8,6 +12,8 @@ export interface ListFornecedoresFilters {
   searchField?: string;
   tipo_pessoa?: string;
   ativo?: string;
+  sortColumn?: string;
+  sortDirection?: string;
 }
 
 export interface ListFornecedoresResponse {
@@ -28,7 +34,7 @@ export class FornecedorService {
    * Listar fornecedores com filtros e paginação
    */
   static async list(filters: ListFornecedoresFilters): Promise<ListFornecedoresResponse> {
-    const { page = 1, limit = 15, search = '', searchField, tipo_pessoa, ativo } = filters;
+    const { page = 1, limit = 15, search = '', searchField, tipo_pessoa, ativo, sortColumn, sortDirection } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
@@ -59,6 +65,26 @@ export class FornecedorService {
       where.ativo = ativo === 'true';
     }
 
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['id', 'DESC']]; // Padrão
+    if (sortColumn && sortDirection) {
+      const sortResult = SortHelper.buildOrder(
+        FORNECEDOR_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('FornecedorService.list - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
+      }
+    }
+
     const count = await Fornecedor.count({ where });
     
     const fornecedores = await Fornecedor.findAll({
@@ -72,7 +98,7 @@ export class FornecedorService {
           attributes: ['id', 'status', 'valor', 'valor_pago', 'data_vencimento']
         }
       ],
-      order: [['created_at', 'DESC']],
+      order,
       limit: limitNum,
       offset
     });

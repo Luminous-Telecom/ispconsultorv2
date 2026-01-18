@@ -18,7 +18,10 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   onRefresh,
   columns,
   onAudit,
-  auditEntity
+  auditEntity,
+  sortColumn,
+  sortDirection,
+  onSort
 }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
@@ -59,6 +62,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
               { key: 'nosso_numero', label: t('table.ourNumber') }
             ],
             sortable: true,
+            sortColumn,
+            sortDirection,
             striped: true,
             hover: true,
             responsive: true,
@@ -112,6 +117,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             }));
             setSelectedItems(tituloItems);
           }}
+          onSort={onSort}
           onRefresh={onRefresh}
           onAudit={onAudit}
           auditEntity={auditEntity}

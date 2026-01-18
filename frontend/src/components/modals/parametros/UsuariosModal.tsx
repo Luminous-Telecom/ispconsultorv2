@@ -4,7 +4,6 @@ import { AxiosError } from 'axios';
 import { useUsuarios, useDeleteUsuario } from '@/hooks/useUsuarios';
 import { Usuario } from '@/types';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useSorting } from '@/hooks/useSorting';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { formatDateTime } from '@/utils/formatters';
 import DraggableModal from '@/components/common/DraggableModal';
@@ -63,7 +62,9 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
     page: tableFilters.page,
     limit: tableFilters.limit,
     search: tableFilters.debouncedSearch || undefined,
-    searchField: searchField || undefined
+    searchField: searchField || undefined,
+    sortColumn: tableFilters.sortColumn,
+    sortDirection: tableFilters.sortDirection
   });
 
   const usuarios = usuariosData?.data || [];
@@ -125,7 +126,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
     auditoria.handleAudit('Usuario', usuario.id);
   };
 
-  const sortedData = useSorting(usuarios as unknown as Record<string, unknown>[], tableFilters.sortColumn, tableFilters.sortDirection) as unknown as Usuario[];
+  // Dados já vêm ordenados do backend - não usar ordenação local
+  const sortedData = usuarios;
 
   const columns: TableConfig<Usuario>['columns'] = [
     {

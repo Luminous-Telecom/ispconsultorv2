@@ -1,7 +1,10 @@
 import { Banco } from '../../../models/cadastros/Banco';
 import { Op, WhereOptions } from 'sequelize';
+import { sequelize } from '../../../config/database';
 import { cache } from '../../../utils/cache';
 import { logger } from '../../../utils/logger';
+import { SortHelper } from '../../../utils/sortHelper';
+import { BANCO_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListBancosFilters {
   search?: string;
@@ -9,6 +12,8 @@ export interface ListBancosFilters {
   tipo_banco?: string;
   page?: number;
   limit?: number;
+  sortColumn?: string;
+  sortDirection?: string;
 }
 
 export interface ListBancosResponse {
@@ -57,7 +62,7 @@ export class BancoService {
    * Listar bancos com filtros e paginação
    */
   static async list(filters: ListBancosFilters): Promise<ListBancosResponse> {
-    const { search, status, tipo_banco, page = 1, limit = 15 } = filters;
+    const { search, status, tipo_banco, page = 1, limit = 15, sortColumn, sortDirection } = filters;
     
     const where: WhereOptions<Banco> = {};
     
@@ -79,20 +84,51 @@ export class BancoService {
     if (tipo_banco) {
       where.tipo_banco = tipo_banco as 'efi' | 'asaas' | 'bancario' | 'outros';
     }
+
+    // Construir ordenação - ordena TODOS os dados antes da paginação
+    let order: any[] = [['id', 'DESC']]; // Padrão
+    if (sortColumn && sortDirection) {
+      const sortResult = SortHelper.buildOrder(
+        BANCO_SORT_CONFIG,
+        sortColumn,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC'
+      );
+
+      if (sortResult.isValid) {
+        order = sortResult.order;
+      } else {
+        logger.warn('BancoService.list - Coluna de ordenação inválida', {
+          column: sortColumn,
+          error: sortResult.error
+        });
+        // Manter ordenação padrão se coluna inválida
+      }
+    }
     
     const offset = (Number(page) - 1) * Number(limit);
-    
+
     const count = await Banco.count({ where });
     
-    const bancos = await Banco.findAll({
-      where,
-      order: [['id', 'DESC']],
-      limit: Number(limit),
-      offset,
-      include: [
-        { association: 'titulos' }
-      ]
-    });
+    let bancos;
+    try {
+      bancos = await Banco.findAll({
+        where,
+        order,
+        limit: Number(limit),
+        offset,
+        include: [
+          { association: 'titulos' }
+        ]
+      });
+    } catch (queryError: any) {
+      logger.error('BancoService.list - Erro na query', {
+        error: queryError.message,
+        stack: queryError.stack,
+        where: JSON.stringify(where).substring(0, 200),
+        order: JSON.stringify(order).substring(0, 200)
+      });
+      throw queryError;
+    }
     
     return {
       success: true,

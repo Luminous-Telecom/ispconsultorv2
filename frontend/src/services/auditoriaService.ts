@@ -29,6 +29,8 @@ export interface AuditoriaFilters {
   usuario_id?: number;
   data_inicio?: string;
   data_fim?: string;
+  sortColumn?: string;
+  sortDirection?: string;
 }
 
 export interface AuditoriaStats {
@@ -55,6 +57,8 @@ class AuditoriaService {
     if (filters.usuario_id) params.append('usuario_id', filters.usuario_id.toString());
     if (filters.data_inicio) params.append('data_inicio', filters.data_inicio);
     if (filters.data_fim) params.append('data_fim', filters.data_fim);
+    if (filters.sortColumn) params.append('sortColumn', filters.sortColumn);
+    if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
 
     const url = `${this.baseEndpoint}?${params.toString()}`;
     

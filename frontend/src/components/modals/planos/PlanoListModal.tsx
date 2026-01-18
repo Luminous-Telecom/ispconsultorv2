@@ -5,7 +5,7 @@ import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { Plano } from '@/types';
-import { useI18n, TranslationKeys } from '@/contexts/I18nContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
 import PlanoModal from './PlanoModal';
@@ -160,11 +160,17 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'status',
       label: t('table.status'),
       sortable: true,
-      render: (item: Plano) => (
-        <span className={`badge ${getStatusBadgeClass(item.status)}`}>
-          {t(`status.${item.status}` as keyof TranslationKeys)}
-        </span>
-      )
+      render: (item: Plano) => {
+        const statusMap: { [key: string]: string } = {
+          'ativo': t('status.active'),
+          'inativo': t('status.inactive')
+        };
+        return (
+          <span className={`badge ${getStatusBadgeClass(item.status)}`}>
+            {statusMap[item.status] || item.status}
+          </span>
+        );
+      }
     },
     {
       key: 'created_at',

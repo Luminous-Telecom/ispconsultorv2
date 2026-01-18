@@ -14,13 +14,17 @@ export class TermoContratoController {
   static async getByContrato(req: Request, res: Response): Promise<void> {
     try {
       const { contratoId } = req.params;
+      const { sortColumn, sortDirection } = req.query;
       
       if (!contratoId) {
         sendValidationError(res, 'ID do contrato é obrigatório');
         return;
       }
 
-      const termos = await TermoContratoService.getByContrato(parseInt(contratoId));
+      const termos = await TermoContratoService.getByContrato(parseInt(contratoId), {
+        sortColumn: sortColumn as string | undefined,
+        sortDirection: (sortDirection as 'ASC' | 'DESC') || undefined
+      });
       
       sendSuccess(res, termos);
     } catch (error: unknown) {

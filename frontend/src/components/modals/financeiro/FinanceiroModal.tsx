@@ -4,7 +4,6 @@ import { useTitulosFinanceiro } from '@/hooks/useTitulosFinanceiro';
 import { Titulo, TituloFilters } from '@/types';
 import { TituloItem } from '@/types/cliente';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useSorting } from '@/hooks/useSorting';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { TituloService } from '@/services/tituloService';
 import { formatDate, formatDateTime } from '@/utils/formatters';
@@ -107,8 +106,12 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     ...(showCancelados ? {} : { status: '!cancelado' }),
     // Aplicar filtros de data de vencimento se preenchidos
     ...(dataVencimentoInicio ? { data_vencimento_inicio: dataVencimentoInicio } : {}),
-    ...(dataVencimentoFim ? { data_vencimento_fim: dataVencimentoFim } : {})
+    ...(dataVencimentoFim ? { data_vencimento_fim: dataVencimentoFim } : {}),
+    // Aplicar ordenação no backend - usar apiParams que já inclui sortColumn e sortDirection
+    sortColumn: tableFilters.apiParams.sortColumn,
+    sortDirection: tableFilters.apiParams.sortDirection
   };
+
 
   const { data: titulosData, isLoading, refetch } = useTitulosFinanceiro(filters);
 
@@ -171,7 +174,6 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     };
   }, [titulosData, tableFilters.limit, tableFilters.page]);
 
-  const sortedData = useSorting(titulos as unknown as Record<string, unknown>[], tableFilters.sortColumn, tableFilters.sortDirection) as unknown as Titulo[];
 
   // Limpar filtros quando o modal fechar
   useEffect(() => {
@@ -201,7 +203,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   }, [titulosData?.data]);
 
   // Dados filtrados para usar no resumo financeiro (já filtrados pelo backend)
-  const filteredData = sortedData;
+  const filteredData = titulos;
 
   const formatCurrency = (value: number | string | null | undefined): string => {
     if (!value) return 'R$ 0,00';
@@ -496,8 +498,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
 
   // Verificar se há títulos com NFS-e emitida
   const hasNFSeEmitida = useMemo(() => {
-    return sortedData.some(item => item.nfse_status === 'emitida' && item.nfse_numero);
-  }, [sortedData]);
+    return titulos.some(item => item.nfse_status === 'emitida' && item.nfse_numero);
+  }, [titulos]);
 
   // Função para gerar PDF de NFS-e
   const handleImprimirNFSe = useCallback(async (selectedItems: Titulo[]) => {
@@ -807,7 +809,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
 
   const tableConfig = useMemo(() => ({
     columns,
-    data: sortedData,
+    data: titulos,
     loading: isLoading,
     searchable: true,
     searchPlaceholder: '',
@@ -824,7 +826,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       { key: 'charge_id', label: t('table.chargeId') },
       { key: 'nosso_numero', label: t('table.ourNumber') }
     ],
-    sortable: true,
+    sortable: false,
     striped: true,
     hover: true,
     responsive: true,
@@ -863,7 +865,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     customControlsAfterActions
   }), [
     columns,
-    sortedData,
+    titulos,
     isLoading,
     onSelectTitulo,
     memoizedBulkActions,
@@ -882,7 +884,10 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
               config={tableConfig}
               tableId="financeiro-modal"
               onSelectionChange={setSelectedItems}
-              onSort={tableFilters.setSort}
+              onSort={(column: string, direction: string) => {
+              // Atualizar os filtros do tableFilters
+              tableFilters.setSort(column, direction as 'asc' | 'desc');
+            }}
               onSearch={handleSearch}
               onSearchFieldChange={handleSearchFieldChange}
               onPageChange={tableFilters.setPage}

@@ -124,6 +124,8 @@ export interface TituloFilters extends Record<string, string | number | boolean 
   cliente_id?: number;
   data_vencimento_inicio?: string;
   data_vencimento_fim?: string;
+  sortColumn?: string;
+  sortDirection?: string;
 }
 
 // ============================================

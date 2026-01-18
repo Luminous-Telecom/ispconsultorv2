@@ -107,6 +107,8 @@ export class ClienteController {
       const ativo = req.query.ativo as string;
       const cidade = req.query.cidade as string;
       const estado = req.query.estado as string;
+      const sortColumn = req.query.sortColumn as string;
+      const sortDirection = req.query.sortDirection as string;
 
       const result = await ClienteService.list({
         page,
@@ -115,7 +117,9 @@ export class ClienteController {
         searchField,
         ativo,
         cidade,
-        estado
+        estado,
+        sortColumn,
+        sortDirection
       });
 
       sendSuccess(res, result);
