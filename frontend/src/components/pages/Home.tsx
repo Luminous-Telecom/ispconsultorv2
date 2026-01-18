@@ -504,9 +504,6 @@ const Home: React.FC = () => {
                 )}
                 <div>
                   <h5 className="footer-brand-name">{companyName}</h5>
-                  <p className="footer-description">
-                    Sistema para assessoria técnica em telecomunicações.
-                  </p>
                 </div>
               </div>
             </div>
