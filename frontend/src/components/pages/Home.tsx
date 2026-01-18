@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DadosEmpresaService, type DadosEmpresa } from '@/services/dadosEmpresaService';
 import { getBrandLogo } from '@/utils/brandLogos';
+import { useFavicon } from '@/hooks/useFavicon';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui';
 import { throttle } from '@/utils/helpers';
@@ -21,6 +22,9 @@ const Home: React.FC = () => {
     retry: false, // Não tentar novamente se falhar
     throwOnError: false, // Não lançar erro para evitar redirecionamento
   });
+
+  // Atualizar favicon dinamicamente com a logo da empresa no site público
+  useFavicon(dadosEmpresa?.logo ? `/api/dados-empresa/logo` : undefined);
 
   // Throttled scroll handler para melhorar INP
   useEffect(() => {
