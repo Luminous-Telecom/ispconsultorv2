@@ -495,6 +495,29 @@ const Home: React.FC = () => {
                 )}
                 <div>
                   <h5 className="footer-brand-name">{companyName}</h5>
+                  {dadosEmpresa?.razao_social && (
+                    <p className="footer-company-info mb-1">
+                      <strong>Razão Social:</strong> {dadosEmpresa.razao_social}
+                    </p>
+                  )}
+                  {dadosEmpresa?.cnpj && (
+                    <p className="footer-company-info mb-1">
+                      <strong>CNPJ:</strong> {dadosEmpresa.cnpj}
+                    </p>
+                  )}
+                  {(dadosEmpresa?.endereco || dadosEmpresa?.numero || dadosEmpresa?.bairro || dadosEmpresa?.cidade || dadosEmpresa?.estado || dadosEmpresa?.cep) && (
+                    <p className="footer-company-info mb-0">
+                      <strong>Endereço:</strong> {[
+                        dadosEmpresa.endereco,
+                        dadosEmpresa.numero,
+                        dadosEmpresa.complemento,
+                        dadosEmpresa.bairro,
+                        dadosEmpresa.cidade,
+                        dadosEmpresa.estado,
+                        dadosEmpresa.cep
+                      ].filter(Boolean).join(', ')}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
