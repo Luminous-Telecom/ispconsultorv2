@@ -256,6 +256,8 @@ const Layout: React.FC = () => {
     { id: 'agendador-tarefas', label: t('params.taskScheduler'), onClick: () => handleOpenModal('agendador-tarefas') },
     { id: 'servidor-email', label: t('params.emailServer'), onClick: () => handleOpenModal('servidor-email') },
     { id: 'servidor-whatsapp', label: t('params.whatsappServer'), onClick: () => handleOpenModal('servidor-whatsapp') },
+    { id: 'historico-whatsapp', label: 'Histórico WhatsApp', onClick: () => handleOpenModal('historico-whatsapp') },
+    { id: 'historico-email', label: 'Histórico Email', onClick: () => handleOpenModal('historico-email') },
     { id: 'nfse', label: t('params.nfse'), onClick: () => handleOpenModal('nfse') },
     { id: 'documentos-sistema', label: t('params.systemDocuments'), onClick: () => handleOpenModal('documentos-sistema') },
     { id: 'assinatura-digital', label: t('params.digitalSignature'), onClick: () => handleOpenModal('assinatura-digital') },

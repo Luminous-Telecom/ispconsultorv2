@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
 import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
+import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Plano } from '../../../models/cadastros/Plano';
@@ -8,6 +9,7 @@ import { Banco } from '../../../models/cadastros/Banco';
 import { Contrato } from '../../../models/contratos/Contrato';
 import { logger } from '../../../utils/logger';
 import { VariaveisDocumentoService } from '../../documentos/VariaveisDocumentoService';
+import { registrarMensagemElasticsearch } from '../../elasticsearch/MensagemHistoricoElasticsearchService';
 import nodemailer, { SendMailOptions } from 'nodemailer';
 import { TituloPDFController } from '../../../controllers/titulos/TituloPDFController';
 import type { TituloComRelacoes } from '../../../controllers/titulos/TituloHelpers/types';
@@ -20,6 +22,38 @@ interface ConfiguracoesEnvios {
 }
 
 export class EmailService {
+  private static stripHtml(html: string): string {
+    // Remove scripts e estilos primeiro
+    let cleaned = html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+    // Remove todas as tags HTML
+    cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, '');
+
+    // Decodifica entidades HTML comuns
+    cleaned = cleaned
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&#x27;/g, "'")
+      .replace(/&#x2F;/g, '/')
+      .replace(/&#x60;/g, '`')
+      .replace(/&#x3D;/g, '=')
+      .replace(/&\w+;/g, ' '); // Remove outras entidades HTML
+
+    // Limpa espaços e quebras de linha
+    cleaned = cleaned
+      .replace(/\s+/g, ' ') // Remove espaços múltiplos
+      .replace(/\n\s*\n/g, '\n') // Remove linhas vazias extras
+      .trim();
+
+    return cleaned;
+  }
+
   static async enviarBoletos(config: ConfiguracoesEnvios): Promise<{
     sucesso: boolean;
     emailsEnviados: number;
@@ -153,7 +187,18 @@ export class EmailService {
             logger.error('Falha ao gerar PDF do boleto para email');
           }
         }
-        const enviou = await this.enviarEmail(servidor, cliente.email, corpoHtml, base64Pdf);
+        const enviou = await this.enviarEmail(
+          servidor,
+          cliente.email,
+          corpoHtml,
+          base64Pdf,
+          'titulo',
+          titulo.id,
+          `${servidor.nome_remetente} - Boleto de Pagamento`,
+          cliente.razao_social || cliente.nome_fantasia || undefined,
+          cliente.email,
+          cliente.telefone || undefined
+        );
         
         if (enviou) {
           enviadas++;
@@ -170,10 +215,16 @@ export class EmailService {
   }
 
   private static async enviarEmail(
-    servidor: ServidorEmail, 
-    emailDestino: string, 
+    servidor: ServidorEmail,
+    emailDestino: string,
     mensagem: string,
-    base64Pdf?: string
+    base64Pdf?: string,
+    entidadeTipo?: string,
+    entidadeId?: number,
+    titulo?: string,
+    clienteNome?: string,
+    clienteEmail?: string,
+    clienteTelefone?: string
   ): Promise<boolean> {
     try {
       const transporter = nodemailer.createTransport({
@@ -207,7 +258,45 @@ export class EmailService {
       }
 
       const result = await transporter.sendMail(mailOptions);
-      logger.info('Email enviado com sucesso:', { 
+
+        // Limpar HTML do conteúdo para exibição
+        const mensagemLimpa = this.stripHtml(mensagem);
+
+        // Registrar mensagem enviada no histórico
+
+        // Registrar mensagem enviada no histórico
+      try {
+        await MensagemHistorico.create({
+          tipo: 'email',
+          destinatario: emailDestino,
+          titulo: titulo || `${servidor.nome_remetente} - Boleto de Pagamento`,
+          mensagem: mensagemLimpa,
+          status: 'enviada',
+          entidade_tipo: entidadeTipo,
+          entidade_id: entidadeId,
+          servidor_id: servidor.id,
+          cliente_nome: clienteNome,
+          cliente_email: clienteEmail,
+          cliente_telefone: clienteTelefone
+        });
+
+        // Registrar no Elasticsearch (sem request, então dados de usuário serão null)
+        await registrarMensagemElasticsearch(null, {
+          tipo: 'email',
+          destinatario: emailDestino,
+          titulo: titulo || `${servidor.nome_remetente} - Boleto de Pagamento`,
+          mensagem: mensagem,
+          status: 'enviada',
+          entidade_tipo: entidadeTipo,
+          entidade_id: entidadeId,
+          servidor_id: servidor.id
+        });
+      } catch (registroError) {
+        logger.error('Erro ao registrar email enviado no histórico:', registroError);
+        // Não falha o envio por erro no registro
+      }
+
+      logger.info('Email enviado com sucesso:', {
         messageId: result.messageId,
         to: emailDestino,
         temAnexo: !!base64Pdf,
@@ -215,6 +304,43 @@ export class EmailService {
       });
       return true;
     } catch (error) {
+      // Limpar HTML do conteúdo para exibição
+      const mensagemLimpa = this.stripHtml(mensagem);
+
+      // Registrar erro no histórico
+      try {
+        await MensagemHistorico.create({
+          tipo: 'email',
+          destinatario: emailDestino,
+          titulo: titulo || `${servidor.nome_remetente} - Boleto de Pagamento`,
+          mensagem: mensagemLimpa,
+          status: 'erro',
+          erro_mensagem: error instanceof Error ? error.message : 'Erro desconhecido',
+          entidade_tipo: entidadeTipo,
+          entidade_id: entidadeId,
+          servidor_id: servidor.id,
+          cliente_nome: clienteNome,
+          cliente_email: clienteEmail,
+          cliente_telefone: clienteTelefone
+        });
+
+        // Registrar erro no Elasticsearch
+        await registrarMensagemElasticsearch({} as any, {
+          tipo: 'email',
+          destinatario: emailDestino,
+          titulo: titulo || `${servidor.nome_remetente} - Boleto de Pagamento`,
+          mensagem: mensagem,
+          status: 'erro',
+          erro_mensagem: error instanceof Error ? error.message : 'Erro desconhecido',
+          entidade_tipo: entidadeTipo,
+          entidade_id: entidadeId,
+          servidor_id: servidor.id
+        });
+      } catch (registroError) {
+        logger.error('Erro ao registrar erro de email no histórico:', registroError);
+        // Não falha o envio por erro no registro
+      }
+
       logger.error('Erro ao enviar email:', error);
       return false;
     }
@@ -342,7 +468,18 @@ export class EmailService {
         tipoEnvio: mensagem.tipo_envio
       });
 
-      const enviou = await this.enviarEmail(servidor, cliente.email, corpoHtml, base64Pdf);
+      const enviou = await this.enviarEmail(
+        servidor,
+        cliente.email,
+        corpoHtml,
+        base64Pdf,
+        'titulo',
+        tituloId,
+        `${servidor.nome_remetente} - Boleto de Pagamento`,
+        cliente.razao_social || cliente.nome_fantasia || undefined,
+        cliente.email,
+        cliente.telefone || undefined
+      );
       
       if (enviou) {
         return { sucesso: true, mensagem: 'Email enviado com sucesso' };

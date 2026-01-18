@@ -24,6 +24,8 @@ const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorT
 const AssinaturaDigitalModal = lazy(() => import('../modals/parametros/AssinaturaDigitalModal'));
 const AuditoriaModal = lazy(() => import('../modals/parametros/AuditoriaModal'));
 const DocumentosSistemaModal = lazy(() => import('../modals/parametros/documentos-sistema').then(m => ({ default: m.DocumentosSistemaModal })));
+const WhatsAppHistoricoModal = lazy(() => import('../modals/comunicacao/WhatsAppHistoricoModal'));
+const EmailHistoricoModal = lazy(() => import('../modals/comunicacao/EmailHistoricoModal'));
 
 interface ModalComponentProps {
   show: boolean;
@@ -63,6 +65,8 @@ const MODAL_CONFIGS: Record<string, ModalConfig> = {
   'assinatura-digital': { component: AssinaturaDigitalModal, title: 'Assinatura Digital', loadingMessage: 'Carregando configurações de assinatura digital...' },
   auditoria: { component: AuditoriaModal, title: 'Logs de Auditoria', loadingMessage: 'Carregando logs de auditoria...', className: 'no-padding' },
   'documentos-sistema': { component: DocumentosSistemaModal, title: 'Modelos de Documentos', loadingMessage: 'Carregando modelos de documentos...' },
+  'historico-whatsapp': { component: WhatsAppHistoricoModal, title: 'Histórico de Mensagens WhatsApp', loadingMessage: 'Carregando histórico de WhatsApp...', className: 'no-padding' },
+  'historico-email': { component: EmailHistoricoModal, title: 'Histórico de Mensagens Email', loadingMessage: 'Carregando histórico de emails...', className: 'no-padding' },
 };
 
 const SingleModalWrapper: React.FC = () => {

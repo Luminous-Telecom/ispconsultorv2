@@ -56,71 +56,27 @@ export const TableHeaderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const value = React.useMemo(() => {
     return {
       title,
-      setTitle: (v: string | null) => {
-        if (v !== title) {
-          setTitle(v);
-        }
-      },
+      setTitle,
       showSearch,
-      setShowSearch: (v: boolean) => {
-        if (v !== showSearch) {
-          setShowSearch(v);
-        }
-      },
+      setShowSearch,
       showReload,
-      setShowReload: (v: boolean) => {
-        if (v !== showReload) {
-          setShowReload(v);
-        }
-      },
+      setShowReload,
       onSearchClick,
-      setOnSearchClick: (v: (() => void) | null) => {
-        if (v !== onSearchClick) {
-          setOnSearchClick(v);
-        }
-      },
+      setOnSearchClick,
       onReloadClick,
-      setOnReloadClick: (v: (() => void) | null) => {
-        if (v !== onReloadClick) {
-          setOnReloadClick(v);
-        }
-      },
+      setOnReloadClick,
       searchPlaceholder,
-      setSearchPlaceholder: (v: string) => {
-        if (v !== searchPlaceholder) {
-          setSearchPlaceholder(v);
-        }
-      },
+      setSearchPlaceholder,
       searchValue,
-      setSearchValue: (v: string) => {
-        if (v !== searchValue) {
-          setSearchValue(v);
-        }
-      },
+      setSearchValue,
       searchField,
-      setSearchField: (v: string) => {
-        if (v !== searchField) {
-          setSearchField(v);
-        }
-      },
+      setSearchField,
       availableSearchFields,
-      setAvailableSearchFields: (v: SearchField[]) => {
-        if (JSON.stringify(availableSearchFields) !== JSON.stringify(v)) {
-          setAvailableSearchFields(v);
-        }
-      },
+      setAvailableSearchFields,
       showMobileSearch,
-      setShowMobileSearch: (v: boolean) => {
-        if (v !== showMobileSearch) {
-          setShowMobileSearch(v);
-        }
-      },
+      setShowMobileSearch,
       loading,
-      setLoading: (v: boolean) => {
-        if (v !== loading) {
-          setLoading(v);
-        }
-      },
+      setLoading,
     };
   }, [
     title,

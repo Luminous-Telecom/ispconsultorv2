@@ -1,5 +1,8 @@
 import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
+import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
+import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
+import { registrarMensagemElasticsearch } from '../../elasticsearch/MensagemHistoricoElasticsearchService';
 
 interface WhatsAppCloudTemplateComponent {
   type: 'body' | 'header' | 'button';
@@ -104,10 +107,81 @@ export class WhatsAppCloudService {
       const errorObj = responseData as { error?: { message?: string; type?: string; code?: number; error_subcode?: number } };
       
       if (response.ok && !errorObj.error) {
+        // Registrar mensagem enviada no histórico
+        try {
+          // Buscar dados do cliente baseado no telefone
+          let clienteData = null;
+          if (telefone) {
+            // Limpar telefone para busca (remover caracteres especiais)
+            const telefoneLimpo = telefone.replace(/\D/g, '');
+            clienteData = await Cliente.findOne({
+              where: {
+                telefone: {
+                  [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                }
+              },
+              attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+            });
+          }
+
+          const clienteNome = clienteData ? (clienteData.razao_social || clienteData.nome_fantasia || undefined) : undefined;
+          const clienteEmail = clienteData?.email || undefined;
+          const clienteTelefone = clienteData?.telefone || undefined;
+
+          await MensagemHistorico.create({
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: texto,
+            status: 'enviada',
+            servidor_id: servidor.id,
+            cliente_nome: clienteNome,
+            cliente_email: clienteEmail,
+            cliente_telefone: clienteTelefone
+          });
+
+          // Registrar no Elasticsearch
+          await registrarMensagemElasticsearch(null, {
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: texto,
+            status: 'enviada',
+            servidor_id: servidor.id
+          });
+        } catch (registroError) {
+          logger.error('Erro ao registrar WhatsApp Cloud enviado no histórico:', registroError);
+          // Não falha o envio por erro no registro
+        }
+
         logger.info(`Mensagem de texto enviada via WhatsApp Cloud API para ${telefoneFormatado}`);
         return true;
       } else {
         const errorMessage = errorObj?.error?.message || `Erro HTTP ${response.status}`;
+
+        // Registrar erro no histórico
+        try {
+          await MensagemHistorico.create({
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: texto,
+            status: 'erro',
+            erro_mensagem: errorMessage,
+            servidor_id: servidor.id
+          });
+
+          // Registrar erro no Elasticsearch
+          await registrarMensagemElasticsearch(null, {
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: texto,
+            status: 'erro',
+            erro_mensagem: errorMessage,
+            servidor_id: servidor.id
+          });
+        } catch (registroError) {
+          logger.error('Erro ao registrar erro de WhatsApp Cloud no histórico:', registroError);
+          // Não falha o envio por erro no registro
+        }
+
         logger.error(`Erro ao enviar mensagem via WhatsApp Cloud API: ${errorMessage}`, {
           status: response.status,
           errorCode: errorObj?.error?.code,
@@ -166,12 +240,104 @@ export class WhatsAppCloudService {
       const responseData = await response.json().catch(() => ({}));
 
       if (response.ok) {
+        // Registrar mensagem enviada no histórico
+        try {
+          // Buscar dados do cliente baseado no telefone
+          let clienteData = null;
+          if (telefone) {
+            // Limpar telefone para busca (remover caracteres especiais)
+            const telefoneLimpo = telefone.replace(/\D/g, '');
+            clienteData = await Cliente.findOne({
+              where: {
+                telefone: {
+                  [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                }
+              },
+              attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+            });
+          }
+
+          const clienteNome = clienteData ? (clienteData.razao_social || clienteData.nome_fantasia || undefined) : undefined;
+          const clienteEmail = clienteData?.email || undefined;
+          const clienteTelefone = clienteData?.telefone || undefined;
+
+          await MensagemHistorico.create({
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: `Template: ${templateName} (${languageCode})`,
+            status: 'enviada',
+            servidor_id: servidor.id,
+            cliente_nome: clienteNome,
+            cliente_email: clienteEmail,
+            cliente_telefone: clienteTelefone
+          });
+
+          // Registrar no Elasticsearch
+          await registrarMensagemElasticsearch(null, {
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: `Template: ${templateName} (${languageCode})`,
+            status: 'enviada',
+            servidor_id: servidor.id
+          });
+        } catch (registroError) {
+          logger.error('Erro ao registrar template WhatsApp Cloud enviado no histórico:', registroError);
+          // Não falha o envio por erro no registro
+        }
+
         logger.info(`Template ${templateName} enviado via WhatsApp Cloud API para ${telefoneFormatado} (idioma: ${languageCode})`);
         return true;
       } else {
         const errorObj = responseData as { error?: { message?: string; type?: string; code?: number; details?: string } };
         const errorMessage = errorObj?.error?.message || `Erro HTTP ${response.status}`;
-        
+
+        // Registrar erro no histórico
+        try {
+          // Buscar dados do cliente baseado no telefone
+          let clienteData = null;
+          if (telefone) {
+            // Limpar telefone para busca (remover caracteres especiais)
+            const telefoneLimpo = telefone.replace(/\D/g, '');
+            clienteData = await Cliente.findOne({
+              where: {
+                telefone: {
+                  [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                }
+              },
+              attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+            });
+          }
+
+          const clienteNome = clienteData ? (clienteData.razao_social || clienteData.nome_fantasia || undefined) : undefined;
+          const clienteEmail = clienteData?.email || undefined;
+          const clienteTelefone = clienteData?.telefone || undefined;
+
+          await MensagemHistorico.create({
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: `Template: ${templateName} (${languageCode})`,
+            status: 'erro',
+            erro_mensagem: errorMessage,
+            servidor_id: servidor.id,
+            cliente_nome: clienteNome,
+            cliente_email: clienteEmail,
+            cliente_telefone: clienteTelefone
+          });
+
+          // Registrar erro no Elasticsearch
+          await registrarMensagemElasticsearch(null, {
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: `Template: ${templateName} (${languageCode})`,
+            status: 'erro',
+            erro_mensagem: errorMessage,
+            servidor_id: servidor.id
+          });
+        } catch (registroError) {
+          logger.error('Erro ao registrar erro de template WhatsApp Cloud no histórico:', registroError);
+          // Não falha o envio por erro no registro
+        }
+
         logger.error(`Erro ao enviar template via WhatsApp Cloud API - Template: ${templateName}, Mensagem: ${errorMessage}`, {
           status: response.status,
           errorCode: errorObj?.error?.code,
@@ -258,9 +424,103 @@ export class WhatsAppCloudService {
       const responseData = await response.json().catch(() => ({}));
 
       if (response.ok) {
+        // Registrar mensagem enviada no histórico
+        try {
+          // Buscar dados do cliente baseado no telefone
+          let clienteData = null;
+          if (telefone) {
+            // Limpar telefone para busca (remover caracteres especiais)
+            const telefoneLimpo = telefone.replace(/\D/g, '');
+            clienteData = await Cliente.findOne({
+              where: {
+                telefone: {
+                  [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                }
+              },
+              attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+            });
+          }
+
+          const clienteNome = clienteData ? (clienteData.razao_social || clienteData.nome_fantasia || undefined) : undefined;
+          const clienteEmail = clienteData?.email || undefined;
+          const clienteTelefone = clienteData?.telefone || undefined;
+
+          await MensagemHistorico.create({
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: caption || `Documento: ${filename}`,
+            status: 'enviada',
+            servidor_id: servidor.id,
+            cliente_nome: clienteNome,
+            cliente_email: clienteEmail,
+            cliente_telefone: clienteTelefone
+          });
+
+          // Registrar no Elasticsearch
+          await registrarMensagemElasticsearch(null, {
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: caption || `Documento: ${filename}`,
+            status: 'enviada',
+            servidor_id: servidor.id
+          });
+        } catch (registroError) {
+          logger.error('Erro ao registrar documento WhatsApp Cloud enviado no histórico:', registroError);
+          // Não falha o envio por erro no registro
+        }
+
         logger.info(`Documento enviado via WhatsApp Cloud API para ${telefoneFormatado}`);
         return true;
       } else {
+        const errorMessage = `Erro HTTP ${response.status}: ${JSON.stringify(responseData)}`;
+
+        // Registrar erro no histórico
+        try {
+          // Buscar dados do cliente baseado no telefone
+          let clienteData = null;
+          if (telefone) {
+            // Limpar telefone para busca (remover caracteres especiais)
+            const telefoneLimpo = telefone.replace(/\D/g, '');
+            clienteData = await Cliente.findOne({
+              where: {
+                telefone: {
+                  [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                }
+              },
+              attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+            });
+          }
+
+          const clienteNome = clienteData ? (clienteData.razao_social || clienteData.nome_fantasia || undefined) : undefined;
+          const clienteEmail = clienteData?.email || undefined;
+          const clienteTelefone = clienteData?.telefone || undefined;
+
+          await MensagemHistorico.create({
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: caption || `Documento: ${filename}`,
+            status: 'erro',
+            erro_mensagem: errorMessage,
+            servidor_id: servidor.id,
+            cliente_nome: clienteNome,
+            cliente_email: clienteEmail,
+            cliente_telefone: clienteTelefone
+          });
+
+          // Registrar erro no Elasticsearch
+          await registrarMensagemElasticsearch(null, {
+            tipo: 'whatsapp',
+            destinatario: telefone,
+            mensagem: caption || `Documento: ${filename}`,
+            status: 'erro',
+            erro_mensagem: errorMessage,
+            servidor_id: servidor.id
+          });
+        } catch (registroError) {
+          logger.error('Erro ao registrar erro de documento WhatsApp Cloud no histórico:', registroError);
+          // Não falha o envio por erro no registro
+        }
+
         logger.error('Erro ao enviar documento via WhatsApp Cloud API:', {
           status: response.status,
           data: responseData

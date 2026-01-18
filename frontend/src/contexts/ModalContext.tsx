@@ -16,6 +16,8 @@ export type ModalType =
   | 'recursos-sistema'
   | 'servidor-email'
   | 'servidor-whatsapp'
+  | 'historico-whatsapp'
+  | 'historico-email'
   | 'nfse'
   | 'documentos-sistema'
   | 'dias-vencimento'

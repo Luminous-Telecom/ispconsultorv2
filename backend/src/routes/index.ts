@@ -17,6 +17,7 @@ import servidorEmailRoutes from './servidorEmailRoutes';
 import servidorWhatsAppRoutes from './servidorWhatsAppRoutes';
 import mensagemWhatsAppRoutes from './mensagemWhatsAppRoutes';
 import mensagemEmailRoutes from './mensagemEmailRoutes';
+import mensagemHistoricoRoutes from './mensagemHistoricoRoutes';
 import modeloDocumentoRoutes from './modeloDocumentoRoutes';
 import modeloReciboRoutes from './modeloReciboRoutes';
 import diasVencimentoRoutes from './diasVencimentoRoutes';
@@ -58,6 +59,7 @@ const routes = [
     { path: '/api/servidores-whatsapp', route: servidorWhatsAppRoutes },
     { path: '/api/mensagens-whatsapp', route: mensagemWhatsAppRoutes },
     { path: '/api/mensagens-email', route: mensagemEmailRoutes },
+    { path: '/api/mensagens-historico', route: mensagemHistoricoRoutes },
     { path: '/api/modelos-documento', route: modeloDocumentoRoutes },
     { path: '/api/recibo', route: modeloReciboRoutes },
     { path: '/api/dias-vencimento', route: diasVencimentoRoutes },

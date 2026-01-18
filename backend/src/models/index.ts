@@ -45,6 +45,7 @@ import { Auditoria } from './sistema/Auditoria';
 // Comunicação
 import { ServidorEmail } from './comunicacao/ServidorEmail';
 import { ServidorWhatsApp } from './comunicacao/ServidorWhatsApp';
+import { MensagemHistorico } from './comunicacao/MensagemHistorico';
 
 // Importar associações específicas
 import './associations';
@@ -303,6 +304,12 @@ ContaPagarPagamento.belongsTo(ContaPagar, {
 });
 
 ContaPagarPagamento.belongsTo(Usuario, {
+  foreignKey: 'usuario_id',
+  as: 'usuario'
+});
+
+// MensagemHistorico
+MensagemHistorico.belongsTo(Usuario, {
   foreignKey: 'usuario_id',
   as: 'usuario'
 });

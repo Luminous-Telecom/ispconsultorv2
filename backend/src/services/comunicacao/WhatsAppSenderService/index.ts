@@ -1,5 +1,8 @@
 import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
+import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
+import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
+import { registrarMensagemElasticsearch } from '../../elasticsearch/MensagemHistoricoElasticsearchService';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
 
 const INTERACTION_DELAY_MS = 2000;
@@ -28,7 +31,7 @@ export class WhatsAppSenderService {
     
     const baseUrl = this.getBaseUrl(servidor);
     const url = `${baseUrl}/message/sendText/${servidor.instance_name}`;
-    return this.fazerRequisicao(url, servidor, { number: telefone, text: mensagem });
+    return this.fazerRequisicao(url, servidor, { number: telefone, text: mensagem }, telefone, mensagem);
   }
 
   /**
@@ -60,7 +63,7 @@ export class WhatsAppSenderService {
         media: base64,
         fileName: 'boleto.pdf',
         caption: descricao || undefined
-      });
+      }, telefone, descricao || 'Boleto em PDF');
     } catch (error) {
       logger.error('Erro ao enviar PDF via WhatsApp:', error);
       return false;
@@ -73,7 +76,14 @@ export class WhatsAppSenderService {
   private static async fazerRequisicao(
     url: string,
     servidor: ServidorWhatsApp,
-    body: WhatsAppRequestBody
+    body: WhatsAppRequestBody,
+    telefone?: string,
+    mensagem?: string,
+    entidadeTipo?: string,
+    entidadeId?: number,
+    clienteNome?: string,
+    clienteEmail?: string,
+    clienteTelefone?: string
   ): Promise<boolean> {
     try {
       const controller = new AbortController();
@@ -91,8 +101,110 @@ export class WhatsAppSenderService {
       const responseData = await response.json().catch(() => ({}));
       
       if (response.ok) {
+        // Registrar mensagem enviada no histórico
+        if (telefone && mensagem) {
+          try {
+            // Buscar dados do cliente baseado no telefone
+            let clienteData = null;
+            if (telefone) {
+              // Limpar telefone para busca (remover caracteres especiais)
+              const telefoneLimpo = telefone.replace(/\D/g, '');
+              clienteData = await Cliente.findOne({
+                where: {
+                  telefone: {
+                    [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                  }
+                },
+                attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+              });
+            }
+
+            const clienteNome = clienteData ? (clienteData.razao_social || clienteData.nome_fantasia || undefined) : undefined;
+            const clienteEmail = clienteData?.email || undefined;
+            const clienteTelefone = clienteData?.telefone || undefined;
+
+            await MensagemHistorico.create({
+              tipo: 'whatsapp',
+              destinatario: telefone,
+              mensagem: mensagem,
+              status: 'enviada',
+              entidade_tipo: entidadeTipo,
+              entidade_id: entidadeId,
+              servidor_id: servidor.id,
+              cliente_nome: clienteNome,
+              cliente_email: clienteEmail,
+              cliente_telefone: clienteTelefone
+            });
+
+            // Registrar no Elasticsearch
+            await registrarMensagemElasticsearch(null, {
+              tipo: 'whatsapp',
+              destinatario: telefone,
+              mensagem: mensagem,
+              status: 'enviada',
+              entidade_tipo: entidadeTipo,
+              entidade_id: entidadeId,
+              servidor_id: servidor.id
+            });
+          } catch (registroError) {
+            logger.error('Erro ao registrar WhatsApp enviado no histórico:', registroError);
+            // Não falha o envio por erro no registro
+          }
+        }
         return true;
       } else {
+        // Registrar erro no histórico
+        if (telefone && mensagem) {
+          try {
+            // Buscar dados do cliente baseado no telefone
+            let clienteData = null;
+            if (telefone) {
+              // Limpar telefone para busca (remover caracteres especiais)
+              const telefoneLimpo = telefone.replace(/\D/g, '');
+              clienteData = await Cliente.findOne({
+                where: {
+                  telefone: {
+                    [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                  }
+                },
+                attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
+              });
+            }
+
+            const clienteNome = clienteData ? (clienteData.razao_social || clienteData.nome_fantasia || undefined) : undefined;
+            const clienteEmail = clienteData?.email || undefined;
+            const clienteTelefone = clienteData?.telefone || undefined;
+
+            await MensagemHistorico.create({
+              tipo: 'whatsapp',
+              destinatario: telefone,
+              mensagem: mensagem,
+              status: 'erro',
+              erro_mensagem: `Erro HTTP ${response.status}: ${JSON.stringify(responseData)}`,
+              entidade_tipo: entidadeTipo,
+              entidade_id: entidadeId,
+              servidor_id: servidor.id,
+              cliente_nome: clienteNome,
+              cliente_email: clienteEmail,
+              cliente_telefone: clienteTelefone
+            });
+
+            // Registrar erro no Elasticsearch
+            await registrarMensagemElasticsearch({} as any, {
+              tipo: 'whatsapp',
+              destinatario: telefone,
+              mensagem: mensagem,
+              status: 'erro',
+              erro_mensagem: `Erro HTTP ${response.status}: ${JSON.stringify(responseData)}`,
+              entidade_tipo: entidadeTipo,
+              entidade_id: entidadeId,
+              servidor_id: servidor.id
+            });
+          } catch (registroError) {
+            logger.error('Erro ao registrar erro de WhatsApp no histórico:', registroError);
+            // Não falha o envio por erro no registro
+          }
+        }
         logger.error('Erro na requisição WhatsApp:', { url, status: response.status, data: responseData });
         return false;
       }
