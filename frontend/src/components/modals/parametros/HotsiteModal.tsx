@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
+import CodeMirror from '@uiw/react-codemirror';
+import { html as htmlLang } from '@codemirror/lang-html';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -38,7 +40,6 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
 
   const [activeTab, setActiveTab] = useState<'editar' | 'visualizar'>('editar');
   const [html, setHtml] = useState<string>('');
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const { data: hotsiteResponse, isLoading } = useQuery({
     queryKey: ['hotsite-admin'],
@@ -99,33 +100,8 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
 
   const insertVariable = (key: string) => {
     const placeholder = `{{${key}}}`;
-    const el = textareaRef.current;
-
-    if (!el) {
-      setHtml((prev) => `${prev}${placeholder}`);
-      return;
-    }
-
-    // Preservar scroll e seleção para evitar "pulo" para o topo
-    const prevScrollTop = el.scrollTop;
-    const prevScrollLeft = el.scrollLeft;
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const next = `${el.value.slice(0, start)}${placeholder}${el.value.slice(end)}`;
-    setHtml(next);
-
-    requestAnimationFrame(() => {
-      // Evitar scroll da página ao focar (quando suportado)
-      try {
-        (el as HTMLTextAreaElement).focus({ preventScroll: true } as unknown as FocusOptions);
-      } catch {
-        el.focus();
-      }
-      const pos = start + placeholder.length;
-      el.setSelectionRange(pos, pos);
-      el.scrollTop = prevScrollTop;
-      el.scrollLeft = prevScrollLeft;
-    });
+    // Insere no final do conteúdo atual
+    setHtml((prev) => `${prev}${placeholder}`);
   };
 
   const previewHtml = useMemo(() => {
@@ -200,14 +176,40 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
                 {activeTab === 'editar' ? (
                   <div className="row g-2">
                     <div className="col-12 col-lg-8">
-                      <div style={{ height: '60vh' }}>
-                        <textarea
-                          ref={textareaRef}
-                          className="form-control font-monospace"
-                          style={{ height: '55vh', whiteSpace: 'pre', fontSize: '13px' }}
+                      <div style={{ height: '60vh', overflow: 'hidden' }}>
+                        <CodeMirror
                           value={html}
-                          onChange={(e) => setHtml(e.target.value)}
+                          height="55vh"
+                          extensions={[htmlLang()]}
+                          onChange={(value) => setHtml(value)}
                           placeholder="Cole ou edite o HTML completo aqui (incluindo <head>, <style> e <script>). Use variáveis como {{empresa.razao_social}}."
+                          basicSetup={{
+                            lineNumbers: true,
+                            highlightActiveLineGutter: true,
+                            highlightSpecialChars: true,
+                            foldGutter: true,
+                            drawSelection: true,
+                            dropCursor: true,
+                            allowMultipleSelections: true,
+                            indentOnInput: true,
+                            bracketMatching: true,
+                            closeBrackets: true,
+                            autocompletion: true,
+                            rectangularSelection: true,
+                            crosshairCursor: true,
+                            highlightActiveLine: true,
+                            highlightSelectionMatches: true,
+                            closeBracketsKeymap: true,
+                            searchKeymap: true,
+                            foldKeymap: true,
+                            completionKeymap: true,
+                            lintKeymap: true,
+                          }}
+                          style={{
+                            fontSize: '13px',
+                            border: '1px solid var(--bs-border-color)',
+                            borderRadius: '4px',
+                          }}
                         />
                       </div>
                     </div>
