@@ -11,6 +11,27 @@ interface HotsiteModalProps {
   onClose: () => void;
 }
 
+function sanitizeSrcDocHtml(rawHtml: string): string {
+  if (!rawHtml) return '';
+
+  try {
+    // Remove APENAS as meta tags que causam erros no console.
+    // Scripts e handlers são mantidos para o hotsite funcionar normalmente.
+    let sanitized = rawHtml;
+
+    // Remove meta tags com X-Frame-Options (não funcionam em iframes)
+    sanitized = sanitized.replace(/<meta[^>]*http-equiv\s*=\s*["']x-frame-options["'][^>]*>/gi, '');
+    
+    // Remove meta tags com Content-Security-Policy que contenham frame-ancestors (não funcionam em iframes)
+    sanitized = sanitized.replace(/<meta[^>]*http-equiv\s*=\s*["']content-security-policy["'][^>]*frame-ancestors[^>]*>/gi, '');
+    sanitized = sanitized.replace(/<meta[^>]*name\s*=\s*["']content-security-policy["'][^>]*frame-ancestors[^>]*>/gi, '');
+
+    return sanitized;
+  } catch {
+    return rawHtml;
+  }
+}
+
 const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
@@ -106,6 +127,10 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
       el.scrollLeft = prevScrollLeft;
     });
   };
+
+  const previewHtml = useMemo(() => {
+    return html ? sanitizeSrcDocHtml(html) : '<div style="font-family: Arial; padding: 16px;">Nenhum HTML configurado.</div>';
+  }, [html]);
 
   return (
     <DraggableModal
@@ -220,7 +245,7 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
                   <div className="ratio ratio-16x9" style={{ minHeight: '60vh' }}>
                     <iframe
                       title="Pré-visualização do hotsite"
-                      srcDoc={html || '<div style=&quot;font-family: Arial; padding: 16px;&quot;>Nenhum HTML configurado.</div>'}
+                      srcDoc={previewHtml}
                       sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox"
                       style={{ border: 0, background: '#fff' }}
                     />
@@ -237,4 +262,3 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
 };
 
 export default HotsiteModal;
-
