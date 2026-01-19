@@ -2770,6 +2770,301 @@ textarea:focus {
 }
 
 /* ============================================
+   HOTSITE MODAL - Estilos específicos
+   ============================================ */
+
+.hotsite-modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.hotsite-tabs {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.hotsite-tabs-mobile {
+  margin-bottom: 1rem;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+}
+
+/* Espaçamento entre abas */
+.hotsite-tabs .nav-item {
+  margin-right: 0.25rem;
+}
+
+.hotsite-tabs .nav-item:last-child {
+  margin-right: 0;
+}
+
+.hotsite-tabs-mobile .nav-item {
+  flex: 1;
+  margin-right: 0.125rem;
+}
+
+.hotsite-tabs-mobile .nav-item:last-child {
+  margin-right: 0;
+}
+
+/* Estilos para abas no modo escuro */
+[data-theme="dark"] .hotsite-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .hotsite-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .hotsite-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+[data-theme="dark"] .hotsite-tabs-mobile .nav-link {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .hotsite-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .hotsite-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--btn-primary-color) !important;
+}
+
+.hotsite-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.hotsite-tab-content-scrollable {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.hotsite-tab-content-padded {
+  padding: 16px;
+}
+
+.hotsite-tab-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* Layout unificado do header com abas */
+.hotsite-header-unified {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 1rem;
+  padding: 0 8px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.hotsite-header-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* Estilo das abas no header unificado */
+.hotsite-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* Para mobile */
+.hotsite-tabs-mobile.hotsite-tabs-unified {
+  .nav-item {
+    flex: 1;
+    margin-right: 0.0625rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.375rem !important;
+    text-align: center !important;
+  }
+}
+
+/* Estilos do CodeMirror para melhor contraste */
+.hotsite-modal-content {
+  .cm-editor {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .cm-content {
+    color: var(--text-primary) !important;
+  }
+
+  .cm-line {
+    color: var(--text-primary) !important;
+  }
+
+  /* Tema claro - garantir contraste adequado */
+  [data-theme="light"] & {
+    .cm-editor {
+      background-color: #ffffff !important;
+    }
+
+    .cm-content,
+    .cm-line {
+      color: #1e293b !important;
+    }
+
+    /* Syntax highlighting para HTML no tema claro */
+    .cm-tag {
+      color: #0d6efd !important;
+    }
+
+    .cm-attribute {
+      color: #198754 !important;
+    }
+
+    .cm-string {
+      color: #dc3545 !important;
+    }
+
+    .cm-comment {
+      color: #6c757d !important;
+    }
+
+    .cm-keyword {
+      color: #0d6efd !important;
+    }
+
+    .cm-property {
+      color: #198754 !important;
+    }
+
+    .cm-variable {
+      color: #1e293b !important;
+    }
+
+    .cm-number {
+      color: #fd7e14 !important;
+    }
+
+    .cm-meta {
+      color: #6c757d !important;
+    }
+
+    .cm-atom {
+      color: #0dcaf0 !important;
+    }
+
+    .cm-def {
+      color: #0d6efd !important;
+    }
+
+    .cm-builtin {
+      color: #0d6efd !important;
+    }
+
+    .cm-qualifier {
+      color: #198754 !important;
+    }
+
+    .cm-type {
+      color: #0dcaf0 !important;
+    }
+
+    .cm-operator {
+      color: #1e293b !important;
+    }
+
+    .cm-punctuation {
+      color: #1e293b !important;
+    }
+
+    /* Números de linha */
+    .cm-lineNumbers .cm-gutterElement {
+      color: #6c757d !important;
+    }
+  }
+}
+
+/* ============================================
    EMAIL MODAL - Estilos específicos
    ============================================ */
 
