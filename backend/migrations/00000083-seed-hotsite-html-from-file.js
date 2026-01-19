@@ -23,21 +23,19 @@ module.exports = {
 
     if (lastId) {
       await queryInterface.sequelize.query(
-        'UPDATE hotsites SET html = ?, ativo = ?, updated_at = ? WHERE id = ?',
-        { replacements: [html, true, Sequelize.literal('CURRENT_TIMESTAMP'), lastId] }
+        'UPDATE hotsites SET html = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        { replacements: [html, true, lastId] }
       );
       return;
     }
 
     // Se não existir nenhum registro, cria um novo
     await queryInterface.sequelize.query(
-      'INSERT INTO hotsites (html, ativo, created_at, updated_at) VALUES (?, ?, ?, ?)',
+      'INSERT INTO hotsites (html, ativo, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
       {
         replacements: [
           html,
-          true,
-          Sequelize.literal('CURRENT_TIMESTAMP'),
-          Sequelize.literal('CURRENT_TIMESTAMP')
+          true
         ]
       }
     );
