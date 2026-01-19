@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { HotsiteService } from '@/services/hotsiteService';
+import { DadosEmpresaService } from '@/services/dadosEmpresaService';
 import './Home.css';
 
 function sanitizeSrcDocHtml(rawHtml: string): string {
@@ -26,6 +27,13 @@ function sanitizeSrcDocHtml(rawHtml: string): string {
 
 const Home: React.FC = () => {
   const [blobUrl, setBlobUrl] = React.useState<string>('');
+
+  // Buscar dados públicos da empresa
+  const { data: empresaData } = useQuery({
+    queryKey: ['dados-empresa-public'],
+    queryFn: () => DadosEmpresaService.getPublic(),
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Buscar hotsite público (HTML configurável)
   const { data: hotsiteResponse, isLoading } = useQuery({
@@ -66,8 +74,10 @@ const Home: React.FC = () => {
   }, [hotsiteHtml]);
 
   useEffect(() => {
-    document.title = 'Hotsite';
-  }, []);
+    // Usar nome fantasia ou razão social da empresa no título
+    const nomeEmpresa = empresaData?.nome_fantasia || empresaData?.razao_social;
+    document.title = nomeEmpresa || 'Hotsite';
+  }, [empresaData]);
 
   return (
     <div className="hotsite-page">
