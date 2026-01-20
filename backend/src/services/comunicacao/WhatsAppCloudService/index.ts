@@ -259,7 +259,9 @@ export class WhatsAppCloudService {
             });
           }
 
-          const clienteNome = clienteData ? (clienteData.razao_social || clienteData.nome_fantasia || undefined) : undefined;
+          const clienteNome = cliente ? (cliente.nome_fantasia || cliente.razao_social || 'Cliente não identificado') :
+                                clienteData ? (clienteData.razao_social || clienteData.nome_fantasia || 'Cliente não identificado') :
+                                'Cliente não identificado';
           const clienteEmail = clienteData?.email || undefined;
           const clienteTelefone = clienteData?.telefone || undefined;
 
@@ -267,7 +269,6 @@ export class WhatsAppCloudService {
           let mensagemDetalhada = `Template: ${templateName} (${languageCode})`;
 
           // Adicionar informações do cliente e título
-          const clienteNome = cliente ? (cliente.nome_fantasia || cliente.razao_social || 'Cliente não identificado') : 'Cliente não identificado';
           mensagemDetalhada += ` | Cliente: ${clienteNome}`;
 
           if (titulo) {
