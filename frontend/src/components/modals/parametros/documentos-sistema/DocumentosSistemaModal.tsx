@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSelectedEntity } from '@/hooks/useSelectedEntity';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import DraggableModal from '@/components/common/DraggableModal';
 import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
 import DocumentoTab from './abas/DocumentoTab';
 
-const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose: _onClose, skipWrapper: _skipWrapper, onHeaderActionsReady }) => {
+const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose: _onClose }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
@@ -67,25 +68,6 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     </div>
   ), [activeTab, handleTabChange, isMobile]);
 
-  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
-  useEffect(() => {
-    if (_skipWrapper && onHeaderActionsReady) {
-      if (!show) {
-        onHeaderActionsReady(null);
-      } else {
-        onHeaderActionsReady(headerActionsContent);
-      }
-    }
-  }, [_skipWrapper, onHeaderActionsReady, show, headerActionsContent]);
-
-  useEffect(() => {
-    return () => {
-      if (_skipWrapper && onHeaderActionsReady) {
-        onHeaderActionsReady(null);
-      }
-    };
-  }, [_skipWrapper, onHeaderActionsReady]);
-
   const getTipoLabel = (tipo: TipoDocumento) => {
     const labels: Record<TipoDocumento, string> = {
       contrato: 'Contratos',
@@ -122,22 +104,30 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
 
   return (
     <>
-      <div className="sistema-modal-content">
-        {/* Conteúdo das Abas */}
-        <div
-          className={`tab-content sistema-tab-content sistema-tab-content-padded`}
-          id="sistemaTabContent"
-        >
-          <DocumentoTab
-            tipo={activeTab}
-            onShowDocumentoModal={handleShowDocumentoModal}
-            selectedDocumentoId={selectedDocumentoId}
-            onDocumentoSelected={setSelectedDocumento}
-            onDocumentosLoaded={setDocumentosDisponiveis}
-            getTipoLabel={getTipoLabel}
-          />
+      <DraggableModal
+        show={show}
+        onClose={_onClose}
+        title="Modelos de Documentos"
+        size="xl"
+        headerActions={headerActionsContent}
+      >
+        <div className="sistema-modal-content">
+          {/* Conteúdo das Abas */}
+          <div
+            className={`tab-content sistema-tab-content sistema-tab-content-padded`}
+            id="sistemaTabContent"
+          >
+            <DocumentoTab
+              tipo={activeTab}
+              onShowDocumentoModal={handleShowDocumentoModal}
+              selectedDocumentoId={selectedDocumentoId}
+              onDocumentoSelected={setSelectedDocumento}
+              onDocumentosLoaded={setDocumentosDisponiveis}
+              getTipoLabel={getTipoLabel}
+            />
+          </div>
         </div>
-      </div>
+      </DraggableModal>
 
       {/* Modal Unificado */}
       {showDocumentoModal && (
@@ -145,7 +135,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
           key={`documento-modal-${selectedDocumentoId || 'create'}-${activeTab}`}
           show={showDocumentoModal}
           onClose={handleCloseDocumentoModal}
-          documento={documentoModalMode === 'edit' && selectedDocumentoId 
+          documento={documentoModalMode === 'edit' && selectedDocumentoId
             ? (selectedDocumento || { id: selectedDocumentoId } as DocumentoUnion)
             : null}
           tipo={activeTab}
