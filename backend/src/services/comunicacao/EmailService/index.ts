@@ -119,12 +119,12 @@ export class EmailService {
 
     const titulos = await Titulo.findAll({
       where: {
-        status: 'pendente',
+        status: { [Op.in]: ['pendente', 'vencido'] },
         pago: false,
         data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia }
       },
       include: [
-        { model: Cliente, as: 'cliente', required: true },
+        { model: Cliente, as: 'cliente', required: true, where: { ativo: true, recebe_email: true } },
         { model: Plano, as: 'plano', required: false },
         { model: Banco, as: 'banco', required: false }
       ]
