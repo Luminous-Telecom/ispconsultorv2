@@ -42,6 +42,8 @@ import { Hotsite } from './sistema/Hotsite';
 import { ScheduledRoutine } from './sistema/ScheduledRoutine';
 import { RoutineExecutionLog } from './sistema/RoutineExecutionLog';
 import { Auditoria } from './sistema/Auditoria';
+import Parametro from './sistema/Parametro';
+import Parametros from './sistema/Parametros';
 
 // Comunicação
 import { ServidorEmail } from './comunicacao/ServidorEmail';
@@ -359,6 +361,8 @@ export {
   AssinaturaDigital,
   ClienteArquivo,
   AssinaturaDigitalProvider,
+  Parametro,
+  Parametros,
   Fornecedor,
   FornecedorContato,
   FornecedorArquivo,
