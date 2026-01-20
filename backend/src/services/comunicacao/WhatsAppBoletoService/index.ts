@@ -26,16 +26,47 @@ export class WhatsAppBoletoService {
     mensagensEnviadas: number;
     erros: number;
   }> {
+    logger.info('WhatsAppBoletoService.enviarBoletos - Iniciando processamento', {
+      context: 'WhatsAppBoletoService',
+      config: JSON.stringify(config)
+    });
+
     try {
+      logger.info('WhatsAppBoletoService.enviarBoletos - Buscando servidor ativo', {
+        context: 'WhatsAppBoletoService'
+      });
+
       const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });
       if (!servidor) {
+        logger.warn('WhatsAppBoletoService.enviarBoletos - Nenhum servidor WhatsApp ativo encontrado', {
+          context: 'WhatsAppBoletoService'
+        });
         return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
       }
 
+      logger.info('WhatsAppBoletoService.enviarBoletos - Servidor encontrado', {
+        context: 'WhatsAppBoletoService',
+        servidorId: servidor.id,
+        servidorNome: servidor.nome
+      });
+
+      logger.info('WhatsAppBoletoService.enviarBoletos - Buscando mensagens ativas', {
+        context: 'WhatsAppBoletoService'
+      });
+
       const mensagens = await MensagemWhatsApp.findAll({ where: { ativo: true } });
       if (mensagens.length === 0) {
+        logger.warn('WhatsAppBoletoService.enviarBoletos - Nenhuma mensagem WhatsApp ativa encontrada', {
+          context: 'WhatsAppBoletoService'
+        });
         return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
       }
+
+      logger.info('WhatsAppBoletoService.enviarBoletos - Mensagens encontradas', {
+        context: 'WhatsAppBoletoService',
+        quantidadeMensagens: mensagens.length,
+        mensagens: mensagens.map(m => ({ id: m.id, tipo: m.tipo, ativo: m.ativo }))
+      });
 
       let mensagensEnviadas = 0;
       let erros = 0;
@@ -46,15 +77,58 @@ export class WhatsAppBoletoService {
         ...(config.depoisVencimento?.map(dias => ({ dias, tipo: 'depois' as const, tipoMensagem: `${String(dias).padStart(2, '0')}_dias_depois_vencimento` })) || [])
       ];
 
+      logger.info('WhatsAppBoletoService.enviarBoletos - Configurações de envio calculadas', {
+        context: 'WhatsAppBoletoService',
+        envios: JSON.stringify(envios)
+      });
+
       for (const envio of envios) {
-        const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo);
-        mensagensEnviadas += resultado.enviadas;
-        erros += resultado.erros;
+        logger.info('WhatsAppBoletoService.enviarBoletos - Processando envio', {
+          context: 'WhatsAppBoletoService',
+          tipoMensagem: envio.tipoMensagem,
+          dias: envio.dias,
+          tipo: envio.tipo
+        });
+
+        try {
+          const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo);
+
+          logger.info('WhatsAppBoletoService.enviarBoletos - Resultado do processamento', {
+            context: 'WhatsAppBoletoService',
+            tipoMensagem: envio.tipoMensagem,
+            enviadas: resultado.enviadas,
+            erros: resultado.erros
+          });
+
+          mensagensEnviadas += resultado.enviadas;
+          erros += resultado.erros;
+        } catch (processError) {
+          logger.error('WhatsAppBoletoService.enviarBoletos - Erro no processamento de envio', {
+            context: 'WhatsAppBoletoService',
+            tipoMensagem: envio.tipoMensagem,
+            error: processError instanceof Error ? processError.message : String(processError),
+            stack: processError instanceof Error ? processError.stack : undefined
+          });
+
+          erros += 1;
+        }
       }
 
-      return { sucesso: mensagensEnviadas > 0, mensagensEnviadas, erros };
+      const resultadoFinal = { sucesso: mensagensEnviadas > 0, mensagensEnviadas, erros };
+
+      logger.info('WhatsAppBoletoService.enviarBoletos - Processamento concluído', {
+        context: 'WhatsAppBoletoService',
+        resultado: JSON.stringify(resultadoFinal)
+      });
+
+      return resultadoFinal;
     } catch (error) {
-      logger.error('Erro ao enviar boletos via WhatsApp:', error);
+      logger.error('WhatsAppBoletoService.enviarBoletos - Erro geral no processamento', {
+        context: 'WhatsAppBoletoService',
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        config: JSON.stringify(config)
+      });
       return { sucesso: false, mensagensEnviadas: 0, erros: 1 };
     }
   }
@@ -69,14 +143,36 @@ export class WhatsAppBoletoService {
     dias: number,
     tipo: 'antes' | 'mesmo' | 'depois'
   ): Promise<{ enviadas: number; erros: number }> {
+    logger.info('WhatsAppBoletoService.processarEnvio - Iniciando processamento', {
+      context: 'WhatsAppBoletoService',
+      tipoMensagem,
+      dias,
+      tipo,
+      servidorId: servidor.id
+    });
+
     const mensagem = mensagens.find((msg) => msg.tipo === tipoMensagem);
+
+    logger.info('WhatsAppBoletoService.processarEnvio - Mensagem encontrada', {
+      context: 'WhatsAppBoletoService',
+      mensagemEncontrada: !!mensagem,
+      mensagemId: mensagem?.id,
+      mensagemTipo: mensagem?.tipo,
+      mensagemTipoEnvio: mensagem?.tipo_envio
+    });
+
     if (!mensagem || mensagem.tipo_envio === 'desativado') {
+      logger.info('WhatsAppBoletoService.processarEnvio - Mensagem não encontrada ou desativada', {
+        context: 'WhatsAppBoletoService',
+        tipoMensagem,
+        motivo: !mensagem ? 'mensagem_nao_encontrada' : 'tipo_envio_desativado'
+      });
       return { enviadas: 0, erros: 0 };
     }
 
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
-    
+
     const dataVencimento = new Date(hoje);
     if (tipo === 'antes') {
       dataVencimento.setDate(hoje.getDate() + dias);
@@ -86,6 +182,29 @@ export class WhatsAppBoletoService {
 
     const proximoDia = new Date(dataVencimento);
     proximoDia.setDate(proximoDia.getDate() + 1);
+
+    logger.info('WhatsAppBoletoService.processarEnvio - Calculando período de busca', {
+      context: 'WhatsAppBoletoService',
+      tipoMensagem,
+      hoje: hoje.toISOString(),
+      dataVencimento: dataVencimento.toISOString(),
+      proximoDia: proximoDia.toISOString(),
+      dias,
+      tipo
+    });
+
+    logger.info('WhatsAppBoletoService.processarEnvio - Buscando títulos no banco', {
+      context: 'WhatsAppBoletoService',
+      tipoMensagem,
+      where: {
+        status: ['pendente', 'vencido'],
+        pago: false,
+        data_vencimento: {
+          gte: dataVencimento.toISOString(),
+          lt: proximoDia.toISOString()
+        }
+      }
+    });
 
     const titulos = await Titulo.findAll({
       where: {
@@ -102,29 +221,93 @@ export class WhatsAppBoletoService {
       order: [['data_vencimento', 'ASC'], ['id', 'ASC']]
     });
 
+    logger.info('WhatsAppBoletoService.processarEnvio - Títulos encontrados', {
+      context: 'WhatsAppBoletoService',
+      tipoMensagem,
+      quantidadeTitulos: titulos.length,
+      titulosIds: titulos.map(t => ({ id: t.id, numero: t.numero_titulo, cliente: t.cliente?.razao_social }))
+    });
+
     let enviadas = 0;
     let erros = 0;
+
+    logger.info('WhatsAppBoletoService.processarEnvio - Iniciando processamento de títulos individuais', {
+      context: 'WhatsAppBoletoService',
+      tipoMensagem,
+      quantidadeTitulos: titulos.length
+    });
 
     for (const titulo of titulos) {
       const cliente = (titulo as Titulo & { cliente?: Cliente | null }).cliente;
       const contrato = (titulo as Titulo & { contrato?: Contrato | null }).contrato;
 
+      logger.info('WhatsAppBoletoService.processarEnvio - Processando título', {
+        context: 'WhatsAppBoletoService',
+        tituloId: titulo.id,
+        tituloNumero: titulo.numero_titulo,
+        clienteNome: cliente?.razao_social,
+        clienteTelefone: cliente?.telefone,
+        contratoId: contrato?.id
+      });
+
       if (!cliente?.telefone) {
+        logger.info('WhatsAppBoletoService.processarEnvio - Pulando título sem telefone', {
+          context: 'WhatsAppBoletoService',
+          tituloId: titulo.id,
+          clienteNome: cliente?.razao_social,
+          motivo: 'telefone_ausente'
+        });
         continue;
       }
 
       try {
+        logger.info('WhatsAppBoletoService.processarEnvio - Enviando mensagem para título', {
+          context: 'WhatsAppBoletoService',
+          tituloId: titulo.id,
+          clienteTelefone: cliente.telefone
+        });
+
         const resultado = await this.enviarParaTitulo(mensagem, servidor, titulo, cliente, contrato);
+
+        logger.info('WhatsAppBoletoService.processarEnvio - Resultado do envio', {
+          context: 'WhatsAppBoletoService',
+          tituloId: titulo.id,
+          sucesso: resultado
+        });
+
         if (resultado) {
+          logger.info('WhatsAppBoletoService.processarEnvio - Envio bem-sucedido', {
+            context: 'WhatsAppBoletoService',
+            tituloId: titulo.id
+          });
           enviadas++;
         } else {
+          logger.warn('WhatsAppBoletoService.processarEnvio - Falha no envio (resultado false)', {
+            context: 'WhatsAppBoletoService',
+            tituloId: titulo.id
+          });
           erros++;
         }
       } catch (error) {
-        logger.error('Erro ao enviar boleto via WhatsApp:', { titulo_id: titulo.id, error });
+        logger.error('WhatsAppBoletoService.processarEnvio - Erro ao enviar boleto', {
+          context: 'WhatsAppBoletoService',
+          tituloId: titulo.id,
+          clienteNome: cliente?.razao_social,
+          clienteTelefone: cliente?.telefone,
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
         erros++;
       }
     }
+
+    logger.info('WhatsAppBoletoService.processarEnvio - Processamento concluído', {
+      context: 'WhatsAppBoletoService',
+      tipoMensagem,
+      enviadas,
+      erros,
+      totalProcessados: enviadas + erros
+    });
 
     return { enviadas, erros };
   }
