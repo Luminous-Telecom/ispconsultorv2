@@ -663,7 +663,13 @@ const CentralAssinante: React.FC = () => {
               <i className="bi bi-file-earmark-text fs-5 position-relative">
                 <span className="position-absolute top-0 end-0 central-assinante-badge-wrapper">
                   <span className="central-assinante-badge-inner">
-                    <Badge variant={dados.resumo.total_contratos > dados.resumo.contratos_ativos ? 'danger' : 'secondary'} pill className="central-assinante-sidebar-badge">{dados.resumo.total_contratos}</Badge>
+                    <Badge
+                      variant={temContratoComAssinaturaPendente() ? 'danger' : 'secondary'}
+                      pill
+                      className="central-assinante-sidebar-badge"
+                    >
+                      {dados.resumo.contratos_ativos}
+                    </Badge>
                   </span>
                 </span>
               </i>
@@ -1272,7 +1278,7 @@ const CentralAssinante: React.FC = () => {
               <i className={`bi bi-file-earmark-text fs-5 position-relative ${activeTab === 'contratos' ? 'text-white' : 'text-white-50'}`}></i>
               <small className="small">Contratos</small>
               <span className="position-absolute top-0 end-0 central-assinante-mobile-badge">
-                <Badge variant={temContratoComAssinaturaPendente() ? 'danger' : 'secondary'} pill className="central-assinante-sidebar-badge">{dados?.resumo.total_contratos || 0}</Badge>
+                <Badge variant={temContratoComAssinaturaPendente() ? 'danger' : 'secondary'} pill className="central-assinante-sidebar-badge">{dados?.resumo.contratos_ativos || 0}</Badge>
               </span>
             </div>
           </button>
