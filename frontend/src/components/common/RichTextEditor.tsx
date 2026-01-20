@@ -221,20 +221,65 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
               body: formData
             });
             
+            // Ler como texto primeiro para poder logar e ainda parsear (evita consumo duplo do body)
+            const rawText = await response.text();
+            let data: unknown = null;
+            try {
+              data = rawText ? JSON.parse(rawText) : null;
+            } catch {
+              data = null;
+            }
+
+            // Logs de diagnóstico (apenas em dev)
+            if (process.env.NODE_ENV !== 'production') {
+              // eslint-disable-next-line no-console
+              console.debug('[RichTextEditor] upload imagem', {
+                ok: response.ok,
+                status: response.status,
+                filename: blobInfo.filename(),
+                response: data ?? rawText
+              });
+            }
+
             if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              throw new Error(errorData.message || `Erro ao fazer upload: ${response.status}`);
+              const errorMessage =
+                (data && typeof data === 'object' && 'message' in data && typeof (data as { message?: unknown }).message === 'string'
+                  ? (data as { message: string }).message
+                  : null) || `Erro ao fazer upload: ${response.status}`;
+              throw new Error(errorMessage);
             }
-            
-            const data = await response.json();
-            
-            if (!data.success || !data.url) {
-              throw new Error(data.message || 'URL da imagem não retornada pelo servidor');
+
+            // Aceitar ambos formatos:
+            // - { success: true, url: "..." }
+            // - { success: true, data: { url: "..." } }
+            const success =
+              !!(data && typeof data === 'object' && 'success' in data && (data as { success?: unknown }).success === true);
+
+            const urlFromTop =
+              (data && typeof data === 'object' && 'url' in data && typeof (data as { url?: unknown }).url === 'string')
+                ? (data as { url: string }).url
+                : null;
+
+            const urlFromData =
+              (data && typeof data === 'object' && 'data' in data && (data as { data?: unknown }).data && typeof (data as { data: { url?: unknown } }).data === 'object'
+                && 'url' in (data as { data: { url?: unknown } }).data
+                && typeof (data as { data: { url?: unknown } }).data.url === 'string')
+                ? (data as { data: { url: string } }).data.url
+                : null;
+
+            const returnedUrl = urlFromTop || urlFromData;
+
+            if (!success || !returnedUrl) {
+              const message =
+                (data && typeof data === 'object' && 'message' in data && typeof (data as { message?: unknown }).message === 'string'
+                  ? (data as { message: string }).message
+                  : null) || 'URL da imagem não retornada pelo servidor';
+              throw new Error(message);
             }
-            
-            const imageUrl = data.url.startsWith('/') 
-              ? `${window.location.origin}${data.url}`
-              : data.url;
+
+            const imageUrl = returnedUrl.startsWith('/')
+              ? `${window.location.origin}${returnedUrl}`
+              : returnedUrl;
             
             return imageUrl;
           }

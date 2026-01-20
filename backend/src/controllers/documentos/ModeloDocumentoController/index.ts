@@ -11,6 +11,7 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { logger } from '../../../utils/logger';
 
 export class ModeloDocumentoController {
   /**
@@ -479,6 +480,11 @@ export class ModeloDocumentoController {
   static async uploadImagem(req: Request, res: Response): Promise<void> {
     try {
       if (!req.file) {
+        logger.warn('Upload de imagem (modelo documento) sem arquivo', {
+          path: req.path,
+          ip: req.ip,
+          userAgent: req.get('User-Agent')
+        });
         sendValidationError(res, 'Arquivo não enviado');
         return;
       }
@@ -498,8 +504,21 @@ export class ModeloDocumentoController {
       }
 
       const filePath = `/arquivos/documentos/${req.file.filename}`;
-      sendSuccess(res, { 
-        url: filePath,
+      // Construir URL completa da imagem
+      const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : '';
+      const fullUrl = `${baseUrl}${filePath}`;
+
+      logger.info('Upload de imagem (modelo documento) concluído', {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        filePath,
+        fullUrl
+      });
+
+      sendSuccess(res, {
+        url: fullUrl,
         path: filePath
       });
     } catch (error) {
