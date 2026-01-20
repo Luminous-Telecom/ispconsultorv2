@@ -217,29 +217,141 @@ export class WhatsAppCloudService {
       const telefoneFormatado = this.formatarTelefone(telefone);
       const url = `${this.API_BASE_URL}/${servidor.whatsapp_cloud_phone_number_id}/messages`;
 
-      const message: WhatsAppCloudTemplateMessage = {
-        messaging_product: 'whatsapp',
-        to: telefoneFormatado,
-        type: 'template',
-        template: {
-          name: templateName,
-          language: {
-            code: languageCode
+      const sendTemplateRequest = async (
+        comps: WhatsAppCloudTemplateComponent[] | undefined
+      ): Promise<{ response: Response; responseData: unknown }> => {
+        const message: WhatsAppCloudTemplateMessage = {
+          messaging_product: 'whatsapp',
+          to: telefoneFormatado,
+          type: 'template',
+          template: {
+            name: templateName,
+            language: {
+              code: languageCode
+            },
+            components: comps || []
+          }
+        };
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${servidor.whatsapp_cloud_token}`
           },
-          components: components || []
-        }
+          body: JSON.stringify(message)
+        });
+
+        const responseData = await response.json().catch(() => ({}));
+        return { response, responseData };
       };
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${servidor.whatsapp_cloud_token}`
-        },
-        body: JSON.stringify(message)
-      });
+      const isParamsMismatchError = (data: unknown): boolean => {
+        const errorObj = data as { error?: { code?: number; message?: string } };
+        const code = errorObj?.error?.code;
+        const msg = (errorObj?.error?.message || '').toLowerCase();
+        return code === 132000 || msg.includes('number of parameters does not match');
+      };
 
-      const responseData = await response.json().catch(() => ({}));
+      const buildComponentsForRetry = (params: {
+        originalComponents: WhatsAppCloudTemplateComponent[] | undefined;
+        bodyParamCount: number;
+        keepHeader: boolean;
+        keepButton: boolean;
+      }): WhatsAppCloudTemplateComponent[] | undefined => {
+        const { originalComponents, bodyParamCount, keepHeader, keepButton } = params;
+
+        if (!originalComponents || originalComponents.length === 0) {
+          return originalComponents;
+        }
+
+        const filtered = originalComponents.filter((c) => {
+          if (!keepHeader && c.type === 'header') return false;
+          if (!keepButton && c.type === 'button') return false;
+          return true;
+        });
+
+        const cloned = filtered.map((c) => ({
+          ...c,
+          parameters: c.parameters ? [...c.parameters] : undefined,
+          buttons: c.buttons ? [...c.buttons] : undefined,
+        }));
+
+        const bodyIndex = cloned.findIndex((c) => c.type === 'body');
+        if (bodyIndex === -1) {
+          return cloned;
+        }
+
+        const body = cloned[bodyIndex];
+        const originalParams = body.parameters || [];
+        const trimmed = originalParams.slice(0, Math.max(0, bodyParamCount));
+        cloned[bodyIndex] = {
+          ...body,
+          parameters: trimmed.length > 0 ? trimmed : undefined,
+        };
+
+        return cloned;
+      };
+
+      const originalComponents = components || [];
+      let { response, responseData } = await sendTemplateRequest(originalComponents);
+
+      // Retry automático para erro (#132000) quando componentes/parâmetros não batem com o template
+      if (!response.ok && isParamsMismatchError(responseData)) {
+        const bodyComponent = originalComponents.find((c) => c.type === 'body');
+        const originalBodyParamCount = bodyComponent?.parameters?.length || 0;
+        const hasHeader = originalComponents.some((c) => c.type === 'header');
+        const hasButton = originalComponents.some((c) => c.type === 'button');
+
+        const headerOptions = hasHeader ? [true, false] : [true];
+        const buttonOptions = hasButton ? [true, false] : [true];
+
+        let succeededWith:
+          | { keepHeader: boolean; keepButton: boolean; bodyParamCount: number }
+          | null = null;
+
+        outer: for (const keepHeader of headerOptions) {
+          for (const keepButton of buttonOptions) {
+            for (let nextCount = originalBodyParamCount; nextCount >= 0; nextCount--) {
+              // Já tentamos o payload original (com tudo e contagem original)
+              if (keepHeader && keepButton && nextCount === originalBodyParamCount) {
+                continue;
+              }
+
+              const nextComponents = buildComponentsForRetry({
+                originalComponents,
+                bodyParamCount: nextCount,
+                keepHeader,
+                keepButton
+              });
+
+              const retry = await sendTemplateRequest(nextComponents);
+              response = retry.response;
+              responseData = retry.responseData;
+
+              if (response.ok) {
+                succeededWith = { keepHeader, keepButton, bodyParamCount: nextCount };
+                break outer;
+              }
+
+              if (!isParamsMismatchError(responseData)) {
+                break outer;
+              }
+            }
+          }
+        }
+
+        if (succeededWith) {
+          logger.warn('Template enviado após ajuste automático de componentes/parâmetros', {
+            template: templateName,
+            telefone: telefoneFormatado,
+            bodyParamsOriginal: originalBodyParamCount,
+            bodyParamsUsados: succeededWith.bodyParamCount,
+            keepHeader: succeededWith.keepHeader,
+            keepButton: succeededWith.keepButton
+          });
+        }
+      }
 
       if (response.ok) {
         // Registrar mensagem enviada no histórico
