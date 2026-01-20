@@ -22,6 +22,7 @@ interface ParametrosForm {
   titulos_vence_domingo: boolean;
   auto_lancamento_titulos: boolean;
   total_titulos_financeiro: number;
+  central_assinante_metodo_login: string;
 }
 
 const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
@@ -36,7 +37,8 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
     titulos_vence_sabado: false,
     titulos_vence_domingo: false,
     auto_lancamento_titulos: false,
-    total_titulos_financeiro: 12
+    total_titulos_financeiro: 12,
+    central_assinante_metodo_login: 'cnpj'
   };
 
   const [formData, setFormData] = useState<ParametrosForm>(initialFormData);
@@ -58,7 +60,8 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
       titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
       titulos_vence_domingo: parametros.data.titulos_vence_domingo ?? false,
       auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
-      total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
+      total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12,
+      central_assinante_metodo_login: parametros.data.central_assinante_metodo_login ?? 'cnpj'
     };
   }, [parametros?.data]);
 
@@ -102,6 +105,13 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
         [field]: numValue
       }));
     }
+  };
+
+  const handleSelectChange = (field: keyof ParametrosForm, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const headerActionsContent = useMemo(() => (
@@ -265,6 +275,33 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                     />
                     <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
                       Quantidade de títulos futuros a manter sempre disponíveis no financeiro (de 1 a 24 meses)
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card mb-3">
+                <div className="card-header py-1 px-2">
+                  <small className="fw-bold mb-0">Central do Assinante</small>
+                </div>
+                <div className="card-body p-2">
+                  <div className="mb-2">
+                    <label htmlFor="central_assinante_metodo_login" className="form-label small mb-1">
+                      Método de Login
+                    </label>
+                    <select
+                      className="form-select form-select-sm"
+                      id="central_assinante_metodo_login"
+                      name="central_assinante_metodo_login"
+                      value={formData.central_assinante_metodo_login}
+                      onChange={(e) => handleSelectChange('central_assinante_metodo_login', e.target.value)}
+                      disabled={updateParametrosMutation.isPending}
+                    >
+                      <option value="cnpj">CNPJ</option>
+                      <option value="email">Email</option>
+                    </select>
+                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                      Define se o login na central do assinante será feito por CNPJ ou Email
                     </div>
                   </div>
                 </div>

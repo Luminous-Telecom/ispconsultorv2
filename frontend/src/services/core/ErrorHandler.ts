@@ -47,18 +47,6 @@ export class ErrorHandler {
     const statusCode = axiosError.response?.status;
     const responseData = axiosError.response?.data;
     const requestUrl = (axiosError.config?.url || '').toLowerCase();
-    
-    // Log imediato para debug (antes de qualquer processamento)
-    if (statusCode === 401) {
-      // eslint-disable-next-line no-console
-      console.log('[ErrorHandler] processError - 401 detectado:', {
-        requestUrl,
-        statusCode,
-        responseData,
-        configUrl: axiosError.config?.url,
-        fullUrl: (axiosError.config?.baseURL || '') + (axiosError.config?.url || '')
-      });
-    }
 
     // Determinar tipo de erro baseado no status code
     let errorType: ErrorType;
@@ -92,21 +80,7 @@ export class ErrorHandler {
           const isParametroRequest = requestUrl.includes('parametro/');
           const isTestAuthRequest = requestUrl.includes('nfse-config/test-auth');
           
-          // Logs para debug
-          // eslint-disable-next-line no-console
-          console.log('[ErrorHandler] 401 Error Debug:', {
-            requestUrl,
-            currentPath: currentPath401,
-            hasToken: !!hasToken401,
-            timeSinceLogin: timeSinceLogin401,
-            isParametroRequest,
-            isTestAuthRequest,
-            willRedirect: currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000 && !isParametroRequest && !isTestAuthRequest
-          });
-          
           if (currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000 && !isParametroRequest && !isTestAuthRequest) {
-            // eslint-disable-next-line no-console
-            console.log('[ErrorHandler] Redirecionando para login');
             if (hasToken401) {
               localStorage.removeItem('auth_token');
             }
@@ -115,9 +89,6 @@ export class ErrorHandler {
                 window.location.href = '/login';
               }
             }, 100);
-          } else {
-            // eslint-disable-next-line no-console
-            console.log('[ErrorHandler] NÃO redirecionando para login');
           }
           break;
         case 403:

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Parametros from '../../../models/sistema/Parametros';
 import { ParametrosService } from '../../../services/sistema/ParametrosService';
+import { ParametroService } from '../../../services/sistema/ParametroService';
 import Joi from 'joi';
 import { logger } from '../../../utils/logger';
 import { cache } from '../../../utils/cache';
@@ -16,7 +17,8 @@ export class ParametrosController {
     titulos_vence_sabado: Joi.boolean().optional(),
     titulos_vence_domingo: Joi.boolean().optional(),
     auto_lancamento_titulos: Joi.boolean().optional(),
-    total_titulos_financeiro: Joi.number().integer().min(1).max(24).optional()
+    total_titulos_financeiro: Joi.number().integer().min(1).max(24).optional(),
+    central_assinante_metodo_login: Joi.string().valid('cnpj', 'email').optional()
   }).min(1).unknown(true);
 
   // Obter parâmetros (sempre retorna o primeiro registro)
@@ -32,6 +34,10 @@ export class ParametrosController {
 
       const parametros = await ParametrosService.get();
 
+      // Buscar parâmetro de método de login da central do assinante
+      const parametroMetodoLogin = await ParametroService.getByChave('central_assinante_metodo_login');
+      const metodoLogin = parametroMetodoLogin?.valor || 'cnpj';
+
       // Garantir que apenas os campos do modelo sejam retornados
       const response = {
         success: true,
@@ -43,6 +49,7 @@ export class ParametrosController {
           titulos_vence_domingo: parametros.titulos_vence_domingo,
           auto_lancamento_titulos: parametros.auto_lancamento_titulos,
           total_titulos_financeiro: parametros.total_titulos_financeiro,
+          central_assinante_metodo_login: metodoLogin,
           created_at: parametros.created_at,
           updated_at: parametros.updated_at
         }
@@ -105,7 +112,29 @@ export class ParametrosController {
       const parametrosAntes = await ParametrosService.get();
       const dadosAnteriores = parametrosAntes.toJSON();
       
-      const parametros = await ParametrosService.update(value);
+      // Separar campos do modelo Parametros dos parâmetros individuais
+      const { central_assinante_metodo_login, ...parametrosData } = value;
+      
+      const parametros = await ParametrosService.update(parametrosData);
+      
+      // Atualizar parâmetro de método de login se fornecido
+      if (central_assinante_metodo_login !== undefined) {
+        let parametroMetodoLogin = await ParametroService.getByChave('central_assinante_metodo_login');
+        if (!parametroMetodoLogin) {
+          parametroMetodoLogin = await ParametroService.create({
+            chave: 'central_assinante_metodo_login',
+            valor: central_assinante_metodo_login,
+            tipo: 'string',
+            descricao: 'Método de login na central do assinante: "cnpj" ou "email"',
+            categoria: 'central_assinante',
+            ativo: true
+          } as any);
+        } else {
+          await ParametroService.update('central_assinante_metodo_login', {
+            valor: central_assinante_metodo_login
+          } as any);
+        }
+      }
       
       // Registrar auditoria
       if (parametrosAntes.created_at.getTime() === parametrosAntes.updated_at.getTime()) {

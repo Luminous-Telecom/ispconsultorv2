@@ -63,7 +63,11 @@ export class ClienteController {
     valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').required(),
     recebe_email: Joi.boolean().default(true),
     recebe_sms: Joi.boolean().default(false),
-    recebe_whatsapp: Joi.boolean().default(false)
+    recebe_whatsapp: Joi.boolean().default(false),
+    central_assinante_senha: Joi.string().min(6).max(255).allow(null, '').messages({
+      'string.min': 'Senha deve ter pelo menos 6 caracteres',
+      'string.max': 'Senha deve ter no máximo 255 caracteres'
+    })
   });
 
   // Schema de validação para atualização
@@ -94,7 +98,11 @@ export class ClienteController {
     valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').allow(null, ''),
     recebe_email: Joi.boolean(),
     recebe_sms: Joi.boolean(),
-    recebe_whatsapp: Joi.boolean()
+    recebe_whatsapp: Joi.boolean(),
+    central_assinante_senha: Joi.string().min(6).max(255).allow(null, '').messages({
+      'string.min': 'Senha deve ter pelo menos 6 caracteres',
+      'string.max': 'Senha deve ter no máximo 255 caracteres'
+    })
   });
 
   // Listar todos os clientes

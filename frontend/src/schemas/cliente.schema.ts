@@ -124,7 +124,19 @@ export const clienteSchema = z.object({
     .max(1000, 'Observações devem ter no máximo 1000 caracteres')
     .trim()
     .default('')
+    .optional(),
+  
+  // Central do Assinante
+  central_assinante_senha: z
+    .string()
+    .trim()
+    .refine(
+      (val) => !val || val === '' || val.length >= 6,
+      { message: 'Senha deve ter pelo menos 6 caracteres' }
+    )
+    .max(255, 'Senha deve ter no máximo 255 caracteres')
     .optional()
+    .default('')
 });
 
 /**

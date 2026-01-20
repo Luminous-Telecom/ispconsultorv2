@@ -47,6 +47,7 @@ export class Cliente extends Model<
   declare recebe_email: boolean;
   declare recebe_sms: boolean;
   declare recebe_whatsapp: boolean;
+  declare central_assinante_senha: string | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -264,6 +265,11 @@ Cliente.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
+    },
+    central_assinante_senha: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'Senha hash para acesso à central do assinante'
     },
     created_at: {
       type: DataTypes.DATE,

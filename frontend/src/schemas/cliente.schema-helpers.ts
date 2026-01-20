@@ -52,7 +52,8 @@ export const validateClienteFormWithZod = (data: ClienteFormData): ClienteFormEr
       valor_primeiro_titulo: data.valor_primeiro_titulo || 'total',
       recebe_email: data.recebe_email ?? true,
       recebe_whatsapp: data.recebe_whatsapp ?? true,
-      observacoes: data.observacoes || ''
+      observacoes: data.observacoes || '',
+      central_assinante_senha: data.central_assinante_senha || ''
     };
 
     // Validar usando Zod

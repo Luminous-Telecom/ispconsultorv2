@@ -20,6 +20,7 @@ interface ParametrosForm {
   titulos_vence_domingo: boolean;
   auto_lancamento_titulos: boolean;
   total_titulos_financeiro: number;
+  central_assinante_metodo_login: string;
 }
 
 const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
@@ -35,7 +36,8 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     titulos_vence_sabado: false,
     titulos_vence_domingo: false,
     auto_lancamento_titulos: false,
-    total_titulos_financeiro: 12
+    total_titulos_financeiro: 12,
+    central_assinante_metodo_login: 'cnpj'
   };
 
   const [formData, setFormData] = useState<ParametrosForm>(initialFormData);
@@ -57,7 +59,8 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
       titulos_vence_domingo: parametros.data.titulos_vence_domingo ?? false,
       auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
-      total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
+      total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12,
+      central_assinante_metodo_login: parametros.data.central_assinante_metodo_login ?? 'cnpj'
     };
   }, [parametros?.data]);
 
@@ -97,6 +100,13 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     }
   };
 
+  const handleSelectChange = (field: keyof ParametrosForm, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateParametrosMutation.mutate(formData);
@@ -122,7 +132,6 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
             type="button"
             variant="primary"
             size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={handleCancel}
             disabled={updateParametrosMutation.isPending}
           >
@@ -133,7 +142,6 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
             form="parametros-form"
             variant="primary"
             size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
             isLoading={updateParametrosMutation.isPending}
           >
             Salvar
@@ -269,6 +277,33 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                 />
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
                   Quantidade de títulos futuros a manter sempre disponíveis no financeiro (de 1 a 24 meses)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card mb-3">
+            <div className="card-header">
+              <h6 className="mb-0">Central do Assinante</h6>
+            </div>
+            <div className="card-body">
+              <div className="mb-3">
+                <label htmlFor="central_assinante_metodo_login" className="form-label">
+                  Método de Login
+                </label>
+                <select
+                  className="form-select"
+                  id="central_assinante_metodo_login"
+                  name="central_assinante_metodo_login"
+                  value={formData.central_assinante_metodo_login}
+                  onChange={(e) => handleSelectChange('central_assinante_metodo_login', e.target.value)}
+                  disabled={updateParametrosMutation.isPending}
+                >
+                  <option value="cnpj">CNPJ</option>
+                  <option value="email">Email</option>
+                </select>
+                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                  Define se o login na central do assinante será feito por CNPJ ou Email
                 </div>
               </div>
             </div>

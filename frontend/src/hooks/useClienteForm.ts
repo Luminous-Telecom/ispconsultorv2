@@ -13,7 +13,7 @@ import { AxiosError } from 'axios';
 import { ClienteService } from '../services/clienteService';
 import { ParametrosService } from '../services/parametrosService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
-import { Cliente, CreateCliente } from '../types';
+import { Cliente, CreateCliente, UpdateCliente } from '../types';
 import { ClienteFormData, ClienteFormErrors } from '../types';
 import { FormValue } from '../types/common';
 import { formatCNPJ, formatPhone, formatCEP } from '../utils/formatters';
@@ -72,7 +72,8 @@ const initialFormData: ClienteFormData = {
   valor_primeiro_titulo: 'total',
   recebe_email: true,
   recebe_whatsapp: true,
-  observacoes: ''
+  observacoes: '',
+  central_assinante_senha: ''
 };
 
 export const useClienteForm = ({
@@ -174,7 +175,8 @@ export const useClienteForm = ({
       valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
       recebe_email: cliente.recebe_email ?? true,
       recebe_whatsapp: cliente.recebe_whatsapp ?? true,
-      observacoes: cliente.observacoes || ''
+      observacoes: cliente.observacoes || '',
+      central_assinante_senha: '' // Não mostrar senha atual por segurança
     } as ZodClienteFormData;
   }, [cliente, clienteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -201,7 +203,7 @@ export const useClienteForm = ({
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
-    mutationFn: (data: Partial<Cliente>) => ClienteService.update(clienteId!, data),
+    mutationFn: (data: UpdateCliente) => ClienteService.update(clienteId!, data),
     onSuccess: () => {
       success('Cliente atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
@@ -373,7 +375,7 @@ export const useClienteForm = ({
   // Handler de submit usando React Hook Form
   const onSubmit: SubmitHandler<ZodClienteFormData> = (data) => {
     // Preparar dados para envio
-    const dataToSend: Partial<CreateCliente> = {
+    const dataToSend: Partial<CreateCliente> | UpdateCliente = {
       cnpj: data.cnpj,
       razao_social: data.razao_social,
       nome_fantasia: data.nome_fantasia || undefined,
@@ -392,7 +394,10 @@ export const useClienteForm = ({
       valor_primeiro_titulo: data.valor_primeiro_titulo as 'total' | 'proporcional',
         recebe_email: data.recebe_email,
         recebe_whatsapp: data.recebe_whatsapp,
-      observacoes: data.observacoes || undefined
+      observacoes: data.observacoes || undefined,
+      central_assinante_senha: data.central_assinante_senha && data.central_assinante_senha.trim() !== '' 
+        ? data.central_assinante_senha 
+        : undefined
     };
 
     // Remover campos undefined
@@ -404,9 +409,9 @@ export const useClienteForm = ({
     });
 
     if (isEditing) {
-      updateClienteMutation.mutate(dataToSend);
+      updateClienteMutation.mutate(dataToSend as UpdateCliente);
     } else {
-      createClienteMutation.mutate(dataToSend);
+      createClienteMutation.mutate(dataToSend as Partial<CreateCliente>);
     }
   };
 

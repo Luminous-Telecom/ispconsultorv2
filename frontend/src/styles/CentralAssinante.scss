@@ -1,0 +1,2049 @@
+// Central do Assinante Styles
+// Estilos totalmente isolados - não são afetados pelo tema claro/escuro do sistema
+// Todos os estilos usam !important para garantir isolamento total
+
+// Paleta de cores moderna e harmoniosa
+$bg-primary: #0f1419;
+$bg-secondary: #1a1f2e;
+$bg-card: #252b3b;
+$bg-hover: #2d3447;
+$border-color: #3a4154;
+$text-primary: #ffffff;
+$text-secondary: rgba(255, 255, 255, 0.7);
+$text-muted: rgba(255, 255, 255, 0.5);
+
+// Layout Principal - Forçar isolamento
+.central-assinante-container,
+.central-assinante-container[data-theme="dark"],
+.central-assinante-container[data-theme="light"],
+[data-theme="dark"] .central-assinante-container,
+[data-theme="light"] .central-assinante-container,
+body[data-theme="dark"] .central-assinante-container,
+body[data-theme="light"] .central-assinante-container {
+  background-color: $bg-primary !important;
+  min-height: 100vh;
+  color: $text-primary !important;
+}
+
+// Header - Estilização moderna e elegante
+.central-assinante-header,
+[data-theme="dark"] .central-assinante-header,
+[data-theme="light"] .central-assinante-header {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%) !important;
+  backdrop-filter: blur(10px) !important;
+  border-bottom: 2px solid rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  color: $text-primary !important;
+  position: relative !important;
+  overflow: hidden !important;
+  padding: 0.75rem 0 !important;
+  
+  &::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(129, 140, 248, 0.1) 50%, 
+      transparent 100%) !important;
+    animation: shimmer 3s ease-in-out infinite !important;
+  }
+  
+  // Isolar todos os textos no header
+  * {
+    color: $text-primary !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: $text-primary !important;
+    margin: 0 !important;
+  }
+  
+  p, span, small, label, div {
+    color: $text-primary !important;
+  }
+  
+  .text-white {
+    color: $text-primary !important;
+  }
+  
+  .text-white-50 {
+    color: $text-secondary !important;
+  }
+  
+  // Estilizar título principal
+  h1 {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    i {
+      color: #818cf8 !important;
+      font-size: 1.3rem !important;
+      margin-right: 0.5rem !important;
+      filter: drop-shadow(0 2px 4px rgba(129, 140, 248, 0.4)) !important;
+      animation: pulse-icon 2s ease-in-out infinite !important;
+    }
+    
+    span {
+      background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+    }
+  }
+  
+  // Estilizar subtítulo (nome do cliente)
+  p {
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    color: $text-secondary !important;
+    margin-top: 0.25rem !important;
+    opacity: 0.9 !important;
+  }
+  
+  // Container do header
+  .container-fluid {
+    position: relative !important;
+    z-index: 2 !important;
+  }
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    transform: translateX(-100%) !important;
+  }
+  50% {
+    transform: translateX(100%) !important;
+  }
+}
+
+@keyframes pulse-icon {
+  0%, 100% {
+    transform: scale(1) !important;
+    opacity: 1 !important;
+  }
+  50% {
+    transform: scale(1.05) !important;
+    opacity: 0.9 !important;
+  }
+}
+
+.central-assinante-main {
+  min-height: calc(100vh - 80px);
+}
+
+// Sidebar
+.central-assinante-sidebar,
+[data-theme="dark"] .central-assinante-sidebar,
+[data-theme="light"] .central-assinante-sidebar {
+  width: 80px !important;
+  background-color: $bg-secondary !important;
+  border-right: 1px solid $border-color !important;
+  flex-shrink: 0;
+  overflow: visible !important;
+}
+
+.central-assinante-nav {
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.central-assinante-nav-button,
+[data-theme="dark"] .central-assinante-nav-button,
+[data-theme="light"] .central-assinante-nav-button {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: var(--bs-border-radius) !important;
+  color: $text-secondary !important;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: center;
+  
+  i {
+    position: relative !important;
+    display: inline-block;
+  }
+
+  &.active {
+    background-color: $bg-card !important;
+    color: $text-primary !important;
+  }
+}
+
+.central-assinante-nav-text {
+  font-size: 0.7rem;
+}
+
+.central-assinante-badge-wrapper {
+  font-size: 0.5rem;
+  top: 0 !important;
+  right: 0 !important;
+  z-index: 10;
+  white-space: nowrap;
+  transform: translate(20%, -20%);
+  pointer-events: none;
+}
+
+.central-assinante-badge-inner {
+  font-size: 0.6rem;
+  padding: 0;
+  display: inline-block;
+}
+
+// Badges do menu lateral - Estilização moderna
+.central-assinante-sidebar-badge {
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  padding: 0.2rem 0.4rem !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: var(--bs-border-radius-pill) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  line-height: 1 !important;
+  letter-spacing: 0.3px !important;
+  
+  // Badge danger (vermelho)
+  &.bg-danger,
+  &[class*="danger"] {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4) !important;
+  }
+  
+  // Badge secondary (cinza)
+  &.bg-secondary,
+  &[class*="secondary"] {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  // Efeito hover no botão pai
+  .central-assinante-nav-button:hover & {
+    transform: scale(1.1) !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4) !important;
+  }
+  
+  // Badge danger com animação pulsante quando há itens importantes
+  &.bg-danger {
+    animation: pulse-badge 2s ease-in-out infinite !important;
+  }
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 2px 12px rgba(239, 68, 68, 0.6);
+  }
+}
+
+// Login Screen - Estilização moderna e elegante
+.central-assinante-login-container,
+[data-theme="dark"] .central-assinante-login-container,
+[data-theme="light"] .central-assinante-login-container {
+  background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%) !important;
+  background-size: 200% 200% !important;
+  animation: gradient-shift 10s ease infinite !important;
+  position: relative !important;
+  overflow: hidden !important;
+  
+  &::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    left: -50% !important;
+    width: 200% !important;
+    height: 200% !important;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%) !important;
+    animation: rotate-bg 20s linear infinite !important;
+  }
+  
+  &::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: 
+      radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%) !important;
+    pointer-events: none !important;
+  }
+  
+  color: $text-primary !important;
+  
+  // Isolar todos os textos na tela de login
+  * {
+    color: $text-primary !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  
+  h1, h2, h3, h4, h5, h6,
+  p, span, small, label, div,
+  a, strong, b, em, i {
+    color: $text-primary !important;
+  }
+  
+  .text-white {
+    color: $text-primary !important;
+  }
+  
+  .text-white-50 {
+    color: $text-secondary !important;
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50% !important;
+  }
+  50% {
+    background-position: 100% 50% !important;
+  }
+}
+
+@keyframes rotate-bg {
+  0% {
+    transform: rotate(0deg) !important;
+  }
+  100% {
+    transform: rotate(360deg) !important;
+  }
+}
+
+.central-assinante-login-card {
+  max-width: 500px !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 2 !important;
+  
+  * {
+    color: $text-primary !important;
+  }
+  
+  // Card com efeito glassmorphism (sem hover e sem transições)
+  .central-assinante-card-bg {
+    background: rgba(37, 43, 59, 0.8) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: none !important;
+    transition: none !important;
+    transform: none !important;
+    
+    // Desabilitar qualquer hover que possa vir de regras globais
+    &:hover {
+      transform: none !important;
+      box-shadow: none !important;
+    }
+  }
+}
+
+.central-assinante-login-header,
+[data-theme="dark"] .central-assinante-login-header,
+[data-theme="light"] .central-assinante-login-header {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%) !important;
+  border-bottom: 2px solid rgba(99, 102, 241, 0.3) !important;
+  padding: 1.5rem 1.5rem 1rem !important;
+  position: relative !important;
+  
+  &::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 4px !important;
+    background: linear-gradient(180deg, #818cf8 0%, #a78bfa 100%) !important;
+  }
+  
+  * {
+    color: $text-primary !important;
+  }
+  
+  h2 {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 0.5rem !important;
+    
+    i {
+      color: #818cf8 !important;
+      font-size: 1.5rem !important;
+      margin-right: 0.75rem !important;
+      filter: drop-shadow(0 2px 4px rgba(129, 140, 248, 0.4)) !important;
+      animation: pulse-icon-login 2s ease-in-out infinite !important;
+    }
+    
+    span {
+      background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+    }
+  }
+  
+  p {
+    font-size: 0.85rem !important;
+    color: $text-secondary !important;
+    margin: 0 !important;
+    opacity: 0.9 !important;
+  }
+}
+
+// Logo da empresa na tela de login (sem efeitos hover)
+.central-assinante-login-logo-wrapper,
+[data-theme="dark"] .central-assinante-login-logo-wrapper,
+[data-theme="light"] .central-assinante-login-logo-wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-bottom: 1rem !important;
+  padding: 0.5rem !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: var(--bs-border-radius) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.central-assinante-login-logo,
+[data-theme="dark"] .central-assinante-login-logo,
+[data-theme="light"] .central-assinante-login-logo {
+  max-width: 280px !important;
+  max-height: 180px !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3)) !important;
+}
+
+@keyframes pulse-icon-login {
+  0%, 100% {
+    transform: scale(1) !important;
+    opacity: 1 !important;
+  }
+  50% {
+    transform: scale(1.1) !important;
+    opacity: 0.9 !important;
+  }
+}
+
+.central-assinante-login-body,
+[data-theme="dark"] .central-assinante-login-body,
+[data-theme="light"] .central-assinante-login-body,
+.card-body.central-assinante-login-body,
+.card-body.pt-2.px-3.pb-3.central-assinante-login-body {
+  padding: 1.75rem 1.5rem !important;
+  
+  * {
+    color: $text-primary !important;
+  }
+  
+  .text-white {
+    color: $text-primary !important;
+  }
+  
+  .text-white-50 {
+    color: $text-secondary !important;
+  }
+  
+  // Estilizar labels
+  .form-label {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: $text-secondary !important;
+    margin-bottom: 0.6rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: block !important;
+  }
+  
+  // Estilizar inputs
+  .form-control,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    background-color: rgba(26, 31, 46, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: var(--bs-border-radius) !important;
+    color: $text-primary !important;
+    padding: 0.875rem 1.125rem !important;
+    font-size: 0.95rem !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    
+    &::placeholder {
+      color: $text-muted !important;
+      opacity: 0.7 !important;
+    }
+    
+    &:focus {
+      background-color: rgba(26, 31, 46, 0.95) !important;
+      border-color: rgba(99, 102, 241, 0.5) !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+      outline: none !important;
+    }
+    
+    &:hover:not(:focus) {
+      border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+  }
+  
+  // Estilizar botão de login
+  .btn-primary,
+  button.btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    border: none !important;
+    border-radius: var(--bs-border-radius) !important;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    box-shadow: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+    
+    &::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: -100% !important;
+      width: 100% !important;
+      height: 100% !important;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+      transition: left 0.5s ease !important;
+    }
+    
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: none !important;
+      border: none !important;
+      
+      &::before {
+        left: 100% !important;
+      }
+    }
+    
+    &:active:not(:disabled),
+    &:focus:not(:disabled) {
+      transform: translateY(0) !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    
+    &:disabled {
+      opacity: 0.7 !important;
+      cursor: not-allowed !important;
+      border: none !important;
+    }
+  }
+  
+  // Estilizar botão secondary
+  .btn-secondary,
+  button.btn-secondary {
+    background-color: #6c757d !important;
+    border: none !important;
+    border-radius: var(--bs-border-radius) !important;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    box-shadow: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #5c636a !important;
+      transform: translateY(-2px) !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+    
+    &:active:not(:disabled),
+    &:focus:not(:disabled) {
+      transform: translateY(0) !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    
+    &:disabled {
+      opacity: 0.7 !important;
+      cursor: not-allowed !important;
+      border: none !important;
+    }
+  }
+  
+  // Espaçamento entre campos
+  .mb-2 {
+    margin-bottom: 1rem !important;
+  }
+  
+  .mb-3 {
+    margin-bottom: 1.5rem !important;
+  }
+}
+
+// Loading & Error
+.central-assinante-loading,
+[data-theme="dark"] .central-assinante-loading,
+[data-theme="light"] .central-assinante-loading {
+  background-color: $bg-primary !important;
+  color: $text-primary !important;
+  
+  // Isolar todos os textos na tela de loading
+  * {
+    color: $text-primary !important;
+  }
+  
+  h1, h2, h3, h4, h5, h6,
+  p, span, small, label, div,
+  a, strong, b, em, i {
+    color: $text-primary !important;
+  }
+  
+  .text-white {
+    color: $text-primary !important;
+  }
+  
+  .text-white-50 {
+    color: $text-muted !important;
+  }
+}
+
+.central-assinante-error,
+[data-theme="dark"] .central-assinante-error,
+[data-theme="light"] .central-assinante-error {
+  background-color: $bg-primary !important;
+  color: $text-primary !important;
+  
+  // Isolar todos os textos na tela de erro
+  * {
+    color: $text-primary !important;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: $text-primary !important;
+  }
+  
+  p, span, small, label, div {
+    color: $text-primary !important;
+  }
+  
+  .text-white {
+    color: $text-primary !important;
+  }
+  
+  .text-white-50 {
+    color: $text-muted !important;
+  }
+}
+
+.central-assinante-error-icon,
+[data-theme="dark"] .central-assinante-error-icon,
+[data-theme="light"] .central-assinante-error-icon {
+  font-size: 2rem;
+  color: inherit !important;
+}
+
+// Cards de Resumo - Estilização moderna e elegante (sem hover)
+.central-assinante-card-bg,
+[data-theme="dark"] .central-assinante-card-bg,
+[data-theme="light"] .central-assinante-card-bg {
+  background: linear-gradient(135deg, rgba(37, 43, 59, 0.95) 0%, rgba(26, 31, 46, 0.95) 100%) !important;
+  border-radius: var(--bs-border-radius) !important;
+  transition: none !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+  overflow: hidden;
+  position: relative !important;
+  box-shadow: none !important;
+  cursor: default !important;
+  
+  // Isolar todos os textos dentro dos cards
+  * {
+    color: $text-primary !important;
+  }
+  
+  .text-white {
+    color: $text-primary !important;
+  }
+  
+  .text-white-50 {
+    color: $text-muted !important;
+  }
+  
+  .card {
+    background: transparent !important;
+    border: none !important;
+    height: 100%;
+    
+    * {
+      color: $text-primary !important;
+    }
+  }
+}
+
+// Sobrescrever efeitos hover para card de login especificamente
+.central-assinante-login-card .central-assinante-card-bg {
+  transition: none !important;
+  
+  &:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: rgba(37, 43, 59, 0.8) !important;
+  }
+}
+
+.central-assinante-card-body-compact {
+  padding: 1.25rem 1rem !important;
+  display: grid !important;
+  justify-items: center !important;
+  align-content: center !important;
+  gap: 0.4rem !important;
+  min-height: 140px;
+  max-height: 160px;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+// Cards do resumo (clicáveis) — manter compactos sem afetar outros cards
+.central-assinante-resumo-card {
+  cursor: pointer !important;
+}
+
+@media (min-width: 1400px) {
+  .central-assinante-resumo-card {
+    max-width: 200px !important;
+    margin: 0 auto !important;
+  }
+}
+
+.central-assinante-card-icon-wrapper {
+  width: 48px !important;
+  height: 48px !important;
+  font-size: 1.3rem !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%) !important;
+  border: 2px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: var(--bs-border-radius) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 0.6rem !important;
+  transition: none !important;
+  box-shadow: none !important;
+  position: relative !important;
+  
+  i {
+    color: rgba(255, 255, 255, 0.9) !important;
+    transition: none !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+}
+
+.central-assinante-card-title {
+  font-size: 2rem !important;
+  font-weight: 800 !important;
+  color: $text-primary !important;
+  margin-bottom: 0.2rem !important;
+  line-height: 1 !important;
+  letter-spacing: -0.5px !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  transition: none !important;
+}
+
+.central-assinante-card-label {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  margin-bottom: 0.15rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  transition: none !important;
+}
+
+.central-assinante-card-subtitle {
+  font-size: 0.7rem !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-weight: 500 !important;
+  margin-top: 0.15rem !important;
+  letter-spacing: 0.3px !important;
+  transition: none !important;
+}
+
+// Estilos específicos para cada tipo de card de resumo - Design moderno e vibrante
+.central-assinante-card-contratos {
+  // Gradiente de fundo azul/roxo
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  
+  .central-assinante-card-icon-wrapper {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.15) 100%) !important;
+    border-color: rgba(99, 102, 241, 0.4) !important;
+    box-shadow: none !important;
+    
+    i {
+      color: #a5b4fc !important;
+      filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.4)) !important;
+    }
+  }
+}
+
+.central-assinante-card-pagos {
+  // Gradiente de fundo verde
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+  
+  .central-assinante-card-icon-wrapper {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(16, 185, 129, 0.15) 100%) !important;
+    border-color: rgba(34, 197, 94, 0.4) !important;
+    box-shadow: none !important;
+    
+    i {
+      color: #6ee7b7 !important;
+      filter: drop-shadow(0 2px 4px rgba(34, 197, 94, 0.4)) !important;
+    }
+  }
+}
+
+.central-assinante-card-atrasados {
+  // Gradiente de fundo vermelho
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(220, 38, 38, 0.12) 100%) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  
+  .central-assinante-card-icon-wrapper {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.2) 100%) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    box-shadow: none !important;
+    
+    i {
+      color: #fca5a5 !important;
+      filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.5)) !important;
+    }
+  }
+}
+
+.central-assinante-card-a-pagar {
+  // Gradiente de fundo amarelo/laranja
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%) !important;
+  border-color: rgba(251, 191, 36, 0.3) !important;
+  
+  .central-assinante-card-icon-wrapper {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(245, 158, 11, 0.15) 100%) !important;
+    border-color: rgba(251, 191, 36, 0.4) !important;
+    box-shadow: none !important;
+    
+    i {
+      color: #fcd34d !important;
+      filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.4)) !important;
+    }
+  }
+}
+
+.central-assinante-card-termos {
+  // Gradiente de fundo roxo/rosa
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%) !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+  
+  .central-assinante-card-icon-wrapper {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%) !important;
+    border-color: rgba(139, 92, 246, 0.4) !important;
+    box-shadow: none !important;
+    
+    i {
+      color: #c4b5fd !important;
+      filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.4)) !important;
+    }
+  }
+}
+
+// Cliente Info - Estilização moderna e elegante (compacta)
+.central-assinante-info-header,
+[data-theme="dark"] .central-assinante-info-header,
+[data-theme="light"] .central-assinante-info-header {
+  padding: 0.6rem 0.9rem !important;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(139, 92, 246, 0.12) 100%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  
+  &::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 3px !important;
+    background: linear-gradient(180deg, rgba(129, 140, 248, 0.9) 0%, rgba(167, 139, 250, 0.85) 100%) !important;
+    border-radius: 0 0 0 0 !important;
+  }
+  
+  * {
+    color: $text-primary !important;
+  }
+  
+  i {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 1.05rem !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35)) !important;
+  }
+}
+
+.central-assinante-info-title,
+[data-theme="dark"] .central-assinante-info-title,
+[data-theme="light"] .central-assinante-info-title {
+  font-size: 0.9rem !important;
+  font-weight: 800 !important;
+  color: $text-primary !important;
+  letter-spacing: 0.2px !important;
+  display: flex !important;
+  align-items: center !important;
+  margin-left: 0.6rem !important;
+  
+  i {
+    margin-right: 0.5rem !important;
+    transition: none !important;
+  }
+}
+
+.central-assinante-info-body,
+[data-theme="dark"] .central-assinante-info-body,
+[data-theme="light"] .central-assinante-info-body {
+  padding: 0.75rem 0.9rem 0.85rem !important;
+  background: linear-gradient(135deg, rgba(37, 43, 59, 0.7) 0%, rgba(26, 31, 46, 0.55) 100%) !important;
+  
+  * {
+    color: $text-primary !important;
+  }
+  
+  // Ajustar espaçamento do grid
+  .row {
+    margin-left: -0.375rem !important;
+    margin-right: -0.375rem !important;
+    
+    > [class*="col-"] {
+      padding-left: 0.375rem !important;
+      padding-right: 0.375rem !important;
+    }
+  }
+}
+
+.central-assinante-info-field {
+  margin-bottom: 0.5rem !important;
+  padding: 0.6rem 0.75rem !important;
+  background: rgba(15, 20, 25, 0.25) !important;
+  border-radius: var(--bs-border-radius) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  transition: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+  
+  &::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 3px !important;
+    background: linear-gradient(180deg, rgba(129, 140, 248, 0.55) 0%, rgba(167, 139, 250, 0.35) 100%) !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
+  
+  &:last-child {
+    margin-bottom: 0 !important;
+  }
+}
+
+.central-assinante-info-label,
+[data-theme="dark"] .central-assinante-info-label,
+[data-theme="light"] .central-assinante-info-label {
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.7px !important;
+  margin-bottom: 0.25rem !important;
+  display: flex !important;
+  align-items: center !important;
+  
+  &::after {
+    content: '' !important;
+    flex: 1 !important;
+    height: 1px !important;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0%, transparent 100%) !important;
+    margin-left: 0.5rem !important;
+  }
+}
+
+.central-assinante-info-value,
+[data-theme="dark"] .central-assinante-info-value,
+[data-theme="light"] .central-assinante-info-value {
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: $text-primary !important;
+  margin: 0 !important;
+  word-break: break-word !important;
+  padding-left: 0.15rem !important;
+  position: relative !important;
+}
+
+// List Items
+.central-assinante-item,
+[data-theme="dark"] .central-assinante-item,
+[data-theme="light"] .central-assinante-item {
+  background-color: $bg-card !important;
+  border-radius: var(--bs-border-radius) !important;
+  overflow: hidden !important;
+  
+  * {
+    color: $text-primary !important;
+  }
+  
+  .text-white {
+    color: $text-primary !important;
+  }
+  
+  .text-white-50 {
+    color: $text-muted !important;
+  }
+}
+
+.central-assinante-item-body,
+[data-theme="dark"] .central-assinante-item-body,
+[data-theme="light"] .central-assinante-item-body {
+  padding: 0.6rem 0.8rem;
+  
+  * {
+    color: $text-primary !important;
+  }
+}
+
+.central-assinante-item-title,
+[data-theme="dark"] .central-assinante-item-title,
+[data-theme="light"] .central-assinante-item-title {
+  font-size: 0.9rem;
+  color: $text-primary !important;
+}
+
+.central-assinante-item-subtitle,
+[data-theme="dark"] .central-assinante-item-subtitle,
+[data-theme="light"] .central-assinante-item-subtitle {
+  font-size: 0.8rem;
+  color: $text-muted !important;
+}
+
+.central-assinante-item-label,
+[data-theme="dark"] .central-assinante-item-label,
+[data-theme="light"] .central-assinante-item-label {
+  font-size: 0.7rem;
+  color: $text-muted !important;
+}
+
+.central-assinante-item-value,
+[data-theme="dark"] .central-assinante-item-value,
+[data-theme="light"] .central-assinante-item-value {
+  font-size: 0.85rem;
+  color: $text-primary !important;
+}
+
+.central-assinante-item-value-bold,
+[data-theme="dark"] .central-assinante-item-value-bold,
+[data-theme="light"] .central-assinante-item-value-bold {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $text-primary !important;
+}
+
+.central-assinante-item-button,
+[data-theme="dark"] .central-assinante-item-button,
+[data-theme="light"] .central-assinante-item-button {
+  flex: 1 1 0 !important;
+  font-size: 0.875rem !important;
+  padding: 0.375rem 0.5rem !important;
+  min-width: 0 !important;
+  // Herda estilos de .btn já definidos acima
+}
+
+// Botões de PDF (Contrato/Termo) no padrão "Imprimir"
+.central-assinante-pdf-button {
+  white-space: nowrap !important;
+  padding: 0.375rem 0.6rem !important;
+  font-size: 0.875rem !important;
+}
+
+.central-assinante-item-min-width {
+  min-width: 120px;
+}
+
+.central-assinante-termo-body,
+[data-theme="dark"] .central-assinante-termo-body,
+[data-theme="light"] .central-assinante-termo-body {
+  padding: 0.4rem 0.5rem;
+  
+  * {
+    color: $text-primary !important;
+  }
+}
+
+.central-assinante-termo-title,
+[data-theme="dark"] .central-assinante-termo-title,
+[data-theme="light"] .central-assinante-termo-title {
+  font-size: 0.85rem;
+  color: $text-primary !important;
+}
+
+// Empty State
+.central-assinante-empty-icon {
+  font-size: 2rem;
+  color: $text-muted !important;
+}
+
+// Mobile Navigation
+.central-assinante-mobile-nav,
+[data-theme="dark"] .central-assinante-mobile-nav,
+[data-theme="light"] .central-assinante-mobile-nav {
+  z-index: 1000;
+  background-color: $bg-secondary !important;
+}
+
+.central-assinante-mobile-button,
+[data-theme="dark"] .central-assinante-mobile-button,
+[data-theme="light"] .central-assinante-mobile-button {
+  flex: 1;
+  background-color: transparent !important;
+  border: none !important;
+
+  &.active {
+    background-color: $bg-hover !important;
+  }
+}
+
+.central-assinante-mobile-badge {
+  font-size: 0.65rem;
+  top: -4px !important;
+  right: -4px !important;
+  z-index: 10;
+  transform: translate(25%, -25%);
+  white-space: nowrap;
+  
+  .central-assinante-sidebar-badge {
+    font-size: 0.6rem !important;
+    padding: 0.15rem 0.35rem !important;
+    min-width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+.central-assinante-mobile-spacer {
+  height: 80px;
+}
+
+// Modal
+.central-assinante-modal-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  z-index: 1050 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.central-assinante-modal-dialog {
+  max-width: 500px;
+}
+
+// Modal mais largo (apenas onde aplicado via classe)
+.central-assinante-modal-dialog-lg {
+  max-width: 680px !important;
+  width: calc(100% - 2rem) !important;
+}
+
+@media (max-width: 576px) {
+  .central-assinante-modal-dialog-lg {
+    max-width: 100% !important;
+    width: calc(100% - 1rem) !important;
+  }
+
+  // Trocar senha (modal) no mobile: ocupar largura e permitir scroll
+  .central-assinante-modal-backdrop {
+    align-items: flex-start !important;
+    padding: 0.75rem !important;
+  }
+
+  .central-assinante-modal-dialog,
+  .central-assinante-modal-dialog-lg {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .central-assinante-modal-content {
+    max-height: calc(100vh - 1.5rem) !important;
+    overflow: hidden !important;
+    border-radius: var(--bs-border-radius) !important;
+  }
+
+  // Conteúdo do modal de trocar senha reutiliza login-header/login-body
+  .central-assinante-modal-backdrop .central-assinante-login-header {
+    padding: 1rem 1rem 0.75rem !important;
+  }
+
+  .central-assinante-modal-backdrop .central-assinante-login-header h2 {
+    font-size: 1.05rem !important;
+  }
+
+  .central-assinante-modal-backdrop .central-assinante-login-header h2 i {
+    font-size: 1.2rem !important;
+    margin-right: 0.6rem !important;
+  }
+
+  .central-assinante-modal-backdrop .central-assinante-login-body {
+    padding: 1.1rem 1rem !important;
+    max-height: calc(100vh - 230px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  // Toggle "Mostrar/Ocultar" no mobile
+  .central-assinante-input-with-toggle-field {
+    padding-right: 4.9rem !important;
+  }
+
+  .central-assinante-password-toggle {
+    right: 0.5rem !important;
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.7rem !important;
+    border-radius: var(--bs-border-radius) !important;
+  }
+}
+
+// Toggle de visualização de senha dentro do input
+.central-assinante-input-with-toggle {
+  position: relative !important;
+}
+
+.central-assinante-input-with-toggle-field {
+  padding-right: 5.75rem !important; // espaço para o botão "Mostrar/Ocultar"
+}
+
+.central-assinante-password-toggle {
+  position: absolute !important;
+  right: 0.75rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  border: none !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  padding: 0.35rem 0.6rem !important;
+  border-radius: var(--bs-border-radius) !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+.central-assinante-password-toggle:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.central-assinante-password-toggle:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+.central-assinante-modal-content,
+[data-theme="dark"] .central-assinante-modal-content,
+[data-theme="light"] .central-assinante-modal-content {
+  background-color: $bg-card !important;
+  border: none !important;
+  color: $text-primary !important;
+  
+  // Garantir que botões dentro do modal também estejam isolados
+  .btn,
+  button.btn,
+  button[class*="btn-"] {
+    background-color: $bg-secondary !important;
+    border-color: $border-color !important;
+    color: $text-primary !important;
+    
+    &:hover:not(:disabled) {
+      background-color: $bg-hover !important;
+      border-color: lighten($border-color, 5%) !important;
+      color: $text-primary !important;
+    }
+  }
+  
+  .btn-primary,
+  button.btn-primary {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: #ffffff !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #0b5ed7 !important;
+      border-color: #0a58ca !important;
+      color: #ffffff !important;
+    }
+  }
+  
+  .btn-secondary,
+  button.btn-secondary {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #ffffff !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #5c636a !important;
+      border-color: #565e64 !important;
+      color: #ffffff !important;
+    }
+  }
+}
+
+.central-assinante-modal-header,
+[data-theme="dark"] .central-assinante-modal-header,
+[data-theme="light"] .central-assinante-modal-header {
+  padding: 0.5rem 0.8rem;
+  background-color: $bg-secondary !important;
+  border-bottom-color: $border-color !important;
+}
+
+.central-assinante-modal-title {
+  font-size: 0.85rem;
+  color: $text-primary !important;
+}
+
+.central-assinante-modal-close {
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.25rem;
+  margin: 0;
+  min-width: auto;
+  width: auto;
+  max-width: fit-content;
+  color: $text-primary !important;
+}
+
+.central-assinante-modal-body,
+[data-theme="dark"] .central-assinante-modal-body,
+[data-theme="light"] .central-assinante-modal-body {
+  padding: 1.5rem !important;
+  
+  * {
+    color: $text-primary !important;
+  }
+  
+  .text-white {
+    color: $text-primary !important;
+  }
+  
+  .text-white-50 {
+    color: $text-muted !important;
+  }
+  
+  // Estilizar labels nos modais
+  .form-label {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: $text-secondary !important;
+    margin-bottom: 0.6rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: block !important;
+  }
+  
+  // Estilizar inputs nos modais
+  .form-control,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    background-color: rgba(26, 31, 46, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    color: $text-primary !important;
+    padding: 0.875rem 1.125rem !important;
+    font-size: 0.95rem !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    
+    &::placeholder {
+      color: $text-muted !important;
+      opacity: 0.7 !important;
+    }
+    
+    &:focus {
+      background-color: rgba(26, 31, 46, 0.95) !important;
+      border-color: rgba(99, 102, 241, 0.5) !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+      outline: none !important;
+    }
+    
+    &:hover:not(:focus) {
+      border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+  }
+  
+  // Espaçamento entre campos nos modais
+  .mb-2 {
+    margin-bottom: 1.125rem !important;
+  }
+  
+  .mb-3 {
+    margin-bottom: 1.75rem !important;
+  }
+  
+  // Espaçamento entre botões nos modais
+  .d-grid.gap-2 {
+    gap: 0.875rem !important;
+  }
+}
+
+.central-assinante-modal-description,
+[data-theme="dark"] .central-assinante-modal-description,
+[data-theme="light"] .central-assinante-modal-description {
+  font-size: 0.7rem;
+  color: $text-muted !important;
+}
+
+.central-assinante-modal-value,
+[data-theme="dark"] .central-assinante-modal-value,
+[data-theme="light"] .central-assinante-modal-value {
+  font-size: 1rem;
+  color: #198754 !important;
+}
+
+.central-assinante-modal-date,
+[data-theme="dark"] .central-assinante-modal-date,
+[data-theme="light"] .central-assinante-modal-date {
+  font-size: 0.7rem;
+  color: $text-muted !important;
+}
+
+.central-assinante-modal-code-wrapper,
+[data-theme="dark"] .central-assinante-modal-code-wrapper,
+[data-theme="light"] .central-assinante-modal-code-wrapper {
+  background-color: $bg-secondary !important;
+  padding: 0.5rem;
+  border-radius: var(--bs-border-radius) !important;
+  margin-bottom: 0.5rem;
+  border: 1px solid $border-color !important;
+}
+
+.central-assinante-modal-code {
+  line-height: 1.6;
+  font-size: 0.7rem;
+  color: $text-primary !important;
+}
+
+.central-assinante-modal-qr-wrapper,
+[data-theme="dark"] .central-assinante-modal-qr-wrapper,
+[data-theme="light"] .central-assinante-modal-qr-wrapper {
+  background-color: $bg-secondary !important;
+  padding: 0.5rem;
+  border-radius: var(--bs-border-radius) !important;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  border: 1px solid $border-color !important;
+}
+
+.central-assinante-modal-qr-img {
+  max-width: 150px;
+}
+
+// Header Button - Botões estilizados (trocar senha e sair)
+.central-assinante-header-button,
+[data-theme="dark"] .central-assinante-header-button,
+[data-theme="light"] .central-assinante-header-button {
+  padding: 0.6rem 1rem !important;
+  min-width: 46px !important;
+  height: 40px !important;
+  width: auto !important;
+  flex-shrink: 0 !important;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%) !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.35) !important;
+  border-radius: var(--bs-border-radius) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease !important;
+  backdrop-filter: blur(10px) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  letter-spacing: 0.3px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  
+  i {
+    font-size: 1.15rem !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)) !important;
+    line-height: 1 !important;
+  }
+  
+  // Botão de trocar senha (ícone de chave)
+  &:first-child {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(168, 85, 247, 0.15) 100%) !important;
+    border-color: rgba(139, 92, 246, 0.35) !important;
+    
+    i {
+      color: #c4b5fd !important;
+    }
+  }
+  
+  // Botão de sair (ícone de logout)
+  &:last-child {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%) !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+    
+    i {
+      color: #fca5a5 !important;
+    }
+  }
+
+  &:hover {
+    transform: translateY(-1px) !important;
+    box-shadow:
+      0 6px 16px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  }
+
+  &:active {
+    transform: translateY(0) !important;
+    box-shadow:
+      0 2px 10px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  }
+
+  &:focus-visible {
+    outline: none !important;
+    box-shadow:
+      0 0 0 3px rgba(129, 140, 248, 0.28),
+      0 2px 10px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  }
+
+  // Hover específico (trocar senha)
+  &:first-child:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.28) 0%, rgba(168, 85, 247, 0.2) 100%) !important;
+    border-color: rgba(139, 92, 246, 0.5) !important;
+  }
+
+  // Hover específico (sair)
+  &:last-child:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.28) 0%, rgba(220, 38, 38, 0.2) 100%) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+  }
+}
+
+// Ajustes responsivos para botões do header
+@media (max-width: 576px) {
+  .central-assinante-header-button {
+    padding: 0.5rem 0.75rem !important;
+    min-width: 40px !important;
+    height: 36px !important;
+    
+    i {
+      font-size: 1rem !important;
+    }
+  }
+}
+
+// Financeiro Pago button fix
+.central-assinante-nav-button-pago {
+  width: 100%;
+  text-align: center;
+}
+
+// ISOLAMENTO TOTAL DE TEXTOS - Sobrescrever TODOS os textos dentro do container
+.central-assinante-container,
+.central-assinante-container[data-theme="dark"],
+.central-assinante-container[data-theme="light"],
+[data-theme="dark"] .central-assinante-container,
+[data-theme="light"] .central-assinante-container,
+body[data-theme="dark"] .central-assinante-container,
+body[data-theme="light"] .central-assinante-container {
+  // Todos os elementos de texto - cores padrão
+  h1, h2, h3, h4, h5, h6,
+  p, span, small, label, div,
+  a, strong, b, em, i, u,
+  li, td, th, dt, dd,
+  .text-white, .text-white-50, .text-muted,
+  [class*="text-"] {
+    color: $text-primary !important;
+  }
+  
+  // Classes específicas do Bootstrap
+  .text-white {
+    color: $text-primary !important;
+  }
+  
+  .text-white-50 {
+    color: $text-muted !important;
+  }
+  
+  .text-muted {
+    color: $text-muted !important;
+  }
+  
+  .text-secondary {
+    color: $text-secondary !important;
+  }
+  
+  // Links
+  a {
+    color: $text-primary !important;
+    
+    &:hover {
+      color: lighten($text-primary, 10%) !important;
+    }
+    
+    &:visited {
+      color: $text-primary !important;
+    }
+  }
+  
+  // Títulos
+  h1, h2, h3, h4, h5, h6 {
+    color: $text-primary !important;
+  }
+  
+  // Parágrafos e textos gerais
+  p, span, small, label {
+    color: $text-primary !important;
+  }
+  
+  // Sobrescrever cores de cards do Bootstrap
+  .card,
+  .card-header {
+    background-color: $bg-card !important;
+    border-color: $border-color !important;
+    color: $text-primary !important;
+    
+    // Textos dentro de cards
+    * {
+      color: $text-primary !important;
+    }
+    
+    .text-white {
+      color: $text-primary !important;
+    }
+    
+    .text-white-50 {
+      color: $text-muted !important;
+    }
+    
+    .text-muted {
+      color: $text-muted !important;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      color: $text-primary !important;
+    }
+    
+    p, span, small, label {
+      color: $text-primary !important;
+    }
+  }
+  
+  // Card-body: remover padding padrão do Bootstrap (sem afetar resumo/login/modal)
+  .card-body:not(.central-assinante-card-body-compact):not(.central-assinante-login-body):not(.central-assinante-modal-body) {
+    background-color: $bg-card !important;
+    border-color: $border-color !important;
+    color: $text-primary !important;
+    padding: 0 !important;
+    
+    // Textos dentro de card-body
+    * {
+      color: $text-primary !important;
+    }
+    
+    .text-white {
+      color: $text-primary !important;
+    }
+    
+    .text-white-50 {
+      color: $text-muted !important;
+    }
+    
+    .text-muted {
+      color: $text-muted !important;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      color: $text-primary !important;
+    }
+    
+    p, span, small, label {
+      color: $text-primary !important;
+    }
+  }
+  
+  // (sem exceções aqui: login/modal/resumo já definem seu próprio padding)
+  
+  // Sobrescrever cores de inputs
+  .form-control,
+  .form-select,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    background-color: $bg-secondary !important;
+    border-color: $border-color !important;
+    color: $text-primary !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    
+    &::placeholder {
+      color: $text-muted !important;
+    }
+    
+    &:focus {
+      background-color: $bg-secondary !important;
+      border-color: $border-color !important;
+      color: $text-primary !important;
+    }
+  }
+  
+  // Labels de formulários
+  .form-label,
+  label {
+    color: $text-secondary !important;
+  }
+  
+  // Sobrescrever cores de badges
+  .badge {
+    background-color: inherit !important;
+    color: inherit !important;
+  }
+  
+  // Ícones Bootstrap Icons
+  i[class*="bi-"],
+  [class*="bi-"] {
+    color: inherit !important;
+  }
+  
+  // Sobrescrever qualquer classe de texto do Bootstrap
+  [class*="text-dark"],
+  [class*="text-light"],
+  [class*="text-black"],
+  [class*="text-body"] {
+    color: $text-primary !important;
+  }
+  
+  // Sobrescrever estilos de botões - isolamento total do tema do sistema
+  .btn,
+  button.btn,
+  button[class*="btn-"] {
+    // Resetar cores do tema do sistema
+    background-color: $bg-secondary !important;
+    border: none !important;
+    color: $text-primary !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+    
+    &:hover:not(:disabled) {
+      background-color: $bg-hover !important;
+      border: none !important;
+      color: $text-primary !important;
+    }
+    
+    &:active:not(:disabled),
+    &:focus:not(:disabled) {
+      background-color: $bg-hover !important;
+      border: none !important;
+      color: $text-primary !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    &:disabled {
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
+      border: none !important;
+    }
+  }
+  
+  // Variantes específicas de botões
+  .btn-primary,
+  button.btn-primary {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: #ffffff !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #0b5ed7 !important;
+      border-color: #0a58ca !important;
+      color: #ffffff !important;
+    }
+    
+    &:active:not(:disabled),
+    &:focus:not(:disabled) {
+      background-color: #0a58ca !important;
+      border-color: #0a53be !important;
+      color: #ffffff !important;
+      box-shadow: none !important;
+    }
+  }
+  
+  .btn-secondary,
+  button.btn-secondary {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #ffffff !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #5c636a !important;
+      border-color: #565e64 !important;
+      color: #ffffff !important;
+    }
+    
+    &:active:not(:disabled),
+    &:focus:not(:disabled) {
+      background-color: #565e64 !important;
+      border-color: #51585e !important;
+      color: #ffffff !important;
+      box-shadow: none !important;
+    }
+  }
+  
+  .btn-danger,
+  button.btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #ffffff !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #bb2d3b !important;
+      border-color: #b02a37 !important;
+      color: #ffffff !important;
+    }
+    
+    &:active:not(:disabled),
+    &:focus:not(:disabled) {
+      background-color: #b02a37 !important;
+      border-color: #a52834 !important;
+      color: #ffffff !important;
+      box-shadow: none !important;
+    }
+  }
+  
+  .btn-success,
+  button.btn-success {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    color: #ffffff !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #157347 !important;
+      border-color: #146c43 !important;
+      color: #ffffff !important;
+    }
+    
+    &:active:not(:disabled),
+    &:focus:not(:disabled) {
+      background-color: #146c43 !important;
+      border-color: #13653f !important;
+      color: #ffffff !important;
+      box-shadow: none !important;
+    }
+  }
+  
+  .btn-link,
+  button.btn-link {
+    background-color: transparent !important;
+    border: none !important;
+    color: $text-primary !important;
+    text-decoration: none !important;
+    
+    &:hover:not(:disabled) {
+      background-color: transparent !important;
+      color: lighten($text-primary, 10%) !important;
+      text-decoration: underline !important;
+    }
+    
+    &:active:not(:disabled),
+    &:focus:not(:disabled) {
+      background-color: transparent !important;
+      color: lighten($text-primary, 10%) !important;
+      box-shadow: none !important;
+    }
+  }
+  
+  // Botões pequenos
+  .btn-sm,
+  button.btn-sm {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  // Botões grandes
+  .btn-lg,
+  button.btn-lg {
+    padding: 0.5rem 1rem !important;
+    font-size: 1.125rem !important;
+  }
+  
+  // Spinner dentro de botões
+  .btn .spinner-border,
+  button .spinner-border {
+    border-color: currentColor !important;
+    border-right-color: transparent !important;
+  }
+  
+  // Garantir isolamento em todas as áreas específicas
+  .central-assinante-item,
+  .central-assinante-card-bg,
+  .central-assinante-modal-content,
+  .central-assinante-login-body {
+    .btn,
+    button.btn,
+    button[class*="btn-"] {
+      // Herda os estilos já definidos acima, mas garante que estejam aplicados
+      background-color: $bg-secondary !important;
+      border-color: $border-color !important;
+      color: $text-primary !important;
+    }
+    
+    .btn-primary,
+    button.btn-primary {
+      background-color: #0d6efd !important;
+      border-color: #0d6efd !important;
+      color: #ffffff !important;
+    }
+    
+    .btn-secondary,
+    button.btn-secondary {
+      background-color: #6c757d !important;
+      border-color: #6c757d !important;
+      color: #ffffff !important;
+    }
+    
+    .btn-danger,
+    button.btn-danger {
+      background-color: #dc3545 !important;
+      border-color: #dc3545 !important;
+      color: #ffffff !important;
+    }
+    
+    .btn-link,
+    button.btn-link {
+      background-color: transparent !important;
+      border: none !important;
+      color: $text-primary !important;
+    }
+  }
+}
+
+// REGRA FINAL - Garantir isolamento total de TODOS os textos
+// Esta regra sobrescreve qualquer estilo do tema do sistema que possa ter escapado
+.central-assinante-container,
+[data-theme="dark"] .central-assinante-container,
+[data-theme="light"] .central-assinante-container,
+body[data-theme="dark"] .central-assinante-container,
+body[data-theme="light"] .central-assinante-container {
+  // Sobrescrever TODAS as classes de texto do Bootstrap que possam estar sendo aplicadas pelo tema
+  .text-dark,
+  [class*="text-dark"] {
+    color: $text-primary !important;
+  }
+  
+  .text-light,
+  [class*="text-light"] {
+    color: $text-primary !important;
+  }
+  
+  .text-black,
+  [class*="text-black"] {
+    color: $text-primary !important;
+  }
+  
+  .text-body,
+  [class*="text-body"] {
+    color: $text-primary !important;
+  }
+  
+  // Garantir que divs e outros elementos de bloco tenham cor padrão se não tiverem classe específica
+  div:not(.badge):not(.btn):not([class*="spinner"]):not([class*="modal"]) {
+    color: $text-primary !important;
+  }
+  
+  // Garantir que spans tenham cor padrão
+  span:not(.badge):not([class*="spinner"]) {
+    color: $text-primary !important;
+  }
+}
+
+// Fix: no mobile, manter o item ativo destacado mesmo sem foco
+// (regras globais do container sobrescrevem cores/estado dos `.btn` e `small`)
+.central-assinante-container .central-assinante-mobile-nav .central-assinante-mobile-button {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: var(--bs-border-radius) !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.central-assinante-container .central-assinante-mobile-nav .central-assinante-mobile-button i,
+.central-assinante-container .central-assinante-mobile-nav .central-assinante-mobile-button small,
+.central-assinante-container .central-assinante-mobile-nav .central-assinante-mobile-button span {
+  color: inherit !important;
+}
+
+.central-assinante-container .central-assinante-mobile-nav .central-assinante-mobile-button.active {
+  background-color: $bg-hover !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  border-top: 2px solid rgba(129, 140, 248, 0.7) !important;
+}

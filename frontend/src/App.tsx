@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './components/notifications/NotificationProvider';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -18,6 +18,7 @@ const Home = lazy(() => import('./components/pages/Home'));
 const Dashboard = lazy(() => import('./components/pages/Dashboard'));
 const Login = lazy(() => import('./components/pages/Login'));
 const PagamentoPublico = lazy(() => import('./components/pages/PagamentoPublico'));
+const CentralAssinante = lazy(() => import('./components/pages/CentralAssinante'));
 
 // Query Client
 const queryClient = new QueryClient({
@@ -87,6 +88,16 @@ function AppContent() {
                         <PagamentoPublico />
                       </Suspense>
                     } />
+                    <Route path="/central-assinante" element={
+                      <Suspense fallback={<Loading message="Carregando central do assinante..." />}>
+                        <CentralAssinante />
+                      </Suspense>
+                    } />
+                    <Route path="/central-assinante/:id/:token" element={
+                      <Suspense fallback={<Loading message="Carregando central do assinante..." />}>
+                        <CentralAssinante />
+                      </Suspense>
+                    } />
                     <Route path="/adm" element={
                       <DashboardFiltersProvider>
                         <TableHeaderProvider>
@@ -109,6 +120,8 @@ function AppContent() {
                         </Suspense>
                       } />
                     </Route>
+                    {/* Fallback: evitar ficar em rotas inválidas (ex: /undefined) */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Suspense>
               </Router>

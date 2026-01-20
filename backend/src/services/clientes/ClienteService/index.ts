@@ -4,6 +4,7 @@ import { Op, WhereOptions } from 'sequelize';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { CLIENTE_SORT_CONFIG } from '../../../config/sortConfigs';
+import bcrypt from 'bcryptjs';
 
 export interface ListClientesFilters {
   page?: number;
@@ -166,7 +167,14 @@ export class ClienteService {
    * Criar cliente
    */
   static async create(dadosCliente: Partial<Cliente>): Promise<Cliente> {
-    return await Cliente.create(dadosCliente as any);
+    const dadosParaSalvar = { ...dadosCliente };
+    
+    // Se tiver senha da central do assinante, fazer hash
+    if (dadosParaSalvar.central_assinante_senha) {
+      dadosParaSalvar.central_assinante_senha = await bcrypt.hash(dadosParaSalvar.central_assinante_senha, 10);
+    }
+    
+    return await Cliente.create(dadosParaSalvar as any);
   }
 
   /**
@@ -179,7 +187,20 @@ export class ClienteService {
       throw new Error('Cliente não encontrado');
     }
     
-    await cliente.update(dadosCliente);
+    const dadosParaSalvar = { ...dadosCliente };
+    
+    // Se tiver senha da central do assinante, fazer hash
+    // Se a senha estiver vazia, não atualizar (manter a atual)
+    if (dadosParaSalvar.central_assinante_senha !== undefined) {
+      if (dadosParaSalvar.central_assinante_senha && dadosParaSalvar.central_assinante_senha.trim() !== '') {
+        dadosParaSalvar.central_assinante_senha = await bcrypt.hash(dadosParaSalvar.central_assinante_senha, 10);
+      } else {
+        // Se estiver vazio, remover do objeto para não atualizar
+        delete dadosParaSalvar.central_assinante_senha;
+      }
+    }
+    
+    await cliente.update(dadosParaSalvar);
     await cliente.reload();
     
     return cliente;

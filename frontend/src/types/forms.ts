@@ -40,6 +40,7 @@ export interface ClienteFormData {
   recebe_email: boolean;
   recebe_whatsapp: boolean;
   observacoes: string;
+  central_assinante_senha?: string;
 }
 
 /**

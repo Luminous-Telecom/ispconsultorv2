@@ -361,11 +361,6 @@
   letter-spacing: -0.01em;
 }
 
-.card-body {
-  padding: 1.5rem;
-}
-
-
 /* Botões modernos e elegantes */
 .btn {
   border-radius: var(--border-radius) !important;
@@ -4525,14 +4520,15 @@ textarea:focus {
     margin-bottom: 0.5rem;
   }
 
-  .btn {
+  /* Removido: .btn com width: 100% e margin-bottom estava causando problemas de layout */
+  /* .btn {
     width: 100%;
     margin-bottom: 0.5rem;
   }
 
   .btn:last-child {
     margin-bottom: 0;
-  }
+  } */
 }
 
 /* Estados de foco */
@@ -4744,6 +4740,66 @@ input[type="week"]::-moz-calendar-picker-indicator {
 .mobile-pagination-placeholder {
   height: 74px;
   width: 100%;
+}
+
+/* ============================================
+   CENTRAL ASSINANTE TABS - Estilos específicos
+   ============================================ */
+.central-assinante-tabs-unified {
+  --bs-nav-tabs-border-color: transparent !important;
+  border-bottom: none !important;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-weight: 400 !important;
+    font-size: var(--font-size-sm) !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-right: 0.25rem !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    cursor: pointer !important;
+  }
+
+  .nav-link.active {
+    background-color: #212529 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:disabled,
+  .nav-link.disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  .nav-link:disabled:hover,
+  .nav-link.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    cursor: not-allowed !important;
+  }
 }
 
 @media (min-width: 768px) {

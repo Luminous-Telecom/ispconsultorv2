@@ -124,8 +124,12 @@ export type { ClienteFilters, PlanoFilters, BancoFilters, CarneFilters, CarnePar
 // ============================================
 
 
-export type CreateCliente = Omit<Cliente, 'id' | 'created_at' | 'updated_at' | 'data_cadastro'>;
-export type UpdateCliente = Partial<CreateCliente>;
+export type CreateCliente = Omit<Cliente, 'id' | 'created_at' | 'updated_at' | 'data_cadastro' | 'central_assinante_senha'> & {
+  central_assinante_senha?: string;
+};
+export type UpdateCliente = Partial<Omit<CreateCliente, 'central_assinante_senha'>> & {
+  central_assinante_senha?: string | null;
+};
 
 export type CreatePlano = Omit<Plano, 'id' | 'created_at' | 'updated_at'>;
 export type UpdatePlano = Partial<CreatePlano>;

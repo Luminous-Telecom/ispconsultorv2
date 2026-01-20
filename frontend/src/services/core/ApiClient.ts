@@ -92,6 +92,8 @@ export class ApiClient {
           '/api/auth/login',
           '/api/health',
           '/api/pagamento/',
+          '/api/central-assinante/login',
+          '/api/central-assinante/recuperar-senha',
         ];
         
         // Verificar se a URL é uma rota pública
@@ -102,9 +104,13 @@ export class ApiClient {
         if (isPublicRoute) {
           delete config.headers?.Authorization;
         } else {
-          const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-          if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+          // Só setar Authorization do admin se ainda não existir um header (ex: Central do Assinante usa seu próprio token)
+          const existingAuth = (config.headers as Record<string, string> | undefined)?.Authorization;
+          if (!existingAuth) {
+            const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+            if (token) {
+              config.headers.Authorization = `Bearer ${token}`;
+            }
           }
         }
         
@@ -150,18 +156,6 @@ export class ApiClient {
         const config = error.config as ExtendedAxiosRequestConfig;
         if (config?.__shouldShowLoading) {
           ApiClient.decrementActiveRequests();
-        }
-        
-        // Log imediato antes de processar o erro (para debug)
-        if (error?.response?.status === 401) {
-          // eslint-disable-next-line no-console
-          console.log('[ApiClient] Interceptor - 401 detectado ANTES do processError:', {
-            url: error.config?.url,
-            baseURL: error.config?.baseURL,
-            fullUrl: (error.config?.baseURL || '') + (error.config?.url || ''),
-            status: error.response?.status,
-            data: error.response?.data
-          });
         }
         
         return Promise.reject(error);

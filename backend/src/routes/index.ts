@@ -36,6 +36,7 @@ import contaPagarRoutes from './contaPagarRoutes';
 import notaFiscalRoutes from './notaFiscalRoutes';
 import nfseConfigRoutes from './nfseConfigRoutes';
 import hotsiteRoutes from './hotsiteRoutes';
+import centralAssinanteRoutes from './centralAssinanteRoutes';
 
 const router = Router();
 
@@ -78,6 +79,7 @@ const routes = [
     { path: '/api/contas-pagar', route: contaPagarRoutes },
     { path: '/api/notas-fiscais', route: notaFiscalRoutes },
     { path: '/api/nfse-config', route: nfseConfigRoutes },
+    { path: '/api', route: centralAssinanteRoutes },
 
     // Rotas de webhook
     { path: '/webhook', route: webhookRoutes },
