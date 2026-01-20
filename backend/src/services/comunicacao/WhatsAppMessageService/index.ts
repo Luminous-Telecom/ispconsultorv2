@@ -120,7 +120,7 @@ export class WhatsAppMessageService {
       templateInfo.name,
       templateInfo.language,
       components,
-      cliente,
+      { nome_fantasia: cliente.nome_fantasia || undefined, razao_social: cliente.razao_social || undefined },
       titulo
     );
 

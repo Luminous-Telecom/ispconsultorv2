@@ -47,7 +47,8 @@ export class WhatsAppBoletoService {
       logger.info('WhatsAppBoletoService.enviarBoletos - Servidor encontrado', {
         context: 'WhatsAppBoletoService',
         servidorId: servidor.id,
-        servidorNome: servidor.nome
+        tipoApi: servidor.tipo_api,
+        instanceName: servidor.instance_name
       });
 
       logger.info('WhatsAppBoletoService.enviarBoletos - Buscando mensagens ativas', {
@@ -225,7 +226,7 @@ export class WhatsAppBoletoService {
       context: 'WhatsAppBoletoService',
       tipoMensagem,
       quantidadeTitulos: titulos.length,
-      titulosIds: titulos.map(t => ({ id: t.id, numero: t.numero_titulo, cliente: t.cliente?.razao_social }))
+      titulosIds: titulos.map(t => ({ id: t.id, numero: t.numero_titulo, cliente: (t as any).cliente?.razao_social }))
     });
 
     let enviadas = 0;
@@ -377,7 +378,7 @@ export class WhatsAppBoletoService {
       templateInfo.name,
       templateInfo.language,
       components,
-      cliente,
+      { nome_fantasia: cliente.nome_fantasia || undefined, razao_social: cliente.razao_social || undefined },
       titulo
     );
   }
