@@ -117,7 +117,7 @@ export class WhatsAppCloudService {
             clienteData = await Cliente.findOne({
               where: {
                 telefone: {
-                  [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                  [require('sequelize').Op.like]: `%${telefoneLimpo}%`
                 }
               },
               attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
@@ -250,7 +250,7 @@ export class WhatsAppCloudService {
             clienteData = await Cliente.findOne({
               where: {
                 telefone: {
-                  [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                  [require('sequelize').Op.like]: `%${telefoneLimpo}%`
                 }
               },
               attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
@@ -301,7 +301,7 @@ export class WhatsAppCloudService {
             clienteData = await Cliente.findOne({
               where: {
                 telefone: {
-                  [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                  [require('sequelize').Op.like]: `%${telefoneLimpo}%`
                 }
               },
               attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
@@ -434,7 +434,7 @@ export class WhatsAppCloudService {
             clienteData = await Cliente.findOne({
               where: {
                 telefone: {
-                  [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                  [require('sequelize').Op.like]: `%${telefoneLimpo}%`
                 }
               },
               attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']
@@ -484,7 +484,7 @@ export class WhatsAppCloudService {
             clienteData = await Cliente.findOne({
               where: {
                 telefone: {
-                  [require('sequelize').Op.iLike]: `%${telefoneLimpo}%`
+                  [require('sequelize').Op.like]: `%${telefoneLimpo}%`
                 }
               },
               attributes: ['razao_social', 'nome_fantasia', 'email', 'telefone']

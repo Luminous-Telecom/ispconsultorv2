@@ -52,7 +52,7 @@ export class MensagemHistoricoController {
       }
 
       if (destinatario) {
-        where.destinatario = { [Op.iLike]: `%${destinatario}%` };
+        where.destinatario = { [Op.like]: `%${destinatario}%` };
       }
 
       if (entidade_tipo) {
