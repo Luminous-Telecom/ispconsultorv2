@@ -193,7 +193,9 @@ export class WhatsAppBoletoService {
       telefone,
       templateInfo.name,
       templateInfo.language,
-      components
+      components,
+      cliente,
+      titulo
     );
   }
 

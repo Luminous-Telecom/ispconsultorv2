@@ -204,7 +204,9 @@ export class WhatsAppCloudService {
     telefone: string,
     templateName: string,
     languageCode = 'pt_BR',
-    components?: WhatsAppCloudTemplateComponent[]
+    components?: WhatsAppCloudTemplateComponent[],
+    cliente?: { nome_fantasia?: string; razao_social?: string } | null,
+    titulo?: { valor: number; data_vencimento: Date; numero_titulo?: string } | null
   ): Promise<boolean> {
     try {
       if (!servidor.whatsapp_cloud_token || !servidor.whatsapp_cloud_phone_number_id) {
@@ -263,6 +265,22 @@ export class WhatsAppCloudService {
 
           // Preparar conteúdo detalhado da mensagem
           let mensagemDetalhada = `Template: ${templateName} (${languageCode})`;
+
+          // Adicionar informações do cliente e título
+          const clienteNome = cliente ? (cliente.nome_fantasia || cliente.razao_social || 'Cliente não identificado') : 'Cliente não identificado';
+          mensagemDetalhada += ` | Cliente: ${clienteNome}`;
+
+          if (titulo) {
+            const hoje = new Date();
+            const dataVencimento = new Date(titulo.data_vencimento);
+            const diasParaVencimento = Math.ceil((dataVencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+            const valorFormatado = titulo.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            mensagemDetalhada += ` | Título: ${titulo.numero_titulo || 'N/A'}`;
+            mensagemDetalhada += ` | Valor: ${valorFormatado}`;
+            mensagemDetalhada += ` | Vence em: ${diasParaVencimento} dias (${dataVencimento.toLocaleDateString('pt-BR')})`;
+          }
+
           if (components && components.length > 0) {
             const componentDetails = components.map((comp, index) => {
               if (comp.type === 'body' && comp.parameters) {
@@ -310,24 +328,41 @@ export class WhatsAppCloudService {
         }
 
         // Preparar informações detalhadas da mensagem para log
-        let logDetails = `Template ${templateName} enviado via WhatsApp Cloud API para ${telefoneFormatado} (idioma: ${languageCode})`;
+        const clienteNome = cliente ? (cliente.nome_fantasia || cliente.razao_social || 'Cliente não identificado') : 'Cliente não identificado';
+
+        let logDetails = `Template ${templateName} enviado via WhatsApp Cloud API`;
+        logDetails += ` | Cliente: ${clienteNome}`;
+        logDetails += ` | Destinatário: ${telefoneFormatado}`;
+
+        if (titulo) {
+          const hoje = new Date();
+          const dataVencimento = new Date(titulo.data_vencimento);
+          const diasParaVencimento = Math.ceil((dataVencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+          const valorFormatado = titulo.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+          logDetails += ` | Título: ${titulo.numero_titulo || 'N/A'}`;
+          logDetails += ` | Valor: ${valorFormatado}`;
+          logDetails += ` | Vencimento: ${diasParaVencimento} dias (${dataVencimento.toLocaleDateString('pt-BR')})`;
+        }
+
+        logDetails += ` | Idioma: ${languageCode}`;
 
         if (components && components.length > 0) {
           const componentDetails = components.map((comp, index) => {
             if (comp.type === 'body' && comp.parameters) {
               const textParams = comp.parameters.filter(p => p.type === 'text' && p.text).map(p => p.text).join(', ');
               if (textParams) {
-                return `Corpo[${index}]: ${textParams}`;
+                return `Corpo: ${textParams}`;
               }
             }
             if (comp.type === 'header' && comp.parameters) {
               const headerParams = comp.parameters.filter(p => p.type === 'text' && p.text).map(p => p.text).join(', ');
               if (headerParams) {
-                return `Cabeçalho[${index}]: ${headerParams}`;
+                return `Cabeçalho: ${headerParams}`;
               }
             }
-            return `${comp.type}[${index}]`;
-          }).filter(detail => detail !== `${detail.split('[')[0]}[${detail.split('[')[1]}`).join(' | ');
+            return `${comp.type}`;
+          }).filter(detail => detail !== detail.split(':')[0]).join(' | ');
 
           if (componentDetails) {
             logDetails += ` | Conteúdo: ${componentDetails}`;

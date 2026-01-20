@@ -119,7 +119,9 @@ export class WhatsAppMessageService {
       telefone,
       templateInfo.name,
       templateInfo.language,
-      components
+      components,
+      cliente,
+      titulo
     );
 
     return enviouTemplate
