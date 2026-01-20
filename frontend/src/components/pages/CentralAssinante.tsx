@@ -130,10 +130,16 @@ const CentralAssinante: React.FC = () => {
     }
   }, [parametrosData?.data?.central_assinante_metodo_login]);
 
-  // Atualizar título da página
+  // Atualizar título da página e meta description
   useEffect(() => {
     document.title = 'Central do Assinante';
-    
+
+    // Atualizar meta description apenas com o nome
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Central do Assinante');
+    }
+
     // Atualizar favicon com logo da empresa se disponível
     // Evitar valores inválidos como "undefined"
     if (empresaData?.logo && empresaData.logo !== 'undefined') {
@@ -148,10 +154,14 @@ const CentralAssinante: React.FC = () => {
         document.head.appendChild(newLink);
       }
     }
-    
+
     // Cleanup: restaurar título padrão ao desmontar
     return () => {
       document.title = 'BackNet';
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.setAttribute('content', '');
+      }
     };
   }, [empresaData]);
 

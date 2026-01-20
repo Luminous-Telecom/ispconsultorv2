@@ -76,7 +76,13 @@ const Home: React.FC = () => {
   useEffect(() => {
     // Usar nome fantasia ou razão social da empresa no título
     const nomeEmpresa = empresaData?.nome_fantasia || empresaData?.razao_social;
-    document.title = nomeEmpresa || 'Hotsite';
+    document.title = nomeEmpresa || '';
+
+    // Atualizar meta description com apenas o nome da empresa (vazio se não houver)
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', nomeEmpresa || '');
+    }
   }, [empresaData]);
 
   return (
