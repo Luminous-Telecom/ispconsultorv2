@@ -16,30 +16,13 @@ export class WhatsAppService {
     mensagensEnviadas: number;
     erros: number;
   }> {
-    const { logger } = await import('../../../utils/logger');
-
-    logger.info('WhatsAppService.enviarBoletos - Iniciando envio de boletos', {
-      context: 'WhatsAppService',
-      config: JSON.stringify(config)
-    });
-
     try {
-      const resultado = await WhatsAppBoletoService.enviarBoletos(config);
-
-      logger.info('WhatsAppService.enviarBoletos - Resultado final', {
-        context: 'WhatsAppService',
-        sucesso: resultado.sucesso,
-        mensagensEnviadas: resultado.mensagensEnviadas,
-        erros: resultado.erros
-      });
-
-      return resultado;
+      return await WhatsAppBoletoService.enviarBoletos(config);
     } catch (error) {
-      logger.error('WhatsAppService.enviarBoletos - Erro geral', {
+      const { logger } = await import('../../../utils/logger');
+      logger.error('Erro no envio de boletos via WhatsApp', {
         context: 'WhatsAppService',
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        config: JSON.stringify(config)
+        error: error instanceof Error ? error.message : String(error)
       });
 
       return {

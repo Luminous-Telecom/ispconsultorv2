@@ -26,48 +26,16 @@ export class WhatsAppBoletoService {
     mensagensEnviadas: number;
     erros: number;
   }> {
-    logger.info('WhatsAppBoletoService.enviarBoletos - Iniciando processamento', {
-      context: 'WhatsAppBoletoService',
-      config: JSON.stringify(config)
-    });
-
     try {
-      logger.info('WhatsAppBoletoService.enviarBoletos - Buscando servidor ativo', {
-        context: 'WhatsAppBoletoService'
-      });
-
       const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });
       if (!servidor) {
-        logger.warn('WhatsAppBoletoService.enviarBoletos - Nenhum servidor WhatsApp ativo encontrado', {
-          context: 'WhatsAppBoletoService'
-        });
         return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
       }
-
-      logger.info('WhatsAppBoletoService.enviarBoletos - Servidor encontrado', {
-        context: 'WhatsAppBoletoService',
-        servidorId: servidor.id,
-        tipoApi: servidor.tipo_api,
-        instanceName: servidor.instance_name
-      });
-
-      logger.info('WhatsAppBoletoService.enviarBoletos - Buscando mensagens ativas', {
-        context: 'WhatsAppBoletoService'
-      });
 
       const mensagens = await MensagemWhatsApp.findAll({ where: { ativo: true } });
       if (mensagens.length === 0) {
-        logger.warn('WhatsAppBoletoService.enviarBoletos - Nenhuma mensagem WhatsApp ativa encontrada', {
-          context: 'WhatsAppBoletoService'
-        });
         return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
       }
-
-      logger.info('WhatsAppBoletoService.enviarBoletos - Mensagens encontradas', {
-        context: 'WhatsAppBoletoService',
-        quantidadeMensagens: mensagens.length,
-        mensagens: mensagens.map(m => ({ id: m.id, tipo: m.tipo, ativo: m.ativo }))
-      });
 
       let mensagensEnviadas = 0;
       let erros = 0;
@@ -78,51 +46,22 @@ export class WhatsAppBoletoService {
         ...(config.depoisVencimento?.map(dias => ({ dias, tipo: 'depois' as const, tipoMensagem: `${String(dias).padStart(2, '0')}_dias_depois_vencimento` })) || [])
       ];
 
-      logger.info('WhatsAppBoletoService.enviarBoletos - Configurações de envio calculadas', {
-        context: 'WhatsAppBoletoService',
-        envios: JSON.stringify(envios)
-      });
-
       for (const envio of envios) {
-        logger.info('WhatsAppBoletoService.enviarBoletos - Processando envio', {
-          context: 'WhatsAppBoletoService',
-          tipoMensagem: envio.tipoMensagem,
-          dias: envio.dias,
-          tipo: envio.tipo
-        });
-
         try {
           const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo);
-
-          logger.info('WhatsAppBoletoService.enviarBoletos - Resultado do processamento', {
-            context: 'WhatsAppBoletoService',
-            tipoMensagem: envio.tipoMensagem,
-            enviadas: resultado.enviadas,
-            erros: resultado.erros
-          });
-
           mensagensEnviadas += resultado.enviadas;
           erros += resultado.erros;
         } catch (processError) {
-          logger.error('WhatsAppBoletoService.enviarBoletos - Erro no processamento de envio', {
+          logger.error('Erro no processamento de envio de boletos', {
             context: 'WhatsAppBoletoService',
             tipoMensagem: envio.tipoMensagem,
-            error: processError instanceof Error ? processError.message : String(processError),
-            stack: processError instanceof Error ? processError.stack : undefined
+            error: processError instanceof Error ? processError.message : String(processError)
           });
-
           erros += 1;
         }
       }
 
-      const resultadoFinal = { sucesso: mensagensEnviadas > 0, mensagensEnviadas, erros };
-
-      logger.info('WhatsAppBoletoService.enviarBoletos - Processamento concluído', {
-        context: 'WhatsAppBoletoService',
-        resultado: JSON.stringify(resultadoFinal)
-      });
-
-      return resultadoFinal;
+      return { sucesso: mensagensEnviadas > 0, mensagensEnviadas, erros };
     } catch (error) {
       logger.error('WhatsAppBoletoService.enviarBoletos - Erro geral no processamento', {
         context: 'WhatsAppBoletoService',
@@ -144,30 +83,8 @@ export class WhatsAppBoletoService {
     dias: number,
     tipo: 'antes' | 'mesmo' | 'depois'
   ): Promise<{ enviadas: number; erros: number }> {
-    logger.info('WhatsAppBoletoService.processarEnvio - Iniciando processamento', {
-      context: 'WhatsAppBoletoService',
-      tipoMensagem,
-      dias,
-      tipo,
-      servidorId: servidor.id
-    });
-
     const mensagem = mensagens.find((msg) => msg.tipo === tipoMensagem);
-
-    logger.info('WhatsAppBoletoService.processarEnvio - Mensagem encontrada', {
-      context: 'WhatsAppBoletoService',
-      mensagemEncontrada: !!mensagem,
-      mensagemId: mensagem?.id,
-      mensagemTipo: mensagem?.tipo,
-      mensagemTipoEnvio: mensagem?.tipo_envio
-    });
-
     if (!mensagem || mensagem.tipo_envio === 'desativado') {
-      logger.info('WhatsAppBoletoService.processarEnvio - Mensagem não encontrada ou desativada', {
-        context: 'WhatsAppBoletoService',
-        tipoMensagem,
-        motivo: !mensagem ? 'mensagem_nao_encontrada' : 'tipo_envio_desativado'
-      });
       return { enviadas: 0, erros: 0 };
     }
 
