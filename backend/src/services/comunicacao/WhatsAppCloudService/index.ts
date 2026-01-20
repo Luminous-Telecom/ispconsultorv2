@@ -261,10 +261,34 @@ export class WhatsAppCloudService {
           const clienteEmail = clienteData?.email || undefined;
           const clienteTelefone = clienteData?.telefone || undefined;
 
+          // Preparar conteúdo detalhado da mensagem
+          let mensagemDetalhada = `Template: ${templateName} (${languageCode})`;
+          if (components && components.length > 0) {
+            const componentDetails = components.map((comp, index) => {
+              if (comp.type === 'body' && comp.parameters) {
+                const textParams = comp.parameters.filter(p => p.type === 'text' && p.text).map(p => p.text).join(', ');
+                if (textParams) {
+                  return `Corpo: ${textParams}`;
+                }
+              }
+              if (comp.type === 'header' && comp.parameters) {
+                const headerParams = comp.parameters.filter(p => p.type === 'text' && p.text).map(p => p.text).join(', ');
+                if (headerParams) {
+                  return `Cabeçalho: ${headerParams}`;
+                }
+              }
+              return `${comp.type}`;
+            }).filter(detail => detail !== detail.split(':')[0]).join(' | ');
+
+            if (componentDetails) {
+              mensagemDetalhada += ` | ${componentDetails}`;
+            }
+          }
+
           await MensagemHistorico.create({
             tipo: 'whatsapp',
             destinatario: telefone,
-            mensagem: `Template: ${templateName} (${languageCode})`,
+            mensagem: mensagemDetalhada,
             status: 'enviada',
             servidor_id: servidor.id,
             cliente_nome: clienteNome,
@@ -276,7 +300,7 @@ export class WhatsAppCloudService {
           await registrarMensagemElasticsearch(null, {
             tipo: 'whatsapp',
             destinatario: telefone,
-            mensagem: `Template: ${templateName} (${languageCode})`,
+            mensagem: mensagemDetalhada,
             status: 'enviada',
             servidor_id: servidor.id
           });
@@ -285,7 +309,32 @@ export class WhatsAppCloudService {
           // Não falha o envio por erro no registro
         }
 
-        logger.info(`Template ${templateName} enviado via WhatsApp Cloud API para ${telefoneFormatado} (idioma: ${languageCode})`);
+        // Preparar informações detalhadas da mensagem para log
+        let logDetails = `Template ${templateName} enviado via WhatsApp Cloud API para ${telefoneFormatado} (idioma: ${languageCode})`;
+
+        if (components && components.length > 0) {
+          const componentDetails = components.map((comp, index) => {
+            if (comp.type === 'body' && comp.parameters) {
+              const textParams = comp.parameters.filter(p => p.type === 'text' && p.text).map(p => p.text).join(', ');
+              if (textParams) {
+                return `Corpo[${index}]: ${textParams}`;
+              }
+            }
+            if (comp.type === 'header' && comp.parameters) {
+              const headerParams = comp.parameters.filter(p => p.type === 'text' && p.text).map(p => p.text).join(', ');
+              if (headerParams) {
+                return `Cabeçalho[${index}]: ${headerParams}`;
+              }
+            }
+            return `${comp.type}[${index}]`;
+          }).filter(detail => detail !== `${detail.split('[')[0]}[${detail.split('[')[1]}`).join(' | ');
+
+          if (componentDetails) {
+            logDetails += ` | Conteúdo: ${componentDetails}`;
+          }
+        }
+
+        logger.info(logDetails);
         return true;
       } else {
         const errorObj = responseData as { error?: { message?: string; type?: string; code?: number; details?: string } };
