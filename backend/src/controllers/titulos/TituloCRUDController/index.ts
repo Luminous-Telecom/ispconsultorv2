@@ -512,28 +512,14 @@ export class TituloCRUDController {
       const { contratoId } = req.params;
       const { sortColumn, sortDirection } = req.query;
 
-      const logger = (await import('../../../utils/logger')).logger;
-      logger.info('TituloCRUDController.getByContrato - Iniciando', {
-        contratoId,
-        sortColumn,
-        sortDirection
-      });
-
       const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
-        logger.warn('TituloCRUDController.getByContrato - Contrato não encontrado', { contratoId });
         sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
       const finalSortColumn = (sortColumn as string) || 'id';
       const finalSortDirection = (sortDirection as string) || 'desc';
-
-      logger.debug('TituloCRUDController.getByContrato - Chamando TituloService.list', {
-        contratoId,
-        finalSortColumn,
-        finalSortDirection
-      });
 
       // Usar TituloService.list com filtro de contrato_id e ordenação do backend
       const result = await TituloService.list({
@@ -548,12 +534,6 @@ export class TituloCRUDController {
 
       // Filtrar apenas não-avulsos - backend já ordena
       const titulos = result.data.filter(t => !t.is_avulso);
-
-      logger.info('TituloCRUDController.getByContrato - Sucesso', {
-        contratoId,
-        totalTitulos: titulos.length,
-        totalEncontrados: result.data.length
-      });
 
       sendSuccess(res, titulos);
     } catch (error: unknown) {
@@ -575,28 +555,14 @@ export class TituloCRUDController {
       const { contratoId } = req.params;
       const { sortColumn, sortDirection } = req.query;
 
-      const logger = (await import('../../../utils/logger')).logger;
-      logger.info('TituloCRUDController.getAvulsosByContrato - Iniciando', {
-        contratoId,
-        sortColumn,
-        sortDirection
-      });
-
       const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
-        logger.warn('TituloCRUDController.getAvulsosByContrato - Contrato não encontrado', { contratoId });
         sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
       const finalSortColumn = (sortColumn as string) || 'id';
       const finalSortDirection = (sortDirection as string) || 'desc';
-
-      logger.debug('TituloCRUDController.getAvulsosByContrato - Chamando TituloService.list', {
-        contratoId,
-        finalSortColumn,
-        finalSortDirection
-      });
 
       // Usar TituloService.list com filtro de contrato_id e ordenação do backend
       const result = await TituloService.list({
@@ -611,12 +577,6 @@ export class TituloCRUDController {
 
       // Filtrar apenas avulsos - backend já ordena
       const titulos = result.data.filter(t => t.is_avulso);
-
-      logger.info('TituloCRUDController.getAvulsosByContrato - Sucesso', {
-        contratoId,
-        totalTitulos: titulos.length,
-        totalEncontrados: result.data.length
-      });
 
       sendSuccess(res, titulos);
     } catch (error: unknown) {
