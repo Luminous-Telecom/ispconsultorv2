@@ -273,13 +273,29 @@ export class WhatsAppCloudService {
 
           if (titulo) {
             const hoje = new Date();
-            const dataVencimento = new Date(titulo.data_vencimento);
-            const diasParaVencimento = Math.ceil((dataVencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-            const valorFormatado = titulo.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            let diasParaVencimento = 'N/A';
+            let dataVencimentoFormatada = 'Data inválida';
+
+            if (titulo.data_vencimento) {
+              try {
+                const dataVencimento = new Date(titulo.data_vencimento);
+                if (!isNaN(dataVencimento.getTime())) {
+                  diasParaVencimento = Math.ceil((dataVencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)).toString();
+                  dataVencimentoFormatada = dataVencimento.toLocaleDateString('pt-BR');
+                }
+              } catch (error) {
+                // Mantém valores padrão se houver erro na conversão de data
+              }
+            }
+
+            let valorFormatado = 'R$ 0,00';
+            if (titulo.valor && !isNaN(Number(titulo.valor))) {
+              valorFormatado = Number(titulo.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            }
 
             mensagemDetalhada += ` | Título: ${titulo.numero_titulo || 'N/A'}`;
             mensagemDetalhada += ` | Valor: ${valorFormatado}`;
-            mensagemDetalhada += ` | Vence em: ${diasParaVencimento} dias (${dataVencimento.toLocaleDateString('pt-BR')})`;
+            mensagemDetalhada += ` | Vence em: ${diasParaVencimento} dias (${dataVencimentoFormatada})`;
           }
 
           if (components && components.length > 0) {
@@ -337,13 +353,29 @@ export class WhatsAppCloudService {
 
         if (titulo) {
           const hoje = new Date();
-          const dataVencimento = new Date(titulo.data_vencimento);
-          const diasParaVencimento = Math.ceil((dataVencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-          const valorFormatado = titulo.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          let diasParaVencimento = 'N/A';
+          let dataVencimentoFormatada = 'Data inválida';
+
+          if (titulo.data_vencimento) {
+            try {
+              const dataVencimento = new Date(titulo.data_vencimento);
+              if (!isNaN(dataVencimento.getTime())) {
+                diasParaVencimento = Math.ceil((dataVencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)).toString();
+                dataVencimentoFormatada = dataVencimento.toLocaleDateString('pt-BR');
+              }
+            } catch (error) {
+              // Mantém valores padrão se houver erro na conversão de data
+            }
+          }
+
+          let valorFormatado = 'R$ 0,00';
+          if (titulo.valor && !isNaN(Number(titulo.valor))) {
+            valorFormatado = Number(titulo.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          }
 
           logDetails += ` | Título: ${titulo.numero_titulo || 'N/A'}`;
           logDetails += ` | Valor: ${valorFormatado}`;
-          logDetails += ` | Vencimento: ${diasParaVencimento} dias (${dataVencimento.toLocaleDateString('pt-BR')})`;
+          logDetails += ` | Vencimento: ${diasParaVencimento} dias (${dataVencimentoFormatada})`;
         }
 
         logDetails += ` | Idioma: ${languageCode}`;
