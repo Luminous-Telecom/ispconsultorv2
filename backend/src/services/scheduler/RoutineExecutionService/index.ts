@@ -73,17 +73,41 @@ export class RoutineExecutionService {
   public async executeRoutineByType(
     routine: ScheduledRoutine
   ): Promise<RoutineExecutionResult> {
+    logger.info('RoutineExecutionService.executeRoutine - Selecionando tipo de rotina', {
+      context: 'RoutineExecutionService',
+      routineTipo: routine.tipo,
+      routineId: routine.id,
+      routineNome: routine.nome
+    });
+
     switch (routine.tipo) {
       case 'geracao_titulos':
+        logger.info('RoutineExecutionService.executeRoutine - Executando geração de títulos', {
+          context: 'RoutineExecutionService',
+          routineId: routine.id
+        });
         return await this.executeGeracaoTitulos(routine);
-      
+
       case 'envio_boletos':
+        logger.info('RoutineExecutionService.executeRoutine - Executando envio de boletos', {
+          context: 'RoutineExecutionService',
+          routineId: routine.id
+        });
         return await this.executeEnvioBoletos(routine);
-      
+
       case 'remessa_bancaria':
+        logger.info('RoutineExecutionService.executeRoutine - Executando remessa bancária', {
+          context: 'RoutineExecutionService',
+          routineId: routine.id
+        });
         return await this.executeRemessaBancaria(routine);
-      
+
       default:
+        logger.warn('RoutineExecutionService.executeRoutine - Tipo de rotina não implementado', {
+          context: 'RoutineExecutionService',
+          routineTipo: routine.tipo,
+          routineId: routine.id
+        });
         return { message: 'Tipo de rotina não implementado' };
     }
   }
@@ -233,15 +257,47 @@ export class RoutineExecutionService {
    * @returns Resultado do envio de boletos
    */
   public async executeEnvioBoletos(routine: ScheduledRoutine): Promise<EnvioBoletosResult> {
+    logger.info('RoutineExecutionService.executeEnvioBoletos - Iniciando execução', {
+      context: 'RoutineExecutionService',
+      routineId: routine.id,
+      routineNome: routine.nome,
+      routineTipo: routine.tipo,
+      routineAtiva: routine.ativo,
+      rotinaConfiguracao: JSON.stringify(routine.configuracao)
+    });
+
     try {
+      logger.info('RoutineExecutionService.executeEnvioBoletos - Fazendo import da rotina', {
+        context: 'RoutineExecutionService',
+        routineId: routine.id
+      });
+
       const { EnvioBoletosRoutine } = await import('../routines/EnvioBoletosRoutine');
+
+      logger.info('RoutineExecutionService.executeEnvioBoletos - Criando instância da rotina', {
+        context: 'RoutineExecutionService',
+        routineId: routine.id
+      });
+
       const envioBoletosRoutine = new EnvioBoletosRoutine();
-      
+
       // Ler configurações da rotina ou usar padrões
       const config = routine.configuracao || {};
-      
+
+      logger.info('RoutineExecutionService.executeEnvioBoletos - Executando rotina', {
+        context: 'RoutineExecutionService',
+        routineId: routine.id,
+        config: JSON.stringify(config)
+      });
+
       const resultado = await envioBoletosRoutine.execute(config);
-      
+
+      logger.info('RoutineExecutionService.executeEnvioBoletos - Rotina executada com sucesso', {
+        context: 'RoutineExecutionService',
+        routineId: routine.id,
+        resultado: JSON.stringify(resultado)
+      });
+
       return {
         success: resultado.success,
         mensagens_enviadas: resultado.data?.boletosEnviados || 0,
@@ -250,11 +306,18 @@ export class RoutineExecutionService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao executar envio de boletos', {
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
+      logger.error('RoutineExecutionService.executeEnvioBoletos - ERRO GERAL NA EXECUÇÃO', {
         context: 'RoutineExecutionService',
         action: 'executeEnvioBoletos',
-        error: errorMessage
+        routineId: routine.id,
+        routineNome: routine.nome,
+        error: errorMessage,
+        stack: errorStack,
+        routineConfiguracao: JSON.stringify(routine.configuracao)
       });
+
       return {
         success: false,
         mensagens_enviadas: 0,
