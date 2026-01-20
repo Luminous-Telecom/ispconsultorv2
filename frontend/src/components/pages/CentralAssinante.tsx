@@ -765,6 +765,7 @@ const CentralAssinante: React.FC = () => {
                         <i className="bi bi-check-circle"></i>
                       </div>
                       <h6 className="mb-0 fw-bold text-white central-assinante-card-title">{dados.resumo.titulos_pagos}</h6>
+                      <small className="text-white-50 d-block central-assinante-card-label">Faturas Pagas</small>
                       <small className="text-white-50 central-assinante-card-subtitle">{formatCurrency(dados.resumo.valor_total_pago)}</small>
                       </div>
                     </Card>
