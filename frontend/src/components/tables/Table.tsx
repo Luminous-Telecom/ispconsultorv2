@@ -1220,7 +1220,7 @@ function Table<T extends { id: number | string }>({
                               .filter(bulkAction => {
                                 const label = bulkAction.label.toLowerCase();
                                 return label.includes('editar') || 
-                                       label.includes('excluir') || 
+                                       label.includes('deletar') || 
                                        label.includes('inserir') || 
                                        label.includes('cancelar') ||
                                        label.includes('selecionar');
@@ -1508,7 +1508,7 @@ function Table<T extends { id: number | string }>({
                               .filter(bulkAction => {
                                 const label = bulkAction.label.toLowerCase();
                                 return label.includes('editar') || 
-                                       label.includes('excluir') || 
+                                       label.includes('deletar') || 
                                        label.includes('inserir') || 
                                        label.includes('cancelar') ||
                                        label.includes('selecionar');
@@ -1611,13 +1611,13 @@ function Table<T extends { id: number | string }>({
               // Novo sempre habilitado, outros só quando há seleção
               const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
               const isEditarButton = bulkAction.label.toLowerCase().includes('editar');
-              const isExcluirButton = bulkAction.label.toLowerCase().includes('excluir');
+              const isExcluirButton = bulkAction.label.toLowerCase().includes('deletar');
               const isImprimirButton = bulkAction.label.toLowerCase().includes('imprimir');
               const isDisabledBySelection = !isNewButton && !isImprimirButton && state.selectedItems.length === 0;
               const isDisabledByCondition = bulkAction.disabled && typeof bulkAction.disabled === 'function' ? bulkAction.disabled(state.selectedItems) : false;
               const isDisabled = isDisabledBySelection || isDisabledByCondition;
               
-              // No mobile, remover "Editar" da barra superior e esconder "Novo" e "Excluir" (serão renderizados no rodapé)
+              // No mobile, remover "Editar" da barra superior e esconder "Novo" e "Deletar" (serão renderizados no rodapé)
               if (isMobile) {
                 if (isEditarButton || isNewButton || isExcluirButton) {
                   return null;
@@ -2046,7 +2046,7 @@ function Table<T extends { id: number | string }>({
       
       {/* Botão FAB suspenso com dropdown (mobile) */}
       {isMobile && bulkActions.length > 0 && (() => {
-        // Filtrar apenas "Novo" (remover "Excluir" do FAB)
+        // Filtrar apenas "Novo" (remover "Deletar" do FAB)
         const fabActions = bulkActions.filter(bulkAction => {
           const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
           return isNewButton;

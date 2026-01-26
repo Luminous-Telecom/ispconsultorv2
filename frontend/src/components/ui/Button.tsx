@@ -104,7 +104,7 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
  * </Button>
  * 
  * <Button variant="danger" rightIcon={<i className="bi bi-trash"></i>} alwaysShowIcon>
- *   Excluir
+ *   Deletar
  * </Button>
  * ```
  */

@@ -83,7 +83,7 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
     },
     onError: (error: unknown) => {
       const axiosError = error as AxiosError<{ message?: string }>;
-      showError(axiosError?.response?.data?.message || 'Erro ao excluir carta de cobrança');
+      showError(axiosError?.response?.data?.message || 'Erro ao deletar carta de cobrança');
     }
   });
 

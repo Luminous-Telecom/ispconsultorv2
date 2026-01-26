@@ -90,7 +90,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       refetch();
     } catch (err: unknown) {
       const errorMessage = await extractApiErrorMessage(err, {
-        defaultMessage: 'Erro ao excluir contrato',
+        defaultMessage: 'Erro ao deletar contrato',
         handleBlobResponse: false
       });
       error(errorMessage);
@@ -401,15 +401,15 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       disabled: (selectedItems: Contrato[]) => selectedItems.length === 0
     },
     {
-      label: 'Excluir',
+      label: 'Deletar',
       action: async (selectedItems: Contrato[]) => {
         if (selectedItems.length === 0) return;
         
         const confirmed = await confirm({
-          message: `Tem certeza que deseja excluir ${selectedItems.length} contrato(s)?`,
+          message: `Tem certeza que deseja deletar ${selectedItems.length} contrato(s)?`,
           variant: 'danger',
-          title: 'Excluir contratos',
-          confirmText: 'Excluir',
+          title: 'Deletar contratos',
+          confirmText: 'Deletar',
           cancelText: 'Cancelar',
         });
         

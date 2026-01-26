@@ -127,7 +127,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
     },
     onError: (error: unknown) => {
       const axiosError = error as AxiosError<{ message?: string }>;
-      showError( axiosError?.response?.data?.message || 'Erro ao excluir documento');
+      showError( axiosError?.response?.data?.message || 'Erro ao deletar documento');
     }
   });
 

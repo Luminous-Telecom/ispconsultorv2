@@ -83,7 +83,7 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
     },
     onError: (error: unknown) => {
       const axiosError = error as AxiosError<{ message?: string }>;
-      showError(axiosError?.response?.data?.message || 'Erro ao excluir recibo');
+      showError(axiosError?.response?.data?.message || 'Erro ao deletar recibo');
     }
   });
 

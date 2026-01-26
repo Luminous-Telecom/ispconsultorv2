@@ -114,10 +114,10 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
         const axiosError = err as AxiosError<{ message?: string; error?: string }>;
         const errorMessage = axiosError.response?.data?.message || 
                             axiosError.response?.data?.error ||
-                            'Erro ao excluir usuário';
+                            'Erro ao deletar usuário';
         _error(errorMessage);
       } else {
-        _error('Erro ao excluir usuário');
+        _error('Erro ao deletar usuário');
       }
     }
   };
@@ -230,15 +230,15 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       disabled: (selectedItems: Usuario[]) => selectedItems.length === 0
     },
     {
-      label: 'Excluir',
+      label: 'Deletar',
       action: async (selectedItems: Usuario[]) => {
         if (selectedItems.length === 0) return;
         
         const confirmed = await confirm({
-          message: `Tem certeza que deseja excluir ${selectedItems.length} usuário(s)?`,
+          message: `Tem certeza que deseja deletar ${selectedItems.length} usuário(s)?`,
           variant: 'danger',
-          title: 'Excluir usuários',
-          confirmText: 'Excluir',
+          title: 'Deletar usuários',
+          confirmText: 'Deletar',
           cancelText: 'Cancelar',
         });
         
@@ -282,7 +282,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
                 label: action.label,
                 onClick: action.action,
                 disabled: action.disabled,
-                variant: (action.label.toLowerCase().includes('excluir') || action.label.toLowerCase().includes('cancelar')) ? 'danger' : 'primary'
+                variant: (action.label.toLowerCase().includes('deletar') || action.label.toLowerCase().includes('cancelar')) ? 'danger' : 'primary'
               })),
               emptyMessage: 'Nenhum usuário encontrado',
               pagination

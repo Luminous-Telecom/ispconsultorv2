@@ -79,7 +79,7 @@ export interface ConfirmModalProps {
  *     handleDelete();
  *     setShowConfirm(false);
  *   }}
- *   message="Tem certeza que deseja excluir este item?"
+ *   message="Tem certeza que deseja deletar este item?"
  *   variant="danger"
  * />
  * ```
