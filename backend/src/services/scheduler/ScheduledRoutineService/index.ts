@@ -17,6 +17,11 @@ export interface ListScheduledRoutinesResponse {
     page: number;
     limit: number;
     pages: number;
+    current_page: number;
+    per_page: number;
+    last_page: number;
+    from: number;
+    to: number;
   };
 }
 
@@ -55,15 +60,25 @@ export class ScheduledRoutineService {
     });
 
     const totalPages = Math.ceil(routines.count / Number(limit));
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const count = routines.count as number;
+    const from = count > 0 ? offset + 1 : 0;
+    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
 
     return {
       success: true,
       data: routines.rows,
       pagination: {
-        total: routines.count,
-        page: Number(page),
-        limit: Number(limit),
-        pages: totalPages
+        total: count,
+        page: pageNum,
+        limit: limitNum,
+        pages: totalPages,
+        current_page: pageNum,
+        per_page: limitNum,
+        last_page: totalPages,
+        from,
+        to
       }
     };
   }

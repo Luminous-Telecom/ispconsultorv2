@@ -189,6 +189,9 @@ export class ContaPagarService {
       offset
     });
 
+    const from = count > 0 ? offset + 1 : 0;
+    const to = count > 0 ? Math.min(offset + limit, count) : 0;
+
     return {
       success: true,
       data: contasPagar,
@@ -197,8 +200,8 @@ export class ContaPagarService {
         per_page: limit,
         total: count,
         last_page: Math.ceil(count / limit),
-        from: offset + 1,
-        to: Math.min(offset + limit, count)
+        from,
+        to
       }
     };
   }

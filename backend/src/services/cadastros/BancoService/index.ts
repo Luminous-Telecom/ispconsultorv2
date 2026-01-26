@@ -130,16 +130,20 @@ export class BancoService {
       throw queryError;
     }
     
+    const limitNum = Number(limit);
+    const from = count > 0 ? offset + 1 : 0;
+    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
+
     return {
       success: true,
       data: bancos,
       pagination: {
         current_page: Number(page),
-        per_page: Number(limit),
+        per_page: limitNum,
         total: count,
-        last_page: Math.ceil(count / Number(limit)),
-        from: offset + 1,
-        to: Math.min(offset + Number(limit), count)
+        last_page: Math.ceil(count / limitNum),
+        from,
+        to
       }
     };
   }

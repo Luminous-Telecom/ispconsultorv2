@@ -110,6 +110,9 @@ export class ClienteService {
 
     const totalPages = Math.ceil(count / limit);
 
+    const from = count > 0 ? offset + 1 : 0;
+    const to = count > 0 ? Math.min(offset + limit, count) : 0;
+
     return {
       success: true,
       data: clientes,
@@ -118,8 +121,8 @@ export class ClienteService {
         per_page: limit,
         total: count,
         last_page: totalPages,
-        from: offset + 1,
-        to: Math.min(offset + limit, count)
+        from,
+        to
       }
     };
   }

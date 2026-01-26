@@ -20,10 +20,14 @@ export interface ListContratosFilters {
 
 export interface ListContratosResponse {
   data: Contrato[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+    from: number;
+    to: number;
+  };
 }
 
 export class ContratoService {
@@ -160,12 +164,20 @@ export class ContratoService {
       throw queryError;
     }
 
+    const totalPages = Math.ceil(count / limitNum);
+    const from = count > 0 ? offset + 1 : 0;
+    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
+
     return {
       data: rows,
-      total: count,
-      page: pageNum,
-      limit: limitNum,
-      totalPages: Math.ceil(count / limitNum)
+      pagination: {
+        current_page: pageNum,
+        per_page: limitNum,
+        total: count,
+        last_page: totalPages,
+        from,
+        to
+      }
     };
   }
 

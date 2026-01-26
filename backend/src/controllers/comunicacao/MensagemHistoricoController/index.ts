@@ -109,16 +109,25 @@ export class MensagemHistoricoController {
       });
 
       const totalPages = Math.ceil(count / Number(limit));
+      const pageNum = Number(page);
+      const limitNum = Number(limit);
+      const from = count > 0 ? offset + 1 : 0;
+      const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
 
       const result = {
         data: rows,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page: pageNum,
+          limit: limitNum,
           total: count,
           totalPages,
-          hasNext: Number(page) < totalPages,
-          hasPrev: Number(page) > 1
+          hasNext: pageNum < totalPages,
+          hasPrev: pageNum > 1,
+          current_page: pageNum,
+          per_page: limitNum,
+          last_page: totalPages,
+          from,
+          to
         },
         filters: {
           tipo,
@@ -202,16 +211,25 @@ export class MensagemHistoricoController {
       });
 
       const totalPages = Math.ceil(count / Number(limit));
+      const pageNum = Number(page);
+      const limitNum = Number(limit);
+      const from = count > 0 ? offset + 1 : 0;
+      const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
 
       const result = {
         data: rows,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page: pageNum,
+          limit: limitNum,
           total: count,
           totalPages,
-          hasNext: Number(page) < totalPages,
-          hasPrev: Number(page) > 1
+          hasNext: pageNum < totalPages,
+          hasPrev: pageNum > 1,
+          current_page: pageNum,
+          per_page: limitNum,
+          last_page: totalPages,
+          from,
+          to
         }
       };
 

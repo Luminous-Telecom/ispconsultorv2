@@ -95,6 +95,9 @@ export class UsuarioService {
       throw queryError;
     }
 
+    const from = count > 0 ? offset + 1 : 0;
+    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
+
     return {
       success: true,
       data: rows,
@@ -103,8 +106,8 @@ export class UsuarioService {
         per_page: limitNum,
         total: count,
         last_page: Math.ceil(count / limitNum),
-        from: offset + 1,
-        to: Math.min(offset + limitNum, count)
+        from,
+        to
       }
     };
   }

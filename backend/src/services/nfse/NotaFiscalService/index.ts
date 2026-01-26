@@ -28,6 +28,11 @@ export interface ListNotasFiscaisResponse {
     limit: number;
     total: number;
     totalPages: number;
+    current_page: number;
+    per_page: number;
+    last_page: number;
+    from: number;
+    to: number;
   };
 }
 
@@ -197,6 +202,10 @@ export class NotaFiscalService {
       throw queryError;
     }
 
+    const totalPages = Math.ceil(count / limitNumber);
+    const from = count > 0 ? offset + 1 : 0;
+    const to = count > 0 ? Math.min(offset + limitNumber, count) : 0;
+
     return {
       success: true,
       data: rows,
@@ -204,7 +213,12 @@ export class NotaFiscalService {
         page: pageNumber,
         limit: limitNumber,
         total: count,
-        totalPages: Math.ceil(count / limitNumber)
+        totalPages,
+        current_page: pageNumber,
+        per_page: limitNumber,
+        last_page: totalPages,
+        from,
+        to
       }
     };
   }
@@ -239,6 +253,10 @@ export class NotaFiscalService {
       offset
     });
 
+    const totalPages = Math.ceil(count / limitNumber);
+    const from = count > 0 ? offset + 1 : 0;
+    const to = count > 0 ? Math.min(offset + limitNumber, count) : 0;
+
     return {
       success: true,
       data: rows,
@@ -246,7 +264,12 @@ export class NotaFiscalService {
         page: pageNumber,
         limit: limitNumber,
         total: count,
-        totalPages: Math.ceil(count / limitNumber)
+        totalPages,
+        current_page: pageNumber,
+        per_page: limitNumber,
+        last_page: totalPages,
+        from,
+        to
       }
     };
   }

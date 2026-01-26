@@ -105,6 +105,9 @@ export class FornecedorService {
 
     const totalPages = Math.ceil(count / limitNum);
 
+    const from = count > 0 ? offset + 1 : 0;
+    const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
+
     return {
       success: true,
       data: fornecedores,
@@ -113,8 +116,8 @@ export class FornecedorService {
         per_page: limitNum,
         total: count,
         last_page: totalPages,
-        from: offset + 1,
-        to: Math.min(offset + limitNum, count)
+        from,
+        to
       }
     };
   }
