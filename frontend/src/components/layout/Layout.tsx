@@ -338,14 +338,8 @@ const Layout: React.FC = () => {
                     aria-controls="blockdomiCollapse"
                     onClick={(e) => {
                       const button = e.currentTarget;
-                      const chevron = button.querySelector('.folder-chevron');
                       const folderIcon = button.querySelector('.folder-icon');
                       setTimeout(() => {
-                        if (chevron && button.classList.contains('collapsed')) {
-                          chevron.className = 'bi bi-chevron-right folder-chevron me-1';
-                        } else if (chevron) {
-                          chevron.className = 'bi bi-chevron-down folder-chevron me-1';
-                        }
                         if (folderIcon && button.classList.contains('collapsed')) {
                           folderIcon.className = 'bi bi-folder folder-icon me-2';
                         } else if (folderIcon) {
@@ -354,7 +348,6 @@ const Layout: React.FC = () => {
                       }, 10);
                     }}
                   >
-                    <i className="bi bi-chevron-right folder-chevron me-1"></i>
                     <i className="bi bi-folder folder-icon me-2"></i>
                     <span>Blockdomi</span>
                   </button>
@@ -397,14 +390,8 @@ const Layout: React.FC = () => {
                     aria-controls="parametrosCollapse"
                     onClick={(e) => {
                       const button = e.currentTarget;
-                      const chevron = button.querySelector('.folder-chevron');
                       const folderIcon = button.querySelector('.folder-icon');
                       setTimeout(() => {
-                        if (chevron && button.classList.contains('collapsed')) {
-                          chevron.className = 'bi bi-chevron-right folder-chevron me-1';
-                        } else if (chevron) {
-                          chevron.className = 'bi bi-chevron-down folder-chevron me-1';
-                        }
                         if (folderIcon && button.classList.contains('collapsed')) {
                           folderIcon.className = 'bi bi-folder folder-icon me-2';
                         } else if (folderIcon) {
@@ -413,7 +400,6 @@ const Layout: React.FC = () => {
                       }, 10);
                     }}
                   >
-                    <i className="bi bi-chevron-right folder-chevron me-1"></i>
                     <i className="bi bi-folder folder-icon me-2"></i>
                     <span>{t('layout.parameters')}</span>
                   </button>

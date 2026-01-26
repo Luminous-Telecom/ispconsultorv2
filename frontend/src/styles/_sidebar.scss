@@ -170,16 +170,6 @@
   border-color: transparent !important;
 }
 
-.sidebar-accordion .accordion-button .folder-chevron {
-  font-size: 0.7rem !important;
-  color: var(--sidebar-text) !important;
-  display: inline-block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  margin-right: 0.25rem !important;
-  transition: transform 0.2s ease;
-}
-
 .sidebar-accordion .accordion-button .folder-icon {
   font-size: 0.9rem !important;
   color: var(--sidebar-text) !important;
@@ -189,7 +179,6 @@
   margin-right: 0.5rem !important;
 }
 
-.sidebar-accordion .accordion-button:not(.collapsed) .folder-chevron,
 .sidebar-accordion .accordion-button:not(.collapsed) .folder-icon {
   color: var(--sidebar-text) !important;
 }
