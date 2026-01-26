@@ -29,7 +29,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   onClose, 
   onSelectContaPagar,
   title,
-  skipWrapper: _skipWrapper 
+  skipWrapper = false
 }) => {
   const { t } = useI18n();
   const defaultTitle = title || t('financial.accountsPayable');
@@ -674,7 +674,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
 
 
 
-  if (_skipWrapper) {
+  if (skipWrapper) {
     return (
       <>
         {modalContent}

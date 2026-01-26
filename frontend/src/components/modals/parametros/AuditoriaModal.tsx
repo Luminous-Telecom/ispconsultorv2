@@ -12,9 +12,10 @@ import { useI18n } from '@/contexts/I18nContext';
 interface AuditoriaModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
 }
 
-const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
+const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrapper = false }) => {
   const { t } = useI18n();
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditoriaLog | null>(null);
@@ -328,6 +329,146 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
     </div>
   );
 
+  const modalContent = (
+    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
+      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
+        {/* Filtros */}
+        <div style={{ padding: '16px', paddingBottom: '8px', flexShrink: 0 }}>
+          {customFilters}
+        </div>
+        {/* Tabela */}
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <ListModal
+            show={true}
+            onClose={() => {}}
+            config={modal.config}
+            data={data?.data || []}
+            loading={isLoading}
+            selectedItems={selectedItem ? [selectedItem] : []}
+            onSelectionChange={handleSelectionChange}
+            pagination={pagination}
+            onPageChange={tableFilters.setPage}
+            onPageSizeChange={tableFilters.setLimit}
+            onLimitChange={tableFilters.setLimit}
+            sortColumn={tableFilters.sortColumn}
+            sortDirection={tableFilters.sortDirection}
+            onSortChange={tableFilters.setSort}
+            refreshQueryFn={refetch}
+            bulkActions={bulkActions}
+            skipWrapper={true}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  if (skipWrapper) {
+    return (
+      <>
+        {modalContent}
+        {/* Modal de Detalhes */}
+        {selectedLog && (
+          <DraggableModal
+            show={showDetailsModal}
+            onClose={() => {
+              setShowDetailsModal(false);
+              setSelectedLog(null);
+            }}
+            title={t('audit.detailsTitle')}
+            size="lg"
+          >
+            <div style={{ padding: '16px' }}>
+              <div className="mb-1">
+                <h6 className="mb-1">{t('audit.generalInfo')}</h6>
+                <div className="row g-1">
+                  <div className="col-md-6">
+                    <small className="text-muted">{t('table.action')}:</small><br />
+                    <span className={`badge bg-${getAcaoBadgeClass(selectedLog.acao)}`}>
+                      {formatAcao(selectedLog.acao)}
+                    </span>
+                  </div>
+                  <div className="col-md-6">
+                    <small className="text-muted">{t('audit.entity')}:</small><br />
+                    <span>{selectedLog.entidade}</span>
+                  </div>
+                  <div className="col-md-6">
+                    <small className="text-muted">{t('audit.entityId')}:</small><br />
+                    <span>{selectedLog.entidade_id || 'N/A'}</span>
+                  </div>
+                  <div className="col-md-6">
+                    <small className="text-muted">{t('audit.timestamp')}:</small><br />
+                    <span>{formatTimestamp(selectedLog.timestamp)}</span>
+                  </div>
+                  <div className="col-md-6">
+                    <small className="text-muted">{t('audit.user')}:</small><br />
+                    <span>{selectedLog.usuario_email || 'N/A'}</span>
+                    {selectedLog.usuario_nome && (
+                      <div className="text-muted small">{selectedLog.usuario_nome}</div>
+                    )}
+                  </div>
+                  <div className="col-md-6">
+                    <small className="text-muted">{t('audit.ip')}:</small><br />
+                    <span>{selectedLog.ip_address || 'N/A'}</span>
+                  </div>
+                  {selectedLog.rota && (
+                    <div className="col-md-12">
+                      <small className="text-muted">{t('audit.route')}:</small><br />
+                      <code>{selectedLog.metodo_http || 'N/A'} {selectedLog.rota}</code>
+                    </div>
+                  )}
+                  {selectedLog.user_agent && (
+                    <div className="col-md-12">
+                      <small className="text-muted">{t('audit.userAgent')}:</small><br />
+                      <span className="small">{selectedLog.user_agent}</span>
+                    </div>
+                  )}
+                  {selectedLog.observacoes && (
+                    <div className="col-md-12">
+                      <small className="text-muted">{t('table.observations')}:</small><br />
+                      <span>{selectedLog.observacoes}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {(selectedLog.dados_anteriores || selectedLog.dados_novos) && (
+                <div className="mb-1">
+                  <h6 className="mb-1">{t('audit.data')}</h6>
+                  <div className="card">
+                    <div className="card-body" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <pre 
+                        className="mb-0" 
+                        style={{ 
+                          fontSize: '0.875rem', 
+                          maxHeight: '400px', 
+                          overflow: 'auto',
+                          backgroundColor: 'var(--bg-secondary)',
+                          color: 'var(--text-primary)',
+                          padding: '1rem',
+                          borderRadius: '0.25rem',
+                          border: '1px solid var(--border-color)',
+                          margin: 0
+                        }}
+                      >
+                        {JSON.stringify(
+                          selectedLog.dados_anteriores && selectedLog.dados_novos
+                            ? { anterior: selectedLog.dados_anteriores, novo: selectedLog.dados_novos }
+                            : selectedLog.dados_novos || selectedLog.dados_anteriores,
+                          null,
+                          2
+                        )}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </DraggableModal>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <DraggableModal
@@ -339,36 +480,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
         title={t('audit.title')}
         size="xl"
       >
-        <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
-          <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
-            {/* Filtros */}
-            <div style={{ padding: '16px', paddingBottom: '8px', flexShrink: 0 }}>
-              {customFilters}
-            </div>
-            {/* Tabela */}
-            <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-              <ListModal
-                show={true}
-                onClose={() => {}}
-                config={modal.config}
-                data={data?.data || []}
-                loading={isLoading}
-                selectedItems={selectedItem ? [selectedItem] : []}
-                onSelectionChange={handleSelectionChange}
-                pagination={pagination}
-                onPageChange={tableFilters.setPage}
-                onPageSizeChange={tableFilters.setLimit}
-                onLimitChange={tableFilters.setLimit}
-                sortColumn={tableFilters.sortColumn}
-                sortDirection={tableFilters.sortDirection}
-                onSortChange={tableFilters.setSort}
-                refreshQueryFn={refetch}
-                bulkActions={bulkActions}
-                skipWrapper={true}
-              />
-            </div>
-          </div>
-        </div>
+        {modalContent}
       </DraggableModal>
 
       {/* Modal de Detalhes */}

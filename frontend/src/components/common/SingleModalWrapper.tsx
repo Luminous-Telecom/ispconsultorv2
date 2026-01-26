@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { useModal } from '@/contexts/ModalContext';
 import Loading from './Loading';
+import DraggableModal from './DraggableModal';
 
 // Lazy load dos modais (code splitting)
 const ClienteListModal = lazy(() => import('../modals/clientes').then(m => ({ default: m.ClienteListModal })));
@@ -89,7 +90,7 @@ const SingleModalWrapper: React.FC = () => {
   const modalProps: ModalComponentProps = {
     show: true,
     onClose: closeModal,
-    skipWrapper: false, // Desabilitar skipWrapper para evitar re-renders
+    skipWrapper: true, // Sempre usar skipWrapper para que o conteúdo seja renderizado dentro do DraggableModal único
     ...(['clientes', 'planos', 'bancos', 'contratos'].includes(activeModal) && { title: modalConfig.title }),
     // Para o cliente-modal, passamos clienteId como prop específica
     ...(isClienteModal && { clienteId }),
@@ -98,9 +99,17 @@ const SingleModalWrapper: React.FC = () => {
   };
 
   return (
-    <Suspense fallback={<Loading message={modalConfig.loadingMessage} />}>
-      <ModalComponent {...modalProps} />
-    </Suspense>
+    <DraggableModal
+      show={true}
+      onClose={closeModal}
+      title={modalConfig.title}
+      size="lg"
+      className={modalConfig.className || ''}
+    >
+      <Suspense fallback={<Loading message={modalConfig.loadingMessage} />}>
+        <ModalComponent {...modalProps} />
+      </Suspense>
+    </DraggableModal>
   );
 };
 

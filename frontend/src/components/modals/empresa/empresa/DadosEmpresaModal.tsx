@@ -16,7 +16,8 @@ import ResponsavelTab from './abas/ResponsavelTab';
 
 const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   show,
-  onClose
+  onClose,
+  skipWrapper = false
 }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel'>('basico');
@@ -126,93 +127,93 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     }
   };
 
-  return (
-    <DraggableModal
-      show={show}
-      onClose={handleCancel}
-      title="Empresa"
-      size="xl"
-      modalId="dados-empresa-modal"
-      headerActions={
-        <div className="empresa-header-unified">
-          {/* Botões à direita */}
-          <div className="empresa-header-buttons modal-header-actions">
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              leftIcon={<i className="bi bi-x-lg"></i>}
-              onClick={handleCancel}
-              disabled={updateDadosMutation.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              form="empresa-form"
-              variant="primary"
-              size="sm"
-              leftIcon={<i className="bi bi-check-lg"></i>}
-              isLoading={updateDadosMutation.isPending}
-            >
-              Salvar
-            </Button>
-          </div>
+  const headerActionsContent = (
+    <div className="empresa-header-unified">
+      {/* Botões à direita */}
+      <div className="empresa-header-buttons modal-header-actions">
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          leftIcon={<i className="bi bi-x-lg"></i>}
+          onClick={handleCancel}
+          disabled={updateDadosMutation.isPending}
+        >
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          form="empresa-form"
+          variant="primary"
+          size="sm"
+          leftIcon={<i className="bi bi-check-lg"></i>}
+          isLoading={updateDadosMutation.isPending}
+        >
+          Salvar
+        </Button>
+      </div>
 
-            {/* Abas na parte inferior do header */}
-            <div className="empresa-header-tabs">
-              <ul
-                className={`nav nav-tabs empresa-tabs-unified ${isMobile ? 'empresa-tabs-mobile' : ''}`}
-                id="empresaTab"
-                role="tablist"
-                style={{
-                  margin: 0,
-                  padding: 0,
-                  borderBottom: 'none',
-                  backgroundColor: 'transparent'
-                }}
-              >
-                <li className="nav-item" role="presentation">
-                  <button
-                    className={`nav-link modal-tab-hover ${activeTab === 'basico' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setActiveTab('basico')}
-                  >
-                    Empresa
-                  </button>
-                </li>
-                <li className="nav-item" role="presentation">
-                  <button
-                    className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setActiveTab('endereco')}
-                  >
-                    Endereço
-                  </button>
-                </li>
-                <li className="nav-item" role="presentation">
-                  <button
-                    className={`nav-link ${activeTab === 'contato' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setActiveTab('contato')}
-                  >
-                    Contato
-                  </button>
-                </li>
-                <li className="nav-item" role="presentation">
-                  <button
-                    className={`nav-link ${activeTab === 'responsavel' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setActiveTab('responsavel')}
-                  >
-                    Responsável
-                  </button>
-                </li>
-              </ul>
-            </div>
+      {/* Abas na parte inferior do header */}
+      <div className="empresa-header-tabs">
+        <ul
+          className={`nav nav-tabs empresa-tabs-unified ${isMobile ? 'empresa-tabs-mobile' : ''}`}
+          id="empresaTab"
+          role="tablist"
+          style={{
+            margin: 0,
+            padding: 0,
+            borderBottom: 'none',
+            backgroundColor: 'transparent'
+          }}
+        >
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link modal-tab-hover ${activeTab === 'basico' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('basico')}
+            >
+              Empresa
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('endereco')}
+            >
+              Endereço
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'contato' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('contato')}
+            >
+              Contato
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'responsavel' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('responsavel')}
+            >
+              Responsável
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+
+  const modalContent = (
+    <>
+      {skipWrapper && (
+        <div className="empresa-header-wrapper" style={{ padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
+          {headerActionsContent}
         </div>
-      }
-    >
+      )}
       <div className="empresa-modal-content">
         {/* Conteúdo das Abas */}
         <div
@@ -256,6 +257,23 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           </form>
         </div>
       </div>
+    </>
+  );
+
+  if (skipWrapper) {
+    return modalContent;
+  }
+
+  return (
+    <DraggableModal
+      show={show}
+      onClose={handleCancel}
+      title="Empresa"
+      size="xl"
+      modalId="dados-empresa-modal"
+      headerActions={headerActionsContent}
+    >
+      {modalContent}
     </DraggableModal>
   );
 };

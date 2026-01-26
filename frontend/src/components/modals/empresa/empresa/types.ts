@@ -6,6 +6,7 @@ export interface DadosEmpresaForm extends DadosEmpresaType {}
 export interface DadosEmpresaModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
 }
 
 export interface DadosEmpresaTabProps {
