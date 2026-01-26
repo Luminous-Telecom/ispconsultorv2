@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useNotificationContext } from '../notifications/NotificationProvider';
 import NotificationContainer from '../notifications/NotificationContainer';
@@ -216,44 +216,42 @@ const Layout: React.FC = () => {
     navigate('/login');
   };
 
+  const cadastrosFolderItems = [
+    { id: 'clientes', label: t('menu.clients'), icon: 'bi-people', onClick: () => handleOpenModal('clientes') },
+    { id: 'contratos', label: t('menu.contracts'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('contratos') },
+    { id: 'planos', label: t('menu.plans'), icon: 'bi-card-list', onClick: () => handleOpenModal('planos') },
+    { id: 'bancos', label: t('menu.banks'), icon: 'bi-bank', onClick: () => handleOpenModal('bancos') },
+    { id: 'fornecedores', label: t('menu.suppliers'), icon: 'bi-truck', onClick: () => handleOpenModal('fornecedores') },
+  ];
 
-  const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
-
-  const menuItems = [
-    { path: '/clientes', label: t('menu.clients'), isModal: true, modalHandler: () => handleOpenModal('clientes') },
-    { path: '/planos', label: t('menu.plans'), isModal: true, modalHandler: () => handleOpenModal('planos') },
-    { path: '/bancos', label: t('menu.banks'), isModal: true, modalHandler: () => handleOpenModal('bancos') },
-    { path: '/contratos', label: t('menu.contracts'), isModal: true, modalHandler: () => handleOpenModal('contratos') },
-    { path: '/financeiro', label: t('menu.financial'), isModal: true, modalHandler: () => handleOpenModal('financeiro') },
-    { path: '/fornecedores', label: t('menu.suppliers'), isModal: true, modalHandler: () => handleOpenModal('fornecedores') },
-    { path: '/contas-pagar', label: t('menu.accountsPayable'), isModal: true, modalHandler: () => handleOpenModal('contas-pagar') },
-    { path: '/notas-fiscais', label: t('menu.invoices'), isModal: true, modalHandler: () => handleOpenModal('notas-fiscais') },
-    { path: '/dados-empresa', label: t('menu.companyData'), isModal: true, modalHandler: () => handleOpenModal('dados-empresa') },
+  const financeiroFolderItems = [
+    { id: 'financeiro', label: t('menu.financial'), icon: 'bi-cash-stack', onClick: () => handleOpenModal('financeiro') },
+    { id: 'contas-pagar', label: t('menu.accountsPayable'), icon: 'bi-arrow-down-circle', onClick: () => handleOpenModal('contas-pagar') },
+    { id: 'notas-fiscais', label: t('menu.invoices'), icon: 'bi-receipt', onClick: () => handleOpenModal('notas-fiscais') },
   ];
 
   const parametrosFolderItems = [
-    { id: 'usuarios', label: t('params.users'), onClick: () => handleOpenModal('usuarios') },
-    { id: 'auditoria', label: t('params.auditLogs'), onClick: () => handleOpenModal('auditoria') },
-    { id: 'recursos-sistema', label: t('params.systemResources'), onClick: () => handleOpenModal('recursos-sistema') },
-    { id: 'hotsite', label: 'Hotsite', onClick: () => handleOpenModal('hotsite') },
-    { id: 'agendador-tarefas', label: t('params.taskScheduler'), onClick: () => handleOpenModal('agendador-tarefas') },
-    { id: 'servidor-email', label: t('params.emailServer'), onClick: () => handleOpenModal('servidor-email') },
-    { id: 'servidor-whatsapp', label: t('params.whatsappServer'), onClick: () => handleOpenModal('servidor-whatsapp') },
-    { id: 'historico-whatsapp', label: 'Histórico WhatsApp', onClick: () => handleOpenModal('historico-whatsapp') },
-    { id: 'historico-email', label: 'Histórico Email', onClick: () => handleOpenModal('historico-email') },
-    { id: 'nfse', label: t('params.nfse'), onClick: () => handleOpenModal('nfse') },
-    { id: 'documentos-sistema', label: t('params.systemDocuments'), onClick: () => handleOpenModal('documentos-sistema') },
-    { id: 'assinatura-digital', label: t('params.digitalSignature'), onClick: () => handleOpenModal('assinatura-digital') },
-    { id: 'dias-vencimento', label: t('params.dueDays'), onClick: () => handleOpenModal('dias-vencimento') },
-    { id: 'atualizacoes', label: t('params.updates'), onClick: () => handleOpenModal('atualizacoes') },
+    { id: 'dados-empresa', label: t('menu.companyData'), icon: 'bi-building', onClick: () => handleOpenModal('dados-empresa') },
+    { id: 'usuarios', label: t('params.users'), icon: 'bi-people-fill', onClick: () => handleOpenModal('usuarios') },
+    { id: 'auditoria', label: t('params.auditLogs'), icon: 'bi-journal-text', onClick: () => handleOpenModal('auditoria') },
+    { id: 'recursos-sistema', label: t('params.systemResources'), icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
+    { id: 'hotsite', label: 'Hotsite', icon: 'bi-globe2', onClick: () => handleOpenModal('hotsite') },
+    { id: 'agendador-tarefas', label: t('params.taskScheduler'), icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
+    { id: 'servidor-email', label: t('params.emailServer'), icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
+    { id: 'servidor-whatsapp', label: t('params.whatsappServer'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
+    { id: 'historico-whatsapp', label: 'Histórico WhatsApp', icon: 'bi-chat-dots', onClick: () => handleOpenModal('historico-whatsapp') },
+    { id: 'historico-email', label: 'Histórico Email', icon: 'bi-envelope-paper', onClick: () => handleOpenModal('historico-email') },
+    { id: 'nfse', label: t('params.nfse'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('nfse') },
+    { id: 'documentos-sistema', label: t('params.systemDocuments'), icon: 'bi-folder', onClick: () => handleOpenModal('documentos-sistema') },
+    { id: 'assinatura-digital', label: t('params.digitalSignature'), icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
+    { id: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
+    { id: 'atualizacoes', label: t('params.updates'), icon: 'bi-arrow-down-up', onClick: () => handleOpenModal('atualizacoes') },
   ];
 
   const blockdomiFolderItems = [
-    { id: 'dominios', label: 'Dominios', onClick: () => handleOpenModal('blockdomi-dominios') },
-    { id: 'ipv4', label: 'IPv4', onClick: () => handleOpenModal('blockdomi-ipv4') },
-    { id: 'ipv6', label: 'IPv6', onClick: () => handleOpenModal('blockdomi-ipv6') },
+    { id: 'dominios', label: 'Dominios', icon: 'bi-globe', onClick: () => handleOpenModal('blockdomi-dominios') },
+    { id: 'ipv4', label: 'IPv4', icon: 'bi-router', onClick: () => handleOpenModal('blockdomi-ipv4') },
+    { id: 'ipv6', label: 'IPv6', icon: 'bi-router-fill', onClick: () => handleOpenModal('blockdomi-ipv6') },
   ];
 
   return (
@@ -300,30 +298,111 @@ const Layout: React.FC = () => {
         {/* Área rolável com a navegação */}
         <div className="sidebar-nav-scrollable flex-grow-1">
           <nav className="sidebar-nav nav nav-pills flex-column mb-auto px-2">
-            {menuItems.map((item) => (
-              <div key={item.path} className="nav-item mb-1">
-                {item.isModal ? (
+            {/* Menu Pasta para Cadastros usando Bootstrap Accordion */}
+            <div className="accordion sidebar-accordion" id="cadastrosAccordion">
+              <div className="accordion-item border-0 bg-transparent">
+                <h2 className="accordion-header">
                   <button
+                    className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
                     type="button"
-                    className={`nav-link text-start w-100 ${isActive(item.path) ? 'active' : ''}`}
-                    onClick={() => {
-                      item.modalHandler?.();
-                      setSidebarOpen(false);
+                    data-bs-toggle="collapse"
+                    data-bs-target="#cadastrosCollapse"
+                    aria-expanded="false"
+                    aria-controls="cadastrosCollapse"
+                    onClick={(e) => {
+                      const button = e.currentTarget;
+                      const folderIcon = button.querySelector('.folder-icon');
+                      setTimeout(() => {
+                        if (folderIcon && button.classList.contains('collapsed')) {
+                          folderIcon.className = 'bi bi-folder folder-icon me-2';
+                        } else if (folderIcon) {
+                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
+                        }
+                      }, 10);
                     }}
                   >
-                    <span>{item.label}</span>
+                    <i className="bi bi-folder folder-icon me-2"></i>
+                    <span>Cadastros</span>
                   </button>
-                ) : (
-                  <Link
-                    to={item.path}
-                    className={`nav-link ${isActive(item.path) ? 'active' : ''}`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <span>{item.label}</span>
-                  </Link>
-                )}
+                </h2>
+                <div
+                  id="cadastrosCollapse"
+                  className="accordion-collapse collapse"
+                  aria-labelledby="cadastrosHeading"
+                  data-bs-parent="#cadastrosAccordion"
+                >
+                  <div className="accordion-body p-0">
+                    {cadastrosFolderItems.map((item) => (
+                      <button
+                        key={item.id}
+                        className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"
+                        onClick={() => {
+                          item.onClick();
+                          setSidebarOpen(false);
+                        }}
+                        type="button"
+                      >
+                        <i className={`bi ${item.icon} me-2`}></i>
+                        <span>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Menu Pasta para Financeiro usando Bootstrap Accordion */}
+            <div className="accordion sidebar-accordion" id="financeiroAccordion">
+              <div className="accordion-item border-0 bg-transparent">
+                <h2 className="accordion-header">
+                  <button
+                    className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#financeiroCollapse"
+                    aria-expanded="false"
+                    aria-controls="financeiroCollapse"
+                    onClick={(e) => {
+                      const button = e.currentTarget;
+                      const folderIcon = button.querySelector('.folder-icon');
+                      setTimeout(() => {
+                        if (folderIcon && button.classList.contains('collapsed')) {
+                          folderIcon.className = 'bi bi-folder folder-icon me-2';
+                        } else if (folderIcon) {
+                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
+                        }
+                      }, 10);
+                    }}
+                  >
+                    <i className="bi bi-folder folder-icon me-2"></i>
+                    <span>Financeiro</span>
+                  </button>
+                </h2>
+                <div
+                  id="financeiroCollapse"
+                  className="accordion-collapse collapse"
+                  aria-labelledby="financeiroHeading"
+                  data-bs-parent="#financeiroAccordion"
+                >
+                  <div className="accordion-body p-0">
+                    {financeiroFolderItems.map((item) => (
+                      <button
+                        key={item.id}
+                        className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"
+                        onClick={() => {
+                          item.onClick();
+                          setSidebarOpen(false);
+                        }}
+                        type="button"
+                      >
+                        <i className={`bi ${item.icon} me-2`}></i>
+                        <span>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Menu Pasta para Blockdomi usando Bootstrap Accordion */}
             <div className="accordion sidebar-accordion" id="blockdomiAccordion">
@@ -362,14 +441,15 @@ const Layout: React.FC = () => {
                     {blockdomiFolderItems.map((item) => (
                       <button
                         key={item.id}
-                        className="nav-link text-start w-100 sidebar-folder-item"
+                        className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"
                         onClick={() => {
                           item.onClick();
                           setSidebarOpen(false);
                         }}
                         type="button"
                       >
-                        {item.label}
+                        <i className={`bi ${item.icon} me-2`}></i>
+                        <span>{item.label}</span>
                       </button>
                     ))}
                   </div>
@@ -414,14 +494,15 @@ const Layout: React.FC = () => {
                     {parametrosFolderItems.map((item) => (
                       <button
                         key={item.id}
-                        className="nav-link text-start w-100 sidebar-folder-item"
+                        className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"
                         onClick={() => {
                           item.onClick();
                           setSidebarOpen(false);
                         }}
                         type="button"
                       >
-                        {item.label}
+                        {item.icon && <i className={`bi ${item.icon} me-2`}></i>}
+                        <span>{item.label}</span>
                       </button>
                     ))}
                   </div>
