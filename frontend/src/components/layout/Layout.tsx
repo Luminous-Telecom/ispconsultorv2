@@ -325,8 +325,6 @@ const Layout: React.FC = () => {
               </div>
             ))}
 
-            <div className="nav-divider my-2 border-top mx-2"></div>
-
             {/* Menu Pasta para Blockdomi usando Bootstrap Accordion */}
             <div className="accordion sidebar-accordion" id="blockdomiAccordion">
               <div className="accordion-item border-0 bg-transparent">
