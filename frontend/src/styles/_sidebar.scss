@@ -207,6 +207,12 @@
   clear: both !important;
 }
 
+.sidebar-folder-item i {
+  font-size: 0.9rem !important;
+  color: var(--sidebar-text) !important;
+  margin-right: 0.5rem !important;
+}
+
 .sidebar-folder-item:hover {
   background-color: var(--sidebar-hover) !important;
   color: var(--sidebar-text) !important;
