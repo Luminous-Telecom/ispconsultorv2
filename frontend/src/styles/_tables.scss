@@ -1257,7 +1257,9 @@ label {
 
 /* Padronizar tamanho de todos os botões de ações em massa */
 .table-header-content .btn,
-.table-header-content button.btn {
+.table-header-content button.btn,
+.table-header-content .table-dropdown-relative .btn,
+.table-header-content .table-dropdown-relative button.btn {
   padding: 0.25rem 0.5rem !important;
   font-size: var(--font-size-xs) !important;
   line-height: 1.25 !important;
@@ -1269,6 +1271,16 @@ label {
 .table-dropdown-relative {
   flex-shrink: 0 !important;
   position: relative !important;
+}
+
+/* Garantir que botões dentro de dropdown tenham o mesmo tamanho */
+.table-dropdown-relative .btn,
+.table-dropdown-relative button.btn {
+  padding: 0.25rem 0.5rem !important;
+  font-size: var(--font-size-xs) !important;
+  line-height: 1.25 !important;
+  min-height: auto !important;
+  height: auto !important;
 }
 
 /* Dropdown menu absolute */
