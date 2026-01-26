@@ -97,7 +97,7 @@
   color: var(--sidebar-text) !important;
 }
 
-.sidebar .nav-link.active {
+.sidebar .nav-link.active:not(.sidebar-folder-button) {
   background-color: var(--sidebar-active);
   color: white !important;
 }
@@ -107,72 +107,156 @@
   color: inherit;
 }
 
-/* Dropdown custom */
-.dropdown-toggle-custom::after {
-  display: none !important;
+.sidebar .nav-link.active i {
+  color: white !important;
 }
 
-.dropdown-arrow {
-  font-size: 0.75rem;
-  transition: transform 0.2s ease;
-  color: inherit;
+/* Garantir que ícones de pasta NUNCA sejam afetados pelo estilo active */
+.sidebar-folder-container .nav-link.active i,
+.sidebar-folder-button.active i,
+.sidebar-folder-container .sidebar-folder-button.active i {
+  color: var(--sidebar-text) !important;
 }
 
-.dropdown-arrow.open {
-  transform: rotate(180deg);
-}
 
 .fs-7 {
   font-size: 0.8rem;
 }
 
-/* Dropdown customizado no sidebar - mesmo visual dos nav-links */
-.sidebar .nav-item .dropdown-menu {
-  background: var(--sidebar-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 0.25rem 0;
-  margin-top: 0.25rem;
-  position: relative;
-  z-index: 1000;
+
+/* Estilo de pasta usando Bootstrap Accordion - Visual de explorador de arquivos */
+.sidebar-accordion {
+  margin-bottom: 0.5rem;
+  width: 100%;
 }
 
-.sidebar .nav-item .dropdown-menu .nav-item .nav-link {
-  border-radius: 0.5rem;
+.sidebar-accordion .accordion-item {
+  background: transparent;
+  border: none;
+}
+
+.sidebar-accordion .accordion-button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 8px !important;
+  font-size: 0.75rem !important;
+  color: var(--sidebar-text) !important;
+  border-radius: 0.5rem !important;
   transition: all 0.2s ease;
+}
+
+.sidebar-accordion .accordion-button:hover {
+  background-color: var(--sidebar-hover) !important;
+  color: var(--sidebar-text) !important;
+}
+
+.sidebar-accordion .accordion-button:not(.collapsed) {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--sidebar-text) !important;
+}
+
+.sidebar-accordion .accordion-button:not(.collapsed):hover {
+  background-color: var(--sidebar-hover) !important;
+}
+
+.sidebar-accordion .accordion-button::after {
+  display: none !important;
+}
+
+.sidebar-accordion .accordion-button:focus {
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.sidebar-accordion .accordion-button .folder-chevron {
+  font-size: 0.7rem !important;
+  color: var(--sidebar-text) !important;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin-right: 0.25rem !important;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-accordion .accordion-button .folder-icon {
+  font-size: 0.9rem !important;
+  color: var(--sidebar-text) !important;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin-right: 0.5rem !important;
+}
+
+.sidebar-accordion .accordion-button:not(.collapsed) .folder-chevron,
+.sidebar-accordion .accordion-button:not(.collapsed) .folder-icon {
+  color: var(--sidebar-text) !important;
+}
+
+.sidebar-accordion .accordion-body {
+  padding: 0.25rem 0 0 0 !important;
+  margin-left: 0;
+  background: transparent;
+}
+
+.sidebar-folder-item {
+  padding: 8px 12px !important;
+  margin-bottom: 0.25rem;
+  margin-left: 1.5rem;
   font-size: 0.75rem;
   font-weight: 400;
-  color: var(--sidebar-text) !important;
-  border: none;
-  background: transparent;
-  width: 100%;
+  border-radius: 0.5rem;
+  display: block !important;
+  width: calc(100% - 1.5rem);
   text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 0.25rem 0.0625rem 0.25rem;
+  background: transparent !important;
+  border: none !important;
+  color: var(--sidebar-text) !important;
+  position: relative !important;
+  float: none !important;
+  clear: both !important;
 }
 
-.sidebar .nav-item .dropdown-menu .nav-item .nav-link:hover {
-  background-color: var(--sidebar-hover);
+.sidebar-folder-item:hover {
+  background-color: var(--sidebar-hover) !important;
   color: var(--sidebar-text) !important;
 }
 
-.sidebar .nav-item .dropdown-menu .nav-item .nav-link:focus {
-  background-color: var(--sidebar-hover);
-  color: var(--sidebar-text) !important;
-  box-shadow: none;
+/* Garantir que estilos de dropdown do Bootstrap não sejam aplicados */
+.sidebar-folder-container .dropdown-menu,
+.sidebar-folder-container .dropdown-content,
+.sidebar-folder-content.dropdown-menu,
+.sidebar-folder-content.dropdown-content {
+  position: relative !important;
+  display: block !important;
+  float: none !important;
+  min-width: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
-.sidebar .nav-item .dropdown-menu .dropdown-item i {
-  width: 16px;
-  height: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 14px;
+.sidebar-folder-item.dropdown-item {
+  position: relative !important;
+  display: block !important;
+  float: none !important;
+}
+
+.sidebar .nav-link i.bi-folder,
+.sidebar .nav-link i.bi-folder-open,
+.sidebar-folder-button i.bi-folder,
+.sidebar-folder-button i.bi-folder-open,
+.sidebar-folder-button.active i.bi-folder,
+.sidebar-folder-button.active i.bi-folder-open {
+  font-size: 0.9rem !important;
+  color: var(--sidebar-text) !important;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* Ajustes específicos para o modo escuro no sidebar se necessário */

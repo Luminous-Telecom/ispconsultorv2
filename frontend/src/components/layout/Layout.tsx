@@ -34,12 +34,10 @@ const Layout: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showTableMenu, setShowTableMenu] = useState(false);
-  const [showParametrosDropdown, setShowParametrosDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [languageDropdownPosition, setLanguageDropdownPosition] = useState({ top: 0, left: 0 });
   const userMenuRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
-  const parametrosDropdownRef = useRef<HTMLDivElement>(null);
   const languageTriggerRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
@@ -120,21 +118,7 @@ const Layout: React.FC = () => {
     }
   }, [showTableMenu]);
 
-  // Fechar dropdown de parâmetros ao clicar fora
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (parametrosDropdownRef.current && !parametrosDropdownRef.current.contains(event.target as Node)) {
-        setShowParametrosDropdown(false);
-      }
-    };
 
-    if (showParametrosDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [showParametrosDropdown]);
 
   // Calcular posição do dropdown de idioma
   useEffect(() => {
@@ -249,7 +233,7 @@ const Layout: React.FC = () => {
     { path: '/dados-empresa', label: t('menu.companyData'), isModal: true, modalHandler: () => handleOpenModal('dados-empresa') },
   ];
 
-  const parametrosDropdownItems = [
+  const parametrosFolderItems = [
     { id: 'usuarios', label: t('params.users'), onClick: () => handleOpenModal('usuarios') },
     { id: 'auditoria', label: t('params.auditLogs'), onClick: () => handleOpenModal('auditoria') },
     { id: 'recursos-sistema', label: t('params.systemResources'), onClick: () => handleOpenModal('recursos-sistema') },
@@ -264,6 +248,12 @@ const Layout: React.FC = () => {
     { id: 'assinatura-digital', label: t('params.digitalSignature'), onClick: () => handleOpenModal('assinatura-digital') },
     { id: 'dias-vencimento', label: t('params.dueDays'), onClick: () => handleOpenModal('dias-vencimento') },
     { id: 'atualizacoes', label: t('params.updates'), onClick: () => handleOpenModal('atualizacoes') },
+  ];
+
+  const blockdomiFolderItems = [
+    { id: 'dominios', label: 'Dominios', onClick: () => handleOpenModal('blockdomi-dominios') },
+    { id: 'ipv4', label: 'IPv4', onClick: () => handleOpenModal('blockdomi-ipv4') },
+    { id: 'ipv6', label: 'IPv6', onClick: () => handleOpenModal('blockdomi-ipv6') },
   ];
 
   return (
@@ -337,32 +327,122 @@ const Layout: React.FC = () => {
 
             <div className="nav-divider my-2 border-top mx-2"></div>
 
-            {/* Menu Dropdown para Parâmetros */}
-            <div className="nav-item mb-1" ref={parametrosDropdownRef}>
-              <button
-                className="nav-link text-start w-100"
-                onClick={() => setShowParametrosDropdown(!showParametrosDropdown)}
-                type="button"
-              >
-                <span>{t('layout.parameters')}</span>
-              </button>
-              {showParametrosDropdown && (
-                <div className="dropdown-menu show">
-                  {parametrosDropdownItems.map((item) => (
-                    <div key={item.id} className="nav-item mb-1">
+            {/* Menu Pasta para Blockdomi usando Bootstrap Accordion */}
+            <div className="accordion sidebar-accordion" id="blockdomiAccordion">
+              <div className="accordion-item border-0 bg-transparent">
+                <h2 className="accordion-header">
+                  <button
+                    className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#blockdomiCollapse"
+                    aria-expanded="false"
+                    aria-controls="blockdomiCollapse"
+                    onClick={(e) => {
+                      const button = e.currentTarget;
+                      const chevron = button.querySelector('.folder-chevron');
+                      const folderIcon = button.querySelector('.folder-icon');
+                      setTimeout(() => {
+                        if (chevron && button.classList.contains('collapsed')) {
+                          chevron.className = 'bi bi-chevron-right folder-chevron me-1';
+                        } else if (chevron) {
+                          chevron.className = 'bi bi-chevron-down folder-chevron me-1';
+                        }
+                        if (folderIcon && button.classList.contains('collapsed')) {
+                          folderIcon.className = 'bi bi-folder folder-icon me-2';
+                        } else if (folderIcon) {
+                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
+                        }
+                      }, 10);
+                    }}
+                  >
+                    <i className="bi bi-chevron-right folder-chevron me-1"></i>
+                    <i className="bi bi-folder folder-icon me-2"></i>
+                    <span>Blockdomi</span>
+                  </button>
+                </h2>
+                <div
+                  id="blockdomiCollapse"
+                  className="accordion-collapse collapse"
+                  aria-labelledby="blockdomiHeading"
+                  data-bs-parent="#blockdomiAccordion"
+                >
+                  <div className="accordion-body p-0">
+                    {blockdomiFolderItems.map((item) => (
                       <button
-                        className="nav-link text-start w-100"
+                        key={item.id}
+                        className="nav-link text-start w-100 sidebar-folder-item"
                         onClick={() => {
                           item.onClick();
-                          setShowParametrosDropdown(false);
+                          setSidebarOpen(false);
                         }}
+                        type="button"
                       >
-                        <span>{item.label}</span>
+                        {item.label}
                       </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              )}
+              </div>
+            </div>
+
+            {/* Menu Pasta para Parâmetros usando Bootstrap Accordion */}
+            <div className="accordion sidebar-accordion" id="parametrosAccordion">
+              <div className="accordion-item border-0 bg-transparent">
+                <h2 className="accordion-header">
+                  <button
+                    className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#parametrosCollapse"
+                    aria-expanded="false"
+                    aria-controls="parametrosCollapse"
+                    onClick={(e) => {
+                      const button = e.currentTarget;
+                      const chevron = button.querySelector('.folder-chevron');
+                      const folderIcon = button.querySelector('.folder-icon');
+                      setTimeout(() => {
+                        if (chevron && button.classList.contains('collapsed')) {
+                          chevron.className = 'bi bi-chevron-right folder-chevron me-1';
+                        } else if (chevron) {
+                          chevron.className = 'bi bi-chevron-down folder-chevron me-1';
+                        }
+                        if (folderIcon && button.classList.contains('collapsed')) {
+                          folderIcon.className = 'bi bi-folder folder-icon me-2';
+                        } else if (folderIcon) {
+                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
+                        }
+                      }, 10);
+                    }}
+                  >
+                    <i className="bi bi-chevron-right folder-chevron me-1"></i>
+                    <i className="bi bi-folder folder-icon me-2"></i>
+                    <span>{t('layout.parameters')}</span>
+                  </button>
+                </h2>
+                <div
+                  id="parametrosCollapse"
+                  className="accordion-collapse collapse"
+                  aria-labelledby="parametrosHeading"
+                  data-bs-parent="#parametrosAccordion"
+                >
+                  <div className="accordion-body p-0">
+                    {parametrosFolderItems.map((item) => (
+                      <button
+                        key={item.id}
+                        className="nav-link text-start w-100 sidebar-folder-item"
+                        onClick={() => {
+                          item.onClick();
+                          setSidebarOpen(false);
+                        }}
+                        type="button"
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </nav>
         </div>
