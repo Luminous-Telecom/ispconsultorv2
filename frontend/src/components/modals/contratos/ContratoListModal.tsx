@@ -388,10 +388,12 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const bulkActions = onSelectContrato ? [] : [
     {
       label: 'Novo',
+      variant: 'primary' as const,
       action: () => setShowCreateModal(true)
     },
     {
       label: 'Editar',
+      variant: 'primary' as const,
       action: (selectedItems: Contrato[]) => {
         if (selectedItems.length > 0) {
           setSelectedContratoId(selectedItems[0].id);
@@ -402,6 +404,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     },
     {
       label: 'Deletar',
+      variant: 'primary' as const,
       action: async (selectedItems: Contrato[]) => {
         if (selectedItems.length === 0) return;
         
@@ -421,6 +424,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     },
     {
       label: 'Imprimir',
+      variant: 'primary' as const,
       disabled: (selectedItems: Contrato[]) => selectedItems.length === 0,
       dropdown: [
         {
