@@ -1255,6 +1255,16 @@ label {
   flex-shrink: 0 !important;
 }
 
+/* Padronizar tamanho de todos os botões de ações em massa */
+.table-header-content .btn,
+.table-header-content button.btn {
+  padding: 0.25rem 0.5rem !important;
+  font-size: var(--font-size-xs) !important;
+  line-height: 1.25 !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+
 /* Dropdown relative */
 .table-dropdown-relative {
   flex-shrink: 0 !important;
