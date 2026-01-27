@@ -596,76 +596,77 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
 
   const modalContent = (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            title={title}
-            config={{
-              columns,
-              data: dataWithVirtualFields,
-              loading: isLoading,
-              searchable: true,
-              searchPlaceholder: '',
-              searchFields: [
-                { key: 'id', label: 'ID' },
-                { key: 'cliente_razao_social', label: 'Cliente' },
-                { key: 'plano_nome', label: 'Plano' },
-                { key: 'status', label: 'Status' },
-                { key: 'valor_final_num', label: 'Valor Final' },
-                { key: 'endereco', label: 'Endereço' },
-                { key: 'cidade', label: 'Cidade' },
-                { key: 'estado', label: 'Estado' }
-              ],
-              sortable: true,
-              sortColumn: tableFilters.sortColumn,
-              sortDirection: tableFilters.sortDirection,
-              striped: true,
-              hover: true,
-              responsive: true,
-              selectable: true,
-              multiSelect: false,
-              bulkActions: bulkActions.map(action => ({
-                key: action.label.toLowerCase().replace(/\s+/g, '-'),
-                label: action.label,
-                onClick: action.action,
-                disabled: action.disabled,
-                dropdown: action.dropdown
-              })),
-              emptyMessage: 'Nenhum contrato encontrado',
-              pagination: pagination
-            }}
-            tableId="contrato-list-modal"
-            onSelectionChange={(items) => {
-              setSelectedItems(items);
-              if (onSelectContrato) {
-                if (items.length > 0) {
-                  const selectedItem = items[items.length - 1];
-                  onSelectContrato(selectedItem);
-                  onClose();
-                }
+          title={title}
+          config={{
+            columns,
+            data: dataWithVirtualFields,
+            loading: isLoading,
+            searchable: true,
+            searchPlaceholder: '',
+            searchFields: [
+              { key: 'id', label: 'ID' },
+              { key: 'cliente_razao_social', label: 'Cliente' },
+              { key: 'plano_nome', label: 'Plano' },
+              { key: 'status', label: 'Status' },
+              { key: 'valor_final_num', label: 'Valor Final' },
+              { key: 'endereco', label: 'Endereço' },
+              { key: 'cidade', label: 'Cidade' },
+              { key: 'estado', label: 'Estado' }
+            ],
+            sortable: true,
+            sortColumn: tableFilters.sortColumn,
+            sortDirection: tableFilters.sortDirection,
+            striped: true,
+            hover: true,
+            responsive: true,
+            selectable: true,
+            multiSelect: false,
+            bulkActions: bulkActions.map(action => ({
+              key: action.label.toLowerCase().replace(/\s+/g, '-'),
+              label: action.label,
+              onClick: action.action,
+              disabled: action.disabled,
+              dropdown: action.dropdown
+            })),
+            emptyMessage: 'Nenhum contrato encontrado',
+            pagination: pagination
+          }}
+          tableId="contrato-list-modal"
+          onSelectionChange={(items) => {
+            setSelectedItems(items);
+            if (onSelectContrato) {
+              if (items.length > 0) {
+                const selectedItem = items[items.length - 1];
+                onSelectContrato(selectedItem);
+                onClose();
               }
-            }}
-            onRowClick={onSelectContrato ? (item) => {
-              onSelectContrato(item);
-              onClose();
-            } : undefined}
-            onRefresh={refetch}
-            onAudit={handleAudit}
-            auditEntity="Contrato"
-            onPageChange={tableFilters.setPage}
-            onPageSizeChange={tableFilters.setLimit}
-            onSort={(column, direction) => tableFilters.setSort(column, direction)}
-            onSearch={(search, field) => handleSearchChange(search, field)}
+            }
+          }}
+          onRowClick={onSelectContrato ? (item) => {
+            onSelectContrato(item);
+            onClose();
+          } : undefined}
+          onRefresh={refetch}
+          onAudit={handleAudit}
+          auditEntity="Contrato"
+          onPageChange={tableFilters.setPage}
+          onPageSizeChange={tableFilters.setLimit}
+          onSort={(column, direction) => tableFilters.setSort(column, direction)}
+          onSearch={(search, field) => handleSearchChange(search, field)}
             search={tableFilters.search}
           />
         </div>
         
+        {/* Resumo - Fixo no final do modal */}
         <div 
           className="p-3 bg-light rounded contrato-totais-resumo" 
           style={{ 
             flexShrink: 0,
-            marginTop: isMobile ? '0.25rem' : '1rem',
-            marginBottom: isMobile ? '3rem' : '1rem',
+            marginTop: isMobile ? '0.25rem' : '0.5rem',
+            marginBottom: 0,
             marginLeft: isMobile ? '0.5rem' : '1rem',
             marginRight: isMobile ? '0.5rem' : '1rem'
           }}

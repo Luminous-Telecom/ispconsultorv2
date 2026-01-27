@@ -547,104 +547,103 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableFilters.setSearch]);
 
+  const hasResumo = show && (contasPagarData?.data || []).filter(item => item.id != null).length > 0;
   const modalContent = (
-    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0 }}>
-      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <ListModal
-            show={show}
-            onClose={() => {
-              clearSelection();
-              onClose();
-            }}
-            config={modal.config}
-            data={(contasPagarData?.data || []).filter(item => item.id != null)}
-            loading={isLoading}
-            selectedItems={selectedItem ? [selectedItem] : []}
-            onSelectionChange={handleSelectionChange}
-            search={tableFilters.search}
-            onSearchChange={handleSearchChange}
-            onSearchFieldChange={setSearchField}
-            filters={modal.config.filters}
-            filterValues={tableFilters.filters}
-            onFilterChange={(key, value) => {
-              const convertedValue = Array.isArray(value) ? (value[0] || null) : value;
-              tableFilters.setFilter(key as keyof ContaPagarFilters, convertedValue as string | number | boolean | null | undefined);
-            }}
-            onFiltersChange={(filters) => {
-              const convertedFilters: Partial<ContaPagarFilters> = {};
-              Object.entries(filters).forEach(([key, value]) => {
-                convertedFilters[key as keyof ContaPagarFilters] = Array.isArray(value) ? (value[0] || null) : (value as string | number | boolean | null | undefined);
-              });
-              tableFilters.setFilters(convertedFilters);
-            }}
-            onClearFilters={() => {
-              tableFilters.resetFilters();
-            }}
-            pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={handleLimitChange}
-        onLimitChange={handleLimitChange}
-            sortColumn={tableFilters.sortColumn}
-            sortDirection={tableFilters.sortDirection}
-            onSortChange={tableFilters.setSort}
-            refreshQueryKeys={['contas-pagar']}
-            refreshQueryFn={refetch}
-            bulkActions={bulkActions}
-            onAudit={handleAudit}
-            auditEntity="ContaPagar"
-            skipWrapper={true}
-            customControlsAfterActions={
-              <div className="d-flex align-items-center gap-2">
-                <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">{t('filter.startDate')}</label>
-                <input
-                  type="date"
-                  id="dataVencimentoInicio"
-                  className="form-control form-control-sm table-pagination-filter"
-                  value={dataVencimentoInicio}
-                  onChange={(e) => setDataVencimentoInicio(e.target.value)}
-                />
-                <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">{t('filter.endDate')}</label>
-                <input
-                  type="date"
-                  id="dataVencimentoFim"
-                  className="form-control form-control-sm table-pagination-filter"
-                  value={dataVencimentoFim}
-                  onChange={(e) => setDataVencimentoFim(e.target.value)}
-                />
-              </div>
-            }
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <ListModal
+          show={show}
+          onClose={() => {
+            clearSelection();
+            onClose();
+          }}
+          config={modal.config}
+          data={(contasPagarData?.data || []).filter(item => item.id != null)}
+          loading={isLoading}
+          selectedItems={selectedItem ? [selectedItem] : []}
+          onSelectionChange={handleSelectionChange}
+          search={tableFilters.search}
+          onSearchChange={handleSearchChange}
+          onSearchFieldChange={setSearchField}
+          filters={modal.config.filters}
+          filterValues={tableFilters.filters}
+          onFilterChange={(key, value) => {
+            const convertedValue = Array.isArray(value) ? (value[0] || null) : value;
+            tableFilters.setFilter(key as keyof ContaPagarFilters, convertedValue as string | number | boolean | null | undefined);
+          }}
+          onFiltersChange={(filters) => {
+            const convertedFilters: Partial<ContaPagarFilters> = {};
+            Object.entries(filters).forEach(([key, value]) => {
+              convertedFilters[key as keyof ContaPagarFilters] = Array.isArray(value) ? (value[0] || null) : (value as string | number | boolean | null | undefined);
+            });
+            tableFilters.setFilters(convertedFilters);
+          }}
+          onClearFilters={() => {
+            tableFilters.resetFilters();
+          }}
+          pagination={pagination}
+      onPageChange={tableFilters.setPage}
+      onPageSizeChange={handleLimitChange}
+      onLimitChange={handleLimitChange}
+          sortColumn={tableFilters.sortColumn}
+          sortDirection={tableFilters.sortDirection}
+          onSortChange={tableFilters.setSort}
+          refreshQueryKeys={['contas-pagar']}
+          refreshQueryFn={refetch}
+          bulkActions={bulkActions}
+          onAudit={handleAudit}
+          auditEntity="ContaPagar"
+          skipWrapper={true}
+          customControlsAfterActions={
+            <div className="d-flex align-items-center gap-2">
+              <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">{t('filter.startDate')}</label>
+              <input
+                type="date"
+                id="dataVencimentoInicio"
+                className="form-control form-control-sm table-pagination-filter"
+                value={dataVencimentoInicio}
+                onChange={(e) => setDataVencimentoInicio(e.target.value)}
+              />
+              <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">{t('filter.endDate')}</label>
+              <input
+                type="date"
+                id="dataVencimentoFim"
+                className="form-control form-control-sm table-pagination-filter"
+                value={dataVencimentoFim}
+                onChange={(e) => setDataVencimentoFim(e.target.value)}
+              />
+            </div>
+          }
           />
-        </div>
+      </div>
 
-        {/* Resumo Financeiro - Fora do container com scroll, fixo no final */}
-        {show && (contasPagarData?.data || []).filter(item => item.id != null).length > 0 && (
-          <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
-            <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.value')}</div>
-                <strong>{formatCurrency(resumoFinanceiro.valorTotal)}</strong>
-              </div>
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.paidValue')}</div>
-                <strong>{formatCurrency(resumoFinanceiro.valorBaixado)}</strong>
-              </div>
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.openValue')}</div>
-                <strong>{formatCurrency(resumoFinanceiro.valorAberto)}</strong>
-              </div>
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.totalPaidValue')}</div>
-                <strong>{formatCurrency(resumoFinanceiro.valorTotalPago)}</strong>
-              </div>
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.canceledValue')}</div>
-                <strong>{formatCurrency(resumoFinanceiro.valorCancelado)}</strong>
-              </div>
+      {/* Resumo Financeiro - Fixo no final do modal */}
+      {hasResumo && (
+        <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '0.5rem', marginBottom: 0, marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+          <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.value')}</div>
+              <strong>{formatCurrency(resumoFinanceiro.valorTotal)}</strong>
+            </div>
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.paidValue')}</div>
+              <strong>{formatCurrency(resumoFinanceiro.valorBaixado)}</strong>
+            </div>
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.openValue')}</div>
+              <strong>{formatCurrency(resumoFinanceiro.valorAberto)}</strong>
+            </div>
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.totalPaidValue')}</div>
+              <strong>{formatCurrency(resumoFinanceiro.valorTotalPago)}</strong>
+            </div>
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.canceledValue')}</div>
+              <strong>{formatCurrency(resumoFinanceiro.valorCancelado)}</strong>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 

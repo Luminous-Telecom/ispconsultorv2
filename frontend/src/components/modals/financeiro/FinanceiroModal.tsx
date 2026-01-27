@@ -880,75 +880,73 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   ]);
 
   const modalContent = (
-    <div className="row financeiro-modal-content">
-      <div className="col-12 financeiro-modal-col">
-        <div className="financeiro-modal-table-container">
-          <Table
-              title={t('financial.title')}
-              config={tableConfig}
-              tableId="financeiro-modal"
-              onSelectionChange={setSelectedItems}
-              onSort={(column: string, direction: string) => {
-              // Atualizar os filtros do tableFilters
-              tableFilters.setSort(column, direction as 'asc' | 'desc');
-            }}
-              onSearch={handleSearch}
-              onSearchFieldChange={handleSearchFieldChange}
-              onPageChange={tableFilters.setPage}
-              onPageSizeChange={tableFilters.setLimit}
-              onRefresh={refetch}
-              onAudit={handleAudit}
-              auditEntity="Titulo"
-            />
-            </div>
-
-        {/* Resumo Financeiro */}
-        {filteredData.length > 0 && (
-          <div className={`d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo ${isMobile ? 'financeiro-resumo-container-mobile' : 'financeiro-resumo-container'}`}>
-            <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.value')}</div>
-                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                  return sum + Number(item.valor_final || item.valor || 0);
-                }, 0))}</strong>
-              </div>
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.paidValue')}</div>
-                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                  // Considerar apenas valor_pago se existir e for maior que 0
-                  const valorPago = Number(item.valor_pago || 0);
-                  if (valorPago > 0) {
-                    return sum + valorPago;
-                  }
-                  return sum;
-                }, 0))}</strong>
-              </div>
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.openValue')}</div>
-                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                  // Considerar apenas títulos pendentes ou vencidos (não pagos e não cancelados)
-                  if (item.status === 'pago' || item.status === 'cancelado') {
-                    return sum;
-                  }
-                  // Calcular valor aberto: valor final - valor pago
-                  const valorFinal = Number(item.valor_final || item.valor || 0);
-                  const valorPago = Number(item.valor_pago || 0);
-                  const valorAberto = valorFinal - valorPago;
-                  return sum + (valorAberto > 0 ? valorAberto : 0);
-                }, 0))}</strong>
-              </div>
-              {showCancelados && (
-                <div className="text-end">
-                  <div className="small text-muted">{t('summary.canceledValue')}</div>
-                  <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                    return sum + (item.status === 'cancelado' ? Number(item.valor_final || item.valor || 0) : 0);
-                  }, 0))}</strong>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <Table
+            title={t('financial.title')}
+            config={tableConfig}
+            tableId="financeiro-modal"
+            onSelectionChange={setSelectedItems}
+            onSort={(column: string, direction: string) => {
+            // Atualizar os filtros do tableFilters
+            tableFilters.setSort(column, direction as 'asc' | 'desc');
+          }}
+            onSearch={handleSearch}
+            onSearchFieldChange={handleSearchFieldChange}
+            onPageChange={tableFilters.setPage}
+            onPageSizeChange={tableFilters.setLimit}
+            onRefresh={refetch}
+            onAudit={handleAudit}
+            auditEntity="Titulo"
+          />
       </div>
+
+      {/* Resumo Financeiro - Fixo no final do modal */}
+      {filteredData.length > 0 && (
+        <div className={`d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo ${isMobile ? 'financeiro-resumo-container-mobile' : 'financeiro-resumo-container'}`} style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '0.5rem', marginBottom: 0, marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+          <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.value')}</div>
+              <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                return sum + Number(item.valor_final || item.valor || 0);
+              }, 0))}</strong>
+            </div>
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.paidValue')}</div>
+              <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                // Considerar apenas valor_pago se existir e for maior que 0
+                const valorPago = Number(item.valor_pago || 0);
+                if (valorPago > 0) {
+                  return sum + valorPago;
+                }
+                return sum;
+              }, 0))}</strong>
+            </div>
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.openValue')}</div>
+              <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                // Considerar apenas títulos pendentes ou vencidos (não pagos e não cancelados)
+                if (item.status === 'pago' || item.status === 'cancelado') {
+                  return sum;
+                }
+                // Calcular valor aberto: valor final - valor pago
+                const valorFinal = Number(item.valor_final || item.valor || 0);
+                const valorPago = Number(item.valor_pago || 0);
+                const valorAberto = valorFinal - valorPago;
+                return sum + (valorAberto > 0 ? valorAberto : 0);
+              }, 0))}</strong>
+            </div>
+            {showCancelados && (
+              <div className="text-end">
+                <div className="small text-muted">{t('summary.canceledValue')}</div>
+                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                  return sum + (item.status === 'cancelado' ? Number(item.valor_final || item.valor || 0) : 0);
+                }, 0))}</strong>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 

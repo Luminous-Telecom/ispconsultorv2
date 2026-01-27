@@ -457,6 +457,7 @@ function Table<T extends { id: number | string }>({
   const tableActionsRef = useRef(tableActions);
   const selectedSearchFieldRef = useRef(selectedSearchField);
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
+  const autoRowsAppliedRef = useRef(false);
   
   // Atualizar refs quando mudarem
   useEffect(() => {
@@ -465,6 +466,40 @@ function Table<T extends { id: number | string }>({
     tableActionsRef.current = tableActions;
     selectedSearchFieldRef.current = selectedSearchField;
   }, [onRefresh, onSearch, tableActions, selectedSearchField]);
+
+  // Cálculo dinâmico de linhas por página baseado no espaço disponível
+  useEffect(() => {
+    if (!normalizedPagination || !onPageSizeChange || autoRowsAppliedRef.current) {
+      return;
+    }
+
+    const calculateAndApply = () => {
+      const container = tableContainerRef.current;
+      if (!container) return;
+
+      const scrollContainer = container.closest('[style*="flex: 1"]') || 
+                             container.closest('[style*="overflow: auto"]');
+      if (!scrollContainer) return;
+
+      const containerHeight = scrollContainer.getBoundingClientRect().height;
+      const optimalRows = Math.max(5, Math.min(30, 
+        Math.floor((containerHeight - 120) / 35)
+      ));
+
+      if (normalizedPagination.perPage !== optimalRows) {
+        onPageSizeChange(optimalRows);
+        autoRowsAppliedRef.current = true;
+      }
+    };
+
+    calculateAndApply();
+    const timer = setTimeout(() => {
+      if (!autoRowsAppliedRef.current) calculateAndApply();
+    }, 200);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [normalizedPagination ? 'ready' : 'waiting']);
 
   // Ajustar largura do select de campo de busca baseado no texto selecionado
   useEffect(() => {
@@ -552,114 +587,26 @@ function Table<T extends { id: number | string }>({
   }, [search, state.searchTerm, tableActions]);
 
   // Calcular valores de paginação
-  // Calcular linhas por página baseado no tamanho do modal/container
-  const calculateRowsPerPage = useCallback(() => {
-    // Verificar se estamos dentro de um modal - múltiplas possibilidades
-    const possibleSelectors = [
-      '.modal-content',
-      '.responsive-dialog-mobile-content',
-      '.cliente-modal-content',
-      '.contrato-modal-content',
-      '.financeiro-modal-content',
-      '[role="dialog"]',
-      '.modal',
-      '.offcanvas',
-      '.modal-dialog',
-      '.card'
-    ];
-
-    // Procurar por modais no documento
-    let modalElement: Element | null = null;
-    for (const selector of possibleSelectors) {
-      // Procurar todos os elementos que correspondem ao seletor
-      const elements = document.querySelectorAll(selector);
-      const elementsArray = Array.from(elements);
-      for (const element of elementsArray) {
-        // Verificar se este modal contém nossa tabela (através do container)
-        if (tableContainerRef.current && element.contains(tableContainerRef.current as Node)) {
-          modalElement = element;
-          break;
-        }
-      }
-      if (modalElement) break;
-    }
-
-    // Fallback: se não encontrou modal contendo a tabela, pegar o último modal aberto
-    if (!modalElement) {
-      for (const selector of possibleSelectors) {
-        const element = document.querySelector(selector);
-        if (element) {
-          modalElement = element;
-          break;
-        }
-      }
-    }
-
-    if (!modalElement) {
-      return null; // Não está em modal, usar padrão
-    }
-
-    const modalRect = modalElement.getBoundingClientRect();
-    const tableRect = tableContainerRef.current?.getBoundingClientRect();
-
-    if (!tableRect) {
-      return null;
-    }
-
-    // Procurar por elementos de resumo/estatísticas acima da tabela
-    const summaryElements = modalElement.querySelectorAll('.financeiro-resumo, .contrato-totais-resumo, .card, .alert, .summary-card, [class*="resumo"], [class*="summary"]');
-    let summaryHeight = 0;
-
-    summaryElements.forEach(element => {
-      const rect = element.getBoundingClientRect();
-      // Verificar se o elemento está acima da tabela e dentro do modal
-      if (rect.top < tableRect.top && rect.bottom > modalRect.top) {
-        summaryHeight += rect.height;
-      }
-    });
-
-    // Calcular altura disponível para o corpo da tabela
-    // Considerar: elementos de resumo + header da tabela + footer/padding
-    const availableHeight = modalRect.height - (tableRect.top - modalRect.top) - summaryHeight - 200;
-
-    // Estimar altura de cada linha (aproximadamente 40px por linha)
-    const rowHeight = 40; // pixels por linha - reduzido
-
-    const availableRows = Math.max(3, Math.floor(availableHeight / rowHeight)); // Mínimo 3
-    const finalRows = Math.min(30, Math.max(3, availableRows)); // Máximo 30
-
-    return finalRows;
-  }, []);
-
   const paginationValues = useMemo(() => {
     const currentPage = normalizedPagination?.currentPage ?? state.currentPage;
     const perPage = normalizedPagination?.perPage ?? state.pageSize;
     const total = normalizedPagination?.total ?? data.length;
-
-    // Calcular linhas por página automaticamente se estiver em modal
-    let effectivePerPage = perPage;
-    if (!normalizedPagination) {
-      const autoRows = calculateRowsPerPage();
-      if (autoRows) {
-        effectivePerPage = autoRows;
-      }
-    }
 
     // Calcular lastPage corretamente
     let lastPage: number = normalizedPagination?.lastPage ?? 1;
     if (!normalizedPagination?.lastPage) {
       if (normalizedPagination && normalizedPagination.total !== undefined) {
         // Se temos total do servidor, calcular lastPage
-        lastPage = Math.max(1, Math.ceil(total / effectivePerPage));
+        lastPage = Math.max(1, Math.ceil(total / perPage));
       } else {
         // Paginação local
-        lastPage = totalPages || Math.max(1, Math.ceil(data.length / effectivePerPage));
+        lastPage = totalPages || Math.max(1, Math.ceil(data.length / perPage));
       }
     }
     lastPage = Math.max(1, lastPage); // Garantir que seja pelo menos 1
 
-    const from = normalizedPagination?.from ?? ((currentPage - 1) * effectivePerPage) + 1;
-    const to = normalizedPagination?.to ?? Math.min(currentPage * effectivePerPage, total);
+    const from = normalizedPagination?.from ?? ((currentPage - 1) * perPage) + 1;
+    const to = normalizedPagination?.to ?? Math.min(currentPage * perPage, total);
 
     // Calcular páginas visíveis
     const getVisiblePages = () => {
@@ -693,99 +640,13 @@ function Table<T extends { id: number | string }>({
     return {
       currentPage,
       lastPage: lastPage as number,
-      perPage: effectivePerPage,
+      perPage,
       total,
       from,
       to,
       visiblePages: getVisiblePages()
     };
-  }, [normalizedPagination, state.currentPage, state.pageSize, totalPages, data.length, calculateRowsPerPage]);
-
-  // Aplicar paginação automática quando em modal
-  useEffect(() => {
-    // Pequeno delay para garantir que o DOM está pronto
-    const timeoutId = setTimeout(() => {
-      const autoRows = calculateRowsPerPage();
-
-      if (autoRows && autoRows !== (normalizedPagination?.perPage || state.pageSize)) {
-        if (normalizedPagination) {
-          // Paginação do servidor - ajustar o limite da requisição
-          onPageSizeChange?.(autoRows);
-        } else {
-          // Paginação local - ajustar o state
-          tableActions.setPageSize(autoRows);
-        }
-      }
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [normalizedPagination, calculateRowsPerPage, state.pageSize, tableActions, onPageSizeChange]);
-
-  // Recalcular linhas por página quando o modal for redimensionado
-  useEffect(() => {
-    const handleResize = () => {
-      const autoRows = calculateRowsPerPage();
-      if (autoRows && autoRows !== (normalizedPagination?.perPage || state.pageSize)) {
-        if (normalizedPagination) {
-          // Paginação do servidor
-          onPageSizeChange?.(autoRows);
-        } else {
-          // Paginação local
-          tableActions.setPageSize(autoRows);
-        }
-      }
-    };
-
-    // Usar ResizeObserver se disponível para detectar mudanças no modal
-    const modalElement = tableContainerRef.current?.closest('.modal-content, .responsive-dialog-mobile-content');
-    if (modalElement && window.ResizeObserver) {
-      const resizeObserver = new ResizeObserver(handleResize);
-      resizeObserver.observe(modalElement);
-
-      return () => {
-        resizeObserver.disconnect();
-      };
-    } else {
-      // Fallback para window resize
-      window.addEventListener('resize', handleResize);
-      return () => {
-        window.removeEventListener('resize', handleResize);
-      };
-    }
-  }, [normalizedPagination, state.pageSize, calculateRowsPerPage, tableActions, onPageSizeChange]);
-
-  // Recalcular linhas por página quando o modal for redimensionado
-  useEffect(() => {
-    const handleResize = () => {
-      const autoRows = calculateRowsPerPage();
-      if (autoRows && autoRows !== (normalizedPagination?.perPage || state.pageSize)) {
-        if (normalizedPagination) {
-          // Paginação do servidor
-          onPageSizeChange?.(autoRows);
-        } else {
-          // Paginação local
-          tableActions.setPageSize(autoRows);
-        }
-      }
-    };
-
-    // Usar ResizeObserver se disponível para detectar mudanças no modal
-    const modalElement = tableContainerRef.current?.closest('.modal-content, .responsive-dialog-mobile-content');
-    if (modalElement && window.ResizeObserver) {
-      const resizeObserver = new ResizeObserver(handleResize);
-      resizeObserver.observe(modalElement);
-
-      return () => {
-        resizeObserver.disconnect();
-      };
-    } else {
-      // Fallback para window resize
-      window.addEventListener('resize', handleResize);
-      return () => {
-        window.removeEventListener('resize', handleResize);
-      };
-    }
-  }, [normalizedPagination, state.pageSize, calculateRowsPerPage, tableActions, onPageSizeChange]);
+  }, [normalizedPagination, state.currentPage, state.pageSize, totalPages, data.length]);
 
   useEffect(() => {
     currentSearchTermRef.current = state.searchTerm;

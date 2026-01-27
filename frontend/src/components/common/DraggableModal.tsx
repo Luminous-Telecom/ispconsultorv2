@@ -82,13 +82,13 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     // Vamos garantir que availableWidth não seja negativo
     const availableWidth = Math.max(0, screenWidth - sidebarWidth);
     
-    // Modal ocupa 95% da largura e altura disponíveis
+    // Modal ocupa 95% da largura e 97% da altura para usar mais espaço (tabelas, etc.)
     const modalWidth = Math.floor(availableWidth * 0.95);
-    const modalHeight = Math.floor(screenHeight * 0.95);
+    const modalHeight = Math.floor(screenHeight * 0.97);
     
-    // Centralizar na área restante (2.5% de margem em cada lado)
+    // Centralizar na área restante (2.5% lateral, 1.5% topo/base)
     const centerX = sidebarWidth + Math.floor(availableWidth * 0.025);
-    const centerY = Math.floor(screenHeight * 0.025);
+    const centerY = Math.floor(screenHeight * 0.015);
     
     setPosition({
       x: centerX,
@@ -285,7 +285,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           top: `${position.y}px`,
           width: `${modalSize.width}px`,
           height: modalSize.height > 0 ? `${modalSize.height}px` : 'auto',
-          maxHeight: `${window.innerHeight - 100}px`,
+          maxHeight: `${window.innerHeight - 32}px`,
           zIndex,
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? 'scale(1)' : 'scale(0.95)',

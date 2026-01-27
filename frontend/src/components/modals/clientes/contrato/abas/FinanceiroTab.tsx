@@ -121,10 +121,9 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   }, [bulkActions]);
 
   return (
-    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
-      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0, paddingBottom: isMobile ? '0' : undefined }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <Table
             key="financeiro-tab-table"
             title={t('tabs.financial')}
             config={{
@@ -185,47 +184,46 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             onAudit={onAudit}
             auditEntity={auditEntity}
           />
-        </div>
-
-        {/* Resumo Financeiro */}
-        {filteredData.length > 0 && (
-          <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginBottom: isMobile ? '3rem' : '1rem', marginTop: isMobile ? '0.25rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
-            <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.value')}</div>
-                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                  return sum + Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0);
-                }, 0))}</strong>
-              </div>
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.paidValue')}</div>
-                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                  // Considerar apenas valor_pago se existir e for maior que 0
-                  const valorPago = Number(item.valor_pago || 0);
-                  if (valorPago > 0) {
-                    return sum + valorPago;
-                  }
-                  return sum;
-                }, 0))}</strong>
-              </div>
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.openValue')}</div>
-                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                  return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0));
-                }, 0))}</strong>
-              </div>
-              {showCancelados && (
-                <div className="text-end">
-                  <div className="small text-muted">{t('summary.canceledValue')}</div>
-                  <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                    return sum + (item.status === 'cancelado' ? Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0) : 0);
-                  }, 0))}</strong>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Resumo Financeiro - Fixo no final */}
+      {filteredData.length > 0 && (
+        <div className="d-flex justify-content-end align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginBottom: 0, marginTop: isMobile ? '0.25rem' : '0.5rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+          <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.value')}</div>
+              <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                return sum + Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0);
+              }, 0))}</strong>
+            </div>
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.paidValue')}</div>
+              <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                // Considerar apenas valor_pago se existir e for maior que 0
+                const valorPago = Number(item.valor_pago || 0);
+                if (valorPago > 0) {
+                  return sum + valorPago;
+                }
+                return sum;
+              }, 0))}</strong>
+            </div>
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.openValue')}</div>
+              <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0));
+              }, 0))}</strong>
+            </div>
+            {showCancelados && (
+              <div className="text-end">
+                <div className="small text-muted">{t('summary.canceledValue')}</div>
+                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                  return sum + (item.status === 'cancelado' ? Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0) : 0);
+                }, 0))}</strong>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

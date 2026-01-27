@@ -39,10 +39,9 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
   }));
   
   return (
-    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <Table
             key={`cliente-contratos-${clienteId || 'new'}`}
             title={t('nav.contracts')}
             search=""
@@ -287,34 +286,33 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
           onAudit={onAudit}
           auditEntity={auditEntity}
         />
-        </div>
+      </div>
 
-        {/* Resumo de Contratos */}
-        {sortedContratosData.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center p-3 bg-light financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
-            <div className="d-flex align-items-center">
-              <i className="bi bi-info-circle text-muted me-2"></i>
-              <span className="small text-muted">{t('summary.contractSummary')}</span>
+      {/* Resumo de Contratos - Fixo no final */}
+      {sortedContratosData.length > 0 && (
+        <div className="d-flex justify-content-between align-items-center p-3 bg-light financeiro-resumo" style={{ flexShrink: 0, marginTop: isMobile ? '0.25rem' : '0.5rem', marginBottom: 0, marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+          <div className="d-flex align-items-center">
+            <i className="bi bi-info-circle text-muted me-2"></i>
+            <span className="small text-muted">{t('summary.contractSummary')}</span>
+          </div>
+          <div className="d-flex gap-4">
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.totalContracts')}</div>
+              <strong>{sortedContratosData.length}</strong>
             </div>
-            <div className="d-flex gap-4">
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.totalContracts')}</div>
-                <strong>{sortedContratosData.length}</strong>
-              </div>
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.activeContracts')}</div>
-                <strong>{sortedContratosData.filter((c: Contrato) => c.status === 'ativo').length}</strong>
-              </div>
-              <div className="text-end">
-                <div className="small text-muted">{t('summary.monthlyTotalValue')}</div>
-                <strong>{formatCurrency(sortedContratosData.reduce((sum: number, contrato: Contrato) => {
-                  return sum + Number(contrato.valor_final || 0);
-                }, 0))}</strong>
-              </div>
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.activeContracts')}</div>
+              <strong>{sortedContratosData.filter((c: Contrato) => c.status === 'ativo').length}</strong>
+            </div>
+            <div className="text-end">
+              <div className="small text-muted">{t('summary.monthlyTotalValue')}</div>
+              <strong>{formatCurrency(sortedContratosData.reduce((sum: number, contrato: Contrato) => {
+                return sum + Number(contrato.valor_final || 0);
+              }, 0))}</strong>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
