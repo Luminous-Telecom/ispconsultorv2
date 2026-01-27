@@ -354,15 +354,15 @@ label {
 
 /* Modo escuro */
 [data-theme="dark"] .table tbody tr:hover {
-  background-color: #334155;
+  background-color: var(--bg-tertiary);
 }
 
 [data-theme="dark"] .table tbody tr:nth-child(even) {
-  background-color: #0f172a !important;
+  background-color: var(--bg-primary) !important;
 }
 
 [data-theme="dark"] .table tbody tr:nth-child(even):hover {
-  background-color: #334155 !important;
+  background-color: var(--bg-tertiary) !important;
 }
 
 /* Garantir que cabeçalhos de tabela tenham texto claro no tema escuro */
@@ -371,15 +371,15 @@ label {
 }
 
 [data-theme="dark"] .table tbody tr:nth-child(even) {
-  background-color: #0f172a !important;
+  background-color: var(--bg-primary) !important;
 }
 
 [data-theme="dark"] .table tbody tr:hover {
-  background-color: #334155 !important;
+  background-color: var(--bg-tertiary) !important;
 }
 
 [data-theme="dark"] .table tbody tr:nth-child(even):hover {
-  background-color: #334155 !important;
+  background-color: var(--bg-tertiary) !important;
 }
 
 /* Linhas selecionadas no tema dark - devem sobrescrever todas as outras regras */
@@ -490,8 +490,8 @@ label {
   border-bottom: 1px solid var(--border-light);
 }
 
-.table tbody tr:hover {
-  background-color: #334155;
+[data-theme="dark"] .table tbody tr:hover {
+  background-color: var(--bg-tertiary);
 }
 
 /* Garantir texto claro no modo escuro para linhas não selecionadas */

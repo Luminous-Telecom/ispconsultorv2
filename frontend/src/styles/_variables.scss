@@ -62,18 +62,18 @@
 
 /* Tema escuro */
 [data-theme="dark"] {
-  /* Cores de fundo - Paleta noturna profissional */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --border-color: #334155;
+  /* Cores de fundo - Paleta preta/cinza */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2d2d2d;
+  --border-color: #2d2d2d;
   --btn-close-filter: invert(1);
   
   /* Cores de texto */
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
-  --border-light: #475569;
+  --border-light: #3a3a3a;
   
   /* Sombras para modo escuro */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
@@ -81,9 +81,9 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
   
   /* Sidebar - Modo escuro harmonizado */
-  --sidebar-bg: #1e293b;
+  --sidebar-bg: #1a1a1a;
   --sidebar-text: #f8fafc;
-  --sidebar-hover: #334155;
+  --sidebar-hover: #2d2d2d;
   --sidebar-active: #6366f1;
   
   /* Navbar - Modo escuro */
