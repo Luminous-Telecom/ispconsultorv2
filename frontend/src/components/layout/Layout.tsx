@@ -274,8 +274,11 @@ const Layout: React.FC = () => {
           <div className="sidebar-logo-wrapper w-100 d-flex flex-column align-items-center">
             <BackNetLogo width={200} height={65} />
             {companyName && (
-              <div className="sidebar-title-wrapper overflow-hidden w-100 text-center" style={{ marginTop: 0 }}>
-                <small className="sidebar-user-name text-muted text-truncate d-block">{companyName}</small>
+              <div className="sidebar-title-wrapper overflow-hidden w-100">
+                <div className="sidebar-company-name text-truncate d-flex align-items-center gap-1">
+                  <i className="bi bi-building"></i>
+                  <span>{companyName}</span>
+                </div>
               </div>
             )}
           </div>

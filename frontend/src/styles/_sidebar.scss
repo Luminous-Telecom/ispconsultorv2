@@ -82,6 +82,32 @@
   color: var(--text-muted) !important;
 }
 
+.sidebar-company-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted) !important;
+  margin-top: 0.75rem;
+  padding: 0 0.75rem;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  opacity: 0.85;
+  justify-content: flex-start;
+
+  i {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    flex-shrink: 0;
+  }
+
+  span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 /* Nav styles override para o tema do projeto */
 .sidebar .nav-link {
   border-radius: 0.5rem;
