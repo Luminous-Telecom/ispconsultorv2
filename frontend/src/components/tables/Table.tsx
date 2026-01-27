@@ -880,6 +880,7 @@ function Table<T extends { id: number | string }>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
   // Sincronizar busca: Header -> Table (apenas se search prop não foi passado)
   useEffect(() => {
     if (initialSyncRef.current && search === undefined && headerSearchValue !== state.searchTerm) {
@@ -1624,26 +1625,27 @@ function Table<T extends { id: number | string }>({
                 }
               }
               
-              // Se tem dropdown, renderizar dropdown
+              // Se tem dropdown, renderizar dropdown Bootstrap
               if (bulkAction.dropdown) {
+                const isOpen = openDropdown === index;
+                
                 return (
                   <div key={index} className="dropdown table-dropdown-relative">
                     <button
                       type="button"
-                      className={`btn btn-sm btn-${bulkAction.variant || 'primary'} table-flex-shrink-0`}
+                      className={`btn btn-sm btn-${bulkAction.variant || 'primary'} dropdown-toggle table-flex-shrink-0 dropdown-toggle-custom`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setOpenDropdown(openDropdown === index ? null : index);
+                        setOpenDropdown(isOpen ? null : index);
                       }}
                       disabled={isDisabled}
+                      aria-expanded={isOpen}
                     >
-                      {bulkAction.label} {isMobile && <i className="bi bi-chevron-down ms-1"></i>}
+                      {bulkAction.label}
                     </button>
-                    {openDropdown === index && (
-                      <ul
-                        className="dropdown-menu show table-dropdown-menu"
-                      >
+                    {isOpen && (
+                      <ul className="dropdown-menu show">
                         {bulkAction.dropdown.map((item, itemIndex) => {
                           const isItemDisabled = typeof item.disabled === 'function'
                             ? item.disabled(state.selectedItems)

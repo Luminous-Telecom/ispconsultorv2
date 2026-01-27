@@ -448,9 +448,15 @@ button,
 }
 
 .btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: var(--font-size-xs);
+  padding: 0.25rem 0.5rem !important;
+  font-size: 12px !important;
+  min-height: auto !important;
+  line-height: 1.25 !important;
+  box-sizing: border-box !important;
+  border-width: 1px !important;
+  height: 27.1px !important;
 }
+
 
 .btn-lg {
   padding: 0.5rem 1rem;
@@ -1111,9 +1117,15 @@ button,
   font-size: 14px;
 }
 
-/* Ocultar ::after de dropdown-toggle */
+/* Remover completamente ::after de dropdown-toggle */
 .dropdown-toggle::after {
   display: none !important;
+  content: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  border: none !important;
 }
 
 .dropdown-toggle:not(.btn):hover {

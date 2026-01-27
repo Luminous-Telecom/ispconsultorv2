@@ -1161,6 +1161,80 @@ label {
   gap: 8px !important;
 }
 
+/* Dropdown com mesmo estilo dos botões normais */
+.table-header-flex .btn-sm.dropdown-toggle-custom,
+.table-header-content .btn-sm.dropdown-toggle-custom {
+  position: relative !important;
+  padding-right: 1.75rem !important;
+}
+
+/* Seta do dropdown */
+.table-header-flex .btn-sm.dropdown-toggle-custom::after,
+.table-header-content .btn-sm.dropdown-toggle-custom::after {
+  content: "▼" !important;
+  display: inline-block !important;
+  position: absolute !important;
+  right: 0.5rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 0.5rem !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  border: none !important;
+  opacity: 0.7 !important;
+}
+
+/* Estilizar dropdown-menu aberto */
+.table-header-flex .dropdown-menu,
+.table-header-content .dropdown-menu {
+  min-width: 140px !important;
+  padding: 0.25rem 0 !important;
+  margin-top: 0.25rem !important;
+  background: #ffffff !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  font-size: 12px !important;
+}
+
+/* Tema escuro */
+[data-theme="dark"] .table-header-flex .dropdown-menu,
+[data-theme="dark"] .table-header-content .dropdown-menu {
+  background: var(--bg-secondary) !important;
+}
+
+/* Itens do dropdown */
+.table-header-flex .dropdown-menu .dropdown-item,
+.table-header-content .dropdown-menu .dropdown-item {
+  padding: 0.375rem 0.75rem !important;
+  font-size: 12px !important;
+  color: var(--text-primary) !important;
+  background: transparent !important;
+  border: none !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.table-header-flex .dropdown-menu .dropdown-item:hover,
+.table-header-content .dropdown-menu .dropdown-item:hover {
+  background-color: #f8f9fa !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .table-header-flex .dropdown-menu .dropdown-item:hover,
+[data-theme="dark"] .table-header-content .dropdown-menu .dropdown-item:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.table-header-flex .dropdown-menu .dropdown-item:disabled,
+.table-header-content .dropdown-menu .dropdown-item:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  background-color: transparent !important;
+}
+
 /* Table responsive container */
 .table-responsive-custom {
   margin: 0 !important;
@@ -1255,36 +1329,15 @@ label {
   flex-shrink: 0 !important;
 }
 
-/* Padronizar tamanho de todos os botões de ações em massa */
-.table-header-content .btn,
-.table-header-content button.btn,
-.table-header-content .table-dropdown-relative .btn,
-.table-header-content .table-dropdown-relative button.btn,
-.table-header-flex .btn,
-.table-header-flex button.btn {
-  padding: 0.25rem 0.5rem !important;
-  font-size: var(--font-size-xs) !important;
-  line-height: 1.25 !important;
-  min-height: auto !important;
-  height: auto !important;
-  font-weight: 500 !important;
-}
-
 /* Dropdown relative */
 .table-dropdown-relative {
   flex-shrink: 0 !important;
   position: relative !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
 }
 
-/* Garantir que botões dentro de dropdown tenham o mesmo tamanho */
-.table-dropdown-relative .btn,
-.table-dropdown-relative button.btn {
-  padding: 0.25rem 0.5rem !important;
-  font-size: var(--font-size-xs) !important;
-  line-height: 1.25 !important;
-  min-height: auto !important;
-  height: auto !important;
-}
+
 
 /* Dropdown menu absolute */
 .table-dropdown-menu {
@@ -1356,3 +1409,4 @@ label {
   min-width: attr(data-column-width px) !important;
   max-width: attr(data-column-width px) !important;
 }
+
