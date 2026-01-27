@@ -270,12 +270,12 @@ const Layout: React.FC = () => {
         className={`d-flex flex-column flex-shrink-0 sidebar ${sidebarOpen ? 'open' : ''}`}
       >
         {/* Header fixo no topo */}
-        <div className="sidebar-header-fixed d-flex flex-column align-items-center justify-content-center p-3 mb-0 border-bottom position-relative">
+        <div className="sidebar-header-fixed d-flex flex-column align-items-center justify-content-center p-3 mb-0 position-relative">
           <div className="sidebar-logo-wrapper w-100 d-flex flex-column align-items-center">
             <BackNetLogo width={200} height={65} />
             {companyName && (
-              <div className="sidebar-title-wrapper overflow-hidden w-100">
-                <div className="sidebar-company-name text-truncate d-flex align-items-center gap-1">
+              <div className="sidebar-title-wrapper overflow-hidden w-100 d-flex justify-content-center">
+                <div className="sidebar-company-name text-truncate d-flex align-items-center justify-content-center gap-1">
                   <i className="bi bi-building"></i>
                   <span>{companyName}</span>
                 </div>

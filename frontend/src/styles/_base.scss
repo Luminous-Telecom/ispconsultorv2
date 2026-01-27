@@ -22,10 +22,46 @@ body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  background-color: var(--bg-primary);
+  background: var(--bg-primary);
+  background-attachment: fixed;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Garantir contraste adequado em todos os textos */
+.text-muted,
+.text-secondary,
+small,
+.small {
+  color: var(--text-secondary) !important;
+}
+
+p, span, div, li, td, th {
+  color: inherit;
+}
+
+/* Garantir que textos em cards e modais tenham contraste */
+.card,
+.card-body,
+.card-header,
+.draggable-modal-container-custom,
+.draggable-modal-body-custom {
+  color: var(--text-primary) !important;
+}
+
+.card *,
+.card-body *,
+.draggable-modal-container-custom *,
+.draggable-modal-body-custom * {
+  color: inherit;
+}
+
+.card .text-muted,
+.card-body .text-muted,
+.draggable-modal-container-custom .text-muted,
+.draggable-modal-body-custom .text-muted {
+  color: var(--text-secondary) !important;
 }
 
 /* Links */

@@ -176,6 +176,8 @@ label {
 
 .table tbody tr {
   height: 2rem; /* Altura fixa das linhas ainda menor */
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
 }
 
 .table tbody td:last-child {
@@ -201,6 +203,7 @@ label {
   height: 2.25rem;
   line-height: 1.1;
   margin: 0;
+  color: var(--text-primary) !important;
 }
 
 /* Truncamento de texto nas células da tabela */
@@ -209,6 +212,8 @@ label {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 0; /* Permite que o width da coluna controle o tamanho */
+  background-color: inherit !important;
+  color: var(--text-primary) !important;
 }
 
 /* Para células que precisam de quebra de linha (como descrições longas) */
@@ -223,6 +228,8 @@ label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  background-color: inherit !important;
+  color: var(--text-primary) !important;
 }
 
 /* Hover padrão - será sobrescrito por regras específicas de tema */
@@ -231,7 +238,11 @@ label {
 }
 
 .table tbody tr:nth-child(even) {
-  background: var(--bg-secondary);
+  background-color: var(--bg-secondary) !important;
+}
+
+.table tbody tr:nth-child(odd) {
+  background-color: var(--bg-primary) !important;
 }
 
 .table tbody tr:nth-child(even):hover {
@@ -240,35 +251,40 @@ label {
 
 /* Garantir hover visível no modo claro */
 :root .table tbody tr:hover {
-  background: #f1f3f4;
+  background-color: var(--bg-tertiary) !important;
 }
 
 :root .table tbody tr:nth-child(even):hover {
-  background: #e8eaed;
+  background-color: var(--bg-tertiary) !important;
+}
+
+:root .table tbody tr:nth-child(odd):hover {
+  background-color: var(--bg-tertiary) !important;
 }
 
 /* Linha selecionada - Deve sobrescrever todas as outras regras */
-.table tbody tr.table-active,
-.table tbody tr.table-active:nth-child(even),
-.table tbody tr.table-active:nth-child(odd) {
-  background-color: #6366f1 !important;
+:root .table tbody tr.table-active,
+:root .table tbody tr.table-active:nth-child(even),
+:root .table tbody tr.table-active:nth-child(odd) {
+  background-color: rgba(107, 155, 209, 0.8) !important;
+  border-left: none !important;
 }
 
-.table tbody tr.table-active td,
-.table tbody tr.table-active th,
-.table tbody tr.table-active:nth-child(even) td,
-.table tbody tr.table-active:nth-child(even) th,
-.table tbody tr.table-active:nth-child(odd) td,
-.table tbody tr.table-active:nth-child(odd) th {
-  background-color: #6366f1 !important;
-  color: white !important;
+:root .table tbody tr.table-active td,
+:root .table tbody tr.table-active th,
+:root .table tbody tr.table-active:nth-child(even) td,
+:root .table tbody tr.table-active:nth-child(even) th,
+:root .table tbody tr.table-active:nth-child(odd) td,
+:root .table tbody tr.table-active:nth-child(odd) th {
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
 }
 
 /* Hover em linha selecionada - tom mais claro para diferenciar */
-.table tbody tr.table-active:hover,
-.table tbody tr.table-active:nth-child(even):hover,
-.table tbody tr.table-active:nth-child(odd):hover {
-  background-color: #818cf8 !important;
+:root .table tbody tr.table-active:hover,
+:root .table tbody tr.table-active:nth-child(even):hover,
+:root .table tbody tr.table-active:nth-child(odd):hover {
+  background-color: rgba(107, 155, 209, 0.85) !important;
 }
 
 .table tbody tr.table-active:hover td,
@@ -277,8 +293,8 @@ label {
 .table tbody tr.table-active:nth-child(even):hover th,
 .table tbody tr.table-active:nth-child(odd):hover td,
 .table tbody tr.table-active:nth-child(odd):hover th {
-  background-color: #818cf8 !important;
-  color: white !important;
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
 }
 
 /* Larguras específicas para colunas (ajustadas para serem ultra compactas) */
@@ -386,7 +402,7 @@ label {
 [data-theme="dark"] .table tbody tr.table-active,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even),
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd) {
-  background-color: #6366f1 !important;
+  background-color: rgba(99, 102, 241, 0.6) !important;
 }
 
 [data-theme="dark"] .table tbody tr.table-active td,
@@ -395,15 +411,15 @@ label {
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even) th,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd) td,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd) th {
-  background-color: #6366f1 !important;
-  color: white !important;
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
 }
 
 /* Hover em linha selecionada no tema dark - tom mais claro para diferenciar */
 [data-theme="dark"] .table tbody tr.table-active:hover,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover {
-  background-color: #818cf8 !important;
+  background-color: rgba(99, 102, 241, 0.7) !important;
 }
 
 [data-theme="dark"] .table tbody tr.table-active:hover td,
@@ -412,8 +428,8 @@ label {
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover th,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover td,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover th {
-  background-color: #818cf8 !important;
-  color: white !important;
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
 }
 
 /* Sobrescrever bg-light para tema escuro */
@@ -488,6 +504,49 @@ label {
 /* Última linha da tabela com borda normal */
 .table tbody tr:last-child td {
   border-bottom: 1px solid var(--border-light);
+}
+
+/* Garantir que tabelas dentro de modais não tenham cores brancas */
+.draggable-modal-container-custom .table tbody tr,
+.draggable-modal-body-custom .table tbody tr,
+.responsive-dialog-mobile-custom .table tbody tr {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.draggable-modal-container-custom .table tbody tr:nth-child(even),
+.draggable-modal-body-custom .table tbody tr:nth-child(even),
+.responsive-dialog-mobile-custom .table tbody tr:nth-child(even) {
+  background-color: var(--bg-secondary) !important;
+}
+
+.draggable-modal-container-custom .table tbody tr:nth-child(odd),
+.draggable-modal-body-custom .table tbody tr:nth-child(odd),
+.responsive-dialog-mobile-custom .table tbody tr:nth-child(odd) {
+  background-color: var(--bg-primary) !important;
+}
+
+.draggable-modal-container-custom .table tbody td,
+.draggable-modal-body-custom .table tbody td,
+.responsive-dialog-mobile-custom .table tbody td {
+  background-color: inherit !important;
+  color: var(--text-primary) !important;
+}
+
+.draggable-modal-container-custom .form-control,
+.draggable-modal-body-custom .form-control,
+.responsive-dialog-mobile-custom .form-control {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.draggable-modal-container-custom .form-control:focus,
+.draggable-modal-body-custom .form-control:focus,
+.responsive-dialog-mobile-custom .form-control:focus {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--primary-color) !important;
+  color: var(--text-primary) !important;
 }
 
 [data-theme="dark"] .table tbody tr:hover {
@@ -1193,7 +1252,7 @@ label {
   min-width: 140px !important;
   padding: 0.25rem 0 !important;
   margin-top: 0.25rem !important;
-  background: #ffffff !important;
+  background: var(--bg-secondary) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: 0.375rem !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
@@ -1219,7 +1278,7 @@ label {
 
 .table-header-flex .dropdown-menu .dropdown-item:hover,
 .table-header-content .dropdown-menu .dropdown-item:hover {
-  background-color: #f8f9fa !important;
+  background-color: #4A5D6E !important;
   color: var(--text-primary) !important;
 }
 
@@ -1287,6 +1346,41 @@ label {
   max-height: 28px !important;
   line-height: 1.25 !important;
   box-sizing: border-box !important;
+}
+
+/* Botões no estilo da paginação (page-link) */
+.table-pagination-header .btn-outline-primary {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius) !important;
+  padding: 0.25rem 0.5rem !important;
+  font-size: var(--font-size-sm) !important;
+  line-height: 1.25 !important;
+  transition: all 0.2s ease !important;
+}
+
+.table-pagination-header .btn-outline-primary:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+.table-pagination-header .btn-outline-primary:focus {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.table-pagination-header .btn-outline-primary:disabled {
+  color: var(--text-muted) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
 }
 
 /* Table pagination flex */

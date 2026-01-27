@@ -36,7 +36,7 @@
 /* Container do modal */
 .draggable-modal-container-custom {
   position: fixed !important;
-  background-color: var(--bg-primary) !important;
+  background-color: var(--bg-modal) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: var(--border-radius) !important;
@@ -50,7 +50,7 @@
 
 /* Header do modal */
 .draggable-modal-header-custom {
-  background-color: var(--bg-secondary) !important;
+  background-color: var(--bg-modal) !important;
   padding: 8px 8px 0 8px !important;
   user-select: none !important;
   display: flex !important;
@@ -111,6 +111,7 @@
   min-height: 0 !important;
   display: flex !important;
   flex-direction: column !important;
+  background-color: var(--bg-modal) !important;
 }
 
 .draggable-modal-body-custom.no-scroll {
@@ -135,7 +136,7 @@
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background-color: var(--bg-primary) !important;
+  background-color: var(--bg-modal) !important;
   color: var(--text-primary) !important;
   z-index: 99999 !important;
   display: flex !important;
@@ -285,6 +286,7 @@
   overflow-y: auto !important;
   padding: 0 !important;
   min-height: 0 !important;
+  background-color: var(--bg-secondary) !important;
 }
 
 /* Search container */
@@ -338,13 +340,38 @@
   animation: slideDown 0.2s ease-out !important;
 }
 
-/* Cards modernos e elegantes */
+/* Cards modernos e elegantes - Bordas coloridas por seção */
 .card {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border-default);
+  border-radius: var(--border-radius);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+}
+
+/* Cards com bordas coloridas por seção */
+.card-border-primary {
+  border-color: var(--card-border-primary) !important;
+}
+
+.card-border-success {
+  border-color: var(--card-border-success) !important;
+}
+
+.card-border-warning {
+  border-color: var(--card-border-warning) !important;
+}
+
+.card-border-info {
+  border-color: var(--card-border-info) !important;
+}
+
+.card-border-pending {
+  border-color: var(--accent-pending) !important;
+}
+
+.card-border-complete {
+  border-color: var(--accent-complete) !important;
 }
 
 .card:hover {
@@ -364,11 +391,22 @@
 .card-header h5,
 .card-header h6,
 .card-title {
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   font-size: var(--font-size-lg);
   font-weight: 400;
   margin: 0;
   letter-spacing: -0.01em;
+}
+
+.card-body,
+.card-body * {
+  color: var(--text-primary) !important;
+}
+
+.card-body .text-muted,
+.card-body .text-secondary,
+.card-body small {
+  color: var(--text-secondary) !important;
 }
 
 /* Botões modernos e elegantes */
@@ -934,12 +972,13 @@ button,
 .form-select {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
   font-size: var(--font-size-sm);
   padding: 0.25rem 0.5rem !important;
   height: 33px; /* Mesma altura dos inputs */
   line-height: 1.25;
+  /* Usar estilo nativo do Bootstrap - a seta será gerenciada pelo Bootstrap */
 }
 
 
@@ -951,7 +990,7 @@ button,
   border: 1px solid var(--border-color) !important;
   border-radius: var(--border-radius) !important;
   overflow: hidden !important;
-  background: var(--bg-primary) !important;
+  background: var(--bg-secondary) !important;
 }
 
 .table-search-combined .table-search-field-select {
@@ -959,14 +998,22 @@ button,
   border-radius: 0 !important;
   border-right: 1px solid var(--border-color) !important;
   background: transparent !important;
+  background-image: var(--bs-form-select-bg-img) !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.5rem center !important;
+  background-size: 16px 12px !important;
+  padding-right: 1.75rem !important;
   height: 28px !important;
   flex-shrink: 0 !important;
-  padding: 0 8px 0 8px !important;
+  padding-left: 8px !important;
   font-size: 0.75rem !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   /* Largura controlada dinamicamente por JavaScript */
 }
 
@@ -1384,13 +1431,54 @@ textarea:focus {
 /* Estilos para form-control nos temas - Simplificado */
 [data-theme="light"] .form-control,
 [data-theme="light"] .form-control-sm {
-  background-color: #ffffff;
-  color: #000000;
-  border-color: #ced4da;
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="light"] .form-control::placeholder {
-  color: #6c757d;
+  color: var(--text-secondary) !important;
+  opacity: 0.8;
+}
+
+/* Inputs e forms - tom intermediário entre background e cards */
+.form-control,
+.form-select {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--primary-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.form-control::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.7;
+}
+
+/* Hover states - 10-15% mais claro que o elemento base */
+.card:hover {
+  background-color: #4A5D6E;
+}
+
+.table tbody tr:hover {
+  background-color: #4A5D6E !important;
+}
+
+/* Active/Selected - cor de acento mais saturada */
+.table tbody tr.table-active {
+  background-color: rgba(107, 155, 209, 0.7) !important;
+  border-left: none !important;
+}
+
+[data-theme="light"] .form-control::placeholder {
+  color: var(--text-secondary) !important;
+  opacity: 0.8;
 }
 
 [data-theme="dark"] .form-control,
@@ -1457,6 +1545,44 @@ textarea:focus {
 
 .contrato-tabs-mobile .nav-item:last-child {
   margin-right: 0;
+}
+
+/* Estilos para abas no modo claro */
+.contrato-tabs .nav-link {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  border-width: 1px !important;
+}
+
+.contrato-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.contrato-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--btn-primary-color) !important;
+  border-bottom-color: var(--bg-primary) !important;
+}
+
+.contrato-tabs-mobile .nav-link {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.contrato-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+.contrato-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--btn-primary-color) !important;
 }
 
 /* Estilos para abas no modo escuro */
@@ -1553,8 +1679,8 @@ textarea:focus {
   .nav-link:hover,
   .nav-link:focus,
   .nav-link:active {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -1570,16 +1696,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -1590,7 +1716,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -1653,6 +1779,44 @@ textarea:focus {
 
 .plano-tabs-mobile .nav-item:last-child {
   margin-right: 0;
+}
+
+/* Estilos para abas no modo claro */
+.plano-tabs .nav-link {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  border-width: 1px !important;
+}
+
+.plano-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.plano-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--btn-primary-color) !important;
+  border-bottom-color: var(--bg-primary) !important;
+}
+
+.plano-tabs-mobile .nav-link {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.plano-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+.plano-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--btn-primary-color) !important;
 }
 
 /* Estilos para abas no modo escuro */
@@ -1730,8 +1894,8 @@ textarea:focus {
   }
 
   .nav-link {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -1745,16 +1909,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -1765,7 +1929,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -1828,6 +1992,92 @@ textarea:focus {
 
 .fornecedor-tabs-mobile .nav-item:last-child {
   margin-right: 0;
+}
+
+/* Estilos para abas no modo claro */
+.fornecedor-tabs .nav-link,
+.banco-tabs .nav-link,
+.documento-tabs .nav-link,
+.empresa-tabs .nav-link,
+.whatsapp-tabs .nav-link,
+.hotsite-tabs .nav-link,
+.email-tabs .nav-link,
+.sistema-tabs .nav-link,
+.cliente-tabs .nav-link {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  border-width: 1px !important;
+}
+
+.fornecedor-tabs .nav-link:hover,
+.banco-tabs .nav-link:hover,
+.documento-tabs .nav-link:hover,
+.empresa-tabs .nav-link:hover,
+.whatsapp-tabs .nav-link:hover,
+.hotsite-tabs .nav-link:hover,
+.email-tabs .nav-link:hover,
+.sistema-tabs .nav-link:hover,
+.cliente-tabs .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.fornecedor-tabs .nav-link.active,
+.banco-tabs .nav-link.active,
+.documento-tabs .nav-link.active,
+.empresa-tabs .nav-link.active,
+.whatsapp-tabs .nav-link.active,
+.hotsite-tabs .nav-link.active,
+.email-tabs .nav-link.active,
+.sistema-tabs .nav-link.active,
+.cliente-tabs .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--btn-primary-color) !important;
+  border-bottom-color: var(--bg-primary) !important;
+}
+
+.fornecedor-tabs-mobile .nav-link,
+.banco-tabs-mobile .nav-link,
+.documento-tabs-mobile .nav-link,
+.empresa-tabs-mobile .nav-link,
+.whatsapp-tabs-mobile .nav-link,
+.hotsite-tabs-mobile .nav-link,
+.email-tabs-mobile .nav-link,
+.sistema-tabs-mobile .nav-link,
+.cliente-tabs-mobile .nav-link {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.fornecedor-tabs-mobile .nav-link:hover,
+.banco-tabs-mobile .nav-link:hover,
+.documento-tabs-mobile .nav-link:hover,
+.empresa-tabs-mobile .nav-link:hover,
+.whatsapp-tabs-mobile .nav-link:hover,
+.hotsite-tabs-mobile .nav-link:hover,
+.email-tabs-mobile .nav-link:hover,
+.sistema-tabs-mobile .nav-link:hover,
+.cliente-tabs-mobile .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+.fornecedor-tabs-mobile .nav-link.active,
+.banco-tabs-mobile .nav-link.active,
+.documento-tabs-mobile .nav-link.active,
+.empresa-tabs-mobile .nav-link.active,
+.whatsapp-tabs-mobile .nav-link.active,
+.hotsite-tabs-mobile .nav-link.active,
+.email-tabs-mobile .nav-link.active,
+.sistema-tabs-mobile .nav-link.active,
+.cliente-tabs-mobile .nav-link.active {
+  color: var(--btn-primary-color) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--btn-primary-color) !important;
 }
 
 /* Estilos para abas no modo escuro */
@@ -1905,8 +2155,8 @@ textarea:focus {
   }
 
   .nav-link {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -1920,16 +2170,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -1940,7 +2190,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -2080,8 +2330,8 @@ textarea:focus {
   }
 
   .nav-link {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -2095,16 +2345,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -2115,7 +2365,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -2255,8 +2505,8 @@ textarea:focus {
   }
 
   .nav-link {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -2270,16 +2520,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -2290,7 +2540,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -2430,8 +2680,8 @@ textarea:focus {
   }
 
   .nav-link {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -2445,16 +2695,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -2465,7 +2715,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -2605,8 +2855,8 @@ textarea:focus {
   }
 
   .nav-link {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -2620,16 +2870,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -2640,7 +2890,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -2780,8 +3030,8 @@ textarea:focus {
   }
 
   .nav-link {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -2795,16 +3045,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -2815,7 +3065,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -2853,7 +3103,7 @@ textarea:focus {
   /* Tema claro - garantir contraste adequado */
   [data-theme="light"] & {
     .cm-editor {
-      background-color: #ffffff !important;
+      background-color: var(--bg-secondary) !important;
     }
 
     .cm-content,
@@ -3053,8 +3303,8 @@ textarea:focus {
   }
 
   .nav-link {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -3068,16 +3318,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -3088,7 +3338,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -3228,8 +3478,8 @@ textarea:focus {
   }
 
   .nav-link {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -3243,16 +3493,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -3263,7 +3513,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -3409,8 +3659,8 @@ textarea:focus {
   }
 
   .nav-link {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
     font-weight: 400 !important;
     font-size: var(--font-size-sm) !important;
@@ -3424,16 +3674,16 @@ textarea:focus {
 
   .nav-link:hover,
   .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     cursor: pointer !important;
   }
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-bottom: none !important;
+    color: var(--btn-primary-color) !important;
+    border: 1px solid var(--btn-primary-color) !important;
+    border-bottom-color: var(--bg-primary) !important;
   }
 
   .nav-link:disabled,
@@ -3444,7 +3694,7 @@ textarea:focus {
 
   .nav-link:disabled:hover,
   .nav-link.disabled:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     cursor: not-allowed !important;
   }
@@ -3694,13 +3944,13 @@ textarea:focus {
   font-size: 0.75rem;
   line-height: 1.25;
   margin-bottom: 0.125rem;
-  color: #212529;
+  color: var(--text-primary) !important;
 }
 
 .notification-message {
   font-size: 0.75rem;
   line-height: 1.4;
-  color: #212529;
+  color: var(--text-primary) !important;
   word-wrap: break-word;
 }
 
@@ -3759,55 +4009,55 @@ textarea:focus {
 
 /* Tipos de notificação */
 .notification-success {
-  border-left: 4px solid #28a745 !important;
-  background-color: #d4edda !important;
+  border-left: 4px solid #8FB369 !important;
+  background-color: #2F3D48 !important;
 }
 
 .notification-success .notification-icon {
-  color: #28a745;
+  color: #8FB369;
 }
 
 .notification-success .notification-progress-bar {
-  background-color: #28a745;
+  background-color: #8FB369;
 }
 
 .notification-error {
-  border-left: 4px solid #dc3545 !important;
-  background-color: #f8d7da !important;
+  border-left: 4px solid #D97373 !important;
+  background-color: #2F3D48 !important;
 }
 
 .notification-error .notification-icon {
-  color: #dc3545;
+  color: #D97373;
 }
 
 .notification-error .notification-progress-bar {
-  background-color: #dc3545;
+  background-color: #D97373;
 }
 
 .notification-warning {
-  border-left: 4px solid #ffc107 !important;
-  background-color: #fff3cd !important;
+  border-left: 4px solid #E8B44C !important;
+  background-color: #2F3D48 !important;
 }
 
 .notification-warning .notification-icon {
-  color: #856404;
+  color: #E8B44C;
 }
 
 .notification-warning .notification-progress-bar {
-  background-color: #ffc107;
+  background-color: #E8B44C;
 }
 
 .notification-info {
-  border-left: 4px solid #17a2b8 !important;
-  background-color: #d1ecf1 !important;
+  border-left: 4px solid #6B9BD1 !important;
+  background-color: #2F3D48 !important;
 }
 
 .notification-info .notification-icon {
-  color: #17a2b8;
+  color: #6B9BD1;
 }
 
 .notification-info .notification-progress-bar {
-  background-color: #17a2b8;
+  background-color: #6B9BD1;
 }
 
 .notification-loading {
@@ -4047,19 +4297,19 @@ textarea:focus {
 /* Dark mode - manter cores definidas */
 @media (prefers-color-scheme: dark) {
   .notification-success {
-    background-color: #d4edda;
+    background-color: #2F3D48;
   }
 
   .notification-error {
-    background-color: #f8d7da;
+    background-color: #2F3D48;
   }
 
   .notification-warning {
-    background-color: #fff3cd;
+    background-color: #2F3D48;
   }
 
   .notification-info {
-    background-color: #d1ecf1;
+    background-color: #2F3D48;
   }
 }
 
@@ -4130,7 +4380,7 @@ textarea:focus {
 .input-icon {
   position: absolute;
   z-index: 3;
-  color: #6c757d;
+  color: var(--text-secondary) !important;
   pointer-events: none;
 }
 
@@ -4167,9 +4417,9 @@ textarea:focus {
 }
 
 .form-field .form-label {
+  color: var(--text-primary) !important;
   font-weight: 500;
   margin-bottom: 0.25rem;
-  color: #495057;
 }
 
 .form-field .form-text {
@@ -4179,6 +4429,7 @@ textarea:focus {
 
 /* Reduzir espaçamento em modais */
 .modal-content .form-label {
+  color: var(--text-primary) !important;
   margin-bottom: 0.25rem !important;
 }
 
@@ -4362,8 +4613,8 @@ textarea:focus {
 
 .form-control:disabled,
 .form-select:disabled {
-  background-color: #e9ecef;
-  opacity: 1;
+  background-color: #2F3D48;
+  opacity: 0.6;
 }
 
 /* Tema escuro - ajustar cor de fundo dos inputs desabilitados */
@@ -4392,15 +4643,15 @@ input[type="week"]:hover {
   cursor: pointer !important;
 }
 
-/* Ícone de calendário - Modo claro (ícone escuro) */
+/* Ícone de calendário - Modo claro (ícone claro para contraste com fundo escuro dos cards) */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator,
 input[type="month"]::-webkit-calendar-picker-indicator,
 input[type="week"]::-webkit-calendar-picker-indicator {
-  filter: brightness(0) saturate(100%);
+  filter: brightness(0) invert(1);
   cursor: pointer !important;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator:hover,
@@ -4432,15 +4683,15 @@ input[type="week"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
 
-/* Para Firefox - Modo claro */
+/* Para Firefox - Modo claro (ícone claro para contraste com fundo escuro dos cards) */
 input[type="date"]::-moz-calendar-picker-indicator,
 input[type="datetime-local"]::-moz-calendar-picker-indicator,
 input[type="time"]::-moz-calendar-picker-indicator,
 input[type="month"]::-moz-calendar-picker-indicator,
 input[type="week"]::-moz-calendar-picker-indicator {
-  filter: brightness(0) saturate(100%);
+  filter: brightness(0) invert(1);
   cursor: pointer !important;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 /* Para Firefox - Modo escuro */
@@ -4497,8 +4748,8 @@ input[type="week"]::-moz-calendar-picker-indicator {
   left: 0;
   right: 0;
   padding: 0.75rem 1rem;
-  background-color: #ffffff;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
   z-index: 1050;
   gap: 0.75rem;

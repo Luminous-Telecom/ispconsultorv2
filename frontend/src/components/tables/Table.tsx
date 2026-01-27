@@ -1439,6 +1439,7 @@ function Table<T extends { id: number | string }>({
                   onClick={handleAuditClick}
                   disabled={loading || state.selectedItems.length !== 1}
                   tooltip={state.selectedItems.length === 1 ? t('ui.auditSelected') : t('ui.selectOneToAudit')}
+                  alwaysShowIcon={true}
                 >
                   {t('buttons.audit')}
                 </Button>
@@ -1451,8 +1452,9 @@ function Table<T extends { id: number | string }>({
                 onClick={tableActions.refresh}
                 disabled={loading}
                 tooltip={t('ui.refresh')}
+                alwaysShowIcon={true}
               >
-                {''}
+                {t('ui.refresh')}
               </Button>
         </div>
       </div>
@@ -1774,7 +1776,7 @@ function Table<T extends { id: number | string }>({
                 disabled={loading || state.selectedItems.length !== 1}
                 title={state.selectedItems.length === 1 ? "Auditar registro selecionado" : "Selecione exatamente 1 registro para auditar"}
               >
-                {isMobile && <i className="bi bi-shield-check"></i>} Auditar
+                <i className="bi bi-shield-check"></i> {t('buttons.audit')}
               </button>
             )}
             <button
@@ -1783,7 +1785,7 @@ function Table<T extends { id: number | string }>({
               onClick={onRefresh}
               title="Recarregar dados"
             >
-              <i className="bi bi-arrow-clockwise"></i>
+              <i className="bi bi-arrow-clockwise"></i> {t('ui.refresh')}
             </button>
           </div>
         </div>

@@ -11,9 +11,12 @@ const BackNetLogo: React.FC<BackNetLogoProps> = ({
   height = 60,
   className = ''
 }) => {
+  // Usar apenas a logo principal
+  const logoSrc = '/logos/backnet.png';
+
   return (
     <img
-      src="/backnet.png"
+      src={logoSrc}
       alt="BackNet Logo"
       width={width}
       height={height}

@@ -100,7 +100,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     ctx.clearRect(0, 0, rect.width, rect.height);
 
     // Margens otimizadas para melhor aproveitamento do espaço
-    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
+    const margin = { top: 10, right: 15, left: 50, bottom: 85 };
     const chartWidth = rect.width - margin.left - margin.right;
     const chartHeight = rect.height - margin.top - margin.bottom;
 
@@ -145,17 +145,20 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     const yTickStep = valueRange / (numYTicks - 1);
 
     // Cores
-    const gridColor = '#2f3844';
-    const axisColor = theme === 'dark' ? '#ffffff' : '#ced4da'; // Branco no modo escuro, cinza claro no modo claro
+    const axisColor = theme === 'dark' ? '#ffffff' : 'rgba(255, 255, 255, 0.3)'; // Branco no modo escuro, branco com transparência no modo claro para combinar com fundo escuro
+    const textColor = theme === 'dark' ? '#ffffff' : '#FFFFFF'; // Branco em ambos os modos (cards têm fundo escuro no modo claro)
+    const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.15)'; // Linhas de grade mais perceptíveis
     const receberLineColor = '#28a745'; // Verde
     const pagarLineColor = '#dc3545'; // Vermelho
     const receberDotColor = '#28a745';
     const pagarDotColor = '#dc3545';
 
-    // Desenhar grid
+    // Desenhar grid com linhas sólidas mais perceptíveis
     ctx.strokeStyle = gridColor;
-    ctx.lineWidth = 1 / dpr; // Linha mais fina para compensar o scale
-    ctx.setLineDash([3, 3]);
+    ctx.lineWidth = 1 / dpr; // Linha mais espessa
+    ctx.setLineDash([]); // Linha sólida
+    
+    // Linhas horizontais (grade)
     for (let i = 0; i < numYTicks; i++) {
       const y = margin.top + (chartHeight / (numYTicks - 1)) * i;
       ctx.beginPath();
@@ -163,7 +166,19 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       ctx.lineTo(margin.left + chartWidth, y);
       ctx.stroke();
     }
-    ctx.setLineDash([]);
+    
+    // Linhas verticais (grade)
+    const totalPoints = chartData.length;
+    const xStep = totalPoints === 1 ? 0 : chartWidth / (totalPoints - 1);
+    chartData.forEach((_, index) => {
+      const x = totalPoints === 1
+        ? margin.left + chartWidth / 2
+        : margin.left + xStep * index;
+      ctx.beginPath();
+      ctx.moveTo(x, margin.top);
+      ctx.lineTo(x, margin.top + chartHeight);
+      ctx.stroke();
+    });
 
     // Desenhar eixos
     ctx.strokeStyle = axisColor;
@@ -182,22 +197,24 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     ctx.stroke();
 
     // Desenhar labels do eixo Y
-    ctx.fillStyle = axisColor;
-    ctx.font = '10px system-ui, -apple-system, sans-serif';
+    ctx.fillStyle = textColor;
+    ctx.font = '11px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     for (let i = 0; i < numYTicks; i++) {
       const value = minValue + yTickStep * (numYTicks - 1 - i);
       const y = margin.top + (chartHeight / (numYTicks - 1)) * i;
       const label = formatYAxis(value);
-      ctx.fillText(label, margin.left - 10, y);
+      // Posicionar texto mais à esquerda para evitar corte do "R$"
+      ctx.fillText(label, margin.left - 5, y);
     }
 
     // Desenhar labels do eixo X (rotacionados verticalmente)
+    ctx.fillStyle = textColor;
+    ctx.font = '11px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    const totalPoints = chartData.length;
-    const xStep = totalPoints === 1 ? 0 : chartWidth / (totalPoints - 1);
+    // Reutilizar totalPoints e xStep já declarados acima
     chartData.forEach((item, index) => {
       const x = totalPoints === 1
         ? margin.left + chartWidth / 2
@@ -309,7 +326,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     ctx.fillStyle = receberLineColor;
     ctx.fill();
     
-    ctx.fillStyle = axisColor; // Usar mesma cor dos eixos para texto da legenda
+    ctx.fillStyle = textColor; // Usar mesma cor do texto para legenda (branco em ambos os modos)
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.font = '10px system-ui, -apple-system, sans-serif';
@@ -323,7 +340,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     ctx.fillStyle = pagarLineColor;
     ctx.fill();
 
-    ctx.fillStyle = axisColor;
+    ctx.fillStyle = textColor;
     ctx.fillText(t('financial.toPayLabel').toUpperCase(), Math.round(pagarX + 16), Math.round(legendY - 3));
 
   }, [chartData, dimensions, formatYAxis, hoveredIndex, t, theme]);

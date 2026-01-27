@@ -69,6 +69,11 @@ $input-border-radius: $border-radius !default;
 $input-focus-border-color: $primary !default;
 $input-focus-box-shadow: 0 0 0 0.2rem rgba($primary, 0.25) !default;
 
+// Form Select - usar seta nativa do Bootstrap com cor visível
+$form-select-bg-size: 16px 12px !default;
+$form-select-indicator-color: #ffffff !default; // Seta branca para contraste no fundo escuro
+$form-select-indicator: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='#{$form-select-indicator-color}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/></svg>") !default;
+
 // Modais
 $modal-backdrop-bg: rgba(0, 0, 0, 0.5) !default;
 $modal-content-border-radius: $border-radius-lg !default;

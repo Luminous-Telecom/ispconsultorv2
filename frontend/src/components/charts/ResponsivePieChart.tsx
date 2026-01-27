@@ -187,10 +187,10 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         ctx.fillRect(legendX, y - boxSize/2, boxSize, boxSize);
         ctx.globalAlpha = 1;
 
-        // Texto - Branco no modo escuro para melhor contraste
+        // Texto - Branco em ambos os modos (cards têm fundo escuro no modo claro)
         ctx.fillStyle = isHidden
           ? '#ced4da'
-          : theme === 'dark' ? '#ffffff' : '#868e96'; // Branco no modo escuro, cinza claro no modo claro
+          : '#ffffff'; // Branco em ambos os modos para melhor contraste
         const text = `${item.label}: ${formatPieValue(item.value || 0, title)}`;
 
         // Truncar texto se muito longo

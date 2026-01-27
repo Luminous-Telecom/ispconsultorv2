@@ -26,7 +26,7 @@
   z-index: 1000;
   overflow: hidden;
   border-right: 1px solid var(--border-color);
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
   transform: translateX(-100%);
   transition: transform 0.3s ease-in-out, background-color 0.3s ease, color 0.3s ease;
   display: flex;
@@ -44,12 +44,13 @@
 }
 
 .sidebar-header-fixed {
-  background: var(--bg-tertiary);
+  background: var(--sidebar-bg);
   color: var(--sidebar-text);
   flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 1001;
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
 .sidebar-nav-scrollable {
@@ -57,6 +58,7 @@
   overflow-x: hidden;
   flex-grow: 1;
   padding-top: 0.5rem;
+  background: var(--bg-tertiary);
 }
 
 .sidebar-logo-wrapper {
@@ -85,14 +87,14 @@
 .sidebar-company-name {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--text-muted) !important;
+  color: var(--sidebar-text) !important;
   margin-top: 0.75rem;
   padding: 0 0.75rem;
   white-space: nowrap;
   letter-spacing: 0.01em;
   line-height: 1.2;
-  opacity: 0.85;
-  justify-content: flex-start;
+  opacity: 0.9;
+  justify-content: center;
 
   i {
     font-size: 0.7rem;
@@ -125,7 +127,7 @@
 
 .sidebar .nav-link.active:not(.sidebar-folder-button) {
   background-color: var(--sidebar-active);
-  color: white !important;
+  color: var(--sidebar-text) !important;
 }
 
 .sidebar .nav-link i {
@@ -134,7 +136,7 @@
 }
 
 .sidebar .nav-link.active i {
-  color: white !important;
+  color: var(--sidebar-text) !important;
 }
 
 /* Garantir que ícones de pasta NUNCA sejam afetados pelo estilo active */
@@ -280,7 +282,49 @@
   opacity: 1 !important;
 }
 
-/* Ajustes específicos para o modo escuro no sidebar se necessário */
+/* Ajustes específicos para o modo escuro no sidebar - Inverter tons */
 [data-theme="dark"] .sidebar {
   border-right-color: var(--border-color);
+  background: var(--sidebar-bg) !important;
+}
+
+/* No modo escuro: inverter os tons - logo usa o cinza das pastas, pastas usam o cinza da logo */
+[data-theme="dark"] .sidebar-header-fixed {
+  background: var(--sidebar-bg);
+}
+
+[data-theme="dark"] .sidebar-nav-scrollable {
+  background: var(--bg-tertiary);
+}
+
+/* Modo escuro - textos da sidebar voltam para as cores originais */
+[data-theme="dark"] .sidebar .nav-link,
+[data-theme="dark"] .sidebar-accordion .accordion-button,
+[data-theme="dark"] .sidebar-folder-item,
+[data-theme="dark"] .sidebar-company-name,
+[data-theme="dark"] .sidebar-title {
+  color: var(--sidebar-text) !important;
+}
+
+[data-theme="dark"] .sidebar .nav-link:hover,
+[data-theme="dark"] .sidebar-accordion .accordion-button:hover,
+[data-theme="dark"] .sidebar-folder-item:hover {
+  background-color: var(--sidebar-hover) !important;
+  color: var(--sidebar-text) !important;
+}
+
+/* Garantir hover visível nas pastas no modo escuro com mais contraste */
+[data-theme="dark"] .sidebar-accordion .accordion-button:hover {
+  background-color: var(--sidebar-hover) !important;
+}
+
+[data-theme="dark"] .sidebar-folder-item:hover {
+  background-color: var(--sidebar-hover) !important;
+}
+
+[data-theme="dark"] .sidebar-accordion .accordion-button .folder-icon,
+[data-theme="dark"] .sidebar-folder-item i,
+[data-theme="dark"] .sidebar .nav-link i.bi-folder,
+[data-theme="dark"] .sidebar .nav-link i.bi-folder-open {
+  color: var(--sidebar-text) !important;
 }

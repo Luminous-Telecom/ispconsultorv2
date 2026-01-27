@@ -11,18 +11,25 @@
   --warning-color: #ffc107;
   --info-color: #0dcaf0;
   
-  /* Cores de fundo - Harmonizadas com Tailwind/Modern UI */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
-  --border-color: #e2e8f0;
+  /* Cores de fundo - Paleta Azul Ardósia Profundo (Slate Blue) - Dashboard Profissional */
+  /* Background principal: azul ardósia escuro - base do dashboard (body) */
+  --bg-primary: #2F3D48;
+  /* Background secundário: azul ardósia médio - para cards e containers */
+  --bg-secondary: #3D4E5C;
+  /* Elementos terciários: azul ardósia claro - para modais e overlays */
+  --bg-tertiary: #4A5D6E;
+  /* Modais: levemente mais claro que cards para hierarquia */
+  --bg-modal: #4A5D6E;
+  /* Bordas sutis: azul ardósia médio-claro */
+  --border-color: #5A6D7E;
   --btn-close-filter: none;
   
-  /* Cores de texto */
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-  --border-light: #f1f5f9;
+  /* Cores de texto - Alto contraste (claro sobre fundo escuro) */
+  --text-primary: #FFFFFF;
+  --text-secondary: #F5F7FA;
+  --text-muted: #E8EDF2;
+  /* Bordas leves: azul ardósia médio */
+  --border-light: #5A6D7E;
   
   /* Sombras modernas */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -30,11 +37,11 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   
-  /* Sidebar - Modo claro harmonizado */
-  --sidebar-bg: #ffffff;
-  --sidebar-text: #1e293b;
-  --sidebar-hover: #f1f5f9;
-  --sidebar-active: #6366f1;
+  /* Sidebar - harmonizada com paleta Azul Ardósia Profundo */
+  --sidebar-bg: #2F3D48;
+  --sidebar-text: #E8EDF2;
+  --sidebar-hover: rgba(107, 155, 209, 0.15);
+  --sidebar-active: #6B9BD1;
   
   /* Transições suaves */
   --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -52,12 +59,40 @@
   --font-size-lg: 0.875rem;   /* 14px */
   --font-size-xl: 1rem;       /* 16px */
 
-  /* Navbar */
-  --navbar-bg: #ffffff;
-  --navbar-text: #1e293b;
-  --navbar-border: #e2e8f0;
-  --navbar-input-bg: #f1f5f9;
-  --navbar-input-text: #1e293b;
+  /* Navbar - Header: #06b6d4 */
+  --navbar-bg: #06b6d4;
+  --navbar-text: #ffffff;
+  --navbar-border: #0891b2;
+  --navbar-input-bg: rgba(255, 255, 255, 0.2);
+  --navbar-input-text: #ffffff;
+  
+  /* Accent colors: cores vibrantes para gráficos e elementos interativos */
+  --primary-color: #6B9BD1;
+  --primary-hover: #5A8BC1;
+  --btn-primary-color: #6B9BD1;
+  --btn-primary-hover: #5A8BC1;
+  --accent-pending: #E8B44C;
+  --accent-complete: #8FB369;
+  
+  /* Cores de borda para cards por seção - cores de acento harmonizadas */
+  --card-border-primary: #6B9BD1;
+  --card-border-success: #8FB369;
+  --card-border-warning: #E8B44C;
+  --card-border-info: #6B9BD1;
+  --card-border-default: #5A6D7E;
+  
+  /* Cores para gráficos e visualizações - paleta completa */
+  --chart-color-1: #6B9BD1;
+  --chart-color-2: #8FB369;
+  --chart-color-3: #E8B44C;
+  --chart-color-4: #D97373;
+  --chart-color-5: #9B7FD9;
+  --chart-color-6: #5DA6CC;
+  --chart-color-7: #A3CB7A;
+  --chart-color-8: #F2B950;
+  
+  /* Bootstrap Form Select - seta nativa com cor visível */
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
 
 /* Tema escuro */
@@ -66,14 +101,18 @@
   --bg-primary: #0a0a0a;
   --bg-secondary: #1a1a1a;
   --bg-tertiary: #2d2d2d;
-  --border-color: #2d2d2d;
+  /* Modais: levemente mais claro que cards para hierarquia */
+  --bg-modal: #2d2d2d;
+  /* Bordas: cinza médio com contraste visível */
+  --border-color: #404040;
   --btn-close-filter: invert(1);
   
   /* Cores de texto */
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
-  --border-light: #3a3a3a;
+  /* Bordas leves: cinza médio mais claro */
+  --border-light: #4a4a4a;
   
   /* Sombras para modo escuro */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
@@ -83,7 +122,7 @@
   /* Sidebar - Modo escuro harmonizado */
   --sidebar-bg: #1a1a1a;
   --sidebar-text: #f8fafc;
-  --sidebar-hover: #2d2d2d;
+  --sidebar-hover: #3a3a3a;
   --sidebar-active: #6366f1;
   
   /* Navbar - Modo escuro */
