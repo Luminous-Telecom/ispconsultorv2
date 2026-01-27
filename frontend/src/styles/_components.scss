@@ -1004,6 +1004,46 @@ button,
   padding: 10px !important;
 }
 
+/* Exceção: dentro de header unificado (botões + abas), alinhar com as abas */
+[class*="-header-unified"] .modal-header-actions {
+  padding: 0 !important;
+}
+
+/* Global: layout header unificado (botões acima das abas, alinhados ao início da primeira aba) */
+[class*="-header-unified"] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  gap: 1rem !important;
+  padding: 0 8px !important;
+  margin: 0 !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+}
+
+[class*="-header-unified"] .modal-header-actions,
+[class*="-header-unified"] [class*="-header-buttons"] {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  align-self: flex-start !important;
+}
+
+[class*="-header-tabs"] {
+  flex: 1 !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
 /* Loading component */
 .loading-container {
   min-height: 200px !important;
@@ -1483,40 +1523,6 @@ textarea:focus {
   margin-left: 1rem !important;
 }
 
-.contrato-header-tabs {
-  flex: 1 !important;
-  display: flex !important;
-  justify-content: center !important;
-}
-
-.contrato-header-buttons {
-  display: flex !important;
-  gap: 0.5rem !important;
-  flex-shrink: 0 !important;
-}
-
-/* Layout unificado do header com abas */
-.contrato-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.contrato-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
-}
-
 /* Estilo das abas no header unificado */
 .contrato-tabs-unified {
   --bs-nav-tabs-border-color: transparent !important;
@@ -1697,28 +1703,6 @@ textarea:focus {
   opacity: 0.6 !important;
 }
 
-/* Layout unificado do header com abas */
-.plano-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.plano-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
-}
-
 /* Estilo das abas no header unificado */
 .plano-tabs-unified {
   --bs-nav-tabs-border-color: transparent !important;
@@ -1892,28 +1876,6 @@ textarea:focus {
 .fornecedor-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
-}
-
-/* Layout unificado do header com abas */
-.fornecedor-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.fornecedor-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
 }
 
 /* Estilo das abas no header unificado */
@@ -2091,28 +2053,6 @@ textarea:focus {
   opacity: 0.6 !important;
 }
 
-/* Layout unificado do header com abas */
-.banco-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.banco-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
-}
-
 /* Estilo das abas no header unificado */
 .banco-tabs-unified {
   --bs-nav-tabs-border-color: transparent !important;
@@ -2286,28 +2226,6 @@ textarea:focus {
 .documento-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
-}
-
-/* Layout unificado do header com abas */
-.documento-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.documento-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
 }
 
 /* Estilo das abas no header unificado */
@@ -2485,28 +2403,6 @@ textarea:focus {
   opacity: 0.6 !important;
 }
 
-/* Layout unificado do header com abas */
-.empresa-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.empresa-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
-}
-
 /* Estilo das abas no header unificado */
 .empresa-tabs-unified {
   --bs-nav-tabs-border-color: transparent !important;
@@ -2682,28 +2578,6 @@ textarea:focus {
   opacity: 0.6 !important;
 }
 
-/* Layout unificado do header com abas */
-.whatsapp-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.whatsapp-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
-}
-
 /* Estilo das abas no header unificado */
 .whatsapp-tabs-unified {
   --bs-nav-tabs-border-color: transparent !important;
@@ -2877,28 +2751,6 @@ textarea:focus {
 .hotsite-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
-}
-
-/* Layout unificado do header com abas */
-.hotsite-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.hotsite-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
 }
 
 /* Estilo das abas no header unificado */
@@ -3174,28 +3026,6 @@ textarea:focus {
   opacity: 0.6 !important;
 }
 
-/* Layout unificado do header com abas */
-.email-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.email-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
-}
-
 /* Estilo das abas no header unificado */
 .email-tabs-unified {
   --bs-nav-tabs-border-color: transparent !important;
@@ -3369,28 +3199,6 @@ textarea:focus {
 .sistema-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
-}
-
-/* Layout unificado do header com abas */
-.sistema-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.sistema-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
 }
 
 /* Estilo das abas no header unificado */
@@ -3573,52 +3381,6 @@ textarea:focus {
   border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
 }
-
-/* Layout do header com abas */
-.cliente-header-layout {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  width: 100% !important;
-  flex: 1 !important;
-  margin-left: 1rem !important;
-}
-
-.cliente-header-tabs {
-  flex: 1 !important;
-  display: flex !important;
-  justify-content: center !important;
-}
-
-.cliente-header-buttons {
-  display: flex !important;
-  gap: 0.5rem !important;
-  flex-shrink: 0 !important;
-}
-
-/* Layout unificado do header com abas */
-.cliente-header-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  gap: 1rem;
-  padding: 0 8px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.cliente-header-buttons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0;
-  margin-bottom: 0;
-}
-
-
 
 /* Estilo das abas no header unificado */
 .cliente-tabs-unified {
