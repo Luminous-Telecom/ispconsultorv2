@@ -48,8 +48,22 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   
   const [selectedItems, setSelectedItems] = useState<Titulo[]>([]);
   const [showCancelados, setShowCancelados] = useState(false);
-  const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>('');
-  const [dataVencimentoFim, setDataVencimentoFim] = useState<string>('');
+  
+  // Calcular primeiro e último dia do mês atual para filtro de datas
+  const getDataInicioMesAtual = () => {
+    const hoje = new Date();
+    const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    return primeiroDia.toISOString().split('T')[0];
+  };
+  
+  const getDataFimMesAtual = () => {
+    const hoje = new Date();
+    const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    return ultimoDia.toISOString().split('T')[0];
+  };
+  
+  const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>(getDataInicioMesAtual());
+  const [dataVencimentoFim, setDataVencimentoFim] = useState<string>(getDataFimMesAtual());
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [showReceberModal, setShowReceberModal] = useState(false);
@@ -178,8 +192,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   // Limpar filtros quando o modal fechar
   useEffect(() => {
     if (!show) {
-      setDataVencimentoInicio('');
-      setDataVencimentoFim('');
+      setDataVencimentoInicio(getDataInicioMesAtual());
+      setDataVencimentoFim(getDataFimMesAtual());
       clearSearch();
       setPage(1);
       setSelectedItems([]);
