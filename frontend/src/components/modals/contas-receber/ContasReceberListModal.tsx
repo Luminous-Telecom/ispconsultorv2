@@ -20,14 +20,14 @@ import { useAuditoria } from '@/hooks/useAuditoria';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 
-interface FinanceiroModalProps {
+interface ContasReceberListModalProps {
   show: boolean;
   onClose: () => void;
   onSelectTitulo?: (titulo: Titulo) => void;
   skipWrapper?: boolean;
 }
 
-const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
+const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   show,
   onClose,
   onSelectTitulo,
@@ -1156,4 +1156,4 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   );
 };
 
-export default FinanceiroModal;
+export default ContasReceberListModal;

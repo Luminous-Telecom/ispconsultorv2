@@ -6,7 +6,7 @@ export type ModalType =
   | 'planos'
   | 'bancos'
   | 'contratos'
-  | 'financeiro'
+  | 'contas-receber'
   | 'dados-empresa'
   | 'fornecedores'
   | 'contas-pagar'

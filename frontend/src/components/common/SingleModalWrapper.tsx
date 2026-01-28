@@ -14,7 +14,7 @@ const ServidorEmailModal = lazy(() => import('../modals/parametros/servidor-emai
 const ServidorWhatsappModal = lazy(() => import('../modals/parametros/servidor-whatsapp').then(m => ({ default: m.ServidorWhatsappModal })));
 const NFSeModal = lazy(() => import('../modals/parametros/NFSeModal'));
 const ContratoListModal = lazy(() => import('../modals/contratos/ContratoListModal'));
-const FinanceiroModal = lazy(() => import('../modals/financeiro/FinanceiroModal'));
+const ContasReceberListModal = lazy(() => import('../modals/contas-receber').then(m => ({ default: m.ContasReceberListModal })));
 const FornecedorListModal = lazy(() => import('../modals/fornecedores').then(m => ({ default: m.FornecedorListModal })));
 const ContasPagarListModal = lazy(() => import('../modals/contas-pagar').then(m => ({ default: m.ContasPagarListModal })));
 const NotaFiscalListModal = lazy(() => import('../modals/notas-fiscais/NotaFiscalListModal'));
@@ -52,7 +52,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   planos: { component: PlanoListModal, titleKey: 'modal.plans', loadingMessageKey: 'ui.loadingPage' },
   bancos: { component: BancoListModal, titleKey: 'modal.banks', loadingMessageKey: 'ui.loadingPage' },
   contratos: { component: ContratoListModal, titleKey: 'modal.contracts', loadingMessageKey: 'ui.loadingPage' },
-  financeiro: { component: FinanceiroModal, titleKey: 'modal.accountsReceivable', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  'contas-receber': { component: ContasReceberListModal, titleKey: 'modal.accountsReceivable', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   fornecedores: { component: FornecedorListModal, titleKey: 'modal.suppliers', loadingMessageKey: 'ui.loadingPage' },
   'contas-pagar': { component: ContasPagarListModal, titleKey: 'modal.accountsPayable', loadingMessageKey: 'ui.loadingPage' },
   'notas-fiscais': { component: NotaFiscalListModal, titleKey: 'modal.invoices', loadingMessageKey: 'ui.loadingPage' },
