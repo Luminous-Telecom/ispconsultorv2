@@ -51,7 +51,7 @@ const MODAL_CONFIGS: Record<string, ModalConfig> = {
   planos: { component: PlanoListModal, title: 'Planos', loadingMessage: 'Carregando planos...' },
   bancos: { component: BancoListModal, title: 'Bancos', loadingMessage: 'Carregando bancos...' },
   contratos: { component: ContratoListModal, title: 'Contratos', loadingMessage: 'Carregando contratos...' },
-  financeiro: { component: FinanceiroModal, title: 'Financeiro - Títulos', loadingMessage: 'Carregando financeiro...', className: 'no-padding' },
+  financeiro: { component: FinanceiroModal, title: 'Contas A Receber', loadingMessage: 'Carregando financeiro...', className: 'no-padding' },
   fornecedores: { component: FornecedorListModal, title: 'Fornecedores', loadingMessage: 'Carregando fornecedores...' },
   'contas-pagar': { component: ContasPagarListModal, title: 'Contas a Pagar', loadingMessage: 'Carregando contas a pagar...' },
   'notas-fiscais': { component: NotaFiscalListModal, title: 'Notas Fiscais', loadingMessage: 'Carregando notas fiscais...' },

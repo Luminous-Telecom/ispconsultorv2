@@ -201,6 +201,7 @@ export interface TranslationKeys {
   'menu.banks': string;
   'menu.contracts': string;
   'menu.financial': string;
+  'menu.accountsReceivable': string;
   'menu.suppliers': string;
   'menu.accountsPayable': string;
   'menu.invoices': string;
@@ -1321,6 +1322,7 @@ const translations: Translations = {
     'menu.banks': 'Bancos',
     'menu.contracts': 'Contratos',
     'menu.financial': 'Financeiro',
+    'menu.accountsReceivable': 'Contas A Receber',
     'menu.suppliers': 'Fornecedores',
     'menu.accountsPayable': 'Contas a Pagar',
     'menu.invoices': 'Notas Fiscais',
@@ -2436,6 +2438,7 @@ const translations: Translations = {
     'menu.banks': 'Banks',
     'menu.contracts': 'Contracts',
     'menu.financial': 'Financial',
+    'menu.accountsReceivable': 'Accounts Receivable',
     'menu.suppliers': 'Suppliers',
     'menu.accountsPayable': 'Accounts Payable',
     'menu.invoices': 'Invoices',
@@ -3553,6 +3556,7 @@ const translations: Translations = {
     'menu.banks': 'Bancos',
     'menu.contracts': 'Contratos',
     'menu.financial': 'Financiero',
+    'menu.accountsReceivable': 'Cuentas por Cobrar',
     'menu.suppliers': 'Proveedores',
     'menu.accountsPayable': 'Cuentas por Pagar',
     'menu.invoices': 'Facturas',

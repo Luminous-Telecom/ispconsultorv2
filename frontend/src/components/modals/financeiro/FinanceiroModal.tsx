@@ -883,7 +883,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         <Table
-            title={t('financial.title')}
+            title={t('menu.accountsReceivable')}
             config={tableConfig}
             tableId="financeiro-modal"
             onSelectionChange={setSelectedItems}
@@ -1046,7 +1046,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       <DraggableModal
         show={show}
         onClose={onClose}
-        title={t('financial.title')}
+        title={t('menu.accountsReceivable')}
         size="xl"
         modalId="financeiro-modal"
         className="no-padding"

@@ -225,7 +225,7 @@ const Layout: React.FC = () => {
   ];
 
   const financeiroFolderItems = [
-    { id: 'financeiro', label: t('menu.financial'), icon: 'bi-cash-stack', onClick: () => handleOpenModal('financeiro') },
+    { id: 'financeiro', label: t('menu.accountsReceivable'), icon: 'bi-cash-stack', onClick: () => handleOpenModal('financeiro') },
     { id: 'contas-pagar', label: t('menu.accountsPayable'), icon: 'bi-arrow-down-circle', onClick: () => handleOpenModal('contas-pagar') },
     { id: 'notas-fiscais', label: t('menu.invoices'), icon: 'bi-receipt', onClick: () => handleOpenModal('notas-fiscais') },
   ];
