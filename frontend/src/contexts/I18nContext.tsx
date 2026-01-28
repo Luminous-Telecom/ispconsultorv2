@@ -207,6 +207,31 @@ export interface TranslationKeys {
   'menu.invoices': string;
   'menu.companyData': string;
 
+  // Modal Titles
+  'modal.clients': string;
+  'modal.plans': string;
+  'modal.banks': string;
+  'modal.contracts': string;
+  'modal.accountsReceivable': string;
+  'modal.suppliers': string;
+  'modal.accountsPayable': string;
+  'modal.invoices': string;
+  'modal.companyData': string;
+  'modal.users': string;
+  'modal.systemResources': string;
+  'modal.hotsite': string;
+  'modal.emailServer': string;
+  'modal.whatsappServer': string;
+  'modal.nfse': string;
+  'modal.dueDays': string;
+  'modal.updates': string;
+  'modal.taskScheduler': string;
+  'modal.digitalSignature': string;
+  'modal.auditLogs': string;
+  'modal.systemDocuments': string;
+  'modal.whatsappHistory': string;
+  'modal.emailHistory': string;
+
   // Parameters Menu
   'params.users': string;
   'params.auditLogs': string;
@@ -1328,6 +1353,31 @@ const translations: Translations = {
     'menu.invoices': 'Notas Fiscais',
     'menu.companyData': 'Dados da Empresa',
 
+    // Modal Titles
+    'modal.clients': 'Clientes',
+    'modal.plans': 'Planos',
+    'modal.banks': 'Bancos',
+    'modal.contracts': 'Contratos',
+    'modal.accountsReceivable': 'Contas A Receber',
+    'modal.suppliers': 'Fornecedores',
+    'modal.accountsPayable': 'Contas a Pagar',
+    'modal.invoices': 'Notas Fiscais',
+    'modal.companyData': 'Dados da Empresa',
+    'modal.users': 'Usuários',
+    'modal.systemResources': 'Recursos do Sistema',
+    'modal.hotsite': 'Hotsite',
+    'modal.emailServer': 'Servidor de E-Mail',
+    'modal.whatsappServer': 'Servidor de WhatsApp',
+    'modal.nfse': 'NFS-e',
+    'modal.dueDays': 'Dias de Vencimento',
+    'modal.updates': 'Atualizações',
+    'modal.taskScheduler': 'Agendador de Tarefas',
+    'modal.digitalSignature': 'Assinatura Digital',
+    'modal.auditLogs': 'Logs de Auditoria',
+    'modal.systemDocuments': 'Modelos de Documentos',
+    'modal.whatsappHistory': 'Histórico de Mensagens WhatsApp',
+    'modal.emailHistory': 'Histórico de Mensagens Email',
+
     // Parameters Menu
     'params.users': 'Usuários',
     'params.auditLogs': 'Logs de Auditoria',
@@ -2443,6 +2493,31 @@ const translations: Translations = {
     'menu.accountsPayable': 'Accounts Payable',
     'menu.invoices': 'Invoices',
     'menu.companyData': 'Company Data',
+
+    // Modal Titles
+    'modal.clients': 'Clients',
+    'modal.plans': 'Plans',
+    'modal.banks': 'Banks',
+    'modal.contracts': 'Contracts',
+    'modal.accountsReceivable': 'Accounts Receivable',
+    'modal.suppliers': 'Suppliers',
+    'modal.accountsPayable': 'Accounts Payable',
+    'modal.invoices': 'Invoices',
+    'modal.companyData': 'Company Data',
+    'modal.users': 'Users',
+    'modal.systemResources': 'System Resources',
+    'modal.hotsite': 'Hotsite',
+    'modal.emailServer': 'Email Server',
+    'modal.whatsappServer': 'WhatsApp Server',
+    'modal.nfse': 'NFS-e',
+    'modal.dueDays': 'Due Days',
+    'modal.updates': 'Updates',
+    'modal.taskScheduler': 'Task Scheduler',
+    'modal.digitalSignature': 'Digital Signature',
+    'modal.auditLogs': 'Audit Logs',
+    'modal.systemDocuments': 'Document Templates',
+    'modal.whatsappHistory': 'WhatsApp Message History',
+    'modal.emailHistory': 'Email Message History',
 
     // Parameters Menu
     'params.users': 'Users',
@@ -3561,6 +3636,31 @@ const translations: Translations = {
     'menu.accountsPayable': 'Cuentas por Pagar',
     'menu.invoices': 'Facturas',
     'menu.companyData': 'Datos de la Empresa',
+
+    // Modal Titles
+    'modal.clients': 'Clientes',
+    'modal.plans': 'Planes',
+    'modal.banks': 'Bancos',
+    'modal.contracts': 'Contratos',
+    'modal.accountsReceivable': 'Cuentas por Cobrar',
+    'modal.suppliers': 'Proveedores',
+    'modal.accountsPayable': 'Cuentas por Pagar',
+    'modal.invoices': 'Facturas',
+    'modal.companyData': 'Datos de la Empresa',
+    'modal.users': 'Usuarios',
+    'modal.systemResources': 'Recursos del Sistema',
+    'modal.hotsite': 'Hotsite',
+    'modal.emailServer': 'Servidor de Correo',
+    'modal.whatsappServer': 'Servidor de WhatsApp',
+    'modal.nfse': 'NFS-e',
+    'modal.dueDays': 'Días de Vencimiento',
+    'modal.updates': 'Actualizaciones',
+    'modal.taskScheduler': 'Programador de Tareas',
+    'modal.digitalSignature': 'Firma Digital',
+    'modal.auditLogs': 'Registros de Auditoría',
+    'modal.systemDocuments': 'Plantillas de Documentos',
+    'modal.whatsappHistory': 'Historial de Mensajes WhatsApp',
+    'modal.emailHistory': 'Historial de Mensajes Email',
 
     // Parameters Menu
     'params.users': 'Usuarios',

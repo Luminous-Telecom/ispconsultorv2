@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { useModal } from '@/contexts/ModalContext';
+import { useI18n, TranslationKeys } from '@/contexts/I18nContext';
 import Loading from './Loading';
 import DraggableModal from './DraggableModal';
 
@@ -40,47 +41,51 @@ interface ModalComponentProps {
 
 interface ModalConfig {
   component: React.LazyExoticComponent<React.ComponentType<ModalComponentProps>>;
-  title: string;
-  loadingMessage: string;
+  titleKey: keyof TranslationKeys;
+  loadingMessageKey: keyof TranslationKeys;
   className?: string;
 }
 
-const MODAL_CONFIGS: Record<string, ModalConfig> = {
-  clientes: { component: ClienteListModal, title: 'Clientes', loadingMessage: 'Carregando clientes...' },
-  'cliente-modal': { component: ClienteModal, title: 'Editar Cliente', loadingMessage: 'Carregando cliente...' },
-  planos: { component: PlanoListModal, title: 'Planos', loadingMessage: 'Carregando planos...' },
-  bancos: { component: BancoListModal, title: 'Bancos', loadingMessage: 'Carregando bancos...' },
-  contratos: { component: ContratoListModal, title: 'Contratos', loadingMessage: 'Carregando contratos...' },
-  financeiro: { component: FinanceiroModal, title: 'Contas A Receber', loadingMessage: 'Carregando financeiro...', className: 'no-padding' },
-  fornecedores: { component: FornecedorListModal, title: 'Fornecedores', loadingMessage: 'Carregando fornecedores...' },
-  'contas-pagar': { component: ContasPagarListModal, title: 'Contas a Pagar', loadingMessage: 'Carregando contas a pagar...' },
-  'notas-fiscais': { component: NotaFiscalListModal, title: 'Notas Fiscais', loadingMessage: 'Carregando notas fiscais...' },
-  'dados-empresa': { component: DadosEmpresaModal, title: 'Dados da Empresa', loadingMessage: 'Carregando dados da empresa...' },
-  usuarios: { component: UsuariosModal, title: 'Usuários', loadingMessage: 'Carregando usuários...' },
-  'recursos-sistema': { component: RecursosSistemaModal, title: 'Recursos do Sistema', loadingMessage: 'Carregando recursos do sistema...' },
-  hotsite: { component: HotsiteModal, title: 'Hotsite', loadingMessage: 'Carregando hotsite...' },
-  'servidor-email': { component: ServidorEmailModal, title: 'Servidor de E-Mail', loadingMessage: 'Carregando servidor de e-mail...' },
-  'servidor-whatsapp': { component: ServidorWhatsappModal, title: 'Servidor de WhatsApp', loadingMessage: 'Carregando servidor de WhatsApp...' },
-  nfse: { component: NFSeModal, title: 'NFS-e', loadingMessage: 'Carregando configurações de NFS-e...' },
-  'dias-vencimento': { component: DiasVencimentoModal, title: 'Dias de Vencimento', loadingMessage: 'Carregando dias de vencimento...' },
-  atualizacoes: { component: AtualizacoesModal, title: 'Atualizações', loadingMessage: 'Carregando atualizações...' },
-  'agendador-tarefas': { component: AgendadorTarefasModal, title: 'Agendador de Tarefas', loadingMessage: 'Carregando agendador de tarefas...' },
-  'assinatura-digital': { component: AssinaturaDigitalModal, title: 'Assinatura Digital', loadingMessage: 'Carregando configurações de assinatura digital...' },
-  auditoria: { component: AuditoriaModal, title: 'Logs de Auditoria', loadingMessage: 'Carregando logs de auditoria...', className: 'no-padding' },
-  'documentos-sistema': { component: DocumentosSistemaModal, title: 'Modelos de Documentos', loadingMessage: 'Carregando modelos de documentos...' },
-  'historico-whatsapp': { component: WhatsAppHistoricoModal, title: 'Histórico de Mensagens WhatsApp', loadingMessage: 'Carregando histórico de WhatsApp...', className: 'no-padding' },
-  'historico-email': { component: EmailHistoricoModal, title: 'Histórico de Mensagens Email', loadingMessage: 'Carregando histórico de emails...', className: 'no-padding' },
-};
+const getModalConfigs = (): Record<string, ModalConfig> => ({
+  clientes: { component: ClienteListModal, titleKey: 'modal.clients', loadingMessageKey: 'ui.loadingPage' },
+  'cliente-modal': { component: ClienteModal, titleKey: 'modal.editClient', loadingMessageKey: 'ui.loadingPage' },
+  planos: { component: PlanoListModal, titleKey: 'modal.plans', loadingMessageKey: 'ui.loadingPage' },
+  bancos: { component: BancoListModal, titleKey: 'modal.banks', loadingMessageKey: 'ui.loadingPage' },
+  contratos: { component: ContratoListModal, titleKey: 'modal.contracts', loadingMessageKey: 'ui.loadingPage' },
+  financeiro: { component: FinanceiroModal, titleKey: 'modal.accountsReceivable', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  fornecedores: { component: FornecedorListModal, titleKey: 'modal.suppliers', loadingMessageKey: 'ui.loadingPage' },
+  'contas-pagar': { component: ContasPagarListModal, titleKey: 'modal.accountsPayable', loadingMessageKey: 'ui.loadingPage' },
+  'notas-fiscais': { component: NotaFiscalListModal, titleKey: 'modal.invoices', loadingMessageKey: 'ui.loadingPage' },
+  'dados-empresa': { component: DadosEmpresaModal, titleKey: 'modal.companyData', loadingMessageKey: 'ui.loadingPage' },
+  usuarios: { component: UsuariosModal, titleKey: 'modal.users', loadingMessageKey: 'ui.loadingPage' },
+  'recursos-sistema': { component: RecursosSistemaModal, titleKey: 'modal.systemResources', loadingMessageKey: 'ui.loadingPage' },
+  hotsite: { component: HotsiteModal, titleKey: 'modal.hotsite', loadingMessageKey: 'ui.loadingPage' },
+  'servidor-email': { component: ServidorEmailModal, titleKey: 'modal.emailServer', loadingMessageKey: 'ui.loadingPage' },
+  'servidor-whatsapp': { component: ServidorWhatsappModal, titleKey: 'modal.whatsappServer', loadingMessageKey: 'ui.loadingPage' },
+  nfse: { component: NFSeModal, titleKey: 'modal.nfse', loadingMessageKey: 'ui.loadingPage' },
+  'dias-vencimento': { component: DiasVencimentoModal, titleKey: 'modal.dueDays', loadingMessageKey: 'ui.loadingPage' },
+  atualizacoes: { component: AtualizacoesModal, titleKey: 'modal.updates', loadingMessageKey: 'ui.loadingPage' },
+  'agendador-tarefas': { component: AgendadorTarefasModal, titleKey: 'modal.taskScheduler', loadingMessageKey: 'ui.loadingPage' },
+  'assinatura-digital': { component: AssinaturaDigitalModal, titleKey: 'modal.digitalSignature', loadingMessageKey: 'ui.loadingPage' },
+  auditoria: { component: AuditoriaModal, titleKey: 'modal.auditLogs', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  'documentos-sistema': { component: DocumentosSistemaModal, titleKey: 'modal.systemDocuments', loadingMessageKey: 'ui.loadingPage' },
+  'historico-whatsapp': { component: WhatsAppHistoricoModal, titleKey: 'modal.whatsappHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  'historico-email': { component: EmailHistoricoModal, titleKey: 'modal.emailHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+});
 
 const SingleModalWrapper: React.FC = () => {
   const { activeModal, modalData, closeModal } = useModal();
+  const { t } = useI18n();
 
   if (!activeModal) return null;
 
+  const MODAL_CONFIGS = getModalConfigs();
   const modalConfig = MODAL_CONFIGS[activeModal];
   if (!modalConfig) return null;
 
   const ModalComponent = modalConfig.component;
+  const modalTitle = t(modalConfig.titleKey);
+  const loadingMessage = t(modalConfig.loadingMessageKey);
 
   // Para o modal de cliente, extraímos o clienteId dos modalData
   const isClienteModal = activeModal === 'cliente-modal';
@@ -91,7 +96,7 @@ const SingleModalWrapper: React.FC = () => {
     show: true,
     onClose: closeModal,
     skipWrapper: true, // Sempre usar skipWrapper para que o conteúdo seja renderizado dentro do DraggableModal único
-    ...(['clientes', 'planos', 'bancos', 'contratos'].includes(activeModal) && { title: modalConfig.title }),
+    ...(['clientes', 'planos', 'bancos', 'contratos'].includes(activeModal) && { title: modalTitle }),
     // Para o cliente-modal, passamos clienteId como prop específica
     ...(isClienteModal && { clienteId }),
     // Para outros modais, passamos os dados adicionais normalmente
@@ -102,11 +107,11 @@ const SingleModalWrapper: React.FC = () => {
     <DraggableModal
       show={true}
       onClose={closeModal}
-      title={modalConfig.title}
+      title={modalTitle}
       size="lg"
       className={modalConfig.className || ''}
     >
-      <Suspense fallback={<Loading message={modalConfig.loadingMessage} />}>
+      <Suspense fallback={<Loading message={loadingMessage} />}>
         <ModalComponent {...modalProps} />
       </Suspense>
     </DraggableModal>
