@@ -40,8 +40,8 @@
   /* Sidebar - harmonizada com paleta Azul Ardósia Profundo */
   --sidebar-bg: #2F3D48;
   --sidebar-text: #E8EDF2;
-  --sidebar-hover: rgba(107, 155, 209, 0.15);
-  --sidebar-active: #6B9BD1;
+  --sidebar-hover: rgba(61, 90, 122, 0.15);
+  --sidebar-active: #3D5A7A;
   
   /* Transições suaves */
   --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -75,10 +75,10 @@
   --accent-complete: #8FB369;
   
   /* Cores de borda para cards por seção - cores de acento harmonizadas */
-  --card-border-primary: #6B9BD1;
+  --card-border-primary: #3D5A7A;
   --card-border-success: #8FB369;
   --card-border-warning: #E8B44C;
-  --card-border-info: #6B9BD1;
+  --card-border-info: #3D5A7A;
   --card-border-default: #5A6D7E;
   
   /* Cores para gráficos e visualizações - paleta completa */
@@ -133,9 +133,20 @@
   --navbar-input-text: #ffffff;
 
   /* Ajustes de cores primárias para melhor contraste no escuro */
-  --primary-color: #3d8bfd;
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  --btn-primary-color: #6366f1;
+  --btn-primary-hover: #4f46e5;
   --success-color: #25cff2;
   --danger-color: #ea868f;
   --warning-color: #ffda6a;
   --info-color: #6edff6;
+  
+  /* Cores de borda para cards por seção - modo escuro */
+  --card-border-primary: #6366f1;
+  --card-border-info: #6366f1;
+  
+  /* Sidebar - Modo escuro */
+  --sidebar-active: #6366f1;
+  --sidebar-hover: rgba(99, 102, 241, 0.15);
 }

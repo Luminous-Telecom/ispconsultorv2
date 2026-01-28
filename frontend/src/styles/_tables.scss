@@ -266,7 +266,7 @@ label {
 :root .table tbody tr.table-active,
 :root .table tbody tr.table-active:nth-child(even),
 :root .table tbody tr.table-active:nth-child(odd) {
-  background-color: rgba(107, 155, 209, 0.8) !important;
+  background-color: rgba(107, 155, 209, 0.9) !important;
   border-left: none !important;
 }
 
@@ -284,7 +284,7 @@ label {
 :root .table tbody tr.table-active:hover,
 :root .table tbody tr.table-active:nth-child(even):hover,
 :root .table tbody tr.table-active:nth-child(odd):hover {
-  background-color: rgba(107, 155, 209, 0.85) !important;
+  background-color: rgba(107, 155, 209, 1) !important;
 }
 
 .table tbody tr.table-active:hover td,
@@ -402,7 +402,7 @@ label {
 [data-theme="dark"] .table tbody tr.table-active,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even),
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd) {
-  background-color: rgba(99, 102, 241, 0.6) !important;
+  background-color: rgba(99, 102, 241, 0.8) !important;
 }
 
 [data-theme="dark"] .table tbody tr.table-active td,
@@ -419,7 +419,7 @@ label {
 [data-theme="dark"] .table tbody tr.table-active:hover,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover {
-  background-color: rgba(99, 102, 241, 0.7) !important;
+  background-color: rgba(99, 102, 241, 0.85) !important;
 }
 
 [data-theme="dark"] .table tbody tr.table-active:hover td,

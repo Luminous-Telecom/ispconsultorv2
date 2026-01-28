@@ -726,9 +726,16 @@ button,
   border-radius: var(--border-radius) !important;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background-color: var(--btn-primary-hover);
   border-color: var(--btn-primary-hover);
+}
+
+.btn-primary:disabled {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
 }
 
 .btn-secondary {
@@ -738,9 +745,16 @@ button,
   border-radius: var(--border-radius) !important;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background: var(--bg-secondary);
   border-color: var(--primary-color);
+}
+
+.btn-secondary:disabled {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
 }
 
 .btn-success {
@@ -750,9 +764,16 @@ button,
   border-radius: var(--border-radius) !important;
 }
 
-.btn-success:hover {
+.btn-success:hover:not(:disabled) {
   background: #059669;
   border-color: #059669;
+}
+
+.btn-success:disabled {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
 }
 
 .btn-danger {
@@ -762,9 +783,16 @@ button,
   border-radius: var(--border-radius) !important;
 }
 
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
   background: #dc2626;
   border-color: #dc2626;
+}
+
+.btn-danger:disabled {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
 }
 
 .btn-info {
@@ -774,9 +802,16 @@ button,
   border-radius: var(--border-radius) !important;
 }
 
-.btn-info:hover {
+.btn-info:hover:not(:disabled) {
   background: #2563eb;
   border-color: #2563eb;
+}
+
+.btn-info:disabled {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
 }
 
 .btn-warning {
@@ -786,9 +821,29 @@ button,
   border-radius: var(--border-radius) !important;
 }
 
-.btn-warning:hover {
+.btn-warning:hover:not(:disabled) {
   background: #d97706;
   border-color: #d97706;
+}
+
+.btn-warning:disabled {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
+}
+
+/* Botões outline - quando desabilitados ficam escuros */
+.btn-outline-primary:disabled,
+.btn-outline-success:disabled,
+.btn-outline-danger:disabled,
+.btn-outline-warning:disabled,
+.btn-outline-info:disabled,
+.btn-outline-secondary:disabled {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
 }
 
 /* Formulários */
@@ -1472,7 +1527,7 @@ textarea:focus {
 
 /* Active/Selected - cor de acento mais saturada */
 .table tbody tr.table-active {
-  background-color: rgba(107, 155, 209, 0.7) !important;
+  background-color: rgba(107, 155, 209, 0.9) !important;
   border-left: none !important;
 }
 
@@ -4601,9 +4656,10 @@ textarea:focus {
 
 /* Estados de loading */
 .btn:disabled {
-  opacity: 0.65;
   cursor: not-allowed;
 }
+
+/* Estilos específicos para botões desabilitados já estão definidos acima */
 
 /* Garantir que spinner seja visível mesmo quando botão está desabilitado */
 .btn:disabled .spinner-border {
