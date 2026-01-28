@@ -432,7 +432,11 @@ label {
   color: var(--text-primary) !important;
 }
 
-/* Sobrescrever bg-light para tema escuro */
+/* Sobrescrever bg-light para ambos os temas */
+.bg-light {
+  background-color: var(--bg-secondary) !important;
+}
+
 [data-theme="dark"] .bg-light {
   background-color: var(--bg-secondary) !important;
 }
