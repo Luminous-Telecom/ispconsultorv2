@@ -10,6 +10,9 @@ import { Fornecedor } from '../models/financeiro/Fornecedor';
 import { TermoContrato } from '../models/contratos/TermoContrato';
 import { Auditoria } from '../models/sistema/Auditoria';
 import { ClienteArquivo } from '../models/clientes/ClienteArquivo';
+import { Dominio } from '../models/blockdomi/Dominio';
+import { IPv4 } from '../models/blockdomi/IPv4';
+import { IPv6 } from '../models/blockdomi/IPv6';
 import { SortConfig } from '../utils/sortHelper';
 
 /**
@@ -245,6 +248,36 @@ export const AUDITORIA_SORT_CONFIG: SortConfig = {
 export const CLIENTE_ARQUIVO_SORT_CONFIG: SortConfig = {
   model: ClienteArquivo,
   tableName: 'cliente_arquivos',
+  virtualColumns: {},
+  relationshipColumns: {}
+};
+
+/**
+ * Configuração de ordenação para Dominio
+ */
+export const DOMINIO_SORT_CONFIG: SortConfig = {
+  model: Dominio,
+  tableName: 'dominios',
+  virtualColumns: {},
+  relationshipColumns: {}
+};
+
+/**
+ * Configuração de ordenação para IPv4
+ */
+export const IPV4_SORT_CONFIG: SortConfig = {
+  model: IPv4,
+  tableName: 'ipv4',
+  virtualColumns: {},
+  relationshipColumns: {}
+};
+
+/**
+ * Configuração de ordenação para IPv6
+ */
+export const IPV6_SORT_CONFIG: SortConfig = {
+  model: IPv6,
+  tableName: 'ipv6',
   virtualColumns: {},
   relationshipColumns: {}
 };

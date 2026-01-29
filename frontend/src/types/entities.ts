@@ -742,3 +742,42 @@ export interface UsuarioFilters extends Record<string, string | number | boolean
   ativo?: boolean;
 }
 
+// ============================================
+// Blockdomi - Dominio
+// ============================================
+export interface Dominio {
+  id: number;
+  dominio: string;
+  descricao?: string | null;
+  ativo: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_at_formatada?: string | null;
+}
+
+// ============================================
+// Blockdomi - IPv4
+// ============================================
+export interface IPv4 {
+  id: number;
+  ip: string;
+  descricao?: string | null;
+  ativo: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_at_formatada?: string | null;
+}
+
+// ============================================
+// Blockdomi - IPv6
+// ============================================
+export interface IPv6 {
+  id: number;
+  ip: string;
+  descricao?: string | null;
+  ativo: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_at_formatada?: string | null;
+}
+

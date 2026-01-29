@@ -96,7 +96,7 @@
  * ```
  */
 
-import { Cliente, Plano, Banco, Contrato, Carne, CarneParcela, Fornecedor, ContaPagar, CreateNotaFiscal } from './entities';
+import { Cliente, Plano, Banco, Contrato, Carne, CarneParcela, Fornecedor, ContaPagar, CreateNotaFiscal, Dominio, IPv4, IPv6 } from './entities';
 
 // Re-exportar tipos consolidados
 export * from './entities';
@@ -117,7 +117,7 @@ export type { PlanoInfo, BancoInfo, ContratoItem, TituloItem, BulkActionItem, No
 
 // Todos os filtros estão em api.ts agora
 // Mantendo apenas para compatibilidade com código existente
-export type { ClienteFilters, PlanoFilters, BancoFilters, CarneFilters, CarneParcelaFilters, FornecedorFilters, ContaPagarFilters, NotaFiscalFilters } from './api';
+export type { ClienteFilters, PlanoFilters, BancoFilters, CarneFilters, CarneParcelaFilters, FornecedorFilters, ContaPagarFilters, NotaFiscalFilters, DominioFilters, IPv4Filters, IPv6Filters } from './api';
 
 // ============================================
 // TIPOS DE CRIAÇÃO E ATUALIZAÇÃO
@@ -136,6 +136,15 @@ export type UpdatePlano = Partial<CreatePlano>;
 
 export type CreateBanco = Omit<Banco, 'id' | 'created_at' | 'updated_at'>;
 export type UpdateBanco = Partial<CreateBanco>;
+
+export type CreateDominio = Omit<Dominio, 'id' | 'created_at' | 'updated_at' | 'created_at_formatada'>;
+export type UpdateDominio = Partial<CreateDominio>;
+
+export type CreateIPv4 = Omit<IPv4, 'id' | 'created_at' | 'updated_at' | 'created_at_formatada'>;
+export type UpdateIPv4 = Partial<CreateIPv4>;
+
+export type CreateIPv6 = Omit<IPv6, 'id' | 'created_at' | 'updated_at' | 'created_at_formatada'>;
+export type UpdateIPv6 = Partial<CreateIPv6>;
 
 export type CreateCarne = Omit<Carne, 'id' | 'created_at' | 'updated_at'>;
 export type UpdateCarne = Partial<CreateCarne>;

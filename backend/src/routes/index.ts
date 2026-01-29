@@ -37,6 +37,9 @@ import notaFiscalRoutes from './notaFiscalRoutes';
 import nfseConfigRoutes from './nfseConfigRoutes';
 import hotsiteRoutes from './hotsiteRoutes';
 import centralAssinanteRoutes from './centralAssinanteRoutes';
+import dominioRoutes from './dominioRoutes';
+import ipv4Routes from './ipv4Routes';
+import ipv6Routes from './ipv6Routes';
 
 const router = Router();
 
@@ -79,6 +82,9 @@ const routes = [
     { path: '/api/contas-pagar', route: contaPagarRoutes },
     { path: '/api/notas-fiscais', route: notaFiscalRoutes },
     { path: '/api/nfse-config', route: nfseConfigRoutes },
+    { path: '/api/dominios', route: dominioRoutes },
+    { path: '/api/ipv4', route: ipv4Routes },
+    { path: '/api/ipv6', route: ipv6Routes },
     { path: '/api', route: centralAssinanteRoutes },
 
     // Rotas de webhook

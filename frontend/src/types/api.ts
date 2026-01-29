@@ -132,3 +132,15 @@ export interface NotaFiscalFilters extends BaseFilters {
   data_fim?: string;
   searchField?: string;
 }
+
+export interface DominioFilters extends BaseFilters {
+  ativo?: boolean;
+}
+
+export interface IPv4Filters extends BaseFilters {
+  ativo?: boolean;
+}
+
+export interface IPv6Filters extends BaseFilters {
+  ativo?: boolean;
+}

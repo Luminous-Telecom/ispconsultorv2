@@ -29,6 +29,9 @@ const AuditoriaModal = lazy(() => import('../modals/parametros/AuditoriaModal'))
 const DocumentosSistemaModal = lazy(() => import('../modals/parametros/documentos-sistema').then(m => ({ default: m.DocumentosSistemaModal })));
 const WhatsAppHistoricoModal = lazy(() => import('../modals/comunicacao/WhatsAppHistoricoModal'));
 const EmailHistoricoModal = lazy(() => import('../modals/comunicacao/EmailHistoricoModal'));
+const DominioListModal = lazy(() => import('../modals/blockdomi/dominios').then(m => ({ default: m.DominioListModal })));
+const IPv4ListModal = lazy(() => import('../modals/blockdomi/ipv4').then(m => ({ default: m.IPv4ListModal })));
+const IPv6ListModal = lazy(() => import('../modals/blockdomi/ipv6').then(m => ({ default: m.IPv6ListModal })));
 
 interface ModalComponentProps {
   show: boolean;
@@ -71,6 +74,9 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'documentos-sistema': { component: DocumentosSistemaModal, titleKey: 'modal.systemDocuments', loadingMessageKey: 'ui.loadingPage' },
   'historico-whatsapp': { component: WhatsAppHistoricoModal, titleKey: 'modal.whatsappHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'historico-email': { component: EmailHistoricoModal, titleKey: 'modal.emailHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  'blockdomi-dominios': { component: DominioListModal, titleKey: 'modal.domains', loadingMessageKey: 'ui.loadingPage' },
+  'blockdomi-ipv4': { component: IPv4ListModal, titleKey: 'modal.ipv4', loadingMessageKey: 'ui.loadingPage' },
+  'blockdomi-ipv6': { component: IPv6ListModal, titleKey: 'modal.ipv6', loadingMessageKey: 'ui.loadingPage' },
 });
 
 const SingleModalWrapper: React.FC = () => {

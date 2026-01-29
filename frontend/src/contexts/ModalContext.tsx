@@ -25,6 +25,9 @@ export type ModalType =
   | 'atualizacoes'
   | 'agendador-tarefas'
   | 'assinatura-digital'
+  | 'blockdomi-dominios'
+  | 'blockdomi-ipv4'
+  | 'blockdomi-ipv6'
   | null;
 
 interface ModalContextType {

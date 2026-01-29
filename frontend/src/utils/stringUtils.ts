@@ -11,3 +11,25 @@ export const ensureString = (value: unknown): string => {
   return String(value);
 };
 
+/**
+ * Sanitiza um domínio: remove apenas protocolo e www., mantém hostname e caminho.
+ * Remove: https://, http://, www. (no início). Query string (?...) é removida.
+ * Exemplos: "https://t.co/rtg5bj3jkz" -> "t.co/rtg5bj3jkz"; "https://exemplo.com" -> "exemplo.com"
+ */
+export const sanitizeDominio = (dominio: string | null | undefined): string => {
+  if (!dominio || typeof dominio !== 'string') return '';
+  let cleaned = dominio.trim().toLowerCase();
+  cleaned = cleaned.replace(/^https?:\/\//i, '');
+  cleaned = cleaned.replace(/^www\./i, '');
+  const firstQuery = cleaned.indexOf('?');
+  if (firstQuery !== -1) cleaned = cleaned.slice(0, firstQuery);
+  cleaned = cleaned.replace(/\/+$/, '').trim();
+  const firstSlash = cleaned.indexOf('/');
+  const hostname = firstSlash === -1 ? cleaned : cleaned.slice(0, firstSlash);
+  const path = firstSlash === -1 ? '' : cleaned.slice(firstSlash);
+  if (!hostname || hostname.includes('..')) return '';
+  if (!/^[a-z0-9][a-z0-9.-]*[a-z0-9]$|^[a-z0-9]$/i.test(hostname)) return '';
+  if (path && !/^\/[a-z0-9/_-]*$/i.test(path)) return '';
+  return hostname + path;
+};
+

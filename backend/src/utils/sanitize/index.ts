@@ -296,6 +296,110 @@ export function sanitizeObject<T extends Record<string, unknown>>(
 }
 
 /**
+ * Sanitiza um domínio: remove apenas protocolo e www., mantém hostname e caminho.
+ * Remove: https://, http://, www. (no início). Query string (?...) é removida.
+ * Exemplos: "https://t.co/rtg5bj3jkz" -> "t.co/rtg5bj3jkz"; "https://exemplo.com" -> "exemplo.com"
+ * @param dominio - Domínio ou URL a ser sanitizado
+ * @returns Domínio sem protocolo (hostname ou hostname/caminho) ou string vazia
+ */
+export function sanitizeDominio(dominio: string | null | undefined): string {
+  if (!dominio || typeof dominio !== 'string') {
+    return '';
+  }
+
+  let cleaned = dominio.trim().toLowerCase();
+
+  // Remover protocolo
+  cleaned = cleaned.replace(/^https?:\/\//i, '');
+
+  // Remover www. apenas no início (hostname)
+  cleaned = cleaned.replace(/^www\./i, '');
+
+  // Remover query string (tudo após ?)
+  const firstQuery = cleaned.indexOf('?');
+  if (firstQuery !== -1) {
+    cleaned = cleaned.slice(0, firstQuery);
+  }
+
+  // Remover barra final se sobrou
+  cleaned = cleaned.replace(/\/+$/, '').trim();
+
+  // Partes: hostname (obrigatório) e opcionalmente /caminho
+  const firstSlash = cleaned.indexOf('/');
+  const hostname = firstSlash === -1 ? cleaned : cleaned.slice(0, firstSlash);
+  const path = firstSlash === -1 ? '' : cleaned.slice(firstSlash);
+
+  // Hostname válido: letras, números, hífen, ponto (sem ..)
+  if (!hostname || hostname.includes('..')) {
+    return '';
+  }
+  if (!/^[a-z0-9][a-z0-9.-]*[a-z0-9]$|^[a-z0-9]$/i.test(hostname)) {
+    return '';
+  }
+
+  // Path opcional: apenas /, letras, números, hífen, underscore
+  if (path && !/^\/[a-z0-9/_-]*$/i.test(path)) {
+    return '';
+  }
+
+  return hostname + path;
+}
+
+/**
+ * Valida se uma string é um IPv4 válido (4 octetos 0-255, ex: 192.168.1.1).
+ * Não aceita trailing/leading dots nem octetos vazios (ex: 45.224.181.)
+ */
+export function isValidIPv4(ip: string | null | undefined): boolean {
+  if (!ip || typeof ip !== 'string') return false;
+  const trimmed = ip.trim();
+  const match = trimmed.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!match) return false;
+  for (let i = 1; i <= 4; i++) {
+    const octet = parseInt(match[i], 10);
+    if (Number.isNaN(octet) || octet < 0 || octet > 255) return false;
+  }
+  return true;
+}
+
+/**
+ * Valida se uma string é um IPv6 válido (8 grupos hex 1-4 dígitos, com : ou ::).
+ * Ex: 2001:0db8:85a3:0000:0000:8a2e:0370:7334 ou 2001:db8::1
+ * Não aceita dois pontos seguidos fora da compressão :: nem dois ::
+ */
+export function isValidIPv6(ip: string | null | undefined): boolean {
+  if (!ip || typeof ip !== 'string') return false;
+  const s = ip.trim();
+  if (s.length < 2) return false;
+  if (s.startsWith(':') && !s.startsWith('::')) return false;
+  if (s.endsWith(':') && !s.endsWith('::')) return false;
+  const parts = s.split(':');
+  if (parts.length > 8) return false;
+  if (parts.length < 2) return false;
+  const emptyCount = parts.filter((p) => p === '').length;
+  const hexGroup = /^[0-9a-fA-F]{1,4}$/;
+  if (emptyCount > 2) return false;
+  if (emptyCount === 2) {
+    if (parts.length !== 3) return false;
+    const nonEmpty = parts.filter((p) => p !== '');
+    if (nonEmpty.length !== 1) return false;
+    return hexGroup.test(nonEmpty[0]);
+  }
+  if (emptyCount === 1) {
+    const nonEmpty = parts.filter((p) => p !== '');
+    if (nonEmpty.length >= 8) return false;
+    for (const p of nonEmpty) {
+      if (!hexGroup.test(p)) return false;
+    }
+    return true;
+  }
+  if (parts.length !== 8) return false;
+  for (const p of parts) {
+    if (!hexGroup.test(p)) return false;
+  }
+  return true;
+}
+
+/**
  * Sanitiza uma URL removendo protocolos perigosos
  * @param url - URL a ser sanitizada
  * @returns URL sanitizada ou string vazia

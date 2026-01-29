@@ -50,6 +50,11 @@ import { ServidorEmail } from './comunicacao/ServidorEmail';
 import { ServidorWhatsApp } from './comunicacao/ServidorWhatsApp';
 import { MensagemHistorico } from './comunicacao/MensagemHistorico';
 
+// Blockdomi
+import { Dominio } from './blockdomi/Dominio';
+import { IPv4 } from './blockdomi/IPv4';
+import { IPv6 } from './blockdomi/IPv6';
+
 // Importar associações específicas
 import './associations';
 
@@ -371,5 +376,8 @@ export {
   ContaPagarArquivo,
   ContaPagarPagamento,
   NotaFiscal,
-  NFSeConfig
+  NFSeConfig,
+  Dominio,
+  IPv4,
+  IPv6
 };

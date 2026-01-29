@@ -228,6 +228,9 @@ export interface TranslationKeys {
   'modal.taskScheduler': string;
   'modal.digitalSignature': string;
   'modal.auditLogs': string;
+  'modal.domains': string;
+  'modal.ipv4': string;
+  'modal.ipv6': string;
   'modal.systemDocuments': string;
   'modal.whatsappHistory': string;
   'modal.emailHistory': string;
@@ -1376,6 +1379,9 @@ const translations: Translations = {
     'modal.auditLogs': 'Logs de Auditoria',
     'modal.systemDocuments': 'Modelos de Documentos',
     'modal.whatsappHistory': 'Histórico de Mensagens WhatsApp',
+    'modal.domains': 'Domínios',
+    'modal.ipv4': 'IPv4',
+    'modal.ipv6': 'IPv6',
     'modal.emailHistory': 'Histórico de Mensagens Email',
 
     // Parameters Menu
@@ -2517,6 +2523,9 @@ const translations: Translations = {
     'modal.auditLogs': 'Audit Logs',
     'modal.systemDocuments': 'Document Templates',
     'modal.whatsappHistory': 'WhatsApp Message History',
+    'modal.domains': 'Domains',
+    'modal.ipv4': 'IPv4',
+    'modal.ipv6': 'IPv6',
     'modal.emailHistory': 'Email Message History',
 
     // Parameters Menu
@@ -3660,6 +3669,9 @@ const translations: Translations = {
     'modal.auditLogs': 'Registros de Auditoría',
     'modal.systemDocuments': 'Plantillas de Documentos',
     'modal.whatsappHistory': 'Historial de Mensajes WhatsApp',
+    'modal.domains': 'Dominios',
+    'modal.ipv4': 'IPv4',
+    'modal.ipv6': 'IPv6',
     'modal.emailHistory': 'Historial de Mensajes Email',
 
     // Parameters Menu

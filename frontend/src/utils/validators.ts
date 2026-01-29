@@ -1,6 +1,59 @@
 // Validações centralizadas para formulários
 
 /**
+ * Valida se uma string é um IPv4 válido (4 octetos 0-255, ex: 192.168.1.1).
+ * Não aceita pontos no final nem octetos vazios (ex: 45.224.181.)
+ */
+export const isValidIPv4 = (ip: string | null | undefined): boolean => {
+  if (!ip || typeof ip !== 'string') return false;
+  const trimmed = ip.trim();
+  const match = trimmed.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!match) return false;
+  for (let i = 1; i <= 4; i++) {
+    const octet = parseInt(match[i], 10);
+    if (Number.isNaN(octet) || octet < 0 || octet > 255) return false;
+  }
+  return true;
+};
+
+/**
+ * Valida se uma string é um IPv6 válido (8 grupos hex 1-4 dígitos, com : ou ::).
+ * Ex: 2001:0db8:85a3:0000:0000:8a2e:0370:7334 ou 2001:db8::1
+ */
+export const isValidIPv6 = (ip: string | null | undefined): boolean => {
+  if (!ip || typeof ip !== 'string') return false;
+  const s = ip.trim();
+  if (s.length < 2) return false;
+  if (s.startsWith(':') && !s.startsWith('::')) return false;
+  if (s.endsWith(':') && !s.endsWith('::')) return false;
+  const parts = s.split(':');
+  if (parts.length > 8) return false;
+  if (parts.length < 2) return false;
+  const emptyCount = parts.filter((p) => p === '').length;
+  const hexGroup = /^[0-9a-fA-F]{1,4}$/;
+  if (emptyCount > 2) return false;
+  if (emptyCount === 2) {
+    if (parts.length !== 3) return false;
+    const nonEmpty = parts.filter((p) => p !== '');
+    if (nonEmpty.length !== 1) return false;
+    return hexGroup.test(nonEmpty[0]);
+  }
+  if (emptyCount === 1) {
+    const nonEmpty = parts.filter((p) => p !== '');
+    if (nonEmpty.length >= 8) return false;
+    for (const p of nonEmpty) {
+      if (!hexGroup.test(p)) return false;
+    }
+    return true;
+  }
+  if (parts.length !== 8) return false;
+  for (const p of parts) {
+    if (!hexGroup.test(p)) return false;
+  }
+  return true;
+};
+
+/**
  * Valida se um CNPJ é válido
  * @param cnpj - CNPJ para validar
  * @returns true se válido, false caso contrário
