@@ -8,6 +8,7 @@ import { IPv6 } from '@/types';
 import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime, formatDate } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
+import DraggableModal from '@/components/common/DraggableModal';
 import { IPv6Modal } from './index';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
@@ -317,42 +318,65 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
 
   const modalData = useMemo(() => ipv6sData?.data || [], [ipv6sData?.data]);
 
+  const modalContent = (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <ListModal
+          show={show}
+          onClose={() => {
+            clearSelection();
+            onClose();
+          }}
+          config={modal.config}
+          data={modalData}
+          loading={isLoading}
+          selectedItems={selectedItem ? [selectedItem] : []}
+          onSelectionChange={handleSelectionChange}
+          onRowDoubleClick={(ipv6) => {
+            if (onSelectIPv6) {
+              onSelectIPv6(ipv6);
+              onClose();
+            }
+          }}
+          search={tableFilters.search}
+          onSearchChange={handleSearchChange}
+          onSearchFieldChange={handleSearchFieldChange}
+          pagination={pagination}
+          onPageChange={tableFilters.setPage}
+          onPageSizeChange={tableFilters.setLimit}
+          onLimitChange={tableFilters.setLimit}
+          sortColumn={tableFilters.sortColumn}
+          sortDirection={tableFilters.sortDirection}
+          onSortChange={tableFilters.setSort}
+          refreshQueryKeys={['ipv6']}
+          refreshQueryFn={refetch}
+          bulkActions={bulkActions}
+          onAudit={handleAudit}
+          auditEntity="IPv6"
+          skipWrapper={true}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <>
-      <ListModal
-        show={show}
-        onClose={() => {
-          clearSelection();
-          onClose();
-        }}
-        config={modal.config}
-        data={modalData}
-        loading={isLoading}
-        selectedItems={selectedItem ? [selectedItem] : []}
-        onSelectionChange={handleSelectionChange}
-        onRowDoubleClick={(ipv6) => {
-          if (onSelectIPv6) {
-            onSelectIPv6(ipv6);
+      {skipWrapper ? (
+        modalContent
+      ) : (
+        <DraggableModal
+          show={show}
+          onClose={() => {
+            clearSelection();
             onClose();
-          }
-        }}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        onSearchFieldChange={handleSearchFieldChange}
-        pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={tableFilters.setLimit}
-        onLimitChange={tableFilters.setLimit}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        refreshQueryKeys={['ipv6']}
-        refreshQueryFn={refetch}
-        bulkActions={bulkActions}
-        onAudit={handleAudit}
-        auditEntity="IPv6"
-        skipWrapper={skipWrapper}
-      />
+          }}
+          title={modal.config.title}
+          size="lg"
+          className="no-padding"
+        >
+          {modalContent}
+        </DraggableModal>
+      )}
 
       <IPv6Modal
         show={showCreateModal || showEditModal}

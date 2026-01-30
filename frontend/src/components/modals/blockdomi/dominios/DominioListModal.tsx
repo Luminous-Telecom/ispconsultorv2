@@ -8,6 +8,7 @@ import { Dominio } from '@/types';
 import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime, formatDate } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
+import DraggableModal from '@/components/common/DraggableModal';
 import DominioModal from './DominioModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
@@ -319,42 +320,65 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
 
   const modalData = useMemo(() => dominiosData?.data || [], [dominiosData?.data]);
 
+  const modalContent = (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <ListModal
+          show={show}
+          onClose={() => {
+            clearSelection();
+            onClose();
+          }}
+          config={modal.config}
+          data={modalData}
+          loading={isLoading}
+          selectedItems={selectedItem ? [selectedItem] : []}
+          onSelectionChange={handleSelectionChange}
+          onRowDoubleClick={(dominio) => {
+            if (onSelectDominio) {
+              onSelectDominio(dominio);
+              onClose();
+            }
+          }}
+          search={tableFilters.search}
+          onSearchChange={handleSearchChange}
+          onSearchFieldChange={handleSearchFieldChange}
+          pagination={pagination}
+          onPageChange={tableFilters.setPage}
+          onPageSizeChange={tableFilters.setLimit}
+          onLimitChange={tableFilters.setLimit}
+          sortColumn={tableFilters.sortColumn}
+          sortDirection={tableFilters.sortDirection}
+          onSortChange={tableFilters.setSort}
+          refreshQueryKeys={['dominios']}
+          refreshQueryFn={refetch}
+          bulkActions={bulkActions}
+          onAudit={handleAudit}
+          auditEntity="Dominio"
+          skipWrapper={true}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <>
-      <ListModal
-        show={show}
-        onClose={() => {
-          clearSelection();
-          onClose();
-        }}
-        config={modal.config}
-        data={modalData}
-        loading={isLoading}
-        selectedItems={selectedItem ? [selectedItem] : []}
-        onSelectionChange={handleSelectionChange}
-        onRowDoubleClick={(dominio) => {
-          if (onSelectDominio) {
-            onSelectDominio(dominio);
+      {skipWrapper ? (
+        modalContent
+      ) : (
+        <DraggableModal
+          show={show}
+          onClose={() => {
+            clearSelection();
             onClose();
-          }
-        }}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        onSearchFieldChange={handleSearchFieldChange}
-        pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={tableFilters.setLimit}
-        onLimitChange={tableFilters.setLimit}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        refreshQueryKeys={['dominios']}
-        refreshQueryFn={refetch}
-        bulkActions={bulkActions}
-        onAudit={handleAudit}
-        auditEntity="Dominio"
-        skipWrapper={skipWrapper}
-      />
+          }}
+          title={modal.config.title}
+          size="lg"
+          className="no-padding"
+        >
+          {modalContent}
+        </DraggableModal>
+      )}
 
       <DominioModal
         show={showCreateModal || showEditModal}
