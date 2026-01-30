@@ -105,7 +105,7 @@ export interface DetailedStats {
  */
 export interface CreateRoutineData {
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'outros';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'outros';
   descricao?: string;
   configuracao: Record<string, JsonValue>;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';

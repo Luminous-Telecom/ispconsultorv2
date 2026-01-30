@@ -71,9 +71,19 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         key: 'tipo',
         label: t('scheduler.type'),
         sortable: true,
-        render: (item: RotinaAgendada) => (
-          <span className="badge bg-info">{item.tipo.replace(/_/g, ' ')}</span>
-        )
+        render: (item: RotinaAgendada) => {
+          const labels: Record<string, string> = {
+            geracao_titulos: 'Geração de Títulos',
+            envio_boletos: 'Envio de Boletos',
+            remessa_bancaria: 'Remessa Bancária',
+            verificar_vencimentos: 'Verificar Vencimentos',
+            desbloquear_blockdomi: 'Desbloquear domínios',
+            outros: 'Outros'
+          };
+          return (
+            <span className="badge bg-info">{labels[item.tipo] ?? item.tipo.replace(/_/g, ' ')}</span>
+          );
+        }
       },
       {
         key: 'frequencia',
@@ -358,6 +368,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         bulkActions={bulkActions}
         onAudit={handleAudit}
         auditEntity="ScheduledRoutine"
+        tableId="agendador-tarefas"
       />
 
       <RotinaAgendadaModal

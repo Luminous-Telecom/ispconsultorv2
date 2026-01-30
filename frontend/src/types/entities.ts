@@ -663,7 +663,7 @@ export interface BulkAction<T = unknown> {
 export interface RotinaAgendada {
   id: number;
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'outros';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'outros';
   descricao?: string;
   configuracao?: Record<string, unknown>;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';

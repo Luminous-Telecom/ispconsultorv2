@@ -193,42 +193,12 @@ export class SchedulerService {
    * @param routine - Rotina a ser executada
    */
   private async executeRoutineInBackground(routine: ScheduledRoutine): Promise<void> {
-    logger.info('SchedulerService.executeRoutineInBackground - Iniciando execução em background', {
-      context: 'SchedulerService',
-      rotinaId: routine.id,
-      rotinaNome: routine.nome,
-      rotinaTipo: routine.tipo,
-      rotinaAtiva: routine.ativo
-    });
-
     const startTime = new Date();
     let executionLog = null;
 
     try {
-      logger.info('SchedulerService.executeRoutineInBackground - Criando log de execução', {
-        context: 'SchedulerService',
-        rotinaId: routine.id,
-        startTime: startTime.toISOString()
-      });
-
-      // Criar log de execução
       executionLog = await this.logService.createExecutionLog(routine.id, startTime);
-
-      logger.info('SchedulerService.executeRoutineInBackground - Log criado, executando rotina', {
-        context: 'SchedulerService',
-        rotinaId: routine.id,
-        executionLogId: executionLog.id
-      });
-
-      // Executar a rotina baseada no tipo
       const resultado = await this.executionService.executeRoutineByType(routine);
-
-      logger.info('SchedulerService.executeRoutineInBackground - Rotina executada', {
-        context: 'SchedulerService',
-        rotinaId: routine.id,
-        resultado: JSON.stringify(resultado)
-      });
-
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
       const statusFinal = 'success' in resultado && resultado.success === false ? 'erro' : 'sucesso';

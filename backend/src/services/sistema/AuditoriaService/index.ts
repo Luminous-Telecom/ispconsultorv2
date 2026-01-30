@@ -5,7 +5,7 @@ import { Request } from 'express';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { logger } from '../../../utils/logger';
 import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
-import { registrarCriacaoElasticsearch, registrarAtualizacaoElasticsearch, registrarExclusaoElasticsearch, registrarLoginElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
+import { registrarCriacaoElasticsearch, registrarAtualizacaoElasticsearch, registrarAtualizacaoElasticsearchSistema, registrarExclusaoElasticsearch, registrarLoginElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
 import { SortHelper } from '../../../utils/sortHelper';
 import { AUDITORIA_SORT_CONFIG } from '../../../config/sortConfigs';
 
@@ -350,6 +350,49 @@ export async function registrarAtualizacao(
 
   // Registrar também no Elasticsearch (não bloqueia se falhar)
   registrarAtualizacaoElasticsearch(req, entidade, entidadeId, dadosAnteriores, dadosNovos, observacoes).catch(() => {});
+}
+
+/**
+ * Registrar atualização de entidade sem requisição HTTP (ex.: rotina agendada).
+ * Grava na tabela Auditoria com usuario_id null e no Elasticsearch como "Sistema".
+ */
+export async function registrarAtualizacaoSistema(
+  entidade: string,
+  entidadeId: number,
+  dadosAnteriores: Record<string, unknown>,
+  dadosNovos: Record<string, unknown>,
+  observacoes?: string
+): Promise<void> {
+  let dadosAntLimpos: Record<string, unknown> | null = null;
+  let dadosNovLimpos: Record<string, unknown> | null = null;
+  try {
+    if (dadosAnteriores && typeof dadosAnteriores === 'object' && Object.keys(dadosAnteriores).length > 0) {
+      dadosAntLimpos = JSON.parse(JSON.stringify(dadosAnteriores));
+    }
+  } catch {
+    dadosAntLimpos = dadosAnteriores;
+  }
+  try {
+    if (dadosNovos && typeof dadosNovos === 'object' && Object.keys(dadosNovos).length > 0) {
+      dadosNovLimpos = JSON.parse(JSON.stringify(dadosNovos));
+    }
+  } catch {
+    dadosNovLimpos = dadosNovos;
+  }
+
+  await Auditoria.create({
+    usuario_id: null,
+    acao: 'update',
+    entidade,
+    entidade_id: entidadeId,
+    dados_anteriores: dadosAntLimpos,
+    dados_novos: dadosNovLimpos,
+    ip_address: null,
+    user_agent: 'Rotina agendada',
+    observacoes: observacoes || null
+  } as any);
+
+  await registrarAtualizacaoElasticsearchSistema(entidade, entidadeId, dadosAnteriores, dadosNovos, observacoes).catch(() => {});
 }
 
 /**

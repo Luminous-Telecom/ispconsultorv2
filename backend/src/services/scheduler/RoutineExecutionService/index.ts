@@ -73,13 +73,6 @@ export class RoutineExecutionService {
   public async executeRoutineByType(
     routine: ScheduledRoutine
   ): Promise<RoutineExecutionResult> {
-    logger.info('RoutineExecutionService.executeRoutine - Selecionando tipo de rotina', {
-      context: 'RoutineExecutionService',
-      routineTipo: routine.tipo,
-      routineId: routine.id,
-      routineNome: routine.nome
-    });
-
     switch (routine.tipo) {
       case 'geracao_titulos':
         logger.info('RoutineExecutionService.executeRoutine - Executando geração de títulos', {
@@ -101,6 +94,9 @@ export class RoutineExecutionService {
           routineId: routine.id
         });
         return await this.executeRemessaBancaria(routine);
+
+      case 'desbloquear_blockdomi':
+        return await this.executeDesbloquearBlockdomi(routine);
 
       default:
         logger.warn('RoutineExecutionService.executeRoutine - Tipo de rotina não implementado', {
@@ -484,6 +480,37 @@ export class RoutineExecutionService {
         total_processados: 0,
         detalhes: [],
         message: `Erro ao executar remessa bancária: ${errorMsg}`
+      };
+    }
+  }
+
+  /**
+   * Executa a rotina de desbloqueio blockdomi (inativar por data fim de bloqueio)
+   * @param routine - Rotina com configurações
+   * @returns Resultado da execução
+   */
+  public async executeDesbloquearBlockdomi(routine: ScheduledRoutine): Promise<RoutineExecutionResult> {
+    try {
+      const { DesbloquearBlockdomiRoutine } = await import('../routines/DesbloquearBlockdomiRoutine');
+      const desbloquearRoutine = new DesbloquearBlockdomiRoutine();
+      const config = routine.configuracao || {};
+      const resultado = await desbloquearRoutine.execute(config);
+      return {
+        success: resultado.success,
+        message: resultado.message,
+        ...(resultado.data || {})
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar desbloqueio blockdomi', {
+        context: 'RoutineExecutionService',
+        action: 'executeDesbloquearBlockdomi',
+        routineId: routine.id,
+        error: errorMessage
+      });
+      return {
+        success: false,
+        message: `Erro ao desbloquear blockdomi: ${errorMessage}`
       };
     }
   }

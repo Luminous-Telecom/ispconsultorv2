@@ -419,6 +419,67 @@ export async function registrarAtualizacaoElasticsearch(
 }
 
 /**
+ * Registrar atualização de entidade sem requisição HTTP (ex.: rotina agendada).
+ * Grava no Elasticsearch com contexto "Sistema".
+ * Executa de forma síncrona (await) para garantir que o registro seja enviado antes de retornar.
+ */
+export async function registrarAtualizacaoElasticsearchSistema(
+  entidade: string,
+  entidadeId: number,
+  dadosAnteriores: Record<string, unknown>,
+  dadosNovos: Record<string, unknown>,
+  observacoes?: string
+): Promise<void> {
+  try {
+    const elasticsearchService = getElasticsearchService();
+    const client = elasticsearchService.getClient();
+    if (!client) return;
+    const isConnected = await elasticsearchService.checkConnection();
+    if (!isConnected) return;
+    await elasticsearchService.ensureIndex();
+
+    const limpar = (d: Record<string, unknown> | null): Record<string, unknown> | null => {
+      if (!d || typeof d !== 'object') return null;
+      try {
+        return JSON.parse(JSON.stringify(d)) as Record<string, unknown>;
+      } catch {
+        return d;
+      }
+    };
+
+    const document = {
+      usuario_id: null,
+      usuario_nome: 'Sistema',
+      usuario_email: null,
+      acao: 'update' as const,
+      entidade,
+      entidade_id: entidadeId,
+      dados_anteriores: limpar(dadosAnteriores),
+      dados_novos: limpar(dadosNovos),
+      ip_address: null,
+      user_agent: 'Rotina agendada',
+      rota: null,
+      metodo_http: null,
+      observacoes: observacoes || null,
+      timestamp: safeFormatDateISOLocal(new Date()) || ''
+    };
+
+    await client.index({
+        index: elasticsearchService.getIndexName(),
+        document
+      });
+  } catch (error) {
+    logger.warn('Falha ao registrar auditoria (Sistema) no Elasticsearch', {
+      context: 'ElasticsearchAuditService',
+      action: 'registrarAtualizacaoElasticsearchSistema',
+      entidade,
+      entidade_id: entidadeId,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+}
+
+/**
  * Registrar exclusão de entidade
  */
 export async function registrarExclusaoElasticsearch(

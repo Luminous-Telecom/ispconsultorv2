@@ -319,6 +319,10 @@ if (!isMainThread && workerData) {
           const { VerificarVencimentosRoutine } = await import('../../services/scheduler/routines/VerificarVencimentosRoutine');
           routineInstance = new VerificarVencimentosRoutine();
           break;
+        case 'desbloquear_blockdomi':
+          const { DesbloquearBlockdomiRoutine } = await import('../../services/scheduler/routines/DesbloquearBlockdomiRoutine');
+          routineInstance = new DesbloquearBlockdomiRoutine();
+          break;
         default:
           throw new Error(`Tipo de rotina não suportado: ${routine.tipo}`);
       }

@@ -174,7 +174,8 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
                   'geracao_titulos': 'Geração de Títulos',
                   'envio_boletos': 'Envio de Boletos',
                   'remessa_bancaria': 'Remessa Bancária',
-                  'verificar_vencimentos': 'Verificar Vencimentos'
+                  'verificar_vencimentos': 'Verificar Vencimentos',
+                  'desbloquear_blockdomi': 'Desbloquear domínios (data fim)'
                 };
                 setFormData({ 
                   ...formData, 
@@ -187,7 +188,8 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
                 { value: 'geracao_titulos', label: 'Geração de Títulos' },
                 { value: 'envio_boletos', label: 'Envio de Boletos' },
                 { value: 'remessa_bancaria', label: 'Remessa Bancária' },
-                { value: 'verificar_vencimentos', label: 'Verificar Vencimentos' }
+                { value: 'verificar_vencimentos', label: 'Verificar Vencimentos' },
+                { value: 'desbloquear_blockdomi', label: 'Desbloquear domínios (data fim)' }
               ]}
             />
           </div>
