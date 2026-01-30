@@ -41,7 +41,10 @@ export class DominioService {
         [Op.or]: [
           { id: { [Op.like]: `%${search}%` } },
           { dominio: { [Op.like]: `%${search}%` } },
-          { descricao: { [Op.like]: `%${search}%` } }
+          { descricao: { [Op.like]: `%${search}%` } },
+          { nome_oficio: { [Op.like]: `%${search}%` } },
+          { link_oficio_anatel: { [Op.like]: `%${search}%` } },
+          { link_oficio_justica: { [Op.like]: `%${search}%` } }
         ]
       } as WhereOptions<Dominio>);
     }
@@ -110,6 +113,13 @@ export class DominioService {
   }
 
   /**
+   * Buscar domínio por nome (para verificar duplicata)
+   */
+  static async findByDominio(dominio: string): Promise<Dominio | null> {
+    return await Dominio.findOne({ where: { dominio } });
+  }
+
+  /**
    * Criar domínio
    */
   static async create(dadosDominio: Partial<Dominio>): Promise<Dominio> {
@@ -130,7 +140,16 @@ export class DominioService {
       throw new Error('Domínio não encontrado');
     }
 
-    const allowedFields: Array<keyof Dominio> = ['dominio', 'descricao', 'ativo'];
+    const allowedFields: Array<keyof Dominio> = [
+      'dominio',
+      'descricao',
+      'nome_oficio',
+      'data_inicio_bloqueio',
+      'data_fim_bloqueio',
+      'link_oficio_anatel',
+      'link_oficio_justica',
+      'ativo'
+    ];
     
     const updateData: Partial<Dominio> = {};
     Object.keys(dadosDominio).forEach(key => {

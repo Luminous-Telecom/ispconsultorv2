@@ -5,6 +5,18 @@ import { CACHE_CONFIG } from '../config/api';
 import { DominioFilters, UpdateDominio } from '../types';
 import { AxiosError } from 'axios';
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  const withMessage = err as { message?: string };
+  if (typeof withMessage?.message === 'string' && withMessage.message.trim()) {
+    return withMessage.message;
+  }
+  const axiosErr = err as AxiosError<{ message?: string }>;
+  if (axiosErr.response?.data?.message) {
+    return axiosErr.response.data.message;
+  }
+  return fallback;
+}
+
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 export const useDominios = (filters: DominioFilters = {}) => {
@@ -39,8 +51,7 @@ export const useCreateDominio = () => {
       success('Domínio criado com sucesso!');
     },
     onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar domínio');
+      error(getErrorMessage(err, 'Erro ao criar domínio'));
     },
   });
 };
@@ -58,8 +69,7 @@ export const useUpdateDominio = () => {
       success('Domínio atualizado com sucesso!');
     },
     onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar domínio');
+      error(getErrorMessage(err, 'Erro ao atualizar domínio'));
     },
   });
 };
@@ -75,8 +85,7 @@ export const useDeleteDominio = () => {
       success('Domínio excluído com sucesso!');
     },
     onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao excluir domínio');
+      error(getErrorMessage(err, 'Erro ao excluir domínio'));
     },
   });
 };

@@ -41,7 +41,10 @@ export class IPv6Service {
         [Op.or]: [
           { id: { [Op.like]: `%${search}%` } },
           { ip: { [Op.like]: `%${search}%` } },
-          { descricao: { [Op.like]: `%${search}%` } }
+          { descricao: { [Op.like]: `%${search}%` } },
+          { nome_oficio: { [Op.like]: `%${search}%` } },
+          { link_oficio_anatel: { [Op.like]: `%${search}%` } },
+          { link_oficio_justica: { [Op.like]: `%${search}%` } }
         ]
       } as WhereOptions<IPv6>);
     }
@@ -110,6 +113,13 @@ export class IPv6Service {
   }
 
   /**
+   * Buscar IPv6 por IP (para verificar duplicata)
+   */
+  static async findByIp(ip: string): Promise<IPv6 | null> {
+    return await IPv6.findOne({ where: { ip } });
+  }
+
+  /**
    * Criar IPv6
    */
   static async create(dadosIPv6: Partial<IPv6>): Promise<IPv6> {
@@ -130,7 +140,16 @@ export class IPv6Service {
       throw new Error('IPv6 não encontrado');
     }
 
-    const allowedFields: Array<keyof IPv6> = ['ip', 'descricao', 'ativo'];
+    const allowedFields: Array<keyof IPv6> = [
+      'ip',
+      'descricao',
+      'nome_oficio',
+      'data_inicio_bloqueio',
+      'data_fim_bloqueio',
+      'link_oficio_anatel',
+      'link_oficio_justica',
+      'ativo'
+    ];
     
     const updateData: Partial<IPv6> = {};
     Object.keys(dadosIPv6).forEach(key => {

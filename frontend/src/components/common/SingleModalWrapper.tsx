@@ -32,6 +32,7 @@ const EmailHistoricoModal = lazy(() => import('../modals/comunicacao/EmailHistor
 const DominioListModal = lazy(() => import('../modals/blockdomi/dominios').then(m => ({ default: m.DominioListModal })));
 const IPv4ListModal = lazy(() => import('../modals/blockdomi/ipv4').then(m => ({ default: m.IPv4ListModal })));
 const IPv6ListModal = lazy(() => import('../modals/blockdomi/ipv6').then(m => ({ default: m.IPv6ListModal })));
+const ImportarListaBlockdomiModal = lazy(() => import('../modals/blockdomi/ImportarListaBlockdomiModal'));
 
 interface ModalComponentProps {
   show: boolean;
@@ -47,6 +48,7 @@ interface ModalConfig {
   titleKey: keyof TranslationKeys;
   loadingMessageKey: keyof TranslationKeys;
   className?: string;
+  size?: 'sm' | 'lg' | 'xl';
 }
 
 const getModalConfigs = (): Record<string, ModalConfig> => ({
@@ -77,6 +79,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'blockdomi-dominios': { component: DominioListModal, titleKey: 'modal.domains', loadingMessageKey: 'ui.loadingPage' },
   'blockdomi-ipv4': { component: IPv4ListModal, titleKey: 'modal.ipv4', loadingMessageKey: 'ui.loadingPage' },
   'blockdomi-ipv6': { component: IPv6ListModal, titleKey: 'modal.ipv6', loadingMessageKey: 'ui.loadingPage' },
+  'blockdomi-importar-lista': { component: ImportarListaBlockdomiModal, titleKey: 'modal.importList', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
 });
 
 const SingleModalWrapper: React.FC = () => {
@@ -114,7 +117,7 @@ const SingleModalWrapper: React.FC = () => {
       show={true}
       onClose={closeModal}
       title={modalTitle}
-      size="lg"
+      size={modalConfig.size ?? 'lg'}
       className={modalConfig.className || ''}
     >
       <Suspense fallback={<Loading message={loadingMessage} />}>

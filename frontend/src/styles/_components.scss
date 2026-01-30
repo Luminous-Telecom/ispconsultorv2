@@ -1516,13 +1516,13 @@ textarea:focus {
   opacity: 0.7;
 }
 
-/* Hover states - 10-15% mais claro que o elemento base */
+/* Hover states - usa variável do tema para respeitar modo claro/escuro */
 .card:hover {
-  background-color: #4A5D6E;
+  background-color: var(--bg-tertiary);
 }
 
 .table tbody tr:hover {
-  background-color: #4A5D6E !important;
+  background-color: var(--bg-tertiary) !important;
 }
 
 /* Active/Selected - cor de acento mais saturada */

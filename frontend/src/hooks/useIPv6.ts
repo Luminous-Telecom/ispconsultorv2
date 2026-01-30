@@ -7,6 +7,18 @@ import { AxiosError } from 'axios';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  const withMessage = err as { message?: string };
+  if (typeof withMessage?.message === 'string' && withMessage.message.trim()) {
+    return withMessage.message;
+  }
+  const axiosErr = err as AxiosError<{ message?: string }>;
+  if (axiosErr.response?.data?.message) {
+    return axiosErr.response.data.message;
+  }
+  return fallback;
+}
+
 export const useIPv6s = (filters: IPv6Filters = {}) => {
   return useQuery({
     queryKey: ['ipv6', filters],
@@ -39,8 +51,7 @@ export const useCreateIPv6 = () => {
       success('IPv6 criado com sucesso!');
     },
     onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar IPv6');
+      error(getErrorMessage(err, 'Erro ao criar IPv6'));
     },
   });
 };
@@ -58,8 +69,7 @@ export const useUpdateIPv6 = () => {
       success('IPv6 atualizado com sucesso!');
     },
     onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar IPv6');
+      error(getErrorMessage(err, 'Erro ao atualizar IPv6'));
     },
   });
 };
@@ -75,8 +85,7 @@ export const useDeleteIPv6 = () => {
       success('IPv6 excluído com sucesso!');
     },
     onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao excluir IPv6');
+      error(getErrorMessage(err, 'Erro ao excluir IPv6'));
     },
   });
 };

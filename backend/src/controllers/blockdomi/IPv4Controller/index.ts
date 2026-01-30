@@ -68,6 +68,12 @@ export class IPv4Controller {
         return;
       }
 
+      const existente = await IPv4Service.findByIp(ip);
+      if (existente) {
+        sendValidationError(res, 'Já existe um IPv4 cadastrado com este valor.');
+        return;
+      }
+
       const ipv4Criado = await IPv4Service.create(req.body);
       
       // Registrar auditoria
@@ -112,6 +118,12 @@ export class IPv4Controller {
 
       if (!isValidIPv4(ip)) {
         sendValidationError(res, 'Informe um IPv4 válido com 4 octetos (ex: 192.168.1.1). Não use pontos no final.');
+        return;
+      }
+
+      const existente = await IPv4Service.findByIp(ip);
+      if (existente && Number(existente.id) !== Number(id)) {
+        sendValidationError(res, 'Já existe um IPv4 cadastrado com este valor.');
         return;
       }
 

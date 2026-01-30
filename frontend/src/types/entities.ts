@@ -749,6 +749,11 @@ export interface Dominio {
   id: number;
   dominio: string;
   descricao?: string | null;
+  nome_oficio?: string | null;
+  data_inicio_bloqueio?: string | null;
+  data_fim_bloqueio?: string | null;
+  link_oficio_anatel?: string | null;
+  link_oficio_justica?: string | null;
   ativo: boolean;
   created_at?: string;
   updated_at?: string;
@@ -762,6 +767,11 @@ export interface IPv4 {
   id: number;
   ip: string;
   descricao?: string | null;
+  nome_oficio?: string | null;
+  data_inicio_bloqueio?: string | null;
+  data_fim_bloqueio?: string | null;
+  link_oficio_anatel?: string | null;
+  link_oficio_justica?: string | null;
   ativo: boolean;
   created_at?: string;
   updated_at?: string;
@@ -775,6 +785,11 @@ export interface IPv6 {
   id: number;
   ip: string;
   descricao?: string | null;
+  nome_oficio?: string | null;
+  data_inicio_bloqueio?: string | null;
+  data_fim_bloqueio?: string | null;
+  link_oficio_anatel?: string | null;
+  link_oficio_justica?: string | null;
   ativo: boolean;
   created_at?: string;
   updated_at?: string;

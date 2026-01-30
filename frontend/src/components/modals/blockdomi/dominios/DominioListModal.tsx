@@ -6,7 +6,7 @@ import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { Dominio } from '@/types';
 import { useI18n } from '@/contexts/I18nContext';
-import { formatDateTime } from '@/utils/formatters';
+import { formatDateTime, formatDate } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
 import DominioModal from './DominioModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
@@ -67,7 +67,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     },
     {
       key: 'dominio',
-      label: 'Domínio',
+      label: t('blockdomi.domain'),
       sortable: true,
       width: '200px',
       render: (item: Dominio) => item.dominio
@@ -78,6 +78,41 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       sortable: true,
       width: '250px',
       render: (item: Dominio) => item.descricao || '-'
+    },
+    {
+      key: 'nome_oficio',
+      label: t('blockdomi.nomeOficio'),
+      sortable: true,
+      width: '220px',
+      render: (item: Dominio) => item.nome_oficio || '-'
+    },
+    {
+      key: 'data_inicio_bloqueio',
+      label: t('blockdomi.dataInicioBloqueio'),
+      sortable: true,
+      width: '130px',
+      render: (item: Dominio) => formatDate(item.data_inicio_bloqueio)
+    },
+    {
+      key: 'data_fim_bloqueio',
+      label: t('blockdomi.dataFimBloqueio'),
+      sortable: true,
+      width: '130px',
+      render: (item: Dominio) => formatDate(item.data_fim_bloqueio)
+    },
+    {
+      key: 'oficio_anatel',
+      label: t('blockdomi.oficioAnatel'),
+      sortable: false,
+      width: '100px',
+      render: (item: Dominio) => item.link_oficio_anatel?.trim() ? t('ui.yes') : t('ui.no')
+    },
+    {
+      key: 'oficio_justica',
+      label: t('blockdomi.oficioJustica'),
+      sortable: false,
+      width: '100px',
+      render: (item: Dominio) => item.link_oficio_justica?.trim() ? t('ui.yes') : t('ui.no')
     },
     {
       key: 'ativo',
@@ -104,15 +139,16 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     }
   ], [t]);
 
-  const defaultTitle = title || (onSelectDominio ? 'Selecionar Domínio' : 'Domínios');
+  const defaultTitle = title || (onSelectDominio ? t('blockdomi.selectDomain') : t('blockdomi.domains'));
   const modal = useListModal({
     title: defaultTitle,
     columns,
     searchPlaceholder: t('layout.searchPlaceholder'),
     searchFields: [
       { key: 'id', label: t('table.id') },
-      { key: 'dominio', label: 'Domínio' },
-      { key: 'descricao', label: t('form.description') }
+      { key: 'dominio', label: t('blockdomi.domain') },
+      { key: 'descricao', label: t('form.description') },
+      { key: 'nome_oficio', label: t('blockdomi.nomeOficio') }
     ],
     multiSelect: false
   });
@@ -219,6 +255,30 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       }
     },
     {
+      label: t('blockdomi.anatel'),
+      variant: 'secondary' as const,
+      disabled: (selectedItems: Dominio[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        return items.length === 0 || !items.some((i) => i.link_oficio_anatel?.trim());
+      },
+      action: (selectedItems: Dominio[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        items.filter((i) => i.link_oficio_anatel?.trim()).forEach((i) => window.open(i.link_oficio_anatel!, '_blank', 'noopener,noreferrer'));
+      }
+    },
+    {
+      label: t('blockdomi.justica'),
+      variant: 'secondary' as const,
+      disabled: (selectedItems: Dominio[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        return items.length === 0 || !items.some((i) => i.link_oficio_justica?.trim());
+      },
+      action: (selectedItems: Dominio[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        items.filter((i) => i.link_oficio_justica?.trim()).forEach((i) => window.open(i.link_oficio_justica!, '_blank', 'noopener,noreferrer'));
+      }
+    },
+    {
       label: t('actions.delete'),
       disabled: (selectedItems: Dominio[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: Dominio[]) => {
@@ -228,7 +288,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
         const confirmed = await confirm({
           message: t('messages.confirmDelete'),
           variant: 'danger',
-          title: 'Excluir Domínio',
+          title: t('blockdomi.deleteDomain'),
           confirmText: t('actions.delete'),
           cancelText: t('actions.cancel'),
         });

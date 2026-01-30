@@ -68,6 +68,12 @@ export class IPv6Controller {
         return;
       }
 
+      const existente = await IPv6Service.findByIp(ip);
+      if (existente) {
+        sendValidationError(res, 'Já existe um IPv6 cadastrado com este valor.');
+        return;
+      }
+
       const ipv6Criado = await IPv6Service.create(req.body);
       
       // Registrar auditoria
@@ -112,6 +118,12 @@ export class IPv6Controller {
 
       if (!isValidIPv6(ip)) {
         sendValidationError(res, 'Informe um IPv6 válido (8 grupos hex separados por :). Ex: 2001:db8::1. Pode usar :: uma vez para comprimir zeros.');
+        return;
+      }
+
+      const existente = await IPv6Service.findByIp(ip);
+      if (existente && Number(existente.id) !== Number(id)) {
+        sendValidationError(res, 'Já existe um IPv6 cadastrado com este valor.');
         return;
       }
 

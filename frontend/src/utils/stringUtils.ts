@@ -14,7 +14,7 @@ export const ensureString = (value: unknown): string => {
 /**
  * Sanitiza um domínio: remove apenas protocolo e www., mantém hostname e caminho.
  * Remove: https://, http://, www. (no início). Query string (?...) é removida.
- * Exemplos: "https://t.co/rtg5bj3jkz" -> "t.co/rtg5bj3jkz"; "https://exemplo.com" -> "exemplo.com"
+ * Exemplos: "https://encurtador.com/abc" -> "encurtador.com/abc"; "https://meusite.com" -> "meusite.com"
  */
 export const sanitizeDominio = (dominio: string | null | undefined): string => {
   if (!dominio || typeof dominio !== 'string') return '';

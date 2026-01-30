@@ -29,6 +29,11 @@ const DominioModal: React.FC<DominioModalProps> = ({
   const [formData, setFormData] = useState({
     dominio: '',
     descricao: '',
+    nome_oficio: '',
+    data_inicio_bloqueio: '',
+    data_fim_bloqueio: '',
+    link_oficio_anatel: '',
+    link_oficio_justica: '',
     ativo: true
   });
 
@@ -37,15 +42,29 @@ const DominioModal: React.FC<DominioModalProps> = ({
   useEffect(() => {
     if (show) {
       if (isEditing && dominioData) {
+        const dInicio = dominioData.data_inicio_bloqueio;
+        const dFim = dominioData.data_fim_bloqueio;
         setFormData({
           dominio: dominioData.dominio || '',
           descricao: dominioData.descricao || '',
+          nome_oficio: dominioData.nome_oficio || '',
+          data_inicio_bloqueio: dInicio ? String(dInicio).slice(0, 10) : '',
+          data_fim_bloqueio: dFim ? String(dFim).slice(0, 10) : '',
+          link_oficio_anatel: dominioData.link_oficio_anatel || '',
+          link_oficio_justica: dominioData.link_oficio_justica || '',
           ativo: dominioData.ativo ?? true
         });
       } else {
+        const today = new Date();
+        const hoje = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         setFormData({
           dominio: '',
           descricao: '',
+          nome_oficio: '',
+          data_inicio_bloqueio: hoje,
+          data_fim_bloqueio: '',
+          link_oficio_anatel: '',
+          link_oficio_justica: '',
           ativo: true
         });
       }
@@ -59,9 +78,9 @@ const DominioModal: React.FC<DominioModalProps> = ({
     const dominioLimpo = sanitizeDominio(formData.dominio);
     const newErrors: Record<string, string> = {};
     if (!formData.dominio.trim()) {
-      newErrors.dominio = 'Domínio é obrigatório';
+      newErrors.dominio = t('blockdomi.domainRequired');
     } else if (!dominioLimpo) {
-      newErrors.dominio = 'Use o domínio sem protocolo (ex: exemplo.com ou t.co/rtg5bj3jkz). Não use https://, http:// ou www. no início.';
+      newErrors.dominio = t('blockdomi.domainInvalidFormat');
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -69,7 +88,15 @@ const DominioModal: React.FC<DominioModalProps> = ({
       return;
     }
 
-    const dataToSend = { ...formData, dominio: dominioLimpo };
+    const dataToSend = {
+      ...formData,
+      dominio: dominioLimpo,
+      nome_oficio: formData.nome_oficio.trim() || null,
+      data_inicio_bloqueio: formData.data_inicio_bloqueio.trim() || null,
+      data_fim_bloqueio: formData.data_fim_bloqueio.trim() || null,
+      link_oficio_anatel: formData.link_oficio_anatel.trim() || null,
+      link_oficio_justica: formData.link_oficio_justica.trim() || null
+    };
 
     try {
       if (isEditing && dominioId) {
@@ -93,7 +120,7 @@ const DominioModal: React.FC<DominioModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={isEditing ? 'Editar Domínio' : 'Criar Domínio'}
+      title={isEditing ? t('blockdomi.editDomain') : t('blockdomi.createDomain')}
       size="lg"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
@@ -113,7 +140,7 @@ const DominioModal: React.FC<DominioModalProps> = ({
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            Salvar
+            {t('buttons.save')}
           </Button>
         </div>
       }
@@ -130,7 +157,7 @@ const DominioModal: React.FC<DominioModalProps> = ({
                 <FormField
                   name="dominio"
                   type="text"
-                  label="Domínio"
+                  label={t('blockdomi.domain')}
                   value={formData.dominio}
                   onChange={(value) => {
                     setFormData(prev => ({ ...prev, dominio: String(value ?? '') }));
@@ -141,8 +168,8 @@ const DominioModal: React.FC<DominioModalProps> = ({
                   error={errors.dominio}
                   required
                   size="sm"
-                  placeholder="exemplo.com ou t.co/rtg5bj3jkz"
-                  helpText="Domínio sem protocolo (ex: exemplo.com ou t.co/rtg5bj3jkz). Sem https://, http:// ou www. no início."
+                  placeholder={t('blockdomi.placeholderDomain')}
+                  helpText={t('blockdomi.helpDomain')}
                 />
               </div>
               <div className="col-12">
@@ -154,6 +181,59 @@ const DominioModal: React.FC<DominioModalProps> = ({
                   onChange={(value) => setFormData(prev => ({ ...prev, descricao: String(value ?? '') }))}
                   size="sm"
                   rows={3}
+                />
+              </div>
+              <div className="col-12">
+                <FormField
+                  name="nome_oficio"
+                  type="text"
+                  label={t('blockdomi.nomeOficio')}
+                  value={formData.nome_oficio}
+                  onChange={(value) => setFormData(prev => ({ ...prev, nome_oficio: String(value ?? '') }))}
+                  size="sm"
+                  placeholder={t('blockdomi.placeholderOficio')}
+                />
+              </div>
+              <div className="col-12 col-md-6">
+                <FormField
+                  name="data_inicio_bloqueio"
+                  type="date"
+                  label={t('blockdomi.dataInicioBloqueio')}
+                  value={formData.data_inicio_bloqueio}
+                  onChange={(value) => setFormData(prev => ({ ...prev, data_inicio_bloqueio: String(value ?? '') }))}
+                  size="sm"
+                />
+              </div>
+              <div className="col-12 col-md-6">
+                <FormField
+                  name="data_fim_bloqueio"
+                  type="date"
+                  label={t('blockdomi.dataFimBloqueio')}
+                  value={formData.data_fim_bloqueio}
+                  onChange={(value) => setFormData(prev => ({ ...prev, data_fim_bloqueio: String(value ?? '') }))}
+                  size="sm"
+                />
+              </div>
+              <div className="col-12">
+                <FormField
+                  name="link_oficio_anatel"
+                  type="text"
+                  label={t('blockdomi.linkOficioAnatel')}
+                  value={formData.link_oficio_anatel}
+                  onChange={(value) => setFormData(prev => ({ ...prev, link_oficio_anatel: String(value ?? '') }))}
+                  size="sm"
+                  placeholder="https://..."
+                />
+              </div>
+              <div className="col-12">
+                <FormField
+                  name="link_oficio_justica"
+                  type="text"
+                  label={t('blockdomi.linkOficioJustica')}
+                  value={formData.link_oficio_justica}
+                  onChange={(value) => setFormData(prev => ({ ...prev, link_oficio_justica: String(value ?? '') }))}
+                  size="sm"
+                  placeholder="https://..."
                 />
               </div>
               <div className="col-12">

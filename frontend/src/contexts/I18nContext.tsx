@@ -194,6 +194,8 @@ export interface TranslationKeys {
   'layout.searchPlaceholder': string;
   'layout.openMenu': string;
   'layout.closeMenu': string;
+  'layout.folderCadastros': string;
+  'layout.folderFinanceiro': string;
 
   // Menu Items
   'menu.clients': string;
@@ -234,6 +236,54 @@ export interface TranslationKeys {
   'modal.systemDocuments': string;
   'modal.whatsappHistory': string;
   'modal.emailHistory': string;
+  'modal.importList': string;
+
+  // Blockdomi
+  'blockdomi.menuTitle': string;
+  'blockdomi.titleImport': string;
+  'blockdomi.domain': string;
+  'blockdomi.domains': string;
+  'blockdomi.selectDomain': string;
+  'blockdomi.nomeOficio': string;
+  'blockdomi.nomeOficioOptional': string;
+  'blockdomi.dataInicioBloqueio': string;
+  'blockdomi.dataFimBloqueio': string;
+  'blockdomi.dataFimBloqueioOptional': string;
+  'blockdomi.oficioAnatel': string;
+  'blockdomi.oficioJustica': string;
+  'blockdomi.linkOficioAnatel': string;
+  'blockdomi.linkOficioJustica': string;
+  'blockdomi.linkOficioAnatelOptional': string;
+  'blockdomi.linkOficioJusticaOptional': string;
+  'blockdomi.anatel': string;
+  'blockdomi.justica': string;
+  'blockdomi.createDomain': string;
+  'blockdomi.editDomain': string;
+  'blockdomi.deleteDomain': string;
+  'blockdomi.createIPv4': string;
+  'blockdomi.editIPv4': string;
+  'blockdomi.deleteIPv4': string;
+  'blockdomi.selectIPv4': string;
+  'blockdomi.createIPv6': string;
+  'blockdomi.editIPv6': string;
+  'blockdomi.deleteIPv6': string;
+  'blockdomi.selectIPv6': string;
+  'blockdomi.importIntro': string;
+  'blockdomi.placeholderDomain': string;
+  'blockdomi.helpDomain': string;
+  'blockdomi.placeholderOficio': string;
+  'blockdomi.emptyEqualsToday': string;
+  'blockdomi.analyze': string;
+  'blockdomi.register': string;
+  'blockdomi.classifying': string;
+  'blockdomi.duplicates': string;
+  'blockdomi.invalid': string;
+  'blockdomi.none': string;
+  'blockdomi.domainRequired': string;
+  'blockdomi.domainInvalidFormat': string;
+  'blockdomi.ipRequired': string;
+  'blockdomi.ipv4InvalidFormat': string;
+  'blockdomi.ipv6InvalidFormat': string;
 
   // Parameters Menu
   'params.users': string;
@@ -1343,6 +1393,8 @@ const translations: Translations = {
     'layout.searchPlaceholder': 'Buscar...',
     'layout.openMenu': 'Abrir menu lateral',
     'layout.closeMenu': 'Recolher menu',
+    'layout.folderCadastros': 'Cadastros',
+    'layout.folderFinanceiro': 'Financeiro',
 
     // Menu Items
     'menu.clients': 'Clientes',
@@ -1383,6 +1435,54 @@ const translations: Translations = {
     'modal.ipv4': 'IPv4',
     'modal.ipv6': 'IPv6',
     'modal.emailHistory': 'Histórico de Mensagens Email',
+    'modal.importList': 'Importar lista',
+
+    // Blockdomi
+    'blockdomi.menuTitle': 'Blockdomi',
+    'blockdomi.titleImport': 'Importar lista - Blockdomi',
+    'blockdomi.domain': 'Domínio',
+    'blockdomi.domains': 'Domínios',
+    'blockdomi.selectDomain': 'Selecionar Domínio',
+    'blockdomi.nomeOficio': 'Nome do ofício',
+    'blockdomi.nomeOficioOptional': 'Nome do ofício (opcional)',
+    'blockdomi.dataInicioBloqueio': 'Data início bloqueio',
+    'blockdomi.dataFimBloqueio': 'Data fim bloqueio',
+    'blockdomi.dataFimBloqueioOptional': 'Data fim bloqueio (opcional)',
+    'blockdomi.oficioAnatel': 'Ofício Anatel',
+    'blockdomi.oficioJustica': 'Ofício Justiça',
+    'blockdomi.linkOficioAnatel': 'Link ofício Anatel',
+    'blockdomi.linkOficioJustica': 'Link ofício Justiça',
+    'blockdomi.linkOficioAnatelOptional': 'Link ofício Anatel (opcional)',
+    'blockdomi.linkOficioJusticaOptional': 'Link ofício Justiça (opcional)',
+    'blockdomi.anatel': 'Anatel',
+    'blockdomi.justica': 'Justiça',
+    'blockdomi.createDomain': 'Criar Domínio',
+    'blockdomi.editDomain': 'Editar Domínio',
+    'blockdomi.deleteDomain': 'Excluir Domínio',
+    'blockdomi.createIPv4': 'Criar IPv4',
+    'blockdomi.editIPv4': 'Editar IPv4',
+    'blockdomi.deleteIPv4': 'Excluir IPv4',
+    'blockdomi.selectIPv4': 'Selecionar IPv4',
+    'blockdomi.createIPv6': 'Criar IPv6',
+    'blockdomi.editIPv6': 'Editar IPv6',
+    'blockdomi.deleteIPv6': 'Excluir IPv6',
+    'blockdomi.selectIPv6': 'Selecionar IPv6',
+    'blockdomi.importIntro': 'Cole uma lista (um item por linha). Serão classificados em: domínios, IPv4, IPv6, duplicados na lista e inválidos. Ao cadastrar, itens já existentes no sistema serão ignorados.',
+    'blockdomi.placeholderDomain': 'meusite.com ou encurtador.com/abc123',
+    'blockdomi.helpDomain': 'Domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Sem https://, http:// ou www. no início.',
+    'blockdomi.placeholderOficio': 'ex: Ofício nº 01/2026/ORG/SETOR/SIGLA',
+    'blockdomi.emptyEqualsToday': 'Vazio = data de hoje',
+    'blockdomi.analyze': 'Analisar',
+    'blockdomi.register': 'Cadastrar',
+    'blockdomi.classifying': 'Classificando...',
+    'blockdomi.duplicates': 'Duplicados',
+    'blockdomi.invalid': 'Inválidos',
+    'blockdomi.none': 'Nenhum',
+    'blockdomi.domainRequired': 'Domínio é obrigatório',
+    'blockdomi.domainInvalidFormat': 'Use o domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Não use https://, http:// ou www. no início.',
+    'blockdomi.ipRequired': 'IP é obrigatório',
+    'blockdomi.ipv4InvalidFormat': 'Informe um IPv4 válido com 4 octetos (ex: 192.168.1.1). Não use pontos no final.',
+    'blockdomi.ipv6InvalidFormat': 'Informe um IPv6 válido (8 grupos hex separados por :). Ex: 2001:db8::1. Pode usar :: uma vez para comprimir zeros.',
 
     // Parameters Menu
     'params.users': 'Usuários',
@@ -2487,6 +2587,8 @@ const translations: Translations = {
     'layout.searchPlaceholder': 'Search...',
     'layout.openMenu': 'Open sidebar menu',
     'layout.closeMenu': 'Close menu',
+    'layout.folderCadastros': 'Registers',
+    'layout.folderFinanceiro': 'Financial',
 
     // Menu Items
     'menu.clients': 'Clients',
@@ -2527,6 +2629,54 @@ const translations: Translations = {
     'modal.ipv4': 'IPv4',
     'modal.ipv6': 'IPv6',
     'modal.emailHistory': 'Email Message History',
+    'modal.importList': 'Import list',
+
+    // Blockdomi
+    'blockdomi.menuTitle': 'Blockdomi',
+    'blockdomi.titleImport': 'Import list - Blockdomi',
+    'blockdomi.domain': 'Domain',
+    'blockdomi.domains': 'Domains',
+    'blockdomi.selectDomain': 'Select Domain',
+    'blockdomi.nomeOficio': 'Warrant name',
+    'blockdomi.nomeOficioOptional': 'Warrant name (optional)',
+    'blockdomi.dataInicioBloqueio': 'Block start date',
+    'blockdomi.dataFimBloqueio': 'Block end date',
+    'blockdomi.dataFimBloqueioOptional': 'Block end date (optional)',
+    'blockdomi.oficioAnatel': 'Anatel warrant',
+    'blockdomi.oficioJustica': 'Justice warrant',
+    'blockdomi.linkOficioAnatel': 'Anatel warrant link',
+    'blockdomi.linkOficioJustica': 'Justice warrant link',
+    'blockdomi.linkOficioAnatelOptional': 'Anatel warrant link (optional)',
+    'blockdomi.linkOficioJusticaOptional': 'Justice warrant link (optional)',
+    'blockdomi.anatel': 'Anatel',
+    'blockdomi.justica': 'Justice',
+    'blockdomi.createDomain': 'Create Domain',
+    'blockdomi.editDomain': 'Edit Domain',
+    'blockdomi.deleteDomain': 'Delete Domain',
+    'blockdomi.createIPv4': 'Create IPv4',
+    'blockdomi.editIPv4': 'Edit IPv4',
+    'blockdomi.deleteIPv4': 'Delete IPv4',
+    'blockdomi.selectIPv4': 'Select IPv4',
+    'blockdomi.createIPv6': 'Create IPv6',
+    'blockdomi.editIPv6': 'Edit IPv6',
+    'blockdomi.deleteIPv6': 'Delete IPv6',
+    'blockdomi.selectIPv6': 'Select IPv6',
+    'blockdomi.importIntro': 'Paste a list (one item per line). Items will be classified as: domains, IPv4, IPv6, duplicates in list, and invalid. When registering, items already in the system will be ignored.',
+    'blockdomi.placeholderDomain': 'example.com or shortener.com/abc123',
+    'blockdomi.helpDomain': 'Domain without protocol (e.g. example.com or shortener.com/abc123). No https://, http:// or www. at the start.',
+    'blockdomi.placeholderOficio': 'e.g. Warrant no. 01/2026/ORG/SECTOR/CODE',
+    'blockdomi.emptyEqualsToday': 'Empty = today\'s date',
+    'blockdomi.analyze': 'Analyze',
+    'blockdomi.register': 'Register',
+    'blockdomi.classifying': 'Classifying...',
+    'blockdomi.duplicates': 'Duplicates',
+    'blockdomi.invalid': 'Invalid',
+    'blockdomi.none': 'None',
+    'blockdomi.domainRequired': 'Domain is required',
+    'blockdomi.domainInvalidFormat': 'Use domain without protocol (e.g. example.com or shortener.com/abc123). Do not use https://, http:// or www. at the start.',
+    'blockdomi.ipRequired': 'IP is required',
+    'blockdomi.ipv4InvalidFormat': 'Enter a valid IPv4 with 4 octets (e.g. 192.168.1.1). Do not use trailing dots.',
+    'blockdomi.ipv6InvalidFormat': 'Enter a valid IPv6 (8 hex groups separated by :). E.g. 2001:db8::1. You may use :: once to compress zeros.',
 
     // Parameters Menu
     'params.users': 'Users',
@@ -3631,6 +3781,8 @@ const translations: Translations = {
     'layout.searchPlaceholder': 'Buscar...',
     'layout.openMenu': 'Abrir menú lateral',
     'layout.closeMenu': 'Cerrar menú',
+    'layout.folderCadastros': 'Registros',
+    'layout.folderFinanceiro': 'Financiero',
     'layout.logoutSuccess': 'Cerrado de sesión exitoso',
     'layout.closeSearch': 'Cerrar búsqueda',
 
@@ -3673,6 +3825,54 @@ const translations: Translations = {
     'modal.ipv4': 'IPv4',
     'modal.ipv6': 'IPv6',
     'modal.emailHistory': 'Historial de Mensajes Email',
+    'modal.importList': 'Importar lista',
+
+    // Blockdomi
+    'blockdomi.menuTitle': 'Blockdomi',
+    'blockdomi.titleImport': 'Importar lista - Blockdomi',
+    'blockdomi.domain': 'Dominio',
+    'blockdomi.domains': 'Dominios',
+    'blockdomi.selectDomain': 'Seleccionar Dominio',
+    'blockdomi.nomeOficio': 'Nombre del oficio',
+    'blockdomi.nomeOficioOptional': 'Nombre del oficio (opcional)',
+    'blockdomi.dataInicioBloqueio': 'Fecha inicio bloqueo',
+    'blockdomi.dataFimBloqueio': 'Fecha fin bloqueo',
+    'blockdomi.dataFimBloqueioOptional': 'Fecha fin bloqueo (opcional)',
+    'blockdomi.oficioAnatel': 'Oficio Anatel',
+    'blockdomi.oficioJustica': 'Oficio Justicia',
+    'blockdomi.linkOficioAnatel': 'Enlace oficio Anatel',
+    'blockdomi.linkOficioJustica': 'Enlace oficio Justicia',
+    'blockdomi.linkOficioAnatelOptional': 'Enlace oficio Anatel (opcional)',
+    'blockdomi.linkOficioJusticaOptional': 'Enlace oficio Justicia (opcional)',
+    'blockdomi.anatel': 'Anatel',
+    'blockdomi.justica': 'Justicia',
+    'blockdomi.createDomain': 'Crear Dominio',
+    'blockdomi.editDomain': 'Editar Dominio',
+    'blockdomi.deleteDomain': 'Eliminar Dominio',
+    'blockdomi.createIPv4': 'Crear IPv4',
+    'blockdomi.editIPv4': 'Editar IPv4',
+    'blockdomi.deleteIPv4': 'Eliminar IPv4',
+    'blockdomi.selectIPv4': 'Seleccionar IPv4',
+    'blockdomi.createIPv6': 'Crear IPv6',
+    'blockdomi.editIPv6': 'Editar IPv6',
+    'blockdomi.deleteIPv6': 'Eliminar IPv6',
+    'blockdomi.selectIPv6': 'Seleccionar IPv6',
+    'blockdomi.importIntro': 'Pegue una lista (un elemento por línea). Se clasificarán en: dominios, IPv4, IPv6, duplicados en la lista e inválidos. Al registrar, los elementos ya existentes en el sistema serán ignorados.',
+    'blockdomi.placeholderDomain': 'ejemplo.com o acortador.com/abc123',
+    'blockdomi.helpDomain': 'Dominio sin protocolo (ej: ejemplo.com o acortador.com/abc123). Sin https://, http:// o www. al inicio.',
+    'blockdomi.placeholderOficio': 'ej: Oficio nº 01/2026/ORG/SECTOR/SIGLA',
+    'blockdomi.emptyEqualsToday': 'Vacío = fecha de hoy',
+    'blockdomi.analyze': 'Analizar',
+    'blockdomi.register': 'Registrar',
+    'blockdomi.classifying': 'Clasificando...',
+    'blockdomi.duplicates': 'Duplicados',
+    'blockdomi.invalid': 'Inválidos',
+    'blockdomi.none': 'Ninguno',
+    'blockdomi.domainRequired': 'El dominio es obligatorio',
+    'blockdomi.domainInvalidFormat': 'Use el dominio sin protocolo (ej: ejemplo.com o acortador.com/abc123). No use https://, http:// o www. al inicio.',
+    'blockdomi.ipRequired': 'La IP es obligatoria',
+    'blockdomi.ipv4InvalidFormat': 'Introduzca un IPv4 válido con 4 octetos (ej: 192.168.1.1). No use puntos al final.',
+    'blockdomi.ipv6InvalidFormat': 'Introduzca un IPv6 válido (8 grupos hex separados por :). Ej: 2001:db8::1. Puede usar :: una vez para comprimir ceros.',
 
     // Parameters Menu
     'params.users': 'Usuarios',

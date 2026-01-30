@@ -65,7 +65,13 @@ export class DominioController {
 
       const dominioLimpo = sanitizeDominio(dominio);
       if (!dominioLimpo) {
-        sendValidationError(res, 'Informe o domínio sem protocolo (ex: exemplo.com ou t.co/rtg5bj3jkz). Não use https://, http:// ou www. no início.');
+        sendValidationError(res, 'Informe o domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Não use https://, http:// ou www. no início.');
+        return;
+      }
+
+      const existente = await DominioService.findByDominio(dominioLimpo);
+      if (existente) {
+        sendValidationError(res, 'Já existe um domínio cadastrado com este valor.');
         return;
       }
 
@@ -113,7 +119,13 @@ export class DominioController {
 
       const dominioLimpo = sanitizeDominio(dominio);
       if (!dominioLimpo) {
-        sendValidationError(res, 'Informe o domínio sem protocolo (ex: exemplo.com ou t.co/rtg5bj3jkz). Não use https://, http:// ou www. no início.');
+        sendValidationError(res, 'Informe o domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Não use https://, http:// ou www. no início.');
+        return;
+      }
+
+      const existente = await DominioService.findByDominio(dominioLimpo);
+      if (existente && Number(existente.id) !== Number(id)) {
+        sendValidationError(res, 'Já existe um domínio cadastrado com este valor.');
         return;
       }
 

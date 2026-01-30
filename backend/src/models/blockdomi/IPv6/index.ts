@@ -15,6 +15,11 @@ export class IPv6 extends Model<
   declare id: CreationOptional<number>;
   declare ip: string;
   declare descricao: string | null;
+  declare nome_oficio: string | null;
+  declare data_inicio_bloqueio: string | null;
+  declare data_fim_bloqueio: string | null;
+  declare link_oficio_anatel: string | null;
+  declare link_oficio_justica: string | null;
   declare ativo: boolean;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
@@ -52,6 +57,26 @@ IPv6.init(
       }
     },
     descricao: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    nome_oficio: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    data_inicio_bloqueio: {
+      type: DataTypes.DATEONLY,
+      allowNull: true
+    },
+    data_fim_bloqueio: {
+      type: DataTypes.DATEONLY,
+      allowNull: true
+    },
+    link_oficio_anatel: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    link_oficio_justica: {
       type: DataTypes.TEXT,
       allowNull: true
     },

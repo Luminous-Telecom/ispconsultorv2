@@ -28,6 +28,7 @@ export type ModalType =
   | 'blockdomi-dominios'
   | 'blockdomi-ipv4'
   | 'blockdomi-ipv6'
+  | 'blockdomi-importar-lista'
   | null;
 
 interface ModalContextType {

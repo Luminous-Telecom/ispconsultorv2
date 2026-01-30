@@ -6,7 +6,7 @@ import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { IPv6 } from '@/types';
 import { useI18n } from '@/contexts/I18nContext';
-import { formatDateTime } from '@/utils/formatters';
+import { formatDateTime, formatDate } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
 import { IPv6Modal } from './index';
 import { useAuditoria } from '@/hooks/useAuditoria';
@@ -80,6 +80,41 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
       render: (item: IPv6) => item.descricao || '-'
     },
     {
+      key: 'nome_oficio',
+      label: t('blockdomi.nomeOficio'),
+      sortable: true,
+      width: '220px',
+      render: (item: IPv6) => item.nome_oficio || '-'
+    },
+    {
+      key: 'data_inicio_bloqueio',
+      label: t('blockdomi.dataInicioBloqueio'),
+      sortable: true,
+      width: '130px',
+      render: (item: IPv6) => formatDate(item.data_inicio_bloqueio)
+    },
+    {
+      key: 'data_fim_bloqueio',
+      label: t('blockdomi.dataFimBloqueio'),
+      sortable: true,
+      width: '130px',
+      render: (item: IPv6) => formatDate(item.data_fim_bloqueio)
+    },
+    {
+      key: 'oficio_anatel',
+      label: t('blockdomi.oficioAnatel'),
+      sortable: false,
+      width: '100px',
+      render: (item: IPv6) => item.link_oficio_anatel?.trim() ? t('ui.yes') : t('ui.no')
+    },
+    {
+      key: 'oficio_justica',
+      label: t('blockdomi.oficioJustica'),
+      sortable: false,
+      width: '100px',
+      render: (item: IPv6) => item.link_oficio_justica?.trim() ? t('ui.yes') : t('ui.no')
+    },
+    {
       key: 'ativo',
       label: t('table.status'),
       sortable: true,
@@ -104,7 +139,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
     }
   ], [t]);
 
-  const defaultTitle = title || (onSelectIPv6 ? 'Selecionar IPv6' : 'IPv6');
+  const defaultTitle = title || (onSelectIPv6 ? t('blockdomi.selectIPv6') : 'IPv6');
   const modal = useListModal({
     title: defaultTitle,
     columns,
@@ -112,7 +147,8 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
     searchFields: [
       { key: 'id', label: t('table.id') },
       { key: 'ip', label: 'IPv6' },
-      { key: 'descricao', label: t('form.description') }
+      { key: 'descricao', label: t('form.description') },
+      { key: 'nome_oficio', label: t('blockdomi.nomeOficio') }
     ],
     multiSelect: false
   });
@@ -219,6 +255,30 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
       }
     },
     {
+      label: t('blockdomi.anatel'),
+      variant: 'secondary' as const,
+      disabled: (selectedItems: IPv6[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        return items.length === 0 || !items.some((i) => i.link_oficio_anatel?.trim());
+      },
+      action: (selectedItems: IPv6[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        items.filter((i) => i.link_oficio_anatel?.trim()).forEach((i) => window.open(i.link_oficio_anatel!, '_blank', 'noopener,noreferrer'));
+      }
+    },
+    {
+      label: t('blockdomi.justica'),
+      variant: 'secondary' as const,
+      disabled: (selectedItems: IPv6[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        return items.length === 0 || !items.some((i) => i.link_oficio_justica?.trim());
+      },
+      action: (selectedItems: IPv6[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        items.filter((i) => i.link_oficio_justica?.trim()).forEach((i) => window.open(i.link_oficio_justica!, '_blank', 'noopener,noreferrer'));
+      }
+    },
+    {
       label: t('actions.delete'),
       disabled: (selectedItems: IPv6[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: IPv6[]) => {
@@ -228,7 +288,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
         const confirmed = await confirm({
           message: t('messages.confirmDelete'),
           variant: 'danger',
-          title: 'Excluir IPv6',
+          title: t('blockdomi.deleteIPv6'),
           confirmText: t('actions.delete'),
           cancelText: t('actions.cancel'),
         });

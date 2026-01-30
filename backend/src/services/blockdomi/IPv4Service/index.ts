@@ -41,7 +41,10 @@ export class IPv4Service {
         [Op.or]: [
           { id: { [Op.like]: `%${search}%` } },
           { ip: { [Op.like]: `%${search}%` } },
-          { descricao: { [Op.like]: `%${search}%` } }
+          { descricao: { [Op.like]: `%${search}%` } },
+          { nome_oficio: { [Op.like]: `%${search}%` } },
+          { link_oficio_anatel: { [Op.like]: `%${search}%` } },
+          { link_oficio_justica: { [Op.like]: `%${search}%` } }
         ]
       } as WhereOptions<IPv4>);
     }
@@ -110,6 +113,13 @@ export class IPv4Service {
   }
 
   /**
+   * Buscar IPv4 por IP (para verificar duplicata)
+   */
+  static async findByIp(ip: string): Promise<IPv4 | null> {
+    return await IPv4.findOne({ where: { ip } });
+  }
+
+  /**
    * Criar IPv4
    */
   static async create(dadosIPv4: Partial<IPv4>): Promise<IPv4> {
@@ -130,7 +140,16 @@ export class IPv4Service {
       throw new Error('IPv4 não encontrado');
     }
 
-    const allowedFields: Array<keyof IPv4> = ['ip', 'descricao', 'ativo'];
+    const allowedFields: Array<keyof IPv4> = [
+      'ip',
+      'descricao',
+      'nome_oficio',
+      'data_inicio_bloqueio',
+      'data_fim_bloqueio',
+      'link_oficio_anatel',
+      'link_oficio_justica',
+      'ativo'
+    ];
     
     const updateData: Partial<IPv4> = {};
     Object.keys(dadosIPv4).forEach(key => {

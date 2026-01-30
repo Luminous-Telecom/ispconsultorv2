@@ -249,9 +249,10 @@ const Layout: React.FC = () => {
   ];
 
   const blockdomiFolderItems = [
-    { id: 'dominios', label: 'Dominios', icon: 'bi-globe', onClick: () => handleOpenModal('blockdomi-dominios') },
-    { id: 'ipv4', label: 'IPv4', icon: 'bi-router', onClick: () => handleOpenModal('blockdomi-ipv4') },
-    { id: 'ipv6', label: 'IPv6', icon: 'bi-router-fill', onClick: () => handleOpenModal('blockdomi-ipv6') },
+    { id: 'dominios', label: t('modal.domains'), icon: 'bi-globe', onClick: () => handleOpenModal('blockdomi-dominios') },
+    { id: 'ipv4', label: t('modal.ipv4'), icon: 'bi-router', onClick: () => handleOpenModal('blockdomi-ipv4') },
+    { id: 'ipv6', label: t('modal.ipv6'), icon: 'bi-router-fill', onClick: () => handleOpenModal('blockdomi-ipv6') },
+    { id: 'importar-lista', label: t('modal.importList'), icon: 'bi-list-ul', onClick: () => handleOpenModal('blockdomi-importar-lista') },
   ];
 
   return (
@@ -325,7 +326,7 @@ const Layout: React.FC = () => {
                     }}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
-                    <span>Cadastros</span>
+                    <span>{t('layout.folderCadastros')}</span>
                   </button>
                 </h2>
                 <div
@@ -378,7 +379,7 @@ const Layout: React.FC = () => {
                     }}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
-                    <span>Financeiro</span>
+                    <span>{t('layout.folderFinanceiro')}</span>
                   </button>
                 </h2>
                 <div
@@ -431,7 +432,7 @@ const Layout: React.FC = () => {
                     }}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
-                    <span>Blockdomi</span>
+                    <span>{t('blockdomi.menuTitle')}</span>
                   </button>
                 </h2>
                 <div
