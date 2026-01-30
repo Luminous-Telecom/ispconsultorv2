@@ -278,6 +278,8 @@ export interface TranslationKeys {
   'blockdomi.classifying': string;
   'blockdomi.duplicates': string;
   'blockdomi.invalid': string;
+  'blockdomi.alreadyRegistered': string;
+  'blockdomi.alreadyRegisteredIgnored': string;
   'blockdomi.none': string;
   'blockdomi.domainRequired': string;
   'blockdomi.domainInvalidFormat': string;
@@ -1467,7 +1469,7 @@ const translations: Translations = {
     'blockdomi.editIPv6': 'Editar IPv6',
     'blockdomi.deleteIPv6': 'Excluir IPv6',
     'blockdomi.selectIPv6': 'Selecionar IPv6',
-    'blockdomi.importIntro': 'Cole uma lista (um item por linha). Serão classificados em: domínios, IPv4, IPv6, duplicados na lista e inválidos. Ao cadastrar, itens já existentes no sistema serão ignorados.',
+    'blockdomi.importIntro': 'Cole uma lista (um item por linha). Serão classificados em: domínios, IPv4, IPv6, já cadastrados no sistema e inválidos. Ao cadastrar, itens já existentes no sistema serão ignorados.',
     'blockdomi.placeholderDomain': 'meusite.com ou encurtador.com/abc123',
     'blockdomi.helpDomain': 'Domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Sem https://, http:// ou www. no início.',
     'blockdomi.placeholderOficio': 'ex: Ofício nº 01/2026/ORG/SETOR/SIGLA',
@@ -1477,6 +1479,8 @@ const translations: Translations = {
     'blockdomi.classifying': 'Classificando...',
     'blockdomi.duplicates': 'Duplicados',
     'blockdomi.invalid': 'Inválidos',
+    'blockdomi.alreadyRegistered': 'Já cadastrados',
+    'blockdomi.alreadyRegisteredIgnored': 'Já cadastrados (ignorados)',
     'blockdomi.none': 'Nenhum',
     'blockdomi.domainRequired': 'Domínio é obrigatório',
     'blockdomi.domainInvalidFormat': 'Use o domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Não use https://, http:// ou www. no início.',
@@ -2661,7 +2665,7 @@ const translations: Translations = {
     'blockdomi.editIPv6': 'Edit IPv6',
     'blockdomi.deleteIPv6': 'Delete IPv6',
     'blockdomi.selectIPv6': 'Select IPv6',
-    'blockdomi.importIntro': 'Paste a list (one item per line). Items will be classified as: domains, IPv4, IPv6, duplicates in list, and invalid. When registering, items already in the system will be ignored.',
+    'blockdomi.importIntro': 'Paste a list (one item per line). Items will be classified as: domains, IPv4, IPv6, already registered in system, and invalid. When registering, items already in the system will be ignored.',
     'blockdomi.placeholderDomain': 'example.com or shortener.com/abc123',
     'blockdomi.helpDomain': 'Domain without protocol (e.g. example.com or shortener.com/abc123). No https://, http:// or www. at the start.',
     'blockdomi.placeholderOficio': 'e.g. Warrant no. 01/2026/ORG/SECTOR/CODE',
@@ -2671,6 +2675,8 @@ const translations: Translations = {
     'blockdomi.classifying': 'Classifying...',
     'blockdomi.duplicates': 'Duplicates',
     'blockdomi.invalid': 'Invalid',
+    'blockdomi.alreadyRegistered': 'Already registered',
+    'blockdomi.alreadyRegisteredIgnored': 'Already registered (ignored)',
     'blockdomi.none': 'None',
     'blockdomi.domainRequired': 'Domain is required',
     'blockdomi.domainInvalidFormat': 'Use domain without protocol (e.g. example.com or shortener.com/abc123). Do not use https://, http:// or www. at the start.',
@@ -3857,7 +3863,7 @@ const translations: Translations = {
     'blockdomi.editIPv6': 'Editar IPv6',
     'blockdomi.deleteIPv6': 'Eliminar IPv6',
     'blockdomi.selectIPv6': 'Seleccionar IPv6',
-    'blockdomi.importIntro': 'Pegue una lista (un elemento por línea). Se clasificarán en: dominios, IPv4, IPv6, duplicados en la lista e inválidos. Al registrar, los elementos ya existentes en el sistema serán ignorados.',
+    'blockdomi.importIntro': 'Pegue una lista (un elemento por línea). Se clasificarán en: dominios, IPv4, IPv6, ya registrados en el sistema e inválidos. Al registrar, los elementos ya existentes en el sistema serán ignorados.',
     'blockdomi.placeholderDomain': 'ejemplo.com o acortador.com/abc123',
     'blockdomi.helpDomain': 'Dominio sin protocolo (ej: ejemplo.com o acortador.com/abc123). Sin https://, http:// o www. al inicio.',
     'blockdomi.placeholderOficio': 'ej: Oficio nº 01/2026/ORG/SECTOR/SIGLA',
@@ -3867,6 +3873,8 @@ const translations: Translations = {
     'blockdomi.classifying': 'Clasificando...',
     'blockdomi.duplicates': 'Duplicados',
     'blockdomi.invalid': 'Inválidos',
+    'blockdomi.alreadyRegistered': 'Ya registrados',
+    'blockdomi.alreadyRegisteredIgnored': 'Ya registrados (ignorados)',
     'blockdomi.none': 'Ninguno',
     'blockdomi.domainRequired': 'El dominio es obligatorio',
     'blockdomi.domainInvalidFormat': 'Use el dominio sin protocolo (ej: ejemplo.com o acortador.com/abc123). No use https://, http:// o www. al inicio.',

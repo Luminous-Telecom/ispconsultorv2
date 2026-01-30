@@ -16,6 +16,8 @@ export interface ClassifiedList {
   ipv6: string[];
   invalidos: string[];
   duplicados: string[];
+  /** Itens válidos da lista que já existem no sistema (serão ignorados ao cadastrar) */
+  jaCadastrados: string[];
 }
 
 interface ImportarListaBlockdomiModalProps {
@@ -85,7 +87,7 @@ function classifyLines(text: string): ClassifiedList {
     }
   }
 
-  return { dominios, ipv4, ipv6, invalidos, duplicados };
+  return { dominios, ipv4, ipv6, invalidos, duplicados, jaCadastrados: [] };
 }
 
 const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = ({
@@ -116,21 +118,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     prevShowRef.current = !!show;
   }, [show]);
 
-  const handleAnalisar = useCallback(() => {
-    setIsAnalyzing(true);
-    setClassified(null);
-    setTimeout(() => {
-      const result = classifyLines(rawText);
-      setClassified(result);
-      setIsAnalyzing(false);
-    }, 0);
-  }, [rawText]);
-
-  const totalValid = useMemo(() => {
-    if (!classified) return 0;
-    return classified.dominios.length + classified.ipv4.length + classified.ipv6.length;
-  }, [classified]);
-
   const fetchExisting = useCallback(async () => {
     const [domRes, ipv4Res, ipv6Res] = await Promise.all([
       DominioService.list({ limit: 9999, page: 1 }),
@@ -142,6 +129,31 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     const existingIPv6 = new Set((ipv6Res?.data ?? []).map((d) => d.ip));
     return { existingDominios, existingIPv4, existingIPv6 };
   }, []);
+
+  const handleAnalisar = useCallback(async () => {
+    setIsAnalyzing(true);
+    setClassified(null);
+    try {
+      const result = classifyLines(rawText);
+      const { existingDominios, existingIPv4, existingIPv6 } = await fetchExisting();
+      const jaCadastrados: string[] = [
+        ...result.dominios.filter((d) => existingDominios.has(d)),
+        ...result.ipv4.filter((ip) => existingIPv4.has(ip)),
+        ...result.ipv6.filter((ip) => existingIPv6.has(ip))
+      ];
+      setClassified({ ...result, jaCadastrados });
+    } catch (e) {
+      setClassified(null);
+      error((e as Error)?.message ?? 'Erro ao analisar.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [rawText, fetchExisting, error]);
+
+  const totalValid = useMemo(() => {
+    if (!classified) return 0;
+    return classified.dominios.length + classified.ipv4.length + classified.ipv6.length;
+  }, [classified]);
 
   const handleCadastrar = useCallback(async () => {
     if (!classified || totalValid === 0) return;
@@ -197,7 +209,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
 
       let msg = `Cadastrados: ${addedDominios} domínio(s), ${addedIPv4} IPv4, ${addedIPv6} IPv6.`;
       if (dupTotal > 0) {
-        msg += ` Duplicados ignorados: ${dupTotal}.`;
+        msg += ` ${t('blockdomi.alreadyRegisteredIgnored')}: ${dupTotal}.`;
       }
       if (classified.invalidos.length > 0) {
         msg += ` Inválidos (não cadastrados): ${classified.invalidos.length}.`;
@@ -366,14 +378,14 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
             </div>
             <div className="col-12 col-md-6 col-lg-3">
               <div className="card h-100">
-                <div className="card-header py-2 bg-warning text-dark">
-                  {t('blockdomi.duplicates')} ({classified.duplicados.length})
+                <div className="card-header py-2 bg-dark text-white">
+                  {t('blockdomi.alreadyRegistered')} ({classified.jaCadastrados.length})
                 </div>
                 <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
-                  {classified.duplicados.length === 0 ? (
+                  {classified.jaCadastrados.length === 0 ? (
                     <span className="text-muted small">{t('blockdomi.none')}</span>
                   ) : (
-                    renderList(classified.duplicados)
+                    renderList(classified.jaCadastrados)
                   )}
                 </div>
               </div>
