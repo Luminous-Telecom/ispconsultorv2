@@ -53,19 +53,28 @@ export const formatNumber = (value: number | string): string => {
 
 /**
  * Formata uma data para o padrão brasileiro (DD/MM/YYYY)
- * Usa o timezone local do navegador para exibição
+ * Strings YYYY-MM-DD (só data, sem hora) são formatadas pelos componentes
+ * diretamente para evitar que new Date() as interprete como UTC e mude o dia.
  * @param date - Data como string, Date ou null/undefined
  * @returns String formatada como dd/mm/aaaa ou '-' se nula
  */
 export const formatDate = (date: string | Date | null | undefined): string => {
   if (!date) return '-';
-  
+
   try {
+    // Crítico: "YYYY-MM-DD" sem hora é interpretado como meia-noite UTC pelo JS.
+    // Em UTC-3 vira dia anterior às 21h → exibe 28 em vez de 29. Evitar criando Date.
+    if (typeof date === 'string') {
+      const match = date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (match) {
+        const [, year, month, day] = match;
+        return `${day}/${month}/${year}`;
+      }
+    }
+
     const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
     if (isNaN(dateObj.getTime())) return '-';
-    
-    // Usa Intl.DateTimeFormat com timezone local para formatação consistente
+
     return new Intl.DateTimeFormat('pt-BR', {
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       year: 'numeric',
