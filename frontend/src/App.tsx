@@ -89,12 +89,12 @@ function AppContent() {
                       </Suspense>
                     } />
                     <Route path="/central-assinante" element={
-                      <Suspense fallback={<Loading message="Carregando central do assinante..." />}>
+                      <Suspense fallback={<Loading message={t('ui.loadingSubscriberCenter')} />}>
                         <CentralAssinante />
                       </Suspense>
                     } />
                     <Route path="/central-assinante/:id/:token" element={
-                      <Suspense fallback={<Loading message="Carregando central do assinante..." />}>
+                      <Suspense fallback={<Loading message={t('ui.loadingSubscriberCenter')} />}>
                         <CentralAssinante />
                       </Suspense>
                     } />

@@ -7,6 +7,7 @@ import DocumentoSistemaService, { DocumentoSistema } from '@/services/documentoS
 import DraggableModal from '@/components/common/DraggableModal';
 import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ModeloContratoSelectModalProps {
   show: boolean;
@@ -19,8 +20,10 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
   show, 
   onClose, 
   onSelect,
-  title = "Selecionar Modelo de Contrato"
+  title
 }) => {
+  const { t } = useI18n();
+  const defaultTitle = title || t('modal.selectContractModel');
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -128,7 +131,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
         clearSelection();
         onClose();
       }}
-      title={title}
+      title={defaultTitle}
       size="lg"
       modalId="modelo-contrato-select-modal"
       className="no-padding"
@@ -136,7 +139,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            title={title}
+            title={defaultTitle}
             config={{
               columns: tableColumns,
               data: modalData,

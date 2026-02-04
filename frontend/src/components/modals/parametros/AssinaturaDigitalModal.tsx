@@ -346,7 +346,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Assinatura Digital Eletrônica"
+      title={t('modal.digitalSignature')}
       size="md"
       modalId="assinatura-digital-modal"
       headerActions={headerActionsContent}

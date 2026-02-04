@@ -9,6 +9,7 @@ import { Button } from '@/components/ui';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { HotsiteService, type HotsiteVariable } from '@/services/hotsiteService';
 import { DadosEmpresaService, type DadosEmpresa } from '@/services/dadosEmpresaService';
 
@@ -101,6 +102,7 @@ function renderTemplate(html: string, variables: Record<string, string>): string
 }
 
 const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { theme } = useTheme();
   const queryClient = useQueryClient();
@@ -324,7 +326,7 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
                   <div className="col-12 col-lg-4">
                     <div className="card">
                       <div className="card-header py-2 px-3">
-                        <h6 className="mb-0">Variáveis Disponíveis</h6>
+                        <h6 className="mb-0">{t('variables.title')}</h6>
                       </div>
                       <div className="card-body p-3" style={{ maxHeight: '55vh', overflowY: 'auto' }}>
                         {variables.length === 0 ? (

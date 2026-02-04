@@ -8,6 +8,7 @@ import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
 import { useTableFilters } from '../../../hooks/useTableFilters';
 import { useModalSelect } from '../../../hooks/useModalSelect';
+import { useI18n } from '../../../contexts/I18nContext';
 import MensagemDetalhesModal from './MensagemDetalhesModal';
 
 interface WhatsAppHistoricoModalProps {
@@ -36,6 +37,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
   show,
   onClose
 }) => {
+  const { t } = useI18n();
   const [showDetalhesModal, setShowDetalhesModal] = useState(false);
   const [mensagemSelecionada, setMensagemSelecionada] = useState<MensagemItem | null>(null);
 
@@ -75,25 +77,25 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
   const tableColumns: TableConfig<MensagemItem>['columns'] = useMemo(() => [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       width: '42px',
       render: (item: MensagemItem) => <span>{item.id}</span>
     },
     {
       key: 'tipo',
-      label: 'Tipo',
+      label: t('history.type'),
       sortable: true,
       width: '80px',
       render: (_item: MensagemItem) => (
         <Badge variant="success">
-          WhatsApp
+          {t('history.whatsapp')}
         </Badge>
       )
     },
     {
       key: 'cliente_nome',
-      label: 'Cliente',
+      label: t('history.client'),
       sortable: true,
       width: '150px',
       render: (item: MensagemItem) => (
@@ -102,7 +104,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
     },
     {
       key: 'destinatario',
-      label: 'Telefone',
+      label: t('history.phone'),
       sortable: true,
       width: '130px',
       render: (item: MensagemItem) => (
@@ -111,7 +113,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
     },
     {
       key: 'mensagem',
-      label: 'Mensagem',
+      label: t('history.message'),
       sortable: false,
       width: '200px',
       render: (item: MensagemItem) => (
@@ -122,7 +124,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('history.status'),
       sortable: true,
       width: '80px',
       render: (item: MensagemItem) => (
@@ -130,13 +132,13 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
           variant={item.status === 'enviada' ? 'success' : 'danger'}
           className="text-capitalize"
         >
-          {item.status === 'enviada' ? 'Enviada' : 'Erro'}
+          {item.status === 'enviada' ? t('history.sent') : t('history.errorStatus')}
         </Badge>
       )
     },
     {
       key: 'erro_mensagem',
-      label: 'Erro',
+      label: t('history.error'),
       sortable: false,
       width: '150px',
       render: (item: MensagemItem) => (
@@ -151,7 +153,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
     },
     {
       key: 'entidade_tipo',
-      label: 'Entidade',
+      label: t('history.entity'),
       sortable: true,
       width: '100px',
       render: (item: MensagemItem) => {
@@ -166,7 +168,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
     },
     {
       key: 'usuario',
-      label: 'Usuário',
+      label: t('history.user'),
       sortable: false,
       width: '120px',
       render: (item: MensagemItem) => {
@@ -174,26 +176,26 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
         return userData ? (
           <span title={userData.email}>{userData.nome}</span>
         ) : (
-          <span className="text-muted">Sistema</span>
+          <span className="text-muted">{t('history.system')}</span>
         );
       }
     },
     {
       key: 'created_at',
-      label: 'Data/Hora',
+      label: t('history.dateTime'),
       sortable: true,
       width: '145px',
       render: (item: MensagemItem) => formatDateTime(item.created_at)
     }
-  ], []);
+  ], [t]);
 
   const searchFields = [
-    { key: 'id', label: 'ID' },
-    { key: 'tipo', label: 'Tipo' },
-    { key: 'cliente_nome', label: 'Cliente' },
-    { key: 'destinatario', label: 'Telefone' },
-    { key: 'mensagem', label: 'Mensagem' },
-    { key: 'status', label: 'Status' }
+    { key: 'id', label: t('table.id') },
+    { key: 'tipo', label: t('history.type') },
+    { key: 'cliente_nome', label: t('history.client') },
+    { key: 'destinatario', label: t('history.phone') },
+    { key: 'mensagem', label: t('history.message') },
+    { key: 'status', label: t('history.status') }
   ];
 
   // Paginação do backend - usar valores do backend quando disponíveis
@@ -234,7 +236,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
   // Bulk actions memoizados
   const bulkActions = useMemo(() => [
     {
-      label: 'Visualizar',
+      label: t('history.view'),
       variant: 'primary' as const,
       disabled: (selectedItems: MensagemItem[]) => selectedItems.length === 0,
       action: (selectedItems: MensagemItem[]) => {
@@ -245,7 +247,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
         }
       }
     }
-  ], [selectedItem]);
+  ], [selectedItem, t]);
 
   const modalData = useMemo(() => data?.data || [], [data?.data]);
 
@@ -264,7 +266,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
           clearSelection();
           onClose();
         }}
-        title="Histórico de Mensagens WhatsApp"
+        title={t('history.whatsappTitle')}
         size="lg"
         modalId="whatsapp-historico-modal"
         className="no-padding"
@@ -272,13 +274,13 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
             <Table
-              title="Histórico de Mensagens WhatsApp"
+              title={t('history.whatsappTitle')}
               config={{
                 columns: tableColumns,
                 data: modalData,
                 loading: isLoading,
                 searchable: true,
-                searchPlaceholder: 'Buscar por telefone...',
+                searchPlaceholder: t('history.searchPhone'),
                 searchFields,
                 sortable: true,
                 sortColumn: tableFilters.sortColumn,
@@ -295,7 +297,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
                   disabled: action.disabled,
                   variant: action.variant
                 })),
-                emptyMessage: 'Nenhuma mensagem encontrada',
+                emptyMessage: t('history.noMessages'),
                 pagination: pagination
               }}
               tableId="whatsapp-historico-table"

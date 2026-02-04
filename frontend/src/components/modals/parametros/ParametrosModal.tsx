@@ -75,13 +75,13 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   const updateParametrosMutation = useMutation({
     mutationFn: (data: ParametrosForm) => ParametrosService.update(data),
     onSuccess: () => {
-      success('Parâmetros atualizados com sucesso!');
+      success(t('params.successUpdate'));
       queryClient.invalidateQueries({ queryKey: ['parametros'] });
       // Não fecha o modal para permitir múltiplas edições
     },
     onError: (error: unknown) => {
       const axiosError = error as AxiosError<{ message?: string }>;
-      const message = axiosError?.response?.data?.message || 'Erro ao atualizar parâmetros';
+      const message = axiosError?.response?.data?.message || t('params.errorUpdate');
       showError(message);
     }
   });
@@ -135,7 +135,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
             onClick={handleCancel}
             disabled={updateParametrosMutation.isPending}
           >
-            Cancelar
+            {t('buttons.cancel')}
           </Button>
           <Button
             type="submit"
@@ -144,7 +144,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
             size="sm"
             isLoading={updateParametrosMutation.isPending}
           >
-            Salvar
+            {t('buttons.save')}
           </Button>
         </div>
       }
@@ -152,7 +152,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       {isLoading ? (
         <div className="text-center p-4">
           <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
+            <span className="visually-hidden">{t('ui.loading')}</span>
           </div>
         </div>
       ) : (
@@ -160,7 +160,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
         <div>
           <div className="card mb-3">
             <div className="card-header">
-              <h6 className="mb-0">Validações</h6>
+              <h6 className="mb-0">{t('params.validations')}</h6>
             </div>
             <div className="card-body">
               <div className="form-check mb-3">
@@ -174,10 +174,10 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   disabled={updateParametrosMutation.isPending}
                 />
                 <label className="form-check-label" htmlFor="validar_cpf_cnpj">
-                  Validar CPF/CNPJ
+                  {t('params.validateCpfCnpj')}
                 </label>
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Quando ativado, valida se CPF/CNPJ é válido ao cadastrar/editar clientes
+                  {t('params.validateCpfCnpjHelp')}
                 </div>
               </div>
 
@@ -192,10 +192,10 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   disabled={updateParametrosMutation.isPending}
                 />
                 <label className="form-check-label" htmlFor="validar_cep">
-                  Validar CEP
+                  {t('params.validateCep')}
                 </label>
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Quando ativado, busca automaticamente os dados do endereço ao digitar um CEP válido
+                  {t('params.validateCepHelp')}
                 </div>
               </div>
             </div>
@@ -203,7 +203,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
 
           <div className="card mb-3">
             <div className="card-header">
-              <h6 className="mb-0">Geração de Títulos</h6>
+              <h6 className="mb-0">{t('params.titleGeneration')}</h6>
             </div>
             <div className="card-body">
               <div className="form-check mb-3">
@@ -217,10 +217,10 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   disabled={updateParametrosMutation.isPending}
                 />
                 <label className="form-check-label" htmlFor="titulos_vence_sabado">
-                  Títulos que Vencem aos Sábados
+                  {t('params.titlesDueSaturday')}
                 </label>
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Se data de vencimento cair em sábado, mantém no sábado. Se desativado, move para próximo dia útil
+                  {t('params.titlesDueSaturdayHelp')}
                 </div>
               </div>
 
@@ -235,10 +235,10 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   disabled={updateParametrosMutation.isPending}
                 />
                 <label className="form-check-label" htmlFor="titulos_vence_domingo">
-                  Títulos que Vencem aos Domingos
+                  {t('params.titlesDueSunday')}
                 </label>
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Se data de vencimento cair em domingo, mantém no domingo. Se desativado, move para próximo dia útil
+                  {t('params.titlesDueSundayHelp')}
                 </div>
               </div>
 
@@ -253,16 +253,16 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   disabled={updateParametrosMutation.isPending}
                 />
                 <label className="form-check-label" htmlFor="auto_lancamento_titulos">
-                  Auto Lançamento de Títulos
+                  {t('params.autoLaunchTitles')}
                 </label>
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Lança automaticamente novos títulos para manter o total configurado no financeiro
+                  {t('params.autoLaunchTitlesHelp')}
                 </div>
               </div>
 
               <div className="mb-3">
                 <label htmlFor="total_titulos_financeiro" className="form-label">
-                  Total de Títulos no Financeiro
+                  {t('params.totalTitlesFinancial')}
                 </label>
                 <input
                   type="number"
@@ -276,7 +276,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   disabled={updateParametrosMutation.isPending || !formData.auto_lancamento_titulos}
                 />
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Quantidade de títulos futuros a manter sempre disponíveis no financeiro (de 1 a 24 meses)
+                  {t('params.totalTitlesFinancialHelp')}
                 </div>
               </div>
             </div>
@@ -284,12 +284,12 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
 
           <div className="card mb-3">
             <div className="card-header">
-              <h6 className="mb-0">Central do Assinante</h6>
+              <h6 className="mb-0">{t('params.subscriberCenter')}</h6>
             </div>
             <div className="card-body">
               <div className="mb-3">
                 <label htmlFor="central_assinante_metodo_login" className="form-label">
-                  Método de Login
+                  {t('params.loginMethod')}
                 </label>
                 <select
                   className="form-select"
@@ -303,7 +303,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   <option value="email">Email</option>
                 </select>
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Define se o login na central do assinante será feito por CNPJ ou Email
+                  {t('params.loginMethodHelp')}
                 </div>
               </div>
             </div>

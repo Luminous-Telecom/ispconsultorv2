@@ -208,6 +208,9 @@ export interface TranslationKeys {
   'menu.accountsPayable': string;
   'menu.invoices': string;
   'menu.companyData': string;
+  'menu.hotsite': string;
+  'menu.whatsappHistory': string;
+  'menu.emailHistory': string;
 
   // Modal Titles
   'modal.clients': string;
@@ -299,6 +302,25 @@ export interface TranslationKeys {
   'params.digitalSignature': string;
   'params.dueDays': string;
   'params.updates': string;
+  'params.validations': string;
+  'params.validateCpfCnpj': string;
+  'params.validateCpfCnpjHelp': string;
+  'params.validateCep': string;
+  'params.validateCepHelp': string;
+  'params.titleGeneration': string;
+  'params.titlesDueSaturday': string;
+  'params.titlesDueSaturdayHelp': string;
+  'params.titlesDueSunday': string;
+  'params.titlesDueSundayHelp': string;
+  'params.autoLaunchTitles': string;
+  'params.autoLaunchTitlesHelp': string;
+  'params.totalTitlesFinancial': string;
+  'params.totalTitlesFinancialHelp': string;
+  'params.subscriberCenter': string;
+  'params.loginMethod': string;
+  'params.loginMethodHelp': string;
+  'params.successUpdate': string;
+  'params.errorUpdate': string;
 
   // Common UI
   'ui.confirm': string;
@@ -333,6 +355,7 @@ export interface TranslationKeys {
   'ui.loadingLogin': string;
   'ui.loadingPayment': string;
   'ui.loadingPage': string;
+  'ui.loadingSubscriberCenter': string;
   'ui.appError': string;
   'ui.criticalError': string;
   'ui.reloadPage': string;
@@ -768,6 +791,7 @@ export interface TranslationKeys {
   'modal.addFile': string;
   'modal.editTerm': string;
   'modal.selectTerm': string;
+  'modal.selectContractModel': string;
   'modal.sendSignature': string;
   'modal.additionalService': string;
   'modal.list': string;
@@ -1151,6 +1175,7 @@ export interface TranslationKeys {
   'settings.messages.emailLabel': string;
   'settings.messages.templateConfig': string;
   'settings.messages.viewTemplates': string;
+  'settings.messages.activeTemplatesWhatsApp': string;
   'settings.messages.templateHelper': string;
   'settings.messages.templateFormat': string;
   'settings.messages.defaultMessage': string;
@@ -1163,6 +1188,30 @@ export interface TranslationKeys {
   'settings.messages.variablesTitle': string;
   'settings.messages.variablesHelper': string;
   'settings.messages.copyVariable': string;
+
+  // Message History
+  'history.whatsappTitle': string;
+  'history.emailTitle': string;
+  'history.type': string;
+  'history.client': string;
+  'history.phone': string;
+  'history.recipient': string;
+  'history.subject': string;
+  'history.message': string;
+  'history.status': string;
+  'history.error': string;
+  'history.entity': string;
+  'history.user': string;
+  'history.dateTime': string;
+  'history.whatsapp': string;
+  'history.email': string;
+  'history.sent': string;
+  'history.errorStatus': string;
+  'history.system': string;
+  'history.view': string;
+  'history.searchPhone': string;
+  'history.searchEmail': string;
+  'history.noMessages': string;
 
   // File Modal
   'messages.selectFile': string;
@@ -1409,6 +1458,9 @@ const translations: Translations = {
     'menu.accountsPayable': 'Contas a Pagar',
     'menu.invoices': 'Notas Fiscais',
     'menu.companyData': 'Dados da Empresa',
+    'menu.hotsite': 'Hotsite',
+    'menu.whatsappHistory': 'Histórico WhatsApp',
+    'menu.emailHistory': 'Histórico Email',
 
     // Modal Titles
     'modal.clients': 'Clientes',
@@ -1500,6 +1552,25 @@ const translations: Translations = {
     'params.digitalSignature': 'Assinatura Digital',
     'params.dueDays': 'Dias de Vencimento',
     'params.updates': 'Atualizações',
+    'params.validations': 'Validações',
+    'params.validateCpfCnpj': 'Validar CPF/CNPJ',
+    'params.validateCpfCnpjHelp': 'Quando ativado, valida se CPF/CNPJ é válido ao cadastrar/editar clientes',
+    'params.validateCep': 'Validar CEP',
+    'params.validateCepHelp': 'Quando ativado, busca automaticamente os dados do endereço ao digitar um CEP válido',
+    'params.titleGeneration': 'Geração de Títulos',
+    'params.titlesDueSaturday': 'Títulos que Vencem aos Sábados',
+    'params.titlesDueSaturdayHelp': 'Se data de vencimento cair em sábado, mantém no sábado. Se desativado, move para próximo dia útil',
+    'params.titlesDueSunday': 'Títulos que Vencem aos Domingos',
+    'params.titlesDueSundayHelp': 'Se data de vencimento cair em domingo, mantém no domingo. Se desativado, move para próximo dia útil',
+    'params.autoLaunchTitles': 'Auto Lançamento de Títulos',
+    'params.autoLaunchTitlesHelp': 'Lança automaticamente novos títulos para manter o total configurado no financeiro',
+    'params.totalTitlesFinancial': 'Total de Títulos no Financeiro',
+    'params.totalTitlesFinancialHelp': 'Quantidade de títulos futuros a manter sempre disponíveis no financeiro (de 1 a 24 meses)',
+    'params.subscriberCenter': 'Central do Assinante',
+    'params.loginMethod': 'Método de Login',
+    'params.loginMethodHelp': 'Define se o login na central do assinante será feito por CNPJ ou Email',
+    'params.successUpdate': 'Parâmetros atualizados com sucesso!',
+    'params.errorUpdate': 'Erro ao atualizar parâmetros',
 
     // Common UI
     'ui.confirm': 'Confirmar',
@@ -1534,6 +1605,7 @@ const translations: Translations = {
     'ui.loadingLogin': 'Carregando login...',
     'ui.loadingPayment': 'Carregando página de pagamento...',
     'ui.loadingPage': 'Carregando página inicial...',
+    'ui.loadingSubscriberCenter': 'Carregando central do assinante...',
     'ui.appError': 'Erro na aplicação',
     'ui.criticalError': 'Ocorreu um erro crítico. Recarregue a página.',
     'ui.reloadPage': 'Recarregar página',
@@ -1939,6 +2011,7 @@ const translations: Translations = {
     'modal.addFile': 'Adicionar Arquivo',
     'modal.editTerm': 'Editar Termo',
     'modal.selectTerm': 'Selecionar Termo',
+    'modal.selectContractModel': 'Selecionar Modelo de Contrato',
     'modal.sendSignature': 'Enviar Assinatura',
     'modal.additionalService': 'Serviço Adicional',
     'modal.list': 'Lista',
@@ -2351,6 +2424,7 @@ const translations: Translations = {
     'settings.messages.emailLabel': 'Mensagem do E-mail',
     'settings.messages.templateConfig': 'Configuração de Template (JSON) - WhatsApp Cloud API',
     'settings.messages.viewTemplates': 'Ver Templates Ativos',
+    'settings.messages.activeTemplatesWhatsApp': 'Templates Ativos - WhatsApp Cloud API',
     'settings.messages.templateHelper': 'Configure o template e variáveis para WhatsApp Cloud API. Deixe vazio para usar mensagem de texto normal.',
     'settings.messages.templateFormat': 'Formato: JSON com name (nome do template), language (idioma: en, pt_BR, etc) e variables (array com ordem das variáveis).',
     'settings.messages.defaultMessage': 'Mensagem Padrão',
@@ -2363,6 +2437,30 @@ const translations: Translations = {
     'settings.messages.variablesTitle': 'Variáveis Disponíveis para Mensagens',
     'settings.messages.variablesHelper': 'Clique nas variáveis para inserir na mensagem',
     'settings.messages.copyVariable': 'Copiar variável',
+
+    // Message History
+    'history.whatsappTitle': 'Histórico de Mensagens WhatsApp',
+    'history.emailTitle': 'Histórico de Mensagens Email',
+    'history.type': 'Tipo',
+    'history.client': 'Cliente',
+    'history.phone': 'Telefone',
+    'history.recipient': 'Destinatário',
+    'history.subject': 'Assunto',
+    'history.message': 'Mensagem',
+    'history.status': 'Status',
+    'history.error': 'Erro',
+    'history.entity': 'Entidade',
+    'history.user': 'Usuário',
+    'history.dateTime': 'Data/Hora',
+    'history.whatsapp': 'WhatsApp',
+    'history.email': 'Email',
+    'history.sent': 'Enviada',
+    'history.errorStatus': 'Erro',
+    'history.system': 'Sistema',
+    'history.view': 'Visualizar',
+    'history.searchPhone': 'Buscar por telefone...',
+    'history.searchEmail': 'Buscar por email...',
+    'history.noMessages': 'Nenhuma mensagem encontrada',
 
     // File Modal
     'messages.selectFile': 'Selecione um arquivo',
@@ -2605,6 +2703,9 @@ const translations: Translations = {
     'menu.accountsPayable': 'Accounts Payable',
     'menu.invoices': 'Invoices',
     'menu.companyData': 'Company Data',
+    'menu.hotsite': 'Hotsite',
+    'menu.whatsappHistory': 'WhatsApp History',
+    'menu.emailHistory': 'Email History',
 
     // Modal Titles
     'modal.clients': 'Clients',
@@ -2696,6 +2797,25 @@ const translations: Translations = {
     'params.digitalSignature': 'Digital Signature',
     'params.dueDays': 'Due Days',
     'params.updates': 'Updates',
+    'params.validations': 'Validations',
+    'params.validateCpfCnpj': 'Validate CPF/CNPJ',
+    'params.validateCpfCnpjHelp': 'When enabled, validates if CPF/CNPJ is valid when creating/editing clients',
+    'params.validateCep': 'Validate ZIP Code',
+    'params.validateCepHelp': 'When enabled, automatically fetches address data when entering a valid ZIP code',
+    'params.titleGeneration': 'Title Generation',
+    'params.titlesDueSaturday': 'Titles Due on Saturdays',
+    'params.titlesDueSaturdayHelp': 'If due date falls on Saturday, keeps it on Saturday. If disabled, moves to next business day',
+    'params.titlesDueSunday': 'Titles Due on Sundays',
+    'params.titlesDueSundayHelp': 'If due date falls on Sunday, keeps it on Sunday. If disabled, moves to next business day',
+    'params.autoLaunchTitles': 'Auto Launch Titles',
+    'params.autoLaunchTitlesHelp': 'Automatically launches new titles to maintain the configured total in financial',
+    'params.totalTitlesFinancial': 'Total Titles in Financial',
+    'params.totalTitlesFinancialHelp': 'Number of future titles to always keep available in financial (from 1 to 24 months)',
+    'params.subscriberCenter': 'Subscriber Center',
+    'params.loginMethod': 'Login Method',
+    'params.loginMethodHelp': 'Defines whether login in subscriber center will be done by CNPJ or Email',
+    'params.successUpdate': 'Parameters updated successfully!',
+    'params.errorUpdate': 'Error updating parameters',
 
     // Common UI
     'ui.confirm': 'Confirm',
@@ -2730,6 +2850,7 @@ const translations: Translations = {
     'ui.loadingLogin': 'Loading login...',
     'ui.loadingPayment': 'Loading payment page...',
     'ui.loadingPage': 'Loading home page...',
+    'ui.loadingSubscriberCenter': 'Loading subscriber center...',
     'ui.appError': 'Application Error',
     'ui.criticalError': 'A critical error occurred. Please reload the page.',
     'ui.reloadPage': 'Reload page',
@@ -3135,6 +3256,7 @@ const translations: Translations = {
     'modal.addFile': 'Add File',
     'modal.editTerm': 'Edit Term',
     'modal.selectTerm': 'Select Term',
+    'modal.selectContractModel': 'Select Contract Model',
     'modal.sendSignature': 'Send Signature',
     'modal.additionalService': 'Additional Service',
     'modal.list': 'List',
@@ -3547,6 +3669,7 @@ const translations: Translations = {
     'settings.messages.emailLabel': 'Email Message',
     'settings.messages.templateConfig': 'Template Configuration (JSON) - WhatsApp Cloud API',
     'settings.messages.viewTemplates': 'View Active Templates',
+    'settings.messages.activeTemplatesWhatsApp': 'Active Templates - WhatsApp Cloud API',
     'settings.messages.templateHelper': 'Configure template and variables for WhatsApp Cloud API. Leave empty to use normal text message.',
     'settings.messages.templateFormat': 'Format: JSON with name (template name), language (en, pt_BR, etc) and variables (array with variable order).',
     'settings.messages.defaultMessage': 'Default Message',
@@ -3559,6 +3682,30 @@ const translations: Translations = {
     'settings.messages.variablesTitle': 'Available Variables for Messages',
     'settings.messages.variablesHelper': 'Click on variables to insert into message',
     'settings.messages.copyVariable': 'Copy variable',
+
+    // Message History
+    'history.whatsappTitle': 'WhatsApp Message History',
+    'history.emailTitle': 'Email Message History',
+    'history.type': 'Type',
+    'history.client': 'Client',
+    'history.phone': 'Phone',
+    'history.recipient': 'Recipient',
+    'history.subject': 'Subject',
+    'history.message': 'Message',
+    'history.status': 'Status',
+    'history.error': 'Error',
+    'history.entity': 'Entity',
+    'history.user': 'User',
+    'history.dateTime': 'Date/Time',
+    'history.whatsapp': 'WhatsApp',
+    'history.email': 'Email',
+    'history.sent': 'Sent',
+    'history.errorStatus': 'Error',
+    'history.system': 'System',
+    'history.view': 'View',
+    'history.searchPhone': 'Search by phone...',
+    'history.searchEmail': 'Search by email...',
+    'history.noMessages': 'No messages found',
 
     // File Modal
     'messages.selectFile': 'Select a file',
@@ -3803,6 +3950,9 @@ const translations: Translations = {
     'menu.accountsPayable': 'Cuentas por Pagar',
     'menu.invoices': 'Facturas',
     'menu.companyData': 'Datos de la Empresa',
+    'menu.hotsite': 'Hotsite',
+    'menu.whatsappHistory': 'Historial WhatsApp',
+    'menu.emailHistory': 'Historial Email',
 
     // Modal Titles
     'modal.clients': 'Clientes',
@@ -3894,6 +4044,25 @@ const translations: Translations = {
     'params.digitalSignature': 'Firma Digital',
     'params.dueDays': 'Días de Vencimiento',
     'params.updates': 'Actualizaciones',
+    'params.validations': 'Validaciones',
+    'params.validateCpfCnpj': 'Validar CPF/CNPJ',
+    'params.validateCpfCnpjHelp': 'Cuando está activado, valida si CPF/CNPJ es válido al crear/editar clientes',
+    'params.validateCep': 'Validar CEP',
+    'params.validateCepHelp': 'Cuando está activado, busca automáticamente los datos de la dirección al escribir un CEP válido',
+    'params.titleGeneration': 'Generación de Títulos',
+    'params.titlesDueSaturday': 'Títulos que Vencen los Sábados',
+    'params.titlesDueSaturdayHelp': 'Si la fecha de vencimiento cae en sábado, mantiene en sábado. Si está desactivado, mueve al próximo día hábil',
+    'params.titlesDueSunday': 'Títulos que Vencen los Domingos',
+    'params.titlesDueSundayHelp': 'Si la fecha de vencimiento cae en domingo, mantiene en domingo. Si está desactivado, mueve al próximo día hábil',
+    'params.autoLaunchTitles': 'Auto Lanzamiento de Títulos',
+    'params.autoLaunchTitlesHelp': 'Lanza automáticamente nuevos títulos para mantener el total configurado en financiero',
+    'params.totalTitlesFinancial': 'Total de Títulos en Financiero',
+    'params.totalTitlesFinancialHelp': 'Cantidad de títulos futuros a mantener siempre disponibles en financiero (de 1 a 24 meses)',
+    'params.subscriberCenter': 'Central del Suscriptor',
+    'params.loginMethod': 'Método de Inicio de Sesión',
+    'params.loginMethodHelp': 'Define si el inicio de sesión en la central del suscriptor se hará por CNPJ o Email',
+    'params.successUpdate': '¡Parámetros actualizados con éxito!',
+    'params.errorUpdate': 'Error al actualizar parámetros',
 
     // Common UI
     'ui.confirm': 'Confirmar',
@@ -3928,6 +4097,7 @@ const translations: Translations = {
     'ui.loadingLogin': 'Cargando inicio de sesión...',
     'ui.loadingPayment': 'Cargando página de pago...',
     'ui.loadingPage': 'Cargando página de inicio...',
+    'ui.loadingSubscriberCenter': 'Cargando central del suscriptor...',
     'ui.appError': 'Error en la aplicación',
     'ui.criticalError': 'Ocurrió un error crítico. Por favor, recargue la página.',
     'ui.reloadPage': 'Recargar página',
@@ -4333,6 +4503,7 @@ const translations: Translations = {
     'modal.addFile': 'Agregar Archivo',
     'modal.editTerm': 'Editar Término',
     'modal.selectTerm': 'Seleccionar Término',
+    'modal.selectContractModel': 'Seleccionar Modelo de Contrato',
     'modal.sendSignature': 'Enviar Firma',
     'modal.additionalService': 'Servicio Adicional',
     'modal.list': 'Lista',
@@ -4741,6 +4912,7 @@ const translations: Translations = {
     'settings.messages.emailLabel': 'Mensaje del Correo',
     'settings.messages.templateConfig': 'Configuración de Plantilla (JSON) - WhatsApp Cloud API',
     'settings.messages.viewTemplates': 'Ver Plantillas Activas',
+    'settings.messages.activeTemplatesWhatsApp': 'Plantillas Activas - WhatsApp Cloud API',
     'settings.messages.templateHelper': 'Configure la plantilla y variables para WhatsApp Cloud API. Deje vacío para usar mensaje de texto normal.',
     'settings.messages.templateFormat': 'Formato: JSON con name (nombre de plantilla), language (idioma: en, pt_BR, etc) y variables (array con orden de variables).',
     'settings.messages.defaultMessage': 'Mensaje Predeterminado',
@@ -4753,6 +4925,30 @@ const translations: Translations = {
     'settings.messages.variablesTitle': 'Variables Disponibles para Mensajes',
     'settings.messages.variablesHelper': 'Haga clic en las variables para insertar en el mensaje',
     'settings.messages.copyVariable': 'Copiar variable',
+
+    // Message History
+    'history.whatsappTitle': 'Historial de Mensajes WhatsApp',
+    'history.emailTitle': 'Historial de Mensajes Email',
+    'history.type': 'Tipo',
+    'history.client': 'Cliente',
+    'history.phone': 'Teléfono',
+    'history.recipient': 'Destinatario',
+    'history.subject': 'Asunto',
+    'history.message': 'Mensaje',
+    'history.status': 'Estado',
+    'history.error': 'Error',
+    'history.entity': 'Entidad',
+    'history.user': 'Usuario',
+    'history.dateTime': 'Fecha/Hora',
+    'history.whatsapp': 'WhatsApp',
+    'history.email': 'Email',
+    'history.sent': 'Enviada',
+    'history.errorStatus': 'Error',
+    'history.system': 'Sistema',
+    'history.view': 'Visualizar',
+    'history.searchPhone': 'Buscar por teléfono...',
+    'history.searchEmail': 'Buscar por email...',
+    'history.noMessages': 'No se encontraron mensajes',
 
     // File Modal
     'messages.selectFile': 'Seleccione un archivo',

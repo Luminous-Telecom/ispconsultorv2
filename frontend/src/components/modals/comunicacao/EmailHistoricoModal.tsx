@@ -8,6 +8,7 @@ import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
 import { useTableFilters } from '../../../hooks/useTableFilters';
 import { useModalSelect } from '../../../hooks/useModalSelect';
+import { useI18n } from '../../../contexts/I18nContext';
 import MensagemDetalhesModal from './MensagemDetalhesModal';
 
 interface EmailHistoricoModalProps {
@@ -36,6 +37,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
   show,
   onClose
 }) => {
+  const { t } = useI18n();
   const [showDetalhesModal, setShowDetalhesModal] = useState(false);
   const [mensagemSelecionada, setMensagemSelecionada] = useState<MensagemItem | null>(null);
 
@@ -75,25 +77,25 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
   const tableColumns: TableConfig<MensagemItem>['columns'] = useMemo(() => [
     {
       key: 'id',
-      label: 'ID',
+      label: t('table.id'),
       sortable: true,
       width: '42px',
       render: (item: MensagemItem) => <span>{item.id}</span>
     },
     {
       key: 'tipo',
-      label: 'Tipo',
+      label: t('history.type'),
       sortable: true,
       width: '70px',
       render: (_item: MensagemItem) => (
         <Badge variant="primary">
-          Email
+          {t('history.email')}
         </Badge>
       )
     },
     {
       key: 'titulo',
-      label: 'Assunto',
+      label: t('history.subject'),
       sortable: true,
       width: '200px',
       render: (item: MensagemItem) => (
@@ -104,7 +106,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
     },
     {
       key: 'cliente_nome',
-      label: 'Cliente',
+      label: t('history.client'),
       sortable: true,
       width: '150px',
       render: (item: MensagemItem) => (
@@ -113,7 +115,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
     },
     {
       key: 'destinatario',
-      label: 'Destinatário',
+      label: t('history.recipient'),
       sortable: true,
       width: '180px',
       render: (item: MensagemItem) => (
@@ -122,7 +124,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
     },
     {
       key: 'mensagem',
-      label: 'Mensagem',
+      label: t('history.message'),
       sortable: false,
       width: '200px',
       render: (item: MensagemItem) => (
@@ -133,7 +135,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('history.status'),
       sortable: true,
       width: '80px',
       render: (item: MensagemItem) => (
@@ -141,13 +143,13 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
           variant={item.status === 'enviada' ? 'success' : 'danger'}
           className="text-capitalize"
         >
-          {item.status === 'enviada' ? 'Enviada' : 'Erro'}
+          {item.status === 'enviada' ? t('history.sent') : t('history.errorStatus')}
         </Badge>
       )
     },
     {
       key: 'erro_mensagem',
-      label: 'Erro',
+      label: t('history.error'),
       sortable: false,
       width: '150px',
       render: (item: MensagemItem) => (
@@ -162,7 +164,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
     },
     {
       key: 'entidade_tipo',
-      label: 'Entidade',
+      label: t('history.entity'),
       sortable: true,
       width: '100px',
       render: (item: MensagemItem) => {
@@ -177,7 +179,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
     },
     {
       key: 'usuario',
-      label: 'Usuário',
+      label: t('history.user'),
       sortable: false,
       width: '120px',
       render: (item: MensagemItem) => {
@@ -185,27 +187,27 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
         return userData ? (
           <span title={userData.email}>{userData.nome}</span>
         ) : (
-          <span className="text-muted">Sistema</span>
+          <span className="text-muted">{t('history.system')}</span>
         );
       }
     },
     {
       key: 'created_at',
-      label: 'Data/Hora',
+      label: t('history.dateTime'),
       sortable: true,
       width: '145px',
       render: (item: MensagemItem) => formatDateTime(item.created_at)
     }
-  ], []);
+  ], [t]);
 
   const searchFields = [
-    { key: 'id', label: 'ID' },
-    { key: 'tipo', label: 'Tipo' },
-    { key: 'cliente_nome', label: 'Cliente' },
-    { key: 'titulo', label: 'Assunto' },
-    { key: 'destinatario', label: 'Destinatário' },
-    { key: 'mensagem', label: 'Mensagem' },
-    { key: 'status', label: 'Status' }
+    { key: 'id', label: t('table.id') },
+    { key: 'tipo', label: t('history.type') },
+    { key: 'cliente_nome', label: t('history.client') },
+    { key: 'titulo', label: t('history.subject') },
+    { key: 'destinatario', label: t('history.recipient') },
+    { key: 'mensagem', label: t('history.message') },
+    { key: 'status', label: t('history.status') }
   ];
 
   // Paginação do backend - usar valores do backend quando disponíveis
@@ -246,7 +248,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
   // Bulk actions memoizados
   const bulkActions = useMemo(() => [
     {
-      label: 'Visualizar',
+      label: t('history.view'),
       variant: 'primary' as const,
       disabled: (selectedItems: MensagemItem[]) => selectedItems.length === 0,
       action: (selectedItems: MensagemItem[]) => {
@@ -257,7 +259,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
         }
       }
     }
-  ], [selectedItem]);
+  ], [selectedItem, t]);
 
   const modalData = useMemo(() => data?.data || [], [data?.data]);
 
@@ -276,7 +278,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
           clearSelection();
           onClose();
         }}
-        title="Histórico de Mensagens Email"
+        title={t('history.emailTitle')}
         size="lg"
         modalId="email-historico-modal"
         className="no-padding"
@@ -284,13 +286,13 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
             <Table
-              title="Histórico de Mensagens Email"
+              title={t('history.emailTitle')}
               config={{
                 columns: tableColumns,
                 data: modalData,
                 loading: isLoading,
                 searchable: true,
-                searchPlaceholder: 'Buscar por email...',
+                searchPlaceholder: t('history.searchEmail'),
                 searchFields,
                 sortable: true,
                 sortColumn: tableFilters.sortColumn,
@@ -307,7 +309,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
                   disabled: action.disabled,
                   variant: action.variant
                 })),
-                emptyMessage: 'Nenhuma mensagem encontrada',
+                emptyMessage: t('history.noMessages'),
                 pagination: pagination
               }}
               tableId="email-historico-table"

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useI18n } from '@/contexts/I18nContext';
 import { defaultApiClient } from '@/services/core';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button, Spinner } from '@/components/ui';
@@ -38,6 +39,7 @@ interface TemplatesModalProps {
 }
 
 const TemplatesModal: React.FC<TemplatesModalProps> = ({ show, onClose }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
 
   const { data, isLoading, error, refetch } = useQuery<TemplatesResponse['data']>({
@@ -83,7 +85,7 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({ show, onClose }) => {
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Templates Ativos - WhatsApp Cloud API"
+      title={t('settings.messages.activeTemplatesWhatsApp')}
       size="xl"
       modalId="templates-modal"
       headerActions={
