@@ -25,7 +25,8 @@ export const sanitizeDominio = (dominio: string | null | undefined): string => {
   if (firstQuery !== -1) cleaned = cleaned.slice(0, firstQuery);
   cleaned = cleaned.replace(/\/+$/, '').trim();
   const firstSlash = cleaned.indexOf('/');
-  const hostname = firstSlash === -1 ? cleaned : cleaned.slice(0, firstSlash);
+  let hostname = firstSlash === -1 ? cleaned : cleaned.slice(0, firstSlash);
+  hostname = hostname.replace(/\.+$/, ''); // remove pontos no final (ex: meusite.com. -> meusite.com)
   const path = firstSlash === -1 ? '' : cleaned.slice(firstSlash);
   if (!hostname || hostname.includes('..')) return '';
   if (!/^[a-z0-9][a-z0-9.-]*[a-z0-9]$|^[a-z0-9]$/i.test(hostname)) return '';
