@@ -275,7 +275,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   const bulkActions = useMemo(() => onSelectFornecedor ? [
     {
         label: t('buttons.cancel'),
-        variant: 'secondary' as const,
+        variant: 'primary' as const,
         action: () => {
           clearSelection();
           onClose();

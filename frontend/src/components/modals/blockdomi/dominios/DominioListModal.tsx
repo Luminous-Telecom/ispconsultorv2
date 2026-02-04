@@ -220,7 +220,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   const bulkActions = useMemo(() => onSelectDominio ? [
     {
       label: t('actions.cancel'),
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       action: () => {
         clearSelection();
         onClose();

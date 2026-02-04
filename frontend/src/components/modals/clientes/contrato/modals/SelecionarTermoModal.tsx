@@ -140,7 +140,7 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
   const bulkActions = useMemo(() => [
     {
       label: 'Cancelar',
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       action: () => {
         clearSelection();
         onClose();

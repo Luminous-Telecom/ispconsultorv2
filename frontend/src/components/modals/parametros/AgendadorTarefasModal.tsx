@@ -306,7 +306,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     },
     {
       label: t('scheduler.deactivate'),
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       disabled: (selectedItems: RotinaAgendada[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
         return !item || !item.ativo;

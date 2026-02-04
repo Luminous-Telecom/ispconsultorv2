@@ -220,7 +220,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
   const bulkActions = useMemo(() => onSelectIPv4 ? [
     {
       label: t('actions.cancel'),
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       action: () => {
         clearSelection();
         onClose();

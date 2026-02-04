@@ -471,7 +471,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   const bulkActions = onSelectContaPagar ? [
     {
       label: t('buttons.cancel'),
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       action: () => {
         clearSelection();
         onClose();
@@ -518,7 +518,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     },
     {
       label: t('actions.duplicate'),
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
       action: (selectedItems: ContaPagar[]) => {
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;

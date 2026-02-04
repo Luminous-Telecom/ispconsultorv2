@@ -282,7 +282,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   const bulkActions = useMemo(() => onSelectPlano ? [
     {
       label: t('actions.cancel'),
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       action: () => {
         clearSelection();
         onClose();

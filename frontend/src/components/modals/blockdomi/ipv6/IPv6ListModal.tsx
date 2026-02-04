@@ -220,7 +220,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
   const bulkActions = useMemo(() => onSelectIPv6 ? [
     {
       label: t('actions.cancel'),
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       action: () => {
         clearSelection();
         onClose();

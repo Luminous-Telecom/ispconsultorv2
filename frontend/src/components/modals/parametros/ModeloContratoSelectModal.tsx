@@ -101,7 +101,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
   const bulkActions = useMemo(() => onSelect ? [
     {
       label: 'Cancelar',
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       action: () => {
         clearSelection();
         onClose();

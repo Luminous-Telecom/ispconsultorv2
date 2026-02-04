@@ -310,7 +310,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     return onSelectClient ? [
       {
         label: t('buttons.cancel'),
-        variant: 'secondary' as const,
+        variant: 'primary' as const,
         action: () => {
           clearSelection();
           onClose();

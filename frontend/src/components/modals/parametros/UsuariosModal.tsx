@@ -282,7 +282,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
                 label: action.label,
                 onClick: action.action,
                 disabled: action.disabled,
-                variant: (action.label.toLowerCase().includes('deletar') || action.label.toLowerCase().includes('cancelar')) ? 'danger' : 'primary'
+                variant: 'primary'
               })),
               emptyMessage: 'Nenhum usuário encontrado',
               pagination
