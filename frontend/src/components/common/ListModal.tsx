@@ -34,7 +34,8 @@ function ListModal<T extends { id: number | string }>({
   onFilterChange: _onFilterChange,
   onFiltersChange,
   onClearFilters: _onClearFilters,
-  customControlsAfterActions
+  customControlsAfterActions,
+  tableId
 }: ListModalProps<T> & {
   filters?: Array<{
     key: string;
@@ -69,8 +70,9 @@ function ListModal<T extends { id: number | string }>({
   }, [columns]);
 
   const tableContent = (
-    <div>
-      <Table
+    <div className="list-modal-table-wrapper">
+      <div className="list-modal-scroll-wrapper">
+        <Table
         title={title}
         config={{
           columns: tableColumns,
@@ -133,7 +135,9 @@ function ListModal<T extends { id: number | string }>({
         onAudit={onAudit}
         auditEntity={auditEntity}
         onRowDoubleClick={onRowDoubleClick}
+        tableId={tableId}
       />
+      </div>
     </div>
   );
 

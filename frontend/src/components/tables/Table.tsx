@@ -410,6 +410,26 @@ function Table<T extends { id: number | string }>({
   // Normalizar paginação
   const normalizedPagination = useMemo(() => normalizePagination(configPagination), [configPagination]);
 
+  // Largura mínima da tabela = soma das colunas (permite scroll horizontal quando não cabe)
+  const tableMinWidth = useMemo(() => {
+    const visibleColumns = columns.filter(col => !col.hidden);
+    let total = 0;
+    visibleColumns.forEach(col => {
+      const w = columnWidths[col.key];
+      if (w !== undefined) {
+        total += w;
+      } else if (col.width !== undefined) {
+        const px = typeof col.width === 'string' ? parseInt(col.width.replace('px', ''), 10) : col.width;
+        total += Number.isNaN(px) ? 120 : px;
+      } else {
+        total += 120;
+      }
+    });
+    if (selectable) total += 50;
+    if (_actions.length > 0) total += 120;
+    return total;
+  }, [columns, columnWidths, selectable, _actions.length]);
+
   // Memoizar dados filtrados para evitar loops infinitos
   const filteredData = useMemo(() => {
     if (!customFilters) return data;
@@ -1211,22 +1231,33 @@ function Table<T extends { id: number | string }>({
                 </td>
               )}
               
-              {/* Células de dados */}
+              {/* Células de dados: largura fixa por coluna; minWidth = width para não encolher ao arrastar outra */}
               {columns
                 .filter(col => !col.hidden)
-                .map(column => (
-                  <td
-                    key={column.key}
-                    className={`${column.align ? `text-${column.align}` : ''}`}
-                    style={{
-                      width: column.width,
-                      minWidth: column.minWidth,
-                      maxWidth: column.maxWidth,
-                    }}
-                  >
-                    {column.render ? column.render(item, index) : String(item[column.key as keyof T] || '')}
-                  </td>
-                ))}
+                .map(column => {
+                  const resizedWidth = columnWidths[column.key];
+                  let widthStyle: React.CSSProperties;
+                  if (resizedWidth !== undefined) {
+                    widthStyle = { width: `${resizedWidth}px`, minWidth: `${resizedWidth}px`, maxWidth: `${resizedWidth}px` };
+                  } else {
+                    const w = column.width;
+                    const widthVal = w != null ? (typeof w === 'number' ? `${w}px` : w) : undefined;
+                    widthStyle = {
+                      width: widthVal ?? undefined,
+                      minWidth: (column.minWidth != null ? (typeof column.minWidth === 'number' ? `${column.minWidth}px` : column.minWidth) : widthVal) ?? undefined,
+                      maxWidth: column.maxWidth != null ? (typeof column.maxWidth === 'number' ? `${column.maxWidth}px` : column.maxWidth) : undefined
+                    };
+                  }
+                  return (
+                    <td
+                      key={column.key}
+                      className={`${column.align ? `text-${column.align}` : ''}`}
+                      style={widthStyle}
+                    >
+                      {column.render ? column.render(item, index) : String(item[column.key as keyof T] || '')}
+                    </td>
+                  );
+                })}
               
               {/* Coluna de ações */}
               {_actions.length > 0 && (
@@ -1462,7 +1493,11 @@ function Table<T extends { id: number | string }>({
   };
 
   return (
-    <div ref={tableContainerRef} className={`${className} table-container-custom`}>
+    <div
+      ref={tableContainerRef}
+      className={`${className} table-container-custom`}
+      style={{ ['--table-min-width' as string]: `${tableMinWidth}px` }}
+    >
       
       {/* Header com botões de ação e filtros - Oculto no mobile */}
           {!isMobile && (bulkActions.length > 0 || searchable || normalizedPagination || (!normalizedPagination && data.length > 0)) && (
@@ -1799,7 +1834,10 @@ function Table<T extends { id: number | string }>({
         </div>
       ) : (
         <div className="table-responsive table-responsive-custom">
-          <table className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''}`}>
+          <table
+            className={`table table-striped table-sm table-custom table-resizable table-resizable-enabled ${isResizing ? 'resizing' : ''}`}
+            style={{ ['--table-min-width' as string]: `${tableMinWidth}px` }}
+          >
             {renderTableHeader()}
             {renderTableBody()}
           </table>

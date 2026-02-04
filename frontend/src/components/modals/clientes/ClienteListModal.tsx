@@ -401,6 +401,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         onAudit={handleAudit}
         auditEntity="Cliente"
         skipWrapper={skipWrapper}
+        tableId="clientes-list-modal"
       />
 
       {/* Modal de Criação */}

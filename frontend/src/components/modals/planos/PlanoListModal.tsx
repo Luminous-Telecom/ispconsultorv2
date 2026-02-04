@@ -113,6 +113,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'valor_mensal',
       label: t('table.monthlyValue'),
       sortable: true,
+      width: '120px',
       render: (item: Plano) => (
         <span className="text-success">
           R$ {Number(item.valor_mensal || 0).toFixed(2).replace('.', ',')}
@@ -123,6 +124,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'quantidade_usuarios',
       label: t('form.usersQuantity'),
       sortable: true,
+      width: '100px',
       render: (item: Plano) => (
         <span>{item.quantidade_usuarios || '-'}</span>
       )
@@ -131,6 +133,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'quantidade_clientes',
       label: t('table.clients'),
       sortable: true,
+      width: '90px',
       render: (item: Plano) => (
         <span className="badge bg-primary">
           {item.quantidade_clientes ?? (item.clientes ? item.clientes.length : 0)}
@@ -141,6 +144,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'periodicidade',
       label: t('table.periodicity'),
       sortable: true,
+      width: '110px',
       render: (item: Plano) => {
         const periodicidades: { [key: string]: string } = {
           mensal: t('form.periodicityMonthly'),
@@ -160,6 +164,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'status',
       label: t('table.status'),
       sortable: true,
+      width: '80px',
       render: (item: Plano) => {
         const statusMap: { [key: string]: string } = {
           'ativo': t('status.active'),
@@ -176,6 +181,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'created_at',
       label: t('table.createdAt'),
       sortable: true,
+      width: '145px',
       render: (item: Plano & { created_at?: string; created_at_formatada?: string | null }) => {
         // Usar created_at_formatada se disponível (vem do backend já formatada)
         if (item.created_at_formatada) {
@@ -388,6 +394,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         onAudit={handleAudit}
         auditEntity="Plano"
         skipWrapper={skipWrapper}
+        tableId="planos-list-modal"
       />
 
       {/* Modal de Criação/Edição unificado */}

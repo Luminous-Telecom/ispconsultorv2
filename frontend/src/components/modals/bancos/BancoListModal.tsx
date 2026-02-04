@@ -338,6 +338,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         onAudit={handleAudit}
         auditEntity="Banco"
         skipWrapper={skipWrapper}
+        tableId="bancos-list-modal"
       />
 
       {/* Modal Unificado (Criação e Edição) */}

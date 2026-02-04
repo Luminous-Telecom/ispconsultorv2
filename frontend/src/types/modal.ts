@@ -69,4 +69,6 @@ export interface ListModalProps<T> {
   auditEntity?: string;
   skipWrapper?: boolean;
   customControlsAfterActions?: React.ReactNode;
+  /** ID estável da tabela para persistir larguras de colunas no localStorage (redimensionamento) */
+  tableId?: string;
 }

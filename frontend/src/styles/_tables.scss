@@ -1199,6 +1199,37 @@ label {
   cursor: pointer !important;
 }
 
+/* ListModal: ocupa toda a largura do modal e estrutura flex para scroll */
+.draggable-modal-body-custom > .list-modal-table-wrapper,
+.list-modal-table-wrapper {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Área de scroll: largura do modal (100% do wrapper), não cresce com o conteúdo para scroll horizontal */
+.list-modal-scroll-wrapper {
+  flex: 1 1 0 !important;
+  overflow: auto !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Container: 100% quando a tabela é mais estreita que o modal; mais largo quando tabela é maior (scroll) */
+.list-modal-scroll-wrapper .table-container-custom {
+  min-width: max(100%, var(--table-min-width, 0px)) !important;
+  width: max(100%, var(--table-min-width, 0px)) !important;
+  max-width: none !important;
+}
+
 /* Table container */
 .table-container-custom {
   width: 100% !important;
@@ -1332,6 +1363,23 @@ label {
   width: 100% !important;
   table-layout: auto !important;
   margin: 0 !important;
+}
+
+/* Redimensionamento: auto para que ao alargar uma coluna a tabela cresça e as outras não encolham (scroll horizontal) */
+.table-resizable-enabled.table-custom,
+.table-resizable.table-custom {
+  table-layout: auto !important;
+}
+
+/* Largura da tabela = soma das colunas; ao alargar uma coluna só cresce e arrasta, scroll permite */
+.table-responsive-custom .table.table-resizable-enabled {
+  width: max(100%, var(--table-min-width, 0px)) !important;
+  min-width: var(--table-min-width, 0px) !important;
+}
+
+.table-resizable-enabled th,
+.table-resizable-enabled td {
+  box-sizing: border-box !important;
 }
 
 /* Table pagination header */
