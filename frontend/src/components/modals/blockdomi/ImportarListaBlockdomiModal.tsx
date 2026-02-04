@@ -235,7 +235,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     } finally {
       setIsCadastrando(false);
     }
-  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, fetchExisting, success, error, onSuccess, onClose, queryClient]);
+  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, fetchExisting, success, error, onSuccess, onClose, queryClient, t]);
 
   const renderList = (items: string[]) => (
     <ul className="list-unstyled mb-0 small">
