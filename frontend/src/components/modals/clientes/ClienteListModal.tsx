@@ -1,12 +1,13 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useClientes, useDeleteCliente } from '@/hooks/useClientes';
 import { useModalSelect } from '@/hooks/useModalSelect';
-import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { formatDateTime } from '@/utils/formatters';
 import { useI18n } from '@/contexts/I18nContext';
 import { useAuditoria } from '@/hooks/useAuditoria';
-import ListModal from '@/components/common/ListModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import ClienteModal from './cliente/ClienteModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { Cliente } from '@/types';
@@ -61,8 +62,8 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     } : undefined
   );
 
-  // Configurar colunas memoizadas
-  const columns = useMemo(() => [
+  // Configurar colunas memoizadas para Table
+  const tableColumns: TableConfig<Cliente & { created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: t('table.id'),
@@ -196,27 +197,22 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     }
   ], [t]);
 
-  // Configurar modal centralizado
   const defaultTitle = title || (onSelectClient ? t('ui.selectClient') : t('menu.clients'));
-  const modal = useListModal({
-    title: defaultTitle,
-    columns,
-    searchPlaceholder: t('layout.searchPlaceholder'),
-    searchFields: [
-      { key: 'id', label: t('table.id') },
-      { key: 'cnpj', label: t('form.cnpj') },
-      { key: 'razao_social', label: t('form.companyName') },
-      { key: 'nome_fantasia', label: t('form.tradeName') },
-      { key: 'email', label: t('form.email') },
-      { key: 'whatsapp', label: t('form.phone') },
-      { key: 'endereco', label: t('form.address') },
-      { key: 'numero', label: t('form.number') },
-      { key: 'complemento', label: t('form.complement') },
-      { key: 'bairro', label: t('form.neighborhood') },
-      { key: 'cidade', label: t('form.city') },
-      { key: 'estado', label: t('form.state') }
-    ]
-  });
+  
+  const searchFields = [
+    { key: 'id', label: t('table.id') },
+    { key: 'cnpj', label: t('form.cnpj') },
+    { key: 'razao_social', label: t('form.companyName') },
+    { key: 'nome_fantasia', label: t('form.tradeName') },
+    { key: 'email', label: t('form.email') },
+    { key: 'whatsapp', label: t('form.phone') },
+    { key: 'endereco', label: t('form.address') },
+    { key: 'numero', label: t('form.number') },
+    { key: 'complemento', label: t('form.complement') },
+    { key: 'bairro', label: t('form.neighborhood') },
+    { key: 'cidade', label: t('form.city') },
+    { key: 'estado', label: t('form.state') }
+  ];
 
   // Hook para buscar clientes usando parâmetros do useTableFilters
   const { data: clientesData, isLoading, refetch } = useClientes({
@@ -249,16 +245,16 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     }
   }, [deleteClienteMutation, refetch]);
 
-  const handleEdit = useCallback((selectedItems: Cliente[]) => {
-    const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+  const handleEdit = useCallback((selectedItems?: Cliente[]) => {
+    const item = (selectedItems && selectedItems.length > 0) ? selectedItems[0] : selectedItem;
     if (item) {
       setSelectedClienteId(item.id);
       setShowEditModal(true);
     }
   }, [selectedItem]);
 
-  const handleEditDelete = useCallback(async (selectedItems: Cliente[]) => {
-    const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+  const handleEditDelete = useCallback(async (selectedItems?: Cliente[]) => {
+    const item = (selectedItems && selectedItems.length > 0) ? selectedItems[0] : selectedItem;
     if (!item) return;
     
     const confirmed = await confirm({
@@ -335,12 +331,12 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       {
         label: t('actions.edit'),
         variant: 'primary' as const,
-        disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
+        disabled: (selectedItems: Cliente[]) => selectedItems.length === 0 && !selectedItem,
         action: handleEdit
       },
       {
         label: t('actions.delete'),
-        disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
+        disabled: (selectedItems: Cliente[]) => selectedItems.length === 0 && !selectedItem,
         action: handleEditDelete
       }
     ];
@@ -354,56 +350,72 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       tableFilters.setSearch(search);
       if (field) tableFilters.setSearchField(field);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch, tableFilters.setSearchField]);
+  }, [tableFilters]);
 
-  const handleSearchFieldChange = useCallback((field: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearchField(field);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearchField]);
-
-  return (
+  const modalContent = (
     <>
-      <ListModal
-        show={show}
-        onClose={() => {
-          clearSelection();
-          onClose();
-        }}
-        config={modal.config}
-        data={modalData}
-        loading={isLoading}
-        selectedItems={selectedItem ? [selectedItem] : []}
-        onSelectionChange={handleSelectionChange}
-        onRowDoubleClick={(cliente) => {
-          // Double-click seleciona o item e fecha o modal
-          if (onSelectClient) {
-            onSelectClient(cliente);
-            onClose();
-          }
-        }}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        onSearchFieldChange={handleSearchFieldChange}
-        pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={tableFilters.setLimit}
-        onLimitChange={tableFilters.setLimit}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        refreshQueryKeys={['clientes']}
-        refreshQueryFn={refetch}
-        bulkActions={bulkActions}
-        onAudit={handleAudit}
-        auditEntity="Cliente"
-        skipWrapper={skipWrapper}
-        tableId="clientes-list-modal"
-      />
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
+            title={defaultTitle}
+            config={{
+              columns: tableColumns,
+              data: modalData,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: t('layout.searchPlaceholder'),
+              searchFields,
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: (items: Cliente[]) => {
+                  // Se não há itens selecionados na tabela, usar selectedItem do hook
+                  const itemsToUse = items.length > 0 ? items : (selectedItem ? [selectedItem] : []);
+                  action.action(itemsToUse);
+                },
+                disabled: action.disabled,
+                variant: action.variant
+              })),
+              emptyMessage: 'Nenhum cliente encontrado',
+              pagination: pagination
+            }}
+            tableId="clientes-list-modal"
+            onSelectionChange={handleSelectionChange}
+            onRowClick={onSelectClient ? (item) => {
+              onSelectClient(item);
+              onClose();
+            } : undefined}
+            onRowDoubleClick={(cliente) => {
+              if (onSelectClient) {
+                onSelectClient(cliente);
+                onClose();
+              }
+            }}
+            onRefresh={refetch}
+            onAudit={handleAudit}
+            auditEntity="Cliente"
+            onPageChange={tableFilters.setPage}
+            onPageSizeChange={tableFilters.setLimit}
+            onSort={(column, direction) => tableFilters.setSort(column, direction)}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
+          />
+        </div>
+      </div>
+    </>
+  );
 
+  // Modais auxiliares (sempre renderizados, independente de skipWrapper)
+  const auxiliaryModals = (
+    <>
       {/* Modal de Criação */}
       <ClienteModal
         key="create-modal"
@@ -439,6 +451,34 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
       {/* ConfirmModal */}
       {modalProps && <ConfirmModal {...modalProps} />}
+    </>
+  );
+
+  if (skipWrapper) {
+    return (
+      <>
+        {modalContent}
+        {auxiliaryModals}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <DraggableModal
+        show={show}
+        onClose={() => {
+          clearSelection();
+          onClose();
+        }}
+        title={defaultTitle}
+        size="lg"
+        modalId="clientes-list-modal"
+        className="no-padding"
+      >
+        {modalContent}
+      </DraggableModal>
+      {auxiliaryModals}
     </>
   );
 };

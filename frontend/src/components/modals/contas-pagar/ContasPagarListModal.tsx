@@ -2,14 +2,14 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useContasPagar, useDeleteContaPagar, useDuplicarContaPagar } from '@/hooks/useContasPagar';
 import { useFornecedores } from '@/hooks/useFornecedores';
 import { useModalSelect } from '@/hooks/useModalSelect';
-import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime, formatDate, formatCurrency } from '@/utils/formatters';
 import { ContaPagar, ContaPagarFilters } from '@/types';
-import ListModal from '@/components/common/ListModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import DraggableModal from '@/components/common/DraggableModal';
 import ContaPagarModal from './ContaPagarModal';
@@ -131,58 +131,57 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     return tipoMap[tipo] || tipo;
   };
 
-  // Configurar modal centralizado
-  const modal = useListModal({
-    title: defaultTitle,
-    filters: [
-      {
-        key: 'fornecedor_id',
-        label: t('table.supplier'),
-        type: 'select',
-        options: fornecedoresOptions,
-        placeholder: t('placeholder.selectProvider')
-      },
-      {
-        key: 'data_inicio',
-        label: t('form.dueDateStart'),
-        type: 'date',
-        placeholder: t('placeholder.startDate')
-      },
-      {
-        key: 'data_fim',
-        label: t('form.dueDateEnd'),
-        type: 'date',
-        placeholder: t('placeholder.endDate')
-      },
-      {
-        key: 'status',
-        label: t('table.status'),
-        type: 'select',
-        options: [
-          { value: 'A_PAGAR', label: t('financial.toPay') },
-          { value: 'PAGO', label: t('financial.paid') },
-          { value: 'PARCIAL', label: t('status.pending') },
-          { value: 'CANCELADO', label: t('status.rejected') }
-        ],
-        placeholder: t('ui.selectOption')
-      },
-      {
-        key: 'tipo_pagamento',
-        label: t('form.paymentType'),
-        type: 'select',
-        options: [
-          { value: 'DINHEIRO', label: t('form.paymentTypeCash') },
-          { value: 'BOLETO', label: t('form.paymentTypeBoleto') },
-          { value: 'CARTAO', label: t('form.paymentTypeCard') },
-          { value: 'DEPOSITO', label: t('form.paymentTypeDeposit') },
-          { value: 'DEBITO_CONTA', label: t('form.paymentTypeDebit') },
-          { value: 'TRANSFERENCIA', label: t('form.paymentTypeTransfer') },
-          { value: 'PIX', label: t('form.paymentTypePix') }
-        ],
-        placeholder: t('placeholder.selectType')
-      }
-    ],
-    columns: [
+  const filters = [
+    {
+      key: 'fornecedor_id',
+      label: t('table.supplier'),
+      type: 'select' as const,
+      options: fornecedoresOptions,
+      placeholder: t('placeholder.selectProvider')
+    },
+    {
+      key: 'data_inicio',
+      label: t('form.dueDateStart'),
+      type: 'date' as const,
+      placeholder: t('placeholder.startDate')
+    },
+    {
+      key: 'data_fim',
+      label: t('form.dueDateEnd'),
+      type: 'date' as const,
+      placeholder: t('placeholder.endDate')
+    },
+    {
+      key: 'status',
+      label: t('table.status'),
+      type: 'select' as const,
+      options: [
+        { value: 'A_PAGAR', label: t('financial.toPay') },
+        { value: 'PAGO', label: t('financial.paid') },
+        { value: 'PARCIAL', label: t('status.pending') },
+        { value: 'CANCELADO', label: t('status.rejected') }
+      ],
+      placeholder: t('ui.selectOption')
+    },
+    {
+      key: 'tipo_pagamento',
+      label: t('form.paymentType'),
+      type: 'select' as const,
+      options: [
+        { value: 'DINHEIRO', label: t('form.paymentTypeCash') },
+        { value: 'BOLETO', label: t('form.paymentTypeBoleto') },
+        { value: 'CARTAO', label: t('form.paymentTypeCard') },
+        { value: 'DEPOSITO', label: t('form.paymentTypeDeposit') },
+        { value: 'DEBITO_CONTA', label: t('form.paymentTypeDebit') },
+        { value: 'TRANSFERENCIA', label: t('form.paymentTypeTransfer') },
+        { value: 'PIX', label: t('form.paymentTypePix') }
+      ],
+      placeholder: t('placeholder.selectType')
+    }
+  ];
+
+  // Configurar colunas para Table
+  const tableColumns: TableConfig<ContaPagar & { created_at?: string; created_at_formatada?: string | null }>['columns'] = [
       {
         key: 'id',
         label: t('table.id'),
@@ -302,19 +301,17 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
           return item.created_at ? formatDateTime(item.created_at) : '-';
         }
       }
-    ],
-    searchPlaceholder: t('layout.searchPlaceholder'),
-    searchFields: [
-      { key: 'numero_documento', label: t('table.documentNumber') },
-      { key: 'nota_fiscal', label: t('form.invoiceNumber') },
-      { key: 'fornecedor', label: t('table.supplier') },
-      { key: 'vencimento', label: t('table.dueDate') },
-      { key: 'valor', label: t('table.value') },
-      { key: 'status', label: t('table.status') },
-      { key: 'tipo', label: t('form.paymentType') }
-    ],
-    multiSelect: false
-  });
+    ];
+
+  const searchFields = [
+    { key: 'numero_documento', label: t('table.documentNumber') },
+    { key: 'nota_fiscal', label: t('form.invoiceNumber') },
+    { key: 'fornecedor', label: t('table.supplier') },
+    { key: 'vencimento', label: t('table.dueDate') },
+    { key: 'valor', label: t('table.value') },
+    { key: 'status', label: t('table.status') },
+    { key: 'tipo', label: t('form.paymentType') }
+  ];
 
   // Resetar página quando filtros de data mudarem
   useEffect(() => {
@@ -561,74 +558,109 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableFilters.setSearch]);
 
-  const hasResumo = show && (contasPagarData?.data || []).filter(item => item.id != null).length > 0;
+  const modalData = useMemo(() => (contasPagarData?.data || []).filter(item => item.id != null), [contasPagarData?.data]);
+  const hasResumo = show && modalData.length > 0;
+  
   const modalContent = (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <ListModal
-          show={show}
-          onClose={() => {
-            clearSelection();
+        <Table
+          title={defaultTitle}
+          config={{
+            columns: tableColumns,
+            data: modalData,
+            loading: isLoading,
+            searchable: true,
+            searchPlaceholder: t('layout.searchPlaceholder'),
+            searchFields,
+            sortable: true,
+            sortColumn: tableFilters.sortColumn,
+            sortDirection: tableFilters.sortDirection,
+            striped: true,
+            hover: true,
+            responsive: true,
+            selectable: true,
+            multiSelect: false,
+            filters,
+            bulkActions: bulkActions.map(action => ({
+              key: action.label.toLowerCase().replace(/\s+/g, '-'),
+              label: action.label,
+              onClick: action.action,
+              disabled: action.disabled,
+              variant: action.variant
+            })),
+            emptyMessage: 'Nenhuma conta a pagar encontrada',
+            pagination: pagination,
+            customControlsAfterActions: (
+              <div className="d-flex align-items-center gap-2">
+                <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">{t('filter.startDate')}</label>
+                <input
+                  type="date"
+                  id="dataVencimentoInicio"
+                  className="form-control form-control-sm table-pagination-filter"
+                  value={dataVencimentoInicio}
+                  onChange={(e) => {
+                    setTimeout(() => {
+                      setDataVencimentoInicio(e.target.value);
+                    }, 0);
+                  }}
+                />
+                <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">{t('filter.endDate')}</label>
+                <input
+                  type="date"
+                  id="dataVencimentoFim"
+                  className="form-control form-control-sm table-pagination-filter"
+                  value={dataVencimentoFim}
+                  onChange={(e) => {
+                    setTimeout(() => {
+                      setDataVencimentoFim(e.target.value);
+                    }, 0);
+                  }}
+                />
+              </div>
+            )
+          }}
+          tableId="contas-pagar-list-modal"
+          onSelectionChange={(items) => {
+            handleSelectionChange(items);
+          }}
+          onRowClick={onSelectContaPagar ? (item) => {
+            onSelectContaPagar(item);
             onClose();
-          }}
-          config={modal.config}
-          data={(contasPagarData?.data || []).filter(item => item.id != null)}
-          loading={isLoading}
-          selectedItems={selectedItem ? [selectedItem] : []}
-          onSelectionChange={handleSelectionChange}
-          search={tableFilters.search}
-          onSearchChange={handleSearchChange}
-          onSearchFieldChange={setSearchField}
-          filters={modal.config.filters}
-          filterValues={tableFilters.filters}
-          onFilterChange={(key, value) => {
-            const convertedValue = Array.isArray(value) ? (value[0] || null) : value;
-            tableFilters.setFilter(key as keyof ContaPagarFilters, convertedValue as string | number | boolean | null | undefined);
-          }}
-          onFiltersChange={(filters) => {
-            const convertedFilters: Partial<ContaPagarFilters> = {};
-            Object.entries(filters).forEach(([key, value]) => {
-              convertedFilters[key as keyof ContaPagarFilters] = Array.isArray(value) ? (value[0] || null) : (value as string | number | boolean | null | undefined);
-            });
-            tableFilters.setFilters(convertedFilters);
-          }}
-          onClearFilters={() => {
-            tableFilters.resetFilters();
-          }}
-          pagination={pagination}
-      onPageChange={tableFilters.setPage}
-      onPageSizeChange={handleLimitChange}
-      onLimitChange={handleLimitChange}
-          sortColumn={tableFilters.sortColumn}
-          sortDirection={tableFilters.sortDirection}
-          onSortChange={tableFilters.setSort}
-          refreshQueryKeys={['contas-pagar']}
-          refreshQueryFn={refetch}
-          bulkActions={bulkActions}
+          } : undefined}
+          onRefresh={refetch}
           onAudit={handleAudit}
           auditEntity="ContaPagar"
-          skipWrapper={true}
-          customControlsAfterActions={
-            <div className="d-flex align-items-center gap-2">
-              <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">{t('filter.startDate')}</label>
-              <input
-                type="date"
-                id="dataVencimentoInicio"
-                className="form-control form-control-sm table-pagination-filter"
-                value={dataVencimentoInicio}
-                onChange={(e) => setDataVencimentoInicio(e.target.value)}
-              />
-              <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">{t('filter.endDate')}</label>
-              <input
-                type="date"
-                id="dataVencimentoFim"
-                className="form-control form-control-sm table-pagination-filter"
-                value={dataVencimentoFim}
-                onChange={(e) => setDataVencimentoFim(e.target.value)}
-              />
-            </div>
-          }
-          />
+          onPageChange={(page) => {
+            setTimeout(() => {
+              tableFilters.setPage(page);
+            }, 0);
+          }}
+          onPageSizeChange={handleLimitChange}
+          onSort={(column, direction) => {
+            setTimeout(() => {
+              tableFilters.setSort(column, direction);
+            }, 0);
+          }}
+          onSearch={(search, field) => {
+            handleSearchChange(search, field);
+            if (field) {
+              setTimeout(() => {
+                setSearchField(field);
+              }, 0);
+            }
+          }}
+          search={tableFilters.search}
+          onFilter={(filters) => {
+            setTimeout(() => {
+              const convertedFilters: Partial<ContaPagarFilters> = {};
+              Object.entries(filters).forEach(([key, value]) => {
+                convertedFilters[key as keyof ContaPagarFilters] = Array.isArray(value) ? (value[0] || null) : (value as string | number | boolean | null | undefined);
+              });
+              tableFilters.setFilters(convertedFilters);
+            }, 0);
+          }}
+        />
       </div>
 
       {/* Resumo Financeiro - Fixo no final do modal */}

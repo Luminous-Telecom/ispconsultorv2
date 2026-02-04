@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useListModal } from '@/hooks/useListModal';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useTableFilters } from '@/hooks/useTableFilters';
-import ListModal from '@/components/common/ListModal';
 import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from '@/services/auditoriaService';
 import { formatDateTime } from '@/utils/formatters';
 import { useI18n } from '@/contexts/I18nContext';
@@ -30,24 +30,20 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
   });
 
   const handleSearchChange = useCallback((value: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
     setTimeout(() => {
       tableFilters.setSearch(value);
       tableFilters.setPage(1);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch, tableFilters.setPage]);
+  }, [tableFilters]);
 
   const handleClearFilters = useCallback(() => {
-    // Usar setTimeout para evitar atualização durante render cycle
     setTimeout(() => {
       tableFilters.setSearch('');
       setAcaoFilter('');
       setEntidadeFilter('');
       tableFilters.setPage(1);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch, tableFilters.setPage]);
+  }, [tableFilters]);
 
   const [acaoFilter, setAcaoFilter] = useState<string>('');
   const [entidadeFilter, setEntidadeFilter] = useState<string>('');
@@ -81,7 +77,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
     clearSelection
   } = useModalSelect<AuditoriaLog>();
 
-  const formatAcao = (acao: string) => {
+  const formatAcao = useCallback((acao: string) => {
     const acoes: Record<string, string> = {
       create: t('audit.actions.create'),
       update: t('audit.actions.update'),
@@ -92,9 +88,9 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
       import: t('audit.actions.import')
     };
     return acoes[acao] || acao;
-  };
+  }, [t]);
 
-  const getAcaoBadgeClass = (acao: string) => {
+  const getAcaoBadgeClass = useCallback((acao: string) => {
     const classes: Record<string, string> = {
       create: 'success',
       update: 'primary',
@@ -105,20 +101,17 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
       import: 'warning'
     };
     return classes[acao] || 'secondary';
-  };
+  }, []);
 
-  const formatTimestamp = (timestamp: string) => {
+  const formatTimestamp = useCallback((timestamp: string) => {
     try {
       return formatDateTime(new Date(timestamp));
     } catch {
       return timestamp;
     }
-  };
+  }, []);
 
-  // Configurar modal centralizado
-  const modal = useListModal({
-    title: t('audit.title'),
-    columns: [
+  const tableColumns: TableConfig<AuditoriaLog>['columns'] = useMemo(() => [
       {
         key: 'id',
         label: t('table.id'),
@@ -210,13 +203,12 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
           <span className="small">{log.observacoes || '-'}</span>
         )
       }
-    ]
-  });
+    ], [t, formatAcao, getAcaoBadgeClass, formatTimestamp]);
 
-  const handleViewDetails = (log: AuditoriaLog) => {
+  const handleViewDetails = useCallback((log: AuditoriaLog) => {
     setSelectedLog(log);
     setShowDetailsModal(true);
-  };
+  }, []);
 
   const pagination = useMemo(() => {
     if (data?.pagination && typeof data.pagination === 'object') {
@@ -253,7 +245,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
   }, [data?.pagination, tableFilters.limit]);
 
   // Bulk actions
-  const bulkActions = [
+  const bulkActions = useMemo(() => [
     {
       label: t('audit.viewDetails'),
       variant: 'primary' as const,
@@ -265,7 +257,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         }
       }
     }
-  ];
+  ], [t, selectedItem, handleViewDetails]);
 
   // Filtros customizados
   const customFilters = (
@@ -329,6 +321,8 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
     </div>
   );
 
+  const modalData = useMemo(() => data?.data || [], [data?.data]);
+
   const modalContent = (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
@@ -338,24 +332,51 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         </div>
         {/* Tabela */}
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <ListModal
-            show={true}
-            onClose={() => {}}
-            config={modal.config}
-            data={data?.data || []}
-            loading={isLoading}
-            selectedItems={selectedItem ? [selectedItem] : []}
-            onSelectionChange={handleSelectionChange}
-            pagination={pagination}
-            onPageChange={tableFilters.setPage}
-            onPageSizeChange={tableFilters.setLimit}
-            onLimitChange={tableFilters.setLimit}
-            sortColumn={tableFilters.sortColumn}
-            sortDirection={tableFilters.sortDirection}
-            onSortChange={tableFilters.setSort}
-            refreshQueryFn={refetch}
-            bulkActions={bulkActions}
-            skipWrapper={true}
+          <Table
+            title={t('audit.title')}
+            config={{
+              columns: tableColumns,
+              data: modalData,
+              loading: isLoading,
+              searchable: false,
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                variant: action.variant
+              })),
+              emptyMessage: 'Nenhum log encontrado',
+              pagination: pagination
+            }}
+            tableId="auditoria-modal-table"
+            onSelectionChange={(items) => {
+              handleSelectionChange(items);
+            }}
+            onRefresh={refetch}
+            onPageChange={(page) => {
+              setTimeout(() => {
+                tableFilters.setPage(page);
+              }, 0);
+            }}
+            onPageSizeChange={(limit) => {
+              setTimeout(() => {
+                tableFilters.setLimit(limit);
+              }, 0);
+            }}
+            onSort={(column, direction) => {
+              setTimeout(() => {
+                tableFilters.setSort(column, direction);
+              }, 0);
+            }}
           />
         </div>
       </div>

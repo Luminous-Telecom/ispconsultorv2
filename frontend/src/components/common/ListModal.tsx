@@ -70,8 +70,14 @@ function ListModal<T extends { id: number | string }>({
   }, [columns]);
 
   const tableContent = (
-    <div className="list-modal-table-wrapper">
-      <div className="list-modal-scroll-wrapper">
+    <div 
+      className="list-modal-table-wrapper" 
+      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
+      <div 
+        className="list-modal-scroll-wrapper" 
+        style={{ flex: 1, overflow: 'auto', minHeight: 0 }}
+      >
         <Table
         title={title}
         config={{
@@ -151,7 +157,7 @@ function ListModal<T extends { id: number | string }>({
       onClose={onClose}
       title={title}
       size="lg"
-      className="no-padding"
+      className="no-padding list-modal-no-body-scroll"
     >
       {tableContent}
     </DraggableModal>

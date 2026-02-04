@@ -1,12 +1,13 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useBancos, useDeleteBanco } from '@/hooks/useBancos';
 import { useModalSelect } from '@/hooks/useModalSelect';
-import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { Banco } from '@/types';
 import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime } from '@/utils/formatters';
-import ListModal from '@/components/common/ListModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import BancoModal from './BancoModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
@@ -56,8 +57,8 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     } : undefined
   );
 
-  // Configurar colunas memoizadas
-  const columns = useMemo(() => [
+  // Configurar colunas memoizadas para Table
+  const tableColumns: TableConfig<Banco & { created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: t('table.id'),
@@ -136,21 +137,14 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     }
   ], [t]);
 
-  // Configurar modal centralizado
-  const modal = useListModal({
-    title: defaultTitle,
-    columns,
-    searchPlaceholder: t('layout.searchPlaceholder'),
-    searchFields: [
-      { key: 'id', label: t('table.id') },
-      { key: 'nome', label: t('form.name') },
-      { key: 'descricao', label: t('form.description') },
-      { key: 'tipo_banco', label: t('table.bankType') },
-      { key: 'sandbox', label: t('table.sandbox') },
-      { key: 'ativo', label: t('table.status') }
-    ],
-    multiSelect: false
-  });
+  const searchFields = [
+    { key: 'id', label: t('table.id') },
+    { key: 'nome', label: t('form.name') },
+    { key: 'descricao', label: t('form.description') },
+    { key: 'tipo_banco', label: t('table.bankType') },
+    { key: 'sandbox', label: t('table.sandbox') },
+    { key: 'ativo', label: t('table.status') }
+  ];
 
   // Hook para buscar bancos usando parâmetros do useTableFilters
   const { data: bancosData, isLoading, refetch } = useBancos({
@@ -283,64 +277,77 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     }
   ], [onSelectBanco, selectedBanco, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
 
+  const modalData = useMemo(() => bancosData?.data || [], [bancosData?.data]);
+
   const handleSearchChange = useCallback((search: string, field?: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
     setTimeout(() => {
       tableFilters.setSearch(search);
       if (field) tableFilters.setSearchField(field);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch, tableFilters.setSearchField]);
+  }, [tableFilters]);
 
-  const handleSearchFieldChange = useCallback((field: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearchField(field);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearchField]);
-
-  const modalData = useMemo(() => bancosData?.data || [], [bancosData?.data]);
-
-  return (
+  const modalContent = (
     <>
-      <ListModal
-        show={show}
-        onClose={() => {
-          clearSelection();
-          onClose();
-        }}
-        config={modal.config}
-        data={modalData}
-        loading={isLoading}
-        selectedItems={selectedBanco ? [selectedBanco] : []}
-        onSelectionChange={handleSelectionChange}
-        onRowDoubleClick={(banco) => {
-          // Double-click seleciona o item e fecha o modal
-          if (onSelectBanco) {
-            onSelectBanco(banco);
-            onClose();
-          }
-        }}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        onSearchFieldChange={handleSearchFieldChange}
-        pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={tableFilters.setLimit}
-        onLimitChange={tableFilters.setLimit}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        refreshQueryKeys={['bancos']}
-        refreshQueryFn={refetch}
-        bulkActions={bulkActions}
-        onAudit={handleAudit}
-        auditEntity="Banco"
-        skipWrapper={skipWrapper}
-        tableId="bancos-list-modal"
-      />
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
+            title={defaultTitle}
+            config={{
+              columns: tableColumns,
+              data: modalData,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: t('layout.searchPlaceholder'),
+              searchFields,
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                variant: action.variant
+              })),
+              emptyMessage: 'Nenhum banco encontrado',
+              pagination: pagination
+            }}
+            tableId="bancos-list-modal"
+            onSelectionChange={(items) => {
+              handleSelectionChange(items);
+            }}
+            onRowClick={onSelectBanco ? (item) => {
+              onSelectBanco(item);
+              onClose();
+            } : undefined}
+            onRowDoubleClick={(banco) => {
+              if (onSelectBanco) {
+                onSelectBanco(banco);
+                onClose();
+              }
+            }}
+            onRefresh={refetch}
+            onAudit={handleAudit}
+            auditEntity="Banco"
+            onPageChange={tableFilters.setPage}
+            onPageSizeChange={tableFilters.setLimit}
+            onSort={(column, direction) => tableFilters.setSort(column, direction)}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
+          />
+        </div>
+      </div>
+    </>
+  );
 
+  // Modais auxiliares (sempre renderizados, independente de skipWrapper)
+  const auxiliaryModals = (
+    <>
       {/* Modal Unificado (Criação e Edição) */}
       <BancoModal
         show={showBancoModal}
@@ -367,6 +374,34 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
 
       {/* ConfirmModal */}
       {modalProps && <ConfirmModal {...modalProps} />}
+    </>
+  );
+
+  if (skipWrapper) {
+    return (
+      <>
+        {modalContent}
+        {auxiliaryModals}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <DraggableModal
+        show={show}
+        onClose={() => {
+          clearSelection();
+          onClose();
+        }}
+        title={defaultTitle}
+        size="lg"
+        modalId="bancos-list-modal"
+        className="no-padding"
+      >
+        {modalContent}
+      </DraggableModal>
+      {auxiliaryModals}
     </>
   );
 };

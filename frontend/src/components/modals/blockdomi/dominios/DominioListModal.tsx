@@ -2,13 +2,13 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDominios, useDeleteDominio } from '@/hooks/useDominios';
 import { useModalSelect } from '@/hooks/useModalSelect';
-import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { Dominio } from '@/types';
 import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime, formatDate } from '@/utils/formatters';
-import ListModal from '@/components/common/ListModal';
 import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import DominioModal from './DominioModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
@@ -58,7 +58,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     } : undefined
   );
 
-  const columns = useMemo(() => [
+  const tableColumns: TableConfig<Dominio & { created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: t('table.id'),
@@ -141,18 +141,13 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   ], [t]);
 
   const defaultTitle = title || (onSelectDominio ? t('blockdomi.selectDomain') : t('blockdomi.domains'));
-  const modal = useListModal({
-    title: defaultTitle,
-    columns,
-    searchPlaceholder: t('layout.searchPlaceholder'),
-    searchFields: [
-      { key: 'id', label: t('table.id') },
-      { key: 'dominio', label: t('blockdomi.domain') },
-      { key: 'descricao', label: t('form.description') },
-      { key: 'nome_oficio', label: t('blockdomi.nomeOficio') }
-    ],
-    multiSelect: false
-  });
+  
+  const searchFields = [
+    { key: 'id', label: t('table.id') },
+    { key: 'dominio', label: t('blockdomi.domain') },
+    { key: 'descricao', label: t('form.description') },
+    { key: 'nome_oficio', label: t('blockdomi.nomeOficio') }
+  ];
 
   const { data: dominiosData, isLoading, refetch } = useDominios({
     search: tableFilters.debouncedSearch || undefined,
@@ -301,84 +296,134 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     }
   ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
 
+  const modalData = useMemo(() => dominiosData?.data || [], [dominiosData?.data]);
+
   const handleSearchChange = useCallback((search: string, field?: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
     setTimeout(() => {
       tableFilters.setSearch(search);
       if (field) tableFilters.setSearchField(field);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch, tableFilters.setSearchField]);
-
-  const handleSearchFieldChange = useCallback((field: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearchField(field);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearchField]);
-
-  const modalData = useMemo(() => dominiosData?.data || [], [dominiosData?.data]);
+  }, [tableFilters]);
 
   const modalContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <ListModal
-          show={show}
-          onClose={() => {
-            clearSelection();
-            onClose();
-          }}
-          config={modal.config}
-          data={modalData}
-          loading={isLoading}
-          selectedItems={selectedItem ? [selectedItem] : []}
-          onSelectionChange={handleSelectionChange}
-          onRowDoubleClick={(dominio) => {
-            if (onSelectDominio) {
-              onSelectDominio(dominio);
+    <>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
+            title={defaultTitle}
+            config={{
+              columns: tableColumns,
+              data: modalData,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: t('layout.searchPlaceholder'),
+              searchFields,
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                variant: action.variant
+              })),
+              emptyMessage: 'Nenhum domínio encontrado',
+              pagination: pagination
+            }}
+            tableId="dominios-list-modal"
+            onSelectionChange={(items) => {
+              handleSelectionChange(items);
+            }}
+            onRowClick={onSelectDominio ? (item) => {
+              onSelectDominio(item);
               onClose();
-            }
-          }}
-          search={tableFilters.search}
-          onSearchChange={handleSearchChange}
-          onSearchFieldChange={handleSearchFieldChange}
-          pagination={pagination}
-          onPageChange={tableFilters.setPage}
-          onPageSizeChange={tableFilters.setLimit}
-          onLimitChange={tableFilters.setLimit}
-          sortColumn={tableFilters.sortColumn}
-          sortDirection={tableFilters.sortDirection}
-          onSortChange={tableFilters.setSort}
-          refreshQueryKeys={['dominios']}
-          refreshQueryFn={refetch}
-          bulkActions={bulkActions}
-          onAudit={handleAudit}
-          auditEntity="Dominio"
-          skipWrapper={true}
-        />
+            } : undefined}
+            onRowDoubleClick={(dominio) => {
+              if (onSelectDominio) {
+                onSelectDominio(dominio);
+                onClose();
+              }
+            }}
+            onRefresh={refetch}
+            onAudit={handleAudit}
+            auditEntity="Dominio"
+            onPageChange={(page) => {
+              setTimeout(() => {
+                tableFilters.setPage(page);
+              }, 0);
+            }}
+            onPageSizeChange={(limit) => {
+              setTimeout(() => {
+                tableFilters.setLimit(limit);
+              }, 0);
+            }}
+            onSort={(column, direction) => {
+              setTimeout(() => {
+                tableFilters.setSort(column, direction);
+              }, 0);
+            }}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
+
+  if (skipWrapper) {
+    return (
+      <>
+        {modalContent}
+        <DominioModal
+          show={showCreateModal || showEditModal}
+          onClose={() => {
+            setShowCreateModal(false);
+            setShowEditModal(false);
+            setSelectedDominioId(null);
+          }}
+          dominioId={showEditModal ? selectedDominioId : null}
+          onSuccess={() => {
+            refetch();
+            queryClient.invalidateQueries({ queryKey: ['dominios'] });
+            setShowCreateModal(false);
+            setShowEditModal(false);
+            setSelectedDominioId(null);
+          }}
+        />
+        <ImprimirModal
+          show={auditoria.showPreview}
+          onClose={auditoria.handleClosePreview}
+          pdfUrl={auditoria.pdfUrl}
+          isGenerating={auditoria.isGeneratingPdf}
+          title={t('financial.executionLogs')}
+          modalId="auditoria-dominio-modal"
+        />
+        {modalProps && <ConfirmModal {...modalProps} />}
+      </>
+    );
+  }
 
   return (
     <>
-      {skipWrapper ? (
-        modalContent
-      ) : (
-        <DraggableModal
-          show={show}
-          onClose={() => {
-            clearSelection();
-            onClose();
-          }}
-          title={modal.config.title}
-          size="lg"
-          className="no-padding"
-        >
-          {modalContent}
-        </DraggableModal>
-      )}
+      <DraggableModal
+        show={show}
+        onClose={() => {
+          clearSelection();
+          onClose();
+        }}
+        title={defaultTitle}
+        size="lg"
+        modalId="dominios-list-modal"
+        className="no-padding"
+      >
+        {modalContent}
+      </DraggableModal>
 
       <DominioModal
         show={showCreateModal || showEditModal}

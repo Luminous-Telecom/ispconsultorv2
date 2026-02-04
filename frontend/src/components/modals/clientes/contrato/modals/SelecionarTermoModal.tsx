@@ -1,10 +1,11 @@
 import React, { useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useListModal } from '@/hooks/useListModal';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useModelosTermo } from '@/hooks/useModelosTermo';
-import ListModal from '@/components/common/ListModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 
 interface Termo {
   id: number;
@@ -36,14 +37,6 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
     initialSortDirection: 'desc'
   });
 
-  const handleSearchChange = useCallback((search: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearch(search);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch]);
-
   const { data: termosSistema, isLoading: isLoadingTermos } = useModelosTermo();
 
   // Usar hook customizado para gerenciar seleção
@@ -58,10 +51,8 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
     } : undefined
   );
 
-  // Configurar modal centralizado
-  const modal = useListModal({
-    title: 'Selecionar Termo Cadastrado',
-    columns: [
+  // Configurar colunas
+  const tableColumns: TableConfig<Termo>['columns'] = useMemo(() => [
       {
         key: 'id',
         label: 'ID',
@@ -85,10 +76,7 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
           </span>
         )
       }
-    ],
-    searchPlaceholder: 'Buscar termos...',
-    multiSelect: false
-  });
+    ], []);
 
   // Filtrar e ordenar termos
   const filteredTermos = useMemo(() => {
@@ -140,16 +128,16 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
     per_page: tableFilters.limit
   };
 
-  const handleInsert = (selectedItems?: Termo[]) => {
+  const handleInsert = useCallback((selectedItems?: Termo[]) => {
     const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : termoSelecionado;
     if (item) {
       onSelect(item);
       clearSelection();
       onClose();
     }
-  };
+  }, [termoSelecionado, onSelect, clearSelection, onClose]);
 
-  const bulkActions = [
+  const bulkActions = useMemo(() => [
     {
       label: 'Cancelar',
       variant: 'secondary' as const,
@@ -164,34 +152,89 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
       disabled: (selectedItems: Termo[]) => selectedItems.length === 0 && !termoSelecionado,
       action: (selectedItems: Termo[]) => handleInsert(selectedItems)
     }
-  ];
+  ], [termoSelecionado, clearSelection, onClose, handleInsert]);
+
+  const handleSearchChange = useCallback((search: string, field?: string) => {
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+      if (field) tableFilters.setSearchField(field);
+    }, 0);
+  }, [tableFilters]);
+
+  const handleRefresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
+  }, [queryClient]);
 
   return (
-    <ListModal
+    <DraggableModal
       show={show}
       onClose={() => {
         clearSelection();
         onClose();
       }}
-      config={modal.config}
-      data={paginatedTermos}
-      loading={isLoadingTermos}
-      selectedItems={termoSelecionado ? [termoSelecionado] : []}
-      onSelectionChange={handleSelectionChange}
-      search={tableFilters.search}
-      onSearchChange={handleSearchChange}
-      pagination={paginationTermos}
-      onPageChange={tableFilters.setPage}
-      onPageSizeChange={tableFilters.setLimit}
-      onLimitChange={tableFilters.setLimit}
-      sortColumn={tableFilters.sortColumn}
-      sortDirection={tableFilters.sortDirection}
-      onSortChange={tableFilters.setSort}
-      onRefresh={() => {
-        queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
-      }}
-      bulkActions={bulkActions}
-    />
+      title="Selecionar Termo Cadastrado"
+      size="lg"
+      modalId="selecionar-termo-modal"
+      className="no-padding"
+    >
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
+            title="Selecionar Termo Cadastrado"
+            config={{
+              columns: tableColumns,
+              data: paginatedTermos,
+              loading: isLoadingTermos,
+              searchable: true,
+              searchPlaceholder: 'Buscar termos...',
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                variant: action.variant
+              })),
+              emptyMessage: 'Nenhum termo encontrado',
+              pagination: paginationTermos
+            }}
+            tableId="selecionar-termo-table"
+            onSelectionChange={(items) => {
+              handleSelectionChange(items);
+            }}
+            onRowClick={(item) => {
+              onSelect(item);
+              onClose();
+            }}
+            onRefresh={handleRefresh}
+            onPageChange={(page) => {
+              setTimeout(() => {
+                tableFilters.setPage(page);
+              }, 0);
+            }}
+            onPageSizeChange={(limit) => {
+              setTimeout(() => {
+                tableFilters.setLimit(limit);
+              }, 0);
+            }}
+            onSort={(column, direction) => {
+              setTimeout(() => {
+                tableFilters.setSort(column, direction);
+              }, 0);
+            }}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
+          />
+        </div>
+      </div>
+    </DraggableModal>
   );
 };
 

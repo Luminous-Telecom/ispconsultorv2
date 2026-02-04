@@ -1,15 +1,15 @@
-/* eslint-disable no-console */
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useI18n } from '@/contexts/I18nContext';
 import { useNotasFiscais } from '@/hooks/useNotasFiscais';
-import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { NotaFiscalService } from '@/services/notaFiscalService';
 import { NotaFiscal } from '@/types';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
-import ListModal from '@/components/common/ListModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import CancelarNotaFiscalModal from './CancelarNotaFiscalModal';
 
@@ -45,8 +45,8 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     resetPageOnFilterChange: true,
   });
 
-  // Configurar colunas memoizadas
-  const columns = useMemo(() => [
+  // Configurar colunas memoizadas para Table
+  const tableColumns: TableConfig<NotaFiscal & { created_at_formatada?: string | null }>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: t('table.id'),
@@ -180,24 +180,17 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     }
   ], [t]);
 
-  // Configurar modal centralizado
-  const modal = useListModal({
-    title: defaultTitle,
-    columns,
-    searchPlaceholder: t('layout.searchPlaceholder'),
-    searchFields: [
-      { key: 'id', label: t('table.id') },
-      { key: 'numero', label: t('table.number') },
-      { key: 'chave_acesso', label: t('table.accessKey') },
-      { key: 'protocolo', label: t('table.protocol') },
-      { key: 'valor', label: t('table.value') },
-      { key: 'status', label: t('table.status') },
-      { key: 'nfse_status', label: t('params.nfse') + ' ' + t('table.status') },
-      { key: 'titulo_id', label: t('table.id') + ' ' + t('table.contract') },
-      { key: 'cliente', label: t('table.client') }
-    ],
-    multiSelect: false
-  });
+  const searchFields = [
+    { key: 'id', label: t('table.id') },
+    { key: 'numero', label: t('table.number') },
+    { key: 'chave_acesso', label: t('table.accessKey') },
+    { key: 'protocolo', label: t('table.protocol') },
+    { key: 'valor', label: t('table.value') },
+    { key: 'status', label: t('table.status') },
+    { key: 'nfse_status', label: t('params.nfse') + ' ' + t('table.status') },
+    { key: 'titulo_id', label: t('table.id') + ' ' + t('table.contract') },
+    { key: 'cliente', label: t('table.client') }
+  ];
 
   // Hook para buscar notas fiscais
   const { data: notasFiscaisData, isLoading, refetch } = useNotasFiscais({
@@ -292,24 +285,14 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     }
   ], [handleImprimir, handleCancelar, t]);
 
+  const modalData = useMemo(() => notasFiscaisData?.data || [], [notasFiscaisData?.data]);
+
   const handleSearchChange = useCallback((search: string, field?: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
     setTimeout(() => {
       tableFilters.setSearch(search);
       if (field) tableFilters.setSearchField(field);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch, tableFilters.setSearchField]);
-
-  const handleSearchFieldChange = useCallback((field: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearchField(field);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearchField]);
-
-  const modalData = useMemo(() => notasFiscaisData?.data || [], [notasFiscaisData?.data]);
+  }, [tableFilters]);
 
   // Paginação do backend
   const pagination = useMemo(() => {
@@ -346,30 +329,119 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
     };
   }, [notasFiscaisData?.pagination, tableFilters.page, tableFilters.limit]);
 
+  const modalContent = (
+    <>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
+            title={defaultTitle}
+            config={{
+              columns: tableColumns,
+              data: modalData,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: t('layout.searchPlaceholder'),
+              searchFields,
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                variant: action.variant
+              })),
+              emptyMessage: 'Nenhuma nota fiscal encontrada',
+              pagination: pagination
+            }}
+            tableId="notas-fiscais-list-modal"
+            onSelectionChange={() => {}}
+            onRefresh={handleRefresh}
+            onAudit={handleAudit}
+            auditEntity="NotaFiscal"
+            onPageChange={(page) => {
+              setTimeout(() => {
+                tableFilters.setPage(page);
+              }, 0);
+            }}
+            onPageSizeChange={(limit) => {
+              setTimeout(() => {
+                tableFilters.setLimit(limit);
+              }, 0);
+            }}
+            onSort={(column, direction) => {
+              setTimeout(() => {
+                tableFilters.setSort(column, direction);
+              }, 0);
+            }}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
+          />
+        </div>
+      </div>
+    </>
+  );
+
+  if (skipWrapper) {
+    return (
+      <>
+        {modalContent}
+        {/* Modal de Visualização de PDF de Auditoria */}
+        <ImprimirModal
+          show={auditoria.showPreview}
+          onClose={auditoria.handleClosePreview}
+          pdfUrl={auditoria.pdfUrl}
+          isGenerating={auditoria.isGeneratingPdf}
+          title={t('financial.executionLogs')}
+          modalId="auditoria-nota-fiscal-modal"
+        />
+        {/* Modal de Visualização de PDF da Nota Fiscal */}
+        <ImprimirModal
+          show={showImprimirModal}
+          onClose={() => {
+            setShowImprimirModal(false);
+            if (pdfUrl) {
+              window.URL.revokeObjectURL(pdfUrl);
+              setPdfUrl(null);
+            }
+          }}
+          pdfUrl={pdfUrl}
+          isGenerating={isGeneratingPdf}
+          title={t('modal.viewInvoice')}
+          modalId="nota-fiscal-imprimir-modal"
+        />
+        {/* Modal de Cancelamento de Nota Fiscal */}
+        <CancelarNotaFiscalModal
+          show={showCancelarModal}
+          onClose={() => {
+            setShowCancelarModal(false);
+            setNotaFiscalParaCancelar(null);
+          }}
+          onSuccess={handleCancelarSuccess}
+          notaFiscal={notaFiscalParaCancelar}
+        />
+      </>
+    );
+  }
+
   return (
     <>
-      <ListModal
+      <DraggableModal
         show={show}
         onClose={onClose}
-        config={modal.config}
-        data={modalData}
-        loading={isLoading}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        onSearchFieldChange={handleSearchFieldChange}
-        pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={tableFilters.setLimit}
-        onLimitChange={tableFilters.setLimit}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        refreshQueryFn={handleRefresh}
-        bulkActions={bulkActions}
-        onAudit={handleAudit}
-        auditEntity="NotaFiscal"
-        skipWrapper={skipWrapper}
-      />
+        title={defaultTitle}
+        size="lg"
+        modalId="notas-fiscais-list-modal"
+        className="no-padding"
+      >
+        {modalContent}
+      </DraggableModal>
 
       {/* Modal de Visualização de PDF de Auditoria */}
       <ImprimirModal

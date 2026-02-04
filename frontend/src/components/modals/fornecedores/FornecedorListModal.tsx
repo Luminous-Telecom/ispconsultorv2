@@ -1,13 +1,13 @@
-/* eslint-disable no-console */
 import React, { useState, useCallback, useMemo } from 'react';
 import { useFornecedores, useDeleteFornecedor } from '@/hooks/useFornecedores';
 import { useModalSelect } from '@/hooks/useModalSelect';
-import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime } from '@/utils/formatters';
 import { Fornecedor } from '@/types';
-import ListModal from '@/components/common/ListModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import FornecedorModal from './FornecedorModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
@@ -27,7 +27,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   onClose, 
   onSelectFornecedor,
   title,
-  skipWrapper: _skipWrapper 
+  skipWrapper = false 
 }) => {
   const { t } = useI18n();
   const defaultTitle = title || t('menu.suppliers');
@@ -60,8 +60,8 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     } : undefined
   );
 
-  // Configurar colunas memoizadas
-  const columns = useMemo(() => [
+  // Configurar colunas memoizadas para Table
+  const tableColumns: TableConfig<Fornecedor & { created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: t('table.id'),
@@ -188,24 +188,17 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     }
   ], [t]);
 
-  // Configurar modal centralizado
-  const modal = useListModal({
-    title: defaultTitle,
-    columns,
-    searchPlaceholder: 'Buscar...',
-    searchFields: [
-      { key: 'nome_razao_social', label: 'Nome/Razão Social' },
-      { key: 'nome_fantasia', label: 'Nome Fantasia' },
-      { key: 'cpf_cnpj', label: 'CPF/CNPJ' },
-      { key: 'cep', label: 'CEP' },
-      { key: 'logradouro', label: 'Logradouro' },
-      { key: 'bairro', label: 'Bairro' },
-      { key: 'cidade', label: 'Cidade' },
-      { key: 'estado', label: 'Estado' },
-      { key: 'pais', label: 'País' }
-    ],
-    multiSelect: false
-  });
+  const searchFields = [
+    { key: 'nome_razao_social', label: 'Nome/Razão Social' },
+    { key: 'nome_fantasia', label: 'Nome Fantasia' },
+    { key: 'cpf_cnpj', label: 'CPF/CNPJ' },
+    { key: 'cep', label: 'CEP' },
+    { key: 'logradouro', label: 'Logradouro' },
+    { key: 'bairro', label: 'Bairro' },
+    { key: 'cidade', label: 'Cidade' },
+    { key: 'estado', label: 'Estado' },
+    { key: 'pais', label: 'País' }
+  ];
 
   // Hook para buscar fornecedores usando parâmetros do useTableFilters
   const { data: fornecedoresData, isLoading, refetch } = useFornecedores({
@@ -334,63 +327,77 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
     }
   ], [onSelectFornecedor, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
 
+  const modalData = useMemo(() => (fornecedoresData?.data || []).filter(item => item.id != null), [fornecedoresData?.data]);
+
   const handleSearchChange = useCallback((search: string, field?: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
     setTimeout(() => {
       tableFilters.setSearch(search);
       if (field) tableFilters.setSearchField(field);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch, tableFilters.setSearchField]);
+  }, [tableFilters]);
 
-  const handleSearchFieldChange = useCallback((field: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearchField(field);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearchField]);
-
-  const modalData = useMemo(() => (fornecedoresData?.data || []).filter(item => item.id != null), [fornecedoresData?.data]);
-
-  return (
+  const modalContent = (
     <>
-      <ListModal
-        show={show}
-        onClose={() => {
-          clearSelection();
-          onClose();
-        }}
-        config={modal.config}
-        data={modalData}
-        loading={isLoading}
-        selectedItems={selectedItem ? [selectedItem] : []}
-        onSelectionChange={handleSelectionChange}
-        onRowDoubleClick={(fornecedor) => {
-          // Double-click seleciona o item e fecha o modal
-          if (onSelectFornecedor) {
-            onSelectFornecedor(fornecedor);
-            onClose();
-          }
-        }}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        onSearchFieldChange={handleSearchFieldChange}
-        pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={tableFilters.setLimit}
-        onLimitChange={tableFilters.setLimit}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        refreshQueryKeys={['fornecedores']}
-        refreshQueryFn={refetch}
-        bulkActions={bulkActions}
-        onAudit={handleAudit}
-        auditEntity="Fornecedor"
-        skipWrapper={_skipWrapper}
-      />
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
+            title={defaultTitle}
+            config={{
+              columns: tableColumns,
+              data: modalData,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: 'Buscar...',
+              searchFields,
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                variant: action.variant
+              })),
+              emptyMessage: 'Nenhum fornecedor encontrado',
+              pagination: pagination
+            }}
+            tableId="fornecedores-list-modal"
+            onSelectionChange={(items) => {
+              handleSelectionChange(items);
+            }}
+            onRowClick={onSelectFornecedor ? (item) => {
+              onSelectFornecedor(item);
+              onClose();
+            } : undefined}
+            onRowDoubleClick={(fornecedor) => {
+              if (onSelectFornecedor) {
+                onSelectFornecedor(fornecedor);
+                onClose();
+              }
+            }}
+            onRefresh={refetch}
+            onAudit={handleAudit}
+            auditEntity="Fornecedor"
+            onPageChange={tableFilters.setPage}
+            onPageSizeChange={tableFilters.setLimit}
+            onSort={(column, direction) => tableFilters.setSort(column, direction)}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
+          />
+        </div>
+      </div>
+    </>
+  );
 
+  // Modais auxiliares (sempre renderizados, independente de skipWrapper)
+  const auxiliaryModals = (
+    <>
       {showCreateModal && (
         <FornecedorModal
           show={showCreateModal}
@@ -429,6 +436,34 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
 
       {/* ConfirmModal */}
       {modalProps && <ConfirmModal {...modalProps} />}
+    </>
+  );
+
+  if (skipWrapper) {
+    return (
+      <>
+        {modalContent}
+        {auxiliaryModals}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <DraggableModal
+        show={show}
+        onClose={() => {
+          clearSelection();
+          onClose();
+        }}
+        title={defaultTitle}
+        size="lg"
+        modalId="fornecedores-list-modal"
+        className="no-padding"
+      >
+        {modalContent}
+      </DraggableModal>
+      {auxiliaryModals}
     </>
   );
 };

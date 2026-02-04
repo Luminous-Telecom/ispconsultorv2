@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { useMensagensEmail } from '../../../hooks/useMensagemHistorico';
 import { MensagemHistoricoFilters } from '../../../services/mensagemHistoricoService';
 import { formatDateTime } from '../../../utils/formatters';
 import { Badge } from '../../ui';
-import ListModal from '../../common/ListModal';
-import { useListModal } from '../../../hooks/useListModal';
+import DraggableModal from '../../common/DraggableModal';
+import Table from '../../tables/Table';
+import { TableConfig } from '../../tables/types';
 import { useTableFilters } from '../../../hooks/useTableFilters';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import MensagemDetalhesModal from './MensagemDetalhesModal';
@@ -71,7 +72,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
   } = useModalSelect<MensagemItem>();
 
   // Configurar colunas memoizadas
-  const columns = useMemo(() => [
+  const tableColumns: TableConfig<MensagemItem>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: 'ID',
@@ -197,21 +198,15 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
     }
   ], []);
 
-  // Configurar modal centralizado
-  const modal = useListModal({
-    title: 'Histórico de Mensagens Email',
-    columns,
-    searchPlaceholder: 'Buscar por email...',
-    searchFields: [
-      { key: 'id', label: 'ID' },
-      { key: 'tipo', label: 'Tipo' },
-      { key: 'cliente_nome', label: 'Cliente' },
-      { key: 'titulo', label: 'Assunto' },
-      { key: 'destinatario', label: 'Destinatário' },
-      { key: 'mensagem', label: 'Mensagem' },
-      { key: 'status', label: 'Status' }
-    ]
-  });
+  const searchFields = [
+    { key: 'id', label: 'ID' },
+    { key: 'tipo', label: 'Tipo' },
+    { key: 'cliente_nome', label: 'Cliente' },
+    { key: 'titulo', label: 'Assunto' },
+    { key: 'destinatario', label: 'Destinatário' },
+    { key: 'mensagem', label: 'Mensagem' },
+    { key: 'status', label: 'Status' }
+  ];
 
   // Paginação do backend - usar valores do backend quando disponíveis
   const pagination = useMemo(() => {
@@ -266,48 +261,81 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
 
   const modalData = useMemo(() => data?.data || [], [data?.data]);
 
-  const handleSearchChange = (search: string, field?: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
+  const handleSearchChange = useCallback((search: string, field?: string) => {
     setTimeout(() => {
       tableFilters.setSearch(search);
       if (field) tableFilters.setSearchField(field);
     }, 0);
-  };
-
-  const handleSearchFieldChange = (field: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearchField(field);
-    }, 0);
-  };
+  }, [tableFilters]);
 
   return (
     <>
-      <ListModal
+      <DraggableModal
         show={show}
         onClose={() => {
           clearSelection();
           onClose();
         }}
-        config={modal.config}
-        data={modalData}
-        loading={isLoading}
-        selectedItems={selectedItem ? [selectedItem] : []}
-        onSelectionChange={handleSelectionChange}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        onSearchFieldChange={handleSearchFieldChange}
-        pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={tableFilters.setLimit}
-        onLimitChange={tableFilters.setLimit}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        refreshQueryKeys={['mensagens-historico']}
-        refreshQueryFn={refetch}
-        bulkActions={bulkActions}
-      />
+        title="Histórico de Mensagens Email"
+        size="lg"
+        modalId="email-historico-modal"
+        className="no-padding"
+      >
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+            <Table
+              title="Histórico de Mensagens Email"
+              config={{
+                columns: tableColumns,
+                data: modalData,
+                loading: isLoading,
+                searchable: true,
+                searchPlaceholder: 'Buscar por email...',
+                searchFields,
+                sortable: true,
+                sortColumn: tableFilters.sortColumn,
+                sortDirection: tableFilters.sortDirection,
+                striped: true,
+                hover: true,
+                responsive: true,
+                selectable: true,
+                multiSelect: false,
+                bulkActions: bulkActions.map(action => ({
+                  key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                  label: action.label,
+                  onClick: action.action,
+                  disabled: action.disabled,
+                  variant: action.variant
+                })),
+                emptyMessage: 'Nenhuma mensagem encontrada',
+                pagination: pagination
+              }}
+              tableId="email-historico-table"
+              onSelectionChange={(items) => {
+                handleSelectionChange(items);
+              }}
+              onRefresh={refetch}
+              onPageChange={(page) => {
+                setTimeout(() => {
+                  tableFilters.setPage(page);
+                }, 0);
+              }}
+              onPageSizeChange={(limit) => {
+                setTimeout(() => {
+                  tableFilters.setLimit(limit);
+                }, 0);
+              }}
+              onSort={(column, direction) => {
+                setTimeout(() => {
+                  tableFilters.setSort(column, direction);
+                }, 0);
+              }}
+              onSearch={(search, field) => handleSearchChange(search, field)}
+              search={tableFilters.search}
+            />
+          </div>
+        </div>
+      </DraggableModal>
 
       <MensagemDetalhesModal
         show={showDetalhesModal}

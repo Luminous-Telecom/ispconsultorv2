@@ -2,12 +2,13 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePlanos, useDeletePlano } from '@/hooks/usePlanos';
 import { useModalSelect } from '@/hooks/useModalSelect';
-import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { Plano } from '@/types';
 import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime } from '@/utils/formatters';
-import ListModal from '@/components/common/ListModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import PlanoModal from './PlanoModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
@@ -75,8 +76,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     return tipos[tipo] || tipo;
   }, [t]);
 
-  // Configurar colunas memoizadas
-  const columns = useMemo(() => [
+  // Configurar colunas memoizadas para Table
+  const tableColumns: TableConfig<Plano & { created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: t('table.id'),
@@ -193,24 +194,18 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     }
   ], [getTipoServicoLabel, getStatusBadgeClass, t]);
 
-  // Configurar modal centralizado
   const defaultTitle = title || (onSelectPlano ? t('ui.selectPlan') : t('menu.plans'));
-  const modal = useListModal({
-    title: defaultTitle,
-    columns,
-    searchPlaceholder: t('layout.searchPlaceholder'),
-    searchFields: [
-      { key: 'id', label: t('table.id') },
-      { key: 'nome_plano', label: t('table.planName') },
-      { key: 'descricao', label: t('form.description') },
-      { key: 'tipo_servico', label: t('table.serviceType') },
-      { key: 'valor_mensal', label: t('table.monthlyValue') },
-      { key: 'quantidade_usuarios', label: t('form.usersQuantity') },
-      { key: 'periodicidade', label: t('table.periodicity') },
-      { key: 'status', label: t('table.status') }
-    ],
-    multiSelect: false
-  });
+  
+  const searchFields = [
+    { key: 'id', label: t('table.id') },
+    { key: 'nome_plano', label: t('table.planName') },
+    { key: 'descricao', label: t('form.description') },
+    { key: 'tipo_servico', label: t('table.serviceType') },
+    { key: 'valor_mensal', label: t('table.monthlyValue') },
+    { key: 'quantidade_usuarios', label: t('form.usersQuantity') },
+    { key: 'periodicidade', label: t('table.periodicity') },
+    { key: 'status', label: t('table.status') }
+  ];
 
   // Hook para buscar planos usando parâmetros do useTableFilters
   const { data: planosData, isLoading, refetch } = usePlanos({
@@ -339,64 +334,77 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     }
   ], [onSelectPlano, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
 
+  const modalData = useMemo(() => planosData?.data || [], [planosData?.data]);
+
   const handleSearchChange = useCallback((search: string, field?: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
     setTimeout(() => {
       tableFilters.setSearch(search);
       if (field) tableFilters.setSearchField(field);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch, tableFilters.setSearchField]);
+  }, [tableFilters]);
 
-  const handleSearchFieldChange = useCallback((field: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearchField(field);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearchField]);
-
-  const modalData = useMemo(() => planosData?.data || [], [planosData?.data]);
-
-  return (
+  const modalContent = (
     <>
-      <ListModal
-        show={show}
-        onClose={() => {
-          clearSelection();
-          onClose();
-        }}
-        config={modal.config}
-        data={modalData}
-        loading={isLoading}
-        selectedItems={selectedItem ? [selectedItem] : []}
-        onSelectionChange={handleSelectionChange}
-        onRowDoubleClick={(plano) => {
-          // Double-click seleciona o item e fecha o modal
-          if (onSelectPlano) {
-            onSelectPlano(plano);
-            onClose();
-          }
-        }}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        onSearchFieldChange={handleSearchFieldChange}
-        pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={tableFilters.setLimit}
-        onLimitChange={tableFilters.setLimit}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        refreshQueryKeys={['planos']}
-        refreshQueryFn={refetch}
-        bulkActions={bulkActions}
-        onAudit={handleAudit}
-        auditEntity="Plano"
-        skipWrapper={skipWrapper}
-        tableId="planos-list-modal"
-      />
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
+            title={defaultTitle}
+            config={{
+              columns: tableColumns,
+              data: modalData,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: t('layout.searchPlaceholder'),
+              searchFields,
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                variant: action.variant
+              })),
+              emptyMessage: 'Nenhum plano encontrado',
+              pagination: pagination
+            }}
+            tableId="planos-list-modal"
+            onSelectionChange={(items) => {
+              handleSelectionChange(items);
+            }}
+            onRowClick={onSelectPlano ? (item) => {
+              onSelectPlano(item);
+              onClose();
+            } : undefined}
+            onRowDoubleClick={(plano) => {
+              if (onSelectPlano) {
+                onSelectPlano(plano);
+                onClose();
+              }
+            }}
+            onRefresh={refetch}
+            onAudit={handleAudit}
+            auditEntity="Plano"
+            onPageChange={tableFilters.setPage}
+            onPageSizeChange={tableFilters.setLimit}
+            onSort={(column, direction) => tableFilters.setSort(column, direction)}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
+          />
+        </div>
+      </div>
+    </>
+  );
 
+  // Modais auxiliares (sempre renderizados, independente de skipWrapper)
+  const auxiliaryModals = (
+    <>
       {/* Modal de Criação/Edição unificado */}
       <PlanoModal
         show={showCreateModal || showEditModal}
@@ -427,6 +435,34 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
       {/* ConfirmModal */}
       {modalProps && <ConfirmModal {...modalProps} />}
+    </>
+  );
+
+  if (skipWrapper) {
+    return (
+      <>
+        {modalContent}
+        {auxiliaryModals}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <DraggableModal
+        show={show}
+        onClose={() => {
+          clearSelection();
+          onClose();
+        }}
+        title={defaultTitle}
+        size="lg"
+        modalId="planos-list-modal"
+        className="no-padding"
+      >
+        {modalContent}
+      </DraggableModal>
+      {auxiliaryModals}
     </>
   );
 };

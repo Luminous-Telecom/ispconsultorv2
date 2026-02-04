@@ -2,12 +2,13 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useModalSelect } from '@/hooks/useModalSelect';
-import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { SchedulerService, RotinaAgendada } from '@/services/schedulerService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { formatDateTime } from '@/utils/formatters';
-import ListModal from '@/components/common/ListModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
@@ -43,23 +44,13 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     auditoria.handleAudit('ScheduledRoutine', rotina.id);
   };
 
-  const handleSearchChange = useCallback((search: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearch(search);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch]);
-
   const {
     selectedItem,
     handleSelectionChange,
     clearSelection
   } = useModalSelect<RotinaAgendada>();
 
-  const modal = useListModal({
-    title: t('scheduler.title'),
-    columns: [
+  const tableColumns: TableConfig<RotinaAgendada & { ultima_execucao_formatada?: string | null; created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
       {
         key: 'id',
         label: t('table.id'),
@@ -150,17 +141,15 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
           return item.created_at ? formatDateTime(item.created_at) : '-';
         }
       }
-    ],
-    searchPlaceholder: '',
-    searchFields: [
-      { key: 'id', label: t('table.id') },
-      { key: 'tipo', label: t('scheduler.type') },
-      { key: 'descricao', label: t('table.description') },
-      { key: 'frequencia', label: t('scheduler.frequency') },
-      { key: 'hora_execucao', label: t('scheduler.schedule') }
-    ],
-    multiSelect: false
-  });
+    ], [t]);
+
+  const searchFields = [
+    { key: 'id', label: t('table.id') },
+    { key: 'tipo', label: t('scheduler.type') },
+    { key: 'descricao', label: t('table.description') },
+    { key: 'frequencia', label: t('scheduler.frequency') },
+    { key: 'hora_execucao', label: t('scheduler.schedule') }
+  ];
 
   const { data: rotinasData, isLoading, refetch } = useQuery({
     queryKey: ['agendador-tarefas', tableFilters.page, tableFilters.limit, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection],
@@ -203,7 +192,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     };
   }, [rotinasData?.pagination]);
 
-  const handleToggle = async (rotina: RotinaAgendada) => {
+  const handleToggle = useCallback(async (rotina: RotinaAgendada) => {
     try {
       await SchedulerService.toggleRotina(rotina.id, !rotina.ativo);
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
@@ -215,9 +204,9 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         showError('Erro ao atualizar status: Erro desconhecido');
       }
     }
-  };
+  }, [queryClient, showError]);
 
-  const handleExecute = async (rotina: RotinaAgendada) => {
+  const handleExecute = useCallback(async (rotina: RotinaAgendada) => {
     const confirmed = await confirm({
       message: t('scheduler.confirmExecute'),
       variant: 'info',
@@ -240,9 +229,9 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         showError(`${t('messages.error')}: ${t('messages.noData')}`);
       }
     }
-  };
+  }, [confirm, t, success, queryClient, showError]);
 
-  const handleDelete = async (rotina: RotinaAgendada) => {
+  const handleDelete = useCallback(async (rotina: RotinaAgendada) => {
     const confirmed = await confirm({
       message: t('scheduler.confirmDelete'),
       variant: 'danger',
@@ -265,23 +254,23 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         showError(`${t('messages.error')}: ${t('messages.noData')}`);
       }
     }
-  };
+  }, [confirm, t, success, queryClient, showError]);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRotinaId, setSelectedRotinaId] = useState<number | null>(null);
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
     setShowCreateModal(true);
-  };
+  }, []);
 
-  const handleEdit = (selectedItems: RotinaAgendada[]) => {
+  const handleEdit = useCallback((selectedItems: RotinaAgendada[]) => {
     const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
     if (item) {
       setSelectedRotinaId(item.id);
       setShowEditModal(true);
     }
-  };
+  }, [selectedItem]);
 
   const handleSuccess = async () => {
     setShowCreateModal(false);
@@ -292,7 +281,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     await refetch();
   };
 
-  const bulkActions = [
+  const bulkActions = useMemo(() => [
     {
       label: t('actions.new'),
       variant: 'primary' as const,
@@ -339,37 +328,85 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         }
       }
     }
-  ];
+  ], [t, selectedItem, handleCreate, handleEdit, handleExecute, handleToggle, handleDelete]);
+
+  const handleSearchChange = useCallback((search: string, field?: string) => {
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+      if (field) tableFilters.setSearchField(field);
+    }, 0);
+  }, [tableFilters]);
 
   return (
     <>
-      <ListModal
+      <DraggableModal
         show={show}
         onClose={() => {
           clearSelection();
           onClose();
         }}
-        config={modal.config}
-        data={paginatedRotinas}
-        loading={isLoading}
-        selectedItems={selectedItem ? [selectedItem] : []}
-        onSelectionChange={handleSelectionChange}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        pagination={pagination}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={tableFilters.setLimit}
-        onLimitChange={tableFilters.setLimit}
-        sortColumn={tableFilters.sortColumn}
-        sortDirection={tableFilters.sortDirection}
-        onSortChange={tableFilters.setSort}
-        refreshQueryKeys={['agendador-tarefas']}
-        refreshQueryFn={refetch}
-        bulkActions={bulkActions}
-        onAudit={handleAudit}
-        auditEntity="ScheduledRoutine"
-        tableId="agendador-tarefas"
-      />
+        title={t('scheduler.title')}
+        size="lg"
+        modalId="agendador-tarefas-modal"
+        className="no-padding"
+      >
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+            <Table
+              title={t('scheduler.title')}
+              config={{
+                columns: tableColumns,
+                data: paginatedRotinas,
+                loading: isLoading,
+                searchable: true,
+                searchPlaceholder: '',
+                searchFields,
+                sortable: true,
+                sortColumn: tableFilters.sortColumn,
+                sortDirection: tableFilters.sortDirection,
+                striped: true,
+                hover: true,
+                responsive: true,
+                selectable: true,
+                multiSelect: false,
+                bulkActions: bulkActions.map(action => ({
+                  key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                  label: action.label,
+                  onClick: action.action,
+                  disabled: action.disabled,
+                  variant: action.variant
+                })),
+                emptyMessage: 'Nenhuma rotina encontrada',
+                pagination: pagination
+              }}
+              tableId="agendador-tarefas"
+              onSelectionChange={(items) => {
+                handleSelectionChange(items);
+              }}
+              onRefresh={refetch}
+              onAudit={handleAudit}
+              auditEntity="ScheduledRoutine"
+              onPageChange={(page) => {
+                setTimeout(() => {
+                  tableFilters.setPage(page);
+                }, 0);
+              }}
+              onPageSizeChange={(limit) => {
+                setTimeout(() => {
+                  tableFilters.setLimit(limit);
+                }, 0);
+              }}
+              onSort={(column, direction) => {
+                setTimeout(() => {
+                  tableFilters.setSort(column, direction);
+                }, 0);
+              }}
+              onSearch={(search, field) => handleSearchChange(search, field)}
+              search={tableFilters.search}
+            />
+          </div>
+        </div>
+      </DraggableModal>
 
       <RotinaAgendadaModal
         show={showCreateModal || showEditModal}

@@ -1,11 +1,12 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useListModal } from '@/hooks/useListModal';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { formatDate } from '@/utils/formatters';
 import DocumentoSistemaService, { DocumentoSistema } from '@/services/documentoSistemaService';
-import ListModal from '@/components/common/ListModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 
 interface ModeloContratoSelectModalProps {
   show: boolean;
@@ -29,14 +30,6 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     resetPageOnFilterChange: true,
   });
 
-  const handleSearchChange = useCallback((search: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
-    setTimeout(() => {
-      tableFilters.setSearch(search);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch]);
-
   // Usar hook customizado para gerenciar seleção
   const {
     selectedItem,
@@ -49,46 +42,40 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     } : undefined
   );
 
-  // Configurar modal centralizado
-  const modal = useListModal({
-    title,
-    columns: [
-      {
-        key: 'id',
-        label: 'ID',
-        sortable: true,
-        width: '42px',
-        render: (item: DocumentoSistema) => <span>{item.id}</span>
-      },
-      {
-        key: 'nome',
-        label: 'Nome',
-        sortable: true,
-        render: (item: DocumentoSistema) => item.nome
-      },
-      {
-        key: 'descricao',
-        label: 'Descrição',
-        sortable: true,
-        render: (item: DocumentoSistema) => (
-          <span className="text-truncate" style={{ maxWidth: '300px' }} title={item.descricao || ''}>
-            {item.descricao || '-'}
-          </span>
-        )
-      },
-      {
-        key: 'created_at',
-        label: 'Criado em',
-        sortable: true,
-        width: '150px',
-        render: (item: DocumentoSistema) => (
-          <span>{formatDate(item.created_at)}</span>
-        )
-      }
-    ],
-    searchPlaceholder: '',
-    multiSelect: false
-  });
+  const tableColumns: TableConfig<DocumentoSistema>['columns'] = useMemo(() => [
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      width: '42px',
+      render: (item: DocumentoSistema) => <span>{item.id}</span>
+    },
+    {
+      key: 'nome',
+      label: 'Nome',
+      sortable: true,
+      render: (item: DocumentoSistema) => item.nome
+    },
+    {
+      key: 'descricao',
+      label: 'Descrição',
+      sortable: true,
+      render: (item: DocumentoSistema) => (
+        <span className="text-truncate" style={{ maxWidth: '300px' }} title={item.descricao || ''}>
+          {item.descricao || '-'}
+        </span>
+      )
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      width: '150px',
+      render: (item: DocumentoSistema) => (
+        <span>{formatDate(item.created_at)}</span>
+      )
+    }
+  ], []);
 
   // Query para buscar modelos de contrato
   const { data: modelosData, isLoading, refetch } = useQuery({
@@ -97,7 +84,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     enabled: show,
   });
 
-  const handleSelect = (selectedItems?: DocumentoSistema[]) => {
+  const handleSelect = useCallback((selectedItems?: DocumentoSistema[]) => {
     const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
     if (item) {
       clearSelection();
@@ -106,9 +93,9 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
         onClose();
       }
     }
-  };
+  }, [selectedItem, clearSelection, onSelect, onClose]);
 
-  const bulkActions = onSelect ? [
+  const bulkActions = useMemo(() => onSelect ? [
     {
       label: 'Cancelar',
       variant: 'secondary' as const,
@@ -123,28 +110,87 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
       disabled: (selectedItems: DocumentoSistema[]) => selectedItems.length === 0 && !selectedItem,
       action: (selectedItems: DocumentoSistema[]) => handleSelect(selectedItems)
     }
-  ] : [];
+  ] : [], [onSelect, selectedItem, clearSelection, onClose, handleSelect]);
+
+  const modalData = useMemo(() => modelosData?.data || [], [modelosData?.data]);
+
+  const handleSearchChange = useCallback((search: string, field?: string) => {
+    setTimeout(() => {
+      tableFilters.setSearch(search);
+      if (field) tableFilters.setSearchField(field);
+    }, 0);
+  }, [tableFilters]);
 
   return (
-    <ListModal
+    <DraggableModal
       show={show}
       onClose={() => {
         clearSelection();
         onClose();
       }}
-        config={modal.config}
-        data={modelosData?.data || []}
-        loading={isLoading}
-        selectedItems={selectedItem ? [selectedItem] : []}
-        onSelectionChange={handleSelectionChange}
-        search={tableFilters.search}
-        onSearchChange={handleSearchChange}
-        onPageChange={tableFilters.setPage}
-        onPageSizeChange={tableFilters.setLimit}
-        onLimitChange={tableFilters.setLimit}
-      onRefresh={refetch}
-      bulkActions={bulkActions}
-    />
+      title={title}
+      size="lg"
+      modalId="modelo-contrato-select-modal"
+      className="no-padding"
+    >
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
+            title={title}
+            config={{
+              columns: tableColumns,
+              data: modalData,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: '',
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                variant: action.variant
+              })),
+              emptyMessage: 'Nenhum modelo encontrado',
+              pagination: undefined
+            }}
+            tableId="modelo-contrato-select-table"
+            onSelectionChange={(items) => {
+              handleSelectionChange(items);
+            }}
+            onRowClick={onSelect ? (item) => {
+              onSelect(item);
+              onClose();
+            } : undefined}
+            onRefresh={refetch}
+            onPageChange={(page) => {
+              setTimeout(() => {
+                tableFilters.setPage(page);
+              }, 0);
+            }}
+            onPageSizeChange={(limit) => {
+              setTimeout(() => {
+                tableFilters.setLimit(limit);
+              }, 0);
+            }}
+            onSort={(column, direction) => {
+              setTimeout(() => {
+                tableFilters.setSort(column, direction);
+              }, 0);
+            }}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
+          />
+        </div>
+      </div>
+    </DraggableModal>
   );
 };
 

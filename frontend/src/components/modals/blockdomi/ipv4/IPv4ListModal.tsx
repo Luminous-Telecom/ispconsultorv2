@@ -2,13 +2,13 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIPv4s, useDeleteIPv4 } from '@/hooks/useIPv4';
 import { useModalSelect } from '@/hooks/useModalSelect';
-import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { IPv4 } from '@/types';
 import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime, formatDate } from '@/utils/formatters';
-import ListModal from '@/components/common/ListModal';
 import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import IPv4Modal from './IPv4Modal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
@@ -58,7 +58,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
     } : undefined
   );
 
-  const columns = useMemo(() => [
+  const tableColumns: TableConfig<IPv4 & { created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: t('table.id'),
@@ -141,18 +141,13 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
   ], [t]);
 
   const defaultTitle = title || (onSelectIPv4 ? t('blockdomi.selectIPv4') : 'IPv4');
-  const modal = useListModal({
-    title: defaultTitle,
-    columns,
-    searchPlaceholder: t('layout.searchPlaceholder'),
-    searchFields: [
-      { key: 'id', label: t('table.id') },
-      { key: 'ip', label: 'IPv4' },
-      { key: 'descricao', label: t('form.description') },
-      { key: 'nome_oficio', label: t('blockdomi.nomeOficio') }
-    ],
-    multiSelect: false
-  });
+  
+  const searchFields = [
+    { key: 'id', label: t('table.id') },
+    { key: 'ip', label: 'IPv4' },
+    { key: 'descricao', label: t('form.description') },
+    { key: 'nome_oficio', label: t('blockdomi.nomeOficio') }
+  ];
 
   const { data: ipv4sData, isLoading, refetch } = useIPv4s({
     search: tableFilters.debouncedSearch || undefined,
@@ -301,82 +296,134 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
     }
   ], [onSelectIPv4, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
 
+  const modalData = useMemo(() => ipv4sData?.data || [], [ipv4sData?.data]);
+
   const handleSearchChange = useCallback((search: string, field?: string) => {
     setTimeout(() => {
       tableFilters.setSearch(search);
       if (field) tableFilters.setSearchField(field);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch, tableFilters.setSearchField]);
-
-  const handleSearchFieldChange = useCallback((field: string) => {
-    setTimeout(() => {
-      tableFilters.setSearchField(field);
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearchField]);
-
-  const modalData = useMemo(() => ipv4sData?.data || [], [ipv4sData?.data]);
+  }, [tableFilters]);
 
   const modalContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <ListModal
-          show={show}
-          onClose={() => {
-            clearSelection();
-            onClose();
-          }}
-          config={modal.config}
-          data={modalData}
-          loading={isLoading}
-          selectedItems={selectedItem ? [selectedItem] : []}
-          onSelectionChange={handleSelectionChange}
-          onRowDoubleClick={(ipv4) => {
-            if (onSelectIPv4) {
-              onSelectIPv4(ipv4);
+    <>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
+            title={defaultTitle}
+            config={{
+              columns: tableColumns,
+              data: modalData,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: t('layout.searchPlaceholder'),
+              searchFields,
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                variant: action.variant
+              })),
+              emptyMessage: 'Nenhum IPv4 encontrado',
+              pagination: pagination
+            }}
+            tableId="ipv4-list-modal"
+            onSelectionChange={(items) => {
+              handleSelectionChange(items);
+            }}
+            onRowClick={onSelectIPv4 ? (item) => {
+              onSelectIPv4(item);
               onClose();
-            }
-          }}
-          search={tableFilters.search}
-          onSearchChange={handleSearchChange}
-          onSearchFieldChange={handleSearchFieldChange}
-          pagination={pagination}
-          onPageChange={tableFilters.setPage}
-          onPageSizeChange={tableFilters.setLimit}
-          onLimitChange={tableFilters.setLimit}
-          sortColumn={tableFilters.sortColumn}
-          sortDirection={tableFilters.sortDirection}
-          onSortChange={tableFilters.setSort}
-          refreshQueryKeys={['ipv4']}
-          refreshQueryFn={refetch}
-          bulkActions={bulkActions}
-          onAudit={handleAudit}
-          auditEntity="IPv4"
-          skipWrapper={true}
-        />
+            } : undefined}
+            onRowDoubleClick={(ipv4) => {
+              if (onSelectIPv4) {
+                onSelectIPv4(ipv4);
+                onClose();
+              }
+            }}
+            onRefresh={refetch}
+            onAudit={handleAudit}
+            auditEntity="IPv4"
+            onPageChange={(page) => {
+              setTimeout(() => {
+                tableFilters.setPage(page);
+              }, 0);
+            }}
+            onPageSizeChange={(limit) => {
+              setTimeout(() => {
+                tableFilters.setLimit(limit);
+              }, 0);
+            }}
+            onSort={(column, direction) => {
+              setTimeout(() => {
+                tableFilters.setSort(column, direction);
+              }, 0);
+            }}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
+
+  if (skipWrapper) {
+    return (
+      <>
+        {modalContent}
+        <IPv4Modal
+          show={showCreateModal || showEditModal}
+          onClose={() => {
+            setShowCreateModal(false);
+            setShowEditModal(false);
+            setSelectedIPv4Id(null);
+          }}
+          ipv4Id={showEditModal ? selectedIPv4Id : null}
+          onSuccess={() => {
+            refetch();
+            queryClient.invalidateQueries({ queryKey: ['ipv4'] });
+            setShowCreateModal(false);
+            setShowEditModal(false);
+            setSelectedIPv4Id(null);
+          }}
+        />
+        <ImprimirModal
+          show={auditoria.showPreview}
+          onClose={auditoria.handleClosePreview}
+          pdfUrl={auditoria.pdfUrl}
+          isGenerating={auditoria.isGeneratingPdf}
+          title={t('financial.executionLogs')}
+          modalId="auditoria-ipv4-modal"
+        />
+        {modalProps && <ConfirmModal {...modalProps} />}
+      </>
+    );
+  }
 
   return (
     <>
-      {skipWrapper ? (
-        modalContent
-      ) : (
-        <DraggableModal
-          show={show}
-          onClose={() => {
-            clearSelection();
-            onClose();
-          }}
-          title={modal.config.title}
-          size="lg"
-          className="no-padding"
-        >
-          {modalContent}
-        </DraggableModal>
-      )}
+      <DraggableModal
+        show={show}
+        onClose={() => {
+          clearSelection();
+          onClose();
+        }}
+        title={defaultTitle}
+        size="lg"
+        modalId="ipv4-list-modal"
+        className="no-padding"
+      >
+        {modalContent}
+      </DraggableModal>
 
       <IPv4Modal
         show={showCreateModal || showEditModal}
