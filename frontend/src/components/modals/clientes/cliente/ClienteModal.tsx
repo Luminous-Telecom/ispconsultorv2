@@ -580,7 +580,7 @@ const ClienteModal = ({
                   </li>
                   <li className="nav-item" role="presentation">
                     <button
-                      className={`nav-link ${activeTab === 'contato' ? 'active' : ''}`}
+                      className={`nav-link modal-tab-hover ${activeTab === 'contato' ? 'active' : ''}`}
                       onClick={() => setActiveTab('contato')}
                       type="button"
                     >
@@ -589,7 +589,7 @@ const ClienteModal = ({
                   </li>
                   <li className="nav-item" role="presentation">
                     <button
-                      className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
+                      className={`nav-link modal-tab-hover ${activeTab === 'endereco' ? 'active' : ''}`}
                       onClick={() => setActiveTab('endereco')}
                       type="button"
                     >
@@ -598,7 +598,7 @@ const ClienteModal = ({
                   </li>
                   <li className="nav-item" role="presentation">
                     <button
-                      className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
+                      className={`nav-link modal-tab-hover ${activeTab === 'contratos' ? 'active' : ''}`}
                       onClick={() => setActiveTab('contratos')}
                       type="button"
                       disabled={!canEditContratosFinanceiro}
@@ -608,7 +608,7 @@ const ClienteModal = ({
                   </li>
                   <li className="nav-item" role="presentation">
                     <button
-                      className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
+                      className={`nav-link modal-tab-hover ${activeTab === 'financeiro' ? 'active' : ''}`}
                       onClick={() => setActiveTab('financeiro')}
                       type="button"
                       disabled={!canEditContratosFinanceiro}
@@ -618,7 +618,7 @@ const ClienteModal = ({
                   </li>
                   <li className="nav-item" role="presentation">
                     <button
-                      className={`nav-link ${activeTab === 'observacoes' ? 'active' : ''}`}
+                      className={`nav-link modal-tab-hover ${activeTab === 'observacoes' ? 'active' : ''}`}
                       onClick={() => setActiveTab('observacoes')}
                       type="button"
                     >
@@ -627,7 +627,7 @@ const ClienteModal = ({
                   </li>
                   <li className="nav-item" role="presentation">
                     <button
-                      className={`nav-link ${activeTab === 'arquivos' ? 'active' : ''}`}
+                      className={`nav-link modal-tab-hover ${activeTab === 'arquivos' ? 'active' : ''}`}
                       onClick={() => setActiveTab('arquivos')}
                       type="button"
                       disabled={!canEditContratosFinanceiro}

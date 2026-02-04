@@ -254,7 +254,7 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
               </li>
               <li className="nav-item" role="presentation">
                 <button
-                  className={`nav-link ${activeTab === 'visualizar' ? 'active' : ''}`}
+                  className={`nav-link modal-tab-hover ${activeTab === 'visualizar' ? 'active' : ''}`}
                   type="button"
                   onClick={() => setActiveTab('visualizar')}
                 >

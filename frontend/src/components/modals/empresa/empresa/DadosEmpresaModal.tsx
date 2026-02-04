@@ -177,7 +177,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
+              className={`nav-link modal-tab-hover ${activeTab === 'endereco' ? 'active' : ''}`}
               type="button"
               onClick={() => setActiveTab('endereco')}
             >
@@ -186,7 +186,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'contato' ? 'active' : ''}`}
+              className={`nav-link modal-tab-hover ${activeTab === 'contato' ? 'active' : ''}`}
               type="button"
               onClick={() => setActiveTab('contato')}
             >
@@ -195,7 +195,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'responsavel' ? 'active' : ''}`}
+              className={`nav-link modal-tab-hover ${activeTab === 'responsavel' ? 'active' : ''}`}
               type="button"
               onClick={() => setActiveTab('responsavel')}
             >
@@ -210,7 +210,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   const modalContent = (
     <>
       {skipWrapper && (
-        <div className="empresa-header-wrapper" style={{ padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
+        <div className="empresa-header-wrapper" style={{ padding: '16px 16px 0 16px', borderBottom: '1px solid var(--border-color)' }}>
           {headerActionsContent}
         </div>
       )}

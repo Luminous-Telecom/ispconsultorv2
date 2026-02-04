@@ -1848,7 +1848,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 </li>
                 <li className="nav-item" role="presentation">
                   <button
-                    className={`nav-link ${activeTab === 'servicos-adicionais' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
+                    className={`nav-link modal-tab-hover ${activeTab === 'servicos-adicionais' ? 'active' : ''} ${!isEditMode ? 'contrato-tab-disabled' : ''}`}
                     type="button"
                     onClick={() => {
                       if (isEditMode) {

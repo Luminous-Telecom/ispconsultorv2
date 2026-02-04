@@ -55,7 +55,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'termo' ? 'active' : ''}`}
+              className={`nav-link modal-tab-hover ${activeTab === 'termo' ? 'active' : ''}`}
               onClick={() => handleTabChange('termo')}
               type="button"
             >

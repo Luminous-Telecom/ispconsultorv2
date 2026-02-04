@@ -450,7 +450,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'adesao' ? 'active' : ''}`}
+              className={`nav-link modal-tab-hover ${activeTab === 'adesao' ? 'active' : ''}`}
               type="button"
               onClick={() => setActiveTab('adesao')}
             >
@@ -459,7 +459,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'permanencia' ? 'active' : ''}`}
+              className={`nav-link modal-tab-hover ${activeTab === 'permanencia' ? 'active' : ''}`}
               type="button"
               onClick={() => setActiveTab('permanencia')}
             >
@@ -468,7 +468,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'recibo' ? 'active' : ''}`}
+              className={`nav-link modal-tab-hover ${activeTab === 'recibo' ? 'active' : ''}`}
               type="button"
               onClick={() => setActiveTab('recibo')}
             >
@@ -477,7 +477,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'carta' ? 'active' : ''}`}
+              className={`nav-link modal-tab-hover ${activeTab === 'carta' ? 'active' : ''}`}
               type="button"
               onClick={() => setActiveTab('carta')}
             >
