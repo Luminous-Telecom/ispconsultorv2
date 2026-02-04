@@ -252,7 +252,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
     },
     {
       label: t('blockdomi.anatel'),
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       disabled: (selectedItems: IPv6[]) => {
         const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
         return items.length === 0 || !items.some((i) => i.link_oficio_anatel?.trim());
@@ -264,7 +264,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
     },
     {
       label: t('blockdomi.justica'),
-      variant: 'secondary' as const,
+      variant: 'primary' as const,
       disabled: (selectedItems: IPv6[]) => {
         const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
         return items.length === 0 || !items.some((i) => i.link_oficio_justica?.trim());
