@@ -754,6 +754,7 @@ export interface Dominio {
   data_fim_bloqueio?: string | null;
   link_oficio_anatel?: string | null;
   link_oficio_justica?: string | null;
+  link_planilha_dominios?: string | null;
   ativo: boolean;
   created_at?: string;
   updated_at?: string;
@@ -772,6 +773,7 @@ export interface IPv4 {
   data_fim_bloqueio?: string | null;
   link_oficio_anatel?: string | null;
   link_oficio_justica?: string | null;
+  link_planilha_dominios?: string | null;
   ativo: boolean;
   created_at?: string;
   updated_at?: string;
@@ -790,6 +792,7 @@ export interface IPv6 {
   data_fim_bloqueio?: string | null;
   link_oficio_anatel?: string | null;
   link_oficio_justica?: string | null;
+  link_planilha_dominios?: string | null;
   ativo: boolean;
   created_at?: string;
   updated_at?: string;

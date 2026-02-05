@@ -50,6 +50,7 @@ interface TableProps<T = Record<string, unknown>> {
   onRefresh?: () => void;
   onAudit?: (item: T) => void | Promise<void>;
   auditEntity?: string;
+  onSelectAllPages?: () => T[] | Promise<T[]>;
   className?: string;
   tableId?: string;
   title?: string;
@@ -71,6 +72,7 @@ function Table<T extends { id: number | string }>({
   onRefresh,
   onAudit,
   auditEntity,
+  onSelectAllPages,
   onSearchFieldChange,
   className = '',
   tableId,
@@ -470,6 +472,41 @@ function Table<T extends { id: number | string }>({
     onPageSizeChange,
     onRefresh,
   });
+
+  const [isLoadingSelectAllPages, setIsLoadingSelectAllPages] = useState(false);
+
+  const handleSelectAllPages = useCallback(async () => {
+    if (!onSelectAllPages || !tableActions.setSelectedItems) return;
+    const total = normalizedPagination?.total ?? 0;
+    const allPagesSelected = state.selectedItems.length >= total && total > 0;
+    if (allPagesSelected) {
+      tableActions.clearSelection?.();
+      return;
+    }
+    setIsLoadingSelectAllPages(true);
+    try {
+      const result = await onSelectAllPages();
+      const items = Array.isArray(result) ? result : [];
+      tableActions.setSelectedItems(items);
+    } finally {
+      setIsLoadingSelectAllPages(false);
+    }
+  }, [onSelectAllPages, tableActions, state.selectedItems.length, normalizedPagination]);
+
+  const showSelectAllPagesCheckbox = Boolean(
+    selectable &&
+    multiSelect &&
+    onSelectAllPages &&
+    normalizedPagination &&
+    (normalizedPagination.total ?? 0) > (normalizedPagination.perPage ?? 15) &&
+    _isAllSelected
+  );
+
+  const isAllPagesSelected = Boolean(
+    showSelectAllPagesCheckbox &&
+    state.selectedItems.length >= (normalizedPagination?.total ?? 0) &&
+    (normalizedPagination?.total ?? 0) > 0
+  );
 
   // Refs para armazenar callbacks e evitar recriação
   const onRefreshRef = useRef(onRefresh);
@@ -1605,6 +1642,28 @@ function Table<T extends { id: number | string }>({
         <div className="d-flex align-items-center justify-content-between table-pagination-header">
           {/* Controles customizados à esquerda */}
           <div className="d-flex align-items-center gap-3">
+            {/* Checkbox selecionar todos (incluindo outras páginas) - exibido quando todos da página atual estão selecionados */}
+            {showSelectAllPagesCheckbox && (
+              <div className="d-flex align-items-center gap-2">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id={`select-all-pages-${uniqueTableId}`}
+                  checked={isAllPagesSelected}
+                  disabled={isLoadingSelectAllPages}
+                  onChange={() => handleSelectAllPages()}
+                />
+                <label
+                  className="form-check-label small text-muted"
+                  htmlFor={`select-all-pages-${uniqueTableId}`}
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {isLoadingSelectAllPages
+                    ? t('ui.loading')
+                    : t('ui.selectAllPages')}
+                </label>
+              </div>
+            )}
             {/* Campo de busca local - apenas quando searchable estiver habilitado */}
             {searchable && (
               <div className="table-search-combined">

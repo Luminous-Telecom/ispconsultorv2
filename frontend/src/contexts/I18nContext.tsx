@@ -256,10 +256,16 @@ export interface TranslationKeys {
   'blockdomi.oficioJustica': string;
   'blockdomi.linkOficioAnatel': string;
   'blockdomi.linkOficioJustica': string;
+  'blockdomi.linkPlanilhaDominios': string;
+  'blockdomi.linkPlanilhaDominiosOptional': string;
+  'blockdomi.planilhaDominios': string;
   'blockdomi.linkOficioAnatelOptional': string;
   'blockdomi.linkOficioJusticaOptional': string;
   'blockdomi.anatel': string;
   'blockdomi.justica': string;
+  'blockdomi.bulkEditDomains': string;
+  'blockdomi.bulkEditIntro': string;
+  'blockdomi.bulkEditSuccess': string;
   'blockdomi.createDomain': string;
   'blockdomi.editDomain': string;
   'blockdomi.deleteDomain': string;
@@ -359,6 +365,7 @@ export interface TranslationKeys {
   'ui.refresh': string;
   'ui.auditSelected': string;
   'ui.selectOneToAudit': string;
+  'ui.selectAllPages': string;
   'ui.loadingApplication': string;
   'ui.loadingDashboard': string;
   'ui.loadingLogin': string;
@@ -1515,10 +1522,16 @@ const translations: Translations = {
     'blockdomi.oficioJustica': 'Ofício Justiça',
     'blockdomi.linkOficioAnatel': 'Link ofício Anatel',
     'blockdomi.linkOficioJustica': 'Link ofício Justiça',
+    'blockdomi.linkPlanilhaDominios': 'Link planilha domínios',
+    'blockdomi.linkPlanilhaDominiosOptional': 'Link planilha domínios (opcional)',
+    'blockdomi.planilhaDominios': 'Planilha domínios',
     'blockdomi.linkOficioAnatelOptional': 'Link ofício Anatel (opcional)',
     'blockdomi.linkOficioJusticaOptional': 'Link ofício Justiça (opcional)',
     'blockdomi.anatel': 'Anatel',
     'blockdomi.justica': 'Justiça',
+    'blockdomi.bulkEditDomains': 'Editar {count} domínio(s)',
+    'blockdomi.bulkEditIntro': 'Os valores abaixo serão aplicados aos {count} domínio(s) selecionado(s).',
+    'blockdomi.bulkEditSuccess': '{count} domínio(s) atualizado(s) com sucesso.',
     'blockdomi.createDomain': 'Criar Domínio',
     'blockdomi.editDomain': 'Editar Domínio',
     'blockdomi.deleteDomain': 'Excluir Domínio',
@@ -1618,6 +1631,7 @@ const translations: Translations = {
     'ui.refresh': 'Atualizar',
     'ui.auditSelected': 'Auditar registro selecionado',
     'ui.selectOneToAudit': 'Selecione exatamente 1 registro para auditar',
+    'ui.selectAllPages': 'Selecionar todos (todas as páginas)',
     'ui.loadingApplication': 'Carregando aplicação...',
     'ui.loadingDashboard': 'Carregando dashboard...',
     'ui.loadingLogin': 'Carregando login...',
@@ -2769,10 +2783,16 @@ const translations: Translations = {
     'blockdomi.oficioJustica': 'Justice warrant',
     'blockdomi.linkOficioAnatel': 'Anatel warrant link',
     'blockdomi.linkOficioJustica': 'Justice warrant link',
+    'blockdomi.linkPlanilhaDominios': 'Domain spreadsheet link',
+    'blockdomi.linkPlanilhaDominiosOptional': 'Domain spreadsheet link (optional)',
+    'blockdomi.planilhaDominios': 'Domain spreadsheet',
     'blockdomi.linkOficioAnatelOptional': 'Anatel warrant link (optional)',
     'blockdomi.linkOficioJusticaOptional': 'Justice warrant link (optional)',
     'blockdomi.anatel': 'Anatel',
     'blockdomi.justica': 'Justice',
+    'blockdomi.bulkEditDomains': 'Edit {count} domain(s)',
+    'blockdomi.bulkEditIntro': 'The values below will be applied to the {count} selected domain(s).',
+    'blockdomi.bulkEditSuccess': '{count} domain(s) updated successfully.',
     'blockdomi.createDomain': 'Create Domain',
     'blockdomi.editDomain': 'Edit Domain',
     'blockdomi.deleteDomain': 'Delete Domain',
@@ -2872,6 +2892,7 @@ const translations: Translations = {
     'ui.refresh': 'Refresh',
     'ui.auditSelected': 'Audit selected record',
     'ui.selectOneToAudit': 'Select exactly 1 record to audit',
+    'ui.selectAllPages': 'Select all (all pages)',
     'ui.loadingApplication': 'Loading application...',
     'ui.loadingDashboard': 'Loading dashboard...',
     'ui.loadingLogin': 'Loading login...',
@@ -4025,10 +4046,16 @@ const translations: Translations = {
     'blockdomi.oficioJustica': 'Oficio Justicia',
     'blockdomi.linkOficioAnatel': 'Enlace oficio Anatel',
     'blockdomi.linkOficioJustica': 'Enlace oficio Justicia',
+    'blockdomi.linkPlanilhaDominios': 'Enlace planilla dominios',
+    'blockdomi.linkPlanilhaDominiosOptional': 'Enlace planilla dominios (opcional)',
+    'blockdomi.planilhaDominios': 'Planilla dominios',
     'blockdomi.linkOficioAnatelOptional': 'Enlace oficio Anatel (opcional)',
     'blockdomi.linkOficioJusticaOptional': 'Enlace oficio Justicia (opcional)',
     'blockdomi.anatel': 'Anatel',
     'blockdomi.justica': 'Justicia',
+    'blockdomi.bulkEditDomains': 'Editar {count} dominio(s)',
+    'blockdomi.bulkEditIntro': 'Los valores siguientes se aplicarán a los {count} dominio(s) seleccionado(s).',
+    'blockdomi.bulkEditSuccess': '{count} dominio(s) actualizado(s) correctamente.',
     'blockdomi.createDomain': 'Crear Dominio',
     'blockdomi.editDomain': 'Editar Dominio',
     'blockdomi.deleteDomain': 'Eliminar Dominio',
@@ -4128,6 +4155,7 @@ const translations: Translations = {
     'ui.refresh': 'Actualizar',
     'ui.auditSelected': 'Auditar registro seleccionado',
     'ui.selectOneToAudit': 'Seleccione exactamente 1 registro para auditar',
+    'ui.selectAllPages': 'Seleccionar todos (todas las páginas)',
     'ui.loadingApplication': 'Cargando aplicación...',
     'ui.loadingDashboard': 'Cargando panel...',
     'ui.loadingLogin': 'Cargando inicio de sesión...',

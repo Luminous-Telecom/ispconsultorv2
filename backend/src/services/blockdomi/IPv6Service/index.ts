@@ -44,7 +44,8 @@ export class IPv6Service {
           { descricao: { [Op.like]: `%${search}%` } },
           { nome_oficio: { [Op.like]: `%${search}%` } },
           { link_oficio_anatel: { [Op.like]: `%${search}%` } },
-          { link_oficio_justica: { [Op.like]: `%${search}%` } }
+          { link_oficio_justica: { [Op.like]: `%${search}%` } },
+          { link_planilha_dominios: { [Op.like]: `%${search}%` } }
         ]
       } as WhereOptions<IPv6>);
     }
@@ -148,6 +149,7 @@ export class IPv6Service {
       'data_fim_bloqueio',
       'link_oficio_anatel',
       'link_oficio_justica',
+      'link_planilha_dominios',
       'ativo'
     ];
     

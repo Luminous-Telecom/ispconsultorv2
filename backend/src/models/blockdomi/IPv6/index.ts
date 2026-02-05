@@ -20,6 +20,7 @@ export class IPv6 extends Model<
   declare data_fim_bloqueio: string | null;
   declare link_oficio_anatel: string | null;
   declare link_oficio_justica: string | null;
+  declare link_planilha_dominios: string | null;
   declare ativo: boolean;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
@@ -77,6 +78,10 @@ IPv6.init(
       allowNull: true
     },
     link_oficio_justica: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    link_planilha_dominios: {
       type: DataTypes.TEXT,
       allowNull: true
     },

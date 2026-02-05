@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDominios, useDeleteDominio } from '@/hooks/useDominios';
+import { DominioService } from '@/services/dominioService';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { Dominio } from '@/types';
@@ -10,6 +11,7 @@ import DraggableModal from '@/components/common/DraggableModal';
 import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
 import DominioModal from './DominioModal';
+import DominioBulkEditModal from './DominioBulkEditModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
@@ -34,7 +36,9 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
   const [selectedDominioId, setSelectedDominioId] = useState<number | null>(null);
+  const [dominiosToBulkEdit, setDominiosToBulkEdit] = useState<Dominio[]>([]);
   
   const auditoria = useAuditoria();
   const { confirm, modalProps } = useConfirmModal();
@@ -114,6 +118,13 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       sortable: false,
       width: '100px',
       render: (item: Dominio) => item.link_oficio_justica?.trim() ? t('ui.yes') : t('ui.no')
+    },
+    {
+      key: 'planilha_dominios',
+      label: t('blockdomi.planilhaDominios'),
+      sortable: false,
+      width: '100px',
+      render: (item: Dominio) => item.link_planilha_dominios?.trim() ? t('ui.yes') : t('ui.no')
     },
     {
       key: 'ativo',
@@ -241,12 +252,19 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     {
       label: t('actions.edit'),
       variant: 'primary' as const,
-      disabled: (selectedItems: Dominio[]) => selectedItems.length === 0 && !selectedItem,
+      disabled: (selectedItems: Dominio[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        return items.length === 0;
+      },
       action: (selectedItems: Dominio[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (item) {
-          setSelectedDominioId(item.id);
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        if (items.length === 0) return;
+        if (items.length === 1) {
+          setSelectedDominioId(items[0].id);
           setShowEditModal(true);
+        } else {
+          setDominiosToBulkEdit(items);
+          setShowBulkEditModal(true);
         }
       }
     },
@@ -281,6 +299,18 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       }
     },
     {
+      label: t('blockdomi.planilhaDominios'),
+      variant: 'primary' as const,
+      disabled: (selectedItems: Dominio[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        return items.length === 0 || !items.some((i) => i.link_planilha_dominios?.trim());
+      },
+      action: (selectedItems: Dominio[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        items.filter((i) => i.link_planilha_dominios?.trim()).forEach((i) => window.open(i.link_planilha_dominios!, '_blank', 'noopener,noreferrer'));
+      }
+    },
+    {
       label: t('actions.delete'),
       disabled: (selectedItems: Dominio[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: Dominio[]) => {
@@ -311,6 +341,18 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     }, 0);
   }, [tableFilters]);
 
+  const handleSelectAllPages = useCallback(async (): Promise<Dominio[]> => {
+    const res = await DominioService.list({
+      search: tableFilters.debouncedSearch || undefined,
+      searchField: tableFilters.searchField || undefined,
+      page: 1,
+      limit: 99999,
+      sortColumn: tableFilters.sortColumn,
+      sortDirection: tableFilters.sortDirection
+    });
+    return res?.data ?? [];
+  }, [tableFilters.debouncedSearch, tableFilters.searchField, tableFilters.sortColumn, tableFilters.sortDirection]);
+
   const modalContent = (
     <>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -331,7 +373,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
               hover: true,
               responsive: true,
               selectable: true,
-              multiSelect: false,
+              multiSelect: true,
               bulkActions: bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,
@@ -376,6 +418,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
             }}
             onSearch={(search, field) => handleSearchChange(search, field)}
             search={tableFilters.search}
+            onSelectAllPages={handleSelectAllPages}
           />
         </div>
       </div>
@@ -400,6 +443,20 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
             setShowCreateModal(false);
             setShowEditModal(false);
             setSelectedDominioId(null);
+          }}
+        />
+        <DominioBulkEditModal
+          show={showBulkEditModal}
+          onClose={() => {
+            setShowBulkEditModal(false);
+            setDominiosToBulkEdit([]);
+          }}
+          dominios={dominiosToBulkEdit}
+          onSuccess={() => {
+            refetch();
+            queryClient.invalidateQueries({ queryKey: ['dominios'] });
+            setShowBulkEditModal(false);
+            setDominiosToBulkEdit([]);
           }}
         />
         <ImprimirModal
@@ -445,6 +502,21 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
           setShowCreateModal(false);
           setShowEditModal(false);
           setSelectedDominioId(null);
+        }}
+      />
+
+      <DominioBulkEditModal
+        show={showBulkEditModal}
+        onClose={() => {
+          setShowBulkEditModal(false);
+          setDominiosToBulkEdit([]);
+        }}
+        dominios={dominiosToBulkEdit}
+        onSuccess={() => {
+          refetch();
+          queryClient.invalidateQueries({ queryKey: ['dominios'] });
+          setShowBulkEditModal(false);
+          setDominiosToBulkEdit([]);
         }}
       />
 

@@ -34,6 +34,7 @@ const IPv4Modal: React.FC<IPv4ModalProps> = ({
     data_fim_bloqueio: '',
     link_oficio_anatel: '',
     link_oficio_justica: '',
+    link_planilha_dominios: '',
     ativo: true
   });
 
@@ -52,6 +53,7 @@ const IPv4Modal: React.FC<IPv4ModalProps> = ({
           data_fim_bloqueio: dFim ? String(dFim).slice(0, 10) : '',
           link_oficio_anatel: ipv4Data.link_oficio_anatel || '',
           link_oficio_justica: ipv4Data.link_oficio_justica || '',
+          link_planilha_dominios: ipv4Data.link_planilha_dominios || '',
           ativo: ipv4Data.ativo ?? true
         });
       } else {
@@ -65,6 +67,7 @@ const IPv4Modal: React.FC<IPv4ModalProps> = ({
           data_fim_bloqueio: '',
           link_oficio_anatel: '',
           link_oficio_justica: '',
+          link_planilha_dominios: '',
           ativo: true
         });
       }
@@ -93,7 +96,8 @@ const IPv4Modal: React.FC<IPv4ModalProps> = ({
       data_inicio_bloqueio: formData.data_inicio_bloqueio.trim() || null,
       data_fim_bloqueio: formData.data_fim_bloqueio.trim() || null,
       link_oficio_anatel: formData.link_oficio_anatel.trim() || null,
-      link_oficio_justica: formData.link_oficio_justica.trim() || null
+      link_oficio_justica: formData.link_oficio_justica.trim() || null,
+      link_planilha_dominios: formData.link_planilha_dominios.trim() || null
     };
     try {
       if (isEditing && ipv4Id) {
@@ -229,6 +233,17 @@ const IPv4Modal: React.FC<IPv4ModalProps> = ({
                   label={t('blockdomi.linkOficioJustica')}
                   value={formData.link_oficio_justica}
                   onChange={(value) => setFormData(prev => ({ ...prev, link_oficio_justica: String(value ?? '') }))}
+                  size="sm"
+                  placeholder="https://..."
+                />
+              </div>
+              <div className="col-12">
+                <FormField
+                  name="link_planilha_dominios"
+                  type="text"
+                  label={t('blockdomi.linkPlanilhaDominios')}
+                  value={formData.link_planilha_dominios}
+                  onChange={(value) => setFormData(prev => ({ ...prev, link_planilha_dominios: String(value ?? '') }))}
                   size="sm"
                   placeholder="https://..."
                 />

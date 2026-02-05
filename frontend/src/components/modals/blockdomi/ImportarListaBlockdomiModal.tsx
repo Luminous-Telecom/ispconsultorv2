@@ -106,6 +106,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const [dataFimBloqueio, setDataFimBloqueio] = useState('');
   const [linkOficioAnatel, setLinkOficioAnatel] = useState('');
   const [linkOficioJustica, setLinkOficioJustica] = useState('');
+  const [linkPlanilhaDominios, setLinkPlanilhaDominios] = useState('');
   const [classified, setClassified] = useState<ClassifiedList | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isCadastrando, setIsCadastrando] = useState(false);
@@ -203,6 +204,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       const dataFimVal = dataFimBloqueio.trim() || null;
       const linkAnatelVal = linkOficioAnatel.trim() || null;
       const linkJusticaVal = linkOficioJustica.trim() || null;
+      const linkPlanilhaVal = linkPlanilhaDominios.trim() || null;
 
       let addedDominios = 0;
       let addedIPv4 = 0;
@@ -211,7 +213,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
 
       for (const d of toAddDominios) {
         try {
-          await DominioService.create({ dominio: d, descricao: null, nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, ativo: true });
+          await DominioService.create({ dominio: d, descricao: null, nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, link_planilha_dominios: linkPlanilhaVal, ativo: true });
           addedDominios++;
         } catch (e) {
           errs.push(`Domínio ${d}: ${(e as Error)?.message ?? 'erro'}`);
@@ -219,7 +221,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       }
       for (const ip of toAddIPv4) {
         try {
-          await IPv4Service.create({ ip, descricao: null, nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, ativo: true });
+          await IPv4Service.create({ ip, descricao: null, nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, link_planilha_dominios: linkPlanilhaVal, ativo: true });
           addedIPv4++;
         } catch (e) {
           errs.push(`IPv4 ${ip}: ${(e as Error)?.message ?? 'erro'}`);
@@ -227,7 +229,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       }
       for (const ip of toAddIPv6) {
         try {
-          await IPv6Service.create({ ip, descricao: null, nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, ativo: true });
+          await IPv6Service.create({ ip, descricao: null, nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, link_planilha_dominios: linkPlanilhaVal, ativo: true });
           addedIPv6++;
         } catch (e) {
           errs.push(`IPv6 ${ip}: ${(e as Error)?.message ?? 'erro'}`);
@@ -261,13 +263,14 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setDataFimBloqueio('');
       setLinkOficioAnatel('');
       setLinkOficioJustica('');
+      setLinkPlanilhaDominios('');
       setClassified(null);
     } catch (e) {
       error((e as Error)?.message ?? 'Erro ao cadastrar.');
     } finally {
       setIsCadastrando(false);
     }
-  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, fetchExisting, success, error, onSuccess, onClose, queryClient, t]);
+  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, fetchExisting, success, error, onSuccess, onClose, queryClient, t]);
 
   const renderList = (items: string[]) => (
     <ul className="list-unstyled mb-0 small">
@@ -315,6 +318,16 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
               onChange={(e) => setLinkOficioJustica(e.target.value)}
             />
             <span className="text-muted small">Separe múltiplos links com vírgula</span>
+          </div>
+          <div className="col-12">
+            <label className="form-label small mb-1">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              placeholder="https://..."
+              value={linkPlanilhaDominios}
+              onChange={(e) => setLinkPlanilhaDominios(e.target.value)}
+            />
           </div>
           <div className="col-12 col-md-6">
             <label className="form-label small mb-1">{t('blockdomi.dataInicioBloqueio')}</label>

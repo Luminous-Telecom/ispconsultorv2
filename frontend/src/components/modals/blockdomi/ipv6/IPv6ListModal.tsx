@@ -116,6 +116,13 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
       render: (item: IPv6) => item.link_oficio_justica?.trim() ? t('ui.yes') : t('ui.no')
     },
     {
+      key: 'planilha_dominios',
+      label: t('blockdomi.planilhaDominios'),
+      sortable: false,
+      width: '100px',
+      render: (item: IPv6) => item.link_planilha_dominios?.trim() ? t('ui.yes') : t('ui.no')
+    },
+    {
       key: 'ativo',
       label: t('table.status'),
       sortable: true,
@@ -277,6 +284,18 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
             setTimeout(() => window.open(url, '_blank', 'noopener,noreferrer'), index * 150);
           });
         });
+      }
+    },
+    {
+      label: t('blockdomi.planilhaDominios'),
+      variant: 'primary' as const,
+      disabled: (selectedItems: IPv6[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        return items.length === 0 || !items.some((i) => i.link_planilha_dominios?.trim());
+      },
+      action: (selectedItems: IPv6[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        items.filter((i) => i.link_planilha_dominios?.trim()).forEach((i) => window.open(i.link_planilha_dominios!, '_blank', 'noopener,noreferrer'));
       }
     },
     {
