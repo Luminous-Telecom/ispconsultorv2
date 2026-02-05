@@ -1,7 +1,11 @@
 import { Sequelize } from 'sequelize';
+import { EventEmitter } from 'events';
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+// Evitar MaxListenersExceededWarning no pool MySQL (Sequelize usa mysql2; cada conexão adiciona close listeners)
+EventEmitter.defaultMaxListeners = 20;
 
 const requiredEnv = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'] as const;
 

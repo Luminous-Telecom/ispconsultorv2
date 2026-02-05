@@ -6,6 +6,7 @@ const router = Router();
 // Rotas para IPv6
 router.get('/', IPv6Controller.list);
 router.get('/:id', IPv6Controller.getById);
+router.post('/bulk', IPv6Controller.bulkCreate);
 router.post('/', IPv6Controller.create);
 router.put('/:id', IPv6Controller.update);
 router.delete('/:id', IPv6Controller.delete);

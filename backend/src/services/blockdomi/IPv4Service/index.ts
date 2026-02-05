@@ -1,5 +1,6 @@
 import { IPv4 } from '../../../models/blockdomi/IPv4';
 import { Op, WhereOptions, Order } from 'sequelize';
+import { isValidIPv4 } from '../../../utils/sanitize';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { IPV4_SORT_CONFIG } from '../../../config/sortConfigs';
@@ -118,6 +119,74 @@ export class IPv4Service {
    */
   static async findByIp(ip: string): Promise<IPv4 | null> {
     return await IPv4.findOne({ where: { ip } });
+  }
+
+  /**
+   * Buscar IPs existentes por lista
+   */
+  static async findByIps(ips: string[]): Promise<Set<string>> {
+    if (ips.length === 0) return new Set();
+    const unique = [...new Set(ips)];
+    const found = await IPv4.findAll({
+      where: { ip: { [Op.in]: unique } },
+      attributes: ['ip'],
+      raw: true
+    });
+    return new Set(found.map((r) => r.ip as string));
+  }
+
+  /**
+   * Criar múltiplos IPv4 em lote
+   */
+  static async bulkCreate(
+    items: string[],
+    metadata: {
+      nome_oficio?: string | null;
+      data_inicio_bloqueio?: string | null;
+      data_fim_bloqueio?: string | null;
+      link_oficio_anatel?: string | null;
+      link_oficio_justica?: string | null;
+      link_planilha_dominios?: string | null;
+    }
+  ): Promise<{ created: number; skipped: number; errors: string[] }> {
+    const valid = items.filter((ip) => isValidIPv4(ip));
+    const existingSet = await this.findByIps(valid);
+    const toCreate: Array<Record<string, unknown>> = [];
+    const errors: string[] = [];
+    const seen = new Set<string>();
+
+    for (const ip of items) {
+      if (!isValidIPv4(ip)) {
+        errors.push(`${ip}: IPv4 inválido`);
+        continue;
+      }
+      if (seen.has(ip)) continue;
+      seen.add(ip);
+      if (existingSet.has(ip)) continue;
+
+      toCreate.push({
+        ip,
+        descricao: null,
+        nome_oficio: metadata.nome_oficio ?? null,
+        data_inicio_bloqueio: metadata.data_inicio_bloqueio ?? null,
+        data_fim_bloqueio: metadata.data_fim_bloqueio ?? null,
+        link_oficio_anatel: metadata.link_oficio_anatel ?? null,
+        link_oficio_justica: metadata.link_oficio_justica ?? null,
+        link_planilha_dominios: metadata.link_planilha_dominios ?? null,
+        ativo: true
+      });
+      existingSet.add(ip);
+    }
+
+    const BATCH = 500;
+    let created = 0;
+    for (let i = 0; i < toCreate.length; i += BATCH) {
+      const batch = toCreate.slice(i, i + BATCH);
+      await IPv4.bulkCreate(batch as never);
+      created += batch.length;
+    }
+
+    return { created, skipped: items.length - toCreate.length - errors.length, errors };
   }
 
   /**

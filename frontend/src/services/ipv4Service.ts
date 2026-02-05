@@ -44,6 +44,21 @@ export class IPv4Service {
   static async delete(id: number): Promise<void> {
     await ipv4ServiceInstance.delete(id);
   }
+
+  static async bulkCreate(payload: {
+    items: string[];
+    nome_oficio?: string | null;
+    data_inicio_bloqueio?: string | null;
+    data_fim_bloqueio?: string | null;
+    link_oficio_anatel?: string | null;
+    link_oficio_justica?: string | null;
+    link_planilha_dominios?: string | null;
+  }): Promise<{ created: number; skipped: number; errors: string[] }> {
+    const { defaultApiClient } = await import('./core');
+    const response = await defaultApiClient.post<{ created: number; skipped: number; errors: string[] }>('/ipv4/bulk', payload, { timeout: 120000 });
+    const data = (response as { data?: { created: number; skipped: number; errors: string[] } }).data;
+    return data ?? { created: 0, skipped: 0, errors: [] };
+  }
 }
 
 export const ipv4Service = ipv4ServiceInstance;

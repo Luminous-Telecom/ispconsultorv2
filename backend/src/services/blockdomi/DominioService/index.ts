@@ -1,5 +1,6 @@
 import { Dominio } from '../../../models/blockdomi/Dominio';
 import { Op, WhereOptions, Order } from 'sequelize';
+import { sanitizeDominio } from '../../../utils/sanitize';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { DOMINIO_SORT_CONFIG } from '../../../config/sortConfigs';
@@ -167,6 +168,74 @@ export class DominioService {
     await existingDominio.reload();
 
     return existingDominio;
+  }
+
+  /**
+   * Buscar domínios existentes por lista (para verificar duplicatas em lote)
+   */
+  static async findByDominios(dominios: string[]): Promise<Set<string>> {
+    if (dominios.length === 0) return new Set();
+    const unique = [...new Set(dominios)];
+    const found = await Dominio.findAll({
+      where: { dominio: { [Op.in]: unique } },
+      attributes: ['dominio'],
+      raw: true
+    });
+    return new Set(found.map((r) => r.dominio as string));
+  }
+
+  /**
+   * Criar múltiplos domínios em lote (ignora duplicados, retorna criados/ignorados)
+   */
+  static async bulkCreate(
+    items: string[],
+    metadata: {
+      nome_oficio?: string | null;
+      data_inicio_bloqueio?: string | null;
+      data_fim_bloqueio?: string | null;
+      link_oficio_anatel?: string | null;
+      link_oficio_justica?: string | null;
+      link_planilha_dominios?: string | null;
+    }
+  ): Promise<{ created: number; skipped: number; errors: string[] }> {
+    const existingSet = await this.findByDominios(items.map((d) => sanitizeDominio(d)).filter(Boolean));
+    const toCreate: Array<{ dominio: string; [key: string]: unknown }> = [];
+    const errors: string[] = [];
+    const seen = new Set<string>();
+
+    for (const raw of items) {
+      const dominio = sanitizeDominio(raw);
+      if (!dominio) {
+        errors.push(`${raw}: formato inválido`);
+        continue;
+      }
+      if (seen.has(dominio)) continue;
+      seen.add(dominio);
+      if (existingSet.has(dominio)) continue;
+
+      toCreate.push({
+        dominio,
+        descricao: null,
+        nome_oficio: metadata.nome_oficio ?? null,
+        data_inicio_bloqueio: metadata.data_inicio_bloqueio ?? null,
+        data_fim_bloqueio: metadata.data_fim_bloqueio ?? null,
+        link_oficio_anatel: metadata.link_oficio_anatel ?? null,
+        link_oficio_justica: metadata.link_oficio_justica ?? null,
+        link_planilha_dominios: metadata.link_planilha_dominios ?? null,
+        ativo: true
+      });
+      existingSet.add(dominio);
+    }
+
+    const BATCH = 500;
+    let created = 0;
+    for (let i = 0; i < toCreate.length; i += BATCH) {
+      const batch = toCreate.slice(i, i + BATCH);
+      await Dominio.bulkCreate(batch as never);
+      created += batch.length;
+    }
+
+    return { created, skipped: items.length - toCreate.length - errors.length, errors };
   }
 
   /**

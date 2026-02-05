@@ -130,14 +130,28 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   }, [show, pdfUrlToExtract]);
 
   const fetchExisting = useCallback(async () => {
-    const [domRes, ipv4Res, ipv6Res] = await Promise.all([
-      DominioService.list({ limit: 9999, page: 1 }),
-      IPv4Service.list({ limit: 9999, page: 1 }),
-      IPv6Service.list({ limit: 9999, page: 1 })
+    const PAGE_SIZE = 5000;
+    const fetchAllPages = async <T extends object>(
+      list: (f: { limit: number; page: number }) => Promise<{ data?: T[]; pagination?: { last_page: number } }>,
+      key: keyof T & string
+    ): Promise<Set<string>> => {
+      const all: string[] = [];
+      let page = 1;
+      while (true) {
+        const res = await list({ limit: PAGE_SIZE, page });
+        const arr = res?.data ?? [];
+        all.push(...arr.map((d) => String((d as Record<string, unknown>)[key as string] ?? '')));
+        const lastPage = res?.pagination?.last_page ?? 1;
+        if (page >= lastPage) break;
+        page++;
+      }
+      return new Set(all);
+    };
+    const [existingDominios, existingIPv4, existingIPv6] = await Promise.all([
+      fetchAllPages(DominioService.list.bind(DominioService), 'dominio'),
+      fetchAllPages(IPv4Service.list.bind(IPv4Service), 'ip'),
+      fetchAllPages(IPv6Service.list.bind(IPv6Service), 'ip')
     ]);
-    const existingDominios = new Set((domRes?.data ?? []).map((d) => d.dominio));
-    const existingIPv4 = new Set((ipv4Res?.data ?? []).map((d) => d.ip));
-    const existingIPv6 = new Set((ipv6Res?.data ?? []).map((d) => d.ip));
     return { existingDominios, existingIPv4, existingIPv6 };
   }, []);
 
@@ -238,35 +252,18 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       const linkJusticaVal = linkOficioJustica.trim() || null;
       const linkPlanilhaVal = linkPlanilhaDominios.trim() || null;
 
-      let addedDominios = 0;
-      let addedIPv4 = 0;
-      let addedIPv6 = 0;
-      const errs: string[] = [];
+      const metadata = { nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, link_planilha_dominios: linkPlanilhaVal };
 
-      for (const d of toAddDominios) {
-        try {
-          await DominioService.create({ dominio: d, descricao: null, nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, link_planilha_dominios: linkPlanilhaVal, ativo: true });
-          addedDominios++;
-        } catch (e) {
-          errs.push(`Domínio ${d}: ${(e as Error)?.message ?? 'erro'}`);
-        }
-      }
-      for (const ip of toAddIPv4) {
-        try {
-          await IPv4Service.create({ ip, descricao: null, nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, link_planilha_dominios: linkPlanilhaVal, ativo: true });
-          addedIPv4++;
-        } catch (e) {
-          errs.push(`IPv4 ${ip}: ${(e as Error)?.message ?? 'erro'}`);
-        }
-      }
-      for (const ip of toAddIPv6) {
-        try {
-          await IPv6Service.create({ ip, descricao: null, nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, link_planilha_dominios: linkPlanilhaVal, ativo: true });
-          addedIPv6++;
-        } catch (e) {
-          errs.push(`IPv6 ${ip}: ${(e as Error)?.message ?? 'erro'}`);
-        }
-      }
+      const [domRes, ipv4Res, ipv6Res] = await Promise.all([
+        toAddDominios.length > 0 ? DominioService.bulkCreate({ items: toAddDominios, ...metadata }) : Promise.resolve({ created: 0, skipped: 0, errors: [] as string[] }),
+        toAddIPv4.length > 0 ? IPv4Service.bulkCreate({ items: toAddIPv4, ...metadata }) : Promise.resolve({ created: 0, skipped: 0, errors: [] as string[] }),
+        toAddIPv6.length > 0 ? IPv6Service.bulkCreate({ items: toAddIPv6, ...metadata }) : Promise.resolve({ created: 0, skipped: 0, errors: [] as string[] })
+      ]);
+
+      const addedDominios = domRes.created;
+      const addedIPv4 = ipv4Res.created;
+      const addedIPv6 = ipv6Res.created;
+      const errs = [...domRes.errors, ...ipv4Res.errors, ...ipv6Res.errors];
 
       const dupDominios = classified.dominios.length - toAddDominios.length;
       const dupIPv4 = classified.ipv4.length - toAddIPv4.length;

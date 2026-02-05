@@ -54,6 +54,34 @@ export class IPv6Controller {
     }
   }
 
+  static async bulkCreate(req: Request, res: Response): Promise<void> {
+    try {
+      const { items, nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, link_oficio_anatel, link_oficio_justica, link_planilha_dominios } = req.body;
+
+      if (!Array.isArray(items) || items.length === 0) {
+        sendValidationError(res, 'Informe a lista de IPv6 (items: string[]).');
+        return;
+      }
+
+      const result = await IPv6Service.bulkCreate(items, {
+        nome_oficio: nome_oficio ?? null,
+        data_inicio_bloqueio: data_inicio_bloqueio ?? null,
+        data_fim_bloqueio: data_fim_bloqueio ?? null,
+        link_oficio_anatel: link_oficio_anatel ?? null,
+        link_oficio_justica: link_oficio_justica ?? null,
+        link_planilha_dominios: link_planilha_dominios ?? null
+      });
+
+      sendSuccess(res, result, `Criados ${result.created} IPv6, ignorados ${result.skipped} duplicado(s).`, 201);
+    } catch (error) {
+      sendError(res, error, 'Erro ao criar IPv6 em lote', 500, true, {
+        context: 'IPv6Controller',
+        action: 'bulkCreate',
+        body: req.body
+      });
+    }
+  }
+
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const { ip } = req.body;
