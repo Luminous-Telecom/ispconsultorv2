@@ -87,5 +87,32 @@ if (fs.existsSync(imagesSource)) {
   console.log('✅ Estrutura de pastas criada');
 }
 
+// 5. Copiar script Python e requirements para dist (necessário para extração de PDF)
+const scriptsSource = path.join(process.cwd(), 'scripts');
+const scriptsDest = path.join(distPath, 'scripts');
+
+if (fs.existsSync(scriptsSource)) {
+  console.log('🐍 Copiando scripts Python...');
+  if (!fs.existsSync(scriptsDest)) {
+    fs.mkdirSync(scriptsDest, { recursive: true });
+  }
+  const pyScript = path.join(scriptsSource, 'extrair-dominios.py');
+  const requirementsFile = path.join(scriptsSource, 'requirements.txt');
+  if (fs.existsSync(pyScript)) {
+    fs.copyFileSync(pyScript, path.join(scriptsDest, 'extrair-dominios.py'));
+    console.log('✅ extrair-dominios.py copiado');
+  }
+  if (fs.existsSync(requirementsFile)) {
+    fs.copyFileSync(requirementsFile, path.join(scriptsDest, 'requirements.txt'));
+    console.log('✅ requirements.txt copiado');
+  }
+  const installScript = path.join(scriptsSource, 'install-python-deps.sh');
+  if (fs.existsSync(installScript)) {
+    fs.copyFileSync(installScript, path.join(scriptsDest, 'install-python-deps.sh'));
+    fs.chmodSync(path.join(scriptsDest, 'install-python-deps.sh'), 0o755);
+    console.log('✅ install-python-deps.sh copiado');
+  }
+}
+
 console.log('🎉 Build concluído com sucesso!');
 

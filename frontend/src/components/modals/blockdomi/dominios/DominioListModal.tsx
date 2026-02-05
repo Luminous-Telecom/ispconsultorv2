@@ -271,7 +271,13 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       },
       action: (selectedItems: Dominio[]) => {
         const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        items.filter((i) => i.link_oficio_justica?.trim()).forEach((i) => window.open(i.link_oficio_justica!, '_blank', 'noopener,noreferrer'));
+        items.filter((i) => i.link_oficio_justica?.trim()).forEach((i) => {
+          const urls = i.link_oficio_justica!.split(',').map(url => url.trim()).filter(url => url);
+          // Delay entre aberturas para evitar bloqueio de popup pelo navegador
+          urls.forEach((url, index) => {
+            setTimeout(() => window.open(url, '_blank', 'noopener,noreferrer'), index * 150);
+          });
+        });
       }
     },
     {

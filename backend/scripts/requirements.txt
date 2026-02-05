@@ -1,0 +1,4 @@
+# Dependências Python para extração de domínios de PDF (extrair-dominios.py)
+# Instalar no servidor: pip3 install -r requirements.txt
+# Ou: pip3 install pdfplumber
+pdfplumber>=0.10.0

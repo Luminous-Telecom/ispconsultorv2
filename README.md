@@ -48,6 +48,7 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 - **Nginx** (para produção)
 - **PM2** (opcional, para gerenciamento de processos)
 - **Git** (para clonar o repositório)
+- **Python 3** e **pip3** (para extração de domínios de PDF no Blockdomi)
 
 ---
 
@@ -1009,12 +1010,28 @@ cd ../frontend
 npm run build
 ```
 
+### Dependências Python (extração de PDF)
+
+A funcionalidade de importar lista de domínios a partir de PDF usa um script Python (`pdfplumber`). Após deploy ou atualização no servidor, instale as dependências:
+
+```bash
+cd backend/dist/scripts
+./install-python-deps.sh
+# Ou manualmente: pip3 install -r requirements.txt
+```
+
+Se Python 3 não estiver instalado:
+```bash
+sudo apt install -y python3 python3-pip
+```
+
 ### Estrutura de Deploy
 
 ```
 /home/projetos/BackNet-ERP/
 ├── backend/
 │   ├── dist/              # Código compilado do backend
+│   │   └── scripts/       # Scripts Python (extrair-dominios.py)
 │   ├── .env               # Variáveis de ambiente
 │   └── node_modules/      # Dependências
 ├── frontend/

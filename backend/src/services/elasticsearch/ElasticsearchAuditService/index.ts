@@ -301,15 +301,7 @@ export async function registrarAuditoriaElasticsearch(
         document
       });
 
-      logger.info('Ação registrada na auditoria (Elasticsearch)', {
-        context: 'ElasticsearchAuditService',
-        acao: dados.acao,
-        entidade: dados.entidade,
-        entidade_id: dados.entidade_id,
-        usuario_id: userData.id,
-        document_id: result._id,
-        index: elasticsearchService.getIndexName()
-      });
+      // Log removido para evitar poluição do console
     } catch (error) {
       // Não lançar erro para não interromper o fluxo principal
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';

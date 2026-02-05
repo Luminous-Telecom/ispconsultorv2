@@ -4,6 +4,7 @@ import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
 import { isValidIPv4, isValidIPv6 } from '@/utils/validators';
 import { sanitizeDominio } from '@/utils/stringUtils';
+import PdfExtractService from '@/services/pdfExtract';
 import { DominioService } from '@/services/dominioService';
 import { IPv4Service } from '@/services/ipv4Service';
 import { IPv6Service } from '@/services/ipv6Service';
@@ -108,6 +109,9 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const [classified, setClassified] = useState<ClassifiedList | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isCadastrando, setIsCadastrando] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [isExtractingPdf, setIsExtractingPdf] = useState(false);
+  const pdfFileInputRef = useRef<HTMLInputElement>(null);
 
   const prevShowRef = useRef(false);
   useEffect(() => {
@@ -149,6 +153,34 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setIsAnalyzing(false);
     }
   }, [rawText, fetchExisting, error]);
+
+  const handleExtractFromPdf = useCallback(async () => {
+    if (pdfFile) {
+      setIsExtractingPdf(true);
+      try {
+        // Usa Python (pdfplumber) no backend para extração precisa
+        const result = await PdfExtractService.extractFromPdf(pdfFile);
+        
+        if (result.success && result.data) {
+          // Converte array de domínios para texto (um por linha)
+          const text = result.data.dominios.join('\n');
+          setRawText(text);
+          setClassified(null);
+          success(`${result.data.total} domínios extraídos das tabelas do PDF`);
+        } else {
+          error(t('blockdomi.pdfExtractError'));
+        }
+        setPdfFile(null);
+        if (pdfFileInputRef.current) pdfFileInputRef.current.value = '';
+      } catch (e) {
+        error((e as Error)?.message ?? 'Erro ao extrair PDF.');
+      } finally {
+        setIsExtractingPdf(false);
+      }
+      return;
+    }
+    error(t('blockdomi.importFromPdfIntro'));
+  }, [pdfFile, success, error, t]);
 
   const totalValid = useMemo(() => {
     if (!classified) return 0;
@@ -275,13 +307,14 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
           </div>
           <div className="col-12">
             <label className="form-label small mb-1">{t('blockdomi.linkOficioJusticaOptional')}</label>
-            <input
-              type="text"
+            <textarea
               className="form-control form-control-sm"
-              placeholder="https://..."
+              rows={2}
+              placeholder="https://exemplo1.com, https://exemplo2.com"
               value={linkOficioJustica}
               onChange={(e) => setLinkOficioJustica(e.target.value)}
             />
+            <span className="text-muted small">Separe múltiplos links com vírgula</span>
           </div>
           <div className="col-12 col-md-6">
             <label className="form-label small mb-1">{t('blockdomi.dataInicioBloqueio')}</label>
@@ -303,6 +336,36 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
             />
           </div>
         </div>
+
+        <div className="card mb-3">
+          <div className="card-header py-2 bg-light">
+            <strong>{t('blockdomi.importFromPdf')}</strong>
+          </div>
+          <div className="card-body py-2">
+            <p className="text-muted small mb-2">{t('blockdomi.importFromPdfIntro')}</p>
+            <div className="mb-2">
+              <label className="form-label small mb-1">{t('blockdomi.pdfFile')}</label>
+              <input
+                ref={pdfFileInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                className="form-control form-control-sm"
+                onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleExtractFromPdf}
+              disabled={isExtractingPdf || !pdfFile}
+            >
+              {t('blockdomi.extractDomainsFromPdf')}
+            </Button>
+            {isExtractingPdf && <span className="ms-2 text-muted small">{t('blockdomi.extractingPdf')}</span>}
+          </div>
+        </div>
+
         <textarea
           className="form-control font-monospace small"
           rows={6}

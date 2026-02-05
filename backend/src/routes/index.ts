@@ -40,6 +40,7 @@ import centralAssinanteRoutes from './centralAssinanteRoutes';
 import dominioRoutes from './dominioRoutes';
 import ipv4Routes from './ipv4Routes';
 import ipv6Routes from './ipv6Routes';
+import pdfExtractRoutes from './pdfExtractRoutes';
 
 const router = Router();
 
@@ -85,6 +86,7 @@ const routes = [
     { path: '/api/dominios', route: dominioRoutes },
     { path: '/api/ipv4', route: ipv4Routes },
     { path: '/api/ipv6', route: ipv6Routes },
+    { path: '/api/pdf-extract', route: pdfExtractRoutes },
     { path: '/api', route: centralAssinanteRoutes },
 
     // Rotas de webhook
