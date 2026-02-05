@@ -256,7 +256,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       queryClient.invalidateQueries({ queryKey: ['ipv4'] });
       queryClient.invalidateQueries({ queryKey: ['ipv6'] });
       onSuccess?.();
-      onClose();
       setRawText('');
       setNomeOficio('');
       setDataInicioBloqueio('');
@@ -270,7 +269,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     } finally {
       setIsCadastrando(false);
     }
-  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, fetchExisting, success, error, onSuccess, onClose, queryClient, t]);
+  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, fetchExisting, success, error, onSuccess, queryClient, t]);
 
   const renderList = (items: string[]) => (
     <ul className="list-unstyled mb-0 small">

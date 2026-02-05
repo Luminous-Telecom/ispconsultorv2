@@ -77,7 +77,6 @@ const DominioBulkEditModal: React.FC<DominioBulkEditModalProps> = ({
 
       success(t('blockdomi.bulkEditSuccess').replace('{count}', String(dominios.length)));
       onSuccess?.();
-      onClose();
     } catch (err) {
       const msg = (err as Error)?.message ?? 'Erro ao atualizar domínios';
       error(msg);

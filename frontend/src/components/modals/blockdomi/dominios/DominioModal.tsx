@@ -112,7 +112,6 @@ const DominioModal: React.FC<DominioModalProps> = ({
         await createMutation.mutateAsync(dataToSend);
       }
       onSuccess?.();
-      onClose();
     } catch (error) {
       // Erro tratado pelo hook
     }

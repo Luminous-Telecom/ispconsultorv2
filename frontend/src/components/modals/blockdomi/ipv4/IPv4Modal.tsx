@@ -109,7 +109,6 @@ const IPv4Modal: React.FC<IPv4ModalProps> = ({
         await createMutation.mutateAsync(dataToSend);
       }
       onSuccess?.();
-      onClose();
     } catch (error) {
       // Erro tratado pelo hook
     }

@@ -109,7 +109,6 @@ const IPv6Modal: React.FC<IPv6ModalProps> = ({
         await createMutation.mutateAsync(dataToSend);
       }
       onSuccess?.();
-      onClose();
     } catch (error) {
       // Erro tratado pelo hook
     }
