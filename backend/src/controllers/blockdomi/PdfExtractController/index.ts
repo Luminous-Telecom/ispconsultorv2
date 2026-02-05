@@ -7,6 +7,10 @@ import { sendError, sendSuccess } from '../../../utils/responseUtils';
 
 const execAsync = promisify(exec);
 
+/** Detecta se está rodando do dist (produção) ou src (desenvolvimento) */
+const isDist = __dirname.includes(`${path.sep}dist${path.sep}`);
+const relativeToRoot = isDist ? '../../../' : '../../../../'; // dist: 3 níveis | src: 4 níveis até backend
+
 class PdfExtractController {
   /**
    * Extrai domínios de um PDF usando script Python (pdfplumber)
@@ -22,8 +26,8 @@ class PdfExtractController {
         return;
       }
 
-      // Salva arquivo temporariamente (dist/uploads/temp)
-      const uploadsDir = path.join(__dirname, '../../../uploads/temp');
+      // Salva arquivo temporariamente (dist/uploads/temp em prod, backend/uploads/temp em dev)
+      const uploadsDir = path.join(__dirname, relativeToRoot, 'uploads/temp');
       await fs.mkdir(uploadsDir, { recursive: true });
       
       const tempFileName = `pdf-${Date.now()}-${Math.random().toString(36).substring(7)}.pdf`;
@@ -31,8 +35,8 @@ class PdfExtractController {
       
       await fs.writeFile(tempFilePath, req.file.buffer);
 
-      // Caminho do script Python (dist/scripts/extrair-dominios.py)
-      const scriptPath = path.join(__dirname, '../../../scripts/extrair-dominios.py');
+      // Caminho do script Python (dist/scripts em prod, backend/scripts em dev)
+      const scriptPath = path.join(__dirname, relativeToRoot, 'scripts/extrair-dominios.py');
 
       // Executa script Python
       const { stdout } = await execAsync(
