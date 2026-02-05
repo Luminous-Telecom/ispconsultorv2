@@ -291,6 +291,10 @@ export interface TranslationKeys {
   'blockdomi.pdfUrl': string;
   'blockdomi.extractDomainsFromPdf': string;
   'blockdomi.extractingPdf': string;
+  'blockdomi.extractFromPlanilhaUrl': string;
+  'blockdomi.extractFromPlanilhaPdf': string;
+  'blockdomi.extractFromPlanilhaUrlHelp': string;
+  'blockdomi.pdfUrlOrLinkRequired': string;
   'blockdomi.pdfUrlPlaceholder': string;
   'blockdomi.pdfExtractSuccess': string;
   'blockdomi.pdfExtractError': string;
@@ -1557,6 +1561,10 @@ const translations: Translations = {
     'blockdomi.pdfUrl': 'Ou URL do PDF',
     'blockdomi.extractDomainsFromPdf': 'Extrair domínios do PDF',
     'blockdomi.extractingPdf': 'Extraindo texto do PDF...',
+    'blockdomi.extractFromPlanilhaUrl': 'Extrair da URL da planilha',
+    'blockdomi.extractFromPlanilhaPdf': 'Extrair domínios do PDF da planilha',
+    'blockdomi.extractFromPlanilhaUrlHelp': 'Use o link da planilha acima para extrair domínios sem fazer upload.',
+    'blockdomi.pdfUrlOrLinkRequired': 'Informe o link da planilha ou selecione um arquivo PDF.',
     'blockdomi.pdfUrlPlaceholder': 'https://...',
     'blockdomi.pdfExtractSuccess': 'Domínios extraídos do PDF. Clique em Analisar.',
     'blockdomi.pdfExtractError': 'Nenhum domínio ou IP encontrado no PDF.',
@@ -2818,6 +2826,10 @@ const translations: Translations = {
     'blockdomi.pdfUrl': 'Or PDF URL',
     'blockdomi.extractDomainsFromPdf': 'Extract domains from PDF',
     'blockdomi.extractingPdf': 'Extracting text from PDF...',
+    'blockdomi.extractFromPlanilhaUrl': 'Extract from spreadsheet URL',
+    'blockdomi.extractFromPlanilhaPdf': 'Extract domains from spreadsheet PDF',
+    'blockdomi.extractFromPlanilhaUrlHelp': 'Use the spreadsheet link above to extract domains without uploading.',
+    'blockdomi.pdfUrlOrLinkRequired': 'Enter the spreadsheet link or select a PDF file.',
     'blockdomi.pdfUrlPlaceholder': 'https://...',
     'blockdomi.pdfExtractSuccess': 'Domains extracted from PDF. Click Analyze.',
     'blockdomi.pdfExtractError': 'No domains or IPs found in PDF.',
@@ -4081,6 +4093,10 @@ const translations: Translations = {
     'blockdomi.pdfUrl': 'O URL del PDF',
     'blockdomi.extractDomainsFromPdf': 'Extraer dominios del PDF',
     'blockdomi.extractingPdf': 'Extrayendo texto del PDF...',
+    'blockdomi.extractFromPlanilhaUrl': 'Extraer de URL de planilla',
+    'blockdomi.extractFromPlanilhaPdf': 'Extraer dominios del PDF de la planilla',
+    'blockdomi.extractFromPlanilhaUrlHelp': 'Use el enlace de la planilla para extraer dominios sin subir archivo.',
+    'blockdomi.pdfUrlOrLinkRequired': 'Ingrese el enlace de la planilla o seleccione un archivo PDF.',
     'blockdomi.pdfUrlPlaceholder': 'https://...',
     'blockdomi.pdfExtractSuccess': 'Dominios extraídos del PDF. Haga clic en Analizar.',
     'blockdomi.pdfExtractError': 'No se encontraron dominios ni IPs en el PDF.',

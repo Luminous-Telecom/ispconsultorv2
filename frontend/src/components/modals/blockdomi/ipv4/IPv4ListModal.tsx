@@ -11,6 +11,7 @@ import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
 import IPv4Modal from './IPv4Modal';
 import { useAuditoria } from '@/hooks/useAuditoria';
+import { useModal } from '@/contexts/ModalContext';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
@@ -37,6 +38,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
   const [selectedIPv4Id, setSelectedIPv4Id] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
+  const { openModal } = useModal();
   const { confirm, modalProps } = useConfirmModal();
   
   const tableFilters = useTableFilters({
@@ -299,6 +301,22 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
       }
     },
     {
+      label: t('blockdomi.extractFromPlanilhaPdf'),
+      variant: 'primary' as const,
+      disabled: (selectedItems: IPv4[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        return items.length === 0 || !items.some((i) => i.link_planilha_dominios?.trim());
+      },
+      action: (selectedItems: IPv4[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        const firstWithUrl = items.find((i) => i.link_planilha_dominios?.trim());
+        if (firstWithUrl?.link_planilha_dominios) {
+          onClose();
+          openModal('blockdomi-importar-lista', { pdfUrlToExtract: firstWithUrl.link_planilha_dominios.trim() });
+        }
+      }
+    },
+    {
       label: t('actions.delete'),
       disabled: (selectedItems: IPv4[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: IPv4[]) => {
@@ -318,7 +336,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
         }
       }
     }
-  ], [onSelectIPv4, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
+  ], [onSelectIPv4, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, openModal, t]);
 
   const modalData = useMemo(() => ipv4sData?.data || [], [ipv4sData?.data]);
 

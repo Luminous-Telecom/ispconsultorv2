@@ -11,6 +11,7 @@ import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
 import { IPv6Modal } from './index';
 import { useAuditoria } from '@/hooks/useAuditoria';
+import { useModal } from '@/contexts/ModalContext';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
@@ -37,6 +38,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
   const [selectedIPv6Id, setSelectedIPv6Id] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
+  const { openModal } = useModal();
   const { confirm, modalProps } = useConfirmModal();
   
   const tableFilters = useTableFilters({
@@ -299,6 +301,22 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
       }
     },
     {
+      label: t('blockdomi.extractFromPlanilhaPdf'),
+      variant: 'primary' as const,
+      disabled: (selectedItems: IPv6[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        return items.length === 0 || !items.some((i) => i.link_planilha_dominios?.trim());
+      },
+      action: (selectedItems: IPv6[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        const firstWithUrl = items.find((i) => i.link_planilha_dominios?.trim());
+        if (firstWithUrl?.link_planilha_dominios) {
+          onClose();
+          openModal('blockdomi-importar-lista', { pdfUrlToExtract: firstWithUrl.link_planilha_dominios.trim() });
+        }
+      }
+    },
+    {
       label: t('actions.delete'),
       disabled: (selectedItems: IPv6[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: IPv6[]) => {
@@ -318,7 +336,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
         }
       }
     }
-  ], [onSelectIPv6, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
+  ], [onSelectIPv6, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, openModal, t]);
 
   const modalData = useMemo(() => ipv6sData?.data || [], [ipv6sData?.data]);
 

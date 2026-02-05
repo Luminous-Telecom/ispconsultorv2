@@ -20,12 +20,19 @@ const upload = multer({
   },
 });
 
-// Rota para extrair domínios de PDF
+// Rota para extrair domínios de PDF (upload)
 router.post(
   '/extract',
   authMiddleware,
   upload.single('pdf'),
   PdfExtractController.extractFromPdf
+);
+
+// Rota para extrair domínios de PDF (URL)
+router.post(
+  '/extract-from-url',
+  authMiddleware,
+  PdfExtractController.extractFromPdfUrl
 );
 
 export default router;

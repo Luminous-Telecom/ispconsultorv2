@@ -26,6 +26,8 @@ interface ImportarListaBlockdomiModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   skipWrapper?: boolean;
+  /** URL do PDF da planilha (quando aberto a partir da lista com link) */
+  pdfUrlToExtract?: string;
 }
 
 function classifyLine(line: string): { type: 'dominio' | 'ipv4' | 'ipv6' | 'invalido'; value: string } {
@@ -95,7 +97,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   show,
   onClose,
   onSuccess,
-  skipWrapper = false
+  skipWrapper = false,
+  pdfUrlToExtract
 }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
@@ -119,9 +122,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     if (show && !prevShowRef.current) {
       const today = new Date();
       setDataInicioBloqueio(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
+      if (pdfUrlToExtract?.trim()) {
+        setLinkPlanilhaDominios(pdfUrlToExtract.trim());
+      }
     }
     prevShowRef.current = !!show;
-  }, [show]);
+  }, [show, pdfUrlToExtract]);
 
   const fetchExisting = useCallback(async () => {
     const [domRes, ipv4Res, ipv6Res] = await Promise.all([
@@ -182,6 +188,32 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     }
     error(t('blockdomi.importFromPdfIntro'));
   }, [pdfFile, success, error, t]);
+
+  const handleExtractFromPdfUrl = useCallback(async () => {
+    const url = linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim();
+    if (!url) {
+      error(t('blockdomi.pdfUrlOrLinkRequired'));
+      return;
+    }
+    setIsExtractingPdf(true);
+    try {
+      const result = await PdfExtractService.extractFromPdfUrl(url);
+      if (result.success && result.data) {
+        const text = result.data.dominios.join('\n');
+        setRawText(text);
+        setClassified(null);
+        success(`${result.data.total} domínios extraídos do PDF da URL`);
+      } else {
+        error(t('blockdomi.pdfExtractError'));
+      }
+    } catch (e) {
+      error((e as Error)?.message ?? 'Erro ao extrair PDF da URL.');
+    } finally {
+      setIsExtractingPdf(false);
+    }
+  }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t]);
+
+  const hasPdfUrl = Boolean(linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim());
 
   const totalValid = useMemo(() => {
     if (!classified) return 0;
@@ -365,16 +397,32 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
               />
             </div>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={handleExtractFromPdf}
-              disabled={isExtractingPdf || !pdfFile}
-            >
-              {t('blockdomi.extractDomainsFromPdf')}
-            </Button>
-            {isExtractingPdf && <span className="ms-2 text-muted small">{t('blockdomi.extractingPdf')}</span>}
+            <div className="d-flex flex-wrap gap-2 align-items-center">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={handleExtractFromPdf}
+                disabled={isExtractingPdf || !pdfFile}
+              >
+                {t('blockdomi.extractDomainsFromPdf')}
+              </Button>
+              {hasPdfUrl && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleExtractFromPdfUrl}
+                  disabled={isExtractingPdf}
+                >
+                  {t('blockdomi.extractFromPlanilhaUrl')}
+                </Button>
+              )}
+              {isExtractingPdf && <span className="text-muted small">{t('blockdomi.extractingPdf')}</span>}
+            </div>
+            {hasPdfUrl && (
+              <p className="text-muted small mt-1 mb-0">{t('blockdomi.extractFromPlanilhaUrlHelp')}</p>
+            )}
           </div>
         </div>
 
