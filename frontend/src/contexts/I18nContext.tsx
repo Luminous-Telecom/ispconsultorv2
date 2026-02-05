@@ -279,6 +279,15 @@ export interface TranslationKeys {
   'blockdomi.analyze': string;
   'blockdomi.register': string;
   'blockdomi.classifying': string;
+  'blockdomi.importFromPdf': string;
+  'blockdomi.importFromPdfIntro': string;
+  'blockdomi.pdfFile': string;
+  'blockdomi.pdfUrl': string;
+  'blockdomi.extractDomainsFromPdf': string;
+  'blockdomi.extractingPdf': string;
+  'blockdomi.pdfUrlPlaceholder': string;
+  'blockdomi.pdfExtractSuccess': string;
+  'blockdomi.pdfExtractError': string;
   'blockdomi.duplicates': string;
   'blockdomi.invalid': string;
   'blockdomi.alreadyRegistered': string;
@@ -1529,6 +1538,15 @@ const translations: Translations = {
     'blockdomi.analyze': 'Analisar',
     'blockdomi.register': 'Cadastrar',
     'blockdomi.classifying': 'Classificando...',
+    'blockdomi.importFromPdf': 'Importar do PDF',
+    'blockdomi.importFromPdfIntro': 'Envie um PDF (ofício com tabela anexo) ou informe a URL do PDF. Serão extraídos apenas os domínios e IPs da tabela.',
+    'blockdomi.pdfFile': 'Arquivo PDF',
+    'blockdomi.pdfUrl': 'Ou URL do PDF',
+    'blockdomi.extractDomainsFromPdf': 'Extrair domínios do PDF',
+    'blockdomi.extractingPdf': 'Extraindo texto do PDF...',
+    'blockdomi.pdfUrlPlaceholder': 'https://...',
+    'blockdomi.pdfExtractSuccess': 'Domínios extraídos do PDF. Clique em Analisar.',
+    'blockdomi.pdfExtractError': 'Nenhum domínio ou IP encontrado no PDF.',
     'blockdomi.duplicates': 'Duplicados',
     'blockdomi.invalid': 'Inválidos',
     'blockdomi.alreadyRegistered': 'Já cadastrados',
@@ -2774,6 +2792,15 @@ const translations: Translations = {
     'blockdomi.analyze': 'Analyze',
     'blockdomi.register': 'Register',
     'blockdomi.classifying': 'Classifying...',
+    'blockdomi.importFromPdf': 'Import from PDF',
+    'blockdomi.importFromPdfIntro': 'Upload a PDF (warrant with annex table) or enter the PDF URL. Only domains and IPs from the table will be extracted.',
+    'blockdomi.pdfFile': 'PDF file',
+    'blockdomi.pdfUrl': 'Or PDF URL',
+    'blockdomi.extractDomainsFromPdf': 'Extract domains from PDF',
+    'blockdomi.extractingPdf': 'Extracting text from PDF...',
+    'blockdomi.pdfUrlPlaceholder': 'https://...',
+    'blockdomi.pdfExtractSuccess': 'Domains extracted from PDF. Click Analyze.',
+    'blockdomi.pdfExtractError': 'No domains or IPs found in PDF.',
     'blockdomi.duplicates': 'Duplicates',
     'blockdomi.invalid': 'Invalid',
     'blockdomi.alreadyRegistered': 'Already registered',
@@ -4021,6 +4048,15 @@ const translations: Translations = {
     'blockdomi.analyze': 'Analizar',
     'blockdomi.register': 'Registrar',
     'blockdomi.classifying': 'Clasificando...',
+    'blockdomi.importFromPdf': 'Importar desde PDF',
+    'blockdomi.importFromPdfIntro': 'Sube un PDF (oficio con tabla anexa) o ingresa la URL del PDF. Solo se extraerán los dominios e IPs de la tabla.',
+    'blockdomi.pdfFile': 'Archivo PDF',
+    'blockdomi.pdfUrl': 'O URL del PDF',
+    'blockdomi.extractDomainsFromPdf': 'Extraer dominios del PDF',
+    'blockdomi.extractingPdf': 'Extrayendo texto del PDF...',
+    'blockdomi.pdfUrlPlaceholder': 'https://...',
+    'blockdomi.pdfExtractSuccess': 'Dominios extraídos del PDF. Haga clic en Analizar.',
+    'blockdomi.pdfExtractError': 'No se encontraron dominios ni IPs en el PDF.',
     'blockdomi.duplicates': 'Duplicados',
     'blockdomi.invalid': 'Inválidos',
     'blockdomi.alreadyRegistered': 'Ya registrados',

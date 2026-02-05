@@ -29,6 +29,7 @@ coverage/
 
 scripts/*
 !scripts/build.js
+!scripts/extrair-dominios.py
 
 # Dependency versions tracking (local configuration)
 .dependency-versions.json
