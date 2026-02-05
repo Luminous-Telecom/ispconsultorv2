@@ -15,7 +15,19 @@ const isProduction = __dirname.includes('dist');
 const consoleFormat = isProduction
   ? combine(
       timestamp(),
-      printf(({ level, message, timestamp: ts }) => `${ts} ${level}: ${message}`)
+      printf((info) => {
+        const { level, message, timestamp: ts, error, statusCode, stack, ...rest } = info;
+        const parts = [message];
+        if (error) parts.push(`erro: ${error}`);
+        if (statusCode) parts.push(`status: ${statusCode}`);
+        if (stack) parts.push(`stack: ${stack}`);
+        const extra = Object.entries(rest)
+          .filter(([, v]) => v !== undefined && v !== null)
+          .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+          .join(' | ');
+        if (extra) parts.push(extra);
+        return `${ts} ${level}: ${parts.join(' | ')}`;
+      })
     )
   : combine(
       colorize(),

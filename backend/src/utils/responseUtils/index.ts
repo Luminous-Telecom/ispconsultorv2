@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { logger } from '../logger';
-import { getErrorMessage } from '../errorUtils';
+import { getErrorMessage, getErrorStack } from '../errorUtils';
 
 /**
  * Interface padrão para respostas de sucesso
@@ -66,7 +66,8 @@ export function sendError(
     logger.error('Erro ao processar requisição', {
       ...context,
       error: errorMessage,
-      statusCode
+      statusCode,
+      ...(getErrorStack(error) && { stack: getErrorStack(error) })
     });
   }
 
