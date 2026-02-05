@@ -290,10 +290,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       onSuccess?.();
       setRawText('');
       setNomeOficio('');
-      setDataInicioBloqueio('');
       setDataFimBloqueio('');
-      setLinkOficioAnatel('');
-      setLinkOficioJustica('');
       setLinkPlanilhaDominios('');
       setClassified(null);
     } catch (e) {
