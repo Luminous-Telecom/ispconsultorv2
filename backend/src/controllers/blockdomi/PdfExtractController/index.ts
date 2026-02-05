@@ -22,8 +22,8 @@ class PdfExtractController {
         return;
       }
 
-      // Salva arquivo temporariamente
-      const uploadsDir = path.join(__dirname, '../../../../uploads/temp');
+      // Salva arquivo temporariamente (dist/uploads/temp)
+      const uploadsDir = path.join(__dirname, '../../../uploads/temp');
       await fs.mkdir(uploadsDir, { recursive: true });
       
       const tempFileName = `pdf-${Date.now()}-${Math.random().toString(36).substring(7)}.pdf`;
@@ -31,8 +31,8 @@ class PdfExtractController {
       
       await fs.writeFile(tempFilePath, req.file.buffer);
 
-      // Caminho do script Python
-      const scriptPath = path.join(__dirname, '../../../../scripts/extrair-dominios.py');
+      // Caminho do script Python (dist/scripts/extrair-dominios.py)
+      const scriptPath = path.join(__dirname, '../../../scripts/extrair-dominios.py');
 
       // Executa script Python
       const { stdout } = await execAsync(
