@@ -1,5 +1,5 @@
 // Service Worker básico para PWA
-const CACHE_NAME = 'backnet-erp-v1';
+const CACHE_NAME = 'backnet-erp-v2';
 const STATIC_CACHE_URLS = [
   '/',
   '/static/js/bundle.js',
@@ -52,21 +52,23 @@ self.addEventListener('fetch', (event) => {
 
   // Para requisições da API, tenta network first
   if (url.pathname.startsWith('/api/')) {
+    const isGet = event.request.method === 'GET';
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Cache API só suporta GET - não cachear POST, PUT, DELETE etc.
-          if (response.status === 200 && event.request.method === 'GET') {
+          // Cache API só suporta GET - nunca cachear POST, PUT, DELETE
+          if (isGet && response.status === 200) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
+              cache.put(event.request, responseClone).catch(() => {});
             });
           }
           return response;
         })
         .catch(() => {
-          // Fallback para cache se network falhar
-          return caches.match(event.request);
+          // Fallback só para GET; POST/PUT/DELETE não têm cache
+          if (isGet) return caches.match(event.request);
+          return new Response(JSON.stringify({ error: 'Network request failed' }), { status: 503 });
         })
     );
   } else {
