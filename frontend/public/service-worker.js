@@ -11,11 +11,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Service Worker caching static assets.');
-        return cache.addAll(STATIC_CACHE_URLS);
-      })
-      .catch((error) => {
-        console.error('Service Worker failed to cache:', error);
+        console.log('[SW] Cache aberto, tentando cachear assets.');
+        return cache.addAll(STATIC_CACHE_URLS).catch((err) => {
+          console.warn('[SW] Falha ao pre-cachear assets (continuando):', err?.message || err);
+          // Não interromper instalação se cache falhar
+        });
       })
   );
   // Força ativação imediata
