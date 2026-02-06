@@ -1,12 +1,8 @@
 // Service Worker básico para PWA
 const CACHE_NAME = 'backnet-erp-v4';
+// Cachear apenas a página principal; outros recursos são buscados dinamicamente
 const STATIC_CACHE_URLS = [
-  '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.json',
-  '/logo192.png',
-  '/logo512.png'
+  '/'
 ];
 
 // Instalação do Service Worker
