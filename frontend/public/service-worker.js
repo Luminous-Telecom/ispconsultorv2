@@ -1,5 +1,5 @@
 // Service Worker básico para PWA
-const CACHE_NAME = 'backnet-erp-v2';
+const CACHE_NAME = 'backnet-erp-v3';
 const STATIC_CACHE_URLS = [
   '/',
   '/static/js/bundle.js',
@@ -11,7 +11,7 @@ const STATIC_CACHE_URLS = [
 
 // Instalação do Service Worker
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing.');
+  console.log('[SW] installing, CACHE_NAME=' + CACHE_NAME);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -28,7 +28,7 @@ self.addEventListener('install', (event) => {
 
 // Ativação do Service Worker
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating.');
+  console.log('[SW] activating, CACHE_NAME=' + CACHE_NAME);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -52,16 +52,29 @@ self.addEventListener('fetch', (event) => {
 
   // Para requisições da API, tenta network first
   if (url.pathname.startsWith('/api/')) {
-    const isGet = event.request.method === 'GET';
+    const method = event.request.method;
+    const isGet = method === 'GET';
+    if (!isGet) {
+      console.log('[SW] API request não-GET ignorada para cache:', method, url.pathname);
+    }
     event.respondWith(
       fetch(event.request)
         .then((response) => {
           // Cache API só suporta GET - nunca cachear POST, PUT, DELETE
-          if (isGet && response.status === 200) {
+          if (isGet && response.status === 200 && event.request.method === 'GET') {
             const responseClone = response.clone();
+            const req = event.request;
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone).catch(() => {});
+              if (req.method !== 'GET') {
+                console.warn('[SW] EVITADO cache.put para método', req.method, req.url);
+                return;
+              }
+              cache.put(req, responseClone).catch((err) => {
+                console.error('[SW] cache.put falhou:', err?.message || err);
+              });
             });
+          } else if (!isGet && response.status === 200) {
+            console.log('[SW] Resposta 200 de', method, '- não cacheados (apenas GET)');
           }
           return response;
         })
