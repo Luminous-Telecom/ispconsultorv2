@@ -12,14 +12,13 @@ window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault();
 });
 
-// Registrar Service Worker para PWA
-if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then((_registration) => {
-      })
-      .catch((_registrationError) => {
-      });
+// Desregistrar Service Workers antigos (removido para evitar erros de cache)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      registration.unregister();
+      console.log('[SW] Service Worker desregistrado');
+    });
   });
 }
 
