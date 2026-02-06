@@ -1,5 +1,5 @@
 // Service Worker básico para PWA
-const CACHE_NAME = 'backnet-erp-v3';
+const CACHE_NAME = 'backnet-erp-v4';
 const STATIC_CACHE_URLS = [
   '/',
   '/static/js/bundle.js',
@@ -50,39 +50,12 @@ self.addEventListener('fetch', (event) => {
   // Estratégia: Network First para dados dinâmicos, Cache First para estáticos
   const url = new URL(event.request.url);
 
-  // Para requisições da API, tenta network first
+  // Para requisições da API: só fetch, SEM cache (evita erro em POST/PUT/DELETE)
   if (url.pathname.startsWith('/api/')) {
-    const method = event.request.method;
-    const isGet = method === 'GET';
-    if (!isGet) {
-      console.log('[SW] API request não-GET ignorada para cache:', method, url.pathname);
-    }
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          // Cache API só suporta GET - nunca cachear POST, PUT, DELETE
-          if (isGet && response.status === 200 && event.request.method === 'GET') {
-            const responseClone = response.clone();
-            const req = event.request;
-            caches.open(CACHE_NAME).then((cache) => {
-              if (req.method !== 'GET') {
-                console.warn('[SW] EVITADO cache.put para método', req.method, req.url);
-                return;
-              }
-              cache.put(req, responseClone).catch((err) => {
-                console.error('[SW] cache.put falhou:', err?.message || err);
-              });
-            });
-          } else if (!isGet && response.status === 200) {
-            console.log('[SW] Resposta 200 de', method, '- não cacheados (apenas GET)');
-          }
-          return response;
-        })
-        .catch(() => {
-          // Fallback só para GET; POST/PUT/DELETE não têm cache
-          if (isGet) return caches.match(event.request);
-          return new Response(JSON.stringify({ error: 'Network request failed' }), { status: 503 });
-        })
+      fetch(event.request).catch(() =>
+        new Response(JSON.stringify({ error: 'Network request failed' }), { status: 503 })
+      )
     );
   } else {
     // Para recursos estáticos, tenta cache first
