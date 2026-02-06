@@ -12,15 +12,14 @@ export const ensureString = (value: unknown): string => {
 };
 
 /**
- * Sanitiza um domínio: remove apenas protocolo e www., mantém hostname e caminho.
- * Remove: https://, http://, www. (no início). Query string (?...) é removida.
- * Exemplos: "https://encurtador.com/abc" -> "encurtador.com/abc"; "https://meusite.com" -> "meusite.com"
+ * Sanitiza um domínio: remove apenas protocolo. Mantém hostname (incl. subdomínios) e caminho.
+ * Remove: https://, http://. Query string (?...) é removida.
+ * Exemplos: "https://encurtador.com/abc" -> "encurtador.com/abc"; "https://www.meusite.com" -> "www.meusite.com"
  */
 export const sanitizeDominio = (dominio: string | null | undefined): string => {
   if (!dominio || typeof dominio !== 'string') return '';
   let cleaned = dominio.trim().toLowerCase();
   cleaned = cleaned.replace(/^https?:\/\//i, '');
-  cleaned = cleaned.replace(/^www\./i, '');
   const firstQuery = cleaned.indexOf('?');
   if (firstQuery !== -1) cleaned = cleaned.slice(0, firstQuery);
   cleaned = cleaned.replace(/\/+$/, '').trim();

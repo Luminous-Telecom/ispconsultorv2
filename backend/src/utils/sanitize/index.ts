@@ -296,9 +296,9 @@ export function sanitizeObject<T extends Record<string, unknown>>(
 }
 
 /**
- * Sanitiza um domínio: remove apenas protocolo e www., mantém hostname e caminho.
- * Remove: https://, http://, www. (no início). Query string (?...) é removida.
- * Exemplos: "https://encurtador.com/abc" -> "encurtador.com/abc"; "https://meusite.com" -> "meusite.com"
+ * Sanitiza um domínio: remove apenas protocolo. Mantém hostname (incl. subdomínios) e caminho.
+ * Remove: https://, http://. Query string (?...) é removida.
+ * Exemplos: "https://encurtador.com/abc" -> "encurtador.com/abc"; "https://www.meusite.com" -> "www.meusite.com"
  * @param dominio - Domínio ou URL a ser sanitizado
  * @returns Domínio sem protocolo (hostname ou hostname/caminho) ou string vazia
  */
@@ -311,9 +311,6 @@ export function sanitizeDominio(dominio: string | null | undefined): string {
 
   // Remover protocolo
   cleaned = cleaned.replace(/^https?:\/\//i, '');
-
-  // Remover www. apenas no início (hostname)
-  cleaned = cleaned.replace(/^www\./i, '');
 
   // Remover query string (tudo após ?)
   const firstQuery = cleaned.indexOf('?');

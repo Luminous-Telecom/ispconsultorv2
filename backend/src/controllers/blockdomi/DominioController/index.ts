@@ -93,7 +93,7 @@ export class DominioController {
 
       const dominioLimpo = sanitizeDominio(dominio);
       if (!dominioLimpo) {
-        sendValidationError(res, 'Informe o domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Não use https://, http:// ou www. no início.');
+        sendValidationError(res, 'Informe o domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Não use https:// ou http:// no início.');
         return;
       }
 
@@ -147,7 +147,7 @@ export class DominioController {
 
       const dominioLimpo = sanitizeDominio(dominio);
       if (!dominioLimpo) {
-        sendValidationError(res, 'Informe o domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Não use https://, http:// ou www. no início.');
+        sendValidationError(res, 'Informe o domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Não use https:// ou http:// no início.');
         return;
       }
 
