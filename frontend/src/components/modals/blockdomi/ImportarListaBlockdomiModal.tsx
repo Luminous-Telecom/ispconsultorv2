@@ -183,10 +183,11 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         const result = await PdfExtractService.extractFromPdf(pdfFile);
         
         if (result.success && result.data) {
-          // Converte array de domínios para texto (um por linha)
           const text = result.data.dominios.join('\n');
           setRawText(text);
           setClassified(null);
+          if (result.data.data_inicio_bloqueio) setDataInicioBloqueio(result.data.data_inicio_bloqueio);
+          if (result.data.data_fim_bloqueio) setDataFimBloqueio(result.data.data_fim_bloqueio);
           success(`${result.data.total} domínios extraídos das tabelas do PDF`);
         } else {
           error(t('blockdomi.pdfExtractError'));
@@ -216,6 +217,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         const text = result.data.dominios.join('\n');
         setRawText(text);
         setClassified(null);
+        if (result.data.data_inicio_bloqueio) setDataInicioBloqueio(result.data.data_inicio_bloqueio);
+        if (result.data.data_fim_bloqueio) setDataFimBloqueio(result.data.data_fim_bloqueio);
         success(`${result.data.total} domínios extraídos do PDF da URL`);
       } else {
         error(t('blockdomi.pdfExtractError'));

@@ -103,7 +103,7 @@ class PdfExtractController {
       }
 
       if (stderr && stderr.trim()) {
-        logger.warn('PdfExtract.extractFromPdf: stderr do Python', { stderr });
+        logger.warn('PdfExtract.extractFromPdf: Python stderr', { stderr: stderr.trim() });
       }
 
       const result = JSON.parse(stdout);
@@ -124,11 +124,14 @@ class PdfExtractController {
       }
 
       logger.info('PdfExtract.extractFromPdf: sucesso', { total: result.total });
-      sendSuccess(res, {
+      const payload: Record<string, unknown> = {
         dominios: result.dominios,
         total: result.total,
         message: `${result.total} domínios extraídos com sucesso`
-      });
+      };
+      if (result.data_inicio_bloqueio) payload.data_inicio_bloqueio = result.data_inicio_bloqueio;
+      if (result.data_fim_bloqueio) payload.data_fim_bloqueio = result.data_fim_bloqueio;
+      sendSuccess(res, payload);
     } catch (error: unknown) {
       const err = error as { code?: string; killed?: boolean; message?: string; stdout?: string; stderr?: string };
 
@@ -268,7 +271,7 @@ class PdfExtractController {
         const execResult = await runPythonScript(scriptPath, tempFilePath, 300000);
         stdout = execResult.stdout;
         if (execResult.stderr && execResult.stderr.trim()) {
-          logger.warn('PdfExtract.extractFromPdfUrl: stderr do Python', { stderr: execResult.stderr });
+          logger.warn('PdfExtract.extractFromPdfUrl: Python stderr', { stderr: execResult.stderr.trim() });
         }
       } catch (execErr: unknown) {
         const execError = execErr as { stdout?: string; stderr?: string; code?: string | number; killed?: boolean; message?: string };
@@ -307,11 +310,14 @@ class PdfExtractController {
       }
 
       logger.info('PdfExtract.extractFromPdfUrl: sucesso', { total: result.total });
-      sendSuccess(res, {
+      const payload: Record<string, unknown> = {
         dominios: result.dominios,
         total: result.total,
         message: `${result.total} domínios extraídos com sucesso`
-      });
+      };
+      if (result.data_inicio_bloqueio) payload.data_inicio_bloqueio = result.data_inicio_bloqueio;
+      if (result.data_fim_bloqueio) payload.data_fim_bloqueio = result.data_fim_bloqueio;
+      sendSuccess(res, payload);
     } catch (error: unknown) {
       const err = error as { name?: string; code?: string; killed?: boolean; message?: string; stdout?: string; stderr?: string };
 
