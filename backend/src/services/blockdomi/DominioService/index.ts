@@ -185,7 +185,25 @@ export class DominioService {
   }
 
   /**
-   * Criar múltiplos domínios em lote (ignora duplicados, retorna criados/ignorados)
+   * Buscar domínios existentes com id e data_fim_bloqueio (para atualização condicional)
+   */
+  static async findByDominiosWithData(dominios: string[]): Promise<Map<string, { id: number; data_fim_bloqueio: string | null }>> {
+    if (dominios.length === 0) return new Map();
+    const unique = [...new Set(dominios)];
+    const found = await Dominio.findAll({
+      where: { dominio: { [Op.in]: unique } },
+      attributes: ['id', 'dominio', 'data_fim_bloqueio'],
+      raw: true
+    });
+    const map = new Map<string, { id: number; data_fim_bloqueio: string | null }>();
+    for (const r of found) {
+      map.set(r.dominio as string, { id: r.id as number, data_fim_bloqueio: r.data_fim_bloqueio as string | null });
+    }
+    return map;
+  }
+
+  /**
+   * Criar múltiplos domínios em lote. Atualiza existentes quando data_fim_bloqueio for nula ou diferente.
    */
   static async bulkCreate(
     items: string[],
@@ -197,11 +215,14 @@ export class DominioService {
       link_oficio_justica?: string | null;
       link_planilha_dominios?: string | null;
     }
-  ): Promise<{ created: number; skipped: number; errors: string[] }> {
-    const existingSet = await this.findByDominios(items.map((d) => sanitizeDominio(d)).filter(Boolean));
+  ): Promise<{ created: number; updated: number; skipped: number; errors: string[] }> {
+    const sanitized = items.map((d) => sanitizeDominio(d)).filter(Boolean) as string[];
+    const existingMap = sanitized.length > 0 ? await this.findByDominiosWithData(sanitized) : new Map();
     const toCreate: Array<{ dominio: string; [key: string]: unknown }> = [];
+    const toUpdate: Array<{ id: number; dominio: string }> = [];
     const errors: string[] = [];
     const seen = new Set<string>();
+    const newDataFim = metadata.data_fim_bloqueio ?? null;
 
     for (const raw of items) {
       const dominio = sanitizeDominio(raw);
@@ -211,7 +232,17 @@ export class DominioService {
       }
       if (seen.has(dominio)) continue;
       seen.add(dominio);
-      if (existingSet.has(dominio)) continue;
+
+      const existing = existingMap.get(dominio);
+      if (existing) {
+        const precisaAtualizar =
+          newDataFim !== null &&
+          (existing.data_fim_bloqueio === null || existing.data_fim_bloqueio !== newDataFim);
+        if (precisaAtualizar) {
+          toUpdate.push({ id: existing.id, dominio });
+        }
+        continue;
+      }
 
       toCreate.push({
         dominio,
@@ -224,7 +255,6 @@ export class DominioService {
         link_planilha_dominios: metadata.link_planilha_dominios ?? null,
         ativo: true
       });
-      existingSet.add(dominio);
     }
 
     const BATCH = 500;
@@ -235,7 +265,21 @@ export class DominioService {
       created += batch.length;
     }
 
-    return { created, skipped: items.length - toCreate.length - errors.length, errors };
+    let updated = 0;
+    for (const { id } of toUpdate) {
+      await this.update(id, {
+        nome_oficio: metadata.nome_oficio ?? undefined,
+        data_inicio_bloqueio: metadata.data_inicio_bloqueio ?? undefined,
+        data_fim_bloqueio: newDataFim ?? undefined,
+        link_oficio_anatel: metadata.link_oficio_anatel ?? undefined,
+        link_oficio_justica: metadata.link_oficio_justica ?? undefined,
+        link_planilha_dominios: metadata.link_planilha_dominios ?? undefined
+      });
+      updated += 1;
+    }
+
+    const skipped = items.length - toCreate.length - toUpdate.length - errors.length;
+    return { created, updated, skipped, errors };
   }
 
   /**

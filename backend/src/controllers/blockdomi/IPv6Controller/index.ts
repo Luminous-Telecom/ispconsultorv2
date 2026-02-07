@@ -72,7 +72,10 @@ export class IPv6Controller {
         link_planilha_dominios: link_planilha_dominios ?? null
       });
 
-      sendSuccess(res, result, `Criados ${result.created} IPv6, ignorados ${result.skipped} duplicado(s).`, 201);
+      const parts = [`Criados ${result.created} IPv6`];
+      if (result.updated > 0) parts.push(`atualizados ${result.updated}`);
+      if (result.skipped > 0) parts.push(`ignorados ${result.skipped} duplicado(s)`);
+      sendSuccess(res, result, parts.join(', ') + '.', 201);
     } catch (error) {
       sendError(res, error, 'Erro ao criar IPv6 em lote', 500, true, {
         context: 'IPv6Controller',

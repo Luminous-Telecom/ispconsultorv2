@@ -136,7 +136,25 @@ export class IPv6Service {
   }
 
   /**
-   * Criar múltiplos IPv6 em lote
+   * Buscar IPs existentes com id e data_fim_bloqueio (para atualização condicional)
+   */
+  static async findByIpsWithData(ips: string[]): Promise<Map<string, { id: number; data_fim_bloqueio: string | null }>> {
+    if (ips.length === 0) return new Map();
+    const unique = [...new Set(ips)];
+    const found = await IPv6.findAll({
+      where: { ip: { [Op.in]: unique } },
+      attributes: ['id', 'ip', 'data_fim_bloqueio'],
+      raw: true
+    });
+    const map = new Map<string, { id: number; data_fim_bloqueio: string | null }>();
+    for (const r of found) {
+      map.set(r.ip as string, { id: r.id as number, data_fim_bloqueio: r.data_fim_bloqueio as string | null });
+    }
+    return map;
+  }
+
+  /**
+   * Criar múltiplos IPv6 em lote. Atualiza existentes quando data_fim_bloqueio for nula ou diferente.
    */
   static async bulkCreate(
     items: string[],
@@ -148,12 +166,14 @@ export class IPv6Service {
       link_oficio_justica?: string | null;
       link_planilha_dominios?: string | null;
     }
-  ): Promise<{ created: number; skipped: number; errors: string[] }> {
+  ): Promise<{ created: number; updated: number; skipped: number; errors: string[] }> {
     const valid = items.filter((ip) => isValidIPv6(ip));
-    const existingSet = await this.findByIps(valid);
+    const existingMap = valid.length > 0 ? await this.findByIpsWithData(valid) : new Map();
     const toCreate: Array<Record<string, unknown>> = [];
+    const toUpdate: Array<{ id: number }> = [];
     const errors: string[] = [];
     const seen = new Set<string>();
+    const newDataFim = metadata.data_fim_bloqueio ?? null;
 
     for (const ip of items) {
       if (!isValidIPv6(ip)) {
@@ -162,7 +182,17 @@ export class IPv6Service {
       }
       if (seen.has(ip)) continue;
       seen.add(ip);
-      if (existingSet.has(ip)) continue;
+
+      const existing = existingMap.get(ip);
+      if (existing) {
+        const precisaAtualizar =
+          newDataFim !== null &&
+          (existing.data_fim_bloqueio === null || existing.data_fim_bloqueio !== newDataFim);
+        if (precisaAtualizar) {
+          toUpdate.push({ id: existing.id });
+        }
+        continue;
+      }
 
       toCreate.push({
         ip,
@@ -175,7 +205,6 @@ export class IPv6Service {
         link_planilha_dominios: metadata.link_planilha_dominios ?? null,
         ativo: true
       });
-      existingSet.add(ip);
     }
 
     const BATCH = 500;
@@ -186,7 +215,21 @@ export class IPv6Service {
       created += batch.length;
     }
 
-    return { created, skipped: items.length - toCreate.length - errors.length, errors };
+    let updated = 0;
+    for (const { id } of toUpdate) {
+      await this.update(id, {
+        nome_oficio: metadata.nome_oficio ?? undefined,
+        data_inicio_bloqueio: metadata.data_inicio_bloqueio ?? undefined,
+        data_fim_bloqueio: newDataFim ?? undefined,
+        link_oficio_anatel: metadata.link_oficio_anatel ?? undefined,
+        link_oficio_justica: metadata.link_oficio_justica ?? undefined,
+        link_planilha_dominios: metadata.link_planilha_dominios ?? undefined
+      });
+      updated += 1;
+    }
+
+    const skipped = items.length - toCreate.length - toUpdate.length - errors.length;
+    return { created, updated, skipped, errors };
   }
 
   /**

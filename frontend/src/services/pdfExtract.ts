@@ -28,7 +28,7 @@ class PdfExtractService {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          timeout: 60000, // 60 segundos
+          timeout: 320000, // 5 min (script Python pode demorar em PDFs grandes)
         }
       );
 
@@ -57,7 +57,7 @@ class PdfExtractService {
       const response = await apiService.post<PdfExtractResponse>(
         '/pdf-extract/extract-from-url',
         { url: url.trim() },
-        { timeout: 90000 }
+        { timeout: 320000 }
       );
 
       if (!response.success || !response.data) {

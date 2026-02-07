@@ -72,7 +72,10 @@ export class DominioController {
         link_planilha_dominios: link_planilha_dominios ?? null
       });
 
-      sendSuccess(res, result, `Criados ${result.created} domínio(s), ignorados ${result.skipped} duplicado(s).`, 201);
+      const parts = [`Criados ${result.created} domínio(s)`];
+      if (result.updated > 0) parts.push(`atualizados ${result.updated}`);
+      if (result.skipped > 0) parts.push(`ignorados ${result.skipped} duplicado(s)`);
+      sendSuccess(res, result, parts.join(', ') + '.', 201);
     } catch (error) {
       sendError(res, error, 'Erro ao criar domínios em lote', 500, true, {
         context: 'DominioController',

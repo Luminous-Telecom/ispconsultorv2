@@ -238,11 +238,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     if (!classified || totalValid === 0) return;
     setIsCadastrando(true);
     try {
-      const { existingDominios, existingIPv4, existingIPv6 } = await fetchExisting();
-      const toAddDominios = classified.dominios.filter((d) => !existingDominios.has(d));
-      const toAddIPv4 = classified.ipv4.filter((ip) => !existingIPv4.has(ip));
-      const toAddIPv6 = classified.ipv6.filter((ip) => !existingIPv6.has(ip));
-
       const nomeOficioVal = nomeOficio.trim() || null;
       const today = new Date();
       const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -255,29 +250,40 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       const metadata = { nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, link_planilha_dominios: linkPlanilhaVal };
 
       const [domRes, ipv4Res, ipv6Res] = await Promise.all([
-        toAddDominios.length > 0 ? DominioService.bulkCreate({ items: toAddDominios, ...metadata }) : Promise.resolve({ created: 0, skipped: 0, errors: [] as string[] }),
-        toAddIPv4.length > 0 ? IPv4Service.bulkCreate({ items: toAddIPv4, ...metadata }) : Promise.resolve({ created: 0, skipped: 0, errors: [] as string[] }),
-        toAddIPv6.length > 0 ? IPv6Service.bulkCreate({ items: toAddIPv6, ...metadata }) : Promise.resolve({ created: 0, skipped: 0, errors: [] as string[] })
+        classified.dominios.length > 0 ? DominioService.bulkCreate({ items: classified.dominios, ...metadata }) : Promise.resolve({ created: 0, updated: 0, skipped: 0, errors: [] as string[] }),
+        classified.ipv4.length > 0 ? IPv4Service.bulkCreate({ items: classified.ipv4, ...metadata }) : Promise.resolve({ created: 0, updated: 0, skipped: 0, errors: [] as string[] }),
+        classified.ipv6.length > 0 ? IPv6Service.bulkCreate({ items: classified.ipv6, ...metadata }) : Promise.resolve({ created: 0, updated: 0, skipped: 0, errors: [] as string[] })
       ]);
 
-      const addedDominios = domRes.created;
-      const addedIPv4 = ipv4Res.created;
-      const addedIPv6 = ipv6Res.created;
       const errs = [...domRes.errors, ...ipv4Res.errors, ...ipv6Res.errors];
 
-      const dupDominios = classified.dominios.length - toAddDominios.length;
-      const dupIPv4 = classified.ipv4.length - toAddIPv4.length;
-      const dupIPv6 = classified.ipv6.length - toAddIPv6.length;
-      const dupTotal = dupDominios + dupIPv4 + dupIPv6;
-
-      let msg = `Cadastrados: ${addedDominios} domínio(s), ${addedIPv4} IPv4, ${addedIPv6} IPv6.`;
-      if (dupTotal > 0) {
-        msg += ` ${t('blockdomi.alreadyRegisteredIgnored')}: ${dupTotal}.`;
+      const parts: string[] = [];
+      if (domRes.created > 0 || domRes.updated > 0) {
+        const p: string[] = [];
+        if (domRes.created > 0) p.push(`${domRes.created} domínio(s) criado(s)`);
+        if (domRes.updated > 0) p.push(`${domRes.updated} domínio(s) atualizado(s)`);
+        parts.push(p.join(', '));
+      }
+      if (ipv4Res.created > 0 || ipv4Res.updated > 0) {
+        const p: string[] = [];
+        if (ipv4Res.created > 0) p.push(`${ipv4Res.created} IPv4 criado(s)`);
+        if (ipv4Res.updated > 0) p.push(`${ipv4Res.updated} IPv4 atualizado(s)`);
+        parts.push(p.join(', '));
+      }
+      if (ipv6Res.created > 0 || ipv6Res.updated > 0) {
+        const p: string[] = [];
+        if (ipv6Res.created > 0) p.push(`${ipv6Res.created} IPv6 criado(s)`);
+        if (ipv6Res.updated > 0) p.push(`${ipv6Res.updated} IPv6 atualizado(s)`);
+        parts.push(p.join(', '));
+      }
+      const skipTotal = domRes.skipped + ipv4Res.skipped + ipv6Res.skipped;
+      if (skipTotal > 0) {
+        parts.push(`${t('blockdomi.alreadyRegisteredIgnored')}: ${skipTotal}`);
       }
       if (classified.invalidos.length > 0) {
-        msg += ` Inválidos (não cadastrados): ${classified.invalidos.length}.`;
+        parts.push(`Inválidos (não cadastrados): ${classified.invalidos.length}`);
       }
-      success(msg);
+      success(parts.length > 0 ? parts.join('. ') + '.' : 'Importação concluída.');
       if (errs.length > 0) {
         error(errs.slice(0, 3).join('; ') + (errs.length > 3 ? ` e mais ${errs.length - 3} erro(s).` : ''));
       }
@@ -295,7 +301,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     } finally {
       setIsCadastrando(false);
     }
-  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, fetchExisting, success, error, onSuccess, queryClient, t]);
+  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, success, error, onSuccess, queryClient, t]);
 
   const renderList = (items: string[]) => (
     <ul className="list-unstyled mb-0 small">

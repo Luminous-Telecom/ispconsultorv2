@@ -28,8 +28,8 @@ export const errorHandlerMiddleware = (
   const errorStack = getErrorStack(err);
   const errorName = getErrorName(err);
   
-  // Log estruturado do erro
-  logger.error('Erro não tratado no middleware global', {
+  // Log estruturado do erro (mensagem no texto principal para visibilidade imediata)
+  logger.error(`Erro não tratado no middleware global: ${errorMessage || err.message || 'Erro desconhecido'}`, {
     context: 'GlobalErrorHandler',
     action: req.method,
     error: errorMessage,
