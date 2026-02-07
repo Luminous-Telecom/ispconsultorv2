@@ -39,7 +39,7 @@ const relativeToRoot = isDist ? '../../../' : '../../../../'; // dist: 3 níveis
 
 class PdfExtractController {
   /**
-   * Extrai domínios de um PDF usando script Python (pdfplumber)
+   * Extrai domínios de um PDF usando script Python (pymupdf)
    * POST /api/blockdomi/pdf-extract
    */
   async extractFromPdf(req: Request, res: Response): Promise<void> {

@@ -179,7 +179,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     if (pdfFile) {
       setIsExtractingPdf(true);
       try {
-        // Usa Python (pdfplumber) no backend para extração precisa
+        // Usa Python (pymupdf) no backend para extração
         const result = await PdfExtractService.extractFromPdf(pdfFile);
         
         if (result.success && result.data) {

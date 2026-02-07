@@ -1,52 +1,43 @@
 #!/usr/bin/env python3
 """
-Extrai domínios de PDF usando pdfplumber (APENAS de tabelas).
+Extrai domínios de PDF usando PyMuPDF (memória baixa, processa página a página).
 Uso: python extrair-dominios.py <caminho_pdf>
 Retorna: JSON com lista de domínios
-CÓPIA EXATA DO SCRIPT extrair.py QUE FUNCIONA
 """
-import pdfplumber
 import re
 import sys
 import json
+import fitz  # pymupdf
 
 def extrair_dominios_pdf(caminho_pdf):
     """
-    Extrai domínios únicos de tabelas em PDF, juntando quebras de linha
-    CÓPIA EXATA da função do script extrair.py que funciona
+    Extrai domínios únicos do texto do PDF, página a página (baixo uso de memória).
     """
-    todos_dominios = set()  # Usar set para evitar duplicatas
-    
-    # Regex para identificar domínios (IGUAL ao script original)
+    todos_dominios = set()
     regex_dominio = r'(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}'
-    
-    with pdfplumber.open(caminho_pdf) as pdf:
-        for num_pagina, pagina in enumerate(pdf.pages, 1):
-            # Extrair tabelas da página
-            tabelas = pagina.extract_tables()
-            
-            if tabelas:
-                for tabela in tabelas:
-                    for linha in tabela:
-                        if linha:
-                            for celula in linha:
-                                if celula:
-                                    # Remove quebras de linha e espaços extras
-                                    celula_limpa = str(celula).replace('\n', '').replace('\r', '').replace(' ', '')
-                                    
-                                    # Encontrar todos os domínios na célula
-                                    dominios_encontrados = re.findall(regex_dominio, celula_limpa)
-                                    todos_dominios.update(dominios_encontrados)
-    
-    return sorted(todos_dominios)  # Retorna lista ordenada alfabeticamente
+
+    doc = fitz.open(caminho_pdf)
+    try:
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            text = page.get_text()
+            page = None  # libera referência
+            if text:
+                text_limpo = text.replace('\n', '').replace('\r', '').replace(' ', '')
+                dominios = re.findall(regex_dominio, text_limpo)
+                todos_dominios.update(dominios)
+    finally:
+        doc.close()
+
+    return sorted(todos_dominios)
 
 def main():
     if len(sys.argv) < 2:
         print(json.dumps({"success": False, "error": "Caminho do PDF não fornecido"}))
         sys.exit(1)
-    
+
     caminho_pdf = sys.argv[1]
-    
+
     try:
         dominios = extrair_dominios_pdf(caminho_pdf)
         print(json.dumps({

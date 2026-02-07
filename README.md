@@ -1012,12 +1012,12 @@ npm run build
 
 ### Dependências Python (extração de PDF)
 
-A funcionalidade de importar lista de domínios a partir de PDF usa um script Python (`pdfplumber`). Após deploy ou atualização no servidor, instale as dependências:
+A funcionalidade de importar lista de domínios a partir de PDF usa um script Python (`pymupdf`). Após deploy ou atualização no servidor, instale as dependências:
 
 ```bash
 cd backend/dist/scripts
 ./install-python-deps.sh
-# Ou manualmente: pip3 install -r requirements.txt
+# Ou manualmente: pip3 install pymupdf
 ```
 
 Se Python 3 não estiver instalado:

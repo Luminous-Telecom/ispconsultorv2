@@ -12,7 +12,7 @@ export interface PdfExtractResponse {
 
 class PdfExtractService {
   /**
-   * Extrai domínios de um arquivo PDF usando Python (pdfplumber)
+   * Extrai domínios de um arquivo PDF usando Python (pymupdf)
    * @param file Arquivo PDF
    * @returns Lista de domínios extraídos
    */
