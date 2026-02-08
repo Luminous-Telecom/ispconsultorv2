@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
@@ -6,6 +6,9 @@ import { logger } from '../../../utils/logger';
 import type { CommandResult } from '../GitUpdateService';
 
 const execAsync = promisify(exec);
+
+/** Delay em ms antes de executar pm2 restart no processo filho (permite enviar resposta SSE antes do kill). */
+const SCHEDULED_RESTART_DELAY_MS = 5000;
 
 export class Pm2Service {
   private readonly projectRoot: string;
@@ -176,5 +179,52 @@ export class Pm2Service {
     }
     
     return restartResult;
+  }
+
+  /**
+   * Agenda reinício do PM2 em um processo filho desvinculado.
+   * Usado durante self-update: o processo atual seria morto por "pm2 restart",
+   * então o restart é executado por um filho que espera alguns segundos (tempo
+   * para enviar a resposta SSE "finalizado" ao frontend).
+   */
+  scheduleRestart(delayMs: number = SCHEDULED_RESTART_DELAY_MS): CommandResult {
+    if (!fs.existsSync(this.projectRoot)) {
+      const errorMsg = `Diretório não existe: ${this.projectRoot}`;
+      logger.error('Erro ao agendar PM2 restart', { error: errorMsg });
+      return { success: false, stdout: '', stderr: errorMsg, error: errorMsg };
+    }
+
+    const script = `
+const d = parseInt(process.env.PM2_DELAY || '5000', 10);
+const cwd = process.env.PM2_CWD || '.';
+const app = process.env.PM2_APP || 'BackNet-backend';
+setTimeout(() => {
+  try {
+    require('child_process').execFileSync('pm2', ['restart', app, '--update-env'], { cwd, stdio: 'inherit', maxBuffer: 10*1024*1024 });
+  } catch (e) { process.exit(1); }
+}, d);
+`;
+    const child = spawn(process.execPath, ['-e', script.trim()], {
+      detached: true,
+      stdio: 'ignore',
+      env: {
+        ...process.env,
+        PM2_DELAY: String(delayMs),
+        PM2_CWD: this.projectRoot,
+        PM2_APP: this.pm2ProcessName,
+      },
+    });
+    child.unref();
+
+    logger.info('PM2 restart agendado em processo filho', {
+      delayMs,
+      processName: this.pm2ProcessName,
+      cwd: this.projectRoot,
+    });
+    return {
+      success: true,
+      stdout: `Reinício agendado em ${delayMs}ms`,
+      stderr: '',
+    };
   }
 }

@@ -313,60 +313,37 @@ export class SelfUpdateService {
   }
 
   /**
-   * Reinicia o PM2 e aguarda o backend estar pronto
+   * Agenda reinício do PM2 via processo filho desvinculado.
+   * O processo atual não pode chamar "pm2 restart" diretamente (seria morto por SIGINT).
+   * Um filho espera alguns segundos (tempo para enviar SSE "finalizado"), depois executa o restart.
+   * O frontend aguarda /health antes de recarregar a página.
    */
   async reloadPM2(onProgress?: (progress: { step: string; progress: number; message: string; logs?: string[] }) => void): Promise<CommandResult> {
     onProgress?.({
       step: 'pm2Reload',
       progress: 92,
-      message: 'Reiniciando aplicação (PM2)...',
-      logs: ['→ Executando PM2 reload...']
+      message: 'Agendando reinício da aplicação (PM2)...',
+      logs: ['→ Reinício será executado em 5 segundos (processo filho)...']
     });
-    const reloadResult = await this.pm2Service.reload();
-    
+    const reloadResult = this.pm2Service.scheduleRestart();
+
     if (reloadResult.success) {
-      onProgress?.({
-        step: 'pm2Reload',
-        progress: 95,
-        message: 'Aguardando backend estar pronto...',
-        logs: ['✓ PM2 reload executado', '→ Aguardando backend responder...']
-      });
-      logger.info('PM2 reload executado com sucesso, aguardando backend estar pronto...');
-      const isReady = await this.healthCheckService.waitForBackendReady();
-      
-      if (!isReady) {
-        logger.warn('Backend pode não estar completamente pronto após PM2 reload', {
-          stdout: reloadResult.stdout,
-          stderr: reloadResult.stderr,
-        });
-        onProgress?.({
-          step: 'pm2Reload',
-          progress: 98,
-          message: 'Backend pode não estar completamente pronto',
-          logs: ['⚠ Backend pode não estar completamente pronto após múltiplas tentativas']
-        });
-        return {
-          ...reloadResult,
-          stderr: reloadResult.stderr + '\nAviso: Backend pode não estar completamente pronto após múltiplas tentativas de health check',
-        };
-      }
-      
       onProgress?.({
         step: 'pm2Reload',
         progress: 100,
         message: 'Atualização concluída com sucesso!',
-        logs: ['✓ PM2 reload concluído', '✓ Backend está pronto', '✓ Atualização concluída com sucesso!']
+        logs: ['✓ Reinício agendado', '✓ O frontend aguardará o servidor ficar pronto antes de recarregar']
       });
-      logger.info('PM2 reload concluído e backend está pronto para receber requisições');
+      logger.info('PM2 restart agendado; frontend aguardará /health antes de recarregar');
     } else {
       onProgress?.({
         step: 'pm2Reload',
         progress: 92,
-        message: `Erro ao reiniciar PM2: ${reloadResult.error || reloadResult.stderr}`,
-        logs: [`✗ PM2 reload falhou: ${reloadResult.error || reloadResult.stderr}`]
+        message: `Erro ao agendar reinício PM2: ${reloadResult.error || reloadResult.stderr}`,
+        logs: [`✗ ${reloadResult.error || reloadResult.stderr}`]
       });
     }
-    
+
     return reloadResult;
   }
 }

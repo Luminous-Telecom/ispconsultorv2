@@ -453,7 +453,14 @@ export class AtualizacoesController {
       let pm2ReloadResult;
       try {
         pm2ReloadResult = await updateService.reloadPM2(sendProgress);
-        logger.info('PM2 reload concluído com sucesso');
+        if (pm2ReloadResult.success) {
+          logger.info('PM2 reload agendado com sucesso');
+        } else {
+          logger.warn('PM2 reload falhou ou foi apenas agendado', {
+            stderr: pm2ReloadResult.stderr,
+            error: pm2ReloadResult.error,
+          });
+        }
       } catch (error) {
         logger.error('Erro ao reiniciar PM2 após atualização', {
           error: error instanceof Error ? error.message : 'Erro desconhecido',
