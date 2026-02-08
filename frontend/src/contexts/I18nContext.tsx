@@ -1083,6 +1083,7 @@ export interface TranslationKeys {
   'updates.badges.improvement': string;
   'updates.badges.other': string;
   'updates.concluded': string;
+  'updates.waitingServer': string;
 
   // Login
   'login.title': string;
@@ -2359,6 +2360,7 @@ const translations: Translations = {
     'updates.badges.improvement': 'Melhoria',
     'updates.badges.other': 'Outro',
     'updates.concluded': 'Atualização concluída!',
+    'updates.waitingServer': 'Aguardando servidor ficar pronto...',
 
     // Login
     'login.title': 'Acesse o painel administrativo',
@@ -3630,6 +3632,7 @@ const translations: Translations = {
     'updates.badges.improvement': 'Improvement',
     'updates.badges.other': 'Other',
     'updates.concluded': 'Update concluded!',
+    'updates.waitingServer': 'Waiting for server to be ready...',
 
     // Login
     'login.title': 'Access the administrative panel',
@@ -4903,6 +4906,7 @@ const translations: Translations = {
     'updates.badges.improvement': 'Mejora',
     'updates.badges.other': 'Otro',
     'updates.concluded': '¡Actualización concluida!',
+    'updates.waitingServer': 'Esperando a que el servidor esté listo...',
 
     // Login
     'login.title': 'Acceda al panel administrativo',

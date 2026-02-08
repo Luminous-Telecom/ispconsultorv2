@@ -11,6 +11,7 @@ import { API_CONFIG } from '@/config/api';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import { useI18n } from '@/contexts/I18nContext';
+import { waitForBackendHealth } from '@/utils/healthCheck';
 
 interface Atualizacao {
   versao: string;
@@ -161,16 +162,28 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
   const updateMutation = useMutation({
     mutationFn: (branch: string = 'main') => executeUpdateWithSSE(branch),
-    onSuccess: () => {
+    onSuccess: async () => {
       success(t('updates.success'), {
         id: `update-success-${Date.now()}`,
         duration: 5000,
       });
-      setTimeout(() => {
-        setIsUpdating(false);
-        onClose();
-        setTimeout(() => window.location.reload(), 1500);
-      }, 1500);
+      setUpdateProgress(t('updates.waitingServer'));
+      setUpdateProgressPercent(100);
+      const ready = await waitForBackendHealth({
+        maxAttempts: 45,
+        delayMs: 1000,
+        onAttempt: (attempt) =>
+          setUpdateProgress(`${t('updates.waitingServer')} (${attempt}/45)`),
+      });
+      if (!ready) {
+        success(t('updates.concluded'), {
+          id: `update-reload-${Date.now()}`,
+          duration: 4000,
+        });
+      }
+      setIsUpdating(false);
+      onClose();
+      setTimeout(() => window.location.reload(), 500);
     },
     onError: (err: unknown) => {
       setIsUpdating(false);
