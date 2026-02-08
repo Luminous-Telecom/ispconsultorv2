@@ -261,8 +261,9 @@ function extractDomainsAndIpsFromPages(pages: PageText[]): string[] {
   const result: string[] = [];
   const seen = new Set<string>();
 
-  // Regex igual ao Python: domínio válido básico
-  const domainLikeRegex = /(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}/g;
+  // Domínio + porta opcional + path opcional (igual ao Python)
+  // TLD pode ter letras, números e hífen (ex: salto-alto777bet)
+  const domainLikeRegex = /(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?::\d{1,5})?(?:\/[^\s'"<>]*)?/g;
   const ipv4Regex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
 
   for (const page of pages) {
@@ -298,13 +299,10 @@ function extractDomainsAndIpsFromPages(pages: PageText[]): string[] {
       while ((m = reDom.exec(lineClean)) !== null) {
         const raw = m[0];
         
-        // Validação MÍNIMA (apenas rejeita óbvios não-domínios)
-        // Rejeita se termina com número (processo judicial)
+        // Rejeita só se o TLD for apenas dígitos (ex: processo.123)
         const parts = raw.split('.');
         const tld = parts[parts.length - 1] ?? '';
-        if (/^\d+$/.test(tld)) {
-          continue;
-        }
+        if (/^\d+$/.test(tld)) continue;
         
         // Sanitiza (lowercase, remove www, etc)
         const cleaned = sanitizeDominio(raw);

@@ -68,7 +68,8 @@ def extrair_datas_operacao(texto):
 def extrair_dominios_pdf(caminho_pdf):
     """Extrai domínios únicos e datas de operação do PDF."""
     todos_dominios = set()
-    regex_dominio = r'(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}'
+    # TLD pode ter letras, números e hífen (ex: salto-alto777bet)
+    regex_dominio = r'(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?'
     texto_cabecalho = ''
 
     doc = fitz.open(caminho_pdf)
