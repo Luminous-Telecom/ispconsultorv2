@@ -54,6 +54,9 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
 
   useEffect(() => {
     if (!show) return;
+    setClassified(null);
+    setIsAnalyzing(false);
+    setIsCadastrando(false);
     setNomeOficio(metadata.nomeOficio ?? '');
     setDataInicioBloqueio(metadata.dataInicioBloqueio ?? '');
     setDataFimBloqueio(metadata.dataFimBloqueio ?? '');
