@@ -220,11 +220,12 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   const handleDelete = useCallback(async (dominioId: number) => {
     try {
       await deleteDominioMutation.mutateAsync(dominioId);
+      clearSelection();
       refetch();
     } catch (error: unknown) {
       // Erro tratado pelo useNotificationContext
     }
-  }, [deleteDominioMutation, refetch]);
+  }, [deleteDominioMutation, clearSelection, refetch]);
 
   const handleAudit = useCallback((dominio: Dominio) => {
     auditoria.handleAudit('Dominio', dominio.id);

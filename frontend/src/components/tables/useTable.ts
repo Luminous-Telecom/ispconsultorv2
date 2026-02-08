@@ -123,17 +123,26 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
 
   // Atualizar dados quando props mudarem
   useEffect(() => {
+    const newData = data || [];
     setState(prev => {
-      const newData = data || [];
       // Verificar se os dados realmente mudaram (comparar tamanho e IDs para evitar comparação de referência)
       const dataChanged = prev.data.length !== newData.length || 
         newData.some((item, index) => !prev.data[index] || prev.data[index].id !== item.id);
       
       if (dataChanged || prev.data !== newData) {
+        // Filtrar selectedItems para manter apenas os que ainda existem nos novos dados
+        const newIds = new Set(newData.map(item => item.id));
+        const validSelectedItems = prev.selectedItems.filter(item => newIds.has(item.id));
+        const selectionChanged = validSelectedItems.length !== prev.selectedItems.length ||
+          validSelectedItems.some((item, i) => prev.selectedItems[i]?.id !== item.id);
+        if (selectionChanged) {
+          queueMicrotask(() => setPendingSelectionChange(validSelectedItems));
+        }
         return {
           ...prev,
           data: newData,
           filteredData: newData,
+          selectedItems: validSelectedItems,
         };
       }
       return prev;

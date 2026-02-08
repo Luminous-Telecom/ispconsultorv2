@@ -99,10 +99,11 @@ export class ErrorHandler {
           const baseURL = (axiosError.config?.baseURL || '').toLowerCase();
           const fullUrl = `${baseURL}${requestUrl}`;
           
-          // Rotas que não devem ser tratadas como erro de autenticação
+          // Rotas que não devem ser tratadas como erro de autenticação (404 = recurso não encontrado)
           const optionalRoutes = [
             'consultar', 'mensagens-', 'servidores-', 'servidor-', 
-            'dados-empresa', 'modelos-', 'modelo-', '/parametros', 'buscar-cep'
+            'dados-empresa', 'modelos-', 'modelo-', '/parametros', 'buscar-cep',
+            'dominios'
           ];
           
           const isOptionalRoute = optionalRoutes.some(route => 
