@@ -20,7 +20,7 @@ const upload = multer({
   },
 });
 
-// Rota para extrair domínios de PDF (upload)
+// Upload: inicia job assíncrono, retorna jobId (evita timeout)
 router.post(
   '/extract',
   authMiddleware,
@@ -28,7 +28,14 @@ router.post(
   PdfExtractController.extractFromPdf
 );
 
-// Rota para extrair domínios de PDF (URL)
+// Consulta status/resultado do job (polling)
+router.get(
+  '/status/:jobId',
+  authMiddleware,
+  PdfExtractController.getJobStatus
+);
+
+// Extração por URL: inicia job assíncrono, retorna jobId
 router.post(
   '/extract-from-url',
   authMiddleware,

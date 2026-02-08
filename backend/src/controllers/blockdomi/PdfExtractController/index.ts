@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { sendError, sendSuccess } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
+import { isRedisAvailable } from '../../../config/redis';
+import { setPdfExtractJob, getPdfExtractJob } from '../../../services/pdfExtractJobService';
 
 function runPythonScript(scriptPath: string, pdfPath: string, timeoutMs: number): Promise<{ stdout: string; stderr: string; code: number | null }> {
   return new Promise((resolve, reject) => {
@@ -37,19 +39,108 @@ function runPythonScript(scriptPath: string, pdfPath: string, timeoutMs: number)
 const isDist = __dirname.includes(`${path.sep}dist${path.sep}`);
 const relativeToRoot = isDist ? '../../../' : '../../../../'; // dist: 3 níveis | src: 4 níveis até backend
 
+/**
+ * Executa o script Python em background (sem bloquear a requisição).
+ * Ao terminar, atualiza o Redis com resultado ou erro e remove o arquivo temporário.
+ */
+function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: string): void {
+  const proc = spawn('python3', [scriptPath, tempFilePath], {
+    detached: true,
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  proc.unref();
+
+  let stdout = '';
+  let stderr = '';
+  proc.stdout?.on('data', (d: Buffer) => { stdout += d.toString(); });
+  proc.stderr?.on('data', (d: Buffer) => { stderr += d.toString(); });
+
+  proc.on('close', (code, signal) => {
+    const cleanup = (): void => {
+      fs.unlink(tempFilePath).catch((err) => {
+        logger.error('PdfExtract.background: falha ao remover temp', { jobId, tempFilePath, error: err instanceof Error ? err.message : String(err) });
+      });
+    };
+
+    if (signal || code !== 0) {
+      const errMsg = signal ? `Processo finalizado por signal: ${signal}` : `Python exit code ${code}`;
+      if (stderr?.trim()) logger.warn('PdfExtract.background: Python stderr', { jobId, stderr: stderr.trim() });
+      setPdfExtractJob(jobId, {
+        status: 'failed',
+        error: errMsg,
+        createdAt: Date.now()
+      }).then(cleanup);
+      return;
+    }
+
+    type PyResult = { success?: boolean; dominios?: string[]; dominios_bruto?: string[]; total?: number; total_bruto?: number; data_inicio_bloqueio?: string | null; data_fim_bloqueio?: string | null; error?: string };
+    let result: PyResult | null = null;
+    try {
+      result = JSON.parse(stdout);
+    } catch {
+      const lines = stdout.split('\n');
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('{')) {
+          try {
+            result = JSON.parse(trimmed);
+            break;
+          } catch {
+            continue;
+          }
+        }
+      }
+    }
+
+    if (result && result.success) {
+      setPdfExtractJob(jobId, {
+        status: 'completed',
+        result: {
+          dominios: result.dominios ?? [],
+          dominios_bruto: result.dominios_bruto ?? result.dominios,
+          total: result.total ?? 0,
+          total_bruto: result.total_bruto ?? result.total,
+          data_inicio_bloqueio: result.data_inicio_bloqueio ?? undefined,
+          data_fim_bloqueio: result.data_fim_bloqueio ?? undefined
+        },
+        createdAt: Date.now()
+      }).then(cleanup);
+    } else {
+      setPdfExtractJob(jobId, {
+        status: 'failed',
+        error: result?.error ?? 'Erro ao extrair domínios',
+        createdAt: Date.now()
+      }).then(cleanup);
+    }
+  });
+
+  proc.on('error', (err) => {
+    logger.error('PdfExtract.background: erro ao iniciar Python', { jobId, error: err.message });
+    setPdfExtractJob(jobId, {
+      status: 'failed',
+      error: err.message ?? 'Erro ao iniciar processamento',
+      createdAt: Date.now()
+    }).then(() => {
+      fs.unlink(tempFilePath).catch(() => {});
+    });
+  });
+}
+
 class PdfExtractController {
   /**
-   * Extrai domínios de um PDF usando script Python (pymupdf)
-   * POST /api/blockdomi/pdf-extract
+   * Upload de PDF e início do processamento assíncrono (evita timeout Cloudflare).
+   * Retorna jobId imediatamente; frontend consulta GET /pdf-extract/status/:jobId até status !== 'processing'.
+   * POST /api/pdf-extract/extract
    */
   async extractFromPdf(req: Request, res: Response): Promise<void> {
-    let tempFilePath: string | null = null;
-
     try {
-      logger.info('PdfExtract.extractFromPdf: início', {
-        hasFile: !!req.file,
-        fileSize: req.file?.buffer?.length
-      });
+      if (!isRedisAvailable()) {
+        sendError(res, new Error('Processamento assíncrono indisponível'), 'Redis não configurado. Defina REDIS_URL.', 503, true, {
+          context: 'PdfExtractController',
+          action: 'extractFromPdf'
+        });
+        return;
+      }
 
       if (!req.file) {
         sendError(res, new Error('Nenhum arquivo PDF foi enviado'), 'Nenhum arquivo PDF foi enviado', 400, true, {
@@ -60,177 +151,87 @@ class PdfExtractController {
         return;
       }
 
+      const jobId = `pdf-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
       const uploadsDir = path.join(__dirname, relativeToRoot, 'uploads/temp');
       await fs.mkdir(uploadsDir, { recursive: true });
-
-      const tempFileName = `pdf-${Date.now()}-${Math.random().toString(36).substring(7)}.pdf`;
-      tempFilePath = path.join(uploadsDir, tempFileName);
+      const tempFileName = `job-${jobId}.pdf`;
+      const tempFilePath = path.join(uploadsDir, tempFileName);
 
       await fs.writeFile(tempFilePath, req.file.buffer);
 
+      await setPdfExtractJob(jobId, {
+        status: 'processing',
+        createdAt: Date.now()
+      });
+
       const scriptPath = path.join(__dirname, relativeToRoot, 'scripts/extrair-dominios.py');
-      logger.info('PdfExtract.extractFromPdf: executando script Python', {
-        scriptPath,
-        tempFilePath,
-        fileSize: req.file.buffer.length
-      });
+      logger.info('PdfExtract.extractFromPdf: job criado, disparando Python em background', { jobId, fileSize: req.file.buffer.length });
 
-      let stdout: string;
-      let stderr: string | undefined;
-      try {
-        const result = await runPythonScript(scriptPath, tempFilePath, 300000);
-        stdout = result.stdout;
-        stderr = result.stderr;
-      } catch (execErr: unknown) {
-        const execError = execErr as { stdout?: string; stderr?: string; code?: string | number; killed?: boolean; message?: string };
-        stderr = execError.stderr;
-        const pyStderr = (execError.stderr || '').trim();
-        const pyStdout = (execError.stdout || '').trim();
-        if (pyStderr) logger.error(`PdfExtract.extractFromPdf: Python stderr: ${pyStderr}`);
-        if (pyStdout) logger.error(`PdfExtract.extractFromPdf: Python stdout: ${pyStdout.substring(0, 800)}`);
-        logger.error('PdfExtract.extractFromPdf: falha ao executar Python', {
-          context: 'PdfExtractController',
-          action: 'extractFromPdf',
-          scriptPath,
-          tempFilePath,
-          exitCode: execError.code,
-          killed: execError.killed,
-          stdout: execError.stdout,
-          stderr: execError.stderr,
-          message: execError.message
-        });
-        throw execErr;
-      }
+      runPythonInBackground(scriptPath, tempFilePath, jobId);
 
-      if (stderr && stderr.trim()) {
-        logger.warn('PdfExtract.extractFromPdf: Python stderr', { stderr: stderr.trim() });
-      }
-
-      logger.info('PdfExtract.extractFromPdf: stdout recebido', {
-        stdoutLength: stdout.length,
-        stdoutPreview: stdout.substring(0, 200)
-      });
-
-      let result;
-      try {
-        result = JSON.parse(stdout);
-      } catch (parseErr) {
-        // Se falhar, tenta encontrar a linha JSON no stdout
-        const lines = stdout.split('\n');
-        let jsonLine = null;
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed.startsWith('{')) {
-            try {
-              jsonLine = JSON.parse(trimmed);
-              break;
-            } catch {
-              continue;
-            }
-          }
-        }
-        
-        if (jsonLine) {
-          logger.warn('PdfExtract.extractFromPdf: JSON encontrado em linha separada', {
-            totalLines: lines.length
-          });
-          result = jsonLine;
-        } else {
-          logger.error('PdfExtract.extractFromPdf: erro ao parsear JSON', {
-            error: parseErr instanceof Error ? parseErr.message : String(parseErr),
-            stdoutFull: stdout,
-            stdoutLength: stdout.length
-          });
-          throw parseErr;
-        }
-      }
-
-      if (!result.success) {
-        logger.error('PdfExtract.extractFromPdf: script retornou success=false', {
-          context: 'PdfExtractController',
-          action: 'extractFromPdf',
-          error: result.error,
-          stdout: stdout.substring(0, 500)
-        });
-        sendError(res, new Error(result.error || 'Erro ao extrair domínios'), result.error || 'Erro ao extrair domínios', 500, true, {
-          context: 'PdfExtractController',
-          action: 'extractFromPdf',
-          pythonError: result.error
-        });
-        return;
-      }
-
-      logger.info('PdfExtract.extractFromPdf: sucesso', { total: result.total, total_bruto: result.total_bruto });
-      const payload: Record<string, unknown> = {
-        dominios: result.dominios,
-        dominios_bruto: result.dominios_bruto ?? result.dominios,
-        total: result.total,
-        total_bruto: result.total_bruto ?? result.total,
-        message: `${result.total} domínios extraídos com sucesso`
-      };
-      if (result.data_inicio_bloqueio) payload.data_inicio_bloqueio = result.data_inicio_bloqueio;
-      if (result.data_fim_bloqueio) payload.data_fim_bloqueio = result.data_fim_bloqueio;
-      sendSuccess(res, payload);
+      sendSuccess(res, { jobId }, undefined, 202);
     } catch (error: unknown) {
-      const err = error as { code?: string; killed?: boolean; message?: string; stdout?: string; stderr?: string };
-
-      logger.error('PdfExtract.extractFromPdf: exceção capturada', {
+      const err = error as { code?: string; message?: string };
+      logger.error('PdfExtract.extractFromPdf: exceção', {
         context: 'PdfExtractController',
         action: 'extractFromPdf',
-        code: err.code,
-        killed: err.killed,
-        message: err.message,
-        stdout: err.stdout,
-        stderr: err.stderr,
-        stack: error instanceof Error ? error.stack : undefined
+        message: err.message
       });
-
-      if (err.code === 'ENOENT') {
-        sendError(res, error, 'Python 3 não está instalado ou script não encontrado', 500, true, {
-          context: 'PdfExtractController',
-          action: 'extractFromPdf',
-          code: err.code
-        });
-      } else if (err.killed) {
-        sendError(res, error, 'Processamento do PDF excedeu o tempo limite', 408, true, {
-          context: 'PdfExtractController',
-          action: 'extractFromPdf',
-          killed: true
-        });
-      } else {
-        sendError(res, error, `Erro ao processar PDF: ${err.message || 'Erro desconhecido'}`, 500, true, {
-          context: 'PdfExtractController',
-          action: 'extractFromPdf',
-          message: err.message,
-          stderr: err.stderr
-        });
-      }
-    } finally {
-      // Remove arquivo temporário
-      if (tempFilePath) {
-        try {
-          await fs.unlink(tempFilePath);
-        } catch (err) {
-          console.error('Erro ao remover arquivo temporário:', err);
-        }
-      }
+      sendError(res, error, err.message ?? 'Erro ao iniciar processamento do PDF', 500, true, {
+        context: 'PdfExtractController',
+        action: 'extractFromPdf'
+      });
     }
   }
 
   /**
-   * Extrai domínios de um PDF a partir de URL
+   * Consulta status e resultado do job de extração (polling).
+   * GET /api/pdf-extract/status/:jobId
+   */
+  async getJobStatus(req: Request, res: Response): Promise<void> {
+    const jobId = req.params.jobId as string;
+    if (!jobId?.trim()) {
+      sendError(res, new Error('jobId obrigatório'), 'jobId obrigatório', 400, true, {
+        context: 'PdfExtractController',
+        action: 'getJobStatus'
+      });
+      return;
+    }
+
+    const state = await getPdfExtractJob(jobId.trim());
+    if (!state) {
+      sendError(res, new Error('Job não encontrado'), 'Job não encontrado ou expirado', 404, false, {
+        context: 'PdfExtractController',
+        action: 'getJobStatus',
+        jobId
+      });
+      return;
+    }
+
+    const payload: { status: string; result?: unknown; error?: string } = {
+      status: state.status
+    };
+    if (state.status === 'completed' && state.result) payload.result = state.result;
+    if (state.status === 'failed' && state.error) payload.error = state.error;
+    sendSuccess(res, payload);
+  }
+
+  /**
+   * Inicia extração de domínios a partir de URL (assíncrono).
+   * Retorna jobId; frontend faz polling em GET /pdf-extract/status/:jobId.
    * POST /api/pdf-extract/extract-from-url
    */
   async extractFromPdfUrl(req: Request, res: Response): Promise<void> {
-    let tempFilePath: string | null = null;
-
     try {
-      const { url } = req.body as { url?: string };
-      logger.info('PdfExtract.extractFromPdfUrl: início', {
-        hasUrl: !!url,
-        urlLength: typeof url === 'string' ? url.length : 0
-      });
+      if (!isRedisAvailable()) {
+        sendError(res, new Error('Processamento assíncrono indisponível'), 'Redis não configurado. Defina REDIS_URL.', 503, true, {
+          context: 'PdfExtractController',
+          action: 'extractFromPdfUrl'
+        });
+        return;
+      }
 
+      const { url } = req.body as { url?: string };
       if (!url || typeof url !== 'string' || !url.trim()) {
         sendError(res, new Error('URL do PDF é obrigatória'), 'URL do PDF é obrigatória', 400, true, {
           context: 'PdfExtractController',
@@ -250,29 +251,55 @@ class PdfExtractController {
         return;
       }
 
-      logger.info('PdfExtract.extractFromPdfUrl: baixando PDF', { url: urlTrimmed });
+      const jobId = `pdf-url-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+      await setPdfExtractJob(jobId, {
+        status: 'processing',
+        createdAt: Date.now()
+      });
+
+      logger.info('PdfExtract.extractFromPdfUrl: job criado, processamento em background', { jobId, url: urlTrimmed });
+
+      // Download + Python em background (não bloqueia a resposta)
+      setImmediate(() => {
+        this.runExtractFromUrlBackground(jobId, urlTrimmed).catch((err) => {
+          logger.error('PdfExtract.extractFromPdfUrl.background', { jobId, error: err instanceof Error ? err.message : String(err) });
+          setPdfExtractJob(jobId, {
+            status: 'failed',
+            error: err instanceof Error ? err.message : String(err),
+            createdAt: Date.now()
+          });
+        });
+      });
+
+      sendSuccess(res, { jobId }, undefined, 202);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      sendError(res, error, err.message ?? 'Erro ao iniciar processamento', 500, true, {
+        context: 'PdfExtractController',
+        action: 'extractFromPdfUrl'
+      });
+    }
+  }
+
+  /**
+   * Executado em background: baixa PDF da URL, salva em temp e chama o script Python.
+   */
+  private async runExtractFromUrlBackground(jobId: string, url: string): Promise<void> {
+    const uploadsDir = path.join(__dirname, relativeToRoot, 'uploads/temp');
+    await fs.mkdir(uploadsDir, { recursive: true });
+    const tempFilePath = path.join(uploadsDir, `job-${jobId}.pdf`);
+
+    try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
-      const response = await fetch(urlTrimmed, {
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
+      const response = await fetch(url, {
         headers: { 'User-Agent': 'BackNet-ERP/1.0' },
         signal: controller.signal
       });
       clearTimeout(timeoutId);
 
-      logger.info('PdfExtract.extractFromPdfUrl: resposta recebida', {
-        status: response.status,
-        contentType: response.headers.get('content-type'),
-        contentLength: response.headers.get('content-length')
-      });
-
       if (!response.ok) {
-        sendError(res, new Error(`Falha ao baixar PDF: ${response.status}`), `Não foi possível baixar o PDF (${response.status})`, 400, true, {
-          context: 'PdfExtractController',
-          action: 'extractFromPdfUrl',
-          status: response.status,
-          url: urlTrimmed
-        });
-        return;
+        throw new Error(`Falha ao baixar PDF: ${response.status}`);
       }
 
       const contentType = response.headers.get('content-type') || '';
@@ -282,179 +309,19 @@ class PdfExtractController {
           const header = Buffer.from(buffer.slice(0, 4));
           const pdfHeader = Buffer.from([0x25, 0x50, 0x44, 0x46]);
           if (!header.equals(pdfHeader)) {
-            sendError(res, new Error('O conteúdo não parece ser um PDF válido'), 'O URL não retornou um PDF válido', 400, true, {
-              context: 'PdfExtractController',
-              action: 'extractFromPdfUrl',
-              reason: 'not_pdf',
-              contentType
-            });
-            return;
+            throw new Error('O URL não retornou um PDF válido');
           }
         }
       }
 
       const buffer = Buffer.from(await response.arrayBuffer());
-      logger.info('PdfExtract.extractFromPdfUrl: PDF baixado', { size: buffer.length });
-
-      const uploadsDir = path.join(__dirname, relativeToRoot, 'uploads/temp');
-      await fs.mkdir(uploadsDir, { recursive: true });
-      const tempFileName = `pdf-url-${Date.now()}-${Math.random().toString(36).substring(7)}.pdf`;
-      tempFilePath = path.join(uploadsDir, tempFileName);
       await fs.writeFile(tempFilePath, buffer);
 
       const scriptPath = path.join(__dirname, relativeToRoot, 'scripts/extrair-dominios.py');
-      logger.info('PdfExtract.extractFromPdfUrl: executando script Python', { scriptPath, tempFilePath });
-
-      let stdout: string;
-      try {
-        const execResult = await runPythonScript(scriptPath, tempFilePath, 300000);
-        stdout = execResult.stdout;
-        
-        logger.info('PdfExtract.extractFromPdfUrl: stdout recebido', {
-          stdoutLength: stdout.length,
-          stdoutPreview: stdout.substring(0, 200),
-          stdoutBytes: Buffer.from(stdout).toString('hex').substring(0, 100)
-        });
-        
-        if (execResult.stderr && execResult.stderr.trim()) {
-          logger.warn('PdfExtract.extractFromPdfUrl: Python stderr', { stderr: execResult.stderr.trim() });
-        }
-      } catch (execErr: unknown) {
-        const execError = execErr as { stdout?: string; stderr?: string; code?: string | number; killed?: boolean; message?: string };
-        const pyStderr = (execError.stderr || '').trim();
-        const pyStdout = (execError.stdout || '').trim();
-        if (pyStderr) logger.error(`PdfExtract.extractFromPdfUrl: Python stderr: ${pyStderr}`);
-        if (pyStdout) logger.error(`PdfExtract.extractFromPdfUrl: Python stdout: ${pyStdout.substring(0, 800)}`);
-        logger.error('PdfExtract.extractFromPdfUrl: falha ao executar Python', {
-          context: 'PdfExtractController',
-          action: 'extractFromPdfUrl',
-          scriptPath,
-          tempFilePath,
-          exitCode: execError.code,
-          killed: execError.killed,
-          stdout: execError.stdout,
-          stderr: execError.stderr,
-          message: execError.message
-        });
-        throw execErr;
-      }
-
-      logger.info('PdfExtract.extractFromPdfUrl: tentando parsear JSON', {
-        stdoutTrimmed: stdout.trim().substring(0, 200)
-      });
-
-      let result;
-      try {
-        // Tenta parsear direto primeiro
-        result = JSON.parse(stdout);
-      } catch (parseErr) {
-        // Se falhar, tenta encontrar a linha JSON no stdout (pode ter warnings antes)
-        const lines = stdout.split('\n');
-        let jsonLine = null;
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed.startsWith('{')) {
-            try {
-              jsonLine = JSON.parse(trimmed);
-              break;
-            } catch {
-              continue;
-            }
-          }
-        }
-        
-        if (jsonLine) {
-          logger.warn('PdfExtract.extractFromPdfUrl: JSON encontrado em linha separada', {
-            totalLines: lines.length,
-            otherLines: lines.filter(l => l.trim() && !l.trim().startsWith('{')).slice(0, 3)
-          });
-          result = jsonLine;
-        } else {
-          logger.error('PdfExtract.extractFromPdfUrl: erro ao parsear JSON', {
-            error: parseErr instanceof Error ? parseErr.message : String(parseErr),
-            stdoutFull: stdout,
-            stdoutLength: stdout.length,
-            firstChar: stdout.charCodeAt(0),
-            lastChar: stdout.charCodeAt(stdout.length - 1)
-          });
-          throw parseErr;
-        }
-      }
-      if (!result.success) {
-        logger.error('PdfExtract.extractFromPdfUrl: script retornou success=false', {
-          context: 'PdfExtractController',
-          action: 'extractFromPdfUrl',
-          error: result.error,
-          stdout: stdout.substring(0, 500)
-        });
-        sendError(res, new Error(result.error || 'Erro ao extrair domínios'), result.error || 'Erro ao extrair domínios', 500, true, {
-          context: 'PdfExtractController',
-          action: 'extractFromPdfUrl',
-          pythonError: result.error
-        });
-        return;
-      }
-
-      logger.info('PdfExtract.extractFromPdfUrl: sucesso', { total: result.total, total_bruto: result.total_bruto });
-      const payload: Record<string, unknown> = {
-        dominios: result.dominios,
-        dominios_bruto: result.dominios_bruto ?? result.dominios,
-        total: result.total,
-        total_bruto: result.total_bruto ?? result.total,
-        message: `${result.total} domínios extraídos com sucesso`
-      };
-      if (result.data_inicio_bloqueio) payload.data_inicio_bloqueio = result.data_inicio_bloqueio;
-      if (result.data_fim_bloqueio) payload.data_fim_bloqueio = result.data_fim_bloqueio;
-      sendSuccess(res, payload);
-    } catch (error: unknown) {
-      const err = error as { name?: string; code?: string; killed?: boolean; message?: string; stdout?: string; stderr?: string };
-
-      logger.error('PdfExtract.extractFromPdfUrl: exceção capturada', {
-        context: 'PdfExtractController',
-        action: 'extractFromPdfUrl',
-        name: err.name,
-        code: err.code,
-        killed: err.killed,
-        message: err.message,
-        stdout: err.stdout,
-        stderr: err.stderr,
-        stack: error instanceof Error ? error.stack : undefined
-      });
-
-      if (err.name === 'AbortError' || err.name === 'TimeoutError') {
-        sendError(res, error, 'Tempo limite excedido ao baixar o PDF', 408, true, {
-          context: 'PdfExtractController',
-          action: 'extractFromPdfUrl',
-          reason: 'timeout'
-        });
-      } else if (err.code === 'ENOENT') {
-        sendError(res, error, 'Python 3 não está instalado ou script não encontrado', 500, true, {
-          context: 'PdfExtractController',
-          action: 'extractFromPdfUrl',
-          code: err.code
-        });
-      } else if (err.killed) {
-        sendError(res, error, 'Processamento do PDF excedeu o tempo limite', 408, true, {
-          context: 'PdfExtractController',
-          action: 'extractFromPdfUrl',
-          killed: true
-        });
-      } else {
-        sendError(res, error, `Erro ao processar PDF: ${err.message || 'Erro desconhecido'}`, 500, true, {
-          context: 'PdfExtractController',
-          action: 'extractFromPdfUrl',
-          message: err.message,
-          stderr: err.stderr
-        });
-      }
-    } finally {
-      if (tempFilePath) {
-        try {
-          await fs.unlink(tempFilePath);
-        } catch (e) {
-          console.error('Erro ao remover arquivo temporário:', e);
-        }
-      }
+      runPythonInBackground(scriptPath, tempFilePath, jobId);
+    } catch (err) {
+      await fs.unlink(tempFilePath).catch(() => {});
+      throw err;
     }
   }
 }

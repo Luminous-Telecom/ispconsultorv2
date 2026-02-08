@@ -10,6 +10,7 @@ import { IPv4Service } from '@/services/ipv4Service';
 import { IPv6Service } from '@/services/ipv6Service';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useI18n } from '@/contexts/I18nContext';
+import { useLoading } from '@/contexts/LoadingContext';
 import DominiosExtraidosVisualizacaoModal, {
   type DominiosExtraidosVisualizacaoMetadata
 } from '@/components/modals/blockdomi/DominiosExtraidosVisualizacaoModal';
@@ -104,6 +105,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
+  const { setExtractionLoading } = useLoading();
   const [rawText, setRawText] = useState('');
   const [nomeOficio, setNomeOficio] = useState('');
   const [dataInicioBloqueio, setDataInicioBloqueio] = useState('');
@@ -183,6 +185,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const handleExtractFromPdf = useCallback(async () => {
     if (pdfFile) {
       setIsExtractingPdf(true);
+      setExtractionLoading(true);
+      await new Promise((r) => setTimeout(r, 0));
       try {
         const result = await PdfExtractService.extractFromPdf(pdfFile);
         
@@ -218,11 +222,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         error((e as Error)?.message ?? 'Erro ao extrair PDF.');
       } finally {
         setIsExtractingPdf(false);
+        setExtractionLoading(false);
       }
       return;
     }
     error(t('blockdomi.importFromPdfIntro'));
-  }, [pdfFile, success, error, t, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios]);
+  }, [pdfFile, success, error, t, setExtractionLoading, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios]);
 
   const handleExtractFromPdfUrl = useCallback(async () => {
     const url = linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim();
@@ -231,6 +236,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       return;
     }
     setIsExtractingPdf(true);
+    setExtractionLoading(true);
+    await new Promise((r) => setTimeout(r, 0));
     try {
       const result = await PdfExtractService.extractFromPdfUrl(url);
       if (result.success && result.data) {
@@ -263,8 +270,9 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       error((e as Error)?.message ?? 'Erro ao extrair PDF da URL.');
     } finally {
       setIsExtractingPdf(false);
+      setExtractionLoading(false);
     }
-  }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica]);
+  }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t, setExtractionLoading, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica]);
 
   const hasPdfUrl = Boolean(linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim());
 
@@ -436,7 +444,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                   {t('blockdomi.extractFromPlanilhaUrl')}
                 </Button>
               )}
-              {isExtractingPdf && <span className="text-muted small">{t('blockdomi.extractingPdf')}</span>}
+              {isExtractingPdf && (
+                <span className="d-inline-flex align-items-center gap-2 text-primary">
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                  <span className="small">{t('blockdomi.extractingPdf')}</span>
+                </span>
+              )}
             </div>
             {hasPdfUrl && (
               <p className="text-muted small mt-1 mb-0">{t('blockdomi.extractFromPlanilhaUrlHelp')}</p>

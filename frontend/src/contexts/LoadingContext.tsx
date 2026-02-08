@@ -1,21 +1,35 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 
 interface LoadingContextType {
   isLoading: boolean;
   setLoading: (loading: boolean) => void;
+  /** Mantém a barra de loading no topo ativa (ex.: extração de PDF em background). */
+  setExtractionLoading: (loading: boolean) => void;
 }
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [extractionLoading, setExtractionLoadingState] = useState(false);
 
   const setLoading = useCallback((loading: boolean) => {
-    setIsLoading(loading);
+    setApiLoading(loading);
   }, []);
 
+  const setExtractionLoading = useCallback((loading: boolean) => {
+    setExtractionLoadingState(loading);
+  }, []);
+
+  const isLoading = apiLoading || extractionLoading;
+
+  const value = useMemo(
+    () => ({ isLoading, setLoading, setExtractionLoading }),
+    [isLoading, setLoading, setExtractionLoading]
+  );
+
   return (
-    <LoadingContext.Provider value={{ isLoading, setLoading }}>
+    <LoadingContext.Provider value={value}>
       {children}
     </LoadingContext.Provider>
   );
