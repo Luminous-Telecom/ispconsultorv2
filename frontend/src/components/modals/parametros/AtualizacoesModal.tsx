@@ -160,6 +160,9 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
     });
   };
 
+  /** Segundos de espera antes de começar o polling em /health (backend agenda pm2 restart em 5s). */
+  const RESTART_GRACE_SECONDS = 6;
+
   const updateMutation = useMutation({
     mutationFn: (branch: string = 'main') => executeUpdateWithSSE(branch),
     onSuccess: async () => {
@@ -167,8 +170,14 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
         id: `update-success-${Date.now()}`,
         duration: 5000,
       });
-      setUpdateProgress(t('updates.waitingServer'));
       setUpdateProgressPercent(100);
+
+      for (let s = RESTART_GRACE_SECONDS; s >= 1; s--) {
+        setUpdateProgress(t('updates.restartInSeconds', { n: s }));
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+
+      setUpdateProgress(t('updates.waitingServer'));
       const ready = await waitForBackendHealth({
         maxAttempts: 45,
         delayMs: 1000,
