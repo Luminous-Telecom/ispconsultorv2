@@ -4,7 +4,7 @@
  */
 import * as pdfjsLib from 'pdfjs-dist';
 import { sanitizeDominio } from '@/utils/stringUtils';
-import { isValidIPv4 } from '@/utils/validators';
+import { isValidIPv4, isValidIPv6 } from '@/utils/validators';
 
 // Worker do pdfjs (CDN para evitar copiar arquivo para public)
 if (typeof window !== 'undefined') {
@@ -265,6 +265,7 @@ function extractDomainsAndIpsFromPages(pages: PageText[]): string[] {
   // TLD pode ter letras, números e hífen (ex: salto-alto777bet)
   const domainLikeRegex = /(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?::\d{1,5})?(?:\/[^\s'"<>]*)?/g;
   const ipv4Regex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
+  const ipv6Regex = /(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?::[0-9a-fA-F]{1,4}){1,7}|::/g;
 
   for (const page of pages) {
     const lines = page.lines.length > 0 ? page.lines : [page.text];
@@ -284,11 +285,21 @@ function extractDomainsAndIpsFromPages(pages: PageText[]): string[] {
       
       let m: RegExpExecArray | null;
 
-      // Busca IPs
+      // Busca IPv4
       const re4 = new RegExp(ipv4Regex.source, 'g');
       while ((m = re4.exec(lineClean)) !== null) {
         const ip = m[0];
         if (isValidIPv4(ip) && !seen.has(ip)) {
+          seen.add(ip);
+          result.push(ip);
+        }
+      }
+
+      // Busca IPv6
+      const re6 = new RegExp(ipv6Regex.source, 'g');
+      while ((m = re6.exec(lineClean)) !== null) {
+        const ip = m[0];
+        if (isValidIPv6(ip) && !seen.has(ip)) {
           seen.add(ip);
           result.push(ip);
         }

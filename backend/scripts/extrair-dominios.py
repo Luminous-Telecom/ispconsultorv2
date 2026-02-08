@@ -87,9 +87,46 @@ def extrair_datas_operacao(texto):
     return (data_inicio, data_fim)
 
 
+def _validar_ipv4(s):
+    """Valida IPv4 (4 octetos 0-255)."""
+    m = re.match(r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$', s)
+    if not m:
+        return False
+    for g in m.groups():
+        n = int(g, 10)
+        if n < 0 or n > 255:
+            return False
+    return True
+
+
+def _validar_ipv6(s):
+    """Valida IPv6 usando ipaddress."""
+    try:
+        import ipaddress
+        ipaddress.IPv6Address(s)
+        return True
+    except Exception:
+        return False
+
+
+# Regex para IPv6 (candidatos: hex e :, pelo menos 2 grupos)
+RE_IPV6_CANDIDATE = re.compile(
+    r'(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|'
+    r'(?:[0-9a-fA-F]{1,4}:){1,7}:|'
+    r'(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|'
+    r'(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|'
+    r'(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|'
+    r'(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|'
+    r'(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|'
+    r'[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|'
+    r':(?::[0-9a-fA-F]{1,4}){1,7}|::'
+)
+RE_IPV4 = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b')
+
+
 def extrair_dominios_de_tabelas(page, regex_dominio):
     """
-    Extrai domínios usando detecção nativa de tabelas do PyMuPDF.
+    Extrai domínios, IPv4 e IPv6 usando detecção nativa de tabelas do PyMuPDF.
     Remove quebras de linha dentro da mesma célula antes de extrair.
     """
     dominios = []
@@ -108,8 +145,20 @@ def extrair_dominios_de_tabelas(page, regex_dominio):
                                 if cell and isinstance(cell, str):
                                     # Remove quebras de linha da mesma célula (conteúdo em 2 linhas vira 1)
                                     texto_limpo = cell.replace(' ', '').replace('\t', '').replace('\n', '')
-                                    dominios_encontrados = re.findall(regex_dominio, texto_limpo)
-                                    dominios.extend(dominios_encontrados)
+                                    # Domínios (exclui IPs para evitar duplicata)
+                                    for d in re.findall(regex_dominio, texto_limpo):
+                                        if not _validar_ipv4(d) and not _validar_ipv6(d):
+                                            dominios.append(d)
+                                    # IPv4 (valida octetos 0-255)
+                                    for m in RE_IPV4.finditer(texto_limpo):
+                                        ip = m.group(0)
+                                        if _validar_ipv4(ip):
+                                            dominios.append(ip)
+                                    # IPv6
+                                    for m in RE_IPV6_CANDIDATE.finditer(texto_limpo):
+                                        ip = m.group(0)
+                                        if _validar_ipv6(ip):
+                                            dominios.append(ip)
     except Exception:
         pass
     
