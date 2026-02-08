@@ -40,6 +40,51 @@ const isDist = __dirname.includes(`${path.sep}dist${path.sep}`);
 const relativeToRoot = isDist ? '../../../' : '../../../../'; // dist: 3 níveis | src: 4 níveis até backend
 
 /**
+ * Executado em background: baixa PDF da URL, salva em temp e chama o script Python.
+ * Função no nível do módulo para não depender de `this` no callback do setImmediate.
+ */
+async function runExtractFromUrlBackground(jobId: string, url: string): Promise<void> {
+  const uploadsDir = path.join(__dirname, relativeToRoot, 'uploads/temp');
+  await fs.mkdir(uploadsDir, { recursive: true });
+  const tempFilePath = path.join(uploadsDir, `job-${jobId}.pdf`);
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'BackNet-ERP/1.0' },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Falha ao baixar PDF: ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/pdf') && !contentType.includes('octet-stream')) {
+      const buffer = await response.arrayBuffer();
+      if (buffer.byteLength > 4) {
+        const header = Buffer.from(buffer.slice(0, 4));
+        const pdfHeader = Buffer.from([0x25, 0x50, 0x44, 0x46]);
+        if (!header.equals(pdfHeader)) {
+          throw new Error('O URL não retornou um PDF válido');
+        }
+      }
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    await fs.writeFile(tempFilePath, buffer);
+
+    const scriptPath = path.join(__dirname, relativeToRoot, 'scripts/extrair-dominios.py');
+    runPythonInBackground(scriptPath, tempFilePath, jobId);
+  } catch (err) {
+    await fs.unlink(tempFilePath).catch(() => {});
+    throw err;
+  }
+}
+
+/**
  * Executa o script Python em background (sem bloquear a requisição).
  * Ao terminar, atualiza o Redis com resultado ou erro e remove o arquivo temporário.
  */
@@ -259,9 +304,8 @@ class PdfExtractController {
 
       logger.info('PdfExtract.extractFromPdfUrl: job criado, processamento em background', { jobId, url: urlTrimmed });
 
-      // Download + Python em background (não bloqueia a resposta)
       setImmediate(() => {
-        this.runExtractFromUrlBackground(jobId, urlTrimmed).catch((err) => {
+        runExtractFromUrlBackground(jobId, urlTrimmed).catch((err) => {
           logger.error('PdfExtract.extractFromPdfUrl.background', { jobId, error: err instanceof Error ? err.message : String(err) });
           setPdfExtractJob(jobId, {
             status: 'failed',
@@ -278,50 +322,6 @@ class PdfExtractController {
         context: 'PdfExtractController',
         action: 'extractFromPdfUrl'
       });
-    }
-  }
-
-  /**
-   * Executado em background: baixa PDF da URL, salva em temp e chama o script Python.
-   */
-  private async runExtractFromUrlBackground(jobId: string, url: string): Promise<void> {
-    const uploadsDir = path.join(__dirname, relativeToRoot, 'uploads/temp');
-    await fs.mkdir(uploadsDir, { recursive: true });
-    const tempFilePath = path.join(uploadsDir, `job-${jobId}.pdf`);
-
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
-      const response = await fetch(url, {
-        headers: { 'User-Agent': 'BackNet-ERP/1.0' },
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`Falha ao baixar PDF: ${response.status}`);
-      }
-
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.includes('application/pdf') && !contentType.includes('octet-stream')) {
-        const buffer = await response.arrayBuffer();
-        if (buffer.byteLength > 4) {
-          const header = Buffer.from(buffer.slice(0, 4));
-          const pdfHeader = Buffer.from([0x25, 0x50, 0x44, 0x46]);
-          if (!header.equals(pdfHeader)) {
-            throw new Error('O URL não retornou um PDF válido');
-          }
-        }
-      }
-
-      const buffer = Buffer.from(await response.arrayBuffer());
-      await fs.writeFile(tempFilePath, buffer);
-
-      const scriptPath = path.join(__dirname, relativeToRoot, 'scripts/extrair-dominios.py');
-      runPythonInBackground(scriptPath, tempFilePath, jobId);
-    } catch (err) {
-      await fs.unlink(tempFilePath).catch(() => {});
-      throw err;
     }
   }
 }
