@@ -189,11 +189,11 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   }, [titulosData, tableFilters.limit, tableFilters.page]);
 
 
-  // Limpar filtros quando o modal fechar
+  // Limpar filtros quando o modal fechar (inclui data inicial/final e busca)
   useEffect(() => {
     if (!show) {
-      setDataVencimentoInicio(getDataInicioMesAtual());
-      setDataVencimentoFim(getDataFimMesAtual());
+      setDataVencimentoInicio('');
+      setDataVencimentoFim('');
       clearSearch();
       setPage(1);
       setSelectedItems([]);
