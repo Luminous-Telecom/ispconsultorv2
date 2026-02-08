@@ -190,9 +190,10 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
           duration: 4000,
         });
       }
-      setIsUpdating(false);
-      onClose();
-      setTimeout(() => window.location.reload(), 500);
+      setUpdateProgress(t('updates.reloadingPage'));
+      setTimeout(() => {
+        window.location.reload();
+      }, 800);
     },
     onError: (err: unknown) => {
       setIsUpdating(false);
