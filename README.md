@@ -49,6 +49,7 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 - **PM2** (opcional, para gerenciamento de processos)
 - **Git** (para clonar o repositório)
 - **Python 3** e **pip3** (para extração de domínios de PDF no Blockdomi)
+- **Redis** (para processamento assíncrono da extração de PDF, evita timeout em PDFs grandes)
 
 ---
 
@@ -437,6 +438,74 @@ ldconfig -p | grep libnss3
 sudo ldconfig
 ```
 
+### 7. Instalar e configurar Redis (extração de PDF assíncrona)
+
+O Redis é usado para controlar o status do processamento de PDFs em background (evita timeout do Cloudflare em arquivos grandes). Sem Redis configurado, a extração de domínios por PDF retorna 503.
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install redis-server -y
+
+# Iniciar e habilitar
+sudo systemctl start redis-server
+sudo systemctl enable redis-server
+
+# Verificar
+redis-cli ping
+# Deve responder: PONG
+```
+
+**CentOS/RHEL:**
+```bash
+sudo yum install redis -y
+sudo systemctl start redis
+sudo systemctl enable redis
+redis-cli ping
+```
+
+**Configurar senha (recomendado em produção):**
+
+Edite o arquivo de configuração do Redis:
+```bash
+# Ubuntu/Debian
+sudo nano /etc/redis/redis.conf
+
+# Procure por # requirepass e descomente, definindo uma senha forte:
+# requirepass sua-senha-redis
+```
+
+Reinicie o Redis:
+```bash
+sudo systemctl restart redis-server   # Ubuntu/Debian
+# ou
+sudo systemctl restart redis         # CentOS/RHEL
+```
+
+**Variáveis no `.env` do backend:**
+
+No arquivo `backend/.env`, adicione:
+
+```env
+# Redis (extração de PDF assíncrona)
+REDIS_URL=redis://localhost:6379
+# Se o Redis tiver senha (requirepass):
+REDIS_PASSWORD=sua-senha-redis
+```
+
+Ou inclua a senha na URL:
+```env
+REDIS_URL=redis://:sua-senha-redis@localhost:6379
+```
+
+**Testar conexão com senha:**
+```bash
+redis-cli
+AUTH sua-senha-redis
+PING
+# Deve responder PONG
+```
+
 ---
 
 ## Instalação do Projeto
@@ -557,6 +626,10 @@ MAX_FILE_SIZE=5242880
 # Configurações de Rate Limiting
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
+
+# Redis (extração de PDF assíncrona - evita timeout em PDFs grandes)
+REDIS_URL=redis://localhost:6379
+# REDIS_PASSWORD=senha   # descomente se o Redis tiver requirepass
 
 # Webhook Secret Interno
 INTERNAL_WEBHOOK_SECRET=seu-webhook-secret-aqui
@@ -1184,6 +1257,8 @@ pm2 startup
 | `ELASTICSEARCH_PASSWORD` | Senha do Elasticsearch (opcional) | `changeme` |
 | `ELASTICSEARCH_SSL` | Habilitar SSL/TLS (opcional) | `false` |
 | `ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED` | Rejeitar certificados não autorizados (opcional) | `true` |
+| `REDIS_URL` | URL do Redis para jobs de extração de PDF (opcional) | `redis://localhost:6379` |
+| `REDIS_PASSWORD` | Senha do Redis, se usar `requirepass` (opcional) | `sua-senha` |
 
 **⚠️ Sobre `REACT_APP_API_URL` no backend:**
 - Em produção: **SEMPRE** use `/api` (URL relativa)
