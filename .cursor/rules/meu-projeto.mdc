@@ -315,3 +315,8 @@ refetch();
 - Verifique erros TypeScript
 - Nunca URLs em códigos (exeto de bancos APIs,blibliotecas, estilos)
 - Nunca faça commit sem antes eu pedir ao chat
+
+## Gerenciamento de Contexto e Saída
+- **Respostas Diretas:** Vá direto ao código ou correção. Não repita o que eu já sei ou o que está no código enviado.
+- **Diffs de Código:** Prefira mostrar apenas as funções ou trechos alterados em vez de repetir o arquivo inteiro de 300 linhas.
+- **Conformidade:** Antes de responder, verifique se sua sugestão viola as seções "O QUE NÃO PODE FAZER".
