@@ -133,8 +133,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                     }
 
                     if (data.success || (data.step === 'finalizado' && data.progress === 100)) {
-                      setIsUpdating(false);
-                      setUpdateProgress(t('updates.concluded'));
+                      setUpdateProgress(data.message || t('updates.concluded'));
                       setUpdateProgressPercent(100);
                       resolve();
                       return;
