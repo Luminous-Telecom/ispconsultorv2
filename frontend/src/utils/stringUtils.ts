@@ -22,8 +22,10 @@ function removeAccents(str: string): string {
  * Sanitiza um domínio: remove protocolo, aspas, acentos, espaços.
  * Mantém hostname (incl. subdomínios), porta e caminho (path).
  * Remove: https://, http://, aspas, acentos, espaços. Query string (?...) é removida.
+ * Path aceita pastas e arquivos: /, ., -, _, %, letras e números (ex.: /pasta/patch, /path/to/file.html).
  * Exemplos:
  *   "https://encurtador.com/abc" -> "encurtador.com/abc"
+ *   "https://site.com/pasta/patch" -> "site.com/pasta/patch"
  *   "verão777.com" -> "verao777.com"
  *   "betl 8k.app" -> "betl8k.app"
  *   "hympg.com:2087" -> "hympg.com:2087"
@@ -47,7 +49,7 @@ export const sanitizeDominio = (dominio: string | null | undefined): string => {
   const portMatch = hostPart.match(/^(.+):(\d{1,5})$/);
   const hostname = portMatch ? portMatch[1] : hostPart;
   if (!/^[a-z0-9][a-z0-9.-]*[a-z0-9]$|^[a-z0-9]$/i.test(hostname)) return '';
-  if (path && !/^\/[a-z0-9/_-]*$/i.test(path)) return '';
+  if (path && !/^\/[a-z0-9/_.%-]*$/i.test(path)) return '';
   return hostPart + path;
 };
 

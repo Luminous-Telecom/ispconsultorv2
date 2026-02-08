@@ -200,10 +200,8 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
       const { type, value } = classifyLine(trimmed);
       if (type === 'invalido') continue;
 
-      // Forma final: para domínios com path, só hostname (ex: teste.com.br/teste → teste.com.br)
-      const formaFinal = type === 'dominio' && value.includes('/')
-        ? value.split('/')[0]
-        : value;
+      // Forma final: valor já sanitizado (mantém path; não tratar path como "filtro")
+      const formaFinal = value;
 
       if (trimmed !== formaFinal) result.push({ raw: trimmed, fixed: formaFinal });
     }
