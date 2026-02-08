@@ -106,7 +106,44 @@ class PdfExtractController {
         logger.warn('PdfExtract.extractFromPdf: Python stderr', { stderr: stderr.trim() });
       }
 
-      const result = JSON.parse(stdout);
+      logger.info('PdfExtract.extractFromPdf: stdout recebido', {
+        stdoutLength: stdout.length,
+        stdoutPreview: stdout.substring(0, 200)
+      });
+
+      let result;
+      try {
+        result = JSON.parse(stdout);
+      } catch (parseErr) {
+        // Se falhar, tenta encontrar a linha JSON no stdout
+        const lines = stdout.split('\n');
+        let jsonLine = null;
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('{')) {
+            try {
+              jsonLine = JSON.parse(trimmed);
+              break;
+            } catch {
+              continue;
+            }
+          }
+        }
+        
+        if (jsonLine) {
+          logger.warn('PdfExtract.extractFromPdf: JSON encontrado em linha separada', {
+            totalLines: lines.length
+          });
+          result = jsonLine;
+        } else {
+          logger.error('PdfExtract.extractFromPdf: erro ao parsear JSON', {
+            error: parseErr instanceof Error ? parseErr.message : String(parseErr),
+            stdoutFull: stdout,
+            stdoutLength: stdout.length
+          });
+          throw parseErr;
+        }
+      }
 
       if (!result.success) {
         logger.error('PdfExtract.extractFromPdf: script retornou success=false', {
@@ -123,10 +160,12 @@ class PdfExtractController {
         return;
       }
 
-      logger.info('PdfExtract.extractFromPdf: sucesso', { total: result.total });
+      logger.info('PdfExtract.extractFromPdf: sucesso', { total: result.total, total_bruto: result.total_bruto });
       const payload: Record<string, unknown> = {
         dominios: result.dominios,
+        dominios_bruto: result.dominios_bruto ?? result.dominios,
         total: result.total,
+        total_bruto: result.total_bruto ?? result.total,
         message: `${result.total} domínios extraídos com sucesso`
       };
       if (result.data_inicio_bloqueio) payload.data_inicio_bloqueio = result.data_inicio_bloqueio;
@@ -270,6 +309,13 @@ class PdfExtractController {
       try {
         const execResult = await runPythonScript(scriptPath, tempFilePath, 300000);
         stdout = execResult.stdout;
+        
+        logger.info('PdfExtract.extractFromPdfUrl: stdout recebido', {
+          stdoutLength: stdout.length,
+          stdoutPreview: stdout.substring(0, 200),
+          stdoutBytes: Buffer.from(stdout).toString('hex').substring(0, 100)
+        });
+        
         if (execResult.stderr && execResult.stderr.trim()) {
           logger.warn('PdfExtract.extractFromPdfUrl: Python stderr', { stderr: execResult.stderr.trim() });
         }
@@ -293,7 +339,47 @@ class PdfExtractController {
         throw execErr;
       }
 
-      const result = JSON.parse(stdout);
+      logger.info('PdfExtract.extractFromPdfUrl: tentando parsear JSON', {
+        stdoutTrimmed: stdout.trim().substring(0, 200)
+      });
+
+      let result;
+      try {
+        // Tenta parsear direto primeiro
+        result = JSON.parse(stdout);
+      } catch (parseErr) {
+        // Se falhar, tenta encontrar a linha JSON no stdout (pode ter warnings antes)
+        const lines = stdout.split('\n');
+        let jsonLine = null;
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('{')) {
+            try {
+              jsonLine = JSON.parse(trimmed);
+              break;
+            } catch {
+              continue;
+            }
+          }
+        }
+        
+        if (jsonLine) {
+          logger.warn('PdfExtract.extractFromPdfUrl: JSON encontrado em linha separada', {
+            totalLines: lines.length,
+            otherLines: lines.filter(l => l.trim() && !l.trim().startsWith('{')).slice(0, 3)
+          });
+          result = jsonLine;
+        } else {
+          logger.error('PdfExtract.extractFromPdfUrl: erro ao parsear JSON', {
+            error: parseErr instanceof Error ? parseErr.message : String(parseErr),
+            stdoutFull: stdout,
+            stdoutLength: stdout.length,
+            firstChar: stdout.charCodeAt(0),
+            lastChar: stdout.charCodeAt(stdout.length - 1)
+          });
+          throw parseErr;
+        }
+      }
       if (!result.success) {
         logger.error('PdfExtract.extractFromPdfUrl: script retornou success=false', {
           context: 'PdfExtractController',
@@ -309,10 +395,12 @@ class PdfExtractController {
         return;
       }
 
-      logger.info('PdfExtract.extractFromPdfUrl: sucesso', { total: result.total });
+      logger.info('PdfExtract.extractFromPdfUrl: sucesso', { total: result.total, total_bruto: result.total_bruto });
       const payload: Record<string, unknown> = {
         dominios: result.dominios,
+        dominios_bruto: result.dominios_bruto ?? result.dominios,
         total: result.total,
+        total_bruto: result.total_bruto ?? result.total,
         message: `${result.total} domínios extraídos com sucesso`
       };
       if (result.data_inicio_bloqueio) payload.data_inicio_bloqueio = result.data_inicio_bloqueio;

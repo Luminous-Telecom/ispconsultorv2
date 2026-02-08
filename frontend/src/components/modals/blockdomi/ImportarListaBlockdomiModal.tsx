@@ -10,6 +10,9 @@ import { IPv4Service } from '@/services/ipv4Service';
 import { IPv6Service } from '@/services/ipv6Service';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useI18n } from '@/contexts/I18nContext';
+import DominiosExtraidosVisualizacaoModal, {
+  type DominiosExtraidosVisualizacaoMetadata
+} from '@/components/modals/blockdomi/DominiosExtraidosVisualizacaoModal';
 
 export interface ClassifiedList {
   dominios: string[];
@@ -17,7 +20,6 @@ export interface ClassifiedList {
   ipv6: string[];
   invalidos: string[];
   duplicados: string[];
-  /** Itens válidos da lista que já existem no sistema (serão ignorados ao cadastrar) */
   jaCadastrados: string[];
 }
 
@@ -26,11 +28,10 @@ interface ImportarListaBlockdomiModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   skipWrapper?: boolean;
-  /** URL do PDF da planilha (quando aberto a partir da lista com link) */
   pdfUrlToExtract?: string;
 }
 
-function classifyLine(line: string): { type: 'dominio' | 'ipv4' | 'ipv6' | 'invalido'; value: string } {
+export function classifyLine(line: string): { type: 'dominio' | 'ipv4' | 'ipv6' | 'invalido'; value: string } {
   const trimmed = line.trim();
   if (!trimmed) return { type: 'invalido', value: trimmed };
 
@@ -43,7 +44,7 @@ function classifyLine(line: string): { type: 'dominio' | 'ipv4' | 'ipv6' | 'inva
   return { type: 'invalido', value: trimmed };
 }
 
-function classifyLines(text: string): ClassifiedList {
+export function classifyLines(text: string): ClassifiedList {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   const dominios: string[] = [];
   const ipv4: string[] = [];
@@ -116,6 +117,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const pdfFileInputRef = useRef<HTMLInputElement>(null);
+  const [visualizacaoExtrados, setVisualizacaoExtrados] = useState<{
+    show: boolean;
+    dominios: string[];
+    listaFiltrada: string[];
+    metadata: DominiosExtraidosVisualizacaoMetadata;
+  }>({ show: false, dominios: [], listaFiltrada: [], metadata: {} });
 
   const prevShowRef = useRef(false);
   useEffect(() => {
@@ -130,27 +137,25 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   }, [show, pdfUrlToExtract]);
 
   const fetchExisting = useCallback(async () => {
-    const PAGE_SIZE = 5000;
-    const fetchAllPages = async <T extends object>(
-      list: (f: { limit: number; page: number }) => Promise<{ data?: T[]; pagination?: { last_page: number } }>,
+    const fetchAll = async <T,>(
+      listFn: (f: { limit: number; page: number }) => Promise<{ data?: T[]; pagination?: { last_page: number } }>,
       key: keyof T & string
     ): Promise<Set<string>> => {
-      const all: string[] = [];
+      const set = new Set<string>();
       let page = 1;
       while (true) {
-        const res = await list({ limit: PAGE_SIZE, page });
+        const res = await listFn({ limit: 5000, page });
         const arr = res?.data ?? [];
-        all.push(...arr.map((d) => String((d as Record<string, unknown>)[key as string] ?? '')));
-        const lastPage = res?.pagination?.last_page ?? 1;
-        if (page >= lastPage) break;
+        arr.forEach((d) => set.add(String((d as Record<string, unknown>)[key] ?? '')));
+        if (page >= (res?.pagination?.last_page ?? 1)) break;
         page++;
       }
-      return new Set(all);
+      return set;
     };
     const [existingDominios, existingIPv4, existingIPv6] = await Promise.all([
-      fetchAllPages(DominioService.list.bind(DominioService), 'dominio'),
-      fetchAllPages(IPv4Service.list.bind(IPv4Service), 'ip'),
-      fetchAllPages(IPv6Service.list.bind(IPv6Service), 'ip')
+      fetchAll(DominioService.list.bind(DominioService), 'dominio'),
+      fetchAll(IPv4Service.list.bind(IPv4Service), 'ip'),
+      fetchAll(IPv6Service.list.bind(IPv6Service), 'ip')
     ]);
     return { existingDominios, existingIPv4, existingIPv6 };
   }, []);
@@ -179,16 +184,31 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     if (pdfFile) {
       setIsExtractingPdf(true);
       try {
-        // Usa Python (pymupdf) no backend para extração
         const result = await PdfExtractService.extractFromPdf(pdfFile);
         
         if (result.success && result.data) {
-          const text = result.data.dominios.join('\n');
-          setRawText(text);
+          const listBruto = result.data.dominios_bruto ?? result.data.dominios;
+          const listFiltrada = result.data.dominios ?? [];
+          const dataInicio = result.data.data_inicio_bloqueio ?? dataInicioBloqueio;
+          const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
+          if (dataInicio) setDataInicioBloqueio(dataInicio);
+          if (dataFim) setDataFimBloqueio(dataFim);
+          setVisualizacaoExtrados(({
+            show: true,
+            dominios: listBruto,
+            listaFiltrada: listFiltrada,
+            metadata: {
+              nomeOficio,
+              dataInicioBloqueio: dataInicio,
+              dataFimBloqueio: dataFim,
+              linkOficioAnatel: linkOficioAnatel,
+              linkOficioJustica: linkOficioJustica,
+              linkPlanilhaDominios: linkPlanilhaDominios.trim() || undefined
+            }
+          }));
+          setRawText(listBruto.join('\n'));
           setClassified(null);
-          if (result.data.data_inicio_bloqueio) setDataInicioBloqueio(result.data.data_inicio_bloqueio);
-          if (result.data.data_fim_bloqueio) setDataFimBloqueio(result.data.data_fim_bloqueio);
-          success(`${result.data.total} domínios extraídos das tabelas do PDF`);
+          success(`${result.data.total_bruto ?? result.data.total} itens extraídos. Abrindo visualização.`);
         } else {
           error(t('blockdomi.pdfExtractError'));
         }
@@ -202,7 +222,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       return;
     }
     error(t('blockdomi.importFromPdfIntro'));
-  }, [pdfFile, success, error, t]);
+  }, [pdfFile, success, error, t, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios]);
 
   const handleExtractFromPdfUrl = useCallback(async () => {
     const url = linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim();
@@ -214,12 +234,28 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     try {
       const result = await PdfExtractService.extractFromPdfUrl(url);
       if (result.success && result.data) {
-        const text = result.data.dominios.join('\n');
-        setRawText(text);
+        const listBruto = result.data.dominios_bruto ?? result.data.dominios;
+        const listFiltrada = result.data.dominios ?? [];
+        const dataInicio = result.data.data_inicio_bloqueio ?? dataInicioBloqueio;
+        const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
+        if (dataInicio) setDataInicioBloqueio(dataInicio);
+        if (dataFim) setDataFimBloqueio(dataFim);
+        setVisualizacaoExtrados(({
+          show: true,
+          dominios: listBruto,
+          listaFiltrada: listFiltrada,
+          metadata: {
+            nomeOficio,
+            dataInicioBloqueio: dataInicio,
+            dataFimBloqueio: dataFim,
+            linkOficioAnatel: linkOficioAnatel,
+            linkOficioJustica: linkOficioJustica,
+            linkPlanilhaDominios: linkPlanilhaDominios.trim() || undefined
+          }
+        }));
+        setRawText(listBruto.join('\n'));
         setClassified(null);
-        if (result.data.data_inicio_bloqueio) setDataInicioBloqueio(result.data.data_inicio_bloqueio);
-        if (result.data.data_fim_bloqueio) setDataFimBloqueio(result.data.data_fim_bloqueio);
-        success(`${result.data.total} domínios extraídos do PDF da URL`);
+        success(`${result.data.total_bruto ?? result.data.total} itens extraídos. Abrindo visualização.`);
       } else {
         error(t('blockdomi.pdfExtractError'));
       }
@@ -228,7 +264,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     } finally {
       setIsExtractingPdf(false);
     }
-  }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t]);
+  }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica]);
 
   const hasPdfUrl = Boolean(linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim());
 
@@ -251,41 +287,20 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       const linkPlanilhaVal = linkPlanilhaDominios.trim() || null;
 
       const metadata = { nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, link_planilha_dominios: linkPlanilhaVal };
-
+      const emptyBulk = { created: 0, updated: 0, skipped: 0, errors: [] as string[] };
       const [domRes, ipv4Res, ipv6Res] = await Promise.all([
-        classified.dominios.length > 0 ? DominioService.bulkCreate({ items: classified.dominios, ...metadata }) : Promise.resolve({ created: 0, updated: 0, skipped: 0, errors: [] as string[] }),
-        classified.ipv4.length > 0 ? IPv4Service.bulkCreate({ items: classified.ipv4, ...metadata }) : Promise.resolve({ created: 0, updated: 0, skipped: 0, errors: [] as string[] }),
-        classified.ipv6.length > 0 ? IPv6Service.bulkCreate({ items: classified.ipv6, ...metadata }) : Promise.resolve({ created: 0, updated: 0, skipped: 0, errors: [] as string[] })
+        classified.dominios.length > 0 ? DominioService.bulkCreate(({ items: classified.dominios, ...metadata })) : Promise.resolve(emptyBulk),
+        classified.ipv4.length > 0 ? IPv4Service.bulkCreate(({ items: classified.ipv4, ...metadata })) : Promise.resolve(emptyBulk),
+        classified.ipv6.length > 0 ? IPv6Service.bulkCreate(({ items: classified.ipv6, ...metadata })) : Promise.resolve(emptyBulk)
       ]);
-
       const errs = [...domRes.errors, ...ipv4Res.errors, ...ipv6Res.errors];
-
       const parts: string[] = [];
-      if (domRes.created > 0 || domRes.updated > 0) {
-        const p: string[] = [];
-        if (domRes.created > 0) p.push(`${domRes.created} domínio(s) criado(s)`);
-        if (domRes.updated > 0) p.push(`${domRes.updated} domínio(s) atualizado(s)`);
-        parts.push(p.join(', '));
-      }
-      if (ipv4Res.created > 0 || ipv4Res.updated > 0) {
-        const p: string[] = [];
-        if (ipv4Res.created > 0) p.push(`${ipv4Res.created} IPv4 criado(s)`);
-        if (ipv4Res.updated > 0) p.push(`${ipv4Res.updated} IPv4 atualizado(s)`);
-        parts.push(p.join(', '));
-      }
-      if (ipv6Res.created > 0 || ipv6Res.updated > 0) {
-        const p: string[] = [];
-        if (ipv6Res.created > 0) p.push(`${ipv6Res.created} IPv6 criado(s)`);
-        if (ipv6Res.updated > 0) p.push(`${ipv6Res.updated} IPv6 atualizado(s)`);
-        parts.push(p.join(', '));
-      }
+      if (domRes.created + domRes.updated > 0) parts.push(`Domínios: ${domRes.created} criado(s), ${domRes.updated} atualizado(s)`);
+      if (ipv4Res.created + ipv4Res.updated > 0) parts.push(`IPv4: ${ipv4Res.created} criado(s), ${ipv4Res.updated} atualizado(s)`);
+      if (ipv6Res.created + ipv6Res.updated > 0) parts.push(`IPv6: ${ipv6Res.created} criado(s), ${ipv6Res.updated} atualizado(s)`);
       const skipTotal = domRes.skipped + ipv4Res.skipped + ipv6Res.skipped;
-      if (skipTotal > 0) {
-        parts.push(`${t('blockdomi.alreadyRegisteredIgnored')}: ${skipTotal}`);
-      }
-      if (classified.invalidos.length > 0) {
-        parts.push(`Inválidos (não cadastrados): ${classified.invalidos.length}`);
-      }
+      if (skipTotal > 0) parts.push(`${t('blockdomi.alreadyRegisteredIgnored')}: ${skipTotal}`);
+      if (classified.invalidos.length > 0) parts.push(`Inválidos: ${classified.invalidos.length}`);
       success(parts.length > 0 ? parts.join('. ') + '.' : 'Importação concluída.');
       if (errs.length > 0) {
         error(errs.slice(0, 3).join('; ') + (errs.length > 3 ? ` e mais ${errs.length - 3} erro(s).` : ''));
@@ -309,7 +324,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const renderList = (items: string[]) => (
     <ul className="list-unstyled mb-0 small">
       {items.map((item, i) => (
-        <li key={i} className="text-break">
+        <li key={i} className="text-nowrap overflow-x-auto" style={{ minHeight: '1.5em' }}>
           {item}
         </li>
       ))}
@@ -535,19 +550,38 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       </div>
   );
 
+  const visualizacaoModal = (
+    <DominiosExtraidosVisualizacaoModal
+      show={visualizacaoExtrados.show}
+      onClose={() => setVisualizacaoExtrados((prev) => ({ ...prev, show: false }))}
+      onSuccess={onSuccess}
+        dominiosExtraidos={visualizacaoExtrados.dominios}
+        listaFiltrada={visualizacaoExtrados.listaFiltrada}
+        metadata={visualizacaoExtrados.metadata}
+    />
+  );
+
   if (skipWrapper) {
-    return content;
+    return (
+      <>
+        {content}
+        {visualizacaoModal}
+      </>
+    );
   }
 
   return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title={t('blockdomi.titleImport')}
-      size="xl"
-    >
-      {content}
-    </DraggableModal>
+    <>
+      <DraggableModal
+        show={show}
+        onClose={onClose}
+        title={t('blockdomi.titleImport')}
+        size="xl"
+      >
+        {content}
+      </DraggableModal>
+      {visualizacaoModal}
+    </>
   );
 };
 

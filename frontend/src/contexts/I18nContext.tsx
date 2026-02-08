@@ -298,6 +298,12 @@ export interface TranslationKeys {
   'blockdomi.pdfUrlPlaceholder': string;
   'blockdomi.pdfExtractSuccess': string;
   'blockdomi.pdfExtractError': string;
+  'blockdomi.titleVisualizacaoExtrados': string;
+  'blockdomi.raw': string;
+  'blockdomi.filtered': string;
+  'blockdomi.valid': string;
+  'blockdomi.copiedToClipboard': string;
+  'blockdomi.copyFailed': string;
   'blockdomi.duplicates': string;
   'blockdomi.invalid': string;
   'blockdomi.alreadyRegistered': string;
@@ -1568,6 +1574,12 @@ const translations: Translations = {
     'blockdomi.pdfUrlPlaceholder': 'https://...',
     'blockdomi.pdfExtractSuccess': 'Domínios extraídos do PDF. Clique em Analisar.',
     'blockdomi.pdfExtractError': 'Nenhum domínio ou IP encontrado no PDF.',
+    'blockdomi.titleVisualizacaoExtrados': 'Domínios extraídos - Visualização',
+    'blockdomi.raw': 'Bruto',
+    'blockdomi.filtered': 'Filtrados',
+    'blockdomi.valid': 'Válidos',
+    'blockdomi.copiedToClipboard': 'Copiado.',
+    'blockdomi.copyFailed': 'Não foi possível copiar.',
     'blockdomi.duplicates': 'Duplicados',
     'blockdomi.invalid': 'Inválidos',
     'blockdomi.alreadyRegistered': 'Já cadastrados',
@@ -2833,6 +2845,12 @@ const translations: Translations = {
     'blockdomi.pdfUrlPlaceholder': 'https://...',
     'blockdomi.pdfExtractSuccess': 'Domains extracted from PDF. Click Analyze.',
     'blockdomi.pdfExtractError': 'No domains or IPs found in PDF.',
+    'blockdomi.titleVisualizacaoExtrados': 'Extracted domains - View',
+    'blockdomi.raw': 'Raw',
+    'blockdomi.filtered': 'Filtered',
+    'blockdomi.valid': 'Valid',
+    'blockdomi.copiedToClipboard': 'Copied.',
+    'blockdomi.copyFailed': 'Could not copy.',
     'blockdomi.duplicates': 'Duplicates',
     'blockdomi.invalid': 'Invalid',
     'blockdomi.alreadyRegistered': 'Already registered',
@@ -4100,6 +4118,12 @@ const translations: Translations = {
     'blockdomi.pdfUrlPlaceholder': 'https://...',
     'blockdomi.pdfExtractSuccess': 'Dominios extraídos del PDF. Haga clic en Analizar.',
     'blockdomi.pdfExtractError': 'No se encontraron dominios ni IPs en el PDF.',
+    'blockdomi.titleVisualizacaoExtrados': 'Dominios extraídos - Visualización',
+    'blockdomi.raw': 'Bruto',
+    'blockdomi.filtered': 'Filtrados',
+    'blockdomi.valid': 'Válidos',
+    'blockdomi.copiedToClipboard': 'Copiado.',
+    'blockdomi.copyFailed': 'No se pudo copiar.',
     'blockdomi.duplicates': 'Duplicados',
     'blockdomi.invalid': 'Inválidos',
     'blockdomi.alreadyRegistered': 'Ya registrados',

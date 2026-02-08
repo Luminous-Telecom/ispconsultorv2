@@ -4,11 +4,12 @@ export interface PdfExtractResponse {
   success: boolean;
   data?: {
     dominios: string[];
+    /** Lista bruta: ordem do PDF, com duplicatas, sem remoção */
+    dominios_bruto?: string[];
     total: number;
+    total_bruto?: number;
     message: string;
-    /** Data início da operação (YYYY-MM-DD) quando extraída do PDF */
     data_inicio_bloqueio?: string | null;
-    /** Data término da operação (YYYY-MM-DD) quando extraída do PDF */
     data_fim_bloqueio?: string | null;
   };
   message?: string;

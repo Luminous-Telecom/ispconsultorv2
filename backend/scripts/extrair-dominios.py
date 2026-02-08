@@ -7,7 +7,29 @@ Retorna: JSON com dominios, data_inicio_bloqueio, data_fim_bloqueio (quando disp
 import re
 import sys
 import json
+import os
+
+# Suprimir todos os outputs antes dos imports
+_original_stdout = sys.stdout
+_original_stderr = sys.stderr
+
+class DevNull:
+    def write(self, _): pass
+    def flush(self): pass
+
+sys.stdout = DevNull()
+sys.stderr = DevNull()
+
+import warnings
+warnings.filterwarnings('ignore')
+os.environ['PYTHONWARNINGS'] = 'ignore'
+os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+
 import fitz  # pymupdf
+
+# Restaura stdout/stderr após todos os imports
+sys.stdout = _original_stdout
+sys.stderr = _original_stderr
 
 RE_DATA_BR = re.compile(r'\b(\d{1,2})[/\-](\d{1,2})[/\-](\d{2,4})\b')
 
@@ -65,11 +87,52 @@ def extrair_datas_operacao(texto):
     return (data_inicio, data_fim)
 
 
+def extrair_dominios_de_tabelas(page, regex_dominio):
+    """
+    Extrai domínios usando detecção nativa de tabelas do PyMuPDF.
+    Remove quebras de linha dentro da mesma célula antes de extrair.
+    """
+    dominios = []
+    
+    try:
+        if hasattr(page, 'find_tables'):
+            tables = page.find_tables()
+            
+            for table in tables:
+                if hasattr(table, 'extract'):
+                    table_data = table.extract()
+                    
+                    for row in table_data:
+                        if row:
+                            for cell in row:
+                                if cell and isinstance(cell, str):
+                                    # Remove quebras de linha da mesma célula (conteúdo em 2 linhas vira 1)
+                                    texto_limpo = cell.replace(' ', '').replace('\t', '').replace('\n', '')
+                                    dominios_encontrados = re.findall(regex_dominio, texto_limpo)
+                                    dominios.extend(dominios_encontrados)
+    except Exception:
+        pass
+    
+    return dominios
+
+
+
+
+
 def extrair_dominios_pdf(caminho_pdf):
-    """Extrai domínios únicos e datas de operação do PDF."""
+    """
+    Extrai domínios e datas de operação do PDF.
+    Usa apenas detecção nativa de tabelas (find_tables).
+    
+    Retorna:
+    - dominios: lista única ordenada
+    - dominios_bruto: lista na ordem original com duplicatas
+    - data_inicio_bloqueio, data_fim_bloqueio: datas quando disponíveis
+    """
     todos_dominios = set()
-    # TLD pode ter letras, números e hífen (ex: salto-alto777bet)
-    regex_dominio = r'(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?'
+    dominios_bruto = []
+    # Inclui path opcional (ex.: embedcanaistv.com/teste) para o bruto refletir exatamente o que está na tabela
+    regex_dominio = r'(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(?:/[a-zA-Z0-9/_.-]+)?'
     texto_cabecalho = ''
 
     doc = fitz.open(caminho_pdf)
@@ -77,47 +140,56 @@ def extrair_dominios_pdf(caminho_pdf):
         for page_num in range(len(doc)):
             page = doc[page_num]
             text = page.get_text()
-            if text:
-                if page_num < 3:
-                    texto_cabecalho += text + '\n'
-                # Processa linha a linha: remove espaços na linha (corrige "dom inio.info") mas mantém linhas separadas
-                for linha in text.splitlines():
-                    linha_limpa = linha.replace(' ', '').replace('\t', '')
-                    if linha_limpa:
-                        dominios = re.findall(regex_dominio, linha_limpa)
-                        todos_dominios.update(dominios)
+            
+            # Pega cabeçalho das primeiras páginas para extração de datas
+            if page_num < 3 and text:
+                texto_cabecalho += text + '\n'
+            
+            dominios_tabelas = extrair_dominios_de_tabelas(page, regex_dominio)
+            for d in dominios_tabelas:
+                dominios_bruto.append(d)
+                todos_dominios.add(d)
+            
             page = None
     finally:
         doc.close()
 
+    # Extrai datas de operação do cabeçalho
     data_inicio, data_fim = extrair_datas_operacao(texto_cabecalho) if texto_cabecalho else (None, None)
 
     return {
         'dominios': sorted(todos_dominios),
+        'dominios_bruto': dominios_bruto,
         'data_inicio_bloqueio': data_inicio,
         'data_fim_bloqueio': data_fim
     }
 
 
 def main():
-    if len(sys.argv) < 2:
-        print(json.dumps({"success": False, "error": "Caminho do PDF não fornecido"}))
-        sys.exit(1)
-
     try:
+        if len(sys.argv) < 2:
+            sys.stdout.write(json.dumps({"success": False, "error": "Caminho do PDF não fornecido"}) + '\n')
+            sys.stdout.flush()
+            sys.exit(1)
+
         resultado = extrair_dominios_pdf(sys.argv[1])
         out = {
             "success": True,
             "dominios": resultado['dominios'],
-            "total": len(resultado['dominios'])
+            "dominios_bruto": resultado['dominios_bruto'],
+            "total": len(resultado['dominios']),
+            "total_bruto": len(resultado['dominios_bruto'])
         }
         if resultado.get('data_inicio_bloqueio'):
             out["data_inicio_bloqueio"] = resultado["data_inicio_bloqueio"]
         if resultado.get('data_fim_bloqueio'):
             out["data_fim_bloqueio"] = resultado["data_fim_bloqueio"]
-        print(json.dumps(out))
+        
+        sys.stdout.write(json.dumps(out) + '\n')
+        sys.stdout.flush()
     except Exception as e:
-        print(json.dumps({"success": False, "error": str(e)}))
+        sys.stdout.write(json.dumps({"success": False, "error": str(e)}) + '\n')
+        sys.stdout.flush()
         sys.exit(1)
 
 
