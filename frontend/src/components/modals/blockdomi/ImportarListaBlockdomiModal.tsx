@@ -480,7 +480,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 <div className="card-header py-2 bg-primary text-white">
                   {t('blockdomi.domains')} ({classified.dominios.length})
                 </div>
-                <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                   {classified.dominios.length === 0 ? (
                     <span className="text-muted small">{t('blockdomi.none')}</span>
                   ) : (
@@ -494,7 +494,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 <div className="card-header py-2 bg-info text-white">
                   IPv4 ({classified.ipv4.length})
                 </div>
-                <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                   {classified.ipv4.length === 0 ? (
                     <span className="text-muted small">{t('blockdomi.none')}</span>
                   ) : (
@@ -508,7 +508,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 <div className="card-header py-2 bg-secondary text-white">
                   IPv6 ({classified.ipv6.length})
                 </div>
-                <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                   {classified.ipv6.length === 0 ? (
                     <span className="text-muted small">{t('blockdomi.none')}</span>
                   ) : (
@@ -522,7 +522,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 <div className="card-header py-2 bg-dark text-white">
                   {t('blockdomi.alreadyRegistered')} ({classified.jaCadastrados.length})
                 </div>
-                <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                   {classified.jaCadastrados.length === 0 ? (
                     <span className="text-muted small">{t('blockdomi.none')}</span>
                   ) : (
@@ -536,7 +536,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 <div className="card-header py-2 bg-danger text-white">
                   {t('blockdomi.invalid')} ({classified.invalidos.length})
                 </div>
-                <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                   {classified.invalidos.length === 0 ? (
                     <span className="text-muted small">{t('blockdomi.none')}</span>
                   ) : (

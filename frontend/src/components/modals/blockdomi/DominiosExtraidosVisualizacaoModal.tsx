@@ -241,7 +241,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                 <strong>{t('blockdomi.raw')}</strong>
                 <span className="badge bg-secondary">{totalBruto}</span>
               </div>
-              <div className="card-body py-2 overflow-auto" style={{ maxHeight: 280 }}>
+              <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 280 }}>
                 {totalBruto === 0 ? (
                   <span className="text-muted small">{t('blockdomi.none')}</span>
                 ) : (
@@ -268,7 +268,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                 <strong>{t('blockdomi.filtered')}</strong>
                 <span className="badge bg-dark">{dominiosFiltrados.length}</span>
               </div>
-              <div className="card-body py-2 overflow-auto" style={{ maxHeight: 280 }}>
+              <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 280 }}>
                 {dominiosFiltrados.length === 0 ? (
                   <span className="text-muted small">{t('blockdomi.none')}</span>
                 ) : (
@@ -302,7 +302,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                 {(dominiosValidos.length > 0) && <span className="badge bg-light text-dark">{dominiosValidos.length}</span>}
                 {isAnalyzing && <span className="badge bg-warning text-dark">{t('blockdomi.classifying')}</span>}
               </div>
-              <div className="card-body py-2 overflow-auto" style={{ maxHeight: 280 }}>
+              <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 280 }}>
                 {isAnalyzing ? (
                   <p className="text-muted small mb-0">{t('blockdomi.classifying')}</p>
                 ) : dominiosValidos.length === 0 ? (
@@ -374,7 +374,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                   <div className="card-header py-2 bg-primary text-white">
                     {t('blockdomi.domains')} ({classified.dominios.length})
                   </div>
-                  <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                  <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                     {classified.dominios.length === 0 ? (
                       <span className="text-muted small">{t('blockdomi.none')}</span>
                     ) : (
@@ -388,7 +388,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                   <div className="card-header py-2 bg-info text-white">
                     IPv4 ({classified.ipv4.length})
                   </div>
-                  <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                  <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                     {classified.ipv4.length === 0 ? (
                       <span className="text-muted small">{t('blockdomi.none')}</span>
                     ) : (
@@ -402,7 +402,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                   <div className="card-header py-2 bg-secondary text-white">
                     IPv6 ({classified.ipv6.length})
                   </div>
-                  <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                  <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                     {classified.ipv6.length === 0 ? (
                       <span className="text-muted small">{t('blockdomi.none')}</span>
                     ) : (
@@ -416,7 +416,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                   <div className="card-header py-2 bg-dark text-white">
                     {t('blockdomi.alreadyRegistered')} ({classified.jaCadastrados.length})
                   </div>
-                  <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                  <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                     {classified.jaCadastrados.length === 0 ? (
                       <span className="text-muted small">{t('blockdomi.none')}</span>
                     ) : (
@@ -430,7 +430,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                   <div className="card-header py-2 bg-danger text-white">
                     {t('blockdomi.invalid')} ({classified.invalidos.length})
                   </div>
-                  <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                  <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                     {classified.invalidos.length === 0 ? (
                       <span className="text-muted small">{t('blockdomi.none')}</span>
                     ) : (
@@ -444,7 +444,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                   <div className="card-header py-2 bg-warning text-dark">
                     {t('blockdomi.duplicates')} ({classified.duplicados.length})
                   </div>
-                  <div className="card-body py-2 overflow-auto" style={{ maxHeight: 200 }}>
+                  <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
                     {classified.duplicados.length === 0 ? (
                       <span className="text-muted small">{t('blockdomi.none')}</span>
                     ) : (
