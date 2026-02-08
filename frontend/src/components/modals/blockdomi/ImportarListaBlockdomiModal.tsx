@@ -566,6 +566,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const handleCloseVisualizacaoExtrados = useCallback(() => {
     setVisualizacaoExtrados({ show: false, dominios: [], listaFiltrada: [], metadata: {} });
     setRawText('');
+    setNomeOficio('');
     setClassified(null);
     setLinkPlanilhaDominios('');
   }, []);
