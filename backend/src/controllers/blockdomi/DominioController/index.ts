@@ -62,6 +62,11 @@ export class DominioController {
         sendValidationError(res, 'Informe a lista de domínios (items: string[]).');
         return;
       }
+      const dataInicio = data_inicio_bloqueio != null ? String(data_inicio_bloqueio).trim() : '';
+      if (!dataInicio) {
+        sendValidationError(res, 'Data início bloqueio é obrigatória no importe em lote.');
+        return;
+      }
 
       const result = await DominioService.bulkCreate(items, {
         nome_oficio: nome_oficio ?? null,

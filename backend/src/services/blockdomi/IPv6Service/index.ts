@@ -136,25 +136,29 @@ export class IPv6Service {
   }
 
   /**
-   * Buscar IPs existentes com id e data_fim_bloqueio (para atualização condicional)
+   * Buscar IPs existentes com id, data_inicio_bloqueio e data_fim_bloqueio (para atualização condicional)
    */
-  static async findByIpsWithData(ips: string[]): Promise<Map<string, { id: number; data_fim_bloqueio: string | null }>> {
+  static async findByIpsWithData(ips: string[]): Promise<Map<string, { id: number; data_inicio_bloqueio: string | null; data_fim_bloqueio: string | null }>> {
     if (ips.length === 0) return new Map();
     const unique = [...new Set(ips)];
     const found = await IPv6.findAll({
       where: { ip: { [Op.in]: unique } },
-      attributes: ['id', 'ip', 'data_fim_bloqueio'],
+      attributes: ['id', 'ip', 'data_inicio_bloqueio', 'data_fim_bloqueio'],
       raw: true
     });
-    const map = new Map<string, { id: number; data_fim_bloqueio: string | null }>();
+    const map = new Map<string, { id: number; data_inicio_bloqueio: string | null; data_fim_bloqueio: string | null }>();
     for (const r of found) {
-      map.set(r.ip as string, { id: r.id as number, data_fim_bloqueio: r.data_fim_bloqueio as string | null });
+      map.set(r.ip as string, {
+        id: r.id as number,
+        data_inicio_bloqueio: r.data_inicio_bloqueio as string | null,
+        data_fim_bloqueio: r.data_fim_bloqueio as string | null
+      });
     }
     return map;
   }
 
   /**
-   * Criar múltiplos IPv6 em lote. Atualiza existentes quando data_fim_bloqueio for nula ou diferente.
+   * Criar múltiplos IPv6 em lote. Atualiza existentes quando data_fim_bloqueio ou data_inicio_bloqueio mudar (data_fim pode ficar vazia). data_inicio_bloqueio é obrigatória (validada no controller).
    */
   static async bulkCreate(
     items: string[],
@@ -173,6 +177,7 @@ export class IPv6Service {
     const toUpdate: Array<{ id: number }> = [];
     const errors: string[] = [];
     const seen = new Set<string>();
+    const newDataInicio = metadata.data_inicio_bloqueio ?? null;
     const newDataFim = metadata.data_fim_bloqueio ?? null;
 
     for (const ip of items) {
@@ -185,9 +190,9 @@ export class IPv6Service {
 
       const existing = existingMap.get(ip);
       if (existing) {
-        const precisaAtualizar =
-          newDataFim !== null &&
-          (existing.data_fim_bloqueio === null || existing.data_fim_bloqueio !== newDataFim);
+        const dataFimMudou = newDataFim !== (existing.data_fim_bloqueio ?? null);
+        const dataInicioMudou = newDataInicio !== (existing.data_inicio_bloqueio ?? null);
+        const precisaAtualizar = dataFimMudou || dataInicioMudou;
         if (precisaAtualizar) {
           toUpdate.push({ id: existing.id });
         }

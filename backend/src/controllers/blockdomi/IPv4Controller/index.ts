@@ -62,6 +62,11 @@ export class IPv4Controller {
         sendValidationError(res, 'Informe a lista de IPv4 (items: string[]).');
         return;
       }
+      const dataInicio = data_inicio_bloqueio != null ? String(data_inicio_bloqueio).trim() : '';
+      if (!dataInicio) {
+        sendValidationError(res, 'Data início bloqueio é obrigatória no importe em lote.');
+        return;
+      }
 
       const result = await IPv4Service.bulkCreate(items, {
         nome_oficio: nome_oficio ?? null,
