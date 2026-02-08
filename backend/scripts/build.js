@@ -16,8 +16,28 @@ try {
   process.exit(1);
 }
 
-// 2. Limpar pastas antigas se existirem
+// 2. Limpar pastas antigas e arquivos conflitantes (arquivo .js plano quando existe pasta com mesmo nome)
 const distPath = path.join(process.cwd(), 'dist');
+function removeConflictingFlatFiles(dir) {
+  if (!fs.existsSync(dir)) return;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      removeConflictingFlatFiles(fullPath);
+    } else if (entry.isFile()) {
+      const base = path.basename(entry.name, path.extname(entry.name));
+      const siblingDir = path.join(dir, base);
+      if (fs.existsSync(siblingDir) && fs.statSync(siblingDir).isDirectory()) {
+        if (/\.(js|d\.ts|js\.map|d\.ts\.map)$/.test(entry.name)) {
+          fs.unlinkSync(fullPath);
+        }
+      }
+    }
+  }
+}
+removeConflictingFlatFiles(path.join(distPath, 'services'));
+removeConflictingFlatFiles(path.join(distPath, 'controllers'));
 const oldImagesPath = path.join(distPath, 'images');
 
 if (fs.existsSync(oldImagesPath)) {
