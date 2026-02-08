@@ -563,10 +563,17 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       </div>
   );
 
+  const handleCloseVisualizacaoExtrados = useCallback(() => {
+    setVisualizacaoExtrados({ show: false, dominios: [], listaFiltrada: [], metadata: {} });
+    setRawText('');
+    setClassified(null);
+    setLinkPlanilhaDominios('');
+  }, []);
+
   const visualizacaoModal = (
     <DominiosExtraidosVisualizacaoModal
       show={visualizacaoExtrados.show}
-      onClose={() => setVisualizacaoExtrados((prev) => ({ ...prev, show: false }))}
+      onClose={handleCloseVisualizacaoExtrados}
       onSuccess={onSuccess}
         dominiosExtraidos={visualizacaoExtrados.dominios}
         listaFiltrada={visualizacaoExtrados.listaFiltrada}
