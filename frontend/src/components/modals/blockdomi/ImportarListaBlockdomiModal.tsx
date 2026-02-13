@@ -343,10 +343,38 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     }
   }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, success, error, onSuccess, queryClient, t]);
 
+  const domainCount = useMemo(() => {
+    const lines = rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    return lines.length;
+  }, [rawText]);
+
+  const handlePaste = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setRawText((prev) => (prev ? `${prev}\n${text}` : text));
+      setClassified(null);
+    } catch {
+      error(t('blockdomi.copyFailed'));
+    }
+  }, [error, t]);
+
+  const handleClear = useCallback(() => {
+    setRawText('');
+    setClassified(null);
+  }, []);
+
+  const previewItems = useMemo(() => {
+    const lines = rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    return lines.slice(0, 24);
+  }, [rawText]);
+
+  const showCompactPreview = rawText.trim().length > 0 && previewItems.length > 0;
+  const PREVIEW_MAX = 24;
+
   const renderList = (items: string[]) => (
     <ul className="list-unstyled mb-0 small">
       {items.map((item, i) => (
-        <li key={i} className="text-nowrap overflow-x-auto" style={{ minHeight: '1.5em' }}>
+        <li key={i} className="text-nowrap overflow-x-auto ilb-list-item">
           {item}
         </li>
       ))}
@@ -354,222 +382,304 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   );
 
   const content = (
-    <div className="p-3">
-        <p className="text-muted small mb-2">
+    <div className="p-3 importar-lista-blockdomi">
+        <p className="ilb-intro">
           {t('blockdomi.importIntro')}
         </p>
-        <div className="mb-2">
-          <label className="form-label small mb-1">{t('blockdomi.nomeOficioOptional')}</label>
-          <input
-            type="text"
-            className="form-control form-control-sm"
-            placeholder={t('blockdomi.placeholderOficio')}
-            value={nomeOficio}
-            onChange={(e) => setNomeOficio(e.target.value)}
-          />
-        </div>
-        <div className="row g-2 mb-2">
-          <div className="col-12">
-            <label className="form-label small mb-1">{t('blockdomi.linkOficioAnatelOptional')}</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              placeholder="https://..."
-              value={linkOficioAnatel}
-              onChange={(e) => setLinkOficioAnatel(e.target.value)}
-            />
-          </div>
-          <div className="col-12">
-            <label className="form-label small mb-1">{t('blockdomi.linkOficioJusticaOptional')}</label>
-            <textarea
-              className="form-control form-control-sm"
-              rows={2}
-              placeholder="https://exemplo1.com, https://exemplo2.com"
-              value={linkOficioJustica}
-              onChange={(e) => setLinkOficioJustica(e.target.value)}
-            />
-            <span className="text-muted small">Separe múltiplos links com vírgula</span>
-          </div>
-          <div className="col-12">
-            <label className="form-label small mb-1">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              placeholder="https://..."
-              value={linkPlanilhaDominios}
-              onChange={(e) => setLinkPlanilhaDominios(e.target.value)}
-            />
-          </div>
-          <div className="col-12 col-md-6">
-            <label className="form-label small mb-1">{t('blockdomi.dataInicioBloqueio')}</label>
-            <input
-              type="date"
-              className="form-control form-control-sm"
-              value={dataInicioBloqueio}
-              onChange={(e) => setDataInicioBloqueio(e.target.value)}
-            />
-            <span className="text-muted small">{t('blockdomi.emptyEqualsToday')}</span>
-          </div>
-          <div className="col-12 col-md-6">
-            <label className="form-label small mb-1">{t('blockdomi.dataFimBloqueioOptional')}</label>
-            <input
-              type="date"
-              className="form-control form-control-sm"
-              value={dataFimBloqueio}
-              onChange={(e) => setDataFimBloqueio(e.target.value)}
-            />
+
+        <div className="ilb-section">
+          <div className="row g-2 mb-2">
+            <div className="col-12 col-md-6">
+              <label className="form-label small mb-1">{t('blockdomi.nomeOficioOptional')}</label>
+              <div className="ilb-input-wrapper">
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder={t('blockdomi.placeholderOficio')}
+                  value={nomeOficio}
+                  onChange={(e) => setNomeOficio(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="col-12 col-md-6">
+              <label className="form-label small mb-1">{t('blockdomi.linkOficioAnatelOptional')}</label>
+              <div className="ilb-input-wrapper">
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="https://..."
+                  value={linkOficioAnatel}
+                  onChange={(e) => setLinkOficioAnatel(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="col-12">
+              <label className="form-label small mb-1">{t('blockdomi.linkOficioJusticaOptional')}</label>
+              <div className="ilb-input-wrapper">
+                <textarea
+                  className="form-control form-control-sm"
+                  rows={2}
+                  placeholder="https://exemplo1.com, https://exemplo2.com"
+                  value={linkOficioJustica}
+                  onChange={(e) => setLinkOficioJustica(e.target.value)}
+                />
+              </div>
+              <span className="text-muted small">{t('blockdomi.separateLinksHelp')}</span>
+            </div>
+            <div className="col-12">
+              <label className="form-label small mb-1">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
+              <div className="ilb-input-wrapper">
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="https://..."
+                  value={linkPlanilhaDominios}
+                  onChange={(e) => setLinkPlanilhaDominios(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="col-12 col-md-6">
+              <label className="form-label small mb-1">{t('blockdomi.dataInicioBloqueio')}</label>
+              <div className="ilb-input-wrapper">
+                <input
+                  type="date"
+                  className="form-control form-control-sm"
+                  value={dataInicioBloqueio}
+                  onChange={(e) => setDataInicioBloqueio(e.target.value)}
+                />
+              </div>
+              <span className="text-muted small">{t('blockdomi.emptyEqualsToday')}</span>
+            </div>
+            <div className="col-12 col-md-6">
+              <label className="form-label small mb-1">{t('blockdomi.dataFimBloqueioOptional')}</label>
+              <div className="ilb-input-wrapper">
+                <input
+                  type="date"
+                  className="form-control form-control-sm"
+                  value={dataFimBloqueio}
+                  onChange={(e) => setDataFimBloqueio(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="card mb-3">
-          <div className="card-header py-2 bg-light">
-            <strong>{t('blockdomi.importFromPdf')}</strong>
-          </div>
-          <div className="card-body py-2">
-            <p className="text-muted small mb-2">{t('blockdomi.importFromPdfIntro')}</p>
-            <div className="mb-2">
-              <label className="form-label small mb-1">{t('blockdomi.pdfFile')}</label>
-              <input
-                ref={pdfFileInputRef}
-                type="file"
-                accept=".pdf,application/pdf"
-                className="form-control form-control-sm"
-                onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
-              />
+        <div className="ilb-section">
+          <div className="card ilb-pdf-card mb-0">
+            <div className="card-header">
+              <i className="bi bi-file-earmark-pdf"></i>
+              {t('blockdomi.importFromPdf')}
             </div>
-            <div className="d-flex flex-wrap gap-2 align-items-center">
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleExtractFromPdf}
-                disabled={isExtractingPdf || !pdfFile}
-              >
-                {t('blockdomi.extractDomainsFromPdf')}
-              </Button>
-              {hasPdfUrl && (
+            <div className="card-body">
+              <p className="text-muted small mb-2">{t('blockdomi.importFromPdfIntro')}</p>
+              <div className="mb-2">
+                <label className="form-label small mb-1">{t('blockdomi.pdfFile')}</label>
+                <input
+                  ref={pdfFileInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  className="form-control form-control-sm"
+                  onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <div className="d-flex flex-wrap gap-2 align-items-center">
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="primary"
                   size="sm"
-                  onClick={handleExtractFromPdfUrl}
-                  disabled={isExtractingPdf}
+                  onClick={handleExtractFromPdf}
+                  disabled={isExtractingPdf || !pdfFile}
+                  leftIcon={<i className="bi bi-file-earmark-arrow-down"></i>}
                 >
-                  {t('blockdomi.extractFromPlanilhaUrl')}
+                  {t('blockdomi.extractDomainsFromPdf')}
                 </Button>
+                {hasPdfUrl && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleExtractFromPdfUrl}
+                    disabled={isExtractingPdf}
+                    leftIcon={<i className="bi bi-link-45deg"></i>}
+                  >
+                    {t('blockdomi.extractFromPlanilhaUrl')}
+                  </Button>
+                )}
+                {isExtractingPdf && (
+                  <span className="ilb-processing">
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                    <span>{t('blockdomi.extractingPdf')}</span>
+                  </span>
+                )}
+              </div>
+              {hasPdfUrl && (
+                <p className="text-muted small mt-1 mb-0">{t('blockdomi.extractFromPlanilhaUrlHelp')}</p>
               )}
-              {isExtractingPdf && (
-                <span className="d-inline-flex align-items-center gap-2 text-primary">
-                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-                  <span className="small">{t('blockdomi.extractingPdf')}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="ilb-section">
+          <div className={`ilb-editor-wrapper ${rawText.trim() ? 'has-content' : ''}`}>
+            <div className="ilb-editor-header">
+              <span>{t('blockdomi.inputListLabel')}</span>
+              {domainCount > 0 && (
+                <span className="ilb-editor-counter">
+                  {domainCount} {t('blockdomi.domainsDetected')}
                 </span>
               )}
             </div>
-            {hasPdfUrl && (
-              <p className="text-muted small mt-1 mb-0">{t('blockdomi.extractFromPlanilhaUrlHelp')}</p>
-            )}
+            <div className="position-relative">
+              <textarea
+                className="ilb-editor-textarea"
+                placeholder="meusite.com&#10;10.0.0.1&#10;2001:db8::1&#10;https://outro.dominio.com/caminho"
+                value={rawText}
+                onChange={(e) => {
+                  setRawText(e.target.value);
+                  setClassified(null);
+                }}
+              />
+              {!rawText.trim() && (
+                <div className="ilb-editor-empty-state">
+                  <i className="bi bi-clipboard2-plus ilb-empty-icon d-block mb-2"></i>
+                  {t('blockdomi.pasteListHint')}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <textarea
-          className="form-control font-monospace small"
-          rows={6}
-          placeholder="meusite.com&#10;10.0.0.1&#10;2001:db8::1&#10;https://outro.dominio.com/caminho"
-          value={rawText}
-          onChange={(e) => {
-            setRawText(e.target.value);
-            setClassified(null);
-          }}
-        />
-        <div className="d-flex gap-2 mt-2">
-          <Button type="button" variant="primary" size="sm" onClick={handleAnalisar} disabled={!rawText.trim() || isAnalyzing}>
-            {t('blockdomi.analyze')}
-          </Button>
-          {classified && (
+          <div className="ilb-actions">
             <Button
               type="button"
-              variant="success"
+              variant="secondary"
               size="sm"
-              onClick={handleCadastrar}
-              disabled={totalValid === 0 || isCadastrando}
+              onClick={handlePaste}
+              leftIcon={<i className="bi bi-clipboard"></i>}
             >
-              {t('blockdomi.register')}
+              {t('blockdomi.paste')}
             </Button>
+            <Button
+              type="button"
+              variant="outline-secondary"
+              size="sm"
+              onClick={handleClear}
+              disabled={!rawText.trim()}
+              leftIcon={<i className="bi bi-trash"></i>}
+            >
+              {t('ui.clear')}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleAnalisar}
+              disabled={!rawText.trim() || isAnalyzing}
+              leftIcon={<i className="bi bi-search"></i>}
+            >
+              {t('blockdomi.analyze')}
+            </Button>
+            {classified && (
+              <Button
+                type="button"
+                variant="success"
+                size="sm"
+                onClick={handleCadastrar}
+                disabled={totalValid === 0 || isCadastrando}
+                leftIcon={<i className="bi bi-cloud-upload"></i>}
+              >
+                {t('blockdomi.register')}
+              </Button>
+            )}
+          </div>
+
+          {showCompactPreview && (
+            <div className="ilb-preview-section">
+              <div className="ilb-preview-title">
+                {t('blockdomi.previewExtracted')} ({previewItems.length}{previewItems.length >= PREVIEW_MAX ? '+' : ''})
+              </div>
+              <div className="ilb-preview-tags">
+                {previewItems.map((item, i) => (
+                  <span key={i} className="ilb-preview-tag">
+                    {item.length > 40 ? `${item.slice(0, 40)}...` : item}
+                  </span>
+                ))}
+                {domainCount > PREVIEW_MAX && (
+                  <span className="ilb-preview-tag text-muted">
+                    +{domainCount - PREVIEW_MAX}...
+                  </span>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
-        {isAnalyzing && <p className="mt-2 text-muted small">{t('blockdomi.classifying')}</p>}
+        {isAnalyzing && (
+          <div className="ilb-processing mt-1">
+            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+            <span>{t('blockdomi.classifying')}</span>
+          </div>
+        )}
 
         {classified && !isAnalyzing && (
-          <div className="row g-3 mt-2">
-            <div className="col-12 col-md-6 col-lg-3">
-              <div className="card h-100">
-                <div className="card-header py-2 bg-primary text-white">
-                  {t('blockdomi.domains')} ({classified.dominios.length})
-                </div>
-                <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
-                  {classified.dominios.length === 0 ? (
-                    <span className="text-muted small">{t('blockdomi.none')}</span>
-                  ) : (
-                    renderList(classified.dominios)
-                  )}
-                </div>
+          <div className="ilb-classification-cards">
+            <div className="card ilb-class-card">
+              <div className="card-header bg-primary text-white">
+                {t('blockdomi.domains')} ({classified.dominios.length})
+              </div>
+              <div className="card-body overflow-auto user-select-text">
+                {classified.dominios.length === 0 ? (
+                  <span className="text-muted small">{t('blockdomi.none')}</span>
+                ) : (
+                  renderList(classified.dominios)
+                )}
               </div>
             </div>
-            <div className="col-12 col-md-6 col-lg-3">
-              <div className="card h-100">
-                <div className="card-header py-2 bg-info text-white">
-                  IPv4 ({classified.ipv4.length})
-                </div>
-                <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
-                  {classified.ipv4.length === 0 ? (
-                    <span className="text-muted small">{t('blockdomi.none')}</span>
-                  ) : (
-                    renderList(classified.ipv4)
-                  )}
-                </div>
+            <div className="card ilb-class-card">
+              <div className="card-header bg-info text-white">
+                IPv4 ({classified.ipv4.length})
+              </div>
+              <div className="card-body overflow-auto user-select-text">
+                {classified.ipv4.length === 0 ? (
+                  <span className="text-muted small">{t('blockdomi.none')}</span>
+                ) : (
+                  renderList(classified.ipv4)
+                )}
               </div>
             </div>
-            <div className="col-12 col-md-6 col-lg-3">
-              <div className="card h-100">
-                <div className="card-header py-2 bg-secondary text-white">
-                  IPv6 ({classified.ipv6.length})
-                </div>
-                <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
-                  {classified.ipv6.length === 0 ? (
-                    <span className="text-muted small">{t('blockdomi.none')}</span>
-                  ) : (
-                    renderList(classified.ipv6)
-                  )}
-                </div>
+            <div className="card ilb-class-card">
+              <div className="card-header bg-secondary text-white">
+                IPv6 ({classified.ipv6.length})
+              </div>
+              <div className="card-body overflow-auto user-select-text">
+                {classified.ipv6.length === 0 ? (
+                  <span className="text-muted small">{t('blockdomi.none')}</span>
+                ) : (
+                  renderList(classified.ipv6)
+                )}
               </div>
             </div>
-            <div className="col-12 col-md-6 col-lg-3">
-              <div className="card h-100">
-                <div className="card-header py-2 bg-dark text-white">
-                  {t('blockdomi.alreadyRegistered')} ({classified.jaCadastrados.length})
-                </div>
-                <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
-                  {classified.jaCadastrados.length === 0 ? (
-                    <span className="text-muted small">{t('blockdomi.none')}</span>
-                  ) : (
-                    renderList(classified.jaCadastrados)
-                  )}
-                </div>
+            <div className="card ilb-class-card">
+              <div className="card-header bg-dark text-white">
+                {t('blockdomi.alreadyRegistered')} ({classified.jaCadastrados.length})
+              </div>
+              <div className="card-body overflow-auto user-select-text">
+                {classified.jaCadastrados.length === 0 ? (
+                  <span className="text-muted small">{t('blockdomi.none')}</span>
+                ) : (
+                  renderList(classified.jaCadastrados)
+                )}
               </div>
             </div>
-            <div className="col-12 col-md-6 col-lg-3">
-              <div className="card h-100">
-                <div className="card-header py-2 bg-danger text-white">
-                  {t('blockdomi.invalid')} ({classified.invalidos.length})
-                </div>
-                <div className="card-body py-2 overflow-auto user-select-text" style={{ maxHeight: 200 }}>
-                  {classified.invalidos.length === 0 ? (
-                    <span className="text-muted small">{t('blockdomi.none')}</span>
-                  ) : (
-                    renderList(classified.invalidos)
-                  )}
-                </div>
+            <div className="card ilb-class-card">
+              <div className="card-header bg-danger text-white">
+                {t('blockdomi.invalid')} ({classified.invalidos.length})
+              </div>
+              <div className="card-body overflow-auto user-select-text">
+                {classified.invalidos.length === 0 ? (
+                  <span className="text-muted small">{t('blockdomi.none')}</span>
+                ) : (
+                  renderList(classified.invalidos)
+                )}
               </div>
             </div>
           </div>

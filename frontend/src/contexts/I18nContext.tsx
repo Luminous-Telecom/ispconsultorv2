@@ -285,6 +285,12 @@ export interface TranslationKeys {
   'blockdomi.analyze': string;
   'blockdomi.register': string;
   'blockdomi.classifying': string;
+  'blockdomi.paste': string;
+  'blockdomi.domainsDetected': string;
+  'blockdomi.previewExtracted': string;
+  'blockdomi.inputListLabel': string;
+  'blockdomi.separateLinksHelp': string;
+  'blockdomi.pasteListHint': string;
   'blockdomi.importFromPdf': string;
   'blockdomi.importFromPdfIntro': string;
   'blockdomi.pdfFile': string;
@@ -1564,6 +1570,12 @@ const translations: Translations = {
     'blockdomi.analyze': 'Analisar',
     'blockdomi.register': 'Cadastrar',
     'blockdomi.classifying': 'Classificando...',
+    'blockdomi.paste': 'Colar',
+    'blockdomi.domainsDetected': 'itens detectados',
+    'blockdomi.previewExtracted': 'Pré-visualização extraída',
+    'blockdomi.inputListLabel': 'Lista de entrada',
+    'blockdomi.separateLinksHelp': 'Separe múltiplos links com vírgula',
+    'blockdomi.pasteListHint': 'Cole domínios ou IPs (um por linha)',
     'blockdomi.importFromPdf': 'Importar do PDF',
     'blockdomi.importFromPdfIntro': 'Envie um PDF (ofício com tabela anexo) ou informe a URL do PDF. Serão extraídos apenas os domínios e IPs da tabela.',
     'blockdomi.pdfFile': 'Arquivo PDF',
@@ -2838,6 +2850,12 @@ const translations: Translations = {
     'blockdomi.analyze': 'Analyze',
     'blockdomi.register': 'Register',
     'blockdomi.classifying': 'Classifying...',
+    'blockdomi.paste': 'Paste',
+    'blockdomi.domainsDetected': 'items detected',
+    'blockdomi.previewExtracted': 'Extracted preview',
+    'blockdomi.inputListLabel': 'Input list',
+    'blockdomi.separateLinksHelp': 'Separate multiple links with comma',
+    'blockdomi.pasteListHint': 'Paste domains or IPs (one per line)',
     'blockdomi.importFromPdf': 'Import from PDF',
     'blockdomi.importFromPdfIntro': 'Upload a PDF (warrant with annex table) or enter the PDF URL. Only domains and IPs from the table will be extracted.',
     'blockdomi.pdfFile': 'PDF file',
@@ -4114,6 +4132,12 @@ const translations: Translations = {
     'blockdomi.analyze': 'Analizar',
     'blockdomi.register': 'Registrar',
     'blockdomi.classifying': 'Clasificando...',
+    'blockdomi.paste': 'Pegar',
+    'blockdomi.domainsDetected': 'elementos detectados',
+    'blockdomi.previewExtracted': 'Vista previa extraída',
+    'blockdomi.inputListLabel': 'Lista de entrada',
+    'blockdomi.separateLinksHelp': 'Separe múltiplos enlaces con coma',
+    'blockdomi.pasteListHint': 'Pegar dominios o IPs (uno por línea)',
     'blockdomi.importFromPdf': 'Importar desde PDF',
     'blockdomi.importFromPdfIntro': 'Sube un PDF (oficio con tabla anexa) o ingresa la URL del PDF. Solo se extraerán los dominios e IPs de la tabla.',
     'blockdomi.pdfFile': 'Archivo PDF',
