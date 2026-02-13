@@ -38,18 +38,17 @@ export const sanitizeDominio = (dominio: string | null | undefined): string => {
   cleaned = removeAccents(cleaned);
   cleaned = cleaned.replace(/\s+/g, ''); // junta espaços (remove)
   cleaned = cleaned.replace(/^https?:\/\//i, '');
-  const firstQuery = cleaned.indexOf('?');
-  if (firstQuery !== -1) cleaned = cleaned.slice(0, firstQuery);
   cleaned = cleaned.replace(/\/+$/, '').trim();
   const firstSlash = cleaned.indexOf('/');
   let hostPart = firstSlash === -1 ? cleaned : cleaned.slice(0, firstSlash);
   hostPart = hostPart.replace(/\.+$/, ''); // remove pontos no final (ex: meusite.com. -> meusite.com)
-  const path = firstSlash === -1 ? '' : cleaned.slice(firstSlash);
-  if (!hostPart || hostPart.includes('..')) return '';
+  const pathAndQuery = firstSlash === -1 ? '' : cleaned.slice(firstSlash);
+  if (!hostPart || hostPart.includes('..') || !hostPart.includes('.')) return '';
   const portMatch = hostPart.match(/^(.+):(\d{1,5})$/);
   const hostname = portMatch ? portMatch[1] : hostPart;
   if (!/^[a-z0-9][a-z0-9.-]*[a-z0-9]$|^[a-z0-9]$/i.test(hostname)) return '';
-  if (path && !/^\/[a-z0-9/_.%-]*$/i.test(path)) return '';
-  return hostPart + path;
+  // Path e query: permite letras, números, / - _ . % ? # & = [ ] @ ! $ ' ( ) * + , ; : ~
+  if (pathAndQuery && !/^\/[\w\-.~:/?#[\]@!$'()*+,;=%&]*$/i.test(pathAndQuery)) return '';
+  return hostPart + pathAndQuery;
 };
 

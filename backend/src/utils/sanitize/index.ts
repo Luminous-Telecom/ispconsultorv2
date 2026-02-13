@@ -312,34 +312,28 @@ export function sanitizeDominio(dominio: string | null | undefined): string {
   // Remover protocolo
   cleaned = cleaned.replace(/^https?:\/\//i, '');
 
-  // Remover query string (tudo após ?)
-  const firstQuery = cleaned.indexOf('?');
-  if (firstQuery !== -1) {
-    cleaned = cleaned.slice(0, firstQuery);
-  }
-
-  // Remover barra final se sobrou
+  // Remover barra final se sobrou (antes do path/query)
   cleaned = cleaned.replace(/\/+$/, '').trim();
 
-  // Partes: hostname (obrigatório) e opcionalmente /caminho
+  // Partes: hostname (obrigatório) e opcionalmente /caminho e ?query
   const firstSlash = cleaned.indexOf('/');
   const hostname = firstSlash === -1 ? cleaned : cleaned.slice(0, firstSlash);
-  const path = firstSlash === -1 ? '' : cleaned.slice(firstSlash);
+  const pathAndQuery = firstSlash === -1 ? '' : cleaned.slice(firstSlash);
 
-  // Hostname válido: letras, números, hífen, ponto (sem ..)
-  if (!hostname || hostname.includes('..')) {
+  // Hostname válido: letras, números, hífen, ponto (sem ..). Deve ter pelo menos 1 ponto (ex: site.com).
+  if (!hostname || hostname.includes('..') || !hostname.includes('.')) {
     return '';
   }
   if (!/^[a-z0-9][a-z0-9.-]*[a-z0-9]$|^[a-z0-9]$/i.test(hostname)) {
     return '';
   }
 
-  // Path opcional: apenas /, letras, números, hífen, underscore
-  if (path && !/^\/[a-z0-9/_-]*$/i.test(path)) {
+  // Path e query opcionais: permite letras, números, / - _ . % ? # & = [ ] @ ! $ ' ( ) * + , ; : ~
+  if (pathAndQuery && !/^\/[\w\-.~:/?#[\]@!$'()*+,;=%&]*$/i.test(pathAndQuery)) {
     return '';
   }
 
-  return hostname + path;
+  return hostname + pathAndQuery;
 }
 
 /**
