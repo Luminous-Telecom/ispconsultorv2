@@ -363,13 +363,49 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     setClassified(null);
   }, []);
 
-  const previewItems = useMemo(() => {
-    const lines = rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-    return lines.slice(0, 24);
+  const handleCopy = useCallback(
+    (items: string[]) => {
+      if (items.length === 0) return;
+      const texto = items.join('\n');
+      navigator.clipboard.writeText(texto).then(
+        () => success(t('blockdomi.copiedToClipboard')),
+        () => error(t('blockdomi.copyFailed'))
+      );
+    },
+    [success, error, t]
+  );
+
+  const dominiosBruto = useMemo(() => {
+    return rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   }, [rawText]);
 
-  const showCompactPreview = rawText.trim().length > 0 && previewItems.length > 0;
-  const PREVIEW_MAX = 24;
+  const dominiosFiltrados = useMemo(() => {
+    const seen = new Set<string>();
+    const result: { raw: string; fixed: string }[] = [];
+    for (const line of dominiosBruto) {
+      if (seen.has(line)) continue;
+      seen.add(line);
+      const { type, value } = classifyLine(line);
+      if (type === 'invalido') continue;
+      if (line !== value) result.push({ raw: line, fixed: value });
+    }
+    return result;
+  }, [dominiosBruto]);
+
+  const dominiosValidos = useMemo(() => {
+    const normalizar = (s: string) => (s.includes('/') ? s.split('/')[0] : s);
+    const result = classifyLines(rawText);
+    const dominiosNorm = result.dominios.map(normalizar);
+    const todos = [...dominiosNorm, ...result.ipv4, ...result.ipv6];
+    const seen = new Set<string>();
+    return todos.filter((x) => {
+      if (seen.has(x)) return false;
+      seen.add(x);
+      return true;
+    });
+  }, [rawText]);
+
+  const showFiltrosExtract = rawText.trim().length > 0;
 
   const renderList = (items: string[]) => (
     <ul className="list-unstyled mb-0 small">
@@ -592,22 +628,91 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
             )}
           </div>
 
-          {showCompactPreview && (
-            <div className="ilb-preview-section">
-              <div className="ilb-preview-title">
-                {t('blockdomi.previewExtracted')} ({previewItems.length}{previewItems.length >= PREVIEW_MAX ? '+' : ''})
+          {showFiltrosExtract && (
+            <div className="row g-2 mb-2 mt-1">
+              <div className="col-12 col-md-4">
+                <div className="card h-100 ilb-filtro-card">
+                  <div className="card-header py-2 bg-light d-flex justify-content-between align-items-center">
+                    <strong>{t('blockdomi.raw')}</strong>
+                    <span className="badge bg-secondary">{dominiosBruto.length}</span>
+                  </div>
+                  <div className="card-body py-2 overflow-auto user-select-text ilb-filtro-body">
+                    {dominiosBruto.length === 0 ? (
+                      <span className="text-muted small">{t('blockdomi.none')}</span>
+                    ) : (
+                      renderList(dominiosBruto)
+                    )}
+                  </div>
+                  <div className="card-footer py-2">
+                    <Button
+                      type="button"
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={() => handleCopy(dominiosBruto)}
+                      disabled={dominiosBruto.length === 0}
+                    >
+                      {t('buttons.copy')}
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <div className="ilb-preview-tags">
-                {previewItems.map((item, i) => (
-                  <span key={i} className="ilb-preview-tag">
-                    {item.length > 40 ? `${item.slice(0, 40)}...` : item}
-                  </span>
-                ))}
-                {domainCount > PREVIEW_MAX && (
-                  <span className="ilb-preview-tag text-muted">
-                    +{domainCount - PREVIEW_MAX}...
-                  </span>
-                )}
+              <div className="col-12 col-md-4">
+                <div className="card h-100 ilb-filtro-card border-warning">
+                  <div className="card-header py-2 bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <strong>{t('blockdomi.filtered')}</strong>
+                    <span className="badge bg-dark">{dominiosFiltrados.length}</span>
+                  </div>
+                  <div className="card-body py-2 overflow-auto user-select-text ilb-filtro-body">
+                    {dominiosFiltrados.length === 0 ? (
+                      <span className="text-muted small">{t('blockdomi.none')}</span>
+                    ) : (
+                      <ul className="list-unstyled mb-0 small">
+                        {dominiosFiltrados.map((item, i) => (
+                          <li key={i} className="text-nowrap overflow-x-auto ilb-list-item">
+                            {item.raw} <span className="text-muted">&gt;</span> {item.fixed}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="card-footer py-2">
+                    <Button
+                      type="button"
+                      variant="outline-dark"
+                      size="sm"
+                      onClick={() => handleCopy(dominiosFiltrados.map((x) => x.fixed))}
+                      disabled={dominiosFiltrados.length === 0}
+                    >
+                      {t('buttons.copy')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="col-12 col-md-4">
+                <div className="card h-100 ilb-filtro-card border-success">
+                  <div className="card-header py-2 bg-success text-white d-flex justify-content-between align-items-center">
+                    <strong>{t('blockdomi.valid')}</strong>
+                    <span className="badge bg-light text-dark">{dominiosValidos.length}</span>
+                  </div>
+                  <div className="card-body py-2 overflow-auto user-select-text ilb-filtro-body">
+                    {dominiosValidos.length === 0 ? (
+                      <span className="text-muted small">{t('blockdomi.none')}</span>
+                    ) : (
+                      renderList(dominiosValidos)
+                    )}
+                  </div>
+                  <div className="card-footer py-2">
+                    <Button
+                      type="button"
+                      variant="outline-light"
+                      size="sm"
+                      onClick={() => handleCopy(dominiosValidos)}
+                      disabled={dominiosValidos.length === 0}
+                    >
+                      {t('buttons.copy')}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

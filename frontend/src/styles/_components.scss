@@ -5196,6 +5196,15 @@ input[type="week"]::-moz-calendar-picker-indicator {
   overflow-y: auto;
 }
 
+.importar-lista-blockdomi .ilb-filtro-card .card-header,
+.importar-lista-blockdomi .ilb-filtro-card .card-footer {
+  padding: 0.25rem 0.5rem;
+}
+
+.importar-lista-blockdomi .ilb-filtro-body {
+  max-height: 180px;
+}
+
 .importar-lista-blockdomi .ilb-class-card .list-unstyled {
   font-size: var(--font-size-xs);
   line-height: 1.5;
