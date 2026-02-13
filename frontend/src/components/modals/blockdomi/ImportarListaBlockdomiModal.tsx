@@ -129,8 +129,22 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const prevShowRef = useRef(false);
   useEffect(() => {
     if (show && !prevShowRef.current) {
+      setRawText('');
+      setNomeOficio('');
+      setDataInicioBloqueio('');
+      setDataFimBloqueio('');
+      setLinkOficioAnatel('');
+      setLinkOficioJustica('');
+      setLinkPlanilhaDominios('');
+      setClassified(null);
+      setPdfFile(null);
+      setVisualizacaoExtrados({ show: false, dominios: [], listaFiltrada: [], metadata: {} });
+      if (pdfFileInputRef.current) {
+        pdfFileInputRef.current.value = '';
+      }
       const today = new Date();
-      setDataInicioBloqueio(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
+      const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      setDataInicioBloqueio(hojeStr);
       if (pdfUrlToExtract?.trim()) {
         setLinkPlanilhaDominios(pdfUrlToExtract.trim());
       }
@@ -569,6 +583,10 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     setNomeOficio('');
     setClassified(null);
     setLinkPlanilhaDominios('');
+    const today = new Date();
+    const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    setDataInicioBloqueio(hojeStr);
+    setDataFimBloqueio('');
   }, []);
 
   const visualizacaoModal = (
