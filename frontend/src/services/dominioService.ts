@@ -45,6 +45,13 @@ export class DominioService {
     await dominioServiceInstance.delete(id);
   }
 
+  static async bulkDelete(ids: number[]): Promise<{ deleted: number; versao: string }> {
+    const { defaultApiClient } = await import('./core');
+    const response = await defaultApiClient.post<{ deleted: number; versao: string }>('/dominios/bulk-delete', { ids });
+    const data = (response as { data?: { deleted: number; versao: string } }).data;
+    return data ?? { deleted: 0, versao: '' };
+  }
+
   static async bulkCreate(payload: {
     items: string[];
     nome_oficio?: string | null;

@@ -22,6 +22,7 @@ export class Dominio extends Model<
   declare link_oficio_justica: string | null;
   declare link_planilha_dominios: string | null;
   declare ativo: boolean;
+  declare versao_id: number | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -34,11 +35,13 @@ export class Dominio extends Model<
   }
 
   /**
-   * Sobrescrever toJSON para incluir created_at_formatada
+   * Sobrescrever toJSON para incluir created_at_formatada e versao (numero)
    */
   toJSON(): Record<string, unknown> {
     const json = this.get({ plain: true }) as Record<string, unknown>;
     json.created_at_formatada = this.getCreatedAtFormatada();
+    const versaoRef = (this as unknown as { versaoRef?: { numero: string } }).versaoRef;
+    json.versao = versaoRef?.numero ?? null;
     return json;
   }
 }
@@ -89,6 +92,13 @@ Dominio.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true
+    },
+    versao_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: 'versoes_blockdomi', key: 'id' },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL'
     },
     created_at: {
       type: DataTypes.DATE,

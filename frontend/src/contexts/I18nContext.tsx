@@ -246,6 +246,10 @@ export interface TranslationKeys {
   'blockdomi.titleImport': string;
   'blockdomi.domain': string;
   'blockdomi.domains': string;
+  'blockdomi.versao': string;
+  'blockdomi.gerarVersao': string;
+  'blockdomi.tipoLista': string;
+  'blockdomi.versaoGerada': string;
   'blockdomi.selectDomain': string;
   'blockdomi.nomeOficio': string;
   'blockdomi.nomeOficioOptional': string;
@@ -1531,6 +1535,10 @@ const translations: Translations = {
     'blockdomi.titleImport': 'Importar lista - Blockdomi',
     'blockdomi.domain': 'Domínio',
     'blockdomi.domains': 'Domínios',
+    'blockdomi.versao': 'Versão',
+    'blockdomi.gerarVersao': 'Gerar versão',
+    'blockdomi.tipoLista': 'Lista',
+    'blockdomi.versaoGerada': 'gerada com sucesso',
     'blockdomi.selectDomain': 'Selecionar Domínio',
     'blockdomi.nomeOficio': 'Nome do ofício',
     'blockdomi.nomeOficioOptional': 'Nome do ofício (opcional)',
@@ -2811,6 +2819,10 @@ const translations: Translations = {
     'blockdomi.titleImport': 'Import list - Blockdomi',
     'blockdomi.domain': 'Domain',
     'blockdomi.domains': 'Domains',
+    'blockdomi.versao': 'Version',
+    'blockdomi.gerarVersao': 'Generate version',
+    'blockdomi.tipoLista': 'List',
+    'blockdomi.versaoGerada': 'generated successfully',
     'blockdomi.selectDomain': 'Select Domain',
     'blockdomi.nomeOficio': 'Warrant name',
     'blockdomi.nomeOficioOptional': 'Warrant name (optional)',
@@ -4093,6 +4105,10 @@ const translations: Translations = {
     'blockdomi.titleImport': 'Importar lista - Blockdomi',
     'blockdomi.domain': 'Dominio',
     'blockdomi.domains': 'Dominios',
+    'blockdomi.versao': 'Versión',
+    'blockdomi.gerarVersao': 'Generar versión',
+    'blockdomi.tipoLista': 'Lista',
+    'blockdomi.versaoGerada': 'generada con éxito',
     'blockdomi.selectDomain': 'Seleccionar Dominio',
     'blockdomi.nomeOficio': 'Nombre del oficio',
     'blockdomi.nomeOficioOptional': 'Nombre del oficio (opcional)',

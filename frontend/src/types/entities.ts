@@ -748,6 +748,7 @@ export interface UsuarioFilters extends Record<string, string | number | boolean
 export interface Dominio {
   id: number;
   dominio: string;
+  versao?: string | null;
   descricao?: string | null;
   nome_oficio?: string | null;
   data_inicio_bloqueio?: string | null;
@@ -767,6 +768,7 @@ export interface Dominio {
 export interface IPv4 {
   id: number;
   ip: string;
+  versao?: string | null;
   descricao?: string | null;
   nome_oficio?: string | null;
   data_inicio_bloqueio?: string | null;
@@ -786,6 +788,7 @@ export interface IPv4 {
 export interface IPv6 {
   id: number;
   ip: string;
+  versao?: string | null;
   descricao?: string | null;
   nome_oficio?: string | null;
   data_inicio_bloqueio?: string | null;

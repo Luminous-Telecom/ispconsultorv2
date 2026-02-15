@@ -16,6 +16,7 @@ import { useAuditoria } from '@/hooks/useAuditoria';
 import { useModal } from '@/contexts/ModalContext';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface DominioListModalProps {
@@ -78,6 +79,13 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       sortable: true,
       width: '200px',
       render: (item: Dominio) => item.dominio
+    },
+    {
+      key: 'versao',
+      label: t('blockdomi.versao'),
+      sortable: true,
+      width: '100px',
+      render: (item: Dominio) => item.versao || '-'
     },
     {
       key: 'descricao',
@@ -217,15 +225,29 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     }
   }, [selectedItem, clearSelection, onSelectDominio, onClose]);
 
+  const { success, error } = useNotificationContext();
+
   const handleDelete = useCallback(async (dominioId: number) => {
     try {
       await deleteDominioMutation.mutateAsync(dominioId);
       clearSelection();
       refetch();
-    } catch (error: unknown) {
+    } catch {
       // Erro tratado pelo useNotificationContext
     }
   }, [deleteDominioMutation, clearSelection, refetch]);
+
+  const handleBulkDelete = useCallback(async (ids: number[]) => {
+    try {
+      const { deleted, versao } = await DominioService.bulkDelete(ids);
+      clearSelection();
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['dominios'] });
+      success(`Excluído(s) ${deleted} domínio(s). Versão da operação: ${versao}.`);
+    } catch (err: unknown) {
+      error((err as Error)?.message ?? 'Erro ao excluir domínios.');
+    }
+  }, [clearSelection, refetch, queryClient, success, error]);
 
   const handleAudit = useCallback((dominio: Dominio) => {
     auditoria.handleAudit('Dominio', dominio.id);
@@ -333,23 +355,30 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       label: t('actions.delete'),
       disabled: (selectedItems: Dominio[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: Dominio[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (!item) return;
-        
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        if (items.length === 0) return;
+
+        const msg = items.length === 1
+          ? t('messages.confirmDelete')
+          : `Tem certeza que deseja excluir ${items.length} domínio(s)?`;
         const confirmed = await confirm({
-          message: t('messages.confirmDelete'),
+          message: msg,
           variant: 'danger',
           title: t('blockdomi.deleteDomain'),
           confirmText: t('actions.delete'),
           cancelText: t('actions.cancel'),
         });
-      
+
         if (confirmed) {
-          handleDelete(item.id);
+          if (items.length === 1) {
+            handleDelete(items[0].id);
+          } else {
+            handleBulkDelete(items.map((i) => i.id));
+          }
         }
       }
     }
-  ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, openModal, t]);
+  ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, confirm, openModal, t]);
 
   const modalData = useMemo(() => dominiosData?.data || [], [dominiosData?.data]);
 

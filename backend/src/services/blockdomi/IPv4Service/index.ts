@@ -1,6 +1,8 @@
 import { IPv4 } from '../../../models/blockdomi/IPv4';
+import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
 import { Op, WhereOptions, Order } from 'sequelize';
 import { isValidIPv4 } from '../../../utils/sanitize';
+import { VersaoBlockdomiService } from '../VersaoBlockdomiService';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { IPV4_SORT_CONFIG } from '../../../config/sortConfigs';
@@ -86,6 +88,7 @@ export class IPv4Service {
       order,
       limit,
       offset,
+      include: [{ model: VersaoBlockdomi, as: 'versaoRef', attributes: ['numero'], required: false }],
       raw: false
     });
 
@@ -155,6 +158,7 @@ export class IPv4Service {
 
   /**
    * Criar múltiplos IPv4 em lote. Atualiza existentes apenas quando data_fim_bloqueio mudar (incluindo ficar vazia). data_inicio_bloqueio é obrigatória. Não usa data_inicio na decisão de atualizar para evitar reatualizar todo dia ao reimportar os mesmos itens.
+   * Se getVersoesForNewRecords for passado, será chamado com a quantidade de novos registros e as versões retornadas serão atribuídas (versao_id).
    */
   static async bulkCreate(
     items: string[],
@@ -165,8 +169,10 @@ export class IPv4Service {
       link_oficio_anatel?: string | null;
       link_oficio_justica?: string | null;
       link_planilha_dominios?: string | null;
+      getVersoesForNewRecords?: (count: number) => Promise<Array<{ id: number; numero: string }>>;
+      versaoId?: number;
     }
-  ): Promise<{ created: number; updated: number; skipped: number; errors: string[] }> {
+  ): Promise<{ created: number; updated: number; skipped: number; errors: string[]; primeiraVersao?: string }> {
     const valid = items.filter((ip) => isValidIPv4(ip));
     const existingMap = valid.length > 0 ? await this.findByIpsWithData(valid) : new Map();
     const toCreate: Array<Record<string, unknown>> = [];
@@ -205,6 +211,22 @@ export class IPv4Service {
       });
     }
 
+    let primeiraVersao: string | undefined;
+    if (toCreate.length > 0) {
+      if (metadata.versaoId != null) {
+        toCreate.forEach((rec) => {
+          (rec as Record<string, unknown>).versao_id = metadata.versaoId;
+        });
+      } else if (metadata.getVersoesForNewRecords) {
+        const versoes = await metadata.getVersoesForNewRecords(toCreate.length);
+        primeiraVersao = versoes[0]?.numero;
+        toCreate.forEach((rec, i) => {
+          const v = versoes[i];
+          (rec as Record<string, unknown>).versao_id = v?.id ?? null;
+        });
+      }
+    }
+
     const BATCH = 500;
     let created = 0;
     for (let i = 0; i < toCreate.length; i += BATCH) {
@@ -227,18 +249,19 @@ export class IPv4Service {
     }
 
     const skipped = items.length - toCreate.length - toUpdate.length - errors.length;
-    return { created, updated, skipped, errors };
+    return { created, updated, skipped, errors, primeiraVersao };
   }
 
   /**
-   * Criar IPv4
+   * Criar IPv4 (individual). Atribui versão automaticamente.
    */
   static async create(dadosIPv4: Partial<IPv4>): Promise<IPv4> {
     if (dadosIPv4.descricao === undefined) {
       dadosIPv4.descricao = null;
     }
-
-    return await IPv4.create(dadosIPv4 as any);
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4');
+    const dados = { ...dadosIPv4, versao_id: versaoId };
+    return await IPv4.create(dados as never);
   }
 
   /**
@@ -280,7 +303,7 @@ export class IPv4Service {
   }
 
   /**
-   * Deletar IPv4
+   * Deletar IPv4. Gera versão de exclusão e registra em operacoes_blockdomi.
    */
   static async delete(id: string | number): Promise<IPv4> {
     const ipv4 = await IPv4.findByPk(id);
@@ -288,9 +311,53 @@ export class IPv4Service {
     if (!ipv4) {
       throw new Error('IPv4 não encontrado');
     }
-    
+
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4_delete');
     await ipv4.destroy();
+
+    const { sequelize } = await import('../../../config/database');
+    const { QueryTypes } = await import('sequelize');
+    await sequelize.query(
+      `INSERT INTO operacoes_blockdomi (tipo, versao_id, quantidade, ids_deletados, created_at) 
+       VALUES ('ipv4_delete', :versaoId, 1, :ids, NOW())`,
+      {
+        replacements: { versaoId, ids: JSON.stringify([Number(id)]) },
+        type: QueryTypes.INSERT
+      }
+    );
     
     return ipv4;
+  }
+
+  /**
+   * Deletar IPv4 em massa. Gera uma versão para toda a operação.
+   */
+  static async bulkDelete(ids: (string | number)[]): Promise<{ deleted: number; versao: string; versaoId: number }> {
+    if (ids.length === 0) {
+      return { deleted: 0, versao: '', versaoId: 0 };
+    }
+
+    const idsNum = ids.map((id) => Number(id)).filter((n) => !Number.isNaN(n));
+    if (idsNum.length === 0) {
+      return { deleted: 0, versao: '', versaoId: 0 };
+    }
+
+    const { id: versaoId, numero: versao } = await VersaoBlockdomiService.obterProximaVersao('ipv4_delete');
+
+    const { Op } = await import('sequelize');
+    const deleted = await IPv4.destroy({ where: { id: { [Op.in]: idsNum } } });
+
+    const { sequelize } = await import('../../../config/database');
+    const { QueryTypes } = await import('sequelize');
+    await sequelize.query(
+      `INSERT INTO operacoes_blockdomi (tipo, versao_id, quantidade, ids_deletados, created_at) 
+       VALUES ('ipv4_delete', :versaoId, :qtd, :ids, NOW())`,
+      {
+        replacements: { versaoId, qtd: deleted, ids: JSON.stringify(idsNum) },
+        type: QueryTypes.INSERT
+      }
+    );
+
+    return { deleted, versao, versaoId };
   }
 }

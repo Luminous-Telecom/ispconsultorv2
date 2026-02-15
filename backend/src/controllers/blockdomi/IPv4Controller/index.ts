@@ -228,4 +228,28 @@ export class IPv4Controller {
       });
     }
   }
+
+  static async bulkDelete(req: Request, res: Response): Promise<void> {
+    try {
+      const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+      if (ids.length === 0) {
+        sendValidationError(res, 'Informe os IDs para exclusão (ids: number[]).');
+        return;
+      }
+
+      const { deleted, versao } = await IPv4Service.bulkDelete(ids);
+      sendSuccess(
+        res,
+        { deleted, versao },
+        `Excluído(s) ${deleted} IPv4. Versão da operação: ${versao}.`,
+        200
+      );
+    } catch (error) {
+      sendError(res, error, 'Erro ao excluir IPv4 em massa', 500, true, {
+        context: 'IPv4Controller',
+        action: 'bulkDelete',
+        body: req.body
+      });
+    }
+  }
 }

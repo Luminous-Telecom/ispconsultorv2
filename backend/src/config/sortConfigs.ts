@@ -259,7 +259,9 @@ export const DOMINIO_SORT_CONFIG: SortConfig = {
   model: Dominio,
   tableName: 'dominios',
   virtualColumns: {},
-  relationshipColumns: {}
+  relationshipColumns: {
+    versao: { association: 'versaoRef', field: 'numero', description: 'Número da versão Blockdomi' }
+  }
 };
 
 /**
@@ -269,7 +271,9 @@ export const IPV4_SORT_CONFIG: SortConfig = {
   model: IPv4,
   tableName: 'ipv4',
   virtualColumns: {},
-  relationshipColumns: {}
+  relationshipColumns: {
+    versao: { association: 'versaoRef', field: 'numero', description: 'Número da versão Blockdomi' }
+  }
 };
 
 /**
@@ -279,5 +283,7 @@ export const IPV6_SORT_CONFIG: SortConfig = {
   model: IPv6,
   tableName: 'ipv6',
   virtualColumns: {},
-  relationshipColumns: {}
+  relationshipColumns: {
+    versao: { association: 'versaoRef', field: 'numero', description: 'Número da versão Blockdomi' }
+  }
 };

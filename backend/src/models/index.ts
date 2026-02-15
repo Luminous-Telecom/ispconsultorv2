@@ -54,6 +54,7 @@ import { MensagemHistorico } from './comunicacao/MensagemHistorico';
 import { Dominio } from './blockdomi/Dominio';
 import { IPv4 } from './blockdomi/IPv4';
 import { IPv6 } from './blockdomi/IPv6';
+import { VersaoBlockdomi } from './blockdomi/VersaoBlockdomi';
 
 // Importar associações específicas
 import './associations';
@@ -188,6 +189,14 @@ ModeloDocumento.hasMany(TermoContrato, {
   foreignKey: 'modelo_documento_id',
   as: 'termosContrato'
 });
+
+// Blockdomi - VersaoBlockdomi
+VersaoBlockdomi.hasMany(Dominio, { foreignKey: 'versao_id' });
+Dominio.belongsTo(VersaoBlockdomi, { foreignKey: 'versao_id', as: 'versaoRef' });
+VersaoBlockdomi.hasMany(IPv4, { foreignKey: 'versao_id' });
+IPv4.belongsTo(VersaoBlockdomi, { foreignKey: 'versao_id', as: 'versaoRef' });
+VersaoBlockdomi.hasMany(IPv6, { foreignKey: 'versao_id' });
+IPv6.belongsTo(VersaoBlockdomi, { foreignKey: 'versao_id', as: 'versaoRef' });
 
 // AssinaturaDigital
 TermoContrato.hasMany(AssinaturaDigital, {
@@ -379,5 +388,6 @@ export {
   NFSeConfig,
   Dominio,
   IPv4,
-  IPv6
+  IPv6,
+  VersaoBlockdomi
 };

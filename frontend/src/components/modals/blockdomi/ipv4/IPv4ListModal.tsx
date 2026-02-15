@@ -14,6 +14,8 @@ import { useAuditoria } from '@/hooks/useAuditoria';
 import { useModal } from '@/contexts/ModalContext';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { IPv4Service } from '@/services/ipv4Service';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface IPv4ListModalProps {
@@ -74,6 +76,13 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
       sortable: true,
       width: '150px',
       render: (item: IPv4) => item.ip
+    },
+    {
+      key: 'versao',
+      label: t('blockdomi.versao'),
+      sortable: true,
+      width: '100px',
+      render: (item: IPv4) => item.versao || '-'
     },
     {
       key: 'descricao',
@@ -213,14 +222,29 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
     }
   }, [selectedItem, clearSelection, onSelectIPv4, onClose]);
 
+  const { success, error } = useNotificationContext();
+
   const handleDelete = useCallback(async (ipv4Id: number) => {
     try {
       await deleteIPv4Mutation.mutateAsync(ipv4Id);
+      clearSelection();
       refetch();
-    } catch (error: unknown) {
+    } catch {
       // Erro tratado pelo useNotificationContext
     }
-  }, [deleteIPv4Mutation, refetch]);
+  }, [deleteIPv4Mutation, clearSelection, refetch]);
+
+  const handleBulkDelete = useCallback(async (ids: number[]) => {
+    try {
+      const { deleted, versao } = await IPv4Service.bulkDelete(ids);
+      clearSelection();
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['ipv4'] });
+      success(`Excluído(s) ${deleted} IPv4. Versão da operação: ${versao}.`);
+    } catch (err: unknown) {
+      error((err as Error)?.message ?? 'Erro ao excluir IPv4.');
+    }
+  }, [clearSelection, refetch, queryClient, success, error]);
 
   const handleAudit = useCallback((ipv4: IPv4) => {
     auditoria.handleAudit('IPv4', ipv4.id);
@@ -320,23 +344,30 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
       label: t('actions.delete'),
       disabled: (selectedItems: IPv4[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: IPv4[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (!item) return;
-        
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        if (items.length === 0) return;
+
+        const msg = items.length === 1
+          ? t('messages.confirmDelete')
+          : `Tem certeza que deseja excluir ${items.length} IPv4?`;
         const confirmed = await confirm({
-          message: t('messages.confirmDelete'),
+          message: msg,
           variant: 'danger',
           title: t('blockdomi.deleteIPv4'),
           confirmText: t('actions.delete'),
           cancelText: t('actions.cancel'),
         });
-      
+
         if (confirmed) {
-          handleDelete(item.id);
+          if (items.length === 1) {
+            handleDelete(items[0].id);
+          } else {
+            handleBulkDelete(items.map((i) => i.id));
+          }
         }
       }
     }
-  ], [onSelectIPv4, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, openModal, t]);
+  ], [onSelectIPv4, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, confirm, openModal, t]);
 
   const modalData = useMemo(() => ipv4sData?.data || [], [ipv4sData?.data]);
 

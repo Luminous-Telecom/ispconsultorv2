@@ -14,6 +14,8 @@ import { useAuditoria } from '@/hooks/useAuditoria';
 import { useModal } from '@/contexts/ModalContext';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { IPv6Service } from '@/services/ipv6Service';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 
 interface IPv6ListModalProps {
@@ -74,6 +76,13 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
       sortable: true,
       width: '200px',
       render: (item: IPv6) => item.ip
+    },
+    {
+      key: 'versao',
+      label: t('blockdomi.versao'),
+      sortable: true,
+      width: '100px',
+      render: (item: IPv6) => item.versao || '-'
     },
     {
       key: 'descricao',
@@ -213,14 +222,29 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
     }
   }, [selectedItem, clearSelection, onSelectIPv6, onClose]);
 
+  const { success, error } = useNotificationContext();
+
   const handleDelete = useCallback(async (ipv6Id: number) => {
     try {
       await deleteIPv6Mutation.mutateAsync(ipv6Id);
+      clearSelection();
       refetch();
-    } catch (error: unknown) {
+    } catch {
       // Erro tratado pelo useNotificationContext
     }
-  }, [deleteIPv6Mutation, refetch]);
+  }, [deleteIPv6Mutation, clearSelection, refetch]);
+
+  const handleBulkDelete = useCallback(async (ids: number[]) => {
+    try {
+      const { deleted, versao } = await IPv6Service.bulkDelete(ids);
+      clearSelection();
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['ipv6'] });
+      success(`Excluído(s) ${deleted} IPv6. Versão da operação: ${versao}.`);
+    } catch (err: unknown) {
+      error((err as Error)?.message ?? 'Erro ao excluir IPv6.');
+    }
+  }, [clearSelection, refetch, queryClient, success, error]);
 
   const handleAudit = useCallback((ipv6: IPv6) => {
     auditoria.handleAudit('IPv6', ipv6.id);
@@ -320,23 +344,30 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
       label: t('actions.delete'),
       disabled: (selectedItems: IPv6[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: IPv6[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (!item) return;
-        
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        if (items.length === 0) return;
+
+        const msg = items.length === 1
+          ? t('messages.confirmDelete')
+          : `Tem certeza que deseja excluir ${items.length} IPv6?`;
         const confirmed = await confirm({
-          message: t('messages.confirmDelete'),
+          message: msg,
           variant: 'danger',
           title: t('blockdomi.deleteIPv6'),
           confirmText: t('actions.delete'),
           cancelText: t('actions.cancel'),
         });
-      
+
         if (confirmed) {
-          handleDelete(item.id);
+          if (items.length === 1) {
+            handleDelete(items[0].id);
+          } else {
+            handleBulkDelete(items.map((i) => i.id));
+          }
         }
       }
     }
-  ], [onSelectIPv6, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, openModal, t]);
+  ], [onSelectIPv6, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, confirm, openModal, t]);
 
   const modalData = useMemo(() => ipv6sData?.data || [], [ipv6sData?.data]);
 

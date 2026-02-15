@@ -8,6 +8,7 @@ import PdfExtractService from '@/services/pdfExtract';
 import { DominioService } from '@/services/dominioService';
 import { IPv4Service } from '@/services/ipv4Service';
 import { IPv6Service } from '@/services/ipv6Service';
+import { BlockdomiService } from '@/services/blockdomiService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useI18n } from '@/contexts/I18nContext';
 import { useLoading } from '@/contexts/LoadingContext';
@@ -308,15 +309,20 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       const linkJusticaVal = linkOficioJustica.trim() || null;
       const linkPlanilhaVal = linkPlanilhaDominios.trim() || null;
 
-      const metadata = { nome_oficio: nomeOficioVal, data_inicio_bloqueio: dataInicioVal, data_fim_bloqueio: dataFimVal, link_oficio_anatel: linkAnatelVal, link_oficio_justica: linkJusticaVal, link_planilha_dominios: linkPlanilhaVal };
-      const emptyBulk = { created: 0, updated: 0, skipped: 0, errors: [] as string[] };
-      const [domRes, ipv4Res, ipv6Res] = await Promise.all([
-        classified.dominios.length > 0 ? DominioService.bulkCreate(({ items: classified.dominios, ...metadata })) : Promise.resolve(emptyBulk),
-        classified.ipv4.length > 0 ? IPv4Service.bulkCreate(({ items: classified.ipv4, ...metadata })) : Promise.resolve(emptyBulk),
-        classified.ipv6.length > 0 ? IPv6Service.bulkCreate(({ items: classified.ipv6, ...metadata })) : Promise.resolve(emptyBulk)
-      ]);
+      const result = await BlockdomiService.importarLista({
+        dominios: classified.dominios,
+        ipv4: classified.ipv4,
+        ipv6: classified.ipv6,
+        nome_oficio: nomeOficioVal,
+        data_inicio_bloqueio: dataInicioVal,
+        data_fim_bloqueio: dataFimVal,
+        link_oficio_anatel: linkAnatelVal,
+        link_oficio_justica: linkJusticaVal,
+        link_planilha_dominios: linkPlanilhaVal
+      });
+      const { versao_lista: versaoLista, dominios: domRes, ipv4: ipv4Res, ipv6: ipv6Res } = result;
       const errs = [...domRes.errors, ...ipv4Res.errors, ...ipv6Res.errors];
-      const parts: string[] = [];
+      const parts: string[] = [`Lista versão ${versaoLista}`];
       if (domRes.created + domRes.updated > 0) parts.push(`Domínios: ${domRes.created} criado(s), ${domRes.updated} atualizado(s)`);
       if (ipv4Res.created + ipv4Res.updated > 0) parts.push(`IPv4: ${ipv4Res.created} criado(s), ${ipv4Res.updated} atualizado(s)`);
       if (ipv6Res.created + ipv6Res.updated > 0) parts.push(`IPv6: ${ipv6Res.created} criado(s), ${ipv6Res.updated} atualizado(s)`);
@@ -417,8 +423,28 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     </ul>
   );
 
+  const [isGerandoVersao, setIsGerandoVersao] = useState(false);
+
+  const handleGerarVersao = useCallback(async () => {
+    setIsGerandoVersao(true);
+    try {
+      const result = await BlockdomiService.gerarVersao();
+      success(`${t('blockdomi.versao')} ${result.numero} ${t('blockdomi.versaoGerada')}`);
+    } catch (e) {
+      error((e as Error)?.message ?? 'Erro ao gerar versão.');
+    } finally {
+      setIsGerandoVersao(false);
+    }
+  }, [success, error, t]);
+
   const content = (
     <div className="p-3 importar-lista-blockdomi">
+        <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+          <Button variant="secondary" size="sm" onClick={handleGerarVersao} disabled={isGerandoVersao}>
+            {t('blockdomi.gerarVersao')}
+          </Button>
+        </div>
+
         <p className="ilb-intro">
           {t('blockdomi.importIntro')}
         </p>
