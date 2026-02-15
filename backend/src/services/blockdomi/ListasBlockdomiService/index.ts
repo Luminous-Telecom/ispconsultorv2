@@ -43,7 +43,8 @@ export class ListasBlockdomiService {
       raw: true
     });
 
-    return dominios.map((r) => r.dominio as string).filter(Boolean).join('\n');
+    const txt = dominios.map((r) => r.dominio as string).filter(Boolean).join('\n');
+    return txt || 'Nenhum domínio encontrado';
   }
 
   /**
@@ -65,7 +66,8 @@ export class ListasBlockdomiService {
       raw: true
     });
 
-    return ips.map((r) => r.ip as string).filter(Boolean).join('\n');
+    const txt = ips.map((r) => r.ip as string).filter(Boolean).join('\n');
+    return txt || 'Nenhum endereço IPv4 encontrado';
   }
 
   /**
@@ -87,7 +89,8 @@ export class ListasBlockdomiService {
       raw: true
     });
 
-    return ips.map((r) => r.ip as string).filter(Boolean).join('\n');
+    const txt = ips.map((r) => r.ip as string).filter(Boolean).join('\n');
+    return txt || 'Nenhum endereço IPv6 encontrado';
   }
 
   /**
@@ -99,7 +102,7 @@ export class ListasBlockdomiService {
       attributes: ['numero'],
       raw: true
     });
-    return v?.numero ?? '';
+    return v?.numero ?? 'Nenhuma versão encontrada';
   }
 
 }
