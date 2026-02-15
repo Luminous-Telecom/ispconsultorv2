@@ -319,6 +319,7 @@ export interface TranslationKeys {
   'blockdomi.alreadyRegistered': string;
   'blockdomi.alreadyRegisteredIgnored': string;
   'blockdomi.none': string;
+  'blockdomi.verListasTxt': string;
   'blockdomi.domainRequired': string;
   'blockdomi.domainInvalidFormat': string;
   'blockdomi.ipRequired': string;
@@ -1608,6 +1609,7 @@ const translations: Translations = {
     'blockdomi.alreadyRegistered': 'Já cadastrados',
     'blockdomi.alreadyRegisteredIgnored': 'Já cadastrados (ignorados)',
     'blockdomi.none': 'Nenhum',
+    'blockdomi.verListasTxt': 'Visualizar listas em TXT',
     'blockdomi.domainRequired': 'Domínio é obrigatório',
     'blockdomi.domainInvalidFormat': 'Use o domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Não use https://, http:// ou www. no início.',
     'blockdomi.ipRequired': 'IP é obrigatório',
@@ -2892,6 +2894,7 @@ const translations: Translations = {
     'blockdomi.alreadyRegistered': 'Already registered',
     'blockdomi.alreadyRegisteredIgnored': 'Already registered (ignored)',
     'blockdomi.none': 'None',
+    'blockdomi.verListasTxt': 'View lists as TXT',
     'blockdomi.domainRequired': 'Domain is required',
     'blockdomi.domainInvalidFormat': 'Use domain without protocol (e.g. example.com or shortener.com/abc123). Do not use https://, http:// or www. at the start.',
     'blockdomi.ipRequired': 'IP is required',
@@ -4178,6 +4181,7 @@ const translations: Translations = {
     'blockdomi.alreadyRegistered': 'Ya registrados',
     'blockdomi.alreadyRegisteredIgnored': 'Ya registrados (ignorados)',
     'blockdomi.none': 'Ninguno',
+    'blockdomi.verListasTxt': 'Ver listas en TXT',
     'blockdomi.domainRequired': 'El dominio es obligatorio',
     'blockdomi.domainInvalidFormat': 'Use el dominio sin protocolo (ej: ejemplo.com o acortador.com/abc123). No use https://, http:// o www. al inicio.',
     'blockdomi.ipRequired': 'La IP es obligatoria',

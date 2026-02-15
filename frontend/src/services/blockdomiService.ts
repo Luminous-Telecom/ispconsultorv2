@@ -2,6 +2,7 @@
  * BlockdomiService - Importação unificada com controle de versão
  */
 import { defaultApiClient } from './core';
+import { API_CONFIG } from '@/config/api';
 
 export interface ImportarListaPayload {
   dominios: string[];
@@ -35,6 +36,13 @@ export class BlockdomiService {
       throw new Error('Resposta inválida do servidor');
     }
     return data;
+  }
+
+  static getListaUrl(tipo: 'dominios' | 'ipv4' | 'ipv6'): string {
+    const base = typeof window !== 'undefined'
+      ? `${window.location.origin}${API_CONFIG.BASE_URL}/blockdomi/listas`
+      : `${API_CONFIG.BASE_URL}/blockdomi/listas`;
+    return `${base}/${tipo}`;
   }
 
   static async importarLista(payload: ImportarListaPayload): Promise<ImportarListaResult> {
