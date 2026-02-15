@@ -1,6 +1,6 @@
 export interface PlanoForm {
   nome_plano: string;
-  tipo_servico: 'infraestrutura' | 'consultoria';
+  tipo_servico: 'infraestrutura' | 'consultoria' | 'blockdomi';
   descricao: string;
   valor_mensal: number;
   quantidade_usuarios: number;

@@ -53,7 +53,8 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
               disabled={isSubmitting}
               options={[
                 { value: 'infraestrutura', label: t('form.serviceTypeInfrastructure') },
-                { value: 'consultoria', label: t('form.serviceTypeConsulting') }
+                { value: 'consultoria', label: t('form.serviceTypeConsulting') },
+                { value: 'blockdomi', label: t('form.serviceTypeBlockdomi') }
               ]}
             />
           </div>

@@ -654,6 +654,7 @@ export interface TranslationKeys {
   'form.planObservationsPlaceholder': string;
   'form.serviceTypeInfrastructure': string;
   'form.serviceTypeConsulting': string;
+  'form.serviceTypeBlockdomi': string;
   'form.periodicityMonthly': string;
   'form.periodicityQuarterly': string;
   'form.periodicitySemiannual': string;
@@ -1983,6 +1984,7 @@ const translations: Translations = {
     'form.planObservationsPlaceholder': 'Observações do plano',
     'form.serviceTypeInfrastructure': 'Infraestrutura',
     'form.serviceTypeConsulting': 'Consultoria',
+    'form.serviceTypeBlockdomi': 'Blockdomi',
     'form.periodicityMonthly': 'Mensal',
     'form.periodicityQuarterly': 'Trimestral',
     'form.periodicitySemiannual': 'Semestral',
@@ -3280,6 +3282,7 @@ const translations: Translations = {
     'form.planObservationsPlaceholder': 'Plan observations',
     'form.serviceTypeInfrastructure': 'Infrastructure',
     'form.serviceTypeConsulting': 'Consulting',
+    'form.serviceTypeBlockdomi': 'Blockdomi',
     'form.periodicityMonthly': 'Monthly',
     'form.periodicityQuarterly': 'Quarterly',
     'form.periodicitySemiannual': 'Semiannual',
@@ -4579,6 +4582,7 @@ const translations: Translations = {
     'form.planObservationsPlaceholder': 'Observaciones del plan',
     'form.serviceTypeInfrastructure': 'Infraestructura',
     'form.serviceTypeConsulting': 'Consultoría',
+    'form.serviceTypeBlockdomi': 'Blockdomi',
     'form.periodicityMonthly': 'Mensual',
     'form.periodicityQuarterly': 'Trimestral',
     'form.periodicitySemiannual': 'Semestral',

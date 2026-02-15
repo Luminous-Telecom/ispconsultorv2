@@ -91,6 +91,11 @@ export const useDashboardCharts = (
   }, [titulosTodos, t]);
 
   const distribuicaoPlanos = useMemo(() => {
+    const tipoLabels: Record<string, string> = {
+      infraestrutura: t('form.serviceTypeInfrastructure'),
+      consultoria: t('form.serviceTypeConsulting'),
+      blockdomi: t('form.serviceTypeBlockdomi')
+    };
     const tipos = planos.reduce((acc, plano) => {
       const tipo = plano.tipo_servico || 'Outros';
       acc[tipo] = (acc[tipo] || 0) + 1;
@@ -99,11 +104,11 @@ export const useDashboardCharts = (
     
     const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1'];
     return Object.entries(tipos).map(([tipo, quantidade], index) => ({
-      label: tipo,
+      label: tipoLabels[tipo] || tipo,
       value: quantidade,
       color: cores[index % cores.length]
     }));
-  }, [planos]);
+  }, [planos, t]);
 
   const taxaPagamentoChartData = useMemo(() => [
     { label: t('status.paid'), value: stats.taxaPagamento, color: '#28a745' },

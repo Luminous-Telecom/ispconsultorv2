@@ -71,7 +71,7 @@ export class PlanoService {
     }
 
     if (tipo_servico) {
-      whereConditions.push({ tipo_servico: tipo_servico as 'infraestrutura' | 'consultoria' });
+      whereConditions.push({ tipo_servico: tipo_servico as 'infraestrutura' | 'consultoria' | 'blockdomi' });
     }
 
     const where: WhereOptions<Plano> = whereConditions.length > 0
@@ -302,7 +302,7 @@ export class PlanoService {
     interface PlanoUpdateData {
       nome_plano?: string;
       descricao?: string | null;
-      tipo_servico?: 'infraestrutura' | 'consultoria';
+      tipo_servico?: 'infraestrutura' | 'consultoria' | 'blockdomi';
       servicos_inclusos?: string[] | null;
       quantidade_usuarios?: number | null;
       valor_mensal?: number;

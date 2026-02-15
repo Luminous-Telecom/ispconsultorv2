@@ -9,6 +9,8 @@ import { registrarCriacaoElasticsearch } from '../../../elasticsearch/Elasticsea
 import type { Request } from 'express';
 import type Parametros from '../../../../models/sistema/Parametros';
 
+type Periodicidade = 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal' | null | undefined;
+
 interface ContratoWithPlano {
   id: number;
   cliente_id: number;
@@ -22,6 +24,7 @@ interface ContratoWithPlano {
   plano?: {
     valor_mensal: number;
     nome_plano?: string;
+    periodicidade?: Periodicidade;
   };
 }
 
@@ -113,21 +116,94 @@ export class TituloGenerationHelper {
   }
 
   /**
-   * Verifica se já existe título para um mês/ano específico
+   * Retorna o incremento em meses para a periodicidade (para bimestral+).
+   * Para quinzenal/semanal retorna 0 (usa dias).
+   */
+  static getMesesIncrement(periodicidade: Periodicidade): number {
+    switch (periodicidade) {
+      case 'semanal': return 0;
+      case 'quinzenal': return 0;
+      case 'mensal': return 1;
+      case 'bimestral': return 2;
+      case 'trimestral': return 3;
+      case 'semestral': return 6;
+      case 'anual': return 12;
+      default: return 1;
+    }
+  }
+
+  /**
+   * Retorna o incremento em dias para periodicidades menores que mensal
+   */
+  static getDiasIncrement(periodicidade: Periodicidade): number {
+    switch (periodicidade) {
+      case 'semanal': return 7;
+      case 'quinzenal': return 15;
+      default: return 0;
+    }
+  }
+
+  /**
+   * Gera chave de período para comparação conforme periodicidade
+   */
+  static getPeriodKey(ano: number, mes: number, dia: number, periodicidade: Periodicidade): string {
+    const m = mes + 1;
+    switch (periodicidade) {
+      case 'anual':
+        return `${ano}`;
+      case 'semestral':
+        return `${ano}-S${Math.floor((m - 1) / 6) + 1}`;
+      case 'trimestral':
+        return `${ano}-T${Math.floor((m - 1) / 3) + 1}`;
+      case 'bimestral':
+        return `${ano}-${String(Math.floor((m - 1) / 2) + 1).padStart(2, '0')}`;
+      case 'quinzenal':
+        return `${ano}-${String(m).padStart(2, '0')}-Q${dia <= 15 ? 1 : 2}`;
+      case 'semanal': {
+        const d = new Date(ano, mes, dia);
+        const inicioAno = new Date(ano, 0, 1);
+        const diff = Math.floor((d.getTime() - inicioAno.getTime()) / (7 * 24 * 60 * 60 * 1000));
+        return `${ano}-W${String(diff + 1).padStart(2, '0')}`;
+      }
+      case 'mensal':
+      default:
+        return `${ano}-${String(m).padStart(2, '0')}`;
+    }
+  }
+
+  /**
+   * Verifica se já existe título para o período conforme periodicidade do plano
+   */
+  static hasTituloForPeriod(
+    todosTitulos: Array<{ data_vencimento: Date; status?: string }>,
+    ano: number,
+    mes: number,
+    dia: number,
+    periodicidade: Periodicidade
+  ): boolean {
+    const periodKey = this.getPeriodKey(ano, mes, dia, periodicidade);
+    return todosTitulos.some(t => {
+      if (t.status === 'cancelado') return false;
+      const dataTitulo = new Date(t.data_vencimento);
+      const keyTitulo = this.getPeriodKey(
+        dataTitulo.getFullYear(),
+        dataTitulo.getMonth(),
+        dataTitulo.getDate(),
+        periodicidade
+      );
+      return keyTitulo === periodKey;
+    });
+  }
+
+  /**
+   * Verifica se já existe título para um mês/ano específico (mantido para compatibilidade)
    */
   static hasTituloForMonth(
     todosTitulos: Array<{ data_vencimento: Date; status?: string }>,
     ano: number,
     mes: number
   ): boolean {
-    const mesAno = `${ano}-${String(mes + 1).padStart(2, '0')}`;
-    return todosTitulos.some(t => {
-      if (t.status === 'cancelado') {
-        return false;
-      }
-      const dataTitulo = new Date(t.data_vencimento);
-      return `${dataTitulo.getFullYear()}-${String(dataTitulo.getMonth() + 1).padStart(2, '0')}` === mesAno;
-    });
+    return this.hasTituloForPeriod(todosTitulos, ano, mes, 1, 'mensal');
   }
 
   /**

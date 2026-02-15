@@ -52,7 +52,7 @@ export interface Plano {
   id: number;
   nome_plano: string;
   descricao?: string;
-  tipo_servico: 'infraestrutura' | 'consultoria';
+  tipo_servico: 'infraestrutura' | 'consultoria' | 'blockdomi';
   servicos_inclusos?: string[];
   quantidade_usuarios?: number;
   valor_mensal: number;

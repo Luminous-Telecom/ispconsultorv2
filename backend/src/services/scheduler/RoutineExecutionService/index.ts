@@ -136,7 +136,7 @@ export class RoutineExecutionService {
           {
             model: Plano,
             as: 'plano',
-            attributes: ['id', 'nome_plano', 'valor_mensal']
+            attributes: ['id', 'nome_plano', 'valor_mensal', 'periodicidade']
           },
           {
             model: Cliente,

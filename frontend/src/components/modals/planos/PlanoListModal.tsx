@@ -71,7 +71,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   const getTipoServicoLabel = useCallback((tipo: string) => {
     const tipos: { [key: string]: string } = {
       infraestrutura: t('form.serviceTypeInfrastructure'),
-      consultoria: t('form.serviceTypeConsulting')
+      consultoria: t('form.serviceTypeConsulting'),
+      blockdomi: t('form.serviceTypeBlockdomi')
     };
     return tipos[tipo] || tipo;
   }, [t]);

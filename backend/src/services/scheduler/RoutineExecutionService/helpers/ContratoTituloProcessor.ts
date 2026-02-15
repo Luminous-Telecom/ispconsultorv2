@@ -3,6 +3,8 @@ import type { Transaction } from 'sequelize';
 import { TituloGenerationHelper } from './TituloGenerationHelper';
 import type Parametros from '../../../../models/sistema/Parametros';
 
+type Periodicidade = 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal' | null | undefined;
+
 interface ContratoWithPlano {
   id: number;
   cliente_id: number;
@@ -16,6 +18,7 @@ interface ContratoWithPlano {
   plano?: {
     valor_mensal: number;
     nome_plano?: string;
+    periodicidade?: Periodicidade;
   };
 }
 
@@ -65,8 +68,13 @@ export class ContratoTituloProcessor {
       dataInicioContrato.setHours(0, 0, 0, 0);
     }
 
+    const periodicidade: Periodicidade = contrato.plano?.periodicidade ?? 'mensal';
+    const mesesIncrement = TituloGenerationHelper.getMesesIncrement(periodicidade);
+    const diasIncrement = TituloGenerationHelper.getDiasIncrement(periodicidade);
+
     let mesAtual: number;
     let anoAtual: number;
+    let diaAtual = diaVencimento;
     
     if (dataInicioContrato && dataInicioContrato > hoje) {
       mesAtual = dataInicioContrato.getMonth();
@@ -79,6 +87,22 @@ export class ContratoTituloProcessor {
     const titulosCriadosNaTransacao: Array<any> = [];
     let titulosGerados = 0;
 
+    const avancarPeriodo = (): void => {
+      if (diasIncrement > 0) {
+        const d = new Date(anoAtual, mesAtual, diaAtual);
+        d.setDate(d.getDate() + diasIncrement);
+        anoAtual = d.getFullYear();
+        mesAtual = d.getMonth();
+        diaAtual = d.getDate();
+      } else {
+        mesAtual += mesesIncrement;
+        while (mesAtual > 11) {
+          mesAtual -= 12;
+          anoAtual++;
+        }
+      }
+    };
+
     await withTransaction(async (transaction: Transaction) => {
       let tentativas = 0;
       let títulosCriadosNoContrato = 0;
@@ -89,24 +113,30 @@ export class ContratoTituloProcessor {
         const dataVencimento = await TituloGenerationHelper.calculateDataVencimento(
           anoAtual,
           mesAtual,
-          diaVencimento,
+          diasIncrement > 0 ? diaAtual : diaVencimento,
           dataInicioContrato,
           hoje,
           parametros
         );
 
-        const tituloExistente = TituloGenerationHelper.hasTituloForMonth(todosTitulos, anoAtual, mesAtual);
+        const anoVenc = dataVencimento.getFullYear();
+        const mesVenc = dataVencimento.getMonth();
+        const diaVenc = dataVencimento.getDate();
+
+        const tituloExistente = TituloGenerationHelper.hasTituloForPeriod(
+          todosTitulos,
+          anoVenc,
+          mesVenc,
+          diaVenc,
+          periodicidade
+        );
 
         const podeGerar = !tituloExistente && 
           (!dataInicioContrato || dataVencimento >= dataInicioContrato) &&
           dataVencimento >= hoje;
         
         if (!podeGerar) {
-          mesAtual++;
-          if (mesAtual > 11) {
-            mesAtual = 0;
-            anoAtual++;
-          }
+          avancarPeriodo();
           continue;
         }
         
@@ -133,11 +163,7 @@ export class ContratoTituloProcessor {
           títulosCriadosNoContrato++;
         }
 
-        mesAtual++;
-        if (mesAtual > 11) {
-          mesAtual = 0;
-          anoAtual++;
-        }
+        avancarPeriodo();
       }
     });
 
