@@ -16,8 +16,6 @@ export class ParametrosController {
     validar_cep: Joi.boolean().optional(),
     titulos_vence_sabado: Joi.boolean().optional(),
     titulos_vence_domingo: Joi.boolean().optional(),
-    auto_lancamento_titulos: Joi.boolean().optional(),
-    total_titulos_financeiro: Joi.number().integer().min(1).max(24).optional(),
     central_assinante_metodo_login: Joi.string().valid('cnpj', 'email').optional()
   }).min(1).unknown(true);
 
@@ -47,8 +45,6 @@ export class ParametrosController {
           validar_cep: parametros.validar_cep,
           titulos_vence_sabado: parametros.titulos_vence_sabado,
           titulos_vence_domingo: parametros.titulos_vence_domingo,
-          auto_lancamento_titulos: parametros.auto_lancamento_titulos,
-          total_titulos_financeiro: parametros.total_titulos_financeiro,
           central_assinante_metodo_login: metodoLogin,
           created_at: parametros.created_at,
           updated_at: parametros.updated_at

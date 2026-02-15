@@ -16,7 +16,7 @@ import { Contrato } from '../hooks/useContratos';
 import { ContratoForm } from '../components/modals/clientes/contrato/types';
 import { contratoSchema } from '../schemas/contrato.schema';
 import type { ContratoFormData as ZodContratoFormData } from '../schemas/contrato.schema';
-import { CreateContratoData } from '../hooks/useContratos';
+import { CreateContratoData, UpdateContratoData } from '../hooks/useContratos';
 import { ensureString } from '../utils/stringUtils';
 
 interface UseContratoFormParams {
@@ -36,7 +36,7 @@ interface UseContratoFormReturn {
   isLoadingContrato: boolean;
   
   // Handlers (mantidos para compatibilidade)
-  handleInputChange: (field: keyof ContratoForm, value: string | number | boolean) => void;
+  handleInputChange: (field: keyof ContratoForm, value: string | number | boolean | null) => void;
   handleSubmit: (e: React.FormEvent) => void;
   validateForm: () => boolean;
   
@@ -61,6 +61,7 @@ const initialFormData: ContratoForm = {
   isento_mensalidade: false,
   dia_vencimento_id: 0,
   conta_boleto: 0,
+  tipo_cobranca_contrato_id: null,
   data_validade_desconto: '',
   modelo_documento_id: 0,
   endereco: '',
@@ -161,6 +162,7 @@ export const useContratoForm = ({
       isento_mensalidade: contrato.isento_mensalidade || false,
       dia_vencimento_id: contrato.dia_vencimento_id || 0,
       conta_boleto: contrato.conta_boleto || 0,
+      tipo_cobranca_contrato_id: contrato.tipo_cobranca_contrato_id ?? null,
       data_validade_desconto: normalizeDate(contrato.data_validade_desconto),
       modelo_documento_id: contrato.modelo_documento_id || 0,
       endereco: ensureString(contrato.endereco),
@@ -189,7 +191,7 @@ export const useContratoForm = ({
 
   // Mutation para atualizar contrato
   const updateContratoMutation = useMutation({
-    mutationFn: (data: CreateContratoData & { id: number }) => ContratoService.update(data.id, data),
+    mutationFn: (data: UpdateContratoData) => ContratoService.update(data.id, data),
     onSuccess: () => {
       success('Contrato atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['contratos'] });
@@ -224,7 +226,7 @@ export const useContratoForm = ({
   const isSubmitting = updateContratoMutation.isPending || createContratoMutation.isPending;
 
   // Handler de mudança de input (mantido para compatibilidade)
-  const handleInputChange = (field: keyof ContratoForm, value: string | number | boolean) => {
+  const handleInputChange = (field: keyof ContratoForm, value: string | number | boolean | null) => {
     // Atualizar React Hook Form
     setValue(field as keyof Omit<ZodContratoFormData, 'cliente_id'>, value as never, { shouldValidate: true });
     
@@ -252,7 +254,8 @@ export const useContratoForm = ({
     
     if (isEditing && contratoId) {
       // Modo edição
-      const dataToSend: CreateContratoData & { id: number } = {
+      const tipoId = (typedData.tipo_cobranca_contrato_id as number);
+      const dataToSend: UpdateContratoData = {
         id: contratoId,
         cliente_id: contrato?.cliente_id || 0,
         plano_id: typedData.plano_id,
@@ -265,6 +268,7 @@ export const useContratoForm = ({
         isento_mensalidade: typedData.isento_mensalidade,
         dia_vencimento_id: typedData.dia_vencimento_id,
         conta_boleto: typedData.conta_boleto,
+        ...(tipoId && tipoId >= 1 ? { tipo_cobranca_contrato_id: tipoId } : {}),
         data_validade_desconto: typedData.data_validade_desconto || undefined,
         modelo_documento_id: typedData.modelo_documento_id,
         endereco: typedData.endereco || undefined,
@@ -291,6 +295,7 @@ export const useContratoForm = ({
         isento_mensalidade: typedData.isento_mensalidade,
         dia_vencimento_id: typedData.dia_vencimento_id,
         conta_boleto: typedData.conta_boleto,
+        tipo_cobranca_contrato_id: typedData.tipo_cobranca_contrato_id as number,
         data_validade_desconto: typedData.data_validade_desconto || undefined,
         modelo_documento_id: typedData.modelo_documento_id,
         endereco: typedData.endereco || undefined,

@@ -81,8 +81,8 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
 
   // Estado inicial
   const [state, setState] = useState<TableState<T>>({
-    data: data || [],
-    filteredData: data || [],
+    data: Array.isArray(data) ? data : [],
+    filteredData: Array.isArray(data) ? data : [],
     selectedItems: [],
     searchTerm: '',
     sortColumn: propSortColumn || '',
@@ -123,7 +123,7 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
 
   // Atualizar dados quando props mudarem
   useEffect(() => {
-    const newData = data || [];
+    const newData = Array.isArray(data) ? data : [];
     setState(prev => {
       // Verificar se os dados realmente mudaram (comparar tamanho e IDs para evitar comparação de referência)
       const dataChanged = prev.data.length !== newData.length || 

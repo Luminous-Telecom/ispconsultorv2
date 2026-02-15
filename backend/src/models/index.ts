@@ -35,6 +35,7 @@ import { Plano } from './cadastros/Plano';
 import { Banco } from './cadastros/Banco';
 import { Usuario } from './cadastros/Usuario';
 import { DiasVencimento } from './cadastros/DiasVencimento';
+import { TipoCobrancaContrato } from './cadastros/TipoCobrancaContrato';
 
 // Sistema
 import { DadosEmpresa } from './sistema/DadosEmpresa';
@@ -147,6 +148,16 @@ Contrato.belongsTo(Plano, {
 Contrato.belongsTo(Banco, {
   foreignKey: 'conta_boleto',
   as: 'bancoBoleto'
+});
+
+Contrato.belongsTo(TipoCobrancaContrato, {
+  foreignKey: 'tipo_cobranca_contrato_id',
+  as: 'tipoCobrancaContrato'
+});
+
+TipoCobrancaContrato.hasMany(Contrato, {
+  foreignKey: 'tipo_cobranca_contrato_id',
+  as: 'contratos'
 });
 
 // TermoContrato
@@ -362,6 +373,7 @@ export {
   Cliente,
   Plano,
   Banco,
+  TipoCobrancaContrato,
   Titulo,
   Contrato,
   ContratoPlanoAdicional,

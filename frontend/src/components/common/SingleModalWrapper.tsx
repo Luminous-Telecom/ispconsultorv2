@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { useModal } from '@/contexts/ModalContext';
 import { useI18n, TranslationKeys } from '@/contexts/I18nContext';
 import Loading from './Loading';
@@ -9,6 +9,7 @@ const ClienteListModal = lazy(() => import('../modals/clientes').then(m => ({ de
 const ClienteModal = lazy(() => import('../modals/clientes').then(m => ({ default: m.ClienteModal })));
 const PlanoListModal = lazy(() => import('../modals/planos').then(m => ({ default: m.PlanoListModal })));
 const BancoListModal = lazy(() => import('../modals/bancos').then(m => ({ default: m.BancoListModal })));
+const TipoCobrancaContratoListModal = lazy(() => import('../modals/tipoCobrancaContrato').then(m => ({ default: m.TipoCobrancaContratoListModal })));
 const DadosEmpresaModal = lazy(() => import('../modals/empresa/empresa').then(m => ({ default: m.DadosEmpresaModal })));
 const ServidorEmailModal = lazy(() => import('../modals/parametros/servidor-email').then(m => ({ default: m.ServidorEmailModal })));
 const ServidorWhatsappModal = lazy(() => import('../modals/parametros/servidor-whatsapp').then(m => ({ default: m.ServidorWhatsappModal })));
@@ -57,6 +58,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'cliente-modal': { component: ClienteModal, titleKey: 'modal.editClient', loadingMessageKey: 'ui.loadingPage' },
   planos: { component: PlanoListModal, titleKey: 'modal.plans', loadingMessageKey: 'ui.loadingPage' },
   bancos: { component: BancoListModal, titleKey: 'modal.banks', loadingMessageKey: 'ui.loadingPage' },
+  'tipos-cobranca-contrato': { component: TipoCobrancaContratoListModal, titleKey: 'modal.billingType', loadingMessageKey: 'ui.loadingPage' },
   contratos: { component: ContratoListModal, titleKey: 'modal.contracts', loadingMessageKey: 'ui.loadingPage' },
   'contas-receber': { component: ContasReceberListModal, titleKey: 'modal.accountsReceivable', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   fornecedores: { component: FornecedorListModal, titleKey: 'modal.suppliers', loadingMessageKey: 'ui.loadingPage' },
@@ -87,6 +89,12 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
 const SingleModalWrapper: React.FC = () => {
   const { activeModal, modalData, closeModal } = useModal();
   const { t } = useI18n();
+  const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
+
+  // Limpar headerActions quando o modal mudar (hooks devem vir antes de qualquer return)
+  useEffect(() => {
+    setHeaderActions(null);
+  }, [activeModal]);
 
   if (!activeModal) return null;
 
@@ -102,12 +110,12 @@ const SingleModalWrapper: React.FC = () => {
   const isClienteModal = activeModal === 'cliente-modal';
   const clienteId = isClienteModal && modalData?.clienteId ? modalData.clienteId as number : null;
 
-
   const modalProps: ModalComponentProps = {
     show: true,
     onClose: closeModal,
     skipWrapper: true, // Sempre usar skipWrapper para que o conteúdo seja renderizado dentro do DraggableModal único
-    ...(['clientes', 'planos', 'bancos', 'contratos'].includes(activeModal) && { title: modalTitle }),
+    onHeaderActionsReady: setHeaderActions,
+    ...(['clientes', 'planos', 'bancos', 'tipos-cobranca-contrato', 'contratos'].includes(activeModal) && { title: modalTitle }),
     // Para o cliente-modal, passamos clienteId como prop específica
     ...(isClienteModal && { clienteId }),
     // Para outros modais, passamos os dados adicionais normalmente
@@ -121,6 +129,7 @@ const SingleModalWrapper: React.FC = () => {
       title={modalTitle}
       size={modalConfig.size ?? 'lg'}
       className={modalConfig.className || ''}
+      headerActions={headerActions}
     >
       <Suspense fallback={<Loading message={loadingMessage} />}>
         <ModalComponent {...modalProps} />

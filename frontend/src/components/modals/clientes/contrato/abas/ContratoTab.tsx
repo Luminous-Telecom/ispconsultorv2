@@ -4,6 +4,7 @@ import { FormValue } from '@/types/common';
 import { useI18n } from '@/contexts/I18nContext';
 import { DocumentoSistema } from '@/services/documentoSistemaService';
 import { DiasVencimento } from '@/services/diasVencimentoService';
+import { TipoCobrancaContrato } from '@/services/tipoCobrancaContratoService';
 import EntitySelectField from '@/components/ui/EntitySelectField';
 import FormField from '@/components/ui/FormField';
 import { ContratoForm } from '../types';
@@ -11,19 +12,24 @@ import { ContratoForm } from '../types';
 interface ContratoTabProps {
   formData: ContratoForm;
   errors: Partial<ContratoForm>;
-  handleInputChange: (field: keyof ContratoForm, value: string | number | boolean) => void;
+  handleInputChange: (field: keyof ContratoForm, value: string | number | boolean | null) => void;
   planoSelecionado: Plano | null;
   bancoSelecionado: Banco | null;
+  tipoCobrancaContratoSelecionado: TipoCobrancaContrato | null;
   modeloContratoSelecionado: DocumentoSistema | null;
   onPlanoSelect: (plano: Plano) => void;
   onBancoSelect: (banco: Banco) => void;
+  onTipoCobrancaContratoSelect: (tipo: TipoCobrancaContrato) => void;
   onModeloContratoSelect: (modelo: DocumentoSistema) => void;
   planosData: PaginatedResponse<Plano> | Plano[] | undefined;
   bancosData: PaginatedResponse<Banco> | Banco[] | undefined;
+  tiposCobrancaContratoData: TipoCobrancaContrato[];
+  tipoCobrancaContratoFromContrato?: TipoCobrancaContrato | { id: number; nome: string; quantidade_titulos: number } | null;
   modelosContratoData: { success: boolean; data: DocumentoSistema[]; message: string } | undefined;
   diasVencimento: DiasVencimento[];
   onShowPlanoModal: () => void;
   onShowBancoModal: () => void;
+  onShowTipoCobrancaContratoModal: () => void;
   onShowModeloContratoModal: () => void;
 }
 
@@ -33,16 +39,21 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   handleInputChange,
   planoSelecionado,
   bancoSelecionado,
+  tipoCobrancaContratoSelecionado,
   modeloContratoSelecionado,
   onPlanoSelect,
   onBancoSelect,
+  onTipoCobrancaContratoSelect,
   onModeloContratoSelect,
   planosData,
   bancosData,
+  tiposCobrancaContratoData,
+  tipoCobrancaContratoFromContrato,
   modelosContratoData,
   diasVencimento,
   onShowPlanoModal,
   onShowBancoModal,
+  onShowTipoCobrancaContratoModal,
   onShowModeloContratoModal
 }) => {
   const { t } = useI18n();
@@ -233,8 +244,33 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
               nome: b.nome
             }))}
             label={t('form.bank')}
-            idFieldTitle={t('form.enterBankId')}
-            error={errors.conta_boleto}
+            required
+          />
+
+          <EntitySelectField
+            value={(tipoCobrancaContratoSelecionado?.id ?? formData.tipo_cobranca_contrato_id) || 0}
+            onChange={(value) => {
+              if (value === 0) {
+                handleInputChange('tipo_cobranca_contrato_id', null);
+              } else {
+                const tipo = tiposCobrancaContratoData.find((t) => t.id === value)
+                  ?? (tipoCobrancaContratoSelecionado?.id === value ? tipoCobrancaContratoSelecionado : null);
+                if (tipo) onTipoCobrancaContratoSelect(tipo);
+              }
+            }}
+            onShowModal={onShowTipoCobrancaContratoModal}
+            entities={[
+              { id: 0, nome: t('ui.selectOption') },
+              ...tiposCobrancaContratoData.map((t) => ({ id: t.id, nome: `${t.nome} (${t.quantidade_titulos}x)` })),
+              ...(tipoCobrancaContratoSelecionado && !tiposCobrancaContratoData.some((t) => t.id === tipoCobrancaContratoSelecionado!.id)
+                ? [{ id: tipoCobrancaContratoSelecionado.id, nome: `${tipoCobrancaContratoSelecionado.nome} (${tipoCobrancaContratoSelecionado.quantidade_titulos}x)` }]
+                : []),
+              ...(tipoCobrancaContratoFromContrato && formData.tipo_cobranca_contrato_id === tipoCobrancaContratoFromContrato.id
+                && !tiposCobrancaContratoData.some((t) => t.id === tipoCobrancaContratoFromContrato!.id)
+                ? [{ id: tipoCobrancaContratoFromContrato.id, nome: `${tipoCobrancaContratoFromContrato.nome} (${tipoCobrancaContratoFromContrato.quantidade_titulos}x)` }]
+                : [])
+            ]}
+            label={t('modal.billingType')}
             required
           />
         </div>

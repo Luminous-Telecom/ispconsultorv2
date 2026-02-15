@@ -43,6 +43,7 @@ import ipv6Routes from './ipv6Routes';
 import blockdomiRoutes from './blockdomiRoutes';
 import ipsPermitidosRoutes from './ipsPermitidosRoutes';
 import pdfExtractRoutes from './pdfExtractRoutes';
+import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
 
 const router = Router();
 
@@ -51,6 +52,7 @@ const routes = [
     { path: '/api/clientes', route: clienteRoutes },
     { path: '/api/planos', route: planoRoutes },
     { path: '/api/bancos', route: bancoRoutes },
+    { path: '/api/tipos-cobranca-contrato', route: tipoCobrancaContratoRoutes },
     { path: '/api/usuarios', route: usuarioRoutes },
     { path: '/api/titulos', route: tituloRoutes },
     { path: '/api/contratos', route: contratoRoutes },

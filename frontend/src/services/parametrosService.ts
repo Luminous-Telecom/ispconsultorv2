@@ -6,8 +6,6 @@ export interface Parametros {
   validar_cep: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
-  auto_lancamento_titulos: boolean;
-  total_titulos_financeiro: number;
   central_assinante_metodo_login?: string;
   assinatura_digital_habilitado?: boolean;
   assinatura_digital_api_provider?: string;

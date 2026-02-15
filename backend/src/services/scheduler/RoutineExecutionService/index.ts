@@ -25,10 +25,16 @@ interface ContratoWithPlano {
   desconto_valor: number | null;
   desconto_percentual: number | null;
   data_inicio: Date | null;
+  tipo_cobranca_contrato_id?: number | null;
   plano?: {
     valor_mensal: number;
     nome_plano?: string;
+    periodicidade?: string | null;
   };
+  tipoCobrancaContrato?: {
+    quantidade_titulos: number;
+    periodicidade: string;
+  } | null;
 }
 
 interface ContratoWithCliente {
@@ -120,12 +126,12 @@ export class RoutineExecutionService {
     const { default: Parametros } = await import('../../../models/sistema/Parametros');
     
     try {
-      // Buscar configuração de total de títulos
       const parametros = await Parametros.findOne();
-      const quantidadeMinimaTitulos = parametros?.total_titulos_financeiro || 12;
+      const quantidadeMinimaTitulos = 12;
       
-      // Buscar modelo Cliente
+      // Buscar modelo Cliente e TipoCobrancaContrato
       const { Cliente } = await import('../../../models/clientes/Cliente');
+      const { TipoCobrancaContrato } = await import('../../../models/cadastros/TipoCobrancaContrato');
       
       // Buscar todos os contratos ativos
       const contratos = await ContratoModel.findAll({
@@ -142,6 +148,12 @@ export class RoutineExecutionService {
             model: Cliente,
             as: 'cliente',
             attributes: ['id', 'ativo']
+          },
+          {
+            model: TipoCobrancaContrato,
+            as: 'tipoCobrancaContrato',
+            attributes: ['id', 'quantidade_titulos', 'periodicidade'],
+            required: false
           }
         ]
       });
@@ -191,13 +203,15 @@ export class RoutineExecutionService {
             : 15;
           const servicosAdicionais = (servicosAdicionaisPorContrato.get(contratoValidado.id) || []) as Array<ContratoPlanoAdicionalWithPlano>;
 
-          const contratoWithPlano = contratoValidado as unknown as ContratoWithPlano;
+          const contratoWithPlano = contratoValidado as unknown as ContratoWithPlano & { conta_boleto: number; dia_vencimento_id: number };
+          const tipoCobranca = contratoWithPlano.tipoCobrancaContrato;
+          const qtdTitulos = tipoCobranca ? tipoCobranca.quantidade_titulos : quantidadeMinimaTitulos;
           const resultado = await ContratoTituloProcessor.processContrato(
-            contratoWithPlano as ContratoWithPlano & { conta_boleto: number; dia_vencimento_id: number },
+            contratoWithPlano as any,
             titulosEmAberto,
             todosTitulos,
             diaVencimento,
-            quantidadeMinimaTitulos,
+            qtdTitulos,
             parametros,
             servicosAdicionais
           );

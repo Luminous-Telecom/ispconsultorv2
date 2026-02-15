@@ -13,6 +13,7 @@ import { ClienteArquivo } from '../models/clientes/ClienteArquivo';
 import { Dominio } from '../models/blockdomi/Dominio';
 import { IPv4 } from '../models/blockdomi/IPv4';
 import { IPv6 } from '../models/blockdomi/IPv6';
+import { TipoCobrancaContrato } from '../models/cadastros/TipoCobrancaContrato';
 import { SortConfig } from '../utils/sortHelper';
 
 /**
@@ -286,4 +287,14 @@ export const IPV6_SORT_CONFIG: SortConfig = {
   relationshipColumns: {
     versao: { association: 'versaoRef', field: 'numero', description: 'Número da versão Blockdomi' }
   }
+};
+
+/**
+ * Configuração de ordenação para TipoCobrancaContrato
+ */
+export const TIPO_COBRANCA_CONTRATO_SORT_CONFIG: SortConfig = {
+  model: TipoCobrancaContrato,
+  tableName: 'tipos_cobranca_contrato',
+  virtualColumns: {},
+  relationshipColumns: {}
 };

@@ -24,7 +24,7 @@ interface ContratoWithPlano {
   plano?: {
     valor_mensal: number;
     nome_plano?: string;
-    periodicidade?: Periodicidade;
+    periodicidade?: Periodicidade | string | null;
   };
 }
 

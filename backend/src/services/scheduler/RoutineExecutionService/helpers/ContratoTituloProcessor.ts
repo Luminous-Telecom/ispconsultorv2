@@ -20,6 +20,10 @@ interface ContratoWithPlano {
     nome_plano?: string;
     periodicidade?: Periodicidade;
   };
+  tipoCobrancaContrato?: {
+    quantidade_titulos: number;
+    periodicidade: string;
+  } | null;
 }
 
 interface TituloData {
@@ -68,7 +72,7 @@ export class ContratoTituloProcessor {
       dataInicioContrato.setHours(0, 0, 0, 0);
     }
 
-    const periodicidade: Periodicidade = contrato.plano?.periodicidade ?? 'mensal';
+    const periodicidade: Periodicidade = (contrato.tipoCobrancaContrato?.periodicidade as Periodicidade) ?? (contrato.plano?.periodicidade as Periodicidade) ?? 'mensal';
     const mesesIncrement = TituloGenerationHelper.getMesesIncrement(periodicidade);
     const diasIncrement = TituloGenerationHelper.getDiasIncrement(periodicidade);
 

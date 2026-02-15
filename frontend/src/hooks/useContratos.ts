@@ -15,6 +15,7 @@ export interface Contrato {
   isento_mensalidade: boolean;
   dia_vencimento_id: number | null;
   conta_boleto: number | null;
+  tipo_cobranca_contrato_id: number | null;
   data_validade_desconto: string | null;
   modelo_documento_id: number | null;
   endereco?: string | null;
@@ -46,6 +47,12 @@ export interface Contrato {
     id: number;
     nome: string;
   };
+  tipoCobrancaContrato?: {
+    id: number;
+    nome: string;
+    quantidade_titulos: number;
+    periodicidade: string;
+  };
 }
 
 export interface CreateContratoData {
@@ -60,6 +67,7 @@ export interface CreateContratoData {
   isento_mensalidade?: boolean;
   dia_vencimento_id: number;
   conta_boleto: number;
+  tipo_cobranca_contrato_id: number;
   data_validade_desconto?: string;
   modelo_documento_id: number;
   endereco?: string;

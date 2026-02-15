@@ -22,6 +22,7 @@ import { sequelize } from '../../../config/database';
 import { Cliente } from '../../clientes/Cliente';
 import { Plano } from '../../cadastros/Plano';
 import { Banco } from '../../cadastros/Banco';
+import { TipoCobrancaContrato } from '../../cadastros/TipoCobrancaContrato';
 import { TermoContrato } from '../TermoContrato';
 import { ModeloDocumento } from '../../documentos/ModeloDocumento';
 import { formatCreatedAt } from '../../../utils/dateUtils';
@@ -43,6 +44,7 @@ export class Contrato extends Model<
   declare isento_mensalidade: boolean;
   declare dia_vencimento_id: number | null;
   declare conta_boleto: number | null;
+  declare tipo_cobranca_contrato_id: number;
   declare data_validade_desconto: Date | null;
   declare modelo_documento_id: number | null;
   declare endereco: string | null;
@@ -67,6 +69,10 @@ export class Contrato extends Model<
   declare getBancoBoleto: BelongsToGetAssociationMixin<Banco>;
   declare setBancoBoleto: BelongsToSetAssociationMixin<Banco, number>;
   declare createBancoBoleto: BelongsToCreateAssociationMixin<Banco>;
+
+  declare getTipoCobrancaContrato: BelongsToGetAssociationMixin<TipoCobrancaContrato>;
+  declare setTipoCobrancaContrato: BelongsToSetAssociationMixin<TipoCobrancaContrato, number>;
+  declare createTipoCobrancaContrato: BelongsToCreateAssociationMixin<TipoCobrancaContrato>;
 
   // Relacionamentos com Termos
   declare getTermos: HasManyGetAssociationsMixin<TermoContrato>;
@@ -257,6 +263,15 @@ Contrato.init(
       comment: 'ID do banco para geração de boleto',
       references: {
         model: 'bancos',
+        key: 'id'
+      }
+    },
+    tipo_cobranca_contrato_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      comment: 'Tipo de cobrança (quantidade de títulos e periodicidade)',
+      references: {
+        model: 'tipos_cobranca_contrato',
         key: 'id'
       }
     },

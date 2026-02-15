@@ -35,6 +35,11 @@ export const contratoSchema = z.object({
     .int('ID do banco deve ser um número inteiro')
     .min(1, 'Banco para boleto é obrigatório'),
   
+  tipo_cobranca_contrato_id: z.preprocess(
+    (val) => (val === null || val === 0 || val === '' ? undefined : val),
+    z.number({ message: 'Tipo de cobrança é obrigatório' }).min(1, 'Tipo de cobrança é obrigatório')
+  ),
+  
   // Descontos
   desconto_percentual: z
     .number()

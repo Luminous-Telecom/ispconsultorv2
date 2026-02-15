@@ -9,6 +9,7 @@ export interface ContratoForm {
   isento_mensalidade: boolean;
   dia_vencimento_id: number;
   conta_boleto: number;
+  tipo_cobranca_contrato_id: number | null;
   data_validade_desconto: string;
   modelo_documento_id: number;
   endereco?: string;

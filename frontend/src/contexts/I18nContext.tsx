@@ -201,6 +201,7 @@ export interface TranslationKeys {
   'menu.clients': string;
   'menu.plans': string;
   'menu.banks': string;
+  'menu.billingType': string;
   'menu.contracts': string;
   'menu.financial': string;
   'menu.accountsReceivable': string;
@@ -216,6 +217,7 @@ export interface TranslationKeys {
   'modal.clients': string;
   'modal.plans': string;
   'modal.banks': string;
+  'modal.billingType': string;
   'modal.contracts': string;
   'modal.accountsReceivable': string;
   'modal.suppliers': string;
@@ -360,10 +362,6 @@ export interface TranslationKeys {
   'params.titlesDueSaturdayHelp': string;
   'params.titlesDueSunday': string;
   'params.titlesDueSundayHelp': string;
-  'params.autoLaunchTitles': string;
-  'params.autoLaunchTitlesHelp': string;
-  'params.totalTitlesFinancial': string;
-  'params.totalTitlesFinancialHelp': string;
   'params.subscriberCenter': string;
   'params.loginMethod': string;
   'params.loginMethodHelp': string;
@@ -662,6 +660,7 @@ export interface TranslationKeys {
   'form.periodicityBimonthly': string;
   'form.periodicityBiweekly': string;
   'form.periodicityWeekly': string;
+  'form.quantityTitles': string;
   'form.messageType': string;
   'form.message10DaysBefore': string;
   'form.message5DaysBefore': string;
@@ -1504,6 +1503,7 @@ const translations: Translations = {
     'menu.clients': 'Clientes',
     'menu.plans': 'Planos',
     'menu.banks': 'Bancos',
+    'menu.billingType': 'Tipo de Cobrança',
     'menu.contracts': 'Contratos',
     'menu.financial': 'Financeiro',
     'menu.accountsReceivable': 'Contas A Receber',
@@ -1519,6 +1519,7 @@ const translations: Translations = {
     'modal.clients': 'Clientes',
     'modal.plans': 'Planos',
     'modal.banks': 'Bancos',
+    'modal.billingType': 'Tipo de Cobrança',
     'modal.contracts': 'Contratos',
     'modal.accountsReceivable': 'Contas A Receber',
     'modal.suppliers': 'Fornecedores',
@@ -1663,10 +1664,6 @@ const translations: Translations = {
     'params.titlesDueSaturdayHelp': 'Se data de vencimento cair em sábado, mantém no sábado. Se desativado, move para próximo dia útil',
     'params.titlesDueSunday': 'Títulos que Vencem aos Domingos',
     'params.titlesDueSundayHelp': 'Se data de vencimento cair em domingo, mantém no domingo. Se desativado, move para próximo dia útil',
-    'params.autoLaunchTitles': 'Auto Lançamento de Títulos',
-    'params.autoLaunchTitlesHelp': 'Lança automaticamente novos títulos para manter o total configurado no financeiro',
-    'params.totalTitlesFinancial': 'Total de Títulos no Financeiro',
-    'params.totalTitlesFinancialHelp': 'Quantidade de títulos futuros a manter sempre disponíveis no financeiro (de 1 a 24 meses)',
     'params.subscriberCenter': 'Central do Assinante',
     'params.loginMethod': 'Método de Login',
     'params.loginMethodHelp': 'Define se o login na central do assinante será feito por CNPJ ou Email',
@@ -1992,6 +1989,7 @@ const translations: Translations = {
     'form.periodicityBimonthly': 'Bimestral',
     'form.periodicityBiweekly': 'Quinzenal',
     'form.periodicityWeekly': 'Semanal',
+    'form.quantityTitles': 'Quantidade de títulos',
     'form.messageType': 'Tipo de Mensagem',
     'form.message10DaysBefore': '10 dias antes',
     'form.message5DaysBefore': '5 dias antes',
@@ -2802,6 +2800,7 @@ const translations: Translations = {
     'menu.clients': 'Clients',
     'menu.plans': 'Plans',
     'menu.banks': 'Banks',
+    'menu.billingType': 'Billing Type',
     'menu.contracts': 'Contracts',
     'menu.financial': 'Financial',
     'menu.accountsReceivable': 'Accounts Receivable',
@@ -2817,6 +2816,7 @@ const translations: Translations = {
     'modal.clients': 'Clients',
     'modal.plans': 'Plans',
     'modal.banks': 'Banks',
+    'modal.billingType': 'Billing Type',
     'modal.contracts': 'Contracts',
     'modal.accountsReceivable': 'Accounts Receivable',
     'modal.suppliers': 'Suppliers',
@@ -2961,10 +2961,6 @@ const translations: Translations = {
     'params.titlesDueSaturdayHelp': 'If due date falls on Saturday, keeps it on Saturday. If disabled, moves to next business day',
     'params.titlesDueSunday': 'Titles Due on Sundays',
     'params.titlesDueSundayHelp': 'If due date falls on Sunday, keeps it on Sunday. If disabled, moves to next business day',
-    'params.autoLaunchTitles': 'Auto Launch Titles',
-    'params.autoLaunchTitlesHelp': 'Automatically launches new titles to maintain the configured total in financial',
-    'params.totalTitlesFinancial': 'Total Titles in Financial',
-    'params.totalTitlesFinancialHelp': 'Number of future titles to always keep available in financial (from 1 to 24 months)',
     'params.subscriberCenter': 'Subscriber Center',
     'params.loginMethod': 'Login Method',
     'params.loginMethodHelp': 'Defines whether login in subscriber center will be done by CNPJ or Email',
@@ -3290,6 +3286,7 @@ const translations: Translations = {
     'form.periodicityBimonthly': 'Bimonthly',
     'form.periodicityBiweekly': 'Biweekly',
     'form.periodicityWeekly': 'Weekly',
+    'form.quantityTitles': 'Quantity of titles',
     'form.messageType': 'Message Type',
     'form.message10DaysBefore': '10 days before',
     'form.message5DaysBefore': '5 days before',
@@ -4102,6 +4099,7 @@ const translations: Translations = {
     'menu.clients': 'Clientes',
     'menu.plans': 'Planes',
     'menu.banks': 'Bancos',
+    'menu.billingType': 'Tipo de Cobro',
     'menu.contracts': 'Contratos',
     'menu.financial': 'Financiero',
     'menu.accountsReceivable': 'Cuentas por Cobrar',
@@ -4117,6 +4115,7 @@ const translations: Translations = {
     'modal.clients': 'Clientes',
     'modal.plans': 'Planes',
     'modal.banks': 'Bancos',
+    'modal.billingType': 'Tipo de Cobro',
     'modal.contracts': 'Contratos',
     'modal.accountsReceivable': 'Cuentas por Cobrar',
     'modal.suppliers': 'Proveedores',
@@ -4261,10 +4260,6 @@ const translations: Translations = {
     'params.titlesDueSaturdayHelp': 'Si la fecha de vencimiento cae en sábado, mantiene en sábado. Si está desactivado, mueve al próximo día hábil',
     'params.titlesDueSunday': 'Títulos que Vencen los Domingos',
     'params.titlesDueSundayHelp': 'Si la fecha de vencimiento cae en domingo, mantiene en domingo. Si está desactivado, mueve al próximo día hábil',
-    'params.autoLaunchTitles': 'Auto Lanzamiento de Títulos',
-    'params.autoLaunchTitlesHelp': 'Lanza automáticamente nuevos títulos para mantener el total configurado en financiero',
-    'params.totalTitlesFinancial': 'Total de Títulos en Financiero',
-    'params.totalTitlesFinancialHelp': 'Cantidad de títulos futuros a mantener siempre disponibles en financiero (de 1 a 24 meses)',
     'params.subscriberCenter': 'Central del Suscriptor',
     'params.loginMethod': 'Método de Inicio de Sesión',
     'params.loginMethodHelp': 'Define si el inicio de sesión en la central del suscriptor se hará por CNPJ o Email',
@@ -4590,6 +4585,7 @@ const translations: Translations = {
     'form.periodicityBimonthly': 'Bimestral',
     'form.periodicityBiweekly': 'Quincenal',
     'form.periodicityWeekly': 'Semanal',
+    'form.quantityTitles': 'Cantidad de títulos',
     'form.messageType': 'Tipo de Mensaje',
     'form.message10DaysBefore': '10 días antes',
     'form.message5DaysBefore': '5 días antes',

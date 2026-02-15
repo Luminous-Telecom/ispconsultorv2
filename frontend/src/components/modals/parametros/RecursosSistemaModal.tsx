@@ -20,8 +20,6 @@ interface ParametrosForm {
   validar_cep: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
-  auto_lancamento_titulos: boolean;
-  total_titulos_financeiro: number;
   central_assinante_metodo_login: string;
 }
 
@@ -36,8 +34,6 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
     validar_cep: false,
     titulos_vence_sabado: false,
     titulos_vence_domingo: false,
-    auto_lancamento_titulos: false,
-    total_titulos_financeiro: 12,
     central_assinante_metodo_login: 'cnpj'
   };
 
@@ -59,8 +55,6 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
       validar_cep: parametros.data.validar_cep ?? false,
       titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
       titulos_vence_domingo: parametros.data.titulos_vence_domingo ?? false,
-      auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
-      total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12,
       central_assinante_metodo_login: parametros.data.central_assinante_metodo_login ?? 'cnpj'
     };
   }, [parametros?.data]);
@@ -95,16 +89,6 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
       ...prev,
       [field]: !prev[field]
     }));
-  };
-
-  const handleNumberChange = (field: keyof ParametrosForm, value: string) => {
-    const numValue = parseInt(value, 10);
-    if (!isNaN(numValue)) {
-      setFormData(prev => ({
-        ...prev,
-        [field]: numValue
-      }));
-    }
   };
 
   const handleSelectChange = (field: keyof ParametrosForm, value: string) => {
@@ -240,43 +224,6 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                     </div>
                   </div>
 
-                  <div className="form-check mb-3">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="auto_lancamento_titulos"
-                      name="auto_lancamento_titulos"
-                      checked={formData.auto_lancamento_titulos}
-                      onChange={() => handleCheckboxChange('auto_lancamento_titulos')}
-                      disabled={updateParametrosMutation.isPending}
-                    />
-                    <label className="form-check-label" htmlFor="auto_lancamento_titulos">
-                      Auto Lançamento de Títulos
-                    </label>
-                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                      Lança automaticamente novos títulos para manter o total configurado no financeiro
-                    </div>
-                  </div>
-
-                  <div className="mb-2">
-                    <label htmlFor="total_titulos_financeiro" className="form-label small mb-1">
-                      Total de Títulos no Financeiro
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control form-control-sm"
-                      id="total_titulos_financeiro"
-                      name="total_titulos_financeiro"
-                      min="1"
-                      max="24"
-                      value={formData.total_titulos_financeiro}
-                      onChange={(e) => handleNumberChange('total_titulos_financeiro', e.target.value)}
-                      disabled={updateParametrosMutation.isPending || !formData.auto_lancamento_titulos}
-                    />
-                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                      Quantidade de títulos futuros a manter sempre disponíveis no financeiro (de 1 a 24 meses)
-                    </div>
-                  </div>
                 </div>
               </div>
 

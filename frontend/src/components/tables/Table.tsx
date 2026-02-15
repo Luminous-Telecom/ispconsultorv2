@@ -54,6 +54,8 @@ interface TableProps<T = Record<string, unknown>> {
   className?: string;
   tableId?: string;
   title?: string;
+  /** Se false, não sincroniza com o header global (use em modais) */
+  syncWithHeader?: boolean;
 }
 
 function Table<T extends { id: number | string }>({
@@ -76,7 +78,8 @@ function Table<T extends { id: number | string }>({
   onSearchFieldChange,
   className = '',
   tableId,
-  title
+  title,
+  syncWithHeader = true
 }: TableProps<T>) {
   // Gerar ID único para a tabela
   const uniqueTableId = tableId || `table-${Math.random().toString(36).substr(2, 9)}`;
@@ -725,8 +728,9 @@ function Table<T extends { id: number | string }>({
   // Ref para controlar se esta tabela deve sincronizar seu estado inicial com o header
   const initialSyncRef = useRef(false);
 
-  // Registrar botões no contexto do header
+  // Registrar botões no contexto do header (não executar quando em modal)
   useEffect(() => {
+    if (!syncWithHeader) return;
     const timeoutId = setTimeout(() => {
       setHeaderTitle(title || 'Lista');
       setHeaderShowSearch(searchable || false);
@@ -786,31 +790,32 @@ function Table<T extends { id: number | string }>({
       clearTimeout(timeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, searchable, stableSearchFields]);
+  }, [syncWithHeader, title, searchable, stableSearchFields]);
 
-  // Limpar quando desmontar
+  // Limpar quando desmontar (apenas se sincronizou com header)
   useEffect(() => {
+    if (!syncWithHeader) return;
     return () => {
-      // Apenas resetamos callbacks que pertencem a esta instância.
       setHeaderOnSearchClick(null);
       setHeaderOnReloadClick(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [syncWithHeader]);
 
-
-  // Sincronizar busca: Header -> Table (apenas se search prop não foi passado)
+  // Sincronizar busca: Header -> Table (apenas se search prop não foi passado e syncWithHeader)
   useEffect(() => {
+    if (!syncWithHeader) return;
     if (initialSyncRef.current && search === undefined && headerSearchValue !== state.searchTerm) {
       const timeoutId = setTimeout(() => {
         tableActions.setSearchTerm(headerSearchValue);
       }, 0);
       return () => clearTimeout(timeoutId);
     }
-  }, [headerSearchValue, state.searchTerm, tableActions, search]);
+  }, [syncWithHeader, headerSearchValue, state.searchTerm, tableActions, search]);
 
   // Propagar mudança de campo para o componente pai e estado local
   useEffect(() => {
+    if (!syncWithHeader) return;
     if (headerSearchField && headerSearchField !== localSearchField) {
       // Usar setTimeout para evitar "Cannot update a component while rendering a different component"
       const timeoutId = setTimeout(() => {
@@ -819,7 +824,7 @@ function Table<T extends { id: number | string }>({
       }, 0);
       return () => clearTimeout(timeoutId);
     }
-  }, [headerSearchField, localSearchField, onSearchFieldChange]);
+  }, [syncWithHeader, headerSearchField, localSearchField, onSearchFieldChange]);
 
   // Fechar dropdown quando clicar fora (callback memoizado)
   const handleClickOutside = useCallback(() => {

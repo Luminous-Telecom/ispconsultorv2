@@ -57,7 +57,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
             const id = parseInt(e.target.value) || 0;
             onChange(id);
           }}
-          defaultValue={value || ''}
+          value={value ? String(value) : ''}
         />
         <input
           placeholder={defaultPlaceholder}

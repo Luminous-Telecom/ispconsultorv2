@@ -2,6 +2,7 @@ import { Contrato } from '../../../models/contratos/Contrato';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Plano } from '../../../models/cadastros/Plano';
 import { Banco } from '../../../models/cadastros/Banco';
+import { TipoCobrancaContrato } from '../../../models/cadastros/TipoCobrancaContrato';
 import { Op, WhereOptions, Transaction } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
@@ -142,7 +143,8 @@ export class ContratoService {
       include: [
         { model: Cliente, as: 'cliente' },
         { model: Plano, as: 'plano' },
-        { model: Banco, as: 'bancoBoleto' }
+        { model: Banco, as: 'bancoBoleto' },
+        { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', required: false }
       ],
       order,
       limit: limitNum,
@@ -189,7 +191,8 @@ export class ContratoService {
       include: [
         { model: Cliente, as: 'cliente' },
         { model: Plano, as: 'plano' },
-        { model: Banco, as: 'bancoBoleto' }
+        { model: Banco, as: 'bancoBoleto' },
+        { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', required: false }
       ]
     });
   }
@@ -204,7 +207,8 @@ export class ContratoService {
       include: [
         { model: Cliente, as: 'cliente' },
         { model: Plano, as: 'plano' },
-        { model: Banco, as: 'bancoBoleto' }
+        { model: Banco, as: 'bancoBoleto' },
+        { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', required: false }
       ]
     });
   }

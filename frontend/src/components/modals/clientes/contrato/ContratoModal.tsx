@@ -4,6 +4,7 @@ import { useTableFilters } from '@/hooks/useTableFilters';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { usePlanos } from '@/hooks/usePlanos';
 import { useBancos } from '@/hooks/useBancos';
+import { useTipoCobrancaContratosAtivos } from '@/hooks/useTipoCobrancaContratos';
 import { useSelectedEntity } from '@/hooks/useSelectedEntity';
 import { useContratoForm } from '@/hooks/useContratoForm';
 import { useTermosContrato, useDeleteTermoContrato } from '@/hooks/useTermosContrato';
@@ -20,7 +21,9 @@ import { TituloModal } from '@/components/modals/titulos/titulo';
 import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
 import PlanoListModal from '@/components/modals/planos/PlanoListModal';
 import BancoListModal from '@/components/modals/bancos/BancoListModal';
+import { TipoCobrancaContratoListModal } from '@/components/modals/tipoCobrancaContrato';
 import { Banco } from '@/types';
+import { TipoCobrancaContrato } from '@/services/tipoCobrancaContratoService';
 import { useContratoPlanosAdicionais, useDeleteContratoPlanoAdicional } from '@/hooks/useContratoPlanosAdicionais';
 import { ContratoPlanoAdicional } from '@/services/contratoPlanoAdicionalService';
 import { extractApiErrorMessageSync } from '@/utils/apiErrorHelper';
@@ -140,6 +143,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Estados dos modais de seleção
   const [showPlanoModal, setShowPlanoModal] = useState(false);
   const [showBancoModal, setShowBancoModal] = useState(false);
+  const [showTipoCobrancaContratoModal, setShowTipoCobrancaContratoModal] = useState(false);
   const [showModeloContratoModal, setShowModeloContratoModal] = useState(false);
   const [showServicoAdicionalModal, setShowServicoAdicionalModal] = useState(false);
   const [editingServicoAdicional, setEditingServicoAdicional] = useState<ContratoPlanoAdicional | null>(null);
@@ -183,6 +187,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
+  const { data: tiposCobrancaContratoData } = useTipoCobrancaContratosAtivos();
   const { data: modelosContratoData } = useQuery({
     queryKey: ['modelos-documento', 'contrato'],
     queryFn: () => DocumentoSistemaService.getByType('contrato'),
@@ -196,12 +201,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   
   const planos = useMemo(() => Array.isArray(planosData) ? planosData : (planosData?.data || []), [planosData]);
   const bancos = useMemo(() => Array.isArray(bancosData) ? bancosData : (bancosData?.data || []), [bancosData]);
+  const tiposCobrancaContrato = useMemo(() => Array.isArray(tiposCobrancaContratoData) ? tiposCobrancaContratoData : [], [tiposCobrancaContratoData]);
   const modelosContrato = useMemo(() => modelosContratoData?.data || [], [modelosContratoData]);
   const diasVencimento = useMemo(() => (diasVencimentoData?.data && Array.isArray(diasVencimentoData.data)) ? diasVencimentoData.data : [], [diasVencimentoData]);
   
   // Objetos selecionados sincronizados com os selects
   const [planoSelecionado, setPlanoSelecionado] = useSelectedEntity<Plano>(formData.plano_id, planos);
   const [bancoSelecionado, setBancoSelecionado] = useSelectedEntity<Banco>(formData.conta_boleto, bancos);
+  const [tipoCobrancaContratoSelecionado, setTipoCobrancaContratoSelecionado] = useSelectedEntity<TipoCobrancaContrato>(formData.tipo_cobranca_contrato_id ?? undefined, tiposCobrancaContrato);
   const [modeloContratoSelecionado, setModeloContratoSelecionado] = useSelectedEntity<DocumentoSistema>(formData.modelo_documento_id, modelosContrato);
 
   // Sincronizar formData do hook com os selects quando mudar
@@ -252,6 +259,20 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Usar dados do contrato do hook
   const contratoData = formHook.contrato;
   const isLoading = formHook.isLoadingContrato;
+
+  // Sincronizar tipo de cobrança do contrato (inclui tipo desativado vindo do backend)
+  useEffect(() => {
+    if (formData.tipo_cobranca_contrato_id) {
+      const tipoFromList = tiposCobrancaContrato.find(t => t.id === formData.tipo_cobranca_contrato_id);
+      const tipoFromContract = contratoData?.tipoCobrancaContrato && contratoData.tipoCobrancaContrato.id === formData.tipo_cobranca_contrato_id
+        ? (contratoData.tipoCobrancaContrato as TipoCobrancaContrato)
+        : null;
+      const tipo = tipoFromList ?? tipoFromContract;
+      if (tipo && tipoCobrancaContratoSelecionado?.id !== tipo.id) {
+        setTipoCobrancaContratoSelecionado(tipo);
+      }
+    }
+  }, [formData.tipo_cobranca_contrato_id, tiposCobrancaContrato, contratoData?.tipoCobrancaContrato, tipoCobrancaContratoSelecionado, setTipoCobrancaContratoSelecionado]);
 
   // Determinar o ID do cliente para buscar os dados
   const clienteIdToFetch = isEditMode && contratoData?.cliente_id 
@@ -371,6 +392,12 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     setBancoSelecionado(banco);
     handleInputChange('conta_boleto', banco.id);
     setShowBancoModal(false);
+  };
+
+  const handleTipoCobrancaContratoSelect = (tipo: TipoCobrancaContrato) => {
+    setTipoCobrancaContratoSelecionado(tipo);
+    handleInputChange('tipo_cobranca_contrato_id', tipo.id);
+    setShowTipoCobrancaContratoModal(false);
   };
 
   const handleModeloContratoSelect = (modelo: DocumentoSistema) => {
@@ -1884,16 +1911,21 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 handleInputChange={handleInputChange}
                 planoSelecionado={planoSelecionado}
                 bancoSelecionado={bancoSelecionado}
+                tipoCobrancaContratoSelecionado={tipoCobrancaContratoSelecionado}
                 modeloContratoSelecionado={modeloContratoSelecionado}
                 onPlanoSelect={handlePlanoSelect}
                 onBancoSelect={handleBancoSelect}
+                onTipoCobrancaContratoSelect={handleTipoCobrancaContratoSelect}
                 onModeloContratoSelect={handleModeloContratoSelect}
                 planosData={planosData}
                 bancosData={bancosData}
+                tiposCobrancaContratoData={tiposCobrancaContrato}
+                tipoCobrancaContratoFromContrato={contratoData?.tipoCobrancaContrato ?? undefined}
                 modelosContratoData={modelosContratoData}
                 diasVencimento={diasVencimento}
                 onShowPlanoModal={() => setShowPlanoModal(true)}
                 onShowBancoModal={() => setShowBancoModal(true)}
+                onShowTipoCobrancaContratoModal={() => setShowTipoCobrancaContratoModal(true)}
                 onShowModeloContratoModal={() => setShowModeloContratoModal(true)}
               />
             )}
@@ -2190,6 +2222,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         onClose={() => setShowBancoModal(false)}
         onSelectBanco={handleBancoSelect}
         title={t('ui.selectBank')}
+      />
+
+      <TipoCobrancaContratoListModal
+        show={showTipoCobrancaContratoModal}
+        onClose={() => setShowTipoCobrancaContratoModal(false)}
+        onSelectTipo={handleTipoCobrancaContratoSelect}
+        title={t('modal.billingType')}
       />
 
       <ModeloContratoSelectModal

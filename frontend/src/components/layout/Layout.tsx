@@ -221,6 +221,7 @@ const Layout: React.FC = () => {
     { id: 'contratos', label: t('menu.contracts'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('contratos') },
     { id: 'planos', label: t('menu.plans'), icon: 'bi-card-list', onClick: () => handleOpenModal('planos') },
     { id: 'bancos', label: t('menu.banks'), icon: 'bi-bank', onClick: () => handleOpenModal('bancos') },
+    { id: 'tipos-cobranca-contrato', label: t('menu.billingType'), icon: 'bi-credit-card', onClick: () => handleOpenModal('tipos-cobranca-contrato') },
     { id: 'fornecedores', label: t('menu.suppliers'), icon: 'bi-truck', onClick: () => handleOpenModal('fornecedores') },
   ];
 

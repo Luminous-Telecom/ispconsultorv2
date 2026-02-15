@@ -7,8 +7,6 @@ interface ParametrosAttributes {
   validar_cep: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
-  auto_lancamento_titulos: boolean;
-  total_titulos_financeiro: number;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -21,8 +19,6 @@ class Parametros extends Model<ParametrosAttributes, ParametrosCreationAttribute
   public validar_cep!: boolean;
   public titulos_vence_sabado!: boolean;
   public titulos_vence_domingo!: boolean;
-  public auto_lancamento_titulos!: boolean;
-  public total_titulos_financeiro!: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -53,16 +49,6 @@ Parametros.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
-    },
-    auto_lancamento_titulos: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
-    total_titulos_financeiro: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 12
     },
     created_at: {
       type: DataTypes.DATE,

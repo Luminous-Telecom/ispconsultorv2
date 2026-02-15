@@ -13,7 +13,7 @@ export class ParametrosService {
     }
 
     let parametros = await Parametros.findOne({
-      attributes: ['id', 'validar_cpf_cnpj', 'validar_cep', 'titulos_vence_sabado', 'titulos_vence_domingo', 'auto_lancamento_titulos', 'total_titulos_financeiro', 'created_at', 'updated_at']
+      attributes: ['id', 'validar_cpf_cnpj', 'validar_cep', 'titulos_vence_sabado', 'titulos_vence_domingo', 'created_at', 'updated_at']
     });
 
     // Se não existir, criar com valores padrão
@@ -23,8 +23,6 @@ export class ParametrosService {
         validar_cep: false,
         titulos_vence_sabado: false,
         titulos_vence_domingo: false,
-        auto_lancamento_titulos: false,
-        total_titulos_financeiro: 12
       });
     }
 
@@ -44,8 +42,6 @@ export class ParametrosService {
         validar_cep: dados.validar_cep ?? false,
         titulos_vence_sabado: dados.titulos_vence_sabado ?? false,
         titulos_vence_domingo: dados.titulos_vence_domingo ?? false,
-        auto_lancamento_titulos: dados.auto_lancamento_titulos ?? false,
-        total_titulos_financeiro: dados.total_titulos_financeiro ?? 12
       });
     } else {
       await parametros.update(dados);
