@@ -437,31 +437,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     }
   }, [success, error, t]);
 
-  const handleAbrirListaTxt = useCallback((tipo: 'dominios' | 'ipv4' | 'ipv6') => {
-    window.open(BlockdomiService.getListaUrl(tipo), '_blank', 'noopener,noreferrer');
-  }, []);
-
   const content = (
     <div className="p-3 importar-lista-blockdomi">
         <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
           <Button variant="secondary" size="sm" onClick={handleGerarVersao} disabled={isGerandoVersao}>
             {t('blockdomi.gerarVersao')}
           </Button>
-        </div>
-
-        <div className="mb-3 p-2 bg-light rounded">
-          <span className="small text-muted d-block mb-2">{t('blockdomi.verListasTxt')}</span>
-          <div className="d-flex flex-wrap gap-2">
-            <Button variant="outline-secondary" size="sm" onClick={() => handleAbrirListaTxt('dominios')}>
-              {t('blockdomi.domains')} TXT
-            </Button>
-            <Button variant="outline-secondary" size="sm" onClick={() => handleAbrirListaTxt('ipv4')}>
-              IPv4 TXT
-            </Button>
-            <Button variant="outline-secondary" size="sm" onClick={() => handleAbrirListaTxt('ipv6')}>
-              IPv6 TXT
-            </Button>
-          </div>
         </div>
 
         <p className="ilb-intro">

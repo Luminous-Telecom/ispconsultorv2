@@ -13,7 +13,6 @@ import { TableConfig } from '@/components/tables/types';
 import DominioModal from './DominioModal';
 import DominioBulkEditModal from './DominioBulkEditModal';
 import { useAuditoria } from '@/hooks/useAuditoria';
-import { useModal } from '@/contexts/ModalContext';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -43,7 +42,6 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   const [dominiosToBulkEdit, setDominiosToBulkEdit] = useState<Dominio[]>([]);
   
   const auditoria = useAuditoria();
-  const { openModal } = useModal();
   const { confirm, modalProps } = useConfirmModal();
   
   const tableFilters = useTableFilters({
@@ -336,22 +334,6 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       }
     },
     {
-      label: t('blockdomi.extractFromPlanilhaPdf'),
-      variant: 'primary' as const,
-      disabled: (selectedItems: Dominio[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        return items.length === 0 || !items.some((i) => i.link_planilha_dominios?.trim());
-      },
-      action: (selectedItems: Dominio[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        const firstWithUrl = items.find((i) => i.link_planilha_dominios?.trim());
-        if (firstWithUrl?.link_planilha_dominios) {
-          onClose();
-          openModal('blockdomi-importar-lista', { pdfUrlToExtract: firstWithUrl.link_planilha_dominios.trim() });
-        }
-      }
-    },
-    {
       label: t('actions.delete'),
       disabled: (selectedItems: Dominio[]) => selectedItems.length === 0 && !selectedItem,
       action: async (selectedItems: Dominio[]) => {
@@ -378,7 +360,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
         }
       }
     }
-  ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, confirm, openModal, t]);
+  ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, confirm, t]);
 
   const modalData = useMemo(() => dominiosData?.data || [], [dominiosData?.data]);
 
