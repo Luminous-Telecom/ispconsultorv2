@@ -41,6 +41,7 @@ import dominioRoutes from './dominioRoutes';
 import ipv4Routes from './ipv4Routes';
 import ipv6Routes from './ipv6Routes';
 import blockdomiRoutes from './blockdomiRoutes';
+import ipsPermitidosRoutes from './ipsPermitidosRoutes';
 import pdfExtractRoutes from './pdfExtractRoutes';
 
 const router = Router();
@@ -88,6 +89,7 @@ const routes = [
     { path: '/api/ipv4', route: ipv4Routes },
     { path: '/api/ipv6', route: ipv6Routes },
     { path: '/api/blockdomi', route: blockdomiRoutes },
+    { path: '/api/ips-permitidos', route: ipsPermitidosRoutes },
     { path: '/api/pdf-extract', route: pdfExtractRoutes },
     { path: '/api', route: centralAssinanteRoutes },
 

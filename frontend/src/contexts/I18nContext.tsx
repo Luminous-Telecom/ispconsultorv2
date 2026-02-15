@@ -325,6 +325,18 @@ export interface TranslationKeys {
   'blockdomi.ipRequired': string;
   'blockdomi.ipv4InvalidFormat': string;
   'blockdomi.ipv6InvalidFormat': string;
+  'blockdomi.ipsPermitidos': string;
+  'blockdomi.ipsPermitidosNew': string;
+  'blockdomi.createIpsPermitidos': string;
+  'blockdomi.editIpsPermitidos': string;
+  'blockdomi.deleteIpsPermitidos': string;
+  'blockdomi.faixaIps': string;
+  'blockdomi.faixaIpsHelp': string;
+  'blockdomi.ipsPermitidosRequired': string;
+  'blockdomi.clienteRequired': string;
+  'blockdomi.selectCliente': string;
+  'blockdomi.noIpsPermitidos': string;
+  'blockdomi.cliente': string;
 
   // Parameters Menu
   'params.users': string;
@@ -1615,8 +1627,20 @@ const translations: Translations = {
     'blockdomi.ipRequired': 'IP é obrigatório',
     'blockdomi.ipv4InvalidFormat': 'Informe um IPv4 válido com 4 octetos (ex: 192.168.1.1). Não use pontos no final.',
     'blockdomi.ipv6InvalidFormat': 'Informe um IPv6 válido (8 grupos hex separados por :). Ex: 2001:db8::1. Pode usar :: uma vez para comprimir zeros.',
+    'blockdomi.ipsPermitidos': 'IPs permitidos',
+    'blockdomi.ipsPermitidosNew': 'Novo',
+    'blockdomi.createIpsPermitidos': 'Cadastrar IPs permitidos',
+    'blockdomi.editIpsPermitidos': 'Editar IPs permitidos',
+    'blockdomi.deleteIpsPermitidos': 'Excluir IPs permitidos',
+    'blockdomi.faixaIps': 'Faixa de IPs',
+    'blockdomi.faixaIpsHelp': 'Separe múltiplos IPs ou faixas por ; (ex: 192.168.1.1; 10.0.0.0/24)',
+    'blockdomi.ipsPermitidosRequired': 'Informe pelo menos um IP ou faixa',
+    'blockdomi.clienteRequired': 'Selecione o cliente',
+    'blockdomi.selectCliente': 'Selecionar cliente',
+    'blockdomi.noIpsPermitidos': 'Nenhum registro encontrado',
+    'blockdomi.cliente': 'Cliente',
 
-    // Parameters Menu
+  // Parameters Menu
     'params.users': 'Usuários',
     'params.auditLogs': 'Logs de Auditoria',
     'params.systemResources': 'Recursos do Sistema',
@@ -2900,8 +2924,20 @@ const translations: Translations = {
     'blockdomi.ipRequired': 'IP is required',
     'blockdomi.ipv4InvalidFormat': 'Enter a valid IPv4 with 4 octets (e.g. 192.168.1.1). Do not use trailing dots.',
     'blockdomi.ipv6InvalidFormat': 'Enter a valid IPv6 (8 hex groups separated by :). E.g. 2001:db8::1. You may use :: once to compress zeros.',
+    'blockdomi.ipsPermitidos': 'Allowed IPs',
+    'blockdomi.ipsPermitidosNew': 'New',
+    'blockdomi.createIpsPermitidos': 'Add allowed IPs',
+    'blockdomi.editIpsPermitidos': 'Edit allowed IPs',
+    'blockdomi.deleteIpsPermitidos': 'Delete allowed IPs',
+    'blockdomi.faixaIps': 'IP range',
+    'blockdomi.faixaIpsHelp': 'Separate multiple IPs or ranges with ; (e.g. 192.168.1.1; 10.0.0.0/24)',
+    'blockdomi.ipsPermitidosRequired': 'Enter at least one IP or range',
+    'blockdomi.clienteRequired': 'Select the client',
+    'blockdomi.selectCliente': 'Select client',
+    'blockdomi.noIpsPermitidos': 'No records found',
+    'blockdomi.cliente': 'Client',
 
-    // Parameters Menu
+  // Parameters Menu
     'params.users': 'Users',
     'params.auditLogs': 'Audit Logs',
     'params.systemResources': 'System Resources',
@@ -4187,8 +4223,20 @@ const translations: Translations = {
     'blockdomi.ipRequired': 'La IP es obligatoria',
     'blockdomi.ipv4InvalidFormat': 'Introduzca un IPv4 válido con 4 octetos (ej: 192.168.1.1). No use puntos al final.',
     'blockdomi.ipv6InvalidFormat': 'Introduzca un IPv6 válido (8 grupos hex separados por :). Ej: 2001:db8::1. Puede usar :: una vez para comprimir ceros.',
+    'blockdomi.ipsPermitidos': 'IPs permitidos',
+    'blockdomi.ipsPermitidosNew': 'Nuevo',
+    'blockdomi.createIpsPermitidos': 'Registrar IPs permitidos',
+    'blockdomi.editIpsPermitidos': 'Editar IPs permitidos',
+    'blockdomi.deleteIpsPermitidos': 'Eliminar IPs permitidos',
+    'blockdomi.faixaIps': 'Rango de IPs',
+    'blockdomi.faixaIpsHelp': 'Separe múltiples IPs o rangos con ; (ej: 192.168.1.1; 10.0.0.0/24)',
+    'blockdomi.ipsPermitidosRequired': 'Ingrese al menos una IP o rango',
+    'blockdomi.clienteRequired': 'Seleccione el cliente',
+    'blockdomi.selectCliente': 'Seleccionar cliente',
+    'blockdomi.noIpsPermitidos': 'Ningún registro encontrado',
+    'blockdomi.cliente': 'Cliente',
 
-    // Parameters Menu
+  // Parameters Menu
     'params.users': 'Usuarios',
     'params.auditLogs': 'Registros de Auditoría',
     'params.systemResources': 'Recursos del Sistema',

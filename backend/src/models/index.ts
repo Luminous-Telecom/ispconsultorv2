@@ -55,6 +55,7 @@ import { Dominio } from './blockdomi/Dominio';
 import { IPv4 } from './blockdomi/IPv4';
 import { IPv6 } from './blockdomi/IPv6';
 import { VersaoBlockdomi } from './blockdomi/VersaoBlockdomi';
+import { IpPermitidoBlockdomi } from './blockdomi/IpPermitidoBlockdomi';
 
 // Importar associações específicas
 import './associations';
@@ -197,6 +198,10 @@ VersaoBlockdomi.hasMany(IPv4, { foreignKey: 'versao_id' });
 IPv4.belongsTo(VersaoBlockdomi, { foreignKey: 'versao_id', as: 'versaoRef' });
 VersaoBlockdomi.hasMany(IPv6, { foreignKey: 'versao_id' });
 IPv6.belongsTo(VersaoBlockdomi, { foreignKey: 'versao_id', as: 'versaoRef' });
+
+// IpPermitidoBlockdomi
+Cliente.hasOne(IpPermitidoBlockdomi, { foreignKey: 'cliente_id', as: 'ipPermitido' });
+IpPermitidoBlockdomi.belongsTo(Cliente, { foreignKey: 'cliente_id', as: 'cliente' });
 
 // AssinaturaDigital
 TermoContrato.hasMany(AssinaturaDigital, {
@@ -389,5 +394,6 @@ export {
   Dominio,
   IPv4,
   IPv6,
-  VersaoBlockdomi
+  VersaoBlockdomi,
+  IpPermitidoBlockdomi
 };
