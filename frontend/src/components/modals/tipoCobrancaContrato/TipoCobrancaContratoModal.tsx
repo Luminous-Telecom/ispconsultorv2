@@ -119,16 +119,28 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
       size="md"
       modalId="tipo-cobranca-contrato-modal"
       headerActions={
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          onClick={handleSubmit}
-          disabled={isPending}
-          form="tipo-cobranca-form"
-        >
-          Salvar
-        </Button>
+        !(isEdit && isLoadingTipo) ? (
+          <div className="d-flex gap-2 modal-header-actions">
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={onClose}
+              disabled={isPending}
+            >
+              {t('buttons.cancel')}
+            </Button>
+            <Button
+              type="submit"
+              form="tipo-cobranca-form"
+              variant="primary"
+              size="sm"
+              isLoading={isPending}
+            >
+              {t('buttons.save')}
+            </Button>
+          </div>
+        ) : undefined
       }
     >
       {isLoadingTipo && isEdit ? (
