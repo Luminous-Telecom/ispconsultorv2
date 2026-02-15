@@ -84,6 +84,17 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
+  const headerActions = (
+    <div className="d-flex gap-2 modal-header-actions">
+      <Button type="button" variant="outline-secondary" size="sm" onClick={onClose} disabled={isSubmitting}>
+        {t('actions.cancel')}
+      </Button>
+      <Button type="submit" form="ips-permitido-form" variant="primary" size="sm" disabled={isSubmitting}>
+        {t('buttons.save')}
+      </Button>
+    </div>
+  );
+
   return (
     <>
       <DraggableModal
@@ -91,8 +102,9 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
         onClose={onClose}
         title={isEditing ? t('blockdomi.editIpsPermitidos') : t('blockdomi.createIpsPermitidos')}
         size="md"
+        headerActions={headerActions}
       >
-        <form onSubmit={handleSubmit} className="p-3">
+        <form id="ips-permitido-form" onSubmit={handleSubmit} className="p-3">
           <div className="mb-3">
             {isEditing ? (
               <>
@@ -127,14 +139,6 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
             />
             <span className="text-muted small">{t('blockdomi.faixaIpsHelp')}</span>
             {errors.faixa_ips && <div className="text-danger small mt-1">{errors.faixa_ips}</div>}
-          </div>
-          <div className="d-flex justify-content-end gap-2">
-            <Button type="button" variant="outline-secondary" onClick={onClose} disabled={isSubmitting}>
-              {t('actions.cancel')}
-            </Button>
-            <Button type="submit" variant="primary" disabled={isSubmitting}>
-              {t('buttons.save')}
-            </Button>
           </div>
         </form>
       </DraggableModal>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIpsPermitidos, useDeleteIpPermitido } from '@/hooks/useIpsPermitidos';
 import { useTableFilters } from '@/hooks/useTableFilters';
@@ -12,6 +12,7 @@ import { useAuditoria } from '@/hooks/useAuditoria';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
+import { Button } from '@/components/ui';
 import type { IpPermitido } from '@/services/ipsPermitidosService';
 
 interface IpsPermitidosListModalProps {
@@ -19,19 +20,22 @@ interface IpsPermitidosListModalProps {
   onClose: () => void;
   title?: string;
   skipWrapper?: boolean;
+  onHeaderActionsReady?: (actions: React.ReactNode) => void;
 }
 
 const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
   show,
   onClose,
   title,
-  skipWrapper = false
+  skipWrapper = false,
+  onHeaderActionsReady
 }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedItems, setSelectedItems] = useState<IpPermitido[]>([]);
   const auditoria = useAuditoria();
   const { confirm, modalProps } = useConfirmModal();
 
@@ -131,49 +135,76 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
     auditoria.handleAudit('IpPermitido', item.id);
   }, [auditoria]);
 
-  const bulkActions = useMemo(() => [
-    {
-      label: t('blockdomi.ipsPermitidosNew'),
-      variant: 'primary' as const,
-      action: () => setShowCreateModal(true)
-    },
-    {
-      label: t('actions.edit'),
-      variant: 'primary' as const,
-      disabled: (selectedItems: IpPermitido[]) => selectedItems.length !== 1,
-      action: (selectedItems: IpPermitido[]) => {
-        if (selectedItems.length === 1) {
-          setSelectedId(selectedItems[0].id);
-          setShowEditModal(true);
-        }
-      }
-    },
-    {
-      label: t('actions.delete'),
-      disabled: (selectedItems: IpPermitido[]) => selectedItems.length === 0,
-      action: async (selectedItems: IpPermitido[]) => {
-        if (selectedItems.length === 0) return;
+  const handleCreate = useCallback(() => {
+    setSelectedId(null);
+    setShowEditModal(false);
+    setShowCreateModal(true);
+  }, []);
 
-        const msg = selectedItems.length === 1
-          ? t('messages.confirmDelete')
-          : `Tem certeza que deseja excluir ${selectedItems.length} registro(s)?`;
-        const confirmed = await confirm({
-          message: msg,
-          variant: 'danger',
-          title: t('blockdomi.deleteIpsPermitidos'),
-          confirmText: t('actions.delete'),
-          cancelText: t('actions.cancel')
-        });
-
-        if (confirmed) {
-          for (const item of selectedItems) {
-            await handleDelete(item.id);
-          }
-          refetch();
-        }
-      }
+  const handleEdit = useCallback(() => {
+    const item = selectedItems[0];
+    if (item) {
+      setSelectedId(item.id);
+      setShowCreateModal(false);
+      setShowEditModal(true);
     }
-  ], [t, confirm, handleDelete, refetch]);
+  }, [selectedItems]);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedItems.length === 0) return;
+    const msg = selectedItems.length === 1
+      ? t('messages.confirmDelete')
+      : `Tem certeza que deseja excluir ${selectedItems.length} registro(s)?`;
+    const confirmed = await confirm({
+      message: msg,
+      variant: 'danger',
+      title: t('blockdomi.deleteIpsPermitidos'),
+      confirmText: t('actions.delete'),
+      cancelText: t('actions.cancel')
+    });
+    if (confirmed) {
+      for (const item of selectedItems) {
+        await handleDelete(item.id);
+      }
+      refetch();
+    }
+  }, [selectedItems, confirm, handleDelete, refetch, t]);
+
+  const headerActionsContent = useMemo(() => (
+    <div className="d-flex gap-2 modal-header-actions">
+      <Button type="button" variant="primary" size="sm" onClick={handleCreate}>
+        {t('actions.create')}
+      </Button>
+      <Button
+        type="button"
+        variant="primary"
+        size="sm"
+        onClick={handleEdit}
+        disabled={selectedItems.length === 0}
+      >
+        {t('actions.edit')}
+      </Button>
+      <Button
+        type="button"
+        variant="primary"
+        size="sm"
+        onClick={handleBulkDelete}
+        disabled={selectedItems.length === 0}
+      >
+        {t('actions.delete')}
+      </Button>
+    </div>
+  ), [handleCreate, handleEdit, handleBulkDelete, selectedItems.length, t]);
+
+  const headerActionsRef = useRef(headerActionsContent);
+  headerActionsRef.current = headerActionsContent;
+
+  useEffect(() => {
+    if (skipWrapper && onHeaderActionsReady) {
+      onHeaderActionsReady(headerActionsRef.current);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipWrapper, onHeaderActionsReady, selectedItems.length]);
 
   const modalData = useMemo(() => ipsData?.data || [], [ipsData?.data]);
 
@@ -184,15 +215,12 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
     }, 0);
   }, [tableFilters]);
 
-  const handleBulkActionClick = useCallback((action: { onClick?: (items: IpPermitido[]) => void }, selectedItems: IpPermitido[]) => {
-    action.onClick?.(selectedItems);
-  }, []);
-
   const modalContent = (
     <>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
+            syncWithHeader={false}
             title={defaultTitle}
             config={{
               columns: tableColumns,
@@ -208,20 +236,22 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
               hover: true,
               responsive: true,
               selectable: true,
-              multiSelect: true,
-              bulkActions: bulkActions.map(action => ({
-                key: action.label.toLowerCase().replace(/\s+/g, '-'),
-                label: action.label,
-                onClick: action.action,
-                disabled: action.disabled,
-                variant: action.variant
-              })),
+              multiSelect: false,
+              bulkActions: [],
               emptyMessage: t('blockdomi.noIpsPermitidos'),
               pagination
             }}
             tableId="ips-permitidos-list"
-            onSelectionChange={() => {}}
-            onBulkActionClick={handleBulkActionClick}
+            onSelectionChange={(items) => {
+              const next = items || [];
+              setSelectedItems(prev => {
+                if (prev.length !== next.length) return next;
+                if (prev.length === 0) return prev;
+                const prevIds = prev.map(i => i.id).sort().join(',');
+                const nextIds = next.map(i => i.id).sort().join(',');
+                return prevIds === nextIds ? prev : next;
+              });
+            }}
             onRefresh={refetch}
             onAudit={handleAudit}
             auditEntity="IpPermitido"
@@ -238,6 +268,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
             search={tableFilters.search}
             onRowDoubleClick={(item) => {
               setSelectedId(item.id);
+              setShowCreateModal(false);
               setShowEditModal(true);
             }}
           />
@@ -290,6 +321,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
         size="lg"
         modalId="ips-permitidos-list-modal"
         className="no-padding"
+        headerActions={headerActionsContent}
       >
         {modalContent}
       </DraggableModal>
