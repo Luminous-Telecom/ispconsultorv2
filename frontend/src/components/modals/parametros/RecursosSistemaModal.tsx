@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -121,8 +121,9 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
     </div>
   ), [onClose, updateParametrosMutation.isPending]);
 
-  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
-  useEffect(() => {
+  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true.
+  // useLayoutEffect garante que os botões apareçam antes da pintura, evitando flash.
+  useLayoutEffect(() => {
     if (skipWrapper && onHeaderActionsReady) {
       onHeaderActionsReady(headerActionsContent);
     }

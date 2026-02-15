@@ -76,7 +76,6 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
         await createMutation.mutateAsync({ cliente_id: clienteId, faixa_ips: ips.join('; ') });
       }
       onSuccess?.();
-      onClose();
     } catch {
       // Erro tratado pelo hook
     }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useLayoutEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from '@/services/dadosEmpresaService';
@@ -17,7 +17,8 @@ import ResponsavelTab from './abas/ResponsavelTab';
 const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   show,
   onClose,
-  skipWrapper = false
+  skipWrapper = false,
+  onHeaderActionsReady
 }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel'>('basico');
@@ -93,9 +94,9 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     updateDadosMutation.mutate(dados);
   };
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     onClose();
-  };
+  }, [onClose]);
 
   const onLogoChange = async (file: File | null) => {
     try {
@@ -127,7 +128,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     }
   };
 
-  const headerActionsContent = (
+  const headerActionsContent = useMemo(() => (
     <div className="empresa-header-unified">
       {/* Botões à direita */}
       <div className="empresa-header-buttons modal-header-actions">
@@ -205,15 +206,16 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         </ul>
       </div>
     </div>
-  );
+  ), [activeTab, isMobile, updateDadosMutation.isPending, handleCancel]);
+
+  useLayoutEffect(() => {
+    if (skipWrapper && onHeaderActionsReady) {
+      onHeaderActionsReady(headerActionsContent);
+    }
+  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
 
   const modalContent = (
     <>
-      {skipWrapper && (
-        <div className="empresa-header-wrapper" style={{ padding: '16px 16px 0 16px', borderBottom: '1px solid var(--border-color)' }}>
-          {headerActionsContent}
-        </div>
-      )}
       <div className="empresa-modal-content">
         {/* Conteúdo das Abas */}
         <div

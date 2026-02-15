@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useLayoutEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIpsPermitidos, useDeleteIpPermitido } from '@/hooks/useIpsPermitidos';
 import { useTableFilters } from '@/hooks/useTableFilters';
@@ -199,7 +199,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
   const headerActionsRef = useRef(headerActionsContent);
   headerActionsRef.current = headerActionsContent;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (skipWrapper && onHeaderActionsReady) {
       onHeaderActionsReady(headerActionsRef.current);
     }
@@ -280,9 +280,6 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
   const handleSuccess = useCallback(() => {
     refetch();
     queryClient.invalidateQueries({ queryKey: ['ips-permitidos'] });
-    setShowCreateModal(false);
-    setShowEditModal(false);
-    setSelectedId(null);
   }, [refetch, queryClient]);
 
   if (skipWrapper) {

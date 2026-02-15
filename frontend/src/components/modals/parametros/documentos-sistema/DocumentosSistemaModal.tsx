@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import { useSelectedEntity } from '@/hooks/useSelectedEntity';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
@@ -6,7 +6,7 @@ import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
 import DocumentoTab from './abas/DocumentoTab';
 
-const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose: _onClose }) => {
+const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose: _onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
@@ -102,15 +102,13 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     }
   }, [show, setSelectedDocumento]);
 
-  return (
-    <>
-      <DraggableModal
-        show={show}
-        onClose={_onClose}
-        title="Modelos de Documentos"
-        size="xl"
-        headerActions={headerActionsContent}
-      >
+  useLayoutEffect(() => {
+    if (skipWrapper && onHeaderActionsReady) {
+      onHeaderActionsReady(headerActionsContent);
+    }
+  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
+
+  const modalContent = (
         <div className="sistema-modal-content">
           {/* Conteúdo das Abas */}
           <div
@@ -127,7 +125,11 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
             />
           </div>
         </div>
-      </DraggableModal>
+  );
+
+  const contentWithModals = (
+    <>
+      {modalContent}
 
       {/* Modal Unificado */}
       {showDocumentoModal && (
@@ -156,6 +158,22 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
         />
       )}
     </>
+  );
+
+  if (skipWrapper) {
+    return contentWithModals;
+  }
+
+  return (
+    <DraggableModal
+      show={show}
+      onClose={_onClose}
+      title="Modelos de Documentos"
+      size="xl"
+      headerActions={headerActionsContent}
+    >
+      {contentWithModals}
+    </DraggableModal>
   );
 };
 

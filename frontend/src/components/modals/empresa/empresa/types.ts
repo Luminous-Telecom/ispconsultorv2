@@ -7,6 +7,7 @@ export interface DadosEmpresaModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
+  onHeaderActionsReady?: (actions: React.ReactNode) => void;
 }
 
 export interface DadosEmpresaTabProps {

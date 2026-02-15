@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import CodeMirror from '@uiw/react-codemirror';
@@ -16,6 +16,8 @@ import { DadosEmpresaService, type DadosEmpresa } from '@/services/dadosEmpresaS
 interface HotsiteModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
+  onHeaderActionsReady?: (actions: React.ReactNode) => void;
 }
 
 function sanitizeSrcDocHtml(rawHtml: string): string {
@@ -101,7 +103,7 @@ function renderTemplate(html: string, variables: Record<string, string>): string
   });
 }
 
-const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
+const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const { theme } = useTheme();
@@ -199,15 +201,8 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
     return sanitizeSrcDocHtml(html);
   }, [html, activeTab, empresaData]);
 
-  return (
-    <DraggableModal
-      show={show}
-      onClose={handleClose}
-      title="Hotsite"
-      size="xl"
-      modalId="hotsite-modal"
-      headerActions={
-        <div className="hotsite-header-unified">
+  const headerActionsContent = useMemo(() => (
+    <div className="hotsite-header-unified">
           {/* Botões à direita */}
           <div className="hotsite-header-buttons modal-header-actions">
             <Button
@@ -264,8 +259,15 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
             </ul>
           </div>
         </div>
-      }
-    >
+  ), [activeTab, isMobile, saveMutation.isPending, handleClose, handleSave]);
+
+  useLayoutEffect(() => {
+    if (skipWrapper && onHeaderActionsReady) {
+      onHeaderActionsReady(headerActionsContent);
+    }
+  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
+
+  const modalContent = (
       <div className="hotsite-modal-content">
         {/* Conteúdo das Abas */}
         <div
@@ -369,6 +371,22 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose }) => {
           )}
         </div>
       </div>
+  );
+
+  if (skipWrapper) {
+    return modalContent;
+  }
+
+  return (
+    <DraggableModal
+      show={show}
+      onClose={handleClose}
+      title="Hotsite"
+      size="xl"
+      modalId="hotsite-modal"
+      headerActions={headerActionsContent}
+    >
+      {modalContent}
     </DraggableModal>
   );
 };

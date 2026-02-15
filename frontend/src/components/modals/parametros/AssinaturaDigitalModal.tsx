@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -180,8 +180,8 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
     </div>
   ), [onClose, updateMutation.isPending, isLoading, isLoadingEnabled, t]);
 
-  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
-  useEffect(() => {
+  // useLayoutEffect garante que os botões apareçam antes da pintura
+  useLayoutEffect(() => {
     if (skipWrapper && onHeaderActionsReady) {
       onHeaderActionsReady(headerActionsContent);
     }

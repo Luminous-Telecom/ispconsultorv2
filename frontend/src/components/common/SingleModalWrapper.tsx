@@ -91,9 +91,12 @@ const SingleModalWrapper: React.FC = () => {
   const { t } = useI18n();
   const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
 
-  // Limpar headerActions quando o modal mudar (hooks devem vir antes de qualquer return)
+  // Limpar headerActions apenas quando o modal fechar (null), não quando mudar de um para outro.
+  // Assim evitamos race condition onde a limpeza sobrescreve os headerActions que o novo modal acabou de setar.
   useEffect(() => {
-    setHeaderActions(null);
+    if (!activeModal) {
+      setHeaderActions(null);
+    }
   }, [activeModal]);
 
   if (!activeModal) return null;

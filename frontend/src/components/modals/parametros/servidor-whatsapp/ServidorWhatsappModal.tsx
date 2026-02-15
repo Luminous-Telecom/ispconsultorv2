@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -385,8 +385,8 @@ const saveMensagemMutation = useMutation({
   const headerActionsContentRef = useRef(headerActionsContent);
   headerActionsContentRef.current = headerActionsContent;
 
-  // Passar headerActions para o SingleModalWrapper quando skipWrapper for true
-  useEffect(() => {
+  // useLayoutEffect garante que os botões apareçam antes da pintura
+  useLayoutEffect(() => {
     if (skipWrapper && onHeaderActionsReady) {
       if (!show) {
         onHeaderActionsReady(null);
@@ -394,16 +394,13 @@ const saveMensagemMutation = useMutation({
         onHeaderActionsReady(headerActionsContentRef.current);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [skipWrapper, onHeaderActionsReady, activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, show]);
-
-  useEffect(() => {
     return () => {
       if (skipWrapper && onHeaderActionsReady) {
         onHeaderActionsReady(null);
       }
     };
-  }, [skipWrapper, onHeaderActionsReady]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipWrapper, onHeaderActionsReady, activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, show]);
 
   const modalContent = (
     <>

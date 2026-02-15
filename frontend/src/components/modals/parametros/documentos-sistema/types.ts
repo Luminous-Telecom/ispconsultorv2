@@ -10,6 +10,8 @@ export type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta | Mod
 export interface DocumentosSistemaModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
+  onHeaderActionsReady?: (actions: React.ReactNode) => void;
 }
 
 export interface DocumentoTabProps {

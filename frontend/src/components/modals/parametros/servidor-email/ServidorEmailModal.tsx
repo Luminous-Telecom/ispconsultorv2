@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -321,7 +321,8 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
   const headerActionsContentRef = useRef(headerActionsContent);
   headerActionsContentRef.current = headerActionsContent;
 
-  useEffect(() => {
+  // useLayoutEffect garante que os botões apareçam antes da pintura
+  useLayoutEffect(() => {
     if (skipWrapper && onHeaderActionsReady) {
       if (!show) {
         onHeaderActionsReady(null);
@@ -329,16 +330,13 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
         onHeaderActionsReady(headerActionsContentRef.current);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [skipWrapper, onHeaderActionsReady, activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, show]);
-
-  useEffect(() => {
     return () => {
       if (skipWrapper && onHeaderActionsReady) {
         onHeaderActionsReady(null);
       }
     };
-  }, [skipWrapper, onHeaderActionsReady]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipWrapper, onHeaderActionsReady, activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, show]);
 
   const modalContent = (
     <>
