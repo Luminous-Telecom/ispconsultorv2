@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { useModal } from '@/contexts/ModalContext';
 import { useI18n, TranslationKeys } from '@/contexts/I18nContext';
 import Loading from './Loading';
@@ -90,9 +90,15 @@ const SingleModalWrapper: React.FC = () => {
   const { activeModal, modalData, closeModal } = useModal();
   const { t } = useI18n();
   const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
+  const prevModalRef = useRef<string | null>(null);
 
-  // Limpar headerActions apenas quando o modal fechar (null), não quando mudar de um para outro.
-  // Assim evitamos race condition onde a limpeza sobrescreve os headerActions que o novo modal acabou de setar.
+  // Limpar headerActions quando o modal fechar ou quando trocar de um modal para outro,
+  // para não exibir botões da tela anterior (ex.: IPs permitidos ao abrir Domínios).
+  if (prevModalRef.current !== activeModal) {
+    prevModalRef.current = activeModal ?? null;
+    setHeaderActions(null);
+  }
+
   useEffect(() => {
     if (!activeModal) {
       setHeaderActions(null);
