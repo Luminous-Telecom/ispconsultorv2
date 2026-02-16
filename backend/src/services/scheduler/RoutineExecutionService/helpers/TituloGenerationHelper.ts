@@ -35,6 +35,7 @@ interface ContratoWithCliente {
   conta_boleto: number | null;
   dia_vencimento_id: number | null;
   data_inicio: Date | null;
+  isento_mensalidade?: boolean;
   cliente?: {
     id: number;
     ativo: boolean;
@@ -58,6 +59,10 @@ export class TituloGenerationHelper {
    * Valida se um contrato pode gerar títulos
    */
   static validateContrato(contrato: ContratoWithCliente): boolean {
+    if (contrato.isento_mensalidade === true) {
+      return false;
+    }
+
     const cliente = contrato.cliente;
     if (!cliente || !cliente.ativo) {
       return false;

@@ -15,6 +15,7 @@ interface ContratoWithPlano {
   desconto_valor: number | null;
   desconto_percentual: number | null;
   data_inicio: Date | null;
+  isento_mensalidade?: boolean;
   plano?: {
     valor_mensal: number;
     nome_plano?: string;
@@ -56,6 +57,10 @@ export class ContratoTituloProcessor {
     parametros: Parametros | null,
     servicosAdicionais: Array<ContratoPlanoAdicionalWithPlano>
   ): Promise<{ titulosGerados: number; titulosCriados: Array<any> }> {
+    if (contrato.isento_mensalidade === true) {
+      return { titulosGerados: 0, titulosCriados: [] };
+    }
+
     const titulosGerar = quantidadeMinimaTitulos - titulosEmAberto.length;
 
     if (titulosGerar <= 0) {
