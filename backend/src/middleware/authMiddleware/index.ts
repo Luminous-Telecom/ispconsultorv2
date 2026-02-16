@@ -41,11 +41,6 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { method: 'GET', path: /^\/api\/clientes\/consultar-cnpj\/.+$/i }, // Consultar CNPJ (público para uso em formulários)
   // Rotas auxiliares de fornecedores (usadas em formulários)
   { method: 'GET', path: /^\/api\/fornecedores\/consultar-cnpj\/.+$/i }, // Consultar CNPJ (público para uso em formulários)
-  // Blockdomi: versão atual (só o número) e listas TXT (para integração, firewall)
-  { method: 'GET', path: /^\/api\/blockdomi\/versao-atual\/?$/i },
-  { method: 'GET', path: /^\/api\/blockdomi\/listas\/dominios\/?$/i },
-  { method: 'GET', path: /^\/api\/blockdomi\/listas\/ipv4\/?$/i },
-  { method: 'GET', path: /^\/api\/blockdomi\/listas\/ipv6\/?$/i },
 ];
 
 const isPublicRoute = (req: Request): boolean => {

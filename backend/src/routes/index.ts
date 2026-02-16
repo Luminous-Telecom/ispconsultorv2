@@ -41,6 +41,7 @@ import dominioRoutes from './dominioRoutes';
 import ipv4Routes from './ipv4Routes';
 import ipv6Routes from './ipv6Routes';
 import blockdomiRoutes from './blockdomiRoutes';
+import blockdomiListasRoutes from './blockdomiListasRoutes';
 import ipsPermitidosRoutes from './ipsPermitidosRoutes';
 import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
@@ -102,6 +103,8 @@ const routes = [
     // IMPORTANTE: Esta rota genérica /api deve vir POR ÚLTIMO para não capturar rotas específicas
     { path: '/api', route: pagamentoPublicoRoutes },
     
+    // Rotas TXT do Blockdomi na raiz: /domain/version, /domain/all, /v4/all, /v6/all
+    { path: '', route: blockdomiListasRoutes },
     // Rotas de health check (sem /api para facilitar monitoramento)
     { path: '', route: healthRoutes },
 ];

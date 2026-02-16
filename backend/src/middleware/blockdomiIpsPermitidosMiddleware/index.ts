@@ -7,10 +7,10 @@ import { IpPermitidoService } from '../../services/blockdomi/IpPermitidoService'
 import { DadosEmpresaService } from '../../services/sistema/DadosEmpresaService';
 
 const BLOCKDOMI_TXT_PATHS = [
-  /^\/api\/blockdomi\/versao-atual\/?$/i,
-  /^\/api\/blockdomi\/listas\/dominios\/?$/i,
-  /^\/api\/blockdomi\/listas\/ipv4\/?$/i,
-  /^\/api\/blockdomi\/listas\/ipv6\/?$/i,
+  /^\/domain\/version\/?$/i,
+  /^\/domain\/all\/?$/i,
+  /^\/v4\/all\/?$/i,
+  /^\/v6\/all\/?$/i,
 ];
 
 function getClientIp(req: Request): string | null {

@@ -4,7 +4,7 @@ import { sendError } from '../../../utils/responseUtils';
 
 export class ListasBlockdomiController {
   /**
-   * GET /listas/dominios - Lista domínios em texto (um por linha)
+   * GET /domain/all - Lista domínios em texto (um por linha)
    * Query: versao (numero ou id), ativo (boolean, default true)
    */
   static async dominiosTxt(req: Request, res: Response): Promise<void> {
@@ -28,7 +28,7 @@ export class ListasBlockdomiController {
   }
 
   /**
-   * GET /listas/ipv4 - Lista IPv4 em texto (um por linha)
+   * GET /v4/all - Lista IPv4 em texto (um por linha)
    */
   static async ipv4Txt(req: Request, res: Response): Promise<void> {
     try {
@@ -51,7 +51,7 @@ export class ListasBlockdomiController {
   }
 
   /**
-   * GET /listas/ipv6 - Lista IPv6 em texto (um por linha)
+   * GET /v6/all - Lista IPv6 em texto (um por linha)
    */
   static async ipv6Txt(req: Request, res: Response): Promise<void> {
     try {
@@ -74,7 +74,7 @@ export class ListasBlockdomiController {
   }
 
   /**
-   * GET /versao-atual - Retorna apenas o número da versão mais recente (texto puro)
+   * GET /domain/version - Retorna apenas o número da versão mais recente (texto puro)
    */
   static async versaoAtual(req: Request, res: Response): Promise<void> {
     try {
