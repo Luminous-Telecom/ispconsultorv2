@@ -35,6 +35,7 @@ import routes from './routes';
 
 // Importar middlewares de autenticação
 import { authMiddleware } from './middleware/authMiddleware';
+import { blockdomiIpsPermitidosMiddleware } from './middleware/blockdomiIpsPermitidosMiddleware';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -194,6 +195,9 @@ app.use(fileProtectionMiddleware);
 app.use(apiProtectionMiddleware);
 app.use(imageProtectionMiddleware);
 app.use(configProtectionMiddleware);
+
+// Restringe rotas TXT do Blockdomi (dominios, versao, ipv4, ipv6) aos IPs cadastrados
+app.use(blockdomiIpsPermitidosMiddleware);
 
 app.use(authMiddleware);
 

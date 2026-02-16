@@ -124,4 +124,56 @@ export class IpPermitidoService {
     if (!row) throw new Error('Registro não encontrado');
     await row.destroy();
   }
+
+  /**
+   * Verifica se o IP do cliente está em alguma faixa cadastrada em ips_permitidos_blockdomi.
+   * Suporta: IP único (IPv4 ou IPv6) e CIDR IPv4 (ex: 10.0.0.0/24).
+   */
+  static async isIpAllowed(clientIp: string | null): Promise<boolean> {
+    if (!clientIp || typeof clientIp !== 'string' || !clientIp.trim()) {
+      return false;
+    }
+
+    const ip = clientIp.trim();
+    const rows = await IpPermitidoBlockdomi.findAll({ attributes: ['faixa_ips'] });
+    const allRanges = rows
+      .map((r) => (r.faixa_ips || '').split(';').map((s) => s.trim()).filter(Boolean))
+      .flat();
+
+    for (const range of allRanges) {
+      if (range.includes('/')) {
+        if (ip.includes(':') && range.includes(':')) {
+          if (ip === range.split('/')[0]) return true;
+        } else if (!ip.includes(':')) {
+          if (IpPermitidoService.ipv4InCidr(ip, range)) return true;
+        }
+      } else {
+        if (ip === range) return true;
+      }
+    }
+    return false;
+  }
+
+  private static ipv4ToInt(ip: string): number {
+    const parts = ip.split('.');
+    if (parts.length !== 4) return -1;
+    let int = 0;
+    for (const p of parts) {
+      const n = parseInt(p, 10);
+      if (isNaN(n) || n < 0 || n > 255) return -1;
+      int = (int << 8) + n;
+    }
+    return int >>> 0;
+  }
+
+  private static ipv4InCidr(ip: string, cidr: string): boolean {
+    const [range, bitsStr] = cidr.split('/');
+    const bits = bitsStr ? parseInt(bitsStr, 10) : 32;
+    if (isNaN(bits) || bits < 0 || bits > 32) return false;
+    const ipNum = IpPermitidoService.ipv4ToInt(ip);
+    const rangeNum = IpPermitidoService.ipv4ToInt(range);
+    if (ipNum < 0 || rangeNum < 0) return false;
+    const mask = bits === 0 ? 0 : ~((1 << (32 - bits)) - 1) >>> 0;
+    return (ipNum & mask) === (rangeNum & mask);
+  }
 }
