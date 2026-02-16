@@ -2,10 +2,17 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    const [tiposResult] = await queryInterface.sequelize.query(
+    const [tiposAtivosResult] = await queryInterface.sequelize.query(
       'SELECT id FROM tipos_cobranca_contrato WHERE ativo = 1 ORDER BY id ASC LIMIT 1'
     );
-    const defaultTipoId = tiposResult && tiposResult[0] ? tiposResult[0].id : null;
+    let defaultTipoId = tiposAtivosResult?.[0]?.id ?? null;
+
+    if (!defaultTipoId) {
+      const [tiposQualquerResult] = await queryInterface.sequelize.query(
+        'SELECT id FROM tipos_cobranca_contrato ORDER BY id ASC LIMIT 1'
+      );
+      defaultTipoId = tiposQualquerResult?.[0]?.id ?? null;
+    }
 
     const [nullCountResult] = await queryInterface.sequelize.query(
       'SELECT COUNT(*) as count FROM contratos WHERE tipo_cobranca_contrato_id IS NULL'
@@ -13,7 +20,14 @@ module.exports = {
     const nullCount = nullCountResult?.[0]?.count ?? 0;
 
     if (nullCount > 0 && !defaultTipoId) {
-      throw new Error('Existem contratos sem tipo de cobrança. Crie pelo menos um tipo de cobrança ativo antes de executar esta migration.');
+      await queryInterface.sequelize.query(
+        `INSERT INTO tipos_cobranca_contrato (nome, quantidade_titulos, periodicidade, ativo, created_at, updated_at)
+         VALUES ('Padrão', 1, 'mensal', 1, NOW(), NOW())`
+      );
+      const [inserted] = await queryInterface.sequelize.query(
+        'SELECT id FROM tipos_cobranca_contrato ORDER BY id DESC LIMIT 1'
+      );
+      defaultTipoId = inserted?.[0]?.id ?? null;
     }
 
     if (defaultTipoId) {
