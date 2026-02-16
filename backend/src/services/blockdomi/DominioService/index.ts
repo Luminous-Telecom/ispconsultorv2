@@ -137,7 +137,7 @@ export class DominioService {
   }
 
   /**
-   * Atualizar domínio
+   * Atualizar domínio. Gera nova versão automaticamente.
    */
   static async update(id: string | number, dadosDominio: Partial<Dominio>): Promise<Dominio> {
     const existingDominio = await Dominio.findByPk(id);
@@ -167,6 +167,9 @@ export class DominioService {
         }
       }
     });
+
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio');
+    updateData.versao_id = versaoId;
     
     await existingDominio.update(updateData);
     await existingDominio.reload();

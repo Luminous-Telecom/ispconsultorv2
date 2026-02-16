@@ -265,7 +265,7 @@ export class IPv4Service {
   }
 
   /**
-   * Atualizar IPv4
+   * Atualizar IPv4. Gera nova versão automaticamente.
    */
   static async update(id: string | number, dadosIPv4: Partial<IPv4>): Promise<IPv4> {
     const existingIPv4 = await IPv4.findByPk(id);
@@ -295,6 +295,9 @@ export class IPv4Service {
         }
       }
     });
+
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4');
+    updateData.versao_id = versaoId;
     
     await existingIPv4.update(updateData);
     await existingIPv4.reload();

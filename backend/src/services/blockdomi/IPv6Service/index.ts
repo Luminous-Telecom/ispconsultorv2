@@ -265,7 +265,7 @@ export class IPv6Service {
   }
 
   /**
-   * Atualizar IPv6
+   * Atualizar IPv6. Gera nova versão automaticamente.
    */
   static async update(id: string | number, dadosIPv6: Partial<IPv6>): Promise<IPv6> {
     const existingIPv6 = await IPv6.findByPk(id);
@@ -295,6 +295,9 @@ export class IPv6Service {
         }
       }
     });
+
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv6');
+    updateData.versao_id = versaoId;
     
     await existingIPv6.update(updateData);
     await existingIPv6.reload();
