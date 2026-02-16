@@ -361,6 +361,13 @@ export class TituloService {
   }
 
   /**
+   * Deletar título (apenas pendente e não registrado no banco)
+   */
+  static async delete(id: number): Promise<void> {
+    await tituloServiceInstance.delete(id);
+  }
+
+  /**
    * Estornar título (volta para pendente)
    */
   static async estornar(id: number): Promise<{ success: boolean; message: string }> {

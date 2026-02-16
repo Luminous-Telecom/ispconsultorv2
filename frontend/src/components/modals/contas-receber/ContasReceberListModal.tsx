@@ -656,6 +656,64 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         }
       },
       {
+        key: 'excluir',
+        label: t('buttons.delete'),
+        variant: 'danger' as const,
+        onClick: async (selectedItems: Titulo[]) => {
+          const isTituloDeletavel = (t: Titulo): boolean => {
+            if (t.status === 'cancelado') return true;
+            if (t.pago) return false;
+            const registrado = !!(t.charge_id || t.nosso_numero || t.codigo_barras || t.linha_digitavel || t.url_boleto);
+            return !registrado;
+          };
+          const deletaveis = selectedItems.filter(isTituloDeletavel);
+          if (deletaveis.length === 0) return;
+          const confirmMessage = deletaveis.length === 1
+            ? t('financial.confirmDeleteTitle')
+            : t('financial.confirmDeleteTitles', { count: deletaveis.length });
+          const confirmed = await confirm({
+            message: confirmMessage,
+            variant: 'danger',
+            title: t('actions.delete'),
+            confirmText: t('actions.delete'),
+            cancelText: t('actions.cancel'),
+          });
+          if (confirmed) {
+            try {
+              let successCount = 0;
+              let errorCount = 0;
+              for (const item of deletaveis) {
+                try {
+                  await TituloService.delete(item.id);
+                  successCount++;
+                } catch {
+                  errorCount++;
+                }
+              }
+              await handleRefreshData();
+              setSelectedItems([]);
+              if (successCount > 0) {
+                success(successCount === 1 ? t('financial.successDeleteTitle') : t('financial.successDeleteTitles', { count: successCount }));
+              }
+              if (errorCount > 0) {
+                error(errorCount === 1 ? t('financial.errorDeleteTitle') : t('financial.errorDeleteTitles', { count: errorCount }));
+              }
+            } catch {
+              error(t('financial.errorDeleteTitlesGeneral'));
+            }
+          }
+        },
+        disabled: (selectedItems: Titulo[]): boolean => {
+          if (selectedItems.length === 0) return true;
+          const isDeletavel = (t: Titulo): boolean => {
+            if (t.status === 'cancelado') return true;
+            if (t.pago) return false;
+            return !(t.charge_id || t.nosso_numero || t.codigo_barras || t.linha_digitavel || t.url_boleto);
+          };
+          return selectedItems.every(t => !isDeletavel(t));
+        }
+      },
+      {
         key: 'estornar',
         label: t('buttons.reverse'),
         variant: 'primary' as const,

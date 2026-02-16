@@ -500,6 +500,13 @@ export interface TranslationKeys {
   'financial.titleReversed': string;
   'financial.errorReversing': string;
   'financial.titleWillReturnPending': string;
+  'financial.confirmDeleteTitle': string;
+  'financial.confirmDeleteTitles': string;
+  'financial.successDeleteTitle': string;
+  'financial.successDeleteTitles': string;
+  'financial.errorDeleteTitle': string;
+  'financial.errorDeleteTitles': string;
+  'financial.errorDeleteTitlesGeneral': string;
   'financial.receive': string;
   'financial.pay': string;
   'financial.toReceive': string;
@@ -1803,6 +1810,13 @@ const translations: Translations = {
     'financial.titleReversed': 'Título estornado com sucesso!',
     'financial.errorReversing': 'Erro ao estornar título.',
     'financial.titleWillReturnPending': 'O título voltará para status PENDENTE.',
+    'financial.confirmDeleteTitle': 'Tem certeza que deseja excluir este título? Apenas títulos pendentes e não registrados no banco podem ser excluídos.',
+    'financial.confirmDeleteTitles': 'Tem certeza que deseja excluir ${count} título(s)? Apenas títulos pendentes e não registrados no banco podem ser excluídos.',
+    'financial.successDeleteTitle': 'Título excluído com sucesso.',
+    'financial.successDeleteTitles': '${count} título(s) excluído(s) com sucesso.',
+    'financial.errorDeleteTitle': 'Não foi possível excluir 1 título.',
+    'financial.errorDeleteTitles': '${count} título(s) não puderam ser excluídos.',
+    'financial.errorDeleteTitlesGeneral': 'Erro ao excluir títulos.',
     'financial.receive': 'Receber',
     'financial.pay': 'Pagar',
     'financial.toReceive': 'A Receber',
@@ -3101,6 +3115,13 @@ const translations: Translations = {
     'financial.titleReversed': 'Title reversed successfully!',
     'financial.errorReversing': 'Error reversing title.',
     'financial.titleWillReturnPending': 'The title will return to PENDING status.',
+    'financial.confirmDeleteTitle': 'Are you sure you want to delete this title? Only pending titles not registered with the bank can be deleted.',
+    'financial.confirmDeleteTitles': 'Are you sure you want to delete ${count} title(s)? Only pending titles not registered with the bank can be deleted.',
+    'financial.successDeleteTitle': 'Title deleted successfully.',
+    'financial.successDeleteTitles': '${count} title(s) deleted successfully.',
+    'financial.errorDeleteTitle': 'Could not delete 1 title.',
+    'financial.errorDeleteTitles': '${count} title(s) could not be deleted.',
+    'financial.errorDeleteTitlesGeneral': 'Error deleting titles.',
     'financial.receive': 'Receive',
     'financial.pay': 'Pay',
     'financial.toReceive': 'To Receive',
@@ -4401,6 +4422,13 @@ const translations: Translations = {
     'financial.titleReversed': '¡Título revertido con éxito!',
     'financial.errorReversing': 'Error al revertir título.',
     'financial.titleWillReturnPending': 'El título volverá al estado PENDIENTE.',
+    'financial.confirmDeleteTitle': '¿Está seguro de que desea eliminar este título? Solo se pueden eliminar títulos pendientes no registrados en el banco.',
+    'financial.confirmDeleteTitles': '¿Está seguro de que desea eliminar ${count} título(s)? Solo se pueden eliminar títulos pendientes no registrados en el banco.',
+    'financial.successDeleteTitle': 'Título eliminado correctamente.',
+    'financial.successDeleteTitles': '${count} título(s) eliminado(s) correctamente.',
+    'financial.errorDeleteTitle': 'No se pudo eliminar 1 título.',
+    'financial.errorDeleteTitles': '${count} título(s) no pudieron ser eliminados.',
+    'financial.errorDeleteTitlesGeneral': 'Error al eliminar títulos.',
     'financial.receive': 'Recibir',
     'financial.pay': 'Pagar',
     'financial.toReceive': 'A Recibir',

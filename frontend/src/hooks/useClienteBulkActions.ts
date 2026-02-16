@@ -348,6 +348,54 @@ export const useClienteBulkActions = ({
     await handleImprimirRecibos(tituloItems);
   };
 
+  const isTituloDeletavel = (t: CarneParcela): boolean => {
+    if (t.status === 'cancelado') return true;
+    if (t.pago) return false;
+    const registrado = !!(t.charge_id || t.nosso_numero || t.codigo_barras || t.linha_digitavel || t.url_boleto);
+    return !registrado;
+  };
+
+  const handleDeletarTitulos = async (items: CarneParcela[]) => {
+    const deletaveis = items.filter(isTituloDeletavel);
+    if (deletaveis.length === 0) return;
+    const confirmMessage = deletaveis.length === 1
+      ? t('financial.confirmDeleteTitle')
+      : t('financial.confirmDeleteTitles', { count: deletaveis.length });
+    const confirmed = await confirm({
+      message: confirmMessage,
+      variant: 'danger',
+      title: t('actions.delete'),
+      confirmText: t('actions.delete'),
+      cancelText: t('actions.cancel'),
+    });
+    if (confirmed) {
+      try {
+        let successCount = 0;
+        let errorCount = 0;
+        for (const item of deletaveis) {
+          try {
+            await TituloService.delete(item.id);
+            successCount++;
+          } catch {
+            errorCount++;
+          }
+        }
+        await queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', effectiveClienteId] });
+        const refreshResult = onRefreshParcelas();
+        if (refreshResult && typeof refreshResult === 'object' && 'then' in refreshResult) {
+          await refreshResult;
+        }
+        if (successCount > 0) {
+          success(successCount === 1 ? t('financial.successDeleteTitle') : t('financial.successDeleteTitles', { count: successCount }));
+        }
+        if (errorCount > 0) {
+          error(errorCount === 1 ? t('financial.errorDeleteTitle') : t('financial.errorDeleteTitles', { count: errorCount }));
+        }
+      } catch {
+        error(t('financial.errorDeleteTitlesGeneral'));
+      }
+    }
+  };
 
   // Ações em lote para títulos
   const titulosBulkActions: BulkAction<CarneParcela>[] = [
@@ -390,6 +438,16 @@ export const useClienteBulkActions = ({
         return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
       },
       onClick: handleCancelarTitulos
+    },
+    {
+      key: 'excluir',
+      label: t('actions.delete'),
+      variant: 'danger',
+      disabled: (selectedItems) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => !isTituloDeletavel(item));
+      },
+      onClick: handleDeletarTitulos
     },
     {
       key: 'estornar',

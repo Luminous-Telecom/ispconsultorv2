@@ -455,7 +455,7 @@ export class TituloCRUDController {
   }
 
   /**
-   * Deleta título
+   * Deleta título (apenas se pendente e não registrado no banco)
    */
   public static async destroy(req: Request, res: Response): Promise<void> {
     try {
@@ -468,20 +468,28 @@ export class TituloCRUDController {
         return;
       }
 
+      const isCancelado = titulo.status === 'cancelado';
+      if (!isCancelado) {
+        if (titulo.pago) {
+          sendValidationError(res, 'Só é possível excluir títulos pendentes (não pagos).');
+          return;
+        }
+        const tituloRegistradoNoBanco = !!(
+          titulo.nosso_numero ||
+          titulo.codigo_barras ||
+          titulo.linha_digitavel ||
+          titulo.charge_id ||
+          titulo.url_boleto
+        );
+        if (tituloRegistradoNoBanco) {
+          sendValidationError(res, 'Só é possível excluir títulos que ainda não foram registrados no banco emissor.');
+          return;
+        }
+      }
+
       // Capturar dados anteriores para auditoria
       const tituloModelCancel = titulo as unknown as Titulo;
       const dadosAnteriores = tituloModelCancel.toJSON() as Record<string, unknown>;
-
-      // Cancelar na API do banco
-      if (titulo.charge_id && titulo.banco && ['efi', 'asaas'].includes(titulo.banco.tipo_banco ?? '')) {
-        try {
-          const { BancoApiService } = await import('../../../services/bancos/BancoApiService');
-          const resultado = await BancoApiService.cancelarTitulo(titulo as TituloComRelacoes);
-          logger.info(`Cancelamento no gateway ${resultado.success ? 'bem-sucedido' : 'falhou'}`, { titulo_id: titulo.id, charge_id: titulo.charge_id, message: resultado.message });
-        } catch (error: unknown) {
-          logger.warn('Erro ao cancelar título no gateway bancário', { titulo_id: titulo.id, error });
-        }
-      }
 
       // Registrar auditoria
       try {
