@@ -894,6 +894,7 @@ export interface TranslationKeys {
   'status.active': string;
   'status.inactive': string;
   'status.suspended': string;
+  'status.exempt': string;
   'status.overdue': string;
   'status.paidLate': string;
 
@@ -2166,6 +2167,7 @@ const translations: Translations = {
     'status.active': 'Ativo',
     'status.inactive': 'Inativo',
     'status.suspended': 'Suspenso',
+    'status.exempt': 'Isentos',
     'status.overdue': 'Vencido',
     'status.paidLate': 'Pago em Atraso',
 
@@ -3463,6 +3465,7 @@ const translations: Translations = {
     'status.active': 'Active',
     'status.inactive': 'Inactive',
     'status.suspended': 'Suspended',
+    'status.exempt': 'Exempt',
     'status.overdue': 'Overdue',
     'status.paidLate': 'Paid Late',
 
@@ -4762,6 +4765,7 @@ const translations: Translations = {
     'status.active': 'Activo',
     'status.inactive': 'Inactivo',
     'status.suspended': 'Suspendido',
+    'status.exempt': 'Exentos',
     'status.overdue': 'Vencido',
     'status.paidLate': 'Pagado con Retraso',
 

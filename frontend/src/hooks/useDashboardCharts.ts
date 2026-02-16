@@ -118,8 +118,9 @@ export const useDashboardCharts = (
   const contratosChartData = useMemo(() => [
     { label: t('status.active'), value: stats.contratosAtivos, color: '#28a745' },
     { label: t('status.inactive'), value: stats.contratosInativos, color: '#dc3545' },
-    { label: t('status.suspended'), value: stats.contratosSuspensos, color: '#ffc107' }
-  ], [stats.contratosAtivos, stats.contratosInativos, stats.contratosSuspensos, t]);
+    { label: t('status.suspended'), value: stats.contratosSuspensos, color: '#ffc107' },
+    { label: t('status.exempt'), value: stats.contratosIsentos, color: '#6c757d' }
+  ], [stats.contratosAtivos, stats.contratosInativos, stats.contratosSuspensos, stats.contratosIsentos, t]);
 
   const ticketMedioChartData = useMemo(() => [
     { label: 'Ticket Médio', value: stats.ticketMedio, color: '#6f42c1' }

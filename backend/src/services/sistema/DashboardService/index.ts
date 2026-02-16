@@ -61,7 +61,7 @@ export class DashboardService {
    */
   static async getAllContratos(): Promise<Contrato[]> {
     return await Contrato.findAll({ 
-      attributes: ['id', 'status', 'plano_id', 'cliente_id']
+      attributes: ['id', 'status', 'plano_id', 'cliente_id', 'isento_mensalidade']
     });
   }
 

@@ -17,6 +17,7 @@ interface DashboardStats {
   contratosAtivos: number;
   contratosInativos: number;
   contratosSuspensos: number;
+  contratosIsentos: number;
   
   // Métricas financeiras
   receitaPrevistaPeriodo: number;
@@ -57,6 +58,7 @@ export const useDashboardStats = (dashboardData: DashboardData | undefined): Das
     const contratosAtivos = contratosTodos.filter(c => c.status === 'ativo').length;
     const contratosInativos = contratosTodos.filter(c => c.status === 'inativo').length;
     const contratosSuspensos = contratosTodos.filter(c => c.status === 'suspenso').length;
+    const contratosIsentos = contratosTodos.filter(c => c.isento_mensalidade === true).length;
 
     // Métricas financeiras
     const receitaPrevistaPeriodo = dashboardData?.resumoPeriodo?.totalPrevisto ?? 0;
@@ -83,6 +85,7 @@ export const useDashboardStats = (dashboardData: DashboardData | undefined): Das
       contratosAtivos,
       contratosInativos,
       contratosSuspensos,
+      contratosIsentos,
       receitaPrevistaPeriodo,
       receitaPagaPeriodo,
       receitaPendentePeriodo,
