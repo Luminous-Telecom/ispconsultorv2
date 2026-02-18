@@ -1035,6 +1035,58 @@ sudo systemctl reload nginx
 - Se usar **HTTP apenas**, ajuste o caminho do `root` no bloco `location /` para o caminho correto do seu servidor
 - Se usar **HTTPS**, continue para a próxima seção
 
+### 4.1 Socket.IO e rotas Blockdomi no Nginx
+
+Se você usa **logs em tempo real** (modal "Logs real" do Blockdomi) e/ou as **rotas TXT** do Blockdomi (`/domain/version`, `/domain/all`, `/v4/all`, `/v6/all`), adicione os blocos abaixo **dentro** do `server` (HTTP ou HTTPS), antes do `location /` dos arquivos estáticos.
+
+**Socket.IO (WebSocket):**
+```nginx
+    # Socket.IO – logs em tempo real do Blockdomi
+    location /socket.io {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+    }
+```
+
+**Rotas TXT do Blockdomi (acesso controlado por IP no backend):**
+```nginx
+    location /domain {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    location /v4 {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    location /v6 {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+```
+
+Depois: `sudo nginx -t` e `sudo systemctl reload nginx`.
+
 ### 5. Configurar SSL com Let's Encrypt (Apenas para HTTPS)
 
 ```bash
