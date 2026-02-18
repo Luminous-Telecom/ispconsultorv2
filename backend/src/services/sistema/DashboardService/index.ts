@@ -565,7 +565,7 @@ export class DashboardService {
    */
   static async getContasPagarPorPeriodoData(startDate: Date, endDate: Date) {
     const { ContaPagarService } = await import('../../financeiro/ContaPagarService');
-    const { formatDate, parseDateFromDb } = await import('../../../utils/dateUtils');
+    const { formatDate, parseDateAsLocal } = await import('../../../utils/dateUtils');
 
     const inicio = new Date(startDate);
     inicio.setHours(0, 0, 0, 0);
@@ -584,10 +584,8 @@ export class DashboardService {
       if (!conta.data_vencimento || conta.status === 'CANCELADO') {
         continue;
       }
-      const dataConta = parseDateFromDb(conta.data_vencimento);
+      const dataConta = parseDateAsLocal(conta.data_vencimento);
       if (!dataConta) continue;
-
-      dataConta.setHours(0, 0, 0, 0);
       const diff = dataConta.getTime() - inicio.getTime();
       const indice = Math.floor(diff / MS_POR_DIA);
       if (indice >= 0 && indice < valoresPorDia.length) {
@@ -613,7 +611,7 @@ export class DashboardService {
    */
   static async getContasPagarUltimos12Meses() {
     const { ContaPagarService } = await import('../../financeiro/ContaPagarService');
-    const { parseDateFromDb } = await import('../../../utils/dateUtils');
+    const { parseDateAsLocal } = await import('../../../utils/dateUtils');
 
     const hoje = new Date();
     const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
@@ -633,7 +631,7 @@ export class DashboardService {
           return acumulado;
         }
 
-        const dataVencimento = parseDateFromDb(conta.data_vencimento);
+        const dataVencimento = parseDateAsLocal(conta.data_vencimento);
         if (!dataVencimento) {
           return acumulado;
         }
@@ -663,7 +661,7 @@ export class DashboardService {
    */
   static async getReceitaUltimos12Meses() {
     const { TituloService } = await import('../../financeiro/TituloService');
-    const { parseDateFromDb } = await import('../../../utils/dateUtils');
+    const { parseDateAsLocal } = await import('../../../utils/dateUtils');
 
     const hoje = new Date();
     const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
@@ -689,7 +687,7 @@ export class DashboardService {
           return acumulado;
         }
 
-        const referencia = parseDateFromDb(titulo.data_vencimento);
+        const referencia = parseDateAsLocal(titulo.data_vencimento);
 
         if (!referencia) {
           return acumulado;
