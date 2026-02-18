@@ -1,6 +1,7 @@
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Op, WhereOptions } from 'sequelize';
+import { buildDateFilter } from '../../../utils/queryFilters';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { CLIENTE_SORT_CONFIG } from '../../../config/sortConfigs';
@@ -14,6 +15,8 @@ export interface ListClientesFilters {
   ativo?: string;
   cidade?: string;
   estado?: string;
+  created_at_inicio?: string;
+  created_at_fim?: string;
   sortColumn?: string;
   sortDirection?: string;
 }
@@ -36,7 +39,7 @@ export class ClienteService {
    * Listar clientes com filtros e paginação
    */
   static async list(filters: ListClientesFilters): Promise<ListClientesResponse> {
-    const { page = 1, limit = 15, search, searchField, ativo, cidade, estado, sortColumn, sortDirection } = filters;
+    const { page = 1, limit = 15, search, searchField, ativo, cidade, estado, created_at_inicio, created_at_fim, sortColumn, sortDirection } = filters;
     const offset = (page - 1) * limit;
 
     const where: WhereOptions = {};
@@ -61,6 +64,11 @@ export class ClienteService {
 
     if (estado) {
       where.estado = estado.toUpperCase();
+    }
+
+    const createdAtFilter = buildDateFilter(created_at_inicio, created_at_fim, 'created_at');
+    if (createdAtFilter) {
+      Object.assign(where, createdAtFilter);
     }
 
     // Construir ordenação - ordena TODOS os dados antes da paginação

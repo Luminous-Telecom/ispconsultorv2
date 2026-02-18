@@ -60,6 +60,69 @@ export const useDashboardChartClicks = () => {
     });
   }, [openModal]);
 
+  const handleLineChartPointClick = useCallback((
+    item: ChartDataItem & { data_inicio?: string; data_fim?: string },
+    modalType: 'contas-receber' | 'contas-pagar' | 'clientes',
+    statusFilter?: string
+  ) => {
+    const dataInicio = item.data_inicio;
+    const dataFim = item.data_fim;
+    if (!dataInicio || !dataFim) return;
+    if (modalType === 'contas-receber') {
+      openModal('contas-receber' as ModalType, {
+        initialFilters: {
+          data_vencimento_inicio: dataInicio,
+          data_vencimento_fim: dataFim,
+          ...(statusFilter && { status: statusFilter })
+        }
+      });
+    } else if (modalType === 'contas-pagar') {
+      openModal('contas-pagar' as ModalType, {
+        initialFilters: { data_inicio: dataInicio, data_fim: dataFim }
+      });
+    } else if (modalType === 'clientes') {
+      openModal('clientes' as ModalType, {
+        initialFilters: { created_at_inicio: dataInicio, created_at_fim: dataFim }
+      });
+    }
+  }, [openModal]);
+
+  const handleRecebidosPeriodoPointClick = useCallback((item: ChartDataItem) => {
+    handleLineChartPointClick(item, 'contas-receber');
+  }, [handleLineChartPointClick]);
+
+  const handleReceberPeriodoPointClick = useCallback((item: ChartDataItem) => {
+    // Gráfico "A receber" mostra apenas pendentes e vencidos (não pagos)
+    handleLineChartPointClick(item, 'contas-receber', 'pendente,vencido');
+  }, [handleLineChartPointClick]);
+
+  const handleReceitaMensalPointClick = useCallback((item: ChartDataItem) => {
+    handleLineChartPointClick(item, 'contas-receber');
+  }, [handleLineChartPointClick]);
+
+  const handleCrescimentoClientesPointClick = useCallback((item: ChartDataItem) => {
+    handleLineChartPointClick(item, 'clientes');
+  }, [handleLineChartPointClick]);
+
+  const handleDualLineChartPointClick = useCallback((
+    item: ChartDataItem & { data_inicio?: string; data_fim?: string },
+    _index: number,
+    lineType: 'receber' | 'pagar'
+  ) => {
+    const dataInicio = item.data_inicio;
+    const dataFim = item.data_fim;
+    if (!dataInicio || !dataFim) return;
+    if (lineType === 'receber') {
+      openModal('contas-receber' as ModalType, {
+        initialFilters: { data_vencimento_inicio: dataInicio, data_vencimento_fim: dataFim }
+      });
+    } else {
+      openModal('contas-pagar' as ModalType, {
+        initialFilters: { data_inicio: dataInicio, data_fim: dataFim }
+      });
+    }
+  }, [openModal]);
+
   return {
     handleClienteSliceClick,
     handlePlanoSliceClick,
@@ -67,5 +130,10 @@ export const useDashboardChartClicks = () => {
     handleDistribuicaoPlanoSliceClick,
     handleContratoSliceClick,
     handleClientesPorPlanoBarClick,
+    handleRecebidosPeriodoPointClick,
+    handleReceberPeriodoPointClick,
+    handleReceitaMensalPointClick,
+    handleCrescimentoClientesPointClick,
+    handleDualLineChartPointClick,
   };
 };

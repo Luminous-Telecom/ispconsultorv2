@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { DashboardData } from '../services/dashboardService';
 import { ChartDataItem } from '../components/charts/types';
 import type { useDashboardStats } from './useDashboardStats';
@@ -127,33 +127,69 @@ export const useDashboardCharts = (
     { label: 'Ticket Médio', value: stats.ticketMedio, color: '#6f42c1' }
   ], [stats.ticketMedio]);
 
+  // Helper: MM/YY -> { data_inicio, data_fim }
+  const parseMesAnoToRange = useCallback((mesAno: string): { data_inicio: string; data_fim: string } => {
+    const [mm, yy] = mesAno.split('/');
+    const month = parseInt(mm || '1', 10);
+    const year = 2000 + parseInt(yy || '25', 10);
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    return {
+      data_inicio: firstDay.toISOString().split('T')[0],
+      data_fim: lastDay.toISOString().split('T')[0],
+    };
+  }, []);
+
+  // Helper: DD/MM/YYYY -> { data_inicio, data_fim } (mesmo dia)
+  const parseDataLabelToRange = useCallback((label: string): { data_inicio: string; data_fim: string } | null => {
+    const match = label.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!match) return null;
+    const [, day, month, year] = match;
+    const d = new Date(parseInt(year!, 10), parseInt(month!, 10) - 1, parseInt(day!, 10));
+    if (isNaN(d.getTime())) return null;
+    const iso = d.toISOString().split('T')[0];
+    return { data_inicio: iso, data_fim: iso };
+  }, []);
+
   // Gráficos de linha - memoizados
   const receitaMensalChartData = useMemo(() => {
     if (!dashboardData?.receitaUltimosMeses) return [];
-    return dashboardData.receitaUltimosMeses.labels.map((label, index) => ({
-      mes: label,
-      valor: dashboardData.receitaUltimosMeses.data[index] ?? 0,
-      color: index === (dashboardData.receitaUltimosMeses.data.length - 1) ? '#28a745' : '#6c757d'
-    }));
-  }, [dashboardData?.receitaUltimosMeses]);
+    return dashboardData.receitaUltimosMeses.labels.map((label, index) => {
+      const range = parseMesAnoToRange(label);
+      return {
+        mes: label,
+        valor: dashboardData!.receitaUltimosMeses.data[index] ?? 0,
+        color: index === (dashboardData.receitaUltimosMeses.data.length - 1) ? '#28a745' : '#6c757d',
+        ...range,
+      };
+    });
+  }, [dashboardData, parseMesAnoToRange]);
 
   const recebidosPeriodoChartData = useMemo(() => {
     if (!dashboardData?.recebidosPeriodo) return [];
-    return dashboardData.recebidosPeriodo.labels.map((label, index) => ({
-      mes: label,
-      valor: dashboardData.recebidosPeriodo?.data?.[index] ?? 0,
-      color: '#28a745',
-    }));
-  }, [dashboardData?.recebidosPeriodo]);
+    return dashboardData.recebidosPeriodo.labels.map((label, index) => {
+      const range = parseDataLabelToRange(label);
+      return {
+        mes: label,
+        valor: dashboardData!.recebidosPeriodo?.data?.[index] ?? 0,
+        color: '#28a745',
+        ...(range || {}),
+      };
+    });
+  }, [dashboardData, parseDataLabelToRange]);
 
   const receberPeriodoChartData = useMemo(() => {
     if (!dashboardData?.aReceberPeriodo) return [];
-    return dashboardData.aReceberPeriodo.labels.map((label, index) => ({
-      mes: label,
-      valor: dashboardData.aReceberPeriodo.data[index] ?? 0,
-      color: '#17a2b8',
-    }));
-  }, [dashboardData?.aReceberPeriodo]);
+    return dashboardData.aReceberPeriodo.labels.map((label, index) => {
+      const range = parseDataLabelToRange(label);
+      return {
+        mes: label,
+        valor: dashboardData!.aReceberPeriodo.data[index] ?? 0,
+        color: '#17a2b8',
+        ...(range || {}),
+      };
+    });
+  }, [dashboardData, parseDataLabelToRange]);
 
   const crescimentoClientes = useMemo(() => {
     const meses = [];
@@ -164,6 +200,7 @@ export const useDashboardCharts = (
       const mes = String(data.getMonth() + 1).padStart(2, '0');
       const ano = String(data.getFullYear()).slice(-2);
       const mesAno = `${mes}/${ano}`;
+      const range = parseMesAnoToRange(mesAno);
       
       const clientesMes = clientes.filter(cliente => {
         if (!cliente.created_at) return false;
@@ -175,12 +212,13 @@ export const useDashboardCharts = (
       meses.push({
         mes: mesAno,
         valor: clientesMes,
-        color: i === 11 ? '#007bff' : '#6c757d'
+        color: i === 11 ? '#007bff' : '#6c757d',
+        ...range,
       });
     }
     
     return meses;
-  }, [clientes]);
+  }, [clientes, parseMesAnoToRange]);
 
   // Gráfico de barras - memoizado
   const clientesPorPlano = useMemo(() => {
@@ -211,12 +249,16 @@ export const useDashboardCharts = (
   const contasReceberPagarChartData = useMemo(() => {
     if (!receitaUltimosMeses.labels || !contasPagarUltimosMeses.labels) return [];
 
-    return receitaUltimosMeses.labels.map((label: string, index: number) => ({
-      mes: label,
-      receber: receitaUltimosMeses.data?.[index] ?? 0,
-      pagar: contasPagarUltimosMeses.data?.[index] ?? 0
-    }));
-  }, [receitaUltimosMeses, contasPagarUltimosMeses]);
+    return receitaUltimosMeses.labels.map((label: string, index: number) => {
+      const range = parseMesAnoToRange(label);
+      return {
+        mes: label,
+        receber: receitaUltimosMeses.data?.[index] ?? 0,
+        pagar: contasPagarUltimosMeses.data?.[index] ?? 0,
+        ...range,
+      };
+    });
+  }, [receitaUltimosMeses, contasPagarUltimosMeses, parseMesAnoToRange]);
 
   // Totais para exibição
   const totalRecebidosPeriodo = useMemo(() =>

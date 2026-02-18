@@ -4,7 +4,7 @@ import { ChartEmptyState } from './ChartEmptyState';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, format = 'number' }) => {
+const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, format = 'number', onPointClick }) => {
   const { t } = useI18n();
   const { theme } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -304,6 +304,31 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     }
   }, [chartData, dimensions]);
 
+  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!onPointClick || chartData.length === 0) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
+    const chartWidth = dimensions.width - margin.left - margin.right;
+    const xStep = chartWidth / (chartData.length - 1 || 1);
+    let closestIndex = 0;
+    let minDistance = Infinity;
+    chartData.forEach((_, index) => {
+      const pointX = margin.left + xStep * index;
+      const distance = Math.abs(x - pointX);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
+    if (minDistance < 30) {
+      const item = data[closestIndex];
+      if (item) onPointClick(item, closestIndex);
+    }
+  }, [chartData, data, dimensions, onPointClick]);
+
   const handleMouseLeave = useCallback(() => {
     setHoveredIndex(null);
     setTooltip(null);
@@ -321,11 +346,12 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
           ref={canvasRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
           style={{
             display: 'block',
             width: '100%',
             height: '100%',
-            cursor: hoveredIndex !== null ? 'pointer' : 'default',
+            cursor: onPointClick && hoveredIndex !== null ? 'pointer' : 'default',
           }}
         />
         {tooltip && (

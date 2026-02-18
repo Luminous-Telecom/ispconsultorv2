@@ -9,13 +9,16 @@ interface DualChartDataItem extends ChartDataItem {
   pagar: number;
 }
 
+export type DualLineChartLineType = 'receber' | 'pagar';
+
 interface DualLineChartProps {
   data: DualChartDataItem[];
   title: string;
   format?: ChartFormat;
+  onPointClick?: (item: DualChartDataItem, index: number, lineType: DualLineChartLineType) => void;
 }
 
-const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format = 'currency' }) => {
+const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format = 'currency', onPointClick }) => {
   const { t } = useI18n();
   const { theme } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -392,6 +395,46 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     setTooltip(null);
   }, []);
 
+  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!onPointClick || chartData.length === 0) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
+    const chartWidth = rect.width - margin.left - margin.right;
+    const chartHeight = rect.height - margin.top - margin.bottom;
+    const totalPoints = chartData.length;
+    const xStep = totalPoints === 1 ? 0 : chartWidth / (totalPoints - 1);
+
+    let closestIndex = 0;
+    let minDistance = Infinity;
+    chartData.forEach((_, index) => {
+      const pointX = totalPoints === 1 ? margin.left + chartWidth / 2 : margin.left + xStep * index;
+      const distance = Math.abs(x - pointX);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    if (minDistance < 30) {
+      const point = chartData[closestIndex];
+      const allValues = chartData.flatMap(d => [d.receber, d.pagar]);
+      const maxValue = Math.max(...allValues, 0);
+      const minValue = 0;
+      const valueRange = maxValue - minValue || 1;
+      const receberY = margin.top + chartHeight - ((point.receber - minValue) / valueRange) * chartHeight;
+      const pagarY = margin.top + chartHeight - ((point.pagar - minValue) / valueRange) * chartHeight;
+      const distReceber = Math.abs(y - receberY);
+      const distPagar = Math.abs(y - pagarY);
+      const lineType: DualLineChartLineType = distReceber <= distPagar ? 'receber' : 'pagar';
+      const item = data[closestIndex];
+      if (item) onPointClick(item, closestIndex, lineType);
+    }
+  }, [chartData, data, onPointClick]);
+
   if (!data || data.length === 0) {
     return <ChartEmptyState title={title} />;
   }
@@ -404,11 +447,12 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
           ref={canvasRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
           style={{
             display: 'block',
             width: '100%',
             height: '100%',
-            cursor: hoveredIndex !== null ? 'pointer' : 'default',
+            cursor: onPointClick && hoveredIndex !== null ? 'pointer' : 'default',
           }}
         />
         {tooltip && (

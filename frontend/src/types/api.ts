@@ -76,6 +76,8 @@ export interface ClienteFilters extends BaseFilters {
   tipo_cobranca?: string;
   cidade?: string;
   estado?: string;
+  created_at_inicio?: string;
+  created_at_fim?: string;
 }
 
 export interface PlanoFilters extends BaseFilters {

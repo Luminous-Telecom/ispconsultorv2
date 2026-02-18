@@ -46,6 +46,11 @@ const Dashboard: React.FC = () => {
     handleDistribuicaoPlanoSliceClick,
     handleContratoSliceClick,
     handleClientesPorPlanoBarClick,
+    handleRecebidosPeriodoPointClick,
+    handleReceberPeriodoPointClick,
+    handleReceitaMensalPointClick,
+    handleCrescimentoClientesPointClick,
+    handleDualLineChartPointClick,
   } = useDashboardChartClicks();
 
   // Query única para buscar todos os dados do dashboard
@@ -163,6 +168,7 @@ const Dashboard: React.FC = () => {
                     data={charts.recebidosPeriodoChartData}
                     title={`${t('dashboard.received')}: ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
                     format="currency"
+                    onPointClick={handleRecebidosPeriodoPointClick}
                   />
                 </div>
               </div>
@@ -172,6 +178,7 @@ const Dashboard: React.FC = () => {
                     data={charts.receberPeriodoChartData}
                     title={`${t('dashboard.toReceive')}: ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
                     format="currency"
+                    onPointClick={handleReceberPeriodoPointClick}
                   />
                 </div>
               </div>
@@ -266,6 +273,7 @@ const Dashboard: React.FC = () => {
                 data={charts.receitaMensalChartData}
                 title={`${t('dashboard.monthlyRevenueTitle')}: ${formatCurrency(charts.totalReceitaMensal || 0)} (${t('dashboard.months12')})`}
                 format="currency"
+                onPointClick={handleReceitaMensalPointClick}
               />
             </div>
           </div>
@@ -276,6 +284,7 @@ const Dashboard: React.FC = () => {
                 data={charts.crescimentoClientes}
                 title={`${t('dashboard.newClients')}: ${formatNumber(charts.totalNovosClientes || 0)} (${t('dashboard.months12')})`}
                 format="number"
+                onPointClick={handleCrescimentoClientesPointClick}
               />
             </div>
           </div>
@@ -289,6 +298,7 @@ const Dashboard: React.FC = () => {
                 data={charts.contasReceberPagarChartData}
                 title={`${t('dashboard.receivablesVsPayables')} (${t('dashboard.months12')})`}
                 format="currency"
+                onPointClick={handleDualLineChartPointClick}
               />
             </div>
           </div>

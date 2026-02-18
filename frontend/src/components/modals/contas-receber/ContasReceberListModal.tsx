@@ -67,15 +67,20 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>(getDataInicioMesAtual());
   const [dataVencimentoFim, setDataVencimentoFim] = useState<string>(getDataFimMesAtual());
 
-  // Quando abre do dashboard com filtro de status, remover filtro de data para mostrar todos
+  // Quando abre do dashboard: aplicar initialFilters (data ou status)
   const prevShowRef = React.useRef(false);
   useEffect(() => {
-    if (show && !prevShowRef.current && initialFilters?.status) {
-      setDataVencimentoInicio('');
-      setDataVencimentoFim('');
+    if (show && !prevShowRef.current) {
+      if (initialFilters?.data_vencimento_inicio || initialFilters?.data_vencimento_fim) {
+        setDataVencimentoInicio(initialFilters.data_vencimento_inicio ?? '');
+        setDataVencimentoFim(initialFilters.data_vencimento_fim ?? '');
+      } else if (initialFilters?.status) {
+        setDataVencimentoInicio('');
+        setDataVencimentoFim('');
+      }
     }
     prevShowRef.current = show;
-  }, [show, initialFilters?.status]);
+  }, [show, initialFilters?.status, initialFilters?.data_vencimento_inicio, initialFilters?.data_vencimento_fim]);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [showReceberModal, setShowReceberModal] = useState(false);

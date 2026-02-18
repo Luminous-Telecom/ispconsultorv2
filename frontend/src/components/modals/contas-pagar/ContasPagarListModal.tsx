@@ -22,6 +22,7 @@ interface ContasPagarListModalProps {
   onSelectContaPagar?: (contaPagar: ContaPagar) => void;
   title?: string;
   skipWrapper?: boolean;
+  initialFilters?: Partial<ContaPagarFilters>;
 }
 
 const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({ 
@@ -29,7 +30,8 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   onClose, 
   onSelectContaPagar,
   title,
-  skipWrapper = false
+  skipWrapper = false,
+  initialFilters
 }) => {
   const { t } = useI18n();
   const defaultTitle = title || t('financial.accountsPayable');
@@ -55,6 +57,14 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>(getDataInicioMesAtual());
   const [dataVencimentoFim, setDataVencimentoFim] = useState<string>(getDataFimMesAtual());
   const isMobile = useIsMobile();
+
+  // Quando abre do dashboard com initialFilters de data
+  React.useEffect(() => {
+    if (show && initialFilters?.data_inicio && initialFilters?.data_fim) {
+      setDataVencimentoInicio(initialFilters.data_inicio);
+      setDataVencimentoFim(initialFilters.data_fim);
+    }
+  }, [show, initialFilters?.data_inicio, initialFilters?.data_fim]);
 
   
   // Hook de auditoria

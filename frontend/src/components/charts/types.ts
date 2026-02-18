@@ -23,6 +23,7 @@ export interface LineChartProps {
   data: ChartDataItem[];
   title: string;
   format?: 'currency' | 'number';
+  onPointClick?: (item: ChartDataItem, index: number) => void;
 }
 
 export interface PieChartProps {
