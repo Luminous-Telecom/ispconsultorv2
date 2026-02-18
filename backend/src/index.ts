@@ -1,5 +1,8 @@
+import http from 'http';
 import express from 'express';
+import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
+import { setIO } from './socket/socketServer';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -232,8 +235,15 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-// Variável global para armazenar referência do servidor
-let server: ReturnType<typeof app.listen> | null = null;
+// Servidor HTTP (permite anexar Socket.IO)
+const httpServer = http.createServer(app);
+const io = new SocketIOServer(httpServer, {
+  path: '/socket.io',
+  cors: { origin: true, credentials: true }
+});
+setIO(io);
+
+let server: http.Server | null = httpServer;
 
 // Inicializar servidor
 const startServer = async () => {
@@ -244,7 +254,7 @@ const startServer = async () => {
 
     await sequelize.authenticate();
 
-    server = app.listen(PORT, async () => {
+    httpServer.listen(PORT, async () => {
       if (!server) return;
       
       server.maxHeadersCount = 2000;

@@ -1,10 +1,12 @@
 /**
  * Middleware que restringe acesso às rotas TXT do Blockdomi (dominios, versao, ipv4, ipv6)
  * somente para IPs cadastrados em ips_permitidos_blockdomi.
+ * Registra log de acesso (IP, rota, status) em blockdomi_log_acesso para todas as requisições a essas rotas.
  */
 import { Request, Response, NextFunction } from 'express';
 import { IpPermitidoService } from '../../services/blockdomi/IpPermitidoService';
 import { DadosEmpresaService } from '../../services/sistema/DadosEmpresaService';
+import { BlockdomiLogAcessoService } from '../../services/blockdomi/BlockdomiLogAcessoService';
 
 const BLOCKDOMI_TXT_PATHS = [
   /^\/domain\/version\/?$/i,
@@ -41,6 +43,27 @@ function isBlockdomiTxtRoute(path: string): boolean {
   return BLOCKDOMI_TXT_PATHS.some((re) => re.test(path));
 }
 
+function registerAccessLog(req: Request, res: Response, path: string): void {
+  res.once('finish', () => {
+    const statusCode = res.statusCode;
+    const clientIp = getClientIp(req);
+    const userAgent = (req.headers['user-agent'] as string) ?? null;
+    let mensagemErro: string | null = null;
+    if (statusCode === 403) mensagemErro = 'IP não autorizado';
+    else if (statusCode >= 500) mensagemErro = `Erro interno (${statusCode})`;
+    BlockdomiLogAcessoService.registrar({
+      ip: clientIp ?? null,
+      rota: path,
+      metodo: req.method,
+      status_http: statusCode,
+      mensagem_erro: mensagemErro,
+      user_agent: userAgent
+    }).catch(() => {
+      // Não falhar a requisição por falha no log
+    });
+  });
+}
+
 export const blockdomiIpsPermitidosMiddleware = async (
   req: Request,
   res: Response,
@@ -51,6 +74,8 @@ export const blockdomiIpsPermitidosMiddleware = async (
   if (!isBlockdomiTxtRoute(path)) {
     return next();
   }
+
+  registerAccessLog(req, res, path);
 
   const clientIp = getClientIp(req);
   const allowed = await IpPermitidoService.isIpAllowed(clientIp);

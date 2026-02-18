@@ -31,6 +31,7 @@ export type ModalType =
   | 'blockdomi-ipv6'
   | 'blockdomi-importar-lista'
   | 'blockdomi-ips-permitidos'
+  | 'blockdomi-logs-acesso'
   | null;
 
 interface ModalContextType {

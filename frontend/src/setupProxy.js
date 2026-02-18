@@ -16,6 +16,18 @@ module.exports = function(app) {
     })
   );
 
+  // Proxy para Socket.IO (WebSocket em tempo real)
+  app.use(
+    '/socket.io',
+    createProxyMiddleware({
+      target: backendUrl,
+      changeOrigin: true,
+      secure: false,
+      logLevel: 'silent',
+      ws: true,
+    })
+  );
+
   // Proxy para webhooks
   app.use(
     '/webhook',

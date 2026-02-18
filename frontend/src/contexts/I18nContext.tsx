@@ -339,6 +339,18 @@ export interface TranslationKeys {
   'blockdomi.selectCliente': string;
   'blockdomi.noIpsPermitidos': string;
   'blockdomi.cliente': string;
+  'blockdomi.logsAcesso': string;
+  'blockdomi.logsIp': string;
+  'blockdomi.logsRota': string;
+  'blockdomi.logsMetodo': string;
+  'blockdomi.logsStatus': string;
+  'blockdomi.logsSucesso': string;
+  'blockdomi.logsSucessoOk': string;
+  'blockdomi.logsSucessoErro': string;
+  'blockdomi.logsMensagemErro': string;
+  'blockdomi.logsSearchPlaceholder': string;
+  'blockdomi.logsEmpty': string;
+  'blockdomi.logsReal': string;
 
   // Parameters Menu
   'params.users': string;
@@ -1649,6 +1661,18 @@ const translations: Translations = {
     'blockdomi.selectCliente': 'Selecionar cliente',
     'blockdomi.noIpsPermitidos': 'Nenhum registro encontrado',
     'blockdomi.cliente': 'Cliente',
+    'blockdomi.logsAcesso': 'Logs de acesso API',
+    'blockdomi.logsIp': 'IP',
+    'blockdomi.logsRota': 'Rota',
+    'blockdomi.logsMetodo': 'Método',
+    'blockdomi.logsStatus': 'Status',
+    'blockdomi.logsSucesso': 'Sucesso',
+    'blockdomi.logsSucessoOk': 'Sim',
+    'blockdomi.logsSucessoErro': 'Erro',
+    'blockdomi.logsMensagemErro': 'Mensagem erro',
+    'blockdomi.logsSearchPlaceholder': 'Buscar por IP, rota...',
+    'blockdomi.logsEmpty': 'Nenhum log encontrado',
+    'blockdomi.logsReal': 'Logs real',
 
   // Parameters Menu
     'params.users': 'Usuários',
@@ -2954,6 +2978,18 @@ const translations: Translations = {
     'blockdomi.selectCliente': 'Select client',
     'blockdomi.noIpsPermitidos': 'No records found',
     'blockdomi.cliente': 'Client',
+    'blockdomi.logsAcesso': 'API access logs',
+    'blockdomi.logsIp': 'IP',
+    'blockdomi.logsRota': 'Route',
+    'blockdomi.logsMetodo': 'Method',
+    'blockdomi.logsStatus': 'Status',
+    'blockdomi.logsSucesso': 'Success',
+    'blockdomi.logsSucessoOk': 'Yes',
+    'blockdomi.logsSucessoErro': 'Error',
+    'blockdomi.logsMensagemErro': 'Error message',
+    'blockdomi.logsSearchPlaceholder': 'Search by IP, route...',
+    'blockdomi.logsEmpty': 'No logs found',
+    'blockdomi.logsReal': 'Real-time logs',
 
   // Parameters Menu
     'params.users': 'Users',
@@ -4261,6 +4297,18 @@ const translations: Translations = {
     'blockdomi.selectCliente': 'Seleccionar cliente',
     'blockdomi.noIpsPermitidos': 'Ningún registro encontrado',
     'blockdomi.cliente': 'Cliente',
+    'blockdomi.logsAcesso': 'Logs de acceso API',
+    'blockdomi.logsIp': 'IP',
+    'blockdomi.logsRota': 'Ruta',
+    'blockdomi.logsMetodo': 'Método',
+    'blockdomi.logsStatus': 'Estado',
+    'blockdomi.logsSucesso': 'Éxito',
+    'blockdomi.logsSucessoOk': 'Sí',
+    'blockdomi.logsSucessoErro': 'Error',
+    'blockdomi.logsMensagemErro': 'Mensaje de error',
+    'blockdomi.logsSearchPlaceholder': 'Buscar por IP, ruta...',
+    'blockdomi.logsEmpty': 'Ningún log encontrado',
+    'blockdomi.logsReal': 'Logs en tiempo real',
 
   // Parameters Menu
     'params.users': 'Usuarios',

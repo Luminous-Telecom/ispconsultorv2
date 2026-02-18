@@ -11,6 +11,11 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/client-ip$/i },
   { path: /^\/api\/health/i },
   { path: /^\/api\/auth\/login$/i },
+  // Rotas TXT Blockdomi (protegidas por IP no blockdomiIpsPermitidosMiddleware)
+  { path: /^\/domain\/version\/?$/i },
+  { path: /^\/domain\/all\/?$/i },
+  { path: /^\/v4\/all\/?$/i },
+  { path: /^\/v6\/all\/?$/i },
   { path: /^\/webhook(\/.*)?$/i },
   { path: /^\/api\/assinaturas?-digital\/webhook/i }, // Webhooks de assinatura digital (com ou sem "s") - aceita qualquer path depois
   { path: /^\/api\/assinaturas?-digital\/webhook\/.*$/i }, // Webhooks de assinatura digital com qualquer provider (zapsign, assinafy, etc)

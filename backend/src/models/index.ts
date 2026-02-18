@@ -57,6 +57,7 @@ import { IPv4 } from './blockdomi/IPv4';
 import { IPv6 } from './blockdomi/IPv6';
 import { VersaoBlockdomi } from './blockdomi/VersaoBlockdomi';
 import { IpPermitidoBlockdomi } from './blockdomi/IpPermitidoBlockdomi';
+import { BlockdomiLogAcesso } from './blockdomi/BlockdomiLogAcesso';
 
 // Importar associações específicas
 import './associations';
@@ -407,5 +408,6 @@ export {
   IPv4,
   IPv6,
   VersaoBlockdomi,
-  IpPermitidoBlockdomi
+  IpPermitidoBlockdomi,
+  BlockdomiLogAcesso
 };

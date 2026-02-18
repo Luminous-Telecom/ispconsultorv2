@@ -35,6 +35,7 @@ const IPv4ListModal = lazy(() => import('../modals/blockdomi/ipv4').then(m => ({
 const IPv6ListModal = lazy(() => import('../modals/blockdomi/ipv6').then(m => ({ default: m.IPv6ListModal })));
 const ImportarListaBlockdomiModal = lazy(() => import('../modals/blockdomi/ImportarListaBlockdomiModal'));
 const IpsPermitidosListModal = lazy(() => import('../modals/blockdomi/ips-permitidos').then(m => ({ default: m.IpsPermitidosListModal })));
+const BlockdomiLogsAcessoModal = lazy(() => import('../modals/blockdomi/BlockdomiLogsAcessoModal'));
 
 interface ModalComponentProps {
   show: boolean;
@@ -84,6 +85,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'blockdomi-ipv6': { component: IPv6ListModal, titleKey: 'modal.ipv6', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'blockdomi-importar-lista': { component: ImportarListaBlockdomiModal, titleKey: 'modal.importList', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
   'blockdomi-ips-permitidos': { component: IpsPermitidosListModal, titleKey: 'blockdomi.ipsPermitidos', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  'blockdomi-logs-acesso': { component: BlockdomiLogsAcessoModal, titleKey: 'blockdomi.logsAcesso', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
 });
 
 const SingleModalWrapper: React.FC = () => {
