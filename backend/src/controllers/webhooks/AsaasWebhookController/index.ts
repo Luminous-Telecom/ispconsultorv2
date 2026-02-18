@@ -75,7 +75,8 @@ export class AsaasWebhookController {
 
       // Processar webhook em background (sem await)
       if (payment && payment.id) {
-        AsaasWebhookService.processWebhook(payment, req).catch(error => {
+        const rootPayload = { dateCreated: (payload as AsaasPaymentPayload).dateCreated };
+        AsaasWebhookService.processWebhook(payment, req, rootPayload).catch(error => {
           const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
           logger.error('Erro ao processar webhook Asaas (payment) em background', {
             payment_id: payment.id,

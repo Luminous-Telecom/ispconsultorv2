@@ -20,7 +20,8 @@ export class AsaasWebhookService {
    */
   static async processWebhook(
     payment: AsaasPaymentPayload['payment'],
-    req?: Request
+    req?: Request,
+    rootPayload?: Pick<AsaasPaymentPayload, 'dateCreated'>
   ): Promise<{ success: boolean; message: string }> {
     try {
       if (!payment || !payment.id) {
@@ -70,10 +71,10 @@ export class AsaasWebhookService {
         }
       }
 
-      const paymentDate = typeof payment.paymentDate === 'string'
-        ? payment.paymentDate
-        : typeof payment.effectiveDate === 'string'
-          ? payment.effectiveDate
+      const paymentDate = typeof payment.dateCreated === 'string'
+        ? payment.dateCreated
+        : typeof rootPayload?.dateCreated === 'string'
+          ? rootPayload.dateCreated
           : undefined;
 
       if (novoStatus === 'pago') {

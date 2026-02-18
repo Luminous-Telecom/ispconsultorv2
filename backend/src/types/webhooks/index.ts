@@ -86,6 +86,7 @@ export interface AsaasPaymentPayload {
   payment?: {
     id?: string;
     status?: string;
+    dateCreated?: string;
     paymentDate?: string;
     effectiveDate?: string;
     value?: number;
