@@ -121,7 +121,7 @@ export interface TituloFilters extends Record<string, string | number | boolean 
   limit?: number;
   search?: string;
   searchField?: string;
-  status?: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'parcial' | 'pago_atraso' | `!${string}`;
+  status?: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'parcial' | 'pago_atraso' | `!${string}` | string;
   cliente_id?: number;
   data_vencimento_inicio?: string;
   data_vencimento_fim?: string;

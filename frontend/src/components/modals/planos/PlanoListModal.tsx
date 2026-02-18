@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { usePlanos, useDeletePlano } from '@/hooks/usePlanos';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useTableFilters } from '@/hooks/useTableFilters';
-import { Plano } from '@/types';
+import { Plano, PlanoFilters } from '@/types';
 import { useI18n } from '@/contexts/I18nContext';
 import { formatDateTime } from '@/utils/formatters';
 import DraggableModal from '@/components/common/DraggableModal';
@@ -21,14 +21,16 @@ interface PlanoListModalProps {
   onSelectPlano?: (plano: Plano) => void;
   title?: string;
   skipWrapper?: boolean;
+  initialFilters?: Partial<PlanoFilters>;
 }
 
-const PlanoListModal: React.FC<PlanoListModalProps> = ({ 
-  show, 
-  onClose, 
+const PlanoListModal: React.FC<PlanoListModalProps> = ({
+  show,
+  onClose,
   onSelectPlano,
   title,
-  skipWrapper = false
+  skipWrapper = false,
+  initialFilters
 }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
@@ -195,7 +197,12 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     }
   ], [getTipoServicoLabel, getStatusBadgeClass, t]);
 
-  const defaultTitle = title || (onSelectPlano ? t('ui.selectPlan') : t('menu.plans'));
+  const filterTitleSuffix = initialFilters?.status
+    ? ` - ${initialFilters.status === 'ativo' ? t('status.active') : t('status.inactive')}`
+    : initialFilters?.tipo_servico
+      ? ` - ${getTipoServicoLabel(initialFilters.tipo_servico)}`
+      : '';
+  const defaultTitle = (title || (onSelectPlano ? t('ui.selectPlan') : t('menu.plans'))) + filterTitleSuffix;
   
   const searchFields = [
     { key: 'id', label: t('table.id') },
@@ -208,14 +215,14 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     { key: 'status', label: t('table.status') }
   ];
 
-  // Hook para buscar planos usando parâmetros do useTableFilters
   const { data: planosData, isLoading, refetch } = usePlanos({
     search: tableFilters.debouncedSearch || undefined,
     searchField: tableFilters.searchField || undefined,
     page: tableFilters.page,
     limit: tableFilters.limit,
     sortColumn: tableFilters.sortColumn,
-    sortDirection: tableFilters.sortDirection
+    sortDirection: tableFilters.sortDirection,
+    ...(initialFilters && Object.keys(initialFilters).length > 0 ? initialFilters : {})
   });
 
   const deletePlanoMutation = useDeletePlano();

@@ -6,12 +6,14 @@ interface BarChartProps {
   data: ChartDataItem[];
   title: string;
   format?: ChartFormat;
+  onBarClick?: (item: ChartDataItem, index: number) => void;
 }
 
-export const BarChart: React.FC<BarChartProps> = ({ 
-  data, 
-  title, 
-  format = 'number' 
+export const BarChart: React.FC<BarChartProps> = ({
+  data,
+  title,
+  format = 'number',
+  onBarClick
 }) => {
   const maxValue = useMemo(() => 
     Math.max(...data.map(item => item.value || item.valor || 0)), 
@@ -42,12 +44,17 @@ export const BarChart: React.FC<BarChartProps> = ({
                 {item.label}
               </div>
               <div className="bar-container-horizontal">
-                <div 
-                  className="bar-horizontal" 
+                <div
+                  className="bar-horizontal"
                   style={{
                     width: `${width}%`,
-                    backgroundColor: item.color || '#6c757d'
+                    backgroundColor: item.color || '#6c757d',
+                    cursor: onBarClick ? 'pointer' : undefined
                   }}
+                  onClick={() => onBarClick?.(item, index)}
+                  role={onBarClick ? 'button' : undefined}
+                  tabIndex={onBarClick ? 0 : undefined}
+                  onKeyDown={onBarClick ? (e) => e.key === 'Enter' && onBarClick(item, index) : undefined}
                 >
                   <span className="bar-value-horizontal">{formatValue(value)}</span>
                 </div>

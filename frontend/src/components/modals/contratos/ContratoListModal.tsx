@@ -26,6 +26,7 @@ interface ContratoListModalProps {
   onSelectContrato?: (contrato: Contrato) => void;
   title?: string;
   skipWrapper?: boolean;
+  initialFilters?: Partial<ContratoFilters>;
 }
 
 const ContratoListModal: React.FC<ContratoListModalProps> = ({
@@ -33,7 +34,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   onClose,
   onSelectContrato,
   title = "Contratos",
-  skipWrapper = false
+  skipWrapper = false,
+  initialFilters
 }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
@@ -50,6 +52,23 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const auditoria = useAuditoria();
   const { confirm, modalProps } = useConfirmModal();
 
+  const displayTitle = useMemo(() => {
+    let suffix = '';
+    if (initialFilters?.status) {
+      const statusLabels: Record<string, string> = {
+        ativo: t('status.active'),
+        inativo: t('status.inactive'),
+        suspenso: t('status.suspended')
+      };
+      suffix = ` - ${statusLabels[initialFilters.status] || initialFilters.status}`;
+    } else if (initialFilters?.isento_mensalidade) {
+      suffix = ` - ${t('status.exempt')}`;
+    } else if (initialFilters?.plano_id) {
+      suffix = ` - ${t('table.plan')} #${initialFilters.plano_id}`;
+    }
+    return title + suffix;
+  }, [title, initialFilters, t]);
+
   // Hook para impressão de contratos
   const impressaoHook = useImpressaoContrato({});
 
@@ -62,16 +81,22 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     resetPageOnFilterChange: true,
   });
   
-  // Buscar contratos com paginação
+  const statusFilter = initialFilters?.status ?? (initialFilters?.isento_mensalidade !== undefined ? undefined : 'ativo');
+  const listFilters: ContratoFilters = {
+    ...(statusFilter && { status: statusFilter }),
+    ...(initialFilters?.isento_mensalidade !== undefined && { isento_mensalidade: initialFilters.isento_mensalidade }),
+    ...(initialFilters?.plano_id && { plano_id: initialFilters.plano_id })
+  };
+
   const { data: contratosData, isLoading, refetch } = useQuery({
-    queryKey: ['contratos', 'list', tableFilters.page, tableFilters.limit, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection],
+    queryKey: ['contratos', 'list', tableFilters.page, tableFilters.limit, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection, listFilters],
     queryFn: () => ContratoService.list({
       page: tableFilters.page,
       limit: tableFilters.limit,
       search: tableFilters.search,
       sortColumn: tableFilters.sortColumn,
       sortDirection: tableFilters.sortDirection,
-      status: 'ativo' // Filtrar apenas ativos por padrão, conforme comportamento anterior
+      ...listFilters
     }),
     staleTime: 30 * 1000, // 30 segundos
     refetchOnMount: false,
@@ -599,7 +624,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-          title={title}
+          title={displayTitle}
           config={{
             columns,
             data: dataWithVirtualFields,

@@ -80,10 +80,15 @@ export class TituloService {
     // Construir filtros usando helpers
     const whereConditions: (WhereOptions | null)[] = [];
 
-    // Filtro de status
+    // Filtro de status (suporta múltiplos: "pago,pago_atraso,parcial")
     if (status) {
       if (typeof status === 'string' && status.startsWith('!')) {
         whereConditions.push({ status: { [Op.ne]: status.substring(1) } } as WhereOptions);
+      } else if (typeof status === 'string' && status.includes(',')) {
+        const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
+        if (statuses.length > 0) {
+          whereConditions.push({ status: { [Op.in]: statuses } } as WhereOptions);
+        }
       } else {
         whereConditions.push({ status } as WhereOptions);
       }

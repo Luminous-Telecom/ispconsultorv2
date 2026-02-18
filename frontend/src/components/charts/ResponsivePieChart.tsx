@@ -9,11 +9,37 @@ const formatPieValue = (value: number, title: string): string | number => {
   return value.toLocaleString('pt-BR');
 };
 
-const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenItems, onToggleItem }) => {
+/** Normaliza ângulo para 0 a 2π */
+const normalizeAngle = (a: number): number => {
+  let r = a;
+  while (r < 0) r += Math.PI * 2;
+  while (r >= Math.PI * 2) r -= Math.PI * 2;
+  return r;
+};
+
+/** Encontra a fatia que contém o ângulo (toda a circunferência é clicável) */
+const findSliceByAngle = (
+  clickAngle: number,
+  slices: { index: number; startAngle: number; endAngle: number }[]
+): { index: number } | null => {
+  const a = normalizeAngle(clickAngle);
+  for (const s of slices) {
+    let start = normalizeAngle(s.startAngle);
+    let end = normalizeAngle(s.endAngle);
+    if (start < end) {
+      if (a >= start && a < end) return { index: s.index };
+    } else if (start > end) {
+      if (a >= start || a < end) return { index: s.index };
+    } else {
+      if (Math.abs(a - start) < 0.001) return { index: s.index };
+    }
+  }
+  return null;
+};
+
+const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenItems, onToggleItem, onSliceClick }) => {
   const { theme } = useTheme();
 
-  // Simplificação: removendo referências complexas de estado
-  // Manteremos apenas a lógica essencial de renderização do canvas
   const visibleData = useMemo(() =>
     data && data.length > 0 ? data.filter((_, index) => !hiddenItems.has(index)) : [],
     [data, hiddenItems]
@@ -28,8 +54,8 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
   
-  // Armazenar áreas clicáveis da legenda
   const legendHitBoxes = useRef<{index: number, x: number, y: number, w: number, h: number}[]>([]);
+  const sliceHitBoxes = useRef<{index: number, cx: number, cy: number, innerR: number, outerR: number, startAngle: number, endAngle: number}[]>([]);
 
   useLayoutEffect(() => {
     const updateDimensions = () => {
@@ -59,13 +85,30 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // Verificar clique na legenda
-    const hit = legendHitBoxes.current.find(box => 
+    // Clique na LEGENDA: apenas toggle (ocultar/exibir)
+    const legendHit = legendHitBoxes.current.find(box =>
       x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h
     );
+    if (legendHit) {
+      onToggleItem(legendHit.index);
+      return;
+    }
 
-    if (hit) {
-      onToggleItem(hit.index);
+    // Clique na PIZZA: toda a circunferência é clicável - usa ângulo para determinar a fatia
+    if (onSliceClick && sliceHitBoxes.current.length > 0) {
+      const first = sliceHitBoxes.current[0];
+      const dx = x - first.cx;
+      const dy = y - first.cy;
+      const distSq = dx * dx + dy * dy;
+      const inRing = distSq >= first.innerR * first.innerR && distSq <= first.outerR * first.outerR;
+      if (inRing) {
+        let clickAngle = Math.atan2(dy, dx);
+        const sliceHit = findSliceByAngle(clickAngle, sliceHitBoxes.current);
+        if (sliceHit) {
+          const item = data[sliceHit.index];
+          if (item) onSliceClick(item, sliceHit.index);
+        }
+      }
     }
   };
 
@@ -112,10 +155,9 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
     const legendYStart = padding + 10;
     const legendItemHeight = 18;
     
-    // Limpar hitboxes antigos
     legendHitBoxes.current = [];
+    sliceHitBoxes.current = [];
     
-    // Desenhar Pizza
     const totalValue = visibleData.reduce((sum, item) => sum + (item.value || 0), 0);
     
     if (totalValue > 0) {
@@ -126,10 +168,22 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       let currentAngle = -Math.PI / 2;
 
       data.forEach((item, index) => {
-        if (hiddenItems.has(index)) return; // Pular itens ocultos no desenho da pizza
+        if (hiddenItems.has(index)) return;
 
         const sliceAngle = ((item.value || 0) / totalValue) * availableAngle;
         const endAngle = currentAngle + sliceAngle;
+
+        if (onSliceClick) {
+          sliceHitBoxes.current.push({
+            index,
+            cx: centerX,
+            cy: centerY,
+            innerR: innerRadius,
+            outerR: outerRadius,
+            startAngle: currentAngle,
+            endAngle
+          });
+        }
 
         ctx.beginPath();
         ctx.arc(centerX, centerY, outerRadius, currentAngle, endAngle);
@@ -229,7 +283,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         });
     });
 
-  }, [data, dimensions, hiddenItems, title, total, visibleData, theme]);
+  }, [data, dimensions, hiddenItems, title, total, visibleData, theme, onSliceClick]);
 
   if (!data || data.length === 0) {
     return (
@@ -255,7 +309,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
             display: 'block',
             width: '100%',
             height: '100%',
-            cursor: 'default' // Estático, sem pointer para evitar logs de interação, mas clicável na legenda
+            cursor: onSliceClick ? 'pointer' : 'default'
           }}
         />
       </div>

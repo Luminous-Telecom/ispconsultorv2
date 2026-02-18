@@ -10,7 +10,7 @@ import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
 import ClienteModal from './cliente/ClienteModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
-import { Cliente } from '@/types';
+import { Cliente, ClienteFilters } from '@/types';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 
@@ -20,14 +20,16 @@ interface ClienteListModalProps {
   onSelectClient?: (cliente: Cliente) => void;
   title?: string;
   skipWrapper?: boolean;
+  initialFilters?: Partial<ClienteFilters>;
 }
 
-const ClienteListModal: React.FC<ClienteListModalProps> = ({ 
-  show, 
-  onClose, 
+const ClienteListModal: React.FC<ClienteListModalProps> = ({
+  show,
+  onClose,
   onSelectClient,
   title,
-  skipWrapper = false
+  skipWrapper = false,
+  initialFilters
 }) => {
   const { t } = useI18n();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -197,7 +199,12 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     }
   ], [t]);
 
-  const defaultTitle = title || (onSelectClient ? t('ui.selectClient') : t('menu.clients'));
+  const filterTitleSuffix = initialFilters?.ativo === true
+    ? ` - ${t('status.active')}`
+    : initialFilters?.ativo === false
+      ? ` - ${t('status.inactive')}`
+      : '';
+  const defaultTitle = (title || (onSelectClient ? t('ui.selectClient') : t('menu.clients'))) + filterTitleSuffix;
   
   const searchFields = [
     { key: 'id', label: t('table.id') },
@@ -214,14 +221,14 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     { key: 'estado', label: t('form.state') }
   ];
 
-  // Hook para buscar clientes usando parâmetros do useTableFilters
   const { data: clientesData, isLoading, refetch } = useClientes({
     search: tableFilters.debouncedSearch || undefined,
     searchField: tableFilters.searchField || undefined,
     page: tableFilters.page,
     limit: tableFilters.limit,
     sortColumn: tableFilters.sortColumn,
-    sortDirection: tableFilters.sortDirection
+    sortDirection: tableFilters.sortDirection,
+    ...(initialFilters && Object.keys(initialFilters).length > 0 ? initialFilters : {})
   });
 
   const deleteClienteMutation = useDeleteCliente();

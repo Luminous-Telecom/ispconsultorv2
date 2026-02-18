@@ -5,6 +5,7 @@ import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDashboardCharts } from '@/hooks/useDashboardCharts';
 import { useChartHiddenItems } from '@/hooks/useChartHiddenItems';
+import { useDashboardChartClicks } from '@/hooks/useDashboardChartClicks';
 import { BarChart, ValueChart, ResponsiveLineChart, DualLineChart, ResponsivePieChart } from '@/components/charts';
 import { Spinner } from '@/components/ui';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
@@ -23,7 +24,6 @@ const Dashboard: React.FC = () => {
     setEndDate,
   } = useDashboardFilters();
 
-  // Gerenciar itens ocultos dos gráficos usando hook customizado
   const {
     hiddenClientes,
     hiddenPlanos,
@@ -38,6 +38,15 @@ const Dashboard: React.FC = () => {
     toggleTaxaPagamento,
     toggleContratos,
   } = useChartHiddenItems();
+
+  const {
+    handleClienteSliceClick,
+    handlePlanoSliceClick,
+    handleStatusPagamentoSliceClick,
+    handleDistribuicaoPlanoSliceClick,
+    handleContratoSliceClick,
+    handleClientesPorPlanoBarClick,
+  } = useDashboardChartClicks();
 
   // Query única para buscar todos os dados do dashboard
   const { data: dashboardData, isLoading: loadingDashboard } = useDashboard({
@@ -178,6 +187,7 @@ const Dashboard: React.FC = () => {
                 title={t('dashboard.clientStatus')}
                 hiddenItems={hiddenClientes}
                 onToggleItem={toggleCliente}
+                onSliceClick={handleClienteSliceClick}
               />
             </div>
           </div>
@@ -189,6 +199,7 @@ const Dashboard: React.FC = () => {
                 title={t('dashboard.planStatus')}
                 hiddenItems={hiddenPlanos}
                 onToggleItem={togglePlano}
+                onSliceClick={handlePlanoSliceClick}
               />
             </div>
           </div>
@@ -200,6 +211,7 @@ const Dashboard: React.FC = () => {
                 title={t('dashboard.paymentStatus')}
                 hiddenItems={hiddenPagamentos}
                 onToggleItem={togglePagamento}
+                onSliceClick={handleStatusPagamentoSliceClick}
               />
             </div>
           </div>
@@ -211,6 +223,7 @@ const Dashboard: React.FC = () => {
                 title={t('dashboard.planDistribution')}
                 hiddenItems={hiddenDistribuicao}
                 onToggleItem={toggleDistribuicao}
+                onSliceClick={handleDistribuicaoPlanoSliceClick}
               />
             </div>
           </div>
@@ -222,6 +235,7 @@ const Dashboard: React.FC = () => {
                 title={t('dashboard.paymentRate')}
                 hiddenItems={hiddenTaxaPagamento}
                 onToggleItem={toggleTaxaPagamento}
+                onSliceClick={handleStatusPagamentoSliceClick}
               />
             </div>
           </div>
@@ -233,6 +247,7 @@ const Dashboard: React.FC = () => {
                 title={t('dashboard.contractStatus')}
                 hiddenItems={hiddenContratos}
                 onToggleItem={toggleContratos}
+                onSliceClick={handleContratoSliceClick}
               />
             </div>
           </div>
@@ -280,7 +295,7 @@ const Dashboard: React.FC = () => {
 
           <div className="col-xl-6 col-lg-6">
             <div className="chart-card">
-              <BarChart data={charts.clientesPorPlano} title={t('dashboard.clientsByPlan')} format="number" />
+              <BarChart data={charts.clientesPorPlano} title={t('dashboard.clientsByPlan')} format="number" onBarClick={handleClientesPorPlanoBarClick} />
             </div>
           </div>
         </div>

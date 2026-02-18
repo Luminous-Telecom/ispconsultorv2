@@ -14,7 +14,7 @@ export interface ChartDataItem {
   mes?: string;
   name?: string;
   // Propriedades adicionais permitidas para compatibilidade com diferentes formatos de dados
-  [key: string]: string | number | undefined;
+  [key: string]: string | number | boolean | undefined;
 }
 
 export type ChartFormat = 'currency' | 'number' | 'percentage';
@@ -30,5 +30,6 @@ export interface PieChartProps {
   title: string;
   hiddenItems: Set<number>;
   onToggleItem: (index: number) => void;
+  onSliceClick?: (item: ChartDataItem, index: number) => void;
 }
 

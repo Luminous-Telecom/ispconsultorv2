@@ -57,20 +57,20 @@ export const useDashboardCharts = (
 
   // Gráficos de pizza - memoizados
   const clientesChartData = useMemo(() => [
-    { label: t('status.active'), value: stats.clientesAtivos, color: '#28a745' },
-    { label: t('status.inactive'), value: stats.clientesInativos, color: '#dc3545' }
+    { label: t('status.active'), value: stats.clientesAtivos, color: '#28a745', filterValue: true },
+    { label: t('status.inactive'), value: stats.clientesInativos, color: '#dc3545', filterValue: false }
   ], [stats.clientesAtivos, stats.clientesInativos, t]);
 
   const planosChartData = useMemo(() => [
-    { label: t('status.active'), value: stats.planosAtivos, color: '#007bff' },
-    { label: t('status.inactive'), value: stats.planosInativos, color: '#6c757d' }
+    { label: t('status.active'), value: stats.planosAtivos, color: '#007bff', filterValue: 'ativo' },
+    { label: t('status.inactive'), value: stats.planosInativos, color: '#6c757d', filterValue: 'inativo' }
   ], [stats.planosAtivos, stats.planosInativos, t]);
 
   const statusPagamentoData = useMemo(() => {
     if (!titulosTodos || titulosTodos.length === 0) return [];
     
     const counts = titulosTodos.reduce((acc, titulo) => {
-      if (titulo.status === 'pago' || titulo.status === 'pago_atraso') {
+      if (titulo.status === 'pago' || titulo.status === 'pago_atraso' || titulo.status === 'parcial') {
         acc.pagos++;
       } else if (titulo.status === 'pendente') {
         acc.pendentes++;
@@ -83,10 +83,10 @@ export const useDashboardCharts = (
     }, { pagos: 0, pendentes: 0, vencidos: 0, cancelados: 0 });
     
     return [
-      { label: t('status.paid'), value: counts.pagos, color: '#28a745' },
-      { label: t('status.pending'), value: counts.pendentes, color: '#17a2b8' },
-      { label: t('status.overdue'), value: counts.vencidos, color: '#ffc107' },
-      { label: t('status.cancelled'), value: counts.cancelados, color: '#dc3545' }
+      { label: t('status.paid'), value: counts.pagos, color: '#28a745', filterValue: 'pago,pago_atraso,parcial' },
+      { label: t('status.pending'), value: counts.pendentes, color: '#17a2b8', filterValue: 'pendente' },
+      { label: t('status.overdue'), value: counts.vencidos, color: '#ffc107', filterValue: 'vencido' },
+      { label: t('status.cancelled'), value: counts.cancelados, color: '#dc3545', filterValue: 'cancelado' }
     ].filter(item => item.value > 0);
   }, [titulosTodos, t]);
 
@@ -106,20 +106,21 @@ export const useDashboardCharts = (
     return Object.entries(tipos).map(([tipo, quantidade], index) => ({
       label: tipoLabels[tipo] || tipo,
       value: quantidade,
-      color: cores[index % cores.length]
+      color: cores[index % cores.length],
+      filterValue: tipo
     }));
   }, [planos, t]);
 
   const taxaPagamentoChartData = useMemo(() => [
-    { label: t('status.paid'), value: stats.taxaPagamento, color: '#28a745' },
-    { label: t('status.pending'), value: 100 - stats.taxaPagamento, color: '#ffc107' }
+    { label: t('status.paid'), value: stats.taxaPagamento, color: '#28a745', filterValue: 'pago,pago_atraso,parcial' },
+    { label: t('status.pending'), value: 100 - stats.taxaPagamento, color: '#ffc107', filterValue: 'pendente,vencido' }
   ], [stats.taxaPagamento, t]);
 
   const contratosChartData = useMemo(() => [
-    { label: t('status.active'), value: stats.contratosAtivos, color: '#28a745' },
-    { label: t('status.inactive'), value: stats.contratosInativos, color: '#dc3545' },
-    { label: t('status.suspended'), value: stats.contratosSuspensos, color: '#ffc107' },
-    { label: t('status.exempt'), value: stats.contratosIsentos, color: '#6c757d' }
+    { label: t('status.active'), value: stats.contratosAtivos, color: '#28a745', filterValue: 'ativo' },
+    { label: t('status.inactive'), value: stats.contratosInativos, color: '#dc3545', filterValue: 'inativo' },
+    { label: t('status.suspended'), value: stats.contratosSuspensos, color: '#ffc107', filterValue: 'suspenso' },
+    { label: t('status.exempt'), value: stats.contratosIsentos, color: '#6c757d', filterValue: 'isento' }
   ], [stats.contratosAtivos, stats.contratosInativos, stats.contratosSuspensos, stats.contratosIsentos, t]);
 
   const ticketMedioChartData = useMemo(() => [
@@ -201,7 +202,8 @@ export const useDashboardCharts = (
     return planos.map((plano, index) => ({
       label: plano.nome_plano,
       value: contagem[plano.id]?.size || 0,
-      color: cores[index % cores.length]
+      color: cores[index % cores.length],
+      plano_id: plano.id
     })).sort((a, b) => b.value - a.value);
   }, [dashboardData?.contratosAtivosTodos, contratos, planos]);
 

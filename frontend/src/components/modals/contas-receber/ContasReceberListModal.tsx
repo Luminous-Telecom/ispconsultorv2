@@ -25,13 +25,15 @@ interface ContasReceberListModalProps {
   onClose: () => void;
   onSelectTitulo?: (titulo: Titulo) => void;
   skipWrapper?: boolean;
+  initialFilters?: Partial<TituloFilters>;
 }
 
 const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   show,
   onClose,
   onSelectTitulo,
-  skipWrapper = false
+  skipWrapper = false,
+  initialFilters
 }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
@@ -64,6 +66,16 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>(getDataInicioMesAtual());
   const [dataVencimentoFim, setDataVencimentoFim] = useState<string>(getDataFimMesAtual());
+
+  // Quando abre do dashboard com filtro de status, remover filtro de data para mostrar todos
+  const prevShowRef = React.useRef(false);
+  useEffect(() => {
+    if (show && !prevShowRef.current && initialFilters?.status) {
+      setDataVencimentoInicio('');
+      setDataVencimentoFim('');
+    }
+    prevShowRef.current = show;
+  }, [show, initialFilters?.status]);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [showReceberModal, setShowReceberModal] = useState(false);
@@ -111,17 +123,15 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showCancelados]);
   
+  const statusFilter = initialFilters?.status ?? (showCancelados ? undefined : '!cancelado');
   const filters: TituloFilters = {
     page: tableFilters.page,
     limit: tableFilters.limit,
     search: tableFilters.debouncedSearch || undefined,
     searchField: tableFilters.searchField || undefined,
-    // Aplicar filtro de status no backend quando não mostrar cancelados
-    ...(showCancelados ? {} : { status: '!cancelado' }),
-    // Aplicar filtros de data de vencimento se preenchidos
+    ...(statusFilter && { status: statusFilter }),
     ...(dataVencimentoInicio ? { data_vencimento_inicio: dataVencimentoInicio } : {}),
     ...(dataVencimentoFim ? { data_vencimento_fim: dataVencimentoFim } : {}),
-    // Aplicar ordenação no backend - usar apiParams que já inclui sortColumn e sortDirection
     sortColumn: tableFilters.apiParams.sortColumn,
     sortDirection: tableFilters.apiParams.sortDirection
   };

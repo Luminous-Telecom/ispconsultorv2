@@ -12,6 +12,8 @@ import { Contrato, CreateContratoData, UpdateContratoData } from '../hooks/useCo
 export interface ContratoFilters extends BaseFilters {
   status?: string;
   cliente_id?: number;
+  isento_mensalidade?: boolean;
+  plano_id?: number;
 }
 
 /**
