@@ -1769,7 +1769,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   type="button"
                   variant="primary"
                   size="sm"
-                  leftIcon={<i className="bi bi-printer"></i>}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1783,20 +1782,18 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 type="button"
                 variant="primary"
                 size="sm"
-                leftIcon={<i className="bi bi-x-lg"></i>}
                 onClick={onClose}
               >
-                {t('buttons.cancel')}
+                Cancelar
               </Button>
               <Button
                 type="submit"
                 form="contrato-form"
                 variant="primary"
                 size="sm"
-                leftIcon={<i className="bi bi-check-lg"></i>}
-                isLoading={formHook.isSubmitting}
+                disabled={formHook.isSubmitting}
               >
-                {isEditMode ? t('buttons.save') : t('modal.createContract')}
+                Salvar
               </Button>
             </div>
 
