@@ -747,7 +747,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           if (selectedItems.length === 0) return;
           
           const item = selectedItems[0];
-          if (item.status !== 'pago') {
+          const statusPago = item.status === 'pago' || item.status === 'pago_atraso' || item.status === 'parcial';
+          if (!statusPago) {
             error(t('financial.canOnlyReversePaid'));
             return;
           }
@@ -776,7 +777,8 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         },
         disabled: (selectedItems: Titulo[]): boolean => {
           if (selectedItems.length === 0) return true;
-          return selectedItems.every(item => item.status !== 'pago');
+          const statusPago = (s: string) => s === 'pago' || s === 'pago_atraso' || s === 'parcial';
+          return selectedItems.every(item => !statusPago(item.status || ''));
         }
       },
       {

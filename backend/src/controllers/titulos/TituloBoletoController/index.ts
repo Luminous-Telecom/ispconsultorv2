@@ -162,7 +162,8 @@ export class TituloBoletoController {
         return;
       }
 
-      if (titulo.status !== 'pago') {
+      const statusPermitido = ['pago', 'pago_atraso', 'parcial'].includes(titulo.status || '');
+      if (!statusPermitido) {
         sendValidationError(res, 'Só é possível estornar títulos que estão pagos');
         return;
       }
