@@ -17,6 +17,8 @@ export interface ListTitulosFilters {
   cliente_id?: string | number;
   data_vencimento_inicio?: string;
   data_vencimento_fim?: string;
+  data_pagamento_inicio?: string;
+  data_pagamento_fim?: string;
   search?: string;
   searchField?: string;
   sortColumn?: string;
@@ -65,6 +67,8 @@ export class TituloService {
       cliente_id,
       data_vencimento_inicio,
       data_vencimento_fim,
+      data_pagamento_inicio,
+      data_pagamento_fim,
       search,
       searchField,
       sortColumn,
@@ -99,8 +103,10 @@ export class TituloService {
       whereConditions.push({ cliente_id } as WhereOptions);
     }
 
-    // Filtro de data usando helper
+    // Filtro de data de vencimento
     whereConditions.push(buildDateFilter(data_vencimento_inicio, data_vencimento_fim, 'data_vencimento'));
+    // Filtro de data de pagamento (ex.: ao abrir Contas A Receber pelo gráfico Recebidos)
+    whereConditions.push(buildDateFilter(data_pagamento_inicio, data_pagamento_fim, 'data_pagamento'));
 
     if (search && String(search).trim()) {
       const term = String(search).trim();

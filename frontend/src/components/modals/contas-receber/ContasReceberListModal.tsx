@@ -67,11 +67,14 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>(getDataInicioMesAtual());
   const [dataVencimentoFim, setDataVencimentoFim] = useState<string>(getDataFimMesAtual());
 
-  // Quando abre do dashboard: aplicar initialFilters (data ou status)
+  // Quando abre do dashboard: aplicar initialFilters (data vencimento, data pagamento ou status)
   const prevShowRef = React.useRef(false);
   useEffect(() => {
     if (show && !prevShowRef.current) {
-      if (initialFilters?.data_vencimento_inicio || initialFilters?.data_vencimento_fim) {
+      if (initialFilters?.data_pagamento_inicio || initialFilters?.data_pagamento_fim) {
+        setDataVencimentoInicio(initialFilters.data_pagamento_inicio ?? '');
+        setDataVencimentoFim(initialFilters.data_pagamento_fim ?? '');
+      } else if (initialFilters?.data_vencimento_inicio || initialFilters?.data_vencimento_fim) {
         setDataVencimentoInicio(initialFilters.data_vencimento_inicio ?? '');
         setDataVencimentoFim(initialFilters.data_vencimento_fim ?? '');
       } else if (initialFilters?.status) {
@@ -80,7 +83,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       }
     }
     prevShowRef.current = show;
-  }, [show, initialFilters?.status, initialFilters?.data_vencimento_inicio, initialFilters?.data_vencimento_fim]);
+  }, [show, initialFilters?.status, initialFilters?.data_vencimento_inicio, initialFilters?.data_vencimento_fim, initialFilters?.data_pagamento_inicio, initialFilters?.data_pagamento_fim]);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [showReceberModal, setShowReceberModal] = useState(false);
@@ -129,14 +132,22 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   }, [showCancelados]);
   
   const statusFilter = initialFilters?.status ?? (showCancelados ? undefined : '!cancelado');
+  const filterByPaymentDate = initialFilters?.data_pagamento_inicio != null || initialFilters?.data_pagamento_fim != null;
   const filters: TituloFilters = {
     page: tableFilters.page,
     limit: tableFilters.limit,
     search: tableFilters.debouncedSearch || undefined,
     searchField: tableFilters.searchField || undefined,
     ...(statusFilter && { status: statusFilter }),
-    ...(dataVencimentoInicio ? { data_vencimento_inicio: dataVencimentoInicio } : {}),
-    ...(dataVencimentoFim ? { data_vencimento_fim: dataVencimentoFim } : {}),
+    ...(filterByPaymentDate
+      ? {
+          ...(dataVencimentoInicio ? { data_pagamento_inicio: dataVencimentoInicio } : {}),
+          ...(dataVencimentoFim ? { data_pagamento_fim: dataVencimentoFim } : {})
+        }
+      : {
+          ...(dataVencimentoInicio ? { data_vencimento_inicio: dataVencimentoInicio } : {}),
+          ...(dataVencimentoFim ? { data_vencimento_fim: dataVencimentoFim } : {})
+        }),
     sortColumn: tableFilters.apiParams.sortColumn,
     sortDirection: tableFilters.apiParams.sortDirection
   };

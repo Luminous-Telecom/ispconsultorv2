@@ -87,9 +87,20 @@ export const useDashboardChartClicks = () => {
     }
   }, [openModal]);
 
-  const handleRecebidosPeriodoPointClick = useCallback((item: ChartDataItem) => {
-    handleLineChartPointClick(item, 'contas-receber');
-  }, [handleLineChartPointClick]);
+  const handleRecebidosPeriodoPointClick = useCallback((
+    item: ChartDataItem & { data_inicio?: string; data_fim?: string }
+  ) => {
+    const dataInicio = item.data_inicio;
+    const dataFim = item.data_fim;
+    if (!dataInicio || !dataFim) return;
+    // Gráfico Recebidos é por data de pagamento: abrir modal filtrando por data_pagamento
+    openModal('contas-receber' as ModalType, {
+      initialFilters: {
+        data_pagamento_inicio: dataInicio,
+        data_pagamento_fim: dataFim
+      }
+    });
+  }, [openModal]);
 
   const handleReceberPeriodoPointClick = useCallback((item: ChartDataItem) => {
     // Gráfico "A receber" mostra apenas pendentes e vencidos (não pagos)
