@@ -67,6 +67,21 @@ export function parseDateFromDb(dateInput: string | Date | null | undefined): Da
 }
 
 /**
+ * Retorna o início do dia (00:00:00) no fuso local do servidor para a data informada.
+ * Usado para agrupar recebidos por dia de forma consistente com o filtro da lista (data_pagamento).
+ */
+export function getStartOfLocalDay(dateInput: string | Date | null | undefined): Date | null {
+  if (!dateInput) return null;
+  try {
+    const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    if (!(d instanceof Date) || isNaN(d.getTime())) return null;
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Converte data do banco para Date em meia-noite local, evitando problemas de timezone.
  * Usado ao agrupar por dia (ex: recebidos por período) para que a data do título
  * seja a mesma exibida no banco, independente do fuso horário.

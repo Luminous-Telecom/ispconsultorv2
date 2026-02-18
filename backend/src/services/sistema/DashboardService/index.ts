@@ -335,7 +335,7 @@ export class DashboardService {
    */
   static async getReceberPorPeriodoData(startDate: Date, endDate: Date) {
     const { TituloService } = await import('../../financeiro/TituloService');
-    const { formatDate, parseDateAsLocal } = await import('../../../utils/dateUtils');
+    const { formatDate, getStartOfLocalDay } = await import('../../../utils/dateUtils');
 
     const inicio = new Date(startDate);
     inicio.setHours(0, 0, 0, 0);
@@ -363,9 +363,9 @@ export class DashboardService {
       if (!titulo.data_vencimento) {
         continue;
       }
-      const dataTitulo = parseDateAsLocal(titulo.data_vencimento);
-      if (!dataTitulo) continue;
-      const diff = dataTitulo.getTime() - inicio.getTime();
+      const inicioDiaLocal = getStartOfLocalDay(titulo.data_vencimento);
+      if (!inicioDiaLocal) continue;
+      const diff = inicioDiaLocal.getTime() - inicio.getTime();
       const indice = Math.floor(diff / MS_POR_DIA);
       if (indice >= 0 && indice < valoresPorDia.length) {
         const valorTitulo = parseFloat(titulo.valor.toString());
@@ -390,7 +390,7 @@ export class DashboardService {
    */
   static async getRecebidosPorPeriodoData(startDate: Date, endDate: Date) {
     const { TituloService } = await import('../../financeiro/TituloService');
-    const { formatDate, parseDateAsLocal } = await import('../../../utils/dateUtils');
+    const { formatDate, getStartOfLocalDay } = await import('../../../utils/dateUtils');
 
     const inicio = new Date(startDate);
     inicio.setHours(0, 0, 0, 0);
@@ -419,9 +419,10 @@ export class DashboardService {
         continue;
       }
 
-      const dataPagamento = parseDateAsLocal(titulo.data_pagamento);
-      if (!dataPagamento) continue;
-      const diff = dataPagamento.getTime() - inicio.getTime();
+      // Usar dia local (mesmo critério do filtro da lista Contas a Receber) para alinhar gráfico e lista
+      const inicioDiaLocal = getStartOfLocalDay(titulo.data_pagamento);
+      if (!inicioDiaLocal) continue;
+      const diff = inicioDiaLocal.getTime() - inicio.getTime();
       const indice = Math.floor(diff / MS_POR_DIA);
 
       if (indice >= 0 && indice < valoresPorDia.length) {
@@ -565,7 +566,7 @@ export class DashboardService {
    */
   static async getContasPagarPorPeriodoData(startDate: Date, endDate: Date) {
     const { ContaPagarService } = await import('../../financeiro/ContaPagarService');
-    const { formatDate, parseDateAsLocal } = await import('../../../utils/dateUtils');
+    const { formatDate, getStartOfLocalDay } = await import('../../../utils/dateUtils');
 
     const inicio = new Date(startDate);
     inicio.setHours(0, 0, 0, 0);
@@ -584,9 +585,9 @@ export class DashboardService {
       if (!conta.data_vencimento || conta.status === 'CANCELADO') {
         continue;
       }
-      const dataConta = parseDateAsLocal(conta.data_vencimento);
-      if (!dataConta) continue;
-      const diff = dataConta.getTime() - inicio.getTime();
+      const inicioDiaLocal = getStartOfLocalDay(conta.data_vencimento);
+      if (!inicioDiaLocal) continue;
+      const diff = inicioDiaLocal.getTime() - inicio.getTime();
       const indice = Math.floor(diff / MS_POR_DIA);
       if (indice >= 0 && indice < valoresPorDia.length) {
         const valorConta = parseFloat(conta.valor.toString());
@@ -611,7 +612,7 @@ export class DashboardService {
    */
   static async getContasPagarUltimos12Meses() {
     const { ContaPagarService } = await import('../../financeiro/ContaPagarService');
-    const { parseDateAsLocal } = await import('../../../utils/dateUtils');
+    const { getStartOfLocalDay } = await import('../../../utils/dateUtils');
 
     const hoje = new Date();
     const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
@@ -631,12 +632,12 @@ export class DashboardService {
           return acumulado;
         }
 
-        const dataVencimento = parseDateAsLocal(conta.data_vencimento);
-        if (!dataVencimento) {
+        const inicioDiaLocal = getStartOfLocalDay(conta.data_vencimento);
+        if (!inicioDiaLocal) {
           return acumulado;
         }
 
-        if (dataVencimento >= mes && dataVencimento < proxMes) {
+        if (inicioDiaLocal >= mes && inicioDiaLocal < proxMes) {
           const valorConta = parseFloat(conta.valor.toString());
           return acumulado + valorConta;
         }
@@ -661,7 +662,7 @@ export class DashboardService {
    */
   static async getReceitaUltimos12Meses() {
     const { TituloService } = await import('../../financeiro/TituloService');
-    const { parseDateAsLocal } = await import('../../../utils/dateUtils');
+    const { getStartOfLocalDay } = await import('../../../utils/dateUtils');
 
     const hoje = new Date();
     const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
@@ -687,7 +688,7 @@ export class DashboardService {
           return acumulado;
         }
 
-        const referencia = parseDateAsLocal(titulo.data_vencimento);
+        const referencia = getStartOfLocalDay(titulo.data_vencimento);
 
         if (!referencia) {
           return acumulado;

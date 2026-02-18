@@ -140,12 +140,15 @@ export const useDashboardCharts = (
     };
   }, []);
 
-  // Helper: DD/MM/YYYY -> { data_inicio, data_fim } (mesmo dia)
+  // Helper: DD/MM/YYYY ou DD/MM/YY -> { data_inicio, data_fim } (mesmo dia)
   const parseDataLabelToRange = useCallback((label: string): { data_inicio: string; data_fim: string } | null => {
-    const match = label.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    const match4 = label.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    const match2 = !match4 ? label.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/) : null;
+    const match = match4 || match2;
     if (!match) return null;
-    const [, day, month, year] = match;
-    const d = new Date(parseInt(year!, 10), parseInt(month!, 10) - 1, parseInt(day!, 10));
+    const [, day, month, yearPart] = match;
+    const year = match2 ? 2000 + parseInt(yearPart!, 10) : parseInt(yearPart!, 10);
+    const d = new Date(year, parseInt(month!, 10) - 1, parseInt(day!, 10));
     if (isNaN(d.getTime())) return null;
     const iso = d.toISOString().split('T')[0];
     return { data_inicio: iso, data_fim: iso };
