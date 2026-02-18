@@ -274,10 +274,15 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
     </>
   );
 
-  const handleSuccess = useCallback(() => {
+  const handleSuccess = useCallback((createdOrUpdated?: IpPermitido) => {
+    if (createdOrUpdated?.id != null && showCreateModal) {
+      setSelectedId(createdOrUpdated.id);
+      setShowCreateModal(false);
+      setShowEditModal(true);
+    }
     refetch();
     queryClient.invalidateQueries({ queryKey: ['ips-permitidos'] });
-  }, [refetch, queryClient]);
+  }, [refetch, queryClient, showCreateModal]);
 
   if (skipWrapper) {
     return (

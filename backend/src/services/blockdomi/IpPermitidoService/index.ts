@@ -57,7 +57,8 @@ export class IpPermitidoService {
       ],
       order,
       limit,
-      offset
+      offset,
+      distinct: true
     });
 
     const from = count > 0 ? offset + 1 : 0;

@@ -10,7 +10,8 @@ import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
 interface IpsPermitidoModalProps {
   show: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  /** Chamado após criar ou editar. No create, recebe o registro criado para o pai poder mudar para modo edição sem fechar o modal. */
+  onSuccess?: (createdOrUpdated?: IpPermitido) => void;
   ipPermitidoId?: number | null;
 }
 
@@ -81,11 +82,12 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
 
     try {
       if (isEditing && ipPermitidoId) {
-        await updateMutation.mutateAsync({ id: ipPermitidoId, data: { faixa_ips: ips.join('; ') } });
+        const updated = await updateMutation.mutateAsync({ id: ipPermitidoId, data: { faixa_ips: ips.join('; ') } });
+        onSuccess?.(updated);
       } else if (clienteId) {
-        await createMutation.mutateAsync({ cliente_id: clienteId, faixa_ips: ips.join('; ') });
+        const created = await createMutation.mutateAsync({ cliente_id: clienteId, faixa_ips: ips.join('; ') });
+        onSuccess?.(created);
       }
-      onSuccess?.();
     } catch {
       // Erro tratado pelo hook
     }

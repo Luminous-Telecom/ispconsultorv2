@@ -2,6 +2,18 @@ import { Request, Response } from 'express';
 import { IpPermitidoService } from '../../../services/blockdomi/IpPermitidoService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { logger } from '../../../utils/logger';
+import { getErrorMessage, getErrorStack } from '../../../utils/errorUtils';
+
+function logControllerError(action: string, error: unknown): void {
+  const msg = getErrorMessage(error);
+  const stack = getErrorStack(error);
+  logger.error(`[IpPermitidoController.${action}] ${msg}`);
+  if (stack) logger.error(`[IpPermitidoController.${action}] stack: ${stack}`);
+  if (error && typeof error === 'object' && !(error instanceof Error)) {
+    logger.error(`[IpPermitidoController.${action}] detalhes: ${JSON.stringify(error)}`);
+  }
+}
 
 export class IpPermitidoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -22,6 +34,7 @@ export class IpPermitidoController {
 
       sendSuccess(res, result);
     } catch (error) {
+      logControllerError('list', error);
       sendError(res, error, 'Erro ao listar IPs permitidos', 500, true, {
         context: 'IpPermitidoController',
         action: 'list'
@@ -42,6 +55,7 @@ export class IpPermitidoController {
       json.cliente_nome = cliente ? (cliente.razao_social || cliente.nome_fantasia || cliente.cnpj || '-') : '-';
       sendSuccess(res, json);
     } catch (error) {
+      logControllerError('getById', error);
       sendError(res, error, 'Erro ao buscar IP permitido', 500, true, {
         context: 'IpPermitidoController',
         action: 'getById'
@@ -66,10 +80,17 @@ export class IpPermitidoController {
       sendSuccess(res, json, 'IPs permitidos cadastrados', 201);
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Erro ao cadastrar';
-      if (msg.includes('cliente_id') || msg.includes('Unique')) {
+      const name = error instanceof Error ? error.name : '';
+      const isUniqueCliente =
+        name === 'SequelizeUniqueConstraintError' ||
+        msg.includes('cliente_id') ||
+        msg.includes('Unique') ||
+        msg === 'Validation error';
+      if (isUniqueCliente) {
         sendValidationError(res, 'Este cliente já possui IPs permitidos cadastrados.');
         return;
       }
+      logControllerError('create', error);
       sendError(res, error, 'Erro ao cadastrar IPs permitidos', 500, true, {
         context: 'IpPermitidoController',
         action: 'create'
@@ -100,6 +121,16 @@ export class IpPermitidoController {
       }
       sendSuccess(res, dadosNovos, 'IPs permitidos atualizados');
     } catch (error) {
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.includes('Registro não encontrado')) {
+        sendNotFound(res, 'Registro não encontrado');
+        return;
+      }
+      if (msg.includes('Faixa de IPs é obrigatória')) {
+        sendValidationError(res, 'Informe pelo menos um IP ou faixa.');
+        return;
+      }
+      logControllerError('update', error);
       sendError(res, error, 'Erro ao atualizar IPs permitidos', 500, true, {
         context: 'IpPermitidoController',
         action: 'update'
@@ -124,6 +155,7 @@ export class IpPermitidoController {
       }
       sendSuccess(res, null, 'Registro excluído');
     } catch (error) {
+      logControllerError('delete', error);
       sendError(res, error, 'Erro ao excluir', 500, true, {
         context: 'IpPermitidoController',
         action: 'delete'
