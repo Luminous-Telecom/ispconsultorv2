@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState, useLayoutEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import CodeMirror from '@uiw/react-codemirror';
@@ -261,11 +261,14 @@ const HotsiteModal: React.FC<HotsiteModalProps> = ({ show, onClose, skipWrapper 
         </div>
   ), [activeTab, isMobile, saveMutation.isPending, handleClose, handleSave]);
 
+  const headerActionsRef = useRef(headerActionsContent);
+  headerActionsRef.current = headerActionsContent;
+
   useLayoutEffect(() => {
     if (skipWrapper && onHeaderActionsReady) {
-      onHeaderActionsReady(headerActionsContent);
+      onHeaderActionsReady(headerActionsRef.current);
     }
-  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
+  }, [skipWrapper, onHeaderActionsReady, activeTab, isMobile, saveMutation.isPending]);
 
   const modalContent = (
       <div className="hotsite-modal-content">
