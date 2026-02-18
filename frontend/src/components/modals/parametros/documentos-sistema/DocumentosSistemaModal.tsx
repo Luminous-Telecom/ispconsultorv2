@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
 import { useSelectedEntity } from '@/hooks/useSelectedEntity';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
 import DocumentoTab from './abas/DocumentoTab';
 
-const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose: _onClose, skipWrapper = false, onHeaderActionsReady }) => {
+const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
@@ -27,9 +28,29 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     setShowDocumentoModal(false);
   }, [setSelectedDocumento, setDocumentosDisponiveis, setShowDocumentoModal]);
 
-  // Header actions com abas
+  const handleClose = useCallback(() => {
+    setActiveTab('contrato');
+    setSelectedDocumentoId(null);
+    setSelectedDocumento(null);
+    setDocumentosDisponiveis([]);
+    setShowDocumentoModal(false);
+    onClose();
+  }, [onClose, setSelectedDocumento]);
+
+  // Header actions com botões e abas (padrão dos demais modais)
   const headerActionsContent = useMemo(() => (
     <div className="sistema-header-unified">
+      {/* Botões à direita */}
+      <div className="sistema-header-buttons modal-header-actions">
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={handleClose}
+        >
+          Cancelar
+        </Button>
+      </div>
       {/* Abas na parte inferior do header */}
       <div className="sistema-header-tabs">
         <ul
@@ -66,7 +87,10 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
         </ul>
       </div>
     </div>
-  ), [activeTab, handleTabChange, isMobile]);
+  ), [activeTab, handleTabChange, handleClose, isMobile]);
+
+  const headerActionsRef = useRef(headerActionsContent);
+  headerActionsRef.current = headerActionsContent;
 
   const getTipoLabel = (tipo: TipoDocumento) => {
     const labels: Record<TipoDocumento, string> = {
@@ -104,15 +128,15 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
 
   useLayoutEffect(() => {
     if (skipWrapper && onHeaderActionsReady) {
-      onHeaderActionsReady(headerActionsContent);
+      onHeaderActionsReady(headerActionsRef.current);
     }
-  }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
+  }, [skipWrapper, onHeaderActionsReady, activeTab, isMobile]);
 
   const modalContent = (
         <div className="sistema-modal-content">
-          {/* Conteúdo das Abas */}
+          {/* Conteúdo das Abas - sem padding lateral (padrão dos modais com tabela) */}
           <div
-            className={`tab-content sistema-tab-content sistema-tab-content-padded`}
+            className="tab-content sistema-tab-content"
             id="sistemaTabContent"
           >
             <DocumentoTab
@@ -167,7 +191,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   return (
     <DraggableModal
       show={show}
-      onClose={_onClose}
+      onClose={handleClose}
       title="Modelos de Documentos"
       size="xl"
       headerActions={headerActionsContent}

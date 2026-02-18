@@ -76,7 +76,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'agendador-tarefas': { component: AgendadorTarefasModal, titleKey: 'modal.taskScheduler', loadingMessageKey: 'ui.loadingPage' },
   'assinatura-digital': { component: AssinaturaDigitalModal, titleKey: 'modal.digitalSignature', loadingMessageKey: 'ui.loadingPage' },
   auditoria: { component: AuditoriaModal, titleKey: 'modal.auditLogs', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
-  'documentos-sistema': { component: DocumentosSistemaModal, titleKey: 'modal.systemDocuments', loadingMessageKey: 'ui.loadingPage' },
+  'documentos-sistema': { component: DocumentosSistemaModal, titleKey: 'modal.systemDocuments', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'historico-whatsapp': { component: WhatsAppHistoricoModal, titleKey: 'modal.whatsappHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'historico-email': { component: EmailHistoricoModal, titleKey: 'modal.emailHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'blockdomi-dominios': { component: DominioListModal, titleKey: 'modal.domains', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
