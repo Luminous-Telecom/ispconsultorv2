@@ -50,7 +50,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   
   const { success, error } = useNotificationContext();
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { confirm: _confirm, modalProps } = useConfirmModal();
 
   const displayTitle = useMemo(() => {
     let suffix = '';
@@ -433,14 +433,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       action: async (selectedItems: Contrato[]) => {
         if (selectedItems.length === 0) return;
         
-        const confirmed = await confirm({
-          message: `Tem certeza que deseja deletar ${selectedItems.length} contrato(s)?`,
-          variant: 'danger',
-          title: 'Deletar contratos',
-          confirmText: 'Deletar',
-          cancelText: 'Cancelar',
-        });
-        
+        const confirmed = window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} contrato(s)?`);
         if (confirmed) {
           selectedItems.forEach(item => handleDelete(item.id));
         }

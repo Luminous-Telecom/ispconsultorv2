@@ -173,14 +173,7 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
       onClick: async (selectedItems: ModeloRecibo[]) => {
         if (selectedItems.length === 0) return;
         
-        const confirmed = await confirm({
-          message: `Tem certeza que deseja deletar ${selectedItems.length} recibo(s)?`,
-          variant: 'danger',
-          title: 'Deletar recibos',
-          confirmText: 'Deletar',
-          cancelText: 'Cancelar',
-        });
-        
+        const confirmed = window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} recibo(s)?`);
         if (confirmed) {
           try {
             await Promise.all(selectedItems.map(item => deleteDocumentoMutation.mutateAsync(item.id)));

@@ -33,7 +33,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<string>('');
   const [updateProgressPercent, setUpdateProgressPercent] = useState<number>(0);
@@ -204,14 +204,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
   const handleUpdate = async () => {
 
-    const confirmed = await confirm({
-      message: t('updates.confirmUpdate'),
-      variant: 'warning',
-      title: t('updates.updateSystem'),
-      confirmText: t('updates.updateSystem'),
-      cancelText: t('actions.cancel'),
-    });
-
+    const confirmed = window.confirm(t('updates.confirmUpdate'));
     if (!confirmed) {
       return;
     }

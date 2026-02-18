@@ -34,7 +34,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -262,20 +262,13 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
           if (!item) return;
           
-          const confirmed = await confirm({
-            message: t('messages.confirmDelete'),
-            variant: 'danger',
-            title: t('modal.deleteBank'),
-            confirmText: t('actions.delete'),
-            cancelText: t('actions.cancel'),
-          });
-        
+          const confirmed = window.confirm(t('messages.confirmDelete'));
         if (confirmed) {
           handleDelete(item.id);
         }
       }
     }
-  ], [onSelectBanco, selectedBanco, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
+  ], [onSelectBanco, selectedBanco, clearSelection, onClose, handleSelect, handleDelete, t]);
 
   const modalData = useMemo(() => bancosData?.data || [], [bancosData?.data]);
 

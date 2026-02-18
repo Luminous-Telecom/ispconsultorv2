@@ -28,7 +28,8 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   const { success, error: showError } = useNotificationContext();
   const [, setSelectedItems] = useState<DocumentoUnion[]>([]);
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- só modalProps é usado (ConfirmModal); confirm não usado
+  const { modalProps } = useConfirmModal();
   const onDocumentosLoadedRef = useRef(onDocumentosLoaded);
   
   // Atualizar ref quando a função mudar
@@ -219,14 +220,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
       onClick: async (selectedItems: DocumentoUnion[]) => {
         if (selectedItems.length === 0) return;
         
-        const confirmed = await confirm({
-          message: `Tem certeza que deseja deletar ${selectedItems.length} documento(s)?`,
-          variant: 'danger',
-          title: 'Deletar documentos',
-          confirmText: 'Deletar',
-          cancelText: 'Cancelar',
-        });
-        
+        const confirmed = window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} documento(s)?`);
         if (confirmed) {
           try {
             await Promise.all(selectedItems.map(item => deleteDocumentoMutation.mutateAsync(item.id)));

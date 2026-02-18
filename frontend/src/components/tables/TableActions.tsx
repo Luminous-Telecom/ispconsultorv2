@@ -1,5 +1,4 @@
 import React, { useMemo, useCallback } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
 import { TableAction, BulkAction } from './types';
 import Button from '../ui/Button';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
@@ -26,8 +25,7 @@ const TableActions = <T extends { id: number | string }>({
   onBulkActionClick,
   className = '',
 }: TableActionsProps<T>) => {
-  const { t } = useI18n();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
   
   // Memoizar ações visíveis para evitar recálculo desnecessário
   const visibleActions = useMemo(() => {
@@ -59,40 +57,28 @@ const TableActions = <T extends { id: number | string }>({
     if (!item || index === undefined) return;
     
     if (action.confirm) {
-      const confirmed = await confirm({
-        message: action.confirm.message,
-        title: action.confirm.title || t('other.confirmAction'),
-        variant: action.variant === 'danger' ? 'danger' : 'warning',
-        confirmText: action.confirm.confirmText || 'Confirmar',
-        cancelText: action.confirm.cancelText || 'Cancelar',
-      });
-      
+      const msg = action.confirm.title ? `${action.confirm.title}\n\n${action.confirm.message}` : action.confirm.message;
+      const confirmed = window.confirm(msg);
       if (confirmed) {
         onActionClick?.(action, item, index);
       }
     } else {
       onActionClick?.(action, item, index);
     }
-  }, [item, index, onActionClick, confirm, t]);
+  }, [item, index, onActionClick]);
 
   // Callback memoizado para ações em massa
   const handleBulkActionClick = useCallback(async (action: BulkAction<T>) => {
     if (action.confirm) {
-      const confirmed = await confirm({
-        message: action.confirm.message,
-        title: action.confirm.title || t('other.confirmAction'),
-        variant: action.variant === 'danger' ? 'danger' : 'warning',
-        confirmText: action.confirm.confirmText || 'Confirmar',
-        cancelText: action.confirm.cancelText || 'Cancelar',
-      });
-      
+      const msg = action.confirm.title ? `${action.confirm.title}\n\n${action.confirm.message}` : action.confirm.message;
+      const confirmed = window.confirm(msg);
       if (confirmed) {
         onBulkActionClick?.(action, selectedItems);
       }
     } else {
       onBulkActionClick?.(action, selectedItems);
     }
-  }, [selectedItems, onBulkActionClick, confirm, t]);
+  }, [selectedItems, onBulkActionClick]);
 
   // Renderizar ações individuais
   const renderItemActions = () => {

@@ -44,7 +44,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
   const [selectedTipoId, setSelectedTipoId] = useState<number | null>(null);
 
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
 
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -166,13 +166,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
         action: async (items: TipoCobrancaContrato[]) => {
           const item = items[0];
           if (!item) return;
-          const ok = await confirm({
-            message: t('messages.confirmDelete'),
-            variant: 'danger',
-            title: t('modal.billingType'),
-            confirmText: t('actions.delete'),
-            cancelText: t('actions.cancel'),
-          });
+          const ok = window.confirm(t('messages.confirmDelete'));
           if (ok) handleDelete(item.id);
         }
       }
@@ -192,7 +186,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
         }
       }
     ] : base;
-  }, [t, onSelectTipo, onClose, handleDelete, confirm]);
+  }, [t, onSelectTipo, onClose, handleDelete]);
 
   const modalData = useMemo(() => {
     const d = tiposData?.data;

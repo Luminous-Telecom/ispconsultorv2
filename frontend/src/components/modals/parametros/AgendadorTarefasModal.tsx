@@ -29,7 +29,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
 
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -207,14 +207,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   }, [queryClient, showError]);
 
   const handleExecute = useCallback(async (rotina: RotinaAgendada) => {
-    const confirmed = await confirm({
-      message: t('scheduler.confirmExecute'),
-      variant: 'info',
-      title: t('scheduler.executeRoutine'),
-      confirmText: t('scheduler.execute'),
-      cancelText: t('actions.cancel'),
-    });
-    
+    const confirmed = window.confirm(t('scheduler.confirmExecute'));
     if (!confirmed) return;
     
     try {
@@ -229,17 +222,10 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         showError(`${t('messages.error')}: ${t('messages.noData')}`);
       }
     }
-  }, [confirm, t, success, queryClient, showError]);
+  }, [t, success, queryClient, showError]);
 
   const handleDelete = useCallback(async (rotina: RotinaAgendada) => {
-    const confirmed = await confirm({
-      message: t('scheduler.confirmDelete'),
-      variant: 'danger',
-      title: t('scheduler.deleteRoutine'),
-      confirmText: t('actions.delete'),
-      cancelText: t('actions.cancel'),
-    });
-    
+    const confirmed = window.confirm(t('scheduler.confirmDelete'));
     if (!confirmed) return;
     
     try {
@@ -254,7 +240,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         showError(`${t('messages.error')}: ${t('messages.noData')}`);
       }
     }
-  }, [confirm, t, success, queryClient, showError]);
+  }, [t, success, queryClient, showError]);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);

@@ -142,14 +142,7 @@ export const useClienteEditModal = (clienteId: number | null) => {
       ? 'Tem certeza que deseja cancelar este título?'
       : `Tem certeza que deseja cancelar ${selectedItems.length} título(s)?`;
 
-    const confirmed = await confirm({
-      message: confirmMessage,
-      variant: 'warning',
-      title: 'Cancelar títulos',
-      confirmText: 'Cancelar',
-      cancelText: 'Voltar'
-    });
-
+    const confirmed = window.confirm(confirmMessage);
     if (!confirmed) return;
 
     try {
@@ -173,7 +166,7 @@ export const useClienteEditModal = (clienteId: number | null) => {
     } catch (err) {
       showNotification('Erro ao cancelar títulos', 'error');
     }
-  }, [showNotification, queryClient, clienteId, confirm]);
+  }, [showNotification, queryClient, clienteId]);
   
   const handleEstornarTitulo = useCallback(async (item: TituloItem) => {
     if (item.status !== 'pago' && item.status !== 'pago_atraso') {
@@ -181,16 +174,8 @@ export const useClienteEditModal = (clienteId: number | null) => {
       return;
     }
 
-    const confirmed = await confirm({
-      message: `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
-        `Valor: R$ ${item.valor_pago || item.valor}\n` +
-        `O título voltará para status PENDENTE.`,
-      variant: 'warning',
-      title: 'Estornar título',
-      confirmText: 'Estornar',
-      cancelText: 'Cancelar'
-    });
-
+    const msg = `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\nValor: R$ ${item.valor_pago || item.valor}\nO título voltará para status PENDENTE.`;
+    const confirmed = window.confirm(msg);
     if (!confirmed) return;
 
     try {
@@ -200,7 +185,7 @@ export const useClienteEditModal = (clienteId: number | null) => {
     } catch (err) {
       showNotification('Erro ao estornar título', 'error');
     }
-  }, [showNotification, queryClient, clienteId, confirm]);
+  }, [showNotification, queryClient, clienteId]);
   
   return {
     // Estados

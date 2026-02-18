@@ -106,7 +106,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { confirm: _confirm, modalProps } = useConfirmModal();
 
   const handleAudit = (titulo: Titulo) => {
     auditoria.handleAudit('Titulo', titulo.id);
@@ -629,15 +629,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           const confirmMessage = selectedItems.length === 1 
             ? t('messages.confirmCancelTitle')
             : t('messages.confirmCancelTitles', { count: selectedItems.length });
-            
-          const confirmed = await confirm({
-            message: confirmMessage,
-            variant: 'warning',
-            title: t('financial.cancelTitles'),
-            confirmText: t('actions.delete'),
-            cancelText: t('ui.back'),
-          });
-          
+          const confirmed = window.confirm(confirmMessage);
           if (confirmed) {
               try {
                 let successCount = 0;
@@ -697,13 +689,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           const confirmMessage = deletaveis.length === 1
             ? t('financial.confirmDeleteTitle')
             : t('financial.confirmDeleteTitles', { count: deletaveis.length });
-          const confirmed = await confirm({
-            message: confirmMessage,
-            variant: 'danger',
-            title: t('actions.delete'),
-            confirmText: t('actions.delete'),
-            cancelText: t('actions.cancel'),
-          });
+          const confirmed = window.confirm(confirmMessage);
           if (confirmed) {
             try {
               let successCount = 0;
@@ -753,27 +739,19 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
             return;
           }
           
-          const confirmed = await confirm({
-            message: `${t('messages.confirmDelete')}\n\n` +
-              `${t('document.title')} ${item.numero_titulo || item.id}\n` +
-              `${t('summary.value')} ${formatCurrency(item.valor_pago || item.valor || 0)}\n\n` +
-              t('financial.titleWillReturnPending'),
-            variant: 'warning',
-            title: t('financial.reverseTitle'),
-            confirmText: t('financial.reverse'),
-            cancelText: t('actions.cancel'),
-          });
+          const msg = `${t('financial.titleWillReturnPending')}\n\n${t('document.title')} ${item.numero_titulo || item.id}\n${t('summary.value')} ${formatCurrency(item.valor_pago || item.valor || 0)}`;
+          const confirmed = window.confirm(msg);
           
           if (confirmed) {
-                try {
-                  await TituloService.estornar(item.id);
-                  success(t('financial.titleReversed'));
-                  handleRefreshData();
-                } catch (err) {
-                  const errorMessage = err instanceof Error ? err.message : t('financial.errorReversing');
-                  error(errorMessage);
-                }
-              }
+            try {
+              await TituloService.estornar(item.id);
+              success(t('financial.titleReversed'));
+              handleRefreshData();
+            } catch (err) {
+              const errorMessage = err instanceof Error ? err.message : t('financial.errorReversing');
+              error(errorMessage);
+            }
+          }
         },
         disabled: (selectedItems: Titulo[]): boolean => {
           if (selectedItems.length === 0) return true;
@@ -838,7 +816,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         ]
       }
     ];
-  }, [success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, confirm, t]);
+  }, [success, error, handleRefreshData, handleImprimirSelecionados, handleImprimirTodosEmAberto, handleImprimirRecibos, hasNFSeEmitida, handleImprimirNFSe, getItensComNFSe, t]);
 
   const handleSearch = useCallback((term: string, field?: string) => {
     // Usar setTimeout para evitar atualização durante render cycle

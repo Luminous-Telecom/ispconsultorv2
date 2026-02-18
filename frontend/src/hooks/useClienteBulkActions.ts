@@ -93,7 +93,7 @@ export const useClienteBulkActions = ({
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const deleteContratoMutation = useDeleteContrato();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
 
   const [selectedItems, setSelectedItems] = useState<TituloItem[]>([]);
   const [selectedContratosItems, setSelectedContratosItems] = useState<Contrato[]>([]);
@@ -116,15 +116,7 @@ export const useClienteBulkActions = ({
     const confirmMessage = items.length === 1 
       ? t('messages.confirmCancelTitle')
       : t('messages.confirmCancelTitles', { count: items.length });
-      
-    const confirmed = await confirm({
-      message: confirmMessage,
-      variant: 'warning',
-      title: t('financial.cancelTitles'),
-      confirmText: t('actions.cancel'),
-      cancelText: t('ui.back'),
-    });
-    
+    const confirmed = window.confirm(confirmMessage);
     if (confirmed) {
         try {
           let successCount = 0;
@@ -173,17 +165,8 @@ export const useClienteBulkActions = ({
       return;
     }
     
-    const confirmed = await confirm({
-      message: `${t('messages.confirmDelete')}\n\n` +
-        `${t('contracts.title')} ${titulo.numero_titulo || titulo.id}\n` +
-        `${t('summary.value')} ${formatCurrency(titulo.valor_pago || titulo.valor || 0)}\n\n` +
-        t('financial.titleWillReturnPending'),
-      variant: 'warning',
-      title: t('financial.reverseTitle'),
-      confirmText: t('financial.reverse'),
-      cancelText: t('actions.cancel'),
-    });
-    
+    const msg = `${t('messages.confirmDelete')}\n\n${t('contracts.title')} ${titulo.numero_titulo || titulo.id}\n${t('summary.value')} ${formatCurrency(titulo.valor_pago || titulo.valor || 0)}\n\n${t('financial.titleWillReturnPending')}`;
+    const confirmed = window.confirm(msg);
     if (confirmed) {
         try {
           await TituloService.estornar(titulo.id);
@@ -303,15 +286,7 @@ export const useClienteBulkActions = ({
     const confirmMessage = items.length === 1
       ? t('messages.confirmDelete')
       : t('messages.confirmDeleteAdditionalServices', { count: items.length });
-    
-    const confirmed = await confirm({
-      message: confirmMessage,
-      variant: 'danger',
-      title: t('contracts.confirmDelete'),
-      confirmText: t('actions.delete'),
-      cancelText: t('actions.cancel'),
-    });
-    
+    const confirmed = window.confirm(confirmMessage);
     if (confirmed) {
         try {
           for (const item of items) {
@@ -361,13 +336,7 @@ export const useClienteBulkActions = ({
     const confirmMessage = deletaveis.length === 1
       ? t('financial.confirmDeleteTitle')
       : t('financial.confirmDeleteTitles', { count: deletaveis.length });
-    const confirmed = await confirm({
-      message: confirmMessage,
-      variant: 'danger',
-      title: t('actions.delete'),
-      confirmText: t('actions.delete'),
-      cancelText: t('actions.cancel'),
-    });
+    const confirmed = window.confirm(confirmMessage);
     if (confirmed) {
       try {
         let successCount = 0;

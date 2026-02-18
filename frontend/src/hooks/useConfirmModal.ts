@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { ConfirmVariant } from '@/components/modals/ConfirmModal';
 
 export interface ConfirmConfig {
@@ -86,37 +86,37 @@ export interface UseConfirmModalReturn {
 export const useConfirmModal = (): UseConfirmModalReturn => {
   const [isOpen, setIsOpen] = useState(false);
   const [config, setConfig] = useState<ConfirmConfig | null>(null);
-  const [resolvePromise, setResolvePromise] = useState<((value: boolean) => void) | null>(null);
+  const resolveRef = useRef<((value: boolean) => void) | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const confirm = useCallback((config: ConfirmConfig): Promise<boolean> => {
     return new Promise<boolean>((resolve) => {
       setConfig(config);
-      setResolvePromise(() => resolve);
+      resolveRef.current = resolve;
       setIsOpen(true);
       setIsLoading(false);
     });
   }, []);
 
   const handleConfirm = useCallback(() => {
-    if (resolvePromise) {
-      resolvePromise(true);
+    if (resolveRef.current) {
+      resolveRef.current(true);
+      resolveRef.current = null;
       setIsOpen(false);
       setConfig(null);
-      setResolvePromise(null);
       setIsLoading(false);
     }
-  }, [resolvePromise]);
+  }, []);
 
   const handleClose = useCallback(() => {
-    if (resolvePromise) {
-      resolvePromise(false);
+    if (resolveRef.current) {
+      resolveRef.current(false);
+      resolveRef.current = null;
       setIsOpen(false);
       setConfig(null);
-      setResolvePromise(null);
       setIsLoading(false);
     }
-  }, [resolvePromise]);
+  }, []);
 
   const setLoading = useCallback((loading: boolean) => {
     setIsLoading(loading);

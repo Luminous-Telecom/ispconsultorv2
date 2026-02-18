@@ -173,14 +173,7 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
       onClick: async (selectedItems: ModeloCarta[]) => {
         if (selectedItems.length === 0) return;
         
-        const confirmed = await confirm({
-          message: `Tem certeza que deseja deletar ${selectedItems.length} carta(s) de cobrança?`,
-          variant: 'danger',
-          title: 'Deletar cartas de cobrança',
-          confirmText: 'Deletar',
-          cancelText: 'Cancelar',
-        });
-        
+        const confirmed = window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} carta(s) de cobrança?`);
         if (confirmed) {
           try {
             await Promise.all(selectedItems.map(item => deleteDocumentoMutation.mutateAsync(item.id)));

@@ -37,7 +37,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedItems, setSelectedItems] = useState<IpPermitido[]>([]);
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
 
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -155,20 +155,14 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
     const msg = selectedItems.length === 1
       ? t('messages.confirmDelete')
       : `Tem certeza que deseja excluir ${selectedItems.length} registro(s)?`;
-    const confirmed = await confirm({
-      message: msg,
-      variant: 'danger',
-      title: t('blockdomi.deleteIpsPermitidos'),
-      confirmText: t('actions.delete'),
-      cancelText: t('actions.cancel')
-    });
+    const confirmed = window.confirm(msg);
     if (confirmed) {
       for (const item of selectedItems) {
         await handleDelete(item.id);
       }
       refetch();
     }
-  }, [selectedItems, confirm, handleDelete, refetch, t]);
+  }, [selectedItems, handleDelete, refetch, t]);
 
   const headerActionsContent = useMemo(() => (
     <div className="d-flex gap-2 modal-header-actions">

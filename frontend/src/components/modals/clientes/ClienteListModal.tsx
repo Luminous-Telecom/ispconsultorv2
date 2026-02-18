@@ -37,7 +37,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
 
   const handleAudit = useCallback((cliente: Cliente) => {
     auditoria.handleAudit('Cliente', cliente.id);
@@ -264,18 +264,11 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     const item = (selectedItems && selectedItems.length > 0) ? selectedItems[0] : selectedItem;
     if (!item) return;
     
-    const confirmed = await confirm({
-      message: t('messages.confirmDelete'),
-      variant: 'danger',
-      title: t('modal.deleteClient'),
-      confirmText: t('actions.delete'),
-      cancelText: t('actions.cancel'),
-    });
-    
+    const confirmed = window.confirm(t('messages.confirmDelete'));
     if (confirmed) {
       handleDelete(item.id);
     }
-  }, [selectedItem, handleDelete, confirm, t]);
+  }, [selectedItem, handleDelete, t]);
 
   // Paginação do backend - usar valores do backend quando disponíveis
   const pagination = useMemo(() => {

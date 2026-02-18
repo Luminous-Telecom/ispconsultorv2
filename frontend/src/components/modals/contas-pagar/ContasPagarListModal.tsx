@@ -69,7 +69,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   
   // Hook de auditoria
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
 
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters<ContaPagarFilters>({
@@ -544,14 +544,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
         if (!item) return;
         
-        const confirmed = await confirm({
-          message: t('messages.confirmDeleteAccountPayable'),
-          variant: 'danger',
-          title: t('modal.deleteAccountPayable'),
-          confirmText: t('buttons.delete'),
-          cancelText: t('buttons.cancel'),
-        });
-        
+        const confirmed = window.confirm(t('messages.confirmDeleteAccountPayable'));
         if (confirmed) {
           handleDelete(item.id);
         }

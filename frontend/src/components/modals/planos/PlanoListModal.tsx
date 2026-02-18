@@ -39,7 +39,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -327,20 +327,13 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
           if (!item) return;
           
-          const confirmed = await confirm({
-            message: t('messages.confirmDelete'),
-            variant: 'danger',
-            title: t('modal.deletePlan'),
-            confirmText: t('actions.delete'),
-            cancelText: t('actions.cancel'),
-          });
-        
+          const confirmed = window.confirm(t('messages.confirmDelete'));
         if (confirmed) {
           handleDelete(item.id);
         }
       }
     }
-  ], [onSelectPlano, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
+  ], [onSelectPlano, selectedItem, clearSelection, onClose, handleSelect, handleDelete, t]);
 
   const modalData = useMemo(() => planosData?.data || [], [planosData?.data]);
 

@@ -39,7 +39,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
   const [selectedIPv6Id, setSelectedIPv6Id] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
   
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -332,14 +332,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
         const msg = items.length === 1
           ? t('messages.confirmDelete')
           : `Tem certeza que deseja excluir ${items.length} IPv6?`;
-        const confirmed = await confirm({
-          message: msg,
-          variant: 'danger',
-          title: t('blockdomi.deleteIPv6'),
-          confirmText: t('actions.delete'),
-          cancelText: t('actions.cancel'),
-        });
-
+        const confirmed = window.confirm(msg);
         if (confirmed) {
           if (items.length === 1) {
             handleDelete(items[0].id);
@@ -349,7 +342,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
         }
       }
     }
-  ], [onSelectIPv6, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, confirm, t]);
+  ], [onSelectIPv6, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, t]);
 
   const modalData = useMemo(() => ipv6sData?.data || [], [ipv6sData?.data]);
 

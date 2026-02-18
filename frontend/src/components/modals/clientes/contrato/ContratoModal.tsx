@@ -183,7 +183,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [showCanceladosAvulsos, setShowCanceladosAvulsos] = useState(false);
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
 
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
@@ -608,15 +608,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         const confirmMessage = selectedItems.length === 1 
           ? t('messages.confirmCancelTitle')
           : t('messages.confirmCancelTitles', { count: selectedItems.length });
-          
-        const confirmed = await confirm({
-          message: confirmMessage,
-          variant: 'warning',
-          title: t('financial.cancelTitles'),
-          confirmText: t('actions.cancel'),
-          cancelText: t('buttons.back'),
-        });
-        
+        const confirmed = window.confirm(confirmMessage);
         if (confirmed) {
           try {
             let successCount = 0;
@@ -672,16 +664,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
           return;
         }
         
-        const confirmed = await confirm({
-          message: `${t('financial.confirmReverse', { number: item.numero_titulo })}\n\n` +
-            `${t('form.value')}: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
-            `${t('financial.titleWillReturnPending')}`,
-          variant: 'warning',
-          title: t('financial.reverseTitle'),
-          confirmText: t('actions.reverse'),
-          cancelText: t('actions.cancel'),
-        });
-        
+        const msg = `${t('financial.confirmReverse', { number: item.numero_titulo })}\n\n${t('form.value')}: ${formatCurrency(item.valor_pago || item.valor || 0)}\n${t('financial.titleWillReturnPending')}`;
+        const confirmed = window.confirm(msg);
         if (confirmed) {
           try {
             await TituloService.estornar(item.id);
@@ -872,15 +856,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         const confirmMessage = selectedItems.length === 1 
           ? t('messages.confirmCancelTitle')
           : t('messages.confirmCancelTitles', { count: selectedItems.length });
-          
-        const confirmed = await confirm({
-          message: confirmMessage,
-          variant: 'warning',
-          title: t('financial.cancelTitles'),
-          confirmText: t('actions.cancel'),
-          cancelText: t('buttons.back'),
-        });
-        
+        const confirmed = window.confirm(confirmMessage);
         if (confirmed) {
           try {
             let successCount = 0;
@@ -936,16 +912,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
           return;
         }
         
-        const confirmed = await confirm({
-          message: `${t('financial.confirmReverse', { number: item.numero_titulo })}\n\n` +
-            `${t('form.value')}: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
-            `${t('financial.titleWillReturnPending')}`,
-          variant: 'warning',
-          title: t('financial.reverseTitle'),
-          confirmText: t('actions.reverse'),
-          cancelText: t('actions.cancel'),
-        });
-        
+        const msg = `${t('financial.confirmReverse', { number: item.numero_titulo })}\n\n${t('form.value')}: ${formatCurrency(item.valor_pago || item.valor || 0)}\n${t('financial.titleWillReturnPending')}`;
+        const confirmed = window.confirm(msg);
         if (confirmed) {
           try {
             await TituloService.estornar(item.id);
@@ -1131,15 +1099,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         const confirmMessage = items.length === 1 
           ? t('messages.confirmDelete')
           : `${t('messages.confirmDelete')} (${items.length} ${t('tabs.terms').toLowerCase()})`;
-          
-        const confirmed = await confirm({
-          message: confirmMessage,
-          variant: 'danger',
-          title: t('other.deleteTerms'),
-          confirmText: t('actions.delete'),
-          cancelText: t('actions.cancel'),
-        });
-        
+        const confirmed = window.confirm(confirmMessage);
         if (confirmed) {
           try {
             let successCount = 0;
@@ -1241,15 +1201,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         const confirmMessage = selectedItems.length === 1 
           ? t('messages.confirmDeleteAdditionalService')
           : t('messages.confirmDeleteAdditionalServices', { count: selectedItems.length });
-          
-        const confirmed = await confirm({
-          message: confirmMessage,
-          variant: 'danger',
-          title: t('modal.deleteAdditionalServices'),
-          confirmText: t('actions.delete'),
-          cancelText: t('actions.cancel'),
-        });
-        
+        const confirmed = window.confirm(confirmMessage);
         if (confirmed) {
           try {
             let successCount = 0;

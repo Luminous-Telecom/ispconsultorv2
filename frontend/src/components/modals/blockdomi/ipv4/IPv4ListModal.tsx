@@ -39,7 +39,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
   const [selectedIPv4Id, setSelectedIPv4Id] = useState<number | null>(null);
   
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
   
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -332,14 +332,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
         const msg = items.length === 1
           ? t('messages.confirmDelete')
           : `Tem certeza que deseja excluir ${items.length} IPv4?`;
-        const confirmed = await confirm({
-          message: msg,
-          variant: 'danger',
-          title: t('blockdomi.deleteIPv4'),
-          confirmText: t('actions.delete'),
-          cancelText: t('actions.cancel'),
-        });
-
+        const confirmed = window.confirm(msg);
         if (confirmed) {
           if (items.length === 1) {
             handleDelete(items[0].id);
@@ -349,7 +342,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
         }
       }
     }
-  ], [onSelectIPv4, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, confirm, t]);
+  ], [onSelectIPv4, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, t]);
 
   const modalData = useMemo(() => ipv4sData?.data || [], [ipv4sData?.data]);
 

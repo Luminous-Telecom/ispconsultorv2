@@ -42,7 +42,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   const [dominiosToBulkEdit, setDominiosToBulkEdit] = useState<Dominio[]>([]);
   
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
   
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -343,14 +343,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
         const msg = items.length === 1
           ? t('messages.confirmDelete')
           : `Tem certeza que deseja excluir ${items.length} domínio(s)?`;
-        const confirmed = await confirm({
-          message: msg,
-          variant: 'danger',
-          title: t('blockdomi.deleteDomain'),
-          confirmText: t('actions.delete'),
-          cancelText: t('actions.cancel'),
-        });
-
+        const confirmed = window.confirm(msg);
         if (confirmed) {
           if (items.length === 1) {
             handleDelete(items[0].id);
@@ -360,7 +353,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
         }
       }
     }
-  ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, confirm, t]);
+  ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, t]);
 
   const modalData = useMemo(() => dominiosData?.data || [], [dominiosData?.data]);
 

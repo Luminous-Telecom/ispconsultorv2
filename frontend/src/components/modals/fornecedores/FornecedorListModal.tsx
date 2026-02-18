@@ -37,7 +37,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   
   // Hook de auditoria
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -312,20 +312,13 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
           if (!item) return;
           
-          const confirmed = await confirm({
-            message: t('messages.confirmDelete'),
-            variant: 'danger',
-            title: t('modal.deleteSupplier'),
-            confirmText: t('actions.delete'),
-            cancelText: t('actions.cancel'),
-          });
-        
+          const confirmed = window.confirm(t('messages.confirmDelete'));
         if (confirmed) {
           handleDelete(item.id);
         }
       }
     }
-  ], [onSelectFornecedor, selectedItem, clearSelection, onClose, handleSelect, handleDelete, confirm, t]);
+  ], [onSelectFornecedor, selectedItem, clearSelection, onClose, handleSelect, handleDelete, t]);
 
   const modalData = useMemo(() => (fornecedoresData?.data || []).filter(item => item.id != null), [fornecedoresData?.data]);
 

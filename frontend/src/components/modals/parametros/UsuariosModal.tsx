@@ -34,7 +34,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
   
   const { success, error: _error } = useNotificationContext();
   const auditoria = useAuditoria();
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
   
   // Hook unificado para filtros, busca, ordenação e paginação
   const tableFilters = useTableFilters({
@@ -234,14 +234,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       action: async (selectedItems: Usuario[]) => {
         if (selectedItems.length === 0) return;
         
-        const confirmed = await confirm({
-          message: `Tem certeza que deseja deletar ${selectedItems.length} usuário(s)?`,
-          variant: 'danger',
-          title: 'Deletar usuários',
-          confirmText: 'Deletar',
-          cancelText: 'Cancelar',
-        });
-        
+        const confirmed = window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} usuário(s)?`);
         if (confirmed) {
           for (const item of selectedItems) {
             await handleDelete(item.id);

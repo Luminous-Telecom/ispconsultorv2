@@ -52,7 +52,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
       sortDirection: finalSortDirection
     }
   });
-  const { confirm, modalProps } = useConfirmModal();
+  const { modalProps } = useConfirmModal();
 
   const isImageFile = useCallback((arquivo: ClienteArquivo): boolean => {
     const mimeType = (arquivo.mime_type || '').toLowerCase();
@@ -217,14 +217,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
         onClick: async (selectedItems: ClienteArquivo[]) => {
           if (selectedItems.length === 0) return;
           
-          const confirmed = await confirm({
-            message: t('confirm.deleteFiles', { count: selectedItems.length }),
-            variant: 'danger',
-            title: t('confirm.deleteFilesTitle'),
-            confirmText: t('actions.delete'),
-            cancelText: t('actions.cancel'),
-          });
-          
+          const confirmed = window.confirm(t('confirm.deleteFiles', { count: selectedItems.length }));
           if (confirmed) {
             for (const item of selectedItems) {
               await deleteMutation.mutateAsync(item.id);
@@ -241,7 +234,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
       { key: 'origem', label: t('table.fileOrigin') }
     ],
     emptyMessage: t('empty.noFiles')
-  }), [arquivos, deleteMutation, handleDownload, handleView, confirm, t, finalSortColumn, finalSortDirection]);
+  }), [arquivos, deleteMutation, handleDownload, handleView, t, finalSortColumn, finalSortDirection]);
 
   if (!clienteId) {
     return (
