@@ -335,7 +335,7 @@ export class DashboardService {
    */
   static async getReceberPorPeriodoData(startDate: Date, endDate: Date) {
     const { TituloService } = await import('../../financeiro/TituloService');
-    const { formatDate, parseDateFromDb } = await import('../../../utils/dateUtils');
+    const { formatDate, parseDateAsLocal } = await import('../../../utils/dateUtils');
 
     const inicio = new Date(startDate);
     inicio.setHours(0, 0, 0, 0);
@@ -363,10 +363,8 @@ export class DashboardService {
       if (!titulo.data_vencimento) {
         continue;
       }
-      const dataTitulo = parseDateFromDb(titulo.data_vencimento);
+      const dataTitulo = parseDateAsLocal(titulo.data_vencimento);
       if (!dataTitulo) continue;
-      
-      dataTitulo.setHours(0, 0, 0, 0);
       const diff = dataTitulo.getTime() - inicio.getTime();
       const indice = Math.floor(diff / MS_POR_DIA);
       if (indice >= 0 && indice < valoresPorDia.length) {
@@ -392,7 +390,7 @@ export class DashboardService {
    */
   static async getRecebidosPorPeriodoData(startDate: Date, endDate: Date) {
     const { TituloService } = await import('../../financeiro/TituloService');
-    const { formatDate, parseDateFromDb } = await import('../../../utils/dateUtils');
+    const { formatDate, parseDateAsLocal } = await import('../../../utils/dateUtils');
 
     const inicio = new Date(startDate);
     inicio.setHours(0, 0, 0, 0);
@@ -421,10 +419,8 @@ export class DashboardService {
         continue;
       }
 
-      const dataPagamento = parseDateFromDb(titulo.data_pagamento);
+      const dataPagamento = parseDateAsLocal(titulo.data_pagamento);
       if (!dataPagamento) continue;
-
-      dataPagamento.setHours(0, 0, 0, 0);
       const diff = dataPagamento.getTime() - inicio.getTime();
       const indice = Math.floor(diff / MS_POR_DIA);
 

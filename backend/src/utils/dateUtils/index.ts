@@ -67,6 +67,49 @@ export function parseDateFromDb(dateInput: string | Date | null | undefined): Da
 }
 
 /**
+ * Converte data do banco para Date em meia-noite local, evitando problemas de timezone.
+ * Usado ao agrupar por dia (ex: recebidos por período) para que a data do título
+ * seja a mesma exibida no banco, independente do fuso horário.
+ * - Strings YYYY-MM-DD: interpreta como data local.
+ * - Date: usa componentes UTC (já que DATE no banco costuma vir como meia-noite UTC).
+ */
+export function parseDateAsLocal(dateInput: string | Date | null | undefined): Date | null {
+  if (!dateInput) return null;
+
+  try {
+    if (typeof dateInput === 'string') {
+      const m = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) {
+        const year = parseInt(m[1], 10);
+        const month = parseInt(m[2], 10) - 1;
+        const day = parseInt(m[3], 10);
+        return new Date(year, month, day, 0, 0, 0, 0);
+      }
+      const d = new Date(dateInput);
+      if (isNaN(d.getTime())) return null;
+      return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0);
+    }
+
+    if (dateInput instanceof Date) {
+      if (isNaN(dateInput.getTime())) return null;
+      return new Date(
+        dateInput.getUTCFullYear(),
+        dateInput.getUTCMonth(),
+        dateInput.getUTCDate(),
+        0,
+        0,
+        0,
+        0
+      );
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Normaliza uma data para salvar no banco de dados
  * Observação: com o Sequelize usando `timezone: '-03:00'`, aqui evitamos lógica complexa.
  * A única regra necessária é: strings no formato YYYY-MM-DD devem ser interpretadas como
