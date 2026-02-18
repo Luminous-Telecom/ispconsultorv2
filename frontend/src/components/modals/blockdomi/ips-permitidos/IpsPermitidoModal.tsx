@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useCreateIpPermitido, useUpdateIpPermitido } from '@/hooks/useIpsPermitidos';
 import { IpsPermitidosService, type IpPermitido } from '@/services/ipsPermitidosService';
 import { useI18n } from '@/contexts/I18nContext';
@@ -22,6 +22,7 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
 }) => {
   const { t } = useI18n();
   const isEditing = !!ipPermitidoId;
+  const loadingIdRef = useRef<number | null>(null);
 
   const [clienteId, setClienteId] = useState<number | null>(null);
   const [clienteNome, setClienteNome] = useState('');
@@ -33,24 +34,33 @@ const IpsPermitidoModal: React.FC<IpsPermitidoModalProps> = ({
   const updateMutation = useUpdateIpPermitido();
 
   useEffect(() => {
-    if (show) {
-      if (isEditing && ipPermitidoId) {
-        IpsPermitidosService.getById(ipPermitidoId).then((data: IpPermitido) => {
+    if (!show) return;
+    if (isEditing && ipPermitidoId) {
+      const requestedId = ipPermitidoId;
+      loadingIdRef.current = requestedId;
+      setClienteId(null);
+      setClienteNome('');
+      setFaixaIps('');
+      IpsPermitidosService.getById(requestedId)
+        .then((data: IpPermitido) => {
+          if (loadingIdRef.current !== requestedId) return;
           setClienteId(data.cliente_id);
           setClienteNome(data.cliente_nome || data.cliente?.razao_social || '-');
           setFaixaIps(data.faixa_ips || '');
-        }).catch(() => {
-          setClienteId(null);
-          setClienteNome('');
-          setFaixaIps('');
+        })
+        .catch(() => {
+          if (loadingIdRef.current === requestedId) {
+            setClienteId(null);
+            setClienteNome('');
+            setFaixaIps('');
+          }
         });
-      } else {
-        setClienteId(null);
-        setClienteNome('');
-        setFaixaIps('');
-      }
-      setErrors({});
+    } else {
+      setClienteId(null);
+      setClienteNome('');
+      setFaixaIps('');
     }
+    setErrors({});
   }, [show, isEditing, ipPermitidoId]);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -36,6 +36,8 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedItems, setSelectedItems] = useState<IpPermitido[]>([]);
+  const selectedItemsRef = useRef<IpPermitido[]>([]);
+  selectedItemsRef.current = selectedItems;
   const auditoria = useAuditoria();
   const { modalProps } = useConfirmModal();
 
@@ -142,27 +144,28 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
   }, []);
 
   const handleEdit = useCallback(() => {
-    const item = selectedItems[0];
+    const item = selectedItemsRef.current[0];
     if (item) {
       setSelectedId(item.id);
       setShowCreateModal(false);
       setShowEditModal(true);
     }
-  }, [selectedItems]);
+  }, []);
 
   const handleBulkDelete = useCallback(async () => {
-    if (selectedItems.length === 0) return;
-    const msg = selectedItems.length === 1
+    const items = selectedItemsRef.current;
+    if (items.length === 0) return;
+    const msg = items.length === 1
       ? t('messages.confirmDelete')
-      : `Tem certeza que deseja excluir ${selectedItems.length} registro(s)?`;
+      : `Tem certeza que deseja excluir ${items.length} registro(s)?`;
     const confirmed = window.confirm(msg);
     if (confirmed) {
-      for (const item of selectedItems) {
+      for (const item of items) {
         await handleDelete(item.id);
       }
       refetch();
     }
-  }, [selectedItems, handleDelete, refetch, t]);
+  }, [handleDelete, refetch, t]);
 
   const headerActionsContent = useMemo(() => (
     <div className="d-flex gap-2 modal-header-actions">
