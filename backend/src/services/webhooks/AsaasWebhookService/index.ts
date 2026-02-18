@@ -71,11 +71,11 @@ export class AsaasWebhookService {
         }
       }
 
-      const paymentDate = typeof payment.dateCreated === 'string'
-        ? payment.dateCreated
-        : typeof rootPayload?.dateCreated === 'string'
-          ? rootPayload.dateCreated
-          : undefined;
+      // Usar apenas dateCreated da raiz do payload (evento) - representa quando o pagamento foi recebido.
+      // payment.dateCreated = data de criação da cobrança (errada para data de pagamento)
+      const paymentDate = typeof rootPayload?.dateCreated === 'string'
+        ? rootPayload.dateCreated
+        : undefined;
 
       if (novoStatus === 'pago') {
         // Normalizar data de pagamento preservando hora
