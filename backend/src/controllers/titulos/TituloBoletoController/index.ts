@@ -10,6 +10,7 @@ import { TituloComRelacoes } from '../TituloHelpers/types';
 import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { PaymentCommonService } from '../../../services/webhooks/PaymentCommonService';
 
 export class TituloBoletoController {
   
@@ -37,8 +38,13 @@ export class TituloBoletoController {
       }
 
       const dadosAnteriores = titulo.toJSON();
-      const dataPagamentoNormalizada = data_pagamento ? (typeof data_pagamento === 'string' ? new Date(data_pagamento) : data_pagamento) : undefined;
-      
+      // Usar normalizePaymentDate para interpretar "YYYY-MM-DD" como data local (evita 21h por timezone UTC)
+      const dataPagamentoNormalizada = data_pagamento
+        ? (typeof data_pagamento === 'string'
+            ? PaymentCommonService.normalizePaymentDate(data_pagamento) ?? undefined
+            : data_pagamento)
+        : undefined;
+
       await titulo.marcarComoPago(valor_pago, dataPagamentoNormalizada);
       await titulo.reload();
 
@@ -120,7 +126,14 @@ export class TituloBoletoController {
         if (statusPago) {
           const dadosAnteriores = titulo.toJSON();
           const valorPago = resultado.data.valor_pago || titulo.valor;
-          const dataPagamento = resultado.data.data_pagamento ? new Date(resultado.data.data_pagamento as string | number) : new Date();
+          const rawData = resultado.data.data_pagamento;
+          const dataPagamento = rawData
+            ? (typeof rawData === 'string'
+                ? PaymentCommonService.normalizePaymentDate(rawData) ?? new Date()
+                : typeof rawData === 'number' || rawData instanceof Date
+                  ? new Date(rawData)
+                  : new Date())
+            : new Date();
 
           await titulo.marcarComoPago(Number(valorPago), dataPagamento);
           await titulo.reload();
