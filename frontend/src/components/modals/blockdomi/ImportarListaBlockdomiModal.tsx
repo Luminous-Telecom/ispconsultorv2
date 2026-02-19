@@ -131,23 +131,21 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   useEffect(() => {
     if (show && !prevShowRef.current) {
       setRawText('');
-      setNomeOficio('');
-      setDataInicioBloqueio('');
-      setDataFimBloqueio('');
-      setLinkOficioAnatel('');
-      setLinkOficioJustica('');
-      setLinkPlanilhaDominios('');
       setClassified(null);
       setPdfFile(null);
       setVisualizacaoExtrados({ show: false, dominios: [], listaFiltrada: [], metadata: {} });
       if (pdfFileInputRef.current) {
         pdfFileInputRef.current.value = '';
       }
-      const today = new Date();
-      const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      setDataInicioBloqueio(hojeStr);
+      setDataInicioBloqueio((prev) => {
+        if (prev === '') {
+          const today = new Date();
+          return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        }
+        return prev;
+      });
       if (pdfUrlToExtract?.trim()) {
-        setLinkPlanilhaDominios(pdfUrlToExtract.trim());
+        setLinkPlanilhaDominios((prev) => (prev === '' ? pdfUrlToExtract.trim() : prev));
       }
     }
     prevShowRef.current = !!show;
@@ -338,9 +336,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       queryClient.invalidateQueries({ queryKey: ['ipv6'] });
       onSuccess?.();
       setRawText('');
-      setNomeOficio('');
-      setDataFimBloqueio('');
-      setLinkPlanilhaDominios('');
       setClassified(null);
     } catch (e) {
       error((e as Error)?.message ?? 'Erro ao cadastrar.');
@@ -821,13 +816,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const handleCloseVisualizacaoExtrados = useCallback(() => {
     setVisualizacaoExtrados({ show: false, dominios: [], listaFiltrada: [], metadata: {} });
     setRawText('');
-    setNomeOficio('');
     setClassified(null);
-    setLinkPlanilhaDominios('');
-    const today = new Date();
-    const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    setDataInicioBloqueio(hojeStr);
-    setDataFimBloqueio('');
   }, []);
 
   const visualizacaoModal = (
