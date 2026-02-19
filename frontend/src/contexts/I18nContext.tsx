@@ -233,6 +233,7 @@ export interface TranslationKeys {
   'modal.dueDays': string;
   'modal.updates': string;
   'modal.taskScheduler': string;
+  'modal.backups': string;
   'modal.digitalSignature': string;
   'modal.auditLogs': string;
   'modal.domains': string;
@@ -364,6 +365,28 @@ export interface TranslationKeys {
   'params.digitalSignature': string;
   'params.dueDays': string;
   'params.updates': string;
+  'params.manageBackups': string;
+
+  // Backup
+  'backup.title': string;
+  'backup.executeManual': string;
+  'backup.manualDatabase': string;
+  'backup.manualFiles': string;
+  'backup.manualLogs': string;
+  'backup.manualFull': string;
+  'backup.confirmDelete': string;
+  'backup.confirmRestoreCritical': string;
+  'backup.deleted': string;
+  'backup.downloadStarted': string;
+  'backup.restoreRequested': string;
+  'backup.manualQueued': string;
+  'backup.loadingList': string;
+  'backup.empty': string;
+  'backup.columnName': string;
+  'backup.columnSize': string;
+  'backup.columnDate': string;
+  'backup.columnType': string;
+  'backup.restore': string;
   'params.validations': string;
   'params.validateCpfCnpj': string;
   'params.validateCpfCnpjHelp': string;
@@ -1555,6 +1578,7 @@ const translations: Translations = {
     'modal.dueDays': 'Dias de Vencimento',
     'modal.updates': 'Atualizações',
     'modal.taskScheduler': 'Agendador de Tarefas',
+    'modal.backups': 'Backup/Restauração',
     'modal.digitalSignature': 'Assinatura Digital',
     'modal.auditLogs': 'Logs de Auditoria',
     'modal.systemDocuments': 'Modelos de Documentos',
@@ -1686,7 +1710,27 @@ const translations: Translations = {
     'params.digitalSignature': 'Assinatura Digital',
     'params.dueDays': 'Dias de Vencimento',
     'params.updates': 'Atualizações',
+    'params.manageBackups': 'Gerenciar Backups',
     'params.validations': 'Validações',
+    'backup.title': 'Backup/Restauração',
+    'backup.executeManual': 'Backup Manual',
+    'backup.manualDatabase': 'Banco de Dados',
+    'backup.manualFiles': 'Arquivos',
+    'backup.manualLogs': 'Logs',
+    'backup.manualFull': 'Completo (BD + Arquivos + Logs)',
+    'backup.confirmDelete': 'Tem certeza que deseja remover o backup "{{nome}}" do servidor?',
+    'backup.confirmRestoreCritical': 'Confirmação crítica: Restaurar este backup pode sobrescrever dados atuais. Deseja continuar?',
+    'backup.deleted': 'Backup removido.',
+    'backup.downloadStarted': 'Download iniciado.',
+    'backup.restoreRequested': 'Restauração solicitada.',
+    'backup.manualQueued': 'Backup manual em fila.',
+    'backup.loadingList': 'Carregando lista de backups...',
+    'backup.empty': 'Nenhum backup encontrado.',
+    'backup.columnName': 'Nome do Arquivo',
+    'backup.columnSize': 'Tamanho',
+    'backup.columnDate': 'Data',
+    'backup.columnType': 'Tipo',
+    'backup.restore': 'Restaurar',
     'params.validateCpfCnpj': 'Validar CPF/CNPJ',
     'params.validateCpfCnpjHelp': 'Quando ativado, valida se CPF/CNPJ é válido ao cadastrar/editar clientes',
     'params.validateCep': 'Validar CEP',
@@ -2872,6 +2916,7 @@ const translations: Translations = {
     'modal.dueDays': 'Due Days',
     'modal.updates': 'Updates',
     'modal.taskScheduler': 'Task Scheduler',
+    'modal.backups': 'Backup/Restore',
     'modal.digitalSignature': 'Digital Signature',
     'modal.auditLogs': 'Audit Logs',
     'modal.systemDocuments': 'Document Templates',
@@ -3003,7 +3048,27 @@ const translations: Translations = {
     'params.digitalSignature': 'Digital Signature',
     'params.dueDays': 'Due Days',
     'params.updates': 'Updates',
+    'params.manageBackups': 'Manage Backups',
     'params.validations': 'Validations',
+    'backup.title': 'Backup/Restore',
+    'backup.executeManual': 'Manual Backup',
+    'backup.manualDatabase': 'Database',
+    'backup.manualFiles': 'Files',
+    'backup.manualLogs': 'Logs',
+    'backup.manualFull': 'Full (DB + Files + Logs)',
+    'backup.confirmDelete': 'Are you sure you want to remove the backup "{{nome}}" from the server?',
+    'backup.confirmRestoreCritical': 'Critical confirmation: Restoring this backup may overwrite current data. Continue?',
+    'backup.deleted': 'Backup removed.',
+    'backup.downloadStarted': 'Download started.',
+    'backup.restoreRequested': 'Restore requested.',
+    'backup.manualQueued': 'Manual backup queued.',
+    'backup.loadingList': 'Loading backup list...',
+    'backup.empty': 'No backups found.',
+    'backup.columnName': 'File Name',
+    'backup.columnSize': 'Size',
+    'backup.columnDate': 'Date',
+    'backup.columnType': 'Type',
+    'backup.restore': 'Restore',
     'params.validateCpfCnpj': 'Validate CPF/CNPJ',
     'params.validateCpfCnpjHelp': 'When enabled, validates if CPF/CNPJ is valid when creating/editing clients',
     'params.validateCep': 'Validate ZIP Code',
@@ -4191,6 +4256,7 @@ const translations: Translations = {
     'modal.dueDays': 'Días de Vencimiento',
     'modal.updates': 'Actualizaciones',
     'modal.taskScheduler': 'Programador de Tareas',
+    'modal.backups': 'Copia de Seguridad/Restaurar',
     'modal.digitalSignature': 'Firma Digital',
     'modal.auditLogs': 'Registros de Auditoría',
     'modal.systemDocuments': 'Plantillas de Documentos',
@@ -4322,7 +4388,27 @@ const translations: Translations = {
     'params.digitalSignature': 'Firma Digital',
     'params.dueDays': 'Días de Vencimiento',
     'params.updates': 'Actualizaciones',
+    'params.manageBackups': 'Gestionar Copias de Seguridad',
     'params.validations': 'Validaciones',
+    'backup.title': 'Copia de Seguridad/Restaurar',
+    'backup.executeManual': 'Copia Manual',
+    'backup.manualDatabase': 'Base de Datos',
+    'backup.manualFiles': 'Archivos',
+    'backup.manualLogs': 'Logs',
+    'backup.manualFull': 'Completo (BD + Archivos + Logs)',
+    'backup.confirmDelete': '¿Está seguro de que desea eliminar la copia "{{nome}}" del servidor?',
+    'backup.confirmRestoreCritical': 'Confirmación crítica: Restaurar esta copia puede sobrescribir datos actuales. ¿Continuar?',
+    'backup.deleted': 'Copia eliminada.',
+    'backup.downloadStarted': 'Descarga iniciada.',
+    'backup.restoreRequested': 'Restauración solicitada.',
+    'backup.manualQueued': 'Copia manual en cola.',
+    'backup.loadingList': 'Cargando lista de copias...',
+    'backup.empty': 'Ninguna copia encontrada.',
+    'backup.columnName': 'Nombre del Archivo',
+    'backup.columnSize': 'Tamaño',
+    'backup.columnDate': 'Fecha',
+    'backup.columnType': 'Tipo',
+    'backup.restore': 'Restaurar',
     'params.validateCpfCnpj': 'Validar CPF/CNPJ',
     'params.validateCpfCnpjHelp': 'Cuando está activado, valida si CPF/CNPJ es válido al crear/editar clientes',
     'params.validateCep': 'Validar CEP',

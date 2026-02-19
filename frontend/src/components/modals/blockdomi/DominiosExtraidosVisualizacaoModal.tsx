@@ -315,7 +315,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
               <div className="card-footer py-2 d-flex gap-2 flex-wrap">
                 <Button
                   type="button"
-                  variant="outline-success"
+                  variant="primary"
                   size="sm"
                   onClick={handleAnalisar}
                   disabled={totalBruto === 0 || isAnalyzing}
@@ -324,7 +324,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                 </Button>
                 <Button
                   type="button"
-                  variant="outline-light"
+                  variant="primary"
                   size="sm"
                   onClick={() => handleCopy(dominiosValidos)}
                   disabled={dominiosValidos.length === 0}
@@ -459,7 +459,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
             <div className="d-flex gap-2">
               <Button
                 type="button"
-                variant="success"
+                variant="primary"
                 size="sm"
                 onClick={handleCadastrar}
                 disabled={totalValid === 0 || isCadastrando}

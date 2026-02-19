@@ -676,7 +676,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       {
         key: 'excluir',
         label: t('buttons.delete'),
-        variant: 'danger' as const,
+        variant: 'primary' as const,
         onClick: async (selectedItems: Titulo[]) => {
           const isTituloDeletavel = (t: Titulo): boolean => {
             if (t.status === 'cancelado') return true;

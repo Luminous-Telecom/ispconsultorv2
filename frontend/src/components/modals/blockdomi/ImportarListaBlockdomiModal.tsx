@@ -643,7 +643,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
             {classified && (
               <Button
                 type="button"
-                variant="success"
+                variant="primary"
                 size="sm"
                 onClick={handleCadastrar}
                 disabled={totalValid === 0 || isCadastrando}

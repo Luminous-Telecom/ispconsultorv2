@@ -48,6 +48,8 @@ export interface BulkAction<T = Record<string, unknown>> {
   label: string;
   icon?: string;
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
+  /** Se false, o botão permanece ativo mesmo sem itens selecionados (ex: Backup Manual, Novo) */
+  requiresSelection?: boolean;
   disabled?: boolean | ((selectedItems: T[]) => boolean);
   hidden?: boolean | ((selectedItems: T[]) => boolean);
   onClick?: (selectedItems: T[]) => void;

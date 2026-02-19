@@ -1549,12 +1549,13 @@ function Table<T extends { id: number | string }>({
             <div className="d-flex align-items-center justify-content-between mb-2 table-header-content">
               <div className="d-flex table-header-flex">
                 {bulkActions.map((bulkAction, index) => {
-              // Novo sempre habilitado, outros só quando há seleção
+              // Novo/Executar sempre habilitados (ou requiresSelection: false), outros só quando há seleção
               const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
               const isEditarButton = bulkAction.label.toLowerCase().includes('editar');
               const isExcluirButton = bulkAction.label.toLowerCase().includes('deletar');
               const isImprimirButton = bulkAction.label.toLowerCase().includes('imprimir');
-              const isDisabledBySelection = !isNewButton && !isImprimirButton && state.selectedItems.length === 0;
+              const noSelectionRequired = bulkAction.requiresSelection === false || isNewButton || isImprimirButton;
+              const isDisabledBySelection = !noSelectionRequired && state.selectedItems.length === 0;
               const isDisabledByCondition = bulkAction.disabled && typeof bulkAction.disabled === 'function' ? bulkAction.disabled(state.selectedItems) : false;
               const isDisabled = isDisabledBySelection || isDisabledByCondition;
               

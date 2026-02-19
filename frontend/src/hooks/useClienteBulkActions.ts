@@ -411,7 +411,7 @@ export const useClienteBulkActions = ({
     {
       key: 'excluir',
       label: t('actions.delete'),
-      variant: 'danger',
+      variant: 'primary',
       disabled: (selectedItems) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => !isTituloDeletavel(item));

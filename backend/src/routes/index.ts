@@ -45,6 +45,7 @@ import blockdomiListasRoutes from './blockdomiListasRoutes';
 import ipsPermitidosRoutes from './ipsPermitidosRoutes';
 import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
+import backupRoutes from './backupRoutes';
 
 const router = Router();
 
@@ -78,6 +79,7 @@ const routes = [
     { path: '/api/termos-contrato', route: termosContratoRoutes },
     { path: '/api/modelos-termo', route: modelosTermoRoutes },
     { path: '/api/atualizacoes', route: atualizacoesRoutes },
+    { path: '/api/backups', route: backupRoutes },
     { path: '/api/assinatura-digital', route: assinaturaDigitalRoutes },
     { path: '/api/assinatura-digital-providers', route: assinaturaDigitalProviderRoutes },
     // IMPORTANTE: cliente-arquivos deve vir ANTES de /api para evitar conflito

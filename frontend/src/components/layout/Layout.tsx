@@ -247,6 +247,7 @@ const Layout: React.FC = () => {
     { id: 'assinatura-digital', label: t('params.digitalSignature'), icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
     { id: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
     { id: 'atualizacoes', label: t('params.updates'), icon: 'bi-arrow-down-up', onClick: () => handleOpenModal('atualizacoes') },
+    { id: 'backups', label: t('params.manageBackups'), icon: 'bi-cloud-arrow-down', onClick: () => handleOpenModal('backups') },
   ];
 
   const blockdomiFolderItems = [
