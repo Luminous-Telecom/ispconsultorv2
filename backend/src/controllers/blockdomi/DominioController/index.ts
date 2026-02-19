@@ -85,7 +85,7 @@ export class DominioController {
       sendError(res, error, 'Erro ao criar domínios em lote', 500, true, {
         context: 'DominioController',
         action: 'bulkCreate',
-        body: req.body
+        itemsCount: Array.isArray(req.body?.items) ? req.body.items.length : 0
       });
     }
   }
