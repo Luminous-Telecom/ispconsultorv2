@@ -212,14 +212,32 @@ export class IPv4Service {
     }
 
     let primeiraVersao: string | undefined;
+    let versaoId: number | null = metadata.versaoId ?? null;
+
+    if (toCreate.length > 0 || toUpdate.length > 0) {
+      if (versaoId == null && !metadata.getVersoesForNewRecords) {
+        const versao = await VersaoBlockdomiService.obterProximaVersao('ipv4');
+        versaoId = versao.id;
+        primeiraVersao = versao.numero;
+      } else if (metadata.getVersoesForNewRecords && toCreate.length > 0) {
+        const versoes = await metadata.getVersoesForNewRecords(toCreate.length);
+        primeiraVersao = versoes[0]?.numero;
+      }
+      if (toUpdate.length > 0 && versaoId == null) {
+        const versao = await VersaoBlockdomiService.obterProximaVersao('ipv4');
+        versaoId = versao.id;
+        if (primeiraVersao == null) primeiraVersao = versao.numero;
+      }
+    }
+
     if (toCreate.length > 0) {
-      if (metadata.versaoId != null) {
+      if (versaoId != null) {
         toCreate.forEach((rec) => {
-          (rec as Record<string, unknown>).versao_id = metadata.versaoId;
+          (rec as Record<string, unknown>).versao_id = versaoId;
         });
       } else if (metadata.getVersoesForNewRecords) {
         const versoes = await metadata.getVersoesForNewRecords(toCreate.length);
-        primeiraVersao = versoes[0]?.numero;
+        primeiraVersao = primeiraVersao ?? versoes[0]?.numero;
         toCreate.forEach((rec, i) => {
           const v = versoes[i];
           (rec as Record<string, unknown>).versao_id = v?.id ?? null;
@@ -236,16 +254,21 @@ export class IPv4Service {
     }
 
     let updated = 0;
-    for (const { id } of toUpdate) {
-      await this.update(id, {
-        nome_oficio: metadata.nome_oficio ?? undefined,
-        data_inicio_bloqueio: metadata.data_inicio_bloqueio ?? undefined,
-        data_fim_bloqueio: newDataFim ?? undefined,
-        link_oficio_anatel: metadata.link_oficio_anatel ?? undefined,
-        link_oficio_justica: metadata.link_oficio_justica ?? undefined,
-        link_planilha_dominios: metadata.link_planilha_dominios ?? undefined
-      });
-      updated += 1;
+    if (toUpdate.length > 0 && versaoId != null) {
+      const ids = toUpdate.map((u) => u.id);
+      await IPv4.update(
+        {
+          nome_oficio: metadata.nome_oficio ?? null,
+          data_inicio_bloqueio: metadata.data_inicio_bloqueio ?? null,
+          data_fim_bloqueio: newDataFim ?? null,
+          link_oficio_anatel: metadata.link_oficio_anatel ?? null,
+          link_oficio_justica: metadata.link_oficio_justica ?? null,
+          link_planilha_dominios: metadata.link_planilha_dominios ?? null,
+          versao_id: versaoId
+        },
+        { where: { id: { [Op.in]: ids } } }
+      );
+      updated = toUpdate.length;
     }
 
     const skipped = items.length - toCreate.length - toUpdate.length - errors.length;

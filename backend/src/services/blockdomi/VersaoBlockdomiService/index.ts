@@ -1,7 +1,6 @@
 import { sequelize } from '../../../config/database';
 import { QueryTypes, Transaction } from 'sequelize';
 import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
-import { logger } from '../../../utils/logger';
 
 export type TipoVersao = 'lista' | 'dominio' | 'ipv4' | 'ipv6' | 'dominio_delete' | 'ipv4_delete' | 'ipv6_delete';
 
@@ -9,6 +8,9 @@ export interface VersaoResult {
   id: number;
   numero: string;
 }
+
+const LOCK_NAME_VERSOES = 'versoes_blockdomi_next';
+const LOCK_TIMEOUT_SEC = 30;
 
 /**
  * Gera versões na tabela versoes_blockdomi.
@@ -52,45 +54,43 @@ export class VersaoBlockdomiService {
 
   /**
    * Obtém a próxima versão e insere em versoes_blockdomi. Retorna id e numero.
-   * Obtém contador e insere na mesma transação para evitar race condition (chave duplicada).
+   * Usa GET_LOCK para serializar acesso e evitar chave duplicada (race condition).
    */
   static async obterProximaVersao(tipo: TipoVersao, data?: Date): Promise<VersaoResult> {
-    const maxRetries = 3;
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      const d = data ?? new Date();
-      const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
-      try {
-        const resultado = await sequelize.transaction(async (t) => {
-          const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, 1, d, t);
-          const c = contadores[0] ?? 1;
-          const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
-          const versao = await VersaoBlockdomi.create({ numero }, { transaction: t });
-          return { id: versao.id, numero: versao.numero };
-        });
-        return resultado;
-      } catch (err: unknown) {
-        const errObj = err as { name?: string; message?: string; parent?: { errno?: number } };
-        const isDuplicate = errObj?.name === 'SequelizeUniqueConstraintError' || errObj?.parent?.errno === 1062;
-        logger.warn('VersaoBlockdomiService.obterProximaVersao erro', {
-          tipo,
-          attempt: attempt + 1,
-          maxRetries,
-          errorName: errObj?.name,
-          errorMessage: errObj?.message,
-          errno: errObj?.parent?.errno,
-          isDuplicate,
-          willRetry: isDuplicate && attempt < maxRetries - 1
-        });
-        if (isDuplicate && attempt < maxRetries - 1) continue;
-        throw err;
+    const d = data ?? new Date();
+    const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
+    const resultado = await sequelize.transaction(async (t) => {
+      const lockRows = await sequelize.query<{ locked: number }>(
+        `SELECT GET_LOCK(:lockName, :timeout) AS locked`,
+        {
+          replacements: { lockName: LOCK_NAME_VERSOES, timeout: LOCK_TIMEOUT_SEC },
+          type: QueryTypes.SELECT,
+          transaction: t
+        }
+      );
+      const locked = Array.isArray(lockRows) && lockRows[0] ? Number(lockRows[0].locked) : 0;
+      if (locked !== 1) {
+        throw new Error('Não foi possível obter lock para criar versão (timeout). Tente novamente.');
       }
-    }
-    throw new Error('Falha ao obter versão após retentativas');
+      try {
+        const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, 1, d, t);
+        const c = contadores[0] ?? 1;
+        const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
+        const versao = await VersaoBlockdomi.create({ numero }, { transaction: t });
+        return { id: versao.id, numero: versao.numero };
+      } finally {
+        await sequelize.query(`SELECT RELEASE_LOCK(:lockName)`, {
+          replacements: { lockName: LOCK_NAME_VERSOES },
+          transaction: t
+        });
+      }
+    });
+    return resultado;
   }
 
   /**
    * Obtém múltiplas versões e insere em versoes_blockdomi. Retorna array de { id, numero }.
-   * Obtém contadores e insere na mesma transação para evitar race condition (chave duplicada).
+   * Usa GET_LOCK para serializar acesso e evitar chave duplicada (race condition).
    */
   static async obterProximasVersoes(
     tipo: TipoVersao,
@@ -99,41 +99,38 @@ export class VersaoBlockdomiService {
   ): Promise<VersaoResult[]> {
     if (quantidade <= 0) return [];
 
-    const maxRetries = 3;
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      const d = data ?? new Date();
-      const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
-      try {
-        const versoes = await sequelize.transaction(async (t) => {
-          const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, quantidade, d, t);
-          const resultado: VersaoResult[] = [];
-          for (const c of contadores) {
-            const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
-            const v = await VersaoBlockdomi.create({ numero }, { transaction: t });
-            resultado.push({ id: v.id, numero: v.numero });
-          }
-          return resultado;
-        });
-        return versoes;
-      } catch (err: unknown) {
-        const errObj = err as { name?: string; message?: string; parent?: { errno?: number } };
-        const isDuplicate = errObj?.name === 'SequelizeUniqueConstraintError' || errObj?.parent?.errno === 1062;
-        logger.warn('VersaoBlockdomiService.obterProximasVersoes erro', {
-          tipo,
-          quantidade,
-          attempt: attempt + 1,
-          maxRetries,
-          errorName: errObj?.name,
-          errorMessage: errObj?.message,
-          errno: errObj?.parent?.errno,
-          isDuplicate,
-          willRetry: isDuplicate && attempt < maxRetries - 1
-        });
-        if (isDuplicate && attempt < maxRetries - 1) continue;
-        throw err;
+    const d = data ?? new Date();
+    const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
+    const versoes = await sequelize.transaction(async (t) => {
+      const lockRows = await sequelize.query<{ locked: number }>(
+        `SELECT GET_LOCK(:lockName, :timeout) AS locked`,
+        {
+          replacements: { lockName: LOCK_NAME_VERSOES, timeout: LOCK_TIMEOUT_SEC },
+          type: QueryTypes.SELECT,
+          transaction: t
+        }
+      );
+      const locked = Array.isArray(lockRows) && lockRows[0] ? Number(lockRows[0].locked) : 0;
+      if (locked !== 1) {
+        throw new Error('Não foi possível obter lock para criar versões (timeout). Tente novamente.');
       }
-    }
-    throw new Error('Falha ao obter versões após retentativas');
+      try {
+        const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, quantidade, d, t);
+        const resultado: VersaoResult[] = [];
+        for (const c of contadores) {
+          const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
+          const v = await VersaoBlockdomi.create({ numero }, { transaction: t });
+          resultado.push({ id: v.id, numero: v.numero });
+        }
+        return resultado;
+      } finally {
+        await sequelize.query(`SELECT RELEASE_LOCK(:lockName)`, {
+          replacements: { lockName: LOCK_NAME_VERSOES },
+          transaction: t
+        });
+      }
+    });
+    return versoes;
   }
 
   /**
