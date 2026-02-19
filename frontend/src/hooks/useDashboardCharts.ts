@@ -51,6 +51,7 @@ export const useDashboardCharts = (
   const clientes = useMemo(() => dashboardData?.clientes || [], [dashboardData?.clientes]);
   const planos = useMemo(() => dashboardData?.planos || [], [dashboardData?.planos]);
   const contratos = useMemo(() => dashboardData?.contratos || [], [dashboardData?.contratos]);
+  const contratosAtivosTodos = useMemo(() => dashboardData?.contratosAtivosTodos || [], [dashboardData?.contratosAtivosTodos]);
   const titulosTodos = useMemo(() => dashboardData?.titulosTodos || [], [dashboardData?.titulosTodos]);
   const contasPagarUltimosMeses = useMemo(() => dashboardData?.contasPagarUltimosMeses || { labels: [], data: [] }, [dashboardData?.contasPagarUltimosMeses]);
   const receitaUltimosMeses = useMemo(() => dashboardData?.receitaUltimosMeses || { labels: [], data: [] }, [dashboardData?.receitaUltimosMeses]);
@@ -96,12 +97,19 @@ export const useDashboardCharts = (
       consultoria: t('form.serviceTypeConsulting'),
       blockdomi: t('form.serviceTypeBlockdomi')
     };
-    const tipos = planos.reduce((acc, plano) => {
-      const tipo = plano.tipo_servico || 'Outros';
-      acc[tipo] = (acc[tipo] || 0) + 1;
+    const mapaPlanoTipo = planos.reduce((acc, plano) => {
+      acc[plano.id] = plano.tipo_servico || 'Outros';
       return acc;
-    }, {} as Record<string, number>);
-    
+    }, {} as Record<number, string>);
+    const clientesPorTipo = contratosAtivosTodos.reduce((acc, contrato) => {
+      const tipo = mapaPlanoTipo[contrato.plano_id] || 'Outros';
+      if (!acc[tipo]) acc[tipo] = new Set<number>();
+      acc[tipo].add(contrato.cliente_id);
+      return acc;
+    }, {} as Record<string, Set<number>>);
+    const tipos = Object.fromEntries(
+      Object.entries(clientesPorTipo).map(([tipo, set]) => [tipo, set.size])
+    );
     const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1'];
     return Object.entries(tipos).map(([tipo, quantidade], index) => ({
       label: tipoLabels[tipo] || tipo,
@@ -109,7 +117,7 @@ export const useDashboardCharts = (
       color: cores[index % cores.length],
       filterValue: tipo
     }));
-  }, [planos, t]);
+  }, [planos, contratosAtivosTodos, t]);
 
   const taxaPagamentoChartData = useMemo(() => [
     { label: t('status.paid'), value: stats.taxaPagamento, color: '#28a745', filterValue: 'pago,pago_atraso,parcial' },
