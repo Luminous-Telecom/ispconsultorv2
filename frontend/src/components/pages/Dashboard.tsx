@@ -26,13 +26,11 @@ const Dashboard: React.FC = () => {
 
   const {
     hiddenClientes,
-    hiddenPlanos,
     hiddenPagamentos,
     hiddenDistribuicao,
     hiddenTaxaPagamento,
     hiddenContratos,
     toggleCliente,
-    togglePlano,
     togglePagamento,
     toggleDistribuicao,
     toggleTaxaPagamento,
@@ -41,7 +39,6 @@ const Dashboard: React.FC = () => {
 
   const {
     handleClienteSliceClick,
-    handlePlanoSliceClick,
     handleStatusPagamentoSliceClick,
     handleDistribuicaoPlanoSliceClick,
     handleContratoSliceClick,
@@ -195,18 +192,6 @@ const Dashboard: React.FC = () => {
                 hiddenItems={hiddenClientes}
                 onToggleItem={toggleCliente}
                 onSliceClick={handleClienteSliceClick}
-              />
-            </div>
-          </div>
-
-          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
-            <div className="chart-card">
-              <ResponsivePieChart
-                data={charts.planosChartData}
-                title={t('dashboard.planStatus')}
-                hiddenItems={hiddenPlanos}
-                onToggleItem={togglePlano}
-                onSliceClick={handlePlanoSliceClick}
               />
             </div>
           </div>

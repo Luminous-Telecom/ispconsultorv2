@@ -20,16 +20,37 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "baseUrl": "src",
-    "types": ["node", "jest", "bootstrap"],
+    "types": [
+      "node",
+      "jest",
+      "bootstrap",
+      "d3"
+    ],
     "paths": {
-      "@/*": ["*"],
-      "@/components/*": ["components/*"],
-      "@/hooks/*": ["hooks/*"],
-      "@/services/*": ["services/*"],
-      "@/types/*": ["types/*"],
-      "@/utils/*": ["utils/*"],
-      "@/contexts/*": ["contexts/*"],
-      "@/constants/*": ["constants/*"]
+      "@/*": [
+        "*"
+      ],
+      "@/components/*": [
+        "components/*"
+      ],
+      "@/hooks/*": [
+        "hooks/*"
+      ],
+      "@/services/*": [
+        "services/*"
+      ],
+      "@/types/*": [
+        "types/*"
+      ],
+      "@/utils/*": [
+        "utils/*"
+      ],
+      "@/contexts/*": [
+        "contexts/*"
+      ],
+      "@/constants/*": [
+        "constants/*"
+      ]
     }
   },
   "include": [
