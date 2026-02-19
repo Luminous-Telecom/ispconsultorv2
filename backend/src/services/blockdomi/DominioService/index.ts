@@ -7,6 +7,12 @@ import { SortHelper } from '../../../utils/sortHelper';
 import { DOMINIO_SORT_CONFIG } from '../../../config/sortConfigs';
 import { VersaoBlockdomiService } from '../VersaoBlockdomiService';
 
+/** Converte string vazia em null para campos DATEONLY/TEXT que aceitam null */
+function emptyToNull<T>(v: T): T | null {
+  if (v === '' || (typeof v === 'string' && v.trim() === '')) return null;
+  return v;
+}
+
 export interface ListDominiosFilters {
   page?: number;
   limit?: number;
@@ -255,12 +261,12 @@ export class DominioService {
       toCreate.push({
         dominio,
         descricao: null,
-        nome_oficio: metadata.nome_oficio ?? null,
-        data_inicio_bloqueio: metadata.data_inicio_bloqueio ?? null,
-        data_fim_bloqueio: metadata.data_fim_bloqueio ?? null,
-        link_oficio_anatel: metadata.link_oficio_anatel ?? null,
-        link_oficio_justica: metadata.link_oficio_justica ?? null,
-        link_planilha_dominios: metadata.link_planilha_dominios ?? null,
+        nome_oficio: emptyToNull(metadata.nome_oficio ?? null),
+        data_inicio_bloqueio: emptyToNull(metadata.data_inicio_bloqueio ?? null),
+        data_fim_bloqueio: emptyToNull(metadata.data_fim_bloqueio ?? null),
+        link_oficio_anatel: emptyToNull(metadata.link_oficio_anatel ?? null),
+        link_oficio_justica: emptyToNull(metadata.link_oficio_justica ?? null),
+        link_planilha_dominios: emptyToNull(metadata.link_planilha_dominios ?? null),
         ativo: true
       });
     }
@@ -312,12 +318,12 @@ export class DominioService {
       const ids = toUpdate.map((u) => u.id);
       await Dominio.update(
         {
-          nome_oficio: metadata.nome_oficio ?? null,
-          data_inicio_bloqueio: metadata.data_inicio_bloqueio ?? null,
-          data_fim_bloqueio: newDataFim ?? null,
-          link_oficio_anatel: metadata.link_oficio_anatel ?? null,
-          link_oficio_justica: metadata.link_oficio_justica ?? null,
-          link_planilha_dominios: metadata.link_planilha_dominios ?? null,
+          nome_oficio: emptyToNull(metadata.nome_oficio ?? null),
+          data_inicio_bloqueio: emptyToNull(metadata.data_inicio_bloqueio ?? null),
+          data_fim_bloqueio: emptyToNull(newDataFim ?? null),
+          link_oficio_anatel: emptyToNull(metadata.link_oficio_anatel ?? null),
+          link_oficio_justica: emptyToNull(metadata.link_oficio_justica ?? null),
+          link_planilha_dominios: emptyToNull(metadata.link_planilha_dominios ?? null),
           versao_id: versaoId
         },
         { where: { id: { [Op.in]: ids } } }

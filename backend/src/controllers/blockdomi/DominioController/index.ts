@@ -68,13 +68,19 @@ export class DominioController {
         return;
       }
 
+      const trimOrNull = (v: unknown): string | null => {
+        if (v == null) return null;
+        const s = String(v).trim();
+        return s === '' ? null : s;
+      };
+
       const result = await DominioService.bulkCreate(items, {
-        nome_oficio: nome_oficio ?? null,
-        data_inicio_bloqueio: data_inicio_bloqueio ?? null,
-        data_fim_bloqueio: data_fim_bloqueio ?? null,
-        link_oficio_anatel: link_oficio_anatel ?? null,
-        link_oficio_justica: link_oficio_justica ?? null,
-        link_planilha_dominios: link_planilha_dominios ?? null
+        nome_oficio: trimOrNull(nome_oficio),
+        data_inicio_bloqueio: dataInicio,
+        data_fim_bloqueio: trimOrNull(data_fim_bloqueio),
+        link_oficio_anatel: trimOrNull(link_oficio_anatel),
+        link_oficio_justica: trimOrNull(link_oficio_justica),
+        link_planilha_dominios: trimOrNull(link_planilha_dominios)
       });
 
       const parts = [`Criados ${result.created} domínio(s)`];
@@ -84,8 +90,7 @@ export class DominioController {
     } catch (error) {
       sendError(res, error, 'Erro ao criar domínios em lote', 500, true, {
         context: 'DominioController',
-        action: 'bulkCreate',
-        itemsCount: Array.isArray(req.body?.items) ? req.body.items.length : 0
+        action: 'bulkCreate'
       });
     }
   }

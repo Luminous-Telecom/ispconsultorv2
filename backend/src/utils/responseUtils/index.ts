@@ -63,11 +63,15 @@ export function sendError(
   const finalMessage = errorMessage || defaultMessage;
 
   if (logError) {
+    const stack = getErrorStack(error);
+    const cause = error instanceof Error ? (error as Error & { cause?: unknown }).cause : undefined;
+    const causeStr = cause instanceof Error ? cause.message : (typeof cause === 'string' ? cause : cause != null ? String(cause) : undefined);
     logger.error('Erro ao processar requisição', {
       ...context,
       error: errorMessage,
       statusCode,
-      ...(getErrorStack(error) && { stack: getErrorStack(error) })
+      ...(stack && { stack }),
+      ...(causeStr && { cause: causeStr })
     });
   }
 
