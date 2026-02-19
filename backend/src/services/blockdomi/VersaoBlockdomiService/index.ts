@@ -1,6 +1,7 @@
 import { sequelize } from '../../../config/database';
 import { QueryTypes, Transaction } from 'sequelize';
 import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
+import { logger } from '../../../utils/logger';
 
 export type TipoVersao = 'lista' | 'dominio' | 'ipv4' | 'ipv6' | 'dominio_delete' | 'ipv4_delete' | 'ipv6_delete';
 
@@ -68,8 +69,18 @@ export class VersaoBlockdomiService {
         });
         return resultado;
       } catch (err: unknown) {
-        const isDuplicate = (err as { name?: string; parent?: { errno?: number } })?.name === 'SequelizeUniqueConstraintError' ||
-          (err as { parent?: { errno?: number } })?.parent?.errno === 1062;
+        const errObj = err as { name?: string; message?: string; parent?: { errno?: number } };
+        const isDuplicate = errObj?.name === 'SequelizeUniqueConstraintError' || errObj?.parent?.errno === 1062;
+        logger.warn('VersaoBlockdomiService.obterProximaVersao erro', {
+          tipo,
+          attempt: attempt + 1,
+          maxRetries,
+          errorName: errObj?.name,
+          errorMessage: errObj?.message,
+          errno: errObj?.parent?.errno,
+          isDuplicate,
+          willRetry: isDuplicate && attempt < maxRetries - 1
+        });
         if (isDuplicate && attempt < maxRetries - 1) continue;
         throw err;
       }
@@ -105,8 +116,19 @@ export class VersaoBlockdomiService {
         });
         return versoes;
       } catch (err: unknown) {
-        const isDuplicate = (err as { name?: string })?.name === 'SequelizeUniqueConstraintError' ||
-          (err as { parent?: { errno?: number } })?.parent?.errno === 1062;
+        const errObj = err as { name?: string; message?: string; parent?: { errno?: number } };
+        const isDuplicate = errObj?.name === 'SequelizeUniqueConstraintError' || errObj?.parent?.errno === 1062;
+        logger.warn('VersaoBlockdomiService.obterProximasVersoes erro', {
+          tipo,
+          quantidade,
+          attempt: attempt + 1,
+          maxRetries,
+          errorName: errObj?.name,
+          errorMessage: errObj?.message,
+          errno: errObj?.parent?.errno,
+          isDuplicate,
+          willRetry: isDuplicate && attempt < maxRetries - 1
+        });
         if (isDuplicate && attempt < maxRetries - 1) continue;
         throw err;
       }

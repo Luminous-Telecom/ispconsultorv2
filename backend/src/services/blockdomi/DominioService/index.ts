@@ -302,6 +302,10 @@ export class DominioService {
       updated += 1;
     }
 
+    if (errors.length > 0) {
+      logger.warn('DominioService.bulkCreate itens com erro de validação', { quantidadeErros: errors.length, erros: errors });
+    }
+
     const skipped = items.length - toCreate.length - toUpdate.length - errors.length;
     return { created, updated, skipped, errors, primeiraVersao };
   }
