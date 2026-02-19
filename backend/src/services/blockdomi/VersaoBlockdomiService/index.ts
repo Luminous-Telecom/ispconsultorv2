@@ -51,20 +51,22 @@ export class VersaoBlockdomiService {
 
   /**
    * Obtém a próxima versão e insere em versoes_blockdomi. Retorna id e numero.
+   * Obtém contador e insere na mesma transação para evitar race condition (chave duplicada).
    */
   static async obterProximaVersao(tipo: TipoVersao, data?: Date): Promise<VersaoResult> {
     const maxRetries = 3;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       const d = data ?? new Date();
       const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
-      const contadores = await sequelize.transaction(async (t) =>
-        VersaoBlockdomiService._obterProximosContadores(tipo, 1, d, t)
-      );
-      const c = contadores[0] ?? 1;
-      const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
       try {
-        const versao = await VersaoBlockdomi.create({ numero });
-        return { id: versao.id, numero: versao.numero };
+        const resultado = await sequelize.transaction(async (t) => {
+          const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, 1, d, t);
+          const c = contadores[0] ?? 1;
+          const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
+          const versao = await VersaoBlockdomi.create({ numero }, { transaction: t });
+          return { id: versao.id, numero: versao.numero };
+        });
+        return resultado;
       } catch (err: unknown) {
         const isDuplicate = (err as { name?: string; parent?: { errno?: number } })?.name === 'SequelizeUniqueConstraintError' ||
           (err as { parent?: { errno?: number } })?.parent?.errno === 1062;
@@ -77,6 +79,7 @@ export class VersaoBlockdomiService {
 
   /**
    * Obtém múltiplas versões e insere em versoes_blockdomi. Retorna array de { id, numero }.
+   * Obtém contadores e insere na mesma transação para evitar race condition (chave duplicada).
    */
   static async obterProximasVersoes(
     tipo: TipoVersao,
@@ -89,17 +92,17 @@ export class VersaoBlockdomiService {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       const d = data ?? new Date();
       const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
-      const contadores = await sequelize.transaction(async (t) =>
-        VersaoBlockdomiService._obterProximosContadores(tipo, quantidade, d, t)
-      );
-
-      const versoes: VersaoResult[] = [];
       try {
-        for (const c of contadores) {
-          const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
-          const v = await VersaoBlockdomi.create({ numero });
-          versoes.push({ id: v.id, numero: v.numero });
-        }
+        const versoes = await sequelize.transaction(async (t) => {
+          const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, quantidade, d, t);
+          const resultado: VersaoResult[] = [];
+          for (const c of contadores) {
+            const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
+            const v = await VersaoBlockdomi.create({ numero }, { transaction: t });
+            resultado.push({ id: v.id, numero: v.numero });
+          }
+          return resultado;
+        });
         return versoes;
       } catch (err: unknown) {
         const isDuplicate = (err as { name?: string })?.name === 'SequelizeUniqueConstraintError' ||
