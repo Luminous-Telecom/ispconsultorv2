@@ -55,7 +55,11 @@ const Layout: React.FC = () => {
     () => dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || '',
     [dadosEmpresa]
   );
-  
+
+  useEffect(() => {
+    document.title = companyName || 'BackNet';
+  }, [companyName]);
+
   // Table header context (para botões de busca e reload)
   const tableHeader = useTableHeader();
   
