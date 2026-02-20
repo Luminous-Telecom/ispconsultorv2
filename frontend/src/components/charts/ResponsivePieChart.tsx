@@ -23,7 +23,8 @@ interface PieDatum {
 }
 
 const HOVER_SCALE = 1.12;
-const LABEL_DISTANCE_EXTRA = 26;
+const LABEL_DISTANCE_BASE = 42;
+const LABEL_STAGGER = 18;
 const RADIUS_MIN_RATIO = 0.7;
 const RADIUS_MAX_RATIO = 1;
 const HIDE_ANIMATION_MS = 400;
@@ -110,10 +111,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
     const innerRadius = outerRadius * 0.45;
     const labelMargin = 40;
     const spaceRight = width - centerX - labelMargin;
-    const labelDistance = Math.max(
-      outerRadius + 8,
-      Math.min(outerRadius + LABEL_DISTANCE_EXTRA, Math.max(0, spaceRight))
-    );
+    const maxLabelDistance = Math.max(outerRadius + 20, Math.min(outerRadius + 80, Math.max(0, spaceRight)));
 
     const pieData: PieDatum[] = visibleData.map(({ item, index }) => {
       const val = getItemValue(item);
@@ -149,6 +147,14 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
 
     const arcsBySize = [...arcs].sort((a, b) => b.data.value - a.data.value);
 
+    const arcsByAngle = [...arcs].sort((a, b) => {
+      const midA = (a.startAngle + a.endAngle) / 2;
+      const midB = (b.startAngle + b.endAngle) / 2;
+      return midA - midB;
+    });
+    const angleOrderMap = new Map<number, number>();
+    arcsByAngle.forEach((a, i) => angleOrderMap.set(a.data.index, i));
+
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
@@ -167,9 +173,15 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
 
     arcs.forEach((d: d3.PieArcDatum<PieDatum>) => {
       const midAngle = (d.startAngle + d.endAngle) / 2;
+      const order = angleOrderMap.get(d.data.index) ?? 0;
+      const staggeredDistance = LABEL_DISTANCE_BASE + order * LABEL_STAGGER;
+      const labelRadius = Math.min(
+        Math.max(outerRadius + 12, staggeredDistance),
+        maxLabelDistance
+      );
       const midR = (innerRadius + getOuterRadius(d)) / 2;
       const start = toPos(midAngle, midR);
-      const end = toPos(midAngle, labelDistance);
+      const end = toPos(midAngle, labelRadius);
 
       const isLineAnimatingIn = animatingIn.has(d.data.index);
       linesG
@@ -382,12 +394,12 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       <h6 className="chart-title-pie" style={{ marginBottom: '5px' }}>
         {title} ({formatPieValue(total, title)})
       </h6>
-      <div style={{ flex: 1, display: 'flex', gap: '8px', minHeight: 120 }}>
+      <div style={{ flex: 1, display: 'flex', gap: '32px', minHeight: 120, maxHeight: 210 }}>
         <ul
           className="pie-sidebar-legend"
           style={{
             margin: 0,
-            padding: '0 8px 0 0',
+            padding: '0 16px 0 0',
             listStyle: 'none',
             overflowY: 'auto',
             flexShrink: 0,
@@ -433,7 +445,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
                     borderRadius: 2
                   }}
                 />
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ overflow: 'visible', whiteSpace: 'normal', wordBreak: 'break-word' }}>
                   {item.label || ''} {formatPieValue(value, title)}
                 </span>
               </li>

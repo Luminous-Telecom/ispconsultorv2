@@ -184,7 +184,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="row g-3">
-          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.clientesChartData}
@@ -196,7 +196,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.statusPagamentoData}
@@ -208,7 +208,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.distribuicaoPlanos}
@@ -220,7 +220,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.taxaPagamentoChartData}
@@ -232,7 +232,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={charts.contratosChartData}
@@ -244,7 +244,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-5-custom col-lg-3 col-md-4 col-sm-6 col-12">
+          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ValueChart data={charts.ticketMedioChartData} title={t('dashboard.averageTicket')} format="currency" />
             </div>

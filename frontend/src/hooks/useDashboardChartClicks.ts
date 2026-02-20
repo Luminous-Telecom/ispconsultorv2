@@ -33,7 +33,7 @@ export const useDashboardChartClicks = () => {
   const handleDistribuicaoPlanoSliceClick = useCallback((item: ChartDataItem) => {
     const fv = (item.filterValue ?? item.label) as string | undefined;
     if (!fv) return;
-    openModal('planos' as ModalType, {
+    openModal('contratos' as ModalType, {
       initialFilters: { tipo_servico: fv }
     });
   }, [openModal]);

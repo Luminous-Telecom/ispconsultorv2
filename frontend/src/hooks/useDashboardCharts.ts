@@ -51,7 +51,6 @@ export const useDashboardCharts = (
   const clientes = useMemo(() => dashboardData?.clientes || [], [dashboardData?.clientes]);
   const planos = useMemo(() => dashboardData?.planos || [], [dashboardData?.planos]);
   const contratos = useMemo(() => dashboardData?.contratos || [], [dashboardData?.contratos]);
-  const contratosAtivosTodos = useMemo(() => dashboardData?.contratosAtivosTodos || [], [dashboardData?.contratosAtivosTodos]);
   const titulosTodos = useMemo(() => dashboardData?.titulosTodos || [], [dashboardData?.titulosTodos]);
   const contasPagarUltimosMeses = useMemo(() => dashboardData?.contasPagarUltimosMeses || { labels: [], data: [] }, [dashboardData?.contasPagarUltimosMeses]);
   const receitaUltimosMeses = useMemo(() => dashboardData?.receitaUltimosMeses || { labels: [], data: [] }, [dashboardData?.receitaUltimosMeses]);
@@ -91,33 +90,27 @@ export const useDashboardCharts = (
     ].filter(item => item.value > 0);
   }, [titulosTodos, t]);
 
+  const clientesPorTipoPlano = useMemo(
+    () => dashboardData?.clientesPorTipoPlano || [],
+    [dashboardData?.clientesPorTipoPlano]
+  );
+
   const distribuicaoPlanos = useMemo(() => {
     const tipoLabels: Record<string, string> = {
       infraestrutura: t('form.serviceTypeInfrastructure'),
       consultoria: t('form.serviceTypeConsulting'),
       blockdomi: t('form.serviceTypeBlockdomi')
     };
-    const mapaPlanoTipo = planos.reduce((acc, plano) => {
-      acc[plano.id] = plano.tipo_servico || 'Outros';
-      return acc;
-    }, {} as Record<number, string>);
-    const clientesPorTipo = contratosAtivosTodos.reduce((acc, contrato) => {
-      const tipo = mapaPlanoTipo[contrato.plano_id] || 'Outros';
-      if (!acc[tipo]) acc[tipo] = new Set<number>();
-      acc[tipo].add(contrato.cliente_id);
-      return acc;
-    }, {} as Record<string, Set<number>>);
-    const tipos = Object.fromEntries(
-      Object.entries(clientesPorTipo).map(([tipo, set]) => [tipo, set.size])
-    );
     const cores = ['#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4'];
-    return Object.entries(tipos).map(([tipo, quantidade], index) => ({
-      label: tipoLabels[tipo] || tipo,
-      value: quantidade,
-      color: cores[index % cores.length],
-      filterValue: tipo
-    }));
-  }, [planos, contratosAtivosTodos, t]);
+    return clientesPorTipoPlano
+      .filter((item) => item.quantidade > 0)
+      .map((item, index) => ({
+        label: tipoLabels[item.tipo_servico] || item.tipo_servico,
+        value: item.quantidade,
+        color: cores[index % cores.length],
+        filterValue: item.tipo_servico
+      }));
+  }, [clientesPorTipoPlano, t]);
 
   const taxaPagamentoChartData = useMemo(() => [
     { label: t('status.paid'), value: stats.taxaPagamento, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },

@@ -60,7 +60,7 @@ export class DashboardController {
       fimPeriodo.setHours(23, 59, 59, 999);
 
       // Buscar todas as estatísticas e dados em paralelo
-      const [statsData, titulosRecentes, titulosVencidos, contratos, contratosAtivosTodos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos, aReceberPeriodo, recebidosPeriodo, resumoPeriodo, receitaUltimosMeses, contasPagarUltimosMeses] = await Promise.all([
+      const [statsData, titulosRecentes, titulosVencidos, contratos, contratosAtivosTodos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos, aReceberPeriodo, recebidosPeriodo, resumoPeriodo, receitaUltimosMeses, contasPagarUltimosMeses, clientesPorTipoPlano] = await Promise.all([
         DashboardService.getStatsData(inicioPeriodo, fimPeriodo),
         DashboardService.getTitulosRecentesData(5),
         DashboardService.getTitulosVencidosData(10),
@@ -76,7 +76,8 @@ export class DashboardController {
         DashboardService.getRecebidosPorPeriodoData(parsedStart, parsedEnd),
         DashboardService.getResumoFinanceiroPeriodo(parsedStart, parsedEnd),
         DashboardService.getReceitaUltimos12Meses(),
-        DashboardService.getContasPagarUltimos12Meses()
+        DashboardService.getContasPagarUltimos12Meses(),
+        DashboardService.getClientesPorTipoPlano()
       ]);
 
       const dashboardData = {
@@ -89,6 +90,7 @@ export class DashboardController {
         contratos: contratos.map(c => c.toJSON()), // Contratos do período
         contratosTodos: contratosTodos.map(c => c.toJSON()), // TODOS os contratos para gráficos
         contratosAtivosTodos: contratosAtivosTodos.map(c => c.toJSON()),
+        clientesPorTipoPlano,
         titulos: titulosPeriodo.map(t => t.toJSON()), // Títulos do período
         titulosTodos: titulosTodos.map(t => t.toJSON()), // TODOS os títulos para gráficos
         receitaUltimosMeses,

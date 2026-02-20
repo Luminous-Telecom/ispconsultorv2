@@ -31,6 +31,7 @@ export interface DashboardData {
   contratos: Contrato[]; // Contratos do período
   contratosTodos?: Contrato[]; // TODOS os contratos para gráficos
   contratosAtivosTodos?: Contrato[]; // Todos os contratos ativos para gráfico "Clientes por Plano"
+  clientesPorTipoPlano?: Array<{ tipo_servico: string; quantidade: number }>; // Qtd clientes (distintos) por tipo de plano
   titulos: Titulo[]; // Títulos do período
   titulosTodos?: Titulo[]; // TODOS os títulos para gráficos
   receitaUltimosMeses: DashboardChart;

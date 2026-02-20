@@ -53,6 +53,11 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const { confirm: _confirm, modalProps } = useConfirmModal();
 
   const displayTitle = useMemo(() => {
+    const tipoServicoLabels: Record<string, string> = {
+      infraestrutura: t('form.serviceTypeInfrastructure'),
+      consultoria: t('form.serviceTypeConsulting'),
+      blockdomi: t('form.serviceTypeBlockdomi')
+    };
     let suffix = '';
     if (initialFilters?.status) {
       const statusLabels: Record<string, string> = {
@@ -65,6 +70,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       suffix = ` - ${t('status.exempt')}`;
     } else if (initialFilters?.plano_id) {
       suffix = ` - ${t('table.plan')} #${initialFilters.plano_id}`;
+    } else if (initialFilters?.tipo_servico) {
+      suffix = ` - ${tipoServicoLabels[initialFilters.tipo_servico] || initialFilters.tipo_servico}`;
     }
     return title + suffix;
   }, [title, initialFilters, t]);
@@ -85,7 +92,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const listFilters: ContratoFilters = {
     ...(statusFilter && { status: statusFilter }),
     ...(initialFilters?.isento_mensalidade !== undefined && { isento_mensalidade: initialFilters.isento_mensalidade }),
-    ...(initialFilters?.plano_id && { plano_id: initialFilters.plano_id })
+    ...(initialFilters?.plano_id && { plano_id: initialFilters.plano_id }),
+    ...(initialFilters?.tipo_servico && { tipo_servico: initialFilters.tipo_servico })
   };
 
   const { data: contratosData, isLoading, refetch } = useQuery({

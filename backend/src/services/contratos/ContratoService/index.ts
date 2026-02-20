@@ -19,6 +19,7 @@ export interface ListContratosFilters {
   sortDirection?: string;
   isento_mensalidade?: boolean;
   plano_id?: number;
+  tipo_servico?: string;
 }
 
 export interface ListContratosResponse {
@@ -76,7 +77,7 @@ export class ContratoService {
    * Listar contratos com filtros e paginação
    */
   static async list(filters: ListContratosFilters): Promise<ListContratosResponse> {
-    const { page = 1, limit = 10, search = '', status, searchField, sortColumn, sortDirection, isento_mensalidade, plano_id } = filters;
+    const { page = 1, limit = 10, search = '', status, searchField, sortColumn, sortDirection, isento_mensalidade, plano_id, tipo_servico } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
@@ -125,6 +126,20 @@ export class ContratoService {
       whereClause.plano_id = plano_id;
     }
 
+    if (tipo_servico) {
+      const escaped = String(tipo_servico).replace(/'/g, "''");
+      const subquery = `(
+        SELECT c.id FROM contratos c
+        WHERE EXISTS (SELECT 1 FROM planos p WHERE p.id = c.plano_id AND p.tipo_servico = '${escaped}')
+        OR EXISTS (
+          SELECT 1 FROM contrato_planos_adicionais cpa
+          INNER JOIN planos p ON cpa.plano_id = p.id
+          WHERE cpa.contrato_id = c.id AND cpa.status = 'ativo' AND p.tipo_servico = '${escaped}'
+        )
+      )`;
+      (whereClause as any).id = { [Op.in]: sequelize.literal(subquery) };
+    }
+
     // Construir ordenação - ordena TODOS os dados antes da paginação
     let order: any[] = [['id', 'DESC']]; // Padrão
     if (sortColumn && sortDirection) {
@@ -150,15 +165,15 @@ export class ContratoService {
     try {
       const result = await Contrato.findAndCountAll({
         where: whereClause,
-      include: [
-        { model: Cliente, as: 'cliente' },
-        { model: Plano, as: 'plano' },
-        { model: Banco, as: 'bancoBoleto' },
-        { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', required: false }
-      ],
-      order,
-      limit: limitNum,
-      offset
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Plano, as: 'plano' },
+          { model: Banco, as: 'bancoBoleto' },
+          { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', required: false }
+        ],
+        order,
+        limit: limitNum,
+        offset
       });
       count = result.count as number;
       rows = result.rows;

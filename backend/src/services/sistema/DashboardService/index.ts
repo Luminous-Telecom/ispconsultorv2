@@ -4,6 +4,7 @@ import { Titulo } from '../../../models/financeiro/Titulo';
 import { Contrato } from '../../../models/contratos/Contrato';
 import { ContaPagar } from '../../../models/financeiro/ContaPagar';
 import { Op } from 'sequelize';
+import { sequelize } from '../../../config/database';
 
 export class DashboardService {
   /**
@@ -50,10 +51,31 @@ export class DashboardService {
         },
         {
           association: 'plano',
-          attributes: ['id', 'nome_plano', 'valor_mensal']
+          attributes: ['id', 'nome_plano', 'valor_mensal', 'tipo_servico']
         }
       ]
     });
+  }
+
+  /**
+   * Quantidade de clientes (distintos) por tipo de plano - para gráfico "Distribuição por Tipo de Plano"
+   */
+  static async getClientesPorTipoPlano(): Promise<Array<{ tipo_servico: string; quantidade: number }>> {
+    const { QueryTypes } = await import('sequelize');
+    const rows = await sequelize.query<{ tipo_servico: string; quantidade: string }>(
+      `SELECT tipo_servico, COUNT(*) as quantidade FROM (
+        SELECT DISTINCT c.cliente_id, p.tipo_servico FROM contratos c
+        INNER JOIN planos p ON c.plano_id = p.id
+        WHERE c.status = 'ativo' AND c.cliente_id IS NOT NULL
+        UNION
+        SELECT DISTINCT c.cliente_id, p.tipo_servico FROM contrato_planos_adicionais cpa
+        INNER JOIN contratos c ON cpa.contrato_id = c.id
+        INNER JOIN planos p ON cpa.plano_id = p.id
+        WHERE c.status = 'ativo' AND cpa.status = 'ativo'
+      ) AS sub GROUP BY tipo_servico`,
+      { type: QueryTypes.SELECT }
+    );
+    return rows.map((r) => ({ tipo_servico: r.tipo_servico, quantidade: parseInt(r.quantidade, 10) || 0 }));
   }
 
   /**
