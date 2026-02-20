@@ -141,7 +141,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       .arc<d3.PieArcDatum<PieDatum>>()
       .innerRadius(innerRadius)
       .outerRadius(getOuterRadius)
-      .cornerRadius(4);
+      .cornerRadius(8);
 
     const arcs = pie(pieData);
 
@@ -431,7 +431,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
                   padding: '2px 4px',
                   cursor: 'pointer',
                   opacity: isHidden ? 0.5 : 1,
-                  borderRadius: 'var(--border-radius, 4px)',
+                  borderRadius: 'var(--border-radius, 8px)',
                   fontSize: '0.625rem',
                   textDecoration: isHidden ? 'line-through' : 'none'
                 }}

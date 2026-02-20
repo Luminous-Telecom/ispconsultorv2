@@ -1402,7 +1402,7 @@ body[data-theme="light"] .central-assinante-container {
   input[type="password"] {
     background-color: rgba(26, 31, 46, 0.8) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 8px !important;
+    border-radius: var(--border-radius) !important;
     color: $text-primary !important;
     padding: 0.875rem 1.125rem !important;
     font-size: 0.95rem !important;

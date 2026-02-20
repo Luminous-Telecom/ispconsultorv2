@@ -640,7 +640,7 @@ label {
 .notification {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   padding: 0.75rem;
   margin-bottom: 0.5rem;
   box-shadow: var(--shadow-lg);
@@ -692,7 +692,7 @@ label {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -742,7 +742,7 @@ label {
 .table-mobile-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   padding: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -829,7 +829,7 @@ label {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   transition: all 0.2s ease;
   min-width: 32px;
   min-height: 32px;
@@ -891,7 +891,7 @@ label {
   position: fixed !important;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 140px;
   z-index: 99999 !important;
@@ -1067,7 +1067,7 @@ label {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 3px;
+  border-radius: var(--border-radius-sm);
   transition: all 0.2s ease;
   min-width: 20px;
   min-height: 20px;
@@ -1096,7 +1096,7 @@ label {
   margin-top: 0.25rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 140px;
   z-index: 1049;
@@ -1289,7 +1289,7 @@ label {
   margin-top: 0.25rem !important;
   background: var(--bg-secondary) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: 0.375rem !important;
+  border-radius: var(--border-radius) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
   font-size: 12px !important;
 }
@@ -1492,7 +1492,7 @@ label {
   z-index: 1050 !important;
   background: var(--bg-secondary) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: 8px !important;
+  border-radius: var(--border-radius) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
   min-width: 140px !important;
   overflow: hidden !important;
