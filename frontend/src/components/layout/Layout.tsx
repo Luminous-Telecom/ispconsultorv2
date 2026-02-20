@@ -659,13 +659,21 @@ const Layout: React.FC = () => {
                     <div
                       ref={languageDropdownRef}
                       data-language-dropdown
-                      className="layout-language-dropdown-menu shadow"
-                      style={{
-                        top: `${languageDropdownPosition.top}px`,
-                        left: `${languageDropdownPosition.left}px`,
-                        minWidth: '160px',
-                        zIndex: 10001
-                      }}
+                      className={
+                        isMobile
+                          ? 'layout-language-dropdown-menu--mobile shadow' // mobile fix: P7 — bottom sheet, sem getBoundingClientRect
+                          : 'layout-language-dropdown-menu shadow'
+                      }
+                      style={
+                        isMobile
+                          ? undefined
+                          : {
+                              top: `${languageDropdownPosition.top}px`,
+                              left: `${languageDropdownPosition.left}px`,
+                              minWidth: '160px',
+                              zIndex: 10001,
+                            }
+                      }
                     >
                       {availableLanguages.map((lang) => (
                         <div key={lang.code}>

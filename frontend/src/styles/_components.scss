@@ -10,11 +10,16 @@
 .draggable-modal-backdrop {
   position: fixed !important;
   top: 0 !important;
-  left: 240px !important;
-  width: calc(100% - 240px) !important;
+  left: 260px !important; /* Offset da sidebar desktop (260px) */
+  width: calc(100% - 260px) !important;
   height: 100% !important;
   background-color: transparent !important;
   pointer-events: none !important;
+
+  @media (max-width: 767.98px) {
+    left: 0 !important; // mobile fix: P4 — sidebar oculta no mobile, backdrop cobre tela toda
+    width: 100% !important; // mobile fix: P4
+  }
 }
 
 /* Overlay para drag events */
@@ -1237,6 +1242,30 @@ button,
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
   overflow: hidden !important;
   padding: 0 !important;
+}
+
+/* mobile fix: P7 — bottom sheet evita problema de posicionamento com teclado virtual */
+.layout-language-dropdown-menu--mobile {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: auto !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important; // mobile fix: P7 + safe area
+  z-index: 10001 !important;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2) !important;
+
+  .table-dropdown-item {
+    padding: 1rem 1.25rem !important;
+    font-size: 1rem !important;
+    min-height: 52px;
+  }
 }
 
 .layout-user-name {

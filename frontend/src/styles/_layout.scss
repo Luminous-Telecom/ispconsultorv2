@@ -479,9 +479,9 @@
   }
 
   .layout-user-avatar {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 0.75rem !important;
+    width: 36px !important; // mobile fix: P3 — era 28px, muito pequeno para toque
+    height: 36px !important; // mobile fix: P3
+    font-size: 0.875rem !important;
   }
 
   .bi-search,
@@ -812,8 +812,8 @@
   }
 
   .navbar-mobile-search-btn {
-    width: 32px;
-    height: 32px;
+    width: 44px; // mobile fix: P3 — era 32px, padrão Apple/Google
+    height: 44px; // mobile fix: P3
   }
 
   .navbar-mobile-search-container {
@@ -824,12 +824,12 @@
   .navbar-mobile-search-field {
     min-width: 130px;
     padding: 0.5625rem 0.6875rem;
-    font-size: 0.8125rem;
+    font-size: 1rem; // mobile fix: P2 — 16px previne zoom automático iOS Safari
   }
 
   .navbar-mobile-search-input {
     padding: 0.5625rem 0.8125rem;
-    font-size: 0.8125rem;
+    font-size: 1rem; // mobile fix: P2 — 16px previne zoom automático iOS Safari
   }
 
   .navbar-mobile-search-close {

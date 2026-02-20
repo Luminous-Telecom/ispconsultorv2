@@ -328,3 +328,39 @@
 [data-theme="dark"] .sidebar .nav-link i.bi-folder-open {
   color: var(--sidebar-text) !important;
 }
+
+/* mobile fix: P10 — nome da empresa sem truncamento desnecessário na sidebar mobile */
+@media (max-width: 767.98px) {
+  .sidebar-company-name {
+    white-space: normal;
+    word-break: break-word;
+    text-align: center;
+    font-size: 0.8125rem;
+    padding: 0 0.5rem;
+  }
+}
+
+/* mobile fix: P6 — touch targets mínimos na sidebar (overlay mobile) */
+@media (max-width: 767.98px) {
+  .sidebar .nav-link {
+    padding: 12px 8px !important;
+    min-height: 44px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .sidebar-accordion .accordion-button {
+    padding: 12px 8px !important;
+    min-height: 44px !important;
+    font-size: 0.875rem !important;
+  }
+
+  .sidebar-folder-item {
+    padding: 12px 12px !important;
+    min-height: 44px;
+    font-size: 0.875rem !important;
+    display: flex !important;
+    align-items: center;
+  }
+}

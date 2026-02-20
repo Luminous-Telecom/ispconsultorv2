@@ -59,6 +59,15 @@
   --font-size-lg: 0.875rem;   /* 14px */
   --font-size-xl: 1rem;       /* 16px */
 
+  /* mobile fix: P9 — escala de fonte mais confortável para leitura mobile */
+  @media (max-width: 767.98px) {
+    --font-size-xs: 0.75rem;    /* 12px */
+    --font-size-sm: 0.8125rem;  /* 13px */
+    --font-size-base: 0.875rem; /* 14px */
+    --font-size-lg: 1rem;       /* 16px */
+    --font-size-xl: 1.125rem;   /* 18px */
+  }
+
   /* Navbar - Header: #06b6d4 */
   --navbar-bg: #06b6d4;
   --navbar-text: #ffffff;
