@@ -17,6 +17,7 @@
   table-layout: fixed;
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Classe específica para tabelas com redimensionamento habilitado */
@@ -1334,6 +1335,7 @@ label {
   margin: 0 !important;
   padding: 0 !important;
   overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
   width: 100% !important;
   box-sizing: border-box !important;
   max-width: 100% !important;

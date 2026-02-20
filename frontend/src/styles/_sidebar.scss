@@ -11,7 +11,7 @@
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
-  z-index: 999;
+  z-index: 1040;
   animation: fadeIn 0.3s ease;
 }
 
@@ -23,7 +23,7 @@
   width: 260px;
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
-  z-index: 1000;
+  z-index: 1050;
   overflow: hidden;
   border-right: 1px solid var(--border-color);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);

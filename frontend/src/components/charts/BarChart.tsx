@@ -66,8 +66,14 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
 
     d3.select(svg).selectAll('*').remove();
 
-    const margin = { top: 16, right: 40, left: 220, bottom: 24 };
-    const chartWidth = dimensions.width - margin.left - margin.right;
+    const isMobile = dimensions.width < 480;
+    const margin = {
+      top: 16,
+      right: isMobile ? 16 : 40,
+      left: isMobile ? Math.min(100, dimensions.width * 0.45) : 220,
+      bottom: 24,
+    };
+    const chartWidth = Math.max(0, dimensions.width - margin.left - margin.right);
 
     const maxValue = Math.max(...chartData.map((d) => d.value), 0) || 1;
     const xScale = d3.scaleLinear().domain([0, maxValue * 1.1]).range([0, chartWidth]);
@@ -118,15 +124,16 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
         .attr('fill', barWidth > 40 ? '#fff' : 'var(--text-primary)')
         .text(d.value.toLocaleString('pt-BR'));
 
+      const labelText = isMobile && d.label.length > 12 ? `${d.label.slice(0, 10)}…` : d.label;
       el.append('text')
         .attr('x', -12)
         .attr('y', y + barHeight / 2)
         .attr('dy', '0.35em')
         .attr('text-anchor', 'end')
-        .attr('font-size', '11px')
+        .attr('font-size', isMobile ? '9px' : '11px')
         .attr('font-family', 'system-ui, -apple-system, sans-serif')
         .attr('fill', 'var(--text-primary)')
-        .text(d.label);
+        .text(labelText);
     });
 
     const defs = d3.select(svg).append('defs');
@@ -221,8 +228,8 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
         style={{
           width: '100%',
           height: '220px',
-          minWidth: '160px',
-          minHeight: '200px',
+          minWidth: '140px',
+          minHeight: '180px',
           position: 'relative',
           overflow: 'visible',
           borderRadius: '8px',

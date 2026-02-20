@@ -536,6 +536,16 @@
   flex-direction: column;
 }
 
+@media (max-width: 767.98px) {
+  .chart-container {
+    overflow: hidden;
+  }
+
+  .chart-card {
+    min-height: 200px;
+  }
+}
+
 .chart-title {
   font-size: 0.8125rem;
   font-weight: 600;
