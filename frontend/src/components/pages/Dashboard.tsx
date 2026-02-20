@@ -17,12 +17,7 @@ const Dashboard: React.FC = () => {
   const { t } = useI18n();
   const { searchValue, searchField } = useTableHeader();
   const { activeModal } = useModal();
-  const {
-    startDate,
-    endDate,
-    setStartDate,
-    setEndDate,
-  } = useDashboardFilters();
+  const { startDate, endDate } = useDashboardFilters();
 
   const {
     hiddenClientes,
@@ -86,103 +81,6 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       <div className="container-fluid px-0 px-md-0">
-        {/* Header Minimalista com Gráficos Filtrados */}
-        <div className="dashboard-header-clean">
-          <div className="d-flex justify-content-between align-items-start">
-            <div className="dashboard-title-section">
-              <h1 className="dashboard-title-minimal">{t('dashboard.title')}</h1>
-
-              {/* Filtros de Data */}
-              <div className="dashboard-filters-minimal mt-2">
-                <div className="d-flex align-items-center gap-2">
-                  <div className="d-flex align-items-center gap-1">
-                    <label htmlFor="dashboard-start-date" className="form-label small fw-bold text-secondary mb-0">{t('dashboard.startDate')}:</label>
-                    <input
-                      id="dashboard-start-date"
-                      name="startDate"
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="form-control form-control-sm"
-                      style={{ width: '110px' }}
-                    />
-                  </div>
-                  <span className="text-muted small">—</span>
-                  <div className="d-flex align-items-center gap-1">
-                    <label htmlFor="dashboard-end-date" className="form-label small fw-bold text-secondary mb-0">{t('dashboard.endDate')}:</label>
-                    <input
-                      id="dashboard-end-date"
-                      name="endDate"
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="form-control form-control-sm"
-                      style={{ width: '110px' }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Métricas Compactas */}
-          <div className="dashboard-metrics-compact mt-2">
-            <div className="row g-2">
-              <div className="col-lg-3 col-md-6">
-                <div className="metric-compact">
-                  <div className="metric-compact-label">{t('dashboard.revenue')}</div>
-                  <div className="metric-compact-value">{formatCurrency(stats.receitaPagaPeriodo)}</div>
-                </div>
-              </div>
-              <div className="col-lg-3 col-md-6">
-                <div className="metric-compact">
-                  <div className="metric-compact-label">{t('dashboard.expected')}</div>
-                  <div className="metric-compact-value text-info">{formatCurrency(stats.receitaPrevistaPeriodo)}</div>
-                </div>
-              </div>
-              <div className="col-lg-3 col-md-6">
-                <div className="metric-compact">
-                  <div className="metric-compact-label">{t('dashboard.pending')}</div>
-                  <div className="metric-compact-value text-warning">{formatCurrency(stats.receitaPendentePeriodo)}</div>
-                </div>
-              </div>
-              <div className="col-lg-3 col-md-6">
-                <div className="metric-compact">
-                  <div className="metric-compact-label">{t('dashboard.clients')}</div>
-                  <div className="metric-compact-value text-success">{formatNumber(stats.clientesAtivosPeriodo)}</div>
-                  <div className="metric-compact-subtext">{formatNumber(stats.clientesComTitulosPeriodo)} {t('dashboard.inPeriod')}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Gráficos Filtrados por Data */}
-          <div className="dashboard-filtered-charts mt-2">
-            <div className="row g-2">
-              <div className="col-lg-6">
-                <div className="chart-compact-container chart-compact-container-recebidos">
-                  <ResponsiveLineChart
-                    data={charts.recebidosPeriodoChartData}
-                    title={`${t('dashboard.received')}: ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
-                    format="currency"
-                    onPointClick={handleRecebidosPeriodoPointClick}
-                  />
-                </div>
-              </div>
-              <div className="col-lg-6">
-                <div className="chart-compact-container chart-compact-container-receber">
-                  <ResponsiveLineChart
-                    data={charts.receberPeriodoChartData}
-                    title={`${t('dashboard.toReceive')}: ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
-                    format="currency"
-                    onPointClick={handleReceberPeriodoPointClick}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="row g-3">
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
@@ -247,6 +145,30 @@ const Dashboard: React.FC = () => {
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ValueChart data={charts.ticketMedioChartData} title={t('dashboard.averageTicket')} format="currency" />
+            </div>
+          </div>
+        </div>
+
+        <div className="row g-3">
+          <div className="col-xl-6 col-lg-6">
+            <div className="chart-card chart-card-line">
+              <ResponsiveLineChart
+                data={charts.recebidosPeriodoChartData}
+                title={`${t('dashboard.received')}: ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
+                format="currency"
+                onPointClick={handleRecebidosPeriodoPointClick}
+              />
+            </div>
+          </div>
+
+          <div className="col-xl-6 col-lg-6">
+            <div className="chart-card chart-card-line">
+              <ResponsiveLineChart
+                data={charts.receberPeriodoChartData}
+                title={`${t('dashboard.toReceive')}: ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
+                format="currency"
+                onPointClick={handleReceberPeriodoPointClick}
+              />
             </div>
           </div>
         </div>

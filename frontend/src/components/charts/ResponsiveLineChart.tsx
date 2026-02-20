@@ -1,57 +1,58 @@
-import React, { useState, useLayoutEffect, useEffect, useRef, useCallback, useMemo, memo } from 'react';
+import React, { useRef, useLayoutEffect, useEffect, useCallback, useMemo, memo, useState } from 'react';
+import * as d3 from 'd3';
 import { LineChartProps } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
-import { useI18n } from '@/contexts/I18nContext';
-import { useTheme } from '../../contexts/ThemeContext';
 
 const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, format = 'number', onPointClick }) => {
-  const { t } = useI18n();
-  const { theme } = useTheme();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string; value: number } | null>(null);
 
-  // Função para formatar o ano (2025 -> 25, 2024 -> 24)
   const formatDateLabel = useCallback((label: string): string => {
     if (!label) return '';
-    // Substituir anos de 4 dígitos por 2 dígitos (ex: 2025 -> 25, 2024 -> 24)
-    return label.replace(/\b(20)(\d{2})\b/g, '$2');
+    const ddmmyyyy = label.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (ddmmyyyy) return `${ddmmyyyy[1].padStart(2, '0')}/${ddmmyyyy[2].padStart(2, '0')}`;
+    const mmyy = label.match(/^(\d{1,2})\/(\d{2})$/);
+    if (mmyy) return `${mmyy[1].padStart(2, '0')}/${mmyy[2]}`;
+    return label;
   }, []);
 
-  const chartData = useMemo(() => 
-    data.map((item) => ({
-      name: formatDateLabel(item.mes || item.name || ''),
-      value: item.valor ?? item.value ?? 0,
-      color: item.color || '#007bff',
-    })),
+  const chartData = useMemo(
+    () =>
+      data.map((item) => ({
+        name: formatDateLabel(item.mes || item.name || ''),
+        value: item.valor ?? item.value ?? 0,
+      })),
     [data, formatDateLabel]
   );
 
-  const formatYAxis = useCallback((tickItem: number) => {
-    if (format === 'currency') {
-      if (tickItem >= 1_000_000) return `R$${(tickItem / 1_000_000).toFixed(1)}M`;
-      if (tickItem >= 1_000) return `R$${(tickItem / 1_000).toFixed(1)}K`;
-      return `R$${tickItem.toFixed(0)}`;
-    }
-    return tickItem.toLocaleString('pt-BR');
-  }, [format]);
+  const formatValue = useCallback(
+    (value: number) => {
+      if (format === 'currency') {
+        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
+      }
+      return value.toLocaleString('pt-BR');
+    },
+    [format]
+  );
 
-  const formatValue = useCallback((value: number) => {
-    if (format === 'currency') {
-      return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-    }
-    return value.toLocaleString('pt-BR');
-  }, [format]);
+  const formatLabel = useCallback(
+    (value: number) => {
+      if (format === 'currency') {
+        return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      return value.toLocaleString('pt-BR');
+    },
+    [format]
+  );
 
   useLayoutEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         setDimensions({
-          width: rect.width || 200,
-          height: rect.height || 300
+          width: rect.width || 160,
+          height: rect.height || 220,
         });
       }
     };
@@ -66,273 +67,252 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
   }, []);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || dimensions.width === 0 || dimensions.height === 0 || chartData.length === 0) return;
+    const svg = svgRef.current;
+    if (!svg || dimensions.width === 0 || dimensions.height === 0 || chartData.length === 0) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    d3.select(svg).selectAll('*').remove();
 
-    // Configurar para alta resolução (device pixel ratio)
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-
-    // Ajustar tamanho real do canvas
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-
-    // Escalar contexto para compensar o device pixel ratio
-    ctx.scale(dpr, dpr);
-    ctx.imageSmoothingEnabled = false;
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'left';
-
-    // Limpar canvas (usar dimensões originais após escala)
-    ctx.clearRect(0, 0, rect.width, rect.height);
-
-    // Margens otimizadas para melhor aproveitamento do espaço
-    const margin = { top: 10, right: 15, left: 50, bottom: 85 };
+    const margin = { top: 24, right: 40, left: 52, bottom: 70 };
     const chartWidth = dimensions.width - margin.left - margin.right;
     const chartHeight = dimensions.height - margin.top - margin.bottom;
 
-    // Valores para cálculo com melhor escala automática
-    const values = chartData.map(d => d.value);
+    const values = chartData.map((d) => d.value);
     const maxValue = Math.max(...values, 0);
+    const minValue = Math.min(...values, 0);
+    const valueRange = maxValue - minValue || 1;
 
-    // Melhorar escala automática: se o valor máximo for muito baixo, ajustar a escala
-    let minValue = 0;
-    let scaleFactor = 1;
+    const yAxisFormat = (v: number) =>
+      format === 'currency' ? v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : v.toLocaleString('pt-BR');
 
-    if (maxValue > 0 && maxValue < 10) {
-      // Para valores muito pequenos, usar escala de 0.1
-      scaleFactor = 0.1;
-      minValue = 0;
-    } else if (maxValue > 0 && maxValue < 100) {
-      // Para valores pequenos, usar escala de 1
-      scaleFactor = 1;
-      minValue = 0;
-    } else {
-      // Para valores maiores, arredondar para cima
-      const magnitude = Math.pow(10, Math.floor(Math.log10(maxValue)));
-      scaleFactor = magnitude;
-      minValue = 0;
+    const xScale = d3
+      .scaleLinear()
+      .domain([0, chartData.length - 1])
+      .range([0, chartWidth]);
+
+    const yMin = Math.max(0, minValue - valueRange * 0.05);
+    const yScale = d3
+      .scaleLinear()
+      .domain([yMin, maxValue + valueRange * 0.1])
+      .range([chartHeight, 0]);
+
+    const lineGenerator = d3
+      .line<{ name: string; value: number }>()
+      .x((_, i) => xScale(i))
+      .y((d) => yScale(Math.max(yMin, d.value)))
+      .curve(d3.curveCatmullRom.alpha(0.5));
+
+    const g = d3.select(svg).attr('width', dimensions.width).attr('height', dimensions.height).append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const textColor = 'var(--text-muted)';
+    const gridColor = 'var(--border-color)';
+
+    const yAxisTicks = yScale.ticks(5).filter((t) => t >= 0);
+    const yAxis = d3
+      .axisLeft(yScale)
+      .tickValues(yAxisTicks.length > 0 ? yAxisTicks : [0])
+      .tickFormat((d) => yAxisFormat(Number(d)));
+    g.append('g')
+      .attr('class', 'y-axis')
+      .call(yAxis)
+      .selectAll('text')
+      .attr('font-size', '10px')
+      .attr('font-family', 'system-ui, -apple-system, sans-serif')
+      .attr('fill', textColor);
+    g.select('.y-axis .domain').attr('stroke', 'none');
+    g.selectAll('.y-axis .tick line').attr('stroke', gridColor).attr('x2', chartWidth);
+
+    chartData.forEach((_, i) => {
+      const x = xScale(i);
+      g.append('line')
+        .attr('x1', x)
+        .attr('x2', x)
+        .attr('y1', 0)
+        .attr('y2', chartHeight)
+        .attr('stroke', gridColor)
+        .attr('stroke-width', 1);
+    });
+
+    const defs = d3.select(svg).append('defs');
+    const gradientId = `line-gradient-${svgRef.current?.id || Math.random().toString(36).slice(2)}`;
+    const gradient = defs
+      .append('linearGradient')
+      .attr('id', gradientId)
+      .attr('gradientUnits', 'userSpaceOnUse')
+      .attr('x1', 0)
+      .attr('y1', 0)
+      .attr('x2', chartWidth)
+      .attr('y2', 0);
+    gradient.append('stop').attr('offset', '0%').attr('stop-color', 'var(--chart-color-1)');
+    gradient.append('stop').attr('offset', '100%').attr('stop-color', 'var(--chart-color-6)');
+
+    const linePath = lineGenerator(chartData);
+    if (linePath) {
+      g.append('path')
+        .attr('d', linePath)
+        .attr('fill', 'none')
+        .attr('stroke', `url(#${gradientId})`)
+        .attr('stroke-width', 4)
+        .attr('stroke-linecap', 'round')
+        .attr('stroke-linejoin', 'round');
     }
 
-    // Ajustar o máximo para ter uma margem superior
-    const adjustedMaxValue = Math.ceil(maxValue / scaleFactor) * scaleFactor;
-    const valueRange = adjustedMaxValue - minValue || 1;
-
-    // Número de ticks no eixo Y otimizado baseado no range de valores
-    let numYTicks = 5;
-    if (valueRange < 10) {
-      numYTicks = 4; // Menos ticks para valores pequenos
-    } else if (valueRange > 1000000) {
-      numYTicks = 6; // Mais ticks para valores grandes
-    }
-
-    const yTickStep = valueRange / (numYTicks - 1);
-
-    // Cores
-    const axisColor = theme === 'dark' ? '#ffffff' : 'rgba(255, 255, 255, 0.3)'; // Branco no modo escuro, branco com transparência no modo claro para combinar com fundo escuro
-    const textColor = theme === 'dark' ? '#ffffff' : '#FFFFFF'; // Branco em ambos os modos (cards têm fundo escuro no modo claro)
-    const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.15)'; // Linhas de grade mais perceptíveis
-    const lineColor = '#007bff';
-
-    // Desenhar grid com linhas sólidas mais perceptíveis
-    ctx.strokeStyle = gridColor;
-    ctx.lineWidth = 1 / dpr; // Linha mais espessa
-    ctx.setLineDash([]); // Linha sólida
-    
-    // Linhas horizontais (grade)
-    for (let i = 0; i < numYTicks; i++) {
-      const y = margin.top + (chartHeight / (numYTicks - 1)) * i;
-      ctx.beginPath();
-      ctx.moveTo(margin.left, y);
-      ctx.lineTo(margin.left + chartWidth, y);
-      ctx.stroke();
-    }
-    
-    // Linhas verticais (grade)
-    const xStep = chartWidth / (chartData.length - 1 || 1);
-    chartData.forEach((_, index) => {
-      const x = margin.left + xStep * index;
-      ctx.beginPath();
-      ctx.moveTo(x, margin.top);
-      ctx.lineTo(x, margin.top + chartHeight);
-      ctx.stroke();
+    const pointsG = g.append('g').attr('class', 'line-points');
+    chartData.forEach((d, i) => {
+      const x = xScale(i);
+      const y = yScale(Math.max(yMin, d.value));
+      pointsG
+        .append('circle')
+        .attr('cx', x)
+        .attr('cy', y)
+        .attr('r', 4)
+        .attr('fill', 'var(--chart-color-1)')
+        .attr('stroke', 'var(--bg-tertiary)')
+        .attr('stroke-width', 2);
     });
 
-    // Desenhar eixos
-    ctx.strokeStyle = axisColor;
-    ctx.lineWidth = 1 / dpr; // Ajustar espessura para dpr
-    
-    // Eixo Y
-    ctx.beginPath();
-    ctx.moveTo(margin.left, margin.top);
-    ctx.lineTo(margin.left, margin.top + chartHeight);
-    ctx.stroke();
+    const avgValue = values.reduce((a, b) => a + b, 0) / values.length;
 
-    // Eixo X
-    ctx.beginPath();
-    ctx.moveTo(margin.left, margin.top + chartHeight);
-    ctx.lineTo(margin.left + chartWidth, margin.top + chartHeight);
-    ctx.stroke();
+    const showValueLabel = (value: number) => {
+      if (chartData.length <= 12) return true;
+      return value > 0;
+    };
 
-    // Desenhar labels do eixo Y
-    ctx.fillStyle = textColor;
-    ctx.font = '500 11px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    for (let i = 0; i < numYTicks; i++) {
-      const value = minValue + yTickStep * (numYTicks - 1 - i);
-      const y = margin.top + (chartHeight / (numYTicks - 1)) * i;
-      const label = formatYAxis(value);
-      // Posicionar texto mais à esquerda para evitar corte do "R$"
-      ctx.fillText(label, margin.left - 5, y);
-    }
+    chartData.forEach((d, i) => {
+      if (!showValueLabel(d.value)) return;
 
-    // Desenhar labels do eixo X (rotacionados verticalmente)
-    ctx.fillStyle = textColor;
-    ctx.font = '11px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    // Reutilizar xStep já declarado acima
-    chartData.forEach((item, index) => {
-      const x = margin.left + xStep * index;
-      const y = margin.top + chartHeight + 10;
-      
-      // Rotacionar o texto verticalmente
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(-Math.PI / 2); // -90 graus
-      ctx.fillText(item.name, 0, 0);
-      ctx.restore();
+      const x = xScale(i);
+      const y = yScale(Math.max(yMin, d.value));
+      const isAbove = d.value >= avgValue;
+      const nearBottom = y > chartHeight * 0.7;
+      const dy = nearBottom ? -14 : isAbove ? -14 : 18;
+
+      g.append('text')
+        .attr('x', x)
+        .attr('y', y + dy)
+        .attr('text-anchor', 'middle')
+        .attr('dy', '0.35em')
+        .attr('font-size', '11px')
+        .attr('font-weight', '600')
+        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('fill', 'var(--text-primary)')
+        .text(formatLabel(d.value));
     });
 
-    // Calcular pontos da linha
-    const points = chartData.map((item, index) => {
-      const x = margin.left + (chartWidth / (chartData.length - 1 || 1)) * index;
-      const y = margin.top + chartHeight - ((item.value - minValue) / valueRange) * chartHeight;
-      return { x, y, value: item.value, label: item.name };
-    });
+    const xAxisG = g
+      .append('g')
+      .attr('transform', `translate(0,${chartHeight})`)
+      .attr('class', 'x-axis');
 
-    // Desenhar área preenchida abaixo da linha
-    ctx.fillStyle = `${lineColor}20`; // Adicionar transparência de 20%
-    ctx.beginPath();
-    points.forEach((point, index) => {
-      if (index === 0) {
-        ctx.moveTo(point.x, point.y);
-      } else {
-        const prevPoint = points[index - 1];
-        const cp1x = prevPoint.x + (point.x - prevPoint.x) / 3;
-        const cp1y = prevPoint.y;
-        const cp2x = prevPoint.x + (point.x - prevPoint.x) * 2 / 3;
-        const cp2y = point.y;
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, point.x, point.y);
-      }
-    });
-
-    // Completar o caminho até o eixo X (base do gráfico)
-    const lastPoint = points[points.length - 1];
-    ctx.lineTo(lastPoint.x, margin.top + chartHeight); // Ir até a base do gráfico
-    ctx.lineTo(points[0].x, margin.top + chartHeight); // Voltar ao início na base
-    ctx.closePath();
-    ctx.fill();
-
-    // Desenhar linha por cima da área preenchida
-    ctx.strokeStyle = lineColor;
-    ctx.lineWidth = 2 / dpr; // Ajustar espessura para dpr
-    ctx.beginPath();
-    points.forEach((point, index) => {
-      if (index === 0) {
-        ctx.moveTo(point.x, point.y);
-      } else {
-        const prevPoint = points[index - 1];
-        const cp1x = prevPoint.x + (point.x - prevPoint.x) / 3;
-        const cp1y = prevPoint.y;
-        const cp2x = prevPoint.x + (point.x - prevPoint.x) * 2 / 3;
-        const cp2y = point.y;
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, point.x, point.y);
-      }
-    });
-    ctx.stroke();
-
-    // Desenhar pontos apenas quando houver hover
-    if (hoveredIndex !== null && hoveredIndex >= 0 && hoveredIndex < points.length) {
-      const hoveredPoint = points[hoveredIndex];
-      ctx.fillStyle = '#0056b3'; // Cor azul escura para o ponto ativo
-      ctx.beginPath();
-      ctx.arc(hoveredPoint.x, hoveredPoint.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }, [chartData, dimensions, formatYAxis, hoveredIndex, theme]);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas || chartData.length === 0) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-
-    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
-    const chartWidth = dimensions.width - margin.left - margin.right;
-    const xStep = chartWidth / (chartData.length - 1 || 1);
-
-    let closestIndex = 0;
-    let minDistance = Infinity;
-
-    chartData.forEach((_, index) => {
-      const pointX = margin.left + xStep * index;
-      const distance = Math.abs(x - pointX);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = index;
-      }
-    });
-
-    if (minDistance < 30) {
-      setHoveredIndex(closestIndex);
-      const point = chartData[closestIndex];
-      setTooltip({
-        x: e.clientX,
-        y: e.clientY,
-        label: point.name,
-        value: point.value,
+    xAxisG
+      .selectAll('.tick')
+      .data(chartData)
+      .join('g')
+      .attr('class', 'tick')
+      .attr('transform', (_, i) => `translate(${xScale(i)},0)`)
+      .each(function (d) {
+        d3.select(this)
+          .append('text')
+          .attr('x', 0)
+          .attr('y', 28)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'central')
+          .attr('font-size', '11px')
+          .attr('font-family', 'system-ui, -apple-system, sans-serif')
+          .attr('fill', textColor)
+          .attr('transform', 'rotate(-45, 0, 28)')
+          .text(d.name);
       });
-    } else {
-      setHoveredIndex(null);
-      setTooltip(null);
-    }
-  }, [chartData, dimensions]);
 
-  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!onPointClick || chartData.length === 0) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const margin = { top: 10, right: 15, left: 40, bottom: 85 };
-    const chartWidth = dimensions.width - margin.left - margin.right;
-    const xStep = chartWidth / (chartData.length - 1 || 1);
-    let closestIndex = 0;
-    let minDistance = Infinity;
-    chartData.forEach((_, index) => {
-      const pointX = margin.left + xStep * index;
-      const distance = Math.abs(x - pointX);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = index;
+    g.append('g')
+      .attr('class', 'click-zones')
+      .selectAll('rect')
+      .data(chartData)
+      .join('rect')
+      .attr('x', (_, i) => xScale(i) - 20)
+      .attr('y', 0)
+      .attr('width', 40)
+      .attr('height', chartHeight)
+      .attr('fill', 'transparent')
+      .attr('cursor', onPointClick ? 'pointer' : 'default')
+      .on('click', (event, d) => {
+        const index = chartData.indexOf(d);
+        if (onPointClick && index >= 0) {
+          onPointClick(data[index], index);
+        }
+      });
+
+    const tooltipFilterId = `tooltip-shadow-${Math.random().toString(36).slice(2)}`;
+    defs.append('filter').attr('id', tooltipFilterId).attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%').append('feDropShadow').attr('dx', 0).attr('dy', 4).attr('stdDeviation', 6).attr('flood-opacity', 0.25);
+
+    const tooltipG = d3.select(svg).append('g').attr('class', 'chart-tooltip').style('opacity', 0).style('pointer-events', 'none');
+    const tooltipBg = tooltipG.append('rect').attr('rx', 6).attr('ry', 6).attr('fill', 'var(--bg-tertiary)').attr('stroke', 'var(--border-color)').attr('stroke-width', 1).attr('filter', `url(#${tooltipFilterId})`);
+
+    const tooltipContent = tooltipG.append('g').attr('transform', 'translate(12,12)');
+    tooltipContent.append('text').attr('class', 'tooltip-label').attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '10px').attr('font-weight', '500').attr('fill', 'var(--text-muted)').attr('y', 0);
+    tooltipContent.append('text').attr('class', 'tooltip-value').attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '11px').attr('font-weight', '600').attr('fill', 'var(--text-primary)').attr('y', 16);
+
+    const padding = { x: 16, y: 12 };
+    const container = containerRef.current;
+    if (!container) return;
+    d3.select(container).on('mousemove.tooltip', function (event: MouseEvent) {
+      if (chartData.length === 0) return;
+      const rect = container.getBoundingClientRect();
+      if (!rect) return;
+      const x = event.clientX - rect.left - margin.left;
+      let closestIndex = 0;
+      let minDistance = Infinity;
+      for (let i = 0; i < chartData.length; i++) {
+        const pointX = xScale(i);
+        if (Math.abs(x - pointX) < minDistance) {
+          minDistance = Math.abs(x - pointX);
+          closestIndex = i;
+        }
       }
+      if (minDistance >= 40) {
+        tooltipG.transition().duration(120).ease(d3.easeCubicOut).style('opacity', 0);
+        pointsG
+          .selectAll('circle')
+          .transition()
+          .duration(120)
+          .ease(d3.easeCubicOut)
+          .attr('r', 4);
+        return;
+      }
+      pointsG
+        .selectAll('circle')
+        .transition()
+        .duration(120)
+        .ease(d3.easeCubicOut)
+        .attr('r', (_, i) => (i === closestIndex ? 6 : 4));
+      const point = chartData[closestIndex];
+      tooltipContent.select('.tooltip-label').text(point.name);
+      tooltipContent.select('.tooltip-value').text(formatValue(point.value));
+      const bbox = tooltipContent.node()?.getBBox();
+      const w = bbox ? Math.max(bbox.width + padding.x, 100) : 120;
+      const h = bbox ? bbox.height + padding.y : 42;
+      tooltipBg.attr('width', w).attr('height', h).attr('x', 0).attr('y', 0);
+      let tx = event.clientX - rect.left + 14;
+      let ty = event.clientY - rect.top - 10;
+      if (tx + w > dimensions.width) tx = dimensions.width - w - 8;
+      if (tx < 8) tx = 8;
+      if (ty < 8) ty = 8;
+      if (ty + h > dimensions.height) ty = event.clientY - rect.top - h - 8;
+      tooltipG.attr('transform', `translate(${tx},${ty})`);
+      tooltipG.transition().duration(180).ease(d3.easeCubicOut).style('opacity', 1);
+    }).on('mouseleave.tooltip', () => {
+      tooltipG.transition().duration(150).ease(d3.easeCubicOut).style('opacity', 0);
+      pointsG
+        .selectAll('circle')
+        .transition()
+        .duration(120)
+        .ease(d3.easeCubicOut)
+        .attr('r', 4);
     });
-    if (minDistance < 30) {
-      const item = data[closestIndex];
-      if (item) onPointClick(item, closestIndex);
-    }
-  }, [chartData, data, dimensions, onPointClick]);
 
-  const handleMouseLeave = useCallback(() => {
-    setHoveredIndex(null);
-    setTooltip(null);
-  }, []);
+    return () => {
+      d3.select(container).on('mousemove.tooltip', null).on('mouseleave.tooltip', null);
+    };
+  }, [chartData, dimensions, format, onPointClick, data, formatLabel, formatValue]);
 
   if (!data || data.length === 0) {
     return <ChartEmptyState title={title} />;
@@ -341,34 +321,28 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
   return (
     <div className="chart-container">
       <h6 className="chart-title">{title}</h6>
-      <div ref={containerRef} style={{ width: '100%', height: '300px', minWidth: '200px', minHeight: '300px', position: 'relative', overflow: 'visible' }}>
-        <canvas
-          ref={canvasRef}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          onClick={handleClick}
+      <div
+        ref={containerRef}
+        style={{
+          width: '100%',
+          height: '220px',
+          minWidth: '160px',
+          minHeight: '200px',
+          position: 'relative',
+          overflow: 'visible',
+          borderRadius: '8px',
+          border: '1px solid var(--border-color)',
+        }}
+      >
+        <svg
+          ref={svgRef}
           style={{
             display: 'block',
             width: '100%',
             height: '100%',
-            cursor: onPointClick && hoveredIndex !== null ? 'pointer' : 'default',
+            overflow: 'visible',
           }}
         />
-        {tooltip && (
-          <div
-            className="custom-tooltip bg-dark p-2 border border-secondary rounded shadow"
-            style={{
-              position: 'fixed',
-              left: `${tooltip.x + 10}px`,
-              top: `${tooltip.y - 10}px`,
-              pointerEvents: 'none',
-              zIndex: 1000,
-            }}
-          >
-            <p className="label text-light mb-0">{tooltip.label}</p>
-            <p className="intro text-info mb-0">{t('financial.value')}: {formatValue(tooltip.value)}</p>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -377,4 +351,3 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
 ResponsiveLineChart.displayName = 'ResponsiveLineChart';
 
 export default ResponsiveLineChart;
-
