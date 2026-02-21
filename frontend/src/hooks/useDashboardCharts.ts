@@ -68,8 +68,21 @@ export const useDashboardCharts = (
 
   const statusPagamentoData = useMemo(() => {
     if (!titulosTodos || titulosTodos.length === 0) return [];
-    
-    const counts = titulosTodos.reduce((acc, titulo) => {
+
+    // Filtrar apenas títulos com data_vencimento no mês atual
+    const hoje = new Date();
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const titulosMesAtual = titulosTodos.filter(titulo => {
+      if (!titulo.data_vencimento) return false;
+      const venc = new Date(titulo.data_vencimento);
+      return venc >= inicioMes && venc <= fimMes;
+    });
+
+    if (titulosMesAtual.length === 0) return [];
+
+    const counts = titulosMesAtual.reduce((acc, titulo) => {
       if (titulo.status === 'pago' || titulo.status === 'pago_atraso' || titulo.status === 'parcial') {
         acc.pagos++;
       } else if (titulo.status === 'pendente') {
@@ -81,7 +94,7 @@ export const useDashboardCharts = (
       }
       return acc;
     }, { pagos: 0, pendentes: 0, vencidos: 0, cancelados: 0 });
-    
+
     return [
       { label: t('status.paid'), value: counts.pagos, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },
       { label: t('status.pending'), value: counts.pendentes, color: '#0ea5e9', filterValue: 'pendente' },
