@@ -44,8 +44,15 @@ export const authService = {
     return defaultApiClient.get<CurrentUser>('/auth/me');
   },
 
-  logout(): void {
-    removeAuthToken();
+  async logout(): Promise<void> {
+    try {
+      // Limpa o cookie HttpOnly no servidor
+      await defaultApiClient.post('/auth/logout');
+    } catch {
+      // Ignora erros de rede — o cookie pode já ter expirado
+    } finally {
+      removeAuthToken();
+    }
   },
 };
 

@@ -75,18 +75,11 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       setUpdateProgressPercent(0);
       setUpdateLogs(['Iniciando processo de atualização...']);
 
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        reject(new Error('Token de autenticação não encontrado'));
-        return;
-      }
-
       const url = `${API_CONFIG.BASE_URL}/atualizacoes/update-stream?branch=${encodeURIComponent(branch)}`;
-
 
       fetch(url, {
         method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include',
       })
         .then(response => {
 

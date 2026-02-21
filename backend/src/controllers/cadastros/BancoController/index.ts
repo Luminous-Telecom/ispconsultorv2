@@ -13,10 +13,21 @@ export class BancoController {
   /**
    * Listar bancos com filtros
    */
+  /** Remove campos sensíveis de um objeto banco antes de enviá-lo ao frontend */
+  private static maskSensitiveFields(banco: Record<string, unknown>): Record<string, unknown> {
+    const masked = { ...banco };
+    masked.has_api_key = !!masked.api_key;
+    delete masked.api_key;
+    masked.has_api_secret = !!masked.api_secret;
+    delete masked.api_secret;
+    return masked;
+  }
+
   static async findAtivos(req: Request, res: Response): Promise<void> {
     try {
       const result = await BancoService.findAtivos();
-      sendSuccess(res, result);
+      const maskedData = result.data.map(b => BancoController.maskSensitiveFields(b.toJSON() as Record<string, unknown>));
+      sendSuccess(res, { ...result, data: maskedData });
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao buscar bancos ativos', 500, true);
     }
@@ -36,7 +47,8 @@ export class BancoController {
         sortDirection: sortDirection as string | undefined
       });
       
-      sendSuccess(res, result);
+      const maskedData = result.data.map(b => BancoController.maskSensitiveFields(b.toJSON ? (b.toJSON() as Record<string, unknown>) : (b as unknown as Record<string, unknown>)));
+      sendSuccess(res, { ...result, data: maskedData });
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao listar bancos', 500, true);
     }
@@ -56,7 +68,7 @@ export class BancoController {
         return;
       }
       
-      sendSuccess(res, banco);
+      sendSuccess(res, BancoController.maskSensitiveFields(banco.toJSON() as Record<string, unknown>));
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao buscar banco', 500, true, {
         banco_id: req.params.id

@@ -208,16 +208,12 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
 
           },
           images_upload_handler: async (blobInfo) => {
-            const { getAuthToken } = await import('../../services/core');
-            
             const formData = new FormData();
             formData.append('image', blobInfo.blob(), blobInfo.filename());
             
             const response = await fetch('/api/modelos-documento/upload-imagem', {
               method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${getAuthToken() || ''}`
-              },
+              credentials: 'include',
               body: formData
             });
             

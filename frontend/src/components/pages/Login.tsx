@@ -47,32 +47,19 @@ const Login: React.FC = () => {
 
       const response = await authService.login({ email, password });
 
-      if (response.success && response.data?.token) {
-        // Verificar se o token foi salvo antes de navegar
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-          // Salvar timestamp do login para evitar redirecionamento imediato em caso de erro 401
-          sessionStorage.setItem('last_login_time', Date.now().toString());
-          success(t('login.success'));
-          // Usar window.location forçar reload completo e evitar problemas de cache/SPA
-          window.location.href = '/adm';
-        } else {
-          error(t('login.errorToken'));
-          removeAuthToken();
-        }
+      if (response.success) {
+        // Cookie HttpOnly setado pelo backend; flag de sessão setada pelo authService
+        sessionStorage.setItem('last_login_time', Date.now().toString());
+        success(t('login.success'));
+        window.location.href = '/adm';
       } else {
         removeAuthToken();
         error(response.message || t('login.errorCredentials'));
       }
     } catch (err) {
       removeAuthToken();
-      // Verificar se é um erro de autenticação (credenciais inválidas)
       const errorMessage = err instanceof Error ? err.message : t('login.errorGeneral');
-      // Não mostrar erro se o token foi salvo (login bem-sucedido apesar do erro)
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        error(errorMessage);
-      }
+      error(errorMessage);
     } finally {
       setIsLoading(false);
     }

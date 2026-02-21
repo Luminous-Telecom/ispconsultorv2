@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { CentralAssinanteController } from '../../controllers/centralAssinante/CentralAssinanteController';
 import { CentralAssinanteAuthController } from '../../controllers/centralAssinante/CentralAssinanteAuthController';
+import { authRateLimitMiddleware } from '../../middleware/rateLimitMiddleware';
 import { logger } from '../../utils/logger';
 
 const router = Router();
@@ -17,8 +18,8 @@ router.use('/central-assinante', (req, res, next) => {
   next();
 });
 
-// Rota pública para login na central do assinante
-router.post('/central-assinante/login', CentralAssinanteAuthController.login);
+// Rota pública para login na central do assinante — rate limited para prevenir brute force
+router.post('/central-assinante/login', authRateLimitMiddleware(), CentralAssinanteAuthController.login);
 
 // Rota pública para recuperar senha na central do assinante
 router.post('/central-assinante/recuperar-senha', CentralAssinanteAuthController.recuperarSenha);

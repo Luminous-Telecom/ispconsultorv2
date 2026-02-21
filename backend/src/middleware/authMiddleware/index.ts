@@ -11,6 +11,7 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/client-ip$/i },
   { path: /^\/api\/health/i },
   { path: /^\/api\/auth\/login$/i },
+  { method: 'POST', path: /^\/api\/auth\/logout$/i }, // Logout limpa cookie — não exige token válido
   // Rotas TXT Blockdomi (protegidas por IP no blockdomiIpsPermitidosMiddleware)
   { path: /^\/domain\/version\/?$/i },
   { path: /^\/domain\/all\/?$/i },
@@ -90,9 +91,16 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     return;
   }
 
+  // Prioridade: cookie HttpOnly (proteção XSS) → Authorization header (retrocompat / clientes API)
+  const cookieToken = (req as Request & { cookies?: Record<string, string> }).cookies?.auth_token;
   const authHeader = req.get('Authorization');
+  const headerToken = authHeader?.startsWith('Bearer ')
+    ? authHeader.replace('Bearer ', '').trim()
+    : null;
 
-  if (!authHeader?.startsWith('Bearer ')) {
+  const token = cookieToken || headerToken;
+
+  if (!token) {
     if (req.path.includes('/notas-fiscais') || req.path.includes('/nfse')) {
       logger.warn('Requisição bloqueada - sem token de autenticação', {
         path: req.path,
@@ -102,8 +110,6 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     res.status(404).end();
     return;
   }
-
-  const token = authHeader.replace('Bearer ', '').trim();
 
   try {
     const payload = jwt.verify(token, jwtSecret);

@@ -7,6 +7,25 @@ import { UsuarioService } from '../../services/cadastros/UsuarioService';
 import { registrarLogin } from '../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest as AuthRequest } from '../../types/auth';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized, sendNotFound } from '../../utils/responseUtils';
+import { isProduction } from '../../utils/envUtils';
+
+/**
+ * Converte string de duração JWT (ex: '24h', '7d', '30m') para milissegundos.
+ * Usado para definir o maxAge do cookie.
+ */
+const jwtDurationToMs = (duration: string): number => {
+  const match = duration.match(/^(\d+)([smhd])$/);
+  if (!match) return 24 * 60 * 60 * 1000; // padrão: 24h
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+  const multipliers: Record<string, number> = {
+    s: 1000,
+    m: 60 * 1000,
+    h: 60 * 60 * 1000,
+    d: 24 * 60 * 60 * 1000,
+  };
+  return value * (multipliers[unit] ?? 1000);
+};
 
 interface AuthenticatedRequest extends Request {
   user?: JwtPayload | string;
@@ -88,16 +107,29 @@ export class AuthController {
       authReq.user = { id: usuario.id, nome: usuario.nome, email: usuario.email };
       await registrarLogin(authReq, usuario.id, 'Login realizado com sucesso');
 
+      const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '24h';
+
+      // Setar token em cookie HttpOnly — inacessível a JavaScript (proteção XSS)
+      res.cookie('auth_token', token, {
+        httpOnly: true,
+        secure: isProduction(),
+        sameSite: 'strict',
+        path: '/',
+        maxAge: jwtDurationToMs(jwtExpiresIn),
+      });
+
       logger.info('Login realizado com sucesso', {
         usuario_id: usuario.id,
         email: usuario.email,
         path: '/api/auth/login',
       });
 
+      // Retornamos o token também no corpo para uso em Socket.IO (única exceção)
+      // O frontend NÃO deve armazenar este token em localStorage
       sendSuccess(res, {
         token,
         token_type: 'Bearer',
-        expires_in: process.env.JWT_EXPIRES_IN || '24h',
+        expires_in: jwtExpiresIn,
         user: {
           id: usuario.id,
           nome: usuario.nome,
@@ -110,6 +142,16 @@ export class AuthController {
     } catch (err) {
       sendError(res, err, 'Erro inesperado durante login', 500, true);
     }
+  }
+
+  static async logout(_req: Request, res: Response): Promise<void> {
+    res.clearCookie('auth_token', {
+      httpOnly: true,
+      secure: isProduction(),
+      sameSite: 'strict',
+      path: '/',
+    });
+    sendSuccess(res, null, 'Logout realizado com sucesso');
   }
 
   static async me(req: Request, res: Response): Promise<void> {

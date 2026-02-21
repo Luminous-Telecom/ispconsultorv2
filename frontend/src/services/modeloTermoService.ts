@@ -79,12 +79,9 @@ class ModeloTermoService {
 
   static async generatePdf(id: number): Promise<Blob> {
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await axios.get(`/api${this.baseUrl}/${id}/pdf`, {
         responseType: 'blob',
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
+        withCredentials: true,
       });
       return response.data;
     } catch (error) {
@@ -105,14 +102,11 @@ class ModeloTermoService {
   }
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
-    const token = localStorage.getItem('auth_token');
     const response = await axios.post(`/api${this.baseUrl}/${id}/pdf/test`, 
       { clienteId },
-      { 
+      {
         responseType: 'blob',
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
+        withCredentials: true,
       }
     );
     return response.data;
@@ -120,12 +114,9 @@ class ModeloTermoService {
 
   static async generatePdfWithContrato(id: number, contratoId: number): Promise<Blob> {
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await axios.post(`/api${this.baseUrl}/${id}/pdf/contrato/${contratoId}`, {}, {
         responseType: 'blob',
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
+        withCredentials: true,
       });
       return response.data;
     } catch (error) {

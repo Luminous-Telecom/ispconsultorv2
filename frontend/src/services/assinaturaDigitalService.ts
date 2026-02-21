@@ -76,14 +76,11 @@ export class AssinaturaDigitalService {
 
   static async baixarPdfAssinado(id: number): Promise<void> {
     try {
-      const token = localStorage.getItem('auth_token');
       const url = `/api/assinaturas-digital/${id}/download`;
       
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {

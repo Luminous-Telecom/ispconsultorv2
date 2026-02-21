@@ -293,14 +293,11 @@ export const useClienteImpressao = ({
     try {
       const ids = itensPagos.map(item => item.id).join(',');
       const axios = (await import('axios')).default;
-      const token = localStorage.getItem('auth_token');
       
       const response = await axios.get(`/api/recibo/web/multiplos?ids=${ids}`, {
         responseType: 'blob',
         timeout: 120000,
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
+        withCredentials: true,
       });
 
       const url = window.URL.createObjectURL(response.data);

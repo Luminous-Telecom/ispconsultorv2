@@ -70,20 +70,15 @@ export class ErrorHandler {
         case 401:
           errorType = ErrorType.AUTHENTICATION_ERROR;
           message = responseData?.message || responseData?.error || 'Não autenticado';
-          const hasToken401 = localStorage.getItem('auth_token');
           const currentPath401 = window.location.pathname;
           const lastLoginTime401 = sessionStorage.getItem('last_login_time');
           const timeSinceLogin401 = lastLoginTime401 ? Date.now() - parseInt(lastLoginTime401, 10) : Infinity;
           
-          // Não redirecionar se for uma requisição de parâmetro que pode não existir (404 disfarçado)
-          // ou se for teste de autenticação do Portal Nacional (401 esperado quando credenciais estão erradas)
           const isParametroRequest = requestUrl.includes('parametro/');
           const isTestAuthRequest = requestUrl.includes('nfse-config/test-auth');
           
           if (currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000 && !isParametroRequest && !isTestAuthRequest) {
-            if (hasToken401) {
-              localStorage.removeItem('auth_token');
-            }
+            sessionStorage.removeItem('auth_session');
             setTimeout(() => {
               if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
                 window.location.href = '/login';
@@ -116,18 +111,17 @@ export class ErrorHandler {
             break;
           }
           
-          // Verificar se é erro de autenticação (token expirado)
-          const hasToken = localStorage.getItem('auth_token');
+          const hasSession = sessionStorage.getItem('auth_session');
           const currentPath = window.location.pathname;
           
-          if (hasToken && currentPath.startsWith('/adm')) {
+          if (hasSession && currentPath.startsWith('/adm')) {
             const lastLoginTime = sessionStorage.getItem('last_login_time');
             const timeSinceLogin = lastLoginTime ? Date.now() - parseInt(lastLoginTime, 10) : Infinity;
             
             if (timeSinceLogin > 2000) {
               errorType = ErrorType.AUTHENTICATION_ERROR;
               message = 'Sessão expirada. Faça login novamente.';
-              localStorage.removeItem('auth_token');
+              sessionStorage.removeItem('auth_session');
               setTimeout(() => {
                 if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
                   window.location.href = '/login';

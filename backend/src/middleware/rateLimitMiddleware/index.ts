@@ -56,12 +56,12 @@ const generalLimiter = rateLimit({
 });
 
 /**
- * Rate limiter mais restritivo para rotas de autenticação
- * Previne ataques de força bruta em login
+ * Rate limiter restritivo para rotas de autenticação — SEMPRE ATIVO.
+ * Máximo 5 tentativas por IP a cada 15 minutos.
  */
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // 5 tentativas por IP
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   message: {
     success: false,
     message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
@@ -81,6 +81,37 @@ const authLimiter = rateLimit({
     res.status(429).json({
       success: false,
       message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
+      error: 'RATE_LIMIT_EXCEEDED'
+    });
+  },
+  skipFailedRequests: false,
+  skipSuccessfulRequests: false
+});
+
+/**
+ * Rate limiter para endpoints públicos sem autenticação (CEP, CNPJ) — SEMPRE ATIVO.
+ * Máximo 30 requisições por IP por minuto.
+ */
+const publicEndpointLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: {
+    success: false,
+    message: 'Muitas requisições. Tente novamente em instantes.',
+    error: 'RATE_LIMIT_EXCEEDED'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req: Request, res: Response) => {
+    logger.warn('Rate limit excedido em endpoint público', {
+      context: 'rateLimitMiddleware',
+      type: 'public',
+      ip: req.ip || req.socket.remoteAddress,
+      path: req.path,
+    });
+    res.status(429).json({
+      success: false,
+      message: 'Muitas requisições. Tente novamente em instantes.',
       error: 'RATE_LIMIT_EXCEEDED'
     });
   },
@@ -109,15 +140,14 @@ export const rateLimitMiddleware = () => {
 };
 
 /**
- * Rate limiter específico para rotas de autenticação
+ * Rate limiter para rotas de autenticação — sempre ativo independente de ENABLE_RATE_LIMIT.
+ * Brute force protection é obrigatório em produção.
  */
-export const authRateLimitMiddleware = () => {
-  if (!ENABLE_RATE_LIMIT) {
-    return (req: Request, res: Response, next: () => void) => {
-      next();
-    };
-  }
+export const authRateLimitMiddleware = () => authLimiter;
 
-  return authLimiter;
-};
+/**
+ * Rate limiter para endpoints públicos sem autenticação (CEP, CNPJ, etc.).
+ * Sempre ativo — 30 req/IP/min.
+ */
+export const publicEndpointRateLimitMiddleware = () => publicEndpointLimiter;
 

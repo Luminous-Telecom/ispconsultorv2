@@ -214,8 +214,8 @@ const Layout: React.FC = () => {
     }
   }, [navigate, location.pathname]);
 
-  const handleLogout = () => {
-    authService.logout();
+  const handleLogout = async () => {
+    await authService.logout();
     success(t('layout.logoutSuccess'));
     navigate('/login');
   };

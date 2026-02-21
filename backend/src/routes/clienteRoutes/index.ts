@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { ClienteController } from '../../controllers/clientes/ClienteController';
+import { publicEndpointRateLimitMiddleware } from '../../middleware/rateLimitMiddleware';
 
 const router = Router();
 
-// Rotas auxiliares (devem vir antes das rotas com parâmetros dinâmicos)
-router.get('/buscar-cep/:cep', ClienteController.buscarCep);
-router.get('/consultar-cnpj/:cnpj', ClienteController.consultarCnpj);
+// Rotas auxiliares — rate limit 30 req/IP/min (endpoints públicos sem autenticação)
+router.get('/buscar-cep/:cep', publicEndpointRateLimitMiddleware(), ClienteController.buscarCep);
+router.get('/consultar-cnpj/:cnpj', publicEndpointRateLimitMiddleware(), ClienteController.consultarCnpj);
 
 // Rotas CRUD básicas
 router.get('/', ClienteController.index);

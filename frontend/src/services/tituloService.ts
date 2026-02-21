@@ -177,18 +177,12 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
     try {
       const idsParam = ids.join(',');
       
-      // Usar axios diretamente para evitar problemas com o interceptor
       const axios = (await import('axios')).default;
-      const token = localStorage.getItem('auth_token');
       
-      // Timeout aumentado para 120 segundos (2 minutos) pois geração de múltiplos PDFs pode demorar
       const response = await axios.get(`/api${API_ENDPOINTS.TITULOS}/boletos-multiplos-pdf?ids=${idsParam}`, {
         responseType: 'blob',
-        timeout: 120000, // 120 segundos
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json'
-        }
+        timeout: 120000,
+        withCredentials: true,
       });
 
       // Com responseType: 'blob', o axios retorna o blob em response.data

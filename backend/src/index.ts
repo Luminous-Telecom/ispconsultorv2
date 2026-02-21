@@ -6,7 +6,6 @@ import { setIO } from './socket/socketServer';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
-import fs from 'fs';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 
@@ -28,7 +27,6 @@ import {
 import { ddosProtectionMiddleware } from './middleware/ddosProtectionMiddleware';
 import { rateLimitMiddleware } from './middleware/rateLimitMiddleware';
 import { defaultSanitizeMiddleware } from './middleware/sanitizeMiddleware';
-import { metricsMiddleware } from './middleware/metricsMiddleware';
 
 
 // Importar modelos para configurar relacionamentos
@@ -65,6 +63,13 @@ const PORT = process.env.PORT;
 // Isso permite que express-rate-limit identifique corretamente o IP do cliente
 app.set('trust proxy', 1);
 
+// Origens confiáveis para CORS (definidas via variável de ambiente)
+// Ex: ALLOWED_ORIGINS=https://luminoustelecom.com.br,https://www.luminoustelecom.com.br
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+
 // Middleware de segurança
 const isPdfOrDownloadRoute = (path: string) => 
   path.startsWith('/webhook/integration/pdf/') || 
@@ -74,11 +79,24 @@ app.use((req, res, next) => {
   const frameguard = isPdfOrDownloadRoute(req.path) ? false : { action: 'deny' as const };
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: isPdfOrDownloadRoute(req.path) ? false : {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
+        imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+        fontSrc: ["'self'", 'https:', 'data:'],
+        connectSrc: ["'self'", 'wss:', 'ws:'],
+        frameSrc: ["'none'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'", 'blob:'],
+        workerSrc: ["'self'", 'blob:'],
+      }
+    },
     frameguard,
     noSniff: true,
     xssFilter: false,
-    referrerPolicy: { policy: 'no-referrer' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     hsts: {
       maxAge: 31536000,
       includeSubDomains: true,
@@ -87,10 +105,26 @@ app.use((req, res, next) => {
   })(req, res, next);
 });
 
-// Middleware de CORS
-// Aceitar todas as origens (em produção, o Nginx controla o CORS)
+// Middleware de CORS — aceita apenas origens definidas em ALLOWED_ORIGINS
+// Se ALLOWED_ORIGINS não estiver configurada, bloqueia todas as origens cross-origin em produção
 app.use(cors({
-  origin: true, // Aceitar todas as origens (Nginx controla em produção)
+  origin: (origin, callback) => {
+    // Requisições sem origin (curl, mobile, server-to-server) são permitidas
+    if (!origin) return callback(null, true);
+    // Se não há lista configurada, permite tudo apenas fora de produção
+    if (ALLOWED_ORIGINS.length === 0) {
+      if (isProduction()) {
+        logger.warn('CORS bloqueado: ALLOWED_ORIGINS não configurada em produção', { origin });
+        return callback(new Error('Origem não permitida: configure ALLOWED_ORIGINS'));
+      }
+      return callback(null, true);
+    }
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+    logger.warn('CORS bloqueado: origem não permitida', { origin, allowedOrigins: ALLOWED_ORIGINS });
+    return callback(new Error('Origem não permitida pelo CORS'));
+  },
   credentials: true,
   exposedHeaders: ['Content-Disposition'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -123,27 +157,29 @@ app.use(defaultSanitizeMiddleware);
 
 const ENABLE_CSRF = process.env.ENABLE_CSRF === 'true';
 if (ENABLE_CSRF) {
-  try {
-    const { csrfTokenMiddleware, csrfProtectionMiddleware } = require('./middleware/csrfMiddleware');
-    app.use(csrfTokenMiddleware);
-    app.use('/api', csrfProtectionMiddleware);
-  } catch (error) {
-    logger.warn('Erro ao carregar middleware de CSRF', {
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
+  import('./middleware/csrfMiddleware')
+    .then(({ csrfTokenMiddleware, csrfProtectionMiddleware }) => {
+      app.use(csrfTokenMiddleware);
+      app.use('/api', csrfProtectionMiddleware);
+    })
+    .catch((error: unknown) => {
+      logger.warn('Erro ao carregar middleware de CSRF', {
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     });
-  }
 }
 
 const ENABLE_METRICS = process.env.ENABLE_METRICS === 'true';
 if (ENABLE_METRICS) {
-  try {
-    const { metricsMiddleware } = require('./middleware/metricsMiddleware');
-    app.use(metricsMiddleware);
-  } catch (error) {
-    logger.warn('Erro ao carregar middleware de métricas', {
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
+  import('./middleware/metricsMiddleware')
+    .then(({ metricsMiddleware }) => {
+      app.use(metricsMiddleware);
+    })
+    .catch((error: unknown) => {
+      logger.warn('Erro ao carregar middleware de métricas', {
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     });
-  }
 }
 
 // Middleware de proteção DDoS (Layer 7)
@@ -239,7 +275,12 @@ app.use('/api/*', (req, res) => {
 const httpServer = http.createServer(app);
 const io = new SocketIOServer(httpServer, {
   path: '/socket.io',
-  cors: { origin: true, credentials: true }
+  cors: {
+    origin: ALLOWED_ORIGINS.length > 0
+      ? ALLOWED_ORIGINS
+      : (isProduction() ? false : true),
+    credentials: true
+  }
 });
 setIO(io);
 

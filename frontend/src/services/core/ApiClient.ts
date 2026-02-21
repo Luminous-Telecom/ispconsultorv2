@@ -31,7 +31,8 @@ export class ApiClient {
         'Content-Type': 'application/json',
         ...config?.headers,
       },
-      withCredentials: config?.withCredentials || false,
+      // withCredentials: true envia o cookie HttpOnly auth_token automaticamente
+      withCredentials: config?.withCredentials !== undefined ? config.withCredentials : true,
     });
 
     this.setupInterceptors();
@@ -100,18 +101,11 @@ export class ApiClient {
         const url = (config.url || '').toLowerCase();
         const isPublicRoute = publicRoutes.some(route => url.includes(route.toLowerCase()));
         
-        // Só adicionar token se não for rota pública
+        // A autenticação é feita via cookie HttpOnly (enviado automaticamente por withCredentials: true).
+        // Não injetamos Authorization header a partir de storage — o cookie é suficiente.
+        // A Central do Assinante pode passar seu próprio token via header se necessário.
         if (isPublicRoute) {
           delete config.headers?.Authorization;
-        } else {
-          // Só setar Authorization do admin se ainda não existir um header (ex: Central do Assinante usa seu próprio token)
-          const existingAuth = (config.headers as Record<string, string> | undefined)?.Authorization;
-          if (!existingAuth) {
-            const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-            if (token) {
-              config.headers.Authorization = `Bearer ${token}`;
-            }
-          }
         }
         
         // Se for FormData, remover Content-Type para axios definir automaticamente com boundary
@@ -242,16 +236,8 @@ export class ApiClient {
 
 export const defaultApiClient = new ApiClient();
 
-export const setAuthToken = (token: string): void => {
-  localStorage.setItem('auth_token', token);
-};
-
-export const removeAuthToken = (): void => {
-  localStorage.removeItem('auth_token');
-};
-
-export const getAuthToken = (): string | null => {
-  return localStorage.getItem('auth_token');
-};
+// Estas funções são mantidas por compatibilidade mas delegam para auth.ts (sessionStorage/memória).
+// O token JWT real fica no cookie HttpOnly — inacessível ao JavaScript.
+export { setAuthToken, removeAuthToken, getAuthToken } from './auth';
 
 

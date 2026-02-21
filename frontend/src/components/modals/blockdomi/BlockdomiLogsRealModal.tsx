@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { useBlockdomiLogs } from '@/hooks/useBlockdomiLogs';
 import { useI18n } from '@/contexts/I18nContext';
 import DraggableModal from '@/components/common/DraggableModal';
-import { getAuthToken } from '@/services/core';
+import { getSocketToken } from '@/services/core';
 import type { BlockdomiLogAcessoItem } from '@/services/blockdomiLogAcessoService';
 
 const INITIAL_LIMIT = 80;
@@ -55,7 +55,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
 
   useEffect(() => {
     if (!show) return;
-    const token = getAuthToken();
+    const token = getSocketToken();
     if (!token) return;
     let socket: Socket | null = null;
     const timer = setTimeout(() => {
