@@ -30,7 +30,7 @@ module.exports = {
 
                                         <p style="font-size:14px;margin:5px 0;">
 
-                                            <a style="color:#ffffff;text-decoration:none;" href="https://luminoustelecom.com.br/central/login.hhvm"><strong>Central Assinante</strong></a> | #empresa.telefone#
+                                            <a style="color:#ffffff;text-decoration:none;" href="#empresa.url_central#"><strong>Central Assinante</strong></a> | #empresa.telefone#
 
                                         </p>
 
