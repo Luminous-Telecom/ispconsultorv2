@@ -90,7 +90,7 @@ app.use((req, res, next) => {
         fontSrc: ["'self'", 'https:', 'data:'],
         // cloudflareinsights.com: beacon envia dados de analytics de volta
         connectSrc: ["'self'", 'wss:', 'ws:', 'https://cloudflareinsights.com'],
-        frameSrc: ["'none'"],
+        frameSrc: ["'self'", 'blob:'],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'", 'blob:'],
         workerSrc: ["'self'", 'blob:'],
