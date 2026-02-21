@@ -4,7 +4,7 @@ import { publicEndpointRateLimitMiddleware } from '../../middleware/rateLimitMid
 
 const router = Router();
 
-// Rotas auxiliares — rate limit 30 req/IP/min (endpoints públicos sem autenticação)
+// Rotas auxiliares — rate limit 20 req/IP/min (endpoints públicos sem autenticação)
 router.get('/buscar-cep/:cep', publicEndpointRateLimitMiddleware(), ClienteController.buscarCep);
 router.get('/consultar-cnpj/:cnpj', publicEndpointRateLimitMiddleware(), ClienteController.consultarCnpj);
 

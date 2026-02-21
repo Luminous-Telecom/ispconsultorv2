@@ -4,33 +4,33 @@ export const copyProtectionMiddleware = (req: Request, res: Response, next: Next
   const isPdfRoute = req.path.startsWith('/webhook/integration/pdf/');
   const isClienteArquivoDownload = req.path.startsWith('/api/cliente-arquivos/') && req.path.includes('/download');
   const isSpecialRoute = isPdfRoute || isClienteArquivoDownload;
-  
-  res.setHeader('x-content-type-options', 'nosniff');
-  res.setHeader('Referrer-Policy', 'no-referrer');
+
+  // Headers que o Helmet NÃO cobre — definidos aqui para todas as rotas
+  // Referrer-Policy e X-Content-Type-Options são gerenciados pelo Helmet — não duplicar aqui
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
   res.setHeader('X-Download-Options', 'noopen');
   res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
   res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex');
-  
+
   if (!isSpecialRoute) {
     // X-Frame-Options DENY é gerenciado pelo Helmet (frameguard) — não duplicar aqui
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     res.setHeader('Surrogate-Control', 'no-store');
-    
-    if (!__dirname.includes('dist')) {
-      res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-      res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-    }
-    
+
+    // COEP/COOP: aplicar em todos os ambientes (dev e prod)
+    // Garante isolamento de origem cruzada — necessário para SharedArrayBuffer e Performance APIs
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+
     const isApiRequest = req.path.startsWith('/api/');
     const expectsHtml = /text\/html/i.test(req.get('accept') || '');
     if (!isApiRequest && expectsHtml) {
       res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
     }
   }
-  
+
   next();
 };
 
