@@ -84,11 +84,13 @@ app.use((req, res, next) => {
         defaultSrc: ["'self'"],
         // 'unsafe-eval' removido — React em produção não precisa de eval
         // 'unsafe-inline' mantido enquanto o HTML é servido estaticamente pelo Nginx sem nonce
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        // cloudflareinsights.com: script de analytics injetado pelo Cloudflare no HTML
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://static.cloudflareinsights.com'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
         imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
         fontSrc: ["'self'", 'https:', 'data:'],
-        connectSrc: ["'self'", 'wss:', 'ws:'],
+        // cloudflareinsights.com: beacon envia dados de analytics de volta
+        connectSrc: ["'self'", 'wss:', 'ws:', 'https://cloudflareinsights.com'],
         frameSrc: ["'none'"],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'", 'blob:'],
