@@ -594,15 +594,19 @@ const Layout: React.FC = () => {
                   </div>
                 )}
 
-                {/* Mobile: Botão de busca centralizado */}
-                {isMobile && !tableHeader.showMobileSearch && (
-                  <button
-                    className="navbar-mobile-search-btn"
-                    onClick={() => tableHeader.setShowMobileSearch(true)}
-                    aria-label={t('layout.search')}
-                  >
-                    <i className="bi bi-search"></i>
-                  </button>
+                {/* Mobile: barra de busca inline entre o hambúrguer e o usuário */}
+                {isMobile && (
+                  <div className="navbar-inline-search">
+                    <i className="bi bi-search navbar-inline-search-icon"></i>
+                    <input
+                      type="search"
+                      className="navbar-inline-search-input"
+                      placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
+                      value={tableHeader.searchValue}
+                      onChange={(e) => tableHeader.setSearchValue(e.target.value)}
+                      aria-label={t('layout.search')}
+                    />
+                  </div>
                 )}
               </div>
 
@@ -646,8 +650,32 @@ const Layout: React.FC = () => {
                         >
                           <i className="bi bi-translate"></i>
                           <span>{t('layout.language')}</span>
-                          <i className="bi bi-chevron-down ms-auto" style={{ fontSize: '0.75rem', opacity: 0.6 }}></i>
+                          <i className={`bi bi-chevron-${showLanguageDropdown ? 'up' : 'down'} ms-auto`} style={{ fontSize: '0.75rem', opacity: 0.6 }}></i>
                         </div>
+                        {/* Mobile: idiomas inline dentro do menu */}
+                        {isMobile && showLanguageDropdown && (
+                          <div ref={languageDropdownRef} data-language-dropdown>
+                            {availableLanguages.map((lang) => (
+                              <button
+                                key={lang.code}
+                                className={`table-dropdown-item d-flex align-items-center w-100 ps-4 ${language === lang.code ? 'active' : ''}`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (language !== lang.code) setLanguage(lang.code);
+                                  setShowLanguageDropdown(false);
+                                }}
+                                style={{ border: 'none', background: 'none' }}
+                              >
+                                <span className="me-2">{lang.flag}</span>
+                                <span>{lang.name}</span>
+                                {language === lang.code && (
+                                  <i className="bi bi-check-lg ms-auto text-primary"></i>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </li>
                       <li><hr className="dropdown-divider" /></li>
                       <li
@@ -659,25 +687,18 @@ const Layout: React.FC = () => {
                       </li>
                     </ul>
                   )}
-                  {showLanguageDropdown && (
+                  {/* Desktop: dropdown flutuante posicionado */}
+                  {!isMobile && showLanguageDropdown && (
                     <div
                       ref={languageDropdownRef}
                       data-language-dropdown
-                      className={
-                        isMobile
-                          ? 'layout-language-dropdown-menu--mobile shadow' // mobile fix: P7 — bottom sheet, sem getBoundingClientRect
-                          : 'layout-language-dropdown-menu shadow'
-                      }
-                      style={
-                        isMobile
-                          ? undefined
-                          : {
-                              top: `${languageDropdownPosition.top}px`,
-                              left: `${languageDropdownPosition.left}px`,
-                              minWidth: '160px',
-                              zIndex: 10001,
-                            }
-                      }
+                      className="layout-language-dropdown-menu shadow"
+                      style={{
+                        top: `${languageDropdownPosition.top}px`,
+                        left: `${languageDropdownPosition.left}px`,
+                        minWidth: '160px',
+                        zIndex: 10001,
+                      }}
                     >
                       {availableLanguages.map((lang) => (
                         <div key={lang.code}>
