@@ -64,7 +64,6 @@ const PORT = process.env.PORT;
 app.set('trust proxy', 1);
 
 // Origens confiáveis para CORS (definidas via variável de ambiente)
-// Ex: ALLOWED_ORIGINS=https://luminoustelecom.com.br,https://www.luminoustelecom.com.br
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map(o => o.trim())
