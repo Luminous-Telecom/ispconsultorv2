@@ -44,9 +44,9 @@ module.exports = {
     // Inserir registro padrão
     await new Promise(resolve => setTimeout(resolve, 100));
     await queryInterface.sequelize.query(
-      'INSERT INTO parametros (validar_cpf_cnpj, titulos_vence_sabado, auto_lancamento_titulos, total_titulos_financeiro) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO parametros (validar_cpf_cnpj, titulos_vence_sabado, auto_lancamento_titulos, total_titulos_financeiro) VALUES (?, ?, ?, ?)',
       {
-        replacements: [true, false, false, true, 6]
+        replacements: [true, false, true, 6]
       }
     );
   },

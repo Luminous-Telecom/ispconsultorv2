@@ -2,7 +2,13 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    // Verificar se já existe
+    const table = await queryInterface.describeTable('parametros').catch(() => null);
+
+    if (!table || !table.chave) {
+      // Estrutura não compatível, ignorar migration
+      return;
+    }
+
     const [rows] = await queryInterface.sequelize.query(
       "SELECT id FROM parametros WHERE chave = 'central_assinante_metodo_login' LIMIT 1"
     );

@@ -12,7 +12,6 @@ module.exports = {
       html: {
         type: Sequelize.TEXT('long'),
         allowNull: false,
-        defaultValue: ''
       },
       ativo: {
         type: Sequelize.BOOLEAN,

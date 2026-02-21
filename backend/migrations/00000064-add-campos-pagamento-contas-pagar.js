@@ -23,12 +23,21 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeColumn('contas_pagar', 'chave_pix');
-    await queryInterface.removeColumn('contas_pagar', 'tipo_chave_pix');
-    await queryInterface.removeColumn('contas_pagar', 'linha_digitavel');
-    
-    // Remover o ENUM se necessário
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_contas_pagar_tipo_chave_pix";');
+    const table = await queryInterface.describeTable('contas_pagar');
+
+    if (table.chave_pix) {
+      await queryInterface.removeColumn('contas_pagar', 'chave_pix');
+    }
+
+    if (table.tipo_chave_pix) {
+      await queryInterface.removeColumn('contas_pagar', 'tipo_chave_pix');
+    }
+
+    if (table.linha_digitavel) {
+      await queryInterface.removeColumn('contas_pagar', 'linha_digitavel');
+    }
+
+    // MySQL não usa DROP TYPE, isso é PostgreSQL.
   }
 };
 

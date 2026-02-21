@@ -321,15 +321,28 @@ module.exports = {
     });
   },
 
-  down: async (queryInterface, Sequelize) => {
-    // Remover campo nota_fiscal_id de titulos
-    await queryInterface.removeIndex('titulos', 'idx_titulos_nota_fiscal_id');
-    await queryInterface.removeColumn('titulos', 'nota_fiscal_id');
+  down: async (queryInterface) => {
 
-    // Remover tabela nfse_config
+    // 1️⃣ Remover foreign key primeiro
+    await queryInterface.removeConstraint(
+      'titulos',
+      'titulos_nota_fiscal_id_foreign_idx'
+    );
+
+    // 2️⃣ Remover index
+    await queryInterface.removeIndex(
+      'titulos',
+      'idx_titulos_nota_fiscal_id'
+    );
+
+    // 3️⃣ Remover coluna
+    await queryInterface.removeColumn(
+      'titulos',
+      'nota_fiscal_id'
+    );
+
+    // 4️⃣ Dropar tabelas
     await queryInterface.dropTable('nfse_config');
-
-    // Remover tabela notas_fiscais
     await queryInterface.dropTable('notas_fiscais');
   }
 };

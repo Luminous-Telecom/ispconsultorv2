@@ -103,16 +103,6 @@ module.exports = {
   },
 
   async down(queryInterface) {
-    // Remover índices primeiro
-    await queryInterface.removeIndex('auditoria', 'idx_auditoria_usuario_id');
-    await queryInterface.removeIndex('auditoria', 'idx_auditoria_acao');
-    await queryInterface.removeIndex('auditoria', 'idx_auditoria_entidade');
-    await queryInterface.removeIndex('auditoria', 'idx_auditoria_entidade_id');
-    await queryInterface.removeIndex('auditoria', 'idx_auditoria_created_at');
-    await queryInterface.removeIndex('auditoria', 'idx_auditoria_entidade_entidade_id');
-    await queryInterface.removeIndex('auditoria', 'idx_auditoria_usuario_created');
-
-    // Remover tabela
     await queryInterface.dropTable('auditoria');
   }
 };

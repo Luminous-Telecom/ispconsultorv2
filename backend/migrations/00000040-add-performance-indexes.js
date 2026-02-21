@@ -61,7 +61,18 @@ module.exports = {
 
   down: async (queryInterface, Sequelize) => {
     // Remover índices na ordem inversa
-    await queryInterface.removeIndex('contratos', 'idx_contratos_conta_boleto_status');
+    // 1. Remover foreign key que depende do índice
+    await queryInterface.removeConstraint(
+      'contratos',
+      'contratos_ibfk_4'
+    );
+
+    // 2. Agora remover o índice
+    await queryInterface.removeIndex(
+      'contratos',
+      'idx_contratos_conta_boleto_status'
+    );
+
     await queryInterface.removeIndex('contratos', 'idx_contratos_status_data_inicio');
     await queryInterface.removeIndex('contratos', 'idx_contratos_cliente_status');
     await queryInterface.removeIndex('titulos', 'idx_titulos_status_pago');

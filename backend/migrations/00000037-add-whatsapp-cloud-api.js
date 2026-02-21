@@ -40,14 +40,27 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('servidores_whatsapp', 'template_mapping');
-    await queryInterface.removeColumn('servidores_whatsapp', 'whatsapp_cloud_business_account_id');
-    await queryInterface.removeColumn('servidores_whatsapp', 'whatsapp_cloud_phone_number_id');
-    await queryInterface.removeColumn('servidores_whatsapp', 'whatsapp_cloud_token');
-    await queryInterface.removeColumn('servidores_whatsapp', 'tipo_api');
-    
-    // Remover ENUM
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_servidores_whatsapp_tipo_api";');
+    const table = await queryInterface.describeTable('servidores_whatsapp');
+
+    if (table.template_mapping) {
+      await queryInterface.removeColumn('servidores_whatsapp', 'template_mapping');
+    }
+
+    if (table.whatsapp_cloud_business_account_id) {
+      await queryInterface.removeColumn('servidores_whatsapp', 'whatsapp_cloud_business_account_id');
+    }
+
+    if (table.whatsapp_cloud_phone_number_id) {
+      await queryInterface.removeColumn('servidores_whatsapp', 'whatsapp_cloud_phone_number_id');
+    }
+
+    if (table.whatsapp_cloud_token) {
+      await queryInterface.removeColumn('servidores_whatsapp', 'whatsapp_cloud_token');
+    }
+
+    if (table.tipo_api) {
+      await queryInterface.removeColumn('servidores_whatsapp', 'tipo_api');
+    }
   }
 };
 
