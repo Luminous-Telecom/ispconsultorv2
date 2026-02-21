@@ -10,6 +10,16 @@ import { URLSearchParams } from 'url';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized } from '../../../utils/responseUtils';
 
 export class NFSeConfigController {
+  /** Remove campos sensíveis antes de enviar ao frontend */
+  private static maskSensitiveFields(config: Record<string, unknown>): Record<string, unknown> {
+    const masked = { ...config };
+    masked.has_asaas_api_key = !!masked.asaas_api_key;
+    delete masked.asaas_api_key;
+    masked.has_portal_nacional_password = !!masked.portal_nacional_password;
+    delete masked.portal_nacional_password;
+    return masked;
+  }
+
   // Schema de validação
   private static updateSchema = Joi.object({
     codigo_servico_municipal: Joi.string().max(20).allow(null, ''),
@@ -45,7 +55,7 @@ export class NFSeConfigController {
         }
       }
 
-      sendSuccess(res, config);
+      sendSuccess(res, NFSeConfigController.maskSensitiveFields(config.toJSON() as Record<string, unknown>));
       return res;
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao obter configuração NFS-e', 500, true, {
@@ -90,8 +100,16 @@ export class NFSeConfigController {
       const dadosAnteriores = config.toJSON();
       const foiCriadoAgora = config.created_at.getTime() === config.updated_at.getTime();
 
-      // Atualizar existente
-      const configAtualizado = await NFSeConfigService.update(value);
+      // Campos sensíveis: preservar valor existente se não enviado ou enviado vazio/null
+      const dadosParaSalvar = { ...value };
+      const camposSensiveis = ['asaas_api_key', 'portal_nacional_password'] as const;
+      for (const campo of camposSensiveis) {
+        if (dadosParaSalvar[campo] === null || dadosParaSalvar[campo] === '' || dadosParaSalvar[campo] === undefined) {
+          delete dadosParaSalvar[campo];
+        }
+      }
+
+      const configAtualizado = await NFSeConfigService.update(dadosParaSalvar);
       
       // Se foi criado agora, registrar criação
       if (foiCriadoAgora) {
@@ -120,7 +138,7 @@ export class NFSeConfigController {
         }
       }
 
-      sendSuccess(res, configAtualizado, 'Configuração NFS-e atualizada com sucesso');
+      sendSuccess(res, NFSeConfigController.maskSensitiveFields(configAtualizado.toJSON() as Record<string, unknown>), 'Configuração NFS-e atualizada com sucesso');
       return res;
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao atualizar configuração NFS-e', 500, true, {

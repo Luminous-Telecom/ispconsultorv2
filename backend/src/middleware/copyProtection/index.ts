@@ -13,7 +13,7 @@ export const copyProtectionMiddleware = (req: Request, res: Response, next: Next
   res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex');
   
   if (!isSpecialRoute) {
-    res.setHeader('X-Frame-Options', 'DENY');
+    // X-Frame-Options DENY é gerenciado pelo Helmet (frameguard) — não duplicar aqui
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');

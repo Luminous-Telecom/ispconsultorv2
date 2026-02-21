@@ -82,7 +82,9 @@ app.use((req, res, next) => {
     contentSecurityPolicy: isPdfOrDownloadRoute(req.path) ? false : {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        // 'unsafe-eval' removido — React em produção não precisa de eval
+        // 'unsafe-inline' mantido enquanto o HTML é servido estaticamente pelo Nginx sem nonce
+        scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
         imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
         fontSrc: ["'self'", 'https:', 'data:'],
@@ -91,6 +93,10 @@ app.use((req, res, next) => {
         objectSrc: ["'none'"],
         mediaSrc: ["'self'", 'blob:'],
         workerSrc: ["'self'", 'blob:'],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+        upgradeInsecureRequests: [],
       }
     },
     frameguard,

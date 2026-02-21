@@ -90,11 +90,11 @@ const authLimiter = rateLimit({
 
 /**
  * Rate limiter para endpoints públicos sem autenticação (CEP, CNPJ) — SEMPRE ATIVO.
- * Máximo 30 requisições por IP por minuto.
+ * Máximo 20 requisições por IP por minuto.
  */
 const publicEndpointLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: 20,
   message: {
     success: false,
     message: 'Muitas requisições. Tente novamente em instantes.',
@@ -147,7 +147,7 @@ export const authRateLimitMiddleware = () => authLimiter;
 
 /**
  * Rate limiter para endpoints públicos sem autenticação (CEP, CNPJ, etc.).
- * Sempre ativo — 30 req/IP/min.
+ * Sempre ativo — 20 req/IP/min.
  */
 export const publicEndpointRateLimitMiddleware = () => publicEndpointLimiter;
 

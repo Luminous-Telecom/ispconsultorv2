@@ -9,10 +9,14 @@ export interface NFSeConfig {
   serie_nf: string | null;
   numero_dps: number | null;
   portal_nacional_username: string | null;
-  portal_nacional_password: string | null;
+  /** Senha mascarada no backend — usar has_portal_nacional_password para verificar se existe */
+  portal_nacional_password?: never;
+  has_portal_nacional_password: boolean;
   portal_nacional_base_url: string | null;
   portal_nacional_ambiente: 'HOMOLOGACAO' | 'PRODUCAO';
-  asaas_api_key: string | null;
+  /** API key mascarada no backend — usar has_asaas_api_key para verificar se existe */
+  asaas_api_key?: never;
+  has_asaas_api_key: boolean;
   asaas_sandbox: boolean;
   provider: 'PORTAL_NACIONAL' | 'ASAAS';
   created_at: string;

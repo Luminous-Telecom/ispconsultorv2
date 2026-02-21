@@ -20,6 +20,8 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
   const queryClient = useQueryClient();
 
   // Estado dos campos
+  // asaas_api_key e portal_nacional_password são campos de nova entrada apenas —
+  // nunca são pré-populados com o valor real (que fica mascarado no backend).
   const [formData, setFormData] = useState({
     codigo_servico_municipal: '',
     aliquota_iss: '0',
@@ -27,12 +29,14 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
     serie_nf: '80000',
     numero_dps: '1',
     portal_nacional_username: '',
-    portal_nacional_password: '',
+    portal_nacional_password: '',      // sempre vazio; envio só se usuário digitar nova senha
     portal_nacional_base_url: 'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
     portal_nacional_ambiente: 'HOMOLOGACAO' as 'HOMOLOGACAO' | 'PRODUCAO',
-    asaas_api_key: '',
+    asaas_api_key: '',                 // sempre vazio; envio só se usuário digitar nova chave
     asaas_sandbox: false,
-    provider: 'PORTAL_NACIONAL' as 'PORTAL_NACIONAL' | 'ASAAS'
+    provider: 'PORTAL_NACIONAL' as 'PORTAL_NACIONAL' | 'ASAAS',
+    has_asaas_api_key: false,
+    has_portal_nacional_password: false,
   });
 
   // Buscar configuração existente
@@ -51,6 +55,8 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
   });
 
   // Preencher formulário quando configuração carregar
+  // Campos sensíveis (asaas_api_key, portal_nacional_password) ficam vazios — backend só informa
+  // se existe (has_asaas_api_key / has_portal_nacional_password). O usuário preenche só para alterar.
   useEffect(() => {
     if (configData) {
       setFormData({
@@ -60,12 +66,14 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
         serie_nf: configData.serie_nf || '80000',
         numero_dps: String(configData.numero_dps || 1),
         portal_nacional_username: configData.portal_nacional_username || '',
-        portal_nacional_password: configData.portal_nacional_password || '',
+        portal_nacional_password: '',
         portal_nacional_base_url: configData.portal_nacional_base_url || 'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
         portal_nacional_ambiente: configData.portal_nacional_ambiente || 'HOMOLOGACAO',
-        asaas_api_key: configData.asaas_api_key || '',
+        asaas_api_key: '',
         asaas_sandbox: configData.asaas_sandbox || false,
-        provider: configData.provider || 'PORTAL_NACIONAL'
+        provider: configData.provider || 'PORTAL_NACIONAL',
+        has_asaas_api_key: configData.has_asaas_api_key ?? false,
+        has_portal_nacional_password: configData.has_portal_nacional_password ?? false,
       });
     }
   }, [configData]);
@@ -74,15 +82,19 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
   const testAuthMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (data.provider === 'ASAAS') {
-        if (!data.asaas_api_key) {
+        // A chave pode estar salva no backend (has_asaas_api_key) mesmo que o campo esteja vazio
+        if (!data.asaas_api_key && !data.has_asaas_api_key) {
           throw new Error(t('nfse.messages.apiKeyRequired'));
         }
 
-        const response = await NFSeConfigService.testAuth({
+        const testPayload: Parameters<typeof NFSeConfigService.testAuth>[0] = {
           provider: 'ASAAS',
-          asaas_api_key: data.asaas_api_key,
-          asaas_sandbox: data.asaas_sandbox
-        });
+          asaas_sandbox: data.asaas_sandbox,
+        };
+        // Só enviar a chave nova se o usuário digitou uma
+        if (data.asaas_api_key) testPayload.asaas_api_key = data.asaas_api_key;
+
+        const response = await NFSeConfigService.testAuth(testPayload);
         
         if (!response.success) {
           const errorMessage = response.message || t('nfse.messages.testError');
@@ -133,13 +145,14 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
         serie_nf: data.serie_nf || null,
         numero_dps: data.numero_dps ? parseInt(data.numero_dps, 10) : null,
         portal_nacional_username: data.portal_nacional_username || null,
-        portal_nacional_password: data.portal_nacional_password || null,
         portal_nacional_base_url: data.portal_nacional_base_url || 'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
         portal_nacional_ambiente: data.portal_nacional_ambiente,
-        asaas_api_key: data.asaas_api_key || null,
         asaas_sandbox: data.asaas_sandbox,
         provider: data.provider
       };
+      // Campos sensíveis: só incluir se o usuário digitou um novo valor
+      if (data.portal_nacional_password) updateData.portal_nacional_password = data.portal_nacional_password;
+      if (data.asaas_api_key) updateData.asaas_api_key = data.asaas_api_key;
 
       const response = await NFSeConfigService.update(updateData);
       
@@ -176,10 +189,10 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
     testAuthMutation.mutate(formData);
   }, [formData, testAuthMutation]);
 
-  const canTest = formData.provider === 'PORTAL_NACIONAL' 
-    ? !!(formData.portal_nacional_username && formData.portal_nacional_password)
+  const canTest = formData.provider === 'PORTAL_NACIONAL'
+    ? !!(formData.portal_nacional_username && (formData.portal_nacional_password || formData.has_portal_nacional_password))
     : formData.provider === 'ASAAS'
-    ? !!formData.asaas_api_key
+    ? !!(formData.asaas_api_key || formData.has_asaas_api_key)
     : false;
 
   // Expor funções para o modal
@@ -350,10 +363,15 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                   value={formData.asaas_api_key}
                   onChange={(e) => handleInputChange('asaas_api_key', e.target.value)}
                   disabled={disabled || saveMutation.isPending}
-                  placeholder={t('placeholder.apiToken')}
+                  placeholder={formData.has_asaas_api_key
+                    ? 'Chave configurada — deixe em branco para manter'
+                    : t('placeholder.apiToken')}
+                  autoComplete="off"
                 />
                 <small className="text-muted d-block mt-1">
-                  {t('nfse.asaasApiKeyHelp')}
+                  {formData.has_asaas_api_key && !formData.asaas_api_key
+                    ? 'Chave de API salva. Preencha apenas para alterar.'
+                    : t('nfse.asaasApiKeyHelp')}
                 </small>
               </div>
 
@@ -407,7 +425,10 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
                   value={formData.portal_nacional_password}
                   onChange={(e) => handleInputChange('portal_nacional_password', e.target.value)}
                   disabled={disabled || saveMutation.isPending}
-                  placeholder={t('nfse.password')}
+                  placeholder={formData.has_portal_nacional_password
+                    ? 'Senha configurada — deixe em branco para manter'
+                    : t('nfse.password')}
+                  autoComplete="off"
                 />
               </div>
             </div>
