@@ -24,11 +24,6 @@ export const copyProtectionMiddleware = (req: Request, res: Response, next: Next
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
 
-    const isApiRequest = req.path.startsWith('/api/');
-    const expectsHtml = /text\/html/i.test(req.get('accept') || '');
-    if (!isApiRequest && expectsHtml) {
-      res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
-    }
   }
 
   next();
