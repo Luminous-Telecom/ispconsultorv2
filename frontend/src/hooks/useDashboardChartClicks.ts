@@ -25,8 +25,17 @@ export const useDashboardChartClicks = () => {
   const handleStatusPagamentoSliceClick = useCallback((item: ChartDataItem) => {
     const fv = item.filterValue as string | undefined;
     if (!fv) return;
+    // Calcular primeiro e último dia do mês atual para coincidir com o filtro do gráfico
+    const hoje = new Date();
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    const toISO = (d: Date) => d.toISOString().split('T')[0];
     openModal('contas-receber' as ModalType, {
-      initialFilters: { status: fv }
+      initialFilters: {
+        status: fv,
+        data_vencimento_inicio: toISO(inicioMes),
+        data_vencimento_fim: toISO(fimMes),
+      }
     });
   }, [openModal]);
 
