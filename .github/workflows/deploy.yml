@@ -474,11 +474,11 @@ jobs:
             echo "=== Copiando artefatos do backend (com frontend integrado) ==="
             # Remover backend/src se existir (não deve estar em produção)
             rm -rf backend/src
-            rm -rf backend/dist backend/package.json backend/package-lock.json backend/env.example
+            rm -rf backend/dist backend/package.json backend/package-lock.json backend/.env.example
             cp -r ../backend/dist backend/dist
             cp ../backend/package.json backend/package.json
             cp ../backend/package-lock.json backend/package-lock.json
-            cp ../backend/env.example backend/env.example
+            cp ../backend/.env.example backend/.env.example
             
             # Verificar se package.json foi copiado corretamente (necessário para npm install no self-update)
             if [ ! -f "backend/package.json" ]; then
