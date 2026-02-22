@@ -1,322 +1,37 @@
 ---
+description: Regras core do projeto BackNet - sempre aplicadas
 alwaysApply: true
 ---
-# Regras e Boas Práticas - BackNet
 
-## Estrutura de Código
+# BackNet - Regras Globais do Projeto
 
-### TypeScript
-- Use TypeScript com tipagem forte em todos os arquivos
-- Evite usar `any` e `unknown`, prefira tipos específicos
-- Defina interfaces para props de componentes
-- Use enums para valores constantes
-- Exporte tipos e interfaces quando necessário
+## Resposta e Contexto
+- Vá direto ao código/correção, sem repetir o que já está no código
+- Mostre apenas funções ou trechos alterados, não o arquivo inteiro
+- Sempre responda em português
 
-### React Components
-- Use componentes funcionais com hooks
-- Prefira `React.FC<Props>` para componentes
-- Mantenha componentes pequenos e focados (máximo 300 linhas)
-- Separe lógica complexa em custom hooks
-- Use `useCallback` e `useMemo` para otimização quando necessário
+## Nomenclatura
+- Arquivos: componentes `PascalCase.tsx`, services/hooks `camelCase.ts`
+- Variáveis: `camelCase`, constantes: `UPPER_SNAKE_CASE`
+- Handlers: prefixo `handle`, booleans: prefixo `is`, `has`, `should`
+- Hooks: prefixo `use` (ex: `usePlanos`, `useClientes`)
 
-### State Management
-- Use React Query (@tanstack/react-query) para dados do servidor
-- Configure `staleTime: 0` para permitir refresh manual
-- Use `queryClient.invalidateQueries()` após mutations
-- Sempre faça refetch após criar/atualizar/deletar
+## Ambiente e Configuração
+- URLs SEMPRE em variáveis de ambiente (.env), nunca hardcoded no código
+- Nunca especifique nome do banco no código
+- NÃO rode `pm2 restart`, `pm2 logs` ou `npm run build` em dev (hot reload automático)
 
-### Hooks Personalizados
-- Nomeie hooks com prefixo `use` (ex: `usePlanos`, `useClientes`)
-- Retorne objetos com propriedades nomeadas, não arrays
-- Implemente hooks para cada entidade: list, getById, create, update, delete
-- Use `useNotificationContext` para feedback ao usuário
+## Git
+- Nunca faça commit sem antes o usuário pedir
+- Nunca commite `.env` ou dados sensíveis
+- Nunca force push para main/master
+- Nunca use commits genéricos
 
-## Componentes de Tabela
+## Botões (regra crítica)
+- SEM ícones nos botões
+- Texto FIXO mesmo durante `isPending` — nunca mude o texto
+- Botão salvar: sempre "Salvar" | Criar: "Criar [Entidade]"
+- Mantém `disabled={isPending}` mas texto não muda
 
-### DataTable - Funcionalidades Obrigatórias
-```typescript
-<DataTable
-  data={getSortedData()}
-  columns={columns}
-  isLoading={isLoading}
-  pagination={pagination}
-  limit={limit}
-  setLimit={setLimit}
-  setPage={setPage}
-  onSort={handleSort}
-  sortColumn={sortColumn}
-  sortDirection={sortDirection}
-  onSearch={setSearch}
-  searchPlaceholder="Buscar..."
-  onRefresh={refetch}
-  bulkActions={bulkActions}
-  onSelectionChange={setSelectedItems}
-  emptyMessage="Nenhum registro encontrado"
-  showHeader={true}
-/>
-```
-
-### Ordenação Backend
-- SEMPRE implemente ordenação no BACKEND, não local
-- Backend ordena TODOS os dados antes da paginação
-- Controllers recebem `sortColumn` e `sortDirection` da query
-- Services aplicam ORDER BY antes do LIMIT/OFFSET
-- Estado inicial padrão: `sortColumn='id'` e `sortDirection='desc'`
-- Últimos registros (ID maior) aparecem primeiro por padrão
-- Suporte ordenação por: strings, números, datas
-- Valide colunas permitidas em allowedColumns
-
-### Bulk Actions
-- Sempre valide se há itens selecionados
-- Use `window.confirm()` para ações destrutivas
-- Delete itens um por vez em loop `for...of` com `await`
-- Faça refetch após ações em lote
-
-## Modais e Formulários
-
-### DraggableModal
-- Use `DraggableModal` para todos os modais
-- Implemente `onClose` e `onSuccess` callbacks
-- Limpe formulário quando modal fechar
-- Use `ModalHeaderActions` para ações no header
-
-### Validação de Formulários
-- Valide campos obrigatórios antes de submit
-- Mostre mensagens de erro específicas
-- Use estado `errors` para armazenar erros
-- Limpe erros quando usuário começar a digitar
-
-## API e Services
-
-### Estrutura de Services
-```typescript
-export class EntityService {
-  static async list(filters: Filters): Promise<PaginatedResponse<Entity>> {}
-  static async getById(id: number): Promise<{ success: boolean; data: Entity }> {}
-  static async create(data: CreateEntity): Promise<{ success: boolean; message: string; data: Entity }> {}
-  static async update(id: number, data: Partial<Entity>): Promise<{ success: boolean; message: string }> {}
-  static async delete(id: number): Promise<void> {}
-}
-```
-
-### Tratamento de Erros
-- Use try/catch em todas as requisições
-- Extraia mensagens de erro: `error?.response?.data?.message`
-- Mostre mensagens específicas ao usuário
-- Log erros no console para debugging
-- Use notificações do sistema para feedback
-
-### Invalidação de Queries
-```typescript
-queryClient.invalidateQueries({ queryKey: ['entity'] });
-queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-refetch();
-```
-
-## Notificações
-
-### NotificationContext
-- Use `success()` para ações bem-sucedidas
-- Use `error()` para erros
-- Use `warning()` para avisos
-- Use `info()` para informações
-
-### Confirmações
-- Use `window.confirm()` para confirmações destrutivas
-- Mensagens claras: "Tem certeza que deseja deletar X item(ns)?"
-- NÃO use modais customizados para confirmações
-
-## Padrões de Nomenclatura
-
-### Arquivos
-- Componentes: `PascalCase.tsx`
-- Services: `camelCase.ts`
-- Hooks: `camelCase.ts`
-
-### Variáveis e Funções
-- Variáveis: `camelCase`
-- Constantes: `UPPER_SNAKE_CASE`
-- Funções: `camelCase`
-- Handlers: prefixo `handle`
-- Booleans: prefixo `is`, `has`, `should`
-
-## Banco de Dados e Backend
-
-### Migrations
-- SEMPRE em JavaScript, não TypeScript
-- Use `queryInterface` para operações
-- Implemente `up` e `down` para reversão
-
-### Models (Sequelize)
-- Use TypeScript com tipos do Sequelize
-- Defina associations corretamente
-- Use `allowNull`, `defaultValue` apropriadamente
-
-### Controllers
-- Valide dados de entrada
-- Use try/catch para tratamento de erros
-- Retorne objetos padronizados: `{ success, message, data }`
-- Use status codes HTTP corretos
-
-## UI/UX
-
-### Bootstrap
-- SEMPRE use classes Bootstrap para estilos
-- Use sistema de grid: `container`, `row`, `col-*`
-- Use utilitários: `mb-3`, `p-4`, `text-center`, etc
-- NÃO use estilos inline
-
-### Badges e Status
-- Use cores semânticas: `success`, `danger`, `warning`, `info`
-- Capitalize primeira letra de status
-
-### Loading States
-- Mostre spinners durante carregamento
-- Desabilite botões durante submissão
-- Use skeleton screens para listas
-
-## O QUE PODE FAZER ✅
-
-### Código
-- ✅ Use `const` e `let`
-- ✅ Use TypeScript com tipagem forte
-- ✅ Use `async/await`
-- ✅ Trate erros com try/catch
-- ✅ Separe componentes reutilizáveis
-
-### Backend
-- ✅ Use validação com Joi
-- ✅ Use variáveis de ambiente (.env)
-- ✅ Mantenha logs limpos
-- ✅ Use transações para operações críticas
-
-### Frontend
-- ✅ Use componentes funcionais com hooks
-- ✅ Use Bootstrap para estilos
-- ✅ Implemente loading states
-
-### Banco de Dados
-- ✅ Migrations em JavaScript (`.js`)
-- ✅ Implemente índices adequados
-- ✅ Não especifique banco no código
-
-### UI/UX
-- ✅ Use Bootstrap
-- ✅ Use ordenações nas colunas
-- ✅ Um dado por linha nas tabelas
-- ✅ Botões sem ícones
-- ✅ Botões de salvar com texto fixo "Salvar"
-- ✅ Mostre ID em tabelas
-- ✅ Use modais para criar/editar
-
-## O QUE NÃO PODE FAZER ❌
-
-### Código
-- ❌ NÃO use `var`
-- ❌ NÃO use `any`
-- ❌ NÃO ignore erros TypeScript
-- ❌ NÃO deixe `console.log` em produção
-- ❌ NÃO use URLs hardcoded
-
-### React
-- ❌ NÃO use class components
-- ❌ NÃO deixe componentes >300 linhas
-- ❌ NÃO modifique state diretamente
-- ❌ NÃO esqueça dependências em useEffect
-
-### Backend
-- ❌ NÃO deixe senhas em texto plano
-- ❌ NÃO ignore validação de entrada
-- ❌ NÃO exponha dados sensíveis em logs
-- ❌ NÃO especifique banco no código
-- ❌ NÃO use carnê
-
-### Frontend/UI
-- ❌ NÃO use jQuery
-- ❌ NÃO use inline styles
-- ❌ NÃO use botões nas linhas de tabelas
-- ❌ NÃO use ícones nos botões
-- ❌ NÃO coloque mais de um dado por linha
-- ❌ NÃO crie tabelas sem ordenação
-- ❌ NÃO mude texto dos botões durante loading
-- ❌ NÃO use URLs em códigos
-
-### Banco de Dados
-- ❌ NÃO faça queries N+1
-- ❌ NÃO crie migrations em TypeScript
-- ❌ NÃO ignore índices
-
-### Git
-- ❌ NÃO commite .env ou dados sensíveis
-- ❌ NÃO commite node_modules
-- ❌ NÃO force push para main/master
-- ❌ NÃO commite sem testar
-- ❌ NÃO use commits genéricos
-- ❌ NÃO atualize git config
-- ❌ NÃO rode comandos destrutivos
-
-### Ambiente
-- ❌ NÃO reinicie PM2 manualmente
-- ❌ NÃO rode `pm2 logs`
-- ❌ NÃO rode `npm run build` em dev
-
-### Rotas
-- ❌ NÃO use URLs hardcoded
-- ❌ URLs devem pertencer ao banco emissor
-
-## Regras Específicas do Projeto
-
-### Tabelas
-- Mostre coluna ID (primeira coluna)
-- ID em texto normal
-- Nunca mais de um dado por linha
-- Sempre ordenação nas colunas
-- Ordenação padrão: ID decrescente
-
-### Botões
-- SEM ícones
-- SEM spinners durante loading
-- Texto fixo mesmo durante isPending
-- Salvar: apenas "Salvar"
-- Criar: "Criar [Entidade]"
-- Mantém `disabled={isPending}`
-
-### Modais
-- Use modais exceto Dashboard
-- Dashboard é rota `/`
-- Tudo em modais: Clientes, Planos, Bancos, Contratos
-- Use `DraggableModal`
-
-### Banco de Dados
-- NÃO especifique nome do banco
-- Banco no cadastro do cliente
-- Código automático por tipo
-- Migrations em `.js`
-
-### URLs e APIs
-- URLs em variáveis de ambiente
-- Cada banco tem suas rotas
-- URL pertence ao banco emissor
-
-### Email
-- NUNCA envie email do cliente ao banco
-- Removida lógica `repassar_email_cliente`
-
-### PM2
-- Hot reload automático
-- Não `pm2 restart`
-- Não `pm2 logs`
-- Não `npm run build`
-
-### Testes
-- Teste PRIMEIRO
-- Confirme funcionando
-- Depois commit
-- Verifique erros TypeScript
-- Nunca URLs em códigos (exeto de bancos APIs,blibliotecas, estilos)
-- Nunca faça commit sem antes eu pedir ao chat
-
-## Gerenciamento de Contexto e Saída
-- **Respostas Diretas:** Vá direto ao código ou correção. Não repita o que eu já sei ou o que está no código enviado.
-- **Diffs de Código:** Prefira mostrar apenas as funções ou trechos alterados em vez de repetir o arquivo inteiro de 300 linhas.
-- **Conformidade:** Antes de responder, verifique se sua sugestão viola as seções "O QUE NÃO PODE FAZER".
+## Confirmações Destrutivas
+- Use `window.confirm()` — nunca modais customizados para confirmação

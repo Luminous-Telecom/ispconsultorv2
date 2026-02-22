@@ -1,0 +1,40 @@
+---
+description: Regras de banco de dados, migrations e models Sequelize no BackNet
+globs: backend/migrations/**/*.js,backend/src/models/**/*.ts
+alwaysApply: false
+---
+
+# Banco de Dados e Migrations - BackNet
+
+## Migrations
+- SEMPRE em JavaScript (`.js`), nunca TypeScript
+- Use `queryInterface` para todas as operações
+- Implemente `up` E `down` para reversão completa
+- NÃO especifique nome do banco no código
+
+## Exemplo de Migration
+```js
+'use strict';
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.addColumn('tabela', 'coluna', {
+      type: Sequelize.STRING,
+      allowNull: true,
+    });
+  },
+  async down(queryInterface) {
+    await queryInterface.removeColumn('tabela', 'coluna');
+  },
+};
+```
+
+## Models (Sequelize)
+- Use TypeScript com tipos do Sequelize
+- Defina associations corretamente no model
+- Use `allowNull` e `defaultValue` apropriadamente
+- Implemente índices adequados para campos de busca/join
+
+## Boas Práticas
+- NÃO faça queries N+1 (use `include` para eager loading)
+- Use transações para operações críticas/múltiplas escritas
+- Nunca ignore índices em campos filtráveis

@@ -1,0 +1,50 @@
+---
+description: Regras de backend, controllers, services e API no BackNet
+globs: backend/**/*.ts
+alwaysApply: false
+---
+
+# Backend API - BackNet
+
+## Controllers
+- Valide dados de entrada (use Joi)
+- Use try/catch em todos os handlers
+- Retorne sempre: `{ success, message, data }`
+- Use status codes HTTP corretos (200, 201, 400, 404, 500)
+
+## Services
+```typescript
+export class EntityService {
+  static async list(filters: Filters): Promise<PaginatedResponse<Entity>> {}
+  static async getById(id: number): Promise<{ success: boolean; data: Entity }> {}
+  static async create(data: CreateEntity): Promise<{ success: boolean; message: string; data: Entity }> {}
+  static async update(id: number, data: Partial<Entity>): Promise<{ success: boolean; message: string }> {}
+  static async delete(id: number): Promise<void> {}
+}
+```
+
+## Ordenação (obrigatória)
+- Ordenação SEMPRE no backend, nunca no frontend
+- Receba `sortColumn` e `sortDirection` da query string
+- Aplique ORDER BY antes do LIMIT/OFFSET
+- Valide colunas em `allowedColumns`
+- Padrão: `sortColumn='id'`, `sortDirection='desc'`
+
+## TypeScript
+- Tipagem forte — nunca use `any` ou `unknown`
+- Use interfaces para Request/Response bodies
+- Use enums para valores constantes
+
+## Segurança
+- Nunca senhas em texto plano
+- Nunca exponha dados sensíveis em logs
+- Use variáveis de ambiente para configurações
+- Use transações para operações críticas
+
+## Email
+- NUNCA envie o email do cliente ao banco
+- Removida lógica `repassar_email_cliente`
+
+## Tratamento de Erros (frontend)
+- Extraia mensagens: `error?.response?.data?.message`
+- Mostre mensagens específicas ao usuário via notificações

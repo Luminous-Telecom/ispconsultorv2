@@ -1,0 +1,63 @@
+---
+description: Regras de componentes React, UI/UX e estado no frontend BackNet
+globs: frontend/**/*.tsx,frontend/**/*.ts
+alwaysApply: false
+---
+
+# Frontend React - BackNet
+
+## Componentes
+- Use componentes funcionais com `React.FC<Props>`, máximo 300 linhas
+- Separe lógica complexa em custom hooks
+- NÃO use class components, jQuery ou inline styles
+- SEMPRE use Bootstrap para estilos (grid, utilitários)
+
+## State Management
+- Use React Query para dados do servidor com `staleTime: 0`
+- Após mutations: `queryClient.invalidateQueries()` + `refetch()`
+- Use `useNotificationContext` para feedback: `success()`, `error()`, `warning()`, `info()`
+
+## Modais
+- Use `DraggableModal` para TODOS os modais (exceto Dashboard `/`)
+- Implemente `onClose` e `onSuccess` callbacks
+- Limpe formulário ao fechar modal
+- Use `ModalHeaderActions` para ações no header
+
+## Formulários
+- Valide campos obrigatórios antes do submit
+- Use estado `errors` para armazenar erros por campo
+- Limpe erros quando usuário começar a digitar
+
+## DataTable - Uso obrigatório
+```tsx
+<DataTable
+  data={getSortedData()}
+  columns={columns}
+  isLoading={isLoading}
+  pagination={pagination}
+  limit={limit}
+  setLimit={setLimit}
+  setPage={setPage}
+  onSort={handleSort}
+  sortColumn={sortColumn}
+  sortDirection={sortDirection}
+  onSearch={setSearch}
+  searchPlaceholder="Buscar..."
+  onRefresh={refetch}
+  bulkActions={bulkActions}
+  onSelectionChange={setSelectedItems}
+  emptyMessage="Nenhum registro encontrado"
+  showHeader={true}
+/>
+```
+
+## Tabelas
+- Primeira coluna: ID (texto normal)
+- Um dado por linha — nunca mais de um
+- Ordenação em TODAS as colunas (estado inicial: `sortColumn='id'`, `sortDirection='desc'`)
+- NÃO use botões nas linhas da tabela
+
+## Bulk Actions
+- Valide se há itens selecionados
+- Delete em loop `for...of` com `await` item por item
+- Refetch após ações em lote
