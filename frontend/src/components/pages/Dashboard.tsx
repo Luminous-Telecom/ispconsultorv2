@@ -197,7 +197,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-
         <div className="row g-3">
           <div className="col-xl-6 col-lg-6">
             <div className="chart-card">

@@ -214,16 +214,16 @@
   --bs-gutter-x: 1.0rem;
 }
 
-/* Container do dashboard */
+/* Container do dashboard - margens laterais consistentes */
 .dashboard-container {
+  padding: 0 0.5rem 0.5rem;
   animation: fadeIn 0.4s ease;
 }
 
-/* Mobile: remover padding-top do dashboard */
+/* Mobile: sem padding (já vem do main-content) */
 @media (max-width: 767.98px) {
   .dashboard-container {
-    padding-top: 0 !important;
-    padding-bottom: 0.5rem;
+    padding: 0 !important;
   }
 }
 
@@ -466,9 +466,7 @@
 /* Responsividade mobile */
 @media (max-width: 767.98px) {
   .main-navbar {
-    min-height: 48px !important;
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
+    padding-bottom: 0 !important;
   }
 
   .form-control-navbar {
