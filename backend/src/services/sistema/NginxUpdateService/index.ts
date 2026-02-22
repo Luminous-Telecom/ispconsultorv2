@@ -43,6 +43,14 @@ export class NginxUpdateService {
   }
 
   async apply(): Promise<CommandResult> {
+    if (process.env.NGINX_UPDATE_ENABLED !== 'true') {
+      return {
+        success: true,
+        stdout: 'Atualização do Nginx desabilitada (NGINX_UPDATE_ENABLED != true)',
+        stderr: '',
+      };
+    }
+
     try {
       const { needsUpdate, sourceVersion, installedVersion } = await this.check();
 
