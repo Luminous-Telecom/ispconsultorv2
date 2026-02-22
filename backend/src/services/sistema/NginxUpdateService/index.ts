@@ -7,7 +7,7 @@ import { type CommandResult } from '../GitUpdateService';
 
 const execAsync = promisify(exec);
 
-const NGINX_CONF_DEST = '/etc/nginx/sites-available/default';
+const NGINX_CONF_DEST = process.env.NGINX_CONF_DEST || '/etc/nginx/sites-available/backnet';
 const VERSION_COMMENT_REGEX = /^#\s*nginx-version:\s*(\d+)/m;
 
 export class NginxUpdateService {
