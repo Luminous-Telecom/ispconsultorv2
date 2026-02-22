@@ -116,6 +116,14 @@
   }
 }
 
+/* Card de Pizza com padding reduzido */
+.chart-card-pie {
+  padding: 0.375rem;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Gráfico de Pizza - Nova Estrutura */
 .chart-container-pie {
   width: 100%;

@@ -104,13 +104,14 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
 
     const { width, height } = dimensions;
     const padding = 16;
-    const centerX = width * 0.32;
+    const centerX = width * 0.38;
     const centerY = height / 2;
     const minDim = Math.min(width, height) - padding * 2;
     const outerRadius = minDim / 2 - 20;
     const innerRadius = outerRadius * 0.45;
     const labelMargin = 40;
-    const spaceRight = width - centerX - labelMargin;
+    const TEXT_MARGIN = 60;
+    const spaceRight = width - centerX - labelMargin - TEXT_MARGIN;
     const maxLabelDistance = Math.max(outerRadius + 20, Math.min(outerRadius + 80, Math.max(0, spaceRight)));
 
     const pieData: PieDatum[] = visibleData.map(({ item, index }) => {
@@ -183,23 +184,33 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       const start = toPos(midAngle, midR);
       const end = toPos(midAngle, labelRadius);
 
+      const anchor = end.x >= 0 ? 'start' : 'end';
+      const dx = end.x >= 0 ? 8 : -8;
+
+      // Clamp label dentro dos limites do SVG para não sair do card
+      const rawLabelX = centerX + end.x;
+      const rawLabelY = centerY + end.y;
+      const labelX = anchor === 'start'
+        ? Math.min(width - TEXT_MARGIN, rawLabelX)
+        : Math.max(TEXT_MARGIN, rawLabelX);
+      const labelY = Math.max(10, Math.min(height - 10, rawLabelY));
+
+      // Linha aponta para a posição real do label (após clamping)
+      const lineEndX = labelX - centerX;
+      const lineEndY = labelY - centerY;
+
       const isLineAnimatingIn = animatingIn.has(d.data.index);
       linesG
         .append('line')
         .attr('data-index', d.data.index)
         .attr('x1', start.x)
         .attr('y1', start.y)
-        .attr('x2', end.x)
-        .attr('y2', end.y)
+        .attr('x2', lineEndX)
+        .attr('y2', lineEndY)
         .attr('stroke', d.data.color)
         .attr('stroke-width', 1)
         .attr('stroke-linecap', 'round')
         .style('opacity', isLineAnimatingIn ? 0 : 1);
-
-      const labelX = centerX + end.x;
-      const labelY = centerY + end.y;
-      const anchor = end.x >= 0 ? 'start' : 'end';
-      const dx = end.x >= 0 ? 8 : -8;
 
       const isLabelAnimatingIn = animatingIn.has(d.data.index);
       const labelGroup = labelsG
@@ -391,15 +402,15 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       className="chart-container-pie chart-radial-style"
       style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
     >
-      <h6 className="chart-title-pie" style={{ marginBottom: '5px' }}>
+      <h6 className="chart-title-pie" style={{ marginBottom: '2px' }}>
         {title} ({formatPieValue(total, title)})
       </h6>
-      <div style={{ flex: 1, display: 'flex', gap: '32px', minHeight: 120, maxHeight: 210 }}>
+      <div style={{ flex: 1, display: 'flex', gap: '20px', minHeight: 120 }}>
         <ul
           className="pie-sidebar-legend"
           style={{
             margin: 0,
-            padding: '0 16px 0 0',
+            padding: 0,
             listStyle: 'none',
             overflowY: 'auto',
             flexShrink: 0,
