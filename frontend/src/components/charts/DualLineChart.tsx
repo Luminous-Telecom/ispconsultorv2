@@ -89,7 +89,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
 
     d3.select(svg).selectAll('*').remove();
 
-    const margin = { top: 24, right: 40, left: 52, bottom: 78 };
+    const margin = { top: 16, right: 20, left: 48, bottom: 58 };
     const chartWidth = dimensions.width - margin.left - margin.right;
     const chartHeight = dimensions.height - margin.top - margin.bottom;
 
@@ -248,13 +248,16 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
 
     const xAxisG = g.append('g').attr('transform', `translate(0,${chartHeight})`).attr('class', 'x-axis');
 
+    const labelStep = Math.max(1, Math.ceil(chartData.length / Math.floor(chartWidth / 38)));
+
     xAxisG
       .selectAll('.tick')
       .data(chartData)
       .join('g')
       .attr('class', 'tick')
       .attr('transform', (_, i) => `translate(${xScale(i)},0)`)
-      .each(function (d) {
+      .each(function (d, i) {
+        if (i % labelStep !== 0 && i !== chartData.length - 1) return;
         d3.select(this)
           .append('text')
           .attr('x', 0)
@@ -273,9 +276,13 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       .selectAll('rect')
       .data(chartData)
       .join('rect')
-      .attr('x', (_, i) => xScale(i) - 20)
+      .attr('x', (_, i) => (i > 0 ? (xScale(i - 1) + xScale(i)) / 2 : 0))
       .attr('y', 0)
-      .attr('width', 40)
+      .attr('width', (_, i) => {
+        const x0 = i > 0 ? (xScale(i - 1) + xScale(i)) / 2 : 0;
+        const x1 = i < chartData.length - 1 ? (xScale(i) + xScale(i + 1)) / 2 : chartWidth;
+        return x1 - x0;
+      })
       .attr('height', chartHeight)
       .attr('fill', 'transparent')
       .attr('cursor', onPointClick ? 'pointer' : 'default')
@@ -294,7 +301,7 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
         }
       });
 
-    const legendY = chartHeight + 65;
+    const legendY = chartHeight + 47;
     const legendItemWidth = 100;
     const totalLegendWidth = legendItemWidth * 2;
     const startLegendX = chartWidth / 2 - totalLegendWidth / 2;
@@ -424,13 +431,12 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
         ref={containerRef}
         style={{
           width: '100%',
-          height: '220px',
+          height: '180px',
           minWidth: '160px',
-          minHeight: '200px',
+          minHeight: '160px',
           position: 'relative',
           overflow: 'visible',
-          borderRadius: '8px',
-          border: '1px solid var(--border-color)',
+          alignSelf: 'stretch',
         }}
       >
         <svg

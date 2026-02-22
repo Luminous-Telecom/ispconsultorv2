@@ -6,7 +6,7 @@
 .chart-card {
   background: var(--bg-secondary);
   border-radius: var(--border-radius);
-  padding: 0.25rem;
+  padding: 0.5rem;
   border: none;
   box-shadow: var(--shadow-sm);
   height: 100%;
@@ -44,7 +44,7 @@
 }
 
 .chart-container {
-  text-align: left;
+  text-align: center;
   user-select: none;
   min-width: 0;
   overflow: visible;
