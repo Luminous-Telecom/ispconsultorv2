@@ -9,6 +9,7 @@ const execAsync = promisify(exec);
 
 const NGINX_CONF_DEST = process.env.NGINX_CONF_DEST || '/etc/nginx/sites-available/backnet';
 const VERSION_COMMENT_REGEX = /^#\s*nginx-version:\s*(\d+)/m;
+const SERVER_NAME_REGEX = /server_name\s+([^;]+);/;
 
 export class NginxUpdateService {
   private readonly nginxConfSource: string;
@@ -64,7 +65,26 @@ export class NginxUpdateService {
 
       logger.info('Aplicando nova configuração do Nginx', { sourceVersion, installedVersion });
 
-      fs.copyFileSync(this.nginxConfSource, NGINX_CONF_DEST);
+      let installedServerName: string | null = null;
+      if (fs.existsSync(NGINX_CONF_DEST)) {
+        const installedContent = fs.readFileSync(NGINX_CONF_DEST, 'utf-8');
+        const match = installedContent.match(SERVER_NAME_REGEX);
+        installedServerName = match ? match[1].trim() : null;
+        fs.copyFileSync(NGINX_CONF_DEST, `${NGINX_CONF_DEST}.bak`);
+      }
+
+      if (!installedServerName) {
+        return {
+          success: false,
+          stdout: '',
+          stderr: 'Não foi possível ler o server_name do Nginx instalado — atualização abortada para evitar sobrescrever o domínio do servidor',
+          error: 'server_name não encontrado na configuração instalada',
+        };
+      }
+
+      let sourceContent = fs.readFileSync(this.nginxConfSource, 'utf-8');
+      sourceContent = sourceContent.replace(SERVER_NAME_REGEX, `server_name ${installedServerName};`);
+      fs.writeFileSync(NGINX_CONF_DEST, sourceContent, 'utf-8');
 
       const { stdout: testOut, stderr: testErr } = await execAsync('nginx -t', { timeout: 10000 });
 
