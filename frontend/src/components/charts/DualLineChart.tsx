@@ -206,45 +206,47 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
         .attr('stroke-width', 2);
     });
 
-    const avgReceber = chartData.reduce((a, d) => a + d.receber, 0) / chartData.length;
-    const avgPagar = chartData.reduce((a, d) => a + d.pagar, 0) / chartData.length;
+    const badgeH = 15;
+    const padX = 4;
 
-    const pixelsPerPoint = chartWidth / Math.max(chartData.length - 1, 1);
-    const estimatedLabelWidth = format === 'currency' ? 68 : 48;
-    const valueLabelStep = Math.max(1, Math.ceil(estimatedLabelWidth / pixelsPerPoint));
+    const renderBadge = (px: number, py: number, label: string, color: string, above: boolean) => {
+      const rawDy = above ? -(badgeH / 2 + 6) : (badgeH / 2 + 6);
+      const badgeG = g.append('g');
+      const textEl = badgeG
+        .append('text')
+        .attr('font-size', '10px')
+        .attr('font-weight', '700')
+        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('fill', color)
+        .attr('dominant-baseline', 'central')
+        .attr('text-anchor', 'middle')
+        .text(label);
+      const bbox = (textEl.node() as SVGTextElement)?.getBBox();
+      const badgeW = (bbox?.width ?? 22) + padX * 2;
+      const bx = Math.max(badgeW / 2, Math.min(chartWidth - badgeW / 2, px));
+      const by = Math.max(badgeH / 2 + 2, Math.min(chartHeight - badgeH / 2 - 2, py + rawDy));
+      badgeG.attr('transform', `translate(${bx},${by})`);
+      badgeG.insert('rect', 'text')
+        .attr('x', -badgeW / 2).attr('y', -badgeH / 2)
+        .attr('width', badgeW).attr('height', badgeH)
+        .attr('rx', 3)
+        .attr('fill', 'var(--bg-secondary)')
+        .attr('stroke', color)
+        .attr('stroke-width', 1);
+    };
 
     chartData.forEach((d, i) => {
-      if (i % valueLabelStep !== 0 && i !== chartData.length - 1) return;
-
       const x = xScale(i);
 
-      const receberY = yScale(Math.max(0, d.receber));
-      const receberNearBottom = receberY > chartHeight * 0.7;
-      const receberDy = receberNearBottom ? -14 : d.receber >= avgReceber ? -14 : 16;
-      g.append('text')
-        .attr('x', x - 6)
-        .attr('y', receberY + receberDy)
-        .attr('text-anchor', 'end')
-        .attr('dy', '0.35em')
-        .attr('font-size', '10px')
-        .attr('font-weight', '600')
-        .attr('font-family', 'system-ui, -apple-system, sans-serif')
-        .attr('fill', 'var(--chart-color-2)')
-        .text(formatLabel(d.receber));
+      if (d.receber !== 0) {
+        const receberY = yScale(Math.max(0, d.receber));
+        renderBadge(x, receberY, formatLabel(d.receber), 'var(--chart-color-2)', true);
+      }
 
-      const pagarY = yScale(Math.max(0, d.pagar));
-      const pagarNearBottom = pagarY > chartHeight * 0.7;
-      const pagarDy = pagarNearBottom ? -14 : d.pagar >= avgPagar ? -14 : 16;
-      g.append('text')
-        .attr('x', x + 6)
-        .attr('y', pagarY + pagarDy)
-        .attr('text-anchor', 'start')
-        .attr('dy', '0.35em')
-        .attr('font-size', '10px')
-        .attr('font-weight', '600')
-        .attr('font-family', 'system-ui, -apple-system, sans-serif')
-        .attr('fill', 'var(--chart-color-4)')
-        .text(formatLabel(d.pagar));
+      if (d.pagar !== 0) {
+        const pagarY = yScale(Math.max(0, d.pagar));
+        renderBadge(x, pagarY, formatLabel(d.pagar), 'var(--chart-color-4)', false);
+      }
     });
 
     const xAxisG = g.append('g').attr('transform', `translate(0,${chartHeight})`).attr('class', 'x-axis');

@@ -172,30 +172,42 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     });
 
     const avgValue = values.reduce((a, b) => a + b, 0) / values.length;
-
-    const pixelsPerPoint = chartWidth / Math.max(chartData.length - 1, 1);
-    const estimatedLabelWidth = format === 'currency' ? 58 : 40;
-    const valueLabelStep = Math.max(1, Math.ceil(estimatedLabelWidth / pixelsPerPoint));
+    const badgeH = 16;
+    const padX = 5;
 
     chartData.forEach((d, i) => {
-      if (i % valueLabelStep !== 0 && i !== chartData.length - 1) return;
+      if (d.value === 0) return;
 
-      const x = xScale(i);
-      const y = yScale(Math.max(yMin, d.value));
+      const px = xScale(i);
+      const py = yScale(Math.max(yMin, d.value));
       const isAbove = d.value >= avgValue;
-      const nearBottom = y > chartHeight * 0.7;
-      const dy = nearBottom ? -14 : isAbove ? -14 : 18;
+      const nearBottom = py > chartHeight * 0.7;
+      const rawDy = nearBottom ? -(badgeH / 2 + 6) : isAbove ? -(badgeH / 2 + 6) : (badgeH / 2 + 6);
 
-      g.append('text')
-        .attr('x', x)
-        .attr('y', y + dy)
-        .attr('text-anchor', 'middle')
-        .attr('dy', '0.35em')
-        .attr('font-size', '11px')
-        .attr('font-weight', '600')
+      const badgeG = g.append('g');
+      const textEl = badgeG
+        .append('text')
+        .attr('font-size', '10px')
+        .attr('font-weight', '700')
         .attr('font-family', 'system-ui, -apple-system, sans-serif')
-        .attr('fill', 'var(--text-primary)')
+        .attr('fill', 'var(--chart-color-1)')
+        .attr('dominant-baseline', 'central')
+        .attr('text-anchor', 'middle')
         .text(formatLabel(d.value));
+
+      const bbox = (textEl.node() as SVGTextElement)?.getBBox();
+      const badgeW = (bbox?.width ?? 24) + padX * 2;
+      const bx = Math.max(badgeW / 2, Math.min(chartWidth - badgeW / 2, px));
+      const by = Math.max(badgeH / 2 + 2, Math.min(chartHeight - badgeH / 2 - 2, py + rawDy));
+
+      badgeG.attr('transform', `translate(${bx},${by})`);
+      badgeG.insert('rect', 'text')
+        .attr('x', -badgeW / 2).attr('y', -badgeH / 2)
+        .attr('width', badgeW).attr('height', badgeH)
+        .attr('rx', 3)
+        .attr('fill', 'var(--bg-secondary)')
+        .attr('stroke', 'var(--chart-color-1)')
+        .attr('stroke-width', 1);
     });
 
     const xAxisG = g
