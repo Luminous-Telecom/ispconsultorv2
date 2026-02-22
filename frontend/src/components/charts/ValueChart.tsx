@@ -7,37 +7,33 @@ interface ValueChartProps {
   format?: ChartFormat;
 }
 
-export const ValueChart: React.FC<ValueChartProps> = ({ 
-  data, 
-  title, 
-  format = 'number' 
-}) => {
-  const value = useMemo(() => data[0]?.value || data[0]?.valor || 0, [data]);
-  
+export const ValueChart: React.FC<ValueChartProps> = ({ data, title, format = 'number' }) => {
+  const value = useMemo(() => data[0]?.value ?? data[0]?.valor ?? 0, [data]);
+  const color = data[0]?.color || 'var(--btn-primary-color)';
+
   const formatValue = useCallback((val: number) => {
     switch (format) {
-      case 'currency':
-        return `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      case 'currency': {
+        const hasCents = val % 1 !== 0;
+        return val.toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+          minimumFractionDigits: hasCents ? 2 : 0,
+          maximumFractionDigits: 2,
+        });
+      }
       case 'percentage':
         return `${val.toFixed(1)}%`;
       default:
-        return val.toFixed(1);
+        return val.toLocaleString('pt-BR');
     }
   }, [format]);
-  
-  const color = data[0]?.color || '#6f42c1';
-  
+
   return (
-    <div className="chart-container-pie">
-      <h6 className="chart-title-pie">{title}</h6>
-      <div className="pie-chart-content">
-        <div className="value-chart">
-          <div className="value-display" style={{ color }}>
-            {formatValue(value)}
-          </div>
-        </div>
-      </div>
+    <div className="kpi-card">
+      <p className="kpi-card__label">{title}</p>
+      <div className="kpi-card__accent" style={{ background: color }} />
+      <p className="kpi-card__value" style={{ color }}>{formatValue(value)}</p>
     </div>
   );
 };
-
