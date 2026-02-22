@@ -77,38 +77,28 @@ const isPdfOrDownloadRoute = (path: string) =>
 app.use((req, res, next) => {
   const frameguard = isPdfOrDownloadRoute(req.path) ? false : { action: 'deny' as const };
   helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
     contentSecurityPolicy: isPdfOrDownloadRoute(req.path) ? false : {
       directives: {
         defaultSrc: ["'self'"],
-        // 'unsafe-eval' removido — React em produção não precisa de eval
-        // 'unsafe-inline' mantido enquanto o HTML é servido estaticamente pelo Nginx sem nonce
-        // cloudflareinsights.com: script de analytics injetado pelo Cloudflare no HTML
-        scriptSrc: ["'self'", "'unsafe-inline'", 'https://static.cloudflareinsights.com'],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://static.cloudflareinsights.com'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
         imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
         fontSrc: ["'self'", 'https:', 'data:'],
-        // cloudflareinsights.com: beacon envia dados de analytics de volta
         connectSrc: ["'self'", 'wss:', 'ws:', 'https://cloudflareinsights.com'],
         frameSrc: ["'self'", 'blob:'],
         objectSrc: ["'none'"],
-        mediaSrc: ["'self'", 'blob:'],
         workerSrc: ["'self'", 'blob:'],
         baseUri: ["'self'"],
         formAction: ["'self'"],
         frameAncestors: ["'none'"],
-        upgradeInsecureRequests: [],
       }
     },
     frameguard,
-    noSniff: true,
+    crossOriginResourcePolicy: false,
+    noSniff: false,
+    referrerPolicy: false,
+    hsts: false,
     xssFilter: false,
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    hsts: {
-      maxAge: 31536000,
-      includeSubDomains: true,
-      preload: true
-    }
   })(req, res, next);
 });
 
