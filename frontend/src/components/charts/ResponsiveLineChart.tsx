@@ -172,13 +172,12 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
 
     const avgValue = values.reduce((a, b) => a + b, 0) / values.length;
 
-    const showValueLabel = (value: number) => {
-      if (chartData.length <= 12) return true;
-      return value > 0;
-    };
+    const pixelsPerPoint = chartWidth / Math.max(chartData.length - 1, 1);
+    const estimatedLabelWidth = format === 'currency' ? 58 : 40;
+    const valueLabelStep = Math.max(1, Math.ceil(estimatedLabelWidth / pixelsPerPoint));
 
     chartData.forEach((d, i) => {
-      if (!showValueLabel(d.value)) return;
+      if (i % valueLabelStep !== 0 && i !== chartData.length - 1) return;
 
       const x = xScale(i);
       const y = yScale(Math.max(yMin, d.value));

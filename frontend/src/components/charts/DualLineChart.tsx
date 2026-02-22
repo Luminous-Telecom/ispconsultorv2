@@ -208,42 +208,42 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
     const avgReceber = chartData.reduce((a, d) => a + d.receber, 0) / chartData.length;
     const avgPagar = chartData.reduce((a, d) => a + d.pagar, 0) / chartData.length;
 
-    const showValueLabel = (value: number) => chartData.length <= 12 || value > 0;
+    const pixelsPerPoint = chartWidth / Math.max(chartData.length - 1, 1);
+    const estimatedLabelWidth = format === 'currency' ? 68 : 48;
+    const valueLabelStep = Math.max(1, Math.ceil(estimatedLabelWidth / pixelsPerPoint));
 
     chartData.forEach((d, i) => {
+      if (i % valueLabelStep !== 0 && i !== chartData.length - 1) return;
+
       const x = xScale(i);
 
       const receberY = yScale(Math.max(0, d.receber));
       const receberNearBottom = receberY > chartHeight * 0.7;
       const receberDy = receberNearBottom ? -14 : d.receber >= avgReceber ? -14 : 16;
-      if (showValueLabel(d.receber)) {
-        g.append('text')
-          .attr('x', x - 6)
-          .attr('y', receberY + receberDy)
-          .attr('text-anchor', 'end')
-          .attr('dy', '0.35em')
-          .attr('font-size', '10px')
-          .attr('font-weight', '600')
-          .attr('font-family', 'system-ui, -apple-system, sans-serif')
-          .attr('fill', 'var(--chart-color-2)')
-          .text(formatLabel(d.receber));
-      }
+      g.append('text')
+        .attr('x', x - 6)
+        .attr('y', receberY + receberDy)
+        .attr('text-anchor', 'end')
+        .attr('dy', '0.35em')
+        .attr('font-size', '10px')
+        .attr('font-weight', '600')
+        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('fill', 'var(--chart-color-2)')
+        .text(formatLabel(d.receber));
 
       const pagarY = yScale(Math.max(0, d.pagar));
       const pagarNearBottom = pagarY > chartHeight * 0.7;
       const pagarDy = pagarNearBottom ? -14 : d.pagar >= avgPagar ? -14 : 16;
-      if (showValueLabel(d.pagar)) {
-        g.append('text')
-          .attr('x', x + 6)
-          .attr('y', pagarY + pagarDy)
-          .attr('text-anchor', 'start')
-          .attr('dy', '0.35em')
-          .attr('font-size', '10px')
-          .attr('font-weight', '600')
-          .attr('font-family', 'system-ui, -apple-system, sans-serif')
-          .attr('fill', 'var(--chart-color-4)')
-          .text(formatLabel(d.pagar));
-      }
+      g.append('text')
+        .attr('x', x + 6)
+        .attr('y', pagarY + pagarDy)
+        .attr('text-anchor', 'start')
+        .attr('dy', '0.35em')
+        .attr('font-size', '10px')
+        .attr('font-weight', '600')
+        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('fill', 'var(--chart-color-4)')
+        .text(formatLabel(d.pagar));
     });
 
     const xAxisG = g.append('g').attr('transform', `translate(0,${chartHeight})`).attr('class', 'x-axis');
