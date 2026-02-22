@@ -44,7 +44,7 @@ const relativeToRoot = isDist ? '../../../' : '../../../../'; // dist: 3 níveis
  * Função no nível do módulo para não depender de `this` no callback do setImmediate.
  */
 async function runExtractFromUrlBackground(jobId: string, url: string): Promise<void> {
-  const uploadsDir = path.join(__dirname, relativeToRoot, 'uploads/temp');
+  const uploadsDir = '/tmp/backnet-pdf';
   await fs.mkdir(uploadsDir, { recursive: true });
   const tempFilePath = path.join(uploadsDir, `job-${jobId}.pdf`);
 
@@ -197,7 +197,7 @@ class PdfExtractController {
       }
 
       const jobId = `pdf-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
-      const uploadsDir = path.join(__dirname, relativeToRoot, 'uploads/temp');
+      const uploadsDir = '/tmp/backnet-pdf';
       await fs.mkdir(uploadsDir, { recursive: true });
       const tempFileName = `job-${jobId}.pdf`;
       const tempFilePath = path.join(uploadsDir, tempFileName);
