@@ -46,7 +46,8 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
   const formatLabel = useCallback(
     (value: number) => {
       if (format === 'currency') {
-        return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const hasCents = value % 1 !== 0;
+        return value.toLocaleString('pt-BR', { minimumFractionDigits: hasCents ? 2 : 0, maximumFractionDigits: 2 });
       }
       return value.toLocaleString('pt-BR');
     },
