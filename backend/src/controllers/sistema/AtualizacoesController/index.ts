@@ -484,6 +484,7 @@ export class AtualizacoesController {
             branch,
             steps: {
               gitPull: { success: result.steps.gitPull.success },
+              nginx: { success: result.steps.nginx.success },
               npmInstall: { success: result.steps.npmInstall.success },
               build: { success: result.steps.build.success },
               migrate: { success: result.steps.migrate.success },
@@ -509,6 +510,7 @@ export class AtualizacoesController {
         message: result.message,
         steps: {
           gitPull: { success: result.steps.gitPull.success },
+          nginx: { success: result.steps.nginx.success },
           npmInstall: { success: result.steps.npmInstall.success },
           build: { success: result.steps.build.success },
           migrate: { success: result.steps.migrate.success },
