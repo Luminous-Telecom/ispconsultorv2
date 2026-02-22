@@ -210,7 +210,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="col-xl-6 col-lg-6">
-            <div className="chart-card">
+            <div className="chart-card" style={{ height: 'auto', minHeight: 0 }}>
               <BarChart data={charts.clientesPorPlano} title={t('dashboard.clientsByPlan')} format="number" onBarClick={handleClientesPorPlanoBarClick} />
             </div>
           </div>

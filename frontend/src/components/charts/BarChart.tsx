@@ -15,7 +15,7 @@ const CHART_COLORS = ['#6B9BD1', '#8FB369', '#E8B44C', '#D97373', '#9B7FD9', '#5
 const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number', onBarClick }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [dimensions, setDimensions] = useState<{ width: number }>({ width: 0 });
 
   const chartData = useMemo(
     () =>
@@ -44,51 +44,82 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
     const updateDimensions = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        setDimensions({
-          width: rect.width || 160,
-          height: rect.height || 220,
-        });
+        setDimensions({ width: rect.width || 200 });
       }
     };
-
     updateDimensions();
     const resizeObserver = new ResizeObserver(updateDimensions);
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-
+    if (containerRef.current) resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
   }, []);
 
   useEffect(() => {
     const svg = svgRef.current;
-    if (!svg || dimensions.width === 0 || dimensions.height === 0 || chartData.length === 0) return;
+    if (!svg || dimensions.width === 0 || chartData.length === 0) return;
 
     d3.select(svg).selectAll('*').remove();
 
-    const isMobile = dimensions.width < 480;
-    const margin = {
-      top: 16,
-      right: isMobile ? 16 : 40,
-      left: isMobile ? Math.min(100, dimensions.width * 0.45) : 220,
-      bottom: 24,
-    };
-    const chartWidth = Math.max(0, dimensions.width - margin.left - margin.right);
-
-    const maxValue = Math.max(...chartData.map((d) => d.value), 0) || 1;
-    const xScale = d3.scaleLinear().domain([0, maxValue * 1.1]).range([0, chartWidth]);
-
-    const barHeight = 20;
-    const barGap = 10;
+    const barHeight = 18;
+    const barGap = 6;
     const totalRowHeight = barHeight + barGap;
+
+    // margem esquerda dinâmica: mede o label mais longo
+    const tempSvg = d3.select(svg);
+    const testText = tempSvg.append('text')
+      .attr('font-size', '10px')
+      .attr('font-family', 'system-ui, -apple-system, sans-serif')
+      .attr('visibility', 'hidden');
+
+    let maxLabelWidth = 0;
+    chartData.forEach((d) => {
+      testText.text(d.label);
+      const w = (testText.node() as SVGTextElement)?.getBBox()?.width ?? 0;
+      if (w > maxLabelWidth) maxLabelWidth = w;
+    });
+    testText.remove();
+
+    const margin = {
+      top: 8,
+      right: 36,
+      left: Math.min(Math.max(maxLabelWidth + 16, 80), dimensions.width * 0.45),
+      bottom: 28,
+    };
+
+    const chartWidth = Math.max(0, dimensions.width - margin.left - margin.right);
+    const maxValue = Math.max(...chartData.map((d) => d.value), 1);
+    const barsHeight = chartData.length * totalRowHeight - barGap;
+    const svgHeight = margin.top + barsHeight + margin.bottom;
+
+    const xScale = d3.scaleLinear().domain([0, maxValue]).range([0, chartWidth]).nice();
 
     const g = d3
       .select(svg)
       .attr('width', dimensions.width)
-      .attr('height', dimensions.height)
+      .attr('height', svgHeight)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
+    const textColor = 'var(--text-muted)';
+    const gridColor = 'var(--border-color)';
+
+    // Eixo X + linhas de grade verticais
+    const xAxis = d3.axisBottom(xScale).ticks(5).tickSize(-barsHeight).tickFormat((d) => d.toLocaleString('pt-BR'));
+    const xAxisG = g
+      .append('g')
+      .attr('class', 'x-axis')
+      .attr('transform', `translate(0,${barsHeight})`)
+      .call(xAxis);
+    xAxisG.select('.domain').attr('stroke', gridColor);
+    xAxisG.selectAll('.tick line')
+      .attr('stroke', gridColor)
+      .attr('stroke-dasharray', '3,3')
+      .attr('stroke-opacity', 0.6);
+    xAxisG.selectAll('.tick text')
+      .attr('fill', textColor)
+      .attr('font-size', '9px')
+      .attr('font-family', 'system-ui, -apple-system, sans-serif');
+
+    // Barras
     const barGroups = g
       .selectAll('.bar-group')
       .data(chartData)
@@ -97,92 +128,57 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
 
     barGroups.each(function (d, i) {
       const y = i * totalRowHeight;
-      const barWidth = Math.max(xScale(d.value), 0);
+      const barWidth = Math.max(xScale(d.value), 2);
       const el = d3.select(this);
 
       el.append('rect')
-        .attr('x', 0)
-        .attr('y', y)
-        .attr('width', barWidth)
-        .attr('height', barHeight)
-        .attr('rx', 4)
-        .attr('ry', 4)
-        .attr('fill', d.color)
+        .attr('x', 0).attr('y', y)
+        .attr('width', barWidth).attr('height', barHeight)
+        .attr('rx', 3).attr('fill', d.color)
         .attr('cursor', onBarClick ? 'pointer' : 'default')
-        .on('click', () => {
-          if (onBarClick) onBarClick(d.raw, i);
-        });
+        .on('click', () => { if (onBarClick) onBarClick(d.raw, i); });
 
+      // valor dentro/fora da barra
+      const valueText = d.value.toLocaleString('pt-BR');
+      const insideBar = barWidth > 32;
       el.append('text')
-        .attr('x', barWidth > 40 ? barWidth - 8 : barWidth + 8)
+        .attr('x', insideBar ? barWidth - 5 : barWidth + 5)
         .attr('y', y + barHeight / 2)
         .attr('dy', '0.35em')
-        .attr('text-anchor', barWidth > 40 ? 'end' : 'start')
-        .attr('font-size', '10px')
-        .attr('font-weight', '600')
+        .attr('text-anchor', insideBar ? 'end' : 'start')
+        .attr('font-size', '10px').attr('font-weight', '700')
         .attr('font-family', 'system-ui, -apple-system, sans-serif')
-        .attr('fill', barWidth > 40 ? '#fff' : 'var(--text-primary)')
-        .text(d.value.toLocaleString('pt-BR'));
+        .attr('fill', insideBar ? '#fff' : 'var(--text-secondary)')
+        .text(valueText);
 
-      const labelText = isMobile && d.label.length > 12 ? `${d.label.slice(0, 10)}…` : d.label;
+      // label à esquerda (nome do plano)
       el.append('text')
-        .attr('x', -12)
-        .attr('y', y + barHeight / 2)
-        .attr('dy', '0.35em')
-        .attr('text-anchor', 'end')
-        .attr('font-size', isMobile ? '9px' : '11px')
+        .attr('x', -8).attr('y', y + barHeight / 2)
+        .attr('dy', '0.35em').attr('text-anchor', 'end')
+        .attr('font-size', '10px')
         .attr('font-family', 'system-ui, -apple-system, sans-serif')
         .attr('fill', 'var(--text-primary)')
-        .text(labelText);
+        .text(d.label);
     });
 
+    // Tooltip
     const defs = d3.select(svg).append('defs');
     const tooltipFilterId = `tooltip-shadow-bar-${Math.random().toString(36).slice(2)}`;
-    defs
-      .append('filter')
-      .attr('id', tooltipFilterId)
-      .attr('x', '-20%')
-      .attr('y', '-20%')
-      .attr('width', '140%')
-      .attr('height', '140%')
-      .append('feDropShadow')
-      .attr('dx', 0)
-      .attr('dy', 4)
-      .attr('stdDeviation', 6)
-      .attr('flood-opacity', 0.25);
+    defs.append('filter').attr('id', tooltipFilterId)
+      .attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%')
+      .append('feDropShadow').attr('dx', 0).attr('dy', 4).attr('stdDeviation', 6).attr('flood-opacity', 0.25);
 
-    const tooltipG = d3
-      .select(svg)
-      .append('g')
-      .attr('class', 'chart-tooltip')
-      .style('opacity', 0)
-      .style('pointer-events', 'none');
-    const tooltipBg = tooltipG
-      .append('rect')
-      .attr('rx', 6)
-      .attr('ry', 6)
-      .attr('fill', 'var(--bg-tertiary)')
-      .attr('stroke', 'var(--border-color)')
-      .attr('stroke-width', 1)
-      .attr('filter', `url(#${tooltipFilterId})`);
-
+    const tooltipG = d3.select(svg).append('g').attr('class', 'chart-tooltip').style('opacity', 0).style('pointer-events', 'none');
+    const tooltipBg = tooltipG.append('rect').attr('rx', 6).attr('ry', 6)
+      .attr('fill', 'var(--bg-tertiary)').attr('stroke', 'var(--border-color)')
+      .attr('stroke-width', 1).attr('filter', `url(#${tooltipFilterId})`);
     const tooltipContent = tooltipG.append('g').attr('transform', 'translate(12,12)');
-    tooltipContent
-      .append('text')
-      .attr('class', 'tooltip-label')
-      .attr('font-family', 'system-ui, -apple-system, sans-serif')
-      .attr('font-size', '10px')
-      .attr('font-weight', '500')
-      .attr('fill', 'var(--text-muted)')
-      .attr('y', 0);
-    tooltipContent
-      .append('text')
-      .attr('class', 'tooltip-value')
-      .attr('font-family', 'system-ui, -apple-system, sans-serif')
-      .attr('font-size', '11px')
-      .attr('font-weight', '600')
-      .attr('fill', 'var(--text-primary)')
-      .attr('y', 16);
+    tooltipContent.append('text').attr('class', 'tooltip-label')
+      .attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '10px')
+      .attr('font-weight', '500').attr('fill', 'var(--text-muted)').attr('y', 0);
+    tooltipContent.append('text').attr('class', 'tooltip-value')
+      .attr('font-family', 'system-ui, -apple-system, sans-serif').attr('font-size', '11px')
+      .attr('font-weight', '600').attr('fill', 'var(--text-primary)').attr('y', 16);
 
     const padding = { x: 16, y: 12 };
     const container = containerRef.current;
@@ -203,7 +199,7 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
         if (tx + w > dimensions.width) tx = dimensions.width - w - 8;
         if (tx < 8) tx = 8;
         if (ty < 8) ty = 8;
-        if (ty + h > dimensions.height) ty = event.clientY - rect.top - h - 8;
+        if (ty + h > svgHeight) ty = event.clientY - rect.top - h - 8;
         tooltipG.attr('transform', `translate(${tx},${ty})`);
         tooltipG.transition().duration(180).ease(d3.easeCubicOut).style('opacity', 1);
       })
@@ -211,9 +207,7 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
         tooltipG.transition().duration(150).ease(d3.easeCubicOut).style('opacity', 0);
       });
 
-    return () => {
-      barGroups.on('mouseenter', null).on('mouseleave', null);
-    };
+    return () => { barGroups.on('mouseenter', null).on('mouseleave', null); };
   }, [chartData, dimensions, format, onBarClick, formatValue]);
 
   if (!data || data.length === 0 || chartData.length === 0) {
@@ -225,26 +219,9 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
       <h6 className="chart-title">{title}</h6>
       <div
         ref={containerRef}
-        style={{
-          width: '100%',
-          height: '220px',
-          minWidth: '140px',
-          minHeight: '180px',
-          position: 'relative',
-          overflow: 'visible',
-          borderRadius: '8px',
-          border: '1px solid var(--border-color)',
-        }}
+        style={{ width: '100%', minWidth: '140px', position: 'relative', overflow: 'visible' }}
       >
-        <svg
-          ref={svgRef}
-          style={{
-            display: 'block',
-            width: '100%',
-            height: '100%',
-            overflow: 'visible',
-          }}
-        />
+        <svg ref={svgRef} style={{ display: 'block', width: '100%', overflow: 'visible' }} />
       </div>
     </div>
   );
