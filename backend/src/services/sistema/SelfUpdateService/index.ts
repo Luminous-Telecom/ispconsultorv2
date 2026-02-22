@@ -150,6 +150,7 @@ export class SelfUpdateService {
         message: `Comandos necessários não encontrados: ${commandCheck.missing.join(', ')}`,
         steps: {
           gitPull: { success: false, stdout: '', stderr: `Comandos faltando: ${commandCheck.missing.join(', ')}` },
+          nginx: { success: false, stdout: '', stderr: '' },
           npmInstall: { success: false, stdout: '', stderr: '' },
           build: { success: false, stdout: '', stderr: '' },
           migrate: { success: false, stdout: '', stderr: '' },
