@@ -7,6 +7,7 @@ import { logger } from '../../utils/logger';
  * Por padrão está desabilitado para não interferir no uso normal
  */
 const ENABLE_RATE_LIMIT = process.env.ENABLE_RATE_LIMIT === 'true';
+const IS_DEV = process.env.NODE_ENV !== 'production';
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10); // 1 minuto
 const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10); // 100 requisições
 
@@ -57,11 +58,12 @@ const generalLimiter = rateLimit({
 
 /**
  * Rate limiter restritivo para rotas de autenticação — SEMPRE ATIVO.
- * Máximo 5 tentativas por IP a cada 15 minutos.
+ * Produção: máximo 5 tentativas por IP a cada 15 minutos.
+ * Desenvolvimento: máximo 100 tentativas por IP a cada 1 minuto.
  */
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
+  windowMs: 60 * 1000,
+  max: IS_DEV ? 100 : 5,
   message: {
     success: false,
     message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
