@@ -97,7 +97,8 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
     try {
       const result = await BackupService.restoreBackup(item.nome);
       success(result?.message ?? t('backup.restoreRequested'));
-      queryClient.invalidateQueries({ queryKey: ['backups'] });
+      // Limpa todo o cache pois a restauração altera todos os dados do banco
+      queryClient.clear();
       refetch();
     } catch (err) {
       const msg = (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? (err as Error)?.message ?? t('messages.error');

@@ -7,6 +7,7 @@ import { createInterface } from 'readline';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { logger } from '../../../utils/logger';
 import { getElasticsearchService } from '../../elasticsearch';
+import { cache } from '../../../utils/cache';
 
 export interface BackupItem {
   nome: string;
@@ -208,6 +209,8 @@ export class BackupService {
             }
           }
 
+          cache.clear();
+          logger.info('Cache de memória limpo após restore completo');
           return { success: true, message: 'Backup completo restaurado com sucesso.' };
         } finally {
           await fs.rm(tempDir, { recursive: true, force: true });
@@ -228,6 +231,8 @@ export class BackupService {
             const readStream = createReadStream(fullPath);
             await run(cmd, args, { stdin: readStream });
             logger.info('Restauração MariaDB concluída', { arquivo: nomeArquivo });
+            cache.clear();
+            logger.info('Cache de memória limpo após restore MariaDB');
             return { success: true, message: 'Banco de dados restaurado com sucesso.' };
           } catch (e) {
             lastErr = e instanceof Error ? e : new Error(String(e));
