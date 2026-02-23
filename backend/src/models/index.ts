@@ -11,7 +11,6 @@ import { ClienteArquivo } from './clientes/ClienteArquivo';
 import { Contrato } from './contratos/Contrato';
 import { ContratoPlanoAdicional } from './contratos/ContratoPlanoAdicional';
 import { TermoContrato } from './contratos/TermoContrato';
-import { ModeloTermo } from './contratos/ModeloTermo';
 
 // Documentos
 import { ModeloDocumento } from './documentos/ModeloDocumento';
@@ -387,7 +386,6 @@ export {
   ModeloDocumento,
   DiasVencimento,
   TermoContrato,
-  ModeloTermo,
   Usuario,
   Auditoria,
   AssinaturaDigital,

@@ -19,10 +19,8 @@ import mensagemWhatsAppRoutes from './mensagemWhatsAppRoutes';
 import mensagemEmailRoutes from './mensagemEmailRoutes';
 import mensagemHistoricoRoutes from './mensagemHistoricoRoutes';
 import modeloDocumentoRoutes from './modeloDocumentoRoutes';
-import modeloReciboRoutes from './modeloReciboRoutes';
 import diasVencimentoRoutes from './diasVencimentoRoutes';
 import termosContratoRoutes from './termosContrato';
-import modelosTermoRoutes from './modelosTermo';
 import atualizacoesRoutes from './atualizacoesRoutes';
 import authRoutes from './authRoutes';
 import pagamentoPublicoRoutes from './pagamentoPublicoRoutes';
@@ -76,10 +74,8 @@ const routes = [
     { path: '/api/mensagens-email', route: mensagemEmailRoutes },
     { path: '/api/mensagens-historico', route: mensagemHistoricoRoutes },
     { path: '/api/modelos-documento', route: modeloDocumentoRoutes },
-    { path: '/api/recibo', route: modeloReciboRoutes },
     { path: '/api/dias-vencimento', route: diasVencimentoRoutes },
     { path: '/api/termos-contrato', route: termosContratoRoutes },
-    { path: '/api/modelos-termo', route: modelosTermoRoutes },
     { path: '/api/atualizacoes', route: atualizacoesRoutes },
     { path: '/api/backups', route: backupRoutes },
     { path: '/api/assinatura-digital', route: assinaturaDigitalRoutes },
