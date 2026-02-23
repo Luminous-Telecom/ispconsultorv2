@@ -121,13 +121,6 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
     req.once('error', decrementCounter);
     req.once('close', decrementCounter);
     
-    // Adicionar listener no socket apenas se não estiver destruído
-    // e aumentar limite de listeners para evitar warning
-    if (req.socket && !req.socket.destroyed) {
-      req.socket.setMaxListeners(15);
-      req.socket.once('close', decrementCounter);
-    }
-
     // Continuar com o próximo middleware
     next();
   };

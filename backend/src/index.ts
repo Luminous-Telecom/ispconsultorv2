@@ -7,7 +7,6 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
 import cookieParser from 'cookie-parser';
-import session from 'express-session';
 
 // Importar configurações
 import { sequelize } from './config/database';
@@ -131,18 +130,6 @@ app.use(cors({
 // Cookie parser (necessário para CSRF e outras funcionalidades)
 app.use(cookieParser());
 
-// Configurar sessão (necessário para CSRF com token baseado em sessão)
-app.use(session({
-  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || 'default-secret-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: isProduction(),
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 horas
-  }
-}));
-
 // Middleware de parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -154,6 +141,19 @@ app.use(defaultSanitizeMiddleware);
 
 const ENABLE_CSRF = process.env.ENABLE_CSRF === 'true';
 if (ENABLE_CSRF) {
+  // Sessão necessária apenas quando CSRF está ativo
+  import('express-session').then(({ default: session }) => {
+    app.use(session({
+      secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || 'default-secret-change-in-production',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: isProduction(),
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000
+      }
+    }));
+  });
   import('./middleware/csrfMiddleware')
     .then(({ csrfTokenMiddleware, csrfProtectionMiddleware }) => {
       app.use(csrfTokenMiddleware);
