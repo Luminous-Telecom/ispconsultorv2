@@ -54,6 +54,10 @@ Dominio.init(
       primaryKey: true,
       autoIncrement: true
     },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
     dominio: {
       type: DataTypes.STRING(255),
       allowNull: false,

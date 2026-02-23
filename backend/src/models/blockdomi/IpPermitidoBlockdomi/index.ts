@@ -26,6 +26,10 @@ IpPermitidoBlockdomi.init(
       primaryKey: true,
       autoIncrement: true
     },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
     cliente_id: {
       type: DataTypes.INTEGER,
       allowNull: false,

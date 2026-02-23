@@ -24,6 +24,10 @@ VersaoBlockdomi.init(
       primaryKey: true,
       autoIncrement: true
     },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
     numero: {
       type: DataTypes.STRING(12),
       allowNull: false

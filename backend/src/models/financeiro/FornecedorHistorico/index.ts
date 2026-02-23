@@ -38,6 +38,10 @@ FornecedorHistorico.init(
       primaryKey: true,
       autoIncrement: true
     },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
     fornecedor_id: {
       type: DataTypes.INTEGER,
       allowNull: false,

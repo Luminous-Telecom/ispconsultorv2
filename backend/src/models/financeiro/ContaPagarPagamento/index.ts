@@ -39,6 +39,10 @@ ContaPagarPagamento.init(
       primaryKey: true,
       autoIncrement: true
     },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
     conta_pagar_id: {
       type: DataTypes.INTEGER,
       allowNull: false,

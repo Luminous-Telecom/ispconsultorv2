@@ -54,6 +54,10 @@ IPv6.init(
       primaryKey: true,
       autoIncrement: true
     },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
     ip: {
       type: DataTypes.STRING(45),
       allowNull: false,

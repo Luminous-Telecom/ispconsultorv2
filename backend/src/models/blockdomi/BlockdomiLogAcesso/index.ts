@@ -42,6 +42,10 @@ BlockdomiLogAcesso.init(
       primaryKey: true,
       autoIncrement: true
     },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
     ip: {
       type: DataTypes.STRING(45),
       allowNull: true
