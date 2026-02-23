@@ -3,6 +3,7 @@ import { sequelize } from '../../../config/database';
 
 interface DiasVencimentoAttributes {
   id: number;
+  empresa_id?: number | null;
   dia?: number;
   dia_padrao: number;
   ativo: boolean;
@@ -14,6 +15,7 @@ type DiasVencimentoCreationAttributes = Optional<DiasVencimentoAttributes, 'id' 
 
 export class DiasVencimento extends Model<DiasVencimentoAttributes, DiasVencimentoCreationAttributes> implements DiasVencimentoAttributes {
   public id!: number;
+  public empresa_id?: number | null;
   public dia?: number;
   public dia_padrao!: number;
   public ativo!: boolean;
@@ -27,6 +29,10 @@ DiasVencimento.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     dia: {
       type: DataTypes.INTEGER,

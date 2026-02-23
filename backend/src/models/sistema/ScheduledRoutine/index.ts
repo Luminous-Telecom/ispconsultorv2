@@ -5,6 +5,7 @@ import { formatCreatedAt } from '../../../utils/dateUtils';
 
 export interface ScheduledRoutineAttributes {
   id: number;
+  empresa_id?: number | null;
   nome: string;
   tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'outros';
   descricao?: string;
@@ -28,6 +29,7 @@ export type ScheduledRoutineCreationAttributes = Optional<ScheduledRoutineAttrib
 
 export class ScheduledRoutine extends Model<ScheduledRoutineAttributes, ScheduledRoutineCreationAttributes> implements ScheduledRoutineAttributes {
   public id!: number;
+  public empresa_id?: number | null;
   public nome!: string;
   public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'outros';
   public descricao?: string;
@@ -78,6 +80,10 @@ ScheduledRoutine.init({
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true
+  },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
   nome: {
     type: DataTypes.STRING(255),

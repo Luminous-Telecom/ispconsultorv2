@@ -16,6 +16,7 @@ export class AssinaturaDigital extends Model<
   InferCreationAttributes<AssinaturaDigital>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare termo_contrato_id: number | null;
   declare cliente_id: number | null;
   declare documento_tipo: 'termo' | 'contrato' | 'outro';
@@ -92,6 +93,10 @@ AssinaturaDigital.init(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     termo_contrato_id: {
       type: DataTypes.INTEGER,

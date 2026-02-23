@@ -3,6 +3,7 @@ import { sequelize } from '../../../config/database';
 
 interface ModeloDocumentoAttributes {
   id: number;
+  empresa_id?: number | null;
   nome: string;
   tipo: 'contrato' | 'recibo' | 'carta' | 'boleto' | 'comprovante' | 'outro' | 'termo';
   conteudo: string;
@@ -25,6 +26,7 @@ type ModeloDocumentoCreationAttributes = Optional<ModeloDocumentoAttributes, 'id
 
 export class ModeloDocumento extends Model<ModeloDocumentoAttributes, ModeloDocumentoCreationAttributes> implements ModeloDocumentoAttributes {
   public id!: number;
+  public empresa_id?: number | null;
   public nome!: string;
   public tipo!: 'contrato' | 'recibo' | 'carta' | 'boleto' | 'comprovante' | 'outro' | 'termo';
   public conteudo!: string;
@@ -77,6 +79,10 @@ ModeloDocumento.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     nome: {
       type: DataTypes.STRING(255),

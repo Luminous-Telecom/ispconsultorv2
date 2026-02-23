@@ -15,6 +15,7 @@ export class ClienteArquivo extends Model<
   InferCreationAttributes<ClienteArquivo>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare cliente_id: number;
   declare nome: string;
   declare tipo: 'documento' | 'foto' | 'assinatura' | 'outro';
@@ -38,7 +39,11 @@ ClienteArquivo.init(
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true
+      autoIncrement: true,
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     cliente_id: {
       type: DataTypes.INTEGER,

@@ -20,6 +20,7 @@ export class Auditoria extends Model<
   InferCreationAttributes<Auditoria>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare usuario_id: number | null;
   declare acao: AcaoAuditoria;
   declare entidade: string;
@@ -67,6 +68,10 @@ Auditoria.init(
       primaryKey: true,
       autoIncrement: true,
       allowNull: false
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     usuario_id: {
       type: DataTypes.INTEGER,

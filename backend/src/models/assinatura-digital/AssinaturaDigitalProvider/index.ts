@@ -5,6 +5,7 @@ export type AssinaturaDigitalProviderType = 'assinafy' | 'zapsign';
 
 interface AssinaturaDigitalProviderAttributes {
   id: number;
+  empresa_id?: number | null;
   provider: AssinaturaDigitalProviderType;
   habilitado: boolean;
   api_key: string | null;
@@ -25,6 +26,7 @@ class AssinaturaDigitalProvider extends Model<
   AssinaturaDigitalProviderCreationAttributes
 > implements AssinaturaDigitalProviderAttributes {
   public id!: number;
+  public empresa_id?: number | null;
   public provider!: AssinaturaDigitalProviderType;
   public habilitado!: boolean;
   public api_key!: string | null;
@@ -41,6 +43,10 @@ AssinaturaDigitalProvider.init(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     provider: {
       type: DataTypes.ENUM('assinafy', 'zapsign'),

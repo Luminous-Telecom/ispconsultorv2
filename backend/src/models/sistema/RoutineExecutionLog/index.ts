@@ -4,6 +4,7 @@ import type { JsonValue } from '../../../types/index';
 
 export interface RoutineExecutionLogAttributes {
   id: number;
+  empresa_id?: number | null;
   routine_id: number;
   status: 'executando' | 'sucesso' | 'erro';
   data_inicio: Date;
@@ -19,6 +20,7 @@ export type RoutineExecutionLogCreationAttributes = Optional<RoutineExecutionLog
 
 export class RoutineExecutionLog extends Model<RoutineExecutionLogAttributes, RoutineExecutionLogCreationAttributes> implements RoutineExecutionLogAttributes {
   public id!: number;
+  public empresa_id?: number | null;
   public routine_id!: number;
   public status!: 'executando' | 'sucesso' | 'erro';
   public data_inicio!: Date;
@@ -35,6 +37,10 @@ RoutineExecutionLog.init({
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true
+  },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
   routine_id: {
     type: DataTypes.INTEGER,

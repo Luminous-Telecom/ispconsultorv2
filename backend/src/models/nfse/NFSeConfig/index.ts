@@ -12,6 +12,7 @@ export class NFSeConfig extends Model<
   InferCreationAttributes<NFSeConfig>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare codigo_servico_municipal: string | null;
   declare aliquota_iss: number;
   declare descricao_servico: string | null;
@@ -34,6 +35,10 @@ NFSeConfig.init(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     codigo_servico_municipal: {
       type: DataTypes.STRING(20),

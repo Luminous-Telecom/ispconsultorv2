@@ -3,6 +3,7 @@ import { sequelize } from '../../../config/database';
 
 interface MensagemEmailAttributes {
   id: number;
+  empresa_id?: number | null;
   tipo: string;
   tipo_envio: 'desativado' | 'pdf';
   mensagem_padrao: string;
@@ -16,6 +17,7 @@ type MensagemEmailCreationAttributes = Optional<MensagemEmailAttributes, 'id' | 
 
 export class MensagemEmail extends Model<MensagemEmailAttributes, MensagemEmailCreationAttributes> implements MensagemEmailAttributes {
   public id!: number;
+  public empresa_id?: number | null;
   public tipo!: string;
   public tipo_envio!: 'desativado' | 'pdf';
   public mensagem_padrao!: string;
@@ -29,7 +31,11 @@ MensagemEmail.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
-    primaryKey: true
+    primaryKey: true,
+  },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
   tipo: {
     type: DataTypes.STRING(100),

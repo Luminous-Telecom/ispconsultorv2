@@ -17,6 +17,7 @@ export class ContratoPlanoAdicional extends Model<
   InferCreationAttributes<ContratoPlanoAdicional>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare contrato_id: number;
   declare plano_id: number;
   declare desconto_percentual: number | null;
@@ -65,6 +66,10 @@ ContratoPlanoAdicional.init(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     contrato_id: {
       type: DataTypes.INTEGER,

@@ -25,6 +25,7 @@ export class TermoContrato extends Model<
   declare data_aceite: Date | null;
   declare aceito_por: string | null;
   declare observacoes: string | null;
+  declare empresa_id: number | null;
   declare ativo: boolean;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
@@ -117,6 +118,10 @@ TermoContrato.init(
     observacoes: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     ativo: {
       type: DataTypes.BOOLEAN,

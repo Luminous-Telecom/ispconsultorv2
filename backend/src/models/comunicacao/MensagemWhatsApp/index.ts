@@ -3,6 +3,7 @@ import { sequelize } from '../../../config/database';
 
 interface MensagemWhatsAppAttributes {
   id: number;
+  empresa_id?: number | null;
   tipo: string;
   tipo_envio: 'desativado' | 'pdf';
   mensagem_padrao: string;
@@ -20,6 +21,7 @@ type MensagemWhatsAppCreationAttributes = Optional<MensagemWhatsAppAttributes, '
 
 export class MensagemWhatsApp extends Model<MensagemWhatsAppAttributes, MensagemWhatsAppCreationAttributes> implements MensagemWhatsAppAttributes {
   public id!: number;
+  public empresa_id?: number | null;
   public tipo!: string;
   public tipo_envio!: 'desativado' | 'pdf';
   public mensagem_padrao!: string;
@@ -37,7 +39,11 @@ MensagemWhatsApp.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
-    primaryKey: true
+    primaryKey: true,
+  },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
   tipo: {
     type: DataTypes.STRING(100),

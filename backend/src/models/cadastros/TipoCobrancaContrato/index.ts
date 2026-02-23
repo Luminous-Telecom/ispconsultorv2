@@ -17,6 +17,7 @@ export class TipoCobrancaContrato extends Model<
   declare nome: string;
   declare quantidade_titulos: number;
   declare periodicidade: PeriodicidadeTipoCobranca;
+  declare empresa_id: number | null;
   declare ativo: boolean;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
@@ -41,6 +42,10 @@ TipoCobrancaContrato.init(
       type: DataTypes.ENUM('mensal', 'bimestral', 'trimestral', 'semestral', 'anual', 'quinzenal', 'semanal'),
       allowNull: false,
       defaultValue: 'mensal'
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     ativo: {
       type: DataTypes.BOOLEAN,
