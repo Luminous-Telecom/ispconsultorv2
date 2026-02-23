@@ -135,14 +135,14 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       .pie<PieDatum>()
       .value((d) => d.value)
       .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
-      .padAngle(0.07)
+      .padAngle(0.02)
       .startAngle(-Math.PI / 2);
 
     const arc = d3
       .arc<d3.PieArcDatum<PieDatum>>()
       .innerRadius(innerRadius)
       .outerRadius(getOuterRadius)
-      .cornerRadius(8);
+      .cornerRadius(4);
 
     const arcs = pie(pieData);
 
