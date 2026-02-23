@@ -28,6 +28,7 @@ export class ContaPagar extends Model<
   InferCreationAttributes<ContaPagar>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare fornecedor_id: number;
   declare data_vencimento: Date;
   declare valor: number;
@@ -120,6 +121,10 @@ ContaPagar.init(
       primaryKey: true,
       autoIncrement: true,
       allowNull: false
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     fornecedor_id: {
       type: DataTypes.INTEGER,

@@ -27,6 +27,7 @@ export class Cliente extends Model<
   InferCreationAttributes<Cliente>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare cnpj: string;
   declare razao_social: string;
   declare nome_fantasia: string | null;
@@ -142,6 +143,10 @@ Cliente.init(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     cnpj: {
       type: DataTypes.STRING(18),

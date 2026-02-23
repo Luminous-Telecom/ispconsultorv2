@@ -20,6 +20,7 @@ export interface ListContratosFilters {
   isento_mensalidade?: boolean;
   plano_id?: number;
   tipo_servico?: string;
+  empresa_id?: number;
 }
 
 export interface ListContratosResponse {
@@ -77,12 +78,16 @@ export class ContratoService {
    * Listar contratos com filtros e paginação
    */
   static async list(filters: ListContratosFilters): Promise<ListContratosResponse> {
-    const { page = 1, limit = 10, search = '', status, searchField, sortColumn, sortDirection, isento_mensalidade, plano_id, tipo_servico } = filters;
+    const { page = 1, limit = 10, search = '', status, searchField, sortColumn, sortDirection, isento_mensalidade, plano_id, tipo_servico, empresa_id } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
 
     const whereClause: WhereOptions = {};
+
+    if (empresa_id !== undefined) {
+      whereClause.empresa_id = empresa_id;
+    }
     
     if (search) {
       const searchString = typeof search === 'string' ? search : String(search);

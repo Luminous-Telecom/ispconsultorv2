@@ -5,6 +5,7 @@ import Loading from './Loading';
 import DraggableModal from './DraggableModal';
 
 // Lazy load dos modais (code splitting)
+const EmpresasModal = lazy(() => import('../modals/empresas/EmpresasModal'));
 const ClienteListModal = lazy(() => import('../modals/clientes').then(m => ({ default: m.ClienteListModal })));
 const ClienteModal = lazy(() => import('../modals/clientes').then(m => ({ default: m.ClienteModal })));
 const PlanoListModal = lazy(() => import('../modals/planos').then(m => ({ default: m.PlanoListModal })));
@@ -56,6 +57,7 @@ interface ModalConfig {
 }
 
 const getModalConfigs = (): Record<string, ModalConfig> => ({
+  empresas: { component: EmpresasModal, titleKey: 'modal.companyData', loadingMessageKey: 'ui.loadingPage' },
   clientes: { component: ClienteListModal, titleKey: 'modal.clients', loadingMessageKey: 'ui.loadingPage' },
   'cliente-modal': { component: ClienteModal, titleKey: 'modal.editClient', loadingMessageKey: 'ui.loadingPage' },
   planos: { component: PlanoListModal, titleKey: 'modal.plans', loadingMessageKey: 'ui.loadingPage' },

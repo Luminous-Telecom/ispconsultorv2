@@ -8,6 +8,7 @@ import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class UsuarioController {
   private static createSchema = Joi.object({
@@ -31,6 +32,7 @@ export class UsuarioController {
       const { page = 1, limit = 10, search = '', ativo, sortColumn, sortDirection } = req.query;
       const pageNum = Number(page);
       const limitNum = Number(limit);
+      const empresaId = getEmpresaIdOrNull(req);
 
       const result = await UsuarioService.list({
         page: pageNum,
@@ -38,7 +40,8 @@ export class UsuarioController {
         search: search as string,
         ativo: ativo as string,
         sortColumn: sortColumn as string,
-        sortDirection: sortDirection as string
+        sortDirection: sortDirection as string,
+        empresa_id: empresaId ?? undefined,
       });
 
       sendSuccess(res, result);
@@ -79,12 +82,15 @@ export class UsuarioController {
         return;
       }
 
+      const empresaId = getEmpresaIdOrNull(req);
+
       const usuario = await UsuarioService.create({
         nome: value.nome,
         email: value.email,
         password: value.password,
         role: value.role || 'admin',
-        ativo: value.ativo !== undefined ? value.ativo : true
+        ativo: value.ativo !== undefined ? value.ativo : true,
+        empresa_id: empresaId ?? undefined,
       });
 
       // Registrar auditoria

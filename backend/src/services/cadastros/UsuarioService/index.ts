@@ -13,6 +13,7 @@ export interface ListUsuariosFilters {
   ativo?: string;
   sortColumn?: string;
   sortDirection?: string;
+  empresa_id?: number;
 }
 
 export interface ListUsuariosResponse {
@@ -33,12 +34,16 @@ export class UsuarioService {
    * Listar usuários com filtros e paginação
    */
   static async list(filters: ListUsuariosFilters): Promise<ListUsuariosResponse> {
-    const { page = 1, limit = 10, search = '', ativo, sortColumn, sortDirection } = filters;
+    const { page = 1, limit = 10, search = '', ativo, sortColumn, sortDirection, empresa_id } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
 
     const whereClause: WhereOptions = {};
+
+    if (empresa_id !== undefined) {
+      whereClause.empresa_id = empresa_id;
+    }
     
     if (search) {
       (whereClause as Record<symbol, unknown>)[Op.or] = [
@@ -180,8 +185,9 @@ export class UsuarioService {
     nome: string;
     email: string;
     password: string;
-    role?: 'admin' | 'user';
+    role?: 'admin' | 'user' | 'superadmin';
     ativo?: boolean;
+    empresa_id?: number;
   }): Promise<Usuario> {
     const passwordHash = await bcrypt.hash(dadosUsuario.password, 10);
 
@@ -190,7 +196,8 @@ export class UsuarioService {
       email: dadosUsuario.email,
       password_hash: passwordHash,
       role: dadosUsuario.role || 'admin',
-      ativo: dadosUsuario.ativo !== undefined ? dadosUsuario.ativo : true
+      ativo: dadosUsuario.ativo !== undefined ? dadosUsuario.ativo : true,
+      empresa_id: dadosUsuario.empresa_id ?? null,
     });
   }
 

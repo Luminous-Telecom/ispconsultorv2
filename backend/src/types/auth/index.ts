@@ -10,6 +10,16 @@ export interface AuthenticatedRequest extends Request {
 }
 
 /**
+ * Payload do JWT com suporte a multi-tenant
+ */
+export interface AuthTokenPayload extends JwtPayload {
+  sub: string;
+  email: string;
+  role: string;
+  empresa_id: number;
+}
+
+/**
  * Interface para dados do usuário autenticado
  */
 export interface AuthenticatedUser {
@@ -17,5 +27,6 @@ export interface AuthenticatedUser {
   nome: string;
   email: string;
   role: string;
+  empresa_id: number;
 }
 

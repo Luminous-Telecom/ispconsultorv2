@@ -26,6 +26,7 @@ export class Plano extends Model<
   InferCreationAttributes<Plano>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare nome_plano: string;
   declare descricao: string | null;
   declare tipo_servico: 'infraestrutura' | 'consultoria' | 'blockdomi';
@@ -155,6 +156,10 @@ Plano.init(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     nome_plano: {
       type: DataTypes.STRING(255),

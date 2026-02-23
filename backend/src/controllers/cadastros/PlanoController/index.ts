@@ -4,6 +4,7 @@ import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class PlanoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -16,6 +17,8 @@ export class PlanoController {
       const sortColumn = req.query.sortColumn as string;
       const sortDirection = req.query.sortDirection as string;
 
+      const empresaId = getEmpresaIdOrNull(req);
+
       const result = await PlanoService.list({
         page,
         limit,
@@ -23,7 +26,8 @@ export class PlanoController {
         status,
         tipo_servico,
         sortColumn,
-        sortDirection
+        sortDirection,
+        empresa_id: empresaId ?? undefined,
       });
 
       sendSuccess(res, result);
@@ -68,7 +72,8 @@ export class PlanoController {
 
   static async create(req: Request, res: Response): Promise<void> {
     try {
-      const body = { ...req.body };
+      const empresaId = getEmpresaIdOrNull(req);
+      const body = { ...req.body, empresa_id: empresaId };
       
       const plano = await PlanoService.create(body);
       

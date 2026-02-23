@@ -15,6 +15,7 @@ export interface LoginResponse {
     nome: string;
     email: string;
     role: string;
+    empresa_id: number | null;
     precisaTrocarSenha?: boolean;
     ultimoLogin?: string;
   };
@@ -25,6 +26,7 @@ export interface CurrentUser {
   nome: string;
   email: string;
   role: string;
+  empresa_id: number | null;
   precisaTrocarSenha?: boolean;
   ultimoLogin?: string;
 }

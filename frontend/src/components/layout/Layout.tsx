@@ -236,6 +236,9 @@ const Layout: React.FC = () => {
   ];
 
   const parametrosFolderItems = [
+    ...(currentUser?.role === 'superadmin' ? [
+      { id: 'empresas', label: 'Gerenciar Empresas', icon: 'bi-buildings', onClick: () => handleOpenModal('empresas') },
+    ] : []),
     { id: 'dados-empresa', label: t('menu.companyData'), icon: 'bi-building', onClick: () => handleOpenModal('dados-empresa') },
     { id: 'usuarios', label: t('params.users'), icon: 'bi-people-fill', onClick: () => handleOpenModal('usuarios') },
     { id: 'auditoria', label: t('params.auditLogs'), icon: 'bi-journal-text', onClick: () => handleOpenModal('auditoria') },

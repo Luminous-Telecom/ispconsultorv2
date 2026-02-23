@@ -8,6 +8,7 @@ import { setAuditData } from '../../../middleware/auditMiddleware';
 import { formatCEP } from '../../../utils/dateUtils';
 import axios from 'axios';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class FornecedorController {
   // Listar todos os fornecedores
@@ -21,6 +22,8 @@ export class FornecedorController {
       const sortColumn = req.query.sortColumn as string;
       const sortDirection = req.query.sortDirection as string;
 
+      const empresaId = getEmpresaIdOrNull(req);
+
       const result = await FornecedorService.list({
         page,
         limit,
@@ -29,7 +32,8 @@ export class FornecedorController {
         tipo_pessoa: tipoPessoa,
         ativo: req.query.ativo as string,
         sortColumn,
-        sortDirection
+        sortDirection,
+        empresa_id: empresaId ?? undefined,
       });
 
       sendSuccess(res, result);

@@ -27,6 +27,7 @@ export class Fornecedor extends Model<
   InferCreationAttributes<Fornecedor>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare tipo_pessoa: 'FISICA' | 'JURIDICA';
   declare nome_razao_social: string;
   declare nome_fantasia: string | null;
@@ -113,6 +114,10 @@ Fornecedor.init(
       primaryKey: true,
       autoIncrement: true,
       allowNull: false
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     tipo_pessoa: {
       type: DataTypes.ENUM('FISICA', 'JURIDICA'),

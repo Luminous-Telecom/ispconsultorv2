@@ -21,6 +21,7 @@ export interface ListContasPagarFilters {
   data_fim?: string;
   sortColumn?: string;
   sortDirection?: string;
+  empresa_id?: number;
 }
 
 export interface ListContasPagarResponse {
@@ -52,11 +53,16 @@ export class ContaPagarService {
       data_inicio,
       data_fim,
       sortColumn,
-      sortDirection
+      sortDirection,
+      empresa_id
     } = filters;
 
     const offset = (page - 1) * limit;
     const whereConditions: Array<WhereOptions> = [];
+
+    if (empresa_id !== undefined) {
+      whereConditions.push({ empresa_id });
+    }
     
     if (status) {
       whereConditions.push({ status });

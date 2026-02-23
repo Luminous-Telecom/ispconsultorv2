@@ -15,6 +15,7 @@ export interface ListPlanosFilters {
   tipo_servico?: string;
   sortColumn?: string;
   sortDirection?: string;
+  empresa_id?: number;
 }
 
 export interface ListPlanosResponse {
@@ -34,11 +35,11 @@ export class PlanoService {
    * Listar planos com filtros e paginação
    */
   static async list(filters: ListPlanosFilters): Promise<ListPlanosResponse> {
-    const { page = 1, limit = 15, search, status, tipo_servico, sortColumn, sortDirection } = filters;
+    const { page = 1, limit = 15, search, status, tipo_servico, sortColumn, sortDirection, empresa_id } = filters;
     const offset = (page - 1) * limit;
 
     // Cache key para planos ativos sem filtros
-    const cacheKey = `planos:list:${page}:${limit}:${status || 'all'}:${tipo_servico || 'all'}:${search || ''}:${sortColumn || 'id'}:${sortDirection || 'DESC'}`;
+    const cacheKey = `planos:list:${empresa_id || 0}:${page}:${limit}:${status || 'all'}:${tipo_servico || 'all'}:${search || ''}:${sortColumn || 'id'}:${sortDirection || 'DESC'}`;
     
     // Verificar cache apenas para listagem simples (sem busca)
     if (!search && !sortColumn) {
@@ -72,6 +73,10 @@ export class PlanoService {
 
     if (tipo_servico) {
       whereConditions.push({ tipo_servico: tipo_servico as 'infraestrutura' | 'consultoria' | 'blockdomi' });
+    }
+
+    if (empresa_id !== undefined) {
+      whereConditions.push({ empresa_id });
     }
 
     const where: WhereOptions<Plano> = whereConditions.length > 0

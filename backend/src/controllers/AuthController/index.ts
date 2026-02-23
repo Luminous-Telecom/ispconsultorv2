@@ -98,6 +98,7 @@ export class AuthController {
         sub: String(usuario.id),
         email: usuario.email,
         role: usuario.role,
+        empresa_id: usuario.empresa_id ?? null,
       });
 
       await UsuarioService.updateUltimoLogin(usuario.id);
@@ -135,6 +136,7 @@ export class AuthController {
           nome: usuario.nome,
           email: usuario.email,
           role: usuario.role,
+          empresa_id: usuario.empresa_id ?? null,
           precisaTrocarSenha: usuario.precisa_trocar_senha,
           ultimoLogin: usuario.ultimo_login,
         },
@@ -176,6 +178,7 @@ export class AuthController {
         nome: usuario.nome,
         email: usuario.email,
         role: usuario.role,
+        empresa_id: usuario.empresa_id ?? null,
         precisaTrocarSenha: usuario.precisa_trocar_senha,
         ultimoLogin: usuario.ultimo_login,
       });

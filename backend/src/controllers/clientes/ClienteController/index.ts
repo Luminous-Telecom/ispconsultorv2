@@ -9,6 +9,7 @@ import { logger } from '../../../utils/logger';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ClienteController {
   // Schema de validação para criação
@@ -120,6 +121,8 @@ export class ClienteController {
       const sortColumn = req.query.sortColumn as string;
       const sortDirection = req.query.sortDirection as string;
 
+      const empresaId = getEmpresaIdOrNull(req);
+
       const result = await ClienteService.list({
         page,
         limit,
@@ -131,7 +134,8 @@ export class ClienteController {
         created_at_inicio,
         created_at_fim,
         sortColumn,
-        sortDirection
+        sortDirection,
+        empresa_id: empresaId ?? undefined,
       });
 
       sendSuccess(res, result);
@@ -213,16 +217,18 @@ export class ClienteController {
         return;
       }
 
-      // Verificar se CNPJ já existe
-      const clienteExistente = await ClienteService.existsByCnpj(value.cnpj);
+      const empresaId = getEmpresaIdOrNull(req);
+
+      // Verificar se CNPJ já existe (dentro da empresa)
+      const clienteExistente = await ClienteService.existsByCnpj(value.cnpj, undefined, empresaId ?? undefined);
 
       if (clienteExistente) {
         sendValidationError(res, 'Já existe um cliente cadastrado com este CNPJ');
         return;
       }
 
-      // Criar cliente
-      const cliente = await ClienteService.create(value);
+      // Criar cliente com empresa_id
+      const cliente = await ClienteService.create({ ...value, empresa_id: empresaId });
 
       // Buscar cliente criado com relacionamentos
       const clienteCriado = await ClienteService.getById(cliente.id);
@@ -522,7 +528,8 @@ export class ClienteController {
 
   static async findAtivos(req: Request, res: Response): Promise<void> {
     try {
-      const clientes = await ClienteService.findAtivos();
+      const empresaId = getEmpresaIdOrNull(req);
+      const clientes = await ClienteService.findAtivos(empresaId ?? undefined);
       sendSuccess(res, clientes);
     } catch (error) {
       sendError(res, error, 'Erro ao listar clientes ativos', 500, true, {

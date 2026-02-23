@@ -14,6 +14,7 @@ export interface ListFornecedoresFilters {
   ativo?: string;
   sortColumn?: string;
   sortDirection?: string;
+  empresa_id?: number;
 }
 
 export interface ListFornecedoresResponse {
@@ -34,12 +35,16 @@ export class FornecedorService {
    * Listar fornecedores com filtros e paginação
    */
   static async list(filters: ListFornecedoresFilters): Promise<ListFornecedoresResponse> {
-    const { page = 1, limit = 15, search = '', searchField, tipo_pessoa, ativo, sortColumn, sortDirection } = filters;
+    const { page = 1, limit = 15, search = '', searchField, tipo_pessoa, ativo, sortColumn, sortDirection, empresa_id } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
 
     const where: WhereOptions = {};
+
+    if (empresa_id !== undefined) {
+      where.empresa_id = empresa_id;
+    }
     
     if (search) {
       const searchPattern = `%${search}%`;

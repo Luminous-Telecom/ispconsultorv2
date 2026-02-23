@@ -4,6 +4,32 @@
  */
 
 // ============================================
+// Empresa (Multi-Tenant) — usa dados_empresa
+// ============================================
+export type Empresa = DadosEmpresa;
+
+export type CreateEmpresa = {
+  razao_social: string;
+  nome_fantasia?: string;
+  cnpj: string;
+  email: string;
+  telefone?: string;
+  celular?: string;
+  cep: string;
+  endereco: string;
+  numero: string;
+  complemento?: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  responsavel_nome: string;
+  responsavel_cpf: string;
+  responsavel_cargo?: string;
+};
+
+export type UpdateEmpresa = Partial<CreateEmpresa>;
+
+// ============================================
 // Cliente
 // ============================================
 export interface Cliente {
@@ -501,6 +527,7 @@ export interface DadosEmpresa {
   inscricao_estadual?: string;
   inscricao_municipal?: string;
   telefone?: string;
+  celular?: string;
   email?: string;
   site?: string;
   cep?: string;

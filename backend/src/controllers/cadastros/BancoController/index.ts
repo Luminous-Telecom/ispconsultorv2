@@ -8,6 +8,7 @@ import { randomBytes } from 'crypto';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class BancoController {
   /**
@@ -25,7 +26,8 @@ export class BancoController {
 
   static async findAtivos(req: Request, res: Response): Promise<void> {
     try {
-      const result = await BancoService.findAtivos();
+      const empresaId = getEmpresaIdOrNull(req);
+      const result = await BancoService.findAtivos(empresaId ?? undefined);
       const maskedData = result.data.map(b => BancoController.maskSensitiveFields(b.toJSON() as Record<string, unknown>));
       sendSuccess(res, { ...result, data: maskedData });
     } catch (error: unknown) {
@@ -37,6 +39,8 @@ export class BancoController {
     try {
       const { search, status, tipo_banco, page = 1, limit = 15, sortColumn, sortDirection } = req.query;
       
+      const empresaId = getEmpresaIdOrNull(req);
+
       const result = await BancoService.list({
         search: search as string | undefined,
         status: status as string | undefined,
@@ -44,7 +48,8 @@ export class BancoController {
         page: Number(page),
         limit: Number(limit),
         sortColumn: sortColumn as string | undefined,
-        sortDirection: sortDirection as string | undefined
+        sortDirection: sortDirection as string | undefined,
+        empresa_id: empresaId ?? undefined,
       });
       
       const maskedData = result.data.map(b => BancoController.maskSensitiveFields(b.toJSON ? (b.toJSON() as Record<string, unknown>) : (b as unknown as Record<string, unknown>)));

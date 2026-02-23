@@ -13,6 +13,7 @@ export class Usuario extends Model<
   InferCreationAttributes<Usuario>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare nome: string;
   declare email: string;
   declare password_hash: string;
@@ -49,6 +50,10 @@ Usuario.init(
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     nome: {
       type: DataTypes.STRING(150),

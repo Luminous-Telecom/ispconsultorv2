@@ -46,11 +46,13 @@ import ipsPermitidosRoutes from './ipsPermitidosRoutes';
 import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
 import backupRoutes from './backupRoutes';
+import empresaRoutes from './empresaRoutes';
 
 const router = Router();
 
 const routes = [
-    { path: '/api/auth', route: authRoutes },    
+    { path: '/api/auth', route: authRoutes },
+    { path: '/api/empresas', route: empresaRoutes },
     { path: '/api/clientes', route: clienteRoutes },
     { path: '/api/planos', route: planoRoutes },
     { path: '/api/bancos', route: bancoRoutes },

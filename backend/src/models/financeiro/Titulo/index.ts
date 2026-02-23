@@ -21,6 +21,7 @@ export class Titulo extends Model<
   InferCreationAttributes<Titulo>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare cliente_id: number;
   declare plano_id: number;
   declare banco_id: number;
@@ -559,6 +560,10 @@ Titulo.init(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     cliente_id: {
       type: DataTypes.INTEGER,

@@ -35,6 +35,7 @@ export class Banco extends Model<
   InferCreationAttributes<Banco>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare nome: string;
   declare codigo: string | null;
   declare descricao: string | null;
@@ -274,6 +275,10 @@ Banco.init(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     nome: {
       type: DataTypes.STRING(255),

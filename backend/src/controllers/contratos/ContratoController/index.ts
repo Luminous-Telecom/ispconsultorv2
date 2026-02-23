@@ -17,6 +17,7 @@ import { withTransaction } from '../../../utils/transaction';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ContratoController {
   // Função auxiliar para normalizar data (evitar problemas de timezone)
@@ -97,6 +98,7 @@ export class ContratoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { page = 1, limit = 10, search = '', status, searchField, sortColumn, sortDirection, isento_mensalidade, plano_id, tipo_servico } = req.query;
+      const empresaId = getEmpresaIdOrNull(req);
       const result = await ContratoService.list({
         page: Number(page),
         limit: Number(limit),
@@ -107,7 +109,8 @@ export class ContratoController {
         sortDirection: sortDirection as string,
         isento_mensalidade: isento_mensalidade === 'true' ? true : isento_mensalidade === 'false' ? false : undefined,
         plano_id: plano_id ? Number(plano_id) : undefined,
-        tipo_servico: tipo_servico as string | undefined
+        tipo_servico: tipo_servico as string | undefined,
+        empresa_id: empresaId ?? undefined,
       });
 
       sendSuccess(res, result);
@@ -195,6 +198,11 @@ export class ContratoController {
       value.data_inicio = ContratoController.normalizeDate(value.data_inicio);
       value.data_fim = ContratoController.normalizeDate(value.data_fim);
       value.data_validade_desconto = ContratoController.normalizeDate(value.data_validade_desconto);
+
+      const empresaId = getEmpresaIdOrNull(req);
+      if (empresaId !== null) {
+        value.empresa_id = empresaId;
+      }
 
       // Verificar se o cliente existe
       const cliente = await ClienteService.getById(value.cliente_id);

@@ -19,6 +19,7 @@ export interface ListClientesFilters {
   created_at_fim?: string;
   sortColumn?: string;
   sortDirection?: string;
+  empresa_id?: number;
 }
 
 export interface ListClientesResponse {
@@ -39,10 +40,14 @@ export class ClienteService {
    * Listar clientes com filtros e paginação
    */
   static async list(filters: ListClientesFilters): Promise<ListClientesResponse> {
-    const { page = 1, limit = 15, search, searchField, ativo, cidade, estado, created_at_inicio, created_at_fim, sortColumn, sortDirection } = filters;
+    const { page = 1, limit = 15, search, searchField, ativo, cidade, estado, created_at_inicio, created_at_fim, sortColumn, sortDirection, empresa_id } = filters;
     const offset = (page - 1) * limit;
 
     const where: WhereOptions = {};
+
+    if (empresa_id !== undefined) {
+      where.empresa_id = empresa_id;
+    }
     
     if (search) {
       const searchPattern = `%${search}%`;
@@ -161,13 +166,17 @@ export class ClienteService {
   }
 
   /**
-   * Verificar se existe cliente com CNPJ
+   * Verificar se existe cliente com CNPJ (dentro da mesma empresa)
    */
-  static async existsByCnpj(cnpj: string, excludeId?: number): Promise<boolean> {
+  static async existsByCnpj(cnpj: string, excludeId?: number, empresaId?: number): Promise<boolean> {
     const where: WhereOptions = { cnpj };
     
     if (excludeId) {
       where.id = { [Op.ne]: excludeId } as unknown as number;
+    }
+
+    if (empresaId !== undefined) {
+      where.empresa_id = empresaId;
     }
     
     const cliente = await Cliente.findOne({ where });
@@ -273,11 +282,15 @@ export class ClienteService {
   }
 
   /**
-   * Listar clientes ativos
+   * Listar clientes ativos (filtrado por empresa)
    */
-  static async findAtivos(): Promise<Cliente[]> {
+  static async findAtivos(empresaId?: number): Promise<Cliente[]> {
+    const where: WhereOptions = { ativo: true };
+    if (empresaId !== undefined) {
+      where.empresa_id = empresaId;
+    }
     return await Cliente.findAll({
-      where: { ativo: true },
+      where,
       order: [['razao_social', 'ASC']]
     });
   }

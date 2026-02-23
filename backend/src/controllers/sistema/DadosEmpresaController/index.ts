@@ -76,19 +76,9 @@ export class DadosEmpresaController {
     }
   }
 
-  // Rota exclusiva do sistema administrativo - requer autenticação
+  // Rota exclusiva do sistema administrativo - requer autenticação (validada pelo authMiddleware via cookie)
   static async get(req: Request, res: Response): Promise<void> {
     try {
-      // Verificar autenticação - se não houver token válido, bloquear
-      const authHeader = req.get('Authorization');
-      const authenticatedReq = req as AuthenticatedRequest;
-      const hasValidToken = authHeader?.startsWith('Bearer ') && authenticatedReq.user;
-      
-      if (!hasValidToken) {
-        sendNotFound(res, '');
-        return;
-      }
-
       let dadosEmpresa = await DadosEmpresaService.findOne();
 
       if (!dadosEmpresa) {

@@ -14,6 +14,7 @@ export interface ListBancosFilters {
   limit?: number;
   sortColumn?: string;
   sortDirection?: string;
+  empresa_id?: number;
 }
 
 export interface ListBancosResponse {
@@ -33,16 +34,21 @@ export class BancoService {
   /**
    * Buscar bancos ativos
    */
-  static async findAtivos(): Promise<{ success: boolean; data: Banco[] }> {
-    const cacheKey = 'bancos:ativos';
+  static async findAtivos(empresaId?: number): Promise<{ success: boolean; data: Banco[] }> {
+    const cacheKey = `bancos:ativos:${empresaId || 0}`;
     const cached = cache.get(cacheKey);
     
     if (cached) {
       return cached as { success: boolean; data: Banco[] };
     }
 
+    const where: WhereOptions = { ativo: true };
+    if (empresaId !== undefined) {
+      where.empresa_id = empresaId;
+    }
+
     const bancos = await Banco.findAll({
-      where: { ativo: true },
+      where,
       include: [
         { association: 'titulos' }
       ],
@@ -62,9 +68,13 @@ export class BancoService {
    * Listar bancos com filtros e paginação
    */
   static async list(filters: ListBancosFilters): Promise<ListBancosResponse> {
-    const { search, status, tipo_banco, page = 1, limit = 15, sortColumn, sortDirection } = filters;
+    const { search, status, tipo_banco, page = 1, limit = 15, sortColumn, sortDirection, empresa_id } = filters;
     
     const where: WhereOptions<Banco> = {};
+
+    if (empresa_id !== undefined) {
+      where.empresa_id = empresa_id;
+    }
     
     if (search) {
       (where as Record<symbol, unknown>)[Op.or] = [

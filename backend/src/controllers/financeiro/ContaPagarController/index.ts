@@ -12,6 +12,7 @@ import { Transaction } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ContaPagarController {
   static async index(req: Request, res: Response): Promise<void> {
@@ -28,6 +29,8 @@ export class ContaPagarController {
       const sortColumn = req.query.sortColumn as string;
       const sortDirection = req.query.sortDirection as string;
 
+      const empresaId = getEmpresaIdOrNull(req);
+
       const result = await ContaPagarService.list({
         page,
         limit,
@@ -39,7 +42,8 @@ export class ContaPagarController {
         data_inicio: dataInicio,
         data_fim: dataFim,
         sortColumn,
-        sortDirection
+        sortDirection,
+        empresa_id: empresaId ?? undefined,
       });
 
       sendSuccess(res, result);
