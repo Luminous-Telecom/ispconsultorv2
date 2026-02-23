@@ -97,7 +97,7 @@ export class ErrorHandler {
           // Rotas que não devem ser tratadas como erro de autenticação (404 = recurso não encontrado)
           const optionalRoutes = [
             'consultar', 'mensagens-', 'servidores-', 'servidor-', 
-            'dados-empresa', 'modelos-', 'modelo-', '/parametros', 'buscar-cep',
+            'modelos-', 'modelo-', '/parametros', 'buscar-cep',
             'dominios'
           ];
           
