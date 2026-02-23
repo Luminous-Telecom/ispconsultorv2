@@ -136,6 +136,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
       label: t('table.status'),
       sortable: true,
       width: '80px',
+      badgeLabels: [t('status.active'), t('status.inactive')],
       render: (item: IPv6) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
           {item.ativo ? t('status.active') : t('status.inactive')}

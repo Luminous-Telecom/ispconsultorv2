@@ -62,6 +62,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         key: 'tipo',
         label: t('scheduler.type'),
         sortable: true,
+        badgeLabels: ['Geração de Títulos', 'Envio de Boletos', 'Remessa Bancária', 'Verificar Vencimentos', 'Desbloquear domínios', 'Outros'],
         render: (item: RotinaAgendada) => {
           const labels: Record<string, string> = {
             geracao_titulos: 'Geração de Títulos',
@@ -110,6 +111,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         key: 'ativo',
         label: t('table.status'),
         sortable: true,
+        badgeLabels: [t('status.active'), t('status.inactive')],
         render: (item: RotinaAgendada) => (
           <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
             {item.ativo ? t('status.active') : t('status.inactive')}

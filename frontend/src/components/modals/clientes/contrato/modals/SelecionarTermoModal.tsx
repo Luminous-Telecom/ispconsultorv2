@@ -70,6 +70,7 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
         key: 'ativo',
         label: 'Status',
         sortable: true,
+        badgeLabels: ['Ativo', 'Inativo'],
         render: (termo: Termo) => (
           <span className={`badge ${termo.ativo ? 'bg-success' : 'bg-secondary'}`}>
             {termo.ativo ? 'Ativo' : 'Inativo'}

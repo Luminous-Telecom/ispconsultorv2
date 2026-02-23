@@ -85,7 +85,7 @@ const BlockdomiLogsAcessoModal: React.FC<BlockdomiLogsAcessoModalProps> = ({
       key: 'sucesso',
       label: t('blockdomi.logsSucesso'),
       sortable: true,
-      width: '100px',
+      badgeLabels: [t('blockdomi.logsSucessoOk'), t('blockdomi.logsSucessoErro')],
       render: (item) => (
         <span className={`badge bg-${item.sucesso ? 'success' : 'danger'}`}>
           {item.sucesso ? t('blockdomi.logsSucessoOk') : t('blockdomi.logsSucessoErro')}

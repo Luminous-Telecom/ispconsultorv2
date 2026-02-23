@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { TableConfig, TableAction, BulkAction, SortDirection, TablePagination } from './types';
@@ -6,12 +5,36 @@ import { FilterValue } from '@/types/common';
 import { useTable } from './useTable';
 import { useColumnResizing } from '@/hooks/useColumnResizing';
 import TableColumn from './TableColumn';
-import TableActions from './TableActions';
-import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
 import { useI18n } from '@/contexts/I18nContext';
+
+// Calcula minWidth dinâmico a partir dos labels do badge (~7px/char + 24px padding)
+function getMinWidthFromBadgeLabels(labels: string[]): number {
+  if (!labels?.length) return 0;
+  const maxLen = Math.max(...labels.map(l => (l || '').length));
+  return maxLen * 7 + 24;
+}
+
+// Largura mínima do título do cabeçalho (~7px/char + 28px para padding + ícone de sort)
+function getTitleMinWidth(label?: string): number {
+  if (!label) return 40;
+  return Math.max(40, label.length * 7 + 28);
+}
+
+function getColumnMinWidth(column: { badgeLabels?: string[]; minWidth?: string | number; label?: string }): number | undefined {
+  const titleMin = getTitleMinWidth(column.label);
+  if (column.badgeLabels?.length) {
+    const badgeMin = getMinWidthFromBadgeLabels(column.badgeLabels);
+    return Math.max(badgeMin, titleMin);
+  }
+  if (column.minWidth != null) {
+    const explicit = typeof column.minWidth === 'number' ? column.minWidth : parseInt(String(column.minWidth).replace('px', ''), 10);
+    return Math.max(explicit, titleMin);
+  }
+  return undefined;
+}
 
 // Helper para normalizar paginação (aceita snake_case da API ou camelCase interno)
 const normalizePagination = (pagination: TableConfig<unknown>['pagination']): TablePagination | undefined => {
@@ -99,15 +122,15 @@ function Table<T extends { id: number | string }>({
     tableId: uniqueTableId,
     columns: config.columns,
     getMinWidthForColumn: (columnKey: string) => {
-      // Encontrar a coluna correspondente
       const column = config.columns.find(col => col.key === columnKey);
-      if (!column?.label) return 40; // Largura mínima padrão com espaço para ícone
+      if (!column) return 40;
 
-      // Estimativa precisa: ~7px por caractere + 40px para padding, ícone de ordenação e espaçamento
-      const titleWidth = column.label.length * 7;
-      const iconAndPaddingWidth = 40; // 16px ícone + 16px padding esquerdo + 8px margem direita
+      // getColumnMinWidth já retorna max(badge, título)
+      const colMin = getColumnMinWidth(column);
+      if (colMin != null) return colMin;
 
-      return Math.max(40, titleWidth + iconAndPaddingWidth);
+      if (!column.label) return 40;
+      return Math.max(40, column.label.length * 6 + 24);
     },
     onResizeEnd: () => {
       // Quando o redimensionamento termina, não fazer nada aqui
@@ -381,15 +404,6 @@ function Table<T extends { id: number | string }>({
     multiSelect = false,
     emptyMessage,
     loadingMessage: _loadingMessage,
-    size: _size = 'md',
-    variant: _variant = 'default',
-    striped: _striped = false,
-    hover: _hover = false,
-    bordered: _bordered = false,
-    borderless: _borderless = false,
-    responsive: _responsive = true,
-    stickyHeader: _stickyHeader = false,
-    stickyActions: _stickyActions = false,
     customControls,
     customControlsAfterActions,
     customFilters,
@@ -421,13 +435,14 @@ function Table<T extends { id: number | string }>({
     let total = 0;
     visibleColumns.forEach(col => {
       const w = columnWidths[col.key];
+      const colMin = getColumnMinWidth(col);
       if (w !== undefined) {
-        total += w;
+        total += colMin != null ? Math.max(w, colMin) : w;
       } else if (col.width !== undefined) {
         const px = typeof col.width === 'string' ? parseInt(col.width.replace('px', ''), 10) : col.width;
-        total += Number.isNaN(px) ? 120 : px;
+        total += Math.max(Number.isNaN(px) ? 120 : px, colMin ?? 0);
       } else {
-        total += 120;
+        total += colMin ?? 120;
       }
     });
     if (selectable) total += 50;
@@ -452,10 +467,7 @@ function Table<T extends { id: number | string }>({
     actions: tableActions,
     paginatedData,
     totalPages,
-    hasNextPage: _hasNextPage,
-    hasPreviousPage: _hasPreviousPage,
     isAllSelected: _isAllSelected,
-    isPartiallySelected: _isPartiallySelected,
   } = useTable({
     data: filteredData,
     columns,
@@ -838,59 +850,6 @@ function Table<T extends { id: number | string }>({
     }
   }, [openDropdown, handleClickOutside]);
 
-  // Construir classes da tabela
-  const _getTableClasses = () => {
-    const classes = ['table'];
-    
-    if (_size !== 'md') {
-      classes.push(`table-${_size}`);
-    }
-    
-    if (_variant !== 'default') {
-      classes.push(`table-${_variant}`);
-    }
-    
-    if (_striped) {
-      classes.push('table-striped');
-    }
-    
-    if (_hover) {
-      classes.push('table-hover');
-    }
-    
-    if (_bordered) {
-      classes.push('table-bordered');
-    }
-    
-    if (_borderless) {
-      classes.push('table-borderless');
-    }
-
-    // Adicionar classe para redimensionamento Bootstrap-style
-    classes.push('table-resizable');
-
-    return classes.join(' ');
-  };
-
-  // Construir classes do container
-  const _getContainerClasses = () => {
-    const classes = ['table-container'];
-    
-    if (_responsive) {
-      classes.push('table-responsive');
-    }
-    
-    if (_stickyHeader) {
-      classes.push('sticky-header');
-    }
-    
-    if (className) {
-      classes.push(className);
-    }
-    
-    return classes.join(' ');
-  };
-
   // Renderizar cabeçalho da tabela
   const renderTableHeader = () => {
     return (
@@ -919,14 +878,20 @@ function Table<T extends { id: number | string }>({
           {/* Colunas */}
           {columns
             .filter(col => !col.hidden)
-            .map((column, index) => (
+            .map((column, index) => {
+              const rawWidth = columnWidths[column.key];
+              const colMinWidth = getColumnMinWidth(column);
+              const effectiveHeaderWidth = rawWidth !== undefined
+                ? (colMinWidth != null ? Math.max(rawWidth, colMinWidth) : rawWidth)
+                : (colMinWidth ?? undefined);
+              return (
               <TableColumn
                 key={column.key}
                 column={column}
                 sortColumn={state.sortColumn}
                 sortDirection={state.sortDirection}
                 onSort={tableActions.setSort}
-                columnWidth={columnWidths[column.key]}
+                columnWidth={effectiveHeaderWidth}
                 onResizeStart={handleResizeStart}
                 onResizeEnd={() => {
                   // Callback chamado quando redimensionamento termina
@@ -939,7 +904,8 @@ function Table<T extends { id: number | string }>({
                 isResizing={isResizing}
                 isLastColumn={index === columns.filter(col => !col.hidden).length - 1}
               />
-            ))}
+            );
+            })}
           
           {/* Coluna de ações */}
           {_actions.length > 0 && (
@@ -1278,16 +1244,24 @@ function Table<T extends { id: number | string }>({
                 .filter(col => !col.hidden)
                 .map(column => {
                   const resizedWidth = columnWidths[column.key];
+                  const colMinWidth = getColumnMinWidth(column);
                   let widthStyle: React.CSSProperties;
                   if (resizedWidth !== undefined) {
-                    widthStyle = { width: `${resizedWidth}px`, minWidth: `${resizedWidth}px`, maxWidth: `${resizedWidth}px` };
+                    const effectiveWidth = colMinWidth != null ? Math.max(resizedWidth, colMinWidth) : resizedWidth;
+                    widthStyle = { width: `${effectiveWidth}px`, minWidth: `${effectiveWidth}px`, maxWidth: `${effectiveWidth}px` };
                   } else {
                     const w = column.width;
                     const widthVal = w != null ? (typeof w === 'number' ? `${w}px` : w) : undefined;
+                    const minVal = colMinWidth != null ? `${colMinWidth}px` : widthVal;
+                    const derivedWidth = widthVal ?? (colMinWidth != null ? `${colMinWidth}px` : undefined);
+                    // Colunas de badge sem width explícito: limitar maxWidth ao valor calculado para não crescer além do necessário
+                    const maxVal = column.maxWidth != null
+                      ? (typeof column.maxWidth === 'number' ? `${column.maxWidth}px` : column.maxWidth)
+                      : (column.badgeLabels?.length && !w ? derivedWidth : undefined);
                     widthStyle = {
-                      width: widthVal ?? undefined,
-                      minWidth: (column.minWidth != null ? (typeof column.minWidth === 'number' ? `${column.minWidth}px` : column.minWidth) : widthVal) ?? undefined,
-                      maxWidth: column.maxWidth != null ? (typeof column.maxWidth === 'number' ? `${column.maxWidth}px` : column.maxWidth) : undefined
+                      width: derivedWidth,
+                      minWidth: minVal ?? undefined,
+                      maxWidth: maxVal,
                     };
                   }
                   return (
@@ -1371,112 +1345,6 @@ function Table<T extends { id: number | string }>({
                 </td>
               )}
               
-              {/* Coluna de ações - mobile dropdown */}
-              {isMobile && (
-                <td
-                  className={`table-actions-cell table-actions-cell-fixed ${isSelected ? 'table-selected-cell' : ''}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="table-actions-desktop">
-                    <button
-                      type="button"
-                      className="table-action-menu-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      setOpenActionDropdown(openActionDropdown === item.id ? null : item.id);
-                    }}
-                    aria-label={t('ui.actionsMenu')}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="12" cy="5" r="1"></circle>
-                        <circle cx="12" cy="19" r="1"></circle>
-                      </svg>
-                    </button>
-                    
-                    {openActionDropdown === item.id && (
-                      <>
-                        <div 
-                          className="table-dropdown-overlay"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenActionDropdown(null);
-                          }}
-                        />
-                        <div className="table-dropdown">
-                          {_actions.length > 0 ? (
-                            _actions
-                              .filter(action => {
-                                if (typeof action.hidden === 'function') {
-                                  return !action.hidden(item);
-                                }
-                                return !action.hidden;
-                              })
-                              .map((action) => {
-                                const isDisabled = typeof action.disabled === 'function' 
-                                  ? action.disabled(item) 
-                                  : action.disabled;
-                                
-                                return (
-                                  <button
-                                    key={action.key}
-                                    type="button"
-                                    className={`table-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setOpenActionDropdown(null);
-                                      if (!isDisabled && onActionClick) {
-                                        onActionClick(action, item, index);
-                                      } else if (!isDisabled && action.onClick) {
-                                        action.onClick(item, index);
-                                      }
-                                    }}
-                                    disabled={isDisabled}
-                                  >
-                                    {action.icon && <i className={action.icon}></i>}
-                                    <span>{action.label}</span>
-                                  </button>
-                                );
-                              })
-                          ) : (
-                            bulkActions
-                              .filter(bulkAction => {
-                                const label = bulkAction.label.toLowerCase();
-                                return label.includes('editar') || 
-                                       label.includes('deletar') || 
-                                       label.includes('inserir') || 
-                                       label.includes('cancelar') ||
-                                       label.includes('selecionar');
-                              })
-                              .map(bulkAction => {
-                                const actionKey = bulkAction.label.toLowerCase().replace(/\s+/g, '-');
-                                return (
-                                  <button
-                                    key={actionKey}
-                                    type="button"
-                                    className={`table-dropdown-item ${bulkAction.variant === 'danger' ? 'danger' : ''}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setOpenActionDropdown(null);
-                                      if (bulkAction.onClick) {
-                                        bulkAction.onClick([item]);
-                                      } else if (onBulkActionClick) {
-                                        onBulkActionClick(bulkAction, [item]);
-                                      }
-                                    }}
-                                  >
-                                    <span>{bulkAction.label}</span>
-                                  </button>
-                                );
-                              })
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </td>
-              )}
-              
             </tr>
           );
         })}
@@ -1484,55 +1352,6 @@ function Table<T extends { id: number | string }>({
     );
   };
 
-
-  // Renderizar barra de ferramentas
-  const _renderToolbar = () => {
-    return (
-      <div className="table-toolbar d-flex justify-content-between align-items-center mb-3">
-        <div className="d-flex align-items-center gap-3">
-          {/* Busca removida do toolbar pois foi para o header */}
-          
-          {/* Ações em massa */}
-          {bulkActions.length > 0 && state.selectedItems.length > 0 && (
-            <TableActions
-              bulkActions={bulkActions}
-              selectedItems={state.selectedItems}
-              onBulkActionClick={onBulkActionClick}
-            />
-          )}
-        </div>
-        
-        <div className="d-flex align-items-center gap-2">
-          {/* Botão de auditar (sempre visível, mas inativo quando não há 1 item selecionado) */}
-              {onAudit && auditEntity && (
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  icon="shield-check"
-                  onClick={handleAuditClick}
-                  disabled={loading || state.selectedItems.length !== 1}
-                  tooltip={state.selectedItems.length === 1 ? t('ui.auditSelected') : t('ui.selectOneToAudit')}
-                  alwaysShowIcon={true}
-                >
-                  {t('buttons.audit')}
-                </Button>
-              )}
-              {/* Botão de refresh */}
-              <Button
-                variant="outline-primary"
-                size="sm"
-                icon="arrow-clockwise"
-                onClick={tableActions.refresh}
-                disabled={loading}
-                tooltip={t('ui.refresh')}
-                alwaysShowIcon={true}
-              >
-                {t('ui.refresh')}
-              </Button>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div

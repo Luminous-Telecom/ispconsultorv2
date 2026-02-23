@@ -117,6 +117,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
         label: t('table.fileType'),
         sortable: true,
         searchable: true,
+        badgeLabels: [t('fileType.document'), t('fileType.photo'), t('fileType.signature')],
         render: (item: ClienteArquivo) => (
           <span className={`badge ${
             item.tipo === 'documento' ? 'bg-primary' :
@@ -136,6 +137,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
         label: t('table.fileOrigin'),
         sortable: true,
         searchable: true,
+        badgeLabels: [t('fileType.manual'), t('fileType.digitalSignature'), t('fileType.system')],
         render: (item: ClienteArquivo) => (
           <span className={`badge ${
             item.origem === 'manual' ? 'bg-secondary' :

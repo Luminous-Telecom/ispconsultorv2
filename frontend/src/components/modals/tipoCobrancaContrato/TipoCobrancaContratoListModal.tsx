@@ -109,6 +109,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
       key: 'ativo',
       label: t('table.status'),
       sortable: true,
+      badgeLabels: [t('status.active'), t('status.inactive')],
       render: (item) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
           {item.ativo ? t('status.active') : t('status.inactive')}

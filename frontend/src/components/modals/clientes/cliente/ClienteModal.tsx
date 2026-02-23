@@ -254,6 +254,7 @@ const ClienteModal = ({
       label: t('table.status'),
       sortable: true,
       searchable: true,
+      badgeLabels: [t('status.paid'), t('status.paidLate'), t('status.pending'), t('status.overdue'), t('status.partial'), t('status.cancelled')],
       render: (item: CarneParcela) => {
         return (
           <span className={`badge bg-${getStatusColor(item.status)}`}>
@@ -325,6 +326,7 @@ const ClienteModal = ({
       label: t('table.invoiceStatus'),
       sortable: true,
       searchable: true,
+      badgeLabels: [t('status.scheduled'), t('status.issued'), t('status.cancelled'), t('status.rejected'), t('status.error')],
       render: (item: CarneParcela & { nfse_status?: 'agendado' | 'emitida' | 'cancelada' | 'rejeitada' | 'erro' | null }) => {
         if (!item.nfse_status) return '-';
         const statusMap: Record<string, { label: string; color: string }> = {

@@ -1269,6 +1269,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: t('table.status'),
       sortable: true,
       searchable: true,
+      badgeLabels: [t('status.paid'), t('status.paidLate'), t('status.pending'), t('status.overdue'), t('status.partial'), t('status.cancelled')],
       render: (item: Titulo) => (
         <span className={`badge bg-${getStatusColor(item.status)}`}>
           {item.status === 'pago' ? t('status.paid') :
@@ -1335,6 +1336,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: t('table.nfStatus'),
       sortable: true,
       searchable: true,
+      badgeLabels: [t('status.scheduled'), t('status.issued'), t('status.cancelled'), t('status.rejected'), t('status.error')],
       render: (item: Titulo) => {
         if (!item.nfse_status) return '-';
         const statusMap: Record<string, { label: string; color: string }> = {
@@ -1415,6 +1417,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: t('table.status'),
       sortable: true,
       searchable: true,
+      badgeLabels: [t('status.paid'), t('status.paidLate'), t('status.pending'), t('status.overdue'), t('status.partial'), t('status.cancelled')],
       render: (item: Titulo) => (
         <span className={`badge bg-${getStatusColor(item.status)}`}>
           {item.status === 'pago' ? t('status.paid') :
@@ -1569,6 +1572,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: t('table.status'),
       sortable: true,
       searchable: true,
+      badgeLabels: [t('status.active'), t('status.inactive'), t('status.suspended')],
       render: (item: ContratoPlanoAdicional) => {
         const statusColors: Record<string, string> = {
           ativo: 'success',
@@ -1603,6 +1607,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       key: 'assinado',
       label: t('table.accepted'),
       sortable: true,
+      badgeLabels: [t('ui.yes'), t('ui.no')],
       render: (item: TermoContrato) => (
         <span className={`badge ${item.assinado === 'SIM' ? 'bg-success' : 'bg-secondary'}`}>
           {item.assinado === 'SIM' ? t('ui.yes') : t('ui.no')}
@@ -1620,6 +1625,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       key: 'ativo',
       label: t('table.status'),
       sortable: true,
+      badgeLabels: [t('status.active'), t('status.inactive')],
       render: (item: TermoContrato) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
           {item.ativo ? t('status.active') : t('status.inactive')}

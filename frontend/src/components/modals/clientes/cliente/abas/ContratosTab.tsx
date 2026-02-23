@@ -124,6 +124,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 label: t('form.status'),
                 sortable: true,
                 searchable: true,
+                badgeLabels: [t('status.active'), t('status.inactive')],
                 render: (contrato: Contrato) => (
                   <span className={`badge ${
                     contrato.status === 'ativo' ? 'bg-success' :
@@ -186,6 +187,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 label: t('table.exempt'),
                 sortable: true,
                 searchable: true,
+                badgeLabels: [t('ui.yes'), t('ui.no')],
                 render: (contrato: Contrato) => (
                   <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
                     {contrato.isento_mensalidade ? t('ui.yes') : t('ui.no')}

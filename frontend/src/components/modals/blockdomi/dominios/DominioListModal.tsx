@@ -139,6 +139,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       label: t('table.status'),
       sortable: true,
       width: '80px',
+      badgeLabels: [t('status.active'), t('status.inactive')],
       render: (item: Dominio) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
           {item.ativo ? t('status.active') : t('status.inactive')}

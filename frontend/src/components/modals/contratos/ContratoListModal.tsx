@@ -369,7 +369,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Status',
       sortable: true,
       searchable: true,
-      width: 60,
+      badgeLabels: ['Ativo', 'Inativo', 'Suspenso', 'Cancelado'],
       render: (item: Contrato) => {
         const getStatusColor = (status: string) => {
           switch (status?.toLowerCase()) {

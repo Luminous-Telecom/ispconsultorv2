@@ -134,7 +134,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         key: 'acao',
         label: t('table.action'),
         sortable: true,
-        width: '100px',
+        badgeLabels: [t('audit.actions.create'), t('audit.actions.update'), t('audit.actions.delete'), t('audit.actions.login'), t('audit.actions.logout'), t('audit.actions.export'), t('audit.actions.import')],
         render: (log: AuditoriaLog) => (
           <span className={`badge bg-${getAcaoBadgeClass(log.acao)}`}>
             {formatAcao(log.acao)}

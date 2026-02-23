@@ -168,7 +168,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       key: 'tipo',
       label: t('backup.columnType'),
       sortable: true,
-      width: '120px',
+      badgeLabels: ['database', 'arquivos', 'completo'],
       render: (item) => <span className="badge bg-secondary">{item.tipo}</span>
     }
   ], [t]);

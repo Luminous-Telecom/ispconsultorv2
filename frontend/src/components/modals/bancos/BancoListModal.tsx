@@ -84,7 +84,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       key: 'tipo_banco',
       label: t('table.bankType'),
       sortable: true,
-      width: '90px',
+      badgeLabels: ['EFI', 'Asaas', 'Bancário', 'Outros'],
       render: (item: Banco) => {
         const tipos: Record<string, string> = {
           'efi': 'EFI',
@@ -103,7 +103,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       key: 'sandbox',
       label: t('table.sandbox'),
       sortable: true,
-      width: '80px',
+      badgeLabels: [t('ui.yes'), t('ui.no')],
       render: (item: Banco) => (
         <span className={`badge ${item.sandbox ? 'bg-warning' : 'bg-primary'}`}>
           {item.sandbox ? t('ui.yes') : t('ui.no')}
@@ -114,7 +114,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       key: 'ativo',
       label: t('table.status'),
       sortable: true,
-      width: '80px',
+      badgeLabels: [t('status.active'), t('status.inactive')],
       render: (item: Banco) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
           {item.ativo ? t('status.active') : t('status.inactive')}

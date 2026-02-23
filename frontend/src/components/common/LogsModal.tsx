@@ -196,6 +196,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
                   label: 'Status',
                   sortable: true,
                   width: '90px',
+                  badgeLabels: ['Sucesso', 'Erro', 'Executando'],
                   render: (log: LogEntry) => (
                     <span className={`badge ${
                       log.status === 'sucesso' ? 'bg-success' :

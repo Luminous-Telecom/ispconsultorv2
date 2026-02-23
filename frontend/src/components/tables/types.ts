@@ -12,6 +12,8 @@ export interface TableColumn<T = Record<string, unknown>> {
   render?: RenderFunction<T>;
   className?: string;
   sortable?: boolean;
+  /** Labels possíveis do badge - minWidth calculado dinamicamente pelo maior texto */
+  badgeLabels?: string[];
   width?: string | number;
   minWidth?: string | number;
   maxWidth?: string | number;

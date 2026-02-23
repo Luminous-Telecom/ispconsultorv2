@@ -86,7 +86,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
       key: 'tipo',
       label: t('history.type'),
       sortable: true,
-      width: '70px',
+      badgeLabels: [t('history.email')],
       render: (_item: MensagemItem) => (
         <Badge variant="primary">
           {t('history.email')}
@@ -137,7 +137,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
       key: 'status',
       label: t('history.status'),
       sortable: true,
-      width: '80px',
+      badgeLabels: [t('history.sent'), t('history.errorStatus')],
       render: (item: MensagemItem) => (
         <Badge
           variant={item.status === 'enviada' ? 'success' : 'danger'}

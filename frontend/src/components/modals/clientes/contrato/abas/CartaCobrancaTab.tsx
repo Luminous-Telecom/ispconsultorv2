@@ -121,6 +121,7 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
       key: 'ativo',
       label: 'Status',
       sortable: true,
+      badgeLabels: ['Ativo', 'Inativo'],
       render: (item: ModeloCarta) => {
         return (
           <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>

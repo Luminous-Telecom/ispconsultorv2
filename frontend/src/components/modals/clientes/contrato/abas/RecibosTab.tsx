@@ -121,6 +121,7 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
       key: 'ativo',
       label: 'Status',
       sortable: true,
+      badgeLabels: ['Ativo', 'Inativo'],
       render: (item: ModeloRecibo) => {
         return (
           <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>

@@ -162,7 +162,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       label: 'Perfil',
       sortable: true,
       searchable: true,
-      width: 120,
+      badgeLabels: ['Administrador', 'Usuário'],
       resizable: true,
       render: (item: Usuario) => {
         const roleLabels: Record<string, string> = {
@@ -181,6 +181,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       label: 'Status',
       sortable: true,
       searchable: false,
+      badgeLabels: ['Ativo', 'Inativo'],
       render: (item: Usuario) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
           {item.ativo ? 'Ativo' : 'Inativo'}

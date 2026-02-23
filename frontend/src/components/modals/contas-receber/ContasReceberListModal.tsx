@@ -400,7 +400,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       label: t('table.status'),
       sortable: true,
       searchable: true,
-      width: 80,
+      badgeLabels: [t('status.pending'), t('status.paid'), t('status.overdue'), t('status.cancelled'), t('status.partial'), t('status.paidLate')],
       resizable: true,
       render: (item: Titulo) => getStatusBadge(item.status)
     },
@@ -503,7 +503,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       label: t('table.invoiceStatus'),
       sortable: true,
       searchable: true,
-      width: 85,
+      badgeLabels: [t('status.scheduled'), t('status.issued'), t('status.cancelled'), t('status.rejected'), t('status.error')],
       render: (item: Titulo) => {
         if (!item.nfse_status) return '-';
         const statusMap: Record<string, { label: string; color: string }> = {

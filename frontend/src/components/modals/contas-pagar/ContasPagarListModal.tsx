@@ -256,7 +256,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         key: 'status',
         label: t('table.status'),
         sortable: true,
-        width: '120px',
+        badgeLabels: [t('financial.toPay'), t('financial.paid'), t('status.pending'), t('status.rejected')],
         render: (item: ContaPagar) => getStatusBadge(item.status)
       },
       {

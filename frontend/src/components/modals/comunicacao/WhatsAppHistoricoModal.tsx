@@ -86,7 +86,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
       key: 'tipo',
       label: t('history.type'),
       sortable: true,
-      width: '80px',
+      badgeLabels: [t('history.whatsapp')],
       render: (_item: MensagemItem) => (
         <Badge variant="success">
           {t('history.whatsapp')}
@@ -126,7 +126,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
       key: 'status',
       label: t('history.status'),
       sortable: true,
-      width: '80px',
+      badgeLabels: [t('history.sent'), t('history.errorStatus')],
       render: (item: MensagemItem) => (
         <Badge
           variant={item.status === 'enviada' ? 'success' : 'danger'}

@@ -88,6 +88,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
       key: 'status',
       label: t('table.status'),
       sortable: true,
+      badgeLabels: [t('status.pending'), t('status.processing'), t('status.authorized'), t('status.cancelled'), t('status.rejected'), t('status.error')],
       render: (item: NotaFiscal) => {
         const statusColors: Record<string, string> = {
           'PENDENTE': 'bg-secondary',
@@ -116,6 +117,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
       key: 'nfse_status',
       label: t('params.nfse') + ' ' + t('table.status'),
       sortable: true,
+      badgeLabels: [t('status.scheduled'), t('status.issued'), t('status.cancelled'), t('status.rejected'), t('status.error')],
       render: (item: NotaFiscal) => {
         if (!item.nfse_status) return '-';
         const statusColors: Record<string, string> = {

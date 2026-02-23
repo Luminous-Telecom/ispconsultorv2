@@ -166,6 +166,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
       key: 'ativo',
       label: 'Status',
       sortable: true,
+      badgeLabels: ['Ativo', 'Inativo'],
       render: (item: DocumentoUnion) => {
         const isAtivo = 'ativo' in item ? item.ativo : true;
         return (

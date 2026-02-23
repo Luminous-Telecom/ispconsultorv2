@@ -74,6 +74,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
       label: t('table.personTypeShort'),
       sortable: true,
       width: '90px',
+      badgeLabels: [t('table.personTypeLegalShort'), t('table.personTypePhysicalShort')],
       render: (item: Fornecedor) => (
         <span className={`badge ${item.tipo_pessoa === 'JURIDICA' ? 'bg-info' : 'bg-primary'}`}>
           {item.tipo_pessoa === 'JURIDICA' ? t('table.personTypeLegalShort') : t('table.personTypePhysicalShort')}

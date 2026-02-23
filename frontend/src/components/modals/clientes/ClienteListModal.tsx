@@ -176,7 +176,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       key: 'ativo',
       label: t('table.status'),
       sortable: true,
-      width: '60px',
+      badgeLabels: [t('status.active'), t('status.inactive')],
       render: (item: Cliente) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
           {item.ativo ? t('status.active') : t('status.inactive')}

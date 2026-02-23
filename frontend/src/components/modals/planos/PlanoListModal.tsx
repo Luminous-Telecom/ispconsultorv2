@@ -106,7 +106,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'tipo_servico',
       label: t('table.serviceType'),
       sortable: true,
-      width: '130px',
+      badgeLabels: [t('form.serviceTypeInfrastructure'), t('form.serviceTypeConsulting'), t('form.serviceTypeBlockdomi')],
       render: (item: Plano) => (
         <span className="badge bg-info">
           {getTipoServicoLabel(item.tipo_servico)}
@@ -137,7 +137,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'quantidade_clientes',
       label: t('table.clients'),
       sortable: true,
-      width: '90px',
+      badgeLabels: ['9999'],
       render: (item: Plano) => (
         <span className="badge bg-primary">
           {item.quantidade_clientes ?? (item.clientes ? item.clientes.length : 0)}
@@ -168,7 +168,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       key: 'status',
       label: t('table.status'),
       sortable: true,
-      width: '80px',
+      badgeLabels: [t('status.active'), t('status.inactive')],
       render: (item: Plano) => {
         const statusMap: { [key: string]: string } = {
           'ativo': t('status.active'),
