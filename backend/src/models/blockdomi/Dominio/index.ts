@@ -13,6 +13,7 @@ export class Dominio extends Model<
   InferCreationAttributes<Dominio>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare dominio: string;
   declare descricao: string | null;
   declare nome_oficio: string | null;

@@ -13,6 +13,7 @@ export class BlockdomiLogAcesso extends Model<
   InferCreationAttributes<BlockdomiLogAcesso>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare ip: string | null;
   declare rota: string;
   declare metodo: string;

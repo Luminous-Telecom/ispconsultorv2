@@ -3,6 +3,7 @@ import { sequelize } from '../../../config/database';
 
 export interface HotsiteAttributes {
   id: number;
+  empresa_id?: number | null;
   html: string;
   ativo: boolean;
   created_at: Date;
@@ -13,6 +14,7 @@ export type HotsiteCreationAttributes = Omit<HotsiteAttributes, 'id' | 'created_
 
 export class Hotsite extends Model<HotsiteAttributes, HotsiteCreationAttributes> implements HotsiteAttributes {
   public id!: number;
+  public empresa_id?: number | null;
   public html!: string;
   public ativo!: boolean;
   public created_at!: Date;
@@ -28,6 +30,10 @@ Hotsite.init({
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true
+  },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
   html: {
     type: DataTypes.TEXT,

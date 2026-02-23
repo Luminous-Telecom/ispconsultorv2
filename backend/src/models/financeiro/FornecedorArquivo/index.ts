@@ -15,6 +15,7 @@ export class FornecedorArquivo extends Model<
   InferCreationAttributes<FornecedorArquivo>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare fornecedor_id: number;
   declare nome: string;
   declare tipo: string | null;

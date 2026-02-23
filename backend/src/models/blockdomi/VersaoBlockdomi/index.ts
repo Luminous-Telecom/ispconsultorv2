@@ -12,6 +12,7 @@ export class VersaoBlockdomi extends Model<
   InferCreationAttributes<VersaoBlockdomi>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare numero: string;
   declare created_at: CreationOptional<Date>;
 }

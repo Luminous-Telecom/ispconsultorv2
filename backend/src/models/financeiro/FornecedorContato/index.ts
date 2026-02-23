@@ -15,6 +15,7 @@ export class FornecedorContato extends Model<
   InferCreationAttributes<FornecedorContato>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare fornecedor_id: number;
   declare tipo: 'telefone' | 'email' | 'whatsapp' | 'celular' | 'fixo' | 'outro';
   declare valor: string;

@@ -16,6 +16,7 @@ export class FornecedorHistorico extends Model<
   InferCreationAttributes<FornecedorHistorico>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare fornecedor_id: number;
   declare data: Date;
   declare usuario_id: number | null;

@@ -15,6 +15,7 @@ export class ContaPagarArquivo extends Model<
   InferCreationAttributes<ContaPagarArquivo>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare conta_pagar_id: number;
   declare nome: string;
   declare tipo: string | null;

@@ -13,6 +13,7 @@ export class IPv4 extends Model<
   InferCreationAttributes<IPv4>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare ip: string;
   declare descricao: string | null;
   declare nome_oficio: string | null;

@@ -12,6 +12,7 @@ export class IpPermitidoBlockdomi extends Model<
   InferCreationAttributes<IpPermitidoBlockdomi>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare cliente_id: number;
   declare faixa_ips: string;
   declare created_at: CreationOptional<Date>;
