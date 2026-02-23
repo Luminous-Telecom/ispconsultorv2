@@ -192,7 +192,19 @@ export class TituloPDFService {
         TIPO_SERVICO: titulo.plano?.tipo_servico || '',
         QUANTIDADE_USUARIOS: titulo.plano?.quantidade_usuarios || '1',
         VALOR_PLANO: valorBoleto,
-        PERIODICIDADE: 'Mensal',
+        PERIODICIDADE: (() => {
+          const labels: Record<string, string> = {
+            mensal: 'Mensal',
+            bimestral: 'Bimestral',
+            trimestral: 'Trimestral',
+            semestral: 'Semestral',
+            anual: 'Anual',
+            quinzenal: 'Quinzenal',
+            semanal: 'Semanal'
+          };
+          const p = titulo.plano?.periodicidade;
+          return p ? (labels[p] || p) : 'Mensal';
+        })(),
         TEXTO_MULTAMORA: titulo.banco?.percentual_multa || titulo.banco?.percentual_juros ? 
           `Multa de ${titulo.banco?.percentual_multa || 2}% + Juros de ${titulo.banco?.percentual_juros || 0.033}% ao dia após o vencimento` : '',
         INSTRUCOES1: processarInstrucaoSegura(titulo.banco?.instrucao_linha_1),
