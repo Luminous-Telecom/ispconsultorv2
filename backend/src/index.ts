@@ -107,9 +107,16 @@ app.use(cors({
   origin: (origin, callback) => {
     // Requisições sem origin (curl, mobile, server-to-server) são permitidas
     if (!origin) return callback(null, true);
-    // Se não há lista configurada, permite tudo apenas fora de produção
+    // Se não há lista configurada: em produção permite localhost; fora de produção permite tudo
     if (ALLOWED_ORIGINS.length === 0) {
       if (isProduction()) {
+        try {
+          const parsed = new URL(origin);
+          const isLocalhost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+          if (isLocalhost) return callback(null, true);
+        } catch {
+          /* invalid URL */
+        }
         logger.warn('CORS bloqueado: ALLOWED_ORIGINS não configurada em produção', { origin });
         return callback(new Error('Origem não permitida: configure ALLOWED_ORIGINS'));
       }
