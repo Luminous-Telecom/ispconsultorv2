@@ -61,7 +61,7 @@ export class SelfUpdateService {
     const backendRoot = this.findPathWith(currentDir, 'package.json');
     this.backendPath = backendRoot || path.resolve(this.projectRoot, 'backend');
 
-    this.pm2ProcessName = process.env.PM2_PROCESS_NAME || 'BackNet-backend';
+    this.pm2ProcessName = process.env.PM2_PROCESS_NAME || 'backend';
     
     this.backendPort = parseInt(process.env.PORT || '3001', 10);
     this.backendUrl = `http://localhost:${this.backendPort}`;

@@ -197,7 +197,7 @@ export class Pm2Service {
     const script = `
 const d = parseInt(process.env.PM2_DELAY || '5000', 10);
 const cwd = process.env.PM2_CWD || '.';
-const app = process.env.PM2_APP || 'BackNet-backend';
+const app = process.env.PM2_APP || 'backend';
 setTimeout(() => {
   try {
     require('child_process').execFileSync('pm2', ['restart', app, '--update-env'], { cwd, stdio: 'inherit', maxBuffer: 10*1024*1024 });

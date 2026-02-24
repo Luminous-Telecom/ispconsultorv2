@@ -140,6 +140,9 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
       next();
       return;
     }
+    // Token de API inválido — não tentar JWT (evita "jwt malformed")
+    res.status(401).json({ success: false, message: 'Token de API inválido. Gere um novo em Parâmetros → Usuários → Gerar token.' });
+    return;
   }
 
   const token = cookieToken || headerToken;
