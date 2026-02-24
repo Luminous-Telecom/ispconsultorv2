@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
 import { ApiTokenService } from '../../../services/sistema/ApiTokenService';
-import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
+import { logger } from '../../../utils/logger';
+import { isProduction } from '../../../utils/envUtils';
 import { AuthTokenPayload } from '../../../types/auth';
 import { registrarCriacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 
@@ -32,8 +34,17 @@ const createSchema = Joi.object({
 export class ApiTokenController {
   static async index(req: Request, res: Response): Promise<void> {
     try {
+      if (isProduction()) {
+        logger.info('[api-tokens] Rota alcançada', { path: req.originalUrl });
+      }
       const empresa_id = getEmpresaId(req);
-      if (!empresa_id) { sendNotFound(res, 'Empresa não identificada'); return; }
+      if (!empresa_id) {
+        if (isProduction()) {
+          logger.info('[api-tokens] 403: usuário sem empresa_id', { path: req.originalUrl });
+        }
+        sendForbidden(res, 'Acesso negado: usuário deve estar vinculado a uma empresa');
+        return;
+      }
 
       const tokens = await ApiTokenService.list(empresa_id);
       sendSuccess(res, tokens);

@@ -269,6 +269,9 @@ app.use(errorHandlerMiddleware);
 
 // Middleware para rotas não encontradas (apenas para rotas da API)
 app.use('/api/*', (req, res) => {
+  if (isProduction() && req.originalUrl.includes('api-tokens')) {
+    logger.info('[api-tokens] 404 catch-all: rota não correspondida', { path: req.originalUrl });
+  }
   res.status(404).json({
     error: 'Rota não encontrada',
     path: req.originalUrl

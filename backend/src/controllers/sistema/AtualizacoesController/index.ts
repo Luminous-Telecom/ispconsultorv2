@@ -315,7 +315,7 @@ export class AtualizacoesController {
   static async updateStream(req: Request, res: Response): Promise<void> {
     let branch = 'main';
 
-    logger.info('🚀 Iniciando processo de atualização via SSE');
+    logger.info('Atualização iniciada');
 
     try {
       // Verificar se o usuário é admin
@@ -334,7 +334,7 @@ export class AtualizacoesController {
 
       branch = (req.query?.branch as string) || req.body?.branch || 'main';
 
-      logger.info('✅ Usuário autorizado, iniciando atualização');
+      logger.debug('Usuário autorizado, iniciando atualização');
 
       // Validar branch
       if (typeof branch !== 'string' || !branch.trim()) {
@@ -356,13 +356,13 @@ export class AtualizacoesController {
         'X-Accel-Buffering': 'no', // Desabilitar buffering do nginx
       });
 
-      logger.info('Iniciando processo de atualização com SSE');
+      logger.debug('Iniciando processo de atualização com SSE');
 
       let updateService: SelfUpdateService;
       try {
-        logger.info('🔧 Criando SelfUpdateService');
+        logger.debug('Criando SelfUpdateService');
         updateService = new SelfUpdateService();
-        logger.info('✅ SelfUpdateService criado com sucesso');
+        logger.debug('SelfUpdateService criado');
       } catch (error) {
         logger.error('❌ Erro ao criar SelfUpdateService', {
           error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -385,9 +385,9 @@ export class AtualizacoesController {
 
       let result;
       try {
-        logger.info('⚡ Executando atualização via SelfUpdateService');
+        logger.debug('Executando atualização via SelfUpdateService');
         result = await updateService.executeUpdate(branch, sendProgress);
-        logger.info('🏁 Processo de atualização concluído');
+        logger.info('Atualização concluída');
       } catch (error) {
         logger.error('❌ Erro inesperado ao executar atualização', {
           error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -416,14 +416,14 @@ export class AtualizacoesController {
       }
 
       // Se chegou até aqui, tudo deu certo até as migrations
-      logger.info('Atualização concluída com sucesso, iniciando reinicialização do PM2');
+      logger.debug('Iniciando reinicialização do PM2');
 
       // Aguardar PM2 reload completar
       let pm2ReloadResult;
       try {
         pm2ReloadResult = await updateService.reloadPM2(sendProgress);
         if (pm2ReloadResult.success) {
-          logger.info('PM2 reload agendado com sucesso');
+          logger.debug('PM2 reload agendado');
         } else {
           logger.warn('PM2 reload falhou ou foi apenas agendado');
         }

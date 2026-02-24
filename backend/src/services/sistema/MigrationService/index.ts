@@ -33,7 +33,7 @@ export class MigrationService {
         };
       }
 
-      logger.info(`Executando: ${description}`, { command, cwd });
+      logger.debug(`Executando: ${description}`, { command, cwd });
 
       const { stdout, stderr } = await execAsync(command, {
         cwd,
@@ -44,7 +44,7 @@ export class MigrationService {
         },
       });
 
-      logger.info(`${description} concluído`, {
+      logger.debug(`${description} concluído`, {
         stdoutLength: stdout.length,
         stderrLength: stderr.length,
       });

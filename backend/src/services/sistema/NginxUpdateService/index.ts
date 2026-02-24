@@ -63,7 +63,7 @@ export class NginxUpdateService {
         };
       }
 
-      logger.info('Aplicando nova configuração do Nginx', { sourceVersion, installedVersion });
+      logger.debug('Aplicando nova configuração do Nginx', { sourceVersion, installedVersion });
 
       let installedServerName: string | null = null;
       if (fs.existsSync(NGINX_CONF_DEST)) {
@@ -100,7 +100,7 @@ export class NginxUpdateService {
 
       await execAsync('nginx -s reload', { timeout: 10000 });
 
-      logger.info('Nginx atualizado e recarregado com sucesso', { sourceVersion });
+      logger.debug('Nginx atualizado e recarregado com sucesso', { sourceVersion });
 
       return {
         success: true,

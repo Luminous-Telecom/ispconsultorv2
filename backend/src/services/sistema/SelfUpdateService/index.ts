@@ -47,7 +47,7 @@ export class SelfUpdateService {
 
   constructor() {
     const currentDir = __dirname;
-    logger.info('Inicializando SelfUpdateService', { currentDir });
+    logger.debug('Inicializando SelfUpdateService', { currentDir });
     
     const gitRoot = this.findPathWith(currentDir, '.git');
     
@@ -75,7 +75,7 @@ export class SelfUpdateService {
     this.healthCheckService = new HealthCheckService(this.backendUrl);
     this.nginxUpdateService = new NginxUpdateService(this.projectRoot);
     
-    logger.info('SelfUpdateService Configurado', {
+    logger.debug('SelfUpdateService Configurado', {
       currentDir,
       projectRoot: this.projectRoot,
       backendPath: this.backendPath,
@@ -223,12 +223,10 @@ export class SelfUpdateService {
       message: 'Verificando versão...',
       logs: ['→ Verificando versão no package.json...']
     });
-    logger.info('Verificando versão no package.json (formato SemVer)');
+    logger.debug('Verificando versão no package.json (formato SemVer)');
     const updateVersionResult = await this.packageManagerService.updateVersion();
     if (!updateVersionResult.success) {
       logger.warn('Falha ao verificar versão, mas continuando o processo');
-    } else {
-      logger.info('Versão verificada com sucesso');
     }
 
     // Passo 2: NPM Install
@@ -351,7 +349,7 @@ export class SelfUpdateService {
         message: 'Atualização concluída com sucesso!',
         logs: ['✓ Reinício agendado', '✓ O frontend aguardará o servidor ficar pronto antes de recarregar']
       });
-      logger.info('PM2 restart agendado; frontend aguardará /health antes de recarregar');
+      logger.debug('PM2 restart agendado; frontend aguardará /health antes de recarregar');
     } else {
       onProgress?.({
         step: 'pm2Reload',

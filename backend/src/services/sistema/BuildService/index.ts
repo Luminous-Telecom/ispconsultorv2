@@ -7,7 +7,7 @@ export class BuildService {
    * Em produção, o código já vem compilado, então sempre retorna sucesso
    */
   async build(): Promise<CommandResult> {
-    logger.info('Build pulado: código já está compilado em produção');
+    logger.debug('Build pulado: código já está compilado em produção');
     return {
       success: true,
       stdout: 'Build pulado: código já está compilado',

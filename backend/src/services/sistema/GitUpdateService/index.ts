@@ -34,7 +34,7 @@ export class GitUpdateService {
     const rootPath = path.parse(currentPath).root;
     const searchedPaths: string[] = [];
     
-    logger.info('Iniciando busca por repositório Git', {
+    logger.debug('Iniciando busca por repositório Git', {
       startPath,
       resolvedPath: currentPath,
       rootPath,
@@ -58,7 +58,7 @@ export class GitUpdateService {
       if (fs.existsSync(gitDir)) {
         const gitStat = fs.statSync(gitDir);
         if (gitStat.isDirectory() || gitStat.isFile()) {
-          logger.info('Repositório Git encontrado', {
+          logger.debug('Repositório Git encontrado', {
             gitRoot: currentPath,
             gitDir,
             isDirectory: gitStat.isDirectory(),
@@ -141,7 +141,7 @@ export class GitUpdateService {
         
         if (gitTopLevel && gitTopLevel.trim()) {
           const gitRoot = gitTopLevel.trim();
-          logger.info('Repositório Git encontrado usando git rev-parse', {
+          logger.debug('Repositório Git encontrado usando git rev-parse', {
             gitRoot,
             triedFrom: dir,
           });
@@ -168,7 +168,7 @@ export class GitUpdateService {
       this.projectRoot,
     ];
     
-    logger.info('Tentando encontrar repositório Git usando git rev-parse', {
+    logger.debug('Tentando encontrar repositório Git usando git rev-parse', {
       directoriesToTry,
       currentDir,
       projectRoot: this.projectRoot,
@@ -181,7 +181,7 @@ export class GitUpdateService {
       
       if (fs.existsSync(gitDir)) {
         gitRoot = this.projectRoot;
-        logger.info('Repositório Git encontrado no projectRoot', { gitRoot });
+        logger.debug('Repositório Git encontrado no projectRoot', { gitRoot });
       } else {
         logger.warn('Diretório .git não encontrado no projectRoot, procurando em diretórios pais', {
           projectRoot: this.projectRoot,
@@ -191,7 +191,7 @@ export class GitUpdateService {
         const foundGitRoot = this.findGitRoot(this.projectRoot);
         if (foundGitRoot) {
           gitRoot = foundGitRoot;
-          logger.info('Repositório Git encontrado em diretório pai', { gitRoot });
+          logger.debug('Repositório Git encontrado em diretório pai', { gitRoot });
         } else {
           logger.error('Diretório .git não encontrado', {
             projectRoot: this.projectRoot,
@@ -230,14 +230,14 @@ export class GitUpdateService {
       };
     }
 
-    logger.info('Configuração do Git verificada', {
+    logger.debug('Configuração do Git verificada', {
       gitRoot,
       remote: gitConfig.remote,
       currentBranch: gitConfig.branch,
       targetBranch: branch,
     });
 
-    logger.info('Executando git fetch antes do pull');
+    logger.debug('Executando git fetch antes do pull');
     const fetchResult = await this.executeCommand('git fetch origin', gitRoot, 'Git Fetch');
     
     if (!fetchResult.success) {
@@ -262,7 +262,7 @@ export class GitUpdateService {
           await execAsync('git stash', { cwd: gitRoot, timeout: 10000 });
           const pullAfterStash = await this.executeCommand(command, gitRoot, 'Git Pull (após stash)');
           if (pullAfterStash.success) {
-            logger.info('Git pull bem-sucedido após stash');
+            logger.debug('Git pull bem-sucedido após stash');
             return pullAfterStash;
           }
         }
@@ -296,7 +296,7 @@ export class GitUpdateService {
         };
       }
 
-      logger.info(`Executando: ${description}`, { command, cwd });
+      logger.debug(`Executando: ${description}`, { command, cwd });
 
       const { stdout, stderr } = await execAsync(command, {
         cwd,
@@ -307,7 +307,7 @@ export class GitUpdateService {
         },
       });
 
-      logger.info(`${description} concluído`, {
+      logger.debug(`${description} concluído`, {
         stdoutLength: stdout.length,
         stderrLength: stderr.length,
       });

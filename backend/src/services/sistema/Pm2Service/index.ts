@@ -41,7 +41,7 @@ export class Pm2Service {
         };
       }
 
-      logger.info(`Executando: ${description}`, { command, cwd });
+      logger.debug(`Executando: ${description}`, { command, cwd });
 
       const { stdout, stderr } = await execAsync(command, {
         cwd,
@@ -52,7 +52,7 @@ export class Pm2Service {
         },
       });
 
-      logger.info(`${description} concluído`, {
+      logger.debug(`${description} concluído`, {
         stdoutLength: stdout.length,
         stderrLength: stderr.length,
       });

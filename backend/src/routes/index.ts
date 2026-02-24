@@ -53,6 +53,7 @@ const routes = [
     { path: '/api/auth', route: authRoutes },
     { path: '/api/empresas', route: empresaRoutes },
     { path: '/api/api-tokens', route: apiTokenRoutes },
+    { path: '/api-tokens', route: apiTokenRoutes }, // Fallback: nginx pode repassar sem prefixo /api
     { path: '/api/clientes', route: clienteRoutes },
     { path: '/api/planos', route: planoRoutes },
     { path: '/api/bancos', route: bancoRoutes },

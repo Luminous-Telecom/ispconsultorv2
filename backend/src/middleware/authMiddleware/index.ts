@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { logger } from '../../utils/logger';
+import { isProduction } from '../../utils/envUtils';
 import { ApiTokenService } from '../../services/sistema/ApiTokenService';
 import { registrarAuditoriaElasticsearch } from '../../services/elasticsearch/ElasticsearchAuditService';
 
@@ -149,7 +150,13 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
   const token = cookieToken || headerToken;
 
   if (!token) {
-    if (req.path.includes('/notas-fiscais') || req.path.includes('/nfse')) {
+    if (isProduction() && req.originalUrl.includes('api-tokens')) {
+      logger.info('[api-tokens] Auth 404: sem token', {
+        path: req.originalUrl,
+        hasCookie: !!cookieToken,
+        hasAuthHeader: !!authHeader,
+      });
+    } else if (req.path.includes('/notas-fiscais') || req.path.includes('/nfse')) {
       logger.warn('Requisição bloqueada - sem token de autenticação', {
         path: req.path,
         originalUrl: req.originalUrl
@@ -164,9 +171,16 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
     req.user = payload;
     next();
   } catch (error) {
-    logger.warn('Falha na validação do token JWT', {
-      message: error instanceof Error ? error.message : 'Erro desconhecido',
-    });
+    if (isProduction() && req.originalUrl.includes('api-tokens')) {
+      logger.info('[api-tokens] Auth 404: token inválido ou expirado', {
+        path: req.originalUrl,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      });
+    } else {
+      logger.warn('Falha na validação do token JWT', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+      });
+    }
     res.status(404).end();
   }
 };
