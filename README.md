@@ -1289,6 +1289,11 @@ pm2 startup
 - Gera títulos automaticamente a partir dos contratos.
 - Persiste `charge_id`, `linha_digitavel`, `codigo_barras`, `qrcode`, `nosso_numero` etc.
 
+### Typebot
+
+- Integração via API existente: consulta cliente por CNPJ, contratos, títulos e criação de cliente.
+- Documentação em `docs/TYPEBOT_INTEGRACAO.md`.
+
 ### URLs de Webhook
 
 - **Asaas**: `https://seu-dominio.com.br/webhook/asaas`

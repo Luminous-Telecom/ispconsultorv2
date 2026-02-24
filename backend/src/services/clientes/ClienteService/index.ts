@@ -268,11 +268,17 @@ export class ClienteService {
   }
 
   /**
-   * Buscar cliente por CNPJ
+   * Buscar cliente por CNPJ (aceita 14 dígitos ou 18 caracteres formatado)
    */
   static async findByCnpj(cnpj: string): Promise<Cliente | null> {
+    const digitos = cnpj.replace(/\D/g, '');
+    const formatos: string[] = [cnpj.trim()];
+    if (digitos.length === 14) {
+      formatos.push(digitos);
+      formatos.push(`${digitos.slice(0, 2)}.${digitos.slice(2, 5)}.${digitos.slice(5, 8)}/${digitos.slice(8, 12)}-${digitos.slice(12)}`);
+    }
     return await Cliente.findOne({
-      where: { cnpj },
+      where: { cnpj: { [Op.in]: [...new Set(formatos)] } },
       include: [
         { association: 'titulos' },
         { association: 'planos' },
