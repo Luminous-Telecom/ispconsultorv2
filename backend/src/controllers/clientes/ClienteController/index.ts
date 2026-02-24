@@ -151,10 +151,16 @@ export class ClienteController {
   static async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const cliente = await ClienteService.getById(id);
 
       if (!cliente) {
+        sendNotFound(res, 'Cliente não encontrado');
+        return;
+      }
+
+      if (empresaId !== null && cliente.empresa_id !== empresaId) {
         sendNotFound(res, 'Cliente não encontrado');
         return;
       }
@@ -509,7 +515,8 @@ export class ClienteController {
   static async findByCnpj(req: Request, res: Response): Promise<void> {
     try {
       const { cnpj } = req.params;
-      const cliente = await ClienteService.findByCnpj(cnpj);
+      const empresaId = getEmpresaIdOrNull(req);
+      const cliente = await ClienteService.findByCnpj(cnpj, empresaId ?? undefined);
 
       if (!cliente) {
         sendNotFound(res, 'Cliente não encontrado');

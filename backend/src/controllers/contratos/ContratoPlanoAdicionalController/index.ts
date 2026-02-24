@@ -10,7 +10,8 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
-//
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+
 export class ContratoPlanoAdicionalController {
   // Schema de validação para criação
   private static createSchema = Joi.object({
@@ -34,9 +35,20 @@ export class ContratoPlanoAdicionalController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { contrato_id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       if (!contrato_id || isNaN(parseInt(contrato_id))) {
         sendValidationError(res, 'ID do contrato inválido');
+        return;
+      }
+
+      const contrato = await ContratoService.getById(contrato_id);
+      if (!contrato) {
+        sendNotFound(res, 'Contrato não encontrado');
+        return;
+      }
+      if (empresaId !== null && contrato.empresa_id !== empresaId) {
+        sendNotFound(res, 'Contrato não encontrado');
         return;
       }
 
@@ -72,11 +84,16 @@ export class ContratoPlanoAdicionalController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const { contrato_id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
       const value = await ContratoPlanoAdicionalController.createSchema.validateAsync(req.body);
 
       // Verificar se o contrato existe
       const contrato = await ContratoService.getById(contrato_id);
       if (!contrato) {
+        sendNotFound(res, 'Contrato não encontrado');
+        return;
+      }
+      if (empresaId !== null && contrato.empresa_id !== empresaId) {
         sendNotFound(res, 'Contrato não encontrado');
         return;
       }
@@ -153,11 +170,18 @@ export class ContratoPlanoAdicionalController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
       const value = await ContratoPlanoAdicionalController.updateSchema.validateAsync(req.body);
 
       const servico = await ContratoPlanoAdicionalService.getById(id);
 
       if (!servico) {
+        sendNotFound(res, 'Serviço adicional não encontrado');
+        return;
+      }
+
+      const contrato = await ContratoService.getById(servico.contrato_id);
+      if (contrato && empresaId !== null && contrato.empresa_id !== empresaId) {
         sendNotFound(res, 'Serviço adicional não encontrado');
         return;
       }
@@ -238,6 +262,7 @@ export class ContratoPlanoAdicionalController {
   static async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       if (!id || isNaN(parseInt(id))) {
         sendValidationError(res, 'ID do serviço adicional inválido');
@@ -248,6 +273,12 @@ export class ContratoPlanoAdicionalController {
       const servico = await ContratoPlanoAdicionalService.getById(servicoId);
       
       if (!servico) {
+        sendNotFound(res, 'Serviço adicional não encontrado');
+        return;
+      }
+
+      const contrato = await ContratoService.getById(servico.contrato_id);
+      if (contrato && empresaId !== null && contrato.empresa_id !== empresaId) {
         sendNotFound(res, 'Serviço adicional não encontrado');
         return;
       }

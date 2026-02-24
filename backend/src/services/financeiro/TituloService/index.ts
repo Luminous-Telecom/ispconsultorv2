@@ -23,6 +23,7 @@ export interface ListTitulosFilters {
   searchField?: string;
   sortColumn?: string;
   sortDirection?: string;
+  empresa_id?: number;
 }
 
 export interface ListTitulosResponse {
@@ -72,7 +73,8 @@ export class TituloService {
       search,
       searchField,
       sortColumn,
-      sortDirection
+      sortDirection,
+      empresa_id
     } = filters;
 
 
@@ -83,6 +85,10 @@ export class TituloService {
 
     // Construir filtros usando helpers
     const whereConditions: (WhereOptions | null)[] = [];
+
+    if (empresa_id !== undefined) {
+      whereConditions.push({ empresa_id } as WhereOptions);
+    }
 
     // Filtro de status (suporta múltiplos: "pago,pago_atraso,parcial")
     if (status) {

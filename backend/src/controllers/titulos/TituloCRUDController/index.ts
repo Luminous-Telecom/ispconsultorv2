@@ -19,6 +19,7 @@ import type { TituloComRelacoes } from '../TituloHelpers/types';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class TituloCRUDController {
   
@@ -44,6 +45,7 @@ export class TituloCRUDController {
 
       const limitNum = Number(limit);
       const pageNum = Number(page);
+      const empresaId = getEmpresaIdOrNull(req);
 
       // Passar parâmetros diretamente para o service (que já constrói os filtros internamente usando helpers)
       const result = await TituloService.list({
@@ -58,7 +60,8 @@ export class TituloCRUDController {
         search: search as string,
         searchField: searchField as string,
         sortColumn: sortColumn as string,
-        sortDirection: sortDirection as string
+        sortDirection: sortDirection as string,
+        empresa_id: empresaId ?? undefined,
       });
 
       sendSuccess(res, result);
@@ -104,10 +107,16 @@ export class TituloCRUDController {
   public static async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const titulo = await TituloService.getById(id);
 
       if (!titulo) {
+        sendNotFound(res, 'Título não encontrado');
+        return;
+      }
+
+      if (empresaId !== null && titulo.empresa_id !== empresaId) {
         sendNotFound(res, 'Título não encontrado');
         return;
       }
@@ -523,9 +532,15 @@ export class TituloCRUDController {
     try {
       const { contratoId } = req.params;
       const { sortColumn, sortDirection } = req.query;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
+        sendNotFound(res, 'Contrato não encontrado');
+        return;
+      }
+
+      if (empresaId !== null && contrato.empresa_id !== empresaId) {
         sendNotFound(res, 'Contrato não encontrado');
         return;
       }
@@ -541,7 +556,8 @@ export class TituloCRUDController {
         search: String(contratoId),
         searchField: 'contrato_id',
         sortColumn: finalSortColumn,
-        sortDirection: finalSortDirection
+        sortDirection: finalSortDirection,
+        empresa_id: empresaId ?? undefined,
       });
 
       // Filtrar apenas não-avulsos - backend já ordena
@@ -566,9 +582,15 @@ export class TituloCRUDController {
     try {
       const { contratoId } = req.params;
       const { sortColumn, sortDirection } = req.query;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const contrato = await ContratoService.getById(contratoId);
       if (!contrato) {
+        sendNotFound(res, 'Contrato não encontrado');
+        return;
+      }
+
+      if (empresaId !== null && contrato.empresa_id !== empresaId) {
         sendNotFound(res, 'Contrato não encontrado');
         return;
       }
@@ -584,7 +606,8 @@ export class TituloCRUDController {
         search: String(contratoId),
         searchField: 'contrato_id',
         sortColumn: finalSortColumn,
-        sortDirection: finalSortDirection
+        sortDirection: finalSortDirection,
+        empresa_id: empresaId ?? undefined,
       });
 
       // Filtrar apenas avulsos - backend já ordena
@@ -608,9 +631,11 @@ export class TituloCRUDController {
   public static async getStats(req: Request, res: Response): Promise<void> {
     try {
       const { cliente_id } = req.query;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const where: WhereOptions = {};
       if (cliente_id) where.cliente_id = cliente_id;
+      if (empresaId !== null) where.empresa_id = empresaId;
 
       const [totalTitulos, titulosPendentes, titulosPagos, titulosVencidos, titulosCancelados] = await Promise.all([
         TituloService.count(where),

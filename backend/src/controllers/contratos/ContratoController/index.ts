@@ -128,6 +128,7 @@ export class ContratoController {
     try {
       const { clienteId } = req.params;
       const { sortColumn, sortDirection } = req.query;
+      const empresaId = getEmpresaIdOrNull(req);
       
       const result = await ContratoService.list({
         page: 1,
@@ -135,7 +136,8 @@ export class ContratoController {
         search: clienteId,
         searchField: 'cliente_id',
         sortColumn: sortColumn as string | undefined,
-        sortDirection: (sortDirection as 'asc' | 'desc') || undefined
+        sortDirection: (sortDirection as 'asc' | 'desc') || undefined,
+        empresa_id: empresaId ?? undefined,
       });
 
       sendSuccess(res, result.data);
@@ -152,10 +154,16 @@ export class ContratoController {
   static async getById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
       
       const contrato = await ContratoService.getById(id);
       
       if (!contrato) {
+        sendNotFound(res, 'Contrato não encontrado');
+        return;
+      }
+
+      if (empresaId !== null && contrato.empresa_id !== empresaId) {
         sendNotFound(res, 'Contrato não encontrado');
         return;
       }
@@ -520,10 +528,12 @@ export class ContratoController {
   // Listar contratos ativos
   static async getAtivos(req: Request, res: Response): Promise<void> {
     try {
+      const empresaId = getEmpresaIdOrNull(req);
       const result = await ContratoService.list({
         page: 1,
         limit: 1000,
-        status: 'ativo'
+        status: 'ativo',
+        empresa_id: empresaId ?? undefined,
       });
 
       sendSuccess(res, result.data);
