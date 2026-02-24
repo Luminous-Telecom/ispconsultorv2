@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { defaultApiClient } from '@/services/core';
 import { formatDate } from '@/utils/formatters';
@@ -28,25 +28,40 @@ interface TituloPublico {
 }
 
 const PagamentoPublico: React.FC = () => {
-  const { id, token } = useParams<{ id: string; token: string }>();
+  const { id, token } = useParams<{ id: string; token?: string }>();
+  const navigate = useNavigate();
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState<boolean>(!token);
+  const sessionInitRef = useRef(false);
   const { error: showError } = useNotificationContext();
 
-  const { data: titulo, isLoading, error } = useQuery<TituloPublico>({
-    queryKey: ['pagamento-publico', id, token],
-    queryFn: async () => {
-      try {
-        const response = await defaultApiClient.get<TituloPublico>(`/pagamento/${id}/${token}`);
-        if (!response.success || !response.data) {
-          throw new Error(response.message || 'Título não encontrado');
+  // Quando tem token na URL: trocar por cookie e remover token da URL (evita token em logs/histórico)
+  useEffect(() => {
+    if (!id || !token || sessionInitRef.current) return;
+    sessionInitRef.current = true;
+    defaultApiClient
+      .post('/pagamento/session', { id, token })
+      .then((res) => {
+        if (res.success) {
+          navigate(`/pagamento/${id}`, { replace: true });
+          setSessionReady(true);
+        } else {
+          setSessionReady(true);
         }
-        return response.data;
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar título';
-        throw new Error(errorMessage);
+      })
+      .catch(() => setSessionReady(true));
+  }, [id, token, navigate]);
+
+  const { data: titulo, isLoading, error } = useQuery<TituloPublico>({
+    queryKey: ['pagamento-publico', id, sessionReady],
+    queryFn: async () => {
+      const response = await defaultApiClient.get<TituloPublico>(`/pagamento/${id}`);
+      if (!response.success || !response.data) {
+        throw new Error(response.message || 'Título não encontrado');
       }
+      return response.data;
     },
-    enabled: !!id && !!token,
+    enabled: !!id && (sessionReady || !token),
     retry: false,
   });
 
@@ -92,12 +107,13 @@ const PagamentoPublico: React.FC = () => {
   };
 
   const downloadPdf = () => {
-    if (id && token) {
-      window.open(`/api/pagamento/${id}/${token}/pdf`, '_blank');
+    if (id) {
+      // Usa cookie de sessão (sem token na URL)
+      window.open(`/api/pagamento/${id}/pdf`, '_blank');
     }
   };
 
-  if (isLoading) {
+  if ((token && !sessionReady) || isLoading) {
     return (
       <div className="pagamento-publico-container">
         <div className="pagamento-publico-loading">

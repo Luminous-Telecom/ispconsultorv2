@@ -1,0 +1,4 @@
+Contact: mailto:lucas.consultor@luminoustelecom.com.br
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: pt-BR, en
+Canonical: https://backnet.app/.well-known/security.txt

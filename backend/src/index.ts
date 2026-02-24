@@ -1,4 +1,5 @@
 import http from 'http';
+import crypto from 'crypto';
 import express from 'express';
 import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
@@ -78,7 +79,8 @@ app.use((req, res, next) => {
     contentSecurityPolicy: isPdfOrDownloadRoute(req.path) ? false : {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://static.cloudflareinsights.com'],
+        // unsafe-inline necessário para CRA/react-scripts (estilos inline). Preferir nonces em migração futura.
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://static.cloudflareinsights.com'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
         imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
         fontSrc: ["'self'", 'https:', 'data:'],
@@ -135,6 +137,14 @@ app.use(cors({
 
 // Cookie parser (necessário para CSRF e outras funcionalidades)
 app.use(cookieParser());
+
+// Middleware X-Request-ID para rastreabilidade de incidentes
+app.use((req, res, next) => {
+  const id = (req.headers['x-request-id'] as string) || crypto.randomUUID();
+  res.setHeader('X-Request-ID', id);
+  (req as express.Request & { requestId: string }).requestId = id;
+  next();
+});
 
 // Middleware de parsing
 app.use(express.json({ limit: '10mb' }));
@@ -267,10 +277,12 @@ app.use(errorHandlerMiddleware);
 
 
 // Middleware para rotas não encontradas (apenas para rotas da API)
+// Em produção: mensagem genérica para não expor estrutura interna
 app.use('/api/*', (req, res) => {
+  const isProd = process.env.NODE_ENV === 'production';
   res.status(404).json({
-    error: 'Rota não encontrada',
-    path: req.originalUrl
+    error: isProd ? 'Recurso não encontrado' : 'Rota não encontrada',
+    ...(!isProd && { path: req.originalUrl })
   });
 });
 

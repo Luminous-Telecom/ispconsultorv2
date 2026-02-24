@@ -60,7 +60,9 @@ export function sendError(
   context?: { [key: string]: unknown }
 ): void {
   const errorMessage = getErrorMessage(error);
-  const finalMessage = errorMessage || defaultMessage;
+  // Em produção, erros 500 não devem expor mensagens internas ao cliente
+  const isProd = process.env.NODE_ENV === 'production';
+  const finalMessage = (isProd && statusCode >= 500) ? defaultMessage : (errorMessage || defaultMessage);
 
   if (logError) {
     const stack = getErrorStack(error);

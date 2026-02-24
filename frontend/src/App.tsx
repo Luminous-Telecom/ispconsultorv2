@@ -83,7 +83,7 @@ function AppContent() {
                         <Login />
                       </Suspense>
                     } />
-                    <Route path="/pagamento/:id/:token" element={
+                    <Route path="/pagamento/:id/:token?" element={
                       <Suspense fallback={<Loading message={t('ui.loadingPayment')} />}>
                         <PagamentoPublico />
                       </Suspense>

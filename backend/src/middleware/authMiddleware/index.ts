@@ -31,8 +31,11 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET logo e nome da empresa (para login e central do assinante)
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/[a-z0-9-]+$/i }, // GET logo e nome da empresa por slug (multiloja)
   { method: 'GET', path: /^\/api\/hotsite\/public\/?$/i }, // GET hotsite público (HTML renderizado)
-  { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+$/i }, // GET página pública de pagamento
-  { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+\/pdf$/i }, // GET PDF do boleto (público)
+  { method: 'POST', path: /^\/api\/pagamento\/session$/i }, // POST troca token por cookie (token no body)
+  { method: 'GET', path: /^\/api\/pagamento\/\d+$/i }, // GET título por sessão (cookie)
+  { method: 'GET', path: /^\/api\/pagamento\/\d+\/pdf$/i }, // GET PDF por sessão (cookie)
+  { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+$/i }, // GET legado (token na URL)
+  { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+\/pdf$/i }, // GET PDF legado (token na URL)
   // Rotas da central do assinante com slug (multiloja)
   { method: 'POST', path: /^\/api\/central-assinante\/[a-z0-9-]+\/login$/i }, // POST login central do assinante (público)
   { method: 'POST', path: /^\/api\/central-assinante\/[a-z0-9-]+\/recuperar-senha$/i }, // POST recuperar senha central do assinante (público)

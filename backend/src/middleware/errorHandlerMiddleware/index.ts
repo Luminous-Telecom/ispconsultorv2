@@ -41,12 +41,14 @@ export const errorHandlerMiddleware = (
     statusCode: err.statusCode
   });
   
+  const isProd = process.env.NODE_ENV === 'production';
+
   // Erro de validação Joi
   if (isJoiError(err)) {
     res.status(400).json({
       success: false,
       message: 'Dados inválidos',
-      error: errorMessage,
+      ...(!isProd && { error: errorMessage }),
       details: err.details?.map(d => ({
         field: d.path.join('.'),
         message: d.message
@@ -61,7 +63,7 @@ export const errorHandlerMiddleware = (
     res.status(400).json({
       success: false,
       message: 'Dados inválidos',
-      error: errorMessage,
+      ...(!isProd && { error: errorMessage }),
       details: sequelizeError.errors?.map(e => ({
         field: (e.path || 'unknown') as string,
         message: e.message
@@ -85,12 +87,13 @@ export const errorHandlerMiddleware = (
     return;
   }
   
-  // Erro com status code customizado
+  // Erro com status code customizado — em prod, 5xx usa mensagem genérica
   if (err.statusCode) {
+    const safeMessage = (isProd && err.statusCode >= 500) ? 'Erro interno do servidor' : errorMessage;
     const response: Record<string, unknown> = {
       success: false,
-      message: errorMessage,
-      error: err.code || errorName
+      message: safeMessage,
+      ...(!isProd && { error: err.code || errorName })
     };
     if (err.details) {
       response.details = err.details;
