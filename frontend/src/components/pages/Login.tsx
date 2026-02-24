@@ -33,6 +33,16 @@ const Login: React.FC = () => {
     fetchClientIp();
   }, []);
 
+  const handleCopyIp = async () => {
+    if (!clientIp) return;
+    try {
+      await navigator.clipboard.writeText(clientIp);
+      success(t('login.ipCopied') || 'IP copiado!');
+    } catch {
+      // Silenciosamente falha se clipboard não disponível
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -133,7 +143,17 @@ const Login: React.FC = () => {
                 <div className="card-footer bg-transparent border-top text-center pt-3">
                   {clientIp && (
                     <p className="text-muted small mb-2">
-                      <i className="bi bi-globe me-1"></i> IP: {clientIp}
+                      <i className="bi bi-globe me-1"></i> IP:{' '}
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={handleCopyIp}
+                        onKeyDown={(e) => e.key === 'Enter' && handleCopyIp()}
+                        className="login-ip-copy"
+                        title={t('login.copyIp') || 'Clique para copiar'}
+                      >
+                        {clientIp}
+                      </span>
                     </p>
                   )}
                   <p className="text-muted mb-0" style={{ fontSize: '0.75rem' }}>

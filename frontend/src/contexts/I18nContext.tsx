@@ -1166,6 +1166,8 @@ export interface TranslationKeys {
   'login.errorGeneral': string;
   'login.infoRequired': string;
   'login.allRightsReserved': string;
+  'login.copyIp': string;
+  'login.ipCopied': string;
 
   // Layout
   'layout.logoutSuccess': string;
@@ -2510,6 +2512,8 @@ const translations: Translations = {
     'login.errorGeneral': 'Falha ao autenticar. Tente novamente.',
     'login.infoRequired': 'Informe email e senha para continuar.',
     'login.allRightsReserved': 'Todos os direitos reservados.',
+    'login.copyIp': 'Clique para copiar',
+    'login.ipCopied': 'IP copiado!',
 
     // Layout
     'layout.logoutSuccess': 'Sessão encerrada com sucesso.',
@@ -3849,6 +3853,8 @@ const translations: Translations = {
     'login.errorGeneral': 'Failed to authenticate. Try again.',
     'login.infoRequired': 'Please enter email and password to continue.',
     'login.allRightsReserved': 'All rights reserved.',
+    'login.copyIp': 'Click to copy',
+    'login.ipCopied': 'IP copied!',
 
     // Layout
     'layout.logoutSuccess': 'Logged out successfully.',
@@ -5190,6 +5196,8 @@ const translations: Translations = {
     'login.errorGeneral': 'Error al autenticar. Inténtelo de nuevo.',
     'login.infoRequired': 'Ingrese el correo y la contraseña para continuar.',
     'login.allRightsReserved': 'Todos los derechos reservados.',
+    'login.copyIp': 'Haga clic para copiar',
+    'login.ipCopied': '¡IP copiado!',
     'empty.noContracts': 'Este cliente aún no tiene contratos registrados.',
     'empty.noTitles': 'Este cliente aún no tiene títulos registrados.',
     'empty.noFiles': 'No se encontraron archivos',
