@@ -93,8 +93,7 @@ export class ApiClient {
           '/api/auth/login',
           '/api/health',
           '/api/pagamento/',
-          '/api/central-assinante/login',
-          '/api/central-assinante/recuperar-senha',
+          '/central-assinante/',
         ];
         
         // Verificar se a URL é uma rota pública

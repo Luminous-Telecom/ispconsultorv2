@@ -9,6 +9,7 @@ export interface ParametroAttributes {
   descricao: string;
   categoria: string;
   ativo: boolean;
+  empresa_id: number | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -23,6 +24,7 @@ export class Parametro extends Model<ParametroAttributes, ParametroCreationAttri
   public descricao!: string;
   public categoria!: string;
   public ativo!: boolean;
+  public empresa_id!: number | null;
   public created_at!: Date;
   public updated_at!: Date;
 
@@ -64,6 +66,11 @@ Parametro.init({
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: true
+  },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null
   },
   created_at: {
     type: DataTypes.DATE,

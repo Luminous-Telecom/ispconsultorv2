@@ -18,68 +18,80 @@ router.use('/central-assinante', (req, res, next) => {
   next();
 });
 
-// Rota pública para login na central do assinante — rate limited para prevenir brute force
-router.post('/central-assinante/login', authRateLimitMiddleware(), CentralAssinanteAuthController.login);
+// ── Rotas com slug (multiloja) ─────────────────────────────────────────────
 
-// Rota pública para recuperar senha na central do assinante
-router.post('/central-assinante/recuperar-senha', CentralAssinanteAuthController.recuperarSenha);
+// POST /api/central-assinante/:slug/login
+router.post('/central-assinante/:slug/login', authRateLimitMiddleware(), CentralAssinanteAuthController.login);
 
-// IMPORTANTE: Rotas mais específicas devem vir ANTES das rotas genéricas
-// Novas rotas (sem expor clienteId/token na URL) - token via header Authorization: Bearer <token>
-router.get('/central-assinante/me/contrato/:contratoId/pdf', (req, res, next) => {
+// POST /api/central-assinante/:slug/recuperar-senha
+router.post('/central-assinante/:slug/recuperar-senha', CentralAssinanteAuthController.recuperarSenha);
+
+// IMPORTANTE: rotas mais específicas devem vir ANTES das rotas genéricas
+
+// GET /api/central-assinante/:slug/me/contrato/:contratoId/pdf
+router.get('/central-assinante/:slug/me/contrato/:contratoId/pdf', (req, res, next) => {
   CentralAssinanteController.imprimirContrato(req, res).catch(next);
 });
 
-router.get('/central-assinante/me/termo/:termoId/pdf', (req, res, next) => {
+// GET /api/central-assinante/:slug/me/termo/:termoId/pdf
+router.get('/central-assinante/:slug/me/termo/:termoId/pdf', (req, res, next) => {
   CentralAssinanteController.imprimirTermo(req, res).catch(next);
 });
 
-router.get('/central-assinante/me/fatura/:tituloId/pdf', (req, res, next) => {
+// GET /api/central-assinante/:slug/me/fatura/:tituloId/pdf
+router.get('/central-assinante/:slug/me/fatura/:tituloId/pdf', (req, res, next) => {
   CentralAssinanteController.imprimirFatura(req, res).catch(next);
 });
 
-router.get('/central-assinante/me/recibo/:tituloId/pdf', (req, res, next) => {
+// GET /api/central-assinante/:slug/me/recibo/:tituloId/pdf
+router.get('/central-assinante/:slug/me/recibo/:tituloId/pdf', (req, res, next) => {
   CentralAssinanteController.imprimirRecibo(req, res).catch(next);
 });
 
-router.post('/central-assinante/me/trocar-senha', (req, res, next) => {
+// POST /api/central-assinante/:slug/me/trocar-senha
+router.post('/central-assinante/:slug/me/trocar-senha', (req, res, next) => {
   CentralAssinanteAuthController.trocarSenha(req, res).catch(next);
 });
 
-router.get('/central-assinante/me', (req, res, next) => {
+// GET /api/central-assinante/:slug/me
+router.get('/central-assinante/:slug/me', (req, res, next) => {
   CentralAssinanteController.getDadosCliente(req, res).catch(next);
 });
 
-// Rotas públicas para impressão/download (requerem token)
+// ── Rotas legacy com id/token na URL (mantidas para links de e-mail já enviados) ──
+
+// GET /api/central-assinante/:id/:token/contrato/:contratoId/pdf
 router.get('/central-assinante/:id/:token/contrato/:contratoId/pdf', (req, res, next) => {
-  logger.info('Rota de contrato PDF capturada', { params: req.params });
+  logger.info('Rota legacy de contrato PDF capturada', { params: req.params });
   CentralAssinanteController.imprimirContrato(req, res).catch(next);
 });
 
+// GET /api/central-assinante/:id/:token/termo/:termoId/pdf
 router.get('/central-assinante/:id/:token/termo/:termoId/pdf', (req, res, next) => {
-  logger.info('Rota de termo PDF capturada', { params: req.params });
+  logger.info('Rota legacy de termo PDF capturada', { params: req.params });
   CentralAssinanteController.imprimirTermo(req, res).catch(next);
 });
 
+// GET /api/central-assinante/:id/:token/fatura/:tituloId/pdf
 router.get('/central-assinante/:id/:token/fatura/:tituloId/pdf', (req, res, next) => {
-  logger.info('Rota de fatura PDF capturada', { params: req.params });
+  logger.info('Rota legacy de fatura PDF capturada', { params: req.params });
   CentralAssinanteController.imprimirFatura(req, res).catch(next);
 });
 
+// GET /api/central-assinante/:id/:token/recibo/:tituloId/pdf
 router.get('/central-assinante/:id/:token/recibo/:tituloId/pdf', (req, res, next) => {
-  logger.info('Rota de recibo PDF capturada', { params: req.params });
+  logger.info('Rota legacy de recibo PDF capturada', { params: req.params });
   CentralAssinanteController.imprimirRecibo(req, res).catch(next);
 });
 
-// Rota para trocar senha (requer token)
+// POST /api/central-assinante/:id/:token/trocar-senha
 router.post('/central-assinante/:id/:token/trocar-senha', (req, res, next) => {
   CentralAssinanteAuthController.trocarSenha(req, res).catch(next);
 });
 
-// Rota pública para buscar dados do cliente na central do assinante (requer token)
-// Esta rota genérica deve vir POR ÚLTIMO para não capturar as rotas específicas acima
+// GET /api/central-assinante/:id/:token — deve vir POR ÚLTIMO para não capturar rotas acima
 router.get('/central-assinante/:id/:token', (req, res, next) => {
-  logger.info('Rota genérica da central do assinante capturada', { params: req.params });
+  logger.info('Rota legacy genérica da central do assinante capturada', { params: req.params });
   CentralAssinanteController.getDadosCliente(req, res).catch(next);
 });
 

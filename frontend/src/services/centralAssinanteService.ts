@@ -159,38 +159,38 @@ export class CentralAssinanteService {
   }
 
   /**
+   * Gerar URL da central do assinante para uma empresa (identificada pelo slug)
+   */
+  static gerarLinkCentral(slug: string): string {
+    return `/central-assinante/${slug}`;
+  }
+
+  /**
    * Login na central do assinante
    */
-  static async login(data: LoginCentralAssinanteRequest): Promise<ApiResponse<LoginCentralAssinanteResponse>> {
-    return defaultApiClient.post<LoginCentralAssinanteResponse>('/central-assinante/login', data);
+  static async login(slug: string, data: LoginCentralAssinanteRequest): Promise<ApiResponse<LoginCentralAssinanteResponse>> {
+    return defaultApiClient.post<LoginCentralAssinanteResponse>(`/central-assinante/${slug}/login`, data);
   }
 
   /**
    * Buscar dados do cliente na central do assinante
    */
-  static async getDadosMe(): Promise<ApiResponse<DadosCentralAssinante>> {
+  static async getDadosMe(slug: string): Promise<ApiResponse<DadosCentralAssinante>> {
     const token = CentralAssinanteService.getCentralToken();
     if (!token) {
       throw new Error('Token da central do assinante não encontrado');
     }
-    return defaultApiClient.get<DadosCentralAssinante>('/central-assinante/me', {
+    return defaultApiClient.get<DadosCentralAssinante>(`/central-assinante/${slug}/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
   }
 
   /**
-   * Gerar link para acessar a central do assinante
-   */
-  static gerarLinkCentral(_clienteId: number, _token: string): string {
-    return `/central-assinante`;
-  }
-
-  /**
    * Baixar PDF do contrato
    */
-  static async baixarContrato(contratoId: number): Promise<Blob> {
+  static async baixarContrato(slug: string, contratoId: number): Promise<Blob> {
     try {
-      const response = await fetch(`/api/central-assinante/me/contrato/${contratoId}/pdf`, {
+      const response = await fetch(`/api/central-assinante/${slug}/me/contrato/${contratoId}/pdf`, {
         headers: CentralAssinanteService.getCentralAuthHeaders(),
       });
       if (!response.ok) {
@@ -205,9 +205,9 @@ export class CentralAssinanteService {
   /**
    * Baixar PDF do termo
    */
-  static async baixarTermo(termoId: number): Promise<Blob> {
+  static async baixarTermo(slug: string, termoId: number): Promise<Blob> {
     try {
-      const response = await fetch(`/api/central-assinante/me/termo/${termoId}/pdf`, {
+      const response = await fetch(`/api/central-assinante/${slug}/me/termo/${termoId}/pdf`, {
         headers: CentralAssinanteService.getCentralAuthHeaders(),
       });
       if (!response.ok) {
@@ -222,9 +222,9 @@ export class CentralAssinanteService {
   /**
    * Baixar PDF da fatura (boleto)
    */
-  static async baixarFatura(tituloId: number): Promise<Blob> {
+  static async baixarFatura(slug: string, tituloId: number): Promise<Blob> {
     try {
-      const response = await fetch(`/api/central-assinante/me/fatura/${tituloId}/pdf`, {
+      const response = await fetch(`/api/central-assinante/${slug}/me/fatura/${tituloId}/pdf`, {
         headers: CentralAssinanteService.getCentralAuthHeaders(),
       });
       if (!response.ok) {
@@ -239,9 +239,9 @@ export class CentralAssinanteService {
   /**
    * Baixar PDF do recibo (para faturas pagas)
    */
-  static async baixarRecibo(tituloId: number): Promise<Blob> {
+  static async baixarRecibo(slug: string, tituloId: number): Promise<Blob> {
     try {
-      const response = await fetch(`/api/central-assinante/me/recibo/${tituloId}/pdf`, {
+      const response = await fetch(`/api/central-assinante/${slug}/me/recibo/${tituloId}/pdf`, {
         headers: CentralAssinanteService.getCentralAuthHeaders(),
       });
       if (!response.ok) {
@@ -256,19 +256,19 @@ export class CentralAssinanteService {
   /**
    * Recuperar senha da central do assinante
    */
-  static async recuperarSenha(data: RecuperarSenhaRequest): Promise<ApiResponse<void>> {
-    return defaultApiClient.post<void>('/central-assinante/recuperar-senha', data);
+  static async recuperarSenha(slug: string, data: RecuperarSenhaRequest): Promise<ApiResponse<void>> {
+    return defaultApiClient.post<void>(`/central-assinante/${slug}/recuperar-senha`, data);
   }
 
   /**
    * Trocar senha da central do assinante
    */
-  static async trocarSenhaMe(data: TrocarSenhaRequest): Promise<ApiResponse<void>> {
+  static async trocarSenhaMe(slug: string, data: TrocarSenhaRequest): Promise<ApiResponse<void>> {
     const token = CentralAssinanteService.getCentralToken();
     if (!token) {
       throw new Error('Token da central do assinante não encontrado');
     }
-    return defaultApiClient.post<void>('/central-assinante/me/trocar-senha', data, {
+    return defaultApiClient.post<void>(`/central-assinante/${slug}/me/trocar-senha`, data, {
       headers: { Authorization: `Bearer ${token}` },
     });
   }

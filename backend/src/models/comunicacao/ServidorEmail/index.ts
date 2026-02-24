@@ -15,6 +15,7 @@ interface ServidorEmailAttributes {
   timeout: number;
   tentativas: number;
   intervalo_tentativas: number;
+  empresa_id?: number | null;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -35,6 +36,7 @@ export class ServidorEmail extends Model<ServidorEmailAttributes, ServidorEmailC
   public timeout!: number;
   public tentativas!: number;
   public intervalo_tentativas!: number;
+  public empresa_id!: number | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -132,6 +134,11 @@ ServidorEmail.init(
         min: 1000,
         max: 60000,
       },
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
     },
   },
   {

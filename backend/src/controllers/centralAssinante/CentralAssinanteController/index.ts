@@ -34,10 +34,11 @@ export class CentralAssinanteController {
 
   /**
    * Gera link público da central do assinante
+   * @param slug Slug da empresa (multiloja) — quando fornecido, inclui o slug na URL
    */
-  static gerarLinkCentralAssinante(clienteId: number, baseUrl?: string): string {
+  static gerarLinkCentralAssinante(clienteId: number, baseUrl?: string, slug?: string): string {
     // Não expor clienteId nem token na URL do navegador
-    return `/central-assinante`;
+    return slug ? `/central-assinante/${slug}` : `/central-assinante`;
   }
 
   /**

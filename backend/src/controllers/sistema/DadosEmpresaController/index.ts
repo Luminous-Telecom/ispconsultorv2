@@ -42,6 +42,47 @@ export class DadosEmpresaController {
     return path.startsWith('/') ? path : `/${path}`;
   }
 
+  // Rota pública — retorna apenas logo, nome_fantasia e razao_social (para login e central do assinante)
+  static async getPublic(req: Request, res: Response): Promise<void> {
+    try {
+      const dadosEmpresa = await DadosEmpresaService.findOne();
+      const data = dadosEmpresa ? (dadosEmpresa.toJSON() as Record<string, unknown>) : {};
+      sendSuccess(res, {
+        logo: DadosEmpresaController.normalizePath(data.logo as string | undefined),
+        nome_fantasia: (data.nome_fantasia as string) || null,
+        razao_social: (data.razao_social as string) || null,
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao buscar dados públicos da empresa', 500, true, {
+        context: 'DadosEmpresaController',
+        action: 'getPublic'
+      });
+    }
+  }
+
+  // Rota pública por slug — retorna logo, nome_fantasia e razao_social da empresa identificada pelo slug
+  static async getPublicBySlug(req: Request, res: Response): Promise<void> {
+    try {
+      const { slug } = req.params;
+      const dadosEmpresa = await DadosEmpresaService.findBySlug(slug);
+      if (!dadosEmpresa) {
+        sendNotFound(res, 'Empresa não encontrada');
+        return;
+      }
+      const data = dadosEmpresa.toJSON() as Record<string, unknown>;
+      sendSuccess(res, {
+        logo: DadosEmpresaController.normalizePath(data.logo as string | undefined),
+        nome_fantasia: (data.nome_fantasia as string) || null,
+        razao_social: (data.razao_social as string) || null,
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao buscar dados públicos da empresa por slug', 500, true, {
+        context: 'DadosEmpresaController',
+        action: 'getPublicBySlug'
+      });
+    }
+  }
+
   // Rota exclusiva do sistema administrativo - requer autenticação (validada pelo authMiddleware via cookie)
   static async get(req: Request, res: Response): Promise<void> {
     try {

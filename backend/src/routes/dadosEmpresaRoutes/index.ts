@@ -178,4 +178,10 @@ router.post('/assinatura', (req, res, next) => {
   });
 }, DadosEmpresaController.uploadAssinatura);
 
+// GET /api/dados-empresa/public - Logo e nome (público — para login e central do assinante)
+router.get('/public', DadosEmpresaController.getPublic);
+
+// GET /api/dados-empresa/public/:slug - Logo e nome da empresa identificada pelo slug (multiloja)
+router.get('/public/:slug', DadosEmpresaController.getPublicBySlug);
+
 export default router;

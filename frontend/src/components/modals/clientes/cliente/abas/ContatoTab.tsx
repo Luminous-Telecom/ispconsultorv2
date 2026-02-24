@@ -1,10 +1,13 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { FormValue } from '@/types/common';
 import { useI18n } from '@/contexts/I18nContext';
 import FormField from '@/components/ui/FormField';
 import ContactFields from '@/components/forms/ContactFields';
 import { ClienteTabProps } from '../types';
 import { Button } from '@/components/ui';
+import { DadosEmpresaService } from '@/services/dadosEmpresaService';
+import { slugify } from '@/utils/stringUtils';
 
 const ContatoTab: React.FC<ClienteTabProps> = ({
   formData,
@@ -13,6 +16,18 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
   formPrefix
 }) => {
   const { t } = useI18n();
+
+  const { data: empresaData } = useQuery({
+    queryKey: ['dados-empresa-public'],
+    queryFn: () => DadosEmpresaService.getPublic(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const empresaSlug = slugify(empresaData?.nome_fantasia || empresaData?.razao_social || '');
+  const centralUrl = empresaSlug
+    ? `${window.location.origin}/central-assinante/${empresaSlug}`
+    : `${window.location.origin}/central-assinante`;
+
   return (
     <div className="d-flex flex-column gap-2">
       <ContactFields
@@ -69,15 +84,12 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
             type="button"
             variant="secondary"
             size="sm"
-            onClick={() => {
-              const url = `${window.location.origin}/central-assinante`;
-              window.open(url, '_blank');
-            }}
+            onClick={() => window.open(centralUrl, '_blank')}
           >
             Abrir Central do Assinante
           </Button>
           <div className="small text-muted mt-2">
-            O cliente pode acessar a central do assinante em: <code>{window.location.origin}/central-assinante</code>
+            O cliente pode acessar a central do assinante em: <code>{centralUrl}</code>
             <br />
             Para fazer login, o cliente precisa usar o CNPJ ou Email (conforme configurado nos parâmetros do sistema) e a senha cadastrada acima.
           </div>
@@ -88,4 +100,3 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
 };
 
 export default ContatoTab;
-

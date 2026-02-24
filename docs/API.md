@@ -44,21 +44,26 @@
 | GET | `/api/pagamento/:id/:token/pdf` | PDF do boleto (público) |
 
 ### Central do Assinante
+
+> `<slug>` é derivado do `nome_fantasia` da empresa (ex: "Minha Internet" → `minha-internet`).  
+> Ver documentação completa em [docs/CENTRAL_ASSINANTE.md](CENTRAL_ASSINANTE.md).
+
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| POST | `/api/central-assinante/login` | Login do assinante |
-| POST | `/api/central-assinante/recuperar-senha` | Recuperar senha |
-| GET | `/api/central-assinante/me` | Dados do assinante (token via header) |
-| POST | `/api/central-assinante/me/trocar-senha` | Trocar senha |
-| GET | `/api/central-assinante/me/contrato/:id/pdf` | PDF do contrato |
-| GET | `/api/central-assinante/me/termo/:id/pdf` | PDF do termo |
-| GET | `/api/central-assinante/me/fatura/:id/pdf` | PDF da fatura |
-| GET | `/api/central-assinante/me/recibo/:id/pdf` | PDF do recibo |
-| GET | `/api/central-assinante/:id/:token` | Dados do assinante (token na URL) |
-| GET | `/api/central-assinante/:id/:token/contrato/:id/pdf` | PDF contrato (token URL) |
-| GET | `/api/central-assinante/:id/:token/termo/:id/pdf` | PDF termo (token URL) |
-| GET | `/api/central-assinante/:id/:token/fatura/:id/pdf` | PDF fatura (token URL) |
-| GET | `/api/central-assinante/:id/:token/recibo/:id/pdf` | PDF recibo (token URL) |
+| GET | `/api/dados-empresa/public/<slug>` | Logo e nome da empresa por slug |
+| POST | `/api/central-assinante/<slug>/login` | Login do assinante |
+| POST | `/api/central-assinante/<slug>/recuperar-senha` | Recuperar senha |
+| GET | `/api/central-assinante/<slug>/me` | Dados do assinante (token via header) |
+| POST | `/api/central-assinante/<slug>/me/trocar-senha` | Trocar senha |
+| GET | `/api/central-assinante/<slug>/me/contrato/:id/pdf` | PDF do contrato |
+| GET | `/api/central-assinante/<slug>/me/termo/:id/pdf` | PDF do termo |
+| GET | `/api/central-assinante/<slug>/me/fatura/:id/pdf` | PDF da fatura |
+| GET | `/api/central-assinante/<slug>/me/recibo/:id/pdf` | PDF do recibo |
+| GET | `/api/central-assinante/:clienteId/:token` | *(legacy)* Dados com token na URL |
+| GET | `/api/central-assinante/:clienteId/:token/contrato/:id/pdf` | *(legacy)* PDF contrato |
+| GET | `/api/central-assinante/:clienteId/:token/termo/:id/pdf` | *(legacy)* PDF termo |
+| GET | `/api/central-assinante/:clienteId/:token/fatura/:id/pdf` | *(legacy)* PDF fatura |
+| GET | `/api/central-assinante/:clienteId/:token/recibo/:id/pdf` | *(legacy)* PDF recibo |
 
 ### Webhooks (públicos)
 | Método | Rota | Descrição |

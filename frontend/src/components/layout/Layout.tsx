@@ -45,10 +45,9 @@ const Layout: React.FC = () => {
   // Responsividade: Mobile-First
   const isMobile = useIsMobile();
   
-  // Buscar dados públicos da empresa (incluindo logo)
   const { data: dadosEmpresa } = useQuery({
-    queryKey: ['dados-empresa-public'],
-    queryFn: () => DadosEmpresaService.getPublic(),
+    queryKey: ['dados-empresa'],
+    queryFn: () => DadosEmpresaService.get(),
   });
 
   const companyName = useMemo(

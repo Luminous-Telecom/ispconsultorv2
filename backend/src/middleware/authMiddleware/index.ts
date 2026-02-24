@@ -28,21 +28,24 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   // Download de arquivos de cliente (visualização pública controlada)
   { method: 'GET', path: /^\/api\/cliente-arquivos\/\d+\/download\/?$/i },
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)
+  { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET logo e nome da empresa (para login e central do assinante)
+  { method: 'GET', path: /^\/api\/dados-empresa\/public\/[a-z0-9-]+$/i }, // GET logo e nome da empresa por slug (multiloja)
   { method: 'GET', path: /^\/api\/hotsite\/public\/?$/i }, // GET hotsite público (HTML renderizado)
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+$/i }, // GET página pública de pagamento
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+\/pdf$/i }, // GET PDF do boleto (público)
-  { method: 'POST', path: /^\/api\/central-assinante\/login$/i }, // POST login central do assinante (público)
-  { method: 'POST', path: /^\/api\/central-assinante\/recuperar-senha$/i }, // POST recuperar senha central do assinante (público)
-  // Novas rotas da central do assinante sem expor id/token na URL (token vai via header)
-  { method: 'GET', path: /^\/api\/central-assinante\/me(\/.*)?$/i },
-  { method: 'POST', path: /^\/api\/central-assinante\/me\/trocar-senha$/i },
+  // Rotas da central do assinante com slug (multiloja)
+  { method: 'POST', path: /^\/api\/central-assinante\/[a-z0-9-]+\/login$/i }, // POST login central do assinante (público)
+  { method: 'POST', path: /^\/api\/central-assinante\/[a-z0-9-]+\/recuperar-senha$/i }, // POST recuperar senha central do assinante (público)
+  { method: 'GET', path: /^\/api\/central-assinante\/[a-z0-9-]+\/me(\/.*)?$/i }, // GET dados do assinante (token via header)
+  { method: 'POST', path: /^\/api\/central-assinante\/[a-z0-9-]+\/me\/trocar-senha$/i }, // POST trocar senha (token via header)
   // Token da central do assinante não é JWT: pode ser base64/base64url/alfanumérico
   // Aceitar um conjunto seguro de caracteres (sem "/") para não abrir demais o matcher.
-  { method: 'GET', path: /^\/api\/central-assinante\/\d+\/[A-Za-z0-9._=-]+$/i }, // GET central do assinante (público com token)
-  { method: 'GET', path: /^\/api\/central-assinante\/\d+\/[A-Za-z0-9._=-]+\/contrato\/\d+\/pdf$/i }, // GET PDF contrato (público com token)
-  { method: 'GET', path: /^\/api\/central-assinante\/\d+\/[A-Za-z0-9._=-]+\/termo\/\d+\/pdf$/i }, // GET PDF termo (público com token)
-  { method: 'GET', path: /^\/api\/central-assinante\/\d+\/[A-Za-z0-9._=-]+\/fatura\/\d+\/pdf$/i }, // GET PDF fatura (público com token)
-  { method: 'GET', path: /^\/api\/central-assinante\/\d+\/[A-Za-z0-9._=-]+\/recibo\/\d+\/pdf$/i }, // GET PDF recibo (público com token)
+  // Rotas legacy com id/token na URL (mantidas para links de e-mail já enviados)
+  { method: 'GET', path: /^\/api\/central-assinante\/\d+\/[A-Za-z0-9._=-]+$/i }, // GET central do assinante legacy (público com token)
+  { method: 'GET', path: /^\/api\/central-assinante\/\d+\/[A-Za-z0-9._=-]+\/contrato\/\d+\/pdf$/i }, // GET PDF contrato legacy (público com token)
+  { method: 'GET', path: /^\/api\/central-assinante\/\d+\/[A-Za-z0-9._=-]+\/termo\/\d+\/pdf$/i }, // GET PDF termo legacy (público com token)
+  { method: 'GET', path: /^\/api\/central-assinante\/\d+\/[A-Za-z0-9._=-]+\/fatura\/\d+\/pdf$/i }, // GET PDF fatura legacy (público com token)
+  { method: 'GET', path: /^\/api\/central-assinante\/\d+\/[A-Za-z0-9._=-]+\/recibo\/\d+\/pdf$/i }, // GET PDF recibo legacy (público com token)
   // Rotas auxiliares de clientes (usadas em formulários)
   { method: 'GET', path: /^\/api\/clientes\/buscar-cep\/.+$/i }, // Buscar CEP (público para uso em formulários)
   { method: 'GET', path: /^\/api\/clientes\/consultar-cnpj\/.+$/i }, // Consultar CNPJ (público para uso em formulários)

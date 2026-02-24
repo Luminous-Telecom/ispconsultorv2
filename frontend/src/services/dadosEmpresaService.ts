@@ -61,9 +61,15 @@ export interface UpdateDadosEmpresa {
 }
 
 export class DadosEmpresaService {
-  // Buscar dados públicos da empresa (para site público)
+  // Buscar dados públicos da empresa (logo e nome — para login e central do assinante)
   static async getPublic(): Promise<Partial<DadosEmpresa>> {
     const response = await publicApiClient.get<{ success: boolean; data: Partial<DadosEmpresa> }>('/dados-empresa/public');
+    return response.data.data || {};
+  }
+
+  // Buscar dados públicos da empresa pelo slug (multiloja — para central do assinante)
+  static async getPublicBySlug(slug: string): Promise<Partial<DadosEmpresa>> {
+    const response = await publicApiClient.get<{ success: boolean; data: Partial<DadosEmpresa> }>(`/dados-empresa/public/${slug}`);
     return response.data.data || {};
   }
 

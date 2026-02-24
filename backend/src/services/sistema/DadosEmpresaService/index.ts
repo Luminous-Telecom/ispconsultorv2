@@ -1,5 +1,6 @@
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { cache } from '../../../utils/cache';
+import { slugify } from '../../../utils/slugify';
 
 export class DadosEmpresaService {
   /**
@@ -17,6 +18,14 @@ export class DadosEmpresaService {
       cache.set(cacheKey, dados, 600000); // Cache por 10 minutos
     }
     return dados;
+  }
+
+  /**
+   * Buscar empresa pelo slug derivado de nome_fantasia ou razao_social
+   */
+  static async findBySlug(slug: string): Promise<DadosEmpresa | null> {
+    const all = await DadosEmpresa.findAll();
+    return all.find(e => slugify(e.nome_fantasia || e.razao_social || '') === slug) ?? null;
   }
 
   /**

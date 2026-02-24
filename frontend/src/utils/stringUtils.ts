@@ -19,6 +19,17 @@ function removeAccents(str: string): string {
 }
 
 /**
+ * Converte um texto para slug URL-safe.
+ * Ex: "Minha Empresa ISP" → "minha-empresa-isp"
+ */
+export function slugify(text: string): string {
+  return removeAccents(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
  * Sanitiza um domínio: remove protocolo, aspas, acentos, espaços.
  * Mantém hostname (incl. subdomínios), porta e caminho (path).
  * Remove: https://, http://, aspas, acentos, espaços. Query string (?...) é removida.

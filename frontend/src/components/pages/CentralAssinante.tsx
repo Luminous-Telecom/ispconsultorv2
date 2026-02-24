@@ -10,8 +10,7 @@ import { useNotificationContext, NotificationContainer } from '@/components/noti
 import '@/styles/CentralAssinante.scss';
 
 const CentralAssinante: React.FC = () => {
-  // Compatibilidade: ainda aceita /central-assinante/:id/:token, mas faz redirect para /central-assinante (sem expor na URL)
-  const { id, token } = useParams<{ id?: string; token?: string }>();
+  const { slug = '' } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { success: showSuccess, error: showError, notifications, removeNotification, pauseNotification, resumeNotification } = useNotificationContext();
   const [activeTab, setActiveTab] = useState<'resumo' | 'contratos' | 'financeiro' | 'financeiro_pago' | 'termos'>('resumo');
@@ -48,34 +47,22 @@ const CentralAssinante: React.FC = () => {
   const [baixandoTermoId, setBaixandoTermoId] = useState<number | null>(null);
   const [baixandoReciboId, setBaixandoReciboId] = useState<number | null>(null);
 
-  // Se vier por URL antiga (com id/token), salvar token e limpar a URL
-  useEffect(() => {
-    const hasLegacyToken = !!(id && token && id !== 'undefined' && token !== 'undefined');
-    if (!hasLegacyToken || !token) return;
-
-    CentralAssinanteService.setCentralToken(token);
-    setCentralToken(token);
-    setIsAuthenticated(true);
-    navigate('/central-assinante', { replace: true });
-  }, [id, token, navigate]);
-
   // Mutation para login
   const loginMutation = useMutation({
-    mutationFn: (data: LoginCentralAssinanteRequest) => CentralAssinanteService.login(data),
+    mutationFn: (data: LoginCentralAssinanteRequest) => CentralAssinanteService.login(slug, data),
     onSuccess: (response) => {
       if (response.success && response.data) {
-        const token = response.data.token;
-        
+        const newToken = response.data.token;
+
         // Validar que token existe antes de navegar
-        if (!token) {
+        if (!newToken) {
           showError('Dados de autenticação inválidos. Tente novamente.');
           return;
         }
-        
-        CentralAssinanteService.setCentralToken(token);
-        setCentralToken(token);
+
+        CentralAssinanteService.setCentralToken(newToken);
+        setCentralToken(newToken);
         setIsAuthenticated(true);
-        navigate('/central-assinante', { replace: true });
         showSuccess('Login realizado com sucesso!');
       }
     },
@@ -87,23 +74,26 @@ const CentralAssinante: React.FC = () => {
 
   // Query para buscar dados (só executa se autenticado)
   const { data: dados, isLoading, error } = useQuery<DadosCentralAssinante>({
-    queryKey: ['central-assinante', centralToken],
+    queryKey: ['central-assinante', centralToken, slug],
     queryFn: async () => {
-      const response = await CentralAssinanteService.getDadosMe();
+      const response = await CentralAssinanteService.getDadosMe(slug);
       if (!response.success || !response.data) {
         throw new Error(response.message || 'Erro ao buscar dados');
       }
       return response.data;
     },
-    enabled: !!(isAuthenticated && !!centralToken),
+    enabled: !!(isAuthenticated && !!centralToken && !!slug),
     retry: false,
   });
 
-  // Query para buscar dados públicos da empresa (logo)
+  // Query para buscar dados públicos da empresa (logo) — usa slug quando disponível
   const { data: empresaData } = useQuery({
-    queryKey: ['dados-empresa-public'],
-    queryFn: () => DadosEmpresaService.getPublic(),
+    queryKey: ['dados-empresa-public', slug],
+    queryFn: () => slug
+      ? DadosEmpresaService.getPublicBySlug(slug)
+      : DadosEmpresaService.getPublic(),
     staleTime: 5 * 60 * 1000,
+    enabled: !!slug,
   });
 
   // Query para buscar parâmetros do sistema (método de login)
@@ -176,7 +166,7 @@ const CentralAssinante: React.FC = () => {
 
   // Mutation para recuperar senha
   const recuperarSenhaMutation = useMutation({
-    mutationFn: (data: RecuperarSenhaRequest) => CentralAssinanteService.recuperarSenha(data),
+    mutationFn: (data: RecuperarSenhaRequest) => CentralAssinanteService.recuperarSenha(slug, data),
     onSuccess: () => {
       showSuccess('Instruções para recuperação de senha foram enviadas para seu email');
       setShowRecuperarSenha(false);
@@ -200,7 +190,7 @@ const CentralAssinante: React.FC = () => {
   // Mutation para trocar senha
   const trocarSenhaMutation = useMutation({
     mutationFn: (data: TrocarSenhaRequest) => {
-      return CentralAssinanteService.trocarSenhaMe(data);
+      return CentralAssinanteService.trocarSenhaMe(slug, data);
     },
     onSuccess: () => {
       showSuccess('Senha alterada com sucesso');
@@ -234,7 +224,7 @@ const CentralAssinante: React.FC = () => {
   const handleImprimirContrato = async (contratoId: number) => {
     setBaixandoContratoId(contratoId);
     try {
-      const blob = await CentralAssinanteService.baixarContrato(contratoId);
+      const blob = await CentralAssinanteService.baixarContrato(slug, contratoId);
       CentralAssinanteService.abrirPdf(blob, `contrato-${contratoId}.pdf`);
     } catch (error) {
       showError('Erro ao baixar contrato');
@@ -246,7 +236,7 @@ const CentralAssinante: React.FC = () => {
   const handleImprimirTermo = async (termoId: number) => {
     setBaixandoTermoId(termoId);
     try {
-      const blob = await CentralAssinanteService.baixarTermo(termoId);
+      const blob = await CentralAssinanteService.baixarTermo(slug, termoId);
       CentralAssinanteService.abrirPdf(blob, `termo-${termoId}.pdf`);
     } catch (error) {
       showError('Erro ao baixar termo');
@@ -258,7 +248,7 @@ const CentralAssinante: React.FC = () => {
   const handleImprimirFatura = async (tituloId: number) => {
     setBaixandoBoletoId(tituloId);
     try {
-      const blob = await CentralAssinanteService.baixarFatura(tituloId);
+      const blob = await CentralAssinanteService.baixarFatura(slug, tituloId);
       CentralAssinanteService.abrirPdf(blob, `boleto-${tituloId}.pdf`);
     } catch (error) {
       showError('Erro ao baixar boleto');
@@ -270,7 +260,7 @@ const CentralAssinante: React.FC = () => {
   const handleImprimirRecibo = async (tituloId: number) => {
     setBaixandoReciboId(tituloId);
     try {
-      const blob = await CentralAssinanteService.baixarRecibo(tituloId);
+      const blob = await CentralAssinanteService.baixarRecibo(slug, tituloId);
       CentralAssinanteService.abrirPdf(blob, `recibo-${tituloId}.pdf`);
     } catch (error) {
       showError('Erro ao baixar recibo');
@@ -599,7 +589,7 @@ const CentralAssinante: React.FC = () => {
               CentralAssinanteService.clearCentralToken();
               setCentralToken(null);
               setIsAuthenticated(false);
-              navigate('/central-assinante', { replace: true });
+              navigate(`/central-assinante/${slug}`, { replace: true });
             }}
           >
             Voltar ao Login
@@ -640,7 +630,7 @@ const CentralAssinante: React.FC = () => {
                   CentralAssinanteService.clearCentralToken();
                   setCentralToken(null);
                   setIsAuthenticated(false);
-                  navigate('/central-assinante', { replace: true });
+                  navigate(`/central-assinante/${slug}`, { replace: true });
                 }}
                 title="Sair"
               >

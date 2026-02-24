@@ -9,6 +9,7 @@ import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized, sendForbidden, sendNotFound } from '../../../utils/responseUtils';
 import { CentralAssinanteController } from '../CentralAssinanteController';
+import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaService';
 import nodemailer from 'nodemailer';
 
 const loginSchema = Joi.object({
@@ -41,10 +42,19 @@ export class CentralAssinanteAuthController {
       }
 
       const { login, senha } = value;
+      const { slug } = req.params;
 
-      // Buscar parâmetro de método de login
+      // Resolver empresa pelo slug
+      const empresa = slug ? await DadosEmpresaService.findBySlug(slug) : await DadosEmpresaService.findOne();
+      if (!empresa) {
+        sendNotFound(res, 'Empresa não encontrada');
+        return;
+      }
+      const empresaId = empresa.id;
+
+      // Buscar parâmetro de método de login (filtrado pela empresa)
       const parametroMetodo = await Parametro.findOne({
-        where: { chave: 'central_assinante_metodo_login', ativo: true }
+        where: { chave: 'central_assinante_metodo_login', ativo: true, empresa_id: empresaId }
       });
 
       const metodoLogin = parametroMetodo?.valor || 'cnpj';
@@ -54,13 +64,13 @@ export class CentralAssinanteAuthController {
 
       if (metodoLogin === 'email') {
         cliente = await Cliente.findOne({
-          where: { email: login, ativo: true }
+          where: { email: login, ativo: true, empresa_id: empresaId }
         });
       } else {
         // Remover formatação do CNPJ para busca
         const cnpjLimpo = login.replace(/\D/g, '');
         cliente = await Cliente.findOne({
-          where: { cnpj: cnpjLimpo, ativo: true }
+          where: { cnpj: cnpjLimpo, ativo: true, empresa_id: empresaId }
         });
       }
 
@@ -85,12 +95,13 @@ export class CentralAssinanteAuthController {
 
       // Gerar token de acesso
       const token = CentralAssinanteController.gerarToken(cliente.id);
-      const link = CentralAssinanteController.gerarLinkCentralAssinante(cliente.id);
+      const link = CentralAssinanteController.gerarLinkCentralAssinante(cliente.id, undefined, slug);
 
       logger.info('Login realizado na central do assinante', {
         cliente_id: cliente.id,
+        empresa_id: empresaId,
+        slug,
         metodo_login: metodoLogin,
-        path: '/api/central-assinante/login',
       });
 
       sendSuccess(res, {
@@ -150,35 +161,41 @@ export class CentralAssinanteAuthController {
       }
 
       const { cnpj, email } = value;
+      const { slug } = req.params;
+
+      // Resolver empresa pelo slug
+      const empresa = slug ? await DadosEmpresaService.findBySlug(slug) : await DadosEmpresaService.findOne();
+      if (!empresa) {
+        sendNotFound(res, 'Empresa não encontrada');
+        return;
+      }
+      const empresaId = empresa.id;
 
       // Remover formatação do CNPJ para busca
       const cnpjLimpo = cnpj.replace(/\D/g, '');
       // Normalizar email: lowercase, trim e remover espaços extras
       const emailLimpo = email.toLowerCase().trim().replace(/\s+/g, '');
 
-      logger.info('Buscando cliente para recuperação de senha', {
-        cnpjLimpo,
-        emailLimpo
-      });
+      logger.info('Buscando cliente para recuperação de senha', { cnpjLimpo, emailLimpo, empresaId });
 
-      // Buscar cliente por CNPJ e Email separadamente
-      const clientePorCnpj = await Cliente.findOne({ where: { cnpj: cnpjLimpo, ativo: true } });
-      const clientePorEmail = await Cliente.findOne({ 
-        where: { 
+      // Buscar cliente por CNPJ e Email separadamente (filtrado pela empresa)
+      const clientePorCnpj = await Cliente.findOne({ where: { cnpj: cnpjLimpo, ativo: true, empresa_id: empresaId } });
+      const clientePorEmail = await Cliente.findOne({
+        where: {
           [Op.and]: [
             sequelize.where(
               sequelize.fn('LOWER', sequelize.col('email')),
               emailLimpo
             )
           ],
-          ativo: true 
-        } 
+          ativo: true,
+          empresa_id: empresaId,
+        }
       });
-
 
       // Verificar se encontrou cliente e se CNPJ e Email pertencem ao mesmo cliente
       let cliente: Cliente | null = null;
-      
+
       if (clientePorCnpj && clientePorEmail) {
         // Ambos existem - verificar se são o mesmo cliente
         if (clientePorCnpj.id === clientePorEmail.id) {
@@ -215,9 +232,9 @@ export class CentralAssinanteAuthController {
         return;
       }
 
-      // Buscar servidor de email ativo
+      // Buscar servidor de email ativo (filtrado pela empresa)
       const servidorEmail = await ServidorEmail.findOne({
-        where: { ativo: true }
+        where: { ativo: true, empresa_id: empresaId }
       });
 
       if (!servidorEmail) {
@@ -285,9 +302,8 @@ export class CentralAssinanteAuthController {
 
       logger.info('Email de recuperação de senha enviado com sucesso', {
         cliente_id: cliente.id,
-        email: cliente.email,
+        empresa_id: empresaId,
         razaoSocial: cliente.razao_social,
-        path: '/api/central-assinante/recuperar-senha',
       });
 
       sendSuccess(res, undefined, 'Instruções para recuperação de senha foram enviadas para seu email');
@@ -379,7 +395,6 @@ export class CentralAssinanteAuthController {
 
       logger.info('Senha alterada na central do assinante', {
         cliente_id: cliente.id,
-        path: '/api/central-assinante/trocar-senha',
       });
 
       sendSuccess(res, undefined, 'Senha alterada com sucesso');

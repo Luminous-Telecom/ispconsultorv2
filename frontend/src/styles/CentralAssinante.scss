@@ -332,7 +332,7 @@ body[data-theme="light"] .central-assinante-container {
 }
 
 .central-assinante-login-card {
-  max-width: 500px !important;
+  max-width: 360px !important;
   width: 100% !important;
   position: relative !important;
   z-index: 2 !important;
@@ -363,7 +363,7 @@ body[data-theme="light"] .central-assinante-container {
 [data-theme="light"] .central-assinante-login-header {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%) !important;
   border-bottom: 2px solid rgba(99, 102, 241, 0.3) !important;
-  padding: 1.5rem 1.5rem 1rem !important;
+  padding: 0.75rem 1rem 0.5rem !important;
   position: relative !important;
   
   &::before {
@@ -381,18 +381,18 @@ body[data-theme="light"] .central-assinante-container {
   }
   
   h2 {
-    font-size: 1.25rem !important;
+    font-size: 1rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.5px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
     
     i {
       color: #818cf8 !important;
-      font-size: 1.5rem !important;
-      margin-right: 0.75rem !important;
+      font-size: 1.1rem !important;
+      margin-right: 0.5rem !important;
       filter: drop-shadow(0 2px 4px rgba(129, 140, 248, 0.4)) !important;
       animation: pulse-icon-login 2s ease-in-out infinite !important;
     }
@@ -420,8 +420,8 @@ body[data-theme="light"] .central-assinante-container {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  margin-bottom: 1rem !important;
-  padding: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  padding: 0.35rem !important;
   background: rgba(255, 255, 255, 0.05) !important;
   border-radius: var(--bs-border-radius) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -430,8 +430,8 @@ body[data-theme="light"] .central-assinante-container {
 .central-assinante-login-logo,
 [data-theme="dark"] .central-assinante-login-logo,
 [data-theme="light"] .central-assinante-login-logo {
-  max-width: 280px !important;
-  max-height: 180px !important;
+  max-width: 160px !important;
+  max-height: 70px !important;
   width: auto !important;
   height: auto !important;
   object-fit: contain !important;
@@ -454,7 +454,7 @@ body[data-theme="light"] .central-assinante-container {
 [data-theme="light"] .central-assinante-login-body,
 .card-body.central-assinante-login-body,
 .card-body.pt-2.px-3.pb-3.central-assinante-login-body {
-  padding: 1.75rem 1.5rem !important;
+  padding: 1rem !important;
   
   * {
     color: $text-primary !important;
