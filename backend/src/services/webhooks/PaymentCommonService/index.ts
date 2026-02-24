@@ -1,6 +1,4 @@
 import { Banco } from '../../../models/cadastros/Banco';
-import { Usuario } from '../../../models/cadastros/Usuario';
-import { logger } from '../../../utils/logger';
 
 /**
  * Serviço com utilitários compartilhados para processamento de webhooks de pagamento
@@ -73,41 +71,18 @@ export class PaymentCommonService {
   }
 
   /**
-   * Valida secret/token do webhook contra banco ou usuário
+   * Valida secret/token do webhook contra o banco
+   * Usado apenas para webhooks de pagamento (Asaas, Efí) — apenas banco, não usuário
    * @param banco Banco relacionado (opcional)
    * @param receivedSecret Secret/token recebido no webhook
    * @returns true se secret válido, false caso contrário
    */
-  static async validateWebhookSecret(banco: Banco | null | undefined, receivedSecret?: string): Promise<boolean> {
+  static validateWebhookSecret(banco: Banco | null | undefined, receivedSecret?: string): boolean {
     if (!receivedSecret) {
       return false;
     }
-
-    // Primeiro tentar validar com webhook_secret do banco (se existir)
-    if (banco?.webhook_secret && banco.webhook_secret === receivedSecret) {
-      return true;
-    }
-
-    // Buscar usuário pelo webhook_secret
-    try {
-      const usuario = await Usuario.findOne({
-        where: {
-          webhook_secret: receivedSecret
-        }
-      });
-
-      if (usuario && usuario.webhook_secret === receivedSecret) {
-        return true;
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao buscar usuário para validação de webhook secret', {
-        error: errorMessage
-      });
-    }
-
-    // Se não encontrou usuário nem banco, rejeitar
-    return false;
+    const expectedToken = banco ? PaymentCommonService.getWebhookToken(banco) : undefined;
+    return !!expectedToken && expectedToken.trim() === receivedSecret.trim();
   }
 
   /**

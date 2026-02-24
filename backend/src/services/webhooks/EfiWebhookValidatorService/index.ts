@@ -14,7 +14,7 @@ export class EfiWebhookValidatorService {
       return { valid: true, shouldBlock: false };
     }
 
-    const isValid = await PaymentCommonService.validateWebhookSecret(banco, receivedSecret);
+    const isValid = PaymentCommonService.validateWebhookSecret(banco, receivedSecret);
     
     if (!isValid) {
       logger.debug('Webhook EFI: secret não corresponde ao banco', {

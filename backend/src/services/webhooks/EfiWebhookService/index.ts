@@ -45,7 +45,7 @@ export class EfiWebhookService {
       for (const banco of bancosAtivos) {
         // Validar secret apenas se foi enviado (para segurança adicional)
         // Mas permitir processar mesmo sem secret, pois o token é autenticação suficiente
-        if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(banco, receivedSecret))) {
+        if (receivedSecret && !PaymentCommonService.validateWebhookSecret(banco, receivedSecret)) {
           // Se um secret foi enviado mas não é válido, apenas logar mas continuar
           logger.debug('Secret do webhook não corresponde ao banco, mas tentando processar token mesmo assim', {
             banco_id: banco.id,
@@ -261,7 +261,7 @@ export class EfiWebhookService {
         }) as (Titulo & { banco?: Banco | null }) | null;
         if (titulo) {
           // Validar secret apenas se foi enviado, mas não bloquear processamento
-          if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(titulo.banco ?? undefined, receivedSecret))) {
+          if (receivedSecret && !PaymentCommonService.validateWebhookSecret(titulo.banco ?? undefined, receivedSecret)) {
             logger.debug('Webhook EFI: secret não corresponde ao banco ao processar custom_id, mas continuando', {
               titulo_id: titulo.id,
               banco_id: titulo.banco?.id ?? null
