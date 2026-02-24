@@ -58,15 +58,17 @@ const generalLimiter = rateLimit({
 
 /**
  * Rate limiter restritivo para rotas de autenticação — SEMPRE ATIVO.
- * Produção: máximo 5 tentativas por IP a cada 15 minutos.
- * Desenvolvimento: máximo 100 tentativas por IP a cada 1 minuto.
+ * Conta APENAS tentativas com erro (credenciais inválidas).
+ * Login bem-sucedido não consome o limite.
+ * Produção: máximo 5 erros por IP a cada 1 minuto.
+ * Desenvolvimento: máximo 100 erros por IP a cada 1 minuto.
  */
 const authLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: IS_DEV ? 100 : 5,
   message: {
     success: false,
-    message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
+    message: 'Muitas tentativas de login com erro. Tente novamente em alguns minutos.',
     error: 'RATE_LIMIT_EXCEEDED'
   },
   standardHeaders: true,
@@ -82,12 +84,11 @@ const authLimiter = rateLimit({
 
     res.status(429).json({
       success: false,
-      message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
+      message: 'Muitas tentativas de login com erro. Tente novamente em alguns minutos.',
       error: 'RATE_LIMIT_EXCEEDED'
     });
   },
-  skipFailedRequests: false,
-  skipSuccessfulRequests: false
+  skipSuccessfulRequests: true // Conta apenas erros de login (401), login OK não consome limite
 });
 
 /**
