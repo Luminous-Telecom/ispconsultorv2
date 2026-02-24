@@ -31,6 +31,7 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 ## Principais Funcionalidades
 
 - Cadastro e gestão de **clientes**, **contratos**, **planos** e **bancos**.
+- **Central do Assinante**: portal self-service para clientes consultarem contratos, faturas e boletos (veja `docs/CENTRAL_ASSINANTE.md`).
 - **Geração, cancelamento e liquidação** de boletos nos gateways Asaas e Efí.
 - Impressão de segunda via com **linha digitável**, **código de barras** e **PIX QR Code**.
 - Armazenamento do `nosso_numero`, `charge_id`, `url_boleto` e metadados FEBRABAN.
@@ -589,7 +590,7 @@ npm run migrate  # Se houver script de migration configurado
 
 ```bash
 cd backend
-cp env.example .env
+cp .env.example .env
 ```
 
 ### 2. Editar `.env` do Backend
@@ -598,14 +599,10 @@ cp env.example .env
 # Configurações do Servidor
 PORT=3001
 
-# ⚠️ IMPORTANTE: Configuração da API para o frontend
-# Em produção, SEMPRE use URL relativa: /api
-# O backend gera /config.js dinamicamente com este valor
-# O frontend sempre prioriza window.__APP_CONFIG__ sobre process.env
+# ⚠️ Configuração da API para o frontend (opcional)
+# O backend gera /config.js com /api por padrão; REACT_APP_* não é lido atualmente
+# Mantido para referência e possíveis extensões futuras
 REACT_APP_API_URL=/api
-REACT_APP_API_TIMEOUT=10000
-REACT_APP_API_RETRY_ATTEMPTS=3
-REACT_APP_API_RETRY_DELAY=1000
 
 # Configurações do Banco de Dados
 DB_HOST=localhost
@@ -694,14 +691,14 @@ REACT_APP_API_URL=http://localhost:3001/api
 **Para Produção:**
 ```env
 # ⚠️ NÃO é necessário configurar REACT_APP_API_URL em produção
-# O backend gera /config.js automaticamente com REACT_APP_API_URL=/api
-# O frontend sempre prioriza window.__APP_CONFIG__ sobre process.env
+# O backend gera /config.js com /api por padrão
+# O frontend prioriza window.__APP_CONFIG__ quando disponível
 PORT=3000
 BACKEND_URL=http://localhost:3001
 ```
 
-**Nota:** Em produção, o backend lê `REACT_APP_API_URL=/api` do seu `.env` e gera `/config.js` dinamicamente.  
-O frontend buildado não deve ter URLs hardcoded - sempre use `/api` (relativo).
+**Nota:** Em produção, o backend serve `/config.js` com `REACT_APP_API_URL=/api`.  
+O frontend usa fallback `/api` quando `window.__APP_CONFIG__` não está definido.
 
 ### 3. Build do Frontend
 
@@ -787,6 +784,16 @@ server {
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
+
+    # Proxy para config.js (configuração dinâmica do frontend)
+    location = /config.js {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 
     # Proxy para API do backend
     location /api {
@@ -930,6 +937,16 @@ server {
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
+
+    # Proxy para config.js (configuração dinâmica do frontend)
+    location = /config.js {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 
     # Proxy para API do backend
     location /api {
@@ -1194,48 +1211,38 @@ pm2 save
 
 ### Configuração do PM2
 
-Crie ou edite `ecosystem.config.js` na raiz do projeto:
+O projeto já inclui `ecosystem.config.js` na raiz. Com Nginx servindo arquivos estáticos do frontend, apenas o backend precisa do PM2:
 
 ```javascript
 module.exports = {
   apps: [
     {
-      name: 'BackNet-backend',
+      name: 'backend',
       cwd: './backend',
-      script: 'dist/index.js',
+      script: './dist/index.js',
+      interpreter: 'node',
       instances: 1,
       exec_mode: 'fork',
+      watch: false,
       env: {
-        PORT: 3001
+        PORT: process.env.PORT || 3001
       },
-      error_file: './logs/backend-error.log',
+      log_file: './logs/backend-combined.log',
       out_file: './logs/backend-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      error_file: './logs/backend-error.log',
+      log_date_format: 'DD/MM/YYYY HH:mm:ss',
       merge_logs: true,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '1G'
-    },
-    {
-      name: 'BackNet-frontend',
-      cwd: './frontend',
-      script: 'server.js',
-      instances: 1,
-      exec_mode: 'fork',
-      env: {
-        PORT: 3000
-      },
-      error_file: './logs/frontend-error.log',
-      out_file: './logs/frontend-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '500M'
+      max_memory_restart: '2G',
+      autorestart: false,
+      kill_timeout: 5000,
+      wait_ready: true,
+      listen_timeout: 10000
     }
   ]
 };
 ```
+
+**Nota:** Se preferir servir o frontend via Express em vez do Nginx, adicione um segundo app com `cwd: './frontend'` e `script: 'server.js'`.
 
 ### Comandos PM2
 
@@ -1251,6 +1258,7 @@ pm2 logs
 
 # Reiniciar
 pm2 restart all
+# ou, se usar o nome 'backend': pm2 restart backend
 
 # Parar
 pm2 stop all
@@ -1295,7 +1303,7 @@ pm2 startup
 | Variável | Descrição | Exemplo |
 |----------|-----------|---------|
 | `PORT` | Porta da API | `3001` |
-| `REACT_APP_API_URL` | ⚠️ **URL da API para o frontend** (obrigatório em produção) | `/api` (relativo) |
+| `REACT_APP_API_URL` | URL da API para o frontend (opcional; config.js usa `/api` por padrão) | `/api` (relativo) |
 | `DB_HOST` | Host do banco de dados | `localhost` |
 | `DB_PORT` | Porta do banco de dados | `3306` |
 | `DB_NAME` | Nome do banco de dados | `backnet` |
@@ -1312,11 +1320,9 @@ pm2 startup
 | `REDIS_URL` | URL do Redis para jobs de extração de PDF (opcional) | `redis://localhost:6379` |
 | `REDIS_PASSWORD` | Senha do Redis, se usar `requirepass` (opcional) | `sua-senha` |
 
-**⚠️ Sobre `REACT_APP_API_URL` no backend:**
-- Em produção: **SEMPRE** use `/api` (URL relativa)
-- O backend gera `/config.js` dinamicamente com este valor
-- O frontend sempre prioriza `window.__APP_CONFIG__` sobre `process.env`
-- Não faça build do frontend com URLs hardcoded
+**ℹ️ Sobre `REACT_APP_API_URL` no backend:**
+- O backend serve `/config.js` com `REACT_APP_API_URL=/api` por padrão
+- O frontend usa `window.__APP_CONFIG__` quando disponível; caso contrário, fallback para `/api`
 
 **ℹ️ Sobre detecção de ambiente:**
 - O backend detecta automaticamente o ambiente através do `__dirname`
@@ -1343,7 +1349,7 @@ Em produção, as configurações vêm do backend via `window.__APP_CONFIG__`.
 
 - Verifique se o MySQL está rodando: `sudo systemctl status mysql`
 - Verifique as variáveis de ambiente no `.env`
-- Verifique os logs: `pm2 logs BackNet-backend`
+- Verifique os logs: `pm2 logs backend`
 
 ### Frontend não carrega
 
@@ -1355,7 +1361,7 @@ Em produção, as configurações vêm do backend via `window.__APP_CONFIG__`.
 
 - Verifique se o backend está rodando: `pm2 status`
 - Verifique se a porta do backend está correta no Nginx
-- Verifique os logs do backend: `pm2 logs BackNet-backend`
+- Verifique os logs do backend: `pm2 logs backend`
 
 ### Webhooks não funcionam
 
@@ -1375,4 +1381,4 @@ Em produção, as configurações vêm do backend via `window.__APP_CONFIG__`.
 
 ---
 
-Para detalhes adicionais consulte a documentação em `release/docs/` ou os arquivos de serviço específicos (`backend/src/services/bancos/*.ts`).
+Para detalhes adicionais consulte a documentação em `docs/` ou os arquivos de serviço específicos (`backend/src/services/bancos/*.ts`).
