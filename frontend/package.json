@@ -35,7 +35,7 @@
     "zod": "^4.1.12"
   },
   "scripts": {
-    "start": "node server.js",
+    "start": "cross-env BROWSER=none BROWSER_ARGS='' craco start",
     "dev": "cross-env BROWSER=none BROWSER_ARGS='' craco start",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' craco build",
     "test": "craco test",
