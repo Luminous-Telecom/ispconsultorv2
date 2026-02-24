@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const copyProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const isPdfRoute = req.path.startsWith('/webhook/integration/pdf/');
   const isClienteArquivoDownload = req.path.startsWith('/api/cliente-arquivos/') && req.path.includes('/download');
-  const isSpecialRoute = isPdfRoute || isClienteArquivoDownload;
+  const isSpecialRoute = isClienteArquivoDownload;
 
   // Headers que o Helmet NÃO cobre — definidos aqui para todas as rotas
   // Referrer-Policy e X-Content-Type-Options são gerenciados pelo Helmet — não duplicar aqui

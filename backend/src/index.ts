@@ -70,8 +70,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
 
 // Middleware de segurança
 const isPdfOrDownloadRoute = (path: string) => 
-  path.startsWith('/webhook/integration/pdf/') || 
-  (path.startsWith('/api/cliente-arquivos/') && path.includes('/download'));
+  path.startsWith('/api/cliente-arquivos/') && path.includes('/download');
 
 app.use((req, res, next) => {
   const frameguard = isPdfOrDownloadRoute(req.path) ? false : { action: 'deny' as const };

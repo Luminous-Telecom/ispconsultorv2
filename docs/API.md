@@ -70,8 +70,6 @@
 |--------|------|-----------|
 | POST | `/webhook/efi` | Webhook Efí Bank |
 | POST | `/webhook/asaas` | Webhook Asaas |
-| POST | `/webhook/integration` | Webhook integrações |
-| GET | `/webhook/integration/pdf/:token` | PDF via webhook |
 | POST | `/api/assinatura-digital/webhook/assinafy` | Webhook Assinafy |
 | POST | `/api/assinatura-digital/webhook/zapsign` | Webhook ZapSign |
 
@@ -418,4 +416,4 @@ curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   "https://backnet.app/api/titulos?status=aberto&page=1&limit=50"
 ```
 
-> O token é gerado em **Parâmetros → Usuários** (edite um usuário e clique em "Gerar token"). Use o mesmo token como Bearer na API ou como `secret` no webhook `/webhook/integration`.
+> O token é gerado em **Parâmetros → Usuários** (edite um usuário e clique em "Gerar token").
