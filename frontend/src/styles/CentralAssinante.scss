@@ -454,7 +454,7 @@ body[data-theme="light"] .central-assinante-container {
 [data-theme="light"] .central-assinante-login-body,
 .card-body.central-assinante-login-body,
 .card-body.pt-2.px-3.pb-3.central-assinante-login-body {
-  padding: 1rem !important;
+  padding: 1rem 1rem 1.5rem !important;
   
   * {
     color: $text-primary !important;
@@ -479,6 +479,13 @@ body[data-theme="light"] .central-assinante-container {
     display: block !important;
   }
   
+  // Botão Entrar — evita corte
+  form .d-grid .btn-primary {
+    min-height: 2.5rem !important;
+    padding: 0.5rem 1rem !important;
+    font-weight: 600 !important;
+  }
+
   // Estilizar inputs
   .form-control,
   input[type="text"],

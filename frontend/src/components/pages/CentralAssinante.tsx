@@ -509,16 +509,18 @@ const CentralAssinante: React.FC = () => {
                   />
                 </div>
 
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  className="w-100"
-                  disabled={loginMutation.isPending}
-                  isLoading={loginMutation.isPending}
-                >
-                  Entrar
-                </Button>
+                <div className="d-grid mt-2 mb-1">
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loginMutation.isPending}
+                  >
+                    {loginMutation.isPending ? (
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                    ) : null}
+                    Entrar
+                  </button>
+                </div>
                 <div className="text-center mt-3">
                   <button
                     type="button"
