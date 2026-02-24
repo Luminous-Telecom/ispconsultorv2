@@ -84,8 +84,6 @@ const upload = multer({
   }
 });
 
-// GET /api/dados-empresa/public - Buscar dados públicos da empresa (para site público)
-router.get('/public', DadosEmpresaController.getPublic);
 
 // GET /api/dados-empresa - Buscar dados completos da empresa (exclusivo do sistema - requer autenticação)
 router.get('/', DadosEmpresaController.get);

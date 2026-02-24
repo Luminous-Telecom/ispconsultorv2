@@ -27,7 +27,6 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/arquivos(\/.*)?$/i },
   // Download de arquivos de cliente (visualização pública controlada)
   { method: 'GET', path: /^\/api\/cliente-arquivos\/\d+\/download\/?$/i },
-  { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET dados públicos da empresa (para site público)
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)
   { method: 'GET', path: /^\/api\/hotsite\/public\/?$/i }, // GET hotsite público (HTML renderizado)
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+$/i }, // GET página pública de pagamento
@@ -76,6 +75,13 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
   const isApiRequest = /^\/api\//i.test(req.originalUrl);
   const isPublic = isPublicRoute(req);
+
+  // Bloqueia navegação direta do browser para rotas da API
+  // Sec-Fetch-Mode: navigate → usuário digitou a URL na barra de endereço
+  if (isApiRequest && !isPublic && req.headers['sec-fetch-mode'] === 'navigate') {
+    res.status(401).json({ error: 'Unauthorized: Invalid access token' });
+    return;
+  }
 
   if (!isApiRequest || isPublic) {
     next();

@@ -41,40 +41,6 @@ export class DadosEmpresaController {
     // Garantir que o path comece com /
     return path.startsWith('/') ? path : `/${path}`;
   }
-  // Rota pública para o site - retorna apenas dados não sensíveis
-  static async getPublic(req: Request, res: Response): Promise<void> {
-    try {
-      let dadosEmpresa = await DadosEmpresaService.findOne();
-
-      if (!dadosEmpresa) {
-        dadosEmpresa = await DadosEmpresaService.create(DadosEmpresaController.getDefaultData());
-      }
-
-      const dadosEmpresaJson = dadosEmpresa.toJSON();
-      dadosEmpresaJson.logo = DadosEmpresaController.normalizePath(dadosEmpresaJson.logo);
-
-      // Criar objeto apenas com dados públicos (sem dados sensíveis)
-      const { 
-        id: _id, 
-        responsavel_nome: _responsavel_nome, 
-        responsavel_cpf: _responsavel_cpf, 
-        responsavel_cargo: _responsavel_cargo,
-        responsavel_assinatura: _responsavel_assinatura,
-        inscricao_estadual: _inscricao_estadual, 
-        inscricao_municipal, 
-        created_at, 
-        updated_at,
-        ...publicData 
-      } = dadosEmpresaJson;
-      
-      sendSuccess(res, publicData);
-    } catch (error) {
-      sendError(res, error, 'Erro ao buscar dados públicos da empresa', 500, true, {
-        context: 'DadosEmpresaController',
-        action: 'getPublic'
-      });
-    }
-  }
 
   // Rota exclusiva do sistema administrativo - requer autenticação (validada pelo authMiddleware via cookie)
   static async get(req: Request, res: Response): Promise<void> {
