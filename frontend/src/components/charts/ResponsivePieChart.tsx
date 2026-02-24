@@ -51,18 +51,43 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
   );
 
   useLayoutEffect(() => {
+    const updateFromRect = (w: number, h: number) => {
+      const maxW = typeof window !== 'undefined' ? window.innerWidth : 2000;
+      const maxH = typeof window !== 'undefined' ? window.innerHeight : 1200;
+      const clampedW = Math.min(Math.max(w, 0), maxW) || 200;
+      const clampedH = Math.min(Math.max(h, 0), maxH) || 150;
+      setDimensions((prev) => {
+        if (prev.width === clampedW && prev.height === clampedH) return prev;
+        return { width: clampedW, height: clampedH };
+      });
+    };
     const update = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        const w = rect.width || 200;
-        const h = rect.height || 150;
-        if (w > 0 && h > 0) setDimensions({ width: w, height: h });
+        updateFromRect(rect.width, rect.height);
       }
     };
+    const scheduleUpdate = () => requestAnimationFrame(update);
+    const handleResize = () => {
+      scheduleUpdate();
+      setTimeout(update, 100);
+    };
     update();
-    const observer = new ResizeObserver(update);
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry?.contentRect) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) updateFromRect(width, height);
+      } else {
+        scheduleUpdate();
+      }
+    });
     if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const visibleData = useMemo(
@@ -472,7 +497,12 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
             overflow: 'visible'
           }}
         >
-          <svg ref={svgRef} style={{ display: 'block', width: '100%', height: '100%', overflow: 'visible' }} />
+          <svg
+            ref={svgRef}
+            width={dimensions.width}
+            height={dimensions.height}
+            style={{ display: 'block', overflow: 'visible', maxWidth: '100%', maxHeight: '100%' }}
+          />
         </div>
       </div>
     </div>
