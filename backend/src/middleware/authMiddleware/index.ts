@@ -102,6 +102,20 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
   // API tokens exclusivos (prefixo bkn_) — autenticação via header, nunca via cookie
   if (headerToken?.startsWith('bkn_')) {
+    // Apenas rotas de integração externa são permitidas via token de API
+    const API_TOKEN_ALLOWED_ROUTES = [
+      /^\/api\/clientes(\/.*)?$/i,
+      /^\/api\/contratos(\/.*)?$/i,
+      /^\/api\/titulos(\/.*)?$/i,
+      /^\/api\/dados-empresa(\/.*)?$/i,
+    ];
+
+    const isAllowed = API_TOKEN_ALLOWED_ROUTES.some(r => r.test(cleanedPath));
+    if (!isAllowed) {
+      res.status(403).json({ success: false, message: 'Rota não disponível via token de API' });
+      return;
+    }
+
     const apiToken = await ApiTokenService.validateToken(headerToken);
     if (!apiToken) {
       res.status(404).end();
@@ -117,7 +131,7 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
       observacoes: `Acesso via API token "${apiToken.nome}" (${apiToken.token_prefix}…)`,
       rota: req.originalUrl,
       metodo_http: req.method
-    }).catch(() => {});
+    }).catch((_err) => { /* não crítico */ });
 
     next();
     return;
