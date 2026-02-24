@@ -254,7 +254,6 @@ const Layout: React.FC = () => {
     { id: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
     { id: 'atualizacoes', label: t('params.updates'), icon: 'bi-arrow-down-up', onClick: () => handleOpenModal('atualizacoes') },
     { id: 'backups', label: t('params.manageBackups'), icon: 'bi-cloud-arrow-down', onClick: () => handleOpenModal('backups') },
-    { id: 'api-tokens', label: t('modal.apiTokens'), icon: 'bi-key', onClick: () => handleOpenModal('api-tokens') },
   ];
 
   const blockdomiFolderItems = [

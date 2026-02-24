@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { logger } from '../../utils/logger';
-import { isProduction } from '../../utils/envUtils';
-import { ApiTokenService } from '../../services/sistema/ApiTokenService';
+import { UsuarioService } from '../../services/cadastros/UsuarioService';
 import { registrarAuditoriaElasticsearch } from '../../services/elasticsearch/ElasticsearchAuditService';
 
 interface AuthenticatedRequest extends Request {
@@ -110,9 +109,9 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
     ? authHeader.replace('Bearer ', '').trim()
     : null;
 
-  // API tokens exclusivos (prefixo bkn_) — autenticação via header, nunca via cookie
-  if (headerToken?.startsWith('bkn_')) {
-    // Apenas rotas de integração externa são permitidas via token de API
+  // Token de usuário (webhook_secret) — autenticação via header Bearer para integrações
+  // Usa o mesmo token gerado em Usuários → Gerar token (API + webhook /integration)
+  if (headerToken && !headerToken.includes('.')) {
     const API_TOKEN_ALLOWED_ROUTES = [
       /^\/api\/clientes(\/.*)?$/i,
       /^\/api\/contratos(\/.*)?$/i,
@@ -120,43 +119,33 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
       /^\/api\/dados-empresa(\/.*)?$/i,
     ];
 
-    const isAllowed = API_TOKEN_ALLOWED_ROUTES.some(r => r.test(cleanedPath));
-    if (!isAllowed) {
-      res.status(403).json({ success: false, message: 'Rota não disponível via token de API' });
+    const usuario = await UsuarioService.findByWebhookSecret(headerToken);
+    if (usuario && usuario.ativo && usuario.empresa_id) {
+      const isAllowed = API_TOKEN_ALLOWED_ROUTES.some(r => r.test(cleanedPath));
+      if (!isAllowed) {
+        res.status(403).json({ success: false, message: 'Rota não disponível via token de API' });
+        return;
+      }
+      req.user = { empresa_id: usuario.empresa_id, api_token: true } as jwt.JwtPayload;
+
+      registrarAuditoriaElasticsearch(req, {
+        acao: 'login',
+        entidade: 'Usuario',
+        entidade_id: usuario.id,
+        observacoes: `Acesso via token de API (usuário ${usuario.nome})`,
+        rota: req.originalUrl,
+        metodo_http: req.method
+      }).catch((_err) => { /* não crítico */ });
+
+      next();
       return;
     }
-
-    const apiToken = await ApiTokenService.validateToken(headerToken);
-    if (!apiToken) {
-      res.status(404).end();
-      return;
-    }
-    req.user = { empresa_id: apiToken.empresa_id, api_token: true } as jwt.JwtPayload;
-
-    // Log de uso no Elasticsearch (não bloqueia)
-    registrarAuditoriaElasticsearch(req, {
-      acao: 'login',
-      entidade: 'ApiToken',
-      entidade_id: apiToken.id,
-      observacoes: `Acesso via API token "${apiToken.nome}" (${apiToken.token_prefix}…)`,
-      rota: req.originalUrl,
-      metodo_http: req.method
-    }).catch((_err) => { /* não crítico */ });
-
-    next();
-    return;
   }
 
   const token = cookieToken || headerToken;
 
   if (!token) {
-    if (isProduction() && req.originalUrl.includes('api-tokens')) {
-      logger.info('[api-tokens] Auth 404: sem token', {
-        path: req.originalUrl,
-        hasCookie: !!cookieToken,
-        hasAuthHeader: !!authHeader,
-      });
-    } else if (req.path.includes('/notas-fiscais') || req.path.includes('/nfse')) {
+    if (req.path.includes('/notas-fiscais') || req.path.includes('/nfse')) {
       logger.warn('Requisição bloqueada - sem token de autenticação', {
         path: req.path,
         originalUrl: req.originalUrl
@@ -171,16 +160,9 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
     req.user = payload;
     next();
   } catch (error) {
-    if (isProduction() && req.originalUrl.includes('api-tokens')) {
-      logger.info('[api-tokens] Auth 404: token inválido ou expirado', {
-        path: req.originalUrl,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-      });
-    } else {
-      logger.warn('Falha na validação do token JWT', {
-        message: error instanceof Error ? error.message : 'Erro desconhecido',
-      });
-    }
+    logger.warn('Falha na validação do token JWT', {
+      message: error instanceof Error ? error.message : 'Erro desconhecido',
+    });
     res.status(404).end();
   }
 };

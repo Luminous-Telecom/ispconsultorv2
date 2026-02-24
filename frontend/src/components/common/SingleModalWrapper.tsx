@@ -27,7 +27,6 @@ const DiasVencimentoModal = lazy(() => import('../modals/parametros/DiasVencimen
 const AtualizacoesModal = lazy(() => import('../modals/parametros/AtualizacoesModal'));
 const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
 const BackupsModal = lazy(() => import('../modals/parametros/BackupsModal'));
-const ApiTokensModal = lazy(() => import('../modals/parametros/ApiTokensModal'));
 const AssinaturaDigitalModal = lazy(() => import('../modals/parametros/AssinaturaDigitalModal'));
 const AuditoriaModal = lazy(() => import('../modals/parametros/AuditoriaModal'));
 const DocumentosSistemaModal = lazy(() => import('../modals/parametros/documentos-sistema').then(m => ({ default: m.DocumentosSistemaModal })));
@@ -80,7 +79,6 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   atualizacoes: { component: AtualizacoesModal, titleKey: 'modal.updates', loadingMessageKey: 'ui.loadingPage' },
   'agendador-tarefas': { component: AgendadorTarefasModal, titleKey: 'modal.taskScheduler', loadingMessageKey: 'ui.loadingPage' },
   backups: { component: BackupsModal, titleKey: 'modal.backups', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  'api-tokens': { component: ApiTokensModal, titleKey: 'modal.apiTokens', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
   'assinatura-digital': { component: AssinaturaDigitalModal, titleKey: 'modal.digitalSignature', loadingMessageKey: 'ui.loadingPage' },
   auditoria: { component: AuditoriaModal, titleKey: 'modal.auditLogs', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'documentos-sistema': { component: DocumentosSistemaModal, titleKey: 'modal.systemDocuments', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },

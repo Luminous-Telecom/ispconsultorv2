@@ -42,7 +42,6 @@ import { Hotsite } from './sistema/Hotsite';
 import { ScheduledRoutine } from './sistema/ScheduledRoutine';
 import { RoutineExecutionLog } from './sistema/RoutineExecutionLog';
 import { Auditoria } from './sistema/Auditoria';
-import { ApiToken } from './sistema/ApiToken';
 import Parametro from './sistema/Parametro';
 import Parametros from './sistema/Parametros';
 
@@ -389,7 +388,6 @@ export {
   TermoContrato,
   Usuario,
   Auditoria,
-  ApiToken,
   AssinaturaDigital,
   ClienteArquivo,
   AssinaturaDigitalProvider,

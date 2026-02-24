@@ -6,7 +6,7 @@
 |------|-----------|--------|
 | **Pública** | Sem autenticação | Rotas específicas abertas |
 | **JWT (sessão)** | Cookie `auth_token` (automático no browser) | Sistema interno completo |
-| **Token de API** | Header `Authorization: Bearer bkn_...` | Integrações externas (rotas restritas) |
+| **Token de API** | Header `Authorization: Bearer <token>` (gerado em Usuários → Gerar token) | Integrações externas (rotas restritas) |
 
 > **Nota:** Acessar rotas da API diretamente no navegador (barra de endereço) retorna `401 Unauthorized` mesmo estando logado. As rotas só respondem a chamadas programáticas (fetch/axios).
 
@@ -91,9 +91,9 @@
 
 ---
 
-## Rotas Privadas — JWT + Token de API (`bkn_`)
+## Rotas Privadas — JWT + Token de API
 
-> Acessíveis via cookie JWT (sistema interno) **ou** via `Authorization: Bearer bkn_...` (integrações externas).
+> Acessíveis via cookie JWT (sistema interno) **ou** via `Authorization: Bearer <token>` (token gerado em Parâmetros → Usuários → Gerar token).
 
 ### Clientes
 | Método | Rota | Descrição |
@@ -185,13 +185,6 @@
 | POST | `/api/empresas` |
 | PUT | `/api/empresas/:id` |
 | DELETE | `/api/empresas/:id` |
-
-### Tokens de API
-| Método | Rota |
-|--------|------|
-| GET | `/api/api-tokens` |
-| POST | `/api/api-tokens` |
-| DELETE | `/api/api-tokens/:id` |
 
 ### Planos
 | Método | Rota |
@@ -413,16 +406,16 @@
 
 ```bash
 # Listar clientes
-curl -H "Authorization: Bearer bkn_SEU_TOKEN_AQUI" \
+curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   https://backnet.app/api/clientes?page=1&limit=20
 
 # Buscar contrato por ID
-curl -H "Authorization: Bearer bkn_SEU_TOKEN_AQUI" \
+curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   https://backnet.app/api/contratos/123
 
 # Listar títulos em aberto
-curl -H "Authorization: Bearer bkn_SEU_TOKEN_AQUI" \
+curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   "https://backnet.app/api/titulos?status=aberto&page=1&limit=50"
 ```
 
-> Tokens de API são criados em **Parâmetros → Tokens de API** no painel administrativo.
+> O token é gerado em **Parâmetros → Usuários** (edite um usuário e clique em "Gerar token"). Use o mesmo token como Bearer na API ou como `secret` no webhook `/webhook/integration`.

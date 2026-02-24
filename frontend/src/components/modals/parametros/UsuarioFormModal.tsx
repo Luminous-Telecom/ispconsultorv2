@@ -160,7 +160,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
   const handleCopyWebhookSecret = () => {
     if (webhookSecret) {
       navigator.clipboard.writeText(webhookSecret);
-      success('Webhook secret copiado!');
+      success(t('messages.webhookTokenCopied'));
     }
   };
 
