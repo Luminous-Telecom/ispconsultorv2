@@ -234,6 +234,7 @@ export interface TranslationKeys {
   'modal.updates': string;
   'modal.taskScheduler': string;
   'modal.backups': string;
+  'modal.apiTokens': string;
   'modal.digitalSignature': string;
   'modal.auditLogs': string;
   'modal.domains': string;
@@ -1579,6 +1580,7 @@ const translations: Translations = {
     'modal.updates': 'Atualizações',
     'modal.taskScheduler': 'Agendador de Tarefas',
     'modal.backups': 'Backup/Restauração',
+    'modal.apiTokens': 'Tokens de API',
     'modal.digitalSignature': 'Assinatura Digital',
     'modal.auditLogs': 'Logs de Auditoria',
     'modal.systemDocuments': 'Modelos de Documentos',
@@ -2917,6 +2919,7 @@ const translations: Translations = {
     'modal.updates': 'Updates',
     'modal.taskScheduler': 'Task Scheduler',
     'modal.backups': 'Backup/Restore',
+    'modal.apiTokens': 'API Tokens',
     'modal.digitalSignature': 'Digital Signature',
     'modal.auditLogs': 'Audit Logs',
     'modal.systemDocuments': 'Document Templates',
@@ -4257,6 +4260,7 @@ const translations: Translations = {
     'modal.updates': 'Actualizaciones',
     'modal.taskScheduler': 'Programador de Tareas',
     'modal.backups': 'Copia de Seguridad/Restaurar',
+    'modal.apiTokens': 'Tokens de API',
     'modal.digitalSignature': 'Firma Digital',
     'modal.auditLogs': 'Registros de Auditoría',
     'modal.systemDocuments': 'Plantillas de Documentos',

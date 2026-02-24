@@ -27,6 +27,7 @@ export type ModalType =
   | 'atualizacoes'
   | 'agendador-tarefas'
   | 'backups'
+  | 'api-tokens'
   | 'assinatura-digital'
   | 'blockdomi-dominios'
   | 'blockdomi-ipv4'

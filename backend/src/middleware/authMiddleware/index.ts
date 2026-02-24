@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { logger } from '../../utils/logger';
+import { ApiTokenService } from '../../services/sistema/ApiTokenService';
+import { registrarAuditoriaElasticsearch } from '../../services/elasticsearch/ElasticsearchAuditService';
 
 interface AuthenticatedRequest extends Request {
   user?: jwt.JwtPayload | string;
@@ -65,7 +67,7 @@ const isPublicRoute = (req: Request): boolean => {
   });
 };
 
-export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+export const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   const cleanedPath = req.originalUrl.split('?')[0];
   
   if (req.method === 'GET' && /^\/api\/cliente-arquivos\/\d+\/download\/?$/.test(cleanedPath)) {
@@ -97,6 +99,29 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
   const headerToken = authHeader?.startsWith('Bearer ')
     ? authHeader.replace('Bearer ', '').trim()
     : null;
+
+  // API tokens exclusivos (prefixo bkn_) — autenticação via header, nunca via cookie
+  if (headerToken?.startsWith('bkn_')) {
+    const apiToken = await ApiTokenService.validateToken(headerToken);
+    if (!apiToken) {
+      res.status(404).end();
+      return;
+    }
+    req.user = { empresa_id: apiToken.empresa_id, api_token: true } as jwt.JwtPayload;
+
+    // Log de uso no Elasticsearch (não bloqueia)
+    registrarAuditoriaElasticsearch(req, {
+      acao: 'login',
+      entidade: 'ApiToken',
+      entidade_id: apiToken.id,
+      observacoes: `Acesso via API token "${apiToken.nome}" (${apiToken.token_prefix}…)`,
+      rota: req.originalUrl,
+      metodo_http: req.method
+    }).catch(() => {});
+
+    next();
+    return;
+  }
 
   const token = cookieToken || headerToken;
 

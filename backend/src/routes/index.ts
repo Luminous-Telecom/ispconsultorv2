@@ -45,12 +45,14 @@ import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
 import backupRoutes from './backupRoutes';
 import empresaRoutes from './empresaRoutes';
+import apiTokenRoutes from './apiTokenRoutes';
 
 const router = Router();
 
 const routes = [
     { path: '/api/auth', route: authRoutes },
     { path: '/api/empresas', route: empresaRoutes },
+    { path: '/api/api-tokens', route: apiTokenRoutes },
     { path: '/api/clientes', route: clienteRoutes },
     { path: '/api/planos', route: planoRoutes },
     { path: '/api/bancos', route: bancoRoutes },
