@@ -226,13 +226,9 @@ export class SelfUpdateService {
     logger.info('Verificando versão no package.json (formato SemVer)');
     const updateVersionResult = await this.packageManagerService.updateVersion();
     if (!updateVersionResult.success) {
-      logger.warn('Falha ao verificar versão, mas continuando o processo', {
-        error: updateVersionResult.error || updateVersionResult.stderr,
-      });
+      logger.warn('Falha ao verificar versão, mas continuando o processo');
     } else {
-      logger.info('Versão verificada com sucesso', {
-        versionInfo: updateVersionResult.stdout,
-      });
+      logger.info('Versão verificada com sucesso');
     }
 
     // Passo 2: NPM Install

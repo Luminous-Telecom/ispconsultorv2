@@ -315,21 +315,12 @@ export class AtualizacoesController {
   static async updateStream(req: Request, res: Response): Promise<void> {
     let branch = 'main';
 
-    logger.info('🚀 Iniciando processo de atualização via SSE', {
-      method: req.method,
-      query: req.query,
-      body: req.body,
-      user: (req as any).user,
-      timestamp: new Date().toISOString()
-    });
+    logger.info('🚀 Iniciando processo de atualização via SSE');
 
     try {
       // Verificar se o usuário é admin
       if (!AtualizacoesController.isAdmin(req)) {
-        logger.warn('🚫 Acesso negado - usuário não é admin', {
-          user: (req as any).user,
-          isAdmin: AtualizacoesController.isAdmin(req)
-        });
+        logger.warn('🚫 Acesso negado - usuário não é admin');
 
         res.writeHead(403, {
           'Content-Type': 'text/event-stream',
@@ -343,10 +334,7 @@ export class AtualizacoesController {
 
       branch = (req.query?.branch as string) || req.body?.branch || 'main';
 
-      logger.info('✅ Usuário autorizado, iniciando atualização', {
-        branch,
-        user: (req as any).user
-      });
+      logger.info('✅ Usuário autorizado, iniciando atualização');
 
       // Validar branch
       if (typeof branch !== 'string' || !branch.trim()) {
@@ -368,10 +356,7 @@ export class AtualizacoesController {
         'X-Accel-Buffering': 'no', // Desabilitar buffering do nginx
       });
 
-      logger.info('Iniciando processo de atualização com SSE', {
-        branch,
-        usuario: (req as AuthenticatedRequest).user,
-      });
+      logger.info('Iniciando processo de atualização com SSE');
 
       let updateService: SelfUpdateService;
       try {
@@ -380,8 +365,7 @@ export class AtualizacoesController {
         logger.info('✅ SelfUpdateService criado com sucesso');
       } catch (error) {
         logger.error('❌ Erro ao criar SelfUpdateService', {
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-          stack: error instanceof Error ? error.stack : undefined
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
         });
         res.write(`data: ${JSON.stringify({
           error: `Erro ao inicializar serviço de atualização: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
@@ -395,24 +379,18 @@ export class AtualizacoesController {
         try {
           res.write(`data: ${JSON.stringify(progress)}\n\n`);
         } catch (err) {
-          logger.error('Erro ao enviar progresso via SSE', { error: err });
+          logger.error('Erro ao enviar progresso via SSE');
         }
       };
 
       let result;
       try {
-        logger.info('⚡ Executando atualização via SelfUpdateService', { branch });
+        logger.info('⚡ Executando atualização via SelfUpdateService');
         result = await updateService.executeUpdate(branch, sendProgress);
-        logger.info('🏁 Processo de atualização concluído', {
-          success: result.success,
-          message: result.message,
-          steps: result.steps
-        });
+        logger.info('🏁 Processo de atualização concluído');
       } catch (error) {
         logger.error('❌ Erro inesperado ao executar atualização', {
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-          stack: error instanceof Error ? error.stack : undefined,
-          branch
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
         });
         sendProgress({
           step: 'erro',
@@ -425,16 +403,7 @@ export class AtualizacoesController {
       }
 
       if (!result.success) {
-        logger.error('Falha no processo de atualização', {
-          steps: Object.keys(result.steps).map(key => {
-            const step = result.steps[key as keyof typeof result.steps];
-            return {
-              step: key,
-              success: step?.success ?? false,
-              error: step?.error || step?.stderr,
-            };
-          }),
-        });
+        logger.error('Falha no processo de atualização', { message: result.message });
 
         sendProgress({
           step: 'erro',
@@ -456,14 +425,11 @@ export class AtualizacoesController {
         if (pm2ReloadResult.success) {
           logger.info('PM2 reload agendado com sucesso');
         } else {
-          logger.warn('PM2 reload falhou ou foi apenas agendado', {
-            stderr: pm2ReloadResult.stderr,
-            error: pm2ReloadResult.error,
-          });
+          logger.warn('PM2 reload falhou ou foi apenas agendado');
         }
       } catch (error) {
         logger.error('Erro ao reiniciar PM2 após atualização', {
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
         });
         pm2ReloadResult = {
           success: false,
@@ -521,9 +487,7 @@ export class AtualizacoesController {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro inesperado durante atualização', {
-        error: errorMessage,
-        branch,
-        usuario: (req as AuthenticatedRequest).user,
+        error: errorMessage
       });
 
       try {
@@ -533,7 +497,7 @@ export class AtualizacoesController {
         })}\n\n`);
         res.end();
       } catch (writeError) {
-        logger.error('Erro ao escrever resposta SSE', { error: writeError });
+        logger.error('Erro ao escrever resposta SSE');
       }
     }
   }
