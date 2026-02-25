@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useModalSelect } from '@/hooks/useModalSelect';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import { useAuditoria } from '@/hooks/useAuditoria';
 import { TemplateWhatsAppService, TemplateWhatsApp } from '@/services/templateWhatsAppService';
 import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
-import { Button, Spinner } from '@/components/ui';
 import { useI18n } from '@/contexts/I18nContext';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import ImprimirModal from '@/components/common/ImprimirModal';
 
 export interface TemplatesTabProps {
   /** Placeholder para compatibilidade */
@@ -14,15 +16,27 @@ export interface TemplatesTabProps {
 }
 
 const TemplatesTab: React.FC<TemplatesTabProps> = () => {
-  const isMobile = useIsMobile();
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
+  const auditoria = useAuditoria();
+
+  const tableFilters = useTableFilters({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 15,
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
+
+  const { handleSelectionChange } = useModalSelect<TemplateWhatsApp>(undefined);
 
   const { data: templatesData, isLoading, error, refetch } = useQuery({
     queryKey: ['templates-whatsapp'],
     queryFn: () => TemplateWhatsAppService.list(),
   });
+
+  const templates = useMemo(() => templatesData?.data ?? [], [templatesData?.data]);
 
   const deleteTemplateMutation = useMutation({
     mutationFn: (id: number) => TemplateWhatsAppService.delete(id),
@@ -38,14 +52,50 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
     },
   });
 
-  const handleDeletarTemplate = (template: TemplateWhatsApp) => {
-    if (!window.confirm(`Remover o template "${template.nome}" (${template.idioma})?`)) return;
-    deleteTemplateMutation.mutate(template.id);
-  };
+  const handleRemover = useCallback((selectedItems: TemplateWhatsApp[]) => {
+    const item = selectedItems?.[0];
+    if (!item) return;
+    if (!window.confirm(`Remover o template "${item.nome}" (${item.idioma})?`)) return;
+    deleteTemplateMutation.mutate(item.id);
+  }, [deleteTemplateMutation]);
 
-  const templates = templatesData?.data ?? [];
+  const handleAudit = useCallback((item: TemplateWhatsApp) => {
+    auditoria.handleAudit('TemplateWhatsApp', item.id);
+  }, [auditoria]);
 
-  const tableColumns: TableConfig<TemplateWhatsApp>['columns'] = [
+  const filteredTemplates = useMemo(() => {
+    const search = (tableFilters.search || '').toLowerCase().trim();
+    let result = templates;
+    if (search) {
+      result = templates.filter(
+        (item) =>
+          String(item.nome).toLowerCase().includes(search) ||
+          String(item.idioma).toLowerCase().includes(search) ||
+          String(item.id).includes(search)
+      );
+    }
+    const col = tableFilters.sortColumn;
+    const dir = tableFilters.sortDirection;
+    if (!col) return result;
+    return [...result].sort((a, b) => {
+      const av = (a as unknown as Record<string, unknown>)[col];
+      const bv = (b as unknown as Record<string, unknown>)[col];
+      const cmp = String(av ?? '').localeCompare(String(bv ?? ''), undefined, { numeric: true });
+      return dir === 'asc' ? cmp : -cmp;
+    });
+  }, [templates, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection]);
+
+  const bulkActions = useMemo(() => [
+    {
+      key: 'remover',
+      label: 'Remover',
+      variant: 'danger' as const,
+      disabled: (items: TemplateWhatsApp[]) => items.length === 0,
+      onClick: (selectedItems: TemplateWhatsApp[]) => handleRemover(selectedItems)
+    }
+  ], [handleRemover]);
+
+  const tableColumns: TableConfig<TemplateWhatsApp>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: t('table.id'),
@@ -65,61 +115,67 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
       sortable: true,
       width: '100px',
       render: (item: TemplateWhatsApp) => item.idioma
-    },
-    {
-      key: 'actions',
-      label: '',
-      width: '100px',
-      render: (item: TemplateWhatsApp) => (
-        <Button
-          type="button"
-          variant="outline-danger"
-          size="sm"
-          onClick={() => handleDeletarTemplate(item)}
-          disabled={deleteTemplateMutation.isPending}
-        >
-          Remover
-        </Button>
-      )
     }
-  ];
+  ], [t]);
+
+  if (error) {
+    return (
+      <div className="alert alert-danger">
+        Erro ao buscar templates: {error instanceof Error ? error.message : 'Erro desconhecido'}
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: isMobile ? '0' : '16px' }}>
-      {error && (
-        <div className="alert alert-danger mb-3">
-          Erro ao buscar templates: {error instanceof Error ? error.message : 'Erro desconhecido'}
+    <>
+      <div className="list-modal-table-wrapper" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="list-modal-scroll-wrapper" style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <Table
+          title=""
+          syncWithHeader={false}
+          config={{
+            columns: tableColumns,
+            data: filteredTemplates,
+            loading: isLoading,
+            searchable: true,
+            searchPlaceholder: t('layout.searchPlaceholder'),
+            sortable: true,
+            sortColumn: tableFilters.sortColumn,
+            sortDirection: tableFilters.sortDirection,
+            striped: true,
+            hover: true,
+            responsive: true,
+            selectable: true,
+            multiSelect: false,
+            bulkActions,
+            emptyMessage: 'Nenhum template criado. Crie os templates na aba Templates Meta.',
+            pagination: undefined,
+            className: 'no-padding'
+          }}
+          tableId="templates-whatsapp-table"
+          onSelectionChange={handleSelectionChange}
+          onRefresh={refetch}
+          onAudit={handleAudit}
+          auditEntity="TemplateWhatsApp"
+          onSort={(column, direction) => {
+            setTimeout(() => tableFilters.setSort(column, direction), 0);
+          }}
+          onSearch={(search) => {
+            tableFilters.setSearch(search);
+          }}
+          search={tableFilters.search}
+        />
         </div>
-      )}
-      {!error && (
-        <div style={{ minHeight: '200px' }}>
-          {isLoading ? (
-            <div className="d-flex justify-content-center align-items-center py-5">
-              <Spinner size="md" variant="primary" aria-label="Carregando..." />
-            </div>
-          ) : (
-            <Table
-              title=""
-              config={{
-                columns: tableColumns,
-                data: templates,
-                loading: false,
-                searchable: false,
-                sortable: true,
-                striped: true,
-                hover: true,
-                responsive: true,
-                selectable: false,
-                emptyMessage: 'Nenhum template criado. Crie os templates na aba Templates Meta.',
-                pagination: undefined
-              }}
-              tableId="templates-whatsapp-table"
-              onRefresh={refetch}
-            />
-          )}
-        </div>
-      )}
-    </div>
+      </div>
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
+        title="Logs de Auditoria"
+        modalId="auditoria-template-whatsapp-modal"
+      />
+    </>
   );
 };
 

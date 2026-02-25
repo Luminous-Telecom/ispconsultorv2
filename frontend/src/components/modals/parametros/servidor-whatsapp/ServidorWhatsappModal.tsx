@@ -466,7 +466,9 @@ const saveMensagemMutation = useMutation({
       <div className="whatsapp-modal-content">
         {/* Conteúdo das Abas */}
         <div
-          className="tab-content whatsapp-tab-content whatsapp-tab-content-scrollable whatsapp-tab-content-padded"
+          className={`tab-content whatsapp-tab-content whatsapp-tab-content-scrollable ${
+            (activeTab === 'templates' || activeTab === 'templates_meta') ? '' : 'whatsapp-tab-content-padded'
+          }`}
           id="whatsappTabContent"
         >
           {activeTab === 'servidor' && (

@@ -331,19 +331,17 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                           ))}
                         </div>
                       </div>
-                      {(mensagemType && onSalvarVincular ? (
-                        <div className="mt-3 pt-3 border-top">
+                      <div className="mt-3 pt-3 border-top">
+                        {mensagemType && onSalvarVincular ? (
                           <Button
                             type="button"
                             variant="primary"
                             size="sm"
                             onClick={() => handleSalvarVincular(template, expandedKey)}
                           >
-                            Salvar e vincular ao tipo &quot;{mensagemType.replace(/_/g, ' ')}&quot;
+                            {`Salvar e vincular ao tipo "${mensagemType.replace(/_/g, ' ')}"`}
                           </Button>
-                        </div>
-                      ) : (
-                        <div className="mt-3 pt-3 border-top">
+                        ) : (
                           <Button
                             type="button"
                             variant="primary"
@@ -353,8 +351,8 @@ const TemplatesMetaTab: React.FC<TemplatesMetaTabProps> = ({
                           >
                             Criar template
                           </Button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

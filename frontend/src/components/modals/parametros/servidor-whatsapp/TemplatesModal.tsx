@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '@/contexts/I18nContext';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
-import TemplatesTab from './abas/TemplatesTab';
+import TemplatesMetaTab from './abas/TemplatesMetaTab';
 
 interface TemplatesModalProps {
   show: boolean;
@@ -51,13 +51,12 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({ show, onClose, mensagem
     >
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: '16px' }}>
-          <TemplatesTab
-        embedded={false}
-        enabled={show}
-        mensagemType={mensagemType}
-        onSalvarVincular={onSalvarVincular}
-        onClose={onClose}
-      />
+          <TemplatesMetaTab
+            enabled={show}
+            mensagemType={mensagemType}
+            onSalvarVincular={onSalvarVincular}
+            onClose={onClose}
+          />
         </div>
       </div>
     </DraggableModal>
