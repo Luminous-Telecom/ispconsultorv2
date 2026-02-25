@@ -87,13 +87,13 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
 
   const bulkActions = useMemo(() => [
     {
-      key: 'remover',
-      label: 'Remover',
+      key: 'deletar',
+      label: t('buttons.delete'),
       variant: 'danger' as const,
       disabled: (items: TemplateWhatsApp[]) => items.length === 0,
       onClick: (selectedItems: TemplateWhatsApp[]) => handleRemover(selectedItems)
     }
-  ], [handleRemover]);
+  ], [handleRemover, t]);
 
   const tableColumns: TableConfig<TemplateWhatsApp>['columns'] = useMemo(() => [
     {
