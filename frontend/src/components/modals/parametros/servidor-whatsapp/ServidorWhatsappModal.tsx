@@ -11,6 +11,7 @@ import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
 import TemplatesTab from './abas/TemplatesTab';
+import TemplatesMetaTab from './abas/TemplatesMetaTab';
 import TemplateSelectModal from './TemplateSelectModal';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -38,7 +39,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const [formData, setFormData] = useState<ServidorWhatsAppForm>(initialFormData);
   const [testPhone, setTestPhone] = useState<string>('');
   const [testMessage, setTestMessage] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens' | 'templates'>('servidor');
+  const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens' | 'templates_meta' | 'templates'>('servidor');
   const [showTemplateSelectModal, setShowTemplateSelectModal] = useState(false);
   
   // Estados para mensagens
@@ -278,24 +279,6 @@ const saveMensagemMutation = useMutation({
     });
   }, [mensagemType, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showError, t]);
 
-  const handleSalvarVincular = useCallback(async (data: { template_id: number }) => {
-    const currentMensagemType = mensagemTypeRef.current || mensagemType;
-    if (!currentMensagemType) return;
-    await saveMensagemMutation.mutateAsync({
-      tipo: currentMensagemType,
-      tipo_envio: tipoEnvioRef.current,
-      mensagem_padrao: mensagemPadraoRef.current || '',
-      mensagem_manual: mensagemManualRef.current || undefined,
-      template_id: data.template_id,
-      interacao1: interacao1Ref.current || undefined,
-      interacao2: interacao2Ref.current || undefined,
-      interacao3: interacao3Ref.current || undefined,
-      ativo: true
-    });
-    queryClient.invalidateQueries({ queryKey: ['mensagem-whatsapp', currentMensagemType] });
-    setTemplateId(data.template_id);
-  }, [mensagemType, saveMensagemMutation, queryClient]);
-
   const handleReset = useCallback(async () => {
     if (servidorAtivo?.data?.id) {
       try {
@@ -379,7 +362,7 @@ const saveMensagemMutation = useMutation({
               handleSaveMensagem();
             }
           }}
-          disabled={activeTab === 'templates'}
+          disabled={activeTab === 'templates' || activeTab === 'templates_meta'}
           isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
         >
           {t('actions.save')}
@@ -427,15 +410,26 @@ const saveMensagemMutation = useMutation({
             </button>
           </li>
           {(formData.tipo_api === 'whatsapp_cloud' || servidorAtivo?.data?.tipo_api === 'whatsapp_cloud') && (
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link modal-tab-hover ${activeTab === 'templates' ? 'active' : ''}`}
-                onClick={() => setActiveTab('templates')}
-                type="button"
-              >
-                {t('settings.messages.viewTemplates')}
-              </button>
-            </li>
+            <>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link modal-tab-hover ${activeTab === 'templates_meta' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('templates_meta')}
+                  type="button"
+                >
+                  {t('whatsappServer.templatesMeta')}
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link modal-tab-hover ${activeTab === 'templates' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('templates')}
+                  type="button"
+                >
+                  {t('whatsappServer.templates')}
+                </button>
+              </li>
+            </>
           )}
         </ul>
       </div>
@@ -521,11 +515,11 @@ const saveMensagemMutation = useMutation({
             />
           )}
 
+          {activeTab === 'templates_meta' && (
+            <TemplatesMetaTab enabled={true} />
+          )}
           {activeTab === 'templates' && (
-            <TemplatesTab
-              embedded={true}
-              enabled={true}
-            />
+            <TemplatesTab />
           )}
         </div>
       </div>
@@ -534,7 +528,10 @@ const saveMensagemMutation = useMutation({
         <TemplateSelectModal
           show={showTemplateSelectModal}
           onClose={() => setShowTemplateSelectModal(false)}
-          onSelect={handleSalvarVincular}
+          onSelect={({ template_id: templateId }) => {
+            setTemplateId(templateId);
+            setShowTemplateSelectModal(false);
+          }}
         />
       )}
     </>

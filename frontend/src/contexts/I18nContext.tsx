@@ -1111,6 +1111,8 @@ export interface TranslationKeys {
   'whatsappServer.variableCopied': string;
   'whatsappServer.server': string;
   'whatsappServer.messages': string;
+  'whatsappServer.templatesMeta': string;
+  'whatsappServer.templates': string;
 
   // Scheduler
   'scheduler.title': string;
@@ -2457,6 +2459,8 @@ const translations: Translations = {
     'whatsappServer.variableCopied': 'Variável copiada!',
     'whatsappServer.server': 'Servidor',
     'whatsappServer.messages': 'Mensagens',
+    'whatsappServer.templatesMeta': 'Templates Meta',
+    'whatsappServer.templates': 'Templates',
 
     // Scheduler
     'scheduler.title': 'Agendador de Tarefas',
@@ -3798,6 +3802,8 @@ const translations: Translations = {
     'whatsappServer.variableCopied': 'Variable copied!',
     'whatsappServer.server': 'Server',
     'whatsappServer.messages': 'Messages',
+    'whatsappServer.templatesMeta': 'Meta Templates',
+    'whatsappServer.templates': 'Templates',
 
     // Scheduler
     'scheduler.title': 'Task Scheduler',
@@ -5141,6 +5147,8 @@ const translations: Translations = {
     'whatsappServer.variableCopied': '¡Variable copiada!',
     'whatsappServer.server': 'Servidor',
     'whatsappServer.messages': 'Mensajes',
+    'whatsappServer.templatesMeta': 'Plantillas Meta',
+    'whatsappServer.templates': 'Plantillas',
 
     // Scheduler
     'scheduler.title': 'Programador de Tareas',
