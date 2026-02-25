@@ -497,6 +497,11 @@ export class WhatsAppBoletoService {
         return enviou;
       }
 
+      if (servidor.tipo_api === 'whatsapp_cloud') {
+        logger.info('[Recibo WhatsApp] Cloud API exige template - recibo_pagamento sem template configurado, não enviando', { titulo_id: titulo.id });
+        return false;
+      }
+
       const msg = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao || '', {
         cliente,
         contrato: contrato || undefined,
@@ -509,14 +514,16 @@ export class WhatsAppBoletoService {
         const base64Pdf = await ReciboPDFService.gerarReciboBase64({ titulo, cliente, baseUrl: undefined });
         if (base64Pdf) {
           const enviou = await WhatsAppSenderService.enviarPdfBase64(servidor, telefone, base64Pdf, msg);
-          logger.info('[Recibo WhatsApp] Envio PDF via Evolution concluído', { titulo_id: titulo.id, sucesso: enviou });
+          const viaApi = servidor.tipo_api === 'whatsapp_cloud' ? 'Cloud API' : 'Evolution';
+          logger.info(`[Recibo WhatsApp] Envio PDF via ${viaApi} concluído`, { titulo_id: titulo.id, sucesso: enviou });
           return enviou;
         }
         logger.warn('Falha ao gerar PDF do recibo para WhatsApp, enviando só texto', { titulo_id: titulo.id });
       }
 
       const enviou = await WhatsAppSenderService.enviarTexto(servidor, telefone, msg);
-      logger.info('[Recibo WhatsApp] Envio via Evolution concluído', { titulo_id: titulo.id, sucesso: enviou });
+      const viaApi = servidor.tipo_api === 'whatsapp_cloud' ? 'Cloud API' : 'Evolution';
+      logger.info(`[Recibo WhatsApp] Envio via ${viaApi} concluído`, { titulo_id: titulo.id, sucesso: enviou });
       return enviou;
     } catch (error) {
       logger.error('Erro ao enviar recibo de pagamento por WhatsApp', {
