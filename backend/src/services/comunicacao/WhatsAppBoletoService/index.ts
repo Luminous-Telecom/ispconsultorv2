@@ -514,16 +514,14 @@ export class WhatsAppBoletoService {
         const base64Pdf = await ReciboPDFService.gerarReciboBase64({ titulo, cliente, baseUrl: undefined });
         if (base64Pdf) {
           const enviou = await WhatsAppSenderService.enviarPdfBase64(servidor, telefone, base64Pdf, msg);
-          const viaApi = servidor.tipo_api === 'whatsapp_cloud' ? 'Cloud API' : 'Evolution';
-          logger.info(`[Recibo WhatsApp] Envio PDF via ${viaApi} concluído`, { titulo_id: titulo.id, sucesso: enviou });
+          logger.info('[Recibo WhatsApp] Envio PDF via Evolution concluído', { titulo_id: titulo.id, sucesso: enviou });
           return enviou;
         }
         logger.warn('Falha ao gerar PDF do recibo para WhatsApp, enviando só texto', { titulo_id: titulo.id });
       }
 
       const enviou = await WhatsAppSenderService.enviarTexto(servidor, telefone, msg);
-      const viaApi = servidor.tipo_api === 'whatsapp_cloud' ? 'Cloud API' : 'Evolution';
-      logger.info(`[Recibo WhatsApp] Envio via ${viaApi} concluído`, { titulo_id: titulo.id, sucesso: enviou });
+      logger.info('[Recibo WhatsApp] Envio via Evolution concluído', { titulo_id: titulo.id, sucesso: enviou });
       return enviou;
     } catch (error) {
       logger.error('Erro ao enviar recibo de pagamento por WhatsApp', {
