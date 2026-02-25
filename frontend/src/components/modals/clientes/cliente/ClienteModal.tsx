@@ -103,13 +103,14 @@ const ClienteModal = ({
     resetPageOnFilterChange: false,
   });
 
-  // Buscar parcelas do cliente - ordenação feita no backend
+  // Buscar parcelas do cliente (todas, sem filtro por data) - ordenação no backend
   const effectiveClienteIdForParcelas = clienteId || formHook.createdClienteId || undefined;
   const { data: parcelasData, isLoading: isLoadingParcelas, refetch: refetchParcelas } = useQuery({
     queryKey: ['parcelas', 'cliente', effectiveClienteIdForParcelas, titulosTableFilters.sortColumn, titulosTableFilters.sortDirection],
-    queryFn: () => TituloService.list({ 
-      cliente_id: effectiveClienteIdForParcelas!, 
-      limit: 100,
+    queryFn: () => TituloService.list({
+      cliente_id: effectiveClienteIdForParcelas!,
+      page: 1,
+      limit: 5000,
       sortColumn: titulosTableFilters.sortColumn,
       sortDirection: titulosTableFilters.sortDirection
     }),

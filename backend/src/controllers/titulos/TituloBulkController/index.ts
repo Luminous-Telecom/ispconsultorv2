@@ -73,6 +73,7 @@ export class TituloBulkController {
           );
 
           const titulo = await TituloService.create({
+            empresa_id: cliente.empresa_id ?? null,
             cliente_id: dadosTitulo.cliente_id,
             plano_id: dadosTitulo.plano_id,
             banco_id: dadosTitulo.banco_id,

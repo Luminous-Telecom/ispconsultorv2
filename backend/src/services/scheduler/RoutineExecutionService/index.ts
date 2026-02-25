@@ -179,14 +179,60 @@ export class RoutineExecutionService {
         servicosAdicionaisTodos
       );
 
+      // Log resumo: contratos por cliente e quais têm taxa isenta (para debug: cliente com 2 contratos e 1 isento)
+      const contratosPorCliente = new Map<number, Array<{ id: number; isento_mensalidade: boolean }>>();
+      for (const c of contratos) {
+        const contratoAny = c as unknown as { id: number; cliente_id: number; isento_mensalidade?: boolean };
+        const clienteId = contratoAny.cliente_id;
+        if (!contratosPorCliente.has(clienteId)) {
+          contratosPorCliente.set(clienteId, []);
+        }
+        contratosPorCliente.get(clienteId)!.push({
+          id: contratoAny.id,
+          isento_mensalidade: contratoAny.isento_mensalidade === true
+        });
+      }
+      logger.info('RoutineExecutionService.executeGeracaoTitulos - Contratos ativos carregados', {
+        totalContratos: contratos.length,
+        totalClientesComContrato: contratosPorCliente.size,
+        clientesComMaisDeUmContrato: [...contratosPorCliente.entries()]
+          .filter(([, list]) => list.length > 1)
+          .map(([clienteId, list]) => ({
+            cliente_id: clienteId,
+            contratos: list,
+            algumIsento: list.some(x => x.isento_mensalidade)
+          }))
+      });
+
       let titulosGerados = 0;
       let contratosProcessados = 0;
       let erros = 0;
 
-          for (const contrato of contratos) {
+      for (const contrato of contratos) {
         try {
           const contratoWithCliente = contrato as unknown as ContratoWithCliente;
+          const contratoAny = contrato as unknown as { id: number; cliente_id: number; isento_mensalidade?: boolean; conta_boleto?: number | null; dia_vencimento_id?: number | null };
+          logger.info('RoutineExecutionService.executeGeracaoTitulos - Processando contrato', {
+            contratoId: contratoAny.id,
+            clienteId: contratoAny.cliente_id,
+            isento_mensalidade: contratoAny.isento_mensalidade === true,
+            conta_boleto: contratoAny.conta_boleto ?? null,
+            dia_vencimento_id: contratoAny.dia_vencimento_id ?? null,
+            clienteAtivo: contratoWithCliente.cliente?.ativo ?? null
+          });
+
           if (!TituloGenerationHelper.validateContrato(contratoWithCliente)) {
+            const motivo =
+              contratoAny.isento_mensalidade === true ? 'isento_mensalidade' :
+              !contratoWithCliente.cliente ? 'cliente_ausente' :
+              !contratoWithCliente.cliente.ativo ? 'cliente_inativo' :
+              !contratoAny.conta_boleto ? 'sem_conta_boleto' :
+              !contratoAny.dia_vencimento_id ? 'sem_dia_vencimento' : 'desconhecido';
+            logger.info('RoutineExecutionService.executeGeracaoTitulos - Contrato ignorado (não gera títulos)', {
+              contratoId: contratoAny.id,
+              clienteId: contratoAny.cliente_id,
+              motivo
+            });
             continue;
           }
 
@@ -216,23 +262,43 @@ export class RoutineExecutionService {
             servicosAdicionais
           );
 
+          logger.info('RoutineExecutionService.executeGeracaoTitulos - Resultado do contrato', {
+            contratoId: contratoWithPlano.id,
+            clienteId: contratoWithPlano.cliente_id,
+            titulosGeradosNesteContrato: resultado.titulosGerados,
+            titulosEmAberto: titulosEmAberto.length,
+            todosTitulos: todosTitulos.length
+          });
+
           titulosGerados += resultado.titulosGerados;
           if (resultado.titulosGerados > 0) {
             contratosProcessados++;
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          const errorStack = error instanceof Error ? error.stack : undefined;
           const contratoWithCliente = contrato as unknown as ContratoWithCliente;
-          
-          logger.error('Erro ao processar contrato na geração de títulos', {
+          const contratoAny = contrato as unknown as { id: number; isento_mensalidade?: boolean };
+
+          logger.error('RoutineExecutionService.executeGeracaoTitulos - Erro ao processar contrato na geração de títulos', {
             context: 'RoutineExecutionService',
             contratoId: contrato.id,
             clienteId: contratoWithCliente.cliente_id,
-            error: errorMessage
+            isento_mensalidade: contratoAny.isento_mensalidade === true,
+            error: errorMessage,
+            stack: errorStack
           });
           erros++;
         }
       }
+
+      logger.info('RoutineExecutionService.executeGeracaoTitulos - Concluído', {
+        success: true,
+        titulos_gerados: titulosGerados,
+        contratos_processados: contratosProcessados,
+        contratos_com_erro: erros,
+        total_contratos_ativos: contratos.length
+      });
 
       return {
         success: true,
@@ -244,7 +310,7 @@ export class RoutineExecutionService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro na execução da rotina de geração de títulos', {
+      logger.error('RoutineExecutionService.executeGeracaoTitulos - Erro na execução da rotina de geração de títulos', {
         context: 'RoutineExecutionService',
         action: 'executeGeracaoTitulos',
         error: errorMessage,

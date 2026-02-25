@@ -41,21 +41,9 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   const [selectedContaPagarId, setSelectedContaPagarId] = useState<number | null>(null);
   const [searchField, setSearchField] = useState<string>('numero_documento');
   
-  // Calcular primeiro e último dia do mês atual para filtro de datas
-  const getDataInicioMesAtual = () => {
-    const hoje = new Date();
-    const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    return primeiroDia.toISOString().split('T')[0];
-  };
-  
-  const getDataFimMesAtual = () => {
-    const hoje = new Date();
-    const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-    return ultimoDia.toISOString().split('T')[0];
-  };
-  
-  const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>(getDataInicioMesAtual());
-  const [dataVencimentoFim, setDataVencimentoFim] = useState<string>(getDataFimMesAtual());
+  // Sem filtro de data por padrão - exibe todos os registros (ao abrir do dashboard aplica initialFilters)
+  const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>('');
+  const [dataVencimentoFim, setDataVencimentoFim] = useState<string>('');
   const isMobile = useIsMobile();
 
   // Quando abre do dashboard com initialFilters de data

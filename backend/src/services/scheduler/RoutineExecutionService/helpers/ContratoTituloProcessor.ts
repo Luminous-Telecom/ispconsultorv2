@@ -1,5 +1,6 @@
 import { withTransaction } from '../../../../utils/transaction';
 import type { Transaction } from 'sequelize';
+import { logger } from '../../../../utils/logger';
 import { TituloGenerationHelper } from './TituloGenerationHelper';
 import type Parametros from '../../../../models/sistema/Parametros';
 
@@ -58,12 +59,23 @@ export class ContratoTituloProcessor {
     servicosAdicionais: Array<ContratoPlanoAdicionalWithPlano>
   ): Promise<{ titulosGerados: number; titulosCriados: Array<any> }> {
     if (contrato.isento_mensalidade === true) {
+      logger.info('ContratoTituloProcessor.processContrato - Contrato isento (taxa isenta), não gera títulos', {
+        contratoId: contrato.id,
+        clienteId: contrato.cliente_id
+      });
       return { titulosGerados: 0, titulosCriados: [] };
     }
 
     const titulosGerar = quantidadeMinimaTitulos - titulosEmAberto.length;
 
     if (titulosGerar <= 0) {
+      logger.info('ContratoTituloProcessor.processContrato - Quantidade de títulos já suficiente, nada a gerar', {
+        contratoId: contrato.id,
+        clienteId: contrato.cliente_id,
+        quantidadeMinimaTitulos,
+        titulosEmAberto: titulosEmAberto.length,
+        titulosGerar
+      });
       return { titulosGerados: 0, titulosCriados: [] };
     }
 

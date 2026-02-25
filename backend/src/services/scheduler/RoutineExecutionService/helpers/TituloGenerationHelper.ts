@@ -265,7 +265,7 @@ export class TituloGenerationHelper {
    * Cria um título para um contrato
    */
   static async createTitulo(
-    contrato: ContratoWithPlano & { conta_boleto: number; dia_vencimento_id: number },
+    contrato: ContratoWithPlano & { conta_boleto: number; dia_vencimento_id: number; empresa_id?: number | null },
     dataVencimento: Date,
     valorTitulo: number,
     numeroTitulo: string,
@@ -277,6 +277,7 @@ export class TituloGenerationHelper {
     const dataVencimentoNormalizada = normalizeDateForDb(dataVencimento) || dataVencimento;
     
     const titulo = await Titulo.create({
+      empresa_id: contrato.empresa_id ?? null,
       contrato_id: contrato.id,
       cliente_id: contrato.cliente_id,
       plano_id: contrato.plano_id,

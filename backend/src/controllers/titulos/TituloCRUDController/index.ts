@@ -272,9 +272,11 @@ export class TituloCRUDController {
         return;
       }
 
+      const empresaId = contratoReferencia?.empresa_id ?? cliente.empresa_id ?? getEmpresaIdOrNull(req);
       const { withTransaction } = await import('../../../utils/transaction');
       const titulo = await withTransaction(async (transaction) => {
         return await TituloService.create({
+          empresa_id: empresaId ?? null,
           cliente_id,
           plano_id: plano.id,
           banco_id: banco.id,
@@ -548,11 +550,11 @@ export class TituloCRUDController {
       const finalSortColumn = (sortColumn as string) || 'id';
       const finalSortDirection = (sortDirection as string) || 'desc';
 
-      // Usar TituloService.list com filtro de contrato_id e ordenação do backend
+      // Usar TituloService.list com filtro de contrato_id, sem filtro de data - todos os títulos do contrato
       const result = await TituloService.list({
         page: 1,
-        limit: 1000,
-        cliente_id: undefined, // Não filtrar por cliente
+        limit: 5000,
+        cliente_id: undefined,
         search: String(contratoId),
         searchField: 'contrato_id',
         sortColumn: finalSortColumn,
@@ -598,11 +600,11 @@ export class TituloCRUDController {
       const finalSortColumn = (sortColumn as string) || 'id';
       const finalSortDirection = (sortDirection as string) || 'desc';
 
-      // Usar TituloService.list com filtro de contrato_id e ordenação do backend
+      // Usar TituloService.list com filtro de contrato_id, sem filtro de data - todos os títulos avulsos do contrato
       const result = await TituloService.list({
         page: 1,
-        limit: 1000,
-        cliente_id: undefined, // Não filtrar por cliente
+        limit: 5000,
+        cliente_id: undefined,
         search: String(contratoId),
         searchField: 'contrato_id',
         sortColumn: finalSortColumn,
