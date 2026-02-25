@@ -1,6 +1,8 @@
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Cliente } from '../../../models/clientes/Cliente';
+import { Contrato } from '../../../models/contratos/Contrato';
 import type { InferAttributes } from 'sequelize';
+import type { TituloComRelacoes } from '../../../controllers/titulos/TituloHelpers/types';
 import { logger } from '../../../utils/logger';
 import { ModeloDocumentoService } from '../../documentos/ModeloDocumentoService';
 import { VariaveisDocumentoService } from '../../documentos/VariaveisDocumentoService';
@@ -47,8 +49,8 @@ export class ReciboPDFService {
           conteudoTemplate,
           {
             cliente,
-            contrato: (contrato as object) || undefined,
-            titulo: titulo as object
+            contrato: contrato ? (contrato as Contrato | (Partial<Contrato> & { id: number })) : undefined,
+            titulo: titulo as Titulo | TituloComRelacoes
           },
           baseUrl
         );

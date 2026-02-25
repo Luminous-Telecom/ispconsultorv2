@@ -9,6 +9,8 @@ import { TituloPDFController } from '../../../controllers/titulos/TituloPDFContr
 import { WhatsAppSenderService } from '../WhatsAppSenderService';
 import { WhatsAppTemplateService } from '../WhatsAppTemplateService';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
+import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
+import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
 
 export class WhatsAppMessageService {
   /**
@@ -47,8 +49,9 @@ export class WhatsAppMessageService {
         return { sucesso: false, mensagem: 'Nenhum servidor WhatsApp ativo encontrado' };
       }
 
-      const mensagem = await MensagemWhatsApp.findOne({ 
-        where: { tipo: 'envio_manual', ativo: true } 
+      const mensagem = await MensagemWhatsApp.findOne({
+        where: { tipo: 'envio_manual', ativo: true },
+        include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
       });
 
       if (!mensagem) {
@@ -89,7 +92,7 @@ export class WhatsAppMessageService {
     mensagemTexto: string,
     baseUrl: undefined
   ): Promise<{ sucesso: boolean; mensagem?: string }> {
-    const templateInfo = WhatsAppCloudService.obterTemplateInfo(mensagem.template_mapping);
+    const templateInfo = TemplateWhatsAppService.getTemplateInfoForMensagem(mensagem);
     if (!templateInfo) {
       return { sucesso: false, mensagem: 'Template não configurado para WhatsApp Cloud API' };
     }

@@ -16,6 +16,7 @@ import contratoRoutes from './contratos';
 import servidorEmailRoutes from './servidorEmailRoutes';
 import servidorWhatsAppRoutes from './servidorWhatsAppRoutes';
 import mensagemWhatsAppRoutes from './mensagemWhatsAppRoutes';
+import templateWhatsAppRoutes from './templateWhatsAppRoutes';
 import mensagemEmailRoutes from './mensagemEmailRoutes';
 import mensagemHistoricoRoutes from './mensagemHistoricoRoutes';
 import modeloDocumentoRoutes from './modeloDocumentoRoutes';
@@ -70,6 +71,7 @@ const routes = [
     { path: '/api/servidores-email', route: servidorEmailRoutes },
     { path: '/api/servidores-whatsapp', route: servidorWhatsAppRoutes },
     { path: '/api/mensagens-whatsapp', route: mensagemWhatsAppRoutes },
+    { path: '/api/templates-whatsapp', route: templateWhatsAppRoutes },
     { path: '/api/mensagens-email', route: mensagemEmailRoutes },
     { path: '/api/mensagens-historico', route: mensagemHistoricoRoutes },
     { path: '/api/modelos-documento', route: modeloDocumentoRoutes },

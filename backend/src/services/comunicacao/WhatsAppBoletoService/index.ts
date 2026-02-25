@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
 import { MensagemWhatsApp } from '../../../models/comunicacao/MensagemWhatsApp';
+import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Contrato } from '../../../models/contratos/Contrato';
@@ -10,6 +11,7 @@ import { TituloPDFController } from '../../../controllers/titulos/TituloPDFContr
 import { WhatsAppSenderService } from '../WhatsAppSenderService';
 import { WhatsAppTemplateService } from '../WhatsAppTemplateService';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
+import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
 
 interface ConfiguracoesEnvios {
   antesVencimento?: number[];
@@ -32,7 +34,10 @@ export class WhatsAppBoletoService {
         return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
       }
 
-      const mensagens = await MensagemWhatsApp.findAll({ where: { ativo: true } });
+      const mensagens = await MensagemWhatsApp.findAll({
+        where: { ativo: true },
+        include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
+      });
       if (mensagens.length === 0) {
         return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
       }
@@ -262,7 +267,7 @@ export class WhatsAppBoletoService {
     contrato: Contrato | null | undefined,
     baseUrl: undefined
   ): Promise<boolean> {
-    const templateInfo = WhatsAppCloudService.obterTemplateInfo(mensagem.template_mapping);
+    const templateInfo = TemplateWhatsAppService.getTemplateInfoForMensagem(mensagem);
     if (!templateInfo) {
       logger.warn('Template não configurado para WhatsApp Cloud API', { mensagem_id: mensagem.id });
       return false;
@@ -414,13 +419,16 @@ export class WhatsAppBoletoService {
         return false;
       }
 
-      const mensagem = await MensagemWhatsApp.findOne({ where: { tipo: 'recibo_pagamento', ativo: true } });
+      const mensagem = await MensagemWhatsApp.findOne({
+        where: { tipo: 'recibo_pagamento', ativo: true },
+        include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
+      });
       if (!mensagem || mensagem.tipo_envio === 'desativado') {
         logger.info('[Recibo WhatsApp] Mensagem recibo_pagamento não encontrada ou desativada', { titulo_id: titulo.id });
         return false;
       }
 
-      const temTemplate = !!(mensagem.template_mapping && mensagem.template_mapping.trim());
+      const temTemplate = !!mensagem.template_id;
       const temMensagemPadrao = !!(mensagem.mensagem_padrao && mensagem.mensagem_padrao.trim());
       if (!temTemplate && !temMensagemPadrao) {
         logger.info('[Recibo WhatsApp] Nem template_mapping nem mensagem_padrao configurados', { titulo_id: titulo.id });
@@ -432,7 +440,7 @@ export class WhatsAppBoletoService {
       const telefone = this.formatarTelefone(cliente.telefone);
 
       if (servidor.tipo_api === 'whatsapp_cloud' && temTemplate) {
-        const templateInfo = WhatsAppCloudService.obterTemplateInfo(mensagem.template_mapping);
+        const templateInfo = TemplateWhatsAppService.getTemplateInfoForMensagem(mensagem);
         if (!templateInfo) {
           logger.info('[Recibo WhatsApp] template_mapping inválido (Cloud API)', { titulo_id: titulo.id });
           return false;
@@ -446,17 +454,32 @@ export class WhatsAppBoletoService {
               dataReferencia: new Date()
             }, baseUrl)
           : '';
+        const estrutura = await WhatsAppCloudService.buscarEstruturaTemplateMeta(
+          servidor,
+          templateInfo.name,
+          templateInfo.language
+        );
+        logger.info(`[Recibo WhatsApp] Estrutura Meta: bodyParamCount=${estrutura?.bodyParamCount ?? 'null'}, hasHeaderDocument=${estrutura?.hasHeaderDocument ?? 'null'}, template=${templateInfo.name}`);
+        const variaveis = (templateInfo.variables || []).slice(
+          0,
+          estrutura?.bodyParamCount ?? (templateInfo.variables?.length ?? 0)
+        );
+        const incluirPdfHeader = mensagem.tipo_envio === 'pdf' && (estrutura?.hasHeaderDocument ?? templateInfo.header_document === true);
+        logger.info(`[Recibo WhatsApp] Variáveis: originais=${JSON.stringify(templateInfo.variables)}, usadas=${JSON.stringify(variaveis)}, incluirPdfHeader=${incluirPdfHeader}`);
         const components = await WhatsAppTemplateService.prepararComponentesTemplate({
           servidor,
           cliente,
           contrato: contrato || undefined,
           titulo,
           mensagemTexto: msg,
-          incluirPdfNoHeader: mensagem.tipo_envio === 'pdf',
+          incluirPdfNoHeader: incluirPdfHeader,
           tipoPdfHeader: 'recibo',
           incluirBotao: false,
-          variables: templateInfo.variables
+          variables: variaveis.length > 0 ? variaveis : templateInfo.variables
         });
+        const bodyComp = components.find((c) => c.type === 'body');
+        const bodyParamsPreview = bodyComp?.parameters?.map((p) => (p.type === 'text' ? p.text : p.type)) ?? [];
+        logger.info(`[Recibo WhatsApp] Componentes: total=${components.length}, tem_header=${components.some((c) => c.type === 'header')}, body_params_count=${bodyComp?.parameters?.length ?? 0}, body_params_preview=${JSON.stringify(bodyParamsPreview)}`);
         const enviou = await WhatsAppCloudService.enviarTemplate(
           servidor,
           telefone,

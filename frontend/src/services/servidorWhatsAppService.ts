@@ -47,6 +47,12 @@ export interface CreateServidorWhatsApp {
 
 export interface UpdateServidorWhatsApp extends Partial<CreateServidorWhatsApp> {}
 
+export interface TemplateWhatsAppRef {
+  id: number;
+  nome: string;
+  idioma: string;
+}
+
 export interface MensagemWhatsApp {
   id?: number;
   tipo: string;
@@ -56,7 +62,8 @@ export interface MensagemWhatsApp {
   interacao1?: string;
   interacao2?: string;
   interacao3?: string;
-  template_mapping?: string;
+  template_id?: number | null;
+  template?: TemplateWhatsAppRef | null;
   ativo: boolean;
 }
 

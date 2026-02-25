@@ -201,8 +201,15 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   // Observação: isso permite scripts; use apenas em endpoints/admin confiáveis.
   const rawHtmlFields = ['html'];
   
-  // Campos que não devem ter HTML encoding (CPF/CNPJ, códigos, nomes, etc)
+  // Campos que não devem ter HTML encoding (CPF/CNPJ, códigos, nomes, JSON, etc)
   const noHtmlEncodeFields = [
+    'variables', // JSON array - preservar aspas
+    'template_mapping', // JSON - mapeamento de templates
+    'configuracao_extra', // JSON - configurações
+    'webhook_events', // JSON - eventos habilitados
+    'servicos_inclusos', // JSON array - serviços do plano
+    'configuracao', // JSON - configuração de rotinas
+    'valor', // JSON - valor de parâmetros (chave-valor)
     'cpf_cnpj_assinante', 
     'cpf_cnpj', 
     'cnpj', 

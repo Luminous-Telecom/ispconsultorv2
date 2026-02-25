@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffe
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useI18n } from '@/contexts/I18nContext';
 import { ServidorEmailService, MensagemEmail } from '@/services/servidorEmailService';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button, Spinner } from '@/components/ui';
@@ -24,6 +25,7 @@ const INITIAL_FORM_DATA: ServidorEmailForm = {
 };
 
 const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -258,8 +260,17 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
 
   const headerActionsContent = useMemo(() => (
     <div className="email-header-unified">
-      {/* Botões à direita */}
+      {/* Botões à direita - ordem padrão: Cancelar/Fechar, Salvar, Remover */}
       <div className="email-header-buttons modal-header-actions">
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={handleClose}
+          disabled={saveServidorMutation.isPending}
+        >
+          {t('buttons.close')}
+        </Button>
         <Button
           type="button"
           variant="primary"
@@ -267,7 +278,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
           onClick={handleSaveClick}
           isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
         >
-          Salvar
+          {t('actions.save')}
         </Button>
         <Button
           type="button"
@@ -276,16 +287,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
           onClick={handleReset}
           disabled={saveServidorMutation.isPending}
         >
-          {(show && servidorAtivo?.data) ? 'Remover Servidor' : 'Limpar'}
-        </Button>
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          onClick={handleClose}
-          disabled={saveServidorMutation.isPending}
-        >
-          Fechar
+          {(show && servidorAtivo?.data) ? t('whatsappServer.removeServer') : t('buttons.clear')}
         </Button>
       </div>
 
@@ -308,22 +310,22 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
               onClick={() => setActiveTab('servidor')}
               type="button"
             >
-              Servidor
+              {t('whatsappServer.server')}
             </button>
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'mensagens' ? 'active' : ''}`}
+              className={`nav-link modal-tab-hover ${activeTab === 'mensagens' ? 'active' : ''}`}
               onClick={() => setActiveTab('mensagens')}
               type="button"
             >
-              Mensagens
+              {t('whatsappServer.messages')}
             </button>
           </li>
         </ul>
       </div>
     </div>
-  ), [handleSaveClick, saveServidorMutation.isPending, saveMensagemMutation.isPending, show, servidorAtivo?.data, handleReset, handleClose, activeTab, isMobile]);
+  ), [handleSaveClick, saveServidorMutation.isPending, saveMensagemMutation.isPending, show, servidorAtivo?.data, handleReset, handleClose, activeTab, isMobile, t]);
 
   const headerActionsContentRef = useRef(headerActionsContent);
   headerActionsContentRef.current = headerActionsContent;
@@ -404,7 +406,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
     <DraggableModal
       show={show}
       onClose={handleClose}
-      title="Servidor de E-Mail"
+      title={t('modal.emailServer')}
       size="xl"
       modalId="servidor-email-modal"
       headerActions={headerActionsContent}

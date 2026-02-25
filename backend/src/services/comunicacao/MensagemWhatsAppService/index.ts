@@ -1,4 +1,5 @@
 import { MensagemWhatsApp } from '../../../models/comunicacao/MensagemWhatsApp';
+import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
 import { logger } from '../../../utils/logger';
 
 export interface MensagemWhatsAppData {
@@ -6,17 +7,22 @@ export interface MensagemWhatsAppData {
   tipo_envio: string;
   mensagem_padrao?: string | null;
   mensagem_manual?: string | null;
+  template_id?: number | null;
+  interacao1?: string | null;
+  interacao2?: string | null;
+  interacao3?: string | null;
   ativo?: boolean;
   empresa_id?: number | null;
 }
 
 export class MensagemWhatsAppService {
   /**
-   * Buscar mensagem por tipo
+   * Buscar mensagem por tipo (com template incluído)
    */
   static async findByTipo(tipo: string): Promise<MensagemWhatsApp | null> {
     return await MensagemWhatsApp.findOne({
-      where: { tipo }
+      where: { tipo },
+      include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
     });
   }
 

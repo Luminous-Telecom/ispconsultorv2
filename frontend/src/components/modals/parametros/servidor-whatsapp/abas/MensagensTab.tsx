@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { FormField, Button } from '@/components/ui';
+import { FormField } from '@/components/ui';
+import EntitySelectField from '@/components/ui/EntitySelectField';
 import { MensagensTabProps } from '../types';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -8,7 +9,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   tipoEnvio,
   mensagemPadrao,
   mensagemManual = '',
-  templateMapping = '',
+  templateId = null as number | null,
+  templateNome = '',
   interacao1,
   interacao2,
   interacao3,
@@ -17,7 +19,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   onTipoEnvioChange,
   onMensagemPadraoChange,
   onMensagemManualChange,
-  onTemplateMappingChange,
+  onTemplateIdChange,
   onInteracao1Change,
   onInteracao2Change,
   onInteracao3Change,
@@ -59,7 +61,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
     return () => {
       cleanupFunctions.forEach(cleanup => cleanup());
     };
-  }, [mensagemPadrao, mensagemManual, templateMapping, interacao1, interacao2, interacao3, mensagemType]);
+  }, [mensagemPadrao, mensagemManual, templateId, interacao1, interacao2, interacao3, mensagemType]);
 
   const handleVariableClick = (variable: string) => {
     if (onInsertVariable) {
@@ -76,16 +78,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
 
   return (
     <div className="whatsapp-messages-container" ref={containerRef}>
-      <div className="card">
-        <div className="card-header py-2 px-3">
-          <h6 className="mb-0 d-flex align-items-center">
-            <i className="bi bi-chat-dots me-2"></i>
-            {t('settings.server.config')}
-          </h6>
-        </div>
-        <div className="card-body p-3">
-          <div className="row g-0">
-            <div className="col-12">
+      <div className="row g-0">
+        <div className="col-12">
               <FormField
                 name="mensagemType"
                 type="select"
@@ -106,73 +100,26 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   { value: 'recibo_pagamento', label: t('messages.types.paymentReceipt') }
                 ]}
               />
-            </div>
-          </div>
+        </div>
+      </div>
 
-          {mensagemType && (
+      {mensagemType && (
             <>
-              {/* Template Mapping (WhatsApp Cloud API) - Mostrar apenas para WhatsApp Cloud */}
-              {isWhatsAppCloud && onTemplateMappingChange ? (
-                <>
-                  <div className="row g-0 mt-3">
-                    <div className="col-12">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <label className="form-label mb-0">
-                          <i className="bi bi-code-square me-2"></i>
-                          {t('settings.messages.templateConfig')}
-                        </label>
-                        {onShowTemplates && (
-                          <Button
-                            type="button"
-                            variant="outline-primary"
-                            size="sm"
-                            leftIcon={<i className="bi bi-list-ul"></i>}
-                            onClick={onShowTemplates}
-                          >
-                            {t('settings.messages.viewTemplates')}
-                          </Button>
-                        )}
-                      </div>
-                      <small className="text-muted d-block mt-1 mb-2">
-                        {t('settings.messages.templateHelper')}
-                      </small>
-                      <FormField
-                        name="templateMapping"
-                        type="textarea"
-                        label=""
-                        placeholder={mensagemType === 'recibo_pagamento'
-                          ? `{
-  "name": "pagamento_recebido",
-  "language": "pt_BR",
-  "variables": [
-    "cliente.razao_social",
-    "titulo.valor_final",
-    "titulo.data_vencimento",
-    "dias_vencimento"
-  ]
-}`
-                          : `{
-  "name": "fatura_pdf",
-  "language": "pt_BR",
-  "variables": [
-    "cliente.razao_social",
-    "titulo.valor_final",
-    "titulo.data_vencimento",
-    "dias_vencimento"
-  ]
-}`}
-                        rows={10}
-                        size="sm"
-                        value={templateMapping}
-                        onChange={(value) => onTemplateMappingChange(String(value ?? ''))}
-                      />
-                      <small className="text-muted d-block mt-1">
-                        {t('settings.messages.templateFormat')}
-                      </small>
-                    </div>
+              {/* WhatsApp Cloud API - Vincular template via modal */}
+              {isWhatsAppCloud && onShowTemplates ? (
+                <div className="row g-0 mt-3">
+                  <div className="col-12">
+                    <EntitySelectField
+                      value={templateId ?? 0}
+                      onChange={(value) => onTemplateIdChange?.(value === 0 ? null : value)}
+                      onShowModal={onShowTemplates}
+                      entities={templateId && templateNome ? [{ id: templateId, nome: templateNome }] : []}
+                      label={t('settings.messages.templateConfig')}
+                      placeholder={t('settings.messages.viewTemplates')}
+                      searchButtonTitle={t('settings.messages.viewTemplates')}
+                    />
                   </div>
-
-                </>
+                </div>
               ) : (
                 <>
                   {/* Tipo de Envio - Apenas para Evolution API */}
@@ -414,8 +361,6 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               )}
             </>
           )}
-        </div>
-      </div>
     </div>
   );
 };

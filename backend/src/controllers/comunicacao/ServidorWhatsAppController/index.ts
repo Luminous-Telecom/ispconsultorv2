@@ -308,14 +308,14 @@ export class ServidorWhatsAppController {
    */
   static async saveMensagem(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const { tipo, tipo_envio, mensagem_padrao, mensagem_manual, template_mapping, interacao1, interacao2, interacao3, ativo } = req.body;
+      const { tipo, tipo_envio, mensagem_padrao, mensagem_manual, template_id, interacao1, interacao2, interacao3, ativo } = req.body;
 
       logger.info('Salvando mensagem WhatsApp:', { 
         tipo, 
         tipo_envio, 
         temMensagemPadrao: !!mensagem_padrao,
         temMensagemManual: !!mensagem_manual,
-        temTemplateMapping: !!template_mapping,
+        temTemplateId: !!template_id,
         ativo 
       });
 
@@ -325,25 +325,25 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      // Para todos os tipos, se tiver template_mapping, não precisa de mensagem_padrao
+      // Para todos os tipos, se tiver template_id, não precisa de mensagem_padrao
       // Para envio_manual sem template, mensagem_manual é obrigatória
       // Para outros tipos sem template, mensagem_padrao é obrigatória
-      if (tipo !== 'envio_manual' && !mensagem_padrao && !template_mapping) {
-        logger.warn('Validação falhou: mensagem_padrao ou template_mapping obrigatório', { tipo, temMensagemPadrao: !!mensagem_padrao, temTemplateMapping: !!template_mapping });
-        sendValidationError(res, 'Mensagem padrão ou template mapping é obrigatório');
+      if (tipo !== 'envio_manual' && !mensagem_padrao && !template_id) {
+        logger.warn('Validação falhou: mensagem_padrao ou template obrigatório', { tipo, temMensagemPadrao: !!mensagem_padrao, temTemplateId: !!template_id });
+        sendValidationError(res, 'Mensagem padrão ou template é obrigatório');
         return;
       }
 
-      if (tipo === 'envio_manual' && !template_mapping && !mensagem_manual) {
-        logger.warn('Validação falhou: template_mapping ou mensagem_manual obrigatório para envio_manual', { tipo, temTemplateMapping: !!template_mapping, temMensagemManual: !!mensagem_manual });
-        sendValidationError(res, 'Template mapping ou mensagem manual é obrigatório para envio manual');
+      if (tipo === 'envio_manual' && !template_id && !mensagem_manual) {
+        logger.warn('Validação falhou: template ou mensagem_manual obrigatório para envio_manual', { tipo, temTemplateId: !!template_id, temMensagemManual: !!mensagem_manual });
+        sendValidationError(res, 'Template ou mensagem manual é obrigatório para envio manual');
         return;
       }
 
       // Para envio_manual, se tiver template, usar mensagem_manual no body do template (ou vazio)
       // Se não tiver template, usar mensagem_manual como mensagem_padrao
       // Para outros tipos, usar mensagem_padrao ou vazio se tiver template
-      const mensagemPadraoFinal = tipo === 'envio_manual' && !template_mapping && mensagem_manual
+      const mensagemPadraoFinal = tipo === 'envio_manual' && !template_id && mensagem_manual
         ? mensagem_manual 
         : (mensagem_padrao || '');
 
@@ -352,7 +352,7 @@ export class ServidorWhatsAppController {
         tipo_envio, 
         mensagemPadraoLength: mensagemPadraoFinal.length,
         mensagemManualLength: mensagem_manual?.length || 0,
-        temTemplateMapping: !!template_mapping
+        temTemplateId: !!template_id
       });
 
       const mensagemData = {
@@ -360,7 +360,7 @@ export class ServidorWhatsAppController {
         tipo_envio,
         mensagem_padrao: mensagemPadraoFinal,
         mensagem_manual: mensagem_manual || null,
-        template_mapping: template_mapping || null,
+        template_id: template_id ? Number(template_id) : null,
         interacao1: interacao1 || null,
         interacao2: interacao2 || null,
         interacao3: interacao3 || null,
@@ -432,6 +432,38 @@ export class ServidorWhatsAppController {
     } catch (error) {
       sendError(res, error, 'Erro ao salvar mensagem', 500, true);
     }
+  }
+
+  /**
+   * Gera o template_mapping sugerido para um template da Meta API.
+   * Usa o nome e os componentes do template para inferir as variáveis corretas.
+   */
+  private static gerarSuggestedTemplateMapping(template: {
+    name?: string;
+    language?: string;
+    components?: Array<{ type?: string; format?: string; text?: string }>;
+  }): { name: string; language: string; variables: string[]; header_document?: boolean } {
+    const name = template.name || 'template';
+    const language = template.language || 'pt_BR';
+
+    const isRecibo = /pagamento|recibo|recebido|payment|receipt/i.test(name);
+    const baseVars = isRecibo
+      ? ['titulo.valor_pago', 'titulo.pagamento']
+      : ['cliente.razao_social', 'titulo.valor_final', 'titulo.data_vencimento', 'dias_vencimento'];
+
+    let varCount = baseVars.length;
+    const bodyComp = template.components?.find((c) => c.type === 'BODY');
+    if (bodyComp?.text) {
+      const matches = bodyComp.text.match(/\{\{(\d+)\}\}/g);
+      if (matches) {
+        const nums = matches.map((m) => parseInt(m.replace(/\{\{|\}\}/g, ''), 10));
+        varCount = Math.max(...nums, 1);
+      }
+    }
+
+    const hasHeaderDoc = template.components?.some((c) => c.type === 'HEADER' && c.format === 'DOCUMENT');
+    const variables = baseVars.slice(0, varCount);
+    return { name, language, variables, header_document: hasHeaderDoc || undefined };
   }
 
   /**
@@ -544,11 +576,14 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      // Filtrar apenas templates aprovados
-      const templates = (responseData as { data?: Array<{ status?: string; [key: string]: unknown }> })?.data || [];
-      const templatesAprovados = templates.filter((template: { status?: string }) => 
-        template.status === 'APPROVED'
-      );
+      // Filtrar apenas templates aprovados e enriquecer com suggested_template_mapping
+      const templates = (responseData as { data?: Array<{ status?: string; name?: string; language?: string; components?: Array<{ type?: string; text?: string }>; [key: string]: unknown }> })?.data || [];
+      const templatesAprovados = templates
+        .filter((template: { status?: string }) => template.status === 'APPROVED')
+        .map((template) => {
+          const suggested = ServidorWhatsAppController.gerarSuggestedTemplateMapping(template);
+          return { ...template, suggested_template_mapping: suggested };
+        });
 
       sendSuccess(res, {
         total: templates.length,

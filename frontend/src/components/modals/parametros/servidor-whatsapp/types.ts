@@ -34,7 +34,8 @@ export interface MensagensTabProps {
   tipoEnvio: 'desativado' | 'pdf';
   mensagemPadrao: string;
   mensagemManual?: string;
-  templateMapping?: string;
+  templateId?: number | null;
+  templateNome?: string;
   interacao1: string;
   interacao2: string;
   interacao3: string;
@@ -43,7 +44,7 @@ export interface MensagensTabProps {
   onTipoEnvioChange: (value: 'desativado' | 'pdf') => void;
   onMensagemPadraoChange: (value: string) => void;
   onMensagemManualChange?: (value: string) => void;
-  onTemplateMappingChange?: (value: string) => void;
+  onTemplateIdChange?: (value: number | null) => void;
   onInteracao1Change: (value: string) => void;
   onInteracao2Change: (value: string) => void;
   onInteracao3Change: (value: string) => void;

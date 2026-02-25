@@ -49,6 +49,8 @@ import Parametros from './sistema/Parametros';
 import { ServidorEmail } from './comunicacao/ServidorEmail';
 import { ServidorWhatsApp } from './comunicacao/ServidorWhatsApp';
 import { MensagemHistorico } from './comunicacao/MensagemHistorico';
+import { MensagemWhatsApp } from './comunicacao/MensagemWhatsApp';
+import { TemplateWhatsApp } from './comunicacao/TemplateWhatsApp';
 
 // Blockdomi
 import { Dominio } from './blockdomi/Dominio';
@@ -347,6 +349,16 @@ MensagemHistorico.belongsTo(Usuario, {
   as: 'usuario'
 });
 
+// TemplateWhatsApp e MensagemWhatsApp
+TemplateWhatsApp.hasMany(MensagemWhatsApp, {
+  foreignKey: 'template_id',
+  as: 'mensagens'
+});
+MensagemWhatsApp.belongsTo(TemplateWhatsApp, {
+  foreignKey: 'template_id',
+  as: 'template'
+});
+
 // NotaFiscal
 NotaFiscal.belongsTo(Cliente, {
   foreignKey: 'cliente_id',
@@ -407,5 +419,7 @@ export {
   IPv6,
   VersaoBlockdomi,
   IpPermitidoBlockdomi,
-  BlockdomiLogAcesso
+  BlockdomiLogAcesso,
+  MensagemWhatsApp,
+  TemplateWhatsApp
 };

@@ -10,7 +10,8 @@ import { Button, Spinner } from '@/components/ui';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
-import TemplatesModal from './TemplatesModal';
+import TemplatesTab from './abas/TemplatesTab';
+import TemplateSelectModal from './TemplateSelectModal';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface GrupoVariaveis {
@@ -37,8 +38,8 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const [formData, setFormData] = useState<ServidorWhatsAppForm>(initialFormData);
   const [testPhone, setTestPhone] = useState<string>('');
   const [testMessage, setTestMessage] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens'>('servidor');
-  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens' | 'templates'>('servidor');
+  const [showTemplateSelectModal, setShowTemplateSelectModal] = useState(false);
   
   // Estados para mensagens
   const [mensagemType, setMensagemType] = useState<string>('');
@@ -49,8 +50,8 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const mensagemPadraoRef = useRef<string>('');
   const [mensagemManual, setMensagemManual] = useState<string>('');
   const mensagemManualRef = useRef<string>('');
-  const [templateMapping, setTemplateMapping] = useState<string>('');
-  const templateMappingRef = useRef<string>('');
+  const [templateId, setTemplateId] = useState<number | null>(null);
+  const templateIdRef = useRef<number | null>(null);
   const [interacao1, setInteracao1] = useState<string>('');
   const interacao1Ref = useRef<string>('');
   const [interacao2, setInteracao2] = useState<string>('');
@@ -97,11 +98,11 @@ useEffect(() => {
   tipoEnvioRef.current = tipoEnvio;
   mensagemPadraoRef.current = mensagemPadrao;
   mensagemManualRef.current = mensagemManual;
-  templateMappingRef.current = templateMapping;
+  templateIdRef.current = templateId;
   interacao1Ref.current = interacao1;
   interacao2Ref.current = interacao2;
   interacao3Ref.current = interacao3;
-}, [mensagemType, tipoEnvio, mensagemPadrao, mensagemManual, templateMapping, interacao1, interacao2, interacao3]);
+}, [mensagemType, tipoEnvio, mensagemPadrao, mensagemManual, templateId, interacao1, interacao2, interacao3]);
 
 useEffect(() => {
   if (activeTab === 'mensagens' && !mensagemType) {
@@ -115,17 +116,7 @@ useEffect(() => {
     setTipoEnvio(mensagemData.tipo_envio);
     setMensagemPadrao(mensagemData.mensagem_padrao ?? '');
     setMensagemManual(mensagemData.mensagem_manual ?? '');
-    setTemplateMapping((() => {
-      const raw = mensagemData.template_mapping ?? '';
-      if (!raw.trim()) return raw;
-      try {
-        const decoded = raw.replace(/&quot;/g, '"');
-        const parsed = JSON.parse(decoded);
-        return JSON.stringify(parsed, null, 2);
-      } catch {
-        return raw;
-      }
-    })());
+    setTemplateId(mensagemData.template_id ?? mensagemData.template?.id ?? null);
     setInteracao1(mensagemData.interacao1 ?? '');
     setInteracao2(mensagemData.interacao2 ?? '');
     setInteracao3(mensagemData.interacao3 ?? '');
@@ -133,7 +124,7 @@ useEffect(() => {
     setTipoEnvio('pdf');
     setMensagemPadrao('');
     setMensagemManual('');
-    setTemplateMapping('');
+    setTemplateId(null);
     setInteracao1('');
     setInteracao2('');
     setInteracao3('');
@@ -253,7 +244,7 @@ const saveMensagemMutation = useMutation({
     const currentTipoEnvio = tipoEnvioRef.current;
     const currentMensagemPadrao = mensagemPadraoRef.current;
     const currentMensagemManual = mensagemManualRef.current;
-    const currentTemplateMapping = templateMappingRef.current;
+    const currentTemplateId = templateIdRef.current;
     const currentInteracao1 = interacao1Ref.current;
     const currentInteracao2 = interacao2Ref.current;
     const currentInteracao3 = interacao3Ref.current;
@@ -264,7 +255,7 @@ const saveMensagemMutation = useMutation({
     }
 
     const isWhatsAppCloud = servidorAtivo?.data?.tipo_api === 'whatsapp_cloud';
-    const temTemplate = !!(currentTemplateMapping && currentTemplateMapping.trim() !== '');
+    const temTemplate = !!currentTemplateId;
 
     let mensagemPadraoFinal = currentMensagemPadrao;
     if (currentMensagemType === 'envio_manual' && !temTemplate && currentMensagemManual) {
@@ -274,28 +265,36 @@ const saveMensagemMutation = useMutation({
       return;
     }
 
-    let templateMappingFinal = currentTemplateMapping?.trim() || undefined;
-    if (templateMappingFinal) {
-      try {
-        const parsed = JSON.parse(templateMappingFinal.replace(/&quot;/g, '"'));
-        templateMappingFinal = JSON.stringify(parsed, null, 2);
-      } catch {
-        // mantém como está se JSON inválido
-      }
-    }
-
     await saveMensagemMutation.mutateAsync({
       tipo: currentMensagemType,
       tipo_envio: currentTipoEnvio,
       mensagem_padrao: mensagemPadraoFinal || '',
       mensagem_manual: currentMensagemManual || undefined,
-      template_mapping: templateMappingFinal,
+      template_id: currentTemplateId,
       interacao1: currentInteracao1 || undefined,
       interacao2: currentInteracao2 || undefined,
       interacao3: currentInteracao3 || undefined,
       ativo: true
     });
   }, [mensagemType, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showError, t]);
+
+  const handleSalvarVincular = useCallback(async (data: { template_id: number }) => {
+    const currentMensagemType = mensagemTypeRef.current || mensagemType;
+    if (!currentMensagemType) return;
+    await saveMensagemMutation.mutateAsync({
+      tipo: currentMensagemType,
+      tipo_envio: tipoEnvioRef.current,
+      mensagem_padrao: mensagemPadraoRef.current || '',
+      mensagem_manual: mensagemManualRef.current || undefined,
+      template_id: data.template_id,
+      interacao1: interacao1Ref.current || undefined,
+      interacao2: interacao2Ref.current || undefined,
+      interacao3: interacao3Ref.current || undefined,
+      ativo: true
+    });
+    queryClient.invalidateQueries({ queryKey: ['mensagem-whatsapp', currentMensagemType] });
+    setTemplateId(data.template_id);
+  }, [mensagemType, saveMensagemMutation, queryClient]);
 
   const handleReset = useCallback(async () => {
     if (servidorAtivo?.data?.id) {
@@ -356,8 +355,17 @@ const saveMensagemMutation = useMutation({
 
   const headerActionsContent = useMemo(() => (
     <div className="whatsapp-header-unified">
-      {/* Botões à direita */}
+      {/* Botões à direita - ordem padrão: Fechar, Salvar, Remover */}
       <div className="whatsapp-header-buttons modal-header-actions">
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={handleClose}
+          disabled={saveServidorMutation.isPending}
+        >
+          {t('buttons.close')}
+        </Button>
         <Button
           type="button"
           variant="primary"
@@ -366,11 +374,12 @@ const saveMensagemMutation = useMutation({
             if (activeTab === 'servidor') {
               const form = document.getElementById('servidor-whatsapp-form') as HTMLFormElement;
               form?.requestSubmit();
-            } else {
+            } else if (activeTab === 'mensagens') {
               e.preventDefault();
               handleSaveMensagem();
             }
           }}
+          disabled={activeTab === 'templates'}
           isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
         >
           {t('actions.save')}
@@ -383,15 +392,6 @@ const saveMensagemMutation = useMutation({
           disabled={saveServidorMutation.isPending}
         >
           {servidorAtivo?.data ? t('whatsappServer.removeServer') : t('buttons.clear')}
-        </Button>
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          onClick={handleClose}
-          disabled={saveServidorMutation.isPending}
-        >
-          {t('buttons.close')}
         </Button>
       </div>
 
@@ -419,17 +419,28 @@ const saveMensagemMutation = useMutation({
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'mensagens' ? 'active' : ''}`}
+              className={`nav-link modal-tab-hover ${activeTab === 'mensagens' ? 'active' : ''}`}
               onClick={() => setActiveTab('mensagens')}
               type="button"
             >
               {t('whatsappServer.messages')}
             </button>
           </li>
+          {(formData.tipo_api === 'whatsapp_cloud' || servidorAtivo?.data?.tipo_api === 'whatsapp_cloud') && (
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link modal-tab-hover ${activeTab === 'templates' ? 'active' : ''}`}
+                onClick={() => setActiveTab('templates')}
+                type="button"
+              >
+                {t('settings.messages.viewTemplates')}
+              </button>
+            </li>
+          )}
         </ul>
       </div>
     </div>
-  ), [activeTab, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, handleClose, handleReset, handleSaveMensagem, isMobile, t]);
+  ), [activeTab, formData.tipo_api, saveServidorMutation.isPending, saveMensagemMutation.isPending, servidorAtivo?.data, handleClose, handleReset, handleSaveMensagem, isMobile, t]);
 
   const headerActionsContentRef = useRef(headerActionsContent);
   headerActionsContentRef.current = headerActionsContent;
@@ -461,7 +472,7 @@ const saveMensagemMutation = useMutation({
       <div className="whatsapp-modal-content">
         {/* Conteúdo das Abas */}
         <div
-          className={`tab-content whatsapp-tab-content whatsapp-tab-content-padded`}
+          className="tab-content whatsapp-tab-content whatsapp-tab-content-scrollable whatsapp-tab-content-padded"
           id="whatsappTabContent"
         >
           {activeTab === 'servidor' && (
@@ -487,7 +498,8 @@ const saveMensagemMutation = useMutation({
               tipoEnvio={tipoEnvio}
               mensagemPadrao={mensagemPadrao}
               mensagemManual={mensagemManual}
-              templateMapping={templateMapping}
+              templateId={templateId}
+              templateNome={mensagemData?.template ? `${mensagemData.template.nome} (${mensagemData.template.idioma})` : undefined}
               interacao1={interacao1}
               interacao2={interacao2}
               interacao3={interacao3}
@@ -496,7 +508,7 @@ const saveMensagemMutation = useMutation({
               onTipoEnvioChange={setTipoEnvio}
               onMensagemPadraoChange={setMensagemPadrao}
               onMensagemManualChange={setMensagemManual}
-              onTemplateMappingChange={setTemplateMapping}
+              onTemplateIdChange={setTemplateId}
               onInteracao1Change={setInteracao1}
               onInteracao2Change={setInteracao2}
               onInteracao3Change={setInteracao3}
@@ -505,16 +517,24 @@ const saveMensagemMutation = useMutation({
               variaveisData={variaveisData}
               onCopyVariable={handleCopyVariable}
               onInsertVariable={handleInsertVariable}
-              onShowTemplates={() => setShowTemplatesModal(true)}
+              onShowTemplates={() => setShowTemplateSelectModal(true)}
+            />
+          )}
+
+          {activeTab === 'templates' && (
+            <TemplatesTab
+              embedded={true}
+              enabled={true}
             />
           )}
         </div>
       </div>
       )}
-      {showTemplatesModal && (
-        <TemplatesModal
-          show={showTemplatesModal}
-          onClose={() => setShowTemplatesModal(false)}
+      {showTemplateSelectModal && (
+        <TemplateSelectModal
+          show={showTemplateSelectModal}
+          onClose={() => setShowTemplateSelectModal(false)}
+          onSelect={handleSalvarVincular}
         />
       )}
     </>

@@ -567,16 +567,17 @@ export class WhatsAppCloudService {
           // Não falha o envio por erro no registro
         }
 
+        const compsSummary = (components || []).map((c) => ({
+          type: c.type,
+          paramsCount: c.parameters?.length ?? 0,
+          paramTypes: c.parameters?.map((p) => p.type) ?? []
+        }));
+        logger.error(`Erro #132000 template ${templateName}: components=${JSON.stringify(compsSummary)}, params_mismatch`);
         logger.error(`Erro ao enviar template via WhatsApp Cloud API - Template: ${templateName}, Mensagem: ${errorMessage}`, {
           status: response.status,
           errorCode: errorObj?.error?.code,
-          errorType: errorObj?.error?.type,
-          errorDetails: errorObj?.error?.details,
-          template: templateName,
-          language: languageCode,
-          telefone: telefoneFormatado,
-          components: JSON.stringify(components).substring(0, 500),
-          fullResponse: JSON.stringify(responseData).substring(0, 1000)
+          components: JSON.stringify(components).substring(0, 800),
+          fullResponse: JSON.stringify(responseData).substring(0, 800)
         });
         return false;
       }
@@ -843,6 +844,64 @@ export class WhatsAppCloudService {
   }
 
   /**
+   * Busca o template na Meta API e retorna a estrutura esperada (quantidade de parâmetros do body, se tem header documento).
+   * Usado para ajustar os componentes enviados conforme o template real.
+   */
+  static async buscarEstruturaTemplateMeta(
+    servidor: { whatsapp_cloud_token?: string; whatsapp_cloud_business_account_id?: string; whatsapp_cloud_phone_number_id?: string },
+    templateName: string,
+    language: string
+  ): Promise<{ bodyParamCount: number; hasHeaderDocument: boolean } | null> {
+    try {
+      if (!servidor.whatsapp_cloud_token) return null;
+      let wabaId = servidor.whatsapp_cloud_business_account_id;
+      if (!wabaId && servidor.whatsapp_cloud_phone_number_id) {
+        const phoneRes = await fetch(
+          `https://graph.facebook.com/v18.0/${servidor.whatsapp_cloud_phone_number_id}?fields=whatsapp_business_account`,
+          { headers: { 'Authorization': `Bearer ${servidor.whatsapp_cloud_token}` } }
+        );
+        const phoneData = await phoneRes.json().catch(() => ({}));
+        wabaId = (phoneData as { whatsapp_business_account?: { id?: string } })?.whatsapp_business_account?.id;
+      }
+      if (!wabaId) return null;
+
+      const res = await fetch(
+        `https://graph.facebook.com/v18.0/${wabaId}/message_templates`,
+        { headers: { 'Authorization': `Bearer ${servidor.whatsapp_cloud_token}` } }
+      );
+      const data = await res.json().catch(() => ({}));
+      const templates = (data as { data?: Array<{ name?: string; language?: string; components?: Array<{ type?: string; format?: string; text?: string }> }> })?.data || [];
+      const langNorm = (l: string) => (l || '').toLowerCase().replace(/-/g, '_');
+      const template = templates.find((t: { name?: string; language?: string }) =>
+        t.name === templateName && langNorm(t.language || '') === langNorm(language || 'pt_BR')
+      );
+      if (!template) {
+        const nomes = templates.slice(0, 5).map((t: { name?: string; language?: string }) => `${t.name}:${t.language}`);
+        logger.info(`[Meta Template] Template não encontrado: procurando ${templateName}:${language}, total=${templates.length}, primeiros=${JSON.stringify(nomes)}`);
+        return null;
+      }
+
+      let bodyParamCount = 0;
+      const bodyComp = template.components?.find((c: { type?: string }) => c.type === 'BODY');
+      if (bodyComp?.text) {
+        const matches = (bodyComp.text as string).match(/\{\{(\d+)\}\}/g);
+        if (matches) {
+          const nums = matches.map((m: string) => parseInt(m.replace(/\{\{|\}\}/g, ''), 10));
+          bodyParamCount = Math.max(...nums, 1);
+        }
+      }
+      const hasHeaderDocument = template.components?.some(
+        (c: { type?: string; format?: string }) => c.type === 'HEADER' && c.format === 'DOCUMENT'
+      ) ?? false;
+      logger.info(`[Meta Template] Estrutura extraída: ${templateName}:${language}, bodyParamCount=${bodyParamCount}, hasHeaderDocument=${hasHeaderDocument}`);
+      return { bodyParamCount, hasHeaderDocument };
+    } catch (error) {
+      logger.error('Erro ao buscar estrutura do template na Meta', { templateName, language, error: error instanceof Error ? error.message : String(error) });
+      return null;
+    }
+  }
+
+  /**
    * Obter template name, idioma e mapeamento de variáveis baseado no template_mapping da mensagem
    * Formato do template_mapping (agora na mensagem, não no servidor): 
    * "nome_template" ou
@@ -861,16 +920,35 @@ export class WhatsAppCloudService {
    */
   static obterTemplateInfo(
     templateMapping: string | null | undefined
-  ): { name: string; language: string; variables?: string[] } | null {
+  ): { name: string; language: string; variables?: string[]; header_document?: boolean } | null {
     try {
-      if (!templateMapping) {
+      if (templateMapping == null) {
         return null;
       }
 
-      const templateInfo = JSON.parse(templateMapping) as string | { 
+      if (typeof templateMapping === 'object' && templateMapping !== null) {
+        const obj = templateMapping as { name?: string; language?: string; variables?: string[]; header_document?: boolean };
+        return {
+          name: obj.name || '',
+          language: obj.language || 'pt_BR',
+          variables: obj.variables || ['cliente.razao_social', 'titulo.valor_final', 'titulo.data_vencimento', 'dias_vencimento'],
+          header_document: obj.header_document
+        };
+      }
+
+      let raw = String(templateMapping).trim();
+      raw = raw
+        .replace(/&quot;/g, '"')
+        .replace(/&#34;/g, '"')
+        .replace(/\u201C/g, '"')
+        .replace(/\u201D/g, '"')
+        .replace(/\u2018/g, "'")
+        .replace(/\u2019/g, "'");
+      const templateInfo = JSON.parse(raw) as string | { 
         name: string; 
         language?: string;
         variables?: string[];
+        header_document?: boolean;
       };
       
       if (!templateInfo) {
@@ -886,14 +964,18 @@ export class WhatsAppCloudService {
         };
       }
 
-      // Se for objeto, usar name, language e variables (ou padrões)
+      // Se for objeto, usar name, language, variables e header_document (ou padrões)
       return {
         name: templateInfo.name,
         language: templateInfo.language || 'pt_BR',
-        variables: templateInfo.variables || ['cliente.razao_social', 'titulo.valor_final', 'titulo.data_vencimento', 'dias_vencimento']
+        variables: templateInfo.variables || ['cliente.razao_social', 'titulo.valor_final', 'titulo.data_vencimento', 'dias_vencimento'],
+        header_document: templateInfo.header_document
       };
     } catch (error) {
-      logger.error('Erro ao obter template info:', error);
+      logger.error('Erro ao obter template info:', {
+        error: error instanceof Error ? error.message : String(error),
+        template_raw_preview: typeof templateMapping === 'string' ? templateMapping.substring(0, 120) : undefined
+      });
       return null;
     }
   }
