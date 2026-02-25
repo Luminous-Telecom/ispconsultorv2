@@ -11,6 +11,7 @@ import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { PaymentCommonService } from '../../../services/webhooks/PaymentCommonService';
+import { ReciboPagamentoService } from '../../../services/comunicacao/ReciboPagamentoService';
 
 export class TituloBoletoController {
   
@@ -56,6 +57,9 @@ export class TituloBoletoController {
         titulo.toJSON() as Record<string, unknown>
       );
 
+      if (titulo.pago) {
+        ReciboPagamentoService.enviarRecibo(titulo.id);
+      }
       sendSuccess(res, titulo, 'Título marcado como pago');
     } catch (error: unknown) {
       sendError(res, error, 'Erro interno do servidor', 500, true, {
@@ -150,6 +154,7 @@ export class TituloBoletoController {
             // Não interromper o fluxo
           }
 
+          ReciboPagamentoService.enviarRecibo(titulo.id);
           sendSuccess(res, { titulo_id: titulo.id, status_novo: titulo.status, valor_pago: valorPago, data_pagamento: dataPagamento }, 'Título atualizado com sucesso');
         } else {
           sendSuccess(res, { titulo_id: titulo.id, status: titulo.status, status_banco: resultado.data.status }, 'Título consultado - sem alterações (ainda não foi pago)');

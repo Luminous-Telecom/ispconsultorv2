@@ -42,13 +42,21 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   
   // Estados para mensagens
   const [mensagemType, setMensagemType] = useState<string>('');
+  const mensagemTypeRef = useRef<string>('');
   const [tipoEnvio, setTipoEnvio] = useState<'desativado' | 'pdf'>('pdf');
+  const tipoEnvioRef = useRef<'desativado' | 'pdf'>('pdf');
   const [mensagemPadrao, setMensagemPadrao] = useState<string>('');
+  const mensagemPadraoRef = useRef<string>('');
   const [mensagemManual, setMensagemManual] = useState<string>('');
+  const mensagemManualRef = useRef<string>('');
   const [templateMapping, setTemplateMapping] = useState<string>('');
+  const templateMappingRef = useRef<string>('');
   const [interacao1, setInteracao1] = useState<string>('');
+  const interacao1Ref = useRef<string>('');
   const [interacao2, setInteracao2] = useState<string>('');
+  const interacao2Ref = useRef<string>('');
   const [interacao3, setInteracao3] = useState<string>('');
+  const interacao3Ref = useRef<string>('');
 
   // Buscar mensagem quando tipo for selecionado
   const { data: mensagemData } = useQuery({
@@ -83,16 +91,44 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   staleTime: 5 * 60 * 1000
 });
 
+// Refs sincronizados com o state (botão Salvar no header lê os refs para evitar closure desatualizada)
+useEffect(() => {
+  mensagemTypeRef.current = mensagemType;
+  tipoEnvioRef.current = tipoEnvio;
+  mensagemPadraoRef.current = mensagemPadrao;
+  mensagemManualRef.current = mensagemManual;
+  templateMappingRef.current = templateMapping;
+  interacao1Ref.current = interacao1;
+  interacao2Ref.current = interacao2;
+  interacao3Ref.current = interacao3;
+}, [mensagemType, tipoEnvio, mensagemPadrao, mensagemManual, templateMapping, interacao1, interacao2, interacao3]);
+
+useEffect(() => {
+  if (activeTab === 'mensagens' && !mensagemType) {
+    setMensagemType('10_dias_antes_vencimento');
+  }
+}, [activeTab, mensagemType]);
+
 // Carregar dados da mensagem quando buscar
 useEffect(() => {
   if (mensagemData) {
     setTipoEnvio(mensagemData.tipo_envio);
-    setMensagemPadrao(mensagemData.mensagem_padrao);
-    setMensagemManual(mensagemData.mensagem_manual || '');
-    setTemplateMapping(mensagemData.template_mapping || '');
-    setInteracao1(mensagemData.interacao1 || '');
-    setInteracao2(mensagemData.interacao2 || '');
-    setInteracao3(mensagemData.interacao3 || '');
+    setMensagemPadrao(mensagemData.mensagem_padrao ?? '');
+    setMensagemManual(mensagemData.mensagem_manual ?? '');
+    setTemplateMapping((() => {
+      const raw = mensagemData.template_mapping ?? '';
+      if (!raw.trim()) return raw;
+      try {
+        const decoded = raw.replace(/&quot;/g, '"');
+        const parsed = JSON.parse(decoded);
+        return JSON.stringify(parsed, null, 2);
+      } catch {
+        return raw;
+      }
+    })());
+    setInteracao1(mensagemData.interacao1 ?? '');
+    setInteracao2(mensagemData.interacao2 ?? '');
+    setInteracao3(mensagemData.interacao3 ?? '');
   } else {
     setTipoEnvio('pdf');
     setMensagemPadrao('');
@@ -213,40 +249,53 @@ const saveMensagemMutation = useMutation({
   };
 
   const handleSaveMensagem = useCallback(async () => {
-    if (!mensagemType) {
+    const currentMensagemType = mensagemTypeRef.current || mensagemType;
+    const currentTipoEnvio = tipoEnvioRef.current;
+    const currentMensagemPadrao = mensagemPadraoRef.current;
+    const currentMensagemManual = mensagemManualRef.current;
+    const currentTemplateMapping = templateMappingRef.current;
+    const currentInteracao1 = interacao1Ref.current;
+    const currentInteracao2 = interacao2Ref.current;
+    const currentInteracao3 = interacao3Ref.current;
+
+    if (!currentMensagemType) {
       showError(t('whatsappServer.selectMessageType'));
       return;
     }
 
-    // Para todos os tipos, se tiver template, não precisa de mensagem_padrao
-    // Para envio_manual sem template, usar mensagem_manual como mensagem_padrao
-    // Para outros tipos sem template, mensagem_padrao é obrigatória
     const isWhatsAppCloud = servidorAtivo?.data?.tipo_api === 'whatsapp_cloud';
-    const temTemplate = !!templateMapping && templateMapping.trim() !== '';
-    
-    let mensagemPadraoFinal = mensagemPadrao;
-    
-    // Para envio_manual, se não tiver template, usar mensagem_manual como mensagem_padrao
-    if (mensagemType === 'envio_manual' && !temTemplate && mensagemManual) {
-      mensagemPadraoFinal = mensagemManual;
-    } else if (mensagemType !== 'envio_manual' && !mensagemPadraoFinal && !temTemplate && !isWhatsAppCloud) {
-      // Para Evolution API sem template (exceto envio_manual), mensagem_padrao é obrigatória
+    const temTemplate = !!(currentTemplateMapping && currentTemplateMapping.trim() !== '');
+
+    let mensagemPadraoFinal = currentMensagemPadrao;
+    if (currentMensagemType === 'envio_manual' && !temTemplate && currentMensagemManual) {
+      mensagemPadraoFinal = currentMensagemManual;
+    } else if (currentMensagemType !== 'envio_manual' && !mensagemPadraoFinal && !temTemplate && !isWhatsAppCloud) {
       showError(t('whatsappServer.messageRequired'));
       return;
     }
 
+    let templateMappingFinal = currentTemplateMapping?.trim() || undefined;
+    if (templateMappingFinal) {
+      try {
+        const parsed = JSON.parse(templateMappingFinal.replace(/&quot;/g, '"'));
+        templateMappingFinal = JSON.stringify(parsed, null, 2);
+      } catch {
+        // mantém como está se JSON inválido
+      }
+    }
+
     await saveMensagemMutation.mutateAsync({
-      tipo: mensagemType,
-      tipo_envio: tipoEnvio,
+      tipo: currentMensagemType,
+      tipo_envio: currentTipoEnvio,
       mensagem_padrao: mensagemPadraoFinal || '',
-      mensagem_manual: mensagemManual || undefined,
-      template_mapping: templateMapping || undefined,
-      interacao1: interacao1 || undefined,
-      interacao2: interacao2 || undefined,
-      interacao3: interacao3 || undefined,
+      mensagem_manual: currentMensagemManual || undefined,
+      template_mapping: templateMappingFinal,
+      interacao1: currentInteracao1 || undefined,
+      interacao2: currentInteracao2 || undefined,
+      interacao3: currentInteracao3 || undefined,
       ativo: true
     });
-  }, [mensagemType, tipoEnvio, mensagemPadrao, mensagemManual, templateMapping, interacao1, interacao2, interacao3, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showError, t]);
+  }, [mensagemType, servidorAtivo?.data?.tipo_api, saveMensagemMutation, showError, t]);
 
   const handleReset = useCallback(async () => {
     if (servidorAtivo?.data?.id) {

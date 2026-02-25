@@ -270,6 +270,7 @@ export class ContaPagarService {
   static async createPagamento(
     dados: {
       conta_pagar_id: number;
+      empresa_id?: number | null;
       data: Date;
       valor: number;
       tipo_pagamento: 'DINHEIRO' | 'BOLETO' | 'CARTAO' | 'DEPOSITO' | 'DEBITO_CONTA' | 'TRANSFERENCIA' | 'PIX';
@@ -278,7 +279,7 @@ export class ContaPagarService {
     },
     transaction?: Transaction
   ): Promise<ContaPagarPagamento> {
-    return await ContaPagarPagamento.create(dados, { transaction });
+    return await ContaPagarPagamento.create({ ...dados, empresa_id: dados.empresa_id ?? null }, { transaction });
   }
 
   /**

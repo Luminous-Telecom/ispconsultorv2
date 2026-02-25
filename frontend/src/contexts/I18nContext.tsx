@@ -1252,7 +1252,8 @@ export interface TranslationKeys {
   'messages.types.15daysAfter': string;
   'messages.types.clientCut': string;
   'messages.types.manualSend': string;
-  
+  'messages.types.paymentReceipt': string;
+
   // Send Types
   'messages.sendTypes.disabled': string;
   'messages.sendTypes.pdf': string;
@@ -2596,6 +2597,7 @@ const translations: Translations = {
     'messages.types.15daysAfter': '15 dias depois do vencimento',
     'messages.types.clientCut': 'Corte do cliente',
     'messages.types.manualSend': 'Envio manual de cobrança',
+    'messages.types.paymentReceipt': 'Recibo de pagamento',
 
     // Send Types
     'messages.sendTypes.disabled': 'Desativar',
@@ -3936,6 +3938,7 @@ const translations: Translations = {
     'messages.types.15daysAfter': '15 days after due date',
     'messages.types.clientCut': 'Client suspension',
     'messages.types.manualSend': 'Manual collection send',
+    'messages.types.paymentReceipt': 'Payment receipt',
 
     // Send Types
     'messages.sendTypes.disabled': 'Disable',
@@ -5274,6 +5277,7 @@ const translations: Translations = {
     'messages.types.15daysAfter': '15 días después del vencimiento',
     'messages.types.clientCut': 'Suspensión del cliente',
     'messages.types.manualSend': 'Envío manual de cobro',
+    'messages.types.paymentReceipt': 'Recibo de pago',
 
     // Send Types
     'messages.sendTypes.disabled': 'Desactivar',

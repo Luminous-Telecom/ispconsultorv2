@@ -7,6 +7,7 @@ export interface MensagemEmailData {
   mensagem_padrao?: string | null;
   mensagem_manual?: string | null;
   ativo?: boolean;
+  empresa_id?: number | null;
 }
 
 export class MensagemEmailService {

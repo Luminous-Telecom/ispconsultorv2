@@ -240,10 +240,11 @@ export class EmailService {
         } : undefined
       });
 
+      const subjectEmail = titulo ?? `${servidor.nome_remetente} - Boleto de Pagamento`;
       const mailOptions: SendMailOptions = {
         from: `"${servidor.nome_remetente}" <${servidor.email_remetente}>`,
         to: emailDestino,
-        subject: `${servidor.nome_remetente} - Boleto de Pagamento`,
+        subject: subjectEmail,
         html: mensagem || '<p>Boleto em anexo.</p>',
         text: 'Seu cliente de email não suporta HTML. Por favor, visualize o anexo PDF.'
       };
@@ -342,6 +343,77 @@ export class EmailService {
       }
 
       logger.error('Erro ao enviar email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Envia email de recibo de pagamento quando o título é marcado como pago.
+   * Se tipo_envio === 'pdf', anexa o PDF do recibo (modelo de documento tipo recibo).
+   */
+  static async enviarReciboPagamento(titulo: TituloComRelacoes): Promise<boolean> {
+    try {
+      logger.info('[Recibo Email] Iniciando envio', { titulo_id: titulo.id });
+
+      const servidor = await ServidorEmail.findOne({ where: { ativo: true } });
+      if (!servidor) {
+        logger.info('[Recibo Email] Servidor de email inativo ou não configurado', { titulo_id: titulo.id });
+        return false;
+      }
+
+      const mensagem = await MensagemEmail.findOne({ where: { tipo: 'recibo_pagamento', ativo: true } });
+      if (!mensagem || mensagem.tipo_envio === 'desativado') {
+        logger.info('[Recibo Email] Mensagem recibo_pagamento não encontrada ou desativada', { titulo_id: titulo.id });
+        return false;
+      }
+
+      const tituloComCliente = titulo as TituloComRelacoes & { cliente?: Cliente };
+      const cliente = tituloComCliente.cliente;
+      if (!cliente?.email || !cliente.recebe_email) {
+        logger.info('[Recibo Email] Cliente sem email ou recebe_email desativado', {
+          titulo_id: titulo.id,
+          tem_email: !!cliente?.email,
+          recebe_email: !!cliente?.recebe_email
+        });
+        return false;
+      }
+
+      const contratoRef: (Partial<Contrato> & { id: number }) | undefined = titulo.contrato_id
+        ? { id: titulo.contrato_id }
+        : undefined;
+
+      const corpoHtml = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
+        cliente,
+        contrato: contratoRef,
+        titulo,
+        dataReferencia: new Date()
+      }, undefined);
+
+      let base64Pdf: string | undefined;
+      if (mensagem.tipo_envio === 'pdf') {
+        const { ReciboPDFService } = await import('../../titulos/ReciboPDFService');
+        base64Pdf = await ReciboPDFService.gerarReciboBase64({ titulo, cliente, baseUrl: undefined }) ?? undefined;
+      }
+
+      const enviou = await this.enviarEmail(
+        servidor,
+        cliente.email,
+        corpoHtml,
+        base64Pdf,
+        'titulo',
+        titulo.id,
+        `${servidor.nome_remetente} - Recibo de Pagamento`,
+        cliente.razao_social || cliente.nome_fantasia || undefined,
+        cliente.email,
+        cliente.telefone || undefined
+      );
+      logger.info('[Recibo Email] Envio concluído', { titulo_id: titulo.id, sucesso: enviou });
+      return enviou;
+    } catch (error) {
+      logger.error('Erro ao enviar recibo de pagamento por email', {
+        titulo_id: titulo.id,
+        error: error instanceof Error ? error.message : String(error)
+      });
       return false;
     }
   }

@@ -59,7 +59,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
     return () => {
       cleanupFunctions.forEach(cleanup => cleanup());
     };
-  }, [mensagemPadrao, mensagemManual, interacao1, interacao2, interacao3, mensagemType]);
+  }, [mensagemPadrao, mensagemManual, templateMapping, interacao1, interacao2, interacao3, mensagemType]);
 
   const handleVariableClick = (variable: string) => {
     if (onInsertVariable) {
@@ -102,7 +102,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   { value: '10_dias_depois_vencimento', label: t('messages.types.10daysAfter') },
                   { value: '15_dias_depois_vencimento', label: t('messages.types.15daysAfter') },
                   { value: 'corte_cliente', label: t('messages.types.clientCut') },
-                  { value: 'envio_manual', label: t('messages.types.manualSend') }
+                  { value: 'envio_manual', label: t('messages.types.manualSend') },
+                  { value: 'recibo_pagamento', label: t('messages.types.paymentReceipt') }
                 ]}
               />
             </div>
@@ -139,8 +140,28 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                         name="templateMapping"
                         type="textarea"
                         label=""
-                        placeholder='{"name": "fatura_pdf", "language": "en", "variables": ["cliente.razao_social", "titulo.valor_final", "titulo.data_vencimento", "dias_vencimento"]}'
-                        rows={6}
+                        placeholder={mensagemType === 'recibo_pagamento'
+                          ? `{
+  "name": "pagamento_recebido",
+  "language": "pt_BR",
+  "variables": [
+    "cliente.razao_social",
+    "titulo.valor_final",
+    "titulo.data_vencimento",
+    "dias_vencimento"
+  ]
+}`
+                          : `{
+  "name": "fatura_pdf",
+  "language": "pt_BR",
+  "variables": [
+    "cliente.razao_social",
+    "titulo.valor_final",
+    "titulo.data_vencimento",
+    "dias_vencimento"
+  ]
+}`}
+                        rows={10}
                         size="sm"
                         value={templateMapping}
                         onChange={(value) => onTemplateMappingChange(String(value ?? ''))}

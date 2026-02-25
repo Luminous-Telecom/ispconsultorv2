@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { TipoCobrancaContratoService } from '../../../services/cadastros/TipoCobrancaContratoService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class TipoCobrancaContratoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -51,7 +52,9 @@ export class TipoCobrancaContratoController {
         sendValidationError(res, 'Nome e quantidade de títulos são obrigatórios');
         return;
       }
+      const empresaId = getEmpresaIdOrNull(req);
       const item = await TipoCobrancaContratoService.create({
+        empresa_id: empresaId ?? null,
         nome,
         quantidade_titulos: Number(quantidade_titulos),
         periodicidade: periodicidade || 'mensal',

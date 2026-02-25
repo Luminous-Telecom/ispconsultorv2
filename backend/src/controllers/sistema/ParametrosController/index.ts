@@ -8,6 +8,7 @@ import { cache } from '../../../utils/cache';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ParametrosController {
   // Schema de validação
@@ -123,7 +124,8 @@ export class ParametrosController {
             tipo: 'string',
             descricao: 'Método de login na central do assinante: "cnpj" ou "email"',
             categoria: 'central_assinante',
-            ativo: true
+            ativo: true,
+            empresa_id: getEmpresaIdOrNull(req) ?? null
           } as any);
         } else {
           await ParametroService.update('central_assinante_metodo_login', {

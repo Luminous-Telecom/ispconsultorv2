@@ -90,7 +90,7 @@ export class IpPermitidoService {
     });
   }
 
-  static async create(data: { cliente_id: number; faixa_ips: string }): Promise<IpPermitidoBlockdomi> {
+  static async create(data: { cliente_id: number; faixa_ips: string; empresa_id?: number | null }): Promise<IpPermitidoBlockdomi> {
     const faixaNormalizada = (data.faixa_ips || '')
       .split(';')
       .map((s) => s.trim())
@@ -101,7 +101,8 @@ export class IpPermitidoService {
     }
     return IpPermitidoBlockdomi.create({
       cliente_id: data.cliente_id,
-      faixa_ips: faixaNormalizada
+      faixa_ips: faixaNormalizada,
+      empresa_id: data.empresa_id ?? null
     });
   }
 

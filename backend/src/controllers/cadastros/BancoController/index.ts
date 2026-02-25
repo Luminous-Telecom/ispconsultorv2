@@ -107,7 +107,8 @@ export class BancoController {
         return;
       }
       
-      const banco = await BancoService.create(dadosBanco);
+      const empresaId = getEmpresaIdOrNull(req);
+      const banco = await BancoService.create({ ...dadosBanco, empresa_id: empresaId ?? null });
       
       // Registrar auditoria
       try {

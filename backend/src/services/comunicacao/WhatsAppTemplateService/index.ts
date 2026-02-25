@@ -19,6 +19,8 @@ export class WhatsAppTemplateService {
     titulo: Titulo;
     mensagemTexto: string;
     incluirPdfNoHeader?: boolean;
+    tipoPdfHeader?: 'boleto' | 'recibo';
+    incluirBotao?: boolean;
     variables?: string[];
   }): Promise<Array<{
     type: 'body' | 'header' | 'button';
@@ -38,7 +40,7 @@ export class WhatsAppTemplateService {
       example?: string[];
     }>;
   }>> {
-    const { servidor, cliente, titulo, incluirPdfNoHeader = false } = params;
+    const { servidor, cliente, titulo, incluirPdfNoHeader = false, tipoPdfHeader = 'boleto', incluirBotao = true } = params;
     const components: Array<{
       type: 'body' | 'header' | 'button';
       parameters?: Array<{
@@ -58,9 +60,11 @@ export class WhatsAppTemplateService {
       }>;
     }> = [];
 
-    if (incluirPdfNoHeader && servidor.tipo_api === 'whatsapp_cloud') {
+    if (incluirPdfNoHeader && servidor.tipo_api === 'whatsapp_cloud' && cliente) {
       try {
-        const base64 = await TituloPDFController.gerarPdfBase64(titulo);
+        const base64 = tipoPdfHeader === 'recibo'
+          ? await import('../../titulos/ReciboPDFService').then(m => m.ReciboPDFService.gerarReciboBase64({ titulo, cliente }))
+          : await TituloPDFController.gerarPdfBase64(titulo);
         if (base64) {
           const mediaId = await WhatsAppCloudService.uploadMediaFromBase64(
             servidor,
@@ -72,7 +76,7 @@ export class WhatsAppTemplateService {
               type: 'header',
               parameters: [{
                 type: 'document',
-                document: { id: mediaId, filename: 'boleto.pdf' }
+                document: { id: mediaId, filename: tipoPdfHeader === 'recibo' ? 'recibo.pdf' : 'boleto.pdf' }
               }]
             });
           }
@@ -91,9 +95,11 @@ export class WhatsAppTemplateService {
       });
     }
 
-    const buttonComponent = this.prepararButtonComponent(titulo);
-    if (buttonComponent) {
-      components.push(buttonComponent);
+    if (incluirBotao) {
+      const buttonComponent = this.prepararButtonComponent(titulo);
+      if (buttonComponent) {
+        components.push(buttonComponent);
+      }
     }
 
     return components;
@@ -166,8 +172,22 @@ export class WhatsAppTemplateService {
           break;
         }
         case 'titulo.data_vencimento': {
-          const texto = titulo.data_vencimento 
+          const texto = titulo.data_vencimento
             ? formatDate(parseDateFromDb(titulo.data_vencimento)) || 'N/A'
+            : 'N/A';
+          bodyParams.push({ type: 'text', text: texto });
+          break;
+        }
+        case 'titulo.valor_pago': {
+          const valor = titulo.valor_pago !== null && titulo.valor_pago !== undefined
+            ? Number(titulo.valor_pago)
+            : Number(titulo.valor);
+          bodyParams.push({ type: 'text', text: isNaN(valor) ? '0.00' : valor.toFixed(2) });
+          break;
+        }
+        case 'titulo.pagamento': {
+          const texto = titulo.data_pagamento
+            ? formatDate(parseDateFromDb(titulo.data_pagamento)) || 'N/A'
             : 'N/A';
           bodyParams.push({ type: 'text', text: texto });
           break;

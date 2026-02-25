@@ -39,7 +39,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               { value: '10_dias_depois_vencimento', label: t('messages.types.10daysAfter') },
               { value: '15_dias_depois_vencimento', label: t('messages.types.15daysAfter') },
               { value: 'corte_cliente', label: t('messages.types.clientCut') },
-              { value: 'envio_manual', label: t('messages.types.manualSend') }
+              { value: 'envio_manual', label: t('messages.types.manualSend') },
+              { value: 'recibo_pagamento', label: t('messages.types.paymentReceipt') }
             ]}
           />
         </div>

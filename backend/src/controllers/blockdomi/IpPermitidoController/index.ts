@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { IpPermitidoService } from '../../../services/blockdomi/IpPermitidoService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { ClienteService } from '../../../services/clientes/ClienteService';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { logger } from '../../../utils/logger';
 import { getErrorMessage, getErrorStack } from '../../../utils/errorUtils';
 
@@ -70,7 +72,13 @@ export class IpPermitidoController {
         sendValidationError(res, 'cliente_id e faixa_ips são obrigatórios. Faixa de IPs separados por ;');
         return;
       }
-      const row = await IpPermitidoService.create({ cliente_id: Number(cliente_id), faixa_ips });
+      const cliente = await ClienteService.getById(Number(cliente_id));
+      const empresaId = cliente?.empresa_id ?? getEmpresaIdOrNull(req) ?? null;
+      const row = await IpPermitidoService.create({
+        cliente_id: Number(cliente_id),
+        faixa_ips,
+        empresa_id: empresaId
+      });
       const json = row.toJSON() as Record<string, unknown>;
       try {
         await registrarCriacao(req, 'IpPermitido', row.id, json);

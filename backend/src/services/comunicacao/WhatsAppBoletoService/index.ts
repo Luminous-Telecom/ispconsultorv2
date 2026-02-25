@@ -396,6 +396,115 @@ export class WhatsAppBoletoService {
   }
 
   /**
+   * Envia mensagem de recibo de pagamento por WhatsApp.
+   * Se tipo_envio === 'pdf', envia o PDF do recibo (modelo de documento tipo recibo) com a mensagem como descrição.
+   */
+  static async enviarReciboPagamento(titulo: Titulo, cliente: Cliente): Promise<boolean> {
+    try {
+      logger.info('[Recibo WhatsApp] Iniciando envio', { titulo_id: titulo.id });
+
+      if (!cliente?.telefone?.trim()) {
+        logger.info('[Recibo WhatsApp] Cliente sem telefone', { titulo_id: titulo.id });
+        return false;
+      }
+
+      const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });
+      if (!servidor) {
+        logger.info('[Recibo WhatsApp] Servidor WhatsApp inativo ou não configurado', { titulo_id: titulo.id });
+        return false;
+      }
+
+      const mensagem = await MensagemWhatsApp.findOne({ where: { tipo: 'recibo_pagamento', ativo: true } });
+      if (!mensagem || mensagem.tipo_envio === 'desativado') {
+        logger.info('[Recibo WhatsApp] Mensagem recibo_pagamento não encontrada ou desativada', { titulo_id: titulo.id });
+        return false;
+      }
+
+      const temTemplate = !!(mensagem.template_mapping && mensagem.template_mapping.trim());
+      const temMensagemPadrao = !!(mensagem.mensagem_padrao && mensagem.mensagem_padrao.trim());
+      if (!temTemplate && !temMensagemPadrao) {
+        logger.info('[Recibo WhatsApp] Nem template_mapping nem mensagem_padrao configurados', { titulo_id: titulo.id });
+        return false;
+      }
+
+      const baseUrl = undefined;
+      const contrato: Contrato | null | undefined = titulo.contrato_id ? { id: titulo.contrato_id } as Contrato : undefined;
+      const telefone = this.formatarTelefone(cliente.telefone);
+
+      if (servidor.tipo_api === 'whatsapp_cloud' && temTemplate) {
+        const templateInfo = WhatsAppCloudService.obterTemplateInfo(mensagem.template_mapping);
+        if (!templateInfo) {
+          logger.info('[Recibo WhatsApp] template_mapping inválido (Cloud API)', { titulo_id: titulo.id });
+          return false;
+        }
+        const mensagemTexto = mensagem.mensagem_padrao || '';
+        const msg = mensagemTexto
+          ? await VariaveisDocumentoService.processarVariaveis(mensagemTexto, {
+              cliente,
+              contrato: contrato || undefined,
+              titulo,
+              dataReferencia: new Date()
+            }, baseUrl)
+          : '';
+        const components = await WhatsAppTemplateService.prepararComponentesTemplate({
+          servidor,
+          cliente,
+          contrato: contrato || undefined,
+          titulo,
+          mensagemTexto: msg,
+          incluirPdfNoHeader: mensagem.tipo_envio === 'pdf',
+          tipoPdfHeader: 'recibo',
+          incluirBotao: false,
+          variables: templateInfo.variables
+        });
+        const enviou = await WhatsAppCloudService.enviarTemplate(
+          servidor,
+          telefone,
+          templateInfo.name,
+          templateInfo.language,
+          components,
+          { nome_fantasia: cliente.nome_fantasia || undefined, razao_social: cliente.razao_social || undefined },
+          titulo
+        );
+        logger.info('[Recibo WhatsApp] Envio via Cloud API concluído', {
+          titulo_id: titulo.id,
+          sucesso: enviou,
+          template: templateInfo.name
+        });
+        return enviou;
+      }
+
+      const msg = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao || '', {
+        cliente,
+        contrato: contrato || undefined,
+        titulo,
+        dataReferencia: new Date()
+      }, baseUrl);
+
+      if (mensagem.tipo_envio === 'pdf') {
+        const { ReciboPDFService } = await import('../../titulos/ReciboPDFService');
+        const base64Pdf = await ReciboPDFService.gerarReciboBase64({ titulo, cliente, baseUrl: undefined });
+        if (base64Pdf) {
+          const enviou = await WhatsAppSenderService.enviarPdfBase64(servidor, telefone, base64Pdf, msg);
+          logger.info('[Recibo WhatsApp] Envio PDF via Evolution concluído', { titulo_id: titulo.id, sucesso: enviou });
+          return enviou;
+        }
+        logger.warn('Falha ao gerar PDF do recibo para WhatsApp, enviando só texto', { titulo_id: titulo.id });
+      }
+
+      const enviou = await WhatsAppSenderService.enviarTexto(servidor, telefone, msg);
+      logger.info('[Recibo WhatsApp] Envio via Evolution concluído', { titulo_id: titulo.id, sucesso: enviou });
+      return enviou;
+    } catch (error) {
+      logger.error('Erro ao enviar recibo de pagamento por WhatsApp', {
+        titulo_id: titulo.id,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return false;
+    }
+  }
+
+  /**
    * Formata telefone para padrão brasileiro
    */
   private static formatarTelefone(telefone: string): string {

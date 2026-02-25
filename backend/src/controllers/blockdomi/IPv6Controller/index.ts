@@ -4,6 +4,7 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { isValidIPv6 } from '../../../utils/sanitize';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class IPv6Controller {
   static async list(req: Request, res: Response): Promise<void> {
@@ -74,7 +75,8 @@ export class IPv6Controller {
         data_fim_bloqueio: data_fim_bloqueio ?? null,
         link_oficio_anatel: link_oficio_anatel ?? null,
         link_oficio_justica: link_oficio_justica ?? null,
-        link_planilha_dominios: link_planilha_dominios ?? null
+        link_planilha_dominios: link_planilha_dominios ?? null,
+        empresa_id: getEmpresaIdOrNull(req) ?? null
       });
 
       const parts = [`Criados ${result.created} IPv6`];
@@ -110,7 +112,10 @@ export class IPv6Controller {
         return;
       }
 
-      const ipv6Criado = await IPv6Service.create(req.body);
+      const ipv6Criado = await IPv6Service.create({
+        ...req.body,
+        empresa_id: req.body.empresa_id ?? getEmpresaIdOrNull(req) ?? null
+      });
       
       // Registrar auditoria
       try {

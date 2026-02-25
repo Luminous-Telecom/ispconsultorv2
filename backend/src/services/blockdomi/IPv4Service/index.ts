@@ -169,6 +169,7 @@ export class IPv4Service {
       link_oficio_anatel?: string | null;
       link_oficio_justica?: string | null;
       link_planilha_dominios?: string | null;
+      empresa_id?: number | null;
       getVersoesForNewRecords?: (count: number) => Promise<Array<{ id: number; numero: string }>>;
       versaoId?: number;
     }
@@ -207,6 +208,7 @@ export class IPv4Service {
         link_oficio_anatel: metadata.link_oficio_anatel ?? null,
         link_oficio_justica: metadata.link_oficio_justica ?? null,
         link_planilha_dominios: metadata.link_planilha_dominios ?? null,
+        empresa_id: metadata.empresa_id ?? null,
         ativo: true
       });
     }

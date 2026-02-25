@@ -11,6 +11,7 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ServidorWhatsAppController {
   /**
@@ -58,7 +59,10 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      const servidor = await ServidorWhatsAppService.create(servidorData);
+      const servidor = await ServidorWhatsAppService.create({
+        ...servidorData,
+        empresa_id: servidorData.empresa_id ?? getEmpresaIdOrNull(req) ?? null
+      });
 
       try {
         await registrarCriacao(
@@ -390,7 +394,10 @@ export class ServidorWhatsAppController {
         } else {
           // Criar novo
           logger.info('Criando nova mensagem:', { tipo });
-          mensagem = await MensagemWhatsAppService.create(mensagemData);
+          mensagem = await MensagemWhatsAppService.create({
+            ...mensagemData,
+            empresa_id: getEmpresaIdOrNull(req) ?? null
+          });
           logger.info('Mensagem criada com sucesso:', { id: mensagem.id, tipo });
           
           try {

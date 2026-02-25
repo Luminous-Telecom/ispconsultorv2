@@ -303,6 +303,7 @@ export class ContratoController {
 
             // Criar serviço adicional
             const servico = await ContratoPlanoAdicionalService.create({
+              empresa_id: contrato.empresa_id ?? null,
               contrato_id: contrato.id,
               plano_id: servicoData.plano_id,
               desconto_percentual: servicoData.desconto_percentual || null,

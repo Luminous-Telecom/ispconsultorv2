@@ -12,6 +12,7 @@ import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ModeloDocumentoController {
   /**
@@ -70,7 +71,10 @@ export class ModeloDocumentoController {
         return;
       }
 
-      const documento = await ModeloDocumentoService.create(documentoData);
+      const documento = await ModeloDocumentoService.create({
+        ...documentoData,
+        empresa_id: documentoData.empresa_id ?? getEmpresaIdOrNull(req) ?? null
+      });
 
       try {
         await registrarCriacao(

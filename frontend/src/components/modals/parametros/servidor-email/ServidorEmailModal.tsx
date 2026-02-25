@@ -47,6 +47,13 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
     }
   }, [mensagemType]);
 
+  // Ao abrir a aba Mensagens, garantir que um tipo esteja selecionado (evita "Selecione um tipo" ao salvar)
+  useEffect(() => {
+    if (activeTab === 'mensagens' && !mensagemType) {
+      setMensagemType('10_dias_antes_vencimento');
+    }
+  }, [activeTab, mensagemType]);
+
   useEffect(() => {
     mensagemTextoRef.current = mensagemTexto;
   }, [mensagemTexto]);

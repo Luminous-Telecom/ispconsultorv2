@@ -129,6 +129,7 @@ export class ContratoPlanoAdicionalController {
       valorFinal = Math.round(valorFinal * 100) / 100;
 
       const servico = await ContratoPlanoAdicionalService.create({
+        empresa_id: contrato.empresa_id ?? null,
         contrato_id: parseInt(contrato_id),
         plano_id: value.plano_id,
         desconto_percentual: value.desconto_percentual || null,

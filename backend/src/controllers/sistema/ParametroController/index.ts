@@ -5,6 +5,7 @@ import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ParametroController {
   
@@ -82,7 +83,8 @@ export class ParametroController {
           tipo: tipo || 'string',
           descricao: descricao || `Parâmetro ${chave}`,
           categoria: categoria || 'geral',
-          ativo: ativo !== undefined ? ativo : true
+          ativo: ativo !== undefined ? ativo : true,
+          empresa_id: getEmpresaIdOrNull(req) ?? null
         });
 
         try {
@@ -179,7 +181,8 @@ export class ParametroController {
               tipo: tipo || 'string',
               descricao: descricao || `Parâmetro ${chave}`,
               categoria: categoria || 'geral',
-              ativo: ativo !== undefined ? ativo : true
+              ativo: ativo !== undefined ? ativo : true,
+              empresa_id: getEmpresaIdOrNull(req) ?? null
             });
             
             await parametro.reload(); // Garantir que os dados estão sincronizados

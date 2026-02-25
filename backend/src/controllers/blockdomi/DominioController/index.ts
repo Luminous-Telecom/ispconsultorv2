@@ -4,6 +4,7 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { sanitizeDominio } from '../../../utils/sanitize';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class DominioController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -80,7 +81,8 @@ export class DominioController {
         data_fim_bloqueio: trimOrNull(data_fim_bloqueio),
         link_oficio_anatel: trimOrNull(link_oficio_anatel),
         link_oficio_justica: trimOrNull(link_oficio_justica),
-        link_planilha_dominios: trimOrNull(link_planilha_dominios)
+        link_planilha_dominios: trimOrNull(link_planilha_dominios),
+        empresa_id: getEmpresaIdOrNull(req) ?? null
       });
 
       const parts = [`Criados ${result.created} domínio(s)`];
@@ -116,7 +118,11 @@ export class DominioController {
         return;
       }
 
-      const dominioCriado = await DominioService.create({ ...req.body, dominio: dominioLimpo });
+      const dominioCriado = await DominioService.create({
+        ...req.body,
+        dominio: dominioLimpo,
+        empresa_id: req.body.empresa_id ?? getEmpresaIdOrNull(req) ?? null
+      });
       
       // Registrar auditoria
       try {

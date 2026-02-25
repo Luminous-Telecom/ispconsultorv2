@@ -59,6 +59,7 @@ export class ContaPagarOperationService {
 
     await ContaPagarService.createPagamento({
       conta_pagar_id: conta.id,
+      empresa_id: conta.empresa_id ?? null,
       data: dataPagamento,
       valor: valorPagamento,
       tipo_pagamento: pagamentoData.tipo_pagamento,
@@ -151,6 +152,7 @@ export class ContaPagarOperationService {
     }
 
     const novaConta = await ContaPagarService.create({
+      empresa_id: contaOriginal.empresa_id ?? null,
       fornecedor_id: contaOriginal.fornecedor_id,
       data_vencimento: contaOriginal.data_vencimento,
       valor: contaOriginal.valor,

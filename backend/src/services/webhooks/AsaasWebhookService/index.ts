@@ -3,6 +3,7 @@ import { Banco } from '../../../models/cadastros/Banco';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { BarcodeService } from '../../bancos/BarcodeService';
 import { PaymentCommonService } from '../PaymentCommonService';
+import { ReciboPagamentoService } from '../../comunicacao/ReciboPagamentoService';
 import { logger } from '../../../utils/logger';
 import { JsonValue } from '../../../types/index';
 import { AsaasPaymentPayload } from '../../../types/webhooks';
@@ -148,7 +149,11 @@ export class AsaasWebhookService {
       
       // Recarregar título para obter dados atualizados
       await titulo.reload();
-      
+
+      if (titulo.pago) {
+        ReciboPagamentoService.enviarRecibo(titulo.id);
+      }
+
       // Capturar dados novos após atualização
       const dadosNovos = titulo.toJSON() as Record<string, unknown>;
       

@@ -7,6 +7,7 @@ import { logger } from '../../../utils/logger';
 
 export interface CreateClienteArquivoData {
   cliente_id: number;
+  empresa_id?: number | null;
   nome: string;
   tipo: 'documento' | 'foto' | 'assinatura' | 'outro';
   arquivo: Express.Multer.File;
@@ -273,6 +274,7 @@ export class ClienteArquivoService {
       
       return await ClienteArquivo.create({
         cliente_id: data.cliente_id,
+        empresa_id: data.empresa_id ?? null,
         nome: data.nome,
         tipo: data.tipo,
         caminho,

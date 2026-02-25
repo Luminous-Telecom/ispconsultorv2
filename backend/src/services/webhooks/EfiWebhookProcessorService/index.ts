@@ -2,6 +2,7 @@ import { Request } from 'express';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { PaymentCommonService } from '../PaymentCommonService';
+import { ReciboPagamentoService } from '../../comunicacao/ReciboPagamentoService';
 import { logger } from '../../../utils/logger';
 import { registrarAtualizacaoElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
 import {
@@ -232,7 +233,11 @@ export class EfiWebhookProcessorService {
       await titulo.update(updateData as Partial<typeof titulo>);
       await titulo.reload();
       const dadosNovos = titulo.toJSON() as Record<string, unknown>;
-      
+
+      if (titulo.pago) {
+        ReciboPagamentoService.enviarRecibo(titulo.id);
+      }
+
       if (req) {
         try {
           await registrarAtualizacaoElasticsearch(

@@ -11,6 +11,7 @@ import { ValidationError } from 'sequelize';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ServidorEmailController {
   /**
@@ -68,7 +69,10 @@ export class ServidorEmailController {
         servidorData.ativo = true;
       }
 
-      const servidor = await ServidorEmailService.create(servidorData);
+      const servidor = await ServidorEmailService.create({
+        ...servidorData,
+        empresa_id: servidorData.empresa_id ?? getEmpresaIdOrNull(req) ?? null
+      });
 
       try {
         await registrarCriacao(
@@ -350,7 +354,10 @@ export class ServidorEmailController {
         }
 
         servidorData.ativo = true;
-        const novoServidor = await ServidorEmailService.create(servidorData);
+        const novoServidor = await ServidorEmailService.create({
+          ...servidorData,
+          empresa_id: servidorData.empresa_id ?? getEmpresaIdOrNull(req) ?? null
+        });
         
         // Recarregar sem a senha
         await novoServidor.reload({
@@ -439,7 +446,8 @@ export class ServidorEmailController {
         tipo_envio,
         mensagem_padrao: mensagemPadraoFinal,
         mensagem_manual: mensagem_manual || null,
-        ativo
+        ativo,
+        empresa_id: getEmpresaIdOrNull(req) ?? null
       };
 
       let mensagem = await MensagemEmailService.findByTipo(tipo);

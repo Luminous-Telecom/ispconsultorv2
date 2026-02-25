@@ -111,6 +111,7 @@ export class TermoContratoController {
       }
 
       const termo = await TermoContratoService.create({
+        empresa_id: contrato.empresa_id ?? null,
         contrato_id: parseInt(contratoId),
         modelo_documento_id: modelo_documento_id,
         tipo_termo: tipoTermo as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',

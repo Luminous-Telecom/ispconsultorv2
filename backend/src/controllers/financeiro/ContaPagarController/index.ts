@@ -140,7 +140,9 @@ export class ContaPagarController {
         }
 
         const contasCriadas = [];
+        const empresaId = getEmpresaIdOrNull(req);
         const dadosBase = {
+          empresa_id: empresaId ?? fornecedor.empresa_id ?? null,
           fornecedor_id: value.fornecedor_id,
           valor: value.valor,
           tipo_pagamento: value.tipo_pagamento,
@@ -222,8 +224,10 @@ export class ContaPagarController {
           value.data_vencimento = normalizeDateForDb(value.data_vencimento) || new Date(value.data_vencimento);
         }
 
+        const empresaIdSingle = getEmpresaIdOrNull(req);
         const conta = await ContaPagarService.create({
           ...value,
+          empresa_id: empresaIdSingle ?? fornecedor.empresa_id ?? null,
           valor_pago: 0,
           status: 'A_PAGAR'
         }, transaction);

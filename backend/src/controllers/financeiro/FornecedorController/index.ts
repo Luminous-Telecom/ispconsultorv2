@@ -97,7 +97,8 @@ export class FornecedorController {
         return;
       }
 
-      const fornecedor = await FornecedorService.create(value);
+      const empresaId = getEmpresaIdOrNull(req);
+      const fornecedor = await FornecedorService.create({ ...value, empresa_id: empresaId ?? null });
 
       // Registrar auditoria
       try {

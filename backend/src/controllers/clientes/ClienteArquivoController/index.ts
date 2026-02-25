@@ -7,6 +7,8 @@ import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { ClienteArquivo } from '../../../models/clientes/ClienteArquivo';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { ClienteService } from '../../../services/clientes/ClienteService';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ClienteArquivoController {
   private static createSchema = Joi.object({
@@ -88,8 +90,15 @@ export class ClienteArquivoController {
         return;
       }
 
+      const cliente = await ClienteService.getById(value.cliente_id);
+      if (!cliente) {
+        sendNotFound(res, 'Cliente não encontrado');
+        return;
+      }
+
       const createData: CreateClienteArquivoData = {
         cliente_id: value.cliente_id,
+        empresa_id: cliente.empresa_id ?? getEmpresaIdOrNull(req) ?? null,
         nome: value.nome || req.file.originalname,
         tipo: value.tipo,
         arquivo: req.file,
