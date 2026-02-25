@@ -35,12 +35,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
     selectedItem,
     handleSelectionChange,
     clearSelection
-  } = useModalSelect<TemplateWhatsApp>(
-    (template) => {
-      onSelect({ template_id: template.id });
-      onClose();
-    }
-  );
+  } = useModalSelect<TemplateWhatsApp>(undefined);
 
   const { data: templatesData, isLoading, error, refetch } = useQuery({
     queryKey: ['templates-whatsapp'],
@@ -170,10 +165,6 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
               }}
               tableId="template-select-table"
               onSelectionChange={handleSelectionChange}
-              onRowClick={(item) => {
-                onSelect({ template_id: item.id });
-                onClose();
-              }}
               onRefresh={refetch}
               onSort={(column, direction) => {
                 setTimeout(() => tableFilters.setSort(column, direction), 0);
