@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { unwrapResponse } from './core';
 
 export interface Backup {
   nome: string;
@@ -20,59 +21,54 @@ export type BackupManualTipo = 'database' | 'arquivos' | 'logs' | 'completo';
 
 export class BackupService {
   static async list(): Promise<Backup[]> {
-    const response = await apiService.get<Backup[]>('/backups') as BackupListResponse;
-    if (!response.success || !response.data) {
-      return [];
-    }
-    return response.data;
+    const response = await apiService.get<Backup[]>('/backups');
+    return unwrapResponse<Backup[]>(response, { fallback: [], throwOnFailure: false });
   }
 
   static async deleteBackup(nome: string): Promise<void> {
-    const response = await apiService.delete<{ success?: boolean; message?: string }>(
+    const response = await apiService.delete<{ success: boolean; message: string }>(
       `/backups/${encodeURIComponent(nome)}`
     );
-    const r = response as { success?: boolean; message?: string };
-    if (r.success === false && r.message) {
-      throw new Error(r.message);
-    }
+    unwrapResponse(response, { fallback: { success: true, message: '' } });
   }
 
   static async downloadBackup(nome: string): Promise<Blob> {
     const response = await apiService.get<Blob>(
       `/backups/${encodeURIComponent(nome)}/download`,
       { responseType: 'blob' }
-    ) as { data?: Blob };
-    const blob = response?.data ?? (response as unknown as Blob);
+    );
+    const blob = unwrapResponse<Blob>(response);
+
     if (!blob || !(blob instanceof Blob)) {
-      throw new Error('Resposta do servidor n√£o √© um arquivo v√°lido');
+      throw new Error('Resposta do servidor n„o È um arquivo v·lido');
     }
+
     return blob;
   }
 
   static async restoreBackup(nome: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.post<{ success?: boolean; message?: string }>(
+    const response = await apiService.post<{ success: boolean; message?: string }>(
       `/backups/${encodeURIComponent(nome)}/restore`
-    ) as { success?: boolean; message?: string; data?: { success?: boolean; message?: string } };
-    const data = response.data ?? response;
-    if (data.success === false && data.message) {
-      throw new Error(data.message);
-    }
+    );
+    const data = unwrapResponse<{ success: boolean; message?: string }>(response);
+
     return {
       success: true,
-      message: data.message ?? 'Restaura√ß√£o solicitada.'
+      message: data.message ?? 'RestauraÁ„o solicitada.'
     };
   }
 
   static async executeManual(tipo: BackupManualTipo): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.post<{ success?: boolean; message?: string; data?: { message?: string } }>(
+    const response = await apiService.post<{ success: boolean; message?: string }>(
       '/backups/manual',
       { tipo }
-    ) as { success?: boolean; message?: string; data?: { message?: string } };
-    const msg = response.message ?? response.data?.message ?? 'Backup em fila.';
-    if (response.success === false) {
-      throw new Error(msg);
-    }
-    return { success: true, message: msg };
+    );
+    const data = unwrapResponse<{ success: boolean; message?: string }>(response);
+
+    return {
+      success: true,
+      message: data.message ?? 'Backup em fila.'
+    };
   }
 
   static triggerFileDownload(blob: Blob, filename: string): void {
@@ -86,3 +82,4 @@ export class BackupService {
     window.URL.revokeObjectURL(url);
   }
 }
+

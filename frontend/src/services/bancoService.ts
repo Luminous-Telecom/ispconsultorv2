@@ -1,16 +1,16 @@
 /**
- * BancoService - Serviço refatorado usando BaseService
- * Mantém compatibilidade com código existente através de métodos estáticos
+ * BancoService - Servico refatorado usando BaseService
+ * Mantem compatibilidade com codigo existente atraves de metodos estaticos
  */
-import { BaseService, defaultApiClient } from './core';
+import { BaseService, defaultApiClient, unwrapResponse } from './core';
 import { ResponseTransformer } from './core/ResponseTransformer';
 import { ErrorHandler } from './core/ErrorHandler';
 import { Banco, CreateBanco, UpdateBanco, BancoFilters, PaginatedResponse, ApiResponse } from '../types';
 import { AxiosError } from 'axios';
 
 /**
- * Classe de serviço para operações relacionadas a Bancos
- * Usa BaseService para operações CRUD padrão
+ * Classe de servico para operacoes relacionadas a Bancos
+ * Usa BaseService para operacoes CRUD padrao
  */
 class BancoServiceClass extends BaseService<Banco, CreateBanco, UpdateBanco, BancoFilters> {
   constructor() {
@@ -21,11 +21,11 @@ class BancoServiceClass extends BaseService<Banco, CreateBanco, UpdateBanco, Ban
    * Buscar bancos ativos
    */
   async findAtivos(): Promise<ApiResponse<Banco[]>> {
-    return this.customGet<Banco[]>(`/ativos`);
+    return this.customGet<Banco[]>('/ativos');
   }
 
   /**
-   * Testar conexão do banco
+   * Testar conexao do banco
    */
   async testarConexao(id: number): Promise<ApiResponse<{ success: boolean; message: string }>> {
     return this.customPost<{ success: boolean; message: string }>(`/${id}/testar-conexao`);
@@ -43,14 +43,12 @@ class BancoServiceClass extends BaseService<Banco, CreateBanco, UpdateBanco, Ban
   }
 
   /**
-   * Obter URL padrão do banco
-   * Nota: Este endpoint usa /api/bancos ao invés de /bancos, então fazemos uma chamada direta ao ApiClient
+   * Obter URL padrao do banco
+   * Nota: Este endpoint usa /api/bancos ao inves de /bancos, entao fazemos uma chamada direta ao ApiClient
    */
   async urlPadrao(tipoBanco: string): Promise<ApiResponse<{ url: string }>> {
     try {
-      // Este endpoint tem um prefixo diferente, então fazemos uma chamada direta
       const response = await this.apiClient.get<{ url: string }>(`/bancos/${tipoBanco}/url-padrao`);
-      // O ApiClient já retorna ApiResponse<T>, então só precisamos normalizar
       return ResponseTransformer.normalize<{ url: string }>(response);
     } catch (error) {
       const apiError = ErrorHandler.processError(error as AxiosError);
@@ -59,16 +57,16 @@ class BancoServiceClass extends BaseService<Banco, CreateBanco, UpdateBanco, Ban
   }
 }
 
-// Instância única do serviço
+// Instancia unica do servico
 const bancoServiceInstance = new BancoServiceClass();
 
 /**
- * BancoService - API estática para compatibilidade com código existente
- * Todos os métodos delegam para a instância do serviço
+ * BancoService - API estatica para compatibilidade com codigo existente
+ * Todos os metodos delegam para a instancia do servico
  */
 export class BancoService {
   /**
-   * Listar bancos com filtros e paginação
+   * Listar bancos com filtros e paginacao
    */
   static async list(filters: BancoFilters = {}): Promise<PaginatedResponse<Banco>> {
     return bancoServiceInstance.list(filters);
@@ -79,10 +77,7 @@ export class BancoService {
    */
   static async getById(id: number): Promise<Banco> {
     const response = await bancoServiceInstance.getById(id);
-    if (response.data) {
-      return response.data;
-    }
-    return response as unknown as Banco;
+    return unwrapResponse<Banco>(response);
   }
 
   /**
@@ -90,10 +85,7 @@ export class BancoService {
    */
   static async create(data: CreateBanco): Promise<Banco> {
     const response = await bancoServiceInstance.create(data);
-    if (response.data) {
-      return response.data;
-    }
-    return response as unknown as Banco;
+    return unwrapResponse<Banco>(response);
   }
 
   /**
@@ -101,10 +93,7 @@ export class BancoService {
    */
   static async update(id: number, data: UpdateBanco): Promise<Banco> {
     const response = await bancoServiceInstance.update(id, data);
-    if (response.data) {
-      return response.data;
-    }
-    return response as unknown as Banco;
+    return unwrapResponse<Banco>(response);
   }
 
   /**
@@ -119,21 +108,15 @@ export class BancoService {
    */
   static async findAtivos(): Promise<Banco[]> {
     const response = await bancoServiceInstance.findAtivos();
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    }
-    return [];
+    return unwrapResponse<Banco[]>(response, { fallback: [], throwOnFailure: false });
   }
 
   /**
-   * Testar conexão do banco
+   * Testar conexao do banco
    */
   static async testarConexao(id: number): Promise<{ success: boolean; message: string }> {
     const response = await bancoServiceInstance.testarConexao(id);
-    if (response.data) {
-      return response.data;
-    }
-    return response as unknown as { success: boolean; message: string };
+    return unwrapResponse<{ success: boolean; message: string }>(response);
   }
 
   /**
@@ -141,33 +124,28 @@ export class BancoService {
    */
   static async buscarDadosApi(id: number): Promise<{ success: boolean; message: string }> {
     const response = await bancoServiceInstance.buscarDadosApi(id);
-    if (response.data) {
-      return response.data;
-    }
-    return response as unknown as { success: boolean; message: string };
+    return unwrapResponse<{ success: boolean; message: string }>(response);
   }
 
   static async gerarWebhookSecret(id: number): Promise<string> {
     const response = await bancoServiceInstance.gerarWebhookSecret(id);
-    if (response.data?.webhook_secret) {
-      return response.data.webhook_secret;
-    }
-    return '';
+    const data = unwrapResponse<{ webhook_secret: string }>(response, {
+      fallback: { webhook_secret: '' },
+      throwOnFailure: false,
+    });
+    return data.webhook_secret;
   }
 
   /**
-   * Obter URL padrão do banco
+   * Obter URL padrao do banco
    */
   static async urlPadrao(tipoBanco: string): Promise<{ url: string }> {
     const response = await bancoServiceInstance.urlPadrao(tipoBanco);
-    if (response.data) {
-      return response.data;
-    }
-    return response as unknown as { url: string };
+    return unwrapResponse<{ url: string }>(response);
   }
 }
 
 /**
- * Exportar também a instância do serviço para uso direto (opcional)
+ * Exportar tambem a instancia do servico para uso direto (opcional)
  */
 export const bancoService = bancoServiceInstance;

@@ -5,4 +5,5 @@ export { ErrorHandler, ErrorType, type ApiError } from './ErrorHandler';
 export { ResponseTransformer } from './ResponseTransformer';
 export { BaseService, type BaseFilters } from './BaseService';
 export { ServiceFactory, type ServiceConfig } from './ServiceFactory';
+export { unwrapResponse, type UnwrapResponseOptions } from './unwrapResponse';
 
