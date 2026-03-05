@@ -166,7 +166,7 @@ ModeloDocumento.init(
   },
   {
     sequelize,
-    tableName: 'modelo_documento',
+    tableName: 'adm_modelo_documento',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

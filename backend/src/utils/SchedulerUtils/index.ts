@@ -3,13 +3,33 @@ import { ScheduledRoutine } from '../../models/sistema/ScheduledRoutine';
 import { ajustarDataVencimento } from '../dateUtils';
 import type { CreateRoutineData, UpdateRoutineData } from '../../types/scheduler';
 
+/** Interface comum para rotinas (ERP e SaaS) */
+export interface RoutineScheduleShape {
+  hora_execucao: string | Date;
+  frequencia: string;
+  dia_semana?: number;
+  dia_execucao?: number;
+  cron_expression?: string;
+}
+
+/** Normaliza hora_execucao para HH:mm (compatível com Sequelize TIME) */
+export function normalizeHoraExecucao(routine: RoutineScheduleShape): string {
+  const h = routine.hora_execucao;
+  if (typeof h === 'string') {
+    const parts = h.split(':');
+    return `${parts[0] ?? '00'}:${parts[1] ?? '00'}`;
+  }
+  const d = h as Date;
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 /**
  * Constrói uma expressão CRON a partir dos dados de uma rotina
- * @param routine - Rotina agendada
+ * @param routine - Rotina agendada (ERP ou SaaS)
  * @returns Expressão CRON válida
  */
-export function buildCronExpression(routine: ScheduledRoutine): string {
-  const [hours, minutes] = routine.hora_execucao.split(':');
+export function buildCronExpression(routine: RoutineScheduleShape): string {
+  const [hours, minutes] = normalizeHoraExecucao(routine).split(':');
 
   switch (routine.frequencia) {
     case 'diaria':
@@ -50,10 +70,10 @@ export function validateCronExpression(expression: string): boolean {
  * @returns Data da próxima execução
  */
 export function calculateNextExecution(
-  routine: Pick<ScheduledRoutine, 'hora_execucao' | 'frequencia'>
+  routine: RoutineScheduleShape
 ): Date {
   const now = new Date();
-  const [hours, minutes] = routine.hora_execucao.split(':');
+  const [hours, minutes] = normalizeHoraExecucao(routine).split(':');
   
   const nextExecution = new Date();
   nextExecution.setHours(parseInt(hours), parseInt(minutes), 0, 0);

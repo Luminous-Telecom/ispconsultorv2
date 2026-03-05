@@ -1,16 +1,18 @@
 import { EventEmitter } from 'events';
 import { WorkerManager } from '../WorkerManager';
-import RoutineExecutionLog from '../../models/sistema/RoutineExecutionLog';
 import ScheduledRoutine from '../../models/sistema/ScheduledRoutine';
-import { Op } from 'sequelize';
 import { logger } from '../../utils/logger';
+import {
+  buscarLogsExecucaoElasticsearch,
+  limparLogsRotinaAntigosElasticsearch
+} from '../../services/elasticsearch/RoutineLogElasticsearchService';
 
 export interface MonitorConfig {
-  healthCheckInterval?: number; // em milissegundos
+  healthCheckInterval?: number;
   logRetentionDays?: number;
   alertThresholds?: {
-    maxExecutionTime?: number; // em milissegundos
-    maxErrorRate?: number; // porcentagem
+    maxExecutionTime?: number;
+    maxErrorRate?: number;
     maxConsecutiveFailures?: number;
   };
 }
@@ -21,13 +23,13 @@ export interface HealthStatus {
   workers: {
     active: number;
     max: number;
-    utilization: number; // porcentagem
+    utilization: number;
   };
   executions: {
     total: number;
     successful: number;
     failed: number;
-    successRate: number; // porcentagem
+    successRate: number;
   };
   alerts: string[];
 }
@@ -67,11 +69,11 @@ export class WorkerMonitor extends EventEmitter {
   private constructor(config: MonitorConfig = {}) {
     super();
     this.config = {
-      healthCheckInterval: config.healthCheckInterval || 30000, // 30 segundos
+      healthCheckInterval: config.healthCheckInterval || 30000,
       logRetentionDays: config.logRetentionDays || 30,
       alertThresholds: {
-        maxExecutionTime: config.alertThresholds?.maxExecutionTime || 300000, // 5 minutos
-        maxErrorRate: config.alertThresholds?.maxErrorRate || 20, // 20%
+        maxExecutionTime: config.alertThresholds?.maxExecutionTime || 300000,
+        maxErrorRate: config.alertThresholds?.maxErrorRate || 20,
         maxConsecutiveFailures: config.alertThresholds?.maxConsecutiveFailures || 3
       }
     };
@@ -85,100 +87,59 @@ export class WorkerMonitor extends EventEmitter {
     return WorkerMonitor.instance;
   }
 
-  /**
-   * Inicia o monitor
-   */
   async start(): Promise<void> {
-    if (this.isRunning) {
-      return;
-    }
-
+    if (this.isRunning) return;
     this.isRunning = true;
 
-    // Configurar verificação de saúde
     this.healthCheckInterval = setInterval(async () => {
       try {
         await this.performHealthCheck();
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        const errorStack = error instanceof Error ? error.stack : undefined;
         logger.error('Erro na verificação de saúde', {
           context: 'WorkerMonitor',
           action: 'start',
-          error: errorMessage,
-          stack: errorStack
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
         });
         this.emit('healthCheckError', error);
       }
     }, this.config.healthCheckInterval);
 
-    // Configurar limpeza de logs
     this.scheduleLogCleanup();
-
-    // Escutar eventos do WorkerManager
-    this.workerManager.on('routineCompleted', (data) => {
-      this.emit('routineCompleted', data);
-    });
-
+    this.workerManager.on('routineCompleted', (data) => this.emit('routineCompleted', data));
     this.workerManager.on('routineFailed', (data) => {
       this.emit('routineFailed', data);
       this.checkForAlerts(data);
     });
-
     this.emit('started');
   }
 
-  /**
-   * Para o monitor
-   */
   async stop(): Promise<void> {
-    if (!this.isRunning) {
-      return;
-    }
-
+    if (!this.isRunning) return;
     this.isRunning = false;
-
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
       this.healthCheckInterval = undefined;
     }
-
     this.emit('stopped');
   }
 
-  /**
-   * Realiza verificação de saúde
-   */
   private async performHealthCheck(): Promise<void> {
     const healthStatus = await this.getHealthStatus();
-    
-    if (healthStatus.status === 'critical') {
-      this.emit('criticalAlert', healthStatus);
-    } else if (healthStatus.status === 'warning') {
-      this.emit('warningAlert', healthStatus);
-    }
-
+    if (healthStatus.status === 'critical') this.emit('criticalAlert', healthStatus);
+    else if (healthStatus.status === 'warning') this.emit('warningAlert', healthStatus);
     this.emit('healthCheck', healthStatus);
   }
 
-  /**
-   * Obtém status de saúde do sistema
-   */
   async getHealthStatus(): Promise<HealthStatus> {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-
-    // Status dos workers
     const workersStatus = this.workerManager.getStatus();
     const workerUtilization = (workersStatus.activeExecutions / workersStatus.config.maxWorkers) * 100;
 
-    // Estatísticas de execução (última hora)
-    const executions = await RoutineExecutionLog.findAll({
-      where: {
-        created_at: {
-          [Op.gte]: oneHourAgo
-        }
-      }
+    const allLogs = await buscarLogsExecucaoElasticsearch(undefined, 1000);
+    const executions = allLogs.filter((log) => {
+      const ts = (log.timestamp as string) || (log.data_inicio as string);
+      return ts && new Date(ts) >= oneHourAgo;
     });
 
     const totalExecutions = executions.length;
@@ -186,31 +147,19 @@ export class WorkerMonitor extends EventEmitter {
     const failedExecutions = executions.filter((e) => e.status === 'erro').length;
     const successRate = totalExecutions > 0 ? (successfulExecutions / totalExecutions) * 100 : 100;
 
-    // Verificar alertas
     const alerts: string[] = [];
-
-    if (workerUtilization > 80) {
-      alerts.push('Alta utilização de workers');
-    }
-
+    if (workerUtilization > 80) alerts.push('Alta utilização de workers');
     if (successRate < (100 - (this.config.alertThresholds.maxErrorRate || 20))) {
       alerts.push(`Taxa de erro alta: ${(100 - successRate).toFixed(1)}%`);
     }
-
-    // Verificar execuções muito longas
-    const longExecutions = executions.filter((e) => 
-      e.duracao_ms && e.duracao_ms > (this.config.alertThresholds.maxExecutionTime || 300000)
+    const longExecutions = executions.filter(
+      (e) => e.duracao_ms && (e.duracao_ms as number) > (this.config.alertThresholds.maxExecutionTime || 300000)
     );
     if (longExecutions.length > 0) {
       alerts.push(`${longExecutions.length} execução(ões) com tempo excessivo`);
     }
 
-    // Determinar status geral
-    let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-    
-    if (alerts.length > 0) {
-      status = alerts.length > 2 ? 'critical' : 'warning';
-    }
+    const status: 'healthy' | 'warning' | 'critical' = alerts.length > 2 ? 'critical' : alerts.length > 0 ? 'warning' : 'healthy';
 
     return {
       status,
@@ -230,24 +179,15 @@ export class WorkerMonitor extends EventEmitter {
     };
   }
 
-  /**
-   * Verifica alertas específicos
-   */
   private async checkForAlerts(data: RoutineFailedData): Promise<void> {
     const { routine } = data;
-
-    // Verificar falhas consecutivas
-    const recentFailures = await RoutineExecutionLog.findAll({
-      where: {
-        routine_id: routine.id,
-        status: 'erro',
-        created_at: {
-          [Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) // últimas 24h
-        }
-      },
-      order: [['created_at', 'DESC']],
-      limit: this.config.alertThresholds.maxConsecutiveFailures || 3
-    });
+    const allLogs = await buscarLogsExecucaoElasticsearch(routine.id, 50);
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recentFailures = allLogs.filter(
+      (log) =>
+        log.status === 'erro' &&
+        new Date((log.timestamp as string) || (log.data_inicio as string)) >= oneDayAgo
+    );
 
     if (recentFailures.length >= (this.config.alertThresholds.maxConsecutiveFailures || 3)) {
       this.emit('consecutiveFailureAlert', {
@@ -258,131 +198,81 @@ export class WorkerMonitor extends EventEmitter {
     }
   }
 
-  /**
-   * Agenda limpeza de logs antigos
-   */
   private scheduleLogCleanup(): void {
-    // Executar limpeza diariamente às 2:00
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(2, 0, 0, 0);
-
     const timeUntilCleanup = tomorrow.getTime() - now.getTime();
 
     setTimeout(() => {
       this.cleanupOldLogs();
-      // Agendar próxima limpeza (24h)
-      setInterval(() => {
-        this.cleanupOldLogs();
-      }, 24 * 60 * 60 * 1000);
+      setInterval(() => this.cleanupOldLogs(), 24 * 60 * 60 * 1000);
     }, timeUntilCleanup);
   }
 
-  /**
-   * Remove logs antigos
-   */
   private async cleanupOldLogs(): Promise<void> {
     try {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - this.config.logRetentionDays);
-
-      const deletedCount = await RoutineExecutionLog.destroy({
-        where: {
-          created_at: {
-            [Op.lt]: cutoffDate
-          }
-        }
-      });
-
-      if (deletedCount > 0) {
-        this.emit('logsCleaned', { deletedCount });
-      }
+      const deletedCount = await limparLogsRotinaAntigosElasticsearch(this.config.logRetentionDays);
+      if (deletedCount > 0) this.emit('logsCleaned', { deletedCount });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
       logger.error('Erro na limpeza de logs', {
         context: 'WorkerMonitor',
         action: 'cleanupOldLogs',
-        error: errorMessage,
-        stack: errorStack
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       this.emit('cleanupError', error);
     }
   }
 
-  /**
-   * Obtém estatísticas detalhadas
-   */
   async getDetailedStats(days = 7): Promise<DetailedStats> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-
-    const executions = await RoutineExecutionLog.findAll({
-      where: {
-        created_at: {
-          [Op.gte]: startDate
-        }
-      },
-      order: [['created_at', 'DESC']]
+    const allLogs = await buscarLogsExecucaoElasticsearch(undefined, 10000);
+    const executions = allLogs.filter((log) => {
+      const ts = (log.timestamp as string) || (log.data_inicio as string);
+      return ts && new Date(ts) >= startDate;
     });
 
-    // Estatísticas por dia
     const dailyStats = new Map<string, DailyStats>();
-    
     for (let i = 0; i < days; i++) {
       const date = new Date(startDate);
       date.setDate(date.getDate() + i);
       const dateKey = date.toISOString().split('T')[0];
-      
-      dailyStats.set(dateKey, {
-        date: dateKey,
-        total: 0,
-        successful: 0,
-        failed: 0,
-        avgDuration: 0
-      });
+      dailyStats.set(dateKey, { date: dateKey, total: 0, successful: 0, failed: 0, avgDuration: 0 });
     }
 
-    // Processar execuções
     executions.forEach((execution) => {
-      const dateKey = execution.created_at.toISOString().split('T')[0];
+      const ts = (execution.timestamp as string) || (execution.data_inicio as string);
+      const dateKey = ts ? new Date(ts).toISOString().split('T')[0] : '';
       const dayStats = dailyStats.get(dateKey);
-      
       if (dayStats) {
         dayStats.total++;
-        if (execution.status === 'sucesso') {
-          dayStats.successful++;
-        } else {
-          dayStats.failed++;
-        }
-        
+        if (execution.status === 'sucesso') dayStats.successful++;
+        else dayStats.failed++;
         if (execution.duracao_ms) {
-          dayStats.avgDuration = (dayStats.avgDuration + execution.duracao_ms) / 2;
+          dayStats.avgDuration = (dayStats.avgDuration + (execution.duracao_ms as number)) / 2;
         }
       }
     });
 
+    const workersStatus = this.workerManager.getStatus();
     return {
       period: { days, startDate, endDate: new Date() },
       totalExecutions: executions.length,
-      successRate: executions.length > 0 ? 
-        (executions.filter((e) => e.status === 'sucesso').length / executions.length) * 100 : 0,
+      successRate:
+        executions.length > 0
+          ? (executions.filter((e) => e.status === 'sucesso').length / executions.length) * 100
+          : 0,
       dailyStats: Array.from(dailyStats.values()),
-      workersStatus: this.workerManager.getStatus()
+      workersStatus
     };
   }
 
-  /**
-   * Obtém configuração atual
-   */
   getConfig(): Required<MonitorConfig> {
     return { ...this.config };
   }
 
-  /**
-   * Atualiza configuração
-   */
   updateConfig(newConfig: Partial<MonitorConfig>): void {
     this.config = { ...this.config, ...newConfig };
     this.emit('configUpdated', this.config);

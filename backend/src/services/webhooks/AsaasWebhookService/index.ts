@@ -3,7 +3,8 @@ import { Banco } from '../../../models/cadastros/Banco';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { BarcodeService } from '../../bancos/BarcodeService';
 import { PaymentCommonService } from '../PaymentCommonService';
-import { ReciboPagamentoService } from '../../comunicacao/ReciboPagamentoService';
+import { TituloWebhookResolver } from '../TituloWebhookResolver';
+import { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook } from '../WebhookTituloUpdater';
 import { logger } from '../../../utils/logger';
 import { JsonValue } from '../../../types/index';
 import { AsaasPaymentPayload } from '../../../types/webhooks';
@@ -32,150 +33,79 @@ export class AsaasWebhookService {
         };
       }
 
-      // Buscar título pelo charge_id (responsabilidade do service)
       const chargeId = String(payment.id);
-      const titulo = await Titulo.findOne({
-        where: { charge_id: chargeId },
-        include: [{ model: Banco, as: 'banco' }]
-      }) as (Titulo & { banco?: Banco | null }) | null;
+      const scope = PaymentCommonService.getWebhookScope(req);
+      const resolved = await TituloWebhookResolver.findByChargeId(chargeId, scope);
 
-      if (!titulo) {
+      if (!resolved) {
         return {
           success: true,
           message: 'Título não encontrado para este charge_id'
         };
       }
 
-      const updates: Partial<Titulo> & Record<string, JsonValue> = {};
+      const { titulo } = resolved;
+      const updates: Record<string, JsonValue> = {};
       const pagamentoStatusRaw = payment.status;
       const paymentStatus = typeof pagamentoStatusRaw === 'string'
         ? pagamentoStatusRaw.toUpperCase()
         : '';
 
-      // Verificar se o payment tem campo deleted (pode vir como propriedade dinâmica)
-      const paymentDeleted = (payment as any).deleted === true;
-
-      // Se o payment está marcado como deleted, tratar como cancelado
-      let novoStatus: Titulo['status'] | null | undefined = null;
+      const paymentDeleted = (payment as { deleted?: boolean }).deleted === true;
+      let novoStatus: string | null = null;
       if (paymentDeleted) {
         novoStatus = 'cancelado';
       } else {
-        novoStatus = AsaasWebhookService.mapAsaasStatus(paymentStatus);
+        novoStatus = AsaasWebhookService.mapAsaasStatus(paymentStatus) ?? null;
       }
 
-      if (novoStatus) {
-        // Não atualizar status se o título já está cancelado
-        // Isso evita que webhooks antigos ou duplicados sobrescrevam o cancelamento
-        if (titulo.status !== 'cancelado' && novoStatus !== titulo.status && novoStatus) {
-          // Só atualizar se o status for diferente do atual e não for undefined
-          updates.status = novoStatus as Titulo['status'];
-        }
+      if (novoStatus && titulo.status !== 'cancelado' && novoStatus !== titulo.status) {
+        updates.status = novoStatus;
       }
 
-      // Usar apenas dateCreated da raiz do payload (evento) - representa quando o pagamento foi recebido.
-      // payment.dateCreated = data de criação da cobrança (errada para data de pagamento)
-      const paymentDate = typeof rootPayload?.dateCreated === 'string'
-        ? rootPayload.dateCreated
-        : undefined;
+      const paymentDate = typeof rootPayload?.dateCreated === 'string' ? rootPayload.dateCreated : undefined;
 
       if (novoStatus === 'pago') {
-        // Normalizar data de pagamento preservando hora
         const dataPagamentoNormalizada = paymentDate
           ? PaymentCommonService.normalizePaymentDate(paymentDate)
           : new Date();
-
         const valorPago = typeof payment.value === 'number' ? Number(payment.value) :
-                          typeof payment.netValue === 'number' ? Number(payment.netValue) :
-                          titulo.valor;
-
-        // Usar método marcarComoPago para garantir lógica consistente
-        // skipLiquidacaoBanco = true pois o webhook já indica que o banco sabe do pagamento
-        await titulo.marcarComoPago(valorPago, dataPagamentoNormalizada || undefined, true);
-
-        // Não adicionar data_pagamento e valor_pago ao updates, pois já foi salvo pelo marcarComoPago
-        // Apenas atualizar status se necessário
-        delete updates.data_pagamento;
-        delete updates.valor_pago;
+          typeof payment.netValue === 'number' ? Number(payment.netValue) : Number(titulo.valor);
+        await applyPagoWebhook(resolved, valorPago, dataPagamentoNormalizada || new Date());
       }
 
-      if (typeof payment.nossoNumero === 'string') {
-        updates.nosso_numero = payment.nossoNumero;
-      }
-
-      if (typeof payment.bankSlipUrl === 'string') {
-        updates.url_boleto = payment.bankSlipUrl;
-      }
-
+      if (typeof payment.nossoNumero === 'string') updates.nosso_numero = payment.nossoNumero;
+      if (typeof payment.bankSlipUrl === 'string') updates.url_boleto = payment.bankSlipUrl;
       if (typeof payment.bankSlipDigitableLine === 'string') {
         updates.linha_digitavel = BarcodeService.formatarLinhaDigitavel(payment.bankSlipDigitableLine);
       }
-
       if (typeof payment.bankSlipBarcode === 'string') {
         const codigoLimpo = payment.bankSlipBarcode.replace(/\D/g, '');
         updates.codigo_barras = codigoLimpo.length > 0 ? codigoLimpo : payment.bankSlipBarcode;
       }
-
-      if (typeof payment.pixQrCode === 'string') {
-        updates.qrcode = payment.pixQrCode;
-      }
-
+      if (typeof payment.pixQrCode === 'string') updates.qrcode = payment.pixQrCode;
       if (typeof payment.pixQrCodeImage === 'string') {
         const imagem = payment.pixQrCodeImage;
-        updates.qrcode_image = imagem.startsWith('data:image/')
-          ? imagem
-          : `data:image/png;base64,${imagem}`;
+        updates.qrcode_image = imagem.startsWith('data:image/') ? imagem : `data:image/png;base64,${imagem}`;
       } else if (typeof payment.pixQrCodeUrl === 'string') {
         updates.qrcode_image = payment.pixQrCodeUrl;
       }
-
       if (typeof payment.dueDate === 'string') {
         const normalizedDate = PaymentCommonService.normalizeDueDate(payment.dueDate);
-        if (normalizedDate) {
-          updates.data_vencimento = normalizedDate;
-        }
+        if (normalizedDate) updates.data_vencimento = normalizedDate as unknown as JsonValue;
       }
 
-      // Capturar dados anteriores antes de atualizar
-      const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
-      
-      // Garantir que status não seja alterado se título está cancelado
-      if (titulo.status === 'cancelado' && updates.status) {
-        delete updates.status;
-      }
-      
+      const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      if (titulo.status === 'cancelado' && updates.status) delete updates.status;
       if (Object.keys(updates).length > 0) {
-        await titulo.update(updates);
+        await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update(updates);
       }
-      
-      // Recarregar título para obter dados atualizados
-      await titulo.reload();
+      await (titulo as { reload: () => Promise<unknown> }).reload();
 
-      if (titulo.pago) {
-        ReciboPagamentoService.enviarRecibo(titulo.id);
-      }
+      enviarReciboSeAdmin(resolved);
 
-      // Capturar dados novos após atualização
-      const dadosNovos = titulo.toJSON() as Record<string, unknown>;
-      
-      // Registrar auditoria no Elasticsearch se req foi fornecido
-      if (req) {
-        try {
-          await registrarAtualizacaoElasticsearch(
-            req,
-            'Titulo',
-            titulo.id,
-            dadosAnteriores,
-            dadosNovos,
-            `Atualização via webhook Asaas - Status: ${paymentStatus}`
-          );
-        } catch (auditError) {
-          // Não bloquear processamento se auditoria falhar
-          logger.warn('Erro ao registrar auditoria de webhook Asaas', {
-            titulo_id: titulo.id,
-            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-          });
-        }
-      }
+      const dadosNovos = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook Asaas - Status: ${paymentStatus}`);
 
       return {
         success: true,
@@ -192,32 +122,26 @@ export class AsaasWebhookService {
   }
 
   /**
-   * Busca e valida token do webhook do Asaas
-   * @param titulo Título relacionado (opcional)
-   * @param receivedSecret Secret recebido no webhook
-   * @returns Token esperado ou undefined se não encontrado
+   * Busca token do webhook do Asaas (admin e SaaS)
    */
   static async findExpectedToken(
-    titulo: (Titulo & { banco?: Banco | null }) | null
+    _titulo?: (Titulo & { banco?: Banco | null }) | null
   ): Promise<string | undefined> {
-    // Se temos título com banco Asaas, usar token dele
-    if (titulo?.banco?.tipo_banco === 'asaas') {
-      const token = PaymentCommonService.getWebhookToken(titulo.banco);
-      if (token) {
-        return token;
-      }
-    }
-
-    // Buscar em todos os bancos Asaas ativos e retornar o primeiro token encontrado
     const bancosAsaas = await Banco.findAll({
       where: { tipo_banco: 'asaas', ativo: true }
     });
-
     for (const banco of bancosAsaas) {
       const token = PaymentCommonService.getWebhookToken(banco);
-      if (token) {
-        return token; // Retorna o primeiro token encontrado
-      }
+      if (token) return token;
+    }
+
+    const { default: SaasBanco } = await import('../../../models/saas/SaasBanco');
+    const bancosSaasAsaas = await SaasBanco.findAll({
+      where: { tipo_banco: 'asaas', ativo: true }
+    });
+    for (const banco of bancosSaasAsaas) {
+      const token = PaymentCommonService.getWebhookToken(banco);
+      if (token) return token;
     }
 
     return undefined;

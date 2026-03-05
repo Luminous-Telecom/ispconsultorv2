@@ -219,8 +219,7 @@ export class ContaPagarService {
     return await ContaPagar.findByPk(id, {
       include: [
         { association: 'fornecedor', required: false },
-        { association: 'pagamentos', required: false, order: [['created_at', 'DESC']] },
-        { association: 'arquivos', required: false }
+        { association: 'pagamentos', required: false, order: [['created_at', 'DESC']] }
       ],
       transaction
     });

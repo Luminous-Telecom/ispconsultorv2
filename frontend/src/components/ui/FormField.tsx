@@ -14,6 +14,7 @@ interface FormFieldProps extends BaseComponentProps, ValidationProps, TooltipPro
   name: string;
   value?: FormValue;
   onChange?: ChangeHandler<FormValue>;
+  onBlur?: (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   placeholder?: string;
   required?: boolean;
   description?: string;
@@ -58,6 +59,7 @@ const FormField: React.FC<FormFieldProps> = ({
   name,
   value,
   onChange,
+  onBlur,
   placeholder,
   required = false,
   description,
@@ -313,6 +315,7 @@ const FormField: React.FC<FormFieldProps> = ({
             type={type}
             value={convertToInputValue(value)}
             onChange={handleChange}
+            onBlur={onBlur}
             min={min}
             max={max}
             step={step}

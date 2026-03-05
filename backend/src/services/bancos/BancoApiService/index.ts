@@ -224,9 +224,14 @@ export class BancoApiService {
   }
 
   /**
-   * Gerar título/boleto via API do banco
+   * Gerar título/boleto via API do banco.
+   * @param titulo - Título com banco, cliente e plano
+   * @param options - Se bancoTable='saas_bancos', usa SaasBanco para credenciais (SaaS)
    */
-  static async gerarTitulo(titulo: TituloWithRelations): Promise<ApiResponse> {
+  static async gerarTitulo(
+    titulo: TituloWithRelations,
+    options?: { bancoTable?: 'bancos' | 'saas_bancos' }
+  ): Promise<ApiResponse> {
     const banco = titulo.banco;
     const cliente = titulo.cliente;
     const plano = titulo.plano;
@@ -276,21 +281,23 @@ export class BancoApiService {
         };
       }
 
-      // Recarregar banco com credenciais completas
-      const bancoInstanceCredenciais = await Banco.findByPk(banco.id, {
-        attributes: [
-          'id',
-          'nome',
-          'tipo_banco',
-          'api_key',
-          'client_id_producao',
-          'client_secret_producao',
-          'sandbox',
-          'url_retorno',
-          'webhook_secret'
-        ]
-      });
-      
+      // Recarregar banco com credenciais completas (Banco ERP ou SaasBanco)
+      const attrs = [
+        'id',
+        'nome',
+        'tipo_banco',
+        'api_key',
+        'client_id_producao',
+        'client_secret_producao',
+        'sandbox',
+        'url_retorno',
+        'webhook_secret'
+      ];
+      const bancoInstanceCredenciais =
+        options?.bancoTable === 'saas_bancos'
+          ? await (await import('../../../models/saas/SaasBanco')).SaasBanco.findByPk(banco.id, { attributes: attrs })
+          : await Banco.findByPk(banco.id, { attributes: attrs });
+
       if (!bancoInstanceCredenciais) {
         return {
           success: false,
@@ -333,12 +340,16 @@ export class BancoApiService {
         };
       }
       
+      const tituloParaGeracao = options?.bancoTable === 'saas_bancos'
+        ? { ...titulo, __skipTituloUpdate: true }
+        : titulo;
+
       if (isAsaas) {
-        return this.asaasService.gerarTitulo(titulo, bancoComCredenciais as BancoLike, token);
+        return this.asaasService.gerarTitulo(tituloParaGeracao, bancoComCredenciais as BancoLike, token);
       }
 
       if (banco.tipo_banco === 'efi') {
-        return this.efiService.gerarTitulo(titulo, bancoComCredenciais as BancoLike, token);
+        return this.efiService.gerarTitulo(tituloParaGeracao, bancoComCredenciais as BancoLike, token);
       }
 
       // Fallback para outros bancos (não deveria chegar aqui)
@@ -497,11 +508,24 @@ export class BancoApiService {
 
   /**
    * Consultar notificação por token
+   * @param source - 'admin' ou 'saas' para fins de log
    */
-  static async consultarNotificacaoPorToken(banco: Banco, notificationToken: string): Promise<ApiResponse> {
+  static async consultarNotificacaoPorToken(
+    banco: Banco,
+    notificationToken: string,
+    source?: 'admin' | 'saas'
+  ): Promise<ApiResponse> {
+    const logCtx = {
+      banco_id: banco.id,
+      banco_nome: banco.nome,
+      origem: source || 'admin',
+      sandbox: banco.sandbox
+    };
+
     try {
       const config = this.getBancoConfig(banco.tipo_banco);
       if (!config) {
+        logger.warn('Configurações do banco não encontradas', logCtx);
         return {
           success: false,
           message: 'Configurações do banco não encontradas'
@@ -510,6 +534,7 @@ export class BancoApiService {
 
       const token = await this.obterToken(banco, config);
       if (!token) {
+        logger.warn('Falha ao obter token OAuth (verifique client_id e client_secret)', logCtx);
         return {
           success: false,
           message: 'Falha ao obter token de acesso'
@@ -529,18 +554,25 @@ export class BancoApiService {
         : config.cobranca_base_url;
       
       const endpoint = baseUrlCobranca + config.notification + '/' + notificationToken;
-      
-      logger.info('Consultando notificação por token', {
-        endpoint: endpoint,
-        token: notificationToken
+      const bancoWithIdentificador = banco as Banco & { identificador_conta?: string | null };
+      const identificadorConta = bancoWithIdentificador.identificador_conta?.trim();
+
+      logger.info('Chamando API EFI para consultar notificação', {
+        ...logCtx,
+        endpoint,
+        ambiente: banco.sandbox ? 'sandbox' : 'producao',
+        tem_identificador_conta: !!identificadorConta
       });
-      
+
+      const headers = this.buildAuthHeaders(banco.tipo_banco, token);
+      if (identificadorConta) {
+        headers['X-Identificador-Conta'] = identificadorConta;
+      }
+
       // Implementar retry para lidar com erros temporários (como no PHP)
       const maxTentativas = 3;
       let delay = 1000; // 1 segundo
       let response: AxiosResponse<Record<string, JsonValue>> | null = null;
-      
-      const headers = this.buildAuthHeaders(banco.tipo_banco, token);
 
       for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
         try {
@@ -597,25 +629,32 @@ export class BancoApiService {
         const axiosError = error as Error & AxiosErrorResponse;
         const errorResponse = axiosError.response;
         
-        // Se é erro de token inválido/expirado, logar como warning em vez de error
+        // 401/500/3500010: esperado ao tentar vários bancos (token de outra conta ou expirado) — logar como warn
         const errorData = errorResponse?.data;
         const errorCode = errorData && typeof errorData === 'object' && !Array.isArray(errorData) && 'code' in errorData 
           ? (errorData as { code?: number }).code 
           : undefined;
-        if (errorCode === 3500010 || errorResponse?.status === 500) {
-          logger.warn('Token de notificação inválido ou expirado', {
-            banco_id: banco.id,
-            token: notificationToken,
-            status: errorResponse?.status
-          });
+        const status = errorResponse?.status;
+        const isExpectedFailure = errorCode === 3500010 || status === 500 || status === 401;
+        const bancoWithCreds = banco as { client_id_producao?: string | null; client_secret_producao?: string | null };
+        const errorDetail = {
+          ...logCtx,
+          status,
+          statusText: errorResponse?.statusText,
+          response_data: errorResponse?.data,
+          has_client_id: !!(bancoWithCreds.client_id_producao?.trim?.()),
+          has_client_secret: !!(bancoWithCreds.client_secret_producao?.trim?.()),
+          hint: status === 401
+            ? '401 = credenciais inválidas ou token de outra conta EFI. Verifique client_id, client_secret e ambiente (sandbox/produção).'
+            : undefined
+        };
+        if (isExpectedFailure) {
+          logger.warn('Token de notificação não encontrado neste banco', errorDetail);
         } else {
           logger.error('Erro ao consultar notificação por token', {
-            banco_id: banco.id,
-            token: notificationToken,
-            error: errorMessage,
-            status: errorResponse?.status,
-            statusText: errorResponse?.statusText,
-            data: errorResponse?.data
+            ...errorDetail,
+            token: notificationToken.substring(0, 20) + '...',
+            error: errorMessage
           });
         }
       

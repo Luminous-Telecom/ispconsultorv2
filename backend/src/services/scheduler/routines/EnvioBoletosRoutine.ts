@@ -9,13 +9,17 @@ export interface EnvioBoletosConfig {
   canais?: ('whatsapp' | 'email')[];
 }
 
+export interface EnvioBoletosOptions {
+  saas?: boolean;
+}
+
 interface DetalhesEnvio {
   whatsapp?: { enviadas: number; erros: number };
   email?: { enviadas: number; erros: number };
 }
 
 export class EnvioBoletosRoutine {
-  async execute(config: EnvioBoletosConfig = {}): Promise<{
+  async execute(config: EnvioBoletosConfig = {}, options: EnvioBoletosOptions = {}): Promise<{
     success: boolean;
     message: string;
     data: {
@@ -40,9 +44,11 @@ export class EnvioBoletosRoutine {
       let totalEnviados = 0;
       let totalErros = 0;
 
+      const { saas = false } = options;
+
       if (canais.includes('whatsapp')) {
         try {
-          const resultado = await WhatsAppService.enviarBoletos(configuracoes);
+          const resultado = await WhatsAppService.enviarBoletos(configuracoes, { saas });
 
           detalhes.whatsapp = {
             enviadas: resultado.mensagensEnviadas,
@@ -63,7 +69,7 @@ export class EnvioBoletosRoutine {
 
       if (canais.includes('email')) {
         try {
-          const resultado = await EmailService.enviarBoletos(configuracoes);
+          const resultado = await EmailService.enviarBoletos(configuracoes, { saas });
 
           detalhes.email = {
             enviadas: resultado.emailsEnviados,

@@ -211,17 +211,19 @@ export class AsaasTituloService {
         // Se o título foi criado (tem charge_id), retornar sucesso mesmo se PIX estiver incompleto
         // O PIX pode ser atualizado posteriormente via webhook
         if (chargeId) {
-          const tituloModel = titulo as unknown as Titulo;
-          await tituloModel.update({
-            charge_id: String(chargeId),
-            codigo_barras: codigoBarrasFinal,
-            url_boleto: urlBoleto,
-            linha_digitavel: linhaDigitavelFormatada,
-            qrcode: pixQrCodeStringValue || pixQrCode || null,
-            qrcode_image: pixQrCodeImageNormalized,
-            nosso_numero: nossoNumero || null,
-            status: 'pendente'
-          });
+          const tituloModel = titulo as unknown as Titulo & { __skipTituloUpdate?: boolean };
+          if (!tituloModel.__skipTituloUpdate && typeof tituloModel.update === 'function') {
+            await tituloModel.update({
+              charge_id: String(chargeId),
+              codigo_barras: codigoBarrasFinal,
+              url_boleto: urlBoleto,
+              linha_digitavel: linhaDigitavelFormatada,
+              qrcode: pixQrCodeStringValue || pixQrCode || null,
+              qrcode_image: pixQrCodeImageNormalized,
+              nosso_numero: nossoNumero || null,
+              status: 'pendente'
+            });
+          }
 
           return {
             success: true,

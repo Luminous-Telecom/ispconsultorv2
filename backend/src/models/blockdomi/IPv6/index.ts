@@ -101,7 +101,7 @@ IPv6.init(
     versao_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: 'versoes_blockdomi', key: 'id' },
+      references: { model: 'adm_versoes_blockdomi', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL'
     },
@@ -119,7 +119,7 @@ IPv6.init(
   {
     sequelize,
     modelName: 'IPv6',
-    tableName: 'ipv6',
+    tableName: 'adm_ipv6',
     timestamps: true,
     underscored: true,
     indexes: [

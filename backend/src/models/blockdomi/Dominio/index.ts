@@ -101,7 +101,7 @@ Dominio.init(
     versao_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: 'versoes_blockdomi', key: 'id' },
+      references: { model: 'adm_versoes_blockdomi', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL'
     },
@@ -119,7 +119,7 @@ Dominio.init(
   {
     sequelize,
     modelName: 'Dominio',
-    tableName: 'dominios',
+    tableName: 'adm_dominios',
     timestamps: true,
     underscored: true,
     indexes: [

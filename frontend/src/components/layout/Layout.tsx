@@ -235,14 +235,10 @@ const Layout: React.FC = () => {
   ];
 
   const parametrosFolderItems = [
-    ...(currentUser?.role === 'superadmin' ? [
-      { id: 'empresas', label: 'Gerenciar Empresas', icon: 'bi-buildings', onClick: () => handleOpenModal('empresas') },
-    ] : []),
     { id: 'dados-empresa', label: t('menu.companyData'), icon: 'bi-building', onClick: () => handleOpenModal('dados-empresa') },
     { id: 'usuarios', label: t('params.users'), icon: 'bi-people-fill', onClick: () => handleOpenModal('usuarios') },
     { id: 'auditoria', label: t('params.auditLogs'), icon: 'bi-journal-text', onClick: () => handleOpenModal('auditoria') },
     { id: 'recursos-sistema', label: t('params.systemResources'), icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
-    { id: 'hotsite', label: t('menu.hotsite'), icon: 'bi-globe2', onClick: () => handleOpenModal('hotsite') },
     { id: 'agendador-tarefas', label: t('params.taskScheduler'), icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
     { id: 'servidor-email', label: t('params.emailServer'), icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
     { id: 'servidor-whatsapp', label: t('params.whatsappServer'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
@@ -252,8 +248,6 @@ const Layout: React.FC = () => {
     { id: 'documentos-sistema', label: t('params.systemDocuments'), icon: 'bi-folder', onClick: () => handleOpenModal('documentos-sistema') },
     { id: 'assinatura-digital', label: t('params.digitalSignature'), icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
     { id: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
-    { id: 'atualizacoes', label: t('params.updates'), icon: 'bi-arrow-down-up', onClick: () => handleOpenModal('atualizacoes') },
-    { id: 'backups', label: t('params.manageBackups'), icon: 'bi-cloud-arrow-down', onClick: () => handleOpenModal('backups') },
   ];
 
   const blockdomiFolderItems = [

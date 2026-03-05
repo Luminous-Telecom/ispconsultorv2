@@ -142,6 +142,41 @@ export class DadosEmpresaService {
       }
     }
 
+  /** Gera PDF de boletos de saas_titulos (admin auth). Requer empresaId para validação. */
+  static async getTitulosSaasBoletosPdf(ids: number[], empresaId: number): Promise<Blob> {
+    const idsParam = ids.join(',');
+    const axios = (await import('axios')).default;
+    const { API_CONFIG } = await import('../config/api');
+    const baseUrl = API_CONFIG.BASE_URL || '/api';
+    const response = await axios.get(`${baseUrl}/dados-empresa/titulos-saas/boletos-pdf?ids=${idsParam}&empresa_id=${empresaId}`, {
+      responseType: 'blob',
+      timeout: 120000,
+      withCredentials: true,
+    });
+    const blob = response.data;
+    if (!blob || !(blob instanceof Blob)) {
+      throw new Error('Resposta inválida do servidor');
+    }
+    return blob;
+  }
+
+  /** Lista saas_titulos da empresa. tipo: 'abertas' (pendente,vencido) ou 'pagas' (pago,pago_atraso,parcial) */
+  static async getTitulosSaas(empresaId: number, tipo: 'abertas' | 'pagas' = 'abertas'): Promise<{ data: unknown[]; pagination?: unknown }> {
+    const response = await apiService.get<{ data: unknown[]; pagination?: unknown } | unknown>(
+      `/dados-empresa/titulos-saas?empresa_id=${empresaId}&tipo=${tipo}`
+    );
+    const res = response as { success?: boolean; data?: { data?: unknown[]; pagination?: unknown } | unknown[] };
+    if (res.success === false) {
+      throw new Error((res as { message?: string }).message || 'Erro ao buscar títulos');
+    }
+    const inner = res.data;
+    if (Array.isArray(inner)) return { data: inner, pagination: undefined };
+    if (inner && typeof inner === 'object' && 'data' in inner) {
+      return { data: (inner as { data?: unknown[] }).data ?? [], pagination: (inner as { pagination?: unknown }).pagination };
+    }
+    return { data: [], pagination: undefined };
+  }
+
   static async update(data: UpdateDadosEmpresa): Promise<DadosEmpresa> {
     const response = await apiService.put<DadosEmpresa>('/dados-empresa', data);
     if (response.success && response.data) {

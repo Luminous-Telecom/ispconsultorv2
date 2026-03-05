@@ -5,6 +5,7 @@ interface AppConfig {
   REACT_APP_API_TIMEOUT: string;
   REACT_APP_API_RETRY_ATTEMPTS: string;
   REACT_APP_API_RETRY_DELAY: string;
+  WEBHOOK_BASE_URL?: string;
 }
 
 declare global {
@@ -54,6 +55,18 @@ export const API_CONFIG = {
   },
   get RETRY_DELAY() {
     return Number(getDynamicConfig().REACT_APP_API_RETRY_DELAY || '1000');
+  },
+  /** URL base para webhooks (ex: https://meudominio.com). Usa BASE_URL do backend ou window.location.origin */
+  get WEBHOOK_BASE_URL() {
+    const cfg = getDynamicConfig();
+    const fromBackend = (cfg as { WEBHOOK_BASE_URL?: string }).WEBHOOK_BASE_URL;
+    if (fromBackend && typeof fromBackend === 'string' && fromBackend.trim()) {
+      return fromBackend.replace(/\/+$/, '');
+    }
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return window.location.origin;
+    }
+    return '';
   },
 };
 

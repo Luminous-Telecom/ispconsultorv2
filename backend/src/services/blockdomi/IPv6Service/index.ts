@@ -346,7 +346,7 @@ export class IPv6Service {
     const { sequelize } = await import('../../../config/database');
     const { QueryTypes } = await import('sequelize');
     await sequelize.query(
-      `INSERT INTO operacoes_blockdomi (tipo, versao_id, quantidade, ids_deletados, created_at) 
+      `INSERT INTO adm_operacoes_blockdomi (tipo, versao_id, quantidade, ids_deletados, created_at) 
        VALUES ('ipv6_delete', :versaoId, 1, :ids, NOW())`,
       {
         replacements: { versaoId, ids: JSON.stringify([Number(id)]) },
@@ -378,7 +378,7 @@ export class IPv6Service {
     const { sequelize } = await import('../../../config/database');
     const { QueryTypes } = await import('sequelize');
     await sequelize.query(
-      `INSERT INTO operacoes_blockdomi (tipo, versao_id, quantidade, ids_deletados, created_at) 
+      `INSERT INTO adm_operacoes_blockdomi (tipo, versao_id, quantidade, ids_deletados, created_at) 
        VALUES ('ipv6_delete', :versaoId, :qtd, :ids, NOW())`,
       {
         replacements: { versaoId, qtd: deleted, ids: JSON.stringify(idsNum) },

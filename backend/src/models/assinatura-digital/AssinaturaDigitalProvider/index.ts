@@ -97,7 +97,7 @@ AssinaturaDigitalProvider.init(
   },
   {
     sequelize,
-    tableName: 'assinatura_digital_providers',
+    tableName: 'adm_assinatura_digital_providers',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

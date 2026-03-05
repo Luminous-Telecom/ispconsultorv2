@@ -124,6 +124,7 @@ export async function registrarMensagemElasticsearch(
       const userData = getUserData(req || null);
 
       const document = {
+        log_tipo: 'mensagem',
         tipo_mensagem: dados.tipo,
         destinatario: dados.destinatario,
         titulo: dados.titulo || null,

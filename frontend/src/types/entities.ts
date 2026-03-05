@@ -149,6 +149,7 @@ export interface TituloFilters extends Record<string, string | number | boolean 
   searchField?: string;
   status?: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'parcial' | 'pago_atraso' | `!${string}` | string;
   cliente_id?: number;
+  empresa_id?: number;
   data_vencimento_inicio?: string;
   data_vencimento_fim?: string;
   data_pagamento_inicio?: string;
@@ -346,43 +347,7 @@ export interface Fornecedor {
   updated_at?: string;
   
   // Relacionamentos
-  contatos?: FornecedorContato[];
-  arquivos?: FornecedorArquivo[];
-  historicos?: FornecedorHistorico[];
   contasPagar?: ContaPagar[];
-}
-
-export interface FornecedorContato {
-  id: number;
-  fornecedor_id: number;
-  tipo: 'telefone' | 'email' | 'whatsapp' | 'celular' | 'fixo' | 'outro';
-  valor: string;
-  principal: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface FornecedorArquivo {
-  id: number;
-  fornecedor_id: number;
-  nome: string;
-  tipo?: string;
-  caminho: string;
-  tamanho?: number;
-  mime_type?: string;
-  data_upload: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface FornecedorHistorico {
-  id: number;
-  fornecedor_id: number;
-  data: string;
-  usuario_id?: number;
-  descricao: string;
-  tipo: 'criacao' | 'atualizacao' | 'exclusao' | 'pagamento' | 'outro';
-  created_at?: string;
 }
 
 // ============================================
@@ -414,7 +379,6 @@ export interface ContaPagar {
   // Relacionamentos
   fornecedor?: Fornecedor;
   pagamentos?: ContaPagarPagamento[];
-  arquivos?: ContaPagarArquivo[];
 }
 
 // ============================================
@@ -501,19 +465,6 @@ export interface ContaPagarPagamento {
   usuario_id?: number;
   observacao?: string;
   created_at?: string;
-}
-
-export interface ContaPagarArquivo {
-  id: number;
-  conta_pagar_id: number;
-  nome: string;
-  tipo?: string;
-  caminho: string;
-  tamanho?: number;
-  mime_type?: string;
-  data_upload: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 // ============================================

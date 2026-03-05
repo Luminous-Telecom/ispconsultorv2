@@ -17,14 +17,14 @@
    DRAGGABLE MODAL - Substitutos para estilos inline
    ============================================ */
 
-/* Backdrop customizado */
+/* Backdrop customizado - overlay semitransparente (padrão dos modais), não cobre a sidebar */
 .draggable-modal-backdrop {
   position: fixed !important;
   top: 0 !important;
   left: 260px !important; /* Offset da sidebar desktop (260px) */
   width: calc(100% - 260px) !important;
   height: 100% !important;
-  background-color: transparent !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
   pointer-events: none !important;
 
   @media (max-width: 767.98px) {
@@ -151,6 +151,21 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
 
 /* Conteúdo com abas/tabelas: preencher todo o espaço disponível */
 .draggable-modal-body-custom > [class*="-modal-content"] {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Form que envolve cliente-modal-content (ex: SaasEmpresaFormModal): preencher todo o modal */
+.draggable-modal-body-custom > form {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.draggable-modal-body-custom > form > .cliente-modal-content {
   flex: 1 1 0 !important;
   min-height: 0 !important;
   overflow: hidden !important;
@@ -1166,8 +1181,8 @@ button,
   flex-direction: column !important;
   align-items: stretch !important;
   width: 100% !important;
-  gap: 1rem !important;
-  padding: 0 8px !important;
+  gap: 0.5rem !important;
+  padding: 0.5rem 8px 0 8px !important;
   margin: 0 !important;
   height: 100% !important;
   box-sizing: border-box !important;
@@ -1193,6 +1208,7 @@ button,
   min-width: 0 !important;
   padding-left: 0 !important;
   margin-left: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* Loading component */
@@ -2119,7 +2135,6 @@ textarea:focus {
 .documento-tabs .nav-link,
 .empresa-tabs .nav-link,
 .whatsapp-tabs .nav-link,
-.hotsite-tabs .nav-link,
 .email-tabs .nav-link,
 .sistema-tabs .nav-link,
 .cliente-tabs .nav-link {
@@ -2134,7 +2149,6 @@ textarea:focus {
 .documento-tabs .nav-link:hover,
 .empresa-tabs .nav-link:hover,
 .whatsapp-tabs .nav-link:hover,
-.hotsite-tabs .nav-link:hover,
 .email-tabs .nav-link:hover,
 .sistema-tabs .nav-link:hover,
 .cliente-tabs .nav-link:hover {
@@ -2148,7 +2162,6 @@ textarea:focus {
 .documento-tabs .nav-link.active,
 .empresa-tabs .nav-link.active,
 .whatsapp-tabs .nav-link.active,
-.hotsite-tabs .nav-link.active,
 .email-tabs .nav-link.active,
 .sistema-tabs .nav-link.active,
 .cliente-tabs .nav-link.active {
@@ -2163,7 +2176,6 @@ textarea:focus {
 .documento-tabs-mobile .nav-link,
 .empresa-tabs-mobile .nav-link,
 .whatsapp-tabs-mobile .nav-link,
-.hotsite-tabs-mobile .nav-link,
 .email-tabs-mobile .nav-link,
 .sistema-tabs-mobile .nav-link,
 .cliente-tabs-mobile .nav-link {
@@ -2177,7 +2189,6 @@ textarea:focus {
 .documento-tabs-mobile .nav-link:hover,
 .empresa-tabs-mobile .nav-link:hover,
 .whatsapp-tabs-mobile .nav-link:hover,
-.hotsite-tabs-mobile .nav-link:hover,
 .email-tabs-mobile .nav-link:hover,
 .sistema-tabs-mobile .nav-link:hover,
 .cliente-tabs-mobile .nav-link:hover {
@@ -2190,7 +2201,6 @@ textarea:focus {
 .documento-tabs-mobile .nav-link.active,
 .empresa-tabs-mobile .nav-link.active,
 .whatsapp-tabs-mobile .nav-link.active,
-.hotsite-tabs-mobile .nav-link.active,
 .email-tabs-mobile .nav-link.active,
 .sistema-tabs-mobile .nav-link.active,
 .cliente-tabs-mobile .nav-link.active {
@@ -2777,6 +2787,14 @@ textarea:focus {
   padding: 0 16px 16px 16px;
 }
 
+/* Tabela de faturas em largura total (compensa o padding do tab-content) */
+.empresa-financeiro-tab-full {
+  margin-left: -16px;
+  margin-right: -16px;
+  width: calc(100% + 32px);
+  box-sizing: border-box;
+}
+
 .empresa-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
@@ -3026,279 +3044,6 @@ textarea:focus {
     font-size: 0.75rem !important;
     padding: 0.25rem 0.375rem !important;
     text-align: center !important;
-  }
-}
-
-/* ============================================
-   HOTSITE MODAL - Estilos específicos
-   ============================================ */
-
-.hotsite-modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
-}
-
-.hotsite-tabs {
-  flex-shrink: 0;
-  margin-bottom: 0;
-  margin-top: 1rem;
-  margin-left: 1rem;
-  margin-right: 1rem;
-}
-
-.hotsite-tabs-mobile {
-  margin-bottom: 1rem;
-  margin-top: 0;
-  margin-left: 0;
-  margin-right: 0;
-  display: flex;
-}
-
-/* Espaçamento entre abas */
-.hotsite-tabs .nav-item {
-  margin-right: 0.25rem;
-}
-
-.hotsite-tabs .nav-item:last-child {
-  margin-right: 0;
-}
-
-.hotsite-tabs-mobile .nav-item {
-  flex: 1;
-  margin-right: 0.125rem;
-}
-
-.hotsite-tabs-mobile .nav-item:last-child {
-  margin-right: 0;
-}
-
-/* Estilos para abas no modo escuro */
-[data-theme="dark"] .hotsite-tabs .nav-link {
-  color: var(--text-secondary) !important;
-  background-color: var(--bg-secondary) !important;
-  border-color: var(--border-color) !important;
-}
-
-[data-theme="dark"] .hotsite-tabs .nav-link:hover {
-  color: var(--text-primary) !important;
-  background-color: var(--bg-tertiary) !important;
-}
-
-[data-theme="dark"] .hotsite-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
-}
-
-[data-theme="dark"] .hotsite-tabs-mobile .nav-link {
-  color: var(--text-secondary) !important;
-  background-color: var(--bg-secondary) !important;
-  border-color: var(--border-color) !important;
-}
-
-[data-theme="dark"] .hotsite-tabs-mobile .nav-link:hover {
-  color: var(--text-primary) !important;
-  background-color: var(--bg-tertiary) !important;
-}
-
-[data-theme="dark"] .hotsite-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
-}
-
-.hotsite-tab-content {
-  flex: 1;
-  overflow: hidden;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.hotsite-tab-content-scrollable {
-  flex: 1;
-  overflow: auto;
-  min-height: 0;
-}
-
-.hotsite-tab-content-padded {
-  padding: 0 16px 16px 16px;
-}
-
-.hotsite-tab-disabled {
-  cursor: not-allowed !important;
-  opacity: 0.6 !important;
-}
-
-/* Estilo das abas no header unificado */
-.hotsite-tabs-unified {
-  --bs-nav-tabs-border-color: transparent !important;
-  border-bottom: none !important;
-  background-color: transparent !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  width: 100% !important;
-  justify-content: flex-start !important;
-  flex-wrap: nowrap !important;
-  min-width: max-content !important;
-
-  .nav-item {
-    flex-shrink: 0 !important;
-  }
-
-  .nav-link {
-    background-color: var(--bg-secondary) !important;
-    border: 1px solid var(--border-color) !important;
-    color: var(--text-primary) !important;
-    font-weight: 400 !important;
-    font-size: var(--font-size-sm) !important;
-    padding: 0.5rem 0.75rem !important;
-    margin-right: 0.25rem !important;
-    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0 !important;
-    transition: all 0.2s ease !important;
-    white-space: nowrap !important;
-    cursor: pointer !important;
-  }
-
-  .nav-link:hover,
-  .nav-link:focus {
-    background-color: var(--bg-tertiary) !important;
-    color: var(--text-primary) !important;
-    cursor: pointer !important;
-  }
-
-  .nav-link.active {
-    background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
-    border-bottom-color: var(--bg-primary) !important;
-  }
-
-  .nav-link:disabled,
-  .nav-link.disabled {
-    opacity: 0.6 !important;
-    cursor: not-allowed !important;
-  }
-
-  .nav-link:disabled:hover,
-  .nav-link.disabled:hover {
-    background-color: var(--bg-secondary) !important;
-    color: var(--text-primary) !important;
-    cursor: not-allowed !important;
-  }
-}
-
-/* Para mobile */
-.hotsite-tabs-mobile.hotsite-tabs-unified {
-  .nav-item {
-    flex: 1;
-    margin-right: 0.0625rem !important;
-  }
-
-  .nav-link {
-    font-size: 0.75rem !important;
-    padding: 0.25rem 0.375rem !important;
-    text-align: center !important;
-  }
-}
-
-/* Estilos do CodeMirror para melhor contraste */
-.hotsite-modal-content {
-  .cm-editor {
-    background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
-  }
-
-  .cm-content {
-    color: var(--text-primary) !important;
-  }
-
-  .cm-line {
-    color: var(--text-primary) !important;
-  }
-
-  /* Tema claro - garantir contraste adequado */
-  [data-theme="light"] & {
-    .cm-editor {
-      background-color: var(--bg-secondary) !important;
-    }
-
-    .cm-content,
-    .cm-line {
-      color: #1e293b !important;
-    }
-
-    /* Syntax highlighting para HTML no tema claro */
-    .cm-tag {
-      color: #0d6efd !important;
-    }
-
-    .cm-attribute {
-      color: #198754 !important;
-    }
-
-    .cm-string {
-      color: #dc3545 !important;
-    }
-
-    .cm-comment {
-      color: #6c757d !important;
-    }
-
-    .cm-keyword {
-      color: #0d6efd !important;
-    }
-
-    .cm-property {
-      color: #198754 !important;
-    }
-
-    .cm-variable {
-      color: #1e293b !important;
-    }
-
-    .cm-number {
-      color: #fd7e14 !important;
-    }
-
-    .cm-meta {
-      color: #6c757d !important;
-    }
-
-    .cm-atom {
-      color: #0dcaf0 !important;
-    }
-
-    .cm-def {
-      color: #0d6efd !important;
-    }
-
-    .cm-builtin {
-      color: #0d6efd !important;
-    }
-
-    .cm-qualifier {
-      color: #198754 !important;
-    }
-
-    .cm-type {
-      color: #0dcaf0 !important;
-    }
-
-    .cm-operator {
-      color: #1e293b !important;
-    }
-
-    .cm-punctuation {
-      color: #1e293b !important;
-    }
-
-    /* Números de linha */
-    .cm-lineNumbers .cm-gutterElement {
-      color: #6c757d !important;
-    }
   }
 }
 

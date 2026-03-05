@@ -40,12 +40,14 @@ export class TituloCRUDController {
         search,
         searchField,
         sortColumn,
-        sortDirection
+        sortDirection,
+        empresa_id: empresaIdQuery
       } = req.query;
 
       const limitNum = Number(limit);
       const pageNum = Number(page);
-      const empresaId = getEmpresaIdOrNull(req);
+      const parsedEmpresa = empresaIdQuery != null && empresaIdQuery !== '' ? Number(empresaIdQuery) : NaN;
+      const empresaId = !Number.isNaN(parsedEmpresa) && parsedEmpresa > 0 ? parsedEmpresa : getEmpresaIdOrNull(req);
 
       // Passar parâmetros diretamente para o service (que já constrói os filtros internamente usando helpers)
       const result = await TituloService.list({

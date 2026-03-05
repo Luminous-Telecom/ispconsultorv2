@@ -142,7 +142,7 @@ DadosEmpresa.init(
   },
   {
     sequelize,
-    tableName: 'dados_empresa',
+    tableName: 'adm_dados_empresa',
     timestamps: true,
     underscored: true
   }

@@ -1,10 +1,4 @@
-import { Op, WhereOptions } from 'sequelize';
-import { Auditoria } from '../../../models/sistema/Auditoria';
-import { Usuario } from '../../../models/cadastros/Usuario';
 import { getElasticsearchService } from '../../elasticsearch/ElasticsearchService';
-import { SortHelper } from '../../../utils/sortHelper';
-import { AUDITORIA_SORT_CONFIG } from '../../../config/sortConfigs';
-import { logger } from '../../../utils/logger';
 
 export class AuditoriaQueryService {
   /**
@@ -19,7 +13,9 @@ export class AuditoriaQueryService {
     dataFim?: string;
   }): { must: any[] } {
     const { search, acao, entidade, usuario_id, dataInicio, dataFim } = params;
-    const must: any[] = [];
+    const must: any[] = [
+      { bool: { should: [{ term: { log_tipo: 'auditoria' } }, { bool: { must: [{ bool: { must_not: { exists: { field: 'log_tipo' } } } }, { exists: { field: 'acao' } }] } }], minimum_should_match: 1 } }
+    ];
 
     if (search) {
       const isRoute = search.startsWith('/api/');
@@ -92,51 +88,6 @@ export class AuditoriaQueryService {
     }
 
     return { must };
-  }
-
-  /**
-   * Constrói filtros do Sequelize para busca no banco de dados
-   */
-  static buildDatabaseFilters(params: {
-    search?: string;
-    acao?: string;
-    entidade?: string;
-    usuario_id?: number;
-    dataInicio?: string;
-    dataFim?: string;
-  }): WhereOptions {
-    const { search, acao, entidade, usuario_id, dataInicio, dataFim } = params;
-    const where: WhereOptions = {};
-
-    if (acao) {
-      where.acao = acao;
-    }
-
-    if (entidade) {
-      where.entidade = entidade;
-    }
-
-    if (usuario_id) {
-      where.usuario_id = usuario_id;
-    }
-
-    if (dataInicio || dataFim) {
-      where.created_at = {};
-      if (dataInicio) {
-        where.created_at[Op.gte] = new Date(dataInicio);
-      }
-      if (dataFim) {
-        where.created_at[Op.lte] = new Date(dataFim);
-      }
-    }
-
-    if (search) {
-      (where as any)[Op.or] = [
-        { observacoes: { [Op.like]: `%${search}%` } }
-      ];
-    }
-
-    return where;
   }
 
   /**
@@ -216,75 +167,5 @@ export class AuditoriaQueryService {
       }));
 
       return { logs, total };
-  }
-
-  /**
-   * Busca auditoria do banco de dados
-   */
-  static async searchFromDatabase(params: {
-    page: number;
-    limit: number;
-    search?: string;
-    acao?: string;
-    entidade?: string;
-    usuario_id?: number;
-    dataInicio?: string;
-    dataFim?: string;
-    sortColumn?: string;
-    sortDirection?: string;
-  }): Promise<{ logs: any[]; total: number }> {
-    const { page, limit, sortColumn, sortDirection, ...filterParams } = params;
-    const where = this.buildDatabaseFilters(filterParams);
-
-    // Construir ordenação - ordena TODOS os dados antes da paginação
-    let order: any[] = [['created_at', 'DESC']]; // Padrão
-    if (sortColumn && sortDirection) {
-      const sortResult = SortHelper.buildOrder(
-        AUDITORIA_SORT_CONFIG,
-        sortColumn,
-        sortDirection.toUpperCase() as 'ASC' | 'DESC'
-      );
-
-      if (sortResult.isValid) {
-        order = sortResult.order;
-      } else {
-        logger.warn('AuditoriaQueryService.searchFromDatabase - Coluna de ordenação inválida', {
-          column: sortColumn,
-          error: sortResult.error
-        });
-        // Manter ordenação padrão se coluna inválida
-      }
-    }
-
-    const { count, rows } = await Auditoria.findAndCountAll({
-      where,
-      limit,
-      offset: (page - 1) * limit,
-      order,
-      include: [
-        {
-          model: require('../../../models/cadastros/Usuario').Usuario,
-          as: 'usuario',
-          attributes: ['id', 'nome', 'email']
-        }
-      ]
-    });
-
-    const logs = rows.map(log => ({
-      id: log.id,
-      acao: log.acao,
-      entidade: log.entidade,
-      entidade_id: log.entidade_id,
-      observacoes: log.observacoes,
-      rota: (log as any).rota || null,
-      usuario_id: log.usuario_id,
-      usuario_nome: (log as any).usuario?.nome || null,
-      usuario_email: (log as any).usuario?.email || null,
-      dados_anteriores: log.dados_anteriores,
-      dados_novos: log.dados_novos,
-      timestamp: log.created_at
-    }));
-
-    return { logs, total: count };
   }
 }

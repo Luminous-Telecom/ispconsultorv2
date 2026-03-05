@@ -101,7 +101,7 @@ IPv4.init(
     versao_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: 'versoes_blockdomi', key: 'id' },
+      references: { model: 'adm_versoes_blockdomi', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL'
     },
@@ -119,7 +119,7 @@ IPv4.init(
   {
     sequelize,
     modelName: 'IPv4',
-    tableName: 'ipv4',
+    tableName: 'adm_ipv4',
     timestamps: true,
     underscored: true,
     indexes: [

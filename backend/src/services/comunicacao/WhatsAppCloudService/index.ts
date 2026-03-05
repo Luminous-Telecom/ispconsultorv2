@@ -1,5 +1,5 @@
 import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
-import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
+import { registrarMensagemHistorico } from '../RegistroMensagemHistoricoService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
 import { registrarMensagemElasticsearch } from '../../elasticsearch/MensagemHistoricoElasticsearchService';
@@ -72,7 +72,8 @@ export class WhatsAppCloudService {
   static async enviarTexto(
     servidor: ServidorWhatsApp,
     telefone: string,
-    texto: string
+    texto: string,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<boolean> {
     try {
       if (!servidor.whatsapp_cloud_token || !servidor.whatsapp_cloud_phone_number_id) {
@@ -128,16 +129,19 @@ export class WhatsAppCloudService {
           const clienteEmail = clienteData?.email || undefined;
           const clienteTelefone = clienteData?.telefone || undefined;
 
-          await MensagemHistorico.create({
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: texto,
-            status: 'enviada',
-            servidor_id: servidor.id,
-            cliente_nome: clienteNome,
-            cliente_email: clienteEmail,
-            cliente_telefone: clienteTelefone
-          });
+          await registrarMensagemHistorico(
+            {
+              tipo: 'whatsapp',
+              destinatario: telefone,
+              mensagem: texto,
+              status: 'enviada',
+              servidor_id: servidor.id,
+              cliente_nome: clienteNome,
+              cliente_email: clienteEmail,
+              cliente_telefone: clienteTelefone,
+            },
+            contextoSaas
+          );
 
           // Registrar no Elasticsearch
           await registrarMensagemElasticsearch(null, {
@@ -159,14 +163,17 @@ export class WhatsAppCloudService {
 
         // Registrar erro no histórico
         try {
-          await MensagemHistorico.create({
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: texto,
-            status: 'erro',
-            erro_mensagem: errorMessage,
-            servidor_id: servidor.id
-          });
+          await registrarMensagemHistorico(
+            {
+              tipo: 'whatsapp',
+              destinatario: telefone,
+              mensagem: texto,
+              status: 'erro',
+              erro_mensagem: errorMessage,
+              servidor_id: servidor.id,
+            },
+            contextoSaas
+          );
 
           // Registrar erro no Elasticsearch
           await registrarMensagemElasticsearch(null, {
@@ -206,7 +213,8 @@ export class WhatsAppCloudService {
     languageCode = 'pt_BR',
     components?: WhatsAppCloudTemplateComponent[],
     cliente?: { nome_fantasia?: string; razao_social?: string } | null,
-    titulo?: { valor: number; data_vencimento: Date; numero_titulo?: string } | null
+    titulo?: { valor: number; data_vencimento: Date; numero_titulo?: string } | null,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<boolean> {
     try {
       if (!servidor.whatsapp_cloud_token || !servidor.whatsapp_cloud_phone_number_id) {
@@ -432,16 +440,19 @@ export class WhatsAppCloudService {
             }
           }
 
-          await MensagemHistorico.create({
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: mensagemDetalhada,
-            status: 'enviada',
-            servidor_id: servidor.id,
-            cliente_nome: clienteNome,
-            cliente_email: clienteEmail,
-            cliente_telefone: clienteTelefone
-          });
+          await registrarMensagemHistorico(
+            {
+              tipo: 'whatsapp',
+              destinatario: telefone,
+              mensagem: mensagemDetalhada,
+              status: 'enviada',
+              servidor_id: servidor.id,
+              cliente_nome: clienteNome,
+              cliente_email: clienteEmail,
+              cliente_telefone: clienteTelefone,
+            },
+            contextoSaas
+          );
 
           // Registrar no Elasticsearch
           await registrarMensagemElasticsearch(null, {
@@ -541,17 +552,20 @@ export class WhatsAppCloudService {
           const clienteEmail = clienteData?.email || undefined;
           const clienteTelefone = clienteData?.telefone || undefined;
 
-          await MensagemHistorico.create({
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: `Template: ${templateName} (${languageCode})`,
-            status: 'erro',
-            erro_mensagem: errorMessage,
-            servidor_id: servidor.id,
-            cliente_nome: clienteNome,
-            cliente_email: clienteEmail,
-            cliente_telefone: clienteTelefone
-          });
+          await registrarMensagemHistorico(
+            {
+              tipo: 'whatsapp',
+              destinatario: telefone,
+              mensagem: `Template: ${templateName} (${languageCode})`,
+              status: 'erro',
+              erro_mensagem: errorMessage,
+              servidor_id: servidor.id,
+              cliente_nome: clienteNome,
+              cliente_email: clienteEmail,
+              cliente_telefone: clienteTelefone,
+            },
+            contextoSaas
+          );
 
           // Registrar erro no Elasticsearch
           await registrarMensagemElasticsearch(null, {
@@ -596,7 +610,8 @@ export class WhatsAppCloudService {
     telefone: string,
     documentUrlOrBase64: string,
     filename = 'boleto.pdf',
-    caption?: string
+    caption?: string,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<boolean> {
     try {
       if (!servidor.whatsapp_cloud_token || !servidor.whatsapp_cloud_phone_number_id) {
@@ -675,16 +690,19 @@ export class WhatsAppCloudService {
           const clienteEmail = clienteData?.email || undefined;
           const clienteTelefone = clienteData?.telefone || undefined;
 
-          await MensagemHistorico.create({
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: caption || `Documento: ${filename}`,
-            status: 'enviada',
-            servidor_id: servidor.id,
-            cliente_nome: clienteNome,
-            cliente_email: clienteEmail,
-            cliente_telefone: clienteTelefone
-          });
+          await registrarMensagemHistorico(
+            {
+              tipo: 'whatsapp',
+              destinatario: telefone,
+              mensagem: caption || `Documento: ${filename}`,
+              status: 'enviada',
+              servidor_id: servidor.id,
+              cliente_nome: clienteNome,
+              cliente_email: clienteEmail,
+              cliente_telefone: clienteTelefone,
+            },
+            contextoSaas
+          );
 
           // Registrar no Elasticsearch
           await registrarMensagemElasticsearch(null, {
@@ -725,17 +743,20 @@ export class WhatsAppCloudService {
           const clienteEmail = clienteData?.email || undefined;
           const clienteTelefone = clienteData?.telefone || undefined;
 
-          await MensagemHistorico.create({
-            tipo: 'whatsapp',
-            destinatario: telefone,
-            mensagem: caption || `Documento: ${filename}`,
-            status: 'erro',
-            erro_mensagem: errorMessage,
-            servidor_id: servidor.id,
-            cliente_nome: clienteNome,
-            cliente_email: clienteEmail,
-            cliente_telefone: clienteTelefone
-          });
+          await registrarMensagemHistorico(
+            {
+              tipo: 'whatsapp',
+              destinatario: telefone,
+              mensagem: caption || `Documento: ${filename}`,
+              status: 'erro',
+              erro_mensagem: errorMessage,
+              servidor_id: servidor.id,
+              cliente_nome: clienteNome,
+              cliente_email: clienteEmail,
+              cliente_telefone: clienteTelefone,
+            },
+            contextoSaas
+          );
 
           // Registrar erro no Elasticsearch
           await registrarMensagemElasticsearch(null, {

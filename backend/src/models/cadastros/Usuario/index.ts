@@ -104,7 +104,7 @@ Usuario.init(
   },
   {
     sequelize,
-    tableName: 'usuarios',
+    tableName: 'adm_usuarios',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

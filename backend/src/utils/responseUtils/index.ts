@@ -68,7 +68,10 @@ export function sendError(
     const stack = getErrorStack(error);
     const cause = error instanceof Error ? (error as Error & { cause?: unknown }).cause : undefined;
     const causeStr = cause instanceof Error ? cause.message : (typeof cause === 'string' ? cause : cause != null ? String(cause) : undefined);
+    const req = (res as Response & { req?: { method?: string; originalUrl?: string; url?: string } }).req;
+    const routeInfo = req ? { route: `${req.method ?? '?'} ${req.originalUrl ?? req.url ?? ''}`.trim() } : {};
     logger.error('Erro ao processar requisição', {
+      ...routeInfo,
       ...context,
       error: errorMessage,
       statusCode,

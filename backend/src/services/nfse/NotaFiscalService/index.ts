@@ -123,7 +123,7 @@ export class NotaFiscalService {
             break;
           case 'cliente':
             orConditions.push(
-              sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = notas_fiscais.cliente_id AND (clientes.razao_social LIKE '${searchTerm.replace(/'/g, "''")}' OR clientes.nome_fantasia LIKE '${searchTerm.replace(/'/g, "''")}'))`) as any
+              sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes WHERE adm_clientes.id = adm_notas_fiscais.cliente_id AND (adm_clientes.razao_social LIKE '${searchTerm.replace(/'/g, "''")}' OR adm_clientes.nome_fantasia LIKE '${searchTerm.replace(/'/g, "''")}'))`) as any
             );
             break;
           default:

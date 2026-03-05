@@ -1,7 +1,7 @@
 import { Op } from 'sequelize';
 import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
 import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
-import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
+import { registrarMensagemHistorico } from '../RegistroMensagemHistoricoService';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Plano } from '../../../models/cadastros/Plano';
@@ -54,15 +54,45 @@ export class EmailService {
     return cleaned;
   }
 
-  static async enviarBoletos(config: ConfiguracoesEnvios): Promise<{
+  /**
+   * @param options.saas - Se true, usa saas_titulos e saas_dados_empresa
+   */
+  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { saas?: boolean }): Promise<{
     sucesso: boolean;
     emailsEnviados: number;
     erros: number;
   }> {
+    const saas = options?.saas ?? false;
     try {
-      const servidor = await ServidorEmail.findOne({ where: { ativo: true } });
-      if (!servidor) {
-        return { sucesso: false, emailsEnviados: 0, erros: 0 };
+      let servidor: ServidorEmail;
+      if (saas) {
+        const SaasServidorEmail = (await import('../../../models/saas/SaasServidorEmail')).default;
+        const saasSrv = await SaasServidorEmail.findOne({ where: { status: 'ativo' } });
+        if (!saasSrv) {
+          return { sucesso: false, emailsEnviados: 0, erros: 0 };
+        }
+        const srv = saasSrv.get({ plain: true }) as Record<string, unknown>;
+        servidor = {
+          id: saasSrv.id,
+          host: (srv.host_smtp as string) || '',
+          porta: saasSrv.porta,
+          usuario: saasSrv.usuario,
+          senha: (srv.senha as string) || (srv.senha_criptografada as string) || '',
+          ssl: saasSrv.ssl,
+          tls: false,
+          nome_remetente: saasSrv.nome,
+          email_remetente: saasSrv.usuario,
+          ativo: true,
+          timeout: 30000,
+          tentativas: 1,
+          intervalo_tentativas: 0,
+        } as unknown as ServidorEmail;
+      } else {
+        const srv = await ServidorEmail.findOne({ where: { ativo: true } });
+        if (!srv) {
+          return { sucesso: false, emailsEnviados: 0, erros: 0 };
+        }
+        servidor = srv;
       }
 
       const mensagens = await MensagemEmail.findAll({ where: { ativo: true } });
@@ -80,7 +110,7 @@ export class EmailService {
       ];
 
       for (const envio of envios) {
-        const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo);
+        const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo, saas);
         emailsEnviados += resultado.enviadas;
         erros += resultado.erros;
       }
@@ -97,7 +127,8 @@ export class EmailService {
     servidor: ServidorEmail,
     tipoMensagem: string,
     dias: number,
-    tipo: 'antes' | 'mesmo' | 'depois'
+    tipo: 'antes' | 'mesmo' | 'depois',
+    saas = false
   ): Promise<{ enviadas: number; erros: number }> {
     const mensagem = mensagens.find((msg) => msg.tipo === tipoMensagem);
     if (!mensagem || mensagem.tipo_envio === 'desativado') {
@@ -117,34 +148,60 @@ export class EmailService {
     const proximoDia = new Date(dataVencimento);
     proximoDia.setDate(proximoDia.getDate() + 1);
 
-    const titulos = await Titulo.findAll({
-      where: {
-        status: { [Op.in]: ['pendente', 'vencido'] },
-        pago: false,
-        data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia }
-      },
-      include: [
-        { model: Cliente, as: 'cliente', required: true, where: { ativo: true, recebe_email: true } },
-        { model: Plano, as: 'plano', required: false },
-        { model: Banco, as: 'banco', required: false }
-      ]
-    });
+    type TituloParaEnvio = { id: number; valor: number; data_vencimento: Date; numero_titulo?: string; linha_digitavel?: string | null; contrato_id?: number | null; cliente?: { razao_social?: string; nome_fantasia?: string; email?: string; telefone?: string }; banco?: unknown; plano?: unknown };
+    let titulos: Array<Titulo | TituloParaEnvio>;
+
+    if (saas) {
+      const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
+      const { SaasDadosEmpresa } = await import('../../../models/saas/SaasDadosEmpresa');
+      const { SaasPlano } = await import('../../../models/saas/SaasPlano');
+      const { SaasBanco } = await import('../../../models/saas/SaasBanco');
+      const rows = await SaasTitulo.findAll({
+        where: { status: { [Op.in]: ['pendente', 'vencido'] } as never, pago: false, data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia } },
+        include: [
+          { model: SaasDadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa', 'email', 'telefone'] },
+          { model: SaasPlano, as: 'plano', required: false },
+          { model: SaasBanco, as: 'banco', required: false },
+        ],
+      });
+      titulos = rows.map((t) => {
+        const emp = (t as unknown as { empresa?: { get: (o: { plain: boolean }) => Record<string, unknown> } }).empresa;
+        const empData = (emp?.get({ plain: true }) as Record<string, unknown>) || {};
+        const plain = t.get({ plain: true }) as Record<string, unknown>;
+        return {
+          ...plain,
+          cliente: { razao_social: empData.razao_social || empData.nome_empresa, nome_fantasia: empData.nome_fantasia, email: empData.email },
+          banco: (t as unknown as { banco?: unknown }).banco,
+          plano: (t as unknown as { plano?: unknown }).plano,
+        } as TituloParaEnvio;
+      });
+    } else {
+      titulos = await Titulo.findAll({
+        where: { status: { [Op.in]: ['pendente', 'vencido'] }, pago: false, data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia } },
+        include: [
+          { model: Cliente, as: 'cliente', required: true, where: { ativo: true, recebe_email: true } },
+          { model: Plano, as: 'plano', required: false },
+          { model: Banco, as: 'banco', required: false },
+        ],
+      });
+    }
 
     let enviadas = 0;
     let erros = 0;
 
     for (const titulo of titulos) {
       try {
-        const tituloPlain = titulo.get({ plain: true }) as Titulo & { cliente: Cliente };
-        const cliente = tituloPlain.cliente;
+        const tituloPlain = saas ? titulo : (titulo as Titulo).get({ plain: true });
+        const tituloObj = tituloPlain as TituloParaEnvio & { cliente?: { email?: string; recebe_email?: boolean; razao_social?: string; nome_fantasia?: string; telefone?: string } };
+        const cliente = tituloObj.cliente;
         
         if (!cliente?.email) {
           erros++;
           continue;
         }
 
-        if (!cliente.recebe_email) {
-          logger.info(`Email não enviado para cliente ${cliente.id}: comunicação por email desativada`);
+        if (!saas && cliente.recebe_email === false) {
+          logger.info(`Email não enviado para cliente ${(cliente as Cliente).id}: comunicação por email desativada`);
           continue;
         }
 
@@ -157,9 +214,9 @@ export class EmailService {
           const baseUrl = undefined;
           
           corpoHtml = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
-            cliente,
+            cliente: cliente as Cliente,
             contrato: contratoRef,
-            titulo,
+            titulo: tituloObj as unknown as TituloComRelacoes,
             dataReferencia: new Date()
           }, baseUrl);
         } else {
@@ -180,15 +237,21 @@ export class EmailService {
 
         let base64Pdf: string | undefined = undefined;
         if ((mensagem && mensagem.tipo_envio === 'pdf') || !mensagem) {
-          const pdf = await TituloPDFController.gerarPdfBase64(titulo as unknown as TituloComRelacoes);
+          const tituloPdf = saas
+            ? { ...tituloObj, cliente: cliente as Cliente & { nome?: string; cpf?: string; cnpj?: string }, banco: tituloObj.banco, plano: tituloObj.plano }
+            : (titulo as Titulo);
+          const pdf = await TituloPDFController.gerarPdfBase64(tituloPdf as unknown as TituloComRelacoes);
           if (pdf) {
             base64Pdf = pdf;
           } else {
             logger.error('Falha ao gerar PDF do boleto para email');
           }
         }
+        const contextoSaas = saas && (titulo as { empresa_id?: number }).empresa_id
+          ? { saas: true as const, empresa_id: (titulo as { empresa_id: number }).empresa_id }
+          : undefined;
         const enviou = await this.enviarEmail(
-          servidor,
+          servidor as ServidorEmail,
           cliente.email,
           corpoHtml,
           base64Pdf,
@@ -197,7 +260,8 @@ export class EmailService {
           `${servidor.nome_remetente} - Boleto de Pagamento`,
           cliente.razao_social || cliente.nome_fantasia || undefined,
           cliente.email,
-          cliente.telefone || undefined
+          cliente.telefone || undefined,
+          contextoSaas
         );
         
         if (enviou) {
@@ -224,7 +288,8 @@ export class EmailService {
     titulo?: string,
     clienteNome?: string,
     clienteEmail?: string,
-    clienteTelefone?: string
+    clienteTelefone?: string,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<boolean> {
     try {
       const transporter = nodemailer.createTransport({
@@ -264,22 +329,23 @@ export class EmailService {
         const mensagemLimpa = this.stripHtml(mensagem);
 
         // Registrar mensagem enviada no histórico
-
-        // Registrar mensagem enviada no histórico
       try {
-        await MensagemHistorico.create({
-          tipo: 'email',
-          destinatario: emailDestino,
-          titulo: titulo || `${servidor.nome_remetente} - Boleto de Pagamento`,
-          mensagem: mensagemLimpa,
-          status: 'enviada',
-          entidade_tipo: entidadeTipo,
-          entidade_id: entidadeId,
-          servidor_id: servidor.id,
-          cliente_nome: clienteNome,
-          cliente_email: clienteEmail,
-          cliente_telefone: clienteTelefone
-        });
+        await registrarMensagemHistorico(
+          {
+            tipo: 'email',
+            destinatario: emailDestino,
+            titulo: titulo || `${servidor.nome_remetente} - Boleto de Pagamento`,
+            mensagem: mensagemLimpa,
+            status: 'enviada',
+            entidade_tipo: entidadeTipo,
+            entidade_id: entidadeId,
+            servidor_id: servidor.id,
+            cliente_nome: clienteNome,
+            cliente_email: clienteEmail,
+            cliente_telefone: clienteTelefone,
+          },
+          contextoSaas
+        );
 
         // Registrar no Elasticsearch (sem request, então dados de usuário serão null)
         await registrarMensagemElasticsearch(null, {
@@ -310,20 +376,23 @@ export class EmailService {
 
       // Registrar erro no histórico
       try {
-        await MensagemHistorico.create({
-          tipo: 'email',
-          destinatario: emailDestino,
-          titulo: titulo || `${servidor.nome_remetente} - Boleto de Pagamento`,
-          mensagem: mensagemLimpa,
-          status: 'erro',
-          erro_mensagem: error instanceof Error ? error.message : 'Erro desconhecido',
-          entidade_tipo: entidadeTipo,
-          entidade_id: entidadeId,
-          servidor_id: servidor.id,
-          cliente_nome: clienteNome,
-          cliente_email: clienteEmail,
-          cliente_telefone: clienteTelefone
-        });
+        await registrarMensagemHistorico(
+          {
+            tipo: 'email',
+            destinatario: emailDestino,
+            titulo: titulo || `${servidor.nome_remetente} - Boleto de Pagamento`,
+            mensagem: mensagemLimpa,
+            status: 'erro',
+            erro_mensagem: error instanceof Error ? error.message : 'Erro desconhecido',
+            entidade_tipo: entidadeTipo,
+            entidade_id: entidadeId,
+            servidor_id: servidor.id,
+            cliente_nome: clienteNome,
+            cliente_email: clienteEmail,
+            cliente_telefone: clienteTelefone,
+          },
+          contextoSaas
+        );
 
         // Registrar erro no Elasticsearch
         await registrarMensagemElasticsearch({} as any, {

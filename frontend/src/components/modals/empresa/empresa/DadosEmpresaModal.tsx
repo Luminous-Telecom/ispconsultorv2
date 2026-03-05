@@ -2,7 +2,9 @@ import React, { useState, useMemo, useLayoutEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from '@/services/dadosEmpresaService';
+import { saasDadosEmpresaService, type SaasDadosEmpresaItem } from '@/services/saas/saasDadosEmpresaService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useI18n } from '@/contexts/I18nContext';
 import { ApiError } from '@/services/core/ErrorHandler';
 import { useFormReset } from '@/hooks/useFormReset';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -13,40 +15,84 @@ import DadosBasicosTab from './abas/DadosBasicosTab';
 import EnderecoTab from './abas/EnderecoTab';
 import ContatoTab from './abas/ContatoTab';
 import ResponsavelTab from './abas/ResponsavelTab';
+import FinanceiroTab from './abas/FinanceiroTab';
+
+function toFormData(item: SaasDadosEmpresaItem): DadosEmpresaForm {
+  return {
+    id: item.id,
+    razao_social: item.razao_social ?? item.nome_empresa ?? '',
+    nome_fantasia: item.nome_fantasia ?? '',
+    cnpj: item.cnpj ?? '',
+    inscricao_estadual: item.inscricao_estadual ?? '',
+    inscricao_municipal: item.inscricao_municipal ?? '',
+    cep: item.cep ?? '',
+    endereco: item.endereco ?? '',
+    numero: item.numero ?? '',
+    complemento: item.complemento ?? '',
+    bairro: item.bairro ?? '',
+    cidade: item.cidade ?? '',
+    estado: item.estado ?? '',
+    telefone: item.telefone ?? '',
+    celular: item.celular ?? '',
+    email: item.email ?? '',
+    site: item.site ?? '',
+    responsavel_nome: item.responsavel_nome ?? '',
+    responsavel_cpf: item.responsavel_cpf ?? '',
+    responsavel_cargo: item.responsavel_cargo ?? '',
+    responsavel_assinatura: item.responsavel_assinatura ?? undefined,
+    logo: item.logo ?? item.logo_url ?? undefined,
+  };
+}
+
+function toSaasPayload(d: DadosEmpresaForm): Partial<SaasDadosEmpresaItem> {
+  return {
+    razao_social: d.razao_social || null,
+    nome_fantasia: d.nome_fantasia || null,
+    cnpj: d.cnpj || null,
+    inscricao_estadual: d.inscricao_estadual || null,
+    inscricao_municipal: d.inscricao_municipal || null,
+    cep: d.cep || null,
+    endereco: d.endereco || null,
+    numero: d.numero || null,
+    complemento: d.complemento || null,
+    bairro: d.bairro || null,
+    cidade: d.cidade || null,
+    estado: d.estado || null,
+    telefone: d.telefone || null,
+    celular: d.celular || null,
+    email: d.email,
+    site: d.site || null,
+    responsavel_nome: d.responsavel_nome || null,
+    responsavel_cpf: d.responsavel_cpf || null,
+    responsavel_cargo: d.responsavel_cargo || null,
+    responsavel_assinatura: d.responsavel_assinatura || null,
+    logo: d.logo || null,
+  };
+}
 
 const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   show,
   onClose,
   skipWrapper = false,
-  onHeaderActionsReady
+  onHeaderActionsReady,
+  variant = 'admin',
+  itemId = null,
+  onSuccess,
+  modalId: propModalId,
+  companyOptions,
+  selectedCompanyId,
+  onCompanyChange,
 }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel'>('basico');
+  const isSaas = variant === 'saas';
+  const isSaasCreate = isSaas && itemId == null;
+  const isSaasEdit = isSaas && itemId != null;
+
+  const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel' | 'faturas-abertas' | 'faturas-pagas'>('basico');
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
 
-  // Query para buscar dados da empresa
-  const { data: dadosEmpresa } = useQuery({
-    queryKey: ['dados-empresa'],
-    queryFn: () => DadosEmpresaService.get(),
-    staleTime: 0, // Sempre buscar dados atualizados
-    refetchOnMount: true,
-  });
-
-  // Mutation para atualizar dados da empresa
-  const updateDadosMutation = useMutation({
-    mutationFn: (data: DadosEmpresaType) => DadosEmpresaService.update(data),
-    onSuccess: () => {
-      success('Dados da empresa atualizados com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
-    },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar dados da empresa');
-    }
-  });
-
-  // Dados iniciais do formulário
   const initialFormData: DadosEmpresaForm = {
     id: 1,
     razao_social: '',
@@ -74,139 +120,224 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
 
   const [dados, setDados] = useState<DadosEmpresaForm>(initialFormData);
 
-  // Usar hook personalizado para reset do formulário
+  const { data: dadosEmpresa } = useQuery({
+    queryKey: ['dados-empresa'],
+    queryFn: () => DadosEmpresaService.get(),
+    enabled: show && !isSaas,
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+
+  const { data: empresaRes, isLoading: isLoadingSaas } = useQuery({
+    queryKey: ['saas-dados-empresa', itemId],
+    queryFn: () => saasDadosEmpresaService.getById(itemId!),
+    enabled: show && isSaasEdit,
+  });
+
+  const empresaData = empresaRes?.data as SaasDadosEmpresaItem | undefined;
+  const customData = isSaasEdit && empresaData ? toFormData(empresaData) : !isSaas ? dadosEmpresa : undefined;
+
   useFormReset({
     show,
     initialData: initialFormData,
     setFormData: setDados,
-    customData: dadosEmpresa
+    customData,
   });
 
-  const handleInputChange = (field: keyof DadosEmpresaForm, value: string) => {
-    setDados(prev => ({
-      ...prev,
-      [field]: value || ''
-    }));
-  };
+  const updateAdminMutation = useMutation({
+    mutationFn: (data: DadosEmpresaType) => DadosEmpresaService.update(data),
+    onSuccess: () => {
+      success('Dados da empresa atualizados com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
+    },
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message?: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao atualizar dados da empresa');
+    },
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateDadosMutation.mutate(dados);
-  };
+  const createSaasMutation = useMutation({
+    mutationFn: (data: DadosEmpresaForm) => saasDadosEmpresaService.create(toSaasPayload(data)),
+    onSuccess: () => {
+      success('Empresa cadastrada com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa-list'] });
+      onSuccess?.();
+    },
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message?: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao cadastrar empresa');
+    },
+  });
+
+  const updateSaasMutation = useMutation({
+    mutationFn: (data: DadosEmpresaForm) => saasDadosEmpresaService.update(itemId!, toSaasPayload(data)),
+    onSuccess: () => {
+      success('Empresa atualizada com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa-list'] });
+      queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa', itemId] });
+      onSuccess?.();
+    },
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message?: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao atualizar empresa');
+    },
+  });
+
+  const isPending = updateAdminMutation.isPending || createSaasMutation.isPending || updateSaasMutation.isPending;
+
+  const handleInputChange = useCallback((field: keyof DadosEmpresaForm, value: string) => {
+    setDados((prev) => ({ ...prev, [field]: value ?? '' }));
+  }, []);
+
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (isSaas && !dados.razao_social?.trim() && !dados.nome_fantasia?.trim()) {
+        error('Razão social ou nome fantasia é obrigatório');
+        return;
+      }
+      if (!dados.email?.trim()) {
+        error('E-mail é obrigatório');
+        return;
+      }
+      if (isSaasCreate) createSaasMutation.mutate(dados);
+      else if (isSaasEdit) updateSaasMutation.mutate(dados);
+      else updateAdminMutation.mutate(dados);
+    },
+    [dados, error, isSaas, isSaasCreate, isSaasEdit, createSaasMutation, updateSaasMutation, updateAdminMutation]
+  );
 
   const handleCancel = useCallback(() => {
     onClose();
   }, [onClose]);
 
-  const onLogoChange = async (file: File | null) => {
-    try {
+  const onLogoChange = useCallback(
+    async (file: File | null) => {
       if (!file) return;
-      
-      const resp = await DadosEmpresaService.uploadLogo(file);
-      setDados(prev => ({ ...prev, logo: resp.logo }));
-      success('Logo atualizada com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
-    } catch (err) {
-      const apiError = err as ApiError;
-      const errorMessage = apiError.message || 'Erro ao enviar a logo';
-      error(errorMessage);
-    }
-  };
+      try {
+        if (isSaasEdit) {
+          const resp = await saasDadosEmpresaService.uploadLogo(itemId!, file);
+          const data = (resp as { data?: { logo?: string } }).data;
+          const logo = data?.logo;
+          if (logo) {
+            setDados((prev) => ({ ...prev, logo }));
+            success('Logo atualizada com sucesso!');
+            queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa', itemId] });
+          }
+        } else if (!isSaas) {
+          const resp = await DadosEmpresaService.uploadLogo(file);
+          setDados((prev) => ({ ...prev, logo: resp.logo }));
+          success('Logo atualizada com sucesso!');
+          queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
+        } else {
+          error('Salve a empresa primeiro para enviar a logo');
+        }
+      } catch (err) {
+        const apiError = err as ApiError;
+        error(apiError.message || 'Erro ao enviar a logo');
+      }
+    },
+    [isSaas, isSaasEdit, itemId, success, error, queryClient]
+  );
 
-  const onAssinaturaChange = async (file: File | null) => {
-    try {
+  const onAssinaturaChange = useCallback(
+    async (file: File | null) => {
       if (!file) return;
-      
-      const resp = await DadosEmpresaService.uploadAssinatura(file);
-      setDados(prev => ({ ...prev, responsavel_assinatura: resp.responsavel_assinatura }));
-      success('Assinatura atualizada com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
-    } catch (err) {
-      const apiError = err as ApiError;
-      const errorMessage = apiError.message || 'Erro ao enviar a assinatura';
-      error(errorMessage);
-    }
-  };
+      try {
+        if (isSaasEdit) {
+          const resp = await saasDadosEmpresaService.uploadAssinatura(itemId!, file);
+          const data = (resp as { data?: { responsavel_assinatura?: string } }).data;
+          const assinatura = data?.responsavel_assinatura;
+          if (assinatura) {
+            setDados((prev) => ({ ...prev, responsavel_assinatura: assinatura }));
+            success('Assinatura atualizada com sucesso!');
+            queryClient.invalidateQueries({ queryKey: ['saas-dados-empresa', itemId] });
+          }
+        } else if (!isSaas) {
+          const resp = await DadosEmpresaService.uploadAssinatura(file);
+          setDados((prev) => ({ ...prev, responsavel_assinatura: resp.responsavel_assinatura }));
+          success('Assinatura atualizada com sucesso!');
+          queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
+        } else {
+          error('Salve a empresa primeiro para enviar a assinatura');
+        }
+      } catch (err) {
+        const apiError = err as ApiError;
+        error(apiError.message || 'Erro ao enviar a assinatura');
+      }
+    },
+    [isSaas, isSaasEdit, itemId, success, error, queryClient]
+  );
 
-  const headerActionsContent = useMemo(() => (
-    <div className="empresa-header-unified">
-      {/* Botões à direita */}
-      <div className="empresa-header-buttons modal-header-actions">
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          leftIcon={<i className="bi bi-x-lg"></i>}
-          onClick={handleCancel}
-          disabled={updateDadosMutation.isPending}
-        >
-          Cancelar
-        </Button>
-        <Button
-          type="submit"
-          form="empresa-form"
-          variant="primary"
-          size="sm"
-          leftIcon={<i className="bi bi-check-lg"></i>}
-          isLoading={updateDadosMutation.isPending}
-        >
-          Salvar
-        </Button>
+  const headerActionsContent = useMemo(
+    () => (
+      <div className="empresa-header-unified">
+        {companyOptions && companyOptions.length > 0 && onCompanyChange && (
+          <div className="mb-1">
+            <select
+              className="form-select form-select-sm"
+              style={{ maxWidth: 280 }}
+              value={selectedCompanyId ?? ''}
+              onChange={(e) => onCompanyChange(e.target.value ? Number(e.target.value) : null)}
+            >
+              {companyOptions.map((o) => (
+                <option key={o.value ?? 'new'} value={o.value ?? ''}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="empresa-header-buttons modal-header-actions">
+          <Button type="button" variant="primary" size="sm" onClick={handleCancel} disabled={isPending}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="empresa-form" variant="primary" size="sm" isLoading={isPending}>
+            Salvar
+          </Button>
+        </div>
+        <div className="empresa-header-tabs">
+          <ul className={`nav nav-tabs empresa-tabs-unified ${isMobile ? 'empresa-tabs-mobile' : ''}`} id="empresaTab" role="tablist" style={{ margin: 0, padding: 0, borderBottom: 'none', backgroundColor: 'transparent' }}>
+            <li className="nav-item" role="presentation">
+              <button className={`nav-link modal-tab-hover ${activeTab === 'basico' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('basico')}>
+                Empresa
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button className={`nav-link modal-tab-hover ${activeTab === 'endereco' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('endereco')}>
+                Endereço
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button className={`nav-link modal-tab-hover ${activeTab === 'contato' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('contato')}>
+                Contato
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button className={`nav-link modal-tab-hover ${activeTab === 'responsavel' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('responsavel')}>
+                Responsável
+              </button>
+            </li>
+            {!isSaas && (
+              <>
+                <li className="nav-item" role="presentation">
+                  <button className={`nav-link modal-tab-hover ${activeTab === 'faturas-abertas' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('faturas-abertas')}>
+                    {t('tabs.faturasAbertas')}
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button className={`nav-link modal-tab-hover ${activeTab === 'faturas-pagas' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('faturas-pagas')}>
+                    {t('tabs.faturasPagas')}
+                  </button>
+                </li>
+              </>
+            )}
+          </ul>
+        </div>
       </div>
-
-      {/* Abas na parte inferior do header */}
-      <div className="empresa-header-tabs">
-        <ul
-          className={`nav nav-tabs empresa-tabs-unified ${isMobile ? 'empresa-tabs-mobile' : ''}`}
-          id="empresaTab"
-          role="tablist"
-          style={{
-            margin: 0,
-            padding: 0,
-            borderBottom: 'none',
-            backgroundColor: 'transparent'
-          }}
-        >
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'basico' ? 'active' : ''}`}
-              type="button"
-              onClick={() => setActiveTab('basico')}
-            >
-              Empresa
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'endereco' ? 'active' : ''}`}
-              type="button"
-              onClick={() => setActiveTab('endereco')}
-            >
-              Endereço
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'contato' ? 'active' : ''}`}
-              type="button"
-              onClick={() => setActiveTab('contato')}
-            >
-              Contato
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link modal-tab-hover ${activeTab === 'responsavel' ? 'active' : ''}`}
-              type="button"
-              onClick={() => setActiveTab('responsavel')}
-            >
-              Responsável
-            </button>
-          </li>
-        </ul>
-      </div>
-    </div>
-  ), [activeTab, isMobile, updateDadosMutation.isPending, handleCancel]);
+    ),
+    [activeTab, isMobile, isPending, handleCancel, companyOptions, selectedCompanyId, onCompanyChange, isSaas, t]
+  );
 
   useLayoutEffect(() => {
     if (skipWrapper && onHeaderActionsReady) {
@@ -215,70 +346,37 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   }, [skipWrapper, onHeaderActionsReady, headerActionsContent]);
 
   const modalContent = (
-    <>
-      <div className="empresa-modal-content">
-        {/* Conteúdo das Abas */}
-        <div
-          className={`tab-content empresa-tab-content empresa-tab-content-padded`}
-          id="empresaTabContent"
-        >
-          <form id="empresa-form" onSubmit={handleSubmit}>
-            {activeTab === 'basico' && (
-              <DadosBasicosTab
-                dados={dados}
-                onChange={handleInputChange}
-                isPending={updateDadosMutation.isPending}
-                onLogoChange={onLogoChange}
-              />
-            )}
-
-            {activeTab === 'endereco' && (
-              <EnderecoTab
-                dados={dados}
-                onChange={handleInputChange}
-                isPending={updateDadosMutation.isPending}
-              />
-            )}
-
-            {activeTab === 'contato' && (
-              <ContatoTab
-                dados={dados}
-                onChange={handleInputChange}
-                isPending={updateDadosMutation.isPending}
-              />
-            )}
-
-            {activeTab === 'responsavel' && (
-              <ResponsavelTab
-                dados={dados}
-                onChange={handleInputChange}
-                isPending={updateDadosMutation.isPending}
-                onAssinaturaChange={onAssinaturaChange}
-              />
-            )}
-          </form>
-        </div>
+    <div className="empresa-modal-content">
+      <div className={`tab-content empresa-tab-content empresa-tab-content-padded`} id="empresaTabContent">
+        <form id="empresa-form" onSubmit={handleSubmit}>
+          {activeTab === 'basico' && <DadosBasicosTab dados={dados} onChange={handleInputChange} isPending={isPending} onLogoChange={onLogoChange} />}
+          {activeTab === 'endereco' && <EnderecoTab dados={dados} onChange={handleInputChange} isPending={isPending} />}
+          {activeTab === 'contato' && <ContatoTab dados={dados} onChange={handleInputChange} isPending={isPending} />}
+          {activeTab === 'responsavel' && <ResponsavelTab dados={dados} onChange={handleInputChange} isPending={isPending} onAssinaturaChange={onAssinaturaChange} />}
+          {activeTab === 'faturas-abertas' && !isSaas && <FinanceiroTab empresaId={dadosEmpresa?.id} tipo="abertas" />}
+          {activeTab === 'faturas-pagas' && !isSaas && <FinanceiroTab empresaId={dadosEmpresa?.id} tipo="pagas" />}
+        </form>
       </div>
-    </>
+    </div>
   );
 
-  if (skipWrapper) {
-    return modalContent;
+  if (skipWrapper) return modalContent;
+
+  const modalId = propModalId ?? 'dados-empresa-modal';
+
+  if (isSaasEdit && isLoadingSaas) {
+    return (
+      <DraggableModal show={show} onClose={onClose} title="Empresa" size="xl" modalId={modalId}>
+        <div className="p-3 text-muted">Carregando...</div>
+      </DraggableModal>
+    );
   }
 
   return (
-    <DraggableModal
-      show={show}
-      onClose={handleCancel}
-      title="Empresa"
-      size="xl"
-      modalId="dados-empresa-modal"
-      headerActions={headerActionsContent}
-    >
+    <DraggableModal show={show} onClose={handleCancel} title="Empresa" size="xl" modalId={modalId} headerActions={headerActionsContent}>
       {modalContent}
     </DraggableModal>
   );
 };
 
 export default DadosEmpresaModal;
-

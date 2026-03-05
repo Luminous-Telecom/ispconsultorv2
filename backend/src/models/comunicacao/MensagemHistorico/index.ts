@@ -113,7 +113,7 @@ MensagemHistorico.init({
   }
 }, {
   sequelize,
-  tableName: 'mensagens_historico',
+  tableName: 'adm_mensagens_historico',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'

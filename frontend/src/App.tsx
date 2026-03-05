@@ -8,6 +8,7 @@ import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
 import { TableHeaderProvider } from './contexts/TableHeaderContext';
 import { ModalProvider } from './contexts/ModalContext';
 import { LoadingProvider } from './contexts/LoadingContext';
+import { SaasAuthProvider } from './contexts/SaasAuthContext';
 import Loading from './components/common/Loading';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectionLayer from './components/common/ProtectionLayer';
@@ -19,6 +20,11 @@ const Dashboard = lazy(() => import('./components/pages/Dashboard'));
 const Login = lazy(() => import('./components/pages/Login'));
 const PagamentoPublico = lazy(() => import('./components/pages/PagamentoPublico'));
 const CentralAssinante = lazy(() => import('./components/pages/CentralAssinante'));
+
+// SaaS Admin Pages
+const SaasLogin = lazy(() => import('./components/pages/saas/SaasLogin'));
+const SaasLayout = lazy(() => import('./components/pages/saas/SaasLayout'));
+const SaasDashboard = lazy(() => import('./components/pages/saas/SaasDashboard'));
 
 // Query Client
 const queryClient = new QueryClient({
@@ -70,6 +76,7 @@ function AppContent() {
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <NotificationProvider>
+              <SaasAuthProvider>
               <Router>
                 <Suspense fallback={<Loading message={t('ui.loadingApplication')} />}>
                   <Routes>
@@ -115,11 +122,38 @@ function AppContent() {
                         </Suspense>
                       } />
                     </Route>
+                    {/* Rotas SaaS Super Admin */}
+                    <Route path="/saas/login" element={
+                      <Suspense fallback={<Loading message="Carregando..." />}>
+                        <SaasLogin />
+                      </Suspense>
+                    } />
+                    <Route path="/saas" element={
+                      <DashboardFiltersProvider>
+                        <TableHeaderProvider>
+                          <ModalProvider>
+                            <LoadingProvider>
+                              <Suspense fallback={<Loading message="Carregando painel SaaS..." />}>
+                                <SaasLayout />
+                              </Suspense>
+                            </LoadingProvider>
+                          </ModalProvider>
+                        </TableHeaderProvider>
+                      </DashboardFiltersProvider>
+                    }>
+                      <Route index element={
+                        <Suspense fallback={<Loading message="Carregando..." />}>
+                          <SaasDashboard />
+                        </Suspense>
+                      } />
+                    </Route>
+
                     {/* Fallback: evitar ficar em rotas inválidas (ex: /undefined) */}
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Suspense>
               </Router>
+              </SaasAuthProvider>
             </NotificationProvider>
           </ThemeProvider>
         </QueryClientProvider>

@@ -210,6 +210,7 @@ app.use(ddosProtectionMiddleware({
     '/api/assinaturas-digital/webhook', // Webhooks de assinatura digital não devem ter proteção DDoS
     '/arquivos',
     '/api/titulos/boletos-multiplos-pdf', // Geração de PDF pode demorar mais que 15s
+    '/api/saas/titulos/boletos-multiplos-pdf', // Idem para SaaS
     '/api/auditoria/pdf', // Geração de PDF de auditoria pode demorar mais que 15s
     '/api/atualizacoes/update', // Atualização pode levar vários minutos (git pull, npm install, build, migrations, pm2 reload)
     '/api/pdf-extract' // Upload de PDF pode demorar (arquivo grande); processamento é assíncrono
@@ -228,11 +229,13 @@ app.use('/api', rateLimitMiddleware());
 // Rota para config.js (deve vir ANTES dos middlewares de proteção)
 app.get('/config.js', (_req, res) => {
   // Gerar configuração dinâmica para o frontend
+  const baseUrl = process.env.BASE_URL || process.env.APP_URL || '';
   const config = {
     REACT_APP_API_URL: '/api',
     REACT_APP_API_TIMEOUT: '10000',
     REACT_APP_API_RETRY_ATTEMPTS: '3',
-    REACT_APP_API_RETRY_DELAY: '1000'
+    REACT_APP_API_RETRY_DELAY: '1000',
+    WEBHOOK_BASE_URL: baseUrl || undefined
   };
   
   // Retornar como JavaScript válido com Content-Type correto
@@ -323,6 +326,7 @@ const startServer = async () => {
         logger.error('Erro ao iniciar agendador:', error);
       }
 
+
       try {
         const { getElasticsearchService } = await import('./services/elasticsearch');
         const elasticsearchService = getElasticsearchService();
@@ -361,7 +365,7 @@ const gracefulShutdown = async (signal: string) => {
   } catch (error) {
     logger.error('Erro ao parar agendador:', error);
   }
-  
+
   await sequelize.close();
   process.exit(0);
 };

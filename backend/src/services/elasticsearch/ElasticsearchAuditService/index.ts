@@ -264,6 +264,7 @@ export async function registrarAuditoriaElasticsearch(
       const dadosNovosLimpos = limparDados(dados.dados_novos || null);
 
       const document = {
+        log_tipo: 'auditoria',
         usuario_id: userData.id,
         usuario_nome: userData.nome,
         usuario_email: userData.email,
@@ -440,6 +441,7 @@ export async function registrarAtualizacaoElasticsearchSistema(
     };
 
     const document = {
+      log_tipo: 'auditoria',
       usuario_id: null,
       usuario_nome: 'Sistema',
       usuario_email: null,

@@ -1,6 +1,15 @@
 import { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { DadosEmpresaService } from '../../../services/sistema/DadosEmpresaService';
+import { SaasTituloService } from '../../../services/saas/SaasCrudService';
+import { SaasTitulo } from '../../../models/saas/SaasTitulo';
+import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
+import { SaasPlano } from '../../../models/saas/SaasPlano';
+import { SaasBanco } from '../../../models/saas/SaasBanco';
+import { saasTituloToTituloComRelacoes } from '../../titulos/TituloHelpers/saasTituloToTituloComRelacoes';
+import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
+import { SaasTituloBoletoService } from '../../../services/saas/SaasTituloBoletoService';
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
@@ -80,6 +89,120 @@ export class DadosEmpresaController {
         context: 'DadosEmpresaController',
         action: 'getPublicBySlug'
       });
+    }
+  }
+
+  /**
+   * Lista saas_titulos por empresa_id (adm_dados_empresa).
+   * Usa auth admin para permitir visualizar titulos SaaS da empresa no modal Dados Empresa.
+   * Query: tipo=abertas (pendente,vencido) ou tipo=pagas (pago,pago_atraso,parcial). Default: abertas.
+   */
+  static async getTitulosSaas(req: Request, res: Response): Promise<void> {
+    try {
+      const empresaId = req.query.empresa_id != null ? Number(req.query.empresa_id) : NaN;
+      if (Number.isNaN(empresaId) || empresaId <= 0) {
+        sendError(res, new Error('empresa_id inválido'), 'empresa_id obrigatório e deve ser maior que zero', 400);
+        return;
+      }
+      const tipo = (req.query.tipo as string) || 'abertas';
+      const statusFilter = tipo === 'pagas' ? 'pago,pago_atraso,parcial' : 'pendente,vencido';
+      const result = await SaasTituloService.list({
+        empresa_id: empresaId,
+        status: statusFilter,
+        limit: 50,
+        sortColumn: 'data_vencimento',
+        sortDirection: tipo === 'pagas' ? 'desc' : 'asc',
+      });
+      sendSuccess(res, result);
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar títulos da empresa', 500, true, {
+        context: 'DadosEmpresaController',
+        action: 'getTitulosSaas',
+      });
+    }
+  }
+
+  /**
+   * Gera PDF de boletos de saas_titulos (admin auth).
+   * Requer ids e empresa_id para validar que os títulos pertencem à empresa.
+   */
+  static async getTitulosSaasBoletosPdf(req: Request, res: Response): Promise<void> {
+    let ids: number[] = [];
+    try {
+      const empresaId = req.query.empresa_id != null ? Number(req.query.empresa_id) : NaN;
+      if (Number.isNaN(empresaId) || empresaId <= 0) {
+        sendValidationError(res, 'empresa_id obrigatório e deve ser maior que zero');
+        return;
+      }
+      const idsParam = req.query.ids as string;
+      if (idsParam) {
+        try {
+          const parsed = JSON.parse(idsParam);
+          ids = Array.isArray(parsed) ? parsed : [parsed];
+        } catch {
+          ids = idsParam.split(',').map((id: string) => parseInt(id.trim(), 10)).filter((id: number) => !isNaN(id));
+        }
+      }
+      if (!ids || ids.length === 0) {
+        sendValidationError(res, 'IDs dos títulos não fornecidos');
+        return;
+      }
+
+      const tituloIncludes = [
+        { model: SaasDadosEmpresa, as: 'empresa', attributes: ['id', 'razao_social', 'nome_empresa', 'nome_fantasia', 'cnpj', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
+        { model: SaasPlano, as: 'plano', attributes: ['id', 'nome', 'valor_mensal'] },
+        { model: SaasBanco, as: 'banco', attributes: ['id', 'nome', 'banco', 'tipo_banco', 'codigo', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 'instrucao_linha_4', 'instrucao_linha_5'] },
+      ];
+
+      const saasTitulos = await SaasTitulo.findAll({
+        where: { id: { [Op.in]: ids }, empresa_id: empresaId },
+        include: tituloIncludes,
+      });
+
+      if (saasTitulos.length === 0) {
+        sendNotFound(res, 'Nenhum título encontrado');
+        return;
+      }
+
+      type SaasTituloComIncludes = SaasTitulo & { banco?: SaasBanco | null; empresa?: SaasDadosEmpresa | null; plano?: SaasPlano | null };
+      const filtrados = saasTitulos.filter((t: SaasTituloComIncludes) => t.status !== 'cancelado');
+
+      const titulosComRelacoes: import('../../titulos/TituloHelpers/types').TituloComRelacoes[] = [];
+      for (const st of filtrados as SaasTituloComIncludes[]) {
+        if (!st.banco) continue;
+        if (!st.charge_id) {
+          try {
+            const resultado = await SaasTituloBoletoService.gerarBoleto(st.id);
+            if (resultado.success) {
+              const recarregado = await SaasTitulo.findByPk(st.id, { include: tituloIncludes });
+              if (recarregado) {
+                titulosComRelacoes.push(saasTituloToTituloComRelacoes(recarregado));
+              } else {
+                titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
+              }
+            } else {
+              titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
+            }
+          } catch {
+            titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
+          }
+        } else {
+          titulosComRelacoes.push(saasTituloToTituloComRelacoes(st));
+        }
+      }
+
+      if (titulosComRelacoes.length === 0) {
+        sendValidationError(res, 'Nenhum boleto válido para gerar PDF');
+        return;
+      }
+
+      const pdfBuffer = await TituloPDFService.gerarPdfDeMultiplosBoletos(titulosComRelacoes);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="boletos-${titulosComRelacoes.length}-titulos.pdf"`);
+      res.setHeader('Content-Length', String(pdfBuffer.length));
+      res.send(pdfBuffer);
+    } catch (err) {
+      sendError(res, err, 'Erro ao gerar PDF de boletos', 500, true);
     }
   }
 

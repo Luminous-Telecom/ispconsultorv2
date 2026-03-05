@@ -1,5 +1,5 @@
 import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
-import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
+import { registrarMensagemHistorico } from '../RegistroMensagemHistoricoService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
 import { registrarMensagemElasticsearch } from '../../elasticsearch/MensagemHistoricoElasticsearchService';
@@ -23,15 +23,15 @@ export class WhatsAppSenderService {
   static async enviarTexto(
     servidor: ServidorWhatsApp,
     telefone: string,
-    mensagem: string
+    mensagem: string,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<boolean> {
     if (servidor.tipo_api === 'whatsapp_cloud') {
-      return WhatsAppCloudService.enviarTexto(servidor, telefone, mensagem);
+      return WhatsAppCloudService.enviarTexto(servidor, telefone, mensagem, contextoSaas);
     }
-    
     const baseUrl = this.getBaseUrl(servidor);
     const url = `${baseUrl}/message/sendText/${servidor.instance_name}`;
-    return this.fazerRequisicao(url, servidor, { number: telefone, text: mensagem }, telefone, mensagem);
+    return this.fazerRequisicao(url, servidor, { number: telefone, text: mensagem }, telefone, mensagem, undefined, undefined, undefined, undefined, undefined, contextoSaas);
   }
 
   /**
@@ -41,7 +41,10 @@ export class WhatsAppSenderService {
     servidor: ServidorWhatsApp,
     telefone: string,
     base64: string,
-    descricao?: string
+    descricao?: string,
+    entidadeTipo?: string,
+    entidadeId?: number,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<boolean> {
     try {
       if (servidor.tipo_api === 'whatsapp_cloud') {
@@ -50,20 +53,19 @@ export class WhatsAppSenderService {
           telefone,
           base64,
           'boleto.pdf',
-          descricao
+          descricao,
+          contextoSaas
         );
       }
-      
       const baseUrl = this.getBaseUrl(servidor);
       const url = `${baseUrl}/message/sendMedia/${servidor.instance_name}`;
-      
       return this.fazerRequisicao(url, servidor, {
         number: telefone,
         mediatype: 'document',
         media: base64,
         fileName: 'boleto.pdf',
         caption: descricao || undefined
-      }, telefone, descricao || 'Boleto em PDF');
+      }, telefone, descricao || 'Boleto em PDF', entidadeTipo, entidadeId, undefined, undefined, undefined, contextoSaas);
     } catch (error) {
       logger.error('Erro ao enviar PDF via WhatsApp:', error);
       return false;
@@ -83,7 +85,8 @@ export class WhatsAppSenderService {
     entidadeId?: number,
     clienteNome?: string,
     clienteEmail?: string,
-    clienteTelefone?: string
+    clienteTelefone?: string,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<boolean> {
     try {
       const controller = new AbortController();
@@ -123,18 +126,21 @@ export class WhatsAppSenderService {
             const clienteEmail = clienteData?.email || undefined;
             const clienteTelefone = clienteData?.telefone || undefined;
 
-            await MensagemHistorico.create({
-              tipo: 'whatsapp',
-              destinatario: telefone,
-              mensagem: mensagem,
-              status: 'enviada',
-              entidade_tipo: entidadeTipo,
-              entidade_id: entidadeId,
-              servidor_id: servidor.id,
-              cliente_nome: clienteNome,
-              cliente_email: clienteEmail,
-              cliente_telefone: clienteTelefone
-            });
+            await registrarMensagemHistorico(
+              {
+                tipo: 'whatsapp',
+                destinatario: telefone,
+                mensagem: mensagem,
+                status: 'enviada',
+                entidade_tipo: entidadeTipo,
+                entidade_id: entidadeId,
+                servidor_id: servidor.id,
+                cliente_nome: clienteNome,
+                cliente_email: clienteEmail,
+                cliente_telefone: clienteTelefone,
+              },
+              contextoSaas
+            );
 
             // Registrar no Elasticsearch
             await registrarMensagemElasticsearch(null, {
@@ -175,19 +181,22 @@ export class WhatsAppSenderService {
             const clienteEmail = clienteData?.email || undefined;
             const clienteTelefone = clienteData?.telefone || undefined;
 
-            await MensagemHistorico.create({
-              tipo: 'whatsapp',
-              destinatario: telefone,
-              mensagem: mensagem,
-              status: 'erro',
-              erro_mensagem: `Erro HTTP ${response.status}: ${JSON.stringify(responseData)}`,
-              entidade_tipo: entidadeTipo,
-              entidade_id: entidadeId,
-              servidor_id: servidor.id,
-              cliente_nome: clienteNome,
-              cliente_email: clienteEmail,
-              cliente_telefone: clienteTelefone
-            });
+            await registrarMensagemHistorico(
+              {
+                tipo: 'whatsapp',
+                destinatario: telefone,
+                mensagem: mensagem,
+                status: 'erro',
+                erro_mensagem: `Erro HTTP ${response.status}: ${JSON.stringify(responseData)}`,
+                entidade_tipo: entidadeTipo,
+                entidade_id: entidadeId,
+                servidor_id: servidor.id,
+                cliente_nome: clienteNome,
+                cliente_email: clienteEmail,
+                cliente_telefone: clienteTelefone,
+              },
+              contextoSaas
+            );
 
             // Registrar erro no Elasticsearch
             await registrarMensagemElasticsearch({} as any, {

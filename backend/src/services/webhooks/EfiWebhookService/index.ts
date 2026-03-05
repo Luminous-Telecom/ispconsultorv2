@@ -14,12 +14,32 @@ import {
 import { EfiWebhookValidatorService } from '../EfiWebhookValidatorService';
 import { EfiWebhookProcessorService } from '../EfiWebhookProcessorService';
 
+/** Extrai o path da URL de retorno para comparar com a URL do request */
+function getUrlRetornoPath(urlRetorno: string | null | undefined): string {
+  if (!urlRetorno || typeof urlRetorno !== 'string') return '';
+  try {
+    if (urlRetorno.startsWith('http://') || urlRetorno.startsWith('https://')) {
+      return new URL(urlRetorno).pathname.replace(/\/+$/, '').toLowerCase();
+    }
+    return urlRetorno.split('?')[0].replace(/\/+$/, '').toLowerCase();
+  } catch {
+    return urlRetorno.split('?')[0].replace(/\/+$/, '').toLowerCase();
+  }
+}
+
+/** Path da URL que recebeu o webhook (EFI envia para o url_retorno configurado na cobrança) */
+function getWebhookRequestPath(req?: Request): string {
+  if (!req?.originalUrl) return '';
+  return req.originalUrl.split('?')[0].replace(/\/+$/, '').toLowerCase();
+}
+
 /**
  * Serviço para processamento de webhooks da EFI (Efí/Gerencianet)
  */
 export class EfiWebhookService {
   /**
    * Processa token de notificação (form-urlencoded)
+   * Prioriza bancos cujo url_retorno corresponde à URL que recebeu o webhook
    */
   static async processNotificationToken(
     notificationToken: string,
@@ -27,9 +47,66 @@ export class EfiWebhookService {
     req?: Request
   ): Promise<WebhookResponse> {
     try {
-      logger.info(`Iniciando processamento de token de notificação: ${notificationToken}`);
-      
-      // Buscar bancos ativos para processar notificação
+      const requestPath = getWebhookRequestPath(req);
+      logger.info('Processando token de notificação EFI', {
+        token: notificationToken.substring(0, 20) + '...',
+        request_path: requestPath || '(vazio)'
+      });
+
+      // Priorizar SaaS quando path for /webhook/efi/saas (cobrança provavelmente criada pelo SaasBanco)
+      const isPathSaas = requestPath?.includes('/saas');
+      let algumBancoAutorizado = false;
+
+      if (isPathSaas) {
+        const { default: SaasBanco } = await import('../../../models/saas/SaasBanco');
+        const bancosSaasEfi = await SaasBanco.findAll({
+          where: { tipo_banco: 'efi', ativo: true }
+        });
+        const bancosSaasComMatch = bancosSaasEfi.filter(
+          (b) =>
+            requestPath &&
+            getUrlRetornoPath((b as { url_retorno?: string }).url_retorno) === requestPath
+        );
+        const bancosSaasATentar =
+          bancosSaasComMatch.length > 0 ? bancosSaasComMatch : bancosSaasEfi;
+
+        logger.info('Path SaaS — tentando bancos SaaS primeiro', {
+          path: requestPath,
+          quantidade: bancosSaasATentar.length,
+          ids: bancosSaasATentar.map((b) => b.id)
+        });
+
+        for (const banco of bancosSaasATentar) {
+          if (receivedSecret && !PaymentCommonService.validateWebhookSecret(banco, receivedSecret)) {
+            continue;
+          }
+          logger.info('Tentando banco SaaS', {
+            banco_id: banco.id,
+            banco_nome: banco.nome,
+            sandbox: banco.sandbox,
+            origem: 'saas'
+          });
+          const resultado = await BancoApiService.consultarNotificacaoPorToken(
+            banco as unknown as Banco,
+            notificationToken,
+            'saas'
+          );
+          if (resultado.success && resultado.data) {
+            algumBancoAutorizado = true;
+            return await EfiWebhookProcessorService.processNotificationData(
+              resultado.data as NotificationData | NotificationItem[] | NotificationItem,
+              banco as unknown as Banco,
+              receivedSecret,
+              req
+            );
+          }
+          if (resultado.message?.includes('não encontrado') || resultado.message?.includes('expirado') || resultado.message?.includes('property_does_not_exists')) {
+            break;
+          }
+        }
+      }
+
+      // Bancos Admin
       const bancosAtivos = await Banco.findAll({
         where: { 
           tipo_banco: 'efi',
@@ -38,28 +115,47 @@ export class EfiWebhookService {
         order: [['created_at', 'DESC']]
       });
 
-      let algumBancoAutorizado = false;
+      logger.info('Bancos admin EFI encontrados', {
+        total: bancosAtivos.length,
+        bancos: bancosAtivos.map((b) => ({
+          id: b.id,
+          nome: b.nome,
+          sandbox: b.sandbox,
+          url_retorno_path: getUrlRetornoPath(b.url_retorno) || '(não configurado)'
+        }))
+      });
 
-      // Para tokens de notificação, tentar processar em todos os bancos EFI ativos
-      // O token em si já é uma forma de autenticação, não precisa validar webhook_secret
-      for (const banco of bancosAtivos) {
+      // Filtrar bancos cujo url_retorno corresponde à URL do request (evita tentar todos)
+      const bancosComMatch = bancosAtivos.filter(
+        (b) => requestPath && getUrlRetornoPath(b.url_retorno) === requestPath
+      );
+      const bancosATentar =
+        bancosComMatch.length > 0 ? bancosComMatch : bancosAtivos;
+
+      logger.info('Bancos admin a tentar', {
+        filtrado_por_url: bancosComMatch.length > 0,
+        quantidade: bancosATentar.length,
+        ids: bancosATentar.map((b) => b.id)
+      });
+
+      for (const banco of bancosATentar) {
         // Validar secret apenas se foi enviado (para segurança adicional)
         // Mas permitir processar mesmo sem secret, pois o token é autenticação suficiente
         if (receivedSecret && !PaymentCommonService.validateWebhookSecret(banco, receivedSecret)) {
-          // Se um secret foi enviado mas não é válido, apenas logar mas continuar
           logger.debug('Secret do webhook não corresponde ao banco, mas tentando processar token mesmo assim', {
             banco_id: banco.id,
             possui_secret: !!banco.webhook_secret
           });
         }
 
-        logger.info(`Tentando consultar token no banco ${banco.id}`, {
+        logger.info('Tentando banco admin', {
           banco_id: banco.id,
           banco_nome: banco.nome,
-          sandbox: banco.sandbox
+          sandbox: banco.sandbox,
+          origem: 'admin'
         });
         
-        const resultado = await BancoApiService.consultarNotificacaoPorToken(banco, notificationToken);
+        const resultado = await BancoApiService.consultarNotificacaoPorToken(banco, notificationToken, 'admin');
         
         if (resultado.success && resultado.data) {
           logger.info('Token encontrado no banco correto!', {
@@ -100,61 +196,70 @@ export class EfiWebhookService {
         }
       }
       
-      // Fallback: Buscar todos os bancos EFI ativos (se não encontrou no primeiro loop)
-      if (!algumBancoAutorizado) {
-        const bancosEfi = await Banco.findAll({
+      // Fallback: tentar bancos EFI SaaS (saas_bancos) — exceto se já tentamos SaaS primeiro (isPathSaas)
+      if (!algumBancoAutorizado && !isPathSaas) {
+        const { default: SaasBanco } = await import('../../../models/saas/SaasBanco');
+        const bancosSaasEfi = await SaasBanco.findAll({
           where: { tipo_banco: 'efi', ativo: true }
         });
-        
-        if (bancosEfi.length === 0) {
-          logger.error('Nenhum banco EFI ativo encontrado para processar notificação');
-          return {
-            success: false,
-            message: 'Nenhum banco EFI ativo encontrado',
-            status: 400
-          };
-        }
-        
-        // Tentar consultar a notificação em cada banco EFI (sem validar secret para tokens)
-        for (const banco of bancosEfi) {
-          logger.info(`Consultando notificação no banco EFI: ${banco.id}`);
-          
-          const resultado = await BancoApiService.consultarNotificacaoPorToken(banco, notificationToken);
-          
+
+        logger.info('Bancos SaaS EFI encontrados', {
+          total: bancosSaasEfi.length,
+          bancos: bancosSaasEfi.map((b) => ({
+            id: b.id,
+            nome: b.nome,
+            sandbox: b.sandbox,
+            url_retorno_path: getUrlRetornoPath(b.url_retorno ?? undefined) || '(não configurado)'
+          }))
+        });
+
+        // Priorizar bancos SaaS cujo url_retorno corresponde ao request
+        const bancosSaasComMatch = bancosSaasEfi.filter(
+          (b) =>
+            requestPath &&
+            getUrlRetornoPath((b as { url_retorno?: string }).url_retorno) === requestPath
+        );
+        const bancosSaasATentar =
+          bancosSaasComMatch.length > 0 ? bancosSaasComMatch : bancosSaasEfi;
+
+        logger.info('Bancos SaaS a tentar', {
+          filtrado_por_url: bancosSaasComMatch.length > 0,
+          quantidade: bancosSaasATentar.length,
+          ids: bancosSaasATentar.map((b) => b.id)
+        });
+
+        for (const banco of bancosSaasATentar) {
+          if (receivedSecret && !PaymentCommonService.validateWebhookSecret(banco, receivedSecret)) {
+            continue;
+          }
+          logger.info('Tentando banco SaaS', {
+            banco_id: banco.id,
+            banco_nome: banco.nome,
+            sandbox: banco.sandbox,
+            origem: 'saas'
+          });
+          const resultado = await BancoApiService.consultarNotificacaoPorToken(banco as unknown as Banco, notificationToken, 'saas');
           if (resultado.success && resultado.data) {
-            logger.info('Notificação consultada com sucesso', {
-              banco_id: banco.id,
-              data: resultado.data
-            });
-            
-            // Processar os dados da notificação
+            algumBancoAutorizado = true;
             return await EfiWebhookProcessorService.processNotificationData(
               resultado.data as NotificationData | NotificationItem[] | NotificationItem,
-              banco,
+              banco as unknown as Banco,
               receivedSecret,
               req
             );
-          } else {
-            // Se o token não foi encontrado, expirou ou não existe, não tentar outros bancos
-            if (resultado.message?.includes('não encontrado') || 
-                resultado.message?.includes('expirado') ||
-                resultado.message?.includes('property_does_not_exists')) {
-              logger.warn('Token de notificação inválido - parando tentativas', {
-                banco_id: banco.id,
-                token: notificationToken,
-                message: resultado.message
-              });
-              break; // Não tentar outros bancos se o token é inválido
-            }
-            
-            logger.warn(`Falha ao consultar notificação no banco ${banco.id}`, {
-              message: resultado.message
-            });
+          }
+          if (resultado.message?.includes('não encontrado') || resultado.message?.includes('expirado') || resultado.message?.includes('property_does_not_exists')) {
+            break;
           }
         }
       }
-      
-      logger.warn('Webhook: Token de notificação não processado (normal para tokens expirados)');
+
+      logger.warn('Webhook EFI: token não processado por nenhum banco', {
+        token: notificationToken.substring(0, 20) + '...',
+        request_path: requestPath || '(vazio)',
+        bancos_admin_tentados: bancosATentar.length,
+        hint: 'Verifique: 1) Credenciais (client_id/client_secret) 2) Ambiente (sandbox vs produção) 3) Se a cobrança foi criada com outro banco'
+      });
       return {
         success: false,
         message: 'Não foi possível consultar a notificação',
@@ -255,62 +360,29 @@ export class EfiWebhookService {
       if (chargeId) {
         return await EfiWebhookProcessorService.processChargeNotification(notification, receivedSecret, undefined, req);
       } else if (customId) {
-        // Tentar buscar por custom_id
-        const titulo = await Titulo.findByPk(String(customId), {
-          include: [{ model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret'] }]
-        }) as (Titulo & { banco?: Banco | null }) | null;
-        if (titulo) {
-          // Validar secret apenas se foi enviado, mas não bloquear processamento
-          if (receivedSecret && !PaymentCommonService.validateWebhookSecret(titulo.banco ?? undefined, receivedSecret)) {
-            logger.debug('Webhook EFI: secret não corresponde ao banco ao processar custom_id, mas continuando', {
-              titulo_id: titulo.id,
-              banco_id: titulo.banco?.id ?? null
+        const { TituloWebhookResolver } = await import('../TituloWebhookResolver');
+        const { enviarReciboSeAdmin, registrarAuditoriaWebhook } = await import('../WebhookTituloUpdater');
+        const scope = PaymentCommonService.getWebhookScope(req);
+        const resolved = await TituloWebhookResolver.findByCustomId(String(customId), scope);
+        if (resolved) {
+          if (receivedSecret && !PaymentCommonService.validateWebhookSecret(resolved.banco ?? undefined, receivedSecret)) {
+            logger.debug('Webhook EFI: secret não corresponde ao banco ao processar custom_id', {
+              titulo_id: (resolved.titulo as { id: number }).id
             });
-            // Não retornar erro - continuar processando
           }
-
-          // Capturar dados anteriores antes de atualizar
-          const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
-          
-          const statusString = typeof notification.status === 'string' 
-            ? notification.status 
-            : notification.status?.current || 'pendente';
+          const { titulo } = resolved;
+          const statusString = typeof notification.status === 'string' ? notification.status : (notification.status as { current?: string })?.current || 'pendente';
           const novoStatus = EfiWebhookProcessorService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
-          await titulo.update({ status: novoStatus });
-          
-          // Recarregar título para obter dados atualizados
-          await titulo.reload();
-          
-          // Capturar dados novos após atualização
-          const dadosNovos = titulo.toJSON() as Record<string, unknown>;
-          
-          // Registrar auditoria no Elasticsearch se req foi fornecido
-          if (req) {
-            try {
-              await registrarAtualizacaoElasticsearch(
-                req,
-                'Titulo',
-                titulo.id,
-                dadosAnteriores,
-                dadosNovos,
-                `Atualização via webhook EFI (generic) - Status: ${statusString}`
-              );
-            } catch (auditError) {
-              // Não bloquear processamento se auditoria falhar
-              logger.warn('Erro ao registrar auditoria de webhook EFI (generic)', {
-                titulo_id: titulo.id,
-                error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-              });
-            }
-          }
-          
+          const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+          await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update({ status: novoStatus, pago: ['pago', 'liquidado'].includes(novoStatus) });
+          await (titulo as { reload: () => Promise<unknown> }).reload();
+          const dadosNovos = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+          enviarReciboSeAdmin(resolved);
+          await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook EFI (generic) - Status: ${statusString}`);
           return {
             success: true,
             message: 'Status atualizado via custom_id',
-            data: {
-              titulo_id: titulo.id,
-              status: novoStatus
-            }
+            data: { titulo_id: (titulo as { id: number }).id, status: novoStatus }
           };
         }
       }

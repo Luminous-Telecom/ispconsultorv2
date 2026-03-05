@@ -16,9 +16,6 @@ import {
   HasManyCreateAssociationMixin
 } from 'sequelize';
 import { sequelize } from '../../../config/database';
-import { FornecedorContato } from '../FornecedorContato';
-import { FornecedorArquivo } from '../FornecedorArquivo';
-import { FornecedorHistorico } from '../FornecedorHistorico';
 import { ContaPagar } from '../ContaPagar';
 import { formatCreatedAt } from '../../../utils/dateUtils';
 
@@ -45,39 +42,6 @@ export class Fornecedor extends Model<
   declare updated_at: CreationOptional<Date>;
 
   // Relacionamentos
-  declare getContatos: HasManyGetAssociationsMixin<FornecedorContato>;
-  declare addContato: HasManyAddAssociationMixin<FornecedorContato, number>;
-  declare addContatos: HasManyAddAssociationsMixin<FornecedorContato, number>;
-  declare setContatos: HasManySetAssociationsMixin<FornecedorContato, number>;
-  declare removeContato: HasManyRemoveAssociationMixin<FornecedorContato, number>;
-  declare removeContatos: HasManyRemoveAssociationsMixin<FornecedorContato, number>;
-  declare hasContato: HasManyHasAssociationMixin<FornecedorContato, number>;
-  declare hasContatos: HasManyHasAssociationsMixin<FornecedorContato, number>;
-  declare countContatos: HasManyCountAssociationsMixin;
-  declare createContato: HasManyCreateAssociationMixin<FornecedorContato>;
-
-  declare getArquivos: HasManyGetAssociationsMixin<FornecedorArquivo>;
-  declare addArquivo: HasManyAddAssociationMixin<FornecedorArquivo, number>;
-  declare addArquivos: HasManyAddAssociationsMixin<FornecedorArquivo, number>;
-  declare setArquivos: HasManySetAssociationsMixin<FornecedorArquivo, number>;
-  declare removeArquivo: HasManyRemoveAssociationMixin<FornecedorArquivo, number>;
-  declare removeArquivos: HasManyRemoveAssociationsMixin<FornecedorArquivo, number>;
-  declare hasArquivo: HasManyHasAssociationMixin<FornecedorArquivo, number>;
-  declare hasArquivos: HasManyHasAssociationsMixin<FornecedorArquivo, number>;
-  declare countArquivos: HasManyCountAssociationsMixin;
-  declare createArquivo: HasManyCreateAssociationMixin<FornecedorArquivo>;
-
-  declare getHistoricos: HasManyGetAssociationsMixin<FornecedorHistorico>;
-  declare addHistorico: HasManyAddAssociationMixin<FornecedorHistorico, number>;
-  declare addHistoricos: HasManyAddAssociationsMixin<FornecedorHistorico, number>;
-  declare setHistoricos: HasManySetAssociationsMixin<FornecedorHistorico, number>;
-  declare removeHistorico: HasManyRemoveAssociationMixin<FornecedorHistorico, number>;
-  declare removeHistoricos: HasManyRemoveAssociationsMixin<FornecedorHistorico, number>;
-  declare hasHistorico: HasManyHasAssociationMixin<FornecedorHistorico, number>;
-  declare hasHistoricos: HasManyHasAssociationsMixin<FornecedorHistorico, number>;
-  declare countHistoricos: HasManyCountAssociationsMixin;
-  declare createHistorico: HasManyCreateAssociationMixin<FornecedorHistorico>;
-
   declare getContasPagar: HasManyGetAssociationsMixin<ContaPagar>;
   declare addContaPagar: HasManyAddAssociationMixin<ContaPagar, number>;
   declare addContasPagar: HasManyAddAssociationsMixin<ContaPagar, number>;
@@ -194,7 +158,7 @@ Fornecedor.init(
   {
     sequelize,
     modelName: 'Fornecedor',
-    tableName: 'fornecedores',
+    tableName: 'adm_fornecedores',
     timestamps: true,
     underscored: true,
     indexes: [

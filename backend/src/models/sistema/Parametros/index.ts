@@ -7,6 +7,8 @@ interface ParametrosAttributes {
   validar_cep: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
+  central_assinante_metodo_login: string;
+  empresa_id: number | null;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -19,6 +21,8 @@ class Parametros extends Model<ParametrosAttributes, ParametrosCreationAttribute
   public validar_cep!: boolean;
   public titulos_vence_sabado!: boolean;
   public titulos_vence_domingo!: boolean;
+  public central_assinante_metodo_login!: string;
+  public empresa_id!: number | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -50,6 +54,16 @@ Parametros.init(
       allowNull: false,
       defaultValue: false
     },
+    central_assinante_metodo_login: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'cnpj'
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'empresa_id'
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -65,7 +79,7 @@ Parametros.init(
   },
   {
     sequelize,
-    tableName: 'parametros',
+    tableName: 'adm_parametros',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

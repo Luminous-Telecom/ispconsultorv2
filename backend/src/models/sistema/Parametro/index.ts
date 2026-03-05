@@ -82,7 +82,7 @@ Parametro.init({
   }
 }, {
   sequelize,
-  tableName: 'parametros',
+  tableName: 'adm_parametro',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'

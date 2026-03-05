@@ -35,8 +35,6 @@
 | GET | `/api/clientes/consultar-cnpj/:cnpj` | Consultar CNPJ |
 | GET | `/api/fornecedores/consultar-cnpj/:cnpj` | Consultar CNPJ de fornecedor |
 | GET | `/api/dados-empresa/logo` | Logo da empresa |
-| GET | `/api/hotsite/public` | Hotsite público (HTML renderizado) |
-
 ### Pagamento Público
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -392,8 +390,6 @@
 | GET | `/api/cliente-arquivos/cliente/:id` | Arquivos do cliente |
 | POST | `/api/cliente-arquivos` | Upload de arquivo |
 | DELETE | `/api/cliente-arquivos/:id` | Excluir arquivo |
-| GET | `/api/hotsite` | Configuração do hotsite |
-| PUT | `/api/hotsite` | Atualizar hotsite |
 | POST | `/api/pdf-extract/extract` | Extrair texto de PDF |
 | POST | `/api/pdf-extract/extract-from-url` | Extrair texto de PDF via URL |
 | GET | `/api/atualizacoes` | Verificar atualizações |

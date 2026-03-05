@@ -4,7 +4,7 @@ import Joi from 'joi';
 import { Op } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { Cliente } from '../../../models/clientes/Cliente';
-import { Parametro } from '../../../models/sistema/Parametro';
+import { ParametrosService } from '../../../services/sistema/ParametrosService';
 import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized, sendForbidden, sendNotFound } from '../../../utils/responseUtils';
@@ -52,12 +52,8 @@ export class CentralAssinanteAuthController {
       }
       const empresaId = empresa.id;
 
-      // Buscar parâmetro de método de login (filtrado pela empresa)
-      const parametroMetodo = await Parametro.findOne({
-        where: { chave: 'central_assinante_metodo_login', ativo: true, empresa_id: empresaId }
-      });
-
-      const metodoLogin = parametroMetodo?.valor || 'cnpj';
+      const parametros = await ParametrosService.get(empresaId);
+      const metodoLogin = parametros.central_assinante_metodo_login || 'cnpj';
 
       // Buscar cliente por CNPJ ou Email conforme parâmetro
       let cliente: Cliente | null = null;

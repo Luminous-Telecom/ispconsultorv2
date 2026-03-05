@@ -22,7 +22,6 @@ const ContasPagarListModal = lazy(() => import('../modals/contas-pagar').then(m 
 const NotaFiscalListModal = lazy(() => import('../modals/notas-fiscais/NotaFiscalListModal'));
 const UsuariosModal = lazy(() => import('../modals/parametros/UsuariosModal'));
 const RecursosSistemaModal = lazy(() => import('../modals/parametros/RecursosSistemaModal'));
-const HotsiteModal = lazy(() => import('../modals/parametros/HotsiteModal'));
 const DiasVencimentoModal = lazy(() => import('../modals/parametros/DiasVencimentoModal'));
 const AtualizacoesModal = lazy(() => import('../modals/parametros/AtualizacoesModal'));
 const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
@@ -38,6 +37,19 @@ const IPv6ListModal = lazy(() => import('../modals/blockdomi/ipv6').then(m => ({
 const ImportarListaBlockdomiModal = lazy(() => import('../modals/blockdomi/ImportarListaBlockdomiModal'));
 const IpsPermitidosListModal = lazy(() => import('../modals/blockdomi/ips-permitidos').then(m => ({ default: m.IpsPermitidosListModal })));
 const BlockdomiLogsAcessoModal = lazy(() => import('../modals/blockdomi/BlockdomiLogsAcessoModal'));
+
+// SaaS Super Admin
+const SaasPlanoListModal = lazy(() => import('../modals/saas/SaasPlanoListModal'));
+const SaasUsuariosModal = lazy(() => import('../modals/saas/SaasUsuariosModal'));
+const SaasBancosModal = lazy(() => import('../modals/saas/SaasBancosModal'));
+/* eslint-disable @typescript-eslint/no-unused-vars -- usados em getModalConfigs */
+const SaasTipoCobrancaModal = lazy(() => import('../modals/saas/SaasTipoCobrancaModal'));
+const SaasClientesModal = lazy(() => import('../modals/saas/SaasClientesModal'));
+const SaasDadosEmpresaModal = lazy(() => import('../modals/saas/SaasDadosEmpresaModal'));
+const SaasRecursosSistemaModal = lazy(() => import('../modals/saas/SaasRecursosSistemaModal'));
+const SaasAgendadorTarefasModal = lazy(() => import('../modals/saas/SaasAgendadorTarefasModal'));
+const SaasNfseModal = lazy(() => import('../modals/saas/SaasNfseModal'));
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 interface ModalComponentProps {
   show: boolean;
@@ -71,7 +83,6 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'dados-empresa': { component: DadosEmpresaModal, titleKey: 'modal.companyData', loadingMessageKey: 'ui.loadingPage' },
   usuarios: { component: UsuariosModal, titleKey: 'modal.users', loadingMessageKey: 'ui.loadingPage' },
   'recursos-sistema': { component: RecursosSistemaModal, titleKey: 'modal.systemResources', loadingMessageKey: 'ui.loadingPage' },
-  hotsite: { component: HotsiteModal, titleKey: 'modal.hotsite', loadingMessageKey: 'ui.loadingPage' },
   'servidor-email': { component: ServidorEmailModal, titleKey: 'modal.emailServer', loadingMessageKey: 'ui.loadingPage' },
   'servidor-whatsapp': { component: ServidorWhatsappModal, titleKey: 'modal.whatsappServer', loadingMessageKey: 'ui.loadingPage' },
   nfse: { component: NFSeModal, titleKey: 'modal.nfse', loadingMessageKey: 'ui.loadingPage' },
@@ -90,6 +101,20 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'blockdomi-importar-lista': { component: ImportarListaBlockdomiModal, titleKey: 'modal.importList', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
   'blockdomi-ips-permitidos': { component: IpsPermitidosListModal, titleKey: 'blockdomi.ipsPermitidos', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'blockdomi-logs-acesso': { component: BlockdomiLogsAcessoModal, titleKey: 'blockdomi.logsAcesso', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  // SaaS Super Admin
+  'saas-planos': { component: SaasPlanoListModal, titleKey: 'modal.plans', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
+  'saas-usuarios': { component: SaasUsuariosModal, titleKey: 'modal.users', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'saas-servidores-email': { component: ServidorEmailModal, titleKey: 'modal.emailServer', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'saas-servidores-whatsapp': { component: ServidorWhatsappModal, titleKey: 'modal.whatsappServer', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'saas-bancos': { component: SaasBancosModal, titleKey: 'modal.banks', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
+  'saas-tipos-cobranca': { component: SaasTipoCobrancaModal, titleKey: 'modal.billingType', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'saas-dias-vencimento': { component: DiasVencimentoModal, titleKey: 'modal.dueDays', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
+  'saas-clientes': { component: SaasClientesModal, titleKey: 'modal.clientsTenants', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
+  'saas-dados-empresa': { component: SaasDadosEmpresaModal, titleKey: 'modal.companyData', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
+  'saas-titulos': { component: ContasReceberListModal, titleKey: 'modal.accountsReceivable', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'saas-recursos-sistema': { component: SaasRecursosSistemaModal, titleKey: 'params.systemResources', loadingMessageKey: 'ui.loadingPage', size: 'lg' },
+  'saas-agendador-tarefas': { component: SaasAgendadorTarefasModal, titleKey: 'params.taskScheduler', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
+  'saas-nfse': { component: SaasNfseModal, titleKey: 'params.nfse', loadingMessageKey: 'ui.loadingPage', size: 'lg' },
 });
 
 const SingleModalWrapper: React.FC = () => {
@@ -130,9 +155,15 @@ const SingleModalWrapper: React.FC = () => {
     onClose: closeModal,
     skipWrapper: true, // Sempre usar skipWrapper para que o conteúdo seja renderizado dentro do DraggableModal único
     onHeaderActionsReady: setHeaderActions,
-    ...(['clientes', 'planos', 'bancos', 'tipos-cobranca-contrato', 'contratos'].includes(activeModal) && { title: modalTitle }),
+    ...(['clientes', 'planos', 'bancos', 'tipos-cobranca-contrato', 'contratos', 'saas-bancos'].includes(activeModal) && { title: modalTitle }),
     // Para o cliente-modal, passamos clienteId como prop específica
     ...(isClienteModal && { clienteId }),
+    // Para saas-dias-vencimento, reaproveita DiasVencimentoModal com variant saas
+    ...(activeModal === 'saas-dias-vencimento' && { variant: 'saas' }),
+    ...(activeModal === 'saas-titulos' && { variant: 'saas' }),
+    // Servidores e históricos: reaproveitam modais do adm no SaaS
+    ...(activeModal === 'saas-servidores-email' && { variant: 'saas' }),
+    ...(activeModal === 'saas-servidores-whatsapp' && { variant: 'saas' }),
     // Para outros modais, passamos os dados adicionais normalmente
     ...(!isClienteModal && modalData && modalData),
   };

@@ -1,53 +1,30 @@
-/* Home Page Styles - Design Moderno com Gradientes */
-.hotsite-page {
-  min-height: 100vh;
-  background: #ffffff;
-}
-
-.hotsite-iframe {
-  width: 100%;
-  height: 100vh;
-  border: 0;
-  display: block;
-  background: #ffffff;
-}
-
-.hotsite-loading {
+.home-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  color: #6c757d;
+  background-color: var(--bg-primary, #f8f9fa);
 }
 
-.hotsite-empty {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: #ffffff;
+.home-content {
+  text-align: center;
+  padding: 2rem;
 }
 
-.hotsite-empty-card {
-  width: 100%;
-  max-width: 520px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-  padding: 18px;
-  background: #ffffff;
-}
-
-.hotsite-empty-title {
+.home-title {
+  font-size: 2.5rem;
   font-weight: 700;
-  margin-bottom: 8px;
-  color: #212529;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary, #212529);
 }
 
-.hotsite-empty-text {
-  color: #6c757d;
-  font-size: 14px;
-  line-height: 1.5;
+.home-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary, #6c757d);
+  margin-bottom: 1.5rem;
 }
 
+.home-login-btn {
+  font-size: 1rem;
+  padding: 0.5rem 1.5rem;
+}

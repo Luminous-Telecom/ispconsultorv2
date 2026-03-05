@@ -11,12 +11,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { BancoService } from '../services/bancoService';
+import { DadosEmpresaService } from '../services/dadosEmpresaService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { Banco } from '../types';
 import { BancoForm } from '../components/modals/bancos/banco/types';
 import { bancoSchema } from '../schemas/banco.schema';
 import type { BancoFormData as ZodBancoFormData } from '../schemas/banco.schema';
 import { FormValue } from '../types/common';
+import { buildWebhookUrlErp } from '../utils/webhookUtils';
 
 interface UseBancoFormParams {
   bancoId: number | null;
@@ -186,6 +188,14 @@ export const useBancoForm = ({
     refetchOnMount: false,
   });
 
+  // Buscar dados da empresa para pré-preencher URL de webhook (ERP)
+  const { data: dadosEmpresa } = useQuery({
+    queryKey: ['dados-empresa'],
+    queryFn: () => DadosEmpresaService.get(),
+    enabled: show && !isEditing,
+    staleTime: 60 * 1000,
+  });
+
   // Dados customizados do banco (quando editando)
   const customFormData = useMemo(() => {
     if (!banco || typeof banco !== 'object') return undefined;
@@ -202,9 +212,17 @@ export const useBancoForm = ({
     if (isEditing && customFormData) {
       reset(customFormData);
     } else if (!isEditing) {
-      reset(initialFormData as ZodBancoFormData);
+      const base = { ...initialFormData } as ZodBancoFormData;
+      if (dadosEmpresa && (base.tipo_banco === 'efi' || base.tipo_banco === 'asaas')) {
+        base.url_retorno = buildWebhookUrlErp(
+          base.tipo_banco,
+          dadosEmpresa.razao_social,
+          dadosEmpresa.nome_fantasia
+        );
+      }
+      reset(base);
     }
-  }, [show, customFormData, isEditing, reset]);
+  }, [show, customFormData, isEditing, reset, dadosEmpresa]);
 
   // Mutation para atualizar banco
   const updateBancoMutation = useMutation({
@@ -295,7 +313,12 @@ export const useBancoForm = ({
       };
       const codigo = codigos[String(normalizedValue)] || '';
       setValue('codigo', codigo, { shouldValidate: false });
-      setValue('url_retorno', `/webhook/${normalizedValue}`, { shouldValidate: false });
+      const tipo = normalizedValue as 'efi' | 'asaas';
+      const url =
+        tipo === 'efi' || tipo === 'asaas'
+          ? buildWebhookUrlErp(tipo, dadosEmpresa?.razao_social, dadosEmpresa?.nome_fantasia)
+          : `/webhook/${normalizedValue}`;
+      setValue('url_retorno', url, { shouldValidate: false });
     }
     
     // Trigger validação do campo (assíncrono mas não bloqueia)

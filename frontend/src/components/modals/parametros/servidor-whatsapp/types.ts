@@ -14,6 +14,8 @@ export interface ServidorWhatsappModalProps {
   onClose: () => void;
   skipWrapper?: boolean;
   onHeaderActionsReady?: (actions: React.ReactNode) => void;
+  /** adm: servidor único por tenant; saas: lista de servidores multi-tenant */
+  variant?: 'adm' | 'saas';
 }
 
 export interface ServidorTabProps {
