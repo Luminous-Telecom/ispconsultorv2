@@ -3,7 +3,7 @@
  * Mesma estrutura do useBancoForm, usando saasBancoService
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -67,6 +67,7 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
   const isEditing = !!bancoId;
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
+  const submittingRef = useRef(false);
 
   const { handleSubmit: rhfHandleSubmit, formState: { errors: rhfErrors }, watch, setValue, reset, trigger } = useForm<ZodBancoFormData>({
     resolver: zodResolver(bancoSchema) as never, defaultValues: initialFormData as ZodBancoFormData, mode: 'onSubmit', reValidateMode: 'onChange',
@@ -96,6 +97,7 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
 
   useEffect(() => {
     if (!show) {
+      submittingRef.current = false;
       reset(initialFormData as ZodBancoFormData);
       return;
     }
@@ -206,11 +208,14 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
   };
 
   const onSubmit = (data: ZodBancoFormData) => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     const payload = toSaasPayload(data as BancoForm);
+    const opts = { onSettled: () => { submittingRef.current = false; } };
     if (isEditing) {
-      updateMutation.mutate(payload as unknown as BancoForm & { empresa_id?: number });
+      updateMutation.mutate(payload as unknown as BancoForm & { empresa_id?: number }, opts);
     } else {
-      createMutation.mutate(payload as unknown as BancoForm);
+      createMutation.mutate(payload as unknown as BancoForm, opts);
     }
   };
 
