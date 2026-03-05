@@ -36,7 +36,7 @@ export class SaasDashboardService {
     return new Date(start.getFullYear(), start.getMonth() + 1, 0, 23, 59, 59, 999);
   }
 
-  static async getDashboardData(startDate?: string, endDate?: string) {
+  static async getDashboardData(startDate?: string, endDate?: string): Promise<Record<string, unknown>> {
     const parsedStart = this.parseStartDate(startDate);
     const parsedEnd = this.parseEndDate(endDate, parsedStart);
 
