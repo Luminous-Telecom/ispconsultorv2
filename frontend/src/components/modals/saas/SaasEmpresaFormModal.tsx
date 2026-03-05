@@ -13,6 +13,7 @@ import { useAuditoria } from '@/hooks/useAuditoria';
 import { saasEmpresasService, type SaasEmpresa } from '@/services/saas/saasEmpresasService';
 import { saasTituloService, saasContratoService, type SaasTitulo, type SaasContrato } from '@/services/saas/saasCrudService';
 import Table from '@/components/tables/Table';
+import ImprimirModal from '@/components/common/ImprimirModal';
 import SaasContratoFormModal from './SaasContratoFormModal';
 import { formatCurrency } from '@/utils/formatters';
 import type { FormValue } from '@/types/common';
@@ -64,6 +65,10 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
   const [showInativosContratos, setShowInativosContratos] = useState(false);
   const [showCanceladosTitulos, setShowCanceladosTitulos] = useState(false);
+  const [selectedTitulos, setSelectedTitulos] = useState<SaasTitulo[]>([]);
+  const [showImprimirModal, setShowImprimirModal] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const { data } = useQuery({
     queryKey: ['saas-empresa', itemId],
@@ -100,6 +105,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
 
   useEffect(() => {
     if (show) setActiveTab('dados-basicos');
+    else setSelectedTitulos([]);
   }, [show]);
 
   const createMutation = useMutation({
@@ -236,33 +242,6 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     { key: 'deletar', label: t('actions.delete'), onClick: handleDeleteContrato },
   ], [t, handleDeleteContrato]);
 
-  const canGerarBoleto = useCallback((t: SaasTitulo) =>
-    t.status === 'pendente' && t.banco && ['efi', 'asaas'].includes((t.banco as { tipo_banco?: string })?.tipo_banco?.toLowerCase() || ''), []);
-
-  const [gerandoBoletoId, setGerandoBoletoId] = useState<number | null>(null);
-
-  const handleGerarBoletoTitulo = useCallback(async (sel: SaasTitulo[]) => {
-    const item = sel[0];
-    if (!item || !canGerarBoleto(item)) return;
-    setGerandoBoletoId(item.id);
-    try {
-      const res = await saasTituloService.gerarBoleto(item.id);
-      queryClient.invalidateQueries({ queryKey: ['saas-titulos', empresaId] });
-      refetchTitulos();
-      const updated = (res as { data?: SaasTitulo })?.data;
-      if (updated?.url_boleto) {
-        window.open(updated.url_boleto, '_blank');
-        success(t('messages.success'));
-      } else {
-        success(t('messages.success'));
-      }
-    } catch (e) {
-      error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error'));
-    } finally {
-      setGerandoBoletoId(null);
-    }
-  }, [canGerarBoleto, queryClient, empresaId, refetchTitulos, success, error, t]);
-
   const handleDeleteTitulo = useCallback(async (sel: SaasTitulo[]) => {
     const item = sel[0];
     if (!item || !window.confirm(t('messages.confirmDelete'))) return;
@@ -276,13 +255,127 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     }
   }, [queryClient, empresaId, refetchTitulos, success, error, t]);
 
+  const clearPdfUrl = useCallback(() => {
+    if (pdfUrl) {
+      window.URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+  }, [pdfUrl]);
+
+  const openPrintModal = useCallback(() => {
+    clearPdfUrl();
+    setShowImprimirModal(true);
+    setIsGeneratingPdf(true);
+  }, [clearPdfUrl]);
+
+  const handleCancelarTitulo = useCallback(async (sel: SaasTitulo[]) => {
+    const items = sel?.length ? sel : selectedTitulos;
+    if (items.length === 0) return;
+    const msg = items.length === 1 ? t('messages.confirmCancelTitle') : t('messages.confirmCancelTitles', { count: items.length });
+    if (!window.confirm(msg)) return;
+    try {
+      let okCount = 0;
+      for (const item of items) {
+        try {
+          await saasTituloService.update(item.id, { status: 'cancelado' } as Partial<SaasTitulo>);
+          okCount++;
+        } catch {
+          // continua
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ['saas-titulos', empresaId] });
+      refetchTitulos();
+      setSelectedTitulos([]);
+      if (okCount > 0) success(okCount === 1 ? t('financial.titleCanceled') : `${okCount} ${t('financial.titlesCanceled')}`);
+    } catch {
+      error(t('financial.errorCanceling'));
+    }
+  }, [selectedTitulos, queryClient, empresaId, refetchTitulos, success, error, t]);
+
+  const handleEstornarTitulo = useCallback(async (sel: SaasTitulo[]) => {
+    const item = sel?.length ? sel[0] : selectedTitulos[0];
+    if (!item) return;
+    const statusPago = item.status === 'pago' || item.status === 'pago_atraso' || item.status === 'parcial';
+    if (!statusPago) {
+      error(t('financial.canOnlyReversePaid'));
+      return;
+    }
+    const msg = `${t('financial.titleWillReturnPending')}\n\n${t('document.title')} ${item.numero_titulo || item.id}\n${t('summary.value')} ${formatCurrency(Number(item.valor))}`;
+    if (!window.confirm(msg)) return;
+    try {
+      await saasTituloService.update(item.id, { status: 'pendente', pago: false, data_pagamento: null, valor_pago: null } as Partial<SaasTitulo>);
+      queryClient.invalidateQueries({ queryKey: ['saas-titulos', empresaId] });
+      refetchTitulos();
+      setSelectedTitulos([]);
+      success(t('financial.titleReversed'));
+    } catch (err) {
+      error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || t('financial.errorReversing'));
+    }
+  }, [selectedTitulos, queryClient, empresaId, refetchTitulos, success, error, t]);
+
+  const handleImprimirSelecionados = useCallback(async (sel?: SaasTitulo[]) => {
+    const items = sel?.length ? sel : selectedTitulos;
+    if (items.length === 0) {
+      error(t('messages.noTitleSelected'));
+      return;
+    }
+    const emAberto = items.filter(t => t.status === 'pendente' || t.status === 'vencido');
+    if (emAberto.length === 0) {
+      error(t('messages.noOpenTitlesFound'));
+      return;
+    }
+    openPrintModal();
+    try {
+      const ids = emAberto.map(item => item.id);
+      const pdfBlob = await saasTituloService.gerarPdfBoletosMultiplos(ids);
+      const url = window.URL.createObjectURL(pdfBlob);
+      setPdfUrl(url);
+      setIsGeneratingPdf(false);
+      success(t('messages.successPrintSelected'));
+    } catch {
+      error(t('messages.errorPrintSelected'));
+      setShowImprimirModal(false);
+      setIsGeneratingPdf(false);
+    }
+  }, [selectedTitulos, error, success, openPrintModal, t]);
+
+  const handleImprimirTodosEmAberto = useCallback(async () => {
+    const emAberto = titulosParaFiltro.filter(t => t.status === 'pendente' || t.status === 'vencido');
+    if (emAberto.length === 0) {
+      error(t('messages.noOpenTitlesFound'));
+      return;
+    }
+    openPrintModal();
+    try {
+      const ids = emAberto.map(item => item.id);
+      const pdfBlob = await saasTituloService.gerarPdfBoletosMultiplos(ids);
+      const url = window.URL.createObjectURL(pdfBlob);
+      setPdfUrl(url);
+      setIsGeneratingPdf(false);
+      success(t('messages.successPrintOpen'));
+    } catch {
+      error(t('messages.errorPrintOpen'));
+      setShowImprimirModal(false);
+      setIsGeneratingPdf(false);
+    }
+  }, [titulosParaFiltro, error, success, openPrintModal, t]);
+
   const titulosBulkActions = useMemo(() => [
-    { key: 'gerar-boleto', label: t('buttons.generate') + ' Boleto', variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
-      const canGen = s.length === 1 && canGerarBoleto(s[0]);
-      return !canGen || gerandoBoletoId != null;
-    }, onClick: handleGerarBoletoTitulo },
-    { key: 'deletar', label: t('actions.delete'), disabled: (s: SaasTitulo[]) => s.length === 0, onClick: handleDeleteTitulo },
-  ], [canGerarBoleto, gerandoBoletoId, handleGerarBoletoTitulo, handleDeleteTitulo, t]);
+    { key: 'cancelar', label: t('buttons.cancel'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
+      const items = s.length > 0 ? s : selectedTitulos;
+      return items.length === 0 || items.every(i => i.status === 'pago' || i.status === 'cancelado');
+    }, onClick: handleCancelarTitulo },
+    { key: 'excluir', label: t('buttons.delete'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => s.length === 0, onClick: handleDeleteTitulo },
+    { key: 'estornar', label: t('buttons.reverse'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
+      const items = s.length > 0 ? s : selectedTitulos;
+      const statusPago = (st: string) => st === 'pago' || st === 'pago_atraso' || st === 'parcial';
+      return items.length === 0 || items.every(i => !statusPago(i.status || ''));
+    }, onClick: handleEstornarTitulo },
+    { key: 'imprimir', label: t('buttons.print'), variant: 'primary' as const, dropdown: [
+      { label: t('other.selected'), action: (sel?: SaasTitulo[]) => handleImprimirSelecionados(sel) },
+      { label: t('other.open'), action: () => handleImprimirTodosEmAberto() },
+    ] },
+  ], [selectedTitulos, handleCancelarTitulo, handleDeleteTitulo, handleEstornarTitulo, handleImprimirSelecionados, handleImprimirTodosEmAberto, t]);
 
   const headerActionsContent = useMemo(() => (
     <div className="cliente-header-unified">
@@ -517,7 +610,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                       label: a.label,
                       variant: a.variant,
                       disabled: a.disabled,
-                      onClick: a.onClick,
+                      onClick: (a as { onClick?: (s: SaasTitulo[]) => void }).onClick,
+                      dropdown: (a as { dropdown?: { label: string; action: (sel?: SaasTitulo[]) => void }[] }).dropdown,
                     })),
                     className: 'no-padding',
                     customControls: (
@@ -539,6 +633,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   onSort={titulosTf.setSort}
                   onSearch={(s, f) => { titulosTf.setSearch(s); if (f) titulosTf.setSearchField(f); }}
                   search={titulosTf.search}
+                  onSelectionChange={(items) => setSelectedTitulos(items as SaasTitulo[])}
                   onAudit={(i) => auditoria.handleAudit('SaasTitulo', i.id)}
                   auditEntity="SaasTitulo"
                 />
@@ -573,6 +668,14 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       </form>
       <SaasContratoFormModal show={showContratoCreate} onClose={() => setShowContratoCreate(false)} empresaId={empresaId!} onSuccess={() => refetchContratos()} />
       <SaasContratoFormModal show={showContratoEdit && !!selectedContratoId} onClose={() => { setShowContratoEdit(false); setSelectedContratoId(null); }} itemId={selectedContratoId} empresaId={empresaId!} onSuccess={() => refetchContratos()} />
+      <ImprimirModal
+        show={showImprimirModal}
+        onClose={() => { setShowImprimirModal(false); clearPdfUrl(); }}
+        pdfUrl={pdfUrl}
+        isGenerating={isGeneratingPdf}
+        title={t('financial.viewDocument')}
+        modalId="saas-empresa-imprimir-modal"
+      />
     </DraggableModal>
   );
 };
