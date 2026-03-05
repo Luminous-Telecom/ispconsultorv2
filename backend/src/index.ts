@@ -313,6 +313,15 @@ const startServer = async () => {
 
     await sequelize.authenticate();
 
+    httpServer.once('error', (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EADDRINUSE') {
+        logger.error(`Porta ${PORT} já está em uso. Encerre o processo atual ou altere a variável PORT.`);
+      } else {
+        logger.error('Erro no servidor HTTP', error);
+      }
+      process.exit(1);
+    });
+
     httpServer.listen(PORT, async () => {
       if (!server) return;
       
@@ -347,7 +356,7 @@ const startServer = async () => {
   }
 };
 
-const gracefulShutdown = async (signal: string) => {
+const gracefulShutdown = async (signal: string, shouldExit: boolean = true) => {
   logger.info(`Recebido sinal ${signal}, iniciando encerramento gracioso...`);
   
   if (server) {
@@ -367,9 +376,16 @@ const gracefulShutdown = async (signal: string) => {
   }
 
   await sequelize.close();
-  process.exit(0);
+  if (shouldExit) {
+    process.exit(0);
+  }
 };
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.once('SIGUSR2', () => {
+  gracefulShutdown('SIGUSR2', false).then(() => {
+    process.kill(process.pid, 'SIGUSR2');
+  });
+});
 
 startServer();
