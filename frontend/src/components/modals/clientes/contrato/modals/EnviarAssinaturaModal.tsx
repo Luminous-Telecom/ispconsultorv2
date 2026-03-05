@@ -214,7 +214,14 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
           </div>
 
           <div>
-            <label className="form-label">Dias para Expiração</label>
+            <label className="form-label">
+              Dias para Expiração
+              <i
+                className="bi bi-info-circle text-muted ms-1"
+                style={{ cursor: 'help', fontSize: '0.85rem' }}
+                title="Padrão: 30 dias"
+              />
+            </label>
             <input
               type="number"
               name="dias_expiracao"
@@ -225,7 +232,6 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
               max={365}
               disabled={isSubmitting}
             />
-            <small className="form-text text-muted">Padrão: 30 dias</small>
           </div>
         </div>
       </form>

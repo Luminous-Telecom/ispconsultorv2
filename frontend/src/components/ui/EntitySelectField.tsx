@@ -43,6 +43,13 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
     <div className="mb-1">
       <label htmlFor={fieldId} className="form-label small">
         {label} {required && <span className="text-danger ms-1">*</span>}
+        {helpText && (
+          <i
+            className="bi bi-info-circle text-muted ms-1"
+            style={{ cursor: 'help', fontSize: '0.85rem' }}
+            title={helpText}
+          />
+        )}
       </label>
       <div className="input-group">
         <input
@@ -81,11 +88,6 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
         </button>
       </div>
       {error && <div className="invalid-feedback entity-select-error">{error}</div>}
-      {helpText && (
-        <small className="form-text text-muted">
-          {helpText}
-        </small>
-      )}
     </div>
   );
 };

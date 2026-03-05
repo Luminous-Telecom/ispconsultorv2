@@ -75,12 +75,8 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 value={formData.senha}
                 onChange={(value) => onChange('senha', String(value ?? ''))}
                 autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
+                helpText={servidorAtivo?.data ? t('emailServer.passwordHelp') : undefined}
               />
-              {servidorAtivo?.data && (
-                <small className="form-text text-secondary">
-                  {t('emailServer.passwordHelp')}
-                </small>
-              )}
             </div>
           </div>
 
@@ -144,9 +140,14 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
           {servidorAtivo?.data && (
             <div className="row mt-3">
               <div className="col-12">
-                <small className="fw-bold text-primary mb-3">
+                <small className="fw-bold text-primary mb-3 d-block">
                   <i className="bi bi-envelope-check me-2"></i>
                   {t('emailServer.sendTestEmail')}
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title={t('emailServer.testEmailHelp')}
+                  />
                 </small>
                 <div className="input-group">
                   <FormField
@@ -168,9 +169,6 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                     {t('emailServer.testEmailButton')}
                   </Button>
                 </div>
-                <small className="form-text text-secondary">
-                  {t('emailServer.testEmailHelp')}
-                </small>
               </div>
             </div>
           )}

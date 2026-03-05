@@ -178,6 +178,9 @@ const FormField: React.FC<FormFieldProps> = ({
     return val as string | number | readonly string[];
   };
 
+  // Tooltip: description ou helpText vão no ícone ao lado do label
+  const tooltipContent = description || helpText;
+
   // Renderizar label
   const renderLabel = () => {
     if (!label) return null;
@@ -186,29 +189,14 @@ const FormField: React.FC<FormFieldProps> = ({
       <label htmlFor={fieldId} className="form-label">
         {label}
         {required && <span className="text-danger ms-1">*</span>}
+        {tooltipContent && (
+          <i
+            className="bi bi-info-circle text-muted ms-1"
+            style={{ cursor: 'help', fontSize: '0.85rem' }}
+            title={tooltipContent}
+          />
+        )}
       </label>
-    );
-  };
-
-  // Renderizar descrição
-  const renderDescription = () => {
-    if (!description) return null;
-    
-    return (
-      <div className="form-text text-muted">
-        {description}
-      </div>
-    );
-  };
-
-  // Renderizar help text
-  const renderHelpText = () => {
-    if (!helpText) return null;
-    
-    return (
-      <div className="form-text text-muted">
-        {helpText}
-      </div>
     );
   };
 
@@ -338,7 +326,6 @@ const FormField: React.FC<FormFieldProps> = ({
     return (
       <div className={`form-field ${className}`}>
         {renderField()}
-        {renderHelpText()}
       </div>
     );
   }
@@ -347,9 +334,7 @@ const FormField: React.FC<FormFieldProps> = ({
   return (
     <div className={`form-field ${className}`}>
       {renderLabel()}
-      {renderDescription()}
       {renderField()}
-      {renderHelpText()}
     </div>
   );
 };

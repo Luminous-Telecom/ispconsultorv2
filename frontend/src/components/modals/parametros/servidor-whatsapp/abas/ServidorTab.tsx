@@ -93,12 +93,8 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                     value={formData.evolution_api_key}
                     onChange={(e) => onChange('evolution_api_key', String(e ?? ''))}
                     autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
+                    helpText={servidorAtivo?.data ? "Deixe em branco para manter o token atual" : undefined}
                   />
-                  {servidorAtivo?.data && (
-                    <small className="form-text text-secondary">
-                      Deixe em branco para manter o token atual
-                    </small>
-                  )}
                 </div>
               </div>
             </>
@@ -119,15 +115,8 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                     value={formData.whatsapp_cloud_token || ''}
                     onChange={(e) => onChange('whatsapp_cloud_token', String(e ?? ''))}
                     autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
+                    helpText={servidorAtivo?.data ? "Deixe em branco para manter o token atual. Token de acesso obtido no Facebook Business Manager." : "Token de acesso obtido no Facebook Business Manager."}
                   />
-                  {servidorAtivo?.data && (
-                    <small className="form-text text-secondary">
-                      Deixe em branco para manter o token atual
-                    </small>
-                  )}
-                  <small className="form-text text-muted d-block mt-1">
-                    Token de acesso obtido no Facebook Business Manager
-                  </small>
                 </div>
               </div>
 
@@ -142,10 +131,8 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                     size="sm"
                     value={formData.whatsapp_cloud_phone_number_id || ''}
                     onChange={(e) => onChange('whatsapp_cloud_phone_number_id', String(e ?? ''))}
+                    helpText="ID do número de telefone do WhatsApp Business"
                   />
-                  <small className="form-text text-muted d-block mt-1">
-                    ID do número de telefone do WhatsApp Business
-                  </small>
                 </div>
               </div>
 
@@ -160,10 +147,8 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                     size="sm"
                     value={formData.whatsapp_cloud_business_account_id || ''}
                     onChange={(e) => onChange('whatsapp_cloud_business_account_id', String(e ?? ''))}
+                    helpText="ID da conta de negócios (opcional)"
                   />
-                  <small className="form-text text-muted d-block mt-1">
-                    ID da conta de negócios (opcional)
-                  </small>
                 </div>
               </div>
 
@@ -190,10 +175,8 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                   size="sm"
                   value={testPhone}
                   onChange={(e) => onTestPhoneChange(String(e ?? ''))}
+                  helpText={t('settings.test.helper')}
                 />
-                <small className="form-text text-secondary">
-                  {t('settings.test.helper')}
-                </small>
               </div>
               <div className="col-md-6">
                 <FormField

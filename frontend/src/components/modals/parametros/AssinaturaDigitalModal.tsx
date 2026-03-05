@@ -213,15 +213,22 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
               />
               <label className="form-check-label" htmlFor="habilitado">
                 {t('digitalSignature.enable')}
+                <i
+                  className="bi bi-info-circle text-muted ms-1"
+                  style={{ cursor: 'help', fontSize: '0.85rem' }}
+                  title={t('digitalSignature.enableHelp')}
+                />
               </label>
-              <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                {t('digitalSignature.enableHelp')}
-              </div>
             </div>
 
             <div className="mb-3">
               <label htmlFor="apiProvider" className="form-label">
                 {t('digitalSignature.provider')}
+                <i
+                  className="bi bi-info-circle text-muted ms-1"
+                  style={{ cursor: 'help', fontSize: '0.85rem' }}
+                  title={t('digitalSignature.providerHelp')}
+                />
               </label>
               <select
                 className="form-select"
@@ -237,14 +244,16 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                 <option value="assinafy">Assinafy (100 assinaturas/mês grátis)</option>
                 <option value="zapsign">ZapSign (5 assinaturas/mês grátis)</option>
               </select>
-              <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                {t('digitalSignature.providerHelp')}
-              </div>
             </div>
 
             <div className="mb-3">
               <label htmlFor="diasExpiracaoPadrao" className="form-label">
                 {t('digitalSignature.expirationDays')}
+                <i
+                  className="bi bi-info-circle text-muted ms-1"
+                  style={{ cursor: 'help', fontSize: '0.85rem' }}
+                  title={t('digitalSignature.expirationDaysHelp')}
+                />
               </label>
               <input
                 type="number"
@@ -256,9 +265,6 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                 onChange={(e) => setFormData(prev => ({ ...prev, diasExpiracaoPadrao: parseInt(e.target.value) || 30 }))}
                 disabled={updateMutation.isPending}
               />
-              <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                {t('digitalSignature.expirationDaysHelp')}
-              </div>
             </div>
           </div>
         </div>
@@ -271,6 +277,11 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
             <div className="mb-3">
               <label htmlFor="apiKey" className="form-label">
                 {t('digitalSignature.apiKey')}
+                <i
+                  className="bi bi-info-circle text-muted ms-1"
+                  style={{ cursor: 'help', fontSize: '0.85rem' }}
+                  title={formData.apiProvider === 'assinafy' ? t('digitalSignature.assinafyHelp') : t('digitalSignature.zapsignHelp')}
+                />
               </label>
               <div className="input-group">
                 <input
@@ -291,24 +302,24 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                   <i className={`bi ${showApiKey ? 'bi-eye-slash' : 'bi-eye'}`}></i>
                 </button>
               </div>
-              <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                {formData.apiProvider === 'assinafy' && (
-                  <>
-                    {t('digitalSignature.assinafyHelp').split('assinafy.com.br')[0]}
-                    <a href="https://assinafy.com.br" target="_blank" rel="noopener noreferrer">
-                      assinafy.com.br
-                    </a>
-                    {t('digitalSignature.assinafyHelp').split('assinafy.com.br')[1]}
-                  </>
-                )}
-                {formData.apiProvider === 'zapsign' && t('digitalSignature.zapsignHelp')}
-              </div>
+              {formData.apiProvider === 'assinafy' && (
+                <small className="form-text text-muted">
+                  <a href="https://assinafy.com.br" target="_blank" rel="noopener noreferrer">
+                    assinafy.com.br
+                  </a>
+                </small>
+              )}
             </div>
 
             {formData.apiProvider === 'assinafy' && (
               <div className="mb-3">
                 <label htmlFor="accountId" className="form-label">
                   {t('digitalSignature.workspaceId')} <span className="text-danger">*</span>
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title={t('digitalSignature.workspaceIdHelp')}
+                  />
                 </label>
                 <input
                   type="text"
@@ -320,9 +331,6 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                   placeholder={t('placeholder.workspaceId')}
                   required
                 />
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  {t('digitalSignature.workspaceIdHelp')}
-                </div>
               </div>
             )}
           </div>

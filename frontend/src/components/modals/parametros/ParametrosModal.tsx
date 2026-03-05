@@ -162,10 +162,12 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                 />
                 <label className="form-check-label" htmlFor="validar_cpf_cnpj">
                   {t('params.validateCpfCnpj')}
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title={t('params.validateCpfCnpjHelp')}
+                  />
                 </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  {t('params.validateCpfCnpjHelp')}
-                </div>
               </div>
 
               <div className="form-check mb-3">
@@ -180,10 +182,12 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                 />
                 <label className="form-check-label" htmlFor="validar_cep">
                   {t('params.validateCep')}
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title={t('params.validateCepHelp')}
+                  />
                 </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  {t('params.validateCepHelp')}
-                </div>
               </div>
             </div>
           </div>
@@ -205,10 +209,12 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                 />
                 <label className="form-check-label" htmlFor="titulos_vence_sabado">
                   {t('params.titlesDueSaturday')}
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title={t('params.titlesDueSaturdayHelp')}
+                  />
                 </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  {t('params.titlesDueSaturdayHelp')}
-                </div>
               </div>
 
               <div className="form-check mb-3">
@@ -223,10 +229,12 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                 />
                 <label className="form-check-label" htmlFor="titulos_vence_domingo">
                   {t('params.titlesDueSunday')}
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title={t('params.titlesDueSundayHelp')}
+                  />
                 </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  {t('params.titlesDueSundayHelp')}
-                </div>
               </div>
             </div>
           </div>
@@ -239,6 +247,11 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
               <div className="mb-3">
                 <label htmlFor="central_assinante_metodo_login" className="form-label">
                   {t('params.loginMethod')}
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title={t('params.loginMethodHelp')}
+                  />
                 </label>
                 <select
                   className="form-select"
@@ -251,9 +264,6 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   <option value="cnpj">CNPJ</option>
                   <option value="email">Email</option>
                 </select>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  {t('params.loginMethodHelp')}
-                </div>
               </div>
             </div>
           </div>

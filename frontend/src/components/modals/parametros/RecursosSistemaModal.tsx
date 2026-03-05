@@ -158,10 +158,12 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                     />
                     <label className="form-check-label" htmlFor="validar_cpf_cnpj">
                       Validar CPF/CNPJ
+                      <i
+                        className="bi bi-info-circle text-muted ms-1"
+                        style={{ cursor: 'help', fontSize: '0.85rem' }}
+                        title="Quando ativado, valida se CPF/CNPJ é válido ao cadastrar/editar clientes"
+                      />
                     </label>
-                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                      Quando ativado, valida se CPF/CNPJ é válido ao cadastrar/editar clientes
-                    </div>
                   </div>
 
                   <div className="form-check mb-3">
@@ -176,10 +178,12 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                     />
                     <label className="form-check-label" htmlFor="validar_cep">
                       Validar CEP
+                      <i
+                        className="bi bi-info-circle text-muted ms-1"
+                        style={{ cursor: 'help', fontSize: '0.85rem' }}
+                        title="Quando ativado, busca automaticamente os dados do endereço ao digitar um CEP válido"
+                      />
                     </label>
-                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                      Quando ativado, busca automaticamente os dados do endereço ao digitar um CEP válido
-                    </div>
                   </div>
                 </div>
               </div>
@@ -201,10 +205,12 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                     />
                     <label className="form-check-label" htmlFor="titulos_vence_sabado">
                       Títulos Vencem aos Sábados
+                      <i
+                        className="bi bi-info-circle text-muted ms-1"
+                        style={{ cursor: 'help', fontSize: '0.85rem' }}
+                        title="Permite que títulos tenham vencimento aos sábados"
+                      />
                     </label>
-                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                      Permite que títulos tenham vencimento aos sábados
-                    </div>
                   </div>
 
                   <div className="form-check mb-3">
@@ -219,10 +225,12 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                     />
                     <label className="form-check-label" htmlFor="titulos_vence_domingo">
                       Títulos Vencem aos Domingos
+                      <i
+                        className="bi bi-info-circle text-muted ms-1"
+                        style={{ cursor: 'help', fontSize: '0.85rem' }}
+                        title="Permite que títulos tenham vencimento aos domingos"
+                      />
                     </label>
-                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                      Permite que títulos tenham vencimento aos domingos
-                    </div>
                   </div>
 
                 </div>
@@ -236,6 +244,11 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                   <div className="mb-2">
                     <label htmlFor="central_assinante_metodo_login" className="form-label small mb-1">
                       Método de Login
+                      <i
+                        className="bi bi-info-circle text-muted ms-1"
+                        style={{ cursor: 'help', fontSize: '0.85rem' }}
+                        title="Define se o login na central do assinante será feito por CNPJ ou Email"
+                      />
                     </label>
                     <select
                       className="form-select form-select-sm"
@@ -248,9 +261,6 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                       <option value="cnpj">CNPJ</option>
                       <option value="email">Email</option>
                     </select>
-                    <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                      Define se o login na central do assinante será feito por CNPJ ou Email
-                    </div>
                   </div>
                 </div>
               </div>

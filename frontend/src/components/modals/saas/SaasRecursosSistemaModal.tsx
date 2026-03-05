@@ -151,8 +151,12 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
                 />
                 <label className="form-check-label" htmlFor="saas_validar_cpf_cnpj">
                   Validar CPF/CNPJ
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title="Valida CPF/CNPJ ao cadastrar/editar clientes"
+                  />
                 </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>Valida CPF/CNPJ ao cadastrar/editar clientes</div>
               </div>
               <div className="form-check mb-3">
                 <input
@@ -165,8 +169,12 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
                 />
                 <label className="form-check-label" htmlFor="saas_validar_cep">
                   Validar CEP
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title="Busca dados do endereço ao digitar CEP"
+                  />
                 </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>Busca dados do endereço ao digitar CEP</div>
               </div>
             </div>
           </div>
@@ -186,6 +194,11 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
                 />
                 <label className="form-check-label" htmlFor="saas_titulos_vence_sabado">
                   Títulos Vencem aos Sábados
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title="Permite que títulos tenham vencimento aos sábados"
+                  />
                 </label>
               </div>
               <div className="form-check mb-3">
@@ -199,6 +212,11 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
                 />
                 <label className="form-check-label" htmlFor="saas_titulos_vence_domingo">
                   Títulos Vencem aos Domingos
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title="Permite que títulos tenham vencimento aos domingos"
+                  />
                 </label>
               </div>
               <div className="form-check mb-3">
@@ -212,10 +230,12 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
                 />
                 <label className="form-check-label" htmlFor="saas_manter_numeros_titulos">
                   Manter Números de Títulos
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title="Quando um título é pago, a geração cria um novo para manter a quantidade configurada"
+                  />
                 </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Quando um título é pago, a geração cria um novo para manter a quantidade configurada
-                </div>
               </div>
               {formData.manter_numeros_titulos && (
                 <div className="mb-3">
@@ -244,6 +264,11 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
             <div className="card-body p-2">
               <label htmlFor="saas_central_metodo" className="form-label small mb-1">
                 Método de Login
+                <i
+                  className="bi bi-info-circle text-muted ms-1"
+                  style={{ cursor: 'help', fontSize: '0.85rem' }}
+                  title="Define se o login na central do assinante será feito por CNPJ ou Email"
+                />
               </label>
               <select
                 className="form-select form-select-sm"

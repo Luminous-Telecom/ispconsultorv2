@@ -61,7 +61,14 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
   return (
     <div className="variaveis-documento">
       <div className="mb-3">
-        <label className="form-label small fw-bold">{t('variables.title')}</label>
+        <label className="form-label small fw-bold">
+          {t('variables.title')}
+          <i
+            className="bi bi-info-circle text-muted ms-1"
+            style={{ cursor: 'help', fontSize: '0.85rem' }}
+            title={`${t('variables.tip')} ${onInserirVariavel ? t('variables.clickToInsert') : t('variables.clickToCopy')}`}
+          />
+        </label>
         <input
           type="text"
           className="form-control form-control-sm"
@@ -69,9 +76,6 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <small className="form-text text-muted">
-          {t('variables.tip')} {onInserirVariavel ? t('variables.clickToInsert') : t('variables.clickToCopy')}
-        </small>
       </div>
 
       <div className="accordion accordion-flush" id="accordionVariaveis">

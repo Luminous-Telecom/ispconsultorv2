@@ -105,26 +105,23 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
     }
   };
 
-  // Renderizar label
+  // Renderizar label (description vai no tooltip do ícone)
   const renderLabel = () => {
     if (!label) return null;
+    const tooltipContent = tooltip || description;
     
     return (
       <label className="form-check-label" htmlFor={id}>
         {label}
         {required && <span className="text-danger ms-1">*</span>}
+        {tooltipContent && (
+          <i
+            className="bi bi-info-circle text-muted ms-1"
+            style={{ cursor: 'help', fontSize: '0.85rem' }}
+            title={tooltipContent}
+          />
+        )}
       </label>
-    );
-  };
-
-  // Renderizar descrição
-  const renderDescription = () => {
-    if (!description) return null;
-    
-    return (
-      <div className="form-text text-muted">
-        {description}
-      </div>
     );
   };
 
@@ -157,7 +154,6 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
       <div className={getWrapperClasses()}>
         {checkboxElement}
         {renderLabel()}
-        {renderDescription()}
         {renderValidationMessage()}
       </div>
     );
@@ -167,7 +163,6 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
   return (
     <>
       {checkboxElement}
-      {renderDescription()}
       {renderValidationMessage()}
     </>
   );
