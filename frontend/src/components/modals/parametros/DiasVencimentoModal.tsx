@@ -19,7 +19,6 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
   onClose,
   variant = 'erp',
   skipWrapper = false,
-  onHeaderActionsReady,
 }) => {
   const isMobile = useIsMobile();
   const [diasAtivos, setDiasAtivos] = useState<number[]>([5, 10, 15, 20, 25, 30]);
@@ -86,18 +85,11 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
     </Button>
   );
 
-  React.useEffect(() => {
-    if (skipWrapper && onHeaderActionsReady) {
-      onHeaderActionsReady(
-        <Button type="button" variant="primary" size="sm" onClick={handleSave} disabled={!canSave}>
-          Salvar
-        </Button>
-      );
-    }
-  }, [skipWrapper, onHeaderActionsReady, canSave, handleSave]);
-
   const content = (
     <div style={{ padding: isMobile ? '0' : '16px' }}>
+      <div className="d-flex justify-content-start align-items-center mb-3">
+        {saveButton}
+      </div>
       <div className="row g-0">
         {Array.from({ length: 30 }, (_, i) => i + 1).map((dia) => (
           <div key={dia} className="col-12 col-sm-6 col-md-4 col-lg-3">
@@ -134,7 +126,6 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
       title="Dias de Vencimento"
       size="xl"
       modalId={variant === 'saas' ? 'saas-dias-vencimento-modal' : 'dias-vencimento-modal'}
-      headerActions={<div className="d-flex gap-2 modal-header-actions">{saveButton}</div>}
     >
       {content}
     </DraggableModal>
