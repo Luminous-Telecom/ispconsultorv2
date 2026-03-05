@@ -13,7 +13,7 @@ export class SaasParametrosService {
     }
 
     let parametros = await SaasParametros.findOne({
-      attributes: ['id', 'validar_cpf_cnpj', 'validar_cep', 'titulos_vence_sabado', 'titulos_vence_domingo', 'central_assinante_metodo_login', 'created_at', 'updated_at']
+      attributes: ['id', 'validar_cpf_cnpj', 'validar_cep', 'titulos_vence_sabado', 'titulos_vence_domingo', 'manter_numeros_titulos', 'quantidade_titulos_manter', 'central_assinante_metodo_login', 'created_at', 'updated_at']
     });
 
     if (!parametros) {
@@ -22,6 +22,8 @@ export class SaasParametrosService {
         validar_cep: false,
         titulos_vence_sabado: false,
         titulos_vence_domingo: false,
+        manter_numeros_titulos: false,
+        quantidade_titulos_manter: 12,
         central_assinante_metodo_login: 'cnpj'
       });
     }
@@ -42,6 +44,8 @@ export class SaasParametrosService {
         validar_cep: dados.validar_cep ?? false,
         titulos_vence_sabado: dados.titulos_vence_sabado ?? false,
         titulos_vence_domingo: dados.titulos_vence_domingo ?? false,
+        manter_numeros_titulos: dados.manter_numeros_titulos ?? false,
+        quantidade_titulos_manter: dados.quantidade_titulos_manter ?? 12,
         central_assinante_metodo_login: dados.central_assinante_metodo_login ?? 'cnpj'
       });
     } else {

@@ -6,6 +6,8 @@ export interface SaasParametros {
   validar_cep: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
+  manter_numeros_titulos: boolean;
+  quantidade_titulos_manter: number | null;
   central_assinante_metodo_login: string;
   created_at?: string;
   updated_at?: string;

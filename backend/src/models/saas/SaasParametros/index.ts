@@ -7,6 +7,8 @@ interface SaasParametrosAttributes {
   validar_cep: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
+  manter_numeros_titulos: boolean;
+  quantidade_titulos_manter: number | null;
   central_assinante_metodo_login: string;
   created_at?: Date;
   updated_at?: Date;
@@ -20,6 +22,8 @@ class SaasParametros extends Model<SaasParametrosAttributes, SaasParametrosCreat
   public validar_cep!: boolean;
   public titulos_vence_sabado!: boolean;
   public titulos_vence_domingo!: boolean;
+  public manter_numeros_titulos!: boolean;
+  public quantidade_titulos_manter!: number | null;
   public central_assinante_metodo_login!: string;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
@@ -51,6 +55,16 @@ SaasParametros.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
+    },
+    manter_numeros_titulos: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    quantidade_titulos_manter: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 12
     },
     central_assinante_metodo_login: {
       type: DataTypes.STRING(20),

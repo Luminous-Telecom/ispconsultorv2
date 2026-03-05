@@ -9,6 +9,8 @@ export class SaasParametrosController {
     validar_cep: Joi.boolean().optional(),
     titulos_vence_sabado: Joi.boolean().optional(),
     titulos_vence_domingo: Joi.boolean().optional(),
+    manter_numeros_titulos: Joi.boolean().optional(),
+    quantidade_titulos_manter: Joi.number().integer().min(1).max(24).allow(null).optional(),
     central_assinante_metodo_login: Joi.string().valid('cnpj', 'email').optional()
   }).min(1).unknown(true);
 
@@ -24,6 +26,8 @@ export class SaasParametrosController {
           validar_cep: parametros.validar_cep,
           titulos_vence_sabado: parametros.titulos_vence_sabado,
           titulos_vence_domingo: parametros.titulos_vence_domingo,
+          manter_numeros_titulos: parametros.manter_numeros_titulos,
+          quantidade_titulos_manter: parametros.quantidade_titulos_manter,
           central_assinante_metodo_login: parametros.central_assinante_metodo_login,
           created_at: parametros.created_at,
           updated_at: parametros.updated_at

@@ -23,6 +23,8 @@ interface ParametrosForm {
   validar_cep: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
+  manter_numeros_titulos: boolean;
+  quantidade_titulos_manter: number;
   central_assinante_metodo_login: string;
 }
 
@@ -31,6 +33,8 @@ const INITIAL: ParametrosForm = {
   validar_cep: false,
   titulos_vence_sabado: false,
   titulos_vence_domingo: false,
+  manter_numeros_titulos: false,
+  quantidade_titulos_manter: 12,
   central_assinante_metodo_login: 'cnpj',
 };
 
@@ -49,11 +53,14 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
 
   const customFormData = useMemo(() => {
     if (!parametros?.data) return undefined;
+    const qtd = parametros.data.quantidade_titulos_manter ?? 12;
     return {
       validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
       validar_cep: parametros.data.validar_cep ?? false,
       titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
       titulos_vence_domingo: parametros.data.titulos_vence_domingo ?? false,
+      manter_numeros_titulos: parametros.data.manter_numeros_titulos ?? false,
+      quantidade_titulos_manter: Math.min(24, Math.max(1, qtd)),
       central_assinante_metodo_login: parametros.data.central_assinante_metodo_login ?? 'cnpj',
     };
   }, [parametros?.data]);
@@ -79,11 +86,19 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate(formData);
+    const payload = { ...formData };
+    if (!payload.manter_numeros_titulos) {
+      payload.quantidade_titulos_manter = 12;
+    }
+    updateMutation.mutate(payload);
   };
 
   const handleCheckboxChange = (field: keyof ParametrosForm) => {
     setFormData((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
+  const handleNumberChange = (field: keyof ParametrosForm, value: number) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSelectChange = (field: keyof ParametrosForm, value: string) => {
@@ -186,6 +201,40 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
                   Títulos Vencem aos Domingos
                 </label>
               </div>
+              <div className="form-check mb-3">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="saas_manter_numeros_titulos"
+                  checked={formData.manter_numeros_titulos}
+                  onChange={() => handleCheckboxChange('manter_numeros_titulos')}
+                  disabled={updateMutation.isPending}
+                />
+                <label className="form-check-label" htmlFor="saas_manter_numeros_titulos">
+                  Manter Números de Títulos
+                </label>
+                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                  Quando um título é pago, a geração cria um novo para manter a quantidade configurada
+                </div>
+              </div>
+              {formData.manter_numeros_titulos && (
+                <div className="mb-3">
+                  <label htmlFor="saas_quantidade_titulos_manter" className="form-label small mb-1">
+                    Quantidade de Títulos a Manter (1 a 24)
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm"
+                    id="saas_quantidade_titulos_manter"
+                    min={1}
+                    max={24}
+                    value={formData.quantidade_titulos_manter}
+                    onChange={(e) => handleNumberChange('quantidade_titulos_manter', Math.min(24, Math.max(1, parseInt(e.target.value, 10) || 12)))}
+                    disabled={updateMutation.isPending}
+                    style={{ maxWidth: '80px' }}
+                  />
+                </div>
+              )}
             </div>
           </div>
           <div className="card mb-3">

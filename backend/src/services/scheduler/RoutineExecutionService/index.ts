@@ -364,8 +364,12 @@ export class RoutineExecutionService {
     const { SaasContratoDataLoader } = await import('./helpers/SaasContratoDataLoader');
     const { SaasContratoTituloProcessor } = await import('./helpers/SaasContratoTituloProcessor');
     const { SaasTituloGenerationHelper } = await import('./helpers/SaasTituloGenerationHelper');
+    const { SaasParametrosService } = await import('../../saas/SaasParametrosService');
 
-    const quantidadeMinimaTitulos = 12;
+    const parametros = await SaasParametrosService.get();
+    const quantidadeMinimaTitulos = parametros.manter_numeros_titulos && parametros.quantidade_titulos_manter != null
+      ? Math.min(24, Math.max(1, parametros.quantidade_titulos_manter))
+      : 1;
 
     try {
       const contratos = await SaasContrato.findAll({
