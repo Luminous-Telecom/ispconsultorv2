@@ -400,12 +400,15 @@ const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format 
       const w = bbox ? Math.max(bbox.width + padding.x, 130) : 150;
       const h = bbox ? bbox.height + padding.y : 60;
       tooltipBg.attr('width', w).attr('height', h).attr('x', 0).attr('y', 0);
-      let tx = event.clientX - rect.left + 14;
-      let ty = event.clientY - rect.top - 10;
-      if (tx + w > dimensions.width) tx = dimensions.width - w - 8;
+      const pointX = margin.left + xScale(closestIndex);
+      const pointY = margin.top + Math.min(yScale(Math.max(0, point.receber)), yScale(Math.max(0, point.pagar)));
+      let tx = pointX - w / 2;
+      let ty = pointY - h - 16;
+      if (tx + w > dimensions.width - 8) tx = dimensions.width - w - 8;
       if (tx < 8) tx = 8;
+      if (ty < 8) ty = pointY + 24;
+      if (ty + h > dimensions.height - 8) ty = dimensions.height - h - 8;
       if (ty < 8) ty = 8;
-      if (ty + h > dimensions.height) ty = event.clientY - rect.top - h - 8;
       tooltipG.attr('transform', `translate(${tx},${ty})`);
       tooltipG.transition().duration(180).ease(d3.easeCubicOut).style('opacity', 1);
     }).on('mouseleave.tooltip', () => {
