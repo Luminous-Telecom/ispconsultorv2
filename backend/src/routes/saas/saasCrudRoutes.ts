@@ -5,10 +5,14 @@ import {
   SaasTituloController,
   SaasContratoController,
 } from '../../controllers/saas/SaasCrudController';
+import { SaasDashboardController } from '../../controllers/saas/SaasDashboardController';
 import { saasAuthMiddleware } from '../../middleware/saasAuthMiddleware';
 
 const router = Router();
 router.use(saasAuthMiddleware);
+
+// Dashboard
+router.get('/dashboard', SaasDashboardController.getDashboardData);
 
 // Tipos de Cobrança
 router.get('/tipos-cobranca', SaasTipoCobrancaController.list);

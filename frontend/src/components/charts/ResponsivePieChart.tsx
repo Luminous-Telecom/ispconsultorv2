@@ -114,7 +114,6 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       data && data.length > 0
         ? data
             .map((item, index) => ({ item, index, value: getItemValue(item) }))
-            .filter(({ value }) => value !== 0)
             .sort((a, b) => b.value - a.value)
         : [],
     [data]

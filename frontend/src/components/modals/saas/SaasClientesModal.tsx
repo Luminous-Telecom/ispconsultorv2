@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useModalSelect } from '@/hooks/useModalSelect';
@@ -12,9 +12,9 @@ import { TableConfig } from '@/components/tables/types';
 import { saasEmpresasService, type SaasEmpresa, type SaasConfigListResponse } from '@/services/saas/saasEmpresasService';
 import SaasEmpresaFormModal from './SaasEmpresaFormModal';
 
-interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onHeaderActionsReady?: (a: React.ReactNode) => void; }
+interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onHeaderActionsReady?: (a: React.ReactNode) => void; empresaId?: number; initialFilters?: { created_at_inicio?: string; created_at_fim?: string }; }
 
-const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }) => {
+const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, empresaId, initialFilters }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { error } = useNotificationContext();
@@ -26,9 +26,24 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
 
   const tf = useTableFilters({ initialPage: 1, initialLimit: 15, searchDebounceMs: 300, resetPageOnFilterChange: true });
 
+  useEffect(() => {
+    if (show && empresaId) {
+      setSelectedId(empresaId);
+      setShowEdit(true);
+    }
+  }, [show, empresaId]);
+
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['saas-empresas', tf.page, tf.limit, tf.debouncedSearch, tf.sortColumn, tf.sortDirection],
-    queryFn: () => saasEmpresasService.list({ page: tf.page, limit: tf.limit, search: tf.debouncedSearch || undefined, sortColumn: tf.sortColumn, sortDirection: tf.sortDirection }),
+    queryKey: ['saas-empresas', tf.page, tf.limit, tf.debouncedSearch, tf.sortColumn, tf.sortDirection, initialFilters?.created_at_inicio, initialFilters?.created_at_fim],
+    queryFn: () => saasEmpresasService.list({
+      page: tf.page,
+      limit: tf.limit,
+      search: tf.debouncedSearch || undefined,
+      sortColumn: tf.sortColumn,
+      sortDirection: tf.sortDirection,
+      ...(initialFilters?.created_at_inicio && { created_at_inicio: initialFilters.created_at_inicio }),
+      ...(initialFilters?.created_at_fim && { created_at_fim: initialFilters.created_at_fim }),
+    }),
     enabled: show, staleTime: 0,
   });
 

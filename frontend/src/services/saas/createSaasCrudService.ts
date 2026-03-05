@@ -16,6 +16,8 @@ export interface SaasCrudFilters {
   status?: string;
   data_vencimento_inicio?: string;
   data_vencimento_fim?: string;
+  data_pagamento_inicio?: string;
+  data_pagamento_fim?: string;
 }
 
 const buildParams = (f: SaasCrudFilters) => {

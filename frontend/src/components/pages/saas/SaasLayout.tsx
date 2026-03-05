@@ -12,10 +12,12 @@ import BackNetLogo from '@/components/common/BackNetLogo';
 import SingleModalWrapper from '@/components/common/SingleModalWrapper';
 import { useModal, type ModalType } from '@/contexts/ModalContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { useTableHeader } from '@/contexts/TableHeaderContext';
 
 const SaasLayout: React.FC = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const tableHeader = useTableHeader();
   const { currentUser, logout, isAuthenticated, isLoading: authLoading } = useSaasAuth();
   const { notifications, removeNotification, pauseNotification, resumeNotification, success } = useNotificationContext();
   const { theme, toggleTheme } = useTheme();
@@ -211,10 +213,57 @@ const SaasLayout: React.FC = () => {
                     <span className="navbar-toggler-icon"></span>
                   </button>
                 )}
+              </div>
+
+              <div className="d-flex justify-content-center flex-grow-1">
                 {!isMobile && (
-                  <span className="badge bg-warning text-dark ms-2" style={{ fontSize: '0.7rem' }}>
-                    SUPER ADMIN
-                  </span>
+                  <div className="navbar-search-container">
+                    <select
+                      id="saas-desktop-search-field"
+                      name="searchField"
+                      className="navbar-search-field"
+                      value={tableHeader.searchField}
+                      onChange={(e) => tableHeader.setSearchField(e.target.value)}
+                      aria-label={t('layout.search')}
+                    >
+                      {tableHeader.availableSearchFields.map(field => (
+                        <option key={field.id} value={field.id}>{field.label}</option>
+                      ))}
+                    </select>
+                    <form
+                      className="mb-0 flex-grow-1"
+                      role="search"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (tableHeader.onSearchClick) tableHeader.onSearchClick();
+                      }}
+                    >
+                      <input
+                        id="saas-desktop-search-input"
+                        name="search"
+                        type="search"
+                        className="navbar-search-input"
+                        placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
+                        aria-label={t('layout.search')}
+                        value={tableHeader.searchValue}
+                        onChange={(e) => tableHeader.setSearchValue(e.target.value)}
+                      />
+                    </form>
+                    <i className="bi bi-search navbar-search-icon"></i>
+                  </div>
+                )}
+                {isMobile && (
+                  <div className="navbar-inline-search">
+                    <i className="bi bi-search navbar-inline-search-icon"></i>
+                    <input
+                      type="search"
+                      className="navbar-inline-search-input"
+                      placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
+                      value={tableHeader.searchValue}
+                      onChange={(e) => tableHeader.setSearchValue(e.target.value)}
+                      aria-label={t('layout.search')}
+                    />
+                  </div>
                 )}
               </div>
 

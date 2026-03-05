@@ -131,6 +131,11 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   
   const statusFilter = initialFilters?.status ?? (showCancelados ? undefined : '!cancelado');
   const filterByPaymentDate = initialFilters?.data_pagamento_inicio != null || initialFilters?.data_pagamento_fim != null;
+  const pagamentoInicio = dataVencimentoInicio || initialFilters?.data_pagamento_inicio || '';
+  const pagamentoFim = dataVencimentoFim || initialFilters?.data_pagamento_fim || '';
+  const vencimentoInicio = dataVencimentoInicio || initialFilters?.data_vencimento_inicio || '';
+  const vencimentoFim = dataVencimentoFim || initialFilters?.data_vencimento_fim || '';
+
   const filters: TituloFilters = {
     page: tableFilters.page,
     limit: tableFilters.limit,
@@ -139,12 +144,12 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     ...(statusFilter && { status: statusFilter }),
     ...(filterByPaymentDate
       ? {
-          ...(dataVencimentoInicio ? { data_pagamento_inicio: dataVencimentoInicio } : {}),
-          ...(dataVencimentoFim ? { data_pagamento_fim: dataVencimentoFim } : {})
+          ...(pagamentoInicio ? { data_pagamento_inicio: pagamentoInicio } : {}),
+          ...(pagamentoFim ? { data_pagamento_fim: pagamentoFim } : {})
         }
       : {
-          ...(dataVencimentoInicio ? { data_vencimento_inicio: dataVencimentoInicio } : {}),
-          ...(dataVencimentoFim ? { data_vencimento_fim: dataVencimentoFim } : {})
+          ...(vencimentoInicio ? { data_vencimento_inicio: vencimentoInicio } : {}),
+          ...(vencimentoFim ? { data_vencimento_fim: vencimentoFim } : {})
         }),
     sortColumn: tableFilters.apiParams.sortColumn,
     sortDirection: tableFilters.apiParams.sortDirection
@@ -152,16 +157,23 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
 
   const { data: titulosData, isLoading, refetch } = useTitulosFinanceiro(filters, !isSaas);
   const { data: saasData, isLoading: saasLoading, refetch: saasRefetch } = useQuery({
-    queryKey: ['saas-titulos', tableFilters.page, tableFilters.limit, tableFilters.debouncedSearch, tableFilters.sortColumn, tableFilters.sortDirection, showCancelados, dataVencimentoInicio, dataVencimentoFim],
+    queryKey: ['saas-titulos', tableFilters.page, tableFilters.limit, tableFilters.debouncedSearch, tableFilters.sortColumn, tableFilters.sortDirection, showCancelados, pagamentoInicio, pagamentoFim, vencimentoInicio, vencimentoFim, statusFilter, filterByPaymentDate],
     queryFn: () => saasTituloService.list({
       page: tableFilters.page,
       limit: tableFilters.limit,
       search: tableFilters.debouncedSearch || undefined,
       sortColumn: tableFilters.sortColumn,
       sortDirection: tableFilters.sortDirection,
-      ...(!showCancelados && { status: '!cancelado' }),
-      ...(dataVencimentoInicio && { data_vencimento_inicio: dataVencimentoInicio }),
-      ...(dataVencimentoFim && { data_vencimento_fim: dataVencimentoFim }),
+      ...(statusFilter && { status: statusFilter }),
+      ...(filterByPaymentDate
+        ? {
+            ...(pagamentoInicio && { data_pagamento_inicio: pagamentoInicio }),
+            ...(pagamentoFim && { data_pagamento_fim: pagamentoFim }),
+          }
+        : {
+            ...(vencimentoInicio && { data_vencimento_inicio: vencimentoInicio }),
+            ...(vencimentoFim && { data_vencimento_fim: vencimentoFim }),
+          }),
     }),
     enabled: isSaas && show,
     staleTime: 0,

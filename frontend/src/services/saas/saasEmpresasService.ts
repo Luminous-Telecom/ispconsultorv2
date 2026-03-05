@@ -35,7 +35,7 @@ const buildParams = (f: Record<string, unknown>) => {
 };
 
 export const saasEmpresasService = {
-  list: (f: { page?: number; limit?: number; search?: string; sortColumn?: string; sortDirection?: 'asc' | 'desc' } = {}) =>
+  list: (f: { page?: number; limit?: number; search?: string; sortColumn?: string; sortDirection?: 'asc' | 'desc'; created_at_inicio?: string; created_at_fim?: string } = {}) =>
     defaultApiClient.get<SaasConfigListResponse<SaasEmpresa>>(`/saas/empresas?${buildParams(f)}`),
   getById: (id: number) => defaultApiClient.get<ApiResponse<SaasEmpresa>>(`/saas/empresas/${id}`),
   create: (d: Partial<SaasEmpresa>) => defaultApiClient.post('/saas/empresas', d),

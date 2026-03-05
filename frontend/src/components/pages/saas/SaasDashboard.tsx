@@ -1,175 +1,184 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { saasEmpresasService } from '@/services/saas/saasEmpresasService';
-import { saasTituloService } from '@/services/saas/saasCrudService';
+import React, { useEffect } from 'react';
+import { formatCurrency, formatNumber } from '@/utils/formatters';
+import { useSaasDashboard } from '@/hooks/useSaasDashboard';
+import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useDashboardCharts } from '@/hooks/useDashboardCharts';
+import { useChartHiddenItems } from '@/hooks/useChartHiddenItems';
+import { useSaasDashboardChartClicks } from '@/hooks/useSaasDashboardChartClicks';
+import { BarChart, ValueChart, ResponsiveLineChart, ResponsivePieChart } from '@/components/charts';
+import { Spinner } from '@/components/ui';
+import { useModal } from '@/contexts/ModalContext';
+import { useI18n } from '@/contexts/I18nContext';
+import { useTableHeader } from '@/contexts/TableHeaderContext';
+import SaasDashboardSearchResult from './SaasDashboardSearchResult';
+
+const SAAS_SEARCH_FIELDS = [
+  { id: 'id', label: 'ID' },
+  { id: 'cnpj', label: 'CNPJ' },
+  { id: 'razao_social', label: 'Razão Social' },
+  { id: 'nome_fantasia', label: 'Nome Fantasia' },
+  { id: 'email', label: 'Email' },
+];
 
 const SaasDashboard: React.FC = () => {
-  const { data: statsData, isLoading: statsLoading } = useQuery({
-    queryKey: ['saas-empresas-stats'],
-    queryFn: () => saasEmpresasService.getStats(),
-    staleTime: 0,
+  const { t } = useI18n();
+  const { searchValue, searchField, setAvailableSearchFields, setSearchPlaceholder } = useTableHeader();
+  const { activeModal } = useModal();
+  const { startDate, endDate } = useDashboardFilters();
+
+  useEffect(() => {
+    setAvailableSearchFields(SAAS_SEARCH_FIELDS);
+    setSearchPlaceholder('Buscar clientes tenants...');
+  }, [setAvailableSearchFields, setSearchPlaceholder]);
+
+  const {
+    hiddenClientes,
+    hiddenPagamentos,
+    hiddenContratos,
+    toggleCliente,
+    togglePagamento,
+    toggleContratos,
+  } = useChartHiddenItems();
+
+  const {
+    handleClienteSliceClick,
+    handleStatusPagamentoSliceClick,
+    handleContratoSliceClick,
+    handleClientesPorPlanoBarClick,
+    handleRecebidosPeriodoPointClick,
+    handleReceberPeriodoPointClick,
+    handleReceitaMensalPointClick,
+    handleCrescimentoClientesPointClick,
+  } = useSaasDashboardChartClicks();
+
+  const { data: dashboardData, isLoading: loadingDashboard } = useSaasDashboard({
+    startDate,
+    endDate,
   });
 
-  const { data: titulosData, isLoading: titulosLoading } = useQuery({
-    queryKey: ['saas-titulos-resumo'],
-    queryFn: () => saasTituloService.getResumo(),
-    staleTime: 0,
-  });
+  const stats = useDashboardStats(dashboardData);
+  const charts = useDashboardCharts(dashboardData, stats, t);
 
-  const stats = statsData?.data as { total?: number; totalUsuarios?: number } | undefined;
-  const fin = titulosData?.data as { titulosPendentes?: number; titulosAtrasados?: number; totalRecebido?: number; mrr?: number } | undefined;
+  if (loadingDashboard) {
+    return (
+      <div className="dashboard-container">
+        <div className="text-center">
+          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
+        </div>
+      </div>
+    );
+  }
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+  if (searchValue && !activeModal) {
+    return (
+      <div className="dashboard-container">
+        <div className="container-fluid px-0 px-md-0">
+          <SaasDashboardSearchResult searchTerm={searchValue} searchField={searchField} />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container-fluid p-4">
-      {/* Cards de Empresas */}
-      <div className="row g-3 mb-4">
-        <div className="col-6 col-md-3">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-muted small">Total Tenants</span>
-                <i className="bi bi-buildings text-primary fs-5"></i>
-              </div>
-              {statsLoading ? (
-                <div className="placeholder-glow"><span className="placeholder col-6"></span></div>
-              ) : (
-                <h3 className="mb-0 fw-bold">{stats?.total ?? 0}</h3>
-              )}
+    <div className="dashboard-container">
+      <div className="container-fluid px-0 px-md-0">
+        <div className="row g-3">
+          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+            <div className="chart-card chart-card-pie">
+              <ResponsivePieChart
+                data={charts.clientesChartData}
+                title={t('dashboard.clientStatus')}
+                hiddenItems={hiddenClientes}
+                onToggleItem={toggleCliente}
+                onSliceClick={handleClienteSliceClick}
+              />
+            </div>
+          </div>
+
+          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+            <div className="chart-card chart-card-pie">
+              <ResponsivePieChart
+                data={charts.statusPagamentoData}
+                title={t('dashboard.paymentStatus')}
+                hiddenItems={hiddenPagamentos}
+                onToggleItem={togglePagamento}
+                onSliceClick={handleStatusPagamentoSliceClick}
+              />
+            </div>
+          </div>
+
+          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+            <div className="chart-card chart-card-pie">
+              <ResponsivePieChart
+                data={charts.contratosChartData}
+                title={t('dashboard.contractStatus')}
+                hiddenItems={hiddenContratos}
+                onToggleItem={toggleContratos}
+                onSliceClick={handleContratoSliceClick}
+              />
+            </div>
+          </div>
+
+          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+            <div className="chart-card">
+              <ValueChart data={charts.ticketMedioChartData} title={t('dashboard.averageTicket')} format="currency" />
             </div>
           </div>
         </div>
 
-        <div className="col-6 col-md-3">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-muted small">Total Usuários</span>
-                <i className="bi bi-people text-success fs-5"></i>
-              </div>
-              {statsLoading ? (
-                <div className="placeholder-glow"><span className="placeholder col-6"></span></div>
-              ) : (
-                <h3 className="mb-0 fw-bold text-success">{stats?.totalUsuarios ?? 0}</h3>
-              )}
+        <div className="row g-3">
+          <div className="col-xl-6 col-lg-6">
+            <div className="chart-card chart-card-line">
+              <ResponsiveLineChart
+                data={charts.recebidosPeriodoChartData}
+                title={`${t('dashboard.received')}: ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
+                format="currency"
+                onPointClick={handleRecebidosPeriodoPointClick}
+              />
+            </div>
+          </div>
+
+          <div className="col-xl-6 col-lg-6">
+            <div className="chart-card chart-card-line">
+              <ResponsiveLineChart
+                data={charts.receberPeriodoChartData}
+                title={`${t('dashboard.toReceive')}: ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
+                format="currency"
+                onPointClick={handleReceberPeriodoPointClick}
+              />
             </div>
           </div>
         </div>
 
-        <div className="col-6 col-md-3">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-muted small">Planos Ativos</span>
-                <i className="bi bi-card-list text-info fs-5"></i>
-              </div>
-              {statsLoading ? (
-                <div className="placeholder-glow"><span className="placeholder col-6"></span></div>
-              ) : (
-                <h3 className="mb-0 fw-bold text-info">—</h3>
-              )}
+        <div className="row g-3">
+          <div className="col-xl-6 col-lg-6">
+            <div className="chart-card chart-card-line">
+              <ResponsiveLineChart
+                data={charts.receitaMensalChartData}
+                title={`${t('dashboard.monthlyRevenueTitle')}: ${formatCurrency(charts.totalReceitaMensal || 0)} (${t('dashboard.months12')})`}
+                format="currency"
+                onPointClick={handleReceitaMensalPointClick}
+              />
+            </div>
+          </div>
+
+          <div className="col-xl-6 col-lg-6">
+            <div className="chart-card chart-card-line">
+              <ResponsiveLineChart
+                data={charts.crescimentoClientes}
+                title={`${t('dashboard.newClients')}: ${formatNumber(charts.totalNovosClientes || 0)} (${t('dashboard.months12')})`}
+                format="number"
+                onPointClick={handleCrescimentoClientesPointClick}
+              />
             </div>
           </div>
         </div>
 
-        <div className="col-6 col-md-3">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-muted small">Financeiro</span>
-                <i className="bi bi-cash-coin text-warning fs-5"></i>
-              </div>
-              {titulosLoading ? (
-                <div className="placeholder-glow"><span className="placeholder col-6"></span></div>
-              ) : (
-                <h3 className="mb-0 fw-bold text-warning">{fin?.titulosPendentes ?? 0}</h3>
-              )}
-              <small className="text-muted">pendentes</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Cards Financeiros */}
-      <div className="row g-3 mb-4">
-        <div className="col-6 col-md-4">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-muted small">MRR (Mês Atual)</span>
-                <i className="bi bi-graph-up-arrow text-success fs-5"></i>
-              </div>
-              {titulosLoading ? (
-                <div className="placeholder-glow"><span className="placeholder col-8"></span></div>
-              ) : (
-                <h4 className="mb-0 fw-bold text-success">{formatCurrency(fin?.mrr ?? 0)}</h4>
-              )}
-              <small className="text-muted">Receita mensal recorrente</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-6 col-md-4">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-muted small">Títulos Pendentes</span>
-                <i className="bi bi-clock-history text-warning fs-5"></i>
-              </div>
-              {titulosLoading ? (
-                <div className="placeholder-glow"><span className="placeholder col-6"></span></div>
-              ) : (
-                <h3 className="mb-0 fw-bold text-warning">{fin?.titulosPendentes ?? 0}</h3>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="col-6 col-md-4">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-muted small">Títulos Atrasados</span>
-                <i className="bi bi-exclamation-triangle text-danger fs-5"></i>
-              </div>
-              {titulosLoading ? (
-                <div className="placeholder-glow"><span className="placeholder col-6"></span></div>
-              ) : (
-                <h3 className="mb-0 fw-bold text-danger">{fin?.titulosAtrasados ?? 0}</h3>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Saldo */}
-      <div className="row g-3">
-        <div className="col-md-6">
-          <div className="card border-0 shadow-sm">
-            <div className="card-body">
-              <h6 className="card-title text-muted mb-3">Resumo de Títulos</h6>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <span className="small">Total Recebido</span>
-                <span className="fw-semibold text-success">{formatCurrency(fin?.totalRecebido ?? 0)}</span>
-              </div>
-              <div className="d-flex justify-content-between align-items-center">
-                <span className="small">MRR (mês atual)</span>
-                <span className="fw-semibold text-success">{formatCurrency(fin?.mrr ?? 0)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-6">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body d-flex flex-column justify-content-center align-items-center text-center">
-              <i className="bi bi-shield-lock-fill text-warning mb-3" style={{ fontSize: '3rem' }}></i>
-              <h6 className="fw-semibold mb-1">Painel Super Admin</h6>
-              <p className="text-muted small mb-0">
-                Gerencie todos os tenants, planos, contratos e títulos da plataforma SaaS.
-              </p>
+        <div className="row g-3">
+          <div className="col-xl-6 col-lg-6">
+            <div className="chart-card" style={{ height: 'auto', minHeight: 0 }}>
+              <BarChart data={charts.clientesPorPlano} title={t('dashboard.clientsByPlan')} format="number" onBarClick={handleClientesPorPlanoBarClick} />
             </div>
           </div>
         </div>

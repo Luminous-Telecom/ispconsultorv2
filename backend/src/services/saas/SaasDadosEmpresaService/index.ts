@@ -8,6 +8,8 @@ interface ListFilters {
   search?: string;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
+  created_at_inicio?: string;
+  created_at_fim?: string;
 }
 
 export class SaasDadosEmpresaService {
@@ -18,12 +20,21 @@ export class SaasDadosEmpresaService {
       search,
       sortColumn = 'id',
       sortDirection = 'desc',
+      created_at_inicio,
+      created_at_fim,
     } = filters;
 
     const allowedColumns = ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email', 'cidade', 'estado', 'created_at'];
     const col = allowedColumns.includes(sortColumn) ? sortColumn : 'id';
 
     const where: WhereOptions = {};
+
+    if (created_at_inicio || created_at_fim) {
+      where.created_at = {
+        ...(created_at_inicio && { [Op.gte]: created_at_inicio }),
+        ...(created_at_fim && { [Op.lte]: created_at_fim }),
+      };
+    }
 
     if (search) {
       Object.assign(where, {

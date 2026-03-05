@@ -148,8 +148,8 @@ const tituloIncludes = [
 ];
 
 export class SaasTituloService {
-  static async list(filters: ListFilters & { status?: string; data_vencimento_inicio?: string; data_vencimento_fim?: string }) {
-    const { page = 1, limit = 20, search, empresa_id, status, data_vencimento_inicio, data_vencimento_fim, sortColumn = 'id', sortDirection = 'desc' } = filters;
+  static async list(filters: ListFilters & { status?: string; data_vencimento_inicio?: string; data_vencimento_fim?: string; data_pagamento_inicio?: string; data_pagamento_fim?: string }) {
+    const { page = 1, limit = 20, search, empresa_id, status, data_vencimento_inicio, data_vencimento_fim, data_pagamento_inicio, data_pagamento_fim, sortColumn = 'id', sortDirection = 'desc' } = filters;
     const allowed = ['id', 'numero_titulo', 'valor', 'data_vencimento', 'status', 'pago', 'created_at'];
     const col = allowed.includes(sortColumn || '') ? sortColumn! : 'id';
     const offset = (page - 1) * limit;
@@ -166,9 +166,19 @@ export class SaasTituloService {
       }
     }
     if (data_vencimento_inicio || data_vencimento_fim) {
+      const inicio = data_vencimento_inicio?.match(/^\d{4}-\d{2}-\d{2}$/) ? `${data_vencimento_inicio} 00:00:00` : data_vencimento_inicio;
+      const fim = data_vencimento_fim?.match(/^\d{4}-\d{2}-\d{2}$/) ? `${data_vencimento_fim} 23:59:59.999` : data_vencimento_fim;
       where.data_vencimento = {
-        ...(data_vencimento_inicio && { [Op.gte]: data_vencimento_inicio }),
-        ...(data_vencimento_fim && { [Op.lte]: data_vencimento_fim }),
+        ...(inicio && { [Op.gte]: inicio }),
+        ...(fim && { [Op.lte]: fim }),
+      };
+    }
+    if (data_pagamento_inicio || data_pagamento_fim) {
+      const inicio = data_pagamento_inicio?.match(/^\d{4}-\d{2}-\d{2}$/) ? `${data_pagamento_inicio} 00:00:00` : data_pagamento_inicio;
+      const fim = data_pagamento_fim?.match(/^\d{4}-\d{2}-\d{2}$/) ? `${data_pagamento_fim} 23:59:59.999` : data_pagamento_fim;
+      where.data_pagamento = {
+        ...(inicio && { [Op.gte]: inicio }),
+        ...(fim && { [Op.lte]: fim }),
       };
     }
     if (search) {

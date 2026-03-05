@@ -31,13 +31,15 @@ const empresaSchema = Joi.object({
 export class SaasDadosEmpresaController {
   static async list(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { page, limit, search, sortColumn, sortDirection } = req.query as Record<string, string>;
+      const { page, limit, search, sortColumn, sortDirection, created_at_inicio, created_at_fim } = req.query as Record<string, string>;
       const result = await SaasDadosEmpresaService.list({
         page: page ? parseInt(page) : 1,
         limit: limit ? parseInt(limit) : 20,
         search,
         sortColumn,
         sortDirection: sortDirection as 'asc' | 'desc',
+        created_at_inicio: created_at_inicio || undefined,
+        created_at_fim: created_at_fim || undefined,
       });
       sendSuccess(res, result);
     } catch (err) {

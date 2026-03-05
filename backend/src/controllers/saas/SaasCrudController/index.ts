@@ -28,7 +28,7 @@ const toErrors = (details: Joi.ValidationErrorItem[]) =>
   }, {});
 
 const listParams = (req: SaasAuthenticatedRequest) => {
-  const { page, limit, search, empresa_id, sortColumn, sortDirection, status, data_vencimento_inicio, data_vencimento_fim } = req.query as Record<string, string>;
+  const { page, limit, search, empresa_id, sortColumn, sortDirection, status, data_vencimento_inicio, data_vencimento_fim, data_pagamento_inicio, data_pagamento_fim } = req.query as Record<string, string>;
   return {
     page: page ? parseInt(page) : 1,
     limit: limit ? parseInt(limit) : 20,
@@ -39,6 +39,8 @@ const listParams = (req: SaasAuthenticatedRequest) => {
     status,
     data_vencimento_inicio: data_vencimento_inicio || undefined,
     data_vencimento_fim: data_vencimento_fim || undefined,
+    data_pagamento_inicio: data_pagamento_inicio || undefined,
+    data_pagamento_fim: data_pagamento_fim || undefined,
   };
 };
 
