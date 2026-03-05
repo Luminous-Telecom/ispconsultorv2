@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import FormField from '@/components/ui/FormField';
-import { Button } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { BancoTabProps } from '../types';
 import { useI18n } from '@/contexts/I18nContext';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 
 const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
   formData,
@@ -14,6 +15,21 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
   testResult
 }) => {
   const { t } = useI18n();
+  const { success, warning } = useNotificationContext();
+
+  const handleCopyWebhookUrl = useCallback(async () => {
+    const url = formData.url_retorno?.trim();
+    if (!url) {
+      warning(t('messages.noTokenToCopy'));
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      success(t('blockdomi.copiedToClipboard'));
+    } catch {
+      warning(t('messages.copyManual'));
+    }
+  }, [formData.url_retorno, success, warning, t]);
 
   return (
     <>
@@ -69,19 +85,26 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
           <div className="row">
             <div className="col-md-12">
               <div className="mb-3">
-                <FormField
-                  name="url_retorno"
-                  type="url"
-                  label={t('form.webhookUrl')}
-                  placeholder={t('placeholder.webhookUrl')}
-                  size="sm"
-                  value={formData.url_retorno}
-                  onChange={(value) => handleInputChange('url_retorno', value)}
-                  disabled={isPending}
-                  autoComplete="url"
-                  formPrefix={formPrefix}
-                />
-                <small className="text-secondary">{t('form.webhookUrlHelp')}</small>
+                <label className="form-label">{t('form.webhookUrl')}</label>
+                <div className="input-group input-group-sm">
+                  <Input
+                    type="url"
+                    value={formData.url_retorno || ''}
+                    readOnly
+                    size="sm"
+                    id={formPrefix ? `${formPrefix}-field-url_retorno` : 'field-url_retorno'}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={handleCopyWebhookUrl}
+                    disabled={isPending}
+                  >
+                    {t('buttons.copy')}
+                  </Button>
+                </div>
+                <small className="text-secondary d-block mt-1">{t('form.webhookUrlHelp')}</small>
               </div>
             </div>
           </div>
@@ -114,19 +137,26 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
           <div className="row">
             <div className="col-md-12">
               <div className="mb-3">
-                <FormField
-                  name="url_retorno"
-                  type="url"
-                  label={t('form.webhookUrl')}
-                  placeholder={t('placeholder.webhookUrl')}
-                  size="sm"
-                  value={formData.url_retorno}
-                  onChange={(value) => handleInputChange('url_retorno', value)}
-                  disabled={isPending}
-                  autoComplete="url"
-                  formPrefix={formPrefix}
-                />
-                <small className="text-secondary">{t('form.webhookUrlHelp')}</small>
+                <label className="form-label">{t('form.webhookUrl')}</label>
+                <div className="input-group input-group-sm">
+                  <Input
+                    type="url"
+                    value={formData.url_retorno || ''}
+                    readOnly
+                    size="sm"
+                    id={formPrefix ? `${formPrefix}-field-url_retorno-asaas` : 'field-url_retorno-asaas'}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={handleCopyWebhookUrl}
+                    disabled={isPending}
+                  >
+                    {t('buttons.copy')}
+                  </Button>
+                </div>
+                <small className="text-secondary d-block mt-1">{t('form.webhookUrlHelp')}</small>
               </div>
             </div>
           </div>
