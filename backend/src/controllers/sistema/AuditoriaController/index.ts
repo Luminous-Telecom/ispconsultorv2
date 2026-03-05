@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { getElasticsearchService } from '../../../services/elasticsearch/ElasticsearchService';
-import { AuditoriaService } from '../../../services/sistema/AuditoriaService';
 import { AuditoriaQueryService } from '../../../services/auditoria/AuditoriaQueryService';
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
 import { logger } from '../../../utils/logger';
@@ -17,15 +16,14 @@ export class AuditoriaController {
       const client = elasticsearchService.getClient();
 
       if (!client) {
-        // Fallback: buscar do banco de dados
-        return await AuditoriaController.listFromDatabase(req, res);
+        sendError(res, new Error('Elasticsearch não está configurado'), 'Elasticsearch não está configurado', 503, false);
+        return;
       }
 
-      // Verificar conexão
       const isConnected = await elasticsearchService.checkConnection();
       if (!isConnected) {
-        // Fallback: buscar do banco de dados
-        return await AuditoriaController.listFromDatabase(req, res);
+        sendError(res, new Error('Elasticsearch não está disponível'), 'Elasticsearch não está disponível', 503, false);
+        return;
       }
 
       const page = parseInt(req.query.page as string) || 1;
@@ -65,65 +63,10 @@ export class AuditoriaController {
         }
       });
     } catch (error) {
-      // Tentar fallback para banco de dados sem logar erro (é esperado que possa falhar)
-      try {
-        return await AuditoriaController.listFromDatabase(req, res);
-      } catch (fallbackError) {
-        sendError(res, fallbackError, 'Erro ao buscar logs de auditoria', 500, true, {
-          context: 'AuditoriaController',
-          action: 'list',
-          elasticsearchError: error instanceof Error ? error.message : 'Erro desconhecido',
-          databaseError: fallbackError instanceof Error ? fallbackError.message : 'Erro desconhecido'
-        });
-      }
-    }
-  }
-
-  /**
-   * Listar logs de auditoria do banco de dados (fallback quando Elasticsearch não está disponível)
-   */
-  static async listFromDatabase(req: Request, res: Response): Promise<void> {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 15;
-      const search = req.query.search as string;
-      const acao = req.query.acao as string;
-      const entidade = req.query.entidade as string;
-      const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
-      const dataInicio = req.query.data_inicio as string;
-      const dataFim = req.query.data_fim as string;
-      const sortColumn = req.query.sortColumn as string;
-      const sortDirection = req.query.sortDirection as string;
-
-
-      const { logs, total } = await AuditoriaQueryService.searchFromDatabase({
-        page,
-        limit,
-        search,
-        acao,
-        entidade,
-        usuario_id,
-        dataInicio,
-        dataFim,
-        sortColumn,
-        sortDirection
-      });
-
-      sendSuccess(res, {
-        data: logs,
-        pagination: {
-          current_page: page,
-          last_page: Math.ceil(total / limit),
-          per_page: limit,
-          total,
-          from: (page - 1) * limit + 1,
-          to: Math.min(page * limit, total)
-        }
-      });
-    } catch (error) {
       sendError(res, error, 'Erro ao buscar logs de auditoria', 500, true, {
         context: 'AuditoriaController',
-        action: 'listFromDatabase'
+        action: 'list',
+        elasticsearchError: error instanceof Error ? error.message : 'Erro desconhecido'
       });
     }
   }

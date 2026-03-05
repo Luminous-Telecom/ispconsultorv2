@@ -1,16 +1,17 @@
-import { Banco } from '../../../models/cadastros/Banco';
 import { PaymentCommonService } from '../PaymentCommonService';
 import { logger } from '../../../utils/logger';
+
+type BancoLike = { id: number; webhook_secret?: string | null };
 
 export class EfiWebhookValidatorService {
   /**
    * Valida secret do webhook (não bloqueia se não fornecido)
    */
   static async validateSecret(
-    banco: Banco,
+    banco: BancoLike | null | undefined,
     receivedSecret?: string
   ): Promise<{ valid: boolean; shouldBlock: boolean }> {
-    if (!receivedSecret) {
+    if (!receivedSecret || !banco) {
       return { valid: true, shouldBlock: false };
     }
 

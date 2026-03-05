@@ -1,4 +1,9 @@
+import { Request } from 'express';
 import { Banco } from '../../../models/cadastros/Banco';
+import type SaasBanco from '../../../models/saas/SaasBanco';
+import type { WebhookEmpresaScope } from '../TituloWebhookResolver';
+
+type BancoOuSaas = Banco | InstanceType<typeof SaasBanco>;
 
 /**
  * Serviço com utilitários compartilhados para processamento de webhooks de pagamento
@@ -71,13 +76,12 @@ export class PaymentCommonService {
   }
 
   /**
-   * Valida secret/token do webhook contra o banco
-   * Usado apenas para webhooks de pagamento (Asaas, Efí) — apenas banco, não usuário
-   * @param banco Banco relacionado (opcional)
+   * Valida secret/token do webhook contra o banco (admin ou SaaS)
+   * @param banco Banco, SaasBanco ou objeto com webhook_secret/configuracoes (opcional)
    * @param receivedSecret Secret/token recebido no webhook
    * @returns true se secret válido, false caso contrário
    */
-  static validateWebhookSecret(banco: Banco | null | undefined, receivedSecret?: string): boolean {
+  static validateWebhookSecret(banco: BancoOuSaas | { webhook_secret?: string | null; configuracoes?: { webhook_token?: string } } | null | undefined, receivedSecret?: string): boolean {
     if (!receivedSecret) {
       return false;
     }
@@ -86,18 +90,26 @@ export class PaymentCommonService {
   }
 
   /**
-   * Busca banco pelo webhook_secret ou configurações
-   * Útil para Asaas que pode ter token em configurações
+   * Extrai scope de empresa do request (empresaIdentifier na URL: saas, slug razão social, ou undefined)
    */
-  static getWebhookToken(banco: Banco): string | undefined {
-    if (banco.webhook_secret && typeof banco.webhook_secret === 'string' && banco.webhook_secret.trim()) {
-      return banco.webhook_secret;
+  static getWebhookScope(req?: Request): WebhookEmpresaScope | undefined {
+    const id = (req as { webhookEmpresaIdentifier?: string })?.webhookEmpresaIdentifier;
+    if (!id || typeof id !== 'string' || !id.trim()) return undefined;
+    return { empresaIdentifier: id.trim() };
+  }
+
+  /**
+   * Busca webhook_secret do banco (admin ou SaaS)
+   */
+  static getWebhookToken(banco: BancoOuSaas | { webhook_secret?: string | null; configuracoes?: { webhook_token?: string } }): string | undefined {
+    const secret = (banco as { webhook_secret?: string | null }).webhook_secret;
+    if (secret && typeof secret === 'string' && secret.trim()) {
+      return secret;
     }
-    
-    if (banco.configuracoes?.webhook_token && typeof banco.configuracoes.webhook_token === 'string') {
-      return banco.configuracoes.webhook_token.trim() || undefined;
+    const config = (banco as Banco).configuracoes;
+    if (config?.webhook_token && typeof config.webhook_token === 'string') {
+      return config.webhook_token.trim() || undefined;
     }
-    
     return undefined;
   }
 }

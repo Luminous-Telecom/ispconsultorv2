@@ -22,16 +22,40 @@ interface ConfiguracoesEnvios {
 export class WhatsAppBoletoService {
   /**
    * Envia boletos baseado em configurações
+   * @param options.saas - Se true, usa saas_titulos e saas_dados_empresa
    */
-  static async enviarBoletos(config: ConfiguracoesEnvios): Promise<{
+  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { saas?: boolean }): Promise<{
     sucesso: boolean;
     mensagensEnviadas: number;
     erros: number;
   }> {
+    const saas = options?.saas ?? false;
     try {
-      const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });
-      if (!servidor) {
-        return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
+      let servidor: ServidorWhatsApp;
+      if (saas) {
+        const SaasSrv = (await import('../../../models/saas/SaasServidorWhatsapp')).default;
+        const saasSrv = await SaasSrv.findOne({ where: { status: 'ativo' } });
+        if (!saasSrv) {
+          return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
+        }
+        servidor = {
+          id: saasSrv.id,
+          tipo_api: 'evolution' as const,
+          evolution_api_url: (saasSrv as { url_api?: string }).url_api || '',
+          evolution_api_key: (saasSrv as { token?: string }).token || '',
+          instance_name: (saasSrv as { numero?: string }).numero || saasSrv.nome,
+          ativo: true,
+          timeout: 30000,
+          notificacoes_automaticas: false,
+          tentativas: 1,
+          intervalo_tentativas: 0,
+        } as unknown as ServidorWhatsApp;
+      } else {
+        const srv = await ServidorWhatsApp.findOne({ where: { ativo: true } });
+        if (!srv) {
+          return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
+        }
+        servidor = srv;
       }
 
       const mensagens = await MensagemWhatsApp.findAll({
@@ -53,7 +77,7 @@ export class WhatsAppBoletoService {
 
       for (const envio of envios) {
         try {
-          const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo);
+          const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo, saas);
           mensagensEnviadas += resultado.enviadas;
           erros += resultado.erros;
         } catch (processError) {
@@ -86,7 +110,8 @@ export class WhatsAppBoletoService {
     servidor: ServidorWhatsApp,
     tipoMensagem: string,
     dias: number,
-    tipo: 'antes' | 'mesmo' | 'depois'
+    tipo: 'antes' | 'mesmo' | 'depois',
+    saas = false
   ): Promise<{ enviadas: number; erros: number }> {
     const mensagem = mensagens.find((msg) => msg.tipo === tipoMensagem);
     if (!mensagem || mensagem.tipo_envio === 'desativado') {
@@ -129,20 +154,34 @@ export class WhatsAppBoletoService {
       }
     });
 
-    const titulos = await Titulo.findAll({
-      where: {
-        status: { [Op.in]: ['pendente', 'vencido'] },
-        pago: false,
-        data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia }
-      },
-      include: [
-        { model: Cliente, as: 'cliente', required: true, where: { ativo: true, recebe_whatsapp: true } },
-        { association: 'contrato', required: false },
-        { association: 'banco', required: false },
-        { association: 'plano', required: false }
-      ],
-      order: [['data_vencimento', 'ASC'], ['id', 'ASC']]
-    });
+    let titulos: Array<Titulo | (InstanceType<typeof import('../../../models/saas/SaasTitulo').SaasTitulo> & { empresa?: { telefone?: string; razao_social?: string; get: (o: { plain: boolean }) => unknown } })>;
+
+    if (saas) {
+      const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
+      const { SaasDadosEmpresa } = await import('../../../models/saas/SaasDadosEmpresa');
+      const { SaasPlano } = await import('../../../models/saas/SaasPlano');
+      const { SaasBanco } = await import('../../../models/saas/SaasBanco');
+      titulos = await SaasTitulo.findAll({
+        where: { status: { [Op.in]: ['pendente', 'vencido'] } as never, pago: false, data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia } },
+        include: [
+          { model: SaasDadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa', 'telefone', 'celular'] },
+          { model: SaasPlano, as: 'plano', required: false },
+          { model: SaasBanco, as: 'banco', required: false },
+        ],
+        order: [['data_vencimento', 'ASC'], ['id', 'ASC']],
+      }) as typeof titulos;
+    } else {
+      titulos = await Titulo.findAll({
+        where: { status: { [Op.in]: ['pendente', 'vencido'] }, pago: false, data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia } },
+        include: [
+          { model: Cliente, as: 'cliente', required: true, where: { ativo: true, recebe_whatsapp: true } },
+          { association: 'contrato', required: false },
+          { association: 'banco', required: false },
+          { association: 'plano', required: false },
+        ],
+        order: [['data_vencimento', 'ASC'], ['id', 'ASC']],
+      }) as typeof titulos;
+    }
 
     logger.info('WhatsAppBoletoService.processarEnvio - Títulos encontrados', {
       context: 'WhatsAppBoletoService',
@@ -161,8 +200,18 @@ export class WhatsAppBoletoService {
     });
 
     for (const titulo of titulos) {
-      const cliente = (titulo as Titulo & { cliente?: Cliente | null }).cliente;
-      const contrato = (titulo as Titulo & { contrato?: Contrato | null }).contrato;
+      let cliente: Cliente | null;
+      let contrato: Contrato | null | undefined;
+      if (saas) {
+        const emp = (titulo as unknown as { empresa?: { get: (o: { plain: boolean }) => Record<string, unknown> } }).empresa;
+        const empData = emp?.get?.({ plain: true }) as Record<string, unknown> | undefined;
+        const telefone = (empData?.telefone || empData?.celular) as string | undefined;
+        cliente = (empData ? { telefone, razao_social: (empData.razao_social || empData.nome_empresa) as string } : null) as Cliente;
+        contrato = null;
+      } else {
+        cliente = (titulo as Titulo & { cliente?: Cliente | null }).cliente ?? null;
+        contrato = (titulo as Titulo & { contrato?: Contrato | null }).contrato;
+      }
 
       logger.info('WhatsAppBoletoService.processarEnvio - Processando título', {
         context: 'WhatsAppBoletoService',
@@ -170,7 +219,8 @@ export class WhatsAppBoletoService {
         tituloNumero: titulo.numero_titulo,
         clienteNome: cliente?.razao_social,
         clienteTelefone: cliente?.telefone,
-        contratoId: contrato?.id
+        contratoId: contrato?.id,
+        saas,
       });
 
       if (!cliente?.telefone) {
@@ -190,7 +240,13 @@ export class WhatsAppBoletoService {
           clienteTelefone: cliente.telefone
         });
 
-        const resultado = await this.enviarParaTitulo(mensagem, servidor, titulo, cliente, contrato);
+        const tituloParaEnvio = saas
+          ? ({ ...(typeof titulo.get === 'function' ? (titulo as { get: (o: { plain: boolean }) => Record<string, unknown> }).get({ plain: true }) : titulo), cliente, contrato, banco: (titulo as unknown as { banco?: unknown }).banco, plano: (titulo as unknown as { plano?: unknown }).plano } as unknown as Titulo)
+          : titulo;
+        const contextoSaas = saas && (titulo as { empresa_id?: number }).empresa_id
+          ? { saas: true as const, empresa_id: (titulo as { empresa_id: number }).empresa_id }
+          : undefined;
+        const resultado = await this.enviarParaTitulo(mensagem, servidor, tituloParaEnvio as Titulo, cliente, contrato, contextoSaas);
 
         logger.info('WhatsAppBoletoService.processarEnvio - Resultado do envio', {
           context: 'WhatsAppBoletoService',
@@ -243,16 +299,17 @@ export class WhatsAppBoletoService {
     servidor: ServidorWhatsApp,
     titulo: Titulo,
     cliente: Cliente,
-    contrato: Contrato | null | undefined
+    contrato: Contrato | null | undefined,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<boolean> {
     const telefone = this.formatarTelefone(cliente.telefone!);
     const baseUrl = undefined;
 
     if (servidor.tipo_api === 'whatsapp_cloud') {
-      return await this.enviarViaCloud(mensagem, servidor, telefone, titulo, cliente, contrato, baseUrl);
+      return await this.enviarViaCloud(mensagem, servidor, telefone, titulo, cliente, contrato, baseUrl, contextoSaas);
     }
 
-    return await this.enviarViaEvolution(mensagem, servidor, telefone, titulo, cliente, contrato, baseUrl);
+    return await this.enviarViaEvolution(mensagem, servidor, telefone, titulo, cliente, contrato, baseUrl, contextoSaas);
   }
 
   /**
@@ -265,7 +322,8 @@ export class WhatsAppBoletoService {
     titulo: Titulo,
     cliente: Cliente,
     contrato: Contrato | null | undefined,
-    baseUrl: undefined
+    baseUrl: undefined,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<boolean> {
     const templateInfo = TemplateWhatsAppService.getTemplateInfoForMensagem(mensagem);
     if (!templateInfo) {
@@ -301,7 +359,8 @@ export class WhatsAppBoletoService {
       templateInfo.language,
       components,
       { nome_fantasia: cliente.nome_fantasia || undefined, razao_social: cliente.razao_social || undefined },
-      titulo
+      titulo,
+      contextoSaas
     );
   }
 
@@ -315,7 +374,8 @@ export class WhatsAppBoletoService {
     titulo: Titulo,
     cliente: Cliente,
     contrato: Contrato | null | undefined,
-    baseUrl: undefined
+    baseUrl: undefined,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<boolean> {
     const mensagemTexto = mensagem.mensagem_padrao || '';
     if (!mensagemTexto) {
@@ -334,19 +394,19 @@ export class WhatsAppBoletoService {
       if (!base64) {
         return false;
       }
-      const enviouPdf = await WhatsAppSenderService.enviarPdfBase64(servidor, telefone, base64, msg);
+      const enviouPdf = await WhatsAppSenderService.enviarPdfBase64(servidor, telefone, base64, msg, 'titulo', titulo.id, contextoSaas);
       if (!enviouPdf) {
         return false;
       }
-      await this.enviarMensagensInteracao(mensagem, servidor, telefone, cliente, contrato, titulo);
+      await this.enviarMensagensInteracao(mensagem, servidor, telefone, cliente, contrato, titulo, contextoSaas);
       return true;
     }
 
-    const enviouTexto = await WhatsAppSenderService.enviarTexto(servidor, telefone, msg);
+    const enviouTexto = await WhatsAppSenderService.enviarTexto(servidor, telefone, msg, contextoSaas);
     if (!enviouTexto) {
       return false;
     }
-    await this.enviarMensagensInteracao(mensagem, servidor, telefone, cliente, contrato, titulo);
+    await this.enviarMensagensInteracao(mensagem, servidor, telefone, cliente, contrato, titulo, contextoSaas);
     return true;
   }
 
@@ -359,7 +419,8 @@ export class WhatsAppBoletoService {
     telefone: string,
     cliente: Cliente,
     contrato: Contrato | null | undefined,
-    titulo: Titulo
+    titulo: Titulo,
+    contextoSaas?: { saas: true; empresa_id: number }
   ): Promise<void> {
     const interacoes = [mensagem.interacao1, mensagem.interacao2, mensagem.interacao3];
 
@@ -383,7 +444,7 @@ export class WhatsAppBoletoService {
           continue;
         }
 
-        const enviou = await WhatsAppSenderService.enviarTexto(servidor, telefone, texto);
+        const enviou = await WhatsAppSenderService.enviarTexto(servidor, telefone, texto, contextoSaas);
         if (!enviou) {
           logger.warn('Falha ao enviar mensagem de interação via WhatsApp', {
             telefone,

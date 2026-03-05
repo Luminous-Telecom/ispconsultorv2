@@ -47,7 +47,7 @@ ContaPagarPagamento.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'contas_pagar',
+        model: 'adm_contas_pagar',
         key: 'id'
       },
       onDelete: 'CASCADE',
@@ -73,7 +73,7 @@ ContaPagarPagamento.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'usuarios',
+        model: 'adm_usuarios',
         key: 'id'
       },
       onDelete: 'SET NULL',
@@ -92,7 +92,7 @@ ContaPagarPagamento.init(
   {
     sequelize,
     modelName: 'ContaPagarPagamento',
-    tableName: 'conta_pagar_pagamentos',
+    tableName: 'adm_conta_pagar_pagamentos',
     timestamps: false, // Usamos created_at manualmente
     underscored: true,
     indexes: [

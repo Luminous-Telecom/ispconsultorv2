@@ -48,8 +48,8 @@ export interface MensagemHistoricoFilters {
  * Classe de serviço para operações relacionadas ao histórico de mensagens
  */
 class MensagemHistoricoServiceClass extends BaseService<MensagemHistorico, Record<string, unknown>, Record<string, unknown>, MensagemHistoricoFilters> {
-  constructor() {
-    super(defaultApiClient, '/mensagens-historico');
+  constructor(baseEndpoint = '/mensagens-historico') {
+    super(defaultApiClient, baseEndpoint);
   }
 
   /**
@@ -61,8 +61,16 @@ class MensagemHistoricoServiceClass extends BaseService<MensagemHistorico, Recor
   }
 }
 
-// Instância única do serviço
+// Instâncias do serviço (tenant e SaaS)
 const mensagemHistoricoServiceInstance = new MensagemHistoricoServiceClass();
+const saasMensagemHistoricoServiceInstance = new MensagemHistoricoServiceClass('/saas/mensagens-historico');
+
+/**
+ * Retorna a instância correta conforme o contexto (SaaS ou tenant)
+ */
+export function getMensagemHistoricoService(isSaas: boolean) {
+  return isSaas ? saasMensagemHistoricoServiceInstance : mensagemHistoricoServiceInstance;
+}
 
 /**
  * MensagemHistoricoService - API estática para compatibilidade

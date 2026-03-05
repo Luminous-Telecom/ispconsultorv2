@@ -130,9 +130,3 @@ export const fornecedorUpdateSchema = Joi.object({
   observacoes: Joi.string().allow(null, '').optional()
 });
 
-export const fornecedorContatoSchema = Joi.object({
-  tipo: Joi.string().valid('telefone', 'email', 'whatsapp', 'celular', 'fixo', 'outro').required(),
-  valor: Joi.string().required(),
-  principal: Joi.boolean().default(false)
-});
-

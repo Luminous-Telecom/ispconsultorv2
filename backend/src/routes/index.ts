@@ -34,7 +34,6 @@ import fornecedorRoutes from './fornecedorRoutes';
 import contaPagarRoutes from './contaPagarRoutes';
 import notaFiscalRoutes from './notaFiscalRoutes';
 import nfseConfigRoutes from './nfseConfigRoutes';
-import hotsiteRoutes from './hotsiteRoutes';
 import centralAssinanteRoutes from './centralAssinanteRoutes';
 import dominioRoutes from './dominioRoutes';
 import ipv4Routes from './ipv4Routes';
@@ -46,6 +45,17 @@ import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
 import backupRoutes from './backupRoutes';
 import empresaRoutes from './empresaRoutes';
+import saasAuthRoutes from './saas/saasAuthRoutes';
+import saasEmpresasRoutes from './saas/saasEmpresasRoutes';
+import saasPlanoRoutes from './saas/saasPlanoRoutes';
+import saasUsuariosRoutes from './saas/saasUsuariosRoutes';
+import saasConfigRoutes from './saas/saasConfigRoutes';
+import saasCrudRoutes from './saas/saasCrudRoutes';
+import saasDadosEmpresaCrudRoutes from './saas/saasDadosEmpresaCrudRoutes';
+import saasMensagemHistoricoRoutes from './saas/saasMensagemHistoricoRoutes';
+import saasParametrosRoutes from './saas/saasParametrosRoutes';
+import saasNfseConfigRoutes from './saas/saasNfseConfigRoutes';
+import saasSchedulerRoutes from './saas/saasSchedulerRoutes';
 const router = Router();
 
 const routes = [
@@ -64,7 +74,6 @@ const routes = [
     { path: '/api/workers', route: workerRoutes },
     { path: '/api/parametro', route: parametroRoutes },
     { path: '/api/parametros', route: parametrosRoutes },
-    { path: '/api/hotsite', route: hotsiteRoutes },
     { path: '/boleto', route: boletoRoutes },
     
     // Rotas dos servidores e configurações
@@ -104,6 +113,19 @@ const routes = [
     // IMPORTANTE: Esta rota genérica /api deve vir POR ÚLTIMO para não capturar rotas específicas
     { path: '/api', route: pagamentoPublicoRoutes },
     
+    // Rotas SaaS (Super Admin) — completamente separadas do ERP
+    { path: '/api/saas/auth', route: saasAuthRoutes },
+    { path: '/api/saas/empresas', route: saasEmpresasRoutes },
+    { path: '/api/saas/planos', route: saasPlanoRoutes },
+    { path: '/api/saas/usuarios', route: saasUsuariosRoutes },
+    { path: '/api/saas/config', route: saasConfigRoutes },
+    { path: '/api/saas/mensagens-historico', route: saasMensagemHistoricoRoutes },
+    { path: '/api/saas/parametros', route: saasParametrosRoutes },
+    { path: '/api/saas/nfse-config', route: saasNfseConfigRoutes },
+    { path: '/api/saas/scheduler', route: saasSchedulerRoutes },
+    { path: '/api/saas/saas-dados-empresa', route: saasDadosEmpresaCrudRoutes },
+    { path: '/api/saas', route: saasCrudRoutes },
+
     // Rotas TXT do Blockdomi na raiz: /domain/version, /domain/all, /v4/all, /v6/all
     { path: '', route: blockdomiListasRoutes },
     // Rotas de health check (sem /api para facilitar monitoramento)

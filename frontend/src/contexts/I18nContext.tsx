@@ -209,12 +209,12 @@ export interface TranslationKeys {
   'menu.accountsPayable': string;
   'menu.invoices': string;
   'menu.companyData': string;
-  'menu.hotsite': string;
   'menu.whatsappHistory': string;
   'menu.emailHistory': string;
 
   // Modal Titles
   'modal.clients': string;
+  'modal.clientsTenants': string;
   'modal.plans': string;
   'modal.banks': string;
   'modal.billingType': string;
@@ -226,7 +226,6 @@ export interface TranslationKeys {
   'modal.companyData': string;
   'modal.users': string;
   'modal.systemResources': string;
-  'modal.hotsite': string;
   'modal.emailServer': string;
   'modal.whatsappServer': string;
   'modal.nfse': string;
@@ -614,6 +613,8 @@ export interface TranslationKeys {
   'form.zipCode': string;
   'form.email': string;
   'form.phone': string;
+  'form.cell': string;
+  'form.site': string;
   'form.receivesEmail': string;
   'form.receivesWhatsApp': string;
   'form.file': string;
@@ -649,6 +650,8 @@ export interface TranslationKeys {
   'form.paymentLocation': string;
   'form.operationNature': string;
   'form.model': string;
+  'form.type': string;
+  'form.code': string;
   'form.issueDate': string;
   'form.totalValue': string;
   'form.servicesValue': string;
@@ -897,6 +900,8 @@ export interface TranslationKeys {
   'tabs.address': string;
   'tabs.contracts': string;
   'tabs.financial': string;
+  'tabs.faturasAbertas': string;
+  'tabs.faturasPagas': string;
   'tabs.observations': string;
   'tabs.files': string;
   'tabs.salePlan': string;
@@ -996,6 +1001,7 @@ export interface TranslationKeys {
   'other.invoiceDetails': string;
   'other.selected': string;
   'other.open': string;
+  'other.all': string;
   'other.receipt': string;
   'other.printNF': string;
   'other.generateNFSeStandalone': string;
@@ -1202,6 +1208,7 @@ export interface TranslationKeys {
   'messages.noPaidTitleSelected': string;
   'messages.noTitlesFound': string;
   'messages.noOpenTitlesFound': string;
+  'messages.noPaidTitlesFound': string;
   'messages.noNFSeTitlesSelected': string;
   'messages.receiptsGenerated': string;
   'messages.errorGeneratingReceipts': string;
@@ -1559,12 +1566,12 @@ const translations: Translations = {
     'menu.accountsPayable': 'Contas a Pagar',
     'menu.invoices': 'Notas Fiscais',
     'menu.companyData': 'Dados da Empresa',
-    'menu.hotsite': 'Hotsite',
     'menu.whatsappHistory': 'Histórico WhatsApp',
     'menu.emailHistory': 'Histórico Email',
 
     // Modal Titles
     'modal.clients': 'Clientes',
+    'modal.clientsTenants': 'Clientes Tenants',
     'modal.plans': 'Planos',
     'modal.banks': 'Bancos',
     'modal.billingType': 'Tipo de Cobrança',
@@ -1576,7 +1583,6 @@ const translations: Translations = {
     'modal.companyData': 'Dados da Empresa',
     'modal.users': 'Usuários',
     'modal.systemResources': 'Recursos do Sistema',
-    'modal.hotsite': 'Hotsite',
     'modal.emailServer': 'Servidor de E-Mail',
     'modal.whatsappServer': 'Servidor de WhatsApp',
     'modal.nfse': 'NFS-e',
@@ -1962,6 +1968,8 @@ const translations: Translations = {
     'form.zipCode': 'CEP',
     'form.email': 'Email',
     'form.phone': 'Telefone',
+    'form.cell': 'Celular',
+    'form.site': 'Site',
     'form.receivesEmail': 'Recebe Email',
     'form.receivesWhatsApp': 'Recebe WhatsApp',
     'form.file': 'Arquivo',
@@ -1997,6 +2005,8 @@ const translations: Translations = {
     'form.paymentLocation': 'Local de Pagamento',
     'form.operationNature': 'Natureza da Operação',
     'form.model': 'Modelo',
+    'form.type': 'Tipo',
+    'form.code': 'Código',
     'form.issueDate': 'Data de Emissão',
     'form.totalValue': 'Valor Total',
     'form.servicesValue': 'Valor dos Serviços',
@@ -2215,6 +2225,8 @@ const translations: Translations = {
     'tabs.address': 'Endereço',
     'tabs.contracts': 'Contratos',
     'tabs.financial': 'Financeiro',
+    'tabs.faturasAbertas': 'Faturas abertas',
+    'tabs.faturasPagas': 'Faturas pagas',
     'tabs.observations': 'Observações',
     'tabs.files': 'Arquivos',
     'tabs.salePlan': 'Plano de Venda',
@@ -2344,6 +2356,7 @@ const translations: Translations = {
     'other.invoiceDetails': 'Detalhes da Nota Fiscal:',
     'other.selected': 'Selecionados',
     'other.open': 'Abertos',
+    'other.all': 'Todos',
     'other.receipt': 'Recibo',
     'other.printNF': 'Imprimir NF',
     'other.generateNFSeStandalone': 'Gerar NFS-e Avulsa',
@@ -2549,6 +2562,7 @@ const translations: Translations = {
     'messages.noPaidTitleSelected': 'Nenhum título pago selecionado. Apenas títulos pagos podem ter recibo.',
     'messages.noTitlesFound': 'Nenhum título encontrado',
     'messages.noOpenTitlesFound': 'Nenhum título em aberto encontrado',
+    'messages.noPaidTitlesFound': 'Nenhuma fatura paga encontrada',
     'messages.noNFSeTitlesSelected': 'Nenhum título selecionado possui NFS-e emitida',
     'messages.receiptsGenerated': '${count} recibo(s) gerado(s) com sucesso!',
     'messages.errorGeneratingReceipts': 'Erro ao gerar recibos',
@@ -2902,12 +2916,12 @@ const translations: Translations = {
     'menu.accountsPayable': 'Accounts Payable',
     'menu.invoices': 'Invoices',
     'menu.companyData': 'Company Data',
-    'menu.hotsite': 'Hotsite',
     'menu.whatsappHistory': 'WhatsApp History',
     'menu.emailHistory': 'Email History',
 
     // Modal Titles
     'modal.clients': 'Clients',
+    'modal.clientsTenants': 'Client Tenants',
     'modal.plans': 'Plans',
     'modal.banks': 'Banks',
     'modal.billingType': 'Billing Type',
@@ -2919,7 +2933,6 @@ const translations: Translations = {
     'modal.companyData': 'Company Data',
     'modal.users': 'Users',
     'modal.systemResources': 'System Resources',
-    'modal.hotsite': 'Hotsite',
     'modal.emailServer': 'Email Server',
     'modal.whatsappServer': 'WhatsApp Server',
     'modal.nfse': 'NFS-e',
@@ -3305,6 +3318,8 @@ const translations: Translations = {
     'form.zipCode': 'Zip Code',
     'form.email': 'Email',
     'form.phone': 'Phone',
+    'form.cell': 'Cell',
+    'form.site': 'Website',
     'form.receivesEmail': 'Receives Email',
     'form.receivesWhatsApp': 'Receives WhatsApp',
     'form.file': 'File',
@@ -3340,6 +3355,8 @@ const translations: Translations = {
     'form.paymentLocation': 'Payment Location',
     'form.operationNature': 'Operation Nature',
     'form.model': 'Model',
+    'form.type': 'Type',
+    'form.code': 'Code',
     'form.issueDate': 'Issue Date',
     'form.totalValue': 'Total Value',
     'form.servicesValue': 'Services Value',
@@ -3558,6 +3575,8 @@ const translations: Translations = {
     'tabs.address': 'Address',
     'tabs.contracts': 'Contracts',
     'tabs.financial': 'Financial',
+    'tabs.faturasAbertas': 'Open invoices',
+    'tabs.faturasPagas': 'Paid invoices',
     'tabs.observations': 'Observations',
     'tabs.files': 'Files',
     'tabs.salePlan': 'Sale Plan',
@@ -3687,6 +3706,7 @@ const translations: Translations = {
     'other.invoiceDetails': 'Invoice Details:',
     'other.selected': 'Selected',
     'other.open': 'Open',
+    'other.all': 'All',
     'other.receipt': 'Receipt',
     'other.printNF': 'Print Invoice',
     'other.generateNFSeStandalone': 'Generate Standalone NFS-e',
@@ -3892,6 +3912,7 @@ const translations: Translations = {
     'messages.noPaidTitleSelected': 'No paid titles selected. Only paid titles can have a receipt.',
     'messages.noTitlesFound': 'No titles found',
     'messages.noOpenTitlesFound': 'No open titles found',
+    'messages.noPaidTitlesFound': 'No paid invoices found',
     'messages.noNFSeTitlesSelected': 'None of the selected titles have an issued NFS-e',
     'messages.receiptsGenerated': '${count} receipt(s) generated successfully!',
     'messages.errorGeneratingReceipts': 'Error generating receipts',
@@ -4247,12 +4268,12 @@ const translations: Translations = {
     'menu.accountsPayable': 'Cuentas por Pagar',
     'menu.invoices': 'Facturas',
     'menu.companyData': 'Datos de la Empresa',
-    'menu.hotsite': 'Hotsite',
     'menu.whatsappHistory': 'Historial WhatsApp',
     'menu.emailHistory': 'Historial Email',
 
     // Modal Titles
     'modal.clients': 'Clientes',
+    'modal.clientsTenants': 'Clientes Tenants',
     'modal.plans': 'Planes',
     'modal.banks': 'Bancos',
     'modal.billingType': 'Tipo de Cobro',
@@ -4264,7 +4285,6 @@ const translations: Translations = {
     'modal.companyData': 'Datos de la Empresa',
     'modal.users': 'Usuarios',
     'modal.systemResources': 'Recursos del Sistema',
-    'modal.hotsite': 'Hotsite',
     'modal.emailServer': 'Servidor de Correo',
     'modal.whatsappServer': 'Servidor de WhatsApp',
     'modal.nfse': 'NFS-e',
@@ -4650,6 +4670,8 @@ const translations: Translations = {
     'form.zipCode': 'Código Postal',
     'form.email': 'Email',
     'form.phone': 'Teléfono',
+    'form.cell': 'Celular',
+    'form.site': 'Sitio',
     'form.receivesEmail': 'Recibe Email',
     'form.receivesWhatsApp': 'Recibe WhatsApp',
     'form.file': 'Archivo',
@@ -4685,6 +4707,8 @@ const translations: Translations = {
     'form.paymentLocation': 'Lugar de Pago',
     'form.operationNature': 'Naturaleza de la Operación',
     'form.model': 'Modelo',
+    'form.type': 'Tipo',
+    'form.code': 'Código',
     'form.issueDate': 'Fecha de Emisión',
     'form.totalValue': 'Valor Total',
     'form.servicesValue': 'Valor de los Servicios',
@@ -4903,6 +4927,8 @@ const translations: Translations = {
     'tabs.address': 'Dirección',
     'tabs.contracts': 'Contratos',
     'tabs.financial': 'Financiero',
+    'tabs.faturasAbertas': 'Facturas abiertas',
+    'tabs.faturasPagas': 'Facturas pagadas',
     'tabs.observations': 'Observaciones',
     'tabs.files': 'Archivos',
     'tabs.salePlan': 'Plan de Venta',
@@ -5032,6 +5058,7 @@ const translations: Translations = {
     'other.invoiceDetails': 'Detalles de la Nota Fiscal:',
     'other.selected': 'Seleccionados',
     'other.open': 'Abiertos',
+    'other.all': 'Todos',
     'other.receipt': 'Recibo',
     'other.printNF': 'Imprimir Factura',
     'other.generateNFSeStandalone': 'Generar NFS-e Independiente',
@@ -5233,6 +5260,7 @@ const translations: Translations = {
     'messages.noPaidTitleSelected': 'No se seleccionaron títulos pagados. Solo los títulos pagados pueden tener recibo.',
     'messages.noTitlesFound': 'No se encontraron títulos',
     'messages.noOpenTitlesFound': 'No se encontraron títulos abiertos',
+    'messages.noPaidTitlesFound': 'No se encontraron facturas pagadas',
     'messages.noNFSeTitlesSelected': 'Ninguno de los títulos seleccionados tiene una NFS-e emitida',
     'messages.receiptsGenerated': '¡${count} recibo(s) generado(s) con éxito!',
     'messages.errorGeneratingReceipts': 'Error al generar recibos',

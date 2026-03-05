@@ -18,11 +18,7 @@ import { ModeloDocumento } from './documentos/ModeloDocumento';
 // Financeiro
 import { Titulo } from './financeiro/Titulo';
 import { Fornecedor } from './financeiro/Fornecedor';
-import { FornecedorContato } from './financeiro/FornecedorContato';
-import { FornecedorArquivo } from './financeiro/FornecedorArquivo';
-import { FornecedorHistorico } from './financeiro/FornecedorHistorico';
 import { ContaPagar } from './financeiro/ContaPagar';
-import { ContaPagarArquivo } from './financeiro/ContaPagarArquivo';
 import { ContaPagarPagamento } from './financeiro/ContaPagarPagamento';
 
 // NFS-e
@@ -38,10 +34,7 @@ import { TipoCobrancaContrato } from './cadastros/TipoCobrancaContrato';
 
 // Sistema
 import { DadosEmpresa } from './sistema/DadosEmpresa';
-import { Hotsite } from './sistema/Hotsite';
 import { ScheduledRoutine } from './sistema/ScheduledRoutine';
-import { RoutineExecutionLog } from './sistema/RoutineExecutionLog';
-import { Auditoria } from './sistema/Auditoria';
 import Parametro from './sistema/Parametro';
 import Parametros from './sistema/Parametros';
 
@@ -58,7 +51,22 @@ import { IPv4 } from './blockdomi/IPv4';
 import { IPv6 } from './blockdomi/IPv6';
 import { VersaoBlockdomi } from './blockdomi/VersaoBlockdomi';
 import { IpPermitidoBlockdomi } from './blockdomi/IpPermitidoBlockdomi';
-import { BlockdomiLogAcesso } from './blockdomi/BlockdomiLogAcesso';
+
+// SaaS
+import { SaasPlano } from './saas/SaasPlano';
+import { SaasDadosEmpresa } from './saas/SaasDadosEmpresa';
+import { SaasContrato } from './saas/SaasContrato';
+import { SaasUsuarioSuper } from './saas/SaasUsuarioSuper';
+import { SaasServidorEmail } from './saas/SaasServidorEmail';
+import { SaasServidorWhatsapp } from './saas/SaasServidorWhatsapp';
+import { SaasBanco } from './saas/SaasBanco';
+import { SaasTipoCobranca } from './saas/SaasTipoCobranca';
+import { SaasDiasVencimento } from './saas/SaasDiasVencimento';
+import { SaasTitulo } from './saas/SaasTitulo';
+import SaasParametros from './saas/SaasParametros';
+import { SaasScheduledRoutine } from './saas/SaasScheduledRoutine';
+import { SaasNFSeConfig } from './saas/SaasNFSeConfig';
+import { SaasMensagemHistorico } from './saas/SaasMensagemHistorico';
 
 // Importar associações específicas
 import './associations';
@@ -248,66 +256,7 @@ ClienteArquivo.belongsTo(Cliente, {
   as: 'cliente'
 });
 
-// ScheduledRoutine
-ScheduledRoutine.hasMany(RoutineExecutionLog, {
-  foreignKey: 'routine_id',
-  as: 'executionLogs'
-});
-
-// RoutineExecutionLog
-RoutineExecutionLog.belongsTo(ScheduledRoutine, {
-  foreignKey: 'routine_id',
-  as: 'routine'
-});
-
-// Auditoria
-Usuario.hasMany(Auditoria, {
-  foreignKey: 'usuario_id',
-  as: 'auditorias'
-});
-
-Auditoria.belongsTo(Usuario, {
-  foreignKey: 'usuario_id',
-  as: 'usuario'
-});
-
-// Fornecedor
-Fornecedor.hasMany(FornecedorContato, {
-  foreignKey: 'fornecedor_id',
-  as: 'contatos'
-});
-
-FornecedorContato.belongsTo(Fornecedor, {
-  foreignKey: 'fornecedor_id',
-  as: 'fornecedor'
-});
-
-Fornecedor.hasMany(FornecedorArquivo, {
-  foreignKey: 'fornecedor_id',
-  as: 'arquivos'
-});
-
-FornecedorArquivo.belongsTo(Fornecedor, {
-  foreignKey: 'fornecedor_id',
-  as: 'fornecedor'
-});
-
-Fornecedor.hasMany(FornecedorHistorico, {
-  foreignKey: 'fornecedor_id',
-  as: 'historicos'
-});
-
-FornecedorHistorico.belongsTo(Fornecedor, {
-  foreignKey: 'fornecedor_id',
-  as: 'fornecedor'
-});
-
-FornecedorHistorico.belongsTo(Usuario, {
-  foreignKey: 'usuario_id',
-  as: 'usuario'
-});
-
-// ContaPagar
+// Fornecedor / ContaPagar
 Fornecedor.hasMany(ContaPagar, {
   foreignKey: 'fornecedor_id',
   as: 'contasPagar'
@@ -316,16 +265,6 @@ Fornecedor.hasMany(ContaPagar, {
 ContaPagar.belongsTo(Fornecedor, {
   foreignKey: 'fornecedor_id',
   as: 'fornecedor'
-});
-
-ContaPagar.hasMany(ContaPagarArquivo, {
-  foreignKey: 'conta_pagar_id',
-  as: 'arquivos'
-});
-
-ContaPagarArquivo.belongsTo(ContaPagar, {
-  foreignKey: 'conta_pagar_id',
-  as: 'contaPagar'
 });
 
 ContaPagar.hasMany(ContaPagarPagamento, {
@@ -348,6 +287,49 @@ MensagemHistorico.belongsTo(Usuario, {
   foreignKey: 'usuario_id',
   as: 'usuario'
 });
+
+// SaaS
+SaasPlano.hasMany(SaasDadosEmpresa, { foreignKey: 'plano_id', as: 'empresas' });
+SaasDadosEmpresa.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
+
+DadosEmpresa.hasMany(SaasContrato, { foreignKey: 'empresa_id', as: 'saasContratos' });
+SaasContrato.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+SaasPlano.hasMany(SaasContrato, { foreignKey: 'plano_id', as: 'contratos' });
+SaasContrato.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
+
+SaasDadosEmpresa.hasMany(SaasServidorEmail, { foreignKey: 'empresa_id', as: 'servidoresEmail' });
+SaasServidorEmail.belongsTo(SaasDadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+
+SaasDadosEmpresa.hasMany(SaasServidorWhatsapp, { foreignKey: 'empresa_id', as: 'servidoresWhatsapp' });
+SaasServidorWhatsapp.belongsTo(SaasDadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+
+SaasDadosEmpresa.hasMany(SaasMensagemHistorico, { foreignKey: 'empresa_id', as: 'mensagensHistorico' });
+SaasMensagemHistorico.belongsTo(SaasDadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+
+SaasDadosEmpresa.hasMany(SaasBanco, { foreignKey: 'empresa_id', as: 'saasBancos' });
+SaasBanco.belongsTo(SaasDadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+
+DadosEmpresa.hasMany(SaasTipoCobranca, { foreignKey: 'empresa_id', as: 'saasTiposCobranca' });
+SaasTipoCobranca.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+
+DadosEmpresa.hasMany(SaasDiasVencimento, { foreignKey: 'empresa_id', as: 'saasDiasVencimento' });
+SaasDiasVencimento.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+
+
+SaasDadosEmpresa.hasMany(SaasTitulo, { foreignKey: 'empresa_id', as: 'titulos' });
+SaasTitulo.belongsTo(SaasDadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+
+SaasPlano.hasMany(SaasTitulo, { foreignKey: 'plano_id', as: 'titulos' });
+SaasTitulo.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
+
+SaasBanco.hasMany(SaasTitulo, { foreignKey: 'banco_id', as: 'titulos' });
+SaasTitulo.belongsTo(SaasBanco, { foreignKey: 'banco_id', as: 'banco' });
+
+SaasContrato.hasMany(SaasTitulo, { foreignKey: 'contrato_id', as: 'titulos' });
+SaasTitulo.belongsTo(SaasContrato, { foreignKey: 'contrato_id', as: 'contrato' });
+
+SaasBanco.hasMany(SaasContrato, { foreignKey: 'banco_id', as: 'contratos' });
+SaasContrato.belongsTo(SaasBanco, { foreignKey: 'banco_id', as: 'banco' });
 
 // TemplateWhatsApp e MensagemWhatsApp
 TemplateWhatsApp.hasMany(MensagemWhatsApp, {
@@ -390,27 +372,20 @@ export {
   Contrato,
   ContratoPlanoAdicional,
   DadosEmpresa,
-  Hotsite,
   ScheduledRoutine,
-  RoutineExecutionLog,
   ServidorEmail,
   ServidorWhatsApp,
   ModeloDocumento,
   DiasVencimento,
   TermoContrato,
   Usuario,
-  Auditoria,
   AssinaturaDigital,
   ClienteArquivo,
   AssinaturaDigitalProvider,
   Parametro,
   Parametros,
   Fornecedor,
-  FornecedorContato,
-  FornecedorArquivo,
-  FornecedorHistorico,
   ContaPagar,
-  ContaPagarArquivo,
   ContaPagarPagamento,
   NotaFiscal,
   NFSeConfig,
@@ -419,7 +394,20 @@ export {
   IPv6,
   VersaoBlockdomi,
   IpPermitidoBlockdomi,
-  BlockdomiLogAcesso,
   MensagemWhatsApp,
-  TemplateWhatsApp
+  TemplateWhatsApp,
+  SaasPlano,
+  SaasDadosEmpresa,
+  SaasContrato,
+  SaasUsuarioSuper,
+  SaasServidorEmail,
+  SaasServidorWhatsapp,
+  SaasBanco,
+  SaasTipoCobranca,
+  SaasDiasVencimento,
+  SaasTitulo,
+  SaasParametros,
+  SaasScheduledRoutine,
+  SaasNFSeConfig,
+  SaasMensagemHistorico,
 };

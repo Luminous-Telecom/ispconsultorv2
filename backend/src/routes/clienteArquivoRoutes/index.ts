@@ -1,14 +1,11 @@
 import { Router } from 'express';
 import { ClienteArquivoController } from '../../controllers/clientes/ClienteArquivoController';
-import { logger } from '../../utils/logger';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { resolveArquivosPath } from '../../utils/pathUtils';
 
 const router = Router();
-
-logger.info('Carregando rotas de cliente-arquivos');
 
 // Configuração do multer para upload de arquivos de cliente
 const uploadDir = resolveArquivosPath('clientes');

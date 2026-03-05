@@ -1,5 +1,6 @@
 import React from 'react';
 import FormField from '@/components/ui/FormField';
+import { Button } from '@/components/ui';
 import { BancoTabProps } from '../types';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -8,7 +9,9 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
   errors,
   handleInputChange,
   isPending,
-  formPrefix
+  formPrefix,
+  handleTestConnection,
+  testResult
 }) => {
   const { t } = useI18n();
 
@@ -85,6 +88,23 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
           disabled={isPending}
           rows={3}
         />
+      </div>
+
+      <div className="mt-3">
+        <Button
+          type="button"
+          variant="outline-primary"
+          size="sm"
+          onClick={handleTestConnection}
+          disabled={isPending}
+        >
+          {t('buttons.testConnection')}
+        </Button>
+        {testResult && (
+          <span className={`ms-2 badge ${testResult.includes('✅') ? 'bg-success' : 'bg-danger'}`}>
+            {testResult}
+          </span>
+        )}
       </div>
     </>
   );

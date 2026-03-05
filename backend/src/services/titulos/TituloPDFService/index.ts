@@ -288,4 +288,47 @@ export class TituloPDFService {
     }
     return Buffer.from(pdfBase64, 'base64');
   }
+
+  /**
+   * Gera PDF de múltiplos boletos (titulos já com cliente e banco).
+   * Reutilizado por admin e SaaS.
+   */
+  static async gerarPdfDeMultiplosBoletos(titulos: TituloComRelacoes[]): Promise<Buffer> {
+    const boletosHtml: string[] = [];
+    for (const titulo of titulos) {
+      const html = await this.processarBoletoHtml(titulo);
+      if (html?.trim()) {
+        boletosHtml.push(`<div style="page-break-after: always;">${html}</div>`);
+      }
+    }
+    if (boletosHtml.length === 0) {
+      throw new Error('Nenhum boleto válido para gerar PDF');
+    }
+    const template = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Boletos - ${boletosHtml.length} título(s)</title>
+        <style>
+          @media print { .page-break { page-break-after: always; } }
+          body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        </style>
+      </head>
+      <body>
+        ${boletosHtml.join('')}
+      </body>
+      </html>
+    `;
+    const templateLimpo = template.replace(/\{\{[^}]+\}\}/g, '');
+    const htmlPdfModule = await import('html-pdf-node');
+    const file = { content: templateLimpo };
+    const options = { format: 'A4' as const, margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' }, printBackground: true, displayHeaderFooter: false };
+    return new Promise<Buffer>((resolve, reject) => {
+      htmlPdfModule.generatePdf(file, options, (err: Error | null, buffer: Buffer) => {
+        if (err) reject(err);
+        else resolve(buffer);
+      });
+    });
+  }
 }

@@ -106,7 +106,8 @@ export const efiConfig = {
   
   
   // Configurações para compatibilidade com BancoApiService
-  auth_type: 'basic' as const,
+  // auth_type: 'bearer' — consulta de notificação usa Bearer token (access_token); Basic é só para /v1/authorize
+  auth_type: 'bearer' as const,
   client_id_field: 'client_id',
   client_secret_field: 'client_secret',
   

@@ -382,10 +382,13 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   const modalContent = (
     <>
 
-      {/* Backdrop customizado - não cobre a sidebar */}
+      {/* Backdrop customizado - overlay escuro semitransparente, não cobre a sidebar */}
       <div
         className="draggable-modal-backdrop"
-        style={{ zIndex: zIndex - 1 }}
+        style={{
+          zIndex: zIndex - 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}
       />
 
       {/* Overlay para manter eventos de arraste mesmo sobre iframes/PDFs */}

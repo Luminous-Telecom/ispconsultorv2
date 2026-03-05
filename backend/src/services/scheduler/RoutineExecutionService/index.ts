@@ -1,10 +1,12 @@
 import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
+import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
 import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
 import { logger } from '../../../utils/logger';
 import { BarcodeService } from '../../bancos/BarcodeService';
 import { TituloGenerationHelper } from './helpers/TituloGenerationHelper';
 import { ContratoDataLoader } from './helpers/ContratoDataLoader';
 import { ContratoTituloProcessor } from './helpers/ContratoTituloProcessor';
+import type { SaasContratoWithPlano } from './helpers/SaasContratoTituloProcessor';
 import type {
   RoutineExecutionResult,
   GeracaoTitulosResult,
@@ -70,39 +72,66 @@ interface TituloWithRelations {
  * 
  * @class RoutineExecutionService
  */
+type AnyRoutine = ScheduledRoutine | SaasScheduledRoutine;
+
+function isSaasRoutine(routine: AnyRoutine): routine is SaasScheduledRoutine {
+  return routine instanceof SaasScheduledRoutine;
+}
+
 export class RoutineExecutionService {
   /**
-   * Executa uma rotina baseada no seu tipo
+   * Executa uma rotina baseada no seu tipo (ERP ou SaaS)
    * @param routine - Rotina a ser executada
    * @returns Resultado da execução
    */
   public async executeRoutineByType(
-    routine: ScheduledRoutine
+    routine: AnyRoutine
   ): Promise<RoutineExecutionResult> {
+    const saas = isSaasRoutine(routine);
+
+    if (saas && !['geracao_titulos', 'envio_boletos', 'remessa_bancaria'].includes(routine.tipo)) {
+      logger.warn('RoutineExecutionService - Tipo não suportado no SaaS', {
+        context: 'RoutineExecutionService',
+        tipo: routine.tipo,
+        routineId: routine.id
+      });
+      return { success: false, message: `Tipo de rotina não suportado no SaaS: ${routine.tipo}` };
+    }
+
     switch (routine.tipo) {
       case 'geracao_titulos':
         logger.info('RoutineExecutionService.executeRoutine - Executando geração de títulos', {
           context: 'RoutineExecutionService',
-          routineId: routine.id
+          routineId: routine.id,
+          saas
         });
-        return await this.executeGeracaoTitulos(routine);
+        if (saas) {
+          return await this.executeGeracaoTitulosSaas(routine as SaasScheduledRoutine);
+        }
+        return await this.executeGeracaoTitulos(routine as ScheduledRoutine);
 
       case 'envio_boletos':
         logger.info('RoutineExecutionService.executeRoutine - Executando envio de boletos', {
           context: 'RoutineExecutionService',
-          routineId: routine.id
+          routineId: routine.id,
+          saas
         });
-        return await this.executeEnvioBoletos(routine);
+        return await this.executeEnvioBoletos(routine, saas);
 
       case 'remessa_bancaria':
         logger.info('RoutineExecutionService.executeRoutine - Executando remessa bancária', {
           context: 'RoutineExecutionService',
-          routineId: routine.id
+          routineId: routine.id,
+          saas
         });
+        if (saas) {
+          return await this.executeRemessaBancariaSaas(routine as SaasScheduledRoutine);
+        }
         return await this.executeRemessaBancaria(routine);
 
       case 'desbloquear_blockdomi':
-        return await this.executeDesbloquearBlockdomi(routine);
+        if (saas) return { success: false, message: 'Tipo não suportado no SaaS' };
+        return await this.executeDesbloquearBlockdomi(routine as ScheduledRoutine);
 
       default:
         logger.warn('RoutineExecutionService.executeRoutine - Tipo de rotina não implementado', {
@@ -326,13 +355,243 @@ export class RoutineExecutionService {
     }
   }
 
+  /**
+   * Executa a rotina de geração de títulos para contratos SaaS
+   */
+  public async executeGeracaoTitulosSaas(_routine: SaasScheduledRoutine): Promise<GeracaoTitulosResult> {
+    const { SaasContrato } = await import('../../../models/saas/SaasContrato');
+    const { SaasPlano } = await import('../../../models/saas/SaasPlano');
+    const { SaasContratoDataLoader } = await import('./helpers/SaasContratoDataLoader');
+    const { SaasContratoTituloProcessor } = await import('./helpers/SaasContratoTituloProcessor');
+    const { SaasTituloGenerationHelper } = await import('./helpers/SaasTituloGenerationHelper');
+
+    const quantidadeMinimaTitulos = 12;
+
+    try {
+      const contratos = await SaasContrato.findAll({
+        where: { status: 'ativo' },
+        include: [
+          { model: SaasPlano, as: 'plano', attributes: ['id', 'nome', 'valor_mensal'] },
+        ],
+      });
+
+      const empresaIds = [...new Set(contratos.map((c) => c.empresa_id))];
+      const empresaDefaults = await SaasContratoDataLoader.loadEmpresaDefaults(empresaIds);
+
+      const contratoIds = contratos.map((c) => c.id);
+      const { titulosEmAbertoPorContrato, todosTitulosPorContrato } =
+        await SaasContratoDataLoader.loadRelatedData(contratoIds, empresaDefaults);
+
+      let titulosGerados = 0;
+      let contratosProcessados = 0;
+      let erros = 0;
+
+      for (const contrato of contratos) {
+        try {
+          const defaults = empresaDefaults.get(contrato.empresa_id);
+          if (!defaults) {
+            logger.info('RoutineExecutionService.executeGeracaoTitulosSaas - Empresa sem banco ou dia de vencimento configurado', {
+              contratoId: contrato.id,
+              empresaId: contrato.empresa_id,
+            });
+            continue;
+          }
+
+          const contratoPlain = contrato.get({ plain: true }) as Record<string, unknown> & { banco_id?: number | null };
+          const contaBoleto = contratoPlain.banco_id ?? defaults.conta_boleto;
+          const contratoEnriquecido = {
+            ...contratoPlain,
+            conta_boleto: contaBoleto,
+            dia_vencimento_id: defaults.dia_vencimento_id,
+            plano: (contrato as { plano?: unknown }).plano,
+          } as SaasContratoWithPlano;
+
+          if (!SaasTituloGenerationHelper.validateContrato(contratoEnriquecido)) {
+            logger.info('RoutineExecutionService.executeGeracaoTitulosSaas - Contrato ignorado', {
+              contratoId: contrato.id,
+              empresaId: contrato.empresa_id,
+            });
+            continue;
+          }
+
+          const titulosEmAberto = titulosEmAbertoPorContrato.get(contrato.id) || [];
+          const todosTitulos = todosTitulosPorContrato.get(contrato.id) || [];
+          const diaVencimento = (contratoPlain.dia_vencimento as number | null | undefined) ?? defaults.dia;
+
+          const resultado = await SaasContratoTituloProcessor.processContrato(
+            contratoEnriquecido,
+            titulosEmAberto,
+            todosTitulos,
+            diaVencimento,
+            quantidadeMinimaTitulos
+          );
+
+          titulosGerados += resultado.titulosGerados;
+          if (resultado.titulosGerados > 0) contratosProcessados++;
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          logger.error('RoutineExecutionService.executeGeracaoTitulosSaas - Erro ao processar contrato', {
+            context: 'RoutineExecutionService',
+            contratoId: contrato.id,
+            empresaId: contrato.empresa_id,
+            error: errorMessage,
+          });
+          erros++;
+        }
+      }
+
+      logger.info('RoutineExecutionService.executeGeracaoTitulosSaas - Concluído', {
+        titulos_gerados: titulosGerados,
+        contratos_processados: contratosProcessados,
+        contratos_com_erro: erros,
+        total_contratos_ativos: contratos.length,
+      });
+
+      return {
+        success: true,
+        titulos_gerados: titulosGerados,
+        contratos_processados: contratosProcessados,
+        contratos_com_erro: erros,
+        message: `Geração de títulos SaaS concluída. ${titulosGerados} títulos gerados em ${contratosProcessados} contratos.`,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('RoutineExecutionService.executeGeracaoTitulosSaas - Erro na execução', {
+        context: 'RoutineExecutionService',
+        error: errorMessage,
+      });
+      return {
+        success: false,
+        titulos_gerados: 0,
+        contratos_processados: 0,
+        contratos_com_erro: 0,
+        message: `Erro ao gerar títulos SaaS: ${errorMessage}`,
+      };
+    }
+  }
+
+  /**
+   * Executa a rotina de remessa bancária para SaaS (registra saas_titulos no banco)
+   */
+  public async executeRemessaBancariaSaas(_routine: SaasScheduledRoutine): Promise<RemessaBancariaResult> {
+    const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
+    const { SaasBanco } = await import('../../../models/saas/SaasBanco');
+    const { SaasDadosEmpresa } = await import('../../../models/saas/SaasDadosEmpresa');
+    const { SaasPlano } = await import('../../../models/saas/SaasPlano');
+    const { BancoApiService } = await import('../../bancos/BancoApiService');
+
+    try {
+      const titulosParaRegistrar = await SaasTitulo.findAll({
+        where: { status: 'pendente', charge_id: null },
+        include: [
+          { model: SaasBanco, as: 'banco', required: true, attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'sandbox', 'client_id_producao', 'client_secret_producao', 'url_retorno', 'percentual_multa', 'percentual_juros'] },
+          { model: SaasDadosEmpresa, as: 'empresa', required: true, attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa', 'cnpj', 'telefone', 'celular', 'email', 'cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] },
+          { model: SaasPlano, as: 'plano', required: true, attributes: ['id', 'nome'] },
+        ],
+        limit: 100,
+      });
+
+      let registrados = 0;
+      let erros = 0;
+      const detalhes: RemessaBancariaResult['detalhes'] = [];
+
+      for (const titulo of titulosParaRegistrar) {
+        try {
+          const empresa = (titulo as unknown as { empresa?: { id: number; get: (o: { plain: boolean }) => Record<string, unknown> } }).empresa;
+          if (!empresa) continue;
+          const emp = empresa.get({ plain: true }) as Record<string, unknown>;
+          const clienteData: Record<string, unknown> = {
+            id: empresa.id,
+            razao_social: emp.razao_social || emp.nome_empresa || 'Sacado',
+            nome_fantasia: emp.nome_fantasia || null,
+            cnpj: emp.cnpj || '',
+            email: emp.email || '',
+            telefone: emp.telefone || emp.celular || null,
+            cep: emp.cep || null,
+            endereco: emp.endereco || null,
+            numero: emp.numero || null,
+            complemento: emp.complemento || null,
+            bairro: emp.bairro || null,
+            cidade: emp.cidade || null,
+            estado: emp.estado || null,
+          };
+          const tituloData = titulo.get({ plain: true }) as Record<string, unknown>;
+          const plano = (titulo as unknown as { plano?: { nome?: string; get: (o: { plain: boolean }) => Record<string, unknown> } }).plano;
+          const banco = (titulo as unknown as { banco?: { nome?: string; get: (o: { plain: boolean }) => Record<string, unknown> } }).banco;
+          const planoData = plano?.get({ plain: true }) as Record<string, unknown> || {};
+          const bancoData = banco?.get({ plain: true }) as Record<string, unknown> || {};
+          const tituloLike = {
+            ...tituloData,
+            cliente: clienteData,
+            banco: bancoData,
+            plano: { ...planoData, nome_plano: planoData.nome ?? planoData.nome_plano },
+          } as unknown as Parameters<typeof BancoApiService.gerarTitulo>[0];
+
+          const resultado = await BancoApiService.gerarTitulo(tituloLike, { bancoTable: 'saas_bancos' });
+
+          if (resultado.success && resultado.data) {
+            registrados++;
+            const dados = resultado.data;
+            const chargeId = typeof dados.charge_id === 'string' ? dados.charge_id : undefined;
+            const codigoBarrasFinal = typeof dados.codigo_barras === 'string' ? dados.codigo_barras : null;
+            const codigoBarrasParaSalvar = codigoBarrasFinal !== null ? codigoBarrasFinal : null;
+            await titulo.update({
+              charge_id: chargeId ?? titulo.charge_id,
+              url_boleto: typeof dados.url_boleto === 'string' ? dados.url_boleto : titulo.url_boleto,
+              qrcode: typeof dados.qrcode === 'string' ? dados.qrcode : titulo.qrcode,
+              qrcode_image: typeof dados.qrcode_image === 'string' ? dados.qrcode_image : titulo.qrcode_image,
+              codigo_barras: codigoBarrasParaSalvar,
+              linha_digitavel: typeof dados.linha_digitavel === 'string' ? dados.linha_digitavel : titulo.linha_digitavel,
+              nosso_numero: typeof dados.nosso_numero === 'string' ? dados.nosso_numero : titulo.nosso_numero,
+            });
+            detalhes.push({ titulo_id: titulo.id, banco: banco?.nome, status: 'sucesso', message: 'Título registrado no banco', charge_id: chargeId });
+          } else {
+            erros++;
+            detalhes.push({ titulo_id: titulo.id, banco: banco?.nome, status: 'erro', message: resultado.message || 'Erro ao registrar título' });
+          }
+        } catch (error) {
+          erros++;
+          const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
+          logger.error('Erro ao processar título SaaS na remessa bancária', {
+            context: 'RoutineExecutionService',
+            action: 'executeRemessaBancariaSaas',
+            tituloId: titulo.id,
+            error: errorMsg,
+          });
+          detalhes.push({ titulo_id: titulo.id, banco: (titulo as unknown as { banco?: { nome?: string } }).banco?.nome, status: 'erro', message: errorMsg });
+        }
+      }
+
+      return {
+        titulos_registrados: registrados,
+        titulos_erro: erros,
+        total_processados: titulosParaRegistrar.length,
+        detalhes,
+      };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar remessa bancária SaaS', {
+        context: 'RoutineExecutionService',
+        action: 'executeRemessaBancariaSaas',
+        error: errorMsg,
+      });
+      return {
+        titulos_registrados: 0,
+        titulos_erro: 0,
+        total_processados: 0,
+        detalhes: [],
+        message: `Erro ao executar remessa bancária: ${errorMsg}`,
+      };
+    }
+  }
 
   /**
    * Executa a rotina de envio de boletos
    * @param routine - Rotina com configurações
+   * @param saas - Se é rotina SaaS (usa saas_titulos e saas_dados_empresa)
    * @returns Resultado do envio de boletos
    */
-  public async executeEnvioBoletos(routine: ScheduledRoutine): Promise<EnvioBoletosResult> {
+  public async executeEnvioBoletos(routine: AnyRoutine, saas = false): Promise<EnvioBoletosResult> {
     logger.info('RoutineExecutionService.executeEnvioBoletos - Iniciando execução', {
       context: 'RoutineExecutionService',
       routineId: routine.id,
@@ -366,7 +625,7 @@ export class RoutineExecutionService {
         config: JSON.stringify(config)
       });
 
-      const resultado = await envioBoletosRoutine.execute(config);
+      const resultado = await envioBoletosRoutine.execute(config, { saas });
 
       logger.info('RoutineExecutionService.executeEnvioBoletos - Rotina executada com sucesso', {
         context: 'RoutineExecutionService',
@@ -408,7 +667,7 @@ export class RoutineExecutionService {
    * @param _routine - Rotina (não utilizado, mas mantido para compatibilidade)
    * @returns Resultado da remessa bancária
    */
-  public async executeRemessaBancaria(_routine: ScheduledRoutine): Promise<RemessaBancariaResult> {
+  public async executeRemessaBancaria(_routine: AnyRoutine): Promise<RemessaBancariaResult> {
     const { Titulo: TituloModel } = await import('../../../models/financeiro/Titulo');
     const { Banco } = await import('../../../models/cadastros/Banco');
     const { Cliente } = await import('../../../models/clientes/Cliente');

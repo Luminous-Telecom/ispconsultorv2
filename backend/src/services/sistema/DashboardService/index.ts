@@ -64,13 +64,13 @@ export class DashboardService {
     const { QueryTypes } = await import('sequelize');
     const rows = await sequelize.query<{ tipo_servico: string; quantidade: string }>(
       `SELECT tipo_servico, COUNT(*) as quantidade FROM (
-        SELECT DISTINCT c.cliente_id, p.tipo_servico FROM contratos c
-        INNER JOIN planos p ON c.plano_id = p.id
+        SELECT DISTINCT c.cliente_id, p.tipo_servico FROM adm_contratos c
+        INNER JOIN adm_planos p ON c.plano_id = p.id
         WHERE c.status = 'ativo' AND c.cliente_id IS NOT NULL
         UNION
-        SELECT DISTINCT c.cliente_id, p.tipo_servico FROM contrato_planos_adicionais cpa
-        INNER JOIN contratos c ON cpa.contrato_id = c.id
-        INNER JOIN planos p ON cpa.plano_id = p.id
+        SELECT DISTINCT c.cliente_id, p.tipo_servico FROM adm_contrato_planos_adicionais cpa
+        INNER JOIN adm_contratos c ON cpa.contrato_id = c.id
+        INNER JOIN adm_planos p ON cpa.plano_id = p.id
         WHERE c.status = 'ativo' AND cpa.status = 'ativo'
       ) AS sub GROUP BY tipo_servico`,
       { type: QueryTypes.SELECT }

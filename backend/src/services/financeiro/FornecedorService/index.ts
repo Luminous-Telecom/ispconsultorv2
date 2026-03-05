@@ -95,10 +95,8 @@ export class FornecedorService {
     const fornecedores = await Fornecedor.findAll({
       where,
       include: [
-        { association: 'contatos', required: false },
-        { association: 'arquivos', required: false, limit: 5 },
-        { 
-          association: 'contasPagar', 
+        {
+          association: 'contasPagar',
           required: false,
           attributes: ['id', 'status', 'valor', 'valor_pago', 'data_vencimento']
         }
@@ -134,11 +132,8 @@ export class FornecedorService {
     if (includeAssociations) {
       return await Fornecedor.findByPk(id, {
         include: [
-          { association: 'contatos', required: false },
-          { association: 'arquivos', required: false },
-          { association: 'historicos', required: false, limit: 50, order: [['created_at', 'DESC']] },
-          { 
-            association: 'contasPagar', 
+          {
+            association: 'contasPagar',
             required: false,
             include: [
               { association: 'pagamentos', required: false, limit: 10, order: [['created_at', 'DESC']] }

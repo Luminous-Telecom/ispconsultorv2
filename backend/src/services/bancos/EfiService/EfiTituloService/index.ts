@@ -182,17 +182,19 @@ export class EfiTituloService {
       codigoBarrasFinal = BarcodeService.converterLinhaDigitavelParaCodigoBarras(barcodeLimpo);
     }
 
-    const tituloModel = titulo as unknown as Titulo;
-    await tituloModel.update({
-      charge_id: chargeIdString,
-      codigo_barras: codigoBarrasFinal,
-      url_boleto: typeof url === 'string' ? url : null,
-      linha_digitavel: linhaDigitavelFormatada,
-      qrcode: typeof pixQrcode === 'string' ? pixQrcode : null,
-      qrcode_image: typeof pixQrcodeImage === 'string' ? pixQrcodeImage : null,
-      nosso_numero: nossoNumero,
-      status: 'pendente'
-    });
+    const tituloModel = titulo as unknown as Titulo & { __skipTituloUpdate?: boolean };
+    if (!tituloModel.__skipTituloUpdate && typeof tituloModel.update === 'function') {
+      await tituloModel.update({
+        charge_id: chargeIdString,
+        codigo_barras: codigoBarrasFinal,
+        url_boleto: typeof url === 'string' ? url : null,
+        linha_digitavel: linhaDigitavelFormatada,
+        qrcode: typeof pixQrcode === 'string' ? pixQrcode : null,
+        qrcode_image: typeof pixQrcodeImage === 'string' ? pixQrcodeImage : null,
+        nosso_numero: nossoNumero,
+        status: 'pendente'
+      });
+    }
 
     try {
       const baseUrl = banco.url_retorno;

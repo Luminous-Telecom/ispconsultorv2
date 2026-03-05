@@ -97,11 +97,11 @@ export class ContratoService {
       if (searchField && typeof searchField === 'string') {
         if (searchField === 'cliente') {
           (whereClause as Record<symbol, unknown>)[Op.or] = [
-            sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = contratos.cliente_id AND clientes.razao_social LIKE '${escapedSearch}')`)
+            sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes WHERE adm_clientes.id = adm_contratos.cliente_id AND adm_clientes.razao_social LIKE '${escapedSearch}')`)
           ];
         } else if (searchField === 'plano') {
           (whereClause as Record<symbol, unknown>)[Op.or] = [
-            sequelize.literal(`EXISTS (SELECT 1 FROM planos WHERE planos.id = contratos.plano_id AND planos.nome_plano LIKE '${escapedSearch}')`)
+            sequelize.literal(`EXISTS (SELECT 1 FROM adm_planos WHERE adm_planos.id = adm_contratos.plano_id AND adm_planos.nome_plano LIKE '${escapedSearch}')`)
           ];
         } else {
           (whereClause as Record<symbol, unknown>)[Op.or] = [
@@ -113,8 +113,8 @@ export class ContratoService {
           { id: { [Op.like]: searchPattern } },
           { status: { [Op.like]: searchPattern } },
           { valor_final: { [Op.like]: searchPattern } },
-          sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = contratos.cliente_id AND clientes.razao_social LIKE '${escapedSearch}')`),
-          sequelize.literal(`EXISTS (SELECT 1 FROM planos WHERE planos.id = contratos.plano_id AND planos.nome_plano LIKE '${escapedSearch}')`)
+          sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes WHERE adm_clientes.id = adm_contratos.cliente_id AND adm_clientes.razao_social LIKE '${escapedSearch}')`),
+          sequelize.literal(`EXISTS (SELECT 1 FROM adm_planos WHERE adm_planos.id = adm_contratos.plano_id AND adm_planos.nome_plano LIKE '${escapedSearch}')`)
         ];
       }
     }
@@ -134,11 +134,11 @@ export class ContratoService {
     if (tipo_servico) {
       const escaped = String(tipo_servico).replace(/'/g, "''");
       const subquery = `(
-        SELECT c.id FROM contratos c
-        WHERE EXISTS (SELECT 1 FROM planos p WHERE p.id = c.plano_id AND p.tipo_servico = '${escaped}')
+        SELECT c.id FROM adm_contratos c
+        WHERE EXISTS (SELECT 1 FROM adm_planos p WHERE p.id = c.plano_id AND p.tipo_servico = '${escaped}')
         OR EXISTS (
-          SELECT 1 FROM contrato_planos_adicionais cpa
-          INNER JOIN planos p ON cpa.plano_id = p.id
+          SELECT 1 FROM adm_contrato_planos_adicionais cpa
+          INNER JOIN adm_planos p ON cpa.plano_id = p.id
           WHERE cpa.contrato_id = c.id AND cpa.status = 'ativo' AND p.tipo_servico = '${escaped}'
         )
       )`;

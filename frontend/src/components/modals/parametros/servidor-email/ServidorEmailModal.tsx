@@ -9,6 +9,7 @@ import { Button, Spinner } from '@/components/ui';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
+import SaasServidorEmailModal from '@/components/modals/saas/SaasServidorEmailModal';
 
 const INITIAL_FORM_DATA: ServidorEmailForm = {
   host: '',
@@ -24,7 +25,7 @@ const INITIAL_FORM_DATA: ServidorEmailForm = {
   intervalo_tentativas: 5000
 };
 
-const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
+const ServidorEmailModalAdm: React.FC<Omit<ServidorEmailModalProps, 'variant'>> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
@@ -414,6 +415,13 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, 
       {modalContent}
     </DraggableModal>
   );
+};
+
+const ServidorEmailModal: React.FC<ServidorEmailModalProps> = (props) => {
+  if (props.variant === 'saas') {
+    return <SaasServidorEmailModal show={props.show} onClose={props.onClose} skipWrapper={props.skipWrapper} />;
+  }
+  return <ServidorEmailModalAdm {...props} />;
 };
 
 export default ServidorEmailModal;

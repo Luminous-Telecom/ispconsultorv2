@@ -30,7 +30,6 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET logo e nome da empresa (para login e central do assinante)
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/[a-z0-9-]+$/i }, // GET logo e nome da empresa por slug (multiloja)
-  { method: 'GET', path: /^\/api\/hotsite\/public\/?$/i }, // GET hotsite público (HTML renderizado)
   { method: 'POST', path: /^\/api\/pagamento\/session$/i }, // POST troca token por cookie (token no body)
   { method: 'GET', path: /^\/api\/pagamento\/\d+$/i }, // GET título por sessão (cookie)
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/pdf$/i }, // GET PDF por sessão (cookie)
@@ -54,6 +53,8 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { method: 'GET', path: /^\/api\/clientes\/consultar-cnpj\/.+$/i }, // Consultar CNPJ (público para uso em formulários)
   // Rotas auxiliares de fornecedores (usadas em formulários)
   { method: 'GET', path: /^\/api\/fornecedores\/consultar-cnpj\/.+$/i }, // Consultar CNPJ (público para uso em formulários)
+  // Rotas SaaS — autenticação gerenciada pelo saasAuthMiddleware (separado do ERP)
+  { path: /^\/api\/saas\//i },
 ];
 
 const isPublicRoute = (req: Request): boolean => {

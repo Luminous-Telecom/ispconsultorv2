@@ -20,6 +20,7 @@ export class EfiWebhookController {
    */
   static async handle(req: Request, res: Response): Promise<void> {
     try {
+      (req as import('../../../types/webhooks').WebhookRequest).webhookEmpresaIdentifier = req.params?.empresaIdentifier;
       const payload = req.body as Record<string, JsonValue> | undefined;
 
       // Extrair secret/token de headers ou payload

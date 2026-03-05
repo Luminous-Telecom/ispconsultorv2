@@ -41,7 +41,7 @@ VersaoBlockdomi.init(
   {
     sequelize,
     modelName: 'VersaoBlockdomi',
-    tableName: 'versoes_blockdomi',
+    tableName: 'adm_versoes_blockdomi',
     timestamps: true,
     underscored: true,
     updatedAt: false

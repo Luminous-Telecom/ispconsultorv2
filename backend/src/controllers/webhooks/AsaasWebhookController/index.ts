@@ -15,6 +15,7 @@ export class AsaasWebhookController {
    * Valida token (obrigatório) e delega processamento ao service
    */
   static async handle(req: Request, res: Response): Promise<void> {
+    (req as import('../../../types/webhooks').WebhookRequest).webhookEmpresaIdentifier = req.params?.empresaIdentifier;
     const startTime = Date.now();
     const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
     const userAgent = req.get('user-agent') || 'unknown';

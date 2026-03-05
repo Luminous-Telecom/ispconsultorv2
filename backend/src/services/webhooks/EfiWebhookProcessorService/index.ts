@@ -2,9 +2,9 @@ import { Request } from 'express';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { PaymentCommonService } from '../PaymentCommonService';
-import { ReciboPagamentoService } from '../../comunicacao/ReciboPagamentoService';
+import { TituloWebhookResolver } from '../TituloWebhookResolver';
+import { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook } from '../WebhookTituloUpdater';
 import { logger } from '../../../utils/logger';
-import { registrarAtualizacaoElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
 import {
   WebhookResponse,
   NotificationData,
@@ -164,111 +164,62 @@ export class EfiWebhookProcessorService {
     req?: Request
   ): Promise<number> {
     const chargeId = identifiers.charge_id || null;
-    
     if (!chargeId) {
       logger.warn('Charge ID não encontrado na notificação de título');
       return 0;
     }
 
     try {
-      const titulo = await Titulo.findOne({
-        where: { charge_id: chargeId },
-        include: [
-          {
-            model: Banco,
-            as: 'banco',
-            attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret']
-          }
-        ]
-      });
-
-      if (!titulo) {
+      const scope = PaymentCommonService.getWebhookScope(req);
+      const resolved = await TituloWebhookResolver.findByChargeId(chargeId, scope);
+      if (!resolved) {
         logger.warn('Título não encontrado', { charge_id: chargeId });
         return 0;
       }
 
-      const bancoRelacionado = (titulo as Titulo & { banco?: Banco | null }).banco ?? banco;
+      const bancoRelacionado = resolved.banco ?? banco;
       await EfiWebhookValidatorService.validateSecret(bancoRelacionado, receivedSecret);
 
+      const { titulo } = resolved;
       const statusString = status || 'pendente';
       const novoStatus = this.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
       const isPago = ['pago', 'liquidado'].includes(novoStatus);
-      
-      const updateData: TituloUpdateData = { 
-        status: novoStatus,
-        pago: isPago
-      };
 
       if (isPago && !titulo.pago) {
-        const dataPagamentoWebhook = dadosCompletos?.created_at 
-          || dadosCompletos?.paid_at 
-          || dadosCompletos?.confirmed_at
-          || dadosCompletos?.payment_date;
-        
-        const dataPagamentoNormalizada = dataPagamentoWebhook 
-          ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook)
-          : new Date();
-        
-        await titulo.marcarComoPago(titulo.valor, dataPagamentoNormalizada || undefined, true);
+        const dataPagamentoWebhook = dadosCompletos?.created_at || dadosCompletos?.paid_at || dadosCompletos?.confirmed_at || dadosCompletos?.payment_date;
+        const dataPagamentoNormalizada = dataPagamentoWebhook ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook) : new Date();
+        await applyPagoWebhook(resolved, Number(titulo.valor), dataPagamentoNormalizada || new Date());
       }
-      
+
+      const updateData: Record<string, unknown> = { status: novoStatus, pago: isPago };
       if (!isPago && titulo.pago) {
         updateData.data_pagamento = null;
         updateData.valor_pago = null;
       }
-      
       if (dadosCompletos?.expire_at) {
         const normalizedDate = PaymentCommonService.normalizeDueDate(dadosCompletos.expire_at);
-        if (normalizedDate) {
-          updateData.data_vencimento = normalizedDate;
-        }
+        if (normalizedDate) updateData.data_vencimento = normalizedDate;
       } else if (dadosCompletos?.due_date) {
         const normalizedDate = PaymentCommonService.normalizeDueDate(dadosCompletos.due_date);
-        if (normalizedDate) {
-          updateData.data_vencimento = normalizedDate;
-        }
-      }
-      
-      const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
-      await titulo.update(updateData as Partial<typeof titulo>);
-      await titulo.reload();
-      const dadosNovos = titulo.toJSON() as Record<string, unknown>;
-
-      if (titulo.pago) {
-        ReciboPagamentoService.enviarRecibo(titulo.id);
+        if (normalizedDate) updateData.data_vencimento = normalizedDate;
       }
 
-      if (req) {
-        try {
-          await registrarAtualizacaoElasticsearch(
-            req,
-            'Titulo',
-            titulo.id,
-            dadosAnteriores,
-            dadosNovos,
-            `Atualização via webhook EFI - Status: ${statusString}`
-          );
-        } catch (auditError) {
-          logger.warn('Erro ao registrar auditoria de webhook EFI', {
-            titulo_id: titulo.id,
-            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-          });
-        }
-      }
+      const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update(updateData);
+      await (titulo as { reload: () => Promise<unknown> }).reload();
+      const dadosNovos = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
 
+      enviarReciboSeAdmin(resolved);
+      await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook EFI - Status: ${statusString}`);
       return 1;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao processar notificação de título', {
-        charge_id: chargeId,
-        error: errorMessage
-      });
+      logger.error('Erro ao processar notificação de título', { charge_id: chargeId, error: error instanceof Error ? error.message : String(error) });
       return 0;
     }
   }
 
   /**
-   * Processa notificação de charge (formato direto)
+   * Processa notificação de charge (formato direto) - admin e SaaS
    */
   static async processChargeNotification(
     notification: ChargeNotification | NotificationItem,
@@ -278,99 +229,55 @@ export class EfiWebhookProcessorService {
   ): Promise<WebhookResponse> {
     try {
       const chargeId = 'charge_id' in notification ? notification.charge_id : notification.id;
-      const status = typeof notification.status === 'string' 
-        ? notification.status 
-        : notification.status?.current;
-      const customId = notification.custom_id;
+      const status = typeof notification.status === 'string' ? notification.status : notification.status?.current;
 
       if (!chargeId) {
-        return {
-          success: false,
-          message: 'Charge ID não encontrado',
-          status: 400
-        };
+        return { success: false, message: 'Charge ID não encontrado', status: 400 };
       }
 
-      const titulo = await Titulo.findOne({
-        where: { charge_id: chargeId },
-        include: [
-          {
-            model: Banco,
-            as: 'banco',
-            attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret']
-          }
-        ]
-      });
-
-      if (!titulo) {
+      const scope = PaymentCommonService.getWebhookScope(req);
+      const resolved = await TituloWebhookResolver.findByChargeId(String(chargeId), scope);
+      if (!resolved) {
         logger.warn('Título não encontrado para charge', { charge_id: chargeId });
-        return {
-          success: false,
-          message: 'Título não encontrado',
-          status: 404
-        };
+        return { success: false, message: 'Título não encontrado', status: 404 };
       }
 
-      const bancoRelacionado = bancoContext ?? (titulo as Titulo & { banco?: Banco | null }).banco ?? null;
+      const bancoRelacionado = resolved.banco ?? bancoContext ?? null;
       if (bancoRelacionado) {
         await EfiWebhookValidatorService.validateSecret(bancoRelacionado, receivedSecret);
       }
 
-      const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
+      const { titulo } = resolved;
       const statusLocal = this.mapEfiStatus(status || 'pendente') as 'pendente' | 'pago' | 'vencido' | 'cancelado';
-      const oldStatus = titulo.status;
-      const oldPago = titulo.pago;
-      
-      await titulo.update({
-        status: statusLocal,
-        pago: ['pago', 'liquidado'].includes(statusLocal)
-      });
-      
-      await titulo.reload();
-      const dadosNovos = titulo.toJSON() as Record<string, unknown>;
-      
-      if (req) {
-        try {
-          await registrarAtualizacaoElasticsearch(
-            req,
-            'Titulo',
-            titulo.id,
-            dadosAnteriores,
-            dadosNovos,
-            `Atualização via webhook EFI (charge notification) - Status: ${status}`
-          );
-        } catch (auditError) {
-          logger.warn('Erro ao registrar auditoria de webhook EFI (charge notification)', {
-            titulo_id: titulo.id,
-            error: auditError instanceof Error ? auditError.message : 'Erro desconhecido'
-          });
-        }
+      const isPago = ['pago', 'liquidado'].includes(statusLocal);
+      const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+
+      if (isPago && !titulo.pago) {
+        const notif = notification as { created_at?: string; paid_at?: string; confirmed_at?: string; payment_date?: string };
+        const dataPagamentoWebhook = notif.created_at || notif.paid_at || notif.confirmed_at || notif.payment_date;
+        const dataPagamentoNormalizada = dataPagamentoWebhook ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook) : new Date();
+        await applyPagoWebhook(resolved, Number(titulo.valor), dataPagamentoNormalizada || new Date());
       }
-      
-      logger.info('Título atualizado via webhook', {
-        titulo_id: titulo.id,
-        charge_id: chargeId,
-        status_anterior: oldStatus,
-        status_novo: statusLocal,
-        pago_anterior: oldPago,
-        pago_novo: titulo.pago
+
+      await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update({
+        status: statusLocal,
+        pago: isPago
       });
-      
+      await (titulo as { reload: () => Promise<unknown> }).reload();
+      const dadosNovos = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+
+      enviarReciboSeAdmin(resolved);
+      await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook EFI (charge notification) - Status: ${status}`);
+
       return {
         success: true,
         message: 'Título atualizado com sucesso',
-        data: { titulo_id: titulo.id }
+        data: { titulo_id: (titulo as { id: number }).id }
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao processar notificação de charge', {
-        error: errorMessage
-      });
-      return {
-        success: false,
-        message: 'Erro ao processar notificação de charge',
-        status: 500
-      };
+      logger.error('Erro ao processar notificação de charge', { error: errorMessage });
+      return { success: false, message: 'Erro ao processar notificação de charge', status: 500 };
     }
   }
 

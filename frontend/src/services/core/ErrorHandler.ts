@@ -27,20 +27,37 @@ export interface ApiError {
 }
 
 /**
+ * Erro que estende Error para exibição correta em React/console.
+ * Lançar objeto {} causa "[object Object]" no overlay.
+ */
+export class ApiErrorException extends Error {
+  readonly apiError: ApiError;
+
+  constructor(apiError: ApiError) {
+    super(apiError.message);
+    this.name = 'ApiErrorException';
+    this.apiError = apiError;
+    Object.setPrototypeOf(this, ApiErrorException.prototype);
+  }
+}
+
+/**
  * Classe para tratamento de erros de API
  */
 export class ErrorHandler {
   /**
    * Processa um erro e retorna um formato padronizado
    */
-  static processError(error: AxiosError | Error): ApiError {
-    // Se não for AxiosError, tratar como erro genérico
+  static processError(error: AxiosError | Error | ApiErrorException): never {
+    if (error instanceof ApiErrorException) {
+      throw error;
+    }
     if (!(error instanceof AxiosError)) {
-      return {
+      throw new ApiErrorException({
         type: ErrorType.UNKNOWN_ERROR,
         message: error.message || 'Erro desconhecido',
         originalError: error as AxiosError,
-      };
+      });
     }
 
     const axiosError = error as AxiosError<{ message?: string; error?: string; errors?: Record<string, string[]> }>;
@@ -152,13 +169,14 @@ export class ErrorHandler {
       Object.assign(details, responseData.errors);
     }
 
-    return {
+    const apiError: ApiError = {
       type: errorType,
       message,
       statusCode,
       details: Object.keys(details).length > 0 ? details : undefined,
       originalError: axiosError,
     };
+    throw new ApiErrorException(apiError);
   }
 
   /**

@@ -1529,10 +1529,10 @@ function Table<T extends { id: number | string }>({
                     id={`${uniqueTableId}-search`}
                     className="form-control form-control-sm table-search-input"
                     placeholder={defaultSearchPlaceholder}
-                    value={search}
+                    value={onSearch ? (search ?? '') : state.searchTerm}
                     onChange={(e) => {
                       const value = e.target.value;
-                      // Usar callback de busca se disponível
+                      tableActions.setSearchTerm(value);
                       if (onSearch) {
                         onSearch(value, selectedSearchField);
                       }

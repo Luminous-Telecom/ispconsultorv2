@@ -7,6 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 import { IpPermitidoService } from '../../services/blockdomi/IpPermitidoService';
 import { DadosEmpresaService } from '../../services/sistema/DadosEmpresaService';
 import { BlockdomiLogAcessoService } from '../../services/blockdomi/BlockdomiLogAcessoService';
+import { emitBlockdomiLog } from '../../socket/socketServer';
 
 const BLOCKDOMI_TXT_PATHS = [
   /^\/domain\/version\/?$/i,
@@ -51,16 +52,18 @@ function registerAccessLog(req: Request, res: Response, path: string): void {
     let mensagemErro: string | null = null;
     if (statusCode === 403) mensagemErro = 'IP não autorizado';
     else if (statusCode >= 500) mensagemErro = `Erro interno (${statusCode})`;
-    BlockdomiLogAcessoService.registrar({
+    const payload = {
       ip: clientIp ?? null,
       rota: path,
       metodo: req.method,
       status_http: statusCode,
+      sucesso: statusCode < 400,
       mensagem_erro: mensagemErro,
-      user_agent: userAgent
-    }).catch(() => {
-      // Não falhar a requisição por falha no log
-    });
+      user_agent: userAgent,
+      timestamp: new Date().toISOString()
+    };
+    BlockdomiLogAcessoService.registrar(payload).catch(() => {});
+    emitBlockdomiLog(payload as Record<string, unknown>);
   });
 }
 

@@ -106,9 +106,9 @@ export class PlanoService {
       }
     } else if (isOrderingByQuantidadeClientes && sortDirection) {
       // Ordenação especial por quantidade_clientes usando subquery
-      // IMPORTANTE: Usar o alias 'Plano' que o Sequelize gera para a tabela 'planos'
+      // IMPORTANTE: Usar adm_planos (tabela) na subquery de ordenação
       const upperDirection = sortDirection.toUpperCase() as 'ASC' | 'DESC';
-      const subquerySql = `(SELECT COUNT(DISTINCT contratos.cliente_id) FROM contratos WHERE contratos.plano_id = Plano.id AND contratos.status = 'ativo')`;
+      const subquerySql = `(SELECT COUNT(DISTINCT adm_contratos.cliente_id) FROM adm_contratos WHERE adm_contratos.plano_id = adm_planos.id AND adm_contratos.status = 'ativo')`;
       order = [[sequelize.literal(subquerySql), upperDirection]];
     }
 

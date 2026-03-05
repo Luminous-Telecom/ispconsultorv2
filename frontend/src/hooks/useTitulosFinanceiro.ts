@@ -14,10 +14,11 @@ class TituloFinanceiroService extends BaseService<Titulo, never, never, TituloFi
 
 const tituloFinanceiroService = new TituloFinanceiroService();
 
-export const useTitulosFinanceiro = (filters: TituloFilters = {}) => {
+export const useTitulosFinanceiro = (filters: TituloFilters = {}, enabled = true) => {
   return useQuery({
     queryKey: ['titulos-financeiro', filters],
     queryFn: () => tituloFinanceiroService.list(filters),
+    enabled,
     staleTime: 0,
     gcTime: DEFAULT_CACHE_TIME,
     refetchOnWindowFocus: false,

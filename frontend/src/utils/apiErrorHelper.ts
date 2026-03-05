@@ -13,6 +13,7 @@
  */
 
 import { AxiosError } from 'axios';
+import { ApiErrorException } from '../services/core/ErrorHandler';
 import { ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 /**
@@ -119,6 +120,11 @@ export async function extractApiErrorMessage(
     return error;
   }
 
+  // ApiErrorException (do ErrorHandler) — mensagem já formatada
+  if (error instanceof ApiErrorException) {
+    return error.apiError.message || defaultMessage;
+  }
+
   // Se for um Error nativo sem ser AxiosError
   if (error instanceof Error && !('isAxiosError' in error)) {
     return error.message || defaultMessage;
@@ -205,6 +211,11 @@ export function extractApiErrorMessageSync(
   // Se for uma string, retornar diretamente
   if (typeof error === 'string') {
     return error;
+  }
+
+  // ApiErrorException (do ErrorHandler) — mensagem já formatada
+  if (error instanceof ApiErrorException) {
+    return error.apiError.message || defaultMessage;
   }
 
   // Se for um Error nativo sem ser AxiosError

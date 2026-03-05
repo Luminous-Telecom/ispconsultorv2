@@ -78,7 +78,7 @@ MensagemWhatsApp.init({
   template_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    references: { model: 'templates_whatsapp', key: 'id' },
+    references: { model: 'adm_templates_whatsapp', key: 'id' },
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   },
@@ -97,7 +97,7 @@ MensagemWhatsApp.init({
   }
 }, {
   sequelize,
-  tableName: 'mensagens_whatsapp',
+  tableName: 'adm_mensagens_whatsapp',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'

@@ -16,7 +16,6 @@ export type ModalType =
   | 'usuarios'
   | 'auditoria'
   | 'recursos-sistema'
-  | 'hotsite'
   | 'servidor-email'
   | 'servidor-whatsapp'
   | 'historico-whatsapp'
@@ -34,6 +33,20 @@ export type ModalType =
   | 'blockdomi-importar-lista'
   | 'blockdomi-ips-permitidos'
   | 'blockdomi-logs-acesso'
+  // SaaS Super Admin
+  | 'saas-planos'
+  | 'saas-usuarios'
+  | 'saas-servidores-email'
+  | 'saas-servidores-whatsapp'
+  | 'saas-bancos'
+  | 'saas-tipos-cobranca'
+  | 'saas-dias-vencimento'
+  | 'saas-clientes'
+  | 'saas-dados-empresa'
+  | 'saas-titulos'
+  | 'saas-recursos-sistema'
+  | 'saas-agendador-tarefas'
+  | 'saas-nfse'
   | null;
 
 interface ModalContextType {

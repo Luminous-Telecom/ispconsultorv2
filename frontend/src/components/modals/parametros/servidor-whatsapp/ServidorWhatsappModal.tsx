@@ -14,13 +14,14 @@ import TemplatesTab from './abas/TemplatesTab';
 import TemplatesMetaTab from './abas/TemplatesMetaTab';
 import TemplateSelectModal from './TemplateSelectModal';
 import { useI18n } from '@/contexts/I18nContext';
+import SaasServidorWhatsappModal from '@/components/modals/saas/SaasServidorWhatsappModal';
 
 interface GrupoVariaveis {
   titulo: string;
   variaveis: Array<{ variavel: string; descricao: string }>;
 }
 
-const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
+const ServidorWhatsappModalAdm: React.FC<Omit<ServidorWhatsappModalProps, 'variant'>> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
@@ -557,6 +558,13 @@ const saveMensagemMutation = useMutation({
       </DraggableModal>
     </>
   );
+};
+
+const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = (props) => {
+  if (props.variant === 'saas') {
+    return <SaasServidorWhatsappModal show={props.show} onClose={props.onClose} skipWrapper={props.skipWrapper} />;
+  }
+  return <ServidorWhatsappModalAdm {...props} />;
 };
 
 export default ServidorWhatsappModal;

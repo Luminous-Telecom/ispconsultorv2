@@ -290,7 +290,7 @@ Cliente.init(
   {
     sequelize,
     modelName: 'Cliente',
-    tableName: 'clientes',
+    tableName: 'adm_clientes',
     timestamps: true,
     underscored: true,
     indexes: [

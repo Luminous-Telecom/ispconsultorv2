@@ -1,4 +1,5 @@
 import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
+import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
 import { logger } from '../../../utils/logger';
 import { calculateNextExecution } from '../../../utils/SchedulerUtils';
 import { RoutineScheduleService } from '../RoutineScheduleService';
@@ -71,6 +72,42 @@ export class SchedulerService {
    */
   public unscheduleRoutine(routineId: number): void {
     this.scheduleService.unscheduleRoutine(routineId);
+  }
+
+  /**
+   * Agenda uma rotina do SaaS
+   */
+  public async scheduleSaasRoutine(routine: SaasScheduledRoutine): Promise<void> {
+    await this.scheduleService.scheduleSaasRoutine(routine);
+  }
+
+  /**
+   * Remove o agendamento de uma rotina do SaaS
+   */
+  public unscheduleSaasRoutine(routineId: number): void {
+    this.scheduleService.unscheduleSaasRoutine(routineId);
+  }
+
+  /**
+   * Executa uma rotina SaaS manualmente (em background, retorna imediatamente)
+   */
+  public async executeSaasRoutineManually(id: number): Promise<void> {
+    const routine = await SaasScheduledRoutine.findByPk(id);
+    if (!routine) {
+      throw new Error('Rotina não encontrada');
+    }
+    if (!routine.ativo) {
+      throw new Error('Rotina está inativa');
+    }
+    this.scheduleService.executeSaasRoutineNow(routine).catch((error) => {
+      logger.error('Erro ao executar rotina SaaS em background', {
+        context: 'SchedulerService',
+        action: 'executeSaasRoutineManually',
+        rotinaId: id,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+    });
   }
 
   /**
@@ -194,10 +231,10 @@ export class SchedulerService {
    */
   private async executeRoutineInBackground(routine: ScheduledRoutine): Promise<void> {
     const startTime = new Date();
-    let executionLog = null;
+    let executionLog: { id: string } | null = null;
 
     try {
-      executionLog = await this.logService.createExecutionLog(routine.id, startTime);
+      executionLog = await this.logService.createExecutionLog(routine, startTime);
       const resultado = await this.executionService.executeRoutineByType(routine);
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();

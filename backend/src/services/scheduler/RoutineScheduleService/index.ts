@@ -1,5 +1,6 @@
 import * as cron from 'node-cron';
 import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
+import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
 import { logger } from '../../../utils/logger';
 import { buildCronExpression, validateCronExpression } from '../../../utils/SchedulerUtils';
 import { RoutineExecutionService } from '../RoutineExecutionService';
@@ -12,13 +13,21 @@ import type {
   DetailedStats
 } from '../../../types/scheduler';
 
+type RoutineSource = 'erp' | 'saas';
+type AnyRoutine = ScheduledRoutine | SaasScheduledRoutine;
+
+function jobKey(source: RoutineSource, id: number): string {
+  return `${source}:${id}`;
+}
+
 /**
- * Serviço responsável por gerenciar agendamento de rotinas (CRON jobs, filas, triggers temporais).
- * 
+ * Serviço responsável por gerenciar agendamento de rotinas (CRON jobs).
+ * Suporta rotinas do ERP (scheduled_routines) e SaaS (saas_scheduled_routines).
+ *
  * @class RoutineScheduleService
  */
 export class RoutineScheduleService {
-  private cronJobs: Map<number, cron.ScheduledTask> = new Map();
+  private cronJobs: Map<string, cron.ScheduledTask> = new Map();
   private isRunning = false;
   private executionService: RoutineExecutionService;
   private logService: RoutineLogService;
@@ -29,7 +38,7 @@ export class RoutineScheduleService {
   }
 
   /**
-   * Inicia o scheduler e carrega rotinas ativas do banco de dados
+   * Inicia o scheduler e carrega rotinas ativas do banco de dados (ERP + SaaS)
    */
   public async start(): Promise<void> {
     if (this.isRunning) {
@@ -37,8 +46,6 @@ export class RoutineScheduleService {
     }
 
     this.isRunning = true;
-
-    // Carregar rotinas ativas do banco de dados
     await this.loadRoutinesFromDatabase();
   }
 
@@ -50,100 +57,128 @@ export class RoutineScheduleService {
       return;
     }
 
-    // Parar todos os cron jobs
-    this.cronJobs.forEach((job, _routineId) => {
-      job.destroy();
-    });
-
+    this.cronJobs.forEach((job) => job.destroy());
     this.cronJobs.clear();
     this.isRunning = false;
   }
 
   /**
-   * Carrega rotinas ativas do banco de dados e agenda cada uma
+   * Carrega rotinas ativas (ERP e SaaS) e agenda cada uma
    */
   private async loadRoutinesFromDatabase(): Promise<void> {
     try {
-      const routines = await ScheduledRoutine.findAll({
-        where: { ativo: true }
-      });
+      const [erpRoutines, saasRoutines] = await Promise.all([
+        ScheduledRoutine.findAll({ where: { ativo: true } }),
+        SaasScheduledRoutine.findAll({ where: { ativo: true } })
+      ]);
 
-      for (const routine of routines) {
+      for (const routine of erpRoutines) {
         await this.scheduleRoutine(routine);
+      }
+      for (const routine of saasRoutines) {
+        await this.scheduleSaasRoutine(routine);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
       logger.error('Erro ao carregar rotinas do banco de dados', {
         context: 'RoutineScheduleService',
         action: 'loadRoutinesFromDatabase',
-        error: errorMessage,
-        stack: errorStack
+        error: errorMessage
       });
     }
   }
 
   /**
-   * Agenda uma rotina específica
-   * @param routine - Rotina a ser agendada
+   * Agenda uma rotina do ERP
    */
   public async scheduleRoutine(routine: ScheduledRoutine): Promise<void> {
-    if (!routine.ativo) {
-      return;
-    }
+    await this.scheduleAnyRoutine(routine, 'erp');
+  }
 
-    // Parar job existente se houver
-    if (this.cronJobs.has(routine.id)) {
-      this.unscheduleRoutine(routine.id);
+  /**
+   * Agenda uma rotina do SaaS
+   */
+  public async scheduleSaasRoutine(routine: SaasScheduledRoutine): Promise<void> {
+    await this.scheduleAnyRoutine(routine, 'saas');
+  }
+
+  private async scheduleAnyRoutine(routine: AnyRoutine, source: RoutineSource): Promise<void> {
+    if (!routine.ativo) return;
+
+    const key = jobKey(source, routine.id);
+    if (this.cronJobs.has(key)) {
+      this.unscheduleAnyRoutine(source, routine.id);
     }
 
     const cronExpression = buildCronExpression(routine);
-    
     if (!validateCronExpression(cronExpression)) {
       logger.error('Expressão cron inválida para rotina', {
         context: 'RoutineScheduleService',
-        action: 'scheduleRoutine',
         rotinaId: routine.id,
+        source,
         cronExpression
       });
       return;
     }
 
     const job = cron.schedule(cronExpression, () => {
-      // Executar em background sem aguardar
-      this.runRoutine(routine).catch((error) => {
-        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        const errorStack = error instanceof Error ? error.stack : undefined;
+      this.runAnyRoutine(routine, source).catch((error) => {
         logger.error('Erro ao executar rotina em background', {
           context: 'RoutineScheduleService',
-          action: 'scheduleRoutine',
           rotinaId: routine.id,
-          error: errorMessage,
-          stack: errorStack
+          source,
+          error: error instanceof Error ? error.message : String(error)
         });
       });
     });
 
     job.start();
-    this.cronJobs.set(routine.id, job);
+    this.cronJobs.set(key, job);
   }
 
   /**
-   * Remove o agendamento de uma rotina
-   * @param routineId - ID da rotina
+   * Remove o agendamento de uma rotina do ERP
    */
   public unscheduleRoutine(routineId: number): void {
-    const job = this.cronJobs.get(routineId);
+    this.unscheduleAnyRoutine('erp', routineId);
+  }
+
+  /**
+   * Remove o agendamento de uma rotina do SaaS
+   */
+  public unscheduleSaasRoutine(routineId: number): void {
+    this.unscheduleAnyRoutine('saas', routineId);
+  }
+
+  private unscheduleAnyRoutine(source: RoutineSource, routineId: number): void {
+    const key = jobKey(source, routineId);
+    const job = this.cronJobs.get(key);
     if (job) {
       job.destroy();
-      this.cronJobs.delete(routineId);
+      this.cronJobs.delete(key);
     }
   }
 
   /**
+   * Executa imediatamente uma rotina SaaS (para chamada manual)
+   */
+  public async executeSaasRoutineNow(routine: SaasScheduledRoutine): Promise<void> {
+    await this.runAnyRoutine(routine, 'saas');
+  }
+
+  /**
    * Executa uma rotina (chamado pelo CRON job)
-   * Orquestra a execução completa: cria log, executa lógica, atualiza log e contadores
-   * @param routine - Rotina a ser executada
+   */
+  private async runAnyRoutine(routine: AnyRoutine, source: RoutineSource): Promise<void> {
+    if (source === 'saas') {
+      await this.runSaasRoutine(routine as SaasScheduledRoutine);
+    } else {
+      await this.runRoutine(routine as ScheduledRoutine);
+    }
+  }
+
+  /**
+   * Executa uma rotina do ERP (chamado pelo CRON job)
    */
   private async runRoutine(routine: ScheduledRoutine): Promise<void> {
     const startTime = new Date();
@@ -151,7 +186,7 @@ export class RoutineScheduleService {
 
     try {
       // Criar log de execução
-      executionLog = await this.logService.createExecutionLog(routine.id, startTime);
+      executionLog = await this.logService.createExecutionLog(routine, startTime);
 
       // Executar a rotina baseada no tipo
       const resultado = await this.executionService.executeRoutineByType(routine);
@@ -196,14 +231,50 @@ export class RoutineScheduleService {
   }
 
   /**
+   * Executa uma rotina do SaaS (chamado pelo CRON job)
+   */
+  private async runSaasRoutine(routine: SaasScheduledRoutine): Promise<void> {
+    const startTime = new Date();
+
+    try {
+      const resultado = await this.executionService.executeRoutineByType(routine);
+      const endTime = new Date();
+      const statusFinal = 'success' in resultado && resultado.success === false ? 'erro' : 'sucesso';
+
+      await this.logService.updateRoutineCounters(routine, statusFinal as 'sucesso' | 'erro', endTime);
+
+      logger.info('Rotina SaaS executada', {
+        context: 'RoutineScheduleService',
+        rotinaId: routine.id,
+        tipo: routine.tipo,
+        success: statusFinal === 'sucesso'
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const endTime = new Date();
+
+      await this.logService.updateRoutineCounters(routine, 'erro', endTime);
+
+      logger.error('Erro ao executar rotina SaaS', {
+        context: 'RoutineScheduleService',
+        rotinaId: routine.id,
+        error: errorMessage
+      });
+    }
+  }
+
+  /**
    * Retorna o status atual do scheduler
    * @returns Status do scheduler
    */
   public getStatus(): SchedulerStatus {
+    const erpIds = Array.from(this.cronJobs.keys())
+      .filter((k) => k.startsWith('erp:'))
+      .map((k) => parseInt(k.split(':')[1], 10));
     return {
       isRunning: this.isRunning,
       activeJobs: this.cronJobs.size,
-      scheduledRoutines: Array.from(this.cronJobs.keys())
+      scheduledRoutines: erpIds
     };
   }
 
@@ -212,10 +283,13 @@ export class RoutineScheduleService {
    * @returns Status dos workers
    */
   public getWorkersStatus(): WorkersStatus {
+    const erpIds = Array.from(this.cronJobs.keys())
+      .filter((k) => k.startsWith('erp:'))
+      .map((k) => parseInt(k.split(':')[1], 10));
     return {
       totalWorkers: this.cronJobs.size,
       activeWorkers: this.cronJobs.size,
-      workers: Array.from(this.cronJobs.keys()).map(id => ({
+      workers: erpIds.map((id) => ({
         id,
         status: 'active',
         lastActivity: new Date()

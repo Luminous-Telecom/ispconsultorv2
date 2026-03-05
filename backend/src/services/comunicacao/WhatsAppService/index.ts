@@ -10,14 +10,15 @@ interface ConfiguracoesEnvios {
 export class WhatsAppService {
   /**
    * Envia boletos baseado em configurações (delegado para WhatsAppBoletoService)
+   * @param options.saas - Se true, usa saas_titulos e saas_dados_empresa
    */
-  static async enviarBoletos(config: ConfiguracoesEnvios): Promise<{
+  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { saas?: boolean }): Promise<{
     sucesso: boolean;
     mensagensEnviadas: number;
     erros: number;
   }> {
     try {
-      return await WhatsAppBoletoService.enviarBoletos(config);
+      return await WhatsAppBoletoService.enviarBoletos(config, options);
     } catch (error) {
       const { logger } = await import('../../../utils/logger');
       logger.error('Erro no envio de boletos via WhatsApp', {

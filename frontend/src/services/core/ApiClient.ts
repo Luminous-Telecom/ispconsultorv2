@@ -94,6 +94,8 @@ export class ApiClient {
           '/api/health',
           '/api/pagamento/',
           '/central-assinante/',
+          // Rotas SaaS — autenticadas via cookie saas_auth_token (separado do ERP)
+          '/api/saas/',
         ];
         
         // Verificar se a URL é uma rota pública

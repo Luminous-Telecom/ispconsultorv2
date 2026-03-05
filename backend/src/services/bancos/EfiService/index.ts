@@ -19,11 +19,16 @@ export class EfiService implements IBancoService {
         const baseUrl = banco.sandbox ? efiConfig.sandbox_url : efiConfig.api_url;
         const endpoint = baseUrl + efiConfig.api_endpoints.auth;
 
-        const authData = {
+        const bancoWithIdentificador = banco as Banco & { identificador_conta?: string | null };
+        const identificadorConta = bancoWithIdentificador.identificador_conta?.trim();
+        const authData: Record<string, string | null> = {
           [efiConfig.client_id_field]: banco.client_id_producao || null,
           [efiConfig.client_secret_field]: banco.client_secret_producao || null,
           grant_type: 'client_credentials'
         };
+        if (identificadorConta) {
+          authData.identificador_conta = identificadorConta;
+        }
 
         const response = await axios.post(endpoint, authData, {
           headers: { 'Content-Type': 'application/json' },

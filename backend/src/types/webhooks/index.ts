@@ -1,4 +1,10 @@
+import { Request } from 'express';
 import { JsonValue } from '../index';
+
+/** Request estendida para webhooks com identificador de empresa na URL */
+export interface WebhookRequest extends Request {
+  webhookEmpresaIdentifier?: string;
+}
 
 export interface WebhookResponse {
   success: boolean;

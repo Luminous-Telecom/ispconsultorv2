@@ -8,7 +8,6 @@ import { NotaFiscal } from '../models/nfse/NotaFiscal';
 import { ContaPagar } from '../models/financeiro/ContaPagar';
 import { Fornecedor } from '../models/financeiro/Fornecedor';
 import { TermoContrato } from '../models/contratos/TermoContrato';
-import { Auditoria } from '../models/sistema/Auditoria';
 import { ClienteArquivo } from '../models/clientes/ClienteArquivo';
 import { Dominio } from '../models/blockdomi/Dominio';
 import { IPv4 } from '../models/blockdomi/IPv4';
@@ -208,37 +207,6 @@ export const TERMO_CONTRATO_SORT_CONFIG: SortConfig = {
       association: 'modeloDocumento',
       field: 'nome',
       description: 'Nome do termo (do modelo de documento)'
-    }
-  }
-};
-
-/**
- * Configuração de ordenação para Auditoria
- */
-export const AUDITORIA_SORT_CONFIG: SortConfig = {
-  model: Auditoria,
-  tableName: 'auditoria',
-  virtualColumns: {
-    timestamp: {
-      sql: `\`Auditoria\`.\`created_at\``,
-      description: 'Timestamp (alias para created_at)'
-    }
-  },
-  relationshipColumns: {
-    usuario: {
-      association: 'usuario',
-      field: 'nome',
-      description: 'Nome do usuário'
-    },
-    usuario_nome: {
-      association: 'usuario',
-      field: 'nome',
-      description: 'Nome do usuário (alias)'
-    },
-    usuario_email: {
-      association: 'usuario',
-      field: 'email',
-      description: 'Email do usuário'
     }
   }
 };

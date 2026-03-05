@@ -199,7 +199,7 @@ Contrato.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'clientes',
+        model: 'adm_clientes',
         key: 'id'
       }
     },
@@ -207,7 +207,7 @@ Contrato.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'planos',
+        model: 'adm_planos',
         key: 'id'
       }
     },
@@ -258,7 +258,7 @@ Contrato.init(
       allowNull: true,
       comment: 'ID do dia de vencimento configurado',
       references: {
-        model: 'dias_vencimento',
+        model: 'adm_dias_vencimento',
         key: 'id'
       }
     },
@@ -267,7 +267,7 @@ Contrato.init(
       allowNull: true,
       comment: 'ID do banco para geração de boleto',
       references: {
-        model: 'bancos',
+        model: 'adm_bancos',
         key: 'id'
       }
     },
@@ -276,7 +276,7 @@ Contrato.init(
       allowNull: false,
       comment: 'Tipo de cobrança (quantidade de títulos e periodicidade)',
       references: {
-        model: 'tipos_cobranca_contrato',
+        model: 'adm_tipos_cobranca_contrato',
         key: 'id'
       }
     },
@@ -290,7 +290,7 @@ Contrato.init(
       allowNull: true,
       comment: 'ID do modelo de documento a ser utilizado',
       references: {
-        model: 'modelo_documento',
+        model: 'adm_modelo_documento',
         key: 'id'
       }
     },
@@ -344,7 +344,7 @@ Contrato.init(
   {
     sequelize,
     modelName: 'Contrato',
-    tableName: 'contratos',
+    tableName: 'adm_contratos',
     timestamps: true,
     underscored: true,
     indexes: [

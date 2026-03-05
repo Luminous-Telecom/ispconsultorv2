@@ -66,7 +66,7 @@ TipoCobrancaContrato.init(
   {
     sequelize,
     modelName: 'TipoCobrancaContrato',
-    tableName: 'tipos_cobranca_contrato',
+    tableName: 'adm_tipos_cobranca_contrato',
     timestamps: true,
     underscored: true
   }

@@ -1,14 +1,13 @@
 import { Request, Response } from 'express';
 import Parametros from '../../../models/sistema/Parametros';
 import { ParametrosService } from '../../../services/sistema/ParametrosService';
-import { ParametroService } from '../../../services/sistema/ParametroService';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import Joi from 'joi';
 import { logger } from '../../../utils/logger';
 import { cache } from '../../../utils/cache';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
-import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ParametrosController {
   // Schema de validação
@@ -23,21 +22,16 @@ export class ParametrosController {
   // Obter parâmetros (sempre retorna o primeiro registro)
   static async get(req: Request, res: Response): Promise<Response> {
     try {
-      // Cache para parâmetros (dados raramente mudam)
-      const cacheKey = 'parametros:sistema';
+      const empresaId = getEmpresaIdOrNull(req);
+      const cacheKey = `parametros:sistema:${empresaId ?? 'global'}`;
       const cached = cache.get(cacheKey);
       
       if (cached) {
         return res.json(cached);
       }
 
-      const parametros = await ParametrosService.get();
+      const parametros = await ParametrosService.get(empresaId);
 
-      // Buscar parâmetro de método de login da central do assinante
-      const parametroMetodoLogin = await ParametroService.getByChave('central_assinante_metodo_login');
-      const metodoLogin = parametroMetodoLogin?.valor || 'cnpj';
-
-      // Garantir que apenas os campos do modelo sejam retornados
       const response = {
         success: true,
         data: {
@@ -46,13 +40,12 @@ export class ParametrosController {
           validar_cep: parametros.validar_cep,
           titulos_vence_sabado: parametros.titulos_vence_sabado,
           titulos_vence_domingo: parametros.titulos_vence_domingo,
-          central_assinante_metodo_login: metodoLogin,
+          central_assinante_metodo_login: parametros.central_assinante_metodo_login || 'cnpj',
           created_at: parametros.created_at,
           updated_at: parametros.updated_at
         }
       };
 
-      // Cachear por 15 minutos (parâmetros raramente mudam)
       cache.set(cacheKey, response, 900000);
 
       return res.json(response);
@@ -106,35 +99,19 @@ export class ParametrosController {
         return res;
       }
 
-      const parametrosAntes = await ParametrosService.get();
+      logger.info('ParametrosController.update: validação ok', { value });
+
+      const empresaId = getEmpresaIdOrNull(req);
+      const parametrosAntes = await ParametrosService.get(empresaId);
+      logger.info('ParametrosController.update: ParametrosService.get ok', { id: parametrosAntes?.id });
+
       const dadosAnteriores = parametrosAntes.toJSON();
-      
-      // Separar campos do modelo Parametros dos parâmetros individuais
-      const { central_assinante_metodo_login, ...parametrosData } = value;
-      
-      const parametros = await ParametrosService.update(parametrosData);
-      
-      // Atualizar parâmetro de método de login se fornecido
-      if (central_assinante_metodo_login !== undefined) {
-        let parametroMetodoLogin = await ParametroService.getByChave('central_assinante_metodo_login');
-        if (!parametroMetodoLogin) {
-          parametroMetodoLogin = await ParametroService.create({
-            chave: 'central_assinante_metodo_login',
-            valor: central_assinante_metodo_login,
-            tipo: 'string',
-            descricao: 'Método de login na central do assinante: "cnpj" ou "email"',
-            categoria: 'central_assinante',
-            ativo: true,
-            empresa_id: getEmpresaIdOrNull(req) ?? null
-          } as any);
-        } else {
-          await ParametroService.update('central_assinante_metodo_login', {
-            valor: central_assinante_metodo_login
-          } as any);
-        }
-      }
-      
+
+      const parametros = await ParametrosService.update(value, empresaId);
+      logger.info('ParametrosController.update: ParametrosService.update ok', { id: parametros?.id });
+
       // Registrar auditoria
+      logger.info('ParametrosController.update: iniciando auditoria');
       if (parametrosAntes.created_at.getTime() === parametrosAntes.updated_at.getTime()) {
         try {
           await registrarCriacao(
@@ -162,13 +139,20 @@ export class ParametrosController {
           // Não interromper o fluxo
         }
       }
+      logger.info('ParametrosController.update: auditoria ok');
 
-      // Invalidar cache após atualização
-      cache.delete('parametros:sistema');
+      cache.delete(`parametros:sistema:${empresaId ?? 'global'}`);
 
       sendSuccess(res, parametros, 'Parâmetros atualizados com sucesso');
       return res;
     } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const errStack = error instanceof Error ? error.stack : undefined;
+      logger.error('ParametrosController.update: erro capturado', {
+        message: errMsg,
+        stack: errStack,
+        body: req.body
+      });
       sendError(res, error, 'Erro ao atualizar parâmetros do sistema', 500, true, {
         context: 'ParametrosController',
         action: 'update',

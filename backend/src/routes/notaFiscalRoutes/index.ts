@@ -1,21 +1,7 @@
 import { Router } from 'express';
 import { NotaFiscalController } from '../../controllers/nfse/NotaFiscalController';
-import { logger } from '../../utils/logger';
 
 const router = Router();
-
-logger.info('Rotas de Nota Fiscal carregadas', {
-  rotas: [
-    'GET /',
-    'GET /cliente/:cliente_id',
-    'POST /gerar',
-    'GET /nfse/multiplos',
-    'GET /:id/status',
-    'POST /:id/cancelar',
-    'GET /:id/pdf',
-    'GET /:id'
-  ]
-});
 
 // Rotas CRUD
 router.get('/', (req, res) => NotaFiscalController.index(req, res));

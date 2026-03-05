@@ -19,7 +19,6 @@ import {
 } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { Fornecedor } from '../Fornecedor';
-import { ContaPagarArquivo } from '../ContaPagarArquivo';
 import { ContaPagarPagamento } from '../ContaPagarPagamento';
 import { formatCreatedAt } from '../../../utils/dateUtils';
 
@@ -50,17 +49,6 @@ export class ContaPagar extends Model<
   // Relacionamentos
   declare getFornecedor: BelongsToGetAssociationMixin<Fornecedor>;
   declare setFornecedor: BelongsToSetAssociationMixin<Fornecedor, number>;
-
-  declare getArquivos: HasManyGetAssociationsMixin<ContaPagarArquivo>;
-  declare addArquivo: HasManyAddAssociationMixin<ContaPagarArquivo, number>;
-  declare addArquivos: HasManyAddAssociationsMixin<ContaPagarArquivo, number>;
-  declare setArquivos: HasManySetAssociationsMixin<ContaPagarArquivo, number>;
-  declare removeArquivo: HasManyRemoveAssociationMixin<ContaPagarArquivo, number>;
-  declare removeArquivos: HasManyRemoveAssociationsMixin<ContaPagarArquivo, number>;
-  declare hasArquivo: HasManyHasAssociationMixin<ContaPagarArquivo, number>;
-  declare hasArquivos: HasManyHasAssociationsMixin<ContaPagarArquivo, number>;
-  declare countArquivos: HasManyCountAssociationsMixin;
-  declare createArquivo: HasManyCreateAssociationMixin<ContaPagarArquivo>;
 
   declare getPagamentos: HasManyGetAssociationsMixin<ContaPagarPagamento>;
   declare addPagamento: HasManyAddAssociationMixin<ContaPagarPagamento, number>;
@@ -130,7 +118,7 @@ ContaPagar.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'fornecedores',
+        model: 'adm_fornecedores',
         key: 'id'
       },
       onDelete: 'RESTRICT',
@@ -213,7 +201,7 @@ ContaPagar.init(
   {
     sequelize,
     modelName: 'ContaPagar',
-    tableName: 'contas_pagar',
+    tableName: 'adm_contas_pagar',
     timestamps: true,
     underscored: true,
     hooks: {
