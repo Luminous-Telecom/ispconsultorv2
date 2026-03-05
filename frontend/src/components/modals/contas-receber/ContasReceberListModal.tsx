@@ -956,15 +956,17 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
   }, []);
 
   const customControls = useMemo(() => (
-    <div className="form-check">
+    <div className="form-check form-switch">
       <input
         className="form-check-input"
         type="checkbox"
+        role="switch"
         id="showCanceladosFinanceiro"
         checked={showCancelados}
         onChange={handleShowCanceladosChange}
+        style={{ cursor: 'pointer' }}
       />
-      <label className="form-check-label" htmlFor="showCanceladosFinanceiro">
+      <label className="form-check-label" htmlFor="showCanceladosFinanceiro" style={{ cursor: 'pointer' }}>
         {t('filter.showCanceled')}
       </label>
     </div>

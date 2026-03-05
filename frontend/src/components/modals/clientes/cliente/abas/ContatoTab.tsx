@@ -53,6 +53,7 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
             label={t('form.receivesEmail')}
             value={formData.recebe_email}
             onChange={(value: FormValue) => handleInputChange('recebe_email', value as boolean)}
+            switch
             formPrefix={formPrefix}
           />
 
@@ -62,6 +63,7 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
             label={t('form.receivesWhatsApp')}
             value={formData.recebe_whatsapp}
             onChange={(value: FormValue) => handleInputChange('recebe_whatsapp', value as boolean)}
+            switch
             formPrefix={formPrefix}
           />
         </div>

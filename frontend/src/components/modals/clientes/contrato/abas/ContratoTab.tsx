@@ -324,16 +324,18 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           />
         </div>
         <div className="flex-fill">
-          <div className="form-check">
+          <div className="form-check form-switch">
             <input
               className="form-check-input"
               type="checkbox"
+              role="switch"
               id="isento_mensalidade"
               name="isento_mensalidade"
               checked={formData.isento_mensalidade}
               onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
+              style={{ cursor: 'pointer' }}
             />
-            <label className="form-check-label" htmlFor="isento_mensalidade">
+            <label className="form-check-label" htmlFor="isento_mensalidade" style={{ cursor: 'pointer' }}>
               {t('form.exemptFromMonthlyFee')}
             </label>
           </div>

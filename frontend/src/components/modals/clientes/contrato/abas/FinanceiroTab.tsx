@@ -160,17 +160,19 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
               className: 'no-padding',
               bulkActions: memoizedBulkActions,
               customControls: (
-                <div className="form-check">
+                <div className="form-check form-switch">
                   <input
                     className="form-check-input"
                     type="checkbox"
+                    role="switch"
                     id="showCanceladosContrato"
                     checked={showCancelados}
                     onChange={(e) => {
                       setShowCancelados(e.target.checked);
                     }}
+                    style={{ cursor: 'pointer' }}
                   />
-                  <label className="form-check-label" htmlFor="showCanceladosContrato">
+                  <label className="form-check-label" htmlFor="showCanceladosContrato" style={{ cursor: 'pointer' }}>
                     {t('filter.showCanceled')}
                   </label>
                 </div>

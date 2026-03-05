@@ -32,18 +32,20 @@ const EnderecoTab: React.FC<EnderecoTabProps> = ({
   return (
     <div className="d-flex flex-column gap-2">
       {/* Usar Endereço do Cliente */}
-      <div className="form-check">
+      <div className="form-check form-switch">
         <input
           className="form-check-input"
           type="checkbox"
+          role="switch"
           id="usar_endereco_cliente"
           name="usar_endereco_cliente"
           checked={formData.usar_endereco_cliente || false}
           onChange={(e) => {
             handleInputChange('usar_endereco_cliente', e.target.checked);
           }}
+          style={{ cursor: 'pointer' }}
         />
-        <label className="form-check-label" htmlFor="usar_endereco_cliente">
+        <label className="form-check-label" htmlFor="usar_endereco_cliente" style={{ cursor: 'pointer' }}>
           {t('form.useClientAddress')}
         </label>
       </div>

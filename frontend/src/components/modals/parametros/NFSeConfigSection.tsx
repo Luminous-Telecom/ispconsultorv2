@@ -376,16 +376,18 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
               </div>
 
               <div className="mb-3">
-                <div className="form-check">
+                <div className="form-check form-switch">
                   <input
                     className="form-check-input"
                     type="checkbox"
+                    role="switch"
                     id="nfse_asaas_sandbox"
                     checked={formData.asaas_sandbox}
                     onChange={(e) => handleInputChange('asaas_sandbox', e.target.checked)}
                     disabled={disabled || saveMutation.isPending}
+                    style={{ cursor: 'pointer' }}
                   />
-                  <label className="form-check-label" htmlFor="nfse_asaas_sandbox">
+                  <label className="form-check-label" htmlFor="nfse_asaas_sandbox" style={{ cursor: 'pointer' }}>
                     {t('nfse.useSandbox')}
                   </label>
                 </div>

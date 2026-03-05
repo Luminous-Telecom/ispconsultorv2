@@ -55,9 +55,10 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
       <FormField
         name="ativo"
         type="checkbox"
-        label={t('form.active')}
+        label={formData.ativo ? t('status.active') : t('status.inactive')}
         value={formData.ativo}
         onChange={(value: FormValue) => handleInputChange('ativo', value as boolean)}
+        switch
         disabled={isSubmitting}
         formPrefix={formPrefix}
       />

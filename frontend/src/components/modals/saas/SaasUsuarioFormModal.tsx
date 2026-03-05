@@ -193,14 +193,11 @@ const SaasUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuar
           <div className="col-md-6">
             <FormField
               name="ativo"
-              type="select"
-              label="Status"
-              value={form.ativo ? 'true' : 'false'}
-              onChange={(v) => setForm(p => ({ ...p, ativo: v === 'true' }))}
-              options={[
-                { value: 'true', label: 'Ativo' },
-                { value: 'false', label: 'Inativo' },
-              ]}
+              type="checkbox"
+              label={form.ativo ? 'Ativo' : 'Inativo'}
+              value={form.ativo}
+              onChange={(v) => setForm(p => ({ ...p, ativo: Boolean(v) }))}
+              switch
               size="sm"
             />
           </div>

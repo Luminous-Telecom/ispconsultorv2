@@ -156,15 +156,20 @@ const SaasPlanos: React.FC = () => {
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Status</label>
-                  <select
-                    className="form-select"
-                    value={form.ativo ? 'true' : 'false'}
-                    onChange={(e) => setForm({ ...form, ativo: e.target.value === 'true' })}
-                  >
-                    <option value="true">Ativo</option>
-                    <option value="false">Inativo</option>
-                  </select>
+                  <div className="form-check form-switch">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="plano-ativo-form"
+                      checked={form.ativo}
+                      onChange={(e) => setForm({ ...form, ativo: e.target.checked })}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <label className="form-check-label" htmlFor="plano-ativo-form" style={{ cursor: 'pointer' }}>
+                      {form.ativo ? 'Ativo' : 'Inativo'}
+                    </label>
+                  </div>
                 </div>
                 <div className="col-12">
                   <label className="form-label">Descrição</label>

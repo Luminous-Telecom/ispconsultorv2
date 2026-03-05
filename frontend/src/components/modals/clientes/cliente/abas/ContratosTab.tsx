@@ -268,15 +268,17 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
             emptyMessage: t('empty.noContracts'),
             className: 'no-padding',
             customControls: (
-              <div className="form-check">
+              <div className="form-check form-switch">
                 <input
                   className="form-check-input"
                   type="checkbox"
+                  role="switch"
                   id="showInativosContratos"
                   checked={showInativosContratos}
                   onChange={(e) => setShowInativosContratos(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
                 />
-                <label className="form-check-label" htmlFor="showInativosContratos">
+                <label className="form-check-label" htmlFor="showInativosContratos" style={{ cursor: 'pointer' }}>
                   {t('filter.showInactive')}
                 </label>
               </div>

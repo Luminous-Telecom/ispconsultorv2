@@ -171,16 +171,18 @@ const LogsModal: React.FC<LogsModalProps> = ({
           {/* Filtro para mostrar apenas erros */}
           {logs.some((log: LogEntry) => log.status === 'erro') && (
             <div className="mb-3">
-              <div className="form-check">
+              <div className="form-check form-switch">
                 <input
                   className="form-check-input"
                   type="checkbox"
+                  role="switch"
                   id="showOnlyErrors"
                   name="showOnlyErrors"
                   checked={showOnlyErrors}
                   onChange={(e) => setShowOnlyErrors(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
                 />
-                <label className="form-check-label" htmlFor="showOnlyErrors">
+                <label className="form-check-label" htmlFor="showOnlyErrors" style={{ cursor: 'pointer' }}>
                   Mostrar apenas logs com erro
                 </label>
               </div>

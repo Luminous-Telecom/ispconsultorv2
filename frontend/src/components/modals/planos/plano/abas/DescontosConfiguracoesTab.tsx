@@ -69,6 +69,7 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
               label={t('form.autoRenewal')}
               value={formData.renovacao_automatica}
               onChange={(value: FormValue) => handleInputChange('renovacao_automatica', !!value)}
+              switch
               disabled={isSubmitting}
             />
           </div>

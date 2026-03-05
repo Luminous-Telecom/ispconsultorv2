@@ -265,9 +265,10 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
             <FormField
               name="ativo"
               type="checkbox"
-              label={t('form.active')}
+              label={formData.ativo ? t('status.active') : t('status.inactive')}
               value={formData.ativo}
               onChange={(value) => setFormData(prev => ({ ...prev, ativo: Boolean(value) }))}
+              switch
               size="sm"
             />
           </div>

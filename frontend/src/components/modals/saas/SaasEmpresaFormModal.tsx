@@ -522,15 +522,17 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                     })),
                     className: 'no-padding',
                     customControls: (
-                      <div className="form-check">
+                      <div className="form-check form-switch">
                         <input
                           className="form-check-input"
                           type="checkbox"
+                          role="switch"
                           id="showInativosSaasContratos"
                           checked={showInativosContratos}
                           onChange={(e) => setShowInativosContratos(e.target.checked)}
+                          style={{ cursor: 'pointer' }}
                         />
-                        <label className="form-check-label" htmlFor="showInativosSaasContratos">
+                        <label className="form-check-label" htmlFor="showInativosSaasContratos" style={{ cursor: 'pointer' }}>
                           {t('filter.showInactive')}
                         </label>
                       </div>
@@ -615,15 +617,17 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                     })),
                     className: 'no-padding',
                     customControls: (
-                      <div className="form-check">
+                      <div className="form-check form-switch">
                         <input
                           className="form-check-input"
                           type="checkbox"
+                          role="switch"
                           id="showCanceladosSaasTitulos"
                           checked={showCanceladosTitulos}
                           onChange={(e) => setShowCanceladosTitulos(e.target.checked)}
+                          style={{ cursor: 'pointer' }}
                         />
-                        <label className="form-check-label" htmlFor="showCanceladosSaasTitulos">
+                        <label className="form-check-label" htmlFor="showCanceladosSaasTitulos" style={{ cursor: 'pointer' }}>
                           {t('filter.showCanceled')}
                         </label>
                       </div>

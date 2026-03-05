@@ -208,12 +208,14 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
             <input
               className="form-check-input"
               type="checkbox"
+              role="switch"
               id="ativo"
               checked={formData.ativo}
               onChange={e => handleInputChange('ativo', e.target.checked)}
+              style={{ cursor: 'pointer' }}
             />
-            <label className="form-check-label" htmlFor="ativo">
-              {t('status.active')}
+            <label className="form-check-label" htmlFor="ativo" style={{ cursor: 'pointer' }}>
+              {formData.ativo ? t('status.active') : t('status.inactive')}
             </label>
           </div>
         </form>

@@ -87,15 +87,17 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             emptyMessage: t('empty.noTitles'),
             className: 'no-padding',
             customControls: (
-              <div className="form-check">
+              <div className="form-check form-switch">
                 <input
                   className="form-check-input"
                   type="checkbox"
+                  role="switch"
                   id="showCancelados"
                   checked={showCancelados}
                   onChange={(e) => setShowCancelados(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
                 />
-                <label className="form-check-label" htmlFor="showCancelados">
+                <label className="form-check-label" htmlFor="showCancelados" style={{ cursor: 'pointer' }}>
                   {t('filter.showCanceled')}
                 </label>
               </div>

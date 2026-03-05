@@ -163,14 +163,11 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
           <div className="col-md-4">
             <FormField
               name="ativo"
-              type="select"
-              label={t('table.status')}
-              value={form.ativo ? 'true' : 'false'}
-              onChange={(v) => setForm(p => ({ ...p, ativo: v === 'true' }))}
-              options={[
-                { value: 'true', label: t('status.active') },
-                { value: 'false', label: t('status.inactive') },
-              ]}
+              type="checkbox"
+              label={form.ativo ? t('status.active') : t('status.inactive')}
+              value={form.ativo}
+              onChange={(v) => setForm(p => ({ ...p, ativo: Boolean(v) }))}
+              switch
               size="sm"
             />
           </div>

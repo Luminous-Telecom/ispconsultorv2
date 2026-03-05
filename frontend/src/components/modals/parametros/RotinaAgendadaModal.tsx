@@ -254,15 +254,17 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
             </div>
 
             <div className="col-12">
-              <div className="form-check">
+              <div className="form-check form-switch">
                 <input
                   className="form-check-input"
                   type="checkbox"
+                  role="switch"
                   id={ativoId}
                   checked={ativo}
                   onChange={(e) => setAtivo(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
                 />
-                <label className="form-check-label" htmlFor={ativoId}>
+                <label className="form-check-label" htmlFor={ativoId} style={{ cursor: 'pointer' }}>
                   Ativo
                 </label>
               </div>

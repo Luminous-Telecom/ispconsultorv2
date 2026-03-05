@@ -192,19 +192,15 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
           <div className="mb-0">
             <FormField
               name="status"
-              type="select"
-              label={t('table.status')}
+              type="checkbox"
+              label={formData.status === 'ativo' ? t('status.active') : t('status.inactive')}
+              value={formData.status === 'ativo'}
+              onChange={(value: FormValue) =>
+                handleInputChange('status', (value ? 'ativo' : 'inativo') as PlanoTabProps['formData']['status'])
+              }
+              switch
               size="sm"
-              value={formData.status}
-              onChange={(value: FormValue) => {
-                const stringValue = typeof value === 'string' ? value : String(value || '');
-                handleInputChange('status', stringValue as PlanoTabProps['formData']['status']);
-              }}
               disabled={isSubmitting}
-              options={[
-                { value: 'ativo', label: t('status.active') },
-                { value: 'inativo', label: t('status.inactive') }
-              ]}
             />
           </div>
         </div>
@@ -217,6 +213,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
               label={t('form.autoRenewal')}
               value={formData.renovacao_automatica}
               onChange={(value: FormValue) => handleInputChange('renovacao_automatica', !!value)}
+              switch
               disabled={isSubmitting}
             />
           </div>
