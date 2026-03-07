@@ -288,7 +288,6 @@ export interface TranslationKeys {
   'blockdomi.placeholderDomain': string;
   'blockdomi.helpDomain': string;
   'blockdomi.placeholderOficio': string;
-  'blockdomi.emptyEqualsToday': string;
   'blockdomi.analyze': string;
   'blockdomi.register': string;
   'blockdomi.classifying': string;
@@ -298,6 +297,7 @@ export interface TranslationKeys {
   'blockdomi.inputListLabel': string;
   'blockdomi.separateLinksHelp': string;
   'blockdomi.orUploadPdf': string;
+  'blockdomi.chooseFile': string;
   'blockdomi.pasteListHint': string;
   'blockdomi.importFromPdf': string;
   'blockdomi.importFromPdfIntro': string;
@@ -1647,7 +1647,6 @@ const translations: Translations = {
     'blockdomi.placeholderDomain': 'meusite.com ou encurtador.com/abc123',
     'blockdomi.helpDomain': 'Domínio sem protocolo (ex: meusite.com ou encurtador.com/abc123). Sem https://, http:// ou www. no início.',
     'blockdomi.placeholderOficio': 'ex: Ofício nº 01/2026/ORG/SETOR/SIGLA',
-    'blockdomi.emptyEqualsToday': 'Vazio = data de hoje',
     'blockdomi.analyze': 'Analisar',
     'blockdomi.register': 'Cadastrar',
     'blockdomi.classifying': 'Classificando...',
@@ -1657,6 +1656,7 @@ const translations: Translations = {
     'blockdomi.inputListLabel': 'Lista de entrada',
     'blockdomi.separateLinksHelp': 'Separe múltiplos links com vírgula',
     'blockdomi.orUploadPdf': 'ou enviar arquivo PDF',
+    'blockdomi.chooseFile': 'Escolher arquivo',
     'blockdomi.pasteListHint': 'Cole domínios ou IPs (um por linha)',
     'blockdomi.importFromPdf': 'Importar do PDF',
     'blockdomi.importFromPdfIntro': 'Envie um PDF (ofício com tabela anexo) ou informe a URL do PDF. Serão extraídos apenas os domínios e IPs da tabela.',
@@ -2999,7 +2999,6 @@ const translations: Translations = {
     'blockdomi.placeholderDomain': 'example.com or shortener.com/abc123',
     'blockdomi.helpDomain': 'Domain without protocol (e.g. example.com or shortener.com/abc123). No https://, http:// or www. at the start.',
     'blockdomi.placeholderOficio': 'e.g. Warrant no. 01/2026/ORG/SECTOR/CODE',
-    'blockdomi.emptyEqualsToday': 'Empty = today\'s date',
     'blockdomi.analyze': 'Analyze',
     'blockdomi.register': 'Register',
     'blockdomi.classifying': 'Classifying...',
@@ -3009,6 +3008,7 @@ const translations: Translations = {
     'blockdomi.inputListLabel': 'Input list',
     'blockdomi.separateLinksHelp': 'Separate multiple links with comma',
     'blockdomi.orUploadPdf': 'or upload PDF file',
+    'blockdomi.chooseFile': 'Choose file',
     'blockdomi.pasteListHint': 'Paste domains or IPs (one per line)',
     'blockdomi.importFromPdf': 'Import from PDF',
     'blockdomi.importFromPdfIntro': 'Upload a PDF (warrant with annex table) or enter the PDF URL. Only domains and IPs from the table will be extracted.',
@@ -4353,7 +4353,6 @@ const translations: Translations = {
     'blockdomi.placeholderDomain': 'ejemplo.com o acortador.com/abc123',
     'blockdomi.helpDomain': 'Dominio sin protocolo (ej: ejemplo.com o acortador.com/abc123). Sin https://, http:// o www. al inicio.',
     'blockdomi.placeholderOficio': 'ej: Oficio nº 01/2026/ORG/SECTOR/SIGLA',
-    'blockdomi.emptyEqualsToday': 'Vacío = fecha de hoy',
     'blockdomi.analyze': 'Analizar',
     'blockdomi.register': 'Registrar',
     'blockdomi.classifying': 'Clasificando...',
@@ -4363,6 +4362,7 @@ const translations: Translations = {
     'blockdomi.inputListLabel': 'Lista de entrada',
     'blockdomi.separateLinksHelp': 'Separe múltiplos enlaces con coma',
     'blockdomi.orUploadPdf': 'o subir archivo PDF',
+    'blockdomi.chooseFile': 'Elegir archivo',
     'blockdomi.pasteListHint': 'Pegar dominios o IPs (uno por línea)',
     'blockdomi.importFromPdf': 'Importar desde PDF',
     'blockdomi.importFromPdfIntro': 'Sube un PDF (oficio con tabla anexa) o ingresa la URL del PDF. Solo se extraerán los dominios e IPs de la tabla.',

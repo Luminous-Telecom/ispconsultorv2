@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
 import { isValidIPv4, isValidIPv6 } from '@/utils/validators';
@@ -464,154 +464,135 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
 
   const [isGerandoVersao, setIsGerandoVersao] = useState(false);
 
+  const { data: versaoAtual = '' } = useQuery({
+    queryKey: ['blockdomi', 'versao-atual'],
+    queryFn: () => BlockdomiService.getVersaoAtual(),
+    enabled: show,
+  });
+
   const handleGerarVersao = useCallback(async () => {
     setIsGerandoVersao(true);
     try {
       const result = await BlockdomiService.gerarVersao();
       success(`${t('blockdomi.versao')} ${result.numero} ${t('blockdomi.versaoGerada')}`);
+      queryClient.invalidateQueries({ queryKey: ['blockdomi', 'versao-atual'] });
     } catch (e) {
       error((e as Error)?.message ?? 'Erro ao gerar versão.');
     } finally {
       setIsGerandoVersao(false);
     }
-  }, [success, error, t]);
+  }, [success, error, t, queryClient]);
 
   const content = (
-    <div className="p-3 importar-lista-blockdomi">
+    <div className="p-4 importar-lista-blockdomi">
         <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+          <span className="text-muted small me-2">
+            {t('blockdomi.versao')} atual: <strong>{versaoAtual || '-'}</strong>
+          </span>
           <Button variant="secondary" size="sm" onClick={handleGerarVersao} disabled={isGerandoVersao}>
             {t('blockdomi.gerarVersao')}
           </Button>
         </div>
 
-        <p className="ilb-intro">
-          {t('blockdomi.importIntro')}
-        </p>
-
-        <div className="ilb-section">
-          <div className="row g-2 mb-2">
-            <div className="col-12 col-md-6">
-              <label className="form-label small mb-1">{t('blockdomi.nomeOficioOptional')}</label>
-              <div className="ilb-input-wrapper">
+        <div className="row g-3 mb-3">
+            <div className="col-12">
+              <div className="row g-2 mb-2 w-100">
+                <div className="col-12 col-md-6">
+                  <label className="form-label small mb-1">{t('blockdomi.nomeOficioOptional')}</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    placeholder={t('blockdomi.placeholderOficio')}
+                    value={nomeOficio}
+                    onChange={(e) => setNomeOficio(e.target.value)}
+                  />
+                </div>
+                <div className="col-6 col-md-3">
+                  <label className="form-label small mb-1">{t('blockdomi.dataInicioBloqueio')}</label>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={dataInicioBloqueio}
+                    onChange={(e) => setDataInicioBloqueio(e.target.value)}
+                  />
+                </div>
+                <div className="col-6 col-md-3">
+                  <label className="form-label small mb-1">{t('blockdomi.dataFimBloqueioOptional')}</label>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={dataFimBloqueio}
+                    onChange={(e) => setDataFimBloqueio(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="pt-3 mt-3 border-top border-secondary pb-3 mb-3 border-bottom border-secondary">
+              <label className="form-label small mb-1 mt-2">{t('blockdomi.linkOficioAnatelOptional')}</label>
+              <div className="input-group input-group-sm mb-1">
                 <input
                   type="text"
-                  className="form-control form-control-sm"
-                  placeholder={t('blockdomi.placeholderOficio')}
-                  value={nomeOficio}
-                  onChange={(e) => setNomeOficio(e.target.value)}
+                  className="form-control"
+                  placeholder="https://... ou arquivo PDF"
+                  value={linkOficioAnatel}
+                  onChange={(e) => setLinkOficioAnatel(e.target.value)}
+                />
+                <input
+                  ref={pdfAnatelInputRef}
+                  type="file"
+                  className="form-control"
+                  accept=".pdf,application/pdf"
+                  onChange={(e) => setPdfOficioAnatel(e.target.files?.[0] ?? null)}
                 />
               </div>
-              <label className="form-label small mb-1 mt-2">{t('blockdomi.linkOficioAnatelOptional')}</label>
-              <div className="row g-2">
-                <div className="col-12 col-md-7">
-                  <div className="ilb-input-wrapper">
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder="https://..."
-                      value={linkOficioAnatel}
-                      onChange={(e) => setLinkOficioAnatel(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="col-12 col-md-5">
-                  <input
-                    ref={pdfAnatelInputRef}
-                    type="file"
-                    accept=".pdf,application/pdf"
-                    className="form-control form-control-sm"
-                    onChange={(e) => setPdfOficioAnatel(e.target.files?.[0] ?? null)}
-                  />
-                  {pdfOficioAnatel && <span className="small text-success">{pdfOficioAnatel.name}</span>}
-                </div>
-              </div>
-              <label className="form-label small mb-1 mt-2">{t('blockdomi.linkOficioJusticaOptional')}</label>
-              <span className="text-muted small d-block mb-1">{t('blockdomi.separateLinksHelp')}</span>
-              <div className="row g-2">
-                <div className="col-12 col-md-7">
-                  <div className="ilb-input-wrapper">
-                    <textarea
-                      className="form-control form-control-sm"
-                      rows={2}
-                      placeholder="https://exemplo1.com, https://exemplo2.com"
-                      value={linkOficioJustica}
-                      onChange={(e) => setLinkOficioJustica(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="col-12 col-md-5">
-                  <input
-                    ref={pdfJusticaInputRef}
-                    type="file"
-                    accept=".pdf,application/pdf"
-                    className="form-control form-control-sm"
-                    onChange={(e) => setPdfOficioJustica(e.target.files?.[0] ?? null)}
-                  />
-                  {pdfOficioJustica && <span className="small text-success">{pdfOficioJustica.name}</span>}
-                </div>
-              </div>
-            </div>
-            <div className="col-12 col-md-6">
-              <label className="form-label small mb-1">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
-              <div className="ilb-input-wrapper">
+              <label className="form-label small mb-1 mt-2">
+                {t('blockdomi.linkOficioJusticaOptional')}
+                <i
+                  className="bi bi-info-circle text-muted ms-1"
+                  style={{ cursor: 'help', fontSize: '0.85rem' }}
+                  title={t('blockdomi.separateLinksHelp')}
+                />
+              </label>
+              <div className="input-group input-group-sm mb-1">
                 <input
                   type="text"
-                  className="form-control form-control-sm"
-                  placeholder="https://..."
+                  className="form-control"
+                  placeholder="https://exemplo1.com, https://exemplo2.com ou arquivo PDF"
+                  value={linkOficioJustica}
+                  onChange={(e) => setLinkOficioJustica(e.target.value)}
+                />
+                <input
+                  ref={pdfJusticaInputRef}
+                  type="file"
+                  className="form-control"
+                  accept=".pdf,application/pdf"
+                  onChange={(e) => setPdfOficioJustica(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <label className="form-label small mb-1 mt-2">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
+              <div className="input-group input-group-sm mb-1">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="https://... ou arquivo PDF"
                   value={linkPlanilhaDominios}
                   onChange={(e) => setLinkPlanilhaDominios(e.target.value)}
                 />
-              </div>
-              <span className="text-muted small">{t('blockdomi.planilhaPdfFromImport')}</span>
-              <label className="form-label small mb-1 mt-2">{t('blockdomi.dataInicioBloqueio')}</label>
-              <div className="ilb-input-wrapper">
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
-                  value={dataInicioBloqueio}
-                  onChange={(e) => setDataInicioBloqueio(e.target.value)}
-                />
-              </div>
-              <span className="text-muted small">{t('blockdomi.emptyEqualsToday')}</span>
-              <label className="form-label small mb-1 mt-2">{t('blockdomi.dataFimBloqueioOptional')}</label>
-              <div className="ilb-input-wrapper">
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
-                  value={dataFimBloqueio}
-                  onChange={(e) => setDataFimBloqueio(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="ilb-section">
-          <div className="card ilb-pdf-card mb-0">
-            <div className="card-header">
-              <i className="bi bi-file-earmark-pdf"></i>
-              {t('blockdomi.importFromPdf')}
-            </div>
-            <div className="card-body">
-              <p className="text-muted small mb-2">{t('blockdomi.importFromPdfIntro')}</p>
-              <div className="mb-2">
-                <label className="form-label small mb-1">{t('blockdomi.pdfFile')}</label>
                 <input
                   ref={pdfFileInputRef}
                   type="file"
+                  className="form-control"
                   accept=".pdf,application/pdf"
-                  className="form-control form-control-sm"
                   onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
                 />
               </div>
-              <div className="d-flex flex-wrap gap-2 align-items-center">
+              <span className="text-muted small d-block">{t('blockdomi.planilhaPdfFromImport')}</span>
+              <div className="d-flex flex-wrap gap-2 align-items-center mt-2">
                 <Button
                   type="button"
                   variant="primary"
                   size="sm"
                   onClick={handleExtractFromPdf}
                   disabled={isExtractingPdf || !pdfFile}
-                  leftIcon={<i className="bi bi-file-earmark-arrow-down"></i>}
                 >
                   {t('blockdomi.extractDomainsFromPdf')}
                 </Button>
@@ -622,7 +603,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                     size="sm"
                     onClick={handleExtractFromPdfUrl}
                     disabled={isExtractingPdf}
-                    leftIcon={<i className="bi bi-link-45deg"></i>}
                   >
                     {t('blockdomi.extractFromPlanilhaUrl')}
                   </Button>
@@ -641,10 +621,16 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
           </div>
         </div>
 
-        <div className="ilb-section">
-          <div className={`ilb-editor-wrapper ${rawText.trim() ? 'has-content' : ''}`}>
+        <div className={`ilb-editor-wrapper mb-3 ${rawText.trim() ? 'has-content' : ''}`}>
             <div className="ilb-editor-header">
-              <span>{t('blockdomi.inputListLabel')}</span>
+              <span>
+                {t('blockdomi.inputListLabel')}
+                <i
+                  className="bi bi-info-circle text-muted ms-1"
+                  style={{ cursor: 'help', fontSize: '0.85rem' }}
+                  title={t('blockdomi.importIntro')}
+                />
+              </span>
               {domainCount > 0 && (
                 <span className="ilb-editor-counter">
                   {domainCount} {t('blockdomi.domainsDetected')}
@@ -676,7 +662,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
               variant="secondary"
               size="sm"
               onClick={handlePaste}
-              leftIcon={<i className="bi bi-clipboard"></i>}
             >
               {t('blockdomi.paste')}
             </Button>
@@ -686,7 +671,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
               size="sm"
               onClick={handleClear}
               disabled={!rawText.trim()}
-              leftIcon={<i className="bi bi-trash"></i>}
             >
               {t('ui.clear')}
             </Button>
@@ -696,7 +680,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
               size="sm"
               onClick={handleAnalisar}
               disabled={!rawText.trim() || isAnalyzing}
-              leftIcon={<i className="bi bi-search"></i>}
             >
               {t('blockdomi.analyze')}
             </Button>
@@ -707,7 +690,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 size="sm"
                 onClick={handleCadastrar}
                 disabled={totalValid === 0 || isCadastrando}
-                leftIcon={<i className="bi bi-cloud-upload"></i>}
               >
                 {t('blockdomi.register')}
               </Button>
@@ -755,7 +737,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                       <ul className="list-unstyled mb-0 small">
                         {dominiosFiltrados.map((item, i) => (
                           <li key={i} className="text-nowrap overflow-x-auto ilb-list-item">
-                            {item.raw} <span className="text-muted">&gt;</span> {item.fixed}
+                            {item.raw} <span className="text-muted">{'>'}</span> {item.fixed}
                           </li>
                         ))}
                       </ul>
@@ -802,7 +784,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
               </div>
             </div>
           )}
-        </div>
 
         {isAnalyzing && (
           <div className="ilb-processing mt-1">

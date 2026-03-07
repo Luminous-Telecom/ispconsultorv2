@@ -127,8 +127,8 @@ const routes = [
     { path: '/api/saas/backups', route: saasBackupsRoutes },
     { path: '/api/saas', route: saasCrudRoutes },
 
-    // Rotas TXT do Blockdomi na raiz: /domain/version, /domain/all, /v4/all, /v6/all
-    { path: '', route: blockdomiListasRoutes },
+    // Rotas TXT do Blockdomi: /api/domain/version, /api/domain/all, /api/v4/all, /api/v6/all
+    { path: '/api', route: blockdomiListasRoutes },
     // Rotas de health check (sem /api para facilitar monitoramento)
     { path: '', route: healthRoutes },
 ];

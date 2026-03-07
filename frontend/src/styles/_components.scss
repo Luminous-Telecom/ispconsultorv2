@@ -4712,19 +4712,29 @@ input[type="week"]::-moz-calendar-picker-indicator {
 }
 
 /* ============================================
-   IMPORTAR LISTA BLOCKDOMI - Design Premium SaaS
+   IMPORTAR LISTA BLOCKDOMI - Design Profissional
    ============================================ */
 .importar-lista-blockdomi {
-  --ilb-spacing: 8px;
-  --ilb-radius: 8px;
+  --ilb-spacing: 10px;
+  --ilb-radius: 10px;
+}
+
+.importar-lista-blockdomi .row.g-3 > [class*='col-'] {
+  min-width: 0;
   --ilb-radius-sm: 6px;
-  --ilb-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  --ilb-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --ilb-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --ilb-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.2);
   --ilb-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --ilb-accent: rgba(6, 182, 212, 0.15);
+  --ilb-accent-border: rgba(6, 182, 212, 0.4);
 }
 
 .importar-lista-blockdomi .ilb-section {
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: var(--ilb-radius);
+  border: 1px solid var(--border-color);
 }
 
 .importar-lista-blockdomi .ilb-section:last-child {
@@ -4734,12 +4744,12 @@ input[type="week"]::-moz-calendar-picker-indicator {
 .importar-lista-blockdomi .ilb-intro {
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
-  line-height: 1.5;
-  margin-bottom: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  background: rgba(255, 255, 255, 0.03);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--ilb-accent);
   border-radius: var(--ilb-radius-sm);
-  border-left: 3px solid var(--primary-color);
+  border-left: 4px solid var(--navbar-bg);
 }
 
 .importar-lista-blockdomi .ilb-input-wrapper {
@@ -4753,7 +4763,37 @@ input[type="week"]::-moz-calendar-picker-indicator {
 }
 
 .importar-lista-blockdomi .ilb-input-wrapper:focus-within {
-  box-shadow: 0 0 0 2px rgba(107, 155, 209, 0.25);
+  box-shadow: 0 0 0 2px var(--ilb-accent-border);
+}
+
+.importar-lista-blockdomi .form-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+/* File input e input-group-text - evitar espaço branco no tema escuro */
+.importar-lista-blockdomi .input-group input[type='file'].form-control {
+  background-color: var(--bg-secondary, #2d2d2d) !important;
+  color: var(--text-primary, #e0e0e0) !important;
+  border-color: var(--border-color, #444) !important;
+}
+.importar-lista-blockdomi .input-group input[type='file'].form-control::file-selector-button {
+  background-color: var(--bg-tertiary, #3d3d3d) !important;
+  color: var(--text-primary, #e0e0e0) !important;
+  border-color: var(--border-color, #444) !important;
+  border-right: 1px solid var(--border-color, #444) !important;
+}
+.importar-lista-blockdomi .input-group input[type='file'].form-control::-webkit-file-upload-button {
+  background-color: var(--bg-tertiary, #3d3d3d) !important;
+  color: var(--text-primary, #e0e0e0) !important;
+  border-color: var(--border-color, #444) !important;
+  border-right: 1px solid var(--border-color, #444) !important;
+}
+.importar-lista-blockdomi .input-group .input-group-text {
+  background-color: var(--bg-tertiary, #3d3d3d) !important;
+  color: var(--text-primary, #e0e0e0) !important;
+  border-color: var(--border-color, #444) !important;
 }
 
 /* Área de input estilo editor de código */
@@ -4773,8 +4813,8 @@ input[type="week"]::-moz-calendar-picker-indicator {
 }
 
 .importar-lista-blockdomi .ilb-editor-wrapper:focus-within {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(107, 155, 209, 0.25);
+  border-color: var(--navbar-bg);
+  box-shadow: 0 0 0 2px var(--ilb-accent-border);
 }
 
 .importar-lista-blockdomi .ilb-editor-header {
@@ -4793,11 +4833,13 @@ input[type="week"]::-moz-calendar-picker-indicator {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  background: rgba(107, 155, 209, 0.2);
+  padding: 4px 10px;
+  background: var(--ilb-accent);
   border-radius: var(--border-radius);
   font-weight: 600;
-  color: var(--primary-color);
+  font-size: var(--font-size-xs);
+  color: var(--navbar-bg);
+  border: 1px solid var(--ilb-accent-border);
 }
 
 .importar-lista-blockdomi .ilb-editor-textarea {
@@ -4873,11 +4915,13 @@ input[type="week"]::-moz-calendar-picker-indicator {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  background: rgba(107, 155, 209, 0.1);
+  padding: 0.4rem 0.75rem;
+  background: var(--ilb-accent);
   border-radius: var(--ilb-radius-sm);
-  color: var(--primary-color);
+  color: var(--navbar-bg);
   font-size: var(--font-size-sm);
+  font-weight: 500;
+  border: 1px solid var(--ilb-accent-border);
 }
 
 .importar-lista-blockdomi .ilb-processing .spinner-border {
@@ -4913,13 +4957,13 @@ input[type="week"]::-moz-calendar-picker-indicator {
 .importar-lista-blockdomi .ilb-preview-tag {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 4px 10px;
   font-size: var(--font-size-xs);
   font-family: 'SF Mono', 'Monaco', monospace;
-  background: rgba(107, 155, 209, 0.15);
+  background: var(--ilb-accent);
   color: var(--text-primary);
   border-radius: var(--border-radius);
-  border: 1px solid rgba(107, 155, 209, 0.3);
+  border: 1px solid var(--ilb-accent-border);
 }
 
 /* Card PDF premium */
@@ -4936,18 +4980,19 @@ input[type="week"]::-moz-calendar-picker-indicator {
 }
 
 .importar-lista-blockdomi .ilb-pdf-card .card-header {
-  padding: 0.25rem 0.5rem;
-  background: rgba(0, 0, 0, 0.15);
+  padding: 0.6rem 1rem;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(0, 0, 0, 0.15) 100%);
   border-bottom: 1px solid var(--border-color);
   font-weight: 600;
   font-size: var(--font-size-sm);
   display: flex;
   align-items: center;
   gap: 8px;
+  color: var(--text-primary);
 }
 
 .importar-lista-blockdomi .ilb-pdf-card .card-body {
-  padding: 0.25rem 0.5rem;
+  padding: 0.75rem 1rem;
 }
 
 /* Cards de classificação */
@@ -4972,28 +5017,193 @@ input[type="week"]::-moz-calendar-picker-indicator {
 }
 
 .importar-lista-blockdomi .ilb-class-card .card-header {
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.75rem;
   font-size: var(--font-size-sm);
   font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .importar-lista-blockdomi .ilb-class-card .card-body {
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.75rem;
   max-height: 200px;
   overflow-y: auto;
 }
 
+.importar-lista-blockdomi .ilb-filtro-card {
+  border: 1px solid var(--border-color);
+  box-shadow: var(--ilb-shadow);
+  transition: box-shadow var(--ilb-transition);
+}
+
+.importar-lista-blockdomi .ilb-filtro-card:hover {
+  box-shadow: var(--ilb-shadow-hover);
+}
+
 .importar-lista-blockdomi .ilb-filtro-card .card-header,
 .importar-lista-blockdomi .ilb-filtro-card .card-footer {
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.importar-lista-blockdomi .ilb-filtro-card .card-body {
+  padding: 0.5rem 0.75rem;
 }
 
 .importar-lista-blockdomi .ilb-filtro-body {
   max-height: 180px;
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
 }
 
 .importar-lista-blockdomi .ilb-class-card .list-unstyled {
   font-size: var(--font-size-xs);
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+.importar-lista-blockdomi .ilb-actions {
+  gap: 0.5rem;
+}
+
+.importar-lista-blockdomi .ilb-actions .btn {
+  padding: 0.4rem 0.85rem;
+  font-weight: 500;
+}
+
+/* ============================================
+   DOMÍNIOS EXTRAÍDOS - Visualização Profissional
+   ============================================ */
+.dominios-extraidos-visualizacao {
+  --dev-radius: 10px;
+  --dev-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --dev-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --dev-accent: rgba(6, 182, 212, 0.12);
+  --dev-accent-border: rgba(6, 182, 212, 0.35);
+}
+
+.dominios-extraidos-visualizacao .dev-preview-cards {
+  margin-bottom: 1.5rem;
+}
+
+.dominios-extraidos-visualizacao .dev-preview-card {
+  height: 100%;
+  border-radius: var(--dev-radius);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--dev-shadow);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dominios-extraidos-visualizacao .dev-preview-card:hover {
+  box-shadow: var(--dev-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.dominios-extraidos-visualizacao .dev-preview-card .card-header {
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dominios-extraidos-visualizacao .dev-preview-card.dev-card-raw .card-header {
+  background: linear-gradient(135deg, rgba(108, 117, 125, 0.2) 0%, rgba(0, 0, 0, 0.1) 100%);
+  color: var(--text-primary);
+}
+
+.dominios-extraidos-visualizacao .dev-preview-card.dev-card-filtered .card-header {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(0, 0, 0, 0.1) 100%);
+  color: var(--text-primary);
+  border-left: 3px solid var(--warning-color);
+}
+
+.dominios-extraidos-visualizacao .dev-preview-card.dev-card-valid .card-header {
+  background: linear-gradient(135deg, rgba(25, 135, 84, 0.2) 0%, rgba(0, 0, 0, 0.1) 100%);
+  color: var(--text-primary);
+  border-left: 3px solid var(--success-color);
+}
+
+.dominios-extraidos-visualizacao .dev-preview-card .card-body {
+  padding: 0.6rem 1rem;
+  max-height: 280px;
+  overflow-y: auto;
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}
+
+.dominios-extraidos-visualizacao .dev-preview-card .card-footer {
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--border-color);
+}
+
+.dominios-extraidos-visualizacao .dev-metadata-section .form-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.dominios-extraidos-visualizacao .dev-metadata-section .form-control {
+  border-radius: 6px;
+}
+
+.dominios-extraidos-visualizacao .dev-class-cards,
+.dominios-extraidos-visualizacao .dev-classification-grid {
+  margin-bottom: 1.25rem;
+}
+
+.dominios-extraidos-visualizacao .dev-classification-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.dominios-extraidos-visualizacao .dev-class-card {
+  border-radius: var(--dev-radius);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--dev-shadow);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dominios-extraidos-visualizacao .dev-class-card:hover {
+  box-shadow: var(--dev-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.dominios-extraidos-visualizacao .dev-class-card .card-header {
+  padding: 0.5rem 0.75rem;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.dominios-extraidos-visualizacao .dev-class-card .card-body {
+  padding: 0.5rem 0.75rem;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}
+
+.dominios-extraidos-visualizacao .dev-register-bar {
+  padding: 1rem 0;
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+}
+
+.dominios-extraidos-visualizacao .dev-register-bar .btn {
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.dominios-extraidos-visualizacao .dev-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
 }
 

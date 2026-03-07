@@ -15,9 +15,13 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/auth\/login$/i },
   { method: 'POST', path: /^\/api\/auth\/logout$/i }, // Logout limpa cookie — não exige token válido
   // Rotas TXT Blockdomi (protegidas por IP no blockdomiIpsPermitidosMiddleware)
+  { path: /^\/api\/domain\/version\/?$/i },
   { path: /^\/domain\/version\/?$/i },
+  { path: /^\/api\/domain\/all\/?$/i },
   { path: /^\/domain\/all\/?$/i },
+  { path: /^\/api\/v4\/all\/?$/i },
   { path: /^\/v4\/all\/?$/i },
+  { path: /^\/api\/v6\/all\/?$/i },
   { path: /^\/v6\/all\/?$/i },
   { path: /^\/webhook(\/.*)?$/i },
   { path: /^\/api\/assinaturas?-digital\/webhook/i }, // Webhooks de assinatura digital (com ou sem "s") - aceita qualquer path depois

@@ -93,8 +93,9 @@ export class ErrorHandler {
           
           const isParametroRequest = requestUrl.includes('parametro/');
           const isTestAuthRequest = requestUrl.includes('nfse-config/test-auth');
+          const isDomainVersionRequest = requestUrl.includes('domain/version');
           
-          if (currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000 && !isParametroRequest && !isTestAuthRequest) {
+          if (currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000 && !isParametroRequest && !isTestAuthRequest && !isDomainVersionRequest) {
             sessionStorage.removeItem('auth_session');
             setTimeout(() => {
               if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
@@ -115,7 +116,7 @@ export class ErrorHandler {
           const optionalRoutes = [
             'consultar', 'mensagens-', 'servidores-', 'servidor-', 
             'modelos-', 'modelo-', '/parametros', 'buscar-cep',
-            'dominios'
+            'dominios', 'domain/version'
           ];
           
           const isOptionalRoute = optionalRoutes.some(route => 

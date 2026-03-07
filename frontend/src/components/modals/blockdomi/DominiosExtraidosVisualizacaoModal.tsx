@@ -234,11 +234,11 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
       title={t('blockdomi.titleVisualizacaoExtrados')}
       size="xl"
     >
-      <div className="p-3">
-        <div className="row g-3 mb-3">
+      <div className="p-4 dominios-extraidos-visualizacao">
+        <div className="row g-3 dev-preview-cards">
           <div className="col-12 col-md-4">
-            <div className="card h-100">
-              <div className="card-header py-2 bg-light d-flex justify-content-between align-items-center">
+            <div className="card h-100 dev-preview-card dev-card-raw">
+              <div className="card-header py-2 d-flex justify-content-between align-items-center">
                 <strong>{t('blockdomi.raw')}</strong>
                 <span className="badge bg-secondary">{totalBruto}</span>
               </div>
@@ -264,8 +264,8 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
           </div>
 
           <div className="col-12 col-md-4">
-            <div className="card h-100 border-warning">
-              <div className="card-header py-2 bg-warning text-dark d-flex justify-content-between align-items-center">
+            <div className="card h-100 dev-preview-card dev-card-filtered">
+              <div className="card-header py-2 d-flex justify-content-between align-items-center">
                 <strong>{t('blockdomi.filtered')}</strong>
                 <span className="badge bg-dark">{dominiosFiltrados.length}</span>
               </div>
@@ -297,8 +297,8 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
           </div>
 
           <div className="col-12 col-md-4">
-            <div className="card h-100 border-success">
-              <div className="card-header py-2 bg-success text-white d-flex justify-content-between align-items-center">
+            <div className="card h-100 dev-preview-card dev-card-valid">
+              <div className="card-header py-2 d-flex justify-content-between align-items-center">
                 <strong>{t('blockdomi.valid')}</strong>
                 {(dominiosValidos.length > 0) && <span className="badge bg-light text-dark">{dominiosValidos.length}</span>}
                 {isAnalyzing && <span className="badge bg-warning text-dark">{t('blockdomi.classifying')}</span>}
@@ -338,7 +338,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
 
         {classified && !isAnalyzing && (
           <>
-            <div className="row g-2 mb-2">
+            <div className="row g-3 mb-3 dev-metadata-section">
               <div className="col-12">
                 <label className="form-label small mb-1">{t('blockdomi.nomeOficioOptional')}</label>
                 <input
@@ -399,9 +399,9 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
               </div>
             </div>
 
-            <div className="row g-3 mb-3">
+            <div className="row g-3 mb-3 dev-class-cards">
               <div className="col-12 col-md-6 col-lg-4">
-                <div className="card h-100">
+                <div className="card h-100 dev-class-card">
                   <div className="card-header py-2 bg-primary text-white">
                     {t('blockdomi.domains')} ({classified.dominios.length})
                   </div>
@@ -415,7 +415,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                 </div>
               </div>
               <div className="col-12 col-md-6 col-lg-4">
-                <div className="card h-100">
+                <div className="card h-100 dev-class-card">
                   <div className="card-header py-2 bg-info text-white">
                     IPv4 ({classified.ipv4.length})
                   </div>
@@ -429,7 +429,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                 </div>
               </div>
               <div className="col-12 col-md-6 col-lg-4">
-                <div className="card h-100">
+                <div className="card h-100 dev-class-card">
                   <div className="card-header py-2 bg-secondary text-white">
                     IPv6 ({classified.ipv6.length})
                   </div>
@@ -443,7 +443,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                 </div>
               </div>
               <div className="col-12 col-md-6 col-lg-4">
-                <div className="card h-100">
+                <div className="card h-100 dev-class-card">
                   <div className="card-header py-2 bg-dark text-white">
                     {t('blockdomi.alreadyRegistered')} ({classified.jaCadastrados.length})
                   </div>
@@ -457,7 +457,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                 </div>
               </div>
               <div className="col-12 col-md-6 col-lg-4">
-                <div className="card h-100">
+                <div className="card h-100 dev-class-card">
                   <div className="card-header py-2 bg-danger text-white">
                     {t('blockdomi.invalid')} ({classified.invalidos.length})
                   </div>
@@ -471,7 +471,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                 </div>
               </div>
               <div className="col-12 col-md-6 col-lg-4">
-                <div className="card h-100">
+                <div className="card h-100 dev-class-card">
                   <div className="card-header py-2 bg-warning text-dark">
                     {t('blockdomi.duplicates')} ({classified.duplicados.length})
                   </div>

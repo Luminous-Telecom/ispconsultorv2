@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { ImportarListaBlockdomiController } from '../../controllers/blockdomi/ImportarListaBlockdomiController';
 import { BlockdomiLogAcessoController } from '../../controllers/blockdomi/BlockdomiLogAcessoController';
+import { ListasBlockdomiController } from '../../controllers/blockdomi/ListasBlockdomiController';
 import { resolveArquivosPath } from '../../utils/pathUtils';
 
 const router = Router();
@@ -38,6 +39,7 @@ const uploadPdf = multer({
 });
 
 router.get('/logs-acesso', BlockdomiLogAcessoController.list);
+router.get('/versao-atual', ListasBlockdomiController.versaoAtual);
 router.post(
   '/upload-oficio-pdf',
   (req, res, next) => {

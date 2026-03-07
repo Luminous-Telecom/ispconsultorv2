@@ -28,6 +28,12 @@ export interface GerarVersaoResult {
 }
 
 export class BlockdomiService {
+  static async getVersaoAtual(): Promise<string> {
+    const response = await defaultApiClient.get<string>('/blockdomi/versao-atual', { responseType: 'text' });
+    const data = (response as { data?: string }).data;
+    return data ?? '';
+  }
+
   static async gerarVersao(): Promise<GerarVersaoResult> {
     const response = await defaultApiClient.post<GerarVersaoResult>('/blockdomi/gerar-versao', {});
     const data = (response as { data?: GerarVersaoResult }).data;
