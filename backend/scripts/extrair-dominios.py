@@ -50,13 +50,93 @@ def normalizar_data(match, formato='br'):
     return None
 
 
+# Cabeçalhos de coluna para início e término da operação (PT/EN)
+RE_COL_INICIO = re.compile(
+    r'operation\s*begins|in[ií]cio\s*da\s*opera[cç][aã]o',
+    re.I
+)
+RE_COL_TERMINO = re.compile(
+    r'operation\s*ends\s*(?:\(unblocking\))?|unblocking|'
+    r't[eé]rmino\s*da\s*opera[cç][aã]o\s*(?:\(desbloqueio\))?|desbloqueio',
+    re.I
+)
+
+
+def _extrair_data_de_texto(texto):
+    """Retorna primeira data DD/MM/YYYY encontrada no texto, ou None."""
+    m = RE_DATA_BR.search(texto)
+    return normalizar_data(m, 'br') if m else None
+
+
+def extrair_datas_das_tabelas(page):
+    """
+    Extrai data_inicio e data_fim das colunas da tabela:
+    - Operation Begins / Início da Operação -> data_inicio
+    - Operation Ends (Unblocking) / Término da Operação (Desbloqueio) -> data_fim
+    Retorna (data_inicio, data_fim).
+    """
+    data_inicio = None
+    data_fim = None
+    try:
+        if not hasattr(page, 'find_tables'):
+            return (None, None)
+        for table in page.find_tables():
+            if not hasattr(table, 'extract'):
+                continue
+            table_data = table.extract()
+            if not table_data:
+                continue
+            # Busca cabeçalho nas primeiras linhas (pode haver linha de título antes)
+            idx_inicio = None
+            idx_termino = None
+            header_row_idx = 0
+            for row_idx, row in enumerate(table_data[:4]):
+                if not row:
+                    continue
+                row_inicio = None
+                row_termino = None
+                for i, cell in enumerate(row):
+                    if cell and isinstance(cell, str):
+                        txt = re.sub(r'\s+', ' ', cell.lower())
+                        if RE_COL_INICIO.search(txt):
+                            row_inicio = i
+                        if RE_COL_TERMINO.search(txt):
+                            row_termino = i
+                if row_inicio is not None or row_termino is not None:
+                    idx_inicio = row_inicio
+                    idx_termino = row_termino
+                    header_row_idx = row_idx
+                    break
+            if idx_inicio is None and idx_termino is None:
+                continue
+            # Extrai datas das linhas de dados (após o cabeçalho)
+            for row in table_data[header_row_idx + 1:]:
+                if row:
+                    if idx_inicio is not None and idx_inicio < len(row) and row[idx_inicio]:
+                        d = _extrair_data_de_texto(str(row[idx_inicio]))
+                        if d and (data_inicio is None or d < data_inicio):
+                            data_inicio = d
+                    if idx_termino is not None and idx_termino < len(row) and row[idx_termino]:
+                        d = _extrair_data_de_texto(str(row[idx_termino]))
+                        if d and (data_fim is None or d > data_fim):
+                            data_fim = d
+            if data_inicio or data_fim:
+                break
+    except Exception:
+        pass
+    return (data_inicio, data_fim)
+
+
 def extrair_datas_operacao(texto):
-    """Extrai data de início e término da operação. Retorna (data_inicio, data_fim)."""
+    """
+    Extrai data de início e término da operação.
+    Apenas padrão explícito "de DD/MM/YYYY a DD/MM/YYYY" (sem fallback de menor/maior).
+    Retorna (data_inicio, data_fim).
+    """
     data_inicio = None
     data_fim = None
     texto_limpo = re.sub(r'\s+', ' ', texto.lower())
 
-    # Padrão "de DD/MM/YYYY a DD/MM/YYYY"
     rango = re.search(
         r'(?:de|entre|per[ií]odo)?\s*(\d{1,2})[/\-](\d{1,2})[/\-](\d{2,4})\s+(?:a|até|e)\s+(\d{1,2})[/\-](\d{1,2})[/\-](\d{2,4})',
         texto_limpo, re.I
@@ -70,19 +150,6 @@ def extrair_datas_operacao(texto):
             data_inicio = f"{y1:04d}-{m1:02d}-{d1:02d}"
         if 1 <= m2 <= 12 and 1 <= d2 <= 31:
             data_fim = f"{y2:04d}-{m2:02d}-{d2:02d}"
-        if data_inicio or data_fim:
-            return (data_inicio, data_fim)
-
-    # Heurística para tabelas: menor data = início, maior = término
-    datas_unicas = set()
-    for match in RE_DATA_BR.finditer(texto):
-        dt = normalizar_data(match, 'br')
-        if dt:
-            datas_unicas.add(dt)
-    if len(datas_unicas) >= 2:
-        ordenadas = sorted(datas_unicas)
-        data_inicio = ordenadas[0]
-        data_fim = ordenadas[-1]
 
     return (data_inicio, data_fim)
 
@@ -183,28 +250,41 @@ def extrair_dominios_pdf(caminho_pdf):
     # Inclui path opcional (ex.: embedcanaistv.com/teste) para o bruto refletir exatamente o que está na tabela
     regex_dominio = r'(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(?:/[a-zA-Z0-9/_.-]+)?'
     texto_cabecalho = ''
+    data_inicio = None
+    data_fim = None
 
     doc = fitz.open(caminho_pdf)
     try:
         for page_num in range(len(doc)):
             page = doc[page_num]
-            text = page.get_text()
-            
-            # Pega cabeçalho das primeiras páginas para extração de datas
+            # Prioridade: datas das colunas da tabela (Operation Begins / Operation Ends)
+            di, df = extrair_datas_das_tabelas(page)
+            if di: data_inicio = di if data_inicio is None else min(data_inicio, di)
+            if df: data_fim = df if data_fim is None else max(data_fim, df)
+
+            # Área central para fallback "de X a Y" (exclui rodapé/cabeçalho)
+            r = page.rect
+            margem_sup = r.height * 0.10
+            margem_inf = r.height * 0.15
+            clip = fitz.Rect(r.x0, r.y0 + margem_sup, r.x1, r.y1 - margem_inf)
+            text = page.get_text(clip=clip)
             if page_num < 3 and text:
                 texto_cabecalho += text + '\n'
-            
+
             dominios_tabelas = extrair_dominios_de_tabelas(page, regex_dominio)
             for d in dominios_tabelas:
                 dominios_bruto.append(d)
                 todos_dominios.add(d)
-            
+
             page = None
     finally:
         doc.close()
 
-    # Extrai datas de operação do cabeçalho
-    data_inicio, data_fim = extrair_datas_operacao(texto_cabecalho) if texto_cabecalho else (None, None)
+    # Fallback: padrão "de DD/MM/YYYY a DD/MM/YYYY" no texto (se não achou nas colunas)
+    if (data_inicio is None or data_fim is None) and texto_cabecalho:
+        di, df = extrair_datas_operacao(texto_cabecalho)
+        if data_inicio is None and di: data_inicio = di
+        if data_fim is None and df: data_fim = df
 
     return {
         'dominios': sorted(todos_dominios),
