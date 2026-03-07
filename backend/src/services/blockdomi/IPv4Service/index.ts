@@ -139,19 +139,37 @@ export class IPv4Service {
   }
 
   /**
-   * Buscar IPs existentes com id e data_fim_bloqueio (para atualização condicional; só data_fim dispara atualização)
+   * Buscar IPs existentes com id, data_fim_bloqueio e links (para atualização condicional)
    */
-  static async findByIpsWithData(ips: string[]): Promise<Map<string, { id: number; data_fim_bloqueio: string | null }>> {
+  static async findByIpsWithData(ips: string[]): Promise<Map<string, {
+    id: number;
+    data_fim_bloqueio: string | null;
+    link_oficio_anatel: string | null;
+    link_oficio_justica: string | null;
+    link_planilha_dominios: string | null;
+  }>> {
     if (ips.length === 0) return new Map();
     const unique = [...new Set(ips)];
     const found = await IPv4.findAll({
       where: { ip: { [Op.in]: unique } },
-      attributes: ['id', 'ip', 'data_fim_bloqueio'],
+      attributes: ['id', 'ip', 'data_fim_bloqueio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'],
       raw: true
     });
-    const map = new Map<string, { id: number; data_fim_bloqueio: string | null }>();
+    const map = new Map<string, {
+      id: number;
+      data_fim_bloqueio: string | null;
+      link_oficio_anatel: string | null;
+      link_oficio_justica: string | null;
+      link_planilha_dominios: string | null;
+    }>();
     for (const r of found) {
-      map.set(r.ip as string, { id: r.id as number, data_fim_bloqueio: r.data_fim_bloqueio as string | null });
+      map.set(r.ip as string, {
+        id: r.id as number,
+        data_fim_bloqueio: r.data_fim_bloqueio as string | null,
+        link_oficio_anatel: r.link_oficio_anatel as string | null,
+        link_oficio_justica: r.link_oficio_justica as string | null,
+        link_planilha_dominios: r.link_planilha_dominios as string | null
+      });
     }
     return map;
   }
@@ -193,7 +211,9 @@ export class IPv4Service {
       const existing = existingMap.get(ip);
       if (existing) {
         const dataFimMudou = newDataFim !== (existing.data_fim_bloqueio ?? null);
-        if (dataFimMudou) {
+        const hasNoUrls = !(existing.link_oficio_anatel?.trim() || existing.link_oficio_justica?.trim() || existing.link_planilha_dominios?.trim());
+        const hasUrlsToAdd = !!(metadata.link_oficio_anatel?.trim() || metadata.link_oficio_justica?.trim() || metadata.link_planilha_dominios?.trim());
+        if (dataFimMudou || (hasNoUrls && hasUrlsToAdd)) {
           toUpdate.push({ id: existing.id });
         }
         continue;
