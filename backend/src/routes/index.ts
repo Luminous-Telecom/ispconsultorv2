@@ -22,7 +22,6 @@ import mensagemHistoricoRoutes from './mensagemHistoricoRoutes';
 import modeloDocumentoRoutes from './modeloDocumentoRoutes';
 import diasVencimentoRoutes from './diasVencimentoRoutes';
 import termosContratoRoutes from './termosContrato';
-import atualizacoesRoutes from './atualizacoesRoutes';
 import authRoutes from './authRoutes';
 import pagamentoPublicoRoutes from './pagamentoPublicoRoutes';
 import healthRoutes from './healthRoutes';
@@ -43,7 +42,6 @@ import blockdomiListasRoutes from './blockdomiListasRoutes';
 import ipsPermitidosRoutes from './ipsPermitidosRoutes';
 import pdfExtractRoutes from './pdfExtractRoutes';
 import tipoCobrancaContratoRoutes from './tipoCobrancaContratoRoutes';
-import backupRoutes from './backupRoutes';
 import empresaRoutes from './empresaRoutes';
 import saasAuthRoutes from './saas/saasAuthRoutes';
 import saasEmpresasRoutes from './saas/saasEmpresasRoutes';
@@ -56,6 +54,9 @@ import saasMensagemHistoricoRoutes from './saas/saasMensagemHistoricoRoutes';
 import saasParametrosRoutes from './saas/saasParametrosRoutes';
 import saasNfseConfigRoutes from './saas/saasNfseConfigRoutes';
 import saasSchedulerRoutes from './saas/saasSchedulerRoutes';
+import saasAtualizacoesRoutes from './saas/saasAtualizacoesRoutes';
+import saasBackupsRoutes from './saas/saasBackupsRoutes';
+
 const router = Router();
 
 const routes = [
@@ -86,8 +87,6 @@ const routes = [
     { path: '/api/modelos-documento', route: modeloDocumentoRoutes },
     { path: '/api/dias-vencimento', route: diasVencimentoRoutes },
     { path: '/api/termos-contrato', route: termosContratoRoutes },
-    { path: '/api/atualizacoes', route: atualizacoesRoutes },
-    { path: '/api/backups', route: backupRoutes },
     { path: '/api/assinatura-digital', route: assinaturaDigitalRoutes },
     { path: '/api/assinatura-digital-providers', route: assinaturaDigitalProviderRoutes },
     // IMPORTANTE: cliente-arquivos deve vir ANTES de /api para evitar conflito
@@ -124,6 +123,8 @@ const routes = [
     { path: '/api/saas/nfse-config', route: saasNfseConfigRoutes },
     { path: '/api/saas/scheduler', route: saasSchedulerRoutes },
     { path: '/api/saas/saas-dados-empresa', route: saasDadosEmpresaCrudRoutes },
+    { path: '/api/saas/atualizacoes', route: saasAtualizacoesRoutes },
+    { path: '/api/saas/backups', route: saasBackupsRoutes },
     { path: '/api/saas', route: saasCrudRoutes },
 
     // Rotas TXT do Blockdomi na raiz: /domain/version, /domain/all, /v4/all, /v6/all

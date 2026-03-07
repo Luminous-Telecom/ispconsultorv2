@@ -45,7 +45,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
     queryFn: async (): Promise<Atualizacao[]> => {
 
       try {
-        const response = await apiService.get('/atualizacoes') as ApiResponseWithVersao;
+        const response = await apiService.get('/saas/atualizacoes') as ApiResponseWithVersao;
 
 
         if (response.success && response.data) {
@@ -75,7 +75,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       setUpdateProgressPercent(0);
       setUpdateLogs(['Iniciando processo de atualização...']);
 
-      const url = `${API_CONFIG.BASE_URL}/atualizacoes/update-stream?branch=${encodeURIComponent(branch)}`;
+      const url = `${API_CONFIG.BASE_URL}/saas/atualizacoes/update-stream?branch=${encodeURIComponent(branch)}`;
 
       fetch(url, {
         method: 'GET',

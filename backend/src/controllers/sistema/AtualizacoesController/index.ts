@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { SelfUpdateService } from '../../../services/sistema/SelfUpdateService';
 import { AuthenticatedRequest } from '../../../types/auth';
+import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendValidationError, sendNotFound, sendForbidden } from '../../../utils/responseUtils';
 
@@ -18,20 +19,25 @@ interface GitHubRelease {
 
 export class AtualizacoesController {
   /**
-   * Verifica se o usuário autenticado é admin
+   * Verifica se o usuário pode acessar (admin ERP ou super_admin SaaS)
    */
-  private static isAdmin(req: Request): boolean {
+  private static canAccess(req: Request): boolean {
+    const saasReq = req as SaasAuthenticatedRequest;
+    if (saasReq.saasUser?.saas && saasReq.saasUser?.tipo === 'super_admin') {
+      return true;
+    }
     const authenticatedReq = req as AuthenticatedRequest;
     const userPayload = authenticatedReq.user as JwtPayload;
-    
-    if (!userPayload || typeof userPayload === 'string') {
-      return false;
-    }
-
+    if (!userPayload || typeof userPayload === 'string') return false;
     return userPayload.role === 'admin';
   }
 
   static async get(req: Request, res: Response): Promise<void> {
+    if (!AtualizacoesController.canAccess(req)) {
+      sendForbidden(res, 'Acesso restrito ao painel SaaS');
+      return;
+    }
+
     logger.info('🔍 Iniciando busca de atualizações', {
       method: req.method,
       url: req.originalUrl,
@@ -318,8 +324,7 @@ export class AtualizacoesController {
     logger.info('Atualização iniciada');
 
     try {
-      // Verificar se o usuário é admin
-      if (!AtualizacoesController.isAdmin(req)) {
+      if (!AtualizacoesController.canAccess(req)) {
         logger.warn('🚫 Acesso negado - usuário não é admin');
 
         res.writeHead(403, {

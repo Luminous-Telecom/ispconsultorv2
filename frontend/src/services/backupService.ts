@@ -21,26 +21,26 @@ export type BackupManualTipo = 'database' | 'arquivos' | 'logs' | 'completo';
 
 export class BackupService {
   static async list(): Promise<Backup[]> {
-    const response = await apiService.get<Backup[]>('/backups');
+    const response = await apiService.get<Backup[]>('/saas/backups');
     return unwrapResponse<Backup[]>(response, { fallback: [], throwOnFailure: false });
   }
 
   static async deleteBackup(nome: string): Promise<void> {
     const response = await apiService.delete<{ success: boolean; message: string }>(
-      `/backups/${encodeURIComponent(nome)}`
+      `/saas/backups/${encodeURIComponent(nome)}`
     );
     unwrapResponse(response, { fallback: { success: true, message: '' } });
   }
 
   static async downloadBackup(nome: string): Promise<Blob> {
     const response = await apiService.get<Blob>(
-      `/backups/${encodeURIComponent(nome)}/download`,
+      `/saas/backups/${encodeURIComponent(nome)}/download`,
       { responseType: 'blob' }
     );
     const blob = unwrapResponse<Blob>(response);
 
     if (!blob || !(blob instanceof Blob)) {
-      throw new Error('Resposta do servidor não é um arquivo válido');
+      throw new Error('Resposta do servidor n˜o ˜ um arquivo v˜lido');
     }
 
     return blob;
@@ -48,19 +48,19 @@ export class BackupService {
 
   static async restoreBackup(nome: string): Promise<{ success: boolean; message: string }> {
     const response = await apiService.post<{ success: boolean; message?: string }>(
-      `/backups/${encodeURIComponent(nome)}/restore`
+      `/saas/backups/${encodeURIComponent(nome)}/restore`
     );
     const data = unwrapResponse<{ success: boolean; message?: string }>(response);
 
     return {
       success: true,
-      message: data.message ?? 'Restauração solicitada.'
+      message: data.message ?? 'Restaura˜˜o solicitada.'
     };
   }
 
   static async executeManual(tipo: BackupManualTipo): Promise<{ success: boolean; message: string }> {
     const response = await apiService.post<{ success: boolean; message?: string }>(
-      '/backups/manual',
+      '/saas/backups/manual',
       { tipo }
     );
     const data = unwrapResponse<{ success: boolean; message?: string }>(response);

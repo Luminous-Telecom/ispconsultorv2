@@ -108,8 +108,8 @@ const SaasLayout: React.FC = () => {
         { id: 'historico-whatsapp', label: t('menu.whatsappHistory'), icon: 'bi-chat-dots', onClick: () => handleOpenModal('historico-whatsapp') },
         { id: 'historico-email', label: t('menu.emailHistory'), icon: 'bi-envelope-paper', onClick: () => handleOpenModal('historico-email') },
         { id: 'auditoria', label: 'Auditoria', icon: 'bi-journal-text', onClick: () => handleOpenModal('auditoria') },
+        { id: 'atualizacoes', label: t('modal.updates'), icon: 'bi-arrow-clockwise', onClick: () => handleOpenModal('atualizacoes') },
         { id: 'backups', label: 'Backups', icon: 'bi-cloud-arrow-down', onClick: () => handleOpenModal('backups') },
-        { id: 'atualizacoes', label: 'Atualizações', icon: 'bi-arrow-down-up', onClick: () => handleOpenModal('atualizacoes') },
       ],
     },
   ];
