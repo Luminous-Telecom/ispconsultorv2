@@ -265,7 +265,6 @@ export interface TranslationKeys {
   'blockdomi.linkPlanilhaDominios': string;
   'blockdomi.linkPlanilhaDominiosOptional': string;
   'blockdomi.planilhaDominios': string;
-  'blockdomi.planilhaPdfFromImport': string;
   'blockdomi.linkOficioAnatelOptional': string;
   'blockdomi.linkOficioJusticaOptional': string;
   'blockdomi.anatel': string;
@@ -1624,7 +1623,6 @@ const translations: Translations = {
     'blockdomi.linkPlanilhaDominios': 'Link planilha domínios',
     'blockdomi.linkPlanilhaDominiosOptional': 'Link planilha domínios (opcional)',
     'blockdomi.planilhaDominios': 'Planilha domínios',
-    'blockdomi.planilhaPdfFromImport': 'Arquivo PDF: use o bloco "Importar do PDF" abaixo',
     'blockdomi.linkOficioAnatelOptional': 'Link ofício Anatel (opcional)',
     'blockdomi.linkOficioJusticaOptional': 'Link decisão judicial (opcional)',
     'blockdomi.anatel': 'Anatel',
@@ -1662,7 +1660,7 @@ const translations: Translations = {
     'blockdomi.importFromPdfIntro': 'Envie um PDF (ofício com tabela anexo) ou informe a URL do PDF. Serão extraídos apenas os domínios e IPs da tabela.',
     'blockdomi.pdfFile': 'Arquivo PDF',
     'blockdomi.pdfUrl': 'Ou URL do PDF',
-    'blockdomi.extractDomainsFromPdf': 'Extrair domínios do PDF',
+    'blockdomi.extractDomainsFromPdf': 'Extrair domínios',
     'blockdomi.extractingPdf': 'Extraindo texto do PDF...',
     'blockdomi.extractFromPlanilhaUrl': 'Extrair da URL da planilha',
     'blockdomi.extractFromPlanilhaPdf': 'Extrair domínios do PDF da planilha',
@@ -2976,7 +2974,6 @@ const translations: Translations = {
     'blockdomi.linkPlanilhaDominios': 'Domain spreadsheet link',
     'blockdomi.linkPlanilhaDominiosOptional': 'Domain spreadsheet link (optional)',
     'blockdomi.planilhaDominios': 'Domain spreadsheet',
-    'blockdomi.planilhaPdfFromImport': 'PDF file: use the "Import from PDF" block below',
     'blockdomi.linkOficioAnatelOptional': 'Anatel warrant link (optional)',
     'blockdomi.linkOficioJusticaOptional': 'Judicial decision link (optional)',
     'blockdomi.anatel': 'Anatel',
@@ -3014,7 +3011,7 @@ const translations: Translations = {
     'blockdomi.importFromPdfIntro': 'Upload a PDF (warrant with annex table) or enter the PDF URL. Only domains and IPs from the table will be extracted.',
     'blockdomi.pdfFile': 'PDF file',
     'blockdomi.pdfUrl': 'Or PDF URL',
-    'blockdomi.extractDomainsFromPdf': 'Extract domains from PDF',
+    'blockdomi.extractDomainsFromPdf': 'Extract domains',
     'blockdomi.extractingPdf': 'Extracting text from PDF...',
     'blockdomi.extractFromPlanilhaUrl': 'Extract from spreadsheet URL',
     'blockdomi.extractFromPlanilhaPdf': 'Extract domains from spreadsheet PDF',
@@ -4330,7 +4327,6 @@ const translations: Translations = {
     'blockdomi.linkPlanilhaDominios': 'Enlace planilla dominios',
     'blockdomi.linkPlanilhaDominiosOptional': 'Enlace planilla dominios (opcional)',
     'blockdomi.planilhaDominios': 'Planilla dominios',
-    'blockdomi.planilhaPdfFromImport': 'Archivo PDF: use el bloque "Importar del PDF" abajo',
     'blockdomi.linkOficioAnatelOptional': 'Enlace oficio Anatel (opcional)',
     'blockdomi.linkOficioJusticaOptional': 'Enlace decisión judicial (opcional)',
     'blockdomi.anatel': 'Anatel',
@@ -4368,7 +4364,7 @@ const translations: Translations = {
     'blockdomi.importFromPdfIntro': 'Sube un PDF (oficio con tabla anexa) o ingresa la URL del PDF. Solo se extraerán los dominios e IPs de la tabla.',
     'blockdomi.pdfFile': 'Archivo PDF',
     'blockdomi.pdfUrl': 'O URL del PDF',
-    'blockdomi.extractDomainsFromPdf': 'Extraer dominios del PDF',
+    'blockdomi.extractDomainsFromPdf': 'Extraer dominios',
     'blockdomi.extractingPdf': 'Extrayendo texto del PDF...',
     'blockdomi.extractFromPlanilhaUrl': 'Extraer de URL de planilla',
     'blockdomi.extractFromPlanilhaPdf': 'Extraer dominios del PDF de la planilla',

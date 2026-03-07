@@ -4772,7 +4772,19 @@ input[type="week"]::-moz-calendar-picker-indicator {
   letter-spacing: 0.02em;
 }
 
-/* File input e input-group-text - evitar espaço branco no tema escuro */
+/* Botões dentro do input-group na mesma altura do input */
+.importar-lista-blockdomi .input-group {
+  align-items: stretch;
+}
+.importar-lista-blockdomi .input-group .btn {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1.25;
+}
+
 .importar-lista-blockdomi .input-group input[type='file'].form-control {
   background-color: var(--bg-secondary, #2d2d2d) !important;
   color: var(--text-primary, #e0e0e0) !important;
@@ -4790,6 +4802,16 @@ input[type="week"]::-moz-calendar-picker-indicator {
   border-color: var(--border-color, #444) !important;
   border-right: 1px solid var(--border-color, #444) !important;
 }
+.importar-lista-blockdomi .input-group.input-group-sm .btn {
+  align-self: stretch !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+  line-height: 1.25 !important;
+  min-height: 0 !important;
+}
+
 .importar-lista-blockdomi .input-group .input-group-text {
   background-color: var(--bg-tertiary, #3d3d3d) !important;
   color: var(--text-primary, #e0e0e0) !important;

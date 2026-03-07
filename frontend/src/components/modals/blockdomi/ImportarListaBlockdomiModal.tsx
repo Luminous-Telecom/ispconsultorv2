@@ -569,7 +569,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 />
               </div>
               <label className="form-label small mb-1 mt-2">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
-              <div className="input-group input-group-sm mb-1">
+              <div className="input-group input-group-sm mb-1 align-items-stretch">
                 <input
                   type="text"
                   className="form-control"
@@ -584,13 +584,11 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                   accept=".pdf,application/pdf"
                   onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
                 />
-              </div>
-              <span className="text-muted small d-block">{t('blockdomi.planilhaPdfFromImport')}</span>
-              <div className="d-flex flex-wrap gap-2 align-items-center mt-2">
                 <Button
                   type="button"
                   variant="primary"
                   size="sm"
+                  className="rounded-0 py-0"
                   onClick={handleExtractFromPdf}
                   disabled={isExtractingPdf || !pdfFile}
                 >
@@ -601,6 +599,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                     type="button"
                     variant="secondary"
                     size="sm"
+                    className="rounded-0 py-0"
                     onClick={handleExtractFromPdfUrl}
                     disabled={isExtractingPdf}
                   >
@@ -608,9 +607,9 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                   </Button>
                 )}
                 {isExtractingPdf && (
-                  <span className="ilb-processing">
-                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-                    <span>{t('blockdomi.extractingPdf')}</span>
+                  <span className="input-group-text ilb-processing border-0 bg-transparent">
+                    <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" />
+                    <span className="small">{t('blockdomi.extractingPdf')}</span>
                   </span>
                 )}
               </div>
