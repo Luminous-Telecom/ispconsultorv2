@@ -367,6 +367,36 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
                   onChange={(e) => setDataFimBloqueio(e.target.value)}
                 />
               </div>
+              <div className="col-12">
+                <label className="form-label small mb-1">{t('blockdomi.linkOficioAnatelOptional')}</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="https://..."
+                  value={linkOficioAnatel}
+                  onChange={(e) => setLinkOficioAnatel(e.target.value)}
+                />
+              </div>
+              <div className="col-12">
+                <label className="form-label small mb-1">{t('blockdomi.linkOficioJusticaOptional')}</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="https://..."
+                  value={linkOficioJustica}
+                  onChange={(e) => setLinkOficioJustica(e.target.value)}
+                />
+              </div>
+              <div className="col-12">
+                <label className="form-label small mb-1">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="https://..."
+                  value={linkPlanilhaDominios}
+                  onChange={(e) => setLinkPlanilhaDominios(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="row g-3 mb-3">

@@ -208,7 +208,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       await new Promise((r) => setTimeout(r, 0));
       try {
         const result = await PdfExtractService.extractFromPdf(pdfFile);
-        
+
         if (result.success && result.data) {
           const listBruto = result.data.dominios_bruto ?? result.data.dominios;
           const listFiltrada = result.data.dominios ?? [];
@@ -216,6 +216,26 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
           const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
           if (dataInicio) setDataInicioBloqueio(dataInicio);
           if (dataFim) setDataFimBloqueio(dataFim);
+
+          let linkAnatel = linkOficioAnatel.trim() || undefined;
+          let linkJustica = linkOficioJustica.trim() || undefined;
+          let linkPlanilha = linkPlanilhaDominios.trim() || undefined;
+
+          try {
+            if (pdfOficioAnatel) {
+              const { url } = await BlockdomiService.uploadOficioPdf(pdfOficioAnatel);
+              linkAnatel = url;
+            }
+            if (pdfOficioJustica) {
+              const { url } = await BlockdomiService.uploadOficioPdf(pdfOficioJustica);
+              linkJustica = url;
+            }
+            const { url } = await BlockdomiService.uploadOficioPdf(pdfFile);
+            linkPlanilha = url;
+          } catch (uploadErr) {
+            error((uploadErr as Error)?.message ?? 'Erro ao enviar PDF. Links não serão salvos nos cadastros.');
+          }
+
           setVisualizacaoExtrados(({
             show: true,
             dominios: listBruto,
@@ -224,9 +244,9 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
               nomeOficio,
               dataInicioBloqueio: dataInicio,
               dataFimBloqueio: dataFim,
-              linkOficioAnatel: linkOficioAnatel,
-              linkOficioJustica: linkOficioJustica,
-              linkPlanilhaDominios: linkPlanilhaDominios.trim() || undefined
+              linkOficioAnatel: linkAnatel,
+              linkOficioJustica: linkJustica,
+              linkPlanilhaDominios: linkPlanilha
             }
           }));
           setRawText(listBruto.join('\n'));
@@ -236,7 +256,11 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
           error(t('blockdomi.pdfExtractError'));
         }
         setPdfFile(null);
+        setPdfOficioAnatel(null);
+        setPdfOficioJustica(null);
         if (pdfFileInputRef.current) pdfFileInputRef.current.value = '';
+        if (pdfAnatelInputRef.current) pdfAnatelInputRef.current.value = '';
+        if (pdfJusticaInputRef.current) pdfJusticaInputRef.current.value = '';
       } catch (e) {
         error((e as Error)?.message ?? 'Erro ao extrair PDF.');
       } finally {
@@ -246,7 +270,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       return;
     }
     error(t('blockdomi.importFromPdfIntro'));
-  }, [pdfFile, success, error, t, setExtractionLoading, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios]);
+  }, [pdfFile, pdfOficioAnatel, pdfOficioJustica, success, error, t, setExtractionLoading, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios]);
 
   const handleExtractFromPdfUrl = useCallback(async () => {
     const url = linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim();
