@@ -265,6 +265,7 @@ export interface TranslationKeys {
   'blockdomi.linkPlanilhaDominios': string;
   'blockdomi.linkPlanilhaDominiosOptional': string;
   'blockdomi.planilhaDominios': string;
+  'blockdomi.planilhaPdfFromImport': string;
   'blockdomi.linkOficioAnatelOptional': string;
   'blockdomi.linkOficioJusticaOptional': string;
   'blockdomi.anatel': string;
@@ -296,6 +297,7 @@ export interface TranslationKeys {
   'blockdomi.previewExtracted': string;
   'blockdomi.inputListLabel': string;
   'blockdomi.separateLinksHelp': string;
+  'blockdomi.orUploadPdf': string;
   'blockdomi.pasteListHint': string;
   'blockdomi.importFromPdf': string;
   'blockdomi.importFromPdfIntro': string;
@@ -1622,6 +1624,7 @@ const translations: Translations = {
     'blockdomi.linkPlanilhaDominios': 'Link planilha domínios',
     'blockdomi.linkPlanilhaDominiosOptional': 'Link planilha domínios (opcional)',
     'blockdomi.planilhaDominios': 'Planilha domínios',
+    'blockdomi.planilhaPdfFromImport': 'Arquivo PDF: use o bloco "Importar do PDF" abaixo',
     'blockdomi.linkOficioAnatelOptional': 'Link ofício Anatel (opcional)',
     'blockdomi.linkOficioJusticaOptional': 'Link decisão judicial (opcional)',
     'blockdomi.anatel': 'Anatel',
@@ -1653,6 +1656,7 @@ const translations: Translations = {
     'blockdomi.previewExtracted': 'Pré-visualização extraída',
     'blockdomi.inputListLabel': 'Lista de entrada',
     'blockdomi.separateLinksHelp': 'Separe múltiplos links com vírgula',
+    'blockdomi.orUploadPdf': 'ou enviar arquivo PDF',
     'blockdomi.pasteListHint': 'Cole domínios ou IPs (um por linha)',
     'blockdomi.importFromPdf': 'Importar do PDF',
     'blockdomi.importFromPdfIntro': 'Envie um PDF (ofício com tabela anexo) ou informe a URL do PDF. Serão extraídos apenas os domínios e IPs da tabela.',
@@ -2972,6 +2976,7 @@ const translations: Translations = {
     'blockdomi.linkPlanilhaDominios': 'Domain spreadsheet link',
     'blockdomi.linkPlanilhaDominiosOptional': 'Domain spreadsheet link (optional)',
     'blockdomi.planilhaDominios': 'Domain spreadsheet',
+    'blockdomi.planilhaPdfFromImport': 'PDF file: use the "Import from PDF" block below',
     'blockdomi.linkOficioAnatelOptional': 'Anatel warrant link (optional)',
     'blockdomi.linkOficioJusticaOptional': 'Judicial decision link (optional)',
     'blockdomi.anatel': 'Anatel',
@@ -3003,6 +3008,7 @@ const translations: Translations = {
     'blockdomi.previewExtracted': 'Extracted preview',
     'blockdomi.inputListLabel': 'Input list',
     'blockdomi.separateLinksHelp': 'Separate multiple links with comma',
+    'blockdomi.orUploadPdf': 'or upload PDF file',
     'blockdomi.pasteListHint': 'Paste domains or IPs (one per line)',
     'blockdomi.importFromPdf': 'Import from PDF',
     'blockdomi.importFromPdfIntro': 'Upload a PDF (warrant with annex table) or enter the PDF URL. Only domains and IPs from the table will be extracted.',
@@ -4324,6 +4330,7 @@ const translations: Translations = {
     'blockdomi.linkPlanilhaDominios': 'Enlace planilla dominios',
     'blockdomi.linkPlanilhaDominiosOptional': 'Enlace planilla dominios (opcional)',
     'blockdomi.planilhaDominios': 'Planilla dominios',
+    'blockdomi.planilhaPdfFromImport': 'Archivo PDF: use el bloque "Importar del PDF" abajo',
     'blockdomi.linkOficioAnatelOptional': 'Enlace oficio Anatel (opcional)',
     'blockdomi.linkOficioJusticaOptional': 'Enlace decisión judicial (opcional)',
     'blockdomi.anatel': 'Anatel',
@@ -4355,6 +4362,7 @@ const translations: Translations = {
     'blockdomi.previewExtracted': 'Vista previa extraída',
     'blockdomi.inputListLabel': 'Lista de entrada',
     'blockdomi.separateLinksHelp': 'Separe múltiplos enlaces con coma',
+    'blockdomi.orUploadPdf': 'o subir archivo PDF',
     'blockdomi.pasteListHint': 'Pegar dominios o IPs (uno por línea)',
     'blockdomi.importFromPdf': 'Importar desde PDF',
     'blockdomi.importFromPdfIntro': 'Sube un PDF (oficio con tabla anexa) o ingresa la URL del PDF. Solo se extraerán los dominios e IPs de la tabla.',

@@ -80,7 +80,7 @@ if (fs.existsSync(imagesSource)) {
   }
   
   // Criar estrutura de pastas para uploads apenas se não existirem (não limpar conteúdo existente)
-  const subpastas = ['empresa', 'clientes', 'documentos'];
+  const subpastas = ['empresa', 'clientes', 'documentos', 'blockdomi'];
   subpastas.forEach(subpasta => {
     const fullPath = path.join(arquivosDest, subpasta);
     if (!fs.existsSync(fullPath)) {
@@ -97,7 +97,7 @@ if (fs.existsSync(imagesSource)) {
   if (!fs.existsSync(arquivosDest)) {
     fs.mkdirSync(arquivosDest, { recursive: true });
   }
-  const subpastas = ['images/bancos', 'images/sistema', 'empresa', 'clientes', 'documentos'];
+  const subpastas = ['images/bancos', 'images/sistema', 'empresa', 'clientes', 'documentos', 'blockdomi'];
   subpastas.forEach(subpasta => {
     const fullPath = path.join(arquivosDest, subpasta);
     if (!fs.existsSync(fullPath)) {

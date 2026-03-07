@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ImportarListaBlockdomiService } from '../../../services/blockdomi/ImportarListaBlockdomiService';
 import { VersaoBlockdomiService } from '../../../services/blockdomi/VersaoBlockdomiService';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
+import { logger } from '../../../utils/logger';
 
 export class ImportarListaBlockdomiController {
   static async importar(req: Request, res: Response): Promise<void> {
@@ -63,6 +64,43 @@ export class ImportarListaBlockdomiController {
         context: 'ImportarListaBlockdomiController',
         action: 'importar',
         body: req.body
+      });
+    }
+  }
+
+  /**
+   * Upload de PDF de ofício para uso nos links (Anatel, Justiça, Planilha).
+   * Retorna URL para ser salva no metadata.
+   */
+  static async uploadOficioPdf(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.file) {
+        sendValidationError(res, 'Arquivo PDF não enviado');
+        return;
+      }
+      const allowedMimes = ['application/pdf'];
+      if (!allowedMimes.includes(req.file.mimetype)) {
+        if (req.file.path) {
+          try {
+            const fs = await import('fs');
+            if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+          } catch {}
+        }
+        sendValidationError(res, 'Apenas arquivos PDF são permitidos');
+        return;
+      }
+      const filePath = `/arquivos/blockdomi/${req.file.filename}`;
+      const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : '';
+      const fullUrl = `${baseUrl}${filePath}`;
+      logger.info('Upload PDF ofício blockdomi concluído', {
+        filename: req.file.filename,
+        originalname: req.file.originalname
+      });
+      sendSuccess(res, { url: fullUrl, path: filePath });
+    } catch (error) {
+      sendError(res, error, 'Erro ao fazer upload do PDF', 500, true, {
+        context: 'ImportarListaBlockdomiController',
+        action: 'uploadOficioPdf'
       });
     }
   }

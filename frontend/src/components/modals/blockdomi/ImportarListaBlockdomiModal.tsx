@@ -114,6 +114,10 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const [linkOficioAnatel, setLinkOficioAnatel] = useState('');
   const [linkOficioJustica, setLinkOficioJustica] = useState('');
   const [linkPlanilhaDominios, setLinkPlanilhaDominios] = useState('');
+  const [pdfOficioAnatel, setPdfOficioAnatel] = useState<File | null>(null);
+  const [pdfOficioJustica, setPdfOficioJustica] = useState<File | null>(null);
+  const pdfAnatelInputRef = useRef<HTMLInputElement>(null);
+  const pdfJusticaInputRef = useRef<HTMLInputElement>(null);
   const [classified, setClassified] = useState<ClassifiedList | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isCadastrando, setIsCadastrando] = useState(false);
@@ -133,10 +137,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setRawText('');
       setClassified(null);
       setPdfFile(null);
+      setPdfOficioAnatel(null);
+      setPdfOficioJustica(null);
+      [pdfFileInputRef, pdfAnatelInputRef, pdfJusticaInputRef].forEach((ref) => {
+        if (ref.current) ref.current.value = '';
+      });
       setVisualizacaoExtrados({ show: false, dominios: [], listaFiltrada: [], metadata: {} });
-      if (pdfFileInputRef.current) {
-        pdfFileInputRef.current.value = '';
-      }
       setDataInicioBloqueio((prev) => {
         if (prev === '') {
           const today = new Date();
@@ -303,9 +309,23 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       const dataInicioVal = dataInicioBloqueio.trim() || hojeStr;
       const dataFimVal = dataFimBloqueio.trim() || null;
-      const linkAnatelVal = linkOficioAnatel.trim() || null;
-      const linkJusticaVal = linkOficioJustica.trim() || null;
-      const linkPlanilhaVal = linkPlanilhaDominios.trim() || null;
+
+      let linkAnatelVal = linkOficioAnatel.trim() || null;
+      let linkJusticaVal = linkOficioJustica.trim() || null;
+      let linkPlanilhaVal = linkPlanilhaDominios.trim() || null;
+
+      if (pdfOficioAnatel) {
+        const { url } = await BlockdomiService.uploadOficioPdf(pdfOficioAnatel);
+        linkAnatelVal = url;
+      }
+      if (pdfOficioJustica) {
+        const { url } = await BlockdomiService.uploadOficioPdf(pdfOficioJustica);
+        linkJusticaVal = url;
+      }
+      if (pdfFile) {
+        const { url } = await BlockdomiService.uploadOficioPdf(pdfFile);
+        linkPlanilhaVal = url;
+      }
 
       const result = await BlockdomiService.importarLista({
         dominios: classified.dominios,
@@ -342,7 +362,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     } finally {
       setIsCadastrando(false);
     }
-  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, success, error, onSuccess, queryClient, t]);
+  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, pdfOficioAnatel, pdfOficioJustica, pdfFile, success, error, onSuccess, queryClient, t]);
 
   const domainCount = useMemo(() => {
     const lines = rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
@@ -457,33 +477,57 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                   onChange={(e) => setNomeOficio(e.target.value)}
                 />
               </div>
+              <label className="form-label small mb-1 mt-2">{t('blockdomi.linkOficioAnatelOptional')}</label>
+              <div className="row g-2">
+                <div className="col-12 col-md-7">
+                  <div className="ilb-input-wrapper">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="https://..."
+                      value={linkOficioAnatel}
+                      onChange={(e) => setLinkOficioAnatel(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="col-12 col-md-5">
+                  <input
+                    ref={pdfAnatelInputRef}
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="form-control form-control-sm"
+                    onChange={(e) => setPdfOficioAnatel(e.target.files?.[0] ?? null)}
+                  />
+                  {pdfOficioAnatel && <span className="small text-success">{pdfOficioAnatel.name}</span>}
+                </div>
+              </div>
+              <label className="form-label small mb-1 mt-2">{t('blockdomi.linkOficioJusticaOptional')}</label>
+              <span className="text-muted small d-block mb-1">{t('blockdomi.separateLinksHelp')}</span>
+              <div className="row g-2">
+                <div className="col-12 col-md-7">
+                  <div className="ilb-input-wrapper">
+                    <textarea
+                      className="form-control form-control-sm"
+                      rows={2}
+                      placeholder="https://exemplo1.com, https://exemplo2.com"
+                      value={linkOficioJustica}
+                      onChange={(e) => setLinkOficioJustica(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="col-12 col-md-5">
+                  <input
+                    ref={pdfJusticaInputRef}
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="form-control form-control-sm"
+                    onChange={(e) => setPdfOficioJustica(e.target.files?.[0] ?? null)}
+                  />
+                  {pdfOficioJustica && <span className="small text-success">{pdfOficioJustica.name}</span>}
+                </div>
+              </div>
             </div>
             <div className="col-12 col-md-6">
-              <label className="form-label small mb-1">{t('blockdomi.linkOficioAnatelOptional')}</label>
-              <div className="ilb-input-wrapper">
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  placeholder="https://..."
-                  value={linkOficioAnatel}
-                  onChange={(e) => setLinkOficioAnatel(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="col-12">
-              <label className="form-label small mb-1">{t('blockdomi.linkOficioJusticaOptional')}</label>
-              <div className="ilb-input-wrapper">
-                <textarea
-                  className="form-control form-control-sm"
-                  rows={2}
-                  placeholder="https://exemplo1.com, https://exemplo2.com"
-                  value={linkOficioJustica}
-                  onChange={(e) => setLinkOficioJustica(e.target.value)}
-                />
-              </div>
-              <span className="text-muted small">{t('blockdomi.separateLinksHelp')}</span>
-            </div>
-            <div className="col-12">
               <label className="form-label small mb-1">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
               <div className="ilb-input-wrapper">
                 <input
@@ -494,9 +538,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                   onChange={(e) => setLinkPlanilhaDominios(e.target.value)}
                 />
               </div>
-            </div>
-            <div className="col-12 col-md-6">
-              <label className="form-label small mb-1">{t('blockdomi.dataInicioBloqueio')}</label>
+              <span className="text-muted small">{t('blockdomi.planilhaPdfFromImport')}</span>
+              <label className="form-label small mb-1 mt-2">{t('blockdomi.dataInicioBloqueio')}</label>
               <div className="ilb-input-wrapper">
                 <input
                   type="date"
@@ -506,9 +549,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 />
               </div>
               <span className="text-muted small">{t('blockdomi.emptyEqualsToday')}</span>
-            </div>
-            <div className="col-12 col-md-6">
-              <label className="form-label small mb-1">{t('blockdomi.dataFimBloqueioOptional')}</label>
+              <label className="form-label small mb-1 mt-2">{t('blockdomi.dataFimBloqueioOptional')}</label>
               <div className="ilb-input-wrapper">
                 <input
                   type="date"

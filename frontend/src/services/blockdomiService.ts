@@ -49,4 +49,19 @@ export class BlockdomiService {
     }
     return data;
   }
+
+  static async uploadOficioPdf(file: File): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('arquivo', file);
+    const response = await defaultApiClient.post<{ success: boolean; data?: { url: string; path: string } }>(
+      '/blockdomi/upload-oficio-pdf',
+      formData,
+      { timeout: 60000 }
+    );
+    const data = (response as { data?: { url: string; path: string } }).data;
+    if (!data?.url) {
+      throw new Error('Resposta inválida do servidor');
+    }
+    return { url: data.url };
+  }
 }
