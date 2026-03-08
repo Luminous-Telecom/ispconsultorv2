@@ -57,7 +57,7 @@ const Layout: React.FC = () => {
     [dadosEmpresa]
   );
 
-  const { hasModulo } = usePlanoModulos();
+  const { hasModulo, isLoading: isLoadingModulos } = usePlanoModulos();
 
   useEffect(() => {
     document.title = companyName || 'BackNet';
@@ -318,7 +318,7 @@ const Layout: React.FC = () => {
         <div className="sidebar-nav-scrollable flex-grow-1">
           <nav className="sidebar-nav nav nav-pills flex-column mb-auto px-2">
             {/* Menu Pasta para Cadastros usando Bootstrap Accordion */}
-            {cadastrosFolderItems.length > 0 && (
+            {!isLoadingModulos && cadastrosFolderItems.length > 0 && (
             <div className="accordion sidebar-accordion" id="cadastrosAccordion">
               <div className="accordion-item border-0 bg-transparent">
                 <h2 className="accordion-header">
@@ -373,7 +373,7 @@ const Layout: React.FC = () => {
             )}
 
             {/* Menu Pasta para Financeiro usando Bootstrap Accordion */}
-            {financeiroFolderItems.length > 0 && (
+            {!isLoadingModulos && financeiroFolderItems.length > 0 && (
             <div className="accordion sidebar-accordion" id="financeiroAccordion">
               <div className="accordion-item border-0 bg-transparent">
                 <h2 className="accordion-header">
@@ -428,7 +428,7 @@ const Layout: React.FC = () => {
             )}
 
             {/* Menu Pasta para Blockdomi usando Bootstrap Accordion */}
-            {blockdomiFolderItems.length > 0 && (
+            {!isLoadingModulos && blockdomiFolderItems.length > 0 && (
             <div className="accordion sidebar-accordion" id="blockdomiAccordion">
               <div className="accordion-item border-0 bg-transparent">
                 <h2 className="accordion-header">

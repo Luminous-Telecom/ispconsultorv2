@@ -31,7 +31,14 @@ export function tenantTemModulo(modulos: PlanoModuloId[] | null, moduloId: Plano
 }
 
 function extrairModulosDoPlano(plano: SaasPlano): PlanoModuloId[] {
-  const recursos = plano.recursos as Record<string, unknown> | null | undefined;
+  let recursos = plano.recursos as Record<string, unknown> | string | null | undefined;
+  if (typeof recursos === 'string') {
+    try {
+      recursos = JSON.parse(recursos) as Record<string, unknown>;
+    } catch {
+      return [];
+    }
+  }
   if (!recursos || typeof recursos !== 'object') return [];
 
   const modulos = recursos.modulos;

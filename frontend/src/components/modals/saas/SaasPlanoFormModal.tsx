@@ -11,9 +11,17 @@ import { PLANO_MODULOS } from '@/constants/planoModulos';
 import type { PlanoModuloId } from '@/services/planoModulosService';
 
 function extractModulosFromRecursos(recursos: unknown): PlanoModuloId[] {
-  const obj = recursos && typeof recursos === 'object' && !Array.isArray(recursos)
-    ? (recursos as Record<string, unknown>)
-    : null;
+  let obj: Record<string, unknown> | null = null;
+  if (recursos && typeof recursos === 'object' && !Array.isArray(recursos)) {
+    obj = recursos as Record<string, unknown>;
+  } else if (typeof recursos === 'string') {
+    try {
+      const parsed = JSON.parse(recursos);
+      obj = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null;
+    } catch {
+      obj = null;
+    }
+  }
   const modulos = obj?.modulos;
   return Array.isArray(modulos) ? modulos.filter((m): m is PlanoModuloId => typeof m === 'string') : [];
 }
@@ -76,7 +84,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
           const p = planoData.data as SaasPlano;
           const modulos = extractModulosFromRecursos(p.recursos);
           const valorAnual: number | '' = p.valor_anual == null ? '' : Number(p.valor_anual);
-          return {
+          const formData = {
             nome: p.nome,
             descricao: p.descricao || '',
             valor_mensal: p.valor_mensal,
@@ -85,6 +93,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
             ativo: p.ativo,
             modulos,
           } as PlanoForm;
+          return formData;
         })()
       : undefined,
   });
