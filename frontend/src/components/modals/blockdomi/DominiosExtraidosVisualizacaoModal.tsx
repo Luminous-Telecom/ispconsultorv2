@@ -26,6 +26,7 @@ interface DominiosExtraidosVisualizacaoModalProps {
   show: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onCadastrarSuccess?: () => void;
   dominiosExtraidos: string[];
   listaFiltrada?: string[];
   metadata?: DominiosExtraidosVisualizacaoMetadata;
@@ -35,6 +36,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
   show,
   onClose,
   onSuccess,
+  onCadastrarSuccess,
   dominiosExtraidos,
   listaFiltrada = [],
   metadata = {}
@@ -157,6 +159,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
       queryClient.invalidateQueries({ queryKey: ['dominios'] });
       queryClient.invalidateQueries({ queryKey: ['ipv4'] });
       queryClient.invalidateQueries({ queryKey: ['ipv6'] });
+      onCadastrarSuccess?.();
       onSuccess?.();
       onClose();
     } catch (e) {
@@ -164,7 +167,7 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
     } finally {
       setIsCadastrando(false);
     }
-  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, success, error, onSuccess, onClose, queryClient, t]);
+  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, success, error, onCadastrarSuccess, onSuccess, onClose, queryClient, t]);
 
   const handleCopy = useCallback(
     (items: string[]) => {

@@ -381,6 +381,18 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       onSuccess?.();
       setRawText('');
       setClassified(null);
+      setNomeOficio('');
+      setDataInicioBloqueio(hojeStr);
+      setDataFimBloqueio('');
+      setLinkOficioAnatel('');
+      setLinkOficioJustica('');
+      setLinkPlanilhaDominios('');
+      setPdfOficioAnatel(null);
+      setPdfOficioJustica(null);
+      setPdfFile(null);
+      [pdfFileInputRef, pdfAnatelInputRef, pdfJusticaInputRef].forEach((ref) => {
+        if (ref.current) ref.current.value = '';
+      });
     } catch (e) {
       error((e as Error)?.message ?? 'Erro ao cadastrar.');
     } finally {
@@ -864,14 +876,34 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     setClassified(null);
   }, []);
 
+  const handleCadastrarSuccessExtrados = useCallback(() => {
+    const today = new Date();
+    const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    setRawText('');
+    setClassified(null);
+    setNomeOficio('');
+    setDataInicioBloqueio(hojeStr);
+    setDataFimBloqueio('');
+    setLinkOficioAnatel('');
+    setLinkOficioJustica('');
+    setLinkPlanilhaDominios('');
+    setPdfOficioAnatel(null);
+    setPdfOficioJustica(null);
+    setPdfFile(null);
+    [pdfFileInputRef, pdfAnatelInputRef, pdfJusticaInputRef].forEach((ref) => {
+      if (ref.current) ref.current.value = '';
+    });
+  }, []);
+
   const visualizacaoModal = (
     <DominiosExtraidosVisualizacaoModal
       show={visualizacaoExtrados.show}
       onClose={handleCloseVisualizacaoExtrados}
       onSuccess={onSuccess}
-        dominiosExtraidos={visualizacaoExtrados.dominios}
-        listaFiltrada={visualizacaoExtrados.listaFiltrada}
-        metadata={visualizacaoExtrados.metadata}
+      onCadastrarSuccess={handleCadastrarSuccessExtrados}
+      dominiosExtraidos={visualizacaoExtrados.dominios}
+      listaFiltrada={visualizacaoExtrados.listaFiltrada}
+      metadata={visualizacaoExtrados.metadata}
     />
   );
 
