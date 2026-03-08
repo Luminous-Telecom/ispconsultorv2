@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { SaasNFSeConfigService } from '../../../services/saas/SaasNFSeConfigService';
+import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
 import { logger } from '../../../utils/logger';
 import Joi from 'joi';
 import axios from 'axios';
@@ -75,7 +76,13 @@ export class SaasNFSeConfigController {
         }
       }
 
+      const configAnterior = await SaasNFSeConfigService.get();
       const configAtualizado = await SaasNFSeConfigService.update(dadosParaSalvar);
+      if (configAnterior) {
+        await registrarAtualizacao(req as any, 'SaasNFSeConfig', configAtualizado.id,
+          configAnterior.toJSON() as Record<string, unknown>,
+          configAtualizado.toJSON() as Record<string, unknown>);
+      }
       sendSuccess(res, SaasNFSeConfigController.maskSensitiveFields(configAtualizado.toJSON() as Record<string, unknown>), 'Configuração NFS-e atualizada com sucesso');
       return res;
     } catch (error: unknown) {

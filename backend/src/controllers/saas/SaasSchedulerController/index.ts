@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { SaasScheduledRoutineService } from '../../../services/saas/SaasScheduledRoutineService';
 import { SchedulerService } from '../../../services/scheduler/SchedulerService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { calculateNextExecution } from '../../../utils/SchedulerUtils';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
 
@@ -64,6 +65,7 @@ export class SaasSchedulerController {
       };
 
       const routine = await SaasScheduledRoutineService.create(dadosComProximaExecucao);
+      await registrarCriacao(req as any, 'SaasScheduledRoutine', routine.id, routine.toJSON ? routine.toJSON() as Record<string, unknown> : routine as unknown as Record<string, unknown>);
       if (routine.ativo) {
         await SchedulerService.getInstance().scheduleSaasRoutine(routine);
       }
@@ -82,7 +84,13 @@ export class SaasSchedulerController {
       const { id } = req.params;
       const updateData = req.body;
 
+      const routineAntiga = await SaasScheduledRoutineService.getById(Number(id));
       const routine = await SaasScheduledRoutineService.update(Number(id), updateData);
+      if (routineAntiga && routine) {
+        await registrarAtualizacao(req as any, 'SaasScheduledRoutine', Number(id),
+          routineAntiga.toJSON ? routineAntiga.toJSON() as Record<string, unknown> : routineAntiga as unknown as Record<string, unknown>,
+          routine.toJSON ? routine.toJSON() as Record<string, unknown> : routine as unknown as Record<string, unknown>);
+      }
       const scheduler = SchedulerService.getInstance();
       if (routine.ativo) {
         await scheduler.scheduleSaasRoutine(routine);
@@ -123,8 +131,13 @@ export class SaasSchedulerController {
     try {
       const { id } = req.params;
       const routineId = Number(id);
+      const routineAntiga = await SaasScheduledRoutineService.getById(routineId);
       SchedulerService.getInstance().unscheduleSaasRoutine(routineId);
       await SaasScheduledRoutineService.delete(routineId);
+      if (routineAntiga) {
+        await registrarExclusao(req as any, 'SaasScheduledRoutine', routineId,
+          routineAntiga.toJSON ? routineAntiga.toJSON() as Record<string, unknown> : routineAntiga as unknown as Record<string, unknown>);
+      }
       sendSuccess(res, undefined, 'Rotina deletada com sucesso');
     } catch (error: unknown) {
       sendError(res, error, 'Erro interno do servidor', 500, true, {

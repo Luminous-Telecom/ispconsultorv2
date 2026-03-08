@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { SaasParametrosService } from '../../../services/saas/SaasParametrosService';
 import Joi from 'joi';
+import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
 
 export class SaasParametrosController {
@@ -66,7 +67,13 @@ export class SaasParametrosController {
         return res;
       }
 
+      const parametrosAntigos = await SaasParametrosService.get();
       const parametros = await SaasParametrosService.update(value);
+      if (parametrosAntigos) {
+        await registrarAtualizacao(req as any, 'SaasParametros', parametros.id,
+          parametrosAntigos.toJSON() as unknown as Record<string, unknown>,
+          parametros.toJSON() as unknown as Record<string, unknown>);
+      }
       sendSuccess(res, parametros, 'Parâmetros atualizados com sucesso');
       return res;
     } catch (error) {

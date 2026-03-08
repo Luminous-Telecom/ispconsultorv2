@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import Joi from 'joi';
 import { SaasPlanoService } from '../../../services/saas/SaasPlanoService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 
@@ -47,6 +48,7 @@ export class SaasPlanoController {
         return;
       }
       const plano = await SaasPlanoService.create(value);
+      await registrarCriacao(req as any, 'SaasPlano', plano.id, plano.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Plano criado com sucesso', data: plano });
     } catch (err) {
       sendError(res, err, 'Erro ao criar plano', 500, true);
@@ -65,7 +67,13 @@ export class SaasPlanoController {
         }, {}));
         return;
       }
+      const planoAntigo = await SaasPlanoService.getById(Number(req.params.id));
       await SaasPlanoService.update(Number(req.params.id), value);
+      if (planoAntigo) {
+        await registrarAtualizacao(req as any, 'SaasPlano', Number(req.params.id),
+          planoAntigo.toJSON() as Record<string, unknown>,
+          { ...planoAntigo.toJSON(), ...value } as Record<string, unknown>);
+      }
       sendSuccess(res, null, 'Plano atualizado com sucesso');
     } catch (err) {
       sendError(res, err, 'Erro ao atualizar plano', 500, true);
@@ -74,7 +82,11 @@ export class SaasPlanoController {
 
   static async delete(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
+      const planoAntigo = await SaasPlanoService.getById(Number(req.params.id));
       await SaasPlanoService.delete(Number(req.params.id));
+      if (planoAntigo) {
+        await registrarExclusao(req as any, 'SaasPlano', Number(req.params.id), planoAntigo.toJSON() as Record<string, unknown>);
+      }
       sendSuccess(res, null, 'Plano removido com sucesso');
     } catch (err) {
       sendError(res, err, 'Erro ao remover plano', 500, true);

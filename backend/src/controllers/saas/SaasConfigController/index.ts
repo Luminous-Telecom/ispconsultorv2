@@ -3,6 +3,7 @@ import Joi from 'joi';
 import { randomBytes } from 'crypto';
 import { SaasServidorEmailService, SaasServidorWhatsappService, SaasBancoService } from '../../../services/saas/SaasConfigService';
 import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
@@ -60,6 +61,7 @@ export class SaasServidorEmailController {
       const { error, value } = emailSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
       const item = await SaasServidorEmailService.create(value);
+      await registrarCriacao(req as any, 'SaasServidorEmail', item.id, item.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Servidor criado com sucesso', data: item });
     } catch (err) { sendError(res, err, 'Erro ao criar servidor', 500, true); }
   }
@@ -67,12 +69,23 @@ export class SaasServidorEmailController {
     try {
       const { error, value } = emailUpdateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      const antigo = await SaasServidorEmailService.getById(Number(req.params.id));
       await SaasServidorEmailService.update(Number(req.params.id), value);
+      if (antigo) {
+        await registrarAtualizacao(req as any, 'SaasServidorEmail', Number(req.params.id),
+          antigo.toJSON() as Record<string, unknown>,
+          { ...antigo.toJSON(), ...value } as Record<string, unknown>);
+      }
       sendSuccess(res, null, 'Servidor atualizado com sucesso');
     } catch (err) { sendError(res, err, 'Erro ao atualizar servidor', 500, true); }
   }
   static async delete(req: SaasAuthenticatedRequest, res: Response) {
-    try { await SaasServidorEmailService.delete(Number(req.params.id)); sendSuccess(res, null, 'Servidor removido'); }
+    try {
+      const antigo = await SaasServidorEmailService.getById(Number(req.params.id));
+      await SaasServidorEmailService.delete(Number(req.params.id));
+      if (antigo) await registrarExclusao(req as any, 'SaasServidorEmail', Number(req.params.id), antigo.toJSON() as Record<string, unknown>);
+      sendSuccess(res, null, 'Servidor removido');
+    }
     catch (err) { sendError(res, err, 'Erro ao remover servidor', 500, true); }
   }
 }
@@ -108,6 +121,7 @@ export class SaasServidorWhatsappController {
       const { error, value } = whatsappSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
       const item = await SaasServidorWhatsappService.create(value);
+      await registrarCriacao(req as any, 'SaasServidorWhatsapp', item.id, item.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Servidor criado com sucesso', data: item });
     } catch (err) { sendError(res, err, 'Erro ao criar servidor', 500, true); }
   }
@@ -115,12 +129,23 @@ export class SaasServidorWhatsappController {
     try {
       const { error, value } = whatsappUpdateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      const antigo = await SaasServidorWhatsappService.getById(Number(req.params.id));
       await SaasServidorWhatsappService.update(Number(req.params.id), value);
+      if (antigo) {
+        await registrarAtualizacao(req as any, 'SaasServidorWhatsapp', Number(req.params.id),
+          antigo.toJSON() as Record<string, unknown>,
+          { ...antigo.toJSON(), ...value } as Record<string, unknown>);
+      }
       sendSuccess(res, null, 'Servidor atualizado com sucesso');
     } catch (err) { sendError(res, err, 'Erro ao atualizar servidor', 500, true); }
   }
   static async delete(req: SaasAuthenticatedRequest, res: Response) {
-    try { await SaasServidorWhatsappService.delete(Number(req.params.id)); sendSuccess(res, null, 'Servidor removido'); }
+    try {
+      const antigo = await SaasServidorWhatsappService.getById(Number(req.params.id));
+      await SaasServidorWhatsappService.delete(Number(req.params.id));
+      if (antigo) await registrarExclusao(req as any, 'SaasServidorWhatsapp', Number(req.params.id), antigo.toJSON() as Record<string, unknown>);
+      sendSuccess(res, null, 'Servidor removido');
+    }
     catch (err) { sendError(res, err, 'Erro ao remover servidor', 500, true); }
   }
 }
@@ -199,6 +224,7 @@ export class SaasBancoController {
         value.empresa_id = empresa?.id ?? 1;
       }
       const item = await SaasBancoService.create(value);
+      await registrarCriacao(req as any, 'SaasBanco', item.id, item.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Banco criado com sucesso', data: item });
     } catch (err) { sendError(res, err, 'Erro ao criar banco', 500, true); }
   }
@@ -206,12 +232,23 @@ export class SaasBancoController {
     try {
       const { error, value } = bancoUpdateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
+      const antigo = await SaasBancoService.getById(Number(req.params.id));
       await SaasBancoService.update(Number(req.params.id), value);
+      if (antigo) {
+        await registrarAtualizacao(req as any, 'SaasBanco', Number(req.params.id),
+          antigo.toJSON() as Record<string, unknown>,
+          { ...antigo.toJSON(), ...value } as Record<string, unknown>);
+      }
       sendSuccess(res, null, 'Banco atualizado com sucesso');
     } catch (err) { sendError(res, err, 'Erro ao atualizar banco', 500, true); }
   }
   static async delete(req: SaasAuthenticatedRequest, res: Response) {
-    try { await SaasBancoService.delete(Number(req.params.id)); sendSuccess(res, null, 'Banco removido'); }
+    try {
+      const antigo = await SaasBancoService.getById(Number(req.params.id));
+      await SaasBancoService.delete(Number(req.params.id));
+      if (antigo) await registrarExclusao(req as any, 'SaasBanco', Number(req.params.id), antigo.toJSON() as Record<string, unknown>);
+      sendSuccess(res, null, 'Banco removido');
+    }
     catch (err) { sendError(res, err, 'Erro ao remover banco', 500, true); }
   }
   static async testarConexao(req: SaasAuthenticatedRequest, res: Response) {

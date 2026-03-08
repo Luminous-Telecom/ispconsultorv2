@@ -4,6 +4,9 @@ export class AuditoriaQueryService {
   /**
    * Constrói query do Elasticsearch para busca de auditoria
    */
+  /** Entidades do painel SaaS – não mostrar no ADM normal (tenant) */
+  static readonly ENTIDADES_SAAS = ['SaasPlano', 'SaasContrato', 'SaasDadosEmpresa', 'SaasDadosEmpresaCrud', 'SaasBanco', 'SaasTitulo', 'SaasTipoCobranca', 'SaasDiasVencimento', 'SaasNFSeConfig', 'SaasParametros', 'SaasServidorEmail', 'SaasServidorWhatsapp', 'SaasUsuarioSuper', 'SaasScheduledRoutine'];
+
   static buildElasticsearchQuery(params: {
     search?: string;
     acao?: string;
@@ -11,8 +14,9 @@ export class AuditoriaQueryService {
     usuario_id?: number;
     dataInicio?: string;
     dataFim?: string;
-  }): { must: any[] } {
-    const { search, acao, entidade, usuario_id, dataInicio, dataFim } = params;
+    empresaId?: number | null;
+  }): { must: any[]; must_not?: any[] } {
+    const { search, acao, entidade, usuario_id, dataInicio, dataFim, empresaId } = params;
     const must: any[] = [
       { bool: { should: [{ term: { log_tipo: 'auditoria' } }, { bool: { must: [{ bool: { must_not: { exists: { field: 'log_tipo' } } } }, { exists: { field: 'acao' } }] } }], minimum_should_match: 1 } }
     ];
@@ -87,7 +91,23 @@ export class AuditoriaQueryService {
       must.push({ range: { timestamp: range } });
     }
 
-    return { must };
+    const must_not: any[] = [];
+
+    // Tenant: excluir entidades SaaS e filtrar por empresa_id (inclui docs legados sem empresa_id)
+    if (empresaId != null && empresaId > 0) {
+      must_not.push({ terms: { entidade: this.ENTIDADES_SAAS } });
+      must.push({
+        bool: {
+          should: [
+            { term: { empresa_id: empresaId } },
+            { bool: { must_not: { exists: { field: 'empresa_id' } } } }
+          ],
+          minimum_should_match: 1
+        }
+      });
+    }
+
+    return must_not.length > 0 ? { must, must_not } : { must };
   }
 
   /**
@@ -104,6 +124,7 @@ export class AuditoriaQueryService {
     dataFim?: string;
     sortColumn?: string;
     sortDirection?: string;
+    empresaId?: number | null;
   }): Promise<{ logs: any[]; total: number }> {
     const elasticsearchService = getElasticsearchService();
     const client = elasticsearchService.getClient();
@@ -113,12 +134,12 @@ export class AuditoriaQueryService {
     }
 
     const { page, limit, sortColumn, sortDirection, ...queryParams } = params;
-    const { must } = this.buildElasticsearchQuery(queryParams);
+    const { must, must_not } = this.buildElasticsearchQuery(queryParams);
 
     // Construir ordenação para Elasticsearch
-    // Mapear colunas do frontend para campos do Elasticsearch
+    // Mapear colunas do frontend para campos do Elasticsearch (o índice não tem campo 'id')
     const sortFieldMap: Record<string, string> = {
-      'id': 'id',
+      'id': 'timestamp',
       'timestamp': 'timestamp',
       'created_at': 'timestamp',
       'acao': 'acao',
@@ -136,16 +157,24 @@ export class AuditoriaQueryService {
     const sortOrder = (sortDirection || 'desc').toLowerCase() === 'asc' ? 'asc' : 'desc';
 
 
+    const boolQuery: any = {
+      must: must.length > 0 ? must : [{ match_all: {} }]
+    };
+    if (must_not && must_not.length > 0) {
+      boolQuery.must_not = must_not;
+    }
+
+    const maxResultWindow = 50000;
+    const from = Math.min((page - 1) * limit, Math.max(0, maxResultWindow - limit));
+
     const query: any = {
       index: elasticsearchService.getIndexName(),
         body: {
           query: {
-            bool: {
-              must: must.length > 0 ? must : [{ match_all: {} }]
-            }
+            bool: boolQuery
           },
           sort: [{ [sortField]: { order: sortOrder } }],
-          from: (page - 1) * limit,
+          from,
           size: limit
         }
       };

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
 import { SaasDadosEmpresaCrudService } from '../../../services/saas/SaasDadosEmpresaCrudService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 
@@ -80,6 +81,7 @@ export class SaasDadosEmpresaCrudController {
         return;
       }
       const empresa = await SaasDadosEmpresaCrudService.create(value);
+      await registrarCriacao(req as any, 'SaasDadosEmpresaCrud', empresa.id, empresa.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Empresa criada com sucesso', data: empresa });
     } catch (err) {
       sendError(res, err, 'Erro ao criar empresa', 500, true);
@@ -98,7 +100,13 @@ export class SaasDadosEmpresaCrudController {
         }, {}));
         return;
       }
+      const empresaAntiga = await SaasDadosEmpresaCrudService.getById(Number(req.params.id));
       await SaasDadosEmpresaCrudService.update(Number(req.params.id), value);
+      if (empresaAntiga) {
+        await registrarAtualizacao(req as any, 'SaasDadosEmpresaCrud', Number(req.params.id),
+          empresaAntiga.toJSON() as Record<string, unknown>,
+          { ...empresaAntiga.toJSON(), ...value } as Record<string, unknown>);
+      }
       sendSuccess(res, null, 'Empresa atualizada com sucesso');
     } catch (err) {
       sendError(res, err, 'Erro ao atualizar empresa', 500, true);
@@ -107,7 +115,11 @@ export class SaasDadosEmpresaCrudController {
 
   static async delete(req: SaasAuthenticatedRequest, res: Response) {
     try {
+      const empresaAntiga = await SaasDadosEmpresaCrudService.getById(Number(req.params.id));
       await SaasDadosEmpresaCrudService.delete(Number(req.params.id));
+      if (empresaAntiga) {
+        await registrarExclusao(req as any, 'SaasDadosEmpresaCrud', Number(req.params.id), empresaAntiga.toJSON() as Record<string, unknown>);
+      }
       sendSuccess(res, null, 'Empresa removida');
     } catch (err) {
       sendError(res, err, 'Erro ao remover empresa', 500, true);

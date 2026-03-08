@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../../../types/auth';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { getElasticsearchService } from '../../../services/elasticsearch/ElasticsearchService';
 import { AuditoriaQueryService } from '../../../services/auditoria/AuditoriaQueryService';
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
@@ -26,6 +27,8 @@ export class AuditoriaController {
         return;
       }
 
+      await elasticsearchService.ensureIndex();
+
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 15;
       const search = req.query.search as string;
@@ -36,10 +39,14 @@ export class AuditoriaController {
       const dataFim = req.query.data_fim as string;
       const sortColumn = req.query.sortColumn as string;
       const sortDirection = req.query.sortDirection as string;
+      const empresaId = getEmpresaIdOrNull(req);
 
+      const maxResultWindow = 50000;
+      const maxLastPage = Math.max(1, Math.floor(maxResultWindow / limit));
+      const effectivePage = Math.min(page, maxLastPage);
 
       const { logs, total } = await AuditoriaQueryService.searchFromElasticsearch({
-        page,
+        page: effectivePage,
         limit,
         search,
         acao,
@@ -48,18 +55,21 @@ export class AuditoriaController {
         dataInicio,
         dataFim,
         sortColumn,
-        sortDirection
+        sortDirection,
+        empresaId
       });
+
+      const lastPage = Math.min(Math.ceil(total / limit), maxLastPage);
 
       sendSuccess(res, {
         data: logs,
         pagination: {
-          current_page: page,
-          last_page: Math.ceil(total / limit),
+          current_page: effectivePage,
+          last_page: lastPage,
           per_page: limit,
           total,
-          from: (page - 1) * limit + 1,
-          to: Math.min(page * limit, total)
+          from: total > 0 ? (effectivePage - 1) * limit + 1 : 0,
+          to: Math.min(effectivePage * limit, total)
         }
       });
     } catch (error) {
@@ -174,6 +184,12 @@ export class AuditoriaController {
         return;
       }
 
+      const empresaId = getEmpresaIdOrNull(req);
+      if (empresaId != null && AuditoriaQueryService.ENTIDADES_SAAS.includes(entidade as string)) {
+        sendForbidden(res, 'Acesso negado a auditoria de entidades SaaS');
+        return;
+      }
+
       const elasticsearchService = getElasticsearchService();
       const client = elasticsearchService.getClient();
 
@@ -230,6 +246,12 @@ export class AuditoriaController {
     try {
       if (!entidade || !entidade_id) {
         sendValidationError(res, 'Parâmetros entidade e entidade_id são obrigatórios');
+        return;
+      }
+
+      const empresaId = getEmpresaIdOrNull(req);
+      if (empresaId != null && AuditoriaQueryService.ENTIDADES_SAAS.includes(entidade as string)) {
+        sendForbidden(res, 'Acesso negado a auditoria de entidades SaaS');
         return;
       }
 

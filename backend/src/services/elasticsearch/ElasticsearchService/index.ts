@@ -100,6 +100,7 @@ class ElasticsearchService {
           index: this.indexName,
           mappings: {
             properties: {
+              empresa_id: { type: 'integer' },
               usuario_id: { type: 'integer' },
               usuario_nome: { type: 'keyword' },
               usuario_email: { type: 'keyword' },
@@ -119,8 +120,8 @@ class ElasticsearchService {
           settings: {
             number_of_shards: 1,
             number_of_replicas: 0,
-            // Aumentar limite de campos para 2000
-            'index.mapping.total_fields.limit': 2000
+            'index.mapping.total_fields.limit': 2000,
+            'index.max_result_window': 50000
           }
         });
 
@@ -132,7 +133,8 @@ class ElasticsearchService {
             index: this.indexName,
             body: {
               settings: {
-                'index.mapping.total_fields.limit': 2000
+                'index.mapping.total_fields.limit': 2000,
+                'index.max_result_window': 50000
               }
             }
           });

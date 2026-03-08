@@ -7,6 +7,14 @@
 import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../../../types/auth';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+
+/** Req com saasUser (SaaS) não tem empresa_id - retorna null */
+function getEmpresaIdForAudit(req: Request | AuthenticatedRequest): number | null {
+  const reqAny = req as AuthenticatedRequest & { saasUser?: unknown };
+  if (reqAny.saasUser) return null;
+  return getEmpresaIdOrNull(req);
+}
 import { getElasticsearchService } from '../ElasticsearchService';
 import { logger } from '../../../utils/logger';
 import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
@@ -44,29 +52,27 @@ function getUserAgent(req: Request): string | null {
 }
 
 /**
- * Obter dados do usuário autenticado
+ * Obter dados do usuário autenticado (ERP ou SaaS)
  */
 function getUserData(req: Request | AuthenticatedRequest): {
   id: number | null;
   nome: string | null;
   email: string | null;
 } {
-  // Verificar se é AuthenticatedRequest e tem user
-  const authenticatedReq = req as AuthenticatedRequest;
-  const userPayload = authenticatedReq.user as JwtPayload | undefined;
-  
+  const reqAny = req as AuthenticatedRequest & { saasUser?: JwtPayload };
+  const userPayload = reqAny.saasUser ?? (reqAny.user as JwtPayload | undefined);
+
   if (!userPayload) {
     return { id: null, nome: null, email: null };
   }
 
-  // O payload JWT contém sub (userId), email e role
-  const userId = userPayload.sub ? parseInt(userPayload.sub, 10) : null;
+  const userId = userPayload.sub ? parseInt(String(userPayload.sub), 10) : null;
   const email = typeof userPayload.email === 'string' ? userPayload.email : null;
   const nome = typeof userPayload.nome === 'string' ? userPayload.nome : null;
 
   return {
     id: userId,
-    nome,
+    nome: nome ?? null,
     email
   };
 }
@@ -114,8 +120,9 @@ export async function registrarAuditoriaElasticsearch(
         // Garantir que o índice existe
         await elasticsearchService.ensureIndex();
 
-      // Obter dados do usuário
+      // Obter dados do usuário e empresa (tenant)
       const userData = getUserData(req);
+      const empresaId = getEmpresaIdForAudit(req);
 
       // Limpar dados removendo apenas campos internos do Sequelize e campos muito grandes
       const limparDados = (dados: Record<string, unknown> | null): Record<string, unknown> | null => {
@@ -265,6 +272,7 @@ export async function registrarAuditoriaElasticsearch(
 
       const document = {
         log_tipo: 'auditoria',
+        empresa_id: empresaId ?? null,
         usuario_id: userData.id,
         usuario_nome: userData.nome,
         usuario_email: userData.email,

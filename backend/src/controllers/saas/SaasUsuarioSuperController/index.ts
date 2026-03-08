@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import Joi from 'joi';
 import { SaasUsuarioSuperService } from '../../../services/saas/SaasUsuarioSuperService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 
@@ -60,6 +61,7 @@ export class SaasUsuarioSuperController {
       const { error, value } = createSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toValidationErrors(error.details)); return; }
       const usuario = await SaasUsuarioSuperService.create(value);
+      await registrarCriacao(req as any, 'SaasUsuarioSuper', usuario.id, usuario.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Usuário criado com sucesso', data: usuario });
     } catch (err) {
       sendError(res, err, 'Erro ao criar usuário', 500, true);
@@ -70,7 +72,13 @@ export class SaasUsuarioSuperController {
     try {
       const { error, value } = updateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toValidationErrors(error.details)); return; }
+      const usuarioAntigo = await SaasUsuarioSuperService.getById(Number(req.params.id));
       await SaasUsuarioSuperService.update(Number(req.params.id), value);
+      if (usuarioAntigo) {
+        await registrarAtualizacao(req as any, 'SaasUsuarioSuper', Number(req.params.id),
+          usuarioAntigo.toJSON() as Record<string, unknown>,
+          { ...usuarioAntigo.toJSON(), ...value } as Record<string, unknown>);
+      }
       sendSuccess(res, null, 'Usuário atualizado com sucesso');
     } catch (err) {
       sendError(res, err, 'Erro ao atualizar usuário', 500, true);
@@ -84,7 +92,11 @@ export class SaasUsuarioSuperController {
         res.status(400).json({ success: false, message: 'Não é possível remover o próprio usuário' });
         return;
       }
+      const usuarioAntigo = await SaasUsuarioSuperService.getById(id);
       await SaasUsuarioSuperService.delete(id);
+      if (usuarioAntigo) {
+        await registrarExclusao(req as any, 'SaasUsuarioSuper', id, usuarioAntigo.toJSON() as Record<string, unknown>);
+      }
       sendSuccess(res, null, 'Usuário removido com sucesso');
     } catch (err) {
       sendError(res, err, 'Erro ao remover usuário', 500, true);
