@@ -161,13 +161,12 @@ const DominiosExtraidosVisualizacaoModal: React.FC<DominiosExtraidosVisualizacao
       queryClient.invalidateQueries({ queryKey: ['ipv6'] });
       onCadastrarSuccess?.();
       onSuccess?.();
-      onClose();
     } catch (e) {
       error((e as Error)?.message ?? 'Erro ao cadastrar.');
     } finally {
       setIsCadastrando(false);
     }
-  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, success, error, onCadastrarSuccess, onSuccess, onClose, queryClient, t]);
+  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, success, error, onCadastrarSuccess, onSuccess, queryClient, t]);
 
   const handleCopy = useCallback(
     (items: string[]) => {

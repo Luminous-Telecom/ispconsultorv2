@@ -7,6 +7,16 @@ import FormField from '@/components/ui/FormField';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useFormReset } from '@/hooks/useFormReset';
 import { saasPlanoService, type SaasPlano } from '@/services/saas/saasPlanoService';
+import { PLANO_MODULOS } from '@/constants/planoModulos';
+import type { PlanoModuloId } from '@/services/planoModulosService';
+
+function extractModulosFromRecursos(recursos: unknown): PlanoModuloId[] {
+  const obj = recursos && typeof recursos === 'object' && !Array.isArray(recursos)
+    ? (recursos as Record<string, unknown>)
+    : null;
+  const modulos = obj?.modulos;
+  return Array.isArray(modulos) ? modulos.filter((m): m is PlanoModuloId => typeof m === 'string') : [];
+}
 
 interface Props {
   show: boolean;
@@ -22,6 +32,7 @@ interface PlanoForm {
   valor_anual: number | '';
   limite_usuarios: number;
   ativo: boolean;
+  modulos: PlanoModuloId[];
 }
 
 const INITIAL: PlanoForm = {
@@ -31,6 +42,7 @@ const INITIAL: PlanoForm = {
   valor_anual: '',
   limite_usuarios: 5,
   ativo: true,
+  modulos: [],
 };
 
 const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId }) => {
@@ -60,14 +72,20 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
     setFormData: setForm,
     setErrors,
     customData: planoData?.data
-      ? {
-          nome: (planoData.data as SaasPlano).nome,
-          descricao: (planoData.data as SaasPlano).descricao || '',
-          valor_mensal: (planoData.data as SaasPlano).valor_mensal,
-          valor_anual: (planoData.data as SaasPlano).valor_anual ?? '',
-          limite_usuarios: (planoData.data as SaasPlano).limite_usuarios,
-          ativo: (planoData.data as SaasPlano).ativo,
-        }
+      ? (() => {
+          const p = planoData.data as SaasPlano;
+          const modulos = extractModulosFromRecursos(p.recursos);
+          const valorAnual: number | '' = p.valor_anual == null ? '' : Number(p.valor_anual);
+          return {
+            nome: p.nome,
+            descricao: p.descricao || '',
+            valor_mensal: p.valor_mensal,
+            valor_anual: valorAnual,
+            limite_usuarios: p.limite_usuarios,
+            ativo: p.ativo,
+            modulos,
+          } as PlanoForm;
+        })()
       : undefined,
   });
 
@@ -108,6 +126,9 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
 
+    const baseRecursos = (isEditing && planoData?.data?.recursos && typeof planoData.data.recursos === 'object')
+      ? { ...(planoData.data.recursos as Record<string, unknown>) }
+      : {};
     const payload: Partial<SaasPlano> = {
       nome: form.nome,
       descricao: form.descricao,
@@ -115,6 +136,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
       valor_anual: form.valor_anual !== '' ? Number(form.valor_anual) : undefined,
       limite_usuarios: form.limite_usuarios,
       ativo: form.ativo,
+      recursos: { ...baseRecursos, modulos: form.modulos },
     };
 
     try {
@@ -218,6 +240,31 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
               rows={3}
               size="sm"
             />
+          </div>
+          <div className="col-12">
+            <label className="form-label small">Módulos do plano</label>
+            <p className="text-muted small mb-2">
+              Selecione os módulos que este plano inclui. Clientes com este plano terão acesso apenas aos módulos marcados.
+            </p>
+            <div className="d-flex flex-wrap gap-3">
+              {PLANO_MODULOS.map((mod) => (
+                <label key={mod.id} className="d-flex align-items-center gap-2 small">
+                  <input
+                    type="checkbox"
+                    checked={form.modulos.includes(mod.id)}
+                    onChange={(e) => {
+                      setForm((p) => ({
+                        ...p,
+                        modulos: e.target.checked
+                          ? [...p.modulos, mod.id]
+                          : p.modulos.filter((m) => m !== mod.id),
+                      }));
+                    }}
+                  />
+                  <span>{mod.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
       </form>

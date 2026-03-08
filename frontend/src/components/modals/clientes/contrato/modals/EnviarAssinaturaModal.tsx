@@ -96,8 +96,6 @@ const EnviarAssinaturaModal: React.FC<EnviarAssinaturaModalProps> = ({
       if (onSuccess) {
         onSuccess();
       }
-      
-      onClose();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao enviar documento para assinatura';
       error(errorMessage);

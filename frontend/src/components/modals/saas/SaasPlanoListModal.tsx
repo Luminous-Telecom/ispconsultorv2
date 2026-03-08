@@ -190,7 +190,6 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
         onSuccess={() => {
           refetch();
           queryClient.invalidateQueries({ queryKey: ['saas-planos'] });
-          setShowCreateModal(false);
         }}
       />
       <SaasPlanoFormModal
@@ -200,8 +199,6 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
         onSuccess={() => {
           refetch();
           queryClient.invalidateQueries({ queryKey: ['saas-planos'] });
-          setShowEditModal(false);
-          setSelectedPlanoId(null);
         }}
       />
       <ImprimirModal

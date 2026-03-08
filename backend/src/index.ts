@@ -261,6 +261,10 @@ import { auditCaptureMiddleware, auditLogMiddleware } from './middleware/auditMi
 app.use(auditCaptureMiddleware);
 app.use(auditLogMiddleware);
 
+// Bloqueia acesso a APIs quando o plano do tenant não inclui o módulo
+import { planoModuloMiddleware } from './middleware/planoModuloMiddleware';
+app.use(planoModuloMiddleware);
+
 // Servir arquivos estáticos de arquivos (ANTES das rotas, mas DEPOIS dos middlewares de proteção)
 // Em produção serve de dist/arquivos/, em dev serve da raiz arquivos/
 const arquivosStaticPath = resolveArquivosPath();

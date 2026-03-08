@@ -16,6 +16,8 @@ import LoadingDots from '../common/LoadingDots';
 import SingleModalWrapper from '../common/SingleModalWrapper';
 import BackNetLogo from '../common/BackNetLogo';
 import { DadosEmpresaService } from '@/services/dadosEmpresaService';
+import { usePlanoModulos } from '@/hooks/usePlanoModulos';
+import { MODAL_MODULO_MAP } from '@/constants/planoModulos';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -54,6 +56,8 @@ const Layout: React.FC = () => {
     () => dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || '',
     [dadosEmpresa]
   );
+
+  const { hasModulo } = usePlanoModulos();
 
   useEffect(() => {
     document.title = companyName || 'BackNet';
@@ -219,45 +223,52 @@ const Layout: React.FC = () => {
     navigate('/login');
   };
 
+  const filterByModulo = (modalId: string) => {
+    const moduloId = MODAL_MODULO_MAP[modalId];
+    if (!moduloId) return true;
+    return hasModulo(moduloId);
+  };
+
   const cadastrosFolderItems = [
-    { id: 'clientes', label: t('menu.clients'), icon: 'bi-people', onClick: () => handleOpenModal('clientes') },
-    { id: 'contratos', label: t('menu.contracts'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('contratos') },
-    { id: 'planos', label: t('menu.plans'), icon: 'bi-card-list', onClick: () => handleOpenModal('planos') },
-    { id: 'bancos', label: t('menu.banks'), icon: 'bi-bank', onClick: () => handleOpenModal('bancos') },
-    { id: 'tipos-cobranca-contrato', label: t('menu.billingType'), icon: 'bi-credit-card', onClick: () => handleOpenModal('tipos-cobranca-contrato') },
-    { id: 'fornecedores', label: t('menu.suppliers'), icon: 'bi-truck', onClick: () => handleOpenModal('fornecedores') },
-  ];
+    { id: 'clientes', modalId: 'clientes', label: t('menu.clients'), icon: 'bi-people', onClick: () => handleOpenModal('clientes') },
+    { id: 'contratos', modalId: 'contratos', label: t('menu.contracts'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('contratos') },
+    { id: 'planos', modalId: 'planos', label: t('menu.plans'), icon: 'bi-card-list', onClick: () => handleOpenModal('planos') },
+    { id: 'bancos', modalId: 'bancos', label: t('menu.banks'), icon: 'bi-bank', onClick: () => handleOpenModal('bancos') },
+    { id: 'tipos-cobranca-contrato', modalId: 'tipos-cobranca-contrato', label: t('menu.billingType'), icon: 'bi-credit-card', onClick: () => handleOpenModal('tipos-cobranca-contrato') },
+    { id: 'fornecedores', modalId: 'fornecedores', label: t('menu.suppliers'), icon: 'bi-truck', onClick: () => handleOpenModal('fornecedores') },
+  ].filter((item) => filterByModulo(item.modalId));
 
   const financeiroFolderItems = [
-    { id: 'contas-receber', label: t('menu.accountsReceivable'), icon: 'bi-cash-stack', onClick: () => handleOpenModal('contas-receber') },
-    { id: 'contas-pagar', label: t('menu.accountsPayable'), icon: 'bi-arrow-down-circle', onClick: () => handleOpenModal('contas-pagar') },
-    { id: 'notas-fiscais', label: t('menu.invoices'), icon: 'bi-receipt', onClick: () => handleOpenModal('notas-fiscais') },
-  ];
+    { id: 'contas-receber', modalId: 'contas-receber', label: t('menu.accountsReceivable'), icon: 'bi-cash-stack', onClick: () => handleOpenModal('contas-receber') },
+    { id: 'contas-pagar', modalId: 'contas-pagar', label: t('menu.accountsPayable'), icon: 'bi-arrow-down-circle', onClick: () => handleOpenModal('contas-pagar') },
+    { id: 'notas-fiscais', modalId: 'notas-fiscais', label: t('menu.invoices'), icon: 'bi-receipt', onClick: () => handleOpenModal('notas-fiscais') },
+  ].filter((item) => filterByModulo(item.modalId));
 
-  const parametrosFolderItems = [
-    { id: 'dados-empresa', label: t('menu.companyData'), icon: 'bi-building', onClick: () => handleOpenModal('dados-empresa') },
-    { id: 'usuarios', label: t('params.users'), icon: 'bi-people-fill', onClick: () => handleOpenModal('usuarios') },
-    { id: 'auditoria', label: t('params.auditLogs'), icon: 'bi-journal-text', onClick: () => handleOpenModal('auditoria') },
-    { id: 'recursos-sistema', label: t('params.systemResources'), icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
-    { id: 'agendador-tarefas', label: t('params.taskScheduler'), icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
-    { id: 'servidor-email', label: t('params.emailServer'), icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
-    { id: 'servidor-whatsapp', label: t('params.whatsappServer'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
-    { id: 'historico-whatsapp', label: t('menu.whatsappHistory'), icon: 'bi-chat-dots', onClick: () => handleOpenModal('historico-whatsapp') },
-    { id: 'historico-email', label: t('menu.emailHistory'), icon: 'bi-envelope-paper', onClick: () => handleOpenModal('historico-email') },
-    { id: 'nfse', label: t('params.nfse'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('nfse') },
-    { id: 'documentos-sistema', label: t('params.systemDocuments'), icon: 'bi-folder', onClick: () => handleOpenModal('documentos-sistema') },
-    { id: 'assinatura-digital', label: t('params.digitalSignature'), icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
-    { id: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
+  const parametrosBaseItems = [
+    { id: 'dados-empresa', modalId: 'dados-empresa', label: t('menu.companyData'), icon: 'bi-building', onClick: () => handleOpenModal('dados-empresa') },
+    { id: 'usuarios', modalId: 'usuarios', label: t('params.users'), icon: 'bi-people-fill', onClick: () => handleOpenModal('usuarios') },
+    { id: 'auditoria', modalId: 'auditoria', label: t('params.auditLogs'), icon: 'bi-journal-text', onClick: () => handleOpenModal('auditoria') },
+    { id: 'recursos-sistema', modalId: 'recursos-sistema', label: t('params.systemResources'), icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
+    { id: 'agendador-tarefas', modalId: 'agendador-tarefas', label: t('params.taskScheduler'), icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
+    { id: 'servidor-email', modalId: 'servidor-email', label: t('params.emailServer'), icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
+    { id: 'servidor-whatsapp', modalId: 'servidor-whatsapp', label: t('params.whatsappServer'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
+    { id: 'historico-whatsapp', modalId: 'historico-whatsapp', label: t('menu.whatsappHistory'), icon: 'bi-chat-dots', onClick: () => handleOpenModal('historico-whatsapp') },
+    { id: 'historico-email', modalId: 'historico-email', label: t('menu.emailHistory'), icon: 'bi-envelope-paper', onClick: () => handleOpenModal('historico-email') },
+    { id: 'nfse', modalId: 'nfse', label: t('params.nfse'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('nfse') },
+    { id: 'documentos-sistema', modalId: 'documentos-sistema', label: t('params.systemDocuments'), icon: 'bi-folder', onClick: () => handleOpenModal('documentos-sistema') },
+    { id: 'assinatura-digital', modalId: 'assinatura-digital', label: t('params.digitalSignature'), icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
+    { id: 'dias-vencimento', modalId: 'dias-vencimento', label: t('params.dueDays'), icon: 'bi-calendar-event', onClick: () => handleOpenModal('dias-vencimento') },
   ];
+  const parametrosFolderItems = parametrosBaseItems.filter((item) => filterByModulo(item.modalId));
 
   const blockdomiFolderItems = [
-    { id: 'dominios', label: t('modal.domains'), icon: 'bi-globe', onClick: () => handleOpenModal('blockdomi-dominios') },
-    { id: 'ipv4', label: t('modal.ipv4'), icon: 'bi-router', onClick: () => handleOpenModal('blockdomi-ipv4') },
-    { id: 'ipv6', label: t('modal.ipv6'), icon: 'bi-router-fill', onClick: () => handleOpenModal('blockdomi-ipv6') },
-    { id: 'importar-lista', label: t('modal.importList'), icon: 'bi-list-ul', onClick: () => handleOpenModal('blockdomi-importar-lista') },
-    { id: 'ips-permitidos', label: t('blockdomi.ipsPermitidos'), icon: 'bi-shield-check', onClick: () => handleOpenModal('blockdomi-ips-permitidos') },
-    { id: 'logs-acesso', label: t('blockdomi.logsAcesso'), icon: 'bi-journal-text', onClick: () => handleOpenModal('blockdomi-logs-acesso') },
-  ];
+    { id: 'dominios', modalId: 'blockdomi-dominios', label: t('modal.domains'), icon: 'bi-globe', onClick: () => handleOpenModal('blockdomi-dominios') },
+    { id: 'ipv4', modalId: 'blockdomi-ipv4', label: t('modal.ipv4'), icon: 'bi-router', onClick: () => handleOpenModal('blockdomi-ipv4') },
+    { id: 'ipv6', modalId: 'blockdomi-ipv6', label: t('modal.ipv6'), icon: 'bi-router-fill', onClick: () => handleOpenModal('blockdomi-ipv6') },
+    { id: 'importar-lista', modalId: 'blockdomi-importar-lista', label: t('modal.importList'), icon: 'bi-list-ul', onClick: () => handleOpenModal('blockdomi-importar-lista') },
+    { id: 'ips-permitidos', modalId: 'blockdomi-ips-permitidos', label: t('blockdomi.ipsPermitidos'), icon: 'bi-shield-check', onClick: () => handleOpenModal('blockdomi-ips-permitidos') },
+    { id: 'logs-acesso', modalId: 'blockdomi-logs-acesso', label: t('blockdomi.logsAcesso'), icon: 'bi-journal-text', onClick: () => handleOpenModal('blockdomi-logs-acesso') },
+  ].filter((item) => filterByModulo(item.modalId));
 
   return (
     <div className="app-layout">
@@ -307,6 +318,7 @@ const Layout: React.FC = () => {
         <div className="sidebar-nav-scrollable flex-grow-1">
           <nav className="sidebar-nav nav nav-pills flex-column mb-auto px-2">
             {/* Menu Pasta para Cadastros usando Bootstrap Accordion */}
+            {cadastrosFolderItems.length > 0 && (
             <div className="accordion sidebar-accordion" id="cadastrosAccordion">
               <div className="accordion-item border-0 bg-transparent">
                 <h2 className="accordion-header">
@@ -358,8 +370,10 @@ const Layout: React.FC = () => {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Menu Pasta para Financeiro usando Bootstrap Accordion */}
+            {financeiroFolderItems.length > 0 && (
             <div className="accordion sidebar-accordion" id="financeiroAccordion">
               <div className="accordion-item border-0 bg-transparent">
                 <h2 className="accordion-header">
@@ -411,8 +425,10 @@ const Layout: React.FC = () => {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Menu Pasta para Blockdomi usando Bootstrap Accordion */}
+            {blockdomiFolderItems.length > 0 && (
             <div className="accordion sidebar-accordion" id="blockdomiAccordion">
               <div className="accordion-item border-0 bg-transparent">
                 <h2 className="accordion-header">
@@ -464,6 +480,7 @@ const Layout: React.FC = () => {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Menu Pasta para Parâmetros usando Bootstrap Accordion */}
             <div className="accordion sidebar-accordion" id="parametrosAccordion">

@@ -105,7 +105,6 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
         await createMutation.mutateAsync(formData as Partial<import('@/services/tipoCobrancaContratoService').TipoCobrancaContrato>);
       }
       onSuccess?.();
-      onClose();
     } catch {
       // Erro tratado pelo hook
     }

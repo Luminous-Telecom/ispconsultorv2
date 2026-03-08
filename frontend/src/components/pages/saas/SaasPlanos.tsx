@@ -44,6 +44,8 @@ const SaasPlanos: React.FC = () => {
 
   const handleEdit = (plano: SaasPlano) => {
     setEditingId(plano.id);
+    const recursos = (plano.recursos as Record<string, unknown>) || {};
+    const modulos = Array.isArray(recursos.modulos) ? recursos.modulos : [];
     setForm({
       nome: plano.nome,
       descricao: plano.descricao || '',
@@ -51,6 +53,7 @@ const SaasPlanos: React.FC = () => {
       valor_anual: plano.valor_anual,
       limite_usuarios: plano.limite_usuarios,
       ativo: plano.ativo,
+      recursos: { ...recursos, modulos },
     });
     setShowForm(true);
   };
@@ -73,7 +76,6 @@ const SaasPlanos: React.FC = () => {
         await saasPlanoService.create(form);
         success('Plano criado com sucesso');
       }
-      setShowForm(false);
       queryClient.invalidateQueries({ queryKey: ['saas-planos'] });
     } catch (err) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao salvar plano';

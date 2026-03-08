@@ -14,7 +14,12 @@ export class SaasPlanoService {
   }
 
   static async update(id: number, data: Partial<SaasPlano>): Promise<void> {
-    await SaasPlano.update(data, { where: { id } });
+    const updateData = { ...data };
+    if (data.recursos != null && typeof data.recursos === 'object') {
+      const modulos = (data.recursos as Record<string, unknown>)?.modulos;
+      updateData.recursos = { modulos };
+    }
+    await SaasPlano.update(updateData, { where: { id } });
   }
 
   static async delete(id: number): Promise<void> {

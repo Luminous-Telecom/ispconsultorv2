@@ -670,7 +670,6 @@ const ClienteModal = ({
               refetchParcelas();
             }}
             onSuccess={() => {
-              setShowTituloEditModal(false);
               setSelectedTituloId(null);
               refetchParcelas();
             }}
@@ -691,8 +690,6 @@ const ClienteModal = ({
               cliente: (selectedParcela!.cliente as { razao_social?: string })?.razao_social ? { razao_social: (selectedParcela!.cliente as { razao_social?: string }).razao_social! } : undefined
             } : null}
             onSuccess={() => {
-              setShowReceberModal(false);
-              setSelectedParcela(null);
               refetchParcelas();
             }}
           />
@@ -743,8 +740,6 @@ const ClienteModal = ({
             titulo={selectedTituloForNFe || undefined}
             onSuccess={() => {
               refetchParcelas();
-              setShowGerarNFeModal(false);
-              setSelectedTituloForNFe(null);
             }}
           />
 

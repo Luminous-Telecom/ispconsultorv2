@@ -6,6 +6,7 @@ import usuarioRoutes from './usuarioRoutes';
 import tituloRoutes from './titulos';
 import boletoRoutes from './boletoRoutes';
 import dadosEmpresaRoutes from './dadosEmpresaRoutes';
+import planoModulosRoutes from './planoModulosRoutes';
 import dashboardRoutes from './dashboardRoutes';
 import webhookRoutes from './webhookRoutes';
 import schedulerRoutes from './schedulerRoutes';
@@ -70,6 +71,7 @@ const routes = [
     { path: '/api/titulos', route: tituloRoutes },
     { path: '/api/contratos', route: contratoRoutes },
     { path: '/api/dados-empresa', route: dadosEmpresaRoutes },
+    { path: '/api/plano-modulos', route: planoModulosRoutes },
     { path: '/api/dashboard', route: dashboardRoutes },
     { path: '/api/scheduler', route: schedulerRoutes },
     { path: '/api/workers', route: workerRoutes },

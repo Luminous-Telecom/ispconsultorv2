@@ -1150,8 +1150,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
             }}
             onSuccess={async () => {
               await handleRefreshData();
-              setShowTituloEditModal(false);
-              setSelectedTituloId(null);
             }}
             tituloId={selectedTituloId}
           />
@@ -1166,8 +1164,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
             }}
             onSuccess={async () => {
               await handleRefreshData();
-              setShowReceberModal(false);
-              setSelectedParcela(null);
             }}
             parcela={selectedParcela}
           />
@@ -1218,8 +1214,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           } as TituloItem & { descricao?: string; observacoes?: string } : undefined}
           onSuccess={async () => {
             await handleRefreshData();
-            setShowGerarNFeModal(false);
-            setSelectedTituloForNFe(null);
           }}
         />)}
 
@@ -1250,8 +1244,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           }}
           onSuccess={async () => {
             await handleRefreshData();
-            setShowTituloEditModal(false);
-            setSelectedTituloId(null);
           }}
           tituloId={selectedTituloId}
         />
@@ -1266,8 +1258,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
           }}
           onSuccess={async () => {
             await handleRefreshData();
-            setShowReceberModal(false);
-            setSelectedParcela(null);
           }}
           parcela={selectedParcela}
         />
@@ -1318,8 +1308,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         } as TituloItem & { descricao?: string; observacoes?: string } : undefined}
         onSuccess={async () => {
           await handleRefreshData();
-          setShowGerarNFeModal(false);
-          setSelectedTituloForNFe(null);
         }}
       />)}
 

@@ -266,8 +266,6 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
   );
 
   const handleSuccess = async () => {
-    setShowCreateModal(false);
-    setShowEditModal(false);
     setSelectedRotinaId(null);
     clearSelection();
     await queryClient.invalidateQueries({ queryKey: [queryKey] });
