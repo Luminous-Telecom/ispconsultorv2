@@ -13,10 +13,8 @@ export function usePlanoModulos() {
 
   const modulos = data?.modulos ?? null;
 
-  const hasModulo = (moduloId: PlanoModuloId): boolean => {
-    const ok = modulos === null ? true : modulos.includes(moduloId);
-    return ok;
-  };
+  const hasModulo = (moduloId: PlanoModuloId): boolean =>
+    modulos === null ? true : modulos.includes(moduloId);
 
   return { modulos, hasModulo, isLoading };
 }
