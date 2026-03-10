@@ -19,6 +19,7 @@ import { saasTituloToTituloComRelacoes } from '../../titulos/TituloHelpers/saasT
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+import { logger } from '../../../utils/logger';
 
 const toErrors = (details: Joi.ValidationErrorItem[]) =>
   details.reduce<Record<string, string[]>>((acc, d) => {
@@ -242,11 +243,45 @@ export class SaasTituloController {
   }
   static async update(req: SaasAuthenticatedRequest, res: Response) {
     try {
-      const { error, value } = tituloSchema
-        .fork(['empresa_id', 'plano_id', 'banco_id', 'numero_titulo'], (s) => s.optional())
-        .validate(req.body, { abortEarly: false, stripUnknown: true });
+      const tituloUpdateSchema = tituloSchema.fork(
+        ['empresa_id', 'plano_id', 'banco_id', 'numero_titulo', 'valor', 'data_vencimento'],
+        (s) => s.optional()
+      );
+      const { error, value } = tituloUpdateSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
       const antigo = await SaasTituloService.getById(Number(req.params.id));
+      if (!antigo) { sendNotFound(res, 'Título não encontrado'); return; }
+
+      // Validações e cancelamento no gateway (quando status = cancelado)
+      if (value.status === 'cancelado') {
+        if (antigo.status === 'pago' || antigo.pago) {
+          sendValidationError(res, 'Não é possível cancelar um título que já foi pago');
+          return;
+        }
+        if (antigo.status === 'cancelado') {
+          sendValidationError(res, 'Este título já está cancelado');
+          return;
+        }
+        // Cancelar no gateway (Asaas/EFI) se tiver charge_id
+        const banco = antigo.get('banco') as SaasBanco | null;
+        if (antigo.charge_id && banco && ['efi', 'asaas'].includes(banco.tipo_banco ?? '')) {
+          const tituloComBanco = await SaasTitulo.findByPk(antigo.id, {
+            include: [{ model: SaasBanco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'api_key', 'client_id_producao', 'client_secret_producao', 'sandbox', 'identificador_conta'] }],
+          });
+          if (tituloComBanco) {
+            const tituloLike = saasTituloToTituloComRelacoes(tituloComBanco);
+            const { BancoApiService } = await import('../../../services/bancos/BancoApiService');
+            const resultado = await BancoApiService.cancelarTitulo(tituloLike);
+            if (!resultado.success) {
+              logger.warn('Falha ao cancelar título SaaS no gateway', { titulo_id: antigo.id, charge_id: antigo.charge_id, message: resultado.message });
+              sendValidationError(res, resultado.message ?? 'Não foi possível cancelar o título no banco emissor');
+              return;
+            }
+            logger.info('Título SaaS cancelado no gateway', { titulo_id: antigo.id, charge_id: antigo.charge_id });
+          }
+        }
+      }
+
       await SaasTituloService.update(Number(req.params.id), value);
       if (antigo) {
         await registrarAtualizacao(req as any, 'SaasTitulo', Number(req.params.id),

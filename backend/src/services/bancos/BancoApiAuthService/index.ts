@@ -102,11 +102,18 @@ export class BancoApiAuthService {
   /**
    * Constrói dados de autenticação
    */
-  private static buildAuthData(banco: Banco, config: BancoConfig): Record<string, string> {
-    const authData: Record<string, string> = {};
+  private static buildAuthData(banco: Banco, config: BancoConfig): Record<string, string | null> {
+    const authData: Record<string, string | null> = {};
 
     if (banco.tipo_banco === 'efi') {
+      const bancoLike = banco as Banco & { client_id_producao?: string | null; client_secret_producao?: string | null; identificador_conta?: string | null };
       authData.grant_type = 'client_credentials';
+      authData[config.client_id_field] = bancoLike.client_id_producao || null;
+      authData[config.client_secret_field] = bancoLike.client_secret_producao || null;
+      const identificadorConta = bancoLike.identificador_conta?.trim();
+      if (identificadorConta) {
+        authData.identificador_conta = identificadorConta;
+      }
     } else if (banco.tipo_banco === 'asaas') {
       // Asaas não usa autenticação OAuth, usa API key diretamente
       return {};
@@ -126,19 +133,10 @@ export class BancoApiAuthService {
   /**
    * Constrói headers de autenticação
    */
-  private static buildAuthHeaders(tipoBanco: string, config: BancoConfig): Record<string, string> {
-    const headers: Record<string, string> = {
+  private static buildAuthHeaders(_tipoBanco: string, _config: BancoConfig): Record<string, string> {
+    return {
       'Content-Type': 'application/json'
     };
-
-    if (tipoBanco === 'efi') {
-      const clientId = config.client_id_field;
-      const clientSecret = config.client_secret_field;
-      const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-      headers['Authorization'] = `Basic ${credentials}`;
-    }
-
-    return headers;
   }
 
   /**
