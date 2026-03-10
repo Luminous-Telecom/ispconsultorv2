@@ -8,6 +8,7 @@ router.use(saasAuthMiddleware);
 
 router.get('/stats', SaasDadosEmpresaController.dashboardStats);
 router.get('/', SaasDadosEmpresaController.list);
+router.post('/:id/desbloquear-manual', SaasDadosEmpresaController.desbloquearManual);
 router.get('/:id', SaasDadosEmpresaController.getById);
 router.post('/', SaasDadosEmpresaController.create);
 router.put('/:id', SaasDadosEmpresaController.update);

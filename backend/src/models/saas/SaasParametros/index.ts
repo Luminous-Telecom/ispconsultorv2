@@ -11,6 +11,7 @@ interface SaasParametrosAttributes {
   quantidade_titulos_manter: number | null;
   central_assinante_metodo_login: string;
   dias_atraso_bloqueio: number | null;
+  dias_desbloqueio_manual: number | null;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -27,6 +28,7 @@ class SaasParametros extends Model<SaasParametrosAttributes, SaasParametrosCreat
   public quantidade_titulos_manter!: number | null;
   public central_assinante_metodo_login!: string;
   public dias_atraso_bloqueio!: number | null;
+  public dias_desbloqueio_manual!: number | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -74,6 +76,11 @@ SaasParametros.init(
       defaultValue: 'cnpj'
     },
     dias_atraso_bloqueio: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null
+    },
+    dias_desbloqueio_manual: {
       type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: null

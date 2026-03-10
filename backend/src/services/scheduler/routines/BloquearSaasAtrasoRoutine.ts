@@ -10,6 +10,8 @@ import SaasTitulo from '../../../models/saas/SaasTitulo';
  * Rotina SaaS que verifica faturas em atraso e bloqueia empresas
  * quando o número de dias configurado (dias_atraso_bloqueio) for atingido.
  * Também desbloqueia empresas cujas faturas foram pagas.
+ * Respeita data_fim_desbloqueio_manual: empresas em desbloqueio manual não são
+ * bloqueadas até que a data passe. Após a data, rebloqueia.
  */
 export class BloquearSaasAtrasoRoutine implements IRoutine {
   async execute(_config: Record<string, JsonValue> = {}): Promise<RoutineResult> {
@@ -58,6 +60,17 @@ export class BloquearSaasAtrasoRoutine implements IRoutine {
         }
       }
 
+      const hojeStr = hoje.toISOString().slice(0, 10);
+
+      const idsComAtraso = Array.from(empresasComAtraso.keys());
+      const empresasComAtrasoData = idsComAtraso.length > 0
+        ? await SaasDadosEmpresa.findAll({
+            where: { id: { [Op.in]: idsComAtraso } },
+            attributes: ['id', 'bloqueado_por_atraso', 'data_fim_desbloqueio_manual']
+          })
+        : [];
+      const mapaEmpresas = new Map(empresasComAtrasoData.map(e => [e.id, e]));
+
       const empresasBloqueadas = await SaasDadosEmpresa.findAll({
         where: { bloqueado_por_atraso: true },
         attributes: ['id']
@@ -68,9 +81,13 @@ export class BloquearSaasAtrasoRoutine implements IRoutine {
       let desbloqueadas = 0;
 
       for (const [empresaId, _info] of empresasComAtraso) {
+        const emp = mapaEmpresas.get(empresaId);
+        const emDesbloqueioManual = emp?.data_fim_desbloqueio_manual && emp.data_fim_desbloqueio_manual >= hojeStr;
+        if (emDesbloqueioManual) continue;
+
         if (!idsBloqueados.has(empresaId)) {
           await SaasDadosEmpresa.update(
-            { bloqueado_por_atraso: true },
+            { bloqueado_por_atraso: true, data_fim_desbloqueio_manual: null },
             { where: { id: empresaId } }
           );
           bloqueadas++;
@@ -78,6 +95,11 @@ export class BloquearSaasAtrasoRoutine implements IRoutine {
             empresa_id: empresaId,
             dias_limite: diasLimite
           });
+        } else if (emp?.data_fim_desbloqueio_manual && emp.data_fim_desbloqueio_manual < hojeStr) {
+          await SaasDadosEmpresa.update(
+            { data_fim_desbloqueio_manual: null },
+            { where: { id: empresaId } }
+          );
         }
       }
 

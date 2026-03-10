@@ -27,6 +27,7 @@ interface ParametrosForm {
   quantidade_titulos_manter: number;
   central_assinante_metodo_login: string;
   dias_atraso_bloqueio: number | null;
+  dias_desbloqueio_manual: number | null;
 }
 
 const INITIAL: ParametrosForm = {
@@ -38,6 +39,7 @@ const INITIAL: ParametrosForm = {
   quantidade_titulos_manter: 12,
   central_assinante_metodo_login: 'cnpj',
   dias_atraso_bloqueio: null,
+  dias_desbloqueio_manual: null,
 };
 
 const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
@@ -65,6 +67,7 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
       quantidade_titulos_manter: Math.min(24, Math.max(1, qtd)),
       central_assinante_metodo_login: parametros.data.central_assinante_metodo_login ?? 'cnpj',
       dias_atraso_bloqueio: parametros.data.dias_atraso_bloqueio ?? null,
+      dias_desbloqueio_manual: parametros.data.dias_desbloqueio_manual ?? null,
     };
   }, [parametros?.data]);
 
@@ -95,6 +98,9 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
     }
     if (payload.dias_atraso_bloqueio !== null && payload.dias_atraso_bloqueio <= 0) {
       payload.dias_atraso_bloqueio = null;
+    }
+    if (payload.dias_desbloqueio_manual !== null && payload.dias_desbloqueio_manual <= 0) {
+      payload.dias_desbloqueio_manual = null;
     }
     updateMutation.mutate(payload);
   };
@@ -315,6 +321,35 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
                     setFormData((prev) => ({
                       ...prev,
                       dias_atraso_bloqueio: v === '' ? null : Math.min(365, Math.max(0, parseInt(v, 10) || 0))
+                    }));
+                  }}
+                  disabled={updateMutation.isPending}
+                  style={{ maxWidth: '140px', minWidth: '80px' }}
+                />
+                <small className="text-muted d-block mt-1">0 ou vazio = desabilitado</small>
+              </div>
+              <div className="mb-3">
+                <label htmlFor="saas_dias_desbloqueio_manual" className="form-label small mb-1">
+                  Dias para desbloqueio manual
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title="Ao desbloquear manualmente, a empresa terá esta quantidade de dias para regularizar títulos. Após o prazo, será bloqueada novamente se houver atraso. Deixe em branco ou 0 para desabilitar."
+                  />
+                </label>
+                <input
+                  type="number"
+                  className="form-control form-control-sm"
+                  id="saas_dias_desbloqueio_manual"
+                  min={0}
+                  max={365}
+                  placeholder="Ex: 7"
+                  value={formData.dias_desbloqueio_manual ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData((prev) => ({
+                      ...prev,
+                      dias_desbloqueio_manual: v === '' ? null : Math.min(365, Math.max(0, parseInt(v, 10) || 0))
                     }));
                   }}
                   disabled={updateMutation.isPending}

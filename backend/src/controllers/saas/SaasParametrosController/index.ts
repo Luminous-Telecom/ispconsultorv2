@@ -13,7 +13,8 @@ export class SaasParametrosController {
     manter_numeros_titulos: Joi.boolean().optional(),
     quantidade_titulos_manter: Joi.number().integer().min(1).max(24).allow(null).optional(),
     central_assinante_metodo_login: Joi.string().valid('cnpj', 'email').optional(),
-    dias_atraso_bloqueio: Joi.number().integer().min(0).max(365).allow(null).optional()
+    dias_atraso_bloqueio: Joi.number().integer().min(0).max(365).allow(null).optional(),
+    dias_desbloqueio_manual: Joi.number().integer().min(0).max(365).allow(null).optional()
   }).min(1).unknown(true);
 
   static async get(req: Request, res: Response): Promise<Response> {
@@ -32,6 +33,7 @@ export class SaasParametrosController {
           quantidade_titulos_manter: parametros.quantidade_titulos_manter,
           central_assinante_metodo_login: parametros.central_assinante_metodo_login,
           dias_atraso_bloqueio: parametros.dias_atraso_bloqueio,
+          dias_desbloqueio_manual: parametros.dias_desbloqueio_manual,
           created_at: parametros.created_at,
           updated_at: parametros.updated_at
         }

@@ -45,6 +45,7 @@ export class SaasDadosEmpresa extends Model<
   declare dominio_customizado: CreationOptional<string | null>;
   declare observacoes: CreationOptional<string | null>;
   declare bloqueado_por_atraso: CreationOptional<boolean>;
+  declare data_fim_desbloqueio_manual: CreationOptional<string | null>;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -90,6 +91,11 @@ SaasDadosEmpresa.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
+    },
+    data_fim_desbloqueio_manual: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      defaultValue: null
     },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },

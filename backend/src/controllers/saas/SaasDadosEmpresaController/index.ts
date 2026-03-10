@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import Joi from 'joi';
 import { SaasDadosEmpresaService } from '../../../services/saas/SaasDadosEmpresaService';
+import { DesbloqueioManualService } from '../../../services/saas/DesbloqueioManualService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
@@ -122,6 +123,24 @@ export class SaasDadosEmpresaController {
       sendSuccess(res, stats);
     } catch (err) {
       sendError(res, err, 'Erro ao buscar estatísticas', 500, true);
+    }
+  }
+
+  static async desbloquearManual(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const id = Number(req.params.id);
+      if (!id || Number.isNaN(id)) {
+        sendValidationError(res, 'ID inválido');
+        return;
+      }
+      const result = await DesbloqueioManualService.desbloquear(id);
+      if (!result.success) {
+        sendError(res, new Error(result.message), result.message, 400, false);
+        return;
+      }
+      sendSuccess(res, result.data, result.message);
+    } catch (err) {
+      sendError(res, err, 'Erro ao desbloquear empresa', 500, true);
     }
   }
 }

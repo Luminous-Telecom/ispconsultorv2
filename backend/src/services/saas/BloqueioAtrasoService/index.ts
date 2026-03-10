@@ -14,10 +14,15 @@ export interface BloqueioAtrasoInfo {
  */
 export async function getBloqueioAtrasoInfo(empresaId: number): Promise<BloqueioAtrasoInfo> {
   const empresa = await SaasDadosEmpresa.findByPk(empresaId, {
-    attributes: ['id', 'bloqueado_por_atraso', 'nome_empresa']
+    attributes: ['id', 'bloqueado_por_atraso', 'data_fim_desbloqueio_manual', 'nome_empresa']
   });
 
   if (!empresa || !empresa.bloqueado_por_atraso) {
+    return { bloqueado: false };
+  }
+
+  const hojeStr = new Date().toISOString().slice(0, 10);
+  if (empresa.data_fim_desbloqueio_manual && empresa.data_fim_desbloqueio_manual >= hojeStr) {
     return { bloqueado: false };
   }
 

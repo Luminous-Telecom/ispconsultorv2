@@ -10,6 +10,7 @@ export interface SaasParametros {
   quantidade_titulos_manter: number | null;
   central_assinante_metodo_login: string;
   dias_atraso_bloqueio: number | null;
+  dias_desbloqueio_manual: number | null;
   created_at?: string;
   updated_at?: string;
 }

@@ -941,10 +941,15 @@ export interface TranslationKeys {
   'status.toPay': string;
   'status.active': string;
   'status.inactive': string;
+  'status.blocked': string;
+  'status.inArrears': string;
   'status.suspended': string;
   'status.exempt': string;
   'status.overdue': string;
   'status.paidLate': string;
+
+  'saas.manualUnblock': string;
+  'saas.confirmManualUnblock': string;
 
   // Placeholders
   'placeholder.cnpj': string;
@@ -2267,10 +2272,15 @@ const translations: Translations = {
     'status.toPay': 'A Pagar',
     'status.active': 'Ativo',
     'status.inactive': 'Inativo',
+    'status.blocked': 'Bloqueado',
+    'status.inArrears': 'Em atraso',
     'status.suspended': 'Suspenso',
     'status.exempt': 'Isentos',
     'status.overdue': 'Vencido',
     'status.paidLate': 'Pago em Atraso',
+
+    'saas.manualUnblock': 'Desbloquear manualmente',
+    'saas.confirmManualUnblock': 'Desbloquear empresa manualmente? Ela terá o prazo configurado para regularizar os títulos.',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -3618,10 +3628,15 @@ const translations: Translations = {
     'status.toPay': 'To Pay',
     'status.active': 'Active',
     'status.inactive': 'Inactive',
+    'status.blocked': 'Blocked',
+    'status.inArrears': 'Overdue',
     'status.suspended': 'Suspended',
     'status.exempt': 'Exempt',
     'status.overdue': 'Overdue',
     'status.paidLate': 'Paid Late',
+
+    'saas.manualUnblock': 'Manual unblock',
+    'saas.confirmManualUnblock': 'Manually unblock company? It will have the configured period to regularize titles.',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -4971,10 +4986,15 @@ const translations: Translations = {
     'status.toPay': 'A Pagar',
     'status.active': 'Activo',
     'status.inactive': 'Inactivo',
+    'status.blocked': 'Bloqueado',
+    'status.inArrears': 'En mora',
     'status.suspended': 'Suspendido',
     'status.exempt': 'Exentos',
     'status.overdue': 'Vencido',
     'status.paidLate': 'Pagado con Retraso',
+
+    'saas.manualUnblock': 'Desbloquear manualmente',
+    'saas.confirmManualUnblock': '¿Desbloquear empresa manualmente? Tendrá el plazo configurado para regularizar los títulos.',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',

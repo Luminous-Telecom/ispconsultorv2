@@ -267,6 +267,24 @@ export class SaasTituloResumoService {
 
 // ─── Contratos ─────────────────────────────────────────────────────────────────
 
+async function getStatusEmpresa(empresaId: number): Promise<{ bloqueado_por_atraso: boolean; em_atraso: boolean }> {
+  const [empresa, countEmAtraso] = await Promise.all([
+    SaasDadosEmpresa.findByPk(empresaId, { attributes: ['bloqueado_por_atraso'] }),
+    SaasTitulo.count({
+      where: {
+        empresa_id: empresaId,
+        pago: false,
+        status: { [Op.in]: ['pendente', 'vencido'] },
+        data_vencimento: { [Op.lt]: new Date(new Date().setHours(0, 0, 0, 0)) },
+      },
+    }),
+  ]);
+  return {
+    bloqueado_por_atraso: !!empresa?.bloqueado_por_atraso,
+    em_atraso: countEmAtraso > 0,
+  };
+}
+
 export class SaasContratoService {
   static async list(filters: ListFilters) {
     const { page = 1, limit = 100, empresa_id, sortColumn = 'id', sortDirection = 'desc' } = filters;
@@ -285,7 +303,14 @@ export class SaasContratoService {
       limit,
       offset,
     });
-    return { data: rows, pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) } };
+    const result: { data: typeof rows; pagination: { total: number; page: number; limit: number; totalPages: number }; status_empresa?: { bloqueado_por_atraso: boolean; em_atraso: boolean } } = {
+      data: rows,
+      pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) },
+    };
+    if (empresa_id) {
+      result.status_empresa = await getStatusEmpresa(empresa_id);
+    }
+    return result;
   }
 
   static async getById(id: number) {

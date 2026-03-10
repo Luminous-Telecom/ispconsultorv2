@@ -213,10 +213,13 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     return titulosParaFiltro;
   }, [titulosParaFiltro, showCanceladosTitulos]);
 
-  const contratosRaw: SaasContrato[] = useMemo(() => {
-    const res = contratosData?.data as { data?: SaasContrato[] } | undefined;
-    return res?.data ?? [];
+  const contratosRes = useMemo(() => {
+    const res = contratosData?.data as { data?: SaasContrato[]; status_empresa?: { bloqueado_por_atraso: boolean; em_atraso: boolean } } | undefined;
+    return { rows: res?.data ?? [], statusEmpresa: res?.status_empresa };
   }, [contratosData]);
+
+  const contratosRaw: SaasContrato[] = contratosRes.rows;
+  const statusEmpresa = contratosRes.statusEmpresa;
 
   const contratos: SaasContrato[] = useMemo(() => {
     let list = contratosRaw;
@@ -287,11 +290,30 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     }
   }, [refetchContratos, error, t]);
 
-  const contratosBulkActions = useMemo(() => [
-    { key: 'novo', label: t('actions.create'), variant: 'primary' as const, requiresSelection: false, onClick: () => setShowContratoCreate(true) },
-    { key: 'editar', label: t('actions.edit'), variant: 'primary' as const, onClick: (sel: SaasContrato[]) => { if (sel[0]) { setSelectedContratoId(sel[0].id); setShowContratoEdit(true); } } },
-    { key: 'deletar', label: t('actions.delete'), onClick: handleDeleteContrato },
-  ], [t, handleDeleteContrato]);
+  const handleDesbloquearManual = useCallback(async () => {
+    if (!empresaId) return;
+    if (!window.confirm(t('saas.confirmManualUnblock') || 'Desbloquear empresa manualmente? Ela terá o prazo configurado para regularizar os títulos.')) return;
+    try {
+      const res = await saasEmpresasService.desbloquearManual(empresaId);
+      const msg = (res as { message?: string })?.message ?? t('messages.success');
+      success(msg);
+      refetchContratos();
+    } catch (e) {
+      error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error'));
+    }
+  }, [empresaId, refetchContratos, success, error, t]);
+
+  const contratosBulkActions = useMemo(() => {
+    const base = [
+      { key: 'novo', label: t('actions.create'), variant: 'primary' as const, requiresSelection: false, onClick: () => setShowContratoCreate(true) },
+      { key: 'editar', label: t('actions.edit'), variant: 'primary' as const, onClick: (sel: SaasContrato[]) => { if (sel[0]) { setSelectedContratoId(sel[0].id); setShowContratoEdit(true); } } },
+      { key: 'deletar', label: t('actions.delete'), onClick: handleDeleteContrato },
+    ];
+    if (statusEmpresa?.bloqueado_por_atraso) {
+      base.push({ key: 'desbloquear', label: t('saas.manualUnblock') || 'Desbloquear manualmente', variant: 'primary' as const, requiresSelection: true, onClick: handleDesbloquearManual });
+    }
+    return base;
+  }, [t, handleDeleteContrato, statusEmpresa?.bloqueado_por_atraso, handleDesbloquearManual]);
 
   const handleDeleteTitulo = useCallback(async (sel: SaasTitulo[]) => {
     const item = sel[0];
@@ -451,7 +473,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
             <button className={`nav-link modal-tab-hover ${activeTab === 'contato' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('contato')}>{t('tabs.contact')}</button>
           </li>
           <li className="nav-item" role="presentation">
-            <button className={`nav-link modal-tab-hover ${activeTab === 'contratos' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('contratos')} disabled={!empresaId}>{t('tabs.contracts')}</button>
+            <button className={`nav-link modal-tab-hover ${activeTab === 'contratos' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('contratos')} disabled={!empresaId}>{t('form.plan')}</button>
           </li>
           <li className="nav-item" role="presentation">
             <button className={`nav-link modal-tab-hover ${activeTab === 'usuarios' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('usuarios')} disabled={!empresaId}>Usuários</button>
@@ -536,7 +558,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
               <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
                 <Table
                   key={`saas-contratos-${empresaId}`}
-                  title={t('nav.contracts')}
+                  title={t('form.plan')}
                   syncWithHeader={false}
                   config={{
                     columns: [
@@ -546,7 +568,12 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                       { key: 'data_inicio', label: t('form.startDate'), sortable: true, searchable: false, render: (i: SaasContrato) => new Date(i.data_inicio).toLocaleDateString('pt-BR') },
                       { key: 'data_fim', label: t('form.endDate'), sortable: true, searchable: false, render: (i: SaasContrato) => i.data_fim ? new Date(i.data_fim).toLocaleDateString('pt-BR') : '—' },
                       { key: 'valor', label: t('form.value'), sortable: true, searchable: false, render: (i: SaasContrato) => formatCurrency(i.valor ?? 0) },
-                      { key: 'status', label: t('table.status'), sortable: true, searchable: true, badgeLabels: [t('status.active'), t('status.inactive')], render: (i: SaasContrato) => <span className={`badge bg-${i.status === 'ativo' ? 'success' : 'secondary'}`}>{i.status === 'ativo' ? t('status.active') : t('status.inactive')}</span> },
+                      { key: 'status', label: t('table.status'), sortable: true, searchable: true, badgeLabels: [t('status.active'), t('status.inactive'), t('status.blocked'), t('status.inArrears')], render: (i: SaasContrato) => {
+                        const displayStatus = statusEmpresa?.bloqueado_por_atraso ? 'bloqueado' : statusEmpresa?.em_atraso ? 'em_atraso' : i.status === 'ativo' ? 'ativo' : 'inativo';
+                        const label = displayStatus === 'bloqueado' ? t('status.blocked') : displayStatus === 'em_atraso' ? t('status.inArrears') : i.status === 'ativo' ? t('status.active') : t('status.inactive');
+                        const variant = displayStatus === 'bloqueado' ? 'danger' : displayStatus === 'em_atraso' ? 'warning' : i.status === 'ativo' ? 'success' : 'secondary';
+                        return <span className={`badge bg-${variant}`}>{label}</span>;
+                      } },
                     ],
                     data: contratos,
                     loading: !contratosData,
