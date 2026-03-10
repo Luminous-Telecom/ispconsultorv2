@@ -5,6 +5,7 @@ import {
   SaasTituloController,
   SaasContratoController,
 } from '../../controllers/saas/SaasCrudController';
+import { SaasTenantUsuarioController } from '../../controllers/saas/SaasTenantUsuarioController';
 import { SaasDashboardController } from '../../controllers/saas/SaasDashboardController';
 import { saasAuthMiddleware } from '../../middleware/saasAuthMiddleware';
 
@@ -46,5 +47,12 @@ router.post('/titulos', SaasTituloController.create);
 router.put('/titulos/:id', SaasTituloController.update);
 router.delete('/titulos/:id', SaasTituloController.delete);
 router.post('/titulos/:id/gerar-boleto', SaasTituloController.gerarBoleto);
+
+// Usuários do tenant (adm_usuarios por empresa_id)
+router.get('/tenant-usuarios', SaasTenantUsuarioController.list);
+router.get('/tenant-usuarios/:id', SaasTenantUsuarioController.getById);
+router.post('/tenant-usuarios', SaasTenantUsuarioController.create);
+router.put('/tenant-usuarios/:id', SaasTenantUsuarioController.update);
+router.delete('/tenant-usuarios/:id', SaasTenantUsuarioController.delete);
 
 export default router;

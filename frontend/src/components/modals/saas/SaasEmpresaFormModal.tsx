@@ -12,9 +12,11 @@ import { useTableFilters } from '@/hooks/useTableFilters';
 import { useAuditoria } from '@/hooks/useAuditoria';
 import { saasEmpresasService, type SaasEmpresa } from '@/services/saas/saasEmpresasService';
 import { saasTituloService, saasContratoService, type SaasTitulo, type SaasContrato } from '@/services/saas/saasCrudService';
+import { saasTenantUsuariosService, type SaasTenantUsuario } from '@/services/saas/saasTenantUsuariosService';
 import Table from '@/components/tables/Table';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import SaasContratoFormModal from './SaasContratoFormModal';
+import SaasTenantUsuarioFormModal from './SaasTenantUsuarioFormModal';
 import { formatCurrency } from '@/utils/formatters';
 import type { FormValue } from '@/types/common';
 
@@ -46,7 +48,7 @@ const INITIAL: Form = {
   responsavel_nome: '', responsavel_cpf: '', responsavel_cargo: '', site: '',
 };
 
-type TabId = 'dados-basicos' | 'endereco' | 'contato' | 'contratos' | 'financeiro';
+type TabId = 'dados-basicos' | 'endereco' | 'contato' | 'contratos' | 'usuarios' | 'financeiro';
 
 const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const { t } = useI18n();
@@ -56,11 +58,15 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const auditoria = useAuditoria();
   const contratosTf = useTableFilters({ initialPage: 1, initialLimit: 500, resetPageOnFilterChange: false });
   const titulosTf = useTableFilters({ initialPage: 1, initialLimit: 500, initialSortColumn: 'id', initialSortDirection: 'desc', resetPageOnFilterChange: false });
+  const usuariosTf = useTableFilters({ initialPage: 1, initialLimit: 500, initialSortColumn: 'id', initialSortDirection: 'desc', resetPageOnFilterChange: false });
   const isEditing = !!itemId;
   const [activeTab, setActiveTab] = useState<TabId>('dados-basicos');
   const [showContratoCreate, setShowContratoCreate] = useState(false);
   const [showContratoEdit, setShowContratoEdit] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
+  const [showUsuarioCreate, setShowUsuarioCreate] = useState(false);
+  const [showUsuarioEdit, setShowUsuarioEdit] = useState(false);
+  const [selectedUsuarioId, setSelectedUsuarioId] = useState<number | null>(null);
   const [form, setForm] = useState<Form>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
   const [showInativosContratos, setShowInativosContratos] = useState(false);
@@ -174,6 +180,12 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     enabled: !!empresaId && (activeTab === 'contratos'),
   });
 
+  const { data: usuariosData, refetch: refetchUsuarios } = useQuery({
+    queryKey: ['saas-tenant-usuarios', empresaId, usuariosTf.sortColumn, usuariosTf.sortDirection],
+    queryFn: () => saasTenantUsuariosService.list({ empresa_id: empresaId!, limit: 500, sortColumn: usuariosTf.sortColumn, sortDirection: usuariosTf.sortDirection }),
+    enabled: !!empresaId && (activeTab === 'usuarios'),
+  });
+
   const titulosRaw: SaasTitulo[] = useMemo(() => {
     const res = titulosData?.data as { data?: SaasTitulo[] } | undefined;
     return res?.data ?? [];
@@ -219,6 +231,43 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       return id.includes(term) || plano.includes(term) || status.includes(term) || valor.includes(term);
     });
   }, [contratosRaw, contratosTf.search, showInativosContratos]);
+
+  const usuariosRaw: SaasTenantUsuario[] = useMemo(() => {
+    const res = usuariosData?.data as { data?: SaasTenantUsuario[] | { data?: SaasTenantUsuario[] } } | undefined;
+    const d = res?.data;
+    const arr = Array.isArray(d) ? d : (d as { data?: SaasTenantUsuario[] } | undefined)?.data;
+    return arr ?? [];
+  }, [usuariosData]);
+
+  const usuarios: SaasTenantUsuario[] = useMemo(() => {
+    const term = (usuariosTf.search || '').toLowerCase().trim();
+    if (!term) return usuariosRaw;
+    return usuariosRaw.filter((u) => {
+      const id = String(u.id);
+      const nome = (u.nome ?? '').toLowerCase();
+      const email = (u.email ?? '').toLowerCase();
+      const role = (u.role ?? '').toLowerCase();
+      return id.includes(term) || nome.includes(term) || email.includes(term) || role.includes(term);
+    });
+  }, [usuariosRaw, usuariosTf.search]);
+
+  const handleDeleteUsuario = useCallback(async (sel: SaasTenantUsuario[]) => {
+    const u = sel[0];
+    if (!u || !window.confirm(t('messages.confirmDelete'))) return;
+    try {
+      await saasTenantUsuariosService.delete(u.id);
+      refetchUsuarios();
+      success(t('messages.success'));
+    } catch {
+      error(t('messages.error'));
+    }
+  }, [refetchUsuarios, success, error, t]);
+
+  const usuariosBulkActions = useMemo(() => [
+    { key: 'novo', label: t('actions.create'), variant: 'primary' as const, requiresSelection: false, onClick: () => setShowUsuarioCreate(true) },
+    { key: 'editar', label: t('actions.edit'), variant: 'primary' as const, onClick: (sel: SaasTenantUsuario[]) => { if (sel[0]) { setSelectedUsuarioId(sel[0].id); setShowUsuarioEdit(true); } } },
+    { key: 'deletar', label: t('actions.delete'), onClick: handleDeleteUsuario },
+  ], [t, handleDeleteUsuario]);
 
   const formDataForAddress = useMemo(() => ({
     cep: form.cep, endereco: form.endereco, numero: form.numero, complemento: form.complemento,
@@ -402,6 +451,9 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
             <button className={`nav-link modal-tab-hover ${activeTab === 'contratos' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('contratos')} disabled={!empresaId}>{t('tabs.contracts')}</button>
           </li>
           <li className="nav-item" role="presentation">
+            <button className={`nav-link modal-tab-hover ${activeTab === 'usuarios' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('usuarios')} disabled={!empresaId}>Usuários</button>
+          </li>
+          <li className="nav-item" role="presentation">
             <button className={`nav-link modal-tab-hover ${activeTab === 'financeiro' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('financeiro')} disabled={!empresaId}>{t('tabs.financial')}</button>
           </li>
         </ul>
@@ -413,7 +465,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     <DraggableModal show={show} onClose={onClose} title={isEditing ? `${t('actions.edit')} ${t('modal.clientsTenants')}` : `${t('actions.create')} ${t('modal.clientsTenants')}`} size="xl" modalId="saas-empresa-form" headerActions={headerActionsContent}>
       <form id="saas-empresa-form-id" onSubmit={handleSubmit}>
         <div className="cliente-modal-content">
-          <div className={`tab-content cliente-tab-content ${(activeTab === 'financeiro' || activeTab === 'contratos') ? 'cliente-tab-content-scrollable' : 'cliente-tab-content-padded'}`} id="saas-empresa-tab-content">
+          <div className={`tab-content cliente-tab-content ${(activeTab === 'financeiro' || activeTab === 'contratos' || activeTab === 'usuarios') ? 'cliente-tab-content-scrollable' : 'cliente-tab-content-padded'}`} id="saas-empresa-tab-content">
           {activeTab === 'dados-basicos' && (
             <div className="row g-2 p-3">
               <div className="col-md-6">
@@ -571,6 +623,59 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
             </div>
           )}
 
+          {activeTab === 'usuarios' && empresaId && (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+                <Table
+                  key={`saas-usuarios-${empresaId}`}
+                  title="Usuários"
+                  syncWithHeader={false}
+                  config={{
+                    columns: [
+                      { key: 'id', label: t('table.id'), sortable: true, searchable: true, width: 42, resizable: true, render: (i: SaasTenantUsuario) => i.id },
+                      { key: 'nome', label: t('form.name'), sortable: true, searchable: true, render: (i: SaasTenantUsuario) => i.nome },
+                      { key: 'email', label: t('form.email'), sortable: true, searchable: true, render: (i: SaasTenantUsuario) => i.email },
+                      { key: 'role', label: t('user.profile'), sortable: true, searchable: true, render: (i: SaasTenantUsuario) => <span className="badge bg-info">{i.role === 'admin' ? t('user.admin') : t('user.user')}</span> },
+                      { key: 'ativo', label: t('table.status'), sortable: true, searchable: false, render: (i: SaasTenantUsuario) => <span className={`badge ${i.ativo ? 'bg-success' : 'bg-secondary'}`}>{i.ativo ? t('status.active') : t('status.inactive')}</span> },
+                    ],
+                    data: usuarios,
+                    loading: !usuariosData,
+                    emptyMessage: 'Nenhum usuário cadastrado',
+                    searchable: true,
+                    searchPlaceholder: '',
+                    searchFields: [
+                      { key: 'id', label: t('table.id') },
+                      { key: 'nome', label: t('form.name') },
+                      { key: 'email', label: t('form.email') },
+                      { key: 'role', label: t('user.profile') },
+                    ],
+                    sortable: true,
+                    sortColumn: usuariosTf.sortColumn,
+                    sortDirection: usuariosTf.sortDirection,
+                    striped: true,
+                    hover: true,
+                    responsive: true,
+                    selectable: true,
+                    multiSelect: false,
+                    bulkActions: usuariosBulkActions.map(a => ({
+                      key: a.key,
+                      label: a.label,
+                      variant: a.variant,
+                      requiresSelection: (a as { requiresSelection?: boolean }).requiresSelection,
+                      onClick: a.onClick,
+                    })),
+                    className: 'no-padding',
+                  }}
+                  onRowDoubleClick={(i: SaasTenantUsuario) => { setSelectedUsuarioId(i.id); setShowUsuarioEdit(true); }}
+                  onRefresh={refetchUsuarios}
+                  onSort={usuariosTf.setSort}
+                  onSearch={(s) => usuariosTf.setSearch(s)}
+                  search={usuariosTf.search}
+                />
+              </div>
+            </div>
+          )}
+
           {activeTab === 'financeiro' && empresaId && (
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
@@ -672,6 +777,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       </form>
       <SaasContratoFormModal show={showContratoCreate} onClose={() => setShowContratoCreate(false)} empresaId={empresaId!} onSuccess={() => refetchContratos()} />
       <SaasContratoFormModal show={showContratoEdit && !!selectedContratoId} onClose={() => { setShowContratoEdit(false); setSelectedContratoId(null); }} itemId={selectedContratoId} empresaId={empresaId!} onSuccess={() => refetchContratos()} />
+      <SaasTenantUsuarioFormModal show={showUsuarioCreate} onClose={() => setShowUsuarioCreate(false)} empresaId={empresaId!} onSuccess={() => refetchUsuarios()} />
+      <SaasTenantUsuarioFormModal show={showUsuarioEdit && !!selectedUsuarioId} onClose={() => { setShowUsuarioEdit(false); setSelectedUsuarioId(null); }} usuarioId={selectedUsuarioId} empresaId={empresaId!} onSuccess={() => refetchUsuarios()} />
       <ImprimirModal
         show={showImprimirModal}
         onClose={() => { setShowImprimirModal(false); clearPdfUrl(); }}
