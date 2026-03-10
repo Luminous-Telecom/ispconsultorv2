@@ -44,6 +44,7 @@ export class SaasDadosEmpresa extends Model<
   declare logo_url: CreationOptional<string | null>;
   declare dominio_customizado: CreationOptional<string | null>;
   declare observacoes: CreationOptional<string | null>;
+  declare bloqueado_por_atraso: CreationOptional<boolean>;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -85,6 +86,11 @@ SaasDadosEmpresa.init(
     logo_url: { type: DataTypes.STRING(500), allowNull: true },
     dominio_customizado: { type: DataTypes.STRING(255), allowNull: true },
     observacoes: { type: DataTypes.TEXT, allowNull: true },
+    bloqueado_por_atraso: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
   },

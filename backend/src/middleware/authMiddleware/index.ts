@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { logger } from '../../utils/logger';
 import { UsuarioService } from '../../services/cadastros/UsuarioService';
 import { registrarAuditoriaElasticsearch } from '../../services/elasticsearch/ElasticsearchAuditService';
+import { getBloqueioAtrasoInfo } from '../../services/saas/BloqueioAtrasoService';
 
 interface AuthenticatedRequest extends Request {
   user?: jwt.JwtPayload | string;
@@ -167,8 +168,27 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
   }
 
   try {
-    const payload = jwt.verify(token, jwtSecret);
+    const payload = jwt.verify(token, jwtSecret) as jwt.JwtPayload & { empresa_id?: number; api_token?: boolean };
     req.user = payload;
+
+    const empresaId = payload.empresa_id;
+    const isSaasAdminRoute = /^\/api\/saas\//i.test(cleanedPath);
+    if (empresaId && !isSaasAdminRoute && !payload.api_token) {
+      const bloqueio = await getBloqueioAtrasoInfo(empresaId);
+      if (bloqueio.bloqueado) {
+        res.status(403).json({
+          success: false,
+          code: 'EMPRESA_BLOQUEADA_ATRASO',
+          message: bloqueio.mensagem ?? 'Acesso bloqueado devido a fatura em atraso.',
+          data: {
+            titulo_id: bloqueio.titulo_id,
+            url_pagamento: bloqueio.url_pagamento
+          }
+        });
+        return;
+      }
+    }
+
     next();
   } catch (error) {
     logger.warn('Falha na validação do token JWT', {

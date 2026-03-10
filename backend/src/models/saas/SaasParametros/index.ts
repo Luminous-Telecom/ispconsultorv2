@@ -10,6 +10,7 @@ interface SaasParametrosAttributes {
   manter_numeros_titulos: boolean;
   quantidade_titulos_manter: number | null;
   central_assinante_metodo_login: string;
+  dias_atraso_bloqueio: number | null;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -25,6 +26,7 @@ class SaasParametros extends Model<SaasParametrosAttributes, SaasParametrosCreat
   public manter_numeros_titulos!: boolean;
   public quantidade_titulos_manter!: number | null;
   public central_assinante_metodo_login!: string;
+  public dias_atraso_bloqueio!: number | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -70,6 +72,11 @@ SaasParametros.init(
       type: DataTypes.STRING(20),
       allowNull: false,
       defaultValue: 'cnpj'
+    },
+    dias_atraso_bloqueio: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null
     },
     created_at: {
       type: DataTypes.DATE,

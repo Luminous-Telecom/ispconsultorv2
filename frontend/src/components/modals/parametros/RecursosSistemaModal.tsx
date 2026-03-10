@@ -139,7 +139,7 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
         </div>
       ) : (
         <>
-          <form id="recursos-sistema-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+          <form id="recursos-sistema-form" className="form-modal-simple" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
             <div>
               <div className="card mb-3">
                 <div className="card-header py-1 px-2">

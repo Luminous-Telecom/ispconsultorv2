@@ -1,11 +1,43 @@
+import { Op } from 'sequelize';
 import { PaymentCommonService } from '../PaymentCommonService';
 import { ReciboPagamentoService } from '../../comunicacao/ReciboPagamentoService';
 import { logger } from '../../../utils/logger';
 import { registrarAtualizacaoElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
+import SaasDadosEmpresa from '../../../models/saas/SaasDadosEmpresa';
+import SaasTitulo from '../../../models/saas/SaasTitulo';
+import SaasParametros from '../../../models/saas/SaasParametros';
 import type { Request } from 'express';
 import type { ResolvedTitulo } from '../TituloWebhookResolver';
 
-type TituloLike = { id: number; valor: number; pago: boolean; status: string; update: (data: Record<string, unknown>) => Promise<unknown>; reload: () => Promise<unknown>; toJSON: () => Record<string, unknown>; marcarComoPago?: (valor: number, data?: Date, skipLiquidacao?: boolean) => Promise<void> };
+type TituloLike = { id: number; empresa_id?: number; valor: number; pago: boolean; status: string; update: (data: Record<string, unknown>) => Promise<unknown>; reload: () => Promise<unknown>; toJSON: () => Record<string, unknown>; marcarComoPago?: (valor: number, data?: Date, skipLiquidacao?: boolean) => Promise<void> };
+
+/**
+ * Se a empresa não tiver mais faturas em atraso ( além do limite configurado ), desbloqueia.
+ */
+async function desbloquearSeSemAtraso(empresaId: number): Promise<void> {
+  const parametros = await SaasParametros.findOne();
+  const diasLimite = parametros?.dias_atraso_bloqueio ?? null;
+  if (diasLimite == null || diasLimite <= 0) return;
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const dataLimite = new Date(hoje);
+  dataLimite.setDate(dataLimite.getDate() - diasLimite);
+
+  const count = await SaasTitulo.count({
+    where: {
+      empresa_id: empresaId,
+      pago: false,
+      status: { [Op.in]: ['pendente', 'vencido'] },
+      data_vencimento: { [Op.lte]: dataLimite }
+    }
+  });
+
+  if (count === 0) {
+    await SaasDadosEmpresa.update({ bloqueado_por_atraso: false }, { where: { id: empresaId } });
+    logger.info('Webhook - Empresa desbloqueada após pagamento', { empresa_id: empresaId });
+  }
+}
 
 /**
  * Aplica atualização de pagamento via webhook em título (admin ou SaaS)
@@ -25,6 +57,10 @@ export async function applyPagoWebhook(
       valor_pago: valorPago,
       status: 'pago'
     });
+    const empresaId = (t as TituloLike & { empresa_id: number }).empresa_id;
+    if (empresaId) {
+      await desbloquearSeSemAtraso(empresaId);
+    }
   } else if (typeof t.marcarComoPago === 'function') {
     await t.marcarComoPago(valorPago, dataPagamento, true);
   }

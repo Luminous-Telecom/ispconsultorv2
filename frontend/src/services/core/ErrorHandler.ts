@@ -104,10 +104,15 @@ export class ErrorHandler {
             }, 100);
           }
           break;
-        case 403:
+        case 403: {
+          const data403 = responseData as { code?: string; message?: string; data?: { titulo_id?: number; url_pagamento?: string | null } };
+          if (data403?.code === 'EMPRESA_BLOQUEADA_ATRASO') {
+            window.dispatchEvent(new CustomEvent('empresa_bloqueada_atraso', { detail: data403 }));
+          }
           errorType = ErrorType.AUTHORIZATION_ERROR;
           message = responseData?.message || responseData?.error || 'Sem permissão para esta ação';
           break;
+        }
         case 404:
           const baseURL = (axiosError.config?.baseURL || '').toLowerCase();
           const fullUrl = `${baseURL}${requestUrl}`;

@@ -26,6 +26,7 @@ interface ParametrosForm {
   manter_numeros_titulos: boolean;
   quantidade_titulos_manter: number;
   central_assinante_metodo_login: string;
+  dias_atraso_bloqueio: number | null;
 }
 
 const INITIAL: ParametrosForm = {
@@ -36,6 +37,7 @@ const INITIAL: ParametrosForm = {
   manter_numeros_titulos: false,
   quantidade_titulos_manter: 12,
   central_assinante_metodo_login: 'cnpj',
+  dias_atraso_bloqueio: null,
 };
 
 const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
@@ -62,6 +64,7 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
       manter_numeros_titulos: parametros.data.manter_numeros_titulos ?? false,
       quantidade_titulos_manter: Math.min(24, Math.max(1, qtd)),
       central_assinante_metodo_login: parametros.data.central_assinante_metodo_login ?? 'cnpj',
+      dias_atraso_bloqueio: parametros.data.dias_atraso_bloqueio ?? null,
     };
   }, [parametros?.data]);
 
@@ -89,6 +92,9 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
     const payload = { ...formData };
     if (!payload.manter_numeros_titulos) {
       payload.quantidade_titulos_manter = 12;
+    }
+    if (payload.dias_atraso_bloqueio !== null && payload.dias_atraso_bloqueio <= 0) {
+      payload.dias_atraso_bloqueio = null;
     }
     updateMutation.mutate(payload);
   };
@@ -134,12 +140,12 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
           </div>
         </div>
       ) : (
-        <form id="saas-recursos-sistema-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+        <form id="saas-recursos-sistema-form" className="form-modal-simple" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px', paddingBottom: isMobile ? 0 : 24 }}>
           <div className="card mb-3">
             <div className="card-header py-1 px-2">
               <small className="fw-bold mb-0">Validações</small>
             </div>
-            <div className="card-body p-2">
+            <div className="card-body p-2 overflow-visible">
               <div className="form-check mb-3">
                 <input
                   type="checkbox"
@@ -182,7 +188,7 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
             <div className="card-header py-1 px-2">
               <small className="fw-bold mb-0">Geração de Títulos</small>
             </div>
-            <div className="card-body p-2">
+            <div className="card-body p-2 overflow-visible">
               <div className="form-check mb-3">
                 <input
                   type="checkbox"
@@ -261,7 +267,7 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
             <div className="card-header py-1 px-2">
               <small className="fw-bold mb-0">Central do Assinante</small>
             </div>
-            <div className="card-body p-2">
+            <div className="card-body p-2 overflow-visible">
               <label htmlFor="saas_central_metodo" className="form-label small mb-1">
                 Método de Login
                 <i
@@ -280,6 +286,42 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
                 <option value="cnpj">CNPJ</option>
                 <option value="email">Email</option>
               </select>
+            </div>
+          </div>
+          <div className="card mb-3">
+            <div className="card-header py-1 px-2">
+              <small className="fw-bold mb-0">Bloqueio por Atraso</small>
+            </div>
+            <div className="card-body p-2 overflow-visible">
+              <div className="mb-3">
+                <label htmlFor="saas_dias_atraso_bloqueio" className="form-label small mb-1">
+                  Dias em atraso para bloqueio
+                  <i
+                    className="bi bi-info-circle text-muted ms-1"
+                    style={{ cursor: 'help', fontSize: '0.85rem' }}
+                    title="Número de dias após o vencimento para bloquear o acesso à plataforma. Deixe em branco ou 0 para desabilitar."
+                  />
+                </label>
+                <input
+                  type="number"
+                  className="form-control form-control-sm"
+                  id="saas_dias_atraso_bloqueio"
+                  min={0}
+                  max={365}
+                  placeholder="Ex: 15"
+                  value={formData.dias_atraso_bloqueio ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData((prev) => ({
+                      ...prev,
+                      dias_atraso_bloqueio: v === '' ? null : Math.min(365, Math.max(0, parseInt(v, 10) || 0))
+                    }));
+                  }}
+                  disabled={updateMutation.isPending}
+                  style={{ maxWidth: '140px', minWidth: '80px' }}
+                />
+                <small className="text-muted d-block mt-1">0 ou vazio = desabilitado</small>
+              </div>
             </div>
           </div>
         </form>

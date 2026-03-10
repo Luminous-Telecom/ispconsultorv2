@@ -165,6 +165,14 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   flex-direction: column !important;
 }
 
+/* Formulários simples (cards/params): permitir scroll e evitar corte de conteúdo */
+.draggable-modal-body-custom > form.form-modal-simple {
+  flex: none !important;
+  min-height: auto !important;
+  overflow: visible !important;
+  display: block !important;
+}
+
 .draggable-modal-body-custom > form > .cliente-modal-content {
   flex: 1 1 0 !important;
   min-height: 0 !important;

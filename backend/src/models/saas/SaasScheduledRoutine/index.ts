@@ -6,7 +6,7 @@ import { formatCreatedAt } from '../../../utils/dateUtils';
 export interface SaasScheduledRoutineAttributes {
   id: number;
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'outros';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'bloquear_saas_atraso' | 'outros';
   descricao?: string;
   configuracao: Record<string, JsonValue>;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
@@ -32,7 +32,7 @@ export type SaasScheduledRoutineCreationAttributes = Optional<
 export class SaasScheduledRoutine extends Model<SaasScheduledRoutineAttributes, SaasScheduledRoutineCreationAttributes> implements SaasScheduledRoutineAttributes {
   public id!: number;
   public nome!: string;
-  public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'outros';
+  public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'bloquear_saas_atraso' | 'outros';
   public descricao?: string;
   public configuracao!: Record<string, JsonValue>;
   public frequencia!: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
@@ -79,7 +79,7 @@ SaasScheduledRoutine.init(
       allowNull: false
     },
     tipo: {
-      type: DataTypes.ENUM('geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'verificar_vencimentos', 'desbloquear_blockdomi', 'outros'),
+      type: DataTypes.ENUM('geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'verificar_vencimentos', 'desbloquear_blockdomi', 'bloquear_saas_atraso', 'outros'),
       allowNull: false
     },
     descricao: {

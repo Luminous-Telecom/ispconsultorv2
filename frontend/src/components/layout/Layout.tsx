@@ -15,6 +15,7 @@ import { useApiLoading } from '@/hooks/useApiLoading';
 import LoadingDots from '../common/LoadingDots';
 import SingleModalWrapper from '../common/SingleModalWrapper';
 import BackNetLogo from '../common/BackNetLogo';
+import BloqueioAtrasoOverlayComponent from '../common/BloqueioAtrasoOverlay';
 import { DadosEmpresaService } from '@/services/dadosEmpresaService';
 import { usePlanoModulos } from '@/hooks/usePlanoModulos';
 import { MODAL_MODULO_MAP } from '@/constants/planoModulos';
@@ -272,6 +273,7 @@ const Layout: React.FC = () => {
 
   return (
     <div className="app-layout">
+      <BloqueioAtrasoOverlayComponent />
       {/* Overlay para fechar sidebar no mobile */}
       {isMobile && sidebarOpen && (
         <div 

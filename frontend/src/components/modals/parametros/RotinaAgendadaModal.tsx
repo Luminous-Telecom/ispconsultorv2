@@ -21,6 +21,7 @@ const TIPO_OPTIONS_SAAS = [
   { value: 'geracao_titulos', label: 'Geração de Títulos' },
   { value: 'envio_boletos', label: 'Envio de Boletos' },
   { value: 'remessa_bancaria', label: 'Remessa Bancária' },
+  { value: 'bloquear_saas_atraso', label: 'Bloquear acesso por atraso' },
 ];
 
 const NOMES_POR_TIPO_ERP: Record<string, string> = {
@@ -35,6 +36,7 @@ const NOMES_POR_TIPO_SAAS: Record<string, string> = {
   geracao_titulos: 'Geração de Títulos',
   envio_boletos: 'Envio de Boletos',
   remessa_bancaria: 'Remessa Bancária',
+  bloquear_saas_atraso: 'Bloquear acesso por atraso',
 };
 
 interface RotinaAgendadaModalProps {

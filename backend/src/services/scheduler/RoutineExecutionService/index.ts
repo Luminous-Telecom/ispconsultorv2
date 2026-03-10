@@ -13,6 +13,7 @@ import type {
   EnvioBoletosResult,
   RemessaBancariaResult
 } from '../../../types/scheduler';
+import type { RoutineResult } from '../../../interfaces/IRoutine';
 
 /**
  * Interfaces auxiliares para tipagem
@@ -89,7 +90,7 @@ export class RoutineExecutionService {
   ): Promise<RoutineExecutionResult> {
     const saas = isSaasRoutine(routine);
 
-    if (saas && !['geracao_titulos', 'envio_boletos', 'remessa_bancaria'].includes(routine.tipo)) {
+    if (saas && !['geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'bloquear_saas_atraso'].includes(routine.tipo)) {
       logger.warn('RoutineExecutionService - Tipo não suportado no SaaS', {
         context: 'RoutineExecutionService',
         tipo: routine.tipo,
@@ -132,6 +133,10 @@ export class RoutineExecutionService {
       case 'desbloquear_blockdomi':
         if (saas) return { success: false, message: 'Tipo não suportado no SaaS' };
         return await this.executeDesbloquearBlockdomi(routine as ScheduledRoutine);
+
+      case 'bloquear_saas_atraso':
+        if (!saas) return { success: false, message: 'Tipo exclusivo do SaaS' };
+        return await this.executeBloquearSaasAtraso();
 
       default:
         logger.warn('RoutineExecutionService.executeRoutine - Tipo de rotina não implementado', {
@@ -854,6 +859,37 @@ export class RoutineExecutionService {
       return {
         success: false,
         message: `Erro ao desbloquear blockdomi: ${errorMessage}`
+      };
+    }
+  }
+
+  /**
+   * Executa a rotina de bloqueio SaaS por atraso (faturas vencidas além do limite de dias)
+   * @returns Resultado da execução
+   */
+  public async executeBloquearSaasAtraso(): Promise<RoutineExecutionResult> {
+    try {
+      const { BloquearSaasAtrasoRoutine } = await import('../routines/BloquearSaasAtrasoRoutine');
+      const routine = new BloquearSaasAtrasoRoutine();
+      const resultado = await routine.execute({}) as RoutineResult & { empresasBloqueadas?: number; empresasDesbloqueadas?: number };
+      return {
+        success: resultado.success,
+        message: resultado.message,
+        empresasBloqueadas: resultado.empresasBloqueadas ?? 0,
+        empresasDesbloqueadas: resultado.empresasDesbloqueadas ?? 0
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar bloqueio SaaS por atraso', {
+        context: 'RoutineExecutionService',
+        action: 'executeBloquearSaasAtraso',
+        error: errorMessage
+      });
+      return {
+        success: false,
+        message: `Erro na rotina de bloqueio por atraso: ${errorMessage}`,
+        empresasBloqueadas: 0,
+        empresasDesbloqueadas: 0
       };
     }
   }
