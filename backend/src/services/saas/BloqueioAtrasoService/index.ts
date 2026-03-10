@@ -1,6 +1,34 @@
 import SaasDadosEmpresa from '../../../models/saas/SaasDadosEmpresa';
 import SaasTitulo from '../../../models/saas/SaasTitulo';
+import SaasParametros from '../../../models/saas/SaasParametros';
 import { Op } from 'sequelize';
+
+/**
+ * Se a empresa não tiver mais faturas em atraso (além do limite configurado), desbloqueia.
+ */
+export async function desbloquearSeSemAtraso(empresaId: number): Promise<void> {
+  const parametros = await SaasParametros.findOne();
+  const diasLimite = parametros?.dias_atraso_bloqueio ?? null;
+  if (diasLimite == null || diasLimite <= 0) return;
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const dataLimite = new Date(hoje);
+  dataLimite.setDate(dataLimite.getDate() - diasLimite);
+
+  const count = await SaasTitulo.count({
+    where: {
+      empresa_id: empresaId,
+      pago: false,
+      status: { [Op.in]: ['pendente', 'vencido'] },
+      data_vencimento: { [Op.lte]: dataLimite }
+    }
+  });
+
+  if (count === 0) {
+    await SaasDadosEmpresa.update({ bloqueado_por_atraso: false }, { where: { id: empresaId } });
+  }
+}
 
 export interface BloqueioAtrasoInfo {
   bloqueado: boolean;

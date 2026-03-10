@@ -43,6 +43,12 @@ export class BloquearSaasAtrasoRoutine implements IRoutine {
         attributes: ['id', 'empresa_id', 'data_vencimento', 'valor', 'numero_titulo', 'url_boleto']
       });
 
+      logger.info('BloquearSaasAtrasoRoutine - Títulos em análise', {
+        total: titulosVencidosAtraso.length,
+        dataLimite: dataLimite.toISOString().slice(0, 10),
+        diasLimite
+      });
+
       const empresasComAtraso = new Map<number, { titulo_id: number; url_boleto: string | null; dias_atraso: number }>();
       for (const t of titulosVencidosAtraso) {
         const venc = new Date(t.data_vencimento);
@@ -61,6 +67,11 @@ export class BloquearSaasAtrasoRoutine implements IRoutine {
       }
 
       const hojeStr = hoje.toISOString().slice(0, 10);
+
+      logger.info('BloquearSaasAtrasoRoutine - Empresas com atraso >= limite', {
+        total: empresasComAtraso.size,
+        empresaIds: Array.from(empresasComAtraso.keys())
+      });
 
       const idsComAtraso = Array.from(empresasComAtraso.keys());
       const empresasComAtrasoData = idsComAtraso.length > 0
@@ -83,7 +94,13 @@ export class BloquearSaasAtrasoRoutine implements IRoutine {
       for (const [empresaId, _info] of empresasComAtraso) {
         const emp = mapaEmpresas.get(empresaId);
         const emDesbloqueioManual = emp?.data_fim_desbloqueio_manual && emp.data_fim_desbloqueio_manual >= hojeStr;
-        if (emDesbloqueioManual) continue;
+        if (emDesbloqueioManual) {
+          logger.info('BloquearSaasAtrasoRoutine - Empresa em desbloqueio manual (não bloqueia)', {
+            empresa_id: empresaId,
+            data_fim_desbloqueio_manual: emp?.data_fim_desbloqueio_manual
+          });
+          continue;
+        }
 
         if (!idsBloqueados.has(empresaId)) {
           await SaasDadosEmpresa.update(

@@ -91,6 +91,13 @@ export interface SaasTitulo {
 export const saasTituloService = {
   ...createSaasCrudService<SaasTitulo>('/saas/titulos'),
   gerarBoleto: (id: number) => defaultApiClient.post<ApiResponse<SaasTitulo>>(`/saas/titulos/${id}/gerar-boleto`, {}),
+  marcarPago: (id: number, dataPagamento?: string, valorPago?: number, observacoes?: string) => {
+    const payload: { data_pagamento?: string; valor_pago?: number; observacoes?: string } = {};
+    if (dataPagamento) payload.data_pagamento = dataPagamento;
+    if (valorPago != null) payload.valor_pago = valorPago;
+    if (observacoes) payload.observacoes = observacoes;
+    return defaultApiClient.post<ApiResponse<SaasTitulo>>(`/saas/titulos/${id}/pagar`, payload);
+  },
   getResumo: () =>
     defaultApiClient.get<ApiResponse<{ titulosPendentes: number; titulosAtrasados: number; totalRecebido: number; mrr: number }>>('/saas/titulos/resumo'),
   gerarPdfBoletosMultiplos: async (ids: number[]): Promise<Blob> => {

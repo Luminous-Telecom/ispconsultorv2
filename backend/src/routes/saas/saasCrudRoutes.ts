@@ -46,6 +46,7 @@ router.get('/titulos/:id', SaasTituloController.getById);
 router.post('/titulos', SaasTituloController.create);
 router.put('/titulos/:id', SaasTituloController.update);
 router.delete('/titulos/:id', SaasTituloController.delete);
+router.post('/titulos/:id/pagar', SaasTituloController.marcarPago);
 router.post('/titulos/:id/gerar-boleto', SaasTituloController.gerarBoleto);
 
 // Usuários do tenant (adm_usuarios por empresa_id)

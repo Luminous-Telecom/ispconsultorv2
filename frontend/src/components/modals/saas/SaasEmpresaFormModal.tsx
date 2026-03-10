@@ -18,6 +18,7 @@ import ImprimirModal from '@/components/common/ImprimirModal';
 import SaasContratoFormModal from './SaasContratoFormModal';
 import SaasTenantUsuarioFormModal from './SaasTenantUsuarioFormModal';
 import SaasTituloFormModal from './SaasTituloFormModal';
+import SaasReceberModal from './SaasReceberModal';
 import { formatCurrency } from '@/utils/formatters';
 import type { FormValue } from '@/types/common';
 
@@ -77,6 +78,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const [showImprimirModal, setShowImprimirModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showReceberModal, setShowReceberModal] = useState(false);
+  const [tituloReceber, setTituloReceber] = useState<SaasTitulo | null>(null);
 
   const { data } = useQuery({
     queryKey: ['saas-empresa', itemId],
@@ -435,6 +438,18 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
 
   const titulosBulkActions = useMemo(() => [
     { key: 'novo', label: t('actions.create'), variant: 'primary' as const, requiresSelection: false, onClick: () => setShowTituloCreate(true) },
+    { key: 'receber', label: t('actions.receive'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
+      const items = s.length > 0 ? s : selectedTitulos;
+      const emAberto = items.filter(i => !i.pago && (i as { status?: string }).status !== 'cancelado');
+      return emAberto.length !== 1;
+    }, onClick: (sel?: SaasTitulo[]) => {
+      const items = sel && sel.length > 0 ? sel : selectedTitulos;
+      const emAberto = items.filter(i => !i.pago && (i as { status?: string }).status !== 'cancelado');
+      if (emAberto.length === 1) {
+        setTituloReceber(emAberto[0]);
+        setShowReceberModal(true);
+      }
+    } },
     { key: 'cancelar', label: t('buttons.cancel'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
       const items = s.length > 0 ? s : selectedTitulos;
       return items.length === 0 || items.every(i => i.status === 'pago' || i.status === 'cancelado');
@@ -774,6 +789,12 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   onSearch={(s, f) => { titulosTf.setSearch(s); if (f) titulosTf.setSearchField(f); }}
                   search={titulosTf.search}
                   onSelectionChange={(items) => setSelectedTitulos(items as SaasTitulo[])}
+                  onRowDoubleClick={(i: SaasTitulo) => {
+                    if (!i.pago && (i as { status?: string }).status !== 'cancelado') {
+                      setTituloReceber(i);
+                      setShowReceberModal(true);
+                    }
+                  }}
                   onAudit={(i) => auditoria.handleAudit('SaasTitulo', i.id)}
                   auditEntity="SaasTitulo"
                 />
@@ -818,6 +839,13 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
         isGenerating={isGeneratingPdf}
         title={t('financial.viewDocument')}
         modalId="saas-empresa-imprimir-modal"
+      />
+      <SaasReceberModal
+        isOpen={showReceberModal}
+        onClose={() => { setShowReceberModal(false); setTituloReceber(null); }}
+        titulo={tituloReceber}
+        empresaNome={form.nome_fantasia || form.razao_social}
+        onSuccess={() => { setShowReceberModal(false); setTituloReceber(null); refetchTitulos(); refetchContratos(); }}
       />
     </DraggableModal>
   );

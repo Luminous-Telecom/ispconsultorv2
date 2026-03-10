@@ -16,6 +16,8 @@ import { SaasPlano } from '../../../models/saas/SaasPlano';
 import { SaasBanco } from '../../../models/saas/SaasBanco';
 import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
 import { saasTituloToTituloComRelacoes } from '../../titulos/TituloHelpers/saasTituloToTituloComRelacoes';
+import { PaymentCommonService } from '../../../services/webhooks/PaymentCommonService';
+import { desbloquearSeSemAtraso } from '../../../services/saas/BloqueioAtrasoService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
@@ -311,6 +313,50 @@ export class SaasTituloController {
       sendSuccess(res, titulo, resultado.message || 'Boleto gerado com sucesso');
     } catch (err) {
       sendError(res, err, 'Erro ao gerar boleto', 500, true);
+    }
+  }
+
+  static async marcarPago(req: SaasAuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { valor_pago, data_pagamento, observacoes } = req.body;
+      const titulo = await SaasTituloService.getById(Number(id));
+      if (!titulo) {
+        sendNotFound(res, 'Título não encontrado');
+        return;
+      }
+      if ((titulo as { status?: string }).status === 'cancelado') {
+        sendValidationError(res, 'Não é possível marcar como pago um título cancelado');
+        return;
+      }
+      if (titulo.pago) {
+        sendValidationError(res, 'Este título já foi marcado como pago');
+        return;
+      }
+      const valorPago = valor_pago != null ? Number(valor_pago) : Number(titulo.valor);
+      const dataPagamentoNorm = data_pagamento
+        ? (typeof data_pagamento === 'string'
+            ? PaymentCommonService.normalizePaymentDate(data_pagamento)
+            : data_pagamento)
+        : new Date();
+      const dataPagamento = dataPagamentoNorm ?? new Date();
+      const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
+      const updateData: Record<string, unknown> = {
+        pago: true,
+        data_pagamento: dataPagamento,
+        valor_pago: valorPago,
+        status: 'pago'
+      };
+      if (observacoes !== undefined) updateData.observacoes = observacoes;
+      await titulo.update(updateData);
+      await registrarAtualizacao(req as any, 'SaasTitulo', titulo.id, dadosAnteriores, titulo.toJSON() as Record<string, unknown>);
+      const empresaId = titulo.empresa_id;
+      if (empresaId) {
+        await desbloquearSeSemAtraso(empresaId);
+      }
+      sendSuccess(res, titulo, 'Título marcado como pago');
+    } catch (err) {
+      sendError(res, err, 'Erro ao marcar título como pago', 500, true);
     }
   }
 
