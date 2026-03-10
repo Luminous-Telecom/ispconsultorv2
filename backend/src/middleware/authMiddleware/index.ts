@@ -173,9 +173,10 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
     const empresaId = payload.empresa_id;
     const isSaasAdminRoute = /^\/api\/saas\//i.test(cleanedPath);
+    const isTenantBoletoAtrasoRoute = /^\/api\/tenant\/boleto-atraso(-pdf)?\/?$/i.test(cleanedPath);
     if (empresaId && !isSaasAdminRoute && !payload.api_token) {
       const bloqueio = await getBloqueioAtrasoInfo(empresaId);
-      if (bloqueio.bloqueado) {
+      if (bloqueio.bloqueado && !isTenantBoletoAtrasoRoute) {
         res.status(403).json({
           success: false,
           code: 'EMPRESA_BLOQUEADA_ATRASO',

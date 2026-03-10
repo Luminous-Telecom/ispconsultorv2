@@ -17,6 +17,7 @@ import Table from '@/components/tables/Table';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import SaasContratoFormModal from './SaasContratoFormModal';
 import SaasTenantUsuarioFormModal from './SaasTenantUsuarioFormModal';
+import SaasTituloFormModal from './SaasTituloFormModal';
 import { formatCurrency } from '@/utils/formatters';
 import type { FormValue } from '@/types/common';
 
@@ -67,6 +68,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const [showUsuarioCreate, setShowUsuarioCreate] = useState(false);
   const [showUsuarioEdit, setShowUsuarioEdit] = useState(false);
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<number | null>(null);
+  const [showTituloCreate, setShowTituloCreate] = useState(false);
   const [form, setForm] = useState<Form>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
   const [showInativosContratos, setShowInativosContratos] = useState(false);
@@ -410,6 +412,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   }, [titulosParaFiltro, error, success, openPrintModal, t]);
 
   const titulosBulkActions = useMemo(() => [
+    { key: 'novo', label: t('actions.create'), variant: 'primary' as const, requiresSelection: false, onClick: () => setShowTituloCreate(true) },
     { key: 'cancelar', label: t('buttons.cancel'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
       const items = s.length > 0 ? s : selectedTitulos;
       return items.length === 0 || items.every(i => i.status === 'pago' || i.status === 'cancelado');
@@ -716,7 +719,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                       key: a.key,
                       label: a.label,
                       variant: a.variant,
-                      disabled: a.disabled,
+                      disabled: (a as { disabled?: (s: SaasTitulo[]) => boolean }).disabled,
+                      requiresSelection: (a as { requiresSelection?: boolean }).requiresSelection,
                       onClick: (a as { onClick?: (s: SaasTitulo[]) => void }).onClick,
                       dropdown: (a as { dropdown?: { label: string; action: (sel?: SaasTitulo[]) => void }[] }).dropdown,
                     })),
@@ -779,6 +783,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       <SaasContratoFormModal show={showContratoEdit && !!selectedContratoId} onClose={() => { setShowContratoEdit(false); setSelectedContratoId(null); }} itemId={selectedContratoId} empresaId={empresaId!} onSuccess={() => refetchContratos()} />
       <SaasTenantUsuarioFormModal show={showUsuarioCreate} onClose={() => setShowUsuarioCreate(false)} empresaId={empresaId!} onSuccess={() => refetchUsuarios()} />
       <SaasTenantUsuarioFormModal show={showUsuarioEdit && !!selectedUsuarioId} onClose={() => { setShowUsuarioEdit(false); setSelectedUsuarioId(null); }} usuarioId={selectedUsuarioId} empresaId={empresaId!} onSuccess={() => refetchUsuarios()} />
+      <SaasTituloFormModal show={showTituloCreate} onClose={() => setShowTituloCreate(false)} empresaId={empresaId!} onSuccess={() => refetchTitulos()} />
       <ImprimirModal
         show={showImprimirModal}
         onClose={() => { setShowImprimirModal(false); clearPdfUrl(); }}

@@ -57,6 +57,7 @@ import saasNfseConfigRoutes from './saas/saasNfseConfigRoutes';
 import saasSchedulerRoutes from './saas/saasSchedulerRoutes';
 import saasAtualizacoesRoutes from './saas/saasAtualizacoesRoutes';
 import saasBackupsRoutes from './saas/saasBackupsRoutes';
+import tenantRoutes from './tenantRoutes';
 
 const router = Router();
 
@@ -128,6 +129,7 @@ const routes = [
     { path: '/api/saas/atualizacoes', route: saasAtualizacoesRoutes },
     { path: '/api/saas/backups', route: saasBackupsRoutes },
     { path: '/api/saas', route: saasCrudRoutes },
+    { path: '/api/tenant', route: tenantRoutes },
 
     // Rotas TXT do Blockdomi: /api/domain/version, /api/domain/all, /api/v4/all, /api/v6/all
     { path: '/api', route: blockdomiListasRoutes },

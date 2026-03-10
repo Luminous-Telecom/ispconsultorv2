@@ -80,6 +80,8 @@ export interface SaasTitulo {
   nosso_numero?: string | null;
   charge_id?: string | null;
   url_boleto?: string | null;
+  descricao?: string | null;
+  is_avulso?: boolean;
   created_at?: string;
   empresa?: { id: number; nome_empresa?: string; razao_social?: string; cnpj?: string; email?: string };
   plano?: { id: number; nome: string };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { defaultApiClient } from '@/services/core';
 
 interface BloqueioAtrasoData {
   code?: string;
@@ -11,9 +12,12 @@ interface BloqueioAtrasoData {
 
 const BloqueioAtrasoOverlay: React.FC = () => {
   const [info, setInfo] = useState<BloqueioAtrasoData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [erroBoleto, setErroBoleto] = useState<string | null>(null);
 
   const handleEvent = useCallback((e: CustomEvent<BloqueioAtrasoData>) => {
     setInfo(e.detail ?? null);
+    setErroBoleto(null);
   }, []);
 
   useEffect(() => {
@@ -25,12 +29,28 @@ const BloqueioAtrasoOverlay: React.FC = () => {
 
   if (!info) return null;
 
-  const urlPagamento = info.data?.url_pagamento;
+  const tituloId = info.data?.titulo_id;
   const mensagem = info.message ?? 'Acesso bloqueado devido a fatura em atraso. Efetue o pagamento para liberar o uso da plataforma.';
+  const podePagar = !!tituloId;
 
-  const handleIrPagamento = () => {
-    if (urlPagamento) {
-      window.open(urlPagamento, '_blank', 'noopener,noreferrer');
+  const handlePagarFatura = async () => {
+    if (!tituloId) return;
+    setIsLoading(true);
+    setErroBoleto(null);
+    try {
+      const res = await defaultApiClient.get<Blob>('/tenant/boleto-atraso-pdf', { responseType: 'blob' });
+      const data = res.data;
+      if (data instanceof Blob) {
+        const url = window.URL.createObjectURL(data);
+        window.open(url, '_blank', 'noopener,noreferrer');
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+      } else {
+        setErroBoleto('Não foi possível obter o boleto.');
+      }
+    } catch {
+      setErroBoleto('Erro ao gerar boleto. Entre em contato com o suporte.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -49,14 +69,18 @@ const BloqueioAtrasoOverlay: React.FC = () => {
           </div>
           <h5 className="card-title text-danger mb-2">Acesso Bloqueado</h5>
           <p className="card-text text-muted mb-4">{mensagem}</p>
-          {urlPagamento ? (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleIrPagamento}
-            >
-              Pagar fatura em atraso
-            </button>
+          {podePagar ? (
+            <>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handlePagarFatura}
+                disabled={isLoading}
+              >
+                Pagar fatura em atraso
+              </button>
+              {erroBoleto && <p className="small text-danger mt-2 mb-0">{erroBoleto}</p>}
+            </>
           ) : (
             <p className="small text-muted mb-0">
               Entre em contato com o suporte para regularizar sua fatura.
