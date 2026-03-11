@@ -137,7 +137,6 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
               onChange={(v) => setForm(p => ({ ...p, role: (v as 'admin' | 'user') ?? 'admin' }))}
               options={[
                 { value: 'admin', label: t('user.admin') },
-                { value: 'user', label: t('user.user') },
               ]}
               size="sm"
             />
