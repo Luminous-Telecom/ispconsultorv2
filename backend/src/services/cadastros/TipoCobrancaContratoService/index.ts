@@ -10,6 +10,7 @@ export interface ListTipoCobrancaContratoFilters {
   limit?: number;
   sortColumn?: string;
   sortDirection?: string;
+  empresa_id?: number | null;
 }
 
 export interface ListTipoCobrancaContratoResponse {
@@ -27,20 +28,29 @@ export interface ListTipoCobrancaContratoResponse {
 
 export class TipoCobrancaContratoService {
   static async list(filters: ListTipoCobrancaContratoFilters): Promise<ListTipoCobrancaContratoResponse> {
-    const { search, ativo, page = 1, limit = 15, sortColumn, sortDirection } = filters;
-    const where: WhereOptions<TipoCobrancaContrato> = {};
+    const { search, ativo, page = 1, limit = 15, sortColumn, sortDirection, empresa_id } = filters;
+    const andConditions: WhereOptions<TipoCobrancaContrato>[] = [];
+
+    if (empresa_id != null) {
+      andConditions.push({ [Op.or]: [{ empresa_id }, { empresa_id: null }] } as WhereOptions<TipoCobrancaContrato>);
+    }
 
     if (search) {
-      (where as Record<symbol, unknown>)[Op.or] = [
-        { id: { [Op.like]: `%${search}%` } },
-        { nome: { [Op.like]: `%${search}%` } },
-        { quantidade_titulos: { [Op.like]: `%${search}%` } }
-      ];
+      andConditions.push({
+        [Op.or]: [
+          { id: { [Op.like]: `%${search}%` } },
+          { nome: { [Op.like]: `%${search}%` } },
+          { quantidade_titulos: { [Op.like]: `%${search}%` } }
+        ]
+      } as WhereOptions<TipoCobrancaContrato>);
     }
 
     if (ativo !== undefined && ativo !== '') {
-      where.ativo = ativo === 'ativo';
+      andConditions.push({ ativo: ativo === 'ativo' });
     }
+
+    const where: WhereOptions<TipoCobrancaContrato> =
+      andConditions.length > 0 ? { [Op.and]: andConditions } : {};
 
     let order: [string, string][] = [['id', 'DESC']];
     if (sortColumn && sortDirection) {
@@ -85,9 +95,13 @@ export class TipoCobrancaContratoService {
     return await TipoCobrancaContrato.findByPk(id);
   }
 
-  static async findAtivos(): Promise<{ success: boolean; data: TipoCobrancaContrato[] }> {
+  static async findAtivos(empresaId?: number | null): Promise<{ success: boolean; data: TipoCobrancaContrato[] }> {
+    const where: WhereOptions<TipoCobrancaContrato> =
+      empresaId != null
+        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : { ativo: true };
     const data = await TipoCobrancaContrato.findAll({
-      where: { ativo: true },
+      where,
       order: [['nome', 'ASC']]
     });
     return { success: true, data };

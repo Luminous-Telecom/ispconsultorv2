@@ -8,13 +8,15 @@ export class TipoCobrancaContratoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { search, ativo, page, limit, sortColumn, sortDirection } = req.query;
+      const empresaId = getEmpresaIdOrNull(req);
       const result = await TipoCobrancaContratoService.list({
         search: search as string | undefined,
         ativo: ativo as string | undefined,
         page: page ? Number(page) : 1,
         limit: limit ? Number(limit) : 15,
         sortColumn: sortColumn as string | undefined,
-        sortDirection: sortDirection as string | undefined
+        sortDirection: sortDirection as string | undefined,
+        empresa_id: empresaId
       });
       sendSuccess(res, result);
     } catch (error: unknown) {
@@ -24,7 +26,8 @@ export class TipoCobrancaContratoController {
 
   static async findAtivos(req: Request, res: Response): Promise<void> {
     try {
-      const result = await TipoCobrancaContratoService.findAtivos();
+      const empresaId = getEmpresaIdOrNull(req);
+      const result = await TipoCobrancaContratoService.findAtivos(empresaId);
       sendSuccess(res, result);
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao buscar tipos de cobrança ativos', 500, true);
