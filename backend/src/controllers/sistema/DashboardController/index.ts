@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Plano } from '../../../models/cadastros/Plano';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { Banco } from '../../../models/cadastros/Banco';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Contrato } from '../../../models/contratos/Contrato';
@@ -48,6 +49,7 @@ export class DashboardController {
   // Obter dados completos do dashboard
   static async getDashboardData(req: Request, res: Response): Promise<void> {
     try {
+      const empresaId = getEmpresaIdOrNull(req);
       const { startDate, endDate } = req.query;
 
       const parsedStart = DashboardController.parseStartDate(startDate as string | undefined);
@@ -59,25 +61,25 @@ export class DashboardController {
       const fimPeriodo = new Date(parsedEnd);
       fimPeriodo.setHours(23, 59, 59, 999);
 
-      // Buscar todas as estatísticas e dados em paralelo
+      // Buscar todas as estatísticas e dados em paralelo (filtrados por empresa_id)
       const [statsData, titulosRecentes, titulosVencidos, contratos, contratosAtivosTodos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos, aReceberPeriodo, recebidosPeriodo, resumoPeriodo, receitaUltimosMeses, contasPagarUltimosMeses, clientesPorTipoPlano] = await Promise.all([
-        DashboardService.getStatsData(inicioPeriodo, fimPeriodo),
-        DashboardService.getTitulosRecentesData(5),
-        DashboardService.getTitulosVencidosData(10),
-        DashboardService.getContratosPeriodo(inicioPeriodo, fimPeriodo),
-        DashboardService.getContratosAtivos(),
-        DashboardService.getClientesPeriodo(inicioPeriodo, fimPeriodo),
-        DashboardService.getPlanosAtivos(),
-        DashboardService.getTitulosPeriodo(inicioPeriodo, fimPeriodo),
-        DashboardService.getAllClientes(),
-        DashboardService.getAllTitulos(),
-        DashboardService.getAllContratos(),
-        DashboardService.getReceberPorPeriodoData(parsedStart, parsedEnd),
-        DashboardService.getRecebidosPorPeriodoData(parsedStart, parsedEnd),
-        DashboardService.getResumoFinanceiroPeriodo(parsedStart, parsedEnd),
-        DashboardService.getReceitaUltimos12Meses(),
-        DashboardService.getContasPagarUltimos12Meses(),
-        DashboardService.getClientesPorTipoPlano()
+        DashboardService.getStatsData(inicioPeriodo, fimPeriodo, empresaId),
+        DashboardService.getTitulosRecentesData(5, empresaId),
+        DashboardService.getTitulosVencidosData(10, empresaId),
+        DashboardService.getContratosPeriodo(inicioPeriodo, fimPeriodo, empresaId),
+        DashboardService.getContratosAtivos(empresaId),
+        DashboardService.getClientesPeriodo(inicioPeriodo, fimPeriodo, empresaId),
+        DashboardService.getPlanosAtivos(empresaId),
+        DashboardService.getTitulosPeriodo(inicioPeriodo, fimPeriodo, empresaId),
+        DashboardService.getAllClientes(empresaId),
+        DashboardService.getAllTitulos(empresaId),
+        DashboardService.getAllContratos(empresaId),
+        DashboardService.getReceberPorPeriodoData(parsedStart, parsedEnd, empresaId),
+        DashboardService.getRecebidosPorPeriodoData(parsedStart, parsedEnd, empresaId),
+        DashboardService.getResumoFinanceiroPeriodo(parsedStart, parsedEnd, empresaId),
+        DashboardService.getReceitaUltimos12Meses(empresaId),
+        DashboardService.getContasPagarUltimos12Meses(empresaId),
+        DashboardService.getClientesPorTipoPlano(empresaId)
       ]);
 
       const dashboardData = {

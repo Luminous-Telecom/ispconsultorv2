@@ -125,10 +125,14 @@ export const useDashboardCharts = (
       }));
   }, [clientesPorTipoPlano, t]);
 
-  const taxaPagamentoChartData = useMemo(() => [
-    { label: t('status.paid'), value: stats.taxaPagamento, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },
-    { label: t('status.pending'), value: 100 - stats.taxaPagamento, color: '#3b82f6', filterValue: 'pendente,vencido' }
-  ], [stats.taxaPagamento, t]);
+  const taxaPagamentoChartData = useMemo(() => {
+    // Sem títulos: não mostrar 100% pendente (seria enganoso)
+    const pendente = stats.totalTitulosTodos > 0 ? 100 - stats.taxaPagamento : 0;
+    return [
+      { label: t('status.paid'), value: stats.taxaPagamento, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },
+      { label: t('status.pending'), value: pendente, color: '#3b82f6', filterValue: 'pendente,vencido' }
+    ];
+  }, [stats.taxaPagamento, stats.totalTitulosTodos, t]);
 
   const contratosChartData = useMemo(() => {
     const isSaas = stats.contratosBloqueados !== undefined || stats.contratosEmAtraso !== undefined;

@@ -297,9 +297,10 @@ export class ContaPagarService {
   /**
    * Buscar todas as contas a pagar com atributos específicos (para resumo/dashboard)
    */
-  static async findAllWithAttributes(attributes: string[]): Promise<ContaPagar[]> {
+  static async findAllWithAttributes(attributes: string[], where?: WhereOptions): Promise<ContaPagar[]> {
     return await ContaPagar.findAll({
-      attributes
+      attributes,
+      where
     });
   }
 

@@ -29,6 +29,17 @@ export const ValueChart: React.FC<ValueChartProps> = ({ data, title, format = 'n
     }
   }, [format]);
 
+  if (!data || data.length === 0) {
+    return (
+      <div className="kpi-card">
+        <p className="kpi-card__label">{title}</p>
+        <div className="chart-empty-state chart-empty-state--compact">
+          <p className="text-muted">Sem dados para exibir</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="kpi-card">
       <p className="kpi-card__label">{title}</p>

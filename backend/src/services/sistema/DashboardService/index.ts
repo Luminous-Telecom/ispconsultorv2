@@ -10,40 +10,46 @@ export class DashboardService {
   /**
    * Buscar contratos do período
    */
-  static async getContratosPeriodo(inicioPeriodo: Date, fimPeriodo: Date): Promise<Contrato[]> {
+  static async getContratosPeriodo(inicioPeriodo: Date, fimPeriodo: Date, empresaId?: number | null): Promise<Contrato[]> {
+    const where: Record<string, unknown> = {
+      [Op.and]: [
+        {
+          data_inicio: {
+            [Op.lte]: fimPeriodo
+          }
+        },
+        {
+          [Op.or]: [
+            {
+              data_fim: {
+                [Op.gte]: inicioPeriodo
+              }
+            },
+            {
+              data_fim: null
+            }
+          ]
+        },
+        ...(empresaId != null ? [{ empresa_id: empresaId }] : [])
+      ]
+    };
     return await Contrato.findAll({ 
       attributes: ['id', 'status', 'plano_id', 'cliente_id', 'valor_final', 'data_inicio', 'data_fim', 'created_at'],
-      where: {
-        [Op.and]: [
-          {
-            data_inicio: {
-              [Op.lte]: fimPeriodo
-            }
-          },
-          {
-            [Op.or]: [
-              {
-                data_fim: {
-                  [Op.gte]: inicioPeriodo
-                }
-              },
-              {
-                data_fim: null
-              }
-            ]
-          }
-        ]
-      }
+      where: where as any
     });
   }
 
   /**
    * Buscar contratos ativos
    */
-  static async getContratosAtivos(): Promise<Contrato[]> {
+  static async getContratosAtivos(empresaId?: number | null): Promise<Contrato[]> {
+    const where: Record<string, unknown> = { status: 'ativo' };
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
     return await Contrato.findAll({
       attributes: ['id', 'status', 'plano_id', 'cliente_id', 'valor_final'],
-      where: { status: 'ativo' },
+      where,
       include: [
         {
           association: 'cliente',
@@ -60,20 +66,25 @@ export class DashboardService {
   /**
    * Quantidade de clientes (distintos) por tipo de plano - para gráfico "Distribuição por Tipo de Plano"
    */
-  static async getClientesPorTipoPlano(): Promise<Array<{ tipo_servico: string; quantidade: number }>> {
+  static async getClientesPorTipoPlano(empresaId?: number | null): Promise<Array<{ tipo_servico: string; quantidade: number }>> {
     const { QueryTypes } = await import('sequelize');
+    const empresaFilter = empresaId != null ? ' AND c.empresa_id = :empresaId' : '';
+    const replacements: Record<string, number> = {};
+    if (empresaId != null) {
+      replacements.empresaId = empresaId;
+    }
     const rows = await sequelize.query<{ tipo_servico: string; quantidade: string }>(
       `SELECT tipo_servico, COUNT(*) as quantidade FROM (
         SELECT DISTINCT c.cliente_id, p.tipo_servico FROM adm_contratos c
         INNER JOIN adm_planos p ON c.plano_id = p.id
-        WHERE c.status = 'ativo' AND c.cliente_id IS NOT NULL
+        WHERE c.status = 'ativo' AND c.cliente_id IS NOT NULL${empresaFilter}
         UNION
         SELECT DISTINCT c.cliente_id, p.tipo_servico FROM adm_contrato_planos_adicionais cpa
         INNER JOIN adm_contratos c ON cpa.contrato_id = c.id
         INNER JOIN adm_planos p ON cpa.plano_id = p.id
-        WHERE c.status = 'ativo' AND cpa.status = 'ativo'
+        WHERE c.status = 'ativo' AND cpa.status = 'ativo'${empresaFilter}
       ) AS sub GROUP BY tipo_servico`,
-      { type: QueryTypes.SELECT }
+      { type: QueryTypes.SELECT, replacements: Object.keys(replacements).length ? replacements : undefined }
     );
     return rows.map((r) => ({ tipo_servico: r.tipo_servico, quantidade: parseInt(r.quantidade, 10) || 0 }));
   }
@@ -81,65 +92,92 @@ export class DashboardService {
   /**
    * Buscar todos os contratos
    */
-  static async getAllContratos(): Promise<Contrato[]> {
+  static async getAllContratos(empresaId?: number | null): Promise<Contrato[]> {
+    const where: Record<string, unknown> = {};
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
     return await Contrato.findAll({ 
-      attributes: ['id', 'status', 'plano_id', 'cliente_id', 'isento_mensalidade']
+      attributes: ['id', 'status', 'plano_id', 'cliente_id', 'isento_mensalidade'],
+      where: Object.keys(where).length ? where : undefined
     });
   }
 
   /**
    * Buscar clientes do período
    */
-  static async getClientesPeriodo(inicioPeriodo: Date, fimPeriodo: Date): Promise<Cliente[]> {
+  static async getClientesPeriodo(inicioPeriodo: Date, fimPeriodo: Date, empresaId?: number | null): Promise<Cliente[]> {
+    const where: Record<string, unknown> = {
+      created_at: {
+        [Op.between]: [inicioPeriodo, fimPeriodo]
+      }
+    };
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
     return await Cliente.findAll({ 
       attributes: ['id', 'ativo', 'created_at'],
-      where: {
-        created_at: {
-          [Op.between]: [inicioPeriodo, fimPeriodo]
-        }
-      }
+      where
     });
   }
 
   /**
    * Buscar todos os clientes
    */
-  static async getAllClientes(): Promise<Cliente[]> {
+  static async getAllClientes(empresaId?: number | null): Promise<Cliente[]> {
+    const where: Record<string, unknown> = {};
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
     return await Cliente.findAll({ 
-      attributes: ['id', 'ativo', 'created_at']
+      attributes: ['id', 'ativo', 'created_at'],
+      where: Object.keys(where).length ? where : undefined
     });
   }
 
   /**
    * Buscar planos ativos
    */
-  static async getPlanosAtivos(): Promise<Plano[]> {
+  static async getPlanosAtivos(empresaId?: number | null): Promise<Plano[]> {
+    const where: Record<string, unknown> = { status: 'ativo' };
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
     return await Plano.findAll({ 
       attributes: ['id', 'status', 'nome_plano', 'tipo_servico'],
-      where: { status: 'ativo' }
+      where
     });
   }
 
   /**
    * Buscar títulos do período
    */
-  static async getTitulosPeriodo(inicioPeriodo: Date, fimPeriodo: Date): Promise<Titulo[]> {
+  static async getTitulosPeriodo(inicioPeriodo: Date, fimPeriodo: Date, empresaId?: number | null): Promise<Titulo[]> {
+    const where: Record<string, unknown> = {
+      data_vencimento: {
+        [Op.between]: [inicioPeriodo, fimPeriodo]
+      }
+    };
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
     return await Titulo.findAll({ 
       attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'],
-      where: {
-        data_vencimento: {
-          [Op.between]: [inicioPeriodo, fimPeriodo]
-        }
-      }
+      where
     });
   }
 
   /**
    * Buscar todos os títulos
    */
-  static async getAllTitulos(): Promise<Titulo[]> {
+  static async getAllTitulos(empresaId?: number | null): Promise<Titulo[]> {
+    const where: Record<string, unknown> = {};
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
     return await Titulo.findAll({ 
-      attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at']
+      attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'],
+      where: Object.keys(where).length ? where : undefined
     });
   }
 
@@ -178,7 +216,7 @@ export class DashboardService {
   /**
    * Obter estatísticas do dashboard
    */
-  static async getStatsData(startDate?: Date, endDate?: Date) {
+  static async getStatsData(startDate?: Date, endDate?: Date, empresaId?: number | null) {
     const { ClienteService } = await import('../../clientes/ClienteService');
     const { PlanoService } = await import('../../cadastros/PlanoService');
     const { BancoService } = await import('../../cadastros/BancoService');
@@ -190,23 +228,35 @@ export class DashboardService {
     if (inicioPeriodo) inicioPeriodo.setHours(0, 0, 0, 0);
     if (fimPeriodo) fimPeriodo.setHours(23, 59, 59, 999);
 
-    const clienteWhere = inicioPeriodo && fimPeriodo ? {
-      created_at: {
-        [Op.between]: [inicioPeriodo, fimPeriodo]
-      }
-    } : {};
+    const empresaFilter = empresaId != null ? { empresa_id: empresaId } : {};
 
-    const planoWhere = inicioPeriodo && fimPeriodo ? {
-      created_at: {
-        [Op.between]: [inicioPeriodo, fimPeriodo]
-      }
-    } : {};
+    const clienteWhere = {
+      ...(inicioPeriodo && fimPeriodo ? {
+        created_at: {
+          [Op.between]: [inicioPeriodo, fimPeriodo]
+        }
+      } : {}),
+      ...empresaFilter
+    };
 
-    const tituloWhere = inicioPeriodo && fimPeriodo ? {
-      data_vencimento: {
-        [Op.between]: [inicioPeriodo, fimPeriodo]
-      }
-    } : {};
+    const planoWhere = {
+      ...(inicioPeriodo && fimPeriodo ? {
+        created_at: {
+          [Op.between]: [inicioPeriodo, fimPeriodo]
+        }
+      } : {}),
+      status: 'ativo',
+      ...empresaFilter
+    };
+
+    const tituloWhere = {
+      ...(inicioPeriodo && fimPeriodo ? {
+        data_vencimento: {
+          [Op.between]: [inicioPeriodo, fimPeriodo]
+        }
+      } : {}),
+      ...empresaFilter
+    };
 
     const [
       totalClientes,
@@ -216,7 +266,7 @@ export class DashboardService {
     ] = await Promise.all([
       ClienteService.count(clienteWhere),
       ClienteService.count({ ...clienteWhere, ativo: true }),
-      PlanoService.count({ ...planoWhere, status: 'ativo' }),
+      PlanoService.count(planoWhere),
       TituloService.count({ ...tituloWhere, status: 'vencido' })
     ]);
 
@@ -234,7 +284,7 @@ export class DashboardService {
       }
     }
 
-    const contratos = await this.getContratosAtivos();
+    const contratos = await this.getContratosAtivos(empresaId);
     const totalValorContratos = contratos.reduce((acumulado, contrato) => {
       return acumulado + parseFloat(String(contrato.valor_final || 0));
     }, 0);
@@ -252,7 +302,8 @@ export class DashboardService {
       status: 'pendente'
     } : {
       data_vencimento: { [Op.lte]: hoje },
-      status: 'pendente'
+      status: 'pendente',
+      ...empresaFilter
     };
 
     return {
@@ -274,7 +325,7 @@ export class DashboardService {
   /**
    * Obter títulos recentes formatados
    */
-  static async getTitulosRecentesData(limit: number): Promise<Array<{
+  static async getTitulosRecentesData(limit: number, empresaId?: number | null): Promise<Array<{
     id: number;
     numero_titulo: string;
     cliente: string;
@@ -283,7 +334,11 @@ export class DashboardService {
     data: string;
   }>> {
     const { formatDate } = await import('../../../utils/dateUtils');
-    const titulos = await this.getTitulosWithIncludes({}, {
+    const where: Record<string, unknown> = {};
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
+    const titulos = await this.getTitulosWithIncludes(where, {
       limit,
       order: [['created_at', 'DESC']],
       include: [
@@ -309,7 +364,7 @@ export class DashboardService {
   /**
    * Obter títulos vencidos formatados
    */
-  static async getTitulosVencidosData(limit: number): Promise<Array<{
+  static async getTitulosVencidosData(limit: number, empresaId?: number | null): Promise<Array<{
     id: number;
     numero_titulo: string;
     cliente: string;
@@ -322,10 +377,14 @@ export class DashboardService {
     const hoje = new Date();
     hoje.setHours(23, 59, 59, 999);
 
-    const titulos = await TituloService.findAllWithFilters({
+    const where: Record<string, unknown> = {
       data_vencimento: { [Op.lte]: hoje },
       status: 'pendente'
-    }, {
+    };
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
+    const titulos = await TituloService.findAllWithFilters(where, {
       include: [
         { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email'] }
       ],
@@ -355,7 +414,7 @@ export class DashboardService {
   /**
    * Obter receber por período
    */
-  static async getReceberPorPeriodoData(startDate: Date, endDate: Date) {
+  static async getReceberPorPeriodoData(startDate: Date, endDate: Date, empresaId?: number | null) {
     const { TituloService } = await import('../../financeiro/TituloService');
     const { formatDate, getStartOfLocalDay } = await import('../../../utils/dateUtils');
 
@@ -367,14 +426,18 @@ export class DashboardService {
     const diffTime = fim.getTime() - inicio.getTime();
     const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-    const titulosPeriodo = await TituloService.findAllWithFilters({
+    const where: Record<string, unknown> = {
       data_vencimento: {
         [Op.between]: [inicio, fim]
       },
       status: {
         [Op.in]: ['pendente', 'vencido']
       }
-    }, {
+    };
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
+    const titulosPeriodo = await TituloService.findAllWithFilters(where, {
       attributes: ['valor', 'data_vencimento']
     });
 
@@ -410,7 +473,7 @@ export class DashboardService {
   /**
    * Obter recebidos por período
    */
-  static async getRecebidosPorPeriodoData(startDate: Date, endDate: Date) {
+  static async getRecebidosPorPeriodoData(startDate: Date, endDate: Date, empresaId?: number | null) {
     const { TituloService } = await import('../../financeiro/TituloService');
     const { formatDate, getStartOfLocalDay } = await import('../../../utils/dateUtils');
 
@@ -422,14 +485,18 @@ export class DashboardService {
     const diffTime = fim.getTime() - inicio.getTime();
     const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-    const titulosPeriodo = await TituloService.findAllWithFilters({
+    const where: Record<string, unknown> = {
       data_pagamento: {
         [Op.between]: [inicio, fim]
       },
       status: {
         [Op.in]: ['pago', 'pago_atraso', 'parcial']
       }
-    }, {
+    };
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
+    const titulosPeriodo = await TituloService.findAllWithFilters(where, {
       attributes: ['valor', 'valor_pago', 'status', 'data_pagamento']
     });
 
@@ -471,7 +538,7 @@ export class DashboardService {
   /**
    * Obter resumo financeiro do período
    */
-  static async getResumoFinanceiroPeriodo(startDate: Date, endDate: Date) {
+  static async getResumoFinanceiroPeriodo(startDate: Date, endDate: Date, empresaId?: number | null) {
     const { TituloService } = await import('../../financeiro/TituloService');
     
     const inicio = new Date(startDate);
@@ -479,11 +546,15 @@ export class DashboardService {
     const fim = new Date(endDate);
     fim.setHours(23, 59, 59, 999);
 
-    const titulosPeriodo = await TituloService.findAllWithFilters({
+    const where: Record<string, unknown> = {
       data_vencimento: {
         [Op.between]: [inicio, fim]
       }
-    }, {
+    };
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
+    const titulosPeriodo = await TituloService.findAllWithFilters(where, {
       attributes: ['valor', 'valor_pago', 'status', 'cliente_id', 'data_vencimento']
     });
 
@@ -528,7 +599,7 @@ export class DashboardService {
       }
     }
 
-    const contratosAtivos = await this.getContratosAtivos();
+    const contratosAtivos = await this.getContratosAtivos(empresaId);
 
     let valorTotalPlanos = 0;
     const clientesComPlanos = new Set<number>();
@@ -586,7 +657,7 @@ export class DashboardService {
   /**
    * Obter contas a pagar por período
    */
-  static async getContasPagarPorPeriodoData(startDate: Date, endDate: Date) {
+  static async getContasPagarPorPeriodoData(startDate: Date, endDate: Date, empresaId?: number | null) {
     const { ContaPagarService } = await import('../../financeiro/ContaPagarService');
     const { formatDate, getStartOfLocalDay } = await import('../../../utils/dateUtils');
 
@@ -598,7 +669,14 @@ export class DashboardService {
     const diffTime = fim.getTime() - inicio.getTime();
     const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-    const contasPagarPeriodo = await ContaPagarService.findAllWithAttributes(['valor', 'data_vencimento', 'data_pagamento', 'status']);
+    const where: Record<string, unknown> = {};
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
+    const contasPagarPeriodo = await ContaPagarService.findAllWithAttributes(
+      ['valor', 'data_vencimento', 'data_pagamento', 'status'],
+      Object.keys(where).length ? where : undefined
+    );
 
     const valoresPorDia = new Array(Math.max(dias, 0)).fill(0);
     const MS_POR_DIA = 1000 * 60 * 60 * 24;
@@ -632,7 +710,7 @@ export class DashboardService {
   /**
    * Obter contas a pagar dos últimos 12 meses
    */
-  static async getContasPagarUltimos12Meses() {
+  static async getContasPagarUltimos12Meses(empresaId?: number | null) {
     const { ContaPagarService } = await import('../../financeiro/ContaPagarService');
     const { getStartOfLocalDay } = await import('../../../utils/dateUtils');
 
@@ -640,7 +718,14 @@ export class DashboardService {
     const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
     const inicioPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1, 0, 0, 0, 0);
 
-    const contasPagar = await ContaPagarService.findAllWithAttributes(['valor', 'data_vencimento', 'data_pagamento', 'status']);
+    const where: Record<string, unknown> = {};
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
+    const contasPagar = await ContaPagarService.findAllWithAttributes(
+      ['valor', 'data_vencimento', 'data_pagamento', 'status'],
+      Object.keys(where).length ? where : undefined
+    );
 
     const labels: string[] = [];
     const data: number[] = [];
@@ -682,7 +767,7 @@ export class DashboardService {
   /**
    * Obter receita dos últimos 12 meses (faturamento total)
    */
-  static async getReceitaUltimos12Meses() {
+  static async getReceitaUltimos12Meses(empresaId?: number | null) {
     const { TituloService } = await import('../../financeiro/TituloService');
     const { getStartOfLocalDay } = await import('../../../utils/dateUtils');
 
@@ -690,11 +775,15 @@ export class DashboardService {
     const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
     const inicioPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1, 0, 0, 0, 0);
 
-    const titulos = await TituloService.findAllWithFilters({
+    const where: Record<string, unknown> = {
       data_vencimento: {
         [Op.between]: [inicioPeriodo, fimPeriodo]
       }
-    }, {
+    };
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    }
+    const titulos = await TituloService.findAllWithFilters(where, {
       attributes: ['valor', 'valor_pago', 'status', 'data_pagamento', 'data_vencimento']
     });
 

@@ -30,6 +30,7 @@ interface DashboardStats {
   
   // Taxa de pagamento
   taxaPagamento: number;
+  totalTitulosTodos: number;
 }
 
 /**
@@ -79,6 +80,7 @@ export const useDashboardStats = (dashboardData: DashboardData | undefined): Das
     const taxaPagamento = totalTitulosTodos > 0 ? (titulosPagosTodos / totalTitulosTodos) * 100 : 0;
 
     return {
+      totalTitulosTodos,
       totalClientes,
       clientesAtivos,
       clientesInativos,

@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useMemo, memo, useState, useLayoutEffect, use
 import * as d3 from 'd3';
 import { PieChartProps } from './types';
 import { ChartDataItem } from './types';
+import { ChartEmptyState } from './ChartEmptyState';
 
 const formatPieValue = (value: number, title: string): string | number => {
   if (title === 'Taxa de Pagamento') {
@@ -401,24 +402,10 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
     });
   }, [data, visibleData, total, hiddenItems, animatingOut, animatingIn, title, dimensions, onToggleItem, onSliceClick]);
 
-  if (!data || data.length === 0 || legendData.length === 0) {
-    return (
-      <div className="chart-container-pie">
-        <h6 className="chart-title-pie">{title}</h6>
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            minHeight: '150px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <p className="text-muted small">Sem dados</p>
-        </div>
-      </div>
-    );
+  const hasNoData = !data || data.length === 0 || legendData.length === 0 ||
+    legendData.every((d) => (d.value ?? 0) === 0);
+  if (hasNoData) {
+    return <ChartEmptyState title={title} containerClassName="chart-container-pie" />;
   }
 
   return (

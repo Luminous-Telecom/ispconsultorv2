@@ -1243,6 +1243,11 @@ button,
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+
+  &--compact {
+    height: 80px !important;
+    min-height: 80px !important;
+  }
 }
 
 /* Entity select field */
