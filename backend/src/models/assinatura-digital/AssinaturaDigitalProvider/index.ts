@@ -51,7 +51,6 @@ AssinaturaDigitalProvider.init(
     provider: {
       type: DataTypes.ENUM('assinafy', 'zapsign'),
       allowNull: false,
-      unique: true,
       comment: 'Tipo do provider de assinatura digital'
     },
     habilitado: {
@@ -104,7 +103,7 @@ AssinaturaDigitalProvider.init(
     indexes: [
       {
         unique: true,
-        fields: ['provider']
+        fields: ['provider', 'empresa_id']
       },
       {
         fields: ['habilitado']

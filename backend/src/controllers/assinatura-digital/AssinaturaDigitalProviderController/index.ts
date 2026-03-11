@@ -85,19 +85,14 @@ export class AssinaturaDigitalProviderController {
   }
 
   /**
-   * Obtém o provider habilitado
+   * Obtém o provider habilitado (200 com null quando nenhum está habilitado)
    */
   static async getEnabled(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
       const provider = await AssinaturaDigitalProviderService.getEnabled(empresaId);
 
-      if (!provider) {
-        sendNotFound(res, 'Nenhum provider habilitado');
-        return;
-      }
-
-      sendSuccess(res, provider);
+      sendSuccess(res, provider, provider ? undefined : 'Nenhum provider habilitado');
     } catch (error) {
       sendError(res, error, 'Erro ao obter provider habilitado', 500, true);
     }
@@ -150,7 +145,8 @@ export class AssinaturaDigitalProviderController {
           api_key: value.api_key,
           account_id: value.account_id,
           dias_expiracao_padrao: value.dias_expiracao_padrao,
-          configuracao_extra: value.configuracao_extra
+          configuracao_extra: value.configuracao_extra,
+          empresa_id: empresaId ?? undefined
         }
       );
 
@@ -222,7 +218,8 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
-      const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider);
+      const empresaId = getEmpresaIdOrNull(req);
+      const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType, empresaId);
 
       if (!providerConfig) {
         sendNotFound(res, 'Provider não encontrado');
@@ -232,7 +229,10 @@ export class AssinaturaDigitalProviderController {
       const dadosAnteriores = providerConfig.toJSON();
       const updateData = AssinaturaDigitalProviderController.prepareUpdateData(value);
       
-      const providerAtualizado = await AssinaturaDigitalProviderService.update(provider, updateData);
+      const providerAtualizado = await AssinaturaDigitalProviderService.update(provider, {
+        ...updateData,
+        empresa_id: empresaId ?? undefined
+      });
 
       try {
         await registrarAtualizacao(
@@ -264,7 +264,8 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
-      const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType);
+      const empresaId = getEmpresaIdOrNull(req);
+      const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType, empresaId);
 
       if (!providerConfig) {
         sendNotFound(res, 'Provider não encontrado');
@@ -272,7 +273,7 @@ export class AssinaturaDigitalProviderController {
       }
 
       const dadosAnteriores = providerConfig.toJSON();
-      await AssinaturaDigitalProviderService.delete(provider as AssinaturaDigitalProviderType);
+      await AssinaturaDigitalProviderService.delete(provider as AssinaturaDigitalProviderType, empresaId);
 
       try {
         await registrarExclusao(

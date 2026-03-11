@@ -120,7 +120,7 @@ export class ErrorHandler {
           const optionalRoutes = [
             'consultar', 'mensagens-', 'servidores-', 'servidor-', 
             'modelos-', 'modelo-', '/parametros', 'buscar-cep',
-            'dominios', 'domain/version'
+            'dominios', 'domain/version', 'assinatura-digital'
           ];
           
           const isOptionalRoute = optionalRoutes.some(route => 

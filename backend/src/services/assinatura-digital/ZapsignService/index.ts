@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { logger } from '../../../utils/logger';
 import { PDFGenerationService } from '../../pdf-generation/PDFGenerationService';
-import AssinaturaDigitalProvider from '../../../models/assinatura-digital/AssinaturaDigitalProvider';
+import { AssinaturaDigitalProviderService } from '../AssinaturaDigitalProviderService';
 import { AssinaturaDigital } from '../../../models/assinatura-digital/AssinaturaDigital';
 
 interface ZapsignConfig {
@@ -73,13 +73,11 @@ export class ZapsignService {
   }
 
   /**
-   * Cria instância do serviço buscando configuração do banco de dados
+   * Cria instância do serviço buscando configuração do banco de dados (por empresa ou global)
    */
-  static async createFromDatabase(): Promise<ZapsignService | null> {
+  static async createFromDatabase(empresaId?: number | null): Promise<ZapsignService | null> {
     try {
-      const provider = await AssinaturaDigitalProvider.findOne({
-        where: { provider: 'zapsign' }
-      });
+      const provider = await AssinaturaDigitalProviderService.getByProvider('zapsign', empresaId);
       
       if (!provider || !provider.habilitado || !provider.api_key) {
         return null;
@@ -100,13 +98,11 @@ export class ZapsignService {
   }
 
   /**
-   * Verifica se a funcionalidade está habilitada
+   * Verifica se a funcionalidade está habilitada (por empresa ou global)
    */
-  static async isEnabled(): Promise<boolean> {
+  static async isEnabled(empresaId?: number | null): Promise<boolean> {
     try {
-      const provider = await AssinaturaDigitalProvider.findOne({
-        where: { provider: 'zapsign' }
-      });
+      const provider = await AssinaturaDigitalProviderService.getByProvider('zapsign', empresaId);
       return provider?.habilitado === true && !!provider?.api_key;
     } catch (error) {
       logger.error('Erro ao verificar se assinatura digital está habilitada:', error);

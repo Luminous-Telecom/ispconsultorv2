@@ -533,7 +533,7 @@ export class ServidorWhatsAppController {
 
       if (!servidor) {
         logger.warn('Tentativa de buscar templates sem servidor ativo');
-        sendNotFound(res, 'Nenhum servidor WhatsApp ativo encontrado');
+        sendSuccess(res, { total: 0, aprovados: 0, templates: [] }, 'Nenhum servidor WhatsApp ativo configurado');
         return;
       }
 

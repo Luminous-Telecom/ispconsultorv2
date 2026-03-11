@@ -26,7 +26,8 @@ export class AssinaturaConsultaService {
     }
 
     const signatureService = await AssinaturaEnvioService.getSignatureService(
-      assinatura.api_provider as 'assinafy' | 'zapsign'
+      assinatura.api_provider as 'assinafy' | 'zapsign',
+      assinatura.empresa_id
     );
     if (!signatureService) {
       throw new Error('API Key não configurada. Configure em Parâmetros > Assinatura Digital');
@@ -73,7 +74,8 @@ export class AssinaturaConsultaService {
     }
 
     const signatureService = await AssinaturaEnvioService.getSignatureService(
-      assinatura.api_provider as 'assinafy' | 'zapsign'
+      assinatura.api_provider as 'assinafy' | 'zapsign',
+      assinatura.empresa_id
     );
     if (!signatureService) {
       throw new Error('API Key não configurada. Configure em Parâmetros > Assinatura Digital');
@@ -105,7 +107,8 @@ export class AssinaturaConsultaService {
     }
 
     const signatureService = await AssinaturaEnvioService.getSignatureService(
-      assinatura.api_provider as 'assinafy' | 'zapsign'
+      assinatura.api_provider as 'assinafy' | 'zapsign',
+      assinatura.empresa_id
     );
     if (!signatureService) {
       throw new Error('API Key não configurada. Configure em Parâmetros > Assinatura Digital');

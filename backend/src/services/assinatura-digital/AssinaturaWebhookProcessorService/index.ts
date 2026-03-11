@@ -149,7 +149,8 @@ export class AssinaturaWebhookProcessorService {
     } else if (!assinatura.pdf_assinado_base64) {
       try {
         const signatureService = await AssinaturaEnvioService.getSignatureService(
-          assinatura.api_provider as 'assinafy' | 'zapsign'
+          assinatura.api_provider as 'assinafy' | 'zapsign',
+          assinatura.empresa_id
         );
         if (signatureService) {
           const pdfBuffer = await (signatureService as unknown as ISignatureService).baixarPdfAssinado(

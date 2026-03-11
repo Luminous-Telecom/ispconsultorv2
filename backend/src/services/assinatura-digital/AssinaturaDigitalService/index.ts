@@ -28,7 +28,7 @@ export class AssinaturaDigitalService {
       where.termo_contrato_id = filters.termo_contrato_id;
     }
     if (filters.empresa_id != null) {
-      (where as Record<string, unknown>)[Op.or as unknown as string] = [{ empresa_id: filters.empresa_id }, { empresa_id: null }];
+      where.empresa_id = filters.empresa_id;
     }
 
     return await AssinaturaDigital.findAll({
@@ -52,10 +52,10 @@ export class AssinaturaDigitalService {
   }
 
   /**
-   * Buscar assinatura por ID
+   * Buscar assinatura por ID (opcionalmente validando empresa_id)
    */
-  static async getById(id: string | number): Promise<AssinaturaDigital | null> {
-    return await AssinaturaDigital.findByPk(id, {
+  static async getById(id: string | number, empresaId?: number | null): Promise<AssinaturaDigital | null> {
+    const assinatura = await AssinaturaDigital.findByPk(id, {
       include: [
         {
           model: TermoContrato,
@@ -69,6 +69,10 @@ export class AssinaturaDigitalService {
         }
       ]
     });
+    if (assinatura && empresaId != null && assinatura.empresa_id !== empresaId) {
+      return null;
+    }
+    return assinatura;
   }
 
   /**

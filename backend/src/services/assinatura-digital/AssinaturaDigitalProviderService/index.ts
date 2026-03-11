@@ -18,46 +18,62 @@ export class AssinaturaDigitalProviderService {
   }
 
   /**
-   * Busca provider por tipo (filtra por empresa_id quando informado)
+   * Busca provider por tipo. Se empresaId informado, prefere empresa-específico, senão global (empresa_id null).
    */
   static async getByProvider(provider: AssinaturaDigitalProviderType, empresaId?: number | null): Promise<AssinaturaDigitalProvider | null> {
-    const where = empresaId != null
-      ? { provider, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-      : { provider };
+    if (empresaId != null) {
+      const porEmpresa = await AssinaturaDigitalProvider.findOne({
+        where: { provider, empresa_id: empresaId }
+      });
+      if (porEmpresa) return porEmpresa;
+      return await AssinaturaDigitalProvider.findOne({
+        where: { provider, empresa_id: null }
+      });
+    }
     return await AssinaturaDigitalProvider.findOne({
-      where
+      where: { provider, empresa_id: null }
     });
   }
 
   /**
-   * Busca provider habilitado (filtra por empresa_id quando informado)
+   * Busca provider habilitado. Se empresaId informado, prefere empresa-específico, senão global.
    */
   static async getEnabled(empresaId?: number | null): Promise<AssinaturaDigitalProvider | null> {
-    const where = empresaId != null
-      ? { habilitado: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-      : { habilitado: true };
+    if (empresaId != null) {
+      const porEmpresa = await AssinaturaDigitalProvider.findOne({
+        where: { habilitado: true, empresa_id: empresaId }
+      });
+      if (porEmpresa) return porEmpresa;
+      return await AssinaturaDigitalProvider.findOne({
+        where: { habilitado: true, empresa_id: null }
+      });
+    }
     return await AssinaturaDigitalProvider.findOne({
-      where
+      where: { habilitado: true, empresa_id: null }
     });
   }
 
   /**
-   * Desabilita outros providers
+   * Desabilita outros providers (para a empresa ou global)
    */
-  static async disableOtherProviders(provider: AssinaturaDigitalProviderType): Promise<void> {
+  static async disableOtherProviders(provider: AssinaturaDigitalProviderType, empresaId?: number | null): Promise<void> {
+    const where: Record<string, unknown> = {
+      habilitado: true,
+      provider: { [Op.ne]: provider }
+    };
+    if (empresaId != null) {
+      where.empresa_id = empresaId;
+    } else {
+      where.empresa_id = null;
+    }
     await AssinaturaDigitalProvider.update(
       { habilitado: false },
-      {
-        where: {
-          habilitado: true,
-          provider: { [Op.ne]: provider }
-        }
-      }
+      { where: where as Parameters<typeof AssinaturaDigitalProvider.update>[1]['where'] }
     );
   }
 
   /**
-   * Cria ou atualiza um provider
+   * Cria ou atualiza um provider (por empresa ou global quando empresaId é null)
    */
   static async upsert(
     provider: AssinaturaDigitalProviderType,
@@ -67,12 +83,19 @@ export class AssinaturaDigitalProviderService {
       account_id?: string;
       dias_expiracao_padrao?: number;
       configuracao_extra?: Record<string, unknown>;
+      empresa_id?: number | null;
     }
   ): Promise<{ provider: AssinaturaDigitalProvider; created: boolean }> {
+    const empresaId = dados.empresa_id ?? null;
+    const where = empresaId != null
+      ? { provider, empresa_id: empresaId }
+      : { provider, empresa_id: null };
+
     const [providerConfig, created] = await AssinaturaDigitalProvider.findOrCreate({
-      where: { provider },
+      where,
       defaults: {
         provider,
+        empresa_id: empresaId,
         habilitado: dados.habilitado ?? false,
         api_key: dados.api_key || null,
         account_id: dados.account_id || null,
@@ -96,7 +119,7 @@ export class AssinaturaDigitalProviderService {
     }
 
     if (dados.habilitado === true) {
-      await this.disableOtherProviders(provider);
+      await this.disableOtherProviders(provider, empresaId);
     }
 
     await providerConfig.reload();
@@ -105,7 +128,7 @@ export class AssinaturaDigitalProviderService {
   }
 
   /**
-   * Atualiza um provider
+   * Atualiza um provider (por empresa ou global)
    */
   static async update(
     provider: AssinaturaDigitalProviderType,
@@ -115,11 +138,11 @@ export class AssinaturaDigitalProviderService {
       account_id?: string;
       dias_expiracao_padrao?: number;
       configuracao_extra?: Record<string, unknown>;
+      empresa_id?: number | null;
     }
   ): Promise<AssinaturaDigitalProvider> {
-    const providerConfig = await AssinaturaDigitalProvider.findOne({
-      where: { provider }
-    });
+    const empresaId = dados.empresa_id ?? null;
+    const providerConfig = await this.getByProvider(provider, empresaId);
 
     if (!providerConfig) {
       throw new Error('Provider não encontrado');
@@ -135,7 +158,7 @@ export class AssinaturaDigitalProviderService {
     await providerConfig.update(updateData);
 
     if (dados.habilitado === true) {
-      await this.disableOtherProviders(provider);
+      await this.disableOtherProviders(provider, empresaId);
     }
 
     await providerConfig.reload();
@@ -144,12 +167,10 @@ export class AssinaturaDigitalProviderService {
   }
 
   /**
-   * Deleta um provider
+   * Deleta um provider (por empresa ou global)
    */
-  static async delete(provider: AssinaturaDigitalProviderType): Promise<AssinaturaDigitalProvider> {
-    const providerConfig = await AssinaturaDigitalProvider.findOne({
-      where: { provider }
-    });
+  static async delete(provider: AssinaturaDigitalProviderType, empresaId?: number | null): Promise<AssinaturaDigitalProvider> {
+    const providerConfig = await this.getByProvider(provider, empresaId);
 
     if (!providerConfig) {
       throw new Error('Provider não encontrado');

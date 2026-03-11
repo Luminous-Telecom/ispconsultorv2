@@ -25,11 +25,11 @@ interface EnviarAssinaturaParams {
 
 export class AssinaturaEnvioService {
   /**
-   * Verifica se a assinatura digital está habilitada
+   * Verifica se a assinatura digital está habilitada (por empresa ou global)
    */
-  static async isSignatureEnabled(): Promise<boolean> {
+  static async isSignatureEnabled(empresaId?: number | null): Promise<boolean> {
     try {
-      const provider = await AssinaturaDigitalProviderService.getEnabled();
+      const provider = await AssinaturaDigitalProviderService.getEnabled(empresaId);
       return !!provider && !!provider.api_key;
     } catch (error) {
       logger.error('Erro ao verificar se assinatura digital está habilitada:', error);
@@ -38,16 +38,16 @@ export class AssinaturaEnvioService {
   }
 
   /**
-   * Obtém o serviço de assinatura digital correto
+   * Obtém o serviço de assinatura digital correto (por empresa ou global)
    */
-  static async getSignatureService(provider: 'assinafy' | 'zapsign'): Promise<AssinafyService | ZapsignService | null> {
+  static async getSignatureService(provider: 'assinafy' | 'zapsign', empresaId?: number | null): Promise<AssinafyService | ZapsignService | null> {
     try {
       switch (provider) {
         case 'zapsign':
-          return await ZapsignService.createFromDatabase();
+          return await ZapsignService.createFromDatabase(empresaId);
         case 'assinafy':
         default:
-          return await AssinafyService.createFromDatabase();
+          return await AssinafyService.createFromDatabase(empresaId);
       }
     } catch (error) {
       logger.error('Erro ao obter serviço de assinatura digital:', error);
@@ -148,18 +148,22 @@ export class AssinaturaEnvioService {
       throw new Error('Email e nome do assinante são obrigatórios');
     }
 
-    const isEnabled = await this.isSignatureEnabled();
+    const empresaId = req?.user && typeof req.user !== 'string' && req.user.empresa_id
+      ? Number(req.user.empresa_id)
+      : null;
+
+    const isEnabled = await this.isSignatureEnabled(empresaId);
     if (!isEnabled) {
       throw new Error('Assinatura digital não está habilitada. Configure em Parâmetros > Assinatura Digital');
     }
 
-    const providerConfig = await AssinaturaDigitalProviderService.getEnabled();
+    const providerConfig = await AssinaturaDigitalProviderService.getEnabled(empresaId);
     if (!providerConfig) {
       throw new Error('Nenhum provider de assinatura digital habilitado. Configure em Parâmetros > Assinatura Digital');
     }
 
     const provider = providerConfig.provider as 'assinafy' | 'zapsign';
-    const signatureService = await this.getSignatureService(provider);
+    const signatureService = await this.getSignatureService(provider, empresaId);
     if (!signatureService) {
       throw new Error('API Key não configurada. Configure em Parâmetros > Assinatura Digital');
     }
@@ -221,6 +225,7 @@ export class AssinaturaEnvioService {
       : null;
 
     const assinatura = await AssinaturaDigitalService.create({
+      empresa_id: empresaId,
       termo_contrato_id: termo_contrato_id || null,
       cliente_id: cliente?.id || cliente_id || null,
       documento_tipo: termo_contrato_id ? 'termo' : 'outro' as const,

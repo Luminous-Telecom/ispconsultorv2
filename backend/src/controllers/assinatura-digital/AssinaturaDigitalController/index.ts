@@ -71,13 +71,14 @@ export class AssinaturaDigitalController {
   }
 
   /**
-   * Obtém assinatura por ID
+   * Obtém assinatura por ID (respeitando empresa_id)
    */
   static async getById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
-      const assinatura = await AssinaturaDigitalService.getById(id);
+      const assinatura = await AssinaturaDigitalService.getById(id, empresaId);
 
       if (!assinatura) {
         sendNotFound(res, 'Assinatura não encontrada');
@@ -142,13 +143,14 @@ export class AssinaturaDigitalController {
   }
 
   /**
-   * Consulta status de uma assinatura
+   * Consulta status de uma assinatura (respeitando empresa_id)
    */
   static async consultarStatus(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
-      const assinatura = await AssinaturaDigitalService.getById(id);
+      const assinatura = await AssinaturaDigitalService.getById(id, empresaId);
 
       if (!assinatura) {
         sendNotFound(res, 'Assinatura não encontrada');
@@ -161,7 +163,8 @@ export class AssinaturaDigitalController {
       }
 
       const signatureService = await AssinaturaEnvioService.getSignatureService(
-        assinatura.api_provider as 'assinafy' | 'zapsign'
+        assinatura.api_provider as 'assinafy' | 'zapsign',
+        assinatura.empresa_id
       );
       if (!signatureService) {
         sendError(res, new Error('API Key não configurada. Configure em Parâmetros > Assinatura Digital'), 'API Key não configurada. Configure em Parâmetros > Assinatura Digital', 500, false);
@@ -208,13 +211,14 @@ export class AssinaturaDigitalController {
   }
 
   /**
-   * Baixa PDF assinado
+   * Baixa PDF assinado (respeitando empresa_id)
    */
   static async baixarPdfAssinado(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
-      const assinatura = await AssinaturaDigitalService.getById(id);
+      const assinatura = await AssinaturaDigitalService.getById(id, empresaId);
 
       if (!assinatura) {
         sendNotFound(res, 'Assinatura não encontrada');
@@ -240,7 +244,8 @@ export class AssinaturaDigitalController {
       }
 
       const signatureService = await AssinaturaEnvioService.getSignatureService(
-        assinatura.api_provider as 'assinafy' | 'zapsign'
+        assinatura.api_provider as 'assinafy' | 'zapsign',
+        assinatura.empresa_id
       );
       if (!signatureService) {
         sendError(res, new Error('API Key não configurada. Configure em Parâmetros > Assinatura Digital'), 'API Key não configurada. Configure em Parâmetros > Assinatura Digital', 500, false);
@@ -268,13 +273,14 @@ export class AssinaturaDigitalController {
   }
 
   /**
-   * Cancela assinatura pendente
+   * Cancela assinatura pendente (respeitando empresa_id)
    */
   static async cancelar(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
-      const assinatura = await AssinaturaDigitalService.getById(id);
+      const assinatura = await AssinaturaDigitalService.getById(id, empresaId);
 
       if (!assinatura) {
         sendNotFound(res, 'Assinatura não encontrada');
@@ -288,7 +294,8 @@ export class AssinaturaDigitalController {
 
       if (assinatura.api_document_id) {
         const signatureService = await AssinaturaEnvioService.getSignatureService(
-          assinatura.api_provider as 'assinafy' | 'zapsign'
+          assinatura.api_provider as 'assinafy' | 'zapsign',
+          assinatura.empresa_id
         );
         if (signatureService) {
           await (signatureService as ISignatureService).cancelarAssinatura(assinatura.api_document_id);
