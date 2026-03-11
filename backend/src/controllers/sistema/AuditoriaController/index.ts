@@ -130,10 +130,16 @@ export class AuditoriaController {
         return;
       }
 
+      const empresaId = getEmpresaIdOrNull(req);
+      const query: Record<string, unknown> = empresaId != null && empresaId > 0
+        ? { bool: { must: [{ term: { empresa_id: empresaId } }], must_not: [{ terms: { entidade: AuditoriaQueryService.ENTIDADES_SAAS } }] } }
+        : { match_all: {} };
+
       // Agregações para estatísticas
       const result = await client.search({
         index: elasticsearchService.getIndexName(),
         body: {
+          query,
           size: 0,
           aggs: {
             acoes: {
@@ -205,17 +211,18 @@ export class AuditoriaController {
       }
 
       // Buscar todos os logs da entidade específica, ordenados por timestamp
+      const must: Record<string, unknown>[] = [
+        { term: { entidade: entidade as string } },
+        { term: { entidade_id: parseInt(entidade_id as string) } }
+      ];
+      if (empresaId != null && empresaId > 0) {
+        must.push({ term: { empresa_id: empresaId } });
+      }
+
       const result = await client.search({
         index: elasticsearchService.getIndexName(),
         body: {
-          query: {
-            bool: {
-              must: [
-                { term: { entidade: entidade as string } },
-                { term: { entidade_id: parseInt(entidade_id as string) } }
-              ]
-            }
-          },
+          query: { bool: { must } },
           sort: [
             { timestamp: { order: 'asc' } }
           ],
@@ -269,17 +276,18 @@ export class AuditoriaController {
         return;
       }
 
+      const must: Record<string, unknown>[] = [
+        { term: { entidade: entidade as string } },
+        { term: { entidade_id: parseInt(entidade_id as string) } }
+      ];
+      if (empresaId != null && empresaId > 0) {
+        must.push({ term: { empresa_id: empresaId } });
+      }
+
       const result = await client.search({
         index: elasticsearchService.getIndexName(),
         body: {
-          query: {
-            bool: {
-              must: [
-                { term: { entidade: entidade as string } },
-                { term: { entidade_id: parseInt(entidade_id as string) } }
-              ]
-            }
-          },
+          query: { bool: { must } },
           sort: [
             { timestamp: { order: 'desc' } }
           ],

@@ -93,18 +93,10 @@ export class AuditoriaQueryService {
 
     const must_not: any[] = [];
 
-    // Tenant: excluir entidades SaaS e filtrar por empresa_id (inclui docs legados sem empresa_id)
+    // Tenant: excluir entidades SaaS e filtrar somente por empresa_id da empresa atual
     if (empresaId != null && empresaId > 0) {
       must_not.push({ terms: { entidade: this.ENTIDADES_SAAS } });
-      must.push({
-        bool: {
-          should: [
-            { term: { empresa_id: empresaId } },
-            { bool: { must_not: { exists: { field: 'empresa_id' } } } }
-          ],
-          minimum_should_match: 1
-        }
-      });
+      must.push({ term: { empresa_id: empresaId } });
     }
 
     return must_not.length > 0 ? { must, must_not } : { must };
