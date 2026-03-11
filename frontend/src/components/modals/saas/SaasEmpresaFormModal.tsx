@@ -25,6 +25,7 @@ import SaasTituloFormModal from './SaasTituloFormModal';
 import SaasReceberModal from './SaasReceberModal';
 import { formatCurrency } from '@/utils/formatters';
 import type { FormValue } from '@/types/common';
+import type { ApiResponse } from '@/types';
 
 interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; }
 
@@ -67,7 +68,13 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const contratosTf = useTableFilters({ initialPage: 1, initialLimit: 500, resetPageOnFilterChange: false });
   const titulosTf = useTableFilters({ initialPage: 1, initialLimit: 500, initialSortColumn: 'id', initialSortDirection: 'desc', resetPageOnFilterChange: false });
   const usuariosTf = useTableFilters({ initialPage: 1, initialLimit: 500, initialSortColumn: 'id', initialSortDirection: 'desc', resetPageOnFilterChange: false });
-  const isEditing = !!itemId;
+  const [internalCreatedId, setInternalCreatedId] = useState<number | null>(null);
+  const effectiveId = itemId ?? internalCreatedId;
+  const isEditing = !!effectiveId;
+
+  useEffect(() => {
+    if (!show) setInternalCreatedId(null);
+  }, [show]);
   const [activeTab, setActiveTab] = useState<TabId>('dados-basicos');
   const [showContratoCreate, setShowContratoCreate] = useState(false);
   const [showContratoEdit, setShowContratoEdit] = useState(false);
@@ -88,9 +95,9 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const [tituloReceber, setTituloReceber] = useState<SaasTitulo | null>(null);
 
   const { data } = useQuery({
-    queryKey: ['saas-empresa', itemId],
-    queryFn: () => saasEmpresasService.getById(itemId!),
-    enabled: show && !!itemId,
+    queryKey: ['saas-empresa', effectiveId],
+    queryFn: () => saasEmpresasService.getById(effectiveId!),
+    enabled: show && !!effectiveId,
   });
 
   const { data: parametros } = useQuery({
@@ -133,12 +140,18 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   }, [show]);
 
   const createMutation = useMutation({
-    mutationFn: (d: Partial<SaasEmpresa>) => saasEmpresasService.create(d),
-    onSuccess: () => { success(t('messages.success')); queryClient.invalidateQueries({ queryKey: ['saas-empresas'] }); onSuccess?.(); },
+    mutationFn: (d: Partial<SaasEmpresa>) => saasEmpresasService.create(d) as Promise<ApiResponse<SaasEmpresa>>,
+    onSuccess: (res) => {
+      const createdId = res?.data?.id;
+      if (createdId) setInternalCreatedId(createdId);
+      success(t('messages.success'));
+      queryClient.invalidateQueries({ queryKey: ['saas-empresas'] });
+      onSuccess?.();
+    },
     onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
   });
   const updateMutation = useMutation({
-    mutationFn: (d: Partial<SaasEmpresa>) => saasEmpresasService.update(itemId!, d),
+    mutationFn: (d: Partial<SaasEmpresa>) => saasEmpresasService.update(effectiveId!, d),
     onSuccess: () => { success(t('messages.success')); queryClient.invalidateQueries({ queryKey: ['saas-empresas'] }); onSuccess?.(); },
     onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
   });
@@ -157,7 +170,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       lastCnpjConsulted.current = '';
       lastCepConsulted.current = '';
     }
-  }, [show, itemId]);
+  }, [show, effectiveId]);
 
   // Buscar CNPJ ao digitar 14 dígitos válidos
   useEffect(() => {
@@ -259,7 +272,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     } catch { /* tratado no mutation */ }
   };
 
-  const empresaId = isEditing ? itemId! : null;
+  const empresaId = isEditing ? effectiveId! : null;
 
   const { data: titulosData, refetch: refetchTitulos } = useQuery({
     queryKey: ['saas-titulos', empresaId, titulosTf.sortColumn, titulosTf.sortDirection],
