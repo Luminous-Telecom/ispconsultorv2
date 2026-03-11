@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { SchedulerService, type CreateRotinaData, type UpdateRotinaData } from '@/services/schedulerService';
 import { SaasSchedulerService } from '@/services/saas/saasSchedulerService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { usePlanoModulos } from '@/hooks/usePlanoModulos';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button, Spinner } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 
-const TIPO_OPTIONS_ERP = [
+const TIPO_OPTIONS_ERP_BASE = [
   { value: 'geracao_titulos', label: 'Geração de Títulos' },
   { value: 'envio_boletos', label: 'Envio de Boletos' },
   { value: 'remessa_bancaria', label: 'Remessa Bancária' },
@@ -59,10 +60,14 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
   const queryClient = useQueryClient();
   const isEditMode = !!rotinaId;
 
+  const { hasModulo } = usePlanoModulos();
   const schedulerService = variant === 'saas' ? SaasSchedulerService : SchedulerService;
   const queryKeyPrefix = variant === 'saas' ? 'saas' : '';
   const invalidateKey = variant === 'saas' ? 'saas-agendador-tarefas' : 'agendador-tarefas';
-  const tipoOptions = variant === 'saas' ? TIPO_OPTIONS_SAAS : TIPO_OPTIONS_ERP;
+  const tipoOptions = useMemo(() => {
+    if (variant === 'saas') return TIPO_OPTIONS_SAAS;
+    return TIPO_OPTIONS_ERP_BASE.filter((o) => o.value !== 'desbloquear_blockdomi' || hasModulo('blockdomi'));
+  }, [variant, hasModulo]);
   const nomesPorTipo = variant === 'saas' ? NOMES_POR_TIPO_SAAS : NOMES_POR_TIPO_ERP;
   const formId = variant === 'saas' ? 'saas-rotina-agendada-form' : 'rotina-agendada-form';
   const descricaoId = variant === 'saas' ? 'saas_descricao' : 'descricao';
