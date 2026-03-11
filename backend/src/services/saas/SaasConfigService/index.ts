@@ -90,12 +90,11 @@ export class SaasServidorWhatsappService {
 
 export class SaasBancoService {
   static async list(filters: ListFilters) {
-    const { page = 1, limit = 20, search, empresa_id, ativo, sortColumn = 'id', sortDirection = 'desc' } = filters;
+    const { page = 1, limit = 20, search, ativo, sortColumn = 'id', sortDirection = 'desc' } = filters;
     const allowed = ['id', 'nome', 'banco', 'tipo_banco', 'agencia', 'conta', 'ativo', 'created_at'];
     const col = allowed.includes(sortColumn) ? sortColumn : 'id';
     const offset = (page - 1) * limit;
     const where: Record<string, unknown> = {};
-    if (empresa_id) where.empresa_id = empresa_id;
     if (ativo !== undefined) where.ativo = ativo;
     if (search) where[Op.or as unknown as string] = [
       { banco: { [Op.like]: `%${search}%` } },
@@ -104,12 +103,12 @@ export class SaasBancoService {
       { conta: { [Op.like]: `%${search}%` } },
     ];
     const { count, rows } = await SaasBanco.findAndCountAll({
-      where, include: [empresaInclude], order: [[col, sortDirection.toUpperCase()]], limit, offset,
+      where, order: [[col, sortDirection.toUpperCase()]], limit, offset,
     });
     return { data: rows, pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) } };
   }
 
-  static async getById(id: number) { return SaasBanco.findByPk(id, { include: [empresaInclude] }); }
+  static async getById(id: number) { return SaasBanco.findByPk(id); }
 
   static async create(data: Partial<SaasBanco>) {
     return SaasBanco.create(data as SaasBanco['_creationAttributes']);

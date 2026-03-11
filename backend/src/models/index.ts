@@ -306,9 +306,6 @@ SaasServidorWhatsapp.belongsTo(SaasDadosEmpresa, { foreignKey: 'empresa_id', as:
 SaasDadosEmpresa.hasMany(SaasMensagemHistorico, { foreignKey: 'empresa_id', as: 'mensagensHistorico' });
 SaasMensagemHistorico.belongsTo(SaasDadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 
-SaasDadosEmpresa.hasMany(SaasBanco, { foreignKey: 'empresa_id', as: 'saasBancos' });
-SaasBanco.belongsTo(SaasDadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
-
 DadosEmpresa.hasMany(SaasTipoCobranca, { foreignKey: 'empresa_id', as: 'saasTiposCobranca' });
 SaasTipoCobranca.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
 

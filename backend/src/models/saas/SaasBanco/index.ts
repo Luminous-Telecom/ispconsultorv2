@@ -7,7 +7,6 @@ export class SaasBanco extends Model<
   InferCreationAttributes<SaasBanco>
 > {
   declare id: CreationOptional<number>;
-  declare empresa_id: number;
   declare nome: string;
   declare banco: string;
   declare codigo: CreationOptional<string | null>;
@@ -84,7 +83,6 @@ export class SaasBanco extends Model<
 SaasBanco.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    empresa_id: { type: DataTypes.INTEGER, allowNull: false },
     nome: { type: DataTypes.STRING(255), allowNull: false, defaultValue: 'Banco' },
     banco: { type: DataTypes.STRING(100), allowNull: false },
     codigo: { type: DataTypes.STRING(10), allowNull: true },

@@ -48,9 +48,9 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
   });
 
   const { data: bancosRes } = useQuery({
-    queryKey: ['saas-bancos-select', empresaId],
-    queryFn: () => saasBancoService.list({ empresa_id: empresaId, ativo: true, limit: 500 }),
-    enabled: show && !!empresaId,
+    queryKey: ['saas-bancos-select'],
+    queryFn: () => saasBancoService.list({ ativo: true, limit: 500 }),
+    enabled: show,
   });
 
   const { data: diasRes } = useQuery({

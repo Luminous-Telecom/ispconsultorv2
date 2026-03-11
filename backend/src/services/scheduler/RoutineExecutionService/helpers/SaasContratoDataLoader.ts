@@ -80,9 +80,10 @@ export class SaasContratoDataLoader {
 
     const [bancos, diasVenc] = await Promise.all([
       SaasBanco.findAll({
-        where: { empresa_id: { [Op.in]: empresaIds }, ativo: true },
-        attributes: ['id', 'empresa_id'],
+        where: { ativo: true },
+        attributes: ['id'],
         order: [['id', 'ASC']],
+        limit: 1,
       }),
       SaasDiasVencimento.findAll({
         where: { empresa_id: { [Op.in]: empresaIds }, ativo: true },
@@ -91,16 +92,16 @@ export class SaasContratoDataLoader {
       }),
     ]);
 
+    const bancoPadrao = bancos[0];
     const mapa: EmpresaDefaults = new Map();
 
     for (const empId of empresaIds) {
-      const banco = bancos.find((b) => b.empresa_id === empId);
       const diaVenc = diasVenc.find((d) => d.empresa_id === empId);
 
-      if (banco && diaVenc) {
+      if (bancoPadrao && diaVenc) {
         const dia = diaVenc.dia ?? diaVenc.dia_padrao ?? 10;
         mapa.set(empId, {
-          conta_boleto: banco.id,
+          conta_boleto: bancoPadrao.id,
           dia_vencimento_id: diaVenc.id,
           dia,
         });

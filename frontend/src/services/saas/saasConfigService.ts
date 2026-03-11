@@ -34,8 +34,6 @@ export interface SaasServidorWhatsapp {
 
 export interface SaasBanco {
   id: number;
-  empresa_id: number;
-  empresa?: { id: number; nome_empresa: string };
   nome?: string;
   banco: string;
   codigo?: string | null;

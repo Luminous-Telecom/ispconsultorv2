@@ -2,7 +2,6 @@ import { Response } from 'express';
 import Joi from 'joi';
 import { randomBytes } from 'crypto';
 import { SaasServidorEmailService, SaasServidorWhatsappService, SaasBancoService } from '../../../services/saas/SaasConfigService';
-import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
@@ -153,7 +152,6 @@ export class SaasServidorWhatsappController {
 // ─── Bancos ──────────────────────────────────────────────────────────────────
 
 const bancoSchema = Joi.object({
-  empresa_id: Joi.number().integer().optional(),
   nome: Joi.string().max(255).optional(),
   banco: Joi.string().max(100).required(),
   codigo: Joi.string().max(10).optional().allow('', null),
@@ -198,10 +196,7 @@ const bancoSchema = Joi.object({
   logo: Joi.string().max(500).optional().allow('', null),
 });
 
-const bancoUpdateSchema = bancoSchema.fork(
-  ['empresa_id', 'banco'],
-  (s) => s.optional()
-);
+const bancoUpdateSchema = bancoSchema.fork(['banco'], (s) => s.optional());
 
 export class SaasBancoController {
   static async list(req: SaasAuthenticatedRequest, res: Response) {
@@ -219,10 +214,6 @@ export class SaasBancoController {
     try {
       const { error, value } = bancoSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
-      if (!value.empresa_id) {
-        const empresa = await SaasDadosEmpresa.findOne({ attributes: ['id'], order: [['id', 'ASC']] });
-        value.empresa_id = empresa?.id ?? 1;
-      }
       const item = await SaasBancoService.create(value);
       await registrarCriacao(req as any, 'SaasBanco', item.id, item.toJSON() as Record<string, unknown>);
       res.status(201).json({ success: true, message: 'Banco criado com sucesso', data: item });
