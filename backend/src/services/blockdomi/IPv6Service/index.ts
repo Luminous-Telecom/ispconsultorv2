@@ -236,9 +236,10 @@ export class IPv6Service {
     let primeiraVersao: string | undefined;
     let versaoId: number | null = metadata.versaoId ?? null;
 
+    const metaEmpresaId = metadata.empresa_id ?? null;
     if (toCreate.length > 0 || toUpdate.length > 0) {
       if (versaoId == null && !metadata.getVersoesForNewRecords) {
-        const versao = await VersaoBlockdomiService.obterProximaVersao('ipv6');
+        const versao = await VersaoBlockdomiService.obterProximaVersao('ipv6', undefined, metaEmpresaId);
         versaoId = versao.id;
         primeiraVersao = versao.numero;
       } else if (metadata.getVersoesForNewRecords && toCreate.length > 0) {
@@ -246,7 +247,7 @@ export class IPv6Service {
         primeiraVersao = versoes[0]?.numero;
       }
       if (toUpdate.length > 0 && versaoId == null) {
-        const versao = await VersaoBlockdomiService.obterProximaVersao('ipv6');
+        const versao = await VersaoBlockdomiService.obterProximaVersao('ipv6', undefined, metaEmpresaId);
         versaoId = versao.id;
         if (primeiraVersao == null) primeiraVersao = versao.numero;
       }
@@ -304,7 +305,8 @@ export class IPv6Service {
     if (dadosIPv6.descricao === undefined) {
       dadosIPv6.descricao = null;
     }
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv6');
+    const empresaId = dadosIPv6.empresa_id ?? null;
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv6', undefined, empresaId);
     const dados = { ...dadosIPv6, versao_id: versaoId };
     return await IPv6.create(dados as never);
   }
@@ -341,7 +343,8 @@ export class IPv6Service {
       }
     });
 
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv6');
+    const empresaId = (existingIPv6 as { empresa_id?: number | null }).empresa_id ?? null;
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv6', undefined, empresaId);
     updateData.versao_id = versaoId;
     
     await existingIPv6.update(updateData);
@@ -360,7 +363,8 @@ export class IPv6Service {
       throw new Error('IPv6 não encontrado');
     }
 
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv6_delete');
+    const empresaId = (ipv6 as { empresa_id?: number | null }).empresa_id ?? null;
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv6_delete', undefined, empresaId);
     await ipv6.destroy();
 
     const { sequelize } = await import('../../../config/database');
@@ -390,7 +394,7 @@ export class IPv6Service {
       return { deleted: 0, versao: '', versaoId: 0 };
     }
 
-    const { id: versaoId, numero: versao } = await VersaoBlockdomiService.obterProximaVersao('ipv6_delete');
+    const { id: versaoId, numero: versao } = await VersaoBlockdomiService.obterProximaVersao('ipv6_delete', undefined, null);
 
     const { Op } = await import('sequelize');
     const deleted = await IPv6.destroy({ where: { id: { [Op.in]: idsNum } } });

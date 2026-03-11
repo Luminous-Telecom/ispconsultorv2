@@ -236,9 +236,10 @@ export class IPv4Service {
     let primeiraVersao: string | undefined;
     let versaoId: number | null = metadata.versaoId ?? null;
 
+    const metaEmpresaId = metadata.empresa_id ?? null;
     if (toCreate.length > 0 || toUpdate.length > 0) {
       if (versaoId == null && !metadata.getVersoesForNewRecords) {
-        const versao = await VersaoBlockdomiService.obterProximaVersao('ipv4');
+        const versao = await VersaoBlockdomiService.obterProximaVersao('ipv4', undefined, metaEmpresaId);
         versaoId = versao.id;
         primeiraVersao = versao.numero;
       } else if (metadata.getVersoesForNewRecords && toCreate.length > 0) {
@@ -246,7 +247,7 @@ export class IPv4Service {
         primeiraVersao = versoes[0]?.numero;
       }
       if (toUpdate.length > 0 && versaoId == null) {
-        const versao = await VersaoBlockdomiService.obterProximaVersao('ipv4');
+        const versao = await VersaoBlockdomiService.obterProximaVersao('ipv4', undefined, metaEmpresaId);
         versaoId = versao.id;
         if (primeiraVersao == null) primeiraVersao = versao.numero;
       }
@@ -304,7 +305,8 @@ export class IPv4Service {
     if (dadosIPv4.descricao === undefined) {
       dadosIPv4.descricao = null;
     }
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4');
+    const empresaId = dadosIPv4.empresa_id ?? null;
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4', undefined, empresaId);
     const dados = { ...dadosIPv4, versao_id: versaoId };
     return await IPv4.create(dados as never);
   }
@@ -341,7 +343,8 @@ export class IPv4Service {
       }
     });
 
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4');
+    const empresaId = (existingIPv4 as { empresa_id?: number | null }).empresa_id ?? null;
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4', undefined, empresaId);
     updateData.versao_id = versaoId;
     
     await existingIPv4.update(updateData);
@@ -360,7 +363,8 @@ export class IPv4Service {
       throw new Error('IPv4 não encontrado');
     }
 
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4_delete');
+    const empresaId = (ipv4 as { empresa_id?: number | null }).empresa_id ?? null;
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4_delete', undefined, empresaId);
     await ipv4.destroy();
 
     const { sequelize } = await import('../../../config/database');
@@ -390,7 +394,7 @@ export class IPv4Service {
       return { deleted: 0, versao: '', versaoId: 0 };
     }
 
-    const { id: versaoId, numero: versao } = await VersaoBlockdomiService.obterProximaVersao('ipv4_delete');
+    const { id: versaoId, numero: versao } = await VersaoBlockdomiService.obterProximaVersao('ipv4_delete', undefined, null);
 
     const { Op } = await import('sequelize');
     const deleted = await IPv4.destroy({ where: { id: { [Op.in]: idsNum } } });

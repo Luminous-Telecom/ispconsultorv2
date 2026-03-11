@@ -29,7 +29,7 @@ export interface ImportarListaResult {
  */
 export class ImportarListaBlockdomiService {
   static async importar(payload: ImportarListaPayload): Promise<ImportarListaResult> {
-    const versaoLista = await VersaoBlockdomiService.obterProximaVersao('lista');
+    const versaoLista = await VersaoBlockdomiService.obterProximaVersao('lista', undefined, payload.empresa_id);
 
     const metadata = {
       nome_oficio: payload.nome_oficio ?? null,

@@ -50,14 +50,14 @@ export class VersaoBlockdomiService {
     return result;
   }
 
-  static async obterProximaVersao(tipo: TipoVersao, data?: Date): Promise<VersaoResult> {
+  static async obterProximaVersao(tipo: TipoVersao, data?: Date, empresaId?: number | null): Promise<VersaoResult> {
     const d = data ?? new Date();
     const anoMesDia = d.toISOString().slice(0, 10).replace(/-/g, '');
     return sequelize.transaction(async (t) => {
       const contadores = await VersaoBlockdomiService._obterProximosContadores(tipo, 1, d, t);
       const c = contadores[0] ?? 1;
       const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
-      const versao = await VersaoBlockdomi.create({ numero }, { transaction: t });
+      const versao = await VersaoBlockdomi.create({ numero, empresa_id: empresaId ?? null }, { transaction: t });
       return { id: versao.id, numero: versao.numero };
     });
   }
@@ -65,7 +65,8 @@ export class VersaoBlockdomiService {
   static async obterProximasVersoes(
     tipo: TipoVersao,
     quantidade: number,
-    data?: Date
+    data?: Date,
+    empresaId?: number | null
   ): Promise<VersaoResult[]> {
     if (quantidade <= 0) return [];
 
@@ -76,7 +77,7 @@ export class VersaoBlockdomiService {
       const resultado: VersaoResult[] = [];
       for (const c of contadores) {
         const numero = `${anoMesDia}${String(c).padStart(2, '0')}`;
-        const v = await VersaoBlockdomi.create({ numero }, { transaction: t });
+        const v = await VersaoBlockdomi.create({ numero, empresa_id: empresaId ?? null }, { transaction: t });
         resultado.push({ id: v.id, numero: v.numero });
       }
       return resultado;
@@ -87,7 +88,7 @@ export class VersaoBlockdomiService {
    * Cria uma nova versão sem vincular a nenhuma entidade. Usado pelo botão "Gerar versão".
    * Não altera versões existentes.
    */
-  static async criarVersao(data?: Date): Promise<VersaoResult> {
-    return VersaoBlockdomiService.obterProximaVersao('lista', data);
+  static async criarVersao(data?: Date, empresaId?: number | null): Promise<VersaoResult> {
+    return VersaoBlockdomiService.obterProximaVersao('lista', data, empresaId);
   }
 }

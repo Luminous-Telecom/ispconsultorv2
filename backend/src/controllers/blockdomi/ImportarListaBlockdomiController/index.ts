@@ -113,7 +113,7 @@ export class ImportarListaBlockdomiController {
    */
   static async gerarVersao(req: Request, res: Response): Promise<void> {
     try {
-      const versao = await VersaoBlockdomiService.criarVersao();
+      const versao = await VersaoBlockdomiService.criarVersao(undefined, getEmpresaIdOrNull(req) ?? null);
       sendSuccess(res, versao, `Versão ${versao.numero} gerada.`, 201);
     } catch (error) {
       sendError(res, error, 'Erro ao gerar versão', 500, true, {

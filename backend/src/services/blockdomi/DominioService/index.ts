@@ -137,7 +137,8 @@ export class DominioService {
     if (dadosDominio.descricao === undefined) {
       dadosDominio.descricao = null;
     }
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio');
+    const empresaId = dadosDominio.empresa_id ?? null;
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio', undefined, empresaId);
     const dados = { ...dadosDominio, versao_id: versaoId };
     return await Dominio.create(dados as never);
   }
@@ -174,9 +175,10 @@ export class DominioService {
       }
     });
 
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio');
+    const empresaId = (existingDominio as { empresa_id?: number | null }).empresa_id ?? null;
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio', undefined, empresaId);
     updateData.versao_id = versaoId;
-    
+
     await existingDominio.update(updateData);
     await existingDominio.reload();
 
@@ -297,8 +299,9 @@ export class DominioService {
     let versaoId: number | null = metadata.versaoId ?? null;
 
     if (toCreate.length > 0 || toUpdate.length > 0) {
+      const metaEmpresaId = metadata.empresa_id ?? null;
       if (versaoId == null && !metadata.getVersoesForNewRecords) {
-        const versao = await VersaoBlockdomiService.obterProximaVersao('dominio');
+        const versao = await VersaoBlockdomiService.obterProximaVersao('dominio', undefined, metaEmpresaId);
         versaoId = versao.id;
         primeiraVersao = versao.numero;
       } else if (metadata.getVersoesForNewRecords && toCreate.length > 0) {
@@ -306,7 +309,7 @@ export class DominioService {
         primeiraVersao = versoes[0]?.numero;
       }
       if (toUpdate.length > 0 && versaoId == null) {
-        const versao = await VersaoBlockdomiService.obterProximaVersao('dominio');
+        const versao = await VersaoBlockdomiService.obterProximaVersao('dominio', undefined, metaEmpresaId);
         versaoId = versao.id;
         if (primeiraVersao == null) primeiraVersao = versao.numero;
       }
@@ -371,7 +374,8 @@ export class DominioService {
       throw new Error('Domínio não encontrado');
     }
 
-    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio_delete');
+    const empresaId = (dominio as { empresa_id?: number | null }).empresa_id ?? null;
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio_delete', undefined, empresaId);
     await dominio.destroy();
 
     const { sequelize } = await import('../../../config/database');
@@ -401,7 +405,7 @@ export class DominioService {
       return { deleted: 0, versao: '', versaoId: 0 };
     }
 
-    const { id: versaoId, numero: versao } = await VersaoBlockdomiService.obterProximaVersao('dominio_delete');
+    const { id: versaoId, numero: versao } = await VersaoBlockdomiService.obterProximaVersao('dominio_delete', undefined, null);
 
     const { Op } = await import('sequelize');
     const deleted = await Dominio.destroy({ where: { id: { [Op.in]: idsNum } } });
