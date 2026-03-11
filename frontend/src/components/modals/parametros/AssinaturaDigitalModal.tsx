@@ -196,7 +196,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
           </div>
         </div>
       ) : (
-      <form id="assinatura-digital-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+      <form id="assinatura-digital-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }} autoComplete="off" data-form-type="other">
         <div className="card mb-3">
           <div className="card-header">
             <h6 className="mb-0">{t('digitalSignature.generalSettings')}</h6>
@@ -289,6 +289,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                   className="form-control"
                   id="apiKey"
                   value={formData.apiKey}
+                  autoComplete="new-password"
                   onChange={(e) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
                   disabled={updateMutation.isPending}
                   placeholder={t('placeholder.apiKey')}
@@ -326,6 +327,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                   className="form-control"
                   id="accountId"
                   value={formData.accountId}
+                  autoComplete="off"
                   onChange={(e) => setFormData(prev => ({ ...prev, accountId: e.target.value }))}
                   disabled={updateMutation.isPending}
                   placeholder={t('placeholder.workspaceId')}
