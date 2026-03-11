@@ -24,12 +24,13 @@ export class WhatsAppBoletoService {
    * Envia boletos baseado em configurações
    * @param options.saas - Se true, usa saas_titulos e saas_dados_empresa
    */
-  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { saas?: boolean }): Promise<{
+  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { saas?: boolean; empresa_id?: number }): Promise<{
     sucesso: boolean;
     mensagensEnviadas: number;
     erros: number;
   }> {
     const saas = options?.saas ?? false;
+    const empresaId = options?.empresa_id;
     try {
       let servidor: ServidorWhatsApp;
       if (saas) {
@@ -77,7 +78,7 @@ export class WhatsAppBoletoService {
 
       for (const envio of envios) {
         try {
-          const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo, saas);
+          const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo, saas, empresaId);
           mensagensEnviadas += resultado.enviadas;
           erros += resultado.erros;
         } catch (processError) {
@@ -111,7 +112,8 @@ export class WhatsAppBoletoService {
     tipoMensagem: string,
     dias: number,
     tipo: 'antes' | 'mesmo' | 'depois',
-    saas = false
+    saas = false,
+    empresaId?: number
   ): Promise<{ enviadas: number; erros: number }> {
     const mensagem = mensagens.find((msg) => msg.tipo === tipoMensagem);
     if (!mensagem || mensagem.tipo_envio === 'desativado') {
@@ -171,8 +173,16 @@ export class WhatsAppBoletoService {
         order: [['data_vencimento', 'ASC'], ['id', 'ASC']],
       }) as typeof titulos;
     } else {
+      const whereTitulo: Record<string, unknown> = {
+        status: { [Op.in]: ['pendente', 'vencido'] },
+        pago: false,
+        data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia }
+      };
+      if (empresaId != null) {
+        whereTitulo.empresa_id = empresaId;
+      }
       titulos = await Titulo.findAll({
-        where: { status: { [Op.in]: ['pendente', 'vencido'] }, pago: false, data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia } },
+        where: whereTitulo as never,
         include: [
           { model: Cliente, as: 'cliente', required: true, where: { ativo: true, recebe_whatsapp: true } },
           { association: 'contrato', required: false },

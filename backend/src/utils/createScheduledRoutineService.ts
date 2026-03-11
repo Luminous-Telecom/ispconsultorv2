@@ -7,6 +7,7 @@ export interface ListScheduledRoutinesFilters {
   search?: string;
   sort?: string;
   direction?: 'asc' | 'desc';
+  empresa_id?: number | null;
 }
 
 export interface ListScheduledRoutinesResponse<T> {
@@ -31,7 +32,7 @@ export function createScheduledRoutineService<T extends Model>(
   Model: ModelStatic<T>
 ): {
   list: (filters: ListScheduledRoutinesFilters) => Promise<ListScheduledRoutinesResponse<T>>;
-  getById: (id: number) => Promise<T | null>;
+  getById: (id: number, empresaId?: number | null) => Promise<T | null>;
   create: (dados: Partial<T>) => Promise<T>;
   update: (id: number, dados: Partial<T>) => Promise<T>;
   delete: (id: number) => Promise<T>;
@@ -43,17 +44,19 @@ export function createScheduledRoutineService<T extends Model>(
         limit = 15,
         search,
         sort = 'created_at',
-        direction = 'desc'
+        direction = 'desc',
+        empresa_id
       } = filters;
 
       const offset = (Number(page) - 1) * Number(limit);
-      let where: WhereOptions = {};
-
-      if (search) {
-        where = {
-          [Op.or]: SEARCH_FIELDS.map((f) => ({ [f]: { [Op.like]: `%${search}%` } }))
-        } as WhereOptions;
+      const conditions: WhereOptions[] = [];
+      if (empresa_id !== undefined && empresa_id !== null) {
+        conditions.push({ empresa_id });
       }
+      if (search) {
+        conditions.push({ [Op.or]: SEARCH_FIELDS.map((f) => ({ [f]: { [Op.like]: `%${search}%` } })) } as WhereOptions);
+      }
+      const where: WhereOptions = conditions.length > 1 ? { [Op.and]: conditions } : (conditions[0] || {});
 
       const result = await (Model as unknown as {
         findAndCountAll: (opts: object) => Promise<{ count: number; rows: T[] }>;
@@ -89,7 +92,12 @@ export function createScheduledRoutineService<T extends Model>(
       };
     },
 
-    async getById(id: number) {
+    async getById(id: number, empresaId?: number | null) {
+      if (empresaId !== undefined && empresaId !== null) {
+        return (Model as unknown as { findOne: (opts: object) => Promise<T | null> }).findOne({
+          where: { id, empresa_id: empresaId }
+        });
+      }
       return Model.findByPk(id) as Promise<T | null>;
     },
 

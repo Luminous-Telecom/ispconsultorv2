@@ -9,7 +9,7 @@ import { registrarAtualizacaoSistema } from '../../sistema/AuditoriaService';
  * é menor ou igual a hoje. Registra cada atualização na auditoria (banco e Elasticsearch).
  */
 export class DesbloquearBlockdomiRoutine implements IRoutine {
-  async execute(_config: Record<string, JsonValue> = {}): Promise<RoutineResult> {
+  async execute(config: Record<string, JsonValue> = {}): Promise<RoutineResult> {
     try {
       const hoje = new Date();
       const hojeStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
@@ -18,10 +18,14 @@ export class DesbloquearBlockdomiRoutine implements IRoutine {
       const { IPv4 } = await import('../../../models/blockdomi/IPv4');
       const { IPv6 } = await import('../../../models/blockdomi/IPv6');
 
-      const whereDataFimPassada = {
+      const empresaId = config.empresa_id as number | null | undefined;
+      const whereDataFimPassada: Record<string, unknown> = {
         data_fim_bloqueio: { [Op.and]: [{ [Op.ne]: null }, { [Op.lte]: hojeStr }] },
         ativo: true
       };
+      if (empresaId != null) {
+        whereDataFimPassada.empresa_id = empresaId;
+      }
 
       const [dominios, ipv4List, ipv6List] = await Promise.all([
         Dominio.findAll({ where: whereDataFimPassada }),

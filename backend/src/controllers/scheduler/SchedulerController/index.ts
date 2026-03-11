@@ -6,6 +6,8 @@ import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull, isSuperAdmin } from '../../../utils/tenantUtils';
+import { getModulosDoPlano, tenantTemModulo } from '../../../services/saas/PlanoModulosService';
 
 export class SchedulerController {
   private schedulerService: SchedulerService;
@@ -18,13 +20,15 @@ export class SchedulerController {
   public async index(req: Request, res: Response): Promise<void> {
     try {
       const { page = 1, limit = 15, search, sort = 'created_at', direction = 'desc' } = req.query;
+      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
 
       const result = await ScheduledRoutineService.list({
         page: Number(page),
         limit: Number(limit),
         search: search as string,
         sort: sort as string,
-        direction: direction as 'asc' | 'desc'
+        direction: direction as 'asc' | 'desc',
+        empresa_id: empresaId ?? undefined
       });
 
       res.json(result);
@@ -40,7 +44,10 @@ export class SchedulerController {
   public async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const routine = await this.schedulerService.getRoutineById(Number(id));
+      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
+      const routine = empresaId !== null
+        ? await ScheduledRoutineService.getById(Number(id), empresaId)
+        : await this.schedulerService.getRoutineById(Number(id));
 
       if (!routine) {
         sendNotFound(res, 'Rotina não encontrada');
@@ -68,7 +75,19 @@ export class SchedulerController {
         return;
       }
 
-      const routine = await this.schedulerService.createRoutine(routineData);
+      const empresaId = getEmpresaIdOrNull(req);
+      if (routineData.tipo === 'desbloquear_blockdomi') {
+        if (empresaId != null) {
+          const modulos = await getModulosDoPlano(empresaId);
+          if (!tenantTemModulo(modulos, 'blockdomi')) {
+            sendValidationError(res, 'Módulo blockdomi não está ativo no plano. A rotina de desbloquear domínios só pode ser criada quando o módulo está habilitado.');
+            return;
+          }
+        }
+      }
+
+      const dadosComEmpresa = { ...routineData, empresa_id: empresaId ?? routineData.empresa_id };
+      const routine = await this.schedulerService.createRoutine(dadosComEmpresa);
 
       // Registrar auditoria
       try {
@@ -97,15 +116,30 @@ export class SchedulerController {
     try {
       const { id } = req.params;
       const updateData = req.body;
+      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
+
+      if (updateData.tipo === 'desbloquear_blockdomi') {
+        if (empresaId != null) {
+          const modulos = await getModulosDoPlano(empresaId);
+          if (!tenantTemModulo(modulos, 'blockdomi')) {
+            sendValidationError(res, 'Módulo blockdomi não está ativo no plano. A rotina de desbloquear domínios só pode ser usada quando o módulo está habilitado.');
+            return;
+          }
+        }
+      }
 
       // Buscar rotina antes de atualizar para capturar dados anteriores
-      const routineBefore = await ScheduledRoutineService.getById(Number(id));
-      const dadosAnteriores = routineBefore ? (routineBefore.toJSON ? routineBefore.toJSON() as Record<string, unknown> : (routineBefore as unknown as Record<string, unknown>)) : {};
+      const routineBefore = await ScheduledRoutineService.getById(Number(id), empresaId ?? undefined);
+      if (!routineBefore) {
+        sendNotFound(res, 'Rotina não encontrada');
+        return;
+      }
+      const dadosAnteriores = routineBefore.toJSON ? routineBefore.toJSON() as Record<string, unknown> : (routineBefore as unknown as Record<string, unknown>);
 
       const routine = await this.schedulerService.updateRoutine(Number(id), updateData);
       
       // Recarregar rotina para obter dados atualizados
-      const routineAtualizada = await ScheduledRoutineService.getById(Number(id));
+      const routineAtualizada = await ScheduledRoutineService.getById(Number(id), empresaId ?? undefined);
       if (!routineAtualizada) {
         sendNotFound(res, 'Rotina não encontrada após atualização');
         return;
@@ -144,9 +178,10 @@ export class SchedulerController {
   public async destroy(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
 
       // Buscar rotina antes de deletar para capturar dados anteriores
-      const routine = await ScheduledRoutineService.getById(Number(id));
+      const routine = await ScheduledRoutineService.getById(Number(id), empresaId ?? undefined);
       if (routine) {
         const dadosAnteriores = routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>);
         
@@ -179,6 +214,7 @@ export class SchedulerController {
     try {
       const { id } = req.params;
       const { ativo } = req.body;
+      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
 
       if (typeof ativo !== 'boolean') {
         sendValidationError(res, 'Campo "ativo" deve ser um booleano');
@@ -186,13 +222,13 @@ export class SchedulerController {
       }
 
       // Buscar rotina antes de atualizar para capturar dados anteriores
-      const routineBefore = await ScheduledRoutineService.getById(Number(id));
+      const routineBefore = await ScheduledRoutineService.getById(Number(id), empresaId ?? undefined);
       const dadosAnteriores = routineBefore ? (routineBefore.toJSON ? routineBefore.toJSON() as Record<string, unknown> : (routineBefore as unknown as Record<string, unknown>)) : {};
 
       await this.schedulerService.toggleRoutine(Number(id), ativo);
       
       // Recarregar rotina para obter dados atualizados
-      const routineAtualizada = await ScheduledRoutineService.getById(Number(id));
+      const routineAtualizada = await ScheduledRoutineService.getById(Number(id), empresaId ?? undefined);
       if (!routineAtualizada) {
         sendNotFound(res, 'Rotina não encontrada após atualização');
         return;
@@ -231,6 +267,12 @@ export class SchedulerController {
   public async execute(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
+      const routine = await ScheduledRoutineService.getById(Number(id), empresaId ?? undefined);
+      if (!routine) {
+        sendNotFound(res, 'Rotina não encontrada');
+        return;
+      }
 
       const resultado = await this.schedulerService.executeRoutineManually(Number(id));
 

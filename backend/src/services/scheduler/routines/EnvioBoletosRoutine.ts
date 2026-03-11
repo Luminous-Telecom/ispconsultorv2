@@ -11,6 +11,7 @@ export interface EnvioBoletosConfig {
 
 export interface EnvioBoletosOptions {
   saas?: boolean;
+  empresa_id?: number;
 }
 
 interface DetalhesEnvio {
@@ -44,11 +45,11 @@ export class EnvioBoletosRoutine {
       let totalEnviados = 0;
       let totalErros = 0;
 
-      const { saas = false } = options;
+      const { saas = false, empresa_id } = options;
 
       if (canais.includes('whatsapp')) {
         try {
-          const resultado = await WhatsAppService.enviarBoletos(configuracoes, { saas });
+          const resultado = await WhatsAppService.enviarBoletos(configuracoes, { saas, empresa_id });
 
           detalhes.whatsapp = {
             enviadas: resultado.mensagensEnviadas,
@@ -69,7 +70,7 @@ export class EnvioBoletosRoutine {
 
       if (canais.includes('email')) {
         try {
-          const resultado = await EmailService.enviarBoletos(configuracoes, { saas });
+          const resultado = await EmailService.enviarBoletos(configuracoes, { saas, empresa_id });
 
           detalhes.email = {
             enviadas: resultado.emailsEnviados,

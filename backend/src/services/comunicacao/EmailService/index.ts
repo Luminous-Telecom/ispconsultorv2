@@ -56,13 +56,15 @@ export class EmailService {
 
   /**
    * @param options.saas - Se true, usa saas_titulos e saas_dados_empresa
+   * @param options.empresa_id - Filtra títulos por empresa (ERP)
    */
-  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { saas?: boolean }): Promise<{
+  static async enviarBoletos(config: ConfiguracoesEnvios, options?: { saas?: boolean; empresa_id?: number }): Promise<{
     sucesso: boolean;
     emailsEnviados: number;
     erros: number;
   }> {
     const saas = options?.saas ?? false;
+    const empresaId = options?.empresa_id;
     try {
       let servidor: ServidorEmail;
       if (saas) {
@@ -110,7 +112,7 @@ export class EmailService {
       ];
 
       for (const envio of envios) {
-        const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo, saas);
+        const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo, saas, empresaId);
         emailsEnviados += resultado.enviadas;
         erros += resultado.erros;
       }
@@ -128,7 +130,8 @@ export class EmailService {
     tipoMensagem: string,
     dias: number,
     tipo: 'antes' | 'mesmo' | 'depois',
-    saas = false
+    saas = false,
+    empresaId?: number
   ): Promise<{ enviadas: number; erros: number }> {
     const mensagem = mensagens.find((msg) => msg.tipo === tipoMensagem);
     if (!mensagem || mensagem.tipo_envio === 'desativado') {
@@ -176,8 +179,16 @@ export class EmailService {
         } as TituloParaEnvio;
       });
     } else {
+      const whereTitulo: Record<string, unknown> = {
+        status: { [Op.in]: ['pendente', 'vencido'] },
+        pago: false,
+        data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia }
+      };
+      if (empresaId != null) {
+        whereTitulo.empresa_id = empresaId;
+      }
       titulos = await Titulo.findAll({
-        where: { status: { [Op.in]: ['pendente', 'vencido'] }, pago: false, data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia } },
+        where: whereTitulo as never,
         include: [
           { model: Cliente, as: 'cliente', required: true, where: { ativo: true, recebe_email: true } },
           { model: Plano, as: 'plano', required: false },

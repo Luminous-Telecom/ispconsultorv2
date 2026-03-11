@@ -153,7 +153,7 @@ export class RoutineExecutionService {
    * @param _routine - Rotina (não utilizado, mas mantido para compatibilidade)
    * @returns Resultado da geração de títulos
    */
-  public async executeGeracaoTitulos(_routine: ScheduledRoutine): Promise<GeracaoTitulosResult> {
+  public async executeGeracaoTitulos(routine: ScheduledRoutine): Promise<GeracaoTitulosResult> {
     const { Contrato: ContratoModel } = await import('../../../models/contratos/Contrato');
     const { Titulo } = await import('../../../models/financeiro/Titulo');
     const { Plano } = await import('../../../models/cadastros/Plano');
@@ -167,11 +167,14 @@ export class RoutineExecutionService {
       const { Cliente } = await import('../../../models/clientes/Cliente');
       const { TipoCobrancaContrato } = await import('../../../models/cadastros/TipoCobrancaContrato');
       
+      const whereContrato: Record<string, unknown> = { status: 'ativo' };
+      if (routine.empresa_id != null) {
+        whereContrato.empresa_id = routine.empresa_id;
+      }
+      
       // Buscar todos os contratos ativos
       const contratos = await ContratoModel.findAll({
-        where: {
-          status: 'ativo'
-        },
+        where: whereContrato,
         include: [
           {
             model: Plano,
@@ -634,7 +637,8 @@ export class RoutineExecutionService {
         config: JSON.stringify(config)
       });
 
-      const resultado = await envioBoletosRoutine.execute(config, { saas });
+      const empresaId = (routine as { empresa_id?: number | null }).empresa_id;
+      const resultado = await envioBoletosRoutine.execute(config, { saas, empresa_id: empresaId ?? undefined });
 
       logger.info('RoutineExecutionService.executeEnvioBoletos - Rotina executada com sucesso', {
         context: 'RoutineExecutionService',
@@ -676,20 +680,26 @@ export class RoutineExecutionService {
    * @param _routine - Rotina (não utilizado, mas mantido para compatibilidade)
    * @returns Resultado da remessa bancária
    */
-  public async executeRemessaBancaria(_routine: AnyRoutine): Promise<RemessaBancariaResult> {
+  public async executeRemessaBancaria(routine: AnyRoutine): Promise<RemessaBancariaResult> {
     const { Titulo: TituloModel } = await import('../../../models/financeiro/Titulo');
     const { Banco } = await import('../../../models/cadastros/Banco');
     const { Cliente } = await import('../../../models/clientes/Cliente');
     const { Plano } = await import('../../../models/cadastros/Plano');
-          const { BancoApiService } = await import('../../bancos/BancoApiService');
+    const { BancoApiService } = await import('../../bancos/BancoApiService');
     
     try {
+      const whereTitulo: Record<string, unknown> = {
+        status: 'pendente',
+        charge_id: null // Apenas títulos que ainda não foram registrados
+      };
+      const empresaId = (routine as { empresa_id?: number | null }).empresa_id;
+      if (empresaId != null) {
+        whereTitulo.empresa_id = empresaId;
+      }
+      
       // Buscar títulos pendentes que ainda não foram registrados no banco (sem charge_id)
       const titulosParaRegistrar = await TituloModel.findAll({
-        where: {
-          status: 'pendente',
-          charge_id: null // Apenas títulos que ainda não foram registrados
-        },
+        where: whereTitulo,
         include: [
           {
             model: Banco,
@@ -834,14 +844,37 @@ export class RoutineExecutionService {
 
   /**
    * Executa a rotina de desbloqueio blockdomi (inativar por data fim de bloqueio)
+   * Só executa se o tenant tiver o módulo blockdomi ativo no plano.
    * @param routine - Rotina com configurações
    * @returns Resultado da execução
    */
   public async executeDesbloquearBlockdomi(routine: ScheduledRoutine): Promise<RoutineExecutionResult> {
     try {
+      const { getModulosDoPlano, tenantTemModulo } = await import('../../saas/PlanoModulosService');
+      const { DadosEmpresa } = await import('../../../models/sistema/DadosEmpresa');
+
+      let empresaId = routine.empresa_id ?? null;
+      if (empresaId == null) {
+        const primeiraEmpresa = await DadosEmpresa.findOne({ attributes: ['id'], order: [['id', 'ASC']] });
+        empresaId = primeiraEmpresa?.id ?? null;
+      }
+      if (empresaId != null) {
+        const modulos = await getModulosDoPlano(empresaId);
+        if (!tenantTemModulo(modulos, 'blockdomi')) {
+          return {
+            success: false,
+            message: 'Módulo blockdomi não está ativo no plano. A rotina de desbloquear domínios só pode ser executada quando o módulo está habilitado.',
+            dominios_inativados: 0,
+            ipv4_inativados: 0,
+            ipv6_inativados: 0,
+            total: 0
+          };
+        }
+      }
+
       const { DesbloquearBlockdomiRoutine } = await import('../routines/DesbloquearBlockdomiRoutine');
       const desbloquearRoutine = new DesbloquearBlockdomiRoutine();
-      const config = routine.configuracao || {};
+      const config = { ...(routine.configuracao || {}), empresa_id: empresaId };
       const resultado = await desbloquearRoutine.execute(config);
       return {
         success: resultado.success,
