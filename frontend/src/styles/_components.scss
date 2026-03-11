@@ -49,6 +49,16 @@
   cursor: grabbing !important;
 }
 
+/* BloqueioAtrasoOverlay: mantém modal centralizado no overlay (override position fixed) */
+.bloqueio-atraso-modal-box.draggable-modal-container-custom {
+  position: relative !important;
+}
+
+.bloqueio-atraso-modal-box .modal-body.draggable-modal-body-custom {
+  padding: 1.5rem !important;
+  align-items: center !important;
+}
+
 /* Container do modal */
 .draggable-modal-container-custom {
   position: fixed !important;

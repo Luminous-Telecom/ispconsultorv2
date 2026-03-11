@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { defaultApiClient } from '@/services/core';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface BloqueioAtrasoData {
   code?: string;
@@ -11,12 +12,15 @@ interface BloqueioAtrasoData {
 }
 
 const BloqueioAtrasoOverlay: React.FC = () => {
+  const { t } = useI18n();
   const [info, setInfo] = useState<BloqueioAtrasoData | null>(null);
+  const [dismissed, setDismissed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [erroBoleto, setErroBoleto] = useState<string | null>(null);
 
   const handleEvent = useCallback((e: CustomEvent<BloqueioAtrasoData>) => {
     setInfo(e.detail ?? null);
+    setDismissed(false);
     setErroBoleto(null);
   }, []);
 
@@ -27,7 +31,7 @@ const BloqueioAtrasoOverlay: React.FC = () => {
     };
   }, [handleEvent]);
 
-  if (!info) return null;
+  if (!info || dismissed) return null;
 
   const tituloId = info.data?.titulo_id;
   const mensagem = info.message ?? 'Acesso bloqueado devido a fatura em atraso. Efetue o pagamento para liberar o uso da plataforma.';
@@ -62,13 +66,26 @@ const BloqueioAtrasoOverlay: React.FC = () => {
         backgroundColor: 'rgba(0,0,0,0.7)',
       }}
     >
-      <div className="card shadow-lg" style={{ maxWidth: '480px', margin: '1rem' }}>
-        <div className="card-body text-center p-4">
+      <div
+        className="bloqueio-atraso-modal-box modal-content draggable-modal-container draggable-modal-container-custom"
+        style={{ maxWidth: '480px', margin: '1rem' }}
+      >
+        <div className="modal-header-draggable draggable-modal-header-custom">
+          <div className="d-flex align-items-center justify-content-center position-relative w-100">
+            <h5 className="modal-title mb-0 draggable-modal-title-custom">Acesso Bloqueado</h5>
+            <button
+              type="button"
+              className="btn-close position-absolute end-0 top-50 translate-middle-y"
+              onClick={() => setDismissed(true)}
+              aria-label={t('ui.close')}
+            />
+          </div>
+        </div>
+        <div className="modal-body draggable-modal-body-custom text-center">
           <div className="mb-3">
             <span className="bi bi-exclamation-triangle-fill text-warning" style={{ fontSize: '3rem' }} />
           </div>
-          <h5 className="card-title text-danger mb-2">Acesso Bloqueado</h5>
-          <p className="card-text text-muted mb-4">{mensagem}</p>
+          <p className="text-muted mb-4">{mensagem}</p>
           {podePagar ? (
             <>
               <button
