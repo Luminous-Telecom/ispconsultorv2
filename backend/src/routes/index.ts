@@ -11,7 +11,6 @@ import dashboardRoutes from './dashboardRoutes';
 import webhookRoutes from './webhookRoutes';
 import schedulerRoutes from './schedulerRoutes';
 import workerRoutes from './workerRoutes';
-import parametroRoutes from './parametroRoutes';
 import parametrosRoutes from './parametrosRoutes';
 import contratoRoutes from './contratos';
 import servidorEmailRoutes from './servidorEmailRoutes';
@@ -76,7 +75,6 @@ const routes = [
     { path: '/api/dashboard', route: dashboardRoutes },
     { path: '/api/scheduler', route: schedulerRoutes },
     { path: '/api/workers', route: workerRoutes },
-    { path: '/api/parametro', route: parametroRoutes },
     { path: '/api/parametros', route: parametrosRoutes },
     { path: '/boleto', route: boletoRoutes },
     

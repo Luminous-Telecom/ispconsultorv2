@@ -35,7 +35,6 @@ import { TipoCobrancaContrato } from './cadastros/TipoCobrancaContrato';
 // Sistema
 import { DadosEmpresa } from './sistema/DadosEmpresa';
 import { ScheduledRoutine } from './sistema/ScheduledRoutine';
-import Parametro from './sistema/Parametro';
 import Parametros from './sistema/Parametros';
 
 // Comunicação
@@ -379,7 +378,6 @@ export {
   AssinaturaDigital,
   ClienteArquivo,
   AssinaturaDigitalProvider,
-  Parametro,
   Parametros,
   Fornecedor,
   ContaPagar,

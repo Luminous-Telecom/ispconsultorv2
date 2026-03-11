@@ -91,11 +91,10 @@ export class ErrorHandler {
           const lastLoginTime401 = sessionStorage.getItem('last_login_time');
           const timeSinceLogin401 = lastLoginTime401 ? Date.now() - parseInt(lastLoginTime401, 10) : Infinity;
           
-          const isParametroRequest = requestUrl.includes('parametro/');
           const isTestAuthRequest = requestUrl.includes('nfse-config/test-auth');
           const isDomainVersionRequest = requestUrl.includes('domain/version');
           
-          if (currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000 && !isParametroRequest && !isTestAuthRequest && !isDomainVersionRequest) {
+          if (currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000 && !isTestAuthRequest && !isDomainVersionRequest) {
             sessionStorage.removeItem('auth_session');
             setTimeout(() => {
               if (window.location.pathname !== '/login' && window.location.pathname !== '/') {

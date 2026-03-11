@@ -210,12 +210,6 @@
 ### Parâmetros do Sistema
 | Método | Rota |
 |--------|------|
-| GET | `/api/parametro` |
-| PUT | `/api/parametro` |
-| POST | `/api/parametro/reset-defaults` |
-| GET | `/api/parametro/categoria/:categoria` |
-| GET | `/api/parametro/:chave` |
-| PUT | `/api/parametro/:chave` |
 | GET | `/api/parametros` |
 | PUT | `/api/parametros` |
 
