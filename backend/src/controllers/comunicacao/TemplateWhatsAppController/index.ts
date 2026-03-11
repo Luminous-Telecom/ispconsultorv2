@@ -1,5 +1,6 @@
 import { Request, Response as ExpressResponse } from 'express';
 import { TemplateWhatsAppService } from '../../../services/comunicacao/TemplateWhatsAppService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendNotFound } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
@@ -47,6 +48,11 @@ export class TemplateWhatsAppController {
         ativo: ativo !== false,
         empresa_id: empresaId,
       });
+      try {
+        await registrarCriacao(req as AuthenticatedRequest, 'TemplateWhatsApp', template.id, (template.get ? template.get({ plain: true }) : template) as unknown as Record<string, unknown>);
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       sendSuccess(res, template, 'Template criado com sucesso', 201);
     } catch (error) {
       const err = error as Error;
@@ -76,8 +82,14 @@ export class TemplateWhatsAppController {
       if (header_document != null) updates.header_document = !!header_document;
       if (ativo != null) updates.ativo = !!ativo;
 
+      const dadosAnteriores = template.get ? template.get({ plain: true }) : template;
       await TemplateWhatsAppService.update(id, updates);
       const updated = await TemplateWhatsAppService.getById(id);
+      try {
+        await registrarAtualizacao(req as AuthenticatedRequest, 'TemplateWhatsApp', id, dadosAnteriores as unknown as Record<string, unknown>, (updated?.get ? updated.get({ plain: true }) : updated) as unknown as Record<string, unknown>);
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       sendSuccess(res, updated, 'Template atualizado com sucesso');
     } catch (error) {
       const err = error as Error;
@@ -97,7 +109,13 @@ export class TemplateWhatsAppController {
         sendNotFound(res, 'Template não encontrado');
         return;
       }
+      const dadosAnteriores = template.get ? template.get({ plain: true }) : template;
       await TemplateWhatsAppService.delete(id);
+      try {
+        await registrarExclusao(req as AuthenticatedRequest, 'TemplateWhatsApp', id, dadosAnteriores as unknown as Record<string, unknown>);
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       sendSuccess(res, { id }, 'Template removido com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao remover template', 500, true);

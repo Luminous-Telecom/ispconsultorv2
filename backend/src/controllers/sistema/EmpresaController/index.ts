@@ -1,12 +1,9 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
 import { EmpresaService } from '../../../services/sistema/EmpresaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
-import { AuthTokenPayload } from '../../../types/auth';
-
-interface AuthenticatedRequest extends Request {
-  user?: AuthTokenPayload | string;
-}
+import { AuthTokenPayload, AuthenticatedRequest } from '../../../types/auth';
 
 const isSuperAdmin = (req: Request): boolean => {
   const user = (req as AuthenticatedRequest).user;
@@ -85,6 +82,11 @@ export class EmpresaController {
       const cnpjExiste = await EmpresaService.existsByCnpj(value.cnpj);
       if (cnpjExiste) { sendValidationError(res, 'Já existe uma empresa com este CNPJ'); return; }
       const empresa = await EmpresaService.create(value);
+      try {
+        await registrarCriacao(req as AuthenticatedRequest, 'Empresa', empresa.id, empresa.get({ plain: true }));
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       sendSuccess(res, empresa, 'Empresa criada com sucesso', 201);
     } catch (error) {
       sendError(res, error, 'Erro ao criar empresa', 500, true);
@@ -109,7 +111,14 @@ export class EmpresaController {
         const cnpjExiste = await EmpresaService.existsByCnpj(value.cnpj, id);
         if (cnpjExiste) { sendValidationError(res, 'Já existe outra empresa com este CNPJ'); return; }
       }
+      const empresaAntiga = await EmpresaService.getById(id);
+      const dadosAnteriores = empresaAntiga ? empresaAntiga.get({ plain: true }) : {};
       const empresa = await EmpresaService.update(id, value);
+      try {
+        await registrarAtualizacao(req as AuthenticatedRequest, 'Empresa', empresa.id, dadosAnteriores, empresa.get({ plain: true }));
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       sendSuccess(res, empresa, 'Empresa atualizada com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao atualizar empresa', 500, true);
@@ -119,7 +128,19 @@ export class EmpresaController {
   static async destroy(req: Request, res: Response): Promise<void> {
     try {
       if (!isSuperAdmin(req)) { sendForbidden(res, 'Acesso restrito a superadmin'); return; }
-      await EmpresaService.delete(parseInt(req.params.id));
+      const id = parseInt(req.params.id);
+      const empresaAntiga = await EmpresaService.getById(id);
+      if (empresaAntiga) {
+        const dadosAnteriores = empresaAntiga.get({ plain: true });
+        await EmpresaService.delete(id);
+        try {
+          await registrarExclusao(req as AuthenticatedRequest, 'Empresa', id, dadosAnteriores);
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
+      } else {
+        await EmpresaService.delete(id);
+      }
       sendSuccess(res, undefined, 'Empresa excluída com sucesso');
     } catch (error) {
       const msg = error instanceof Error ? error.message : '';

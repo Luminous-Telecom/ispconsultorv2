@@ -33,6 +33,8 @@ const ROUTE_ENTITY_MAP: Record<string, string> = {
   '/api/scheduler': 'ScheduledRoutine',
   '/api/fornecedores': 'Fornecedor',
   '/api/contas-pagar': 'ContaPagar',
+  '/api/empresas': 'Empresa',
+  '/api/templates-whatsapp': 'TemplateWhatsApp',
 };
 
 /**
