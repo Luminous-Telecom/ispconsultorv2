@@ -25,26 +25,39 @@ export interface ContextoSaas {
   empresa_id: number;
 }
 
+/** Contexto para ERP: empresa_id para isolar dados por empresa */
+export interface ContextoErp {
+  empresa_id?: number;
+}
+
+/** Contexto passado aos serviços de envio (SaaS ou ERP) */
+export type ContextoHistorico = ContextoSaas | ContextoErp;
+
 /**
  * Registra mensagem no histórico (adm_mensagens_historico ou saas_mensagens_historico)
+ * Usa empresa_id do contexto para isolar por empresa (SaaS ou ERP).
  */
 export async function registrarMensagemHistorico(
   dados: DadosRegistroHistorico,
-  contexto?: ContextoSaas
+  contexto?: ContextoHistorico
 ): Promise<void> {
   try {
-    if (contexto?.saas && contexto.empresa_id) {
+    const empresaId = contexto?.empresa_id;
+    if (contexto && 'saas' in contexto && contexto.saas && empresaId) {
       await SaasMensagemHistorico.create({
-        empresa_id: contexto.empresa_id,
+        empresa_id: empresaId,
         ...dados,
       });
     } else {
-      await MensagemHistorico.create(dados);
+      await MensagemHistorico.create({
+        ...dados,
+        ...(empresaId != null && { empresa_id: empresaId }),
+      });
     }
   } catch (error) {
     logger.error('Erro ao registrar mensagem no histórico:', {
       context: 'RegistroMensagemHistoricoService',
-      saas: !!contexto?.saas,
+      saas: !!(contexto && 'saas' in contexto && contexto.saas),
       error: error instanceof Error ? error.message : String(error),
     });
     throw error;

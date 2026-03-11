@@ -1,7 +1,7 @@
 import { Op } from 'sequelize';
 import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail';
 import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
-import { registrarMensagemHistorico } from '../RegistroMensagemHistoricoService';
+import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Plano } from '../../../models/cadastros/Plano';
@@ -264,9 +264,12 @@ export class EmailService {
             logger.error('Falha ao gerar PDF do boleto para email');
           }
         }
+        const empresaIdHistorico = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? empresaId;
         const contextoSaas = saas && (titulo as { empresa_id?: number }).empresa_id
           ? { saas: true as const, empresa_id: (titulo as { empresa_id: number }).empresa_id }
-          : undefined;
+          : empresaIdHistorico != null
+            ? { empresa_id: empresaIdHistorico }
+            : undefined;
         const enviou = await this.enviarEmail(
           servidor as ServidorEmail,
           cliente.email,
@@ -306,7 +309,7 @@ export class EmailService {
     clienteNome?: string,
     clienteEmail?: string,
     clienteTelefone?: string,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     try {
       const transporter = nodemailer.createTransport({

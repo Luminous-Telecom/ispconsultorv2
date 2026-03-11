@@ -159,6 +159,7 @@ export class MensagemHistoricoController {
   static async show(req: AuthenticatedRequest, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const mensagem = await MensagemHistorico.findByPk(id, {
         include: [
@@ -174,6 +175,14 @@ export class MensagemHistoricoController {
       if (!mensagem) {
         sendError(res, null, 'Mensagem não encontrada', 404);
         return;
+      }
+
+      if (empresaId != null) {
+        const msgEmpresaId = (mensagem as { empresa_id?: number | null }).empresa_id;
+        if (msgEmpresaId != null && msgEmpresaId !== empresaId) {
+          sendError(res, null, 'Mensagem não encontrada', 404);
+          return;
+        }
       }
 
       sendSuccess(res, mensagem, 'Mensagem encontrada');

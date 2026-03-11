@@ -1,5 +1,5 @@
 import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
-import { registrarMensagemHistorico } from '../RegistroMensagemHistoricoService';
+import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
 import { registrarMensagemElasticsearch } from '../../elasticsearch/MensagemHistoricoElasticsearchService';
@@ -24,7 +24,7 @@ export class WhatsAppSenderService {
     servidor: ServidorWhatsApp,
     telefone: string,
     mensagem: string,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     if (servidor.tipo_api === 'whatsapp_cloud') {
       return WhatsAppCloudService.enviarTexto(servidor, telefone, mensagem, contextoSaas);
@@ -44,7 +44,7 @@ export class WhatsAppSenderService {
     descricao?: string,
     entidadeTipo?: string,
     entidadeId?: number,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     try {
       if (servidor.tipo_api === 'whatsapp_cloud') {
@@ -86,7 +86,7 @@ export class WhatsAppSenderService {
     clienteNome?: string,
     clienteEmail?: string,
     clienteTelefone?: string,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     try {
       const controller = new AbortController();

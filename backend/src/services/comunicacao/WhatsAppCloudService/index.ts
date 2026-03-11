@@ -1,5 +1,5 @@
 import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp';
-import { registrarMensagemHistorico } from '../RegistroMensagemHistoricoService';
+import { registrarMensagemHistorico, type ContextoHistorico } from '../RegistroMensagemHistoricoService';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { logger } from '../../../utils/logger';
 import { registrarMensagemElasticsearch } from '../../elasticsearch/MensagemHistoricoElasticsearchService';
@@ -73,7 +73,7 @@ export class WhatsAppCloudService {
     servidor: ServidorWhatsApp,
     telefone: string,
     texto: string,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     try {
       if (!servidor.whatsapp_cloud_token || !servidor.whatsapp_cloud_phone_number_id) {
@@ -214,7 +214,7 @@ export class WhatsAppCloudService {
     components?: WhatsAppCloudTemplateComponent[],
     cliente?: { nome_fantasia?: string; razao_social?: string } | null,
     titulo?: { valor: number; data_vencimento: Date; numero_titulo?: string } | null,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     try {
       if (!servidor.whatsapp_cloud_token || !servidor.whatsapp_cloud_phone_number_id) {
@@ -611,7 +611,7 @@ export class WhatsAppCloudService {
     documentUrlOrBase64: string,
     filename = 'boleto.pdf',
     caption?: string,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     try {
       if (!servidor.whatsapp_cloud_token || !servidor.whatsapp_cloud_phone_number_id) {

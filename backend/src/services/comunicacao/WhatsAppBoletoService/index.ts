@@ -12,6 +12,7 @@ import { WhatsAppSenderService } from '../WhatsAppSenderService';
 import { WhatsAppTemplateService } from '../WhatsAppTemplateService';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
+import type { ContextoHistorico } from '../RegistroMensagemHistoricoService';
 
 interface ConfiguracoesEnvios {
   antesVencimento?: number[];
@@ -259,9 +260,12 @@ export class WhatsAppBoletoService {
         const tituloParaEnvio = saas
           ? ({ ...(typeof titulo.get === 'function' ? (titulo as { get: (o: { plain: boolean }) => Record<string, unknown> }).get({ plain: true }) : titulo), cliente, contrato, banco: (titulo as unknown as { banco?: unknown }).banco, plano: (titulo as unknown as { plano?: unknown }).plano } as unknown as Titulo)
           : titulo;
+        const empresaIdHistorico = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? empresaId;
         const contextoSaas = saas && (titulo as { empresa_id?: number }).empresa_id
           ? { saas: true as const, empresa_id: (titulo as { empresa_id: number }).empresa_id }
-          : undefined;
+          : empresaIdHistorico != null
+            ? { empresa_id: empresaIdHistorico }
+            : undefined;
         const resultado = await this.enviarParaTitulo(mensagem, servidor, tituloParaEnvio as Titulo, cliente, contrato, contextoSaas);
 
         logger.info('WhatsAppBoletoService.processarEnvio - Resultado do envio', {
@@ -316,7 +320,7 @@ export class WhatsAppBoletoService {
     titulo: Titulo,
     cliente: Cliente,
     contrato: Contrato | null | undefined,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     const telefone = this.formatarTelefone(cliente.telefone!);
     const baseUrl = undefined;
@@ -339,7 +343,7 @@ export class WhatsAppBoletoService {
     cliente: Cliente,
     contrato: Contrato | null | undefined,
     baseUrl: undefined,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     const templateInfo = TemplateWhatsAppService.getTemplateInfoForMensagem(mensagem);
     if (!templateInfo) {
@@ -391,7 +395,7 @@ export class WhatsAppBoletoService {
     cliente: Cliente,
     contrato: Contrato | null | undefined,
     baseUrl: undefined,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<boolean> {
     const mensagemTexto = mensagem.mensagem_padrao || '';
     if (!mensagemTexto) {
@@ -436,7 +440,7 @@ export class WhatsAppBoletoService {
     cliente: Cliente,
     contrato: Contrato | null | undefined,
     titulo: Titulo,
-    contextoSaas?: { saas: true; empresa_id: number }
+    contextoSaas?: ContextoHistorico
   ): Promise<void> {
     const interacoes = [mensagem.interacao1, mensagem.interacao2, mensagem.interacao3];
 
@@ -522,6 +526,7 @@ export class WhatsAppBoletoService {
       const baseUrl = undefined;
       const contrato: Contrato | null | undefined = titulo.contrato_id ? { id: titulo.contrato_id } as Contrato : undefined;
       const telefone = this.formatarTelefone(cliente.telefone);
+      const contextoHistorico = empresaId != null ? { empresa_id: empresaId } : undefined;
 
       if (servidor.tipo_api === 'whatsapp_cloud' && temTemplate) {
         const templateInfo = TemplateWhatsAppService.getTemplateInfoForMensagem(mensagem);
@@ -571,7 +576,8 @@ export class WhatsAppBoletoService {
           templateInfo.language,
           components,
           { nome_fantasia: cliente.nome_fantasia || undefined, razao_social: cliente.razao_social || undefined },
-          titulo
+          titulo,
+          contextoHistorico
         );
         logger.info('[Recibo WhatsApp] Envio via Cloud API concluído', {
           titulo_id: titulo.id,
@@ -597,14 +603,14 @@ export class WhatsAppBoletoService {
         const { ReciboPDFService } = await import('../../titulos/ReciboPDFService');
         const base64Pdf = await ReciboPDFService.gerarReciboBase64({ titulo, cliente, baseUrl: undefined });
         if (base64Pdf) {
-          const enviou = await WhatsAppSenderService.enviarPdfBase64(servidor, telefone, base64Pdf, msg);
+          const enviou = await WhatsAppSenderService.enviarPdfBase64(servidor, telefone, base64Pdf, msg, undefined, undefined, contextoHistorico);
           logger.info('[Recibo WhatsApp] Envio PDF via Evolution concluído', { titulo_id: titulo.id, sucesso: enviou });
           return enviou;
         }
         logger.warn('Falha ao gerar PDF do recibo para WhatsApp, enviando só texto', { titulo_id: titulo.id });
       }
 
-      const enviou = await WhatsAppSenderService.enviarTexto(servidor, telefone, msg);
+      const enviou = await WhatsAppSenderService.enviarTexto(servidor, telefone, msg, contextoHistorico);
       logger.info('[Recibo WhatsApp] Envio via Evolution concluído', { titulo_id: titulo.id, sucesso: enviou });
       return enviou;
     } catch (error) {
