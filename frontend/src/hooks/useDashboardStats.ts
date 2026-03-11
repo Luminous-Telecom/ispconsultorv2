@@ -18,6 +18,8 @@ interface DashboardStats {
   contratosInativos: number;
   contratosSuspensos: number;
   contratosIsentos: number;
+  contratosBloqueados?: number;
+  contratosEmAtraso?: number;
   
   // Métricas financeiras
   receitaPrevistaPeriodo: number;
@@ -54,8 +56,10 @@ export const useDashboardStats = (dashboardData: DashboardData | undefined): Das
     const planosAtivos = planos.filter(p => p.status === 'ativo').length;
     const planosInativos = totalPlanos - planosAtivos;
 
-    // Estatísticas de contratos
-    const contratosAtivos = contratosTodos.filter(c => c.status === 'ativo').length;
+    // Estatísticas de contratos (SaaS: usa ativos ajustados para não duplicar com bloqueados/em atraso)
+    const contratosAtivos = dashboardData?.contratosAtivosSaaS != null
+      ? dashboardData.contratosAtivosSaaS
+      : contratosTodos.filter(c => c.status === 'ativo').length;
     const contratosInativos = contratosTodos.filter(c => c.status === 'inativo').length;
     const contratosSuspensos = contratosTodos.filter(c => c.status === 'suspenso').length;
     const contratosIsentos = contratosTodos.filter(c => c.isento_mensalidade === true).length;
@@ -86,6 +90,8 @@ export const useDashboardStats = (dashboardData: DashboardData | undefined): Das
       contratosInativos,
       contratosSuspensos,
       contratosIsentos,
+      contratosBloqueados: dashboardData?.contratosBloqueados,
+      contratosEmAtraso: dashboardData?.contratosEmAtraso,
       receitaPrevistaPeriodo,
       receitaPagaPeriodo,
       receitaPendentePeriodo,
@@ -100,6 +106,9 @@ export const useDashboardStats = (dashboardData: DashboardData | undefined): Das
     contratosTodos,
     titulosTodos,
     dashboardData?.resumoPeriodo,
+    dashboardData?.contratosBloqueados,
+    dashboardData?.contratosEmAtraso,
+    dashboardData?.contratosAtivosSaaS,
   ]);
 };
 

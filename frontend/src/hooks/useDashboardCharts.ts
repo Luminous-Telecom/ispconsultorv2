@@ -130,12 +130,24 @@ export const useDashboardCharts = (
     { label: t('status.pending'), value: 100 - stats.taxaPagamento, color: '#3b82f6', filterValue: 'pendente,vencido' }
   ], [stats.taxaPagamento, t]);
 
-  const contratosChartData = useMemo(() => [
-    { label: t('status.active'), value: stats.contratosAtivos, color: '#10b981', filterValue: 'ativo' },
-    { label: t('status.inactive'), value: stats.contratosInativos, color: '#ef4444', filterValue: 'inativo' },
-    { label: t('status.suspended'), value: stats.contratosSuspensos, color: '#f97316', filterValue: 'suspenso' },
-    { label: t('status.exempt'), value: stats.contratosIsentos, color: '#64748b', filterValue: 'isento' }
-  ], [stats.contratosAtivos, stats.contratosInativos, stats.contratosSuspensos, stats.contratosIsentos, t]);
+  const contratosChartData = useMemo(() => {
+    const isSaas = stats.contratosBloqueados !== undefined || stats.contratosEmAtraso !== undefined;
+    const items: ChartDataItem[] = [
+      { label: t('status.active'), value: stats.contratosAtivos, color: '#10b981', filterValue: 'ativo' },
+      { label: t('status.inactive'), value: stats.contratosInativos, color: '#94a3b8', filterValue: 'inativo' },
+    ];
+    if (!isSaas) {
+      items.push({ label: t('status.suspended'), value: stats.contratosSuspensos, color: '#f97316', filterValue: 'suspenso' });
+    }
+    items.push({ label: t('status.exempt'), value: stats.contratosIsentos, color: '#64748b', filterValue: 'isento' });
+    if ((stats.contratosBloqueados ?? 0) > 0) {
+      items.push({ label: t('status.blocked'), value: stats.contratosBloqueados!, color: '#dc2626', filterValue: 'bloqueado' });
+    }
+    if ((stats.contratosEmAtraso ?? 0) > 0) {
+      items.push({ label: t('status.inArrears'), value: stats.contratosEmAtraso!, color: '#f59e0b', filterValue: 'em_atraso' });
+    }
+    return items;
+  }, [stats.contratosAtivos, stats.contratosInativos, stats.contratosSuspensos, stats.contratosIsentos, stats.contratosBloqueados, stats.contratosEmAtraso, t]);
 
   const ticketMedioChartData = useMemo(() => [
     { label: 'Ticket Médio', value: stats.ticketMedio, color: '#8b5cf6' }

@@ -32,6 +32,9 @@ export interface DashboardData {
   contratosTodos?: Contrato[]; // TODOS os contratos para gráficos
   contratosAtivosTodos?: Contrato[]; // Todos os contratos ativos para gráfico "Clientes por Plano"
   clientesPorTipoPlano?: Array<{ tipo_servico: string; quantidade: number }>; // Qtd clientes (distintos) por tipo de plano
+  contratosBloqueados?: number; // SaaS: empresas bloqueadas por atraso
+  contratosEmAtraso?: number; // SaaS: empresas em atraso (não bloqueadas)
+  contratosAtivosSaaS?: number; // SaaS: ativos excluindo bloqueados/em atraso (evita duplicar)
   titulos: Titulo[]; // Títulos do período
   titulosTodos?: Titulo[]; // TODOS os títulos para gráficos
   receitaUltimosMeses: DashboardChart;

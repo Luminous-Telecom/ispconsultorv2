@@ -4,6 +4,7 @@ import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasPlano } from '../../../models/saas/SaasPlano';
 import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { SaasTitulo } from '../../../models/saas/SaasTitulo';
+import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
 import { getStartOfLocalDay } from '../../../utils/dateUtils';
 
@@ -45,7 +46,7 @@ export class SaasDashboardService {
     const fimPeriodo = new Date(parsedEnd);
     fimPeriodo.setHours(23, 59, 59, 999);
 
-    const [empresas, planos, contratos, contratosTodos, titulos, receitaUltimosMeses, aReceberPeriodo, recebidosPeriodo, clientesPorTipoPlano, resumoPeriodo, contasPagarUltimosMeses] = await Promise.all([
+    const [empresas, planos, contratos, contratosTodos, titulos, receitaUltimosMeses, aReceberPeriodo, recebidosPeriodo, clientesPorTipoPlano, resumoPeriodo, contasPagarUltimosMeses, statusContratos] = await Promise.all([
       this.getEmpresasCompat(),
       this.getPlanosCompat(),
       this.getContratosCompat(inicioPeriodo, fimPeriodo),
@@ -57,6 +58,7 @@ export class SaasDashboardService {
       this.getClientesPorTipoPlano(),
       this.getResumoFinanceiroPeriodo(parsedStart, parsedEnd),
       this.getContasPagarUltimos12Meses(),
+      this.getStatusContratosSaaS(),
     ]);
 
     return {
@@ -64,6 +66,9 @@ export class SaasDashboardService {
         totalClientes: empresas.length,
         planosAtivos: planos.filter(p => (p as { status?: string }).status === 'ativo').length,
       },
+      contratosBloqueados: statusContratos.bloqueados,
+      contratosEmAtraso: statusContratos.emAtraso,
+      contratosAtivosSaaS: statusContratos.contratosAtivos,
       titulosRecentes: [],
       titulosVencidos: [],
       clientes: empresas.filter(e => {
@@ -387,5 +392,44 @@ export class SaasDashboardService {
       data.push(0); // SaaS não tem contas a pagar agregadas
     }
     return { labels, data };
+  }
+
+  /** Retorna contagens para o gráfico de contratos (evita duplicar ativo+bloqueado) */
+  private static async getStatusContratosSaaS(): Promise<{ bloqueados: number; emAtraso: number; contratosAtivos: number }> {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const empresasBloqueadas = await SaasDadosEmpresa.findAll({
+      where: { bloqueado_por_atraso: true },
+      attributes: ['id'],
+    });
+    const empresasBloqueadasIds = new Set(empresasBloqueadas.map(e => e.id));
+
+    const empresasEmAtrasoRows = await sequelize.query<{ empresa_id: number }>(
+      `SELECT DISTINCT empresa_id FROM saas_titulos
+       WHERE pago = false AND status IN ('pendente', 'vencido') AND data_vencimento < :hoje`,
+      { replacements: { hoje }, type: QueryTypes.SELECT }
+    );
+    const empresaIdsEmAtraso = new Set(
+      (Array.isArray(empresasEmAtrasoRows) ? empresasEmAtrasoRows : [])
+        .map(r => r.empresa_id)
+        .filter(id => !empresasBloqueadasIds.has(id))
+    );
+
+    const empresasExcluidas = [...empresasBloqueadasIds, ...empresaIdsEmAtraso];
+    const contratosAtivos = empresasExcluidas.length > 0
+      ? await SaasContrato.count({
+          where: {
+            status: 'ativo',
+            empresa_id: { [Op.notIn]: empresasExcluidas },
+          },
+        })
+      : await SaasContrato.count({ where: { status: 'ativo' } });
+
+    return {
+      bloqueados: empresasBloqueadasIds.size,
+      emAtraso: empresaIdsEmAtraso.size,
+      contratosAtivos,
+    };
   }
 }
