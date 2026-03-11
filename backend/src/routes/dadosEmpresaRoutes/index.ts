@@ -4,41 +4,47 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { resolveArquivosPath } from '../../utils/pathUtils';
+import { getEmpresaIdOrNull } from '../../utils/tenantUtils';
 
 const router = Router();
 
-// Configuração do multer para upload de logo
-const uploadDir = resolveArquivosPath('empresa');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+const baseUploadDir = resolveArquivosPath('empresa');
+if (!fs.existsSync(baseUploadDir)) {
+  fs.mkdirSync(baseUploadDir, { recursive: true });
 }
 
-// Storage para logo - sempre usa o mesmo nome para substituir o arquivo antigo
+// Storage para logo - pasta por empresa_id para multi-tenant
 const logoStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
+  destination: (req, _file, cb) => {
+    const empresaId = getEmpresaIdOrNull(req);
+    const dir = path.join(baseUploadDir, String(empresaId ?? 'default'));
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
   },
-  filename: (_req, _file, cb) => {
-    // Sempre usar o mesmo nome para substituir o arquivo antigo
-    cb(null, 'logo.png');
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.png';
+    cb(null, `logo${ext}`);
   }
 });
 
-// Storage para assinatura - sempre usa o mesmo nome para substituir o arquivo antigo
+// Storage para assinatura - pasta por empresa_id para multi-tenant
 const assinaturaStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
+  destination: (req, _file, cb) => {
+    const empresaId = getEmpresaIdOrNull(req);
+    const dir = path.join(baseUploadDir, String(empresaId ?? 'default'));
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
   },
-  filename: (_req, _file, cb) => {
-    // Sempre usar o mesmo nome para substituir o arquivo antigo
-    cb(null, 'assinatura.png');
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.png';
+    cb(null, `assinatura${ext}`);
   }
 });
 
 // Storage genérico (mantido para compatibilidade)
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
+    cb(null, baseUploadDir);
   },
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);

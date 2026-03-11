@@ -14,6 +14,7 @@ import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
+import path from 'path';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 
@@ -316,9 +317,10 @@ export class DadosEmpresaController {
         return;
       }
 
-      // Sempre usar o mesmo caminho para substituir o arquivo antigo
       const empresaId = getEmpresaIdOrNull(req);
-      const filePath = `/arquivos/empresa/logo.png`;
+      const subdir = String(empresaId ?? 'default');
+      const ext = path.extname(req.file.originalname || '') || '.png';
+      const filePath = `/arquivos/empresa/${subdir}/logo${ext}`;
       let dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
 
       if (!dadosEmpresa) {
@@ -346,8 +348,7 @@ export class DadosEmpresaController {
               ? logoPath.substring('arquivos/'.length).split('/')
               : logoPath.split('/');
             const oldLogoPath = resolveArquivosPath(...pathParts);
-            // Só deletar se for um arquivo diferente do novo
-            if (fs.existsSync(oldLogoPath) && !oldLogoPath.endsWith('logo.png')) {
+            if (fs.existsSync(oldLogoPath) && oldLogoPath !== req.file.path) {
               fs.unlinkSync(oldLogoPath);
             }
           } catch (err) {
@@ -432,28 +433,26 @@ export class DadosEmpresaController {
         return;
       }
 
-      // Sempre usar o mesmo caminho para substituir o arquivo antigo
       const empresaId = getEmpresaIdOrNull(req);
-      const filePath = `/arquivos/empresa/assinatura.png`;
+      const subdir = String(empresaId ?? 'default');
+      const ext = path.extname(req.file.originalname || '') || '.png';
+      const filePath = `/arquivos/empresa/${subdir}/assinatura${ext}`;
       let dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
 
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), responsavel_assinatura: filePath });
       } else {
-        // Deletar assinatura antiga se existir (pode ter nome diferente)
         if (dadosEmpresa.responsavel_assinatura) {
           try {
             const fs = require('fs');
             const assinaturaPath = dadosEmpresa.responsavel_assinatura.startsWith('/') 
               ? dadosEmpresa.responsavel_assinatura.substring(1)
               : dadosEmpresa.responsavel_assinatura;
-            // Remover prefixo 'arquivos/' e usar resolveArquivosPath
             const pathParts = assinaturaPath.startsWith('arquivos/') 
               ? assinaturaPath.substring('arquivos/'.length).split('/')
               : assinaturaPath.split('/');
             const oldAssinaturaPath = resolveArquivosPath(...pathParts);
-            // Só deletar se for um arquivo diferente do novo
-            if (fs.existsSync(oldAssinaturaPath) && !oldAssinaturaPath.endsWith('assinatura.png')) {
+            if (fs.existsSync(oldAssinaturaPath) && oldAssinaturaPath !== req.file.path) {
               fs.unlinkSync(oldAssinaturaPath);
             }
           } catch (err) {
