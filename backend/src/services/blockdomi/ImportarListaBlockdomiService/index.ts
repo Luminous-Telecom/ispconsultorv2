@@ -13,6 +13,7 @@ export interface ImportarListaPayload {
   link_oficio_anatel?: string | null;
   link_oficio_justica?: string | null;
   link_planilha_dominios?: string | null;
+  empresa_id?: number | null;
 }
 
 export interface ImportarListaResult {
@@ -37,6 +38,7 @@ export class ImportarListaBlockdomiService {
       link_oficio_anatel: payload.link_oficio_anatel ?? null,
       link_oficio_justica: payload.link_oficio_justica ?? null,
       link_planilha_dominios: payload.link_planilha_dominios ?? null,
+      empresa_id: payload.empresa_id ?? null,
       versaoId: versaoLista.id
     };
 

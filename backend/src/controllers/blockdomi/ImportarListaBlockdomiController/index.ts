@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ImportarListaBlockdomiService } from '../../../services/blockdomi/ImportarListaBlockdomiService';
 import { VersaoBlockdomiService } from '../../../services/blockdomi/VersaoBlockdomiService';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { logger } from '../../../utils/logger';
 
 export class ImportarListaBlockdomiController {
@@ -44,7 +45,8 @@ export class ImportarListaBlockdomiController {
         data_fim_bloqueio: data_fim_bloqueio ?? null,
         link_oficio_anatel: link_oficio_anatel ?? null,
         link_oficio_justica: link_oficio_justica ?? null,
-        link_planilha_dominios: link_planilha_dominios ?? null
+        link_planilha_dominios: link_planilha_dominios ?? null,
+        empresa_id: getEmpresaIdOrNull(req) ?? null
       });
 
       const parts = [`Lista versão ${result.versao_lista}`];
