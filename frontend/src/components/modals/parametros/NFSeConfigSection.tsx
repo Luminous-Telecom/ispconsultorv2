@@ -34,7 +34,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
     portal_nacional_ambiente: 'HOMOLOGACAO' as 'HOMOLOGACAO' | 'PRODUCAO',
     asaas_api_key: '',                 // sempre vazio; envio só se usuário digitar nova chave
     asaas_sandbox: false,
-    provider: 'PORTAL_NACIONAL' as 'PORTAL_NACIONAL' | 'ASAAS',
+    provider: 'ASAAS' as 'PORTAL_NACIONAL' | 'ASAAS',
     has_asaas_api_key: false,
     has_portal_nacional_password: false,
   });
@@ -71,7 +71,7 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
         portal_nacional_ambiente: configData.portal_nacional_ambiente || 'HOMOLOGACAO',
         asaas_api_key: '',
         asaas_sandbox: configData.asaas_sandbox || false,
-        provider: configData.provider || 'PORTAL_NACIONAL',
+        provider: configData.provider === 'PORTAL_NACIONAL' ? 'ASAAS' : (configData.provider || 'ASAAS'),
         has_asaas_api_key: configData.has_asaas_api_key ?? false,
         has_portal_nacional_password: configData.has_portal_nacional_password ?? false,
       });
