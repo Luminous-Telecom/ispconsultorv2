@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
@@ -34,7 +34,8 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   const { t } = useI18n();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
-  const [actionLoading, setActionLoading] = useState<{ delete?: string; download?: string; restore?: string }>({});
+  const [actionLoading, setActionLoading] = useState<{ delete?: string; download?: string; restore?: string; upload?: boolean }>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('data');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -89,6 +90,28 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       setActionLoading(prev => ({ ...prev, download: undefined }));
     }
   }, [success, showError, t]);
+
+  const handleImportClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setActionLoading(prev => ({ ...prev, upload: true }));
+    try {
+      const result = await BackupService.uploadBackup(file);
+      success(result?.message ?? t('backup.imported'));
+      queryClient.invalidateQueries({ queryKey: ['backups'] });
+      refetch();
+    } catch (err) {
+      const msg = (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? (err as Error)?.message ?? t('messages.error');
+      showError(msg);
+    } finally {
+      setActionLoading(prev => ({ ...prev, upload: false }));
+    }
+  }, [queryClient, refetch, success, showError, t]);
 
   const handleRestore = useCallback(async (item: BackupWithId) => {
     const confirmed = window.confirm(t('backup.confirmRestoreCritical'));
@@ -188,6 +211,14 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       }))
     },
     {
+      key: 'importar',
+      label: t('backup.import'),
+      variant: 'primary' as const,
+      requiresSelection: false,
+      disabled: (_items: BackupWithId[]) => !!(actionLoading.upload),
+      onClick: () => handleImportClick()
+    },
+    {
       key: 'deletar',
       label: t('actions.delete'),
       variant: 'primary' as const,
@@ -217,7 +248,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
         if (item) handleRestore(item);
       }
     }
-  ], [t, actionLoading, manualMutation, handleDelete, handleDownload, handleRestore]);
+  ], [t, actionLoading, manualMutation, handleImportClick, handleDelete, handleDownload, handleRestore]);
 
   const pagination = useMemo(() => ({
     currentPage: 1,
@@ -230,6 +261,13 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
 
   const modalContent = (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".sql,.tar.gz,.ndjson,.txt"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         <Table
           syncWithHeader={false}

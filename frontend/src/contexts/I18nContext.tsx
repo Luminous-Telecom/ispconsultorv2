@@ -387,6 +387,8 @@ export interface TranslationKeys {
   'backup.columnDate': string;
   'backup.columnType': string;
   'backup.restore': string;
+  'backup.import': string;
+  'backup.imported': string;
   'params.validations': string;
   'params.validateCpfCnpj': string;
   'params.validateCpfCnpjHelp': string;
@@ -1751,6 +1753,8 @@ const translations: Translations = {
     'backup.columnDate': 'Data',
     'backup.columnType': 'Tipo',
     'backup.restore': 'Restaurar',
+    'backup.import': 'Importar',
+    'backup.imported': 'Backup importado com sucesso.',
     'params.validateCpfCnpj': 'Validar CNPJ',
     'params.validateCpfCnpjHelp': 'Quando ativado, valida se CNPJ é válido ao cadastrar/editar clientes',
     'params.validateCep': 'Validar CEP',
@@ -3109,6 +3113,8 @@ const translations: Translations = {
     'backup.columnDate': 'Date',
     'backup.columnType': 'Type',
     'backup.restore': 'Restore',
+    'backup.import': 'Import',
+    'backup.imported': 'Backup imported successfully.',
     'params.validateCpfCnpj': 'Validate CNPJ',
     'params.validateCpfCnpjHelp': 'When enabled, validates if CNPJ is valid when creating/editing clients',
     'params.validateCep': 'Validate ZIP Code',
@@ -4469,6 +4475,8 @@ const translations: Translations = {
     'backup.columnDate': 'Fecha',
     'backup.columnType': 'Tipo',
     'backup.restore': 'Restaurar',
+    'backup.import': 'Importar',
+    'backup.imported': 'Copia de seguridad importada con éxito.',
     'params.validateCpfCnpj': 'Validar CNPJ',
     'params.validateCpfCnpjHelp': 'Cuando está activado, valida si CNPJ es válido al crear/editar clientes',
     'params.validateCep': 'Validar CEP',

@@ -40,7 +40,7 @@ export class BackupService {
     const blob = unwrapResponse<Blob>(response);
 
     if (!blob || !(blob instanceof Blob)) {
-      throw new Error('Resposta do servidor nòo ò um arquivo vòlido');
+      throw new Error('Resposta do servidor nùo ù um arquivo vùlido');
     }
 
     return blob;
@@ -54,7 +54,7 @@ export class BackupService {
 
     return {
       success: true,
-      message: data.message ?? 'Restauraòòo solicitada.'
+      message: data.message ?? 'Restauraùùo solicitada.'
     };
   }
 
@@ -68,6 +68,20 @@ export class BackupService {
     return {
       success: true,
       message: data.message ?? 'Backup em fila.'
+    };
+  }
+
+  static async uploadBackup(file: File): Promise<{ success: boolean; message: string }> {
+    const formData = new FormData();
+    formData.append('arquivo', file);
+    const response = await apiService.post<{ success: boolean; message?: string; data?: { nome: string } }>(
+      '/saas/backups/upload',
+      formData
+    );
+    const data = unwrapResponse<{ success: boolean; message?: string }>(response);
+    return {
+      success: true,
+      message: data.message ?? 'Backup importado com sucesso.'
     };
   }
 

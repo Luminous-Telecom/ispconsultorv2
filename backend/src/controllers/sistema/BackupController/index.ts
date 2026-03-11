@@ -95,6 +95,23 @@ export class BackupController {
     }
   }
 
+  static async upload(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.file) {
+        res.status(400).json({ success: false, message: 'Nenhum arquivo foi enviado' });
+        return;
+      }
+      const nome = req.file.filename;
+      logger.info('Backup importado via upload', { arquivo: nome, tamanho: req.file.size });
+      sendSuccess(res, { nome }, 'Backup importado com sucesso');
+    } catch (error) {
+      sendError(res, error, 'Erro ao importar backup', 500, true, {
+        context: 'BackupController',
+        action: 'upload'
+      });
+    }
+  }
+
   static async executeManual(req: Request, res: Response): Promise<void> {
     try {
       const tipo = req.body?.tipo as 'database' | 'arquivos' | 'logs' | 'completo';
