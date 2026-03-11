@@ -117,7 +117,8 @@ export class ServidorWhatsAppMessageService {
     message: string
   ): Promise<Record<string, unknown>> {
     const { WhatsAppCloudService } = await import('../WhatsAppCloudService');
-    const enviou = await WhatsAppCloudService.enviarTexto(servidor, phone, message);
+    const contextoHistorico = servidor.empresa_id != null ? { empresa_id: servidor.empresa_id } : undefined;
+    const enviou = await WhatsAppCloudService.enviarTexto(servidor, phone, message, contextoHistorico);
     
     if (!enviou) {
       throw new Error('Erro ao enviar mensagem via WhatsApp Cloud API');

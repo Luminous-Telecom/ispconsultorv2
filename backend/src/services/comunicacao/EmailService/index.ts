@@ -484,6 +484,9 @@ export class EmailService {
         base64Pdf = await ReciboPDFService.gerarReciboBase64({ titulo, cliente, baseUrl: undefined }) ?? undefined;
       }
 
+      const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
+      const contextoSaas = empresaId != null ? { empresa_id: empresaId } : undefined;
+
       const enviou = await this.enviarEmail(
         servidor,
         cliente.email,
@@ -494,7 +497,8 @@ export class EmailService {
         `${servidor.nome_remetente} - Recibo de Pagamento`,
         cliente.razao_social || cliente.nome_fantasia || undefined,
         cliente.email,
-        cliente.telefone || undefined
+        cliente.telefone || undefined,
+        contextoSaas
       );
       logger.info('[Recibo Email] Envio concluído', { titulo_id: titulo.id, sucesso: enviou });
       return enviou;
@@ -629,6 +633,9 @@ export class EmailService {
         tipoEnvio: mensagem.tipo_envio
       });
 
+      const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
+      const contextoSaas = empresaId != null ? { empresa_id: empresaId } : undefined;
+
       const enviou = await this.enviarEmail(
         servidor,
         cliente.email,
@@ -639,7 +646,8 @@ export class EmailService {
         `${servidor.nome_remetente} - Boleto de Pagamento`,
         cliente.razao_social || cliente.nome_fantasia || undefined,
         cliente.email,
-        cliente.telefone || undefined
+        cliente.telefone || undefined,
+        contextoSaas
       );
       
       if (enviou) {

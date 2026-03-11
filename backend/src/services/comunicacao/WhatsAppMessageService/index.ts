@@ -11,6 +11,7 @@ import { WhatsAppTemplateService } from '../WhatsAppTemplateService';
 import { WhatsAppCloudService } from '../WhatsAppCloudService';
 import { TemplateWhatsAppService } from '../TemplateWhatsAppService';
 import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
+import type { ContextoHistorico } from '../RegistroMensagemHistoricoService';
 
 export class WhatsAppMessageService {
   /**
@@ -61,14 +62,16 @@ export class WhatsAppMessageService {
       const contrato = (titulo as Titulo & { contrato?: Contrato | null }).contrato;
       const telefone = this.formatarTelefone(cliente.telefone);
       const baseUrl = undefined;
-      
+      const empresaId = (titulo as { empresa_id?: number }).empresa_id ?? (cliente as { empresa_id?: number }).empresa_id ?? undefined;
+      const contextoHistorico: ContextoHistorico | undefined = empresaId != null ? { empresa_id: empresaId } : undefined;
+
       const mensagemTexto = mensagem.mensagem_manual || mensagem.mensagem_padrao || '';
       
       if (servidor.tipo_api === 'whatsapp_cloud') {
-        return await this.enviarViaCloud(mensagem, servidor, telefone, titulo, cliente, contrato, mensagemTexto, baseUrl);
+        return await this.enviarViaCloud(mensagem, servidor, telefone, titulo, cliente, contrato, mensagemTexto, baseUrl, contextoHistorico);
       }
 
-      return await this.enviarViaEvolution(mensagem, servidor, telefone, titulo, cliente, contrato, mensagemTexto, baseUrl);
+      return await this.enviarViaEvolution(mensagem, servidor, telefone, titulo, cliente, contrato, mensagemTexto, baseUrl, contextoHistorico);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao enviar título manual via WhatsApp:', { 
@@ -90,7 +93,8 @@ export class WhatsAppMessageService {
     cliente: Cliente,
     contrato: Contrato | null | undefined,
     mensagemTexto: string,
-    baseUrl: undefined
+    baseUrl: undefined,
+    contextoHistorico?: ContextoHistorico
   ): Promise<{ sucesso: boolean; mensagem?: string }> {
     const templateInfo = TemplateWhatsAppService.getTemplateInfoForMensagem(mensagem);
     if (!templateInfo) {
@@ -124,7 +128,8 @@ export class WhatsAppMessageService {
       templateInfo.language,
       components,
       { nome_fantasia: cliente.nome_fantasia || undefined, razao_social: cliente.razao_social || undefined },
-      titulo
+      titulo,
+      contextoHistorico
     );
 
     return enviouTemplate
@@ -143,7 +148,8 @@ export class WhatsAppMessageService {
     cliente: Cliente,
     contrato: Contrato | null | undefined,
     mensagemTexto: string,
-    baseUrl: undefined
+    baseUrl: undefined,
+    contextoHistorico?: ContextoHistorico
   ): Promise<{ sucesso: boolean; mensagem?: string }> {
     if (!mensagemTexto) {
       return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada' };
@@ -161,19 +167,19 @@ export class WhatsAppMessageService {
       if (!base64) {
         return { sucesso: false, mensagem: 'Erro ao gerar PDF do boleto' };
       }
-      const enviouPdf = await WhatsAppSenderService.enviarPdfBase64(servidor, telefone, base64, msg);
+      const enviouPdf = await WhatsAppSenderService.enviarPdfBase64(servidor, telefone, base64, msg, 'titulo', titulo.id, contextoHistorico);
       if (!enviouPdf) {
         return { sucesso: false, mensagem: 'Erro ao enviar PDF' };
       }
-      await this.enviarMensagensInteracao(mensagem, servidor, telefone, cliente, contrato, titulo);
+      await this.enviarMensagensInteracao(mensagem, servidor, telefone, cliente, contrato, titulo, contextoHistorico);
       return { sucesso: true, mensagem: 'Mensagem enviada com sucesso' };
     }
 
-    const enviouTexto = await WhatsAppSenderService.enviarTexto(servidor, telefone, msg);
+    const enviouTexto = await WhatsAppSenderService.enviarTexto(servidor, telefone, msg, contextoHistorico);
     if (!enviouTexto) {
       return { sucesso: false, mensagem: 'Erro ao enviar mensagem' };
     }
-    await this.enviarMensagensInteracao(mensagem, servidor, telefone, cliente, contrato, titulo);
+    await this.enviarMensagensInteracao(mensagem, servidor, telefone, cliente, contrato, titulo, contextoHistorico);
     return { sucesso: true, mensagem: 'Mensagem enviada com sucesso' };
   }
 
@@ -186,7 +192,8 @@ export class WhatsAppMessageService {
     telefone: string,
     cliente: Cliente,
     contrato: Contrato | null | undefined,
-    titulo: Titulo
+    titulo: Titulo,
+    contextoHistorico?: ContextoHistorico
   ): Promise<void> {
     const interacoes = [mensagem.interacao1, mensagem.interacao2, mensagem.interacao3];
 
@@ -210,7 +217,7 @@ export class WhatsAppMessageService {
           continue;
         }
 
-        const enviou = await WhatsAppSenderService.enviarTexto(servidor, telefone, texto);
+        const enviou = await WhatsAppSenderService.enviarTexto(servidor, telefone, texto, contextoHistorico);
         if (!enviou) {
           logger.warn('Falha ao enviar mensagem de interação via WhatsApp', {
             telefone,

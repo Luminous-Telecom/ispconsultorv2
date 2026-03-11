@@ -48,7 +48,8 @@ export class ServidorWhatsAppTestService {
 
     try {
       if (servidor.tipo_api === 'whatsapp_cloud') {
-        const enviou = await WhatsAppCloudService.enviarTexto(servidor, numero, mensagemTexto);
+        const contextoHistorico = servidor.empresa_id != null ? { empresa_id: servidor.empresa_id } : undefined;
+        const enviou = await WhatsAppCloudService.enviarTexto(servidor, numero, mensagemTexto, contextoHistorico);
         
         if (!enviou) {
           return {
