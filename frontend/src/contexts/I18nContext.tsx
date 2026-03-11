@@ -441,6 +441,7 @@ export interface TranslationKeys {
   'ui.appError': string;
   'ui.criticalError': string;
   'ui.reloadPage': string;
+  'ui.serverUnavailable': string;
   'ui.loading': string;
 
   // Company Labels
@@ -1803,6 +1804,7 @@ const translations: Translations = {
     'ui.appError': 'Erro na aplicação',
     'ui.criticalError': 'Ocorreu um erro crítico. Recarregue a página.',
     'ui.reloadPage': 'Recarregar página',
+    'ui.serverUnavailable': 'Servidor indisponível no momento. Por favor, recarregue. Caso persista, entre em contato com o suporte.',
     'ui.loading': 'Carregando...',
 
     // Company Labels
@@ -3160,6 +3162,7 @@ const translations: Translations = {
     'ui.appError': 'Application Error',
     'ui.criticalError': 'A critical error occurred. Please reload the page.',
     'ui.reloadPage': 'Reload page',
+    'ui.serverUnavailable': 'Server unavailable at the moment. Please reload. If it persists, contact support.',
     'ui.loading': 'Loading...',
 
     // Company Labels
@@ -4519,6 +4522,7 @@ const translations: Translations = {
     'ui.appError': 'Error en la aplicación',
     'ui.criticalError': 'Ocurrió un error crítico. Por favor, recargue la página.',
     'ui.reloadPage': 'Recargar página',
+    'ui.serverUnavailable': 'Servidor no disponible en este momento. Por favor, recargue. Si persiste, contacte con soporte.',
     'ui.loading': 'Cargando...',
 
     // Company Labels

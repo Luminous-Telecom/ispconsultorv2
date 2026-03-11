@@ -58,7 +58,7 @@ const Layout: React.FC = () => {
     [dadosEmpresa]
   );
 
-  const { hasModulo, isLoading: isLoadingModulos } = usePlanoModulos();
+  const { hasModulo, isLoading: isLoadingModulos, serverUnavailable: isServerUnavailable } = usePlanoModulos();
 
   useEffect(() => {
     document.title = companyName || 'BackNet';
@@ -270,6 +270,24 @@ const Layout: React.FC = () => {
     { id: 'ips-permitidos', modalId: 'blockdomi-ips-permitidos', label: t('blockdomi.ipsPermitidos'), icon: 'bi-shield-check', onClick: () => handleOpenModal('blockdomi-ips-permitidos') },
     { id: 'logs-acesso', modalId: 'blockdomi-logs-acesso', label: t('blockdomi.logsAcesso'), icon: 'bi-journal-text', onClick: () => handleOpenModal('blockdomi-logs-acesso') },
   ].filter((item) => filterByModulo(item.modalId));
+
+  if (isServerUnavailable) {
+    return (
+      <div className="app-layout d-flex align-items-center justify-content-center min-vh-100">
+        <div className="text-center p-4">
+          <i className="bi bi-cloud-off text-danger" style={{ fontSize: '4rem' }}></i>
+          <h4 className="mt-3 text-danger">{t('ui.serverUnavailable')}</h4>
+          <button
+            type="button"
+            className="btn btn-primary mt-3"
+            onClick={() => window.location.reload()}
+          >
+            {t('ui.reloadPage')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-layout">
