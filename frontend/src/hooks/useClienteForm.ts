@@ -264,7 +264,7 @@ export const useClienteForm = ({
           return;
         }
 
-        // Verificar se a opção de validar CPF/CNPJ está marcada
+        // Verificar se a opção de validar CNPJ está marcada
         if (parametros?.data?.validar_cpf_cnpj) {
           // Verificar se os campos já estão preenchidos (não sobrescrever se usuário já preencheu)
           const camposVazios = !formData.razao_social && !formData.nome_fantasia && !formData.endereco;

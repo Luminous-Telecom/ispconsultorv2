@@ -36,7 +36,7 @@ export interface CreateEmpresaData {
   cidade: string;
   estado: string;
   responsavel_nome: string;
-  responsavel_cpf: string;
+  responsavel_cpf?: string;
   responsavel_cargo?: string;
 }
 
@@ -83,6 +83,7 @@ export class EmpresaService {
   static async create(dados: CreateEmpresaData): Promise<DadosEmpresa> {
     return DadosEmpresa.create({
       ...dados,
+      responsavel_cpf: dados.responsavel_cpf ?? '',
       inscricao_estadual: null,
       inscricao_municipal: null,
       responsavel_assinatura: null,
@@ -94,7 +95,11 @@ export class EmpresaService {
   static async update(id: number, dados: Partial<CreateEmpresaData>): Promise<DadosEmpresa> {
     const empresa = await DadosEmpresa.findByPk(id);
     if (!empresa) throw new Error('Empresa não encontrada');
-    await empresa.update(dados);
+    const payload = { ...dados };
+    if (Object.prototype.hasOwnProperty.call(dados, 'responsavel_cpf')) {
+      payload.responsavel_cpf = dados.responsavel_cpf ?? '';
+    }
+    await empresa.update(payload as Parameters<DadosEmpresa['update']>[0]);
     await empresa.reload();
     return empresa;
   }

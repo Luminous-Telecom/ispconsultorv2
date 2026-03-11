@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useI18n } from '@/contexts/I18nContext';
@@ -10,7 +10,11 @@ import { useNotificationContext } from '@/components/notifications/NotificationP
 import { useFormReset } from '@/hooks/useFormReset';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useAuditoria } from '@/hooks/useAuditoria';
+import { SaasParametrosService } from '@/services/saas/saasParametrosService';
+import { ClienteService } from '@/services/clienteService';
 import { saasEmpresasService, type SaasEmpresa } from '@/services/saas/saasEmpresasService';
+import { formatCNPJ, formatCEP } from '@/utils/formatters';
+import { isValidCNPJ } from '@/utils/validators';
 import { saasTituloService, saasContratoService, type SaasTitulo, type SaasContrato } from '@/services/saas/saasCrudService';
 import { saasTenantUsuariosService, type SaasTenantUsuario } from '@/services/saas/saasTenantUsuariosService';
 import Table from '@/components/tables/Table';
@@ -55,7 +59,9 @@ type TabId = 'dados-basicos' | 'endereco' | 'contato' | 'contratos' | 'usuarios'
 const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success, error, info } = useNotificationContext();
+  const lastCnpjConsulted = useRef<string>('');
+  const lastCepConsulted = useRef<string>('');
   const isMobile = useIsMobile();
   const auditoria = useAuditoria();
   const contratosTf = useTableFilters({ initialPage: 1, initialLimit: 500, resetPageOnFilterChange: false });
@@ -85,6 +91,13 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     queryKey: ['saas-empresa', itemId],
     queryFn: () => saasEmpresasService.getById(itemId!),
     enabled: show && !!itemId,
+  });
+
+  const { data: parametros } = useQuery({
+    queryKey: ['saas-parametros'],
+    queryFn: () => SaasParametrosService.get(),
+    staleTime: 60 * 1000,
+    enabled: show
   });
 
   useFormReset({ show: show && !isEditing, initialData: INITIAL, setFormData: setForm, setErrors });
@@ -132,9 +145,85 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   const handleInputChange = (field: keyof Form, value: string) => {
-    setForm(p => ({ ...p, [field]: value }));
+    let formatted = value;
+    if (field === 'cnpj') formatted = formatCNPJ(value);
+    if (field === 'cep') formatted = formatCEP(value);
+    setForm(p => ({ ...p, [field]: formatted }));
     if (errors[field]) setErrors(e => ({ ...e, [field]: undefined }));
   };
+
+  useEffect(() => {
+    if (show) {
+      lastCnpjConsulted.current = '';
+      lastCepConsulted.current = '';
+    }
+  }, [show, itemId]);
+
+  // Buscar CNPJ ao digitar 14 dígitos válidos
+  useEffect(() => {
+    if (!show || isEditing || !parametros?.data?.validar_cpf_cnpj) return;
+    const cnpjLimpo = form.cnpj.replace(/\D/g, '');
+    if (cnpjLimpo.length !== 14 || !isValidCNPJ(form.cnpj) || lastCnpjConsulted.current === cnpjLimpo) return;
+    const camposVazios = !form.razao_social && !form.nome_fantasia && !form.endereco;
+    if (!camposVazios) return;
+
+    lastCnpjConsulted.current = cnpjLimpo;
+    ClienteService.consultarCnpj(cnpjLimpo)
+      .then((res) => {
+        if (res.success && res.data) {
+          const d = res.data;
+          setForm(prev => ({
+            ...prev,
+            razao_social: d.razao_social || prev.razao_social,
+            nome_fantasia: d.nome_fantasia || prev.nome_fantasia,
+            cep: d.cep || prev.cep,
+            endereco: d.endereco || prev.endereco,
+            numero: d.numero || prev.numero,
+            complemento: d.complemento || prev.complemento,
+            bairro: d.bairro || prev.bairro,
+            cidade: d.cidade || prev.cidade,
+            estado: d.estado || prev.estado,
+            telefone: d.telefone || prev.telefone,
+            email: d.email || prev.email
+          }));
+          success('Dados do CNPJ preenchidos automaticamente!');
+        }
+      })
+      .catch((err) => {
+        lastCnpjConsulted.current = '';
+        if (err?.response?.status === 404) {
+          info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
+        } else {
+          error(err?.response?.data?.message || 'Erro ao consultar CNPJ. Tente novamente ou preencha manualmente.');
+        }
+      });
+  }, [form.cnpj, form.razao_social, form.nome_fantasia, form.endereco, show, isEditing, parametros?.data?.validar_cpf_cnpj, success, info, error]);
+
+  // Buscar CEP ao digitar 8 dígitos
+  useEffect(() => {
+    if (!show || !parametros?.data?.validar_cep) return;
+    const cepLimpo = form.cep.replace(/\D/g, '');
+    if (cepLimpo.length !== 8 || lastCepConsulted.current === cepLimpo) return;
+    const camposVazios = !form.endereco && !form.bairro && !form.cidade && !form.estado;
+    if (!camposVazios) return;
+
+    lastCepConsulted.current = cepLimpo;
+    ClienteService.buscarCep(cepLimpo)
+      .then((data) => {
+        if (data) {
+          setForm(prev => ({
+            ...prev,
+            endereco: data.logradouro || prev.endereco,
+            bairro: data.bairro || prev.bairro,
+            cidade: data.localidade || prev.cidade,
+            estado: data.uf || prev.estado,
+            complemento: data.complemento || prev.complemento
+          }));
+          success('Dados do CEP preenchidos automaticamente!');
+        }
+      })
+      .catch(() => { lastCepConsulted.current = ''; });
+  }, [form.cep, form.endereco, form.bairro, form.cidade, form.estado, show, parametros?.data?.validar_cep, success]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,7 +232,6 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     if (!form.cnpj.trim()) errs.cnpj = t('form.required');
     if (!form.email.trim()) errs.email = t('form.required');
     if (!form.responsavel_nome.trim()) errs.responsavel_nome = t('form.required');
-    if (!form.responsavel_cpf.trim()) errs.responsavel_cpf = t('form.required');
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
     try {
@@ -525,8 +613,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   onChange={v => handleInputChange('responsavel_nome', String(v ?? ''))} required size="md" error={errors.responsavel_nome} />
               </div>
               <div className="col-md-4">
-                <FormField name="responsavel_cpf" type="text" label={`${t('form.cpf')} ${t('tabs.responsible')} *`} value={form.responsavel_cpf}
-                  onChange={v => handleInputChange('responsavel_cpf', String(v ?? ''))} required size="md" error={errors.responsavel_cpf} />
+                <FormField name="responsavel_cpf" type="text" label={`${t('form.cpf')} ${t('tabs.responsible')}`} value={form.responsavel_cpf}
+                  onChange={v => handleInputChange('responsavel_cpf', String(v ?? ''))} size="md" error={errors.responsavel_cpf} />
               </div>
               <div className="col-md-6">
                 <FormField name="responsavel_cargo" type="text" label={t('form.role')} value={form.responsavel_cargo}
@@ -543,6 +631,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                 formData={formDataForAddress as unknown as Record<string, FormValue>}
                 onChange={(name: string, value: FormValue) => handleInputChange(name as keyof Form, String(value ?? ''))}
                 errors={errors as Record<string, string>}
+                parametrosOverride={parametros?.data ? { validar_cep: parametros.data.validar_cep } : undefined}
               />
             </div>
           )}

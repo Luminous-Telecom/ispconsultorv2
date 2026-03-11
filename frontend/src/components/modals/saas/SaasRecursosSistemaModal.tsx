@@ -162,11 +162,11 @@ const SaasRecursosSistemaModal: React.FC<Props> = ({ show, onClose, skipWrapper 
                   disabled={updateMutation.isPending}
                 />
                 <label className="form-check-label" htmlFor="saas_validar_cpf_cnpj">
-                  Validar CPF/CNPJ
+                  Validar CNPJ
                   <i
                     className="bi bi-info-circle text-muted ms-1"
                     style={{ cursor: 'help', fontSize: '0.85rem' }}
-                    title="Valida CPF/CNPJ ao cadastrar/editar clientes"
+                    title="Valida CNPJ ao cadastrar/editar clientes"
                   />
                 </label>
               </div>

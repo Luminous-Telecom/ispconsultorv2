@@ -35,7 +35,7 @@ const createSchema = Joi.object({
   cidade: Joi.string().required(),
   estado: Joi.string().length(2).required(),
   responsavel_nome: Joi.string().required(),
-  responsavel_cpf: Joi.string().min(11).max(14).required(),
+  responsavel_cpf: Joi.string().min(11).max(14).allow('', null).optional(),
   responsavel_cargo: Joi.string().allow('', null).optional(),
 });
 

@@ -157,11 +157,11 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                       disabled={updateParametrosMutation.isPending}
                     />
                     <label className="form-check-label" htmlFor="validar_cpf_cnpj">
-                      Validar CPF/CNPJ
+                      Validar CNPJ
                       <i
                         className="bi bi-info-circle text-muted ms-1"
                         style={{ cursor: 'help', fontSize: '0.85rem' }}
-                        title="Quando ativado, valida se CPF/CNPJ é válido ao cadastrar/editar clientes"
+                        title="Quando ativado, valida se CNPJ é válido ao cadastrar/editar clientes"
                       />
                     </label>
                   </div>

@@ -1,8 +1,11 @@
-import React, { useState, useMemo, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useMemo, useLayoutEffect, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from '@/services/dadosEmpresaService';
 import { saasDadosEmpresaService, type SaasDadosEmpresaItem } from '@/services/saas/saasDadosEmpresaService';
+import { ParametrosService } from '@/services/parametrosService';
+import { SaasParametrosService } from '@/services/saas/saasParametrosService';
+import { ClienteService } from '@/services/clienteService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useI18n } from '@/contexts/I18nContext';
 import { ApiError } from '@/services/core/ErrorHandler';
@@ -16,6 +19,7 @@ import EnderecoTab from './abas/EnderecoTab';
 import ContatoTab from './abas/ContatoTab';
 import ResponsavelTab from './abas/ResponsavelTab';
 import FinanceiroTab from './abas/FinanceiroTab';
+import { isValidCNPJ } from '@/utils/validators';
 
 function toFormData(item: SaasDadosEmpresaItem): DadosEmpresaForm {
   return {
@@ -90,7 +94,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   const isSaasEdit = isSaas && itemId != null;
 
   const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel' | 'faturas-abertas' | 'faturas-pagas'>('basico');
-  const { success, error } = useNotificationContext();
+  const { success, error, info } = useNotificationContext();
   const queryClient = useQueryClient();
 
   const initialFormData: DadosEmpresaForm = {
@@ -134,6 +138,23 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     enabled: show && isSaasEdit,
   });
 
+  const { data: parametrosAdmin } = useQuery({
+    queryKey: ['parametros'],
+    queryFn: () => ParametrosService.get(),
+    staleTime: 60 * 1000,
+    enabled: show && !isSaas
+  });
+
+  const { data: parametrosSaas } = useQuery({
+    queryKey: ['saas-parametros'],
+    queryFn: () => SaasParametrosService.get(),
+    staleTime: 60 * 1000,
+    enabled: show && isSaas
+  });
+
+  const parametros = isSaas ? parametrosSaas : parametrosAdmin;
+  const lastCnpjConsulted = useRef<string>('');
+
   const empresaData = empresaRes?.data as SaasDadosEmpresaItem | undefined;
   const customData = isSaasEdit && empresaData ? toFormData(empresaData) : !isSaas ? dadosEmpresa : undefined;
 
@@ -143,6 +164,50 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     setFormData: setDados,
     customData,
   });
+
+  useEffect(() => {
+    if (show) lastCnpjConsulted.current = '';
+  }, [show, itemId]);
+
+  // Buscar CNPJ ao digitar 14 dígitos válidos
+  useEffect(() => {
+    if (!show || !parametros?.data?.validar_cpf_cnpj) return;
+    const cnpjLimpo = dados.cnpj.replace(/\D/g, '');
+    if (cnpjLimpo.length !== 14 || !isValidCNPJ(dados.cnpj) || lastCnpjConsulted.current === cnpjLimpo) return;
+    const camposVazios = !dados.razao_social && !dados.nome_fantasia && !dados.endereco;
+    if (!camposVazios) return;
+
+    lastCnpjConsulted.current = cnpjLimpo;
+    ClienteService.consultarCnpj(cnpjLimpo)
+      .then((res) => {
+        if (res.success && res.data) {
+          const d = res.data;
+          setDados(prev => ({
+            ...prev,
+            razao_social: d.razao_social || prev.razao_social,
+            nome_fantasia: d.nome_fantasia || prev.nome_fantasia,
+            cep: d.cep || prev.cep,
+            endereco: d.endereco || prev.endereco,
+            numero: d.numero || prev.numero,
+            complemento: d.complemento || prev.complemento,
+            bairro: d.bairro || prev.bairro,
+            cidade: d.cidade || prev.cidade,
+            estado: d.estado || prev.estado,
+            telefone: d.telefone || prev.telefone,
+            email: d.email || prev.email
+          }));
+          success('Dados do CNPJ preenchidos automaticamente!');
+        }
+      })
+      .catch((err) => {
+        lastCnpjConsulted.current = '';
+        if (err?.response?.status === 404) {
+          info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
+        } else {
+          error(err?.response?.data?.message || 'Erro ao consultar CNPJ. Tente novamente ou preencha manualmente.');
+        }
+      });
+  }, [dados.cnpj, dados.razao_social, dados.nome_fantasia, dados.endereco, show, parametros?.data?.validar_cpf_cnpj, success, info, error]);
 
   const updateAdminMutation = useMutation({
     mutationFn: (data: DadosEmpresaType) => DadosEmpresaService.update(data),
@@ -350,7 +415,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       <div className={`tab-content empresa-tab-content empresa-tab-content-padded`} id="empresaTabContent">
         <form id="empresa-form" onSubmit={handleSubmit}>
           {activeTab === 'basico' && <DadosBasicosTab dados={dados} onChange={handleInputChange} isPending={isPending} onLogoChange={onLogoChange} />}
-          {activeTab === 'endereco' && <EnderecoTab dados={dados} onChange={handleInputChange} isPending={isPending} />}
+          {activeTab === 'endereco' && <EnderecoTab dados={dados} onChange={handleInputChange} isPending={isPending} parametrosOverride={isSaas && parametros?.data ? { validar_cep: parametros.data.validar_cep } : undefined} />}
           {activeTab === 'contato' && <ContatoTab dados={dados} onChange={handleInputChange} isPending={isPending} />}
           {activeTab === 'responsavel' && <ResponsavelTab dados={dados} onChange={handleInputChange} isPending={isPending} onAssinaturaChange={onAssinaturaChange} />}
           {activeTab === 'faturas-abertas' && !isSaas && <FinanceiroTab empresaId={dadosEmpresa?.id} tipo="abertas" />}

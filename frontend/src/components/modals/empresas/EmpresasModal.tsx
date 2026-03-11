@@ -1,10 +1,16 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useEmpresas, useCreateEmpresa, useUpdateEmpresa, useDeleteEmpresa } from '@/hooks/useEmpresas';
 import { Empresa, CreateEmpresa } from '@/types';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import Table from '@/components/tables/Table';
 import { TableConfig, SortDirection } from '@/components/tables/types';
 import DraggableModal from '@/components/common/DraggableModal';
+import { ParametrosService } from '@/services/parametrosService';
+import { ClienteService } from '@/services/clienteService';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { formatCNPJ, formatCEP } from '@/utils/formatters';
+import { isValidCNPJ } from '@/utils/validators';
 
 interface EmpresasModalProps {
   show: boolean;
@@ -36,6 +42,16 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<CreateEmpresa>(INITIAL_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof CreateEmpresa, string>>>({});
+  const { success, error, info } = useNotificationContext();
+  const lastCnpjConsulted = useRef<string>('');
+  const lastCepConsulted = useRef<string>('');
+
+  const { data: parametros } = useQuery({
+    queryKey: ['parametros'],
+    queryFn: () => ParametrosService.get(),
+    staleTime: 60 * 1000,
+    enabled: show && showForm
+  });
 
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -112,9 +128,85 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
   }, []);
 
   const handleChange = useCallback((field: keyof CreateEmpresa, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    let formattedValue = value;
+    if (field === 'cnpj') formattedValue = formatCNPJ(value);
+    if (field === 'cep') formattedValue = formatCEP(value);
+    setForm(prev => ({ ...prev, [field]: formattedValue }));
     setErrors(prev => ({ ...prev, [field]: undefined }));
   }, []);
+
+  // Buscar CNPJ ao digitar 14 dígitos válidos
+  useEffect(() => {
+    if (!showForm || editingId || !parametros?.data?.validar_cpf_cnpj) return;
+    const cnpjLimpo = form.cnpj.replace(/\D/g, '');
+    if (cnpjLimpo.length !== 14 || !isValidCNPJ(form.cnpj) || lastCnpjConsulted.current === cnpjLimpo) return;
+    const camposVazios = !form.razao_social && !form.nome_fantasia && !form.endereco;
+    if (!camposVazios) return;
+
+    lastCnpjConsulted.current = cnpjLimpo;
+    ClienteService.consultarCnpj(cnpjLimpo)
+      .then((res) => {
+        if (res.success && res.data) {
+          const d = res.data;
+          setForm(prev => ({
+            ...prev,
+            razao_social: d.razao_social || prev.razao_social,
+            nome_fantasia: d.nome_fantasia || prev.nome_fantasia,
+            cep: d.cep || prev.cep,
+            endereco: d.endereco || prev.endereco,
+            numero: d.numero || prev.numero,
+            complemento: d.complemento || prev.complemento,
+            bairro: d.bairro || prev.bairro,
+            cidade: d.cidade || prev.cidade,
+            estado: d.estado || prev.estado,
+            telefone: d.telefone || prev.telefone,
+            email: d.email || prev.email
+          }));
+          success('Dados do CNPJ preenchidos automaticamente!');
+        }
+      })
+      .catch((err) => {
+        lastCnpjConsulted.current = '';
+        if (err?.response?.status === 404) {
+          info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
+        } else {
+          error(err?.response?.data?.message || 'Erro ao consultar CNPJ. Tente novamente ou preencha manualmente.');
+        }
+      });
+  }, [form.cnpj, form.razao_social, form.nome_fantasia, form.endereco, showForm, editingId, parametros?.data?.validar_cpf_cnpj, success, info, error]);
+
+  // Buscar CEP ao digitar 8 dígitos
+  useEffect(() => {
+    if (!showForm || !parametros?.data?.validar_cep) return;
+    const cepLimpo = form.cep.replace(/\D/g, '');
+    if (cepLimpo.length !== 8 || lastCepConsulted.current === cepLimpo) return;
+    const camposVazios = !form.endereco && !form.bairro && !form.cidade && !form.estado;
+    if (!camposVazios) return;
+
+    lastCepConsulted.current = cepLimpo;
+    ClienteService.buscarCep(cepLimpo)
+      .then((data) => {
+        if (data) {
+          setForm(prev => ({
+            ...prev,
+            endereco: data.logradouro || prev.endereco,
+            bairro: data.bairro || prev.bairro,
+            cidade: data.localidade || prev.cidade,
+            estado: data.uf || prev.estado,
+            complemento: data.complemento || prev.complemento
+          }));
+          success('Dados do CEP preenchidos automaticamente!');
+        }
+      })
+      .catch(() => { lastCepConsulted.current = ''; });
+  }, [form.cep, form.endereco, form.bairro, form.cidade, form.estado, showForm, parametros?.data?.validar_cep, success]);
+
+  useEffect(() => {
+    if (showForm) {
+      lastCnpjConsulted.current = '';
+      lastCepConsulted.current = '';
+    }
+  }, [showForm, editingId]);
 
   const validate = useCallback((): boolean => {
     const e: Partial<Record<keyof CreateEmpresa, string>> = {};
@@ -128,7 +220,6 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
     if (!form.cidade.trim()) e.cidade = 'Cidade é obrigatória';
     if (!form.estado.trim()) e.estado = 'Estado é obrigatório';
     if (!form.responsavel_nome.trim()) e.responsavel_nome = 'Nome do responsável é obrigatório';
-    if (!form.responsavel_cpf.trim()) e.responsavel_cpf = 'CPF do responsável é obrigatório';
     setErrors(e);
     return Object.keys(e).length === 0;
   }, [form]);
@@ -272,7 +363,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
                 <Field label="Responsável" field="responsavel_nome" required />
               </div>
               <div className="col-md-3">
-                <Field label="CPF do Responsável" field="responsavel_cpf" required maxLength={14} />
+                <Field label="CPF do Responsável" field="responsavel_cpf" maxLength={14} />
               </div>
               <div className="col-md-4">
                 <Field label="Cargo" field="responsavel_cargo" />

@@ -13,6 +13,8 @@ interface AddressFieldsProps {
   formData?: Record<string, FormValue>;
   onChange?: (name: string, value: FormValue) => void;
   errors?: Record<string, string>;
+  /** Quando informado, usa estes parâmetros ao invés de buscar (útil no contexto SaaS) */
+  parametrosOverride?: { validar_cep?: boolean };
 }
 
 const AddressFields: React.FC<AddressFieldsProps> = ({ 
@@ -21,7 +23,8 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
   size = 'sm',
   formData = {},
   onChange,
-  errors = {}
+  errors = {},
+  parametrosOverride
 }) => {
   const { t } = useI18n();
   const getFieldName = (field: string) => prefix ? `${prefix}_${field}` : field;
@@ -34,12 +37,15 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
     }
   };
 
-  // Buscar parâmetros para verificar se deve buscar CEP automaticamente
+  // Buscar parâmetros para verificar se deve buscar CEP automaticamente (ignorado se parametrosOverride)
   const { data: parametros } = useQuery({
     queryKey: ['parametros'],
     queryFn: () => ParametrosService.get(),
     staleTime: 60 * 1000,
+    enabled: !parametrosOverride
   });
+
+  const validarCep = parametrosOverride?.validar_cep ?? parametros?.data?.validar_cep ?? false;
 
   // Buscar CEP automaticamente quando o CEP tiver 8 dígitos
   const cepValue = getFieldValue('cep');
@@ -47,10 +53,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
   const isSearching = useRef<boolean>(false);
   
   useEffect(() => {
-    // Verificar se a opção de validar CEP está marcada
-    if (!parametros?.data?.validar_cep) {
-      return;
-    }
+    if (!validarCep) return;
 
     const cep = typeof cepValue === 'string' ? cepValue : String(cepValue || '');
     const cepNumbers = cep.replace(/\D/g, '');
@@ -81,7 +84,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       lastSearchedCep.current = '';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cepValue, parametros?.data?.validar_cep]);
+  }, [cepValue, validarCep]);
 
   const addressFields = [
     {
