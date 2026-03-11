@@ -343,7 +343,9 @@ const NFSeConfigSection: React.FC<NFSeConfigSectionProps> = ({
               disabled={disabled || saveMutation.isPending}
             >
               <option value="ASAAS">Asaas</option>
-              <option value="PORTAL_NACIONAL">Portal Nacional</option>
+              <option value="PORTAL_NACIONAL" disabled>
+                Portal Nacional (em breve)
+              </option>
             </select>
             <small className="text-muted d-block mt-1">
               {t('nfse.providerHelp')}
