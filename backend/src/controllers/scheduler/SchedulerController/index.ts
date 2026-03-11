@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { SchedulerService } from '../../../services/scheduler/SchedulerService';
 import { ScheduledRoutineService } from '../../../services/scheduler/ScheduledRoutineService';
 import { ScheduledRoutine } from '../../../models';
-import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
@@ -20,7 +19,17 @@ export class SchedulerController {
   public async index(req: Request, res: Response): Promise<void> {
     try {
       const { page = 1, limit = 15, search, sort = 'created_at', direction = 'desc' } = req.query;
-      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
+      const isAdmin = isSuperAdmin(req);
+      const empresaId = isAdmin ? null : getEmpresaIdOrNull(req);
+
+      if (!isAdmin && (empresaId === null || empresaId === undefined)) {
+        res.json({
+          success: true,
+          data: [],
+          pagination: { total: 0, page: Number(page), limit: Number(limit), pages: 0, current_page: Number(page), per_page: Number(limit), last_page: 0, from: 0, to: 0 }
+        });
+        return;
+      }
 
       const result = await ScheduledRoutineService.list({
         page: Number(page),
@@ -30,7 +39,6 @@ export class SchedulerController {
         direction: direction as 'asc' | 'desc',
         empresa_id: empresaId ?? undefined
       });
-
       res.json(result);
     } catch (error: unknown) {
       sendError(res, error, 'Erro interno do servidor', 500, true, {
@@ -44,7 +52,12 @@ export class SchedulerController {
   public async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
+      const isAdmin = isSuperAdmin(req);
+      const empresaId = isAdmin ? null : getEmpresaIdOrNull(req);
+      if (!isAdmin && (empresaId === null || empresaId === undefined)) {
+        sendNotFound(res, 'Rotina não encontrada');
+        return;
+      }
       const routine = empresaId !== null
         ? await ScheduledRoutineService.getById(Number(id), empresaId)
         : await this.schedulerService.getRoutineById(Number(id));

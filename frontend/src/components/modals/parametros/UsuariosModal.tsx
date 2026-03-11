@@ -162,19 +162,11 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       label: 'Perfil',
       sortable: true,
       searchable: true,
-      badgeLabels: ['Administrador', 'Usuário'],
+      badgeLabels: ['Administrador'],
       resizable: true,
-      render: (item: Usuario) => {
-        const roleLabels: Record<string, string> = {
-          'admin': 'Administrador',
-          'user': 'Usuário'
-        };
-        return (
-          <span className="badge bg-info">
-            {roleLabels[item.role] || item.role}
-          </span>
-        );
-      }
+      render: (_item: Usuario) => (
+        <span className="badge bg-info">Administrador</span>
+      )
     },
     {
       key: 'ativo',

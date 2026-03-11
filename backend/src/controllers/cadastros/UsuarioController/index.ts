@@ -8,14 +8,14 @@ import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
-import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { getEmpresaIdOrNull, isSuperAdmin } from '../../../utils/tenantUtils';
 
 export class UsuarioController {
   private static createSchema = Joi.object({
     nome: Joi.string().min(3).max(150).required(),
     email: Joi.string().email().max(180).required(),
     password: Joi.string().min(6).required(),
-    role: Joi.string().valid('admin', 'user').default('admin'),
+    role: Joi.string().valid('admin').default('admin'),
     ativo: Joi.boolean().default(true)
   });
 
@@ -23,7 +23,7 @@ export class UsuarioController {
     nome: Joi.string().min(3).max(150),
     email: Joi.string().email().max(180),
     password: Joi.string().min(6),
-    role: Joi.string().valid('admin', 'user'),
+    role: Joi.string().valid('admin'),
     ativo: Joi.boolean()
   });
 
@@ -32,7 +32,13 @@ export class UsuarioController {
       const { page = 1, limit = 10, search = '', ativo, sortColumn, sortDirection } = req.query;
       const pageNum = Number(page);
       const limitNum = Number(limit);
-      const empresaId = getEmpresaIdOrNull(req);
+      const isAdmin = isSuperAdmin(req);
+      const empresaId = isAdmin ? null : getEmpresaIdOrNull(req);
+
+      if (!isAdmin && (empresaId === null || empresaId === undefined)) {
+        sendSuccess(res, { success: true, data: [], pagination: { current_page: pageNum, per_page: limitNum, total: 0, last_page: 0, from: 0, to: 0 } });
+        return;
+      }
 
       const result = await UsuarioService.list({
         page: pageNum,

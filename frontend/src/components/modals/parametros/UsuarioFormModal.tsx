@@ -14,7 +14,7 @@ interface UsuarioForm {
   nome: string;
   email: string;
   password: string;
-  role: 'admin' | 'user';
+  role: 'admin';
   ativo: boolean;
 }
 
@@ -58,7 +58,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         nome: usuarioData.nome || '',
         email: usuarioData.email || '',
         password: '',
-        role: usuarioData.role || 'admin',
+        role: 'admin',
         ativo: usuarioData.ativo !== undefined ? usuarioData.ativo : true
       });
       setWebhookSecret(usuarioData.webhook_secret || '');
@@ -125,7 +125,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         const updateData: Partial<UsuarioForm> = {
           nome: formData.nome,
           email: formData.email,
-          role: formData.role,
+          role: 'admin',
           ativo: formData.ativo
         };
         if (formData.password) {
@@ -133,7 +133,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         }
         await updateUsuarioMutation.mutateAsync(updateData);
       } else {
-        await createUsuarioMutation.mutateAsync(formData);
+        await createUsuarioMutation.mutateAsync({ ...formData, role: 'admin' });
       }
     } catch (err) {
       // Erro já tratado no mutation
@@ -245,20 +245,6 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
               required={!isEditing}
               size="sm"
               error={errors.password}
-            />
-          </div>
-          <div className="col-md-6">
-            <FormField
-              name="role"
-              type="select"
-              label={t('user.profile')}
-              value={formData.role}
-              onChange={(value) => setFormData(prev => ({ ...prev, role: value as 'admin' | 'user' }))}
-              options={[
-                { value: 'admin', label: t('user.admin') },
-                { value: 'user', label: t('user.user') }
-              ]}
-              size="sm"
             />
           </div>
           <div className="col-md-6">

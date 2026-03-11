@@ -50,12 +50,8 @@ export function createScheduledRoutineService<T extends Model>(
 
       const offset = (Number(page) - 1) * Number(limit);
       const conditions: WhereOptions[] = [];
-      if (empresa_id !== undefined && empresa_id !== null) {
-        conditions.push({ empresa_id });
-      }
-      if (search) {
-        conditions.push({ [Op.or]: SEARCH_FIELDS.map((f) => ({ [f]: { [Op.like]: `%${search}%` } })) } as WhereOptions);
-      }
+      if (empresa_id !== undefined && empresa_id !== null) conditions.push({ empresa_id });
+      if (search) conditions.push({ [Op.or]: SEARCH_FIELDS.map((f) => ({ [f]: { [Op.like]: `%${search}%` } })) } as WhereOptions);
       const where: WhereOptions = conditions.length > 1 ? { [Op.and]: conditions } : (conditions[0] || {});
 
       const result = await (Model as unknown as {
