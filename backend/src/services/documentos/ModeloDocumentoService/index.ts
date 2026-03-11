@@ -22,7 +22,7 @@ export class ModeloDocumentoService {
     if (ativo !== undefined) {
       whereClause.ativo = ativo;
     }
-    if (empresa_id != null) {
+    if (typeof empresa_id === 'number') {
       (whereClause as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id }, { empresa_id: null }];
     }
 
@@ -42,7 +42,7 @@ export class ModeloDocumentoService {
    */
   static async getByType(tipo: string, ativo = true, empresaId?: number | null): Promise<ModeloDocumento[]> {
     const where: WhereOptions = { tipo: tipo as never, ativo };
-    if (empresaId != null) {
+    if (typeof empresaId === 'number') {
       (where as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id: empresaId }, { empresa_id: null }];
     }
     return await ModeloDocumento.findAll({
@@ -56,7 +56,7 @@ export class ModeloDocumentoService {
    */
   static async getDefaultByType(tipo: string, empresaId?: number | null): Promise<ModeloDocumento | null> {
     const where: WhereOptions = { tipo: tipo as never, ativo: true };
-    if (empresaId != null) {
+    if (typeof empresaId === 'number') {
       (where as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id: empresaId }, { empresa_id: null }];
     }
     return await ModeloDocumento.findOne({
@@ -70,7 +70,7 @@ export class ModeloDocumentoService {
    */
   static async getTypes(empresaId?: number | null): Promise<string[]> {
     const where: WhereOptions = { ativo: true };
-    if (empresaId != null) {
+    if (typeof empresaId === 'number') {
       (where as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id: empresaId }, { empresa_id: null }];
     }
     const tipos = await ModeloDocumento.findAll({

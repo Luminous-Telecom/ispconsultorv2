@@ -20,6 +20,7 @@ import templateWhatsAppRoutes from './templateWhatsAppRoutes';
 import mensagemEmailRoutes from './mensagemEmailRoutes';
 import mensagemHistoricoRoutes from './mensagemHistoricoRoutes';
 import modeloDocumentoRoutes from './modeloDocumentoRoutes';
+import modeloTermoRoutes from './modeloTermoRoutes';
 import diasVencimentoRoutes from './diasVencimentoRoutes';
 import termosContratoRoutes from './termosContrato';
 import authRoutes from './authRoutes';
@@ -86,6 +87,7 @@ const routes = [
     { path: '/api/mensagens-email', route: mensagemEmailRoutes },
     { path: '/api/mensagens-historico', route: mensagemHistoricoRoutes },
     { path: '/api/modelos-documento', route: modeloDocumentoRoutes },
+    { path: '/api/modelos-termo', route: modeloTermoRoutes },
     { path: '/api/dias-vencimento', route: diasVencimentoRoutes },
     { path: '/api/termos-contrato', route: termosContratoRoutes },
     { path: '/api/assinatura-digital', route: assinaturaDigitalRoutes },
