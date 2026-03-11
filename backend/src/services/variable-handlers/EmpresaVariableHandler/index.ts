@@ -1,5 +1,6 @@
 import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from '../types';
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import { DadosEmpresaService } from '../../sistema/DadosEmpresaService';
+import type { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { Formatter } from '../utils/Formatter';
 import { VariableReplacer } from '../utils/VariableReplacer';
 import { ImageConverter } from '../utils/ImageConverter';
@@ -60,7 +61,7 @@ export class EmpresaVariableHandler implements VariableHandler {
   }
 
   async process(conteudo: string, context: VariableContext): Promise<string> {
-    const empresa = await this.buscarDadosEmpresa();
+    const empresa = await this.buscarDadosEmpresa(context.empresaId);
     
     if (!empresa) {
       return conteudo;
@@ -73,12 +74,10 @@ export class EmpresaVariableHandler implements VariableHandler {
   }
 
   /**
-   * Busca dados da empresa no banco de dados
+   * Busca dados da empresa no banco de dados (multi-tenant)
    */
-  private async buscarDadosEmpresa(): Promise<DadosEmpresa | null> {
-    return DadosEmpresa.findOne({
-      order: [['id', 'DESC']]
-    });
+  private async buscarDadosEmpresa(empresaId?: number | null): Promise<DadosEmpresa | null> {
+    return DadosEmpresaService.findOne(empresaId ?? undefined);
   }
 
   /**

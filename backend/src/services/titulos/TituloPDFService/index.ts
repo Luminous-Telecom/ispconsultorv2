@@ -72,7 +72,8 @@ export class TituloPDFService {
         throw new Error('Banco não encontrado para o título');
       }
       
-      const dadosEmpresa = await DadosEmpresaService.findOne();
+      const empresaId = (titulo as { empresa_id?: number | null }).empresa_id ?? undefined;
+      const dadosEmpresa = await DadosEmpresaService.findOne(empresaId);
       if (!dadosEmpresa) {
         throw new Error('Dados da empresa não configurados');
       }

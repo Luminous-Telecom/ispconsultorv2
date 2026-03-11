@@ -232,7 +232,7 @@ export class NotaFiscalService {
         {
           model: Cliente,
           as: 'cliente',
-          attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email', 'telefone', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep']
+          attributes: ['id', 'empresa_id', 'razao_social', 'nome_fantasia', 'cnpj', 'email', 'telefone', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep']
         }
       ]
     });

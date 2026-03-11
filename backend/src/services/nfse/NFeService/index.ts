@@ -1,6 +1,7 @@
 import { NotaFiscal } from '../../../models/nfse/NotaFiscal';
 import { Cliente } from '../../../models/clientes/Cliente';
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import { DadosEmpresaService } from '../../sistema/DadosEmpresaService';
+import type { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import { PortalNacionalNFSeService } from '../PortalNacionalNFSeService';
 import { AsaasNFSeService } from '../AsaasNFSeService';
@@ -56,8 +57,9 @@ export class NFeService {
         };
       }
 
-      // Buscar dados da empresa
-      const dadosEmpresa = await DadosEmpresa.findOne();
+      // Buscar dados da empresa (multi-tenant)
+      const empresaId = (cliente as { empresa_id?: number | null }).empresa_id ?? undefined;
+      const dadosEmpresa = await DadosEmpresaService.findOne(empresaId);
       if (!dadosEmpresa) {
         return {
           success: false,

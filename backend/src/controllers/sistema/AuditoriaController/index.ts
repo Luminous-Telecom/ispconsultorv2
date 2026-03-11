@@ -308,7 +308,7 @@ export class AuditoriaController {
         return;
       }
 
-      const html = await AuditoriaPDFService.generateAuditPdfHtml(logs, entidade as string);
+      const html = await AuditoriaPDFService.generateAuditPdfHtml(logs, entidade as string, undefined, empresaId);
       const { PDFGenerationService } = await import('../../../services/pdf-generation/PDFGenerationService');
       const pdfBuffer = await PDFGenerationService.generateFromHtml(
         html,

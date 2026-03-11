@@ -48,6 +48,8 @@ export interface VariableContext {
   titulo?: Titulo | TituloComRelacoes;
   dataReferencia?: Date;
   baseUrl?: string;
+  /** ID da empresa para multi-tenant (dados da empresa, assinaturas, etc.) */
+  empresaId?: number | null;
 }
 
 /**

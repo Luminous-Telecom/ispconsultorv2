@@ -26,7 +26,8 @@ export class NotaFiscalHtmlService {
       throw new Error('Cliente não encontrado para a nota fiscal');
     }
 
-    const dadosEmpresa = await DadosEmpresaService.findOne();
+    const empresaId = (notaFiscal.cliente as { empresa_id?: number | null }).empresa_id ?? undefined;
+    const dadosEmpresa = await DadosEmpresaService.findOne(empresaId);
     if (!dadosEmpresa) {
       throw new Error('Dados da empresa não configurados');
     }

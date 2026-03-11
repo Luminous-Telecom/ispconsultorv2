@@ -5,13 +5,15 @@ import { formatDate } from '../../../utils/dateUtils';
 export class AuditoriaPDFService {
   /**
    * Gera HTML do PDF de auditoria
+   * @param empresaId - ID da empresa para buscar dados (multi-tenant)
    */
   static async generateAuditPdfHtml(
     logs: any[],
     entidade: string,
-    dadosEmpresa?: any
+    dadosEmpresa?: any,
+    empresaId?: number | null
   ): Promise<string> {
-    const empresa = dadosEmpresa || await DadosEmpresaService.findOne();
+    const empresa = dadosEmpresa || await DadosEmpresaService.findOne(empresaId ?? undefined);
     
     const escapeHtml = (text: unknown): string => {
       if (text === null || text === undefined) {

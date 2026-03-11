@@ -75,8 +75,9 @@ export class EfiHelpers {
     cliente: ClienteForBoleto,
     plano: PlanoForBoleto
   ): Promise<BoletoData> {
-    const { DadosEmpresa } = await import('../../../../models/sistema/DadosEmpresa');
-    const dadosEmpresa = await DadosEmpresa.findOne();
+    const { DadosEmpresaService } = await import('../../../../services/sistema/DadosEmpresaService');
+    const empresaId = (titulo as { empresa_id?: number | null }).empresa_id ?? undefined;
+    const dadosEmpresa = await DadosEmpresaService.findOne(empresaId);
 
     if (!dadosEmpresa) {
       throw new Error('Dados da empresa não configurados');

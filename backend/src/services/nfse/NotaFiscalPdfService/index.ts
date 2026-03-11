@@ -11,41 +11,12 @@ export class NotaFiscalPdfService {
   static async gerarPdfNfse(
     notaFiscal: NotaFiscal & { cliente?: Cliente | null }
   ): Promise<Buffer> {
-    try {
-      logger.info('Iniciando geração de PDF da NFS-e', {
-        nota_id: notaFiscal.id
-      });
-
-      const html = await NotaFiscalHtmlService.processarNfseHtml(notaFiscal);
-
-      logger.debug('HTML processado para PDF', {
-        nota_id: notaFiscal.id,
-        htmlLength: html.length,
-        hasLogoInHtml: html.includes('data:image/svg+xml;base64,'),
-        hasImgTag: html.includes('<img'),
-        logoImgTags: (html.match(/<img[^>]*src="[^"]*data:image\/svg\+xml;base64,[^"]*"[^>]*>/g) || []).length
-      });
-
-      const pdfBuffer = await PDFGenerationService.generateFromHtml(html, 'html-pdf-node', {
-        format: 'A4',
-        margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
-        printBackground: true
-      });
-
-      logger.info('PDF gerado com sucesso', {
-        nota_id: notaFiscal.id,
-        pdfSize: pdfBuffer.length
-      });
-
-      return pdfBuffer;
-    } catch (error) {
-      logger.error('Erro ao gerar PDF da NFS-e', {
-        nota_id: notaFiscal.id,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        stack: error instanceof Error ? error.stack : undefined
-      });
-      throw error;
-    }
+    const html = await NotaFiscalHtmlService.processarNfseHtml(notaFiscal);
+    return PDFGenerationService.generateFromHtml(html, 'html-pdf-node', {
+      format: 'A4',
+      margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
+      printBackground: true
+    });
   }
 
   /**
@@ -54,10 +25,10 @@ export class NotaFiscalPdfService {
   static async getPdfBuffer(notaFiscal: NotaFiscal): Promise<Buffer | null> {
     try {
       const notaCompleta = await NotaFiscal.findByPk(notaFiscal.id, {
-        include: [{ association: 'cliente' }]
+        include: [{ model: Cliente, as: 'cliente' }]
       }) as (NotaFiscal & { cliente?: Cliente | null }) | null;
 
-      if (!notaCompleta) {
+      if (!notaCompleta || !notaCompleta.cliente) {
         return null;
       }
 

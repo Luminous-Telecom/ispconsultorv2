@@ -450,11 +450,14 @@ export class ModeloDocumentoController {
 
         const contrato = await ContratoService.findAtivoByCliente(cliente.id);
         const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : undefined;
+        const { getEmpresaIdOrNull } = await import('../../../utils/tenantUtils');
+        const empresaId = getEmpresaIdOrNull(req) ?? cliente.empresa_id ?? contrato?.empresa_id;
         conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
           conteudo,
           {
             cliente,
-            contrato: contrato || undefined
+            contrato: contrato || undefined,
+            empresaId
           },
           baseUrl
         );

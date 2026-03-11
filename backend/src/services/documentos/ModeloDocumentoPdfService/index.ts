@@ -7,6 +7,7 @@ import { PDFGenerationService } from '../../pdf-generation/PDFGenerationService'
 import { Contrato } from '../../../models/contratos/Contrato';
 import type { Response } from 'express';
 import { sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class ModeloDocumentoPdfService {
   /**
@@ -84,11 +85,13 @@ export class ModeloDocumentoPdfService {
       }
 
       const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : undefined;
+      const empresaId = getEmpresaIdOrNull(req) ?? cliente.empresa_id ?? contrato?.empresa_id;
       conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
         documento.conteudo,
         {
           cliente,
-          contrato: contrato || undefined
+          contrato: contrato || undefined,
+          empresaId
         },
         baseUrl
       );

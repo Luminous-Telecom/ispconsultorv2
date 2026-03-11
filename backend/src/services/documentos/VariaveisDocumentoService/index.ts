@@ -23,6 +23,8 @@ export interface DadosVariaveis {
   contrato?: Contrato | (Partial<Contrato> & { id: number });
   titulo?: Titulo | TituloComRelacoes;
   dataReferencia?: Date;
+  /** ID da empresa para multi-tenant (contratos, recibos, etc.) */
+  empresaId?: number | null;
 }
 
 /**
@@ -149,12 +151,14 @@ export class VariaveisDocumentoService {
    * @returns Contexto configurado para os handlers
    */
   private static criarContexto(dados: DadosVariaveis, baseUrl?: string): VariableContext {
+    const empresaId = dados.empresaId ?? (dados.titulo as { empresa_id?: number | null })?.empresa_id ?? (dados.cliente as { empresa_id?: number | null })?.empresa_id ?? (dados.contrato as { empresa_id?: number | null })?.empresa_id;
     return {
       cliente: dados.cliente,
       contrato: dados.contrato,
       titulo: dados.titulo,
       dataReferencia: dados.dataReferencia || new Date(),
-      baseUrl
+      baseUrl,
+      empresaId
     };
   }
 
