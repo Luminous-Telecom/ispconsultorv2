@@ -6,6 +6,7 @@ import Joi from 'joi';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class AssinaturaDigitalProviderController {
   private static updateSchema = Joi.object({
@@ -48,7 +49,8 @@ export class AssinaturaDigitalProviderController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const providers = await AssinaturaDigitalProviderService.list();
+      const empresaId = getEmpresaIdOrNull(req);
+      const providers = await AssinaturaDigitalProviderService.list(empresaId);
 
       sendSuccess(res, providers);
     } catch (error) {
@@ -68,7 +70,8 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
-      const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType);
+      const empresaId = getEmpresaIdOrNull(req);
+      const providerConfig = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType, empresaId);
 
       if (!providerConfig) {
         sendSuccess(res, null, 'Provider não encontrado', 200);
@@ -86,7 +89,8 @@ export class AssinaturaDigitalProviderController {
    */
   static async getEnabled(req: Request, res: Response): Promise<void> {
     try {
-      const provider = await AssinaturaDigitalProviderService.getEnabled();
+      const empresaId = getEmpresaIdOrNull(req);
+      const provider = await AssinaturaDigitalProviderService.getEnabled(empresaId);
 
       if (!provider) {
         sendNotFound(res, 'Nenhum provider habilitado');
@@ -135,8 +139,8 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
-      // Buscar dados anteriores antes do upsert (se existir)
-      const providerConfigAntes = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType);
+      const empresaId = getEmpresaIdOrNull(req);
+      const providerConfigAntes = await AssinaturaDigitalProviderService.getByProvider(provider as AssinaturaDigitalProviderType, empresaId);
       const dadosAnteriores = providerConfigAntes ? providerConfigAntes.toJSON() : null;
 
       const { provider: providerConfig, created } = await AssinaturaDigitalProviderService.upsert(

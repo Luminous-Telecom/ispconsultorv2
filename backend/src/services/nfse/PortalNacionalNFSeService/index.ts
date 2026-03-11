@@ -48,9 +48,9 @@ export class PortalNacionalNFSeService {
   /**
    * Obtém configuração do Portal Nacional da tabela nfse_config
    */
-  private static async getConfig(): Promise<PortalNacionalConfig | null> {
+  private static async getConfig(empresaId?: number | null): Promise<PortalNacionalConfig | null> {
     try {
-      const config = await NFSeConfigService.getConfig();
+      const config = await NFSeConfigService.getConfig(empresaId);
 
       if (!config.portal_nacional_username || !config.portal_nacional_password) {
         logger.warn('Configuração do Portal Nacional NFS-e não encontrada ou incompleta');
@@ -163,7 +163,7 @@ export class PortalNacionalNFSeService {
     dadosEmpresa: DadosEmpresa
   ): Promise<GerarNFSeResponse> {
     try {
-      const config = await this.getConfig();
+      const config = await this.getConfig(dadosEmpresa?.id);
       if (!config) {
         return {
           success: false,
@@ -247,7 +247,7 @@ export class PortalNacionalNFSeService {
     dadosEmpresa: DadosEmpresa
   ): Promise<Record<string, any>> {
     // Buscar configurações de NFS-e
-    const config = await NFSeConfigService.getConfig();
+    const config = await NFSeConfigService.getConfig(dadosEmpresa?.id);
     
     // Calcular valor total e deduções
     const valorTotal = Number(notaFiscal.valor_total) || 0;
@@ -341,13 +341,13 @@ export class PortalNacionalNFSeService {
   /**
    * Consulta status de uma NFS-e no Portal Nacional
    */
-  static async consultarStatus(chaveAcesso: string): Promise<{
+  static async consultarStatus(chaveAcesso: string, empresaId?: number | null): Promise<{
     success: boolean;
     status?: string;
     erro?: string;
   }> {
     try {
-      const config = await this.getConfig();
+      const config = await this.getConfig(empresaId);
       if (!config) {
         return {
           success: false,
@@ -385,13 +385,13 @@ export class PortalNacionalNFSeService {
   /**
    * Cancela uma NFS-e no Portal Nacional
    */
-  static async cancelarNFSe(chaveAcesso: string, justificativa: string): Promise<{
+  static async cancelarNFSe(chaveAcesso: string, justificativa: string, empresaId?: number | null): Promise<{
     success: boolean;
     mensagem?: string;
     erro?: string;
   }> {
     try {
-      const config = await this.getConfig();
+      const config = await this.getConfig(empresaId);
       if (!config) {
         return {
           success: false,

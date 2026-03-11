@@ -5,29 +5,39 @@ export type AssinaturaDigitalProviderType = 'assinafy' | 'zapsign';
 
 export class AssinaturaDigitalProviderService {
   /**
-   * Lista todos os providers
+   * Lista todos os providers (filtra por empresa_id quando informado)
    */
-  static async list(): Promise<AssinaturaDigitalProvider[]> {
+  static async list(empresaId?: number | null): Promise<AssinaturaDigitalProvider[]> {
+    const where = empresaId != null
+      ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+      : {};
     return await AssinaturaDigitalProvider.findAll({
+      where,
       order: [['provider', 'ASC']]
     });
   }
 
   /**
-   * Busca provider por tipo
+   * Busca provider por tipo (filtra por empresa_id quando informado)
    */
-  static async getByProvider(provider: AssinaturaDigitalProviderType): Promise<AssinaturaDigitalProvider | null> {
+  static async getByProvider(provider: AssinaturaDigitalProviderType, empresaId?: number | null): Promise<AssinaturaDigitalProvider | null> {
+    const where = empresaId != null
+      ? { provider, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+      : { provider };
     return await AssinaturaDigitalProvider.findOne({
-      where: { provider }
+      where
     });
   }
 
   /**
-   * Busca provider habilitado
+   * Busca provider habilitado (filtra por empresa_id quando informado)
    */
-  static async getEnabled(): Promise<AssinaturaDigitalProvider | null> {
+  static async getEnabled(empresaId?: number | null): Promise<AssinaturaDigitalProvider | null> {
+    const where = empresaId != null
+      ? { habilitado: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+      : { habilitado: true };
     return await AssinaturaDigitalProvider.findOne({
-      where: { habilitado: true }
+      where
     });
   }
 

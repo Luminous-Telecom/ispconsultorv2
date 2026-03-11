@@ -19,7 +19,8 @@ export class ServidorEmailController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const result = await ServidorEmailService.list();
+      const empresaId = getEmpresaIdOrNull(req);
+      const result = await ServidorEmailService.list(empresaId);
 
       sendSuccess(res, result.data, 'Servidores de email listados com sucesso');
     } catch (error) {
@@ -28,15 +29,33 @@ export class ServidorEmailController {
   }
 
   /**
+   * Verifica se o servidor pertence à empresa do usuário (ou é global)
+   */
+  private static pertenceEmpresa(
+    servidor: ServidorEmail | { empresa_id?: number | null },
+    empresaId: number | null
+  ): boolean {
+    const sid = (servidor as { empresa_id?: number | null }).empresa_id;
+    if (empresaId == null) return true; // superadmin
+    return sid === empresaId || sid === null; // próprio ou global
+  }
+
+  /**
    * Buscar servidor de email por ID
    */
   static async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const servidor = await ServidorEmailService.getById(id, { excludePassword: true });
 
       if (!servidor) {
+        sendNotFound(res, 'Servidor de email não encontrado');
+        return;
+      }
+
+      if (!ServidorEmailController.pertenceEmpresa(servidor, empresaId)) {
         sendNotFound(res, 'Servidor de email não encontrado');
         return;
       }
@@ -60,18 +79,18 @@ export class ServidorEmailController {
         return;
       }
 
-      // Se estiver criando um servidor ativo, desativar outros
+      const empresaIdServidor = servidorData.empresa_id ?? getEmpresaIdOrNull(req) ?? null;
       if (servidorData.ativo !== false) {
-        await ServidorEmailService.updateBulk(
-          { ativo: true },
-          { ativo: false }
-        );
+        const whereAtivo = empresaIdServidor != null
+          ? { ativo: true, [Op.or]: [{ empresa_id: empresaIdServidor }, { empresa_id: null }] }
+          : { ativo: true };
+        await ServidorEmailService.updateBulk(whereAtivo, { ativo: false });
         servidorData.ativo = true;
       }
 
       const servidor = await ServidorEmailService.create({
         ...servidorData,
-        empresa_id: servidorData.empresa_id ?? getEmpresaIdOrNull(req) ?? null
+        empresa_id: empresaIdServidor
       });
 
       try {
@@ -104,6 +123,7 @@ export class ServidorEmailController {
     try {
       const { id } = req.params;
       const servidorData = req.body;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const servidor = await ServidorEmailService.getById(id);
 
@@ -112,12 +132,17 @@ export class ServidorEmailController {
         return;
       }
 
-      // Se estiver ativando este servidor, desativar outros
+      if (!ServidorEmailController.pertenceEmpresa(servidor, empresaId)) {
+        sendNotFound(res, 'Servidor de email não encontrado');
+        return;
+      }
+
+      const empresaIdServidor = (servidor as { empresa_id?: number | null }).empresa_id ?? empresaId ?? null;
       if (servidorData.ativo === true) {
-        await ServidorEmailService.updateBulk(
-          { ativo: true, id: { [Op.ne]: id } },
-          { ativo: false }
-        );
+        const whereAtivo = empresaIdServidor != null
+          ? { ativo: true, id: { [Op.ne]: id }, [Op.or]: [{ empresa_id: empresaIdServidor }, { empresa_id: null }] }
+          : { ativo: true, id: { [Op.ne]: id } };
+        await ServidorEmailService.updateBulk(whereAtivo, { ativo: false });
       }
 
       const dadosAnteriores = servidor.toJSON();
@@ -153,10 +178,16 @@ export class ServidorEmailController {
   static async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const servidor = await ServidorEmailService.getById(id);
 
       if (!servidor) {
+        sendNotFound(res, 'Servidor de email não encontrado');
+        return;
+      }
+
+      if (!ServidorEmailController.pertenceEmpresa(servidor, empresaId)) {
         sendNotFound(res, 'Servidor de email não encontrado');
         return;
       }
@@ -187,10 +218,16 @@ export class ServidorEmailController {
   static async testConnection(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const servidor = await ServidorEmailService.getById(id);
 
       if (!servidor) {
+        sendNotFound(res, 'Servidor de email não encontrado');
+        return;
+      }
+
+      if (!ServidorEmailController.pertenceEmpresa(servidor, empresaId)) {
         sendNotFound(res, 'Servidor de email não encontrado');
         return;
       }
@@ -217,6 +254,7 @@ export class ServidorEmailController {
     try {
       const { id } = req.params;
       const { email_teste } = req.body;
+      const empresaId = getEmpresaIdOrNull(req);
 
       if (!email_teste) {
         sendValidationError(res, 'E-mail de teste é obrigatório');
@@ -225,6 +263,11 @@ export class ServidorEmailController {
 
       const servidor = await ServidorEmailService.getById(id);
       if (!servidor) {
+        sendNotFound(res, 'Servidor não encontrado');
+        return;
+      }
+
+      if (!ServidorEmailController.pertenceEmpresa(servidor, empresaId)) {
         sendNotFound(res, 'Servidor não encontrado');
         return;
       }
@@ -286,15 +329,19 @@ export class ServidorEmailController {
    */
   static async getActive(req: Request, res: Response): Promise<void> {
     try {
+      const empresaId = getEmpresaIdOrNull(req);
+      const where = empresaId != null
+        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : { ativo: true };
       const servidor = await ServidorEmailService.findOne({
-        where: { ativo: true },
+        where,
         attributes: {
           exclude: ['senha'], // Não retornar a senha
         },
       });
 
       if (!servidor) {
-        sendNotFound(res, 'Nenhum servidor de email ativo encontrado');
+        sendSuccess(res, null, 'Nenhum servidor de email ativo configurado');
         return;
       }
 
@@ -310,10 +357,13 @@ export class ServidorEmailController {
   static async createOrUpdate(req: Request, res: Response): Promise<void> {
     try {
       const servidorData = req.body;
+      const empresaId = getEmpresaIdOrNull(req);
 
-      // Buscar servidor existente
+      const whereAtivo = empresaId != null
+        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : { ativo: true };
       const servidor = await ServidorEmailService.findOne({
-        where: { ativo: true }
+        where: whereAtivo
       });
 
       if (servidor) {
@@ -396,9 +446,10 @@ export class ServidorEmailController {
   static async getMensagemByTipo(req: Request, res: Response): Promise<void> {
     try {
       const { tipo } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
       logger.info('Buscando mensagem Email por tipo:', { tipo });
 
-      const mensagem = await MensagemEmailService.findByTipo(tipo);
+      const mensagem = await MensagemEmailService.findByTipo(tipo, empresaId);
 
       if (!mensagem) {
         logger.info('Mensagem não encontrada para o tipo:', { tipo });
@@ -450,7 +501,8 @@ export class ServidorEmailController {
         empresa_id: getEmpresaIdOrNull(req) ?? null
       };
 
-      let mensagem = await MensagemEmailService.findByTipo(tipo);
+      const empresaIdMsg = getEmpresaIdOrNull(req) ?? null;
+      let mensagem = await MensagemEmailService.findByTipo(tipo, empresaIdMsg);
 
       try {
         if (mensagem) {

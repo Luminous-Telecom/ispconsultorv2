@@ -1,9 +1,11 @@
+import { Op } from 'sequelize';
 import { Request, Response } from 'express';
 import { DiasVencimentoService } from '../../../services/cadastros/DiasVencimentoService';
 import { logger } from '../../../utils/logger';
 import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class DiasVencimentoController {
   /**
@@ -11,7 +13,8 @@ export class DiasVencimentoController {
    */
   static async get(req: Request, res: Response): Promise<void> {
     try {
-      const dias = await DiasVencimentoService.list();
+      const empresaId = getEmpresaIdOrNull(req);
+      const dias = await DiasVencimentoService.list(undefined, empresaId);
 
       sendSuccess(res, dias, 'Dias de vencimento encontrados');
     } catch (error) {
@@ -25,17 +28,20 @@ export class DiasVencimentoController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { dias } = req.body;
-      
-      const diasAntes = await DiasVencimentoService.list();
+      const empresaId = getEmpresaIdOrNull(req);
+
+      const whereEmpresa = empresaId != null ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] } : {};
+      const diasAntes = await DiasVencimentoService.list(undefined, empresaId);
       const dadosAnteriores = diasAntes.map(d => d.toJSON());
       
-      await DiasVencimentoService.updateStatus(false);
+      await DiasVencimentoService.updateStatus(false, Object.keys(whereEmpresa).length > 0 ? whereEmpresa : undefined);
       
       if (dias.length > 0) {
-        await DiasVencimentoService.updateStatus(true, { dia: dias });
+        const whereAtivo = empresaId != null ? { dia: dias, ...whereEmpresa } : { dia: dias };
+        await DiasVencimentoService.updateStatus(true, whereAtivo);
       }
 
-      const diasDepois = await DiasVencimentoService.list();
+      const diasDepois = await DiasVencimentoService.list(undefined, empresaId);
       const dadosNovos = diasDepois.map(d => d.toJSON());
 
       // Registrar auditoria para cada dia que mudou
@@ -65,15 +71,17 @@ export class DiasVencimentoController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const { dias } = req.body;
-      
-      await DiasVencimentoService.updateStatus(false);
+      const empresaId = getEmpresaIdOrNull(req);
+
+      const whereEmpresa = empresaId != null ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] } : {};
+      await DiasVencimentoService.updateStatus(false, Object.keys(whereEmpresa).length > 0 ? whereEmpresa : undefined);
       
       if (dias.length > 0) {
-        await DiasVencimentoService.updateStatus(true, { dia: dias });
+        const whereAtivo = empresaId != null ? { dia: dias, ...whereEmpresa } : { dia: dias };
+        await DiasVencimentoService.updateStatus(true, whereAtivo);
       }
 
-      // Para create, usar update já que é a mesma lógica
-      const diasDepois = await DiasVencimentoService.list({ ativo: true });
+      const diasDepois = await DiasVencimentoService.list({ ativo: true }, empresaId);
       for (const dia of diasDepois) {
         await registrarAtualizacao(
           req as AuthenticatedRequest,

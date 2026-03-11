@@ -8,6 +8,7 @@ import Joi from 'joi';
 import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class NotaFiscalController {
   // Schema de validação para criação
@@ -59,7 +60,7 @@ export class NotaFiscalController {
       const pageNumber = parseInt(page as string, 10);
       const limitNumber = parseInt(limit as string, 10);
 
-      // Passar parâmetros diretamente para o service (que já constrói os filtros internamente)
+      const empresaId = getEmpresaIdOrNull(req);
       const result = await NotaFiscalService.list({
         page: pageNumber,
         limit: limitNumber,
@@ -70,7 +71,8 @@ export class NotaFiscalController {
         data_inicio: data_inicio as string,
         data_fim: data_fim as string,
         sortColumn: sortColumn as string,
-        sortDirection: sortDirection as string
+        sortDirection: sortDirection as string,
+        empresa_id: empresaId ?? undefined
       });
 
       sendSuccess(res, result);
@@ -85,10 +87,17 @@ export class NotaFiscalController {
   static async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const notaFiscal = await NotaFiscalService.getById(id);
 
       if (!notaFiscal) {
+        sendNotFound(res, 'Nota fiscal não encontrada');
+        return;
+      }
+
+      if (empresaId != null && (notaFiscal as { empresa_id?: number | null }).empresa_id != null &&
+          (notaFiscal as { empresa_id?: number | null }).empresa_id !== empresaId) {
         sendNotFound(res, 'Nota fiscal não encontrada');
         return;
       }
@@ -162,6 +171,18 @@ export class NotaFiscalController {
   static async consultarStatus(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+
+      const notaFiscal = await NotaFiscalService.getById(parseInt(id, 10));
+      if (!notaFiscal) {
+        sendNotFound(res, 'NFS-e não encontrada');
+        return;
+      }
+      if (empresaId != null && (notaFiscal as { empresa_id?: number | null }).empresa_id != null &&
+          (notaFiscal as { empresa_id?: number | null }).empresa_id !== empresaId) {
+        sendNotFound(res, 'NFS-e não encontrada');
+        return;
+      }
 
       const resultado = await NFeService.consultarStatus(parseInt(id, 10));
 
@@ -184,9 +205,21 @@ export class NotaFiscalController {
     try {
       const { id } = req.params;
       const { justificativa } = req.body;
+      const empresaId = getEmpresaIdOrNull(req);
 
       if (!justificativa || justificativa.length < 15) {
         sendValidationError(res, 'Justificativa é obrigatória e deve ter pelo menos 15 caracteres');
+        return;
+      }
+
+      const notaFiscal = await NotaFiscalService.getById(parseInt(id, 10));
+      if (!notaFiscal) {
+        sendNotFound(res, 'NFS-e não encontrada');
+        return;
+      }
+      if (empresaId != null && (notaFiscal as { empresa_id?: number | null }).empresa_id != null &&
+          (notaFiscal as { empresa_id?: number | null }).empresa_id !== empresaId) {
+        sendNotFound(res, 'NFS-e não encontrada');
         return;
       }
 
@@ -218,10 +251,12 @@ export class NotaFiscalController {
       const pageNumber = parseInt(page as string, 10);
       const limitNumber = parseInt(limit as string, 10);
 
+      const empresaId = getEmpresaIdOrNull(req);
       const result = await NotaFiscalService.findByCliente(
         parseInt(cliente_id, 10),
         pageNumber,
-        limitNumber
+        limitNumber,
+        empresaId
       );
 
       sendSuccess(res, result);
@@ -244,8 +279,15 @@ export class NotaFiscalController {
       }
 
       const notaFiscal = await NotaFiscalService.getById(notaFiscalId);
+      const empresaId = getEmpresaIdOrNull(req);
 
       if (!notaFiscal) {
+        sendNotFound(res, 'NFS-e não encontrada');
+        return;
+      }
+
+      if (empresaId != null && (notaFiscal as { empresa_id?: number | null }).empresa_id != null &&
+          (notaFiscal as { empresa_id?: number | null }).empresa_id !== empresaId) {
         sendNotFound(res, 'NFS-e não encontrada');
         return;
       }

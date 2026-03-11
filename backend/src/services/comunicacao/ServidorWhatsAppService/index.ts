@@ -1,12 +1,17 @@
+import { Op } from 'sequelize';
 import { ServidorWhatsApp } from '../../../models/comunicacao/ServidorWhatsApp/index';
 import { WhereOptions } from 'sequelize';
 
 export class ServidorWhatsAppService {
   /**
-   * Listar todos os servidores de WhatsApp
+   * Listar todos os servidores de WhatsApp (filtra por empresa_id quando informado)
    */
-  static async list(): Promise<{ success: boolean; data: ServidorWhatsApp[] }> {
+  static async list(empresaId?: number | null): Promise<{ success: boolean; data: ServidorWhatsApp[] }> {
+    const where = empresaId != null
+      ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+      : {};
     const servidores = await ServidorWhatsApp.findAll({
+      where,
       order: [['created_at', 'DESC']],
       attributes: {
         exclude: ['evolution_api_key', 'whatsapp_cloud_token'], // Não retornar tokens na listagem

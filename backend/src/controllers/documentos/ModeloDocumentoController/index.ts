@@ -21,15 +21,11 @@ export class ModeloDocumentoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { tipo } = req.query;
-      
-      const whereClause: { tipo?: string; ativo?: boolean } = {};
-      if (tipo) {
-        whereClause.tipo = tipo as string;
-      }
+      const empresaId = getEmpresaIdOrNull(req);
 
       const result = await ModeloDocumentoService.list({
         tipo: tipo as string,
-        ativo: whereClause.ativo
+        empresa_id: empresaId ?? undefined
       });
 
       sendSuccess(res, result, 'Documentos do sistema listados com sucesso');
@@ -191,7 +187,8 @@ export class ModeloDocumentoController {
     try {
       const { tipo } = req.params;
 
-      const documentos = await ModeloDocumentoService.getByType(tipo);
+      const empresaId = getEmpresaIdOrNull(req);
+      const documentos = await ModeloDocumentoService.getByType(tipo, true, empresaId);
 
       sendSuccess(res, documentos, `Documentos do tipo ${tipo} listados com sucesso`);
     } catch (error) {
@@ -206,7 +203,8 @@ export class ModeloDocumentoController {
     try {
       const { tipo } = req.params;
 
-      const documento = await ModeloDocumentoService.getDefaultByType(tipo);
+      const empresaId = getEmpresaIdOrNull(req);
+      const documento = await ModeloDocumentoService.getDefaultByType(tipo, empresaId);
 
       if (!documento) {
         sendNotFound(res, `Nenhum documento padrão encontrado para o tipo ${tipo}`);
@@ -224,7 +222,8 @@ export class ModeloDocumentoController {
    */
   static async getTypes(req: Request, res: Response): Promise<void> {
     try {
-      const tiposList = await ModeloDocumentoService.getTypes();
+      const empresaId = getEmpresaIdOrNull(req);
+      const tiposList = await ModeloDocumentoService.getTypes(empresaId);
 
       sendSuccess(res, tiposList, 'Tipos de documentos listados com sucesso');
     } catch (error) {

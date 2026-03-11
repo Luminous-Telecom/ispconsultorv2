@@ -18,6 +18,7 @@ export interface ListNotasFiscaisFilters {
   data_fim?: string;
   sortColumn?: string;
   sortDirection?: string;
+  empresa_id?: number | null;
 }
 
 export interface ListNotasFiscaisResponse {
@@ -51,7 +52,8 @@ export class NotaFiscalService {
       data_inicio,
       data_fim,
       sortColumn,
-      sortDirection
+      sortDirection,
+      empresa_id
     } = filters;
 
     const pageNumber = parseInt(String(page), 10);
@@ -60,6 +62,10 @@ export class NotaFiscalService {
 
     // Construir filtros usando helpers
     const whereConditions: (WhereOptions | null)[] = [];
+
+    if (empresa_id !== undefined && empresa_id !== null) {
+      whereConditions.push({ empresa_id } as WhereOptions);
+    }
 
     // Filtro de status
     if (status) {
@@ -239,15 +245,20 @@ export class NotaFiscalService {
   }
 
   /**
-   * Buscar notas fiscais por cliente com paginação
+   * Buscar notas fiscais por cliente com paginação (filtra por empresa_id quando informado)
    */
-  static async findByCliente(cliente_id: number, page = 1, limit = 15): Promise<ListNotasFiscaisResponse> {
+  static async findByCliente(cliente_id: number, page = 1, limit = 15, empresaId?: number | null): Promise<ListNotasFiscaisResponse> {
     const pageNumber = parseInt(String(page), 10);
     const limitNumber = parseInt(String(limit), 10);
     const offset = (pageNumber - 1) * limitNumber;
 
+    const where: WhereOptions = { cliente_id };
+    if (empresaId !== undefined && empresaId !== null) {
+      (where as Record<string, unknown>).empresa_id = empresaId;
+    }
+
     const { count, rows } = await NotaFiscal.findAndCountAll({
-      where: { cliente_id },
+      where,
       order: [['created_at', 'DESC']],
       limit: limitNumber,
       offset

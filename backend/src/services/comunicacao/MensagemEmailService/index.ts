@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { MensagemEmail } from '../../../models/comunicacao/MensagemEmail';
 import { logger } from '../../../utils/logger';
 
@@ -12,11 +13,14 @@ export interface MensagemEmailData {
 
 export class MensagemEmailService {
   /**
-   * Buscar mensagem por tipo
+   * Buscar mensagem por tipo (filtra por empresa_id quando informado - inclui globais com empresa_id null)
    */
-  static async findByTipo(tipo: string): Promise<MensagemEmail | null> {
+  static async findByTipo(tipo: string, empresaId?: number | null): Promise<MensagemEmail | null> {
+    const where = empresaId != null
+      ? { tipo, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+      : { tipo };
     return await MensagemEmail.findOne({
-      where: { tipo }
+      where
     });
   }
 

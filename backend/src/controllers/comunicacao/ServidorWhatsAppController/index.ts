@@ -12,14 +12,28 @@ import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { Op } from 'sequelize';
 
 export class ServidorWhatsAppController {
+  /**
+   * Verifica se o servidor pertence à empresa do usuário (ou é global)
+   */
+  private static pertenceEmpresa(
+    servidor: { empresa_id?: number | null },
+    empresaId: number | null
+  ): boolean {
+    const sid = servidor.empresa_id;
+    if (empresaId == null) return true; // superadmin
+    return sid === empresaId || sid === null; // próprio ou global
+  }
+
   /**
    * Listar todos os servidores de WhatsApp
    */
   static async list(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const result = await ServidorWhatsAppService.list();
+      const empresaId = getEmpresaIdOrNull(req);
+      const result = await ServidorWhatsAppService.list(empresaId);
 
       sendSuccess(res, result.data, 'Servidores de WhatsApp listados com sucesso');
     } catch (error) {
@@ -33,10 +47,16 @@ export class ServidorWhatsAppController {
   static async show(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const servidor = await ServidorWhatsAppService.getById(id, { excludeTokens: true });
 
       if (!servidor) {
+        sendNotFound(res, 'Servidor de WhatsApp não encontrado');
+        return;
+      }
+
+      if (!ServidorWhatsAppController.pertenceEmpresa(servidor, empresaId)) {
         sendNotFound(res, 'Servidor de WhatsApp não encontrado');
         return;
       }
@@ -94,10 +114,16 @@ export class ServidorWhatsAppController {
     try {
       const { id } = req.params;
       const servidorData = req.body;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const servidor = await ServidorWhatsAppService.getById(id);
 
       if (!servidor) {
+        sendNotFound(res, 'Servidor de WhatsApp não encontrado');
+        return;
+      }
+
+      if (!ServidorWhatsAppController.pertenceEmpresa(servidor, empresaId)) {
         sendNotFound(res, 'Servidor de WhatsApp não encontrado');
         return;
       }
@@ -135,10 +161,16 @@ export class ServidorWhatsAppController {
   static async delete(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const servidor = await ServidorWhatsAppService.getById(id);
 
       if (!servidor) {
+        sendNotFound(res, 'Servidor de WhatsApp não encontrado');
+        return;
+      }
+
+      if (!ServidorWhatsAppController.pertenceEmpresa(servidor, empresaId)) {
         sendNotFound(res, 'Servidor de WhatsApp não encontrado');
         return;
       }
@@ -169,6 +201,18 @@ export class ServidorWhatsAppController {
   static async testConnection(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+
+      const servidor = await ServidorWhatsAppService.getById(id);
+      if (!servidor) {
+        sendNotFound(res, 'Servidor de WhatsApp não encontrado');
+        return;
+      }
+      if (!ServidorWhatsAppController.pertenceEmpresa(servidor, empresaId)) {
+        sendNotFound(res, 'Servidor de WhatsApp não encontrado');
+        return;
+      }
+
       const result = await ServidorWhatsAppTestService.testConnection(Number(id));
       
       if (result.success) {
@@ -186,10 +230,14 @@ export class ServidorWhatsAppController {
    */
   static async getActive(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const servidor = await ServidorWhatsAppService.findOne({ ativo: true });
+      const empresaId = getEmpresaIdOrNull(req);
+      const where = empresaId != null
+        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : { ativo: true };
+      const servidor = await ServidorWhatsAppService.findOne(where);
 
       if (!servidor) {
-        sendNotFound(res, 'Nenhum servidor de WhatsApp ativo encontrado');
+        sendSuccess(res, null, 'Nenhum servidor de WhatsApp ativo encontrado');
         return;
       }
 
@@ -237,9 +285,14 @@ export class ServidorWhatsAppController {
   static async connectInstance(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const servidor = await ServidorWhatsAppService.getById(id);
       if (!servidor) {
+        sendNotFound(res, 'Servidor não encontrado');
+        return;
+      }
+      if (!ServidorWhatsAppController.pertenceEmpresa(servidor, empresaId)) {
         sendNotFound(res, 'Servidor não encontrado');
         return;
       }
@@ -258,6 +311,7 @@ export class ServidorWhatsAppController {
     try {
       const { id } = req.params;
       const { phone, message } = req.body;
+      const empresaId = getEmpresaIdOrNull(req);
 
       if (!phone || !message) {
         sendValidationError(res, 'Número do telefone e mensagem são obrigatórios');
@@ -266,6 +320,10 @@ export class ServidorWhatsAppController {
 
       const servidor = await ServidorWhatsAppService.getById(id);
       if (!servidor) {
+        sendNotFound(res, 'Servidor não encontrado');
+        return;
+      }
+      if (!ServidorWhatsAppController.pertenceEmpresa(servidor, empresaId)) {
         sendNotFound(res, 'Servidor não encontrado');
         return;
       }

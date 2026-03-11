@@ -30,9 +30,9 @@ interface GerarNFSeResponse {
 }
 
 export class AsaasNFSeService {
-  private static async getConfig(): Promise<AsaasConfig | null> {
+  private static async getConfig(empresaId?: number | null): Promise<AsaasConfig | null> {
     try {
-      const config = await NFSeConfigService.getConfig();
+      const config = await NFSeConfigService.getConfig(empresaId);
 
       if (!config.asaas_api_key) {
         logger.warn('API Key do Asaas não configurada para NFS-e');
@@ -123,7 +123,7 @@ export class AsaasNFSeService {
     dadosEmpresa: DadosEmpresa
   ): Promise<GerarNFSeResponse> {
     try {
-      const config = await this.getConfig();
+      const config = await this.getConfig(dadosEmpresa?.id);
       if (!config) {
         return {
           success: false,
@@ -205,7 +205,7 @@ export class AsaasNFSeService {
           const errorDescription = errorData?.errors?.[0]?.description || axiosError.message;
           
           // Verificar se está em sandbox
-          const config = await this.getConfig();
+          const config = await this.getConfig(dadosEmpresa?.id);
           const isSandbox = config?.sandbox || false;
           
           // Se o erro for por falta de saldo, deixar agendada e o webhook atualizará quando autorizar
@@ -417,7 +417,7 @@ export class AsaasNFSeService {
     dadosEmpresa: DadosEmpresa,
     customerId: string
   ): Promise<Record<string, any>> {
-    const config = await NFSeConfigService.getConfig();
+    const config = await NFSeConfigService.getConfig(dadosEmpresa?.id);
     const serviceDescription = notaFiscal.descricao || config.descricao_servico || '';
     const aliquotaIss = Number(notaFiscal.aliquota_iss) || Number(config.aliquota_iss) || 0;
 
@@ -459,13 +459,13 @@ export class AsaasNFSeService {
     };
   }
 
-  static async consultarStatus(chaveAcesso: string): Promise<{
+  static async consultarStatus(chaveAcesso: string, empresaId?: number | null): Promise<{
     success: boolean;
     status?: string;
     erro?: string;
   }> {
     try {
-      const config = await this.getConfig();
+      const config = await this.getConfig(empresaId);
       if (!config) {
         return { success: false, erro: 'Configuração não encontrada' };
       }
@@ -486,13 +486,13 @@ export class AsaasNFSeService {
     }
   }
 
-  static async cancelarNFSe(chaveAcesso: string, justificativa: string): Promise<{
+  static async cancelarNFSe(chaveAcesso: string, justificativa: string, empresaId?: number | null): Promise<{
     success: boolean;
     mensagem?: string;
     erro?: string;
   }> {
     try {
-      const config = await this.getConfig();
+      const config = await this.getConfig(empresaId);
       if (!config) {
         return { success: false, erro: 'Configuração não encontrada' };
       }

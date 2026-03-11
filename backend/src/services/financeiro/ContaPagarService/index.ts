@@ -153,8 +153,7 @@ export class ContaPagarService {
     
     const includeOptions = [
       fornecedorInclude,
-      { association: 'pagamentos', required: false, limit: 5, order: [['created_at', 'DESC']] as [string, string][] },
-      { association: 'arquivos', required: false, limit: 5 }
+      { association: 'pagamentos', required: false, limit: 5, order: [['created_at', 'DESC']] as [string, string][] }
     ];
 
     // Ordenação - ordena TODOS os dados antes da paginação

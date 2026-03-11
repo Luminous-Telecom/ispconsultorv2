@@ -8,6 +8,7 @@ import Joi from 'joi';
 import axios from 'axios';
 import { URLSearchParams } from 'url';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class NFSeConfigController {
   /** Remove campos sensíveis antes de enviar ao frontend */
@@ -36,10 +37,11 @@ export class NFSeConfigController {
     provider: Joi.string().valid('PORTAL_NACIONAL', 'ASAAS').required()
   }).min(1);
 
-  // Obter configuração (sempre retorna o primeiro registro)
+  // Obter configuração (filtra por empresa_id quando autenticado)
   static async get(req: Request, res: Response): Promise<Response> {
     try {
-      const config = await NFSeConfigService.get();
+      const empresaId = getEmpresaIdOrNull(req);
+      const config = await NFSeConfigService.get(empresaId);
 
       // Registrar criação se for novo
       if (config.created_at.getTime() === config.updated_at.getTime()) {
@@ -95,8 +97,8 @@ export class NFSeConfigController {
         return res;
       }
 
-      // Obter configuração existente (ou criar se não existir)
-      const config = await NFSeConfigService.get();
+      const empresaId = getEmpresaIdOrNull(req);
+      const config = await NFSeConfigService.get(empresaId);
       const dadosAnteriores = config.toJSON();
       const foiCriadoAgora = config.created_at.getTime() === config.updated_at.getTime();
 
@@ -109,7 +111,7 @@ export class NFSeConfigController {
         }
       }
 
-      const configAtualizado = await NFSeConfigService.update(dadosParaSalvar);
+      const configAtualizado = await NFSeConfigService.update(dadosParaSalvar, empresaId);
       
       // Se foi criado agora, registrar criação
       if (foiCriadoAgora) {

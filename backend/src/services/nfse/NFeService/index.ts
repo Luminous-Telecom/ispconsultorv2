@@ -104,6 +104,7 @@ export class NFeService {
         : null;
 
       const notaFiscal = await NotaFiscal.create({
+        empresa_id: empresaId ?? null,
         cliente_id: dados.cliente_id,
         titulo_id: dados.titulo_id || null,
         status: 'PENDENTE',
@@ -132,7 +133,7 @@ export class NFeService {
       await notaFiscal.reload();
       logger.info(`[NFeService] Data emissão após salvar no banco - Local: ${notaFiscal.data_emissao.getFullYear()}-${String(notaFiscal.data_emissao.getMonth() + 1).padStart(2, '0')}-${String(notaFiscal.data_emissao.getDate()).padStart(2, '0')} ${String(notaFiscal.data_emissao.getHours()).padStart(2, '0')}:${String(notaFiscal.data_emissao.getMinutes()).padStart(2, '0')}:${String(notaFiscal.data_emissao.getSeconds()).padStart(2, '0')}`);
 
-      const resultadoProvedor = await this.gerarNFeComProvedor(notaFiscal, cliente, dadosEmpresa);
+      const resultadoProvedor = await this.gerarNFeComProvedor(notaFiscal, cliente, dadosEmpresa, empresaId);
 
       if (resultadoProvedor.success) {
         // Atualizar nota fiscal com dados do provedor
@@ -205,7 +206,8 @@ export class NFeService {
   private static async gerarNFeComProvedor(
     notaFiscal: NotaFiscal,
     cliente: Cliente,
-    dadosEmpresa: DadosEmpresa
+    dadosEmpresa: DadosEmpresa,
+    empresaId?: number | null
   ): Promise<{
     success: boolean;
     numero?: string | null;
@@ -220,7 +222,8 @@ export class NFeService {
     codigo_erro?: string;
   }> {
     // Verificar qual provedor está configurado
-    const config = await NFSeConfigService.getConfig();
+    const empId = empresaId ?? dadosEmpresa?.id ?? (cliente as { empresa_id?: number | null }).empresa_id ?? undefined;
+    const config = await NFSeConfigService.getConfig(empId);
     const provider = config.provider;
 
     // Se Asaas está configurado, usar ele
@@ -284,15 +287,19 @@ export class NFeService {
         };
       }
 
-      // Se tem chave de acesso, consultar no provedor configurado
+      let empresaIdNota: number | undefined;
+      if (notaFiscal.cliente_id) {
+        const clienteNota = await Cliente.findByPk(notaFiscal.cliente_id, { attributes: ['empresa_id'] });
+        empresaIdNota = (clienteNota as { empresa_id?: number | null } | null)?.empresa_id ?? undefined;
+      }
       if (notaFiscal.chave_acesso) {
-        const config = await NFSeConfigService.getConfig();
+        const config = await NFSeConfigService.getConfig(empresaIdNota);
         let resultado: { success: boolean; status?: string; erro?: string } | null = null;
 
         if (config.provider === 'ASAAS') {
-          resultado = await AsaasNFSeService.consultarStatus(notaFiscal.chave_acesso);
+          resultado = await AsaasNFSeService.consultarStatus(notaFiscal.chave_acesso, empresaIdNota);
         } else if (config.provider === 'PORTAL_NACIONAL') {
-          resultado = await PortalNacionalNFSeService.consultarStatus(notaFiscal.chave_acesso);
+          resultado = await PortalNacionalNFSeService.consultarStatus(notaFiscal.chave_acesso, empresaIdNota);
         }
 
         if (resultado?.success && resultado.status && resultado.status !== notaFiscal.status) {
@@ -409,7 +416,10 @@ export class NFeService {
 
       if (identificador) {
 
-        const resultado = await AsaasNFSeService.cancelarNFSe(identificador, justificativa);
+        const empresaIdCancel = notaFiscal.cliente_id
+          ? ((await Cliente.findByPk(notaFiscal.cliente_id, { attributes: ['empresa_id'] })) as { empresa_id?: number | null } | null)?.empresa_id
+          : undefined;
+        const resultado = await AsaasNFSeService.cancelarNFSe(identificador, justificativa, empresaIdCancel);
 
         if (!resultado.success) {
           return {

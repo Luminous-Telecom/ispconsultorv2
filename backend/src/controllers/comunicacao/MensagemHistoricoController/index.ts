@@ -1,10 +1,11 @@
-import { Request, Response as ExpressResponse } from 'express';
+import { Response as ExpressResponse } from 'express';
 import { Op } from 'sequelize';
 import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
 import { Usuario } from '../../../models/cadastros/Usuario';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 interface MensagemHistoricoFilters {
   tipo?: 'email' | 'whatsapp';
@@ -39,9 +40,12 @@ export class MensagemHistoricoController {
       } = req.query;
 
       const offset = (Number(page) - 1) * Number(limit);
+      const empresaId = getEmpresaIdOrNull(req) ?? undefined;
 
       // Construir filtros
-      const where: any = {};
+      const where: Record<string, unknown> = empresaId != null
+        ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : {};
 
       if (tipo) {
         where.tipo = tipo;
@@ -68,13 +72,10 @@ export class MensagemHistoricoController {
       }
 
       if (data_inicio || data_fim) {
-        where.created_at = {};
-        if (data_inicio) {
-          where.created_at[Op.gte] = new Date(data_inicio as string);
-        }
-        if (data_fim) {
-          where.created_at[Op.lte] = new Date(data_fim as string);
-        }
+        where.created_at = {
+          ...(data_inicio && { [Op.gte]: new Date(data_inicio as string) }),
+          ...(data_fim && { [Op.lte]: new Date(data_fim as string) })
+        };
       }
 
       // Construir ordenação
@@ -189,14 +190,17 @@ export class MensagemHistoricoController {
     try {
       const { entidade_tipo, entidade_id } = req.params;
       const { page = 1, limit = 10 } = req.query;
+      const empresaId = req.user && typeof req.user === 'object' && req.user?.empresa_id ? Number(req.user.empresa_id) : undefined;
 
       const offset = (Number(page) - 1) * Number(limit);
 
+      const where: Record<string, unknown> = { entidade_tipo, entidade_id: Number(entidade_id) };
+      if (empresaId != null) {
+        (where as Record<string, unknown>)[Op.or as unknown as string] = [{ empresa_id: empresaId }, { empresa_id: null }];
+      }
+
       const { count, rows } = await MensagemHistorico.findAndCountAll({
-        where: {
-          entidade_tipo,
-          entidade_id: Number(entidade_id)
-        },
+        where,
         include: [
           {
             model: Usuario,

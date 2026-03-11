@@ -32,7 +32,7 @@ export class NotaFiscalHtmlService {
       throw new Error('Dados da empresa não configurados');
     }
 
-    const nfseConfig = await NFSeConfigService.get();
+    const nfseConfig = await NFSeConfigService.get(empresaId);
     const descricaoServico = nfseConfig?.descricao_servico || '';
 
     const servicos: Array<{

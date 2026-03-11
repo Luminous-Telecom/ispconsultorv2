@@ -3,6 +3,7 @@ import { sequelize } from '../../../config/database';
 
 interface MensagemHistoricoAttributes {
   id: number;
+  empresa_id?: number | null;
   tipo: 'email' | 'whatsapp';
   destinatario: string;
   titulo?: string;
@@ -24,6 +25,7 @@ type MensagemHistoricoCreationAttributes = Optional<MensagemHistoricoAttributes,
 
 export class MensagemHistorico extends Model<MensagemHistoricoAttributes, MensagemHistoricoCreationAttributes> implements MensagemHistoricoAttributes {
   public id!: number;
+  public empresa_id?: number | null;
   public tipo!: 'email' | 'whatsapp';
   public destinatario!: string;
   public titulo?: string;
@@ -46,6 +48,10 @@ MensagemHistorico.init({
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true
+  },
+  empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   tipo: {
     type: DataTypes.ENUM('email', 'whatsapp'),

@@ -3,6 +3,7 @@ import { sequelize } from '../../../config/database';
 
 interface ServidorWhatsAppAttributes {
   id: number;
+  empresa_id?: number | null;
   tipo_api: 'evolution' | 'whatsapp_cloud';
   evolution_api_url: string;
   evolution_api_key: string;
@@ -27,6 +28,7 @@ interface ServidorWhatsAppAttributes {
 
 export class ServidorWhatsApp extends Model<ServidorWhatsAppAttributes, Optional<ServidorWhatsAppAttributes, 'id' | 'created_at' | 'updated_at'>> implements ServidorWhatsAppAttributes {
   public id!: number;
+  public empresa_id?: number | null;
   public tipo_api!: 'evolution' | 'whatsapp_cloud';
   public evolution_api_url!: string;
   public evolution_api_key!: string;
@@ -55,6 +57,10 @@ ServidorWhatsApp.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     tipo_api: {
       type: DataTypes.ENUM('evolution', 'whatsapp_cloud'),

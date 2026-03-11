@@ -52,15 +52,21 @@ export class WhatsAppBoletoService {
           intervalo_tentativas: 0,
         } as unknown as ServidorWhatsApp;
       } else {
-        const srv = await ServidorWhatsApp.findOne({ where: { ativo: true } });
+        const whereSrv = empresaId != null
+          ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+          : { ativo: true };
+        const srv = await ServidorWhatsApp.findOne({ where: whereSrv });
         if (!srv) {
           return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
         }
         servidor = srv;
       }
 
+      const whereMsg = empresaId != null
+        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : { ativo: true };
       const mensagens = await MensagemWhatsApp.findAll({
-        where: { ativo: true },
+        where: whereMsg,
         include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
       });
       if (mensagens.length === 0) {
@@ -484,14 +490,21 @@ export class WhatsAppBoletoService {
         return false;
       }
 
-      const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });
+      const empresaId = (titulo as { empresa_id?: number | null }).empresa_id ?? (cliente as { empresa_id?: number | null }).empresa_id ?? undefined;
+      const whereSrv = empresaId != null
+        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : { ativo: true };
+      const servidor = await ServidorWhatsApp.findOne({ where: whereSrv });
       if (!servidor) {
         logger.info('[Recibo WhatsApp] Servidor WhatsApp inativo ou não configurado', { titulo_id: titulo.id });
         return false;
       }
 
+      const whereMsg = empresaId != null
+        ? { tipo: 'recibo_pagamento', ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : { tipo: 'recibo_pagamento', ativo: true };
       const mensagem = await MensagemWhatsApp.findOne({
-        where: { tipo: 'recibo_pagamento', ativo: true },
+        where: whereMsg,
         include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
       });
       if (!mensagem || mensagem.tipo_envio === 'desativado') {

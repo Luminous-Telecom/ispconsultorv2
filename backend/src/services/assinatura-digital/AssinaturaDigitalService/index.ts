@@ -2,15 +2,18 @@ import { AssinaturaDigital } from '../../../models/assinatura-digital/Assinatura
 import { TermoContrato } from '../../../models/contratos/TermoContrato';
 import { Cliente } from '../../../models/clientes/Cliente';
 
+import { Op } from 'sequelize';
+
 export interface ListAssinaturasFilters {
   status?: string;
   cliente_id?: string | number;
   termo_contrato_id?: string | number;
+  empresa_id?: number | null;
 }
 
 export class AssinaturaDigitalService {
   /**
-   * Listar assinaturas com filtros
+   * Listar assinaturas com filtros (filtra por empresa_id quando informado)
    */
   static async list(filters: ListAssinaturasFilters): Promise<AssinaturaDigital[]> {
     const where: Record<string, unknown> = {};
@@ -23,6 +26,9 @@ export class AssinaturaDigitalService {
     }
     if (filters.termo_contrato_id) {
       where.termo_contrato_id = filters.termo_contrato_id;
+    }
+    if (filters.empresa_id != null) {
+      (where as Record<string, unknown>)[Op.or as unknown as string] = [{ empresa_id: filters.empresa_id }, { empresa_id: null }];
     }
 
     return await AssinaturaDigital.findAll({

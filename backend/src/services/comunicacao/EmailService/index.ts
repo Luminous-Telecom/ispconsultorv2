@@ -90,14 +90,20 @@ export class EmailService {
           intervalo_tentativas: 0,
         } as unknown as ServidorEmail;
       } else {
-        const srv = await ServidorEmail.findOne({ where: { ativo: true } });
+        const whereSrv = empresaId != null
+          ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+          : { ativo: true };
+        const srv = await ServidorEmail.findOne({ where: whereSrv });
         if (!srv) {
           return { sucesso: false, emailsEnviados: 0, erros: 0 };
         }
         servidor = srv;
       }
 
-      const mensagens = await MensagemEmail.findAll({ where: { ativo: true } });
+      const whereMsg = empresaId != null
+        ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : { ativo: true };
+      const mensagens = await MensagemEmail.findAll({ where: whereMsg });
       if (mensagens.length === 0) {
         return { sucesso: false, emailsEnviados: 0, erros: 0 };
       }

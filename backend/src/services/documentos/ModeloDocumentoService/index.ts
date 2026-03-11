@@ -1,17 +1,19 @@
+import { Op } from 'sequelize';
 import { ModeloDocumento } from '../../../models/documentos/ModeloDocumento';
 import { WhereOptions } from 'sequelize';
 
 export interface ListModeloDocumentoFilters {
   tipo?: string;
   ativo?: boolean;
+  empresa_id?: number | null;
 }
 
 export class ModeloDocumentoService {
   /**
-   * Listar modelos de documento
+   * Listar modelos de documento (filtra por empresa_id quando informado)
    */
   static async list(filters: ListModeloDocumentoFilters = {}): Promise<{ success: boolean; data: ModeloDocumento[] }> {
-    const { tipo, ativo } = filters;
+    const { tipo, ativo, empresa_id } = filters;
     
     const whereClause: WhereOptions = {};
     if (tipo) {
@@ -19,6 +21,9 @@ export class ModeloDocumentoService {
     }
     if (ativo !== undefined) {
       whereClause.ativo = ativo;
+    }
+    if (empresa_id != null) {
+      (whereClause as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id }, { empresa_id: null }];
     }
 
     const documentos = await ModeloDocumento.findAll({
@@ -33,39 +38,45 @@ export class ModeloDocumentoService {
   }
 
   /**
-   * Buscar modelos por tipo
+   * Buscar modelos por tipo (filtra por empresa_id quando informado)
    */
-  static async getByType(tipo: string, ativo = true): Promise<ModeloDocumento[]> {
+  static async getByType(tipo: string, ativo = true, empresaId?: number | null): Promise<ModeloDocumento[]> {
+    const where: WhereOptions = { tipo: tipo as never, ativo };
+    if (empresaId != null) {
+      (where as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id: empresaId }, { empresa_id: null }];
+    }
     return await ModeloDocumento.findAll({
-      where: { 
-        tipo: tipo as any, 
-        ativo 
-      },
+      where,
       order: [['nome', 'ASC']]
     });
   }
 
   /**
-   * Buscar modelo padrão por tipo
+   * Buscar modelo padrão por tipo (filtra por empresa_id quando informado)
    */
-  static async getDefaultByType(tipo: string): Promise<ModeloDocumento | null> {
+  static async getDefaultByType(tipo: string, empresaId?: number | null): Promise<ModeloDocumento | null> {
+    const where: WhereOptions = { tipo: tipo as never, ativo: true };
+    if (empresaId != null) {
+      (where as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id: empresaId }, { empresa_id: null }];
+    }
     return await ModeloDocumento.findOne({
-      where: { 
-        tipo: tipo as any, 
-        ativo: true 
-      },
+      where,
       order: [['created_at', 'ASC']]
     });
   }
 
   /**
-   * Listar tipos disponíveis
+   * Listar tipos disponíveis (filtra por empresa_id quando informado)
    */
-  static async getTypes(): Promise<string[]> {
+  static async getTypes(empresaId?: number | null): Promise<string[]> {
+    const where: WhereOptions = { ativo: true };
+    if (empresaId != null) {
+      (where as WhereOptions & { [Op.or]?: unknown[] })[Op.or] = [{ empresa_id: empresaId }, { empresa_id: null }];
+    }
     const tipos = await ModeloDocumento.findAll({
       attributes: ['tipo'],
       group: ['tipo'],
-      where: { ativo: true },
+      where,
       order: [['tipo', 'ASC']]
     });
 

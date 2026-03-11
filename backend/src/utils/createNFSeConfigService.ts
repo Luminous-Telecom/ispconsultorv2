@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import type { ModelStatic, Model } from 'sequelize';
 
 const DEFAULT_NFSE = {
@@ -17,29 +18,38 @@ const DEFAULT_NFSE = {
 
 export function createNFSeConfigService<T extends Model>(Model: ModelStatic<T>) {
   return {
-    async get(): Promise<T> {
-      let config = (await Model.findOne({
+    async get(empresaId?: number | null): Promise<T> {
+      const where = empresaId != null
+        ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : {};
+      let config = (await (Model as ModelStatic<Model>).findOne({
+        where,
         order: [['id', 'ASC']]
       })) as T | null;
 
       if (!config) {
-        config = (await Model.create(DEFAULT_NFSE as never)) as T;
+        const createData = { ...DEFAULT_NFSE, empresa_id: empresaId ?? null } as never;
+        config = (await Model.create(createData)) as T;
       }
 
       return config;
     },
 
-    async getConfig(): Promise<T> {
-      return this.get();
+    async getConfig(empresaId?: number | null): Promise<T> {
+      return this.get(empresaId);
     },
 
-    async update(dados: Partial<T>): Promise<T> {
-      let config = (await Model.findOne({
+    async update(dados: Partial<T>, empresaId?: number | null): Promise<T> {
+      const where = empresaId != null
+        ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+        : {};
+      let config = (await (Model as ModelStatic<Model>).findOne({
+        where,
         order: [['id', 'ASC']]
       })) as T | null;
 
       if (!config) {
-        const merged = { ...DEFAULT_NFSE, ...dados } as never;
+        const merged = { ...DEFAULT_NFSE, ...dados, empresa_id: (dados as { empresa_id?: number | null })?.empresa_id ?? empresaId ?? null } as never;
         config = (await Model.create(merged)) as T;
       } else {
         await (config as unknown as { update: (d: object) => Promise<void> }).update(dados as object);

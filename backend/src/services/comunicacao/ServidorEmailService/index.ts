@@ -1,12 +1,16 @@
 import { ServidorEmail } from '../../../models/comunicacao/ServidorEmail/index';
-import { WhereOptions, FindOptions } from 'sequelize';
+import { WhereOptions, FindOptions, Op } from 'sequelize';
 
 export class ServidorEmailService {
   /**
-   * Listar todos os servidores de email
+   * Listar todos os servidores de email (filtra por empresa_id quando informado)
    */
-  static async list(): Promise<{ success: boolean; data: ServidorEmail[] }> {
+  static async list(empresaId?: number | null): Promise<{ success: boolean; data: ServidorEmail[] }> {
+    const where = empresaId != null
+      ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+      : {};
     const servidores = await ServidorEmail.findAll({
+      where,
       order: [['created_at', 'DESC']],
       attributes: {
         exclude: ['senha'], // Não retornar a senha na listagem

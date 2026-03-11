@@ -16,6 +16,7 @@ export class NotaFiscal extends Model<
   InferCreationAttributes<NotaFiscal>
 > {
   declare id: CreationOptional<number>;
+  declare empresa_id: number | null;
   declare cliente_id: number;
   declare titulo_id: number | null;
   declare numero: string | null;
@@ -104,6 +105,10 @@ NotaFiscal.init(
       primaryKey: true,
       autoIncrement: true,
       allowNull: false
+    },
+    empresa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true
     },
     cliente_id: {
       type: DataTypes.INTEGER,

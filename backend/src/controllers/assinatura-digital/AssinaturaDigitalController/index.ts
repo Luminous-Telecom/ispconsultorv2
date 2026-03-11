@@ -22,6 +22,7 @@ import { registrarAtualizacaoElasticsearch, registrarCriacaoElasticsearch } from
 import { getCurrentTimestamp } from '../../../utils/timezoneUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 // Interface comum para serviços de assinatura digital
 interface ISignatureService {
@@ -54,23 +55,13 @@ export class AssinaturaDigitalController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { status, cliente_id, termo_contrato_id } = req.query;
-
-      const where: Record<string, unknown> = {};
-      
-      if (status) {
-        where.status = status;
-      }
-      if (cliente_id) {
-        where.cliente_id = cliente_id;
-      }
-      if (termo_contrato_id) {
-        where.termo_contrato_id = termo_contrato_id;
-      }
+      const empresaId = getEmpresaIdOrNull(req);
 
       const assinaturas = await AssinaturaDigitalService.list({
         status: status as string,
         cliente_id: cliente_id as string | number,
-        termo_contrato_id: termo_contrato_id as string | number
+        termo_contrato_id: termo_contrato_id as string | number,
+        empresa_id: empresaId ?? undefined
       });
 
       sendSuccess(res, assinaturas);
