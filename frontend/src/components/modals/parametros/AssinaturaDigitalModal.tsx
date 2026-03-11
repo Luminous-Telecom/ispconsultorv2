@@ -337,12 +337,6 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
             )}
           </div>
         </div>
-
-        {formData.apiProvider === 'assinafy' && (
-          <div className="alert alert-info">
-            {t('digitalSignature.assinafyInfo')}
-          </div>
-        )}
       </form>
       )}
     </>
