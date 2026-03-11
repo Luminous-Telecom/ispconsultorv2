@@ -235,11 +235,14 @@ export class ContratoController {
         }
       }
 
-      // Verificar se o modelo de documento existe (se fornecido)
+      // Verificar se o modelo de documento existe e pertence à empresa (se fornecido)
       if (value.modelo_documento_id) {
         const { ModeloDocumentoService } = await import('../../../services/documentos/ModeloDocumentoService');
         const modeloDocumento = await ModeloDocumentoService.getById(value.modelo_documento_id);
-        if (!modeloDocumento) {
+        const empresaId = getEmpresaIdOrNull(req);
+        const pertenceEmpresa = (doc: { empresa_id?: number | null }) =>
+          empresaId == null || doc.empresa_id === empresaId || doc.empresa_id === null;
+        if (!modeloDocumento || !pertenceEmpresa(modeloDocumento)) {
           sendNotFound(res, 'Modelo de documento não encontrado');
           return;
         }
@@ -406,6 +409,19 @@ export class ContratoController {
       if (!contrato) {
         sendNotFound(res, 'Contrato não encontrado');
         return;
+      }
+
+      // Verificar modelo de documento (se estiver sendo atualizado)
+      if (value.modelo_documento_id != null) {
+        const { ModeloDocumentoService } = await import('../../../services/documentos/ModeloDocumentoService');
+        const modeloDocumento = await ModeloDocumentoService.getById(value.modelo_documento_id);
+        const empresaId = getEmpresaIdOrNull(req);
+        const pertenceEmpresa = (doc: { empresa_id?: number | null }) =>
+          empresaId == null || doc.empresa_id === empresaId || doc.empresa_id === null;
+        if (!modeloDocumento || !pertenceEmpresa(modeloDocumento)) {
+          sendNotFound(res, 'Modelo de documento não encontrado');
+          return;
+        }
       }
 
       // Capturar dados anteriores para auditoria

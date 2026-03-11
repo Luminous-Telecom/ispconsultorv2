@@ -409,7 +409,8 @@ export class CentralAssinanteController {
       }
 
       // Buscar modelo padrão de contrato
-      const modelos = await ModeloDocumentoService.getByType('contrato', true);
+      const empresaId = (contrato as { empresa_id?: number | null }).empresa_id ?? null;
+      const modelos = await ModeloDocumentoService.getByType('contrato', true, empresaId);
       if (modelos.length === 0) {
         sendNotFound(res, 'Nenhum modelo de contrato encontrado');
         return;
@@ -502,7 +503,8 @@ export class CentralAssinanteController {
       }
 
       // Buscar modelo de termo pelo tipo
-      const modelos = await ModeloDocumentoService.getByType('termo', true);
+      const empresaId = (contrato as { empresa_id?: number | null }).empresa_id ?? (cliente as { empresa_id?: number | null }).empresa_id ?? null;
+      const modelos = await ModeloDocumentoService.getByType('termo', true, empresaId);
       const modelo = modelos.find(m => m.nome.toLowerCase().includes(termo.tipo_termo.toLowerCase())) || modelos[0];
 
       if (!modelo) {
@@ -795,13 +797,14 @@ export class CentralAssinanteController {
       }
 
       // Tentar buscar modelo de recibo
-      let modelos = await ModeloDocumentoService.getByType('recibo', true);
+      const empresaId = (titulo as { empresa_id?: number | null }).empresa_id ?? (cliente as { empresa_id?: number | null }).empresa_id ?? null;
+      let modelos = await ModeloDocumentoService.getByType('recibo', true, empresaId);
       logger.info('Modelos de recibo encontrados (tipo recibo)', { quantidade: modelos.length });
       
       // Se não encontrar, buscar qualquer modelo de documento que tenha conteudo_recibo
       if (modelos.length === 0) {
         logger.info('Buscando modelos de documento com conteudo_recibo');
-        const todosModelos = await ModeloDocumentoService.list({ ativo: true });
+        const todosModelos = await ModeloDocumentoService.list({ ativo: true, empresa_id: empresaId ?? undefined });
         modelos = todosModelos.data.filter((m: any) => m.conteudo_recibo && m.conteudo_recibo.trim().length > 0);
         logger.info('Modelos com conteudo_recibo encontrados', { quantidade: modelos.length });
       }

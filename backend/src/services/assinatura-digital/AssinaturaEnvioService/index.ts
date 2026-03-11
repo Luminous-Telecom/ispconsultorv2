@@ -85,6 +85,11 @@ export class AssinaturaEnvioService {
       if (!modeloDocumento) {
         throw new Error('Modelo de documento não encontrado');
       }
+      const empresaIdContrato = (contrato as { empresa_id?: number | null })?.empresa_id ?? null;
+      const modeloEmpresaId = (modeloDocumento as { empresa_id?: number | null }).empresa_id;
+      if (empresaIdContrato != null && modeloEmpresaId != null && modeloEmpresaId !== empresaIdContrato) {
+        throw new Error('Modelo de documento não pertence à empresa do contrato');
+      }
 
       const conteudoMap: Record<string, string> = {
         'adesao': modeloDocumento.conteudo_adesao || modeloDocumento.conteudo || '',

@@ -83,9 +83,16 @@ export class TermoContratoController {
         return;
       }
 
-      // Buscar o modelo de documento (termo)
+      // Buscar o modelo de documento (termo) e verificar se pertence à empresa do contrato
       const modeloDocumento = await ModeloDocumentoService.getById(modelo_documento_id);
       if (!modeloDocumento) {
+        sendNotFound(res, 'Modelo de termo não encontrado');
+        return;
+      }
+      const empresaIdContrato = contrato.empresa_id ?? null;
+      const modeloEmpresaId = (modeloDocumento as { empresa_id?: number | null }).empresa_id;
+      const pertenceEmpresa = empresaIdContrato == null || modeloEmpresaId === empresaIdContrato || modeloEmpresaId === null;
+      if (!pertenceEmpresa) {
         sendNotFound(res, 'Modelo de termo não encontrado');
         return;
       }
@@ -170,7 +177,16 @@ export class TermoContratoController {
       
       // Atualizar apenas campos permitidos
       if (ativo !== undefined) termo.ativo = ativo;
-      if (modelo_documento_id !== undefined) termo.modelo_documento_id = modelo_documento_id;
+      if (modelo_documento_id !== undefined) {
+        const modeloDoc = await ModeloDocumentoService.getById(modelo_documento_id);
+        const empresaIdTermo = termo.empresa_id ?? null;
+        const pertenceEmpresa = !modeloDoc ? false : empresaIdTermo == null || (modeloDoc as { empresa_id?: number | null }).empresa_id === empresaIdTermo || (modeloDoc as { empresa_id?: number | null }).empresa_id === null;
+        if (!modeloDoc || !pertenceEmpresa) {
+          sendNotFound(res, 'Modelo de termo não encontrado');
+          return;
+        }
+        termo.modelo_documento_id = modelo_documento_id;
+      }
       if (assinado !== undefined) termo.assinado = assinado;
 
       await termo.save();

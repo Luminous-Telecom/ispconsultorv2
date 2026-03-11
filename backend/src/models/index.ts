@@ -211,6 +211,9 @@ ModeloDocumento.hasMany(TermoContrato, {
   as: 'termosContrato'
 });
 
+DadosEmpresa.hasMany(ModeloDocumento, { foreignKey: 'empresa_id', as: 'modelosDocumento' });
+ModeloDocumento.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+
 // Blockdomi - VersaoBlockdomi
 VersaoBlockdomi.hasMany(Dominio, { foreignKey: 'versao_id' });
 Dominio.belongsTo(VersaoBlockdomi, { foreignKey: 'versao_id', as: 'versaoRef' });

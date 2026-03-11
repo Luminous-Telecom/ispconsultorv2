@@ -32,9 +32,10 @@ export class ReciboPDFService {
       contrato = await ContratoService.getById(titulo.contrato_id) ?? undefined;
     }
     try {
-      let modelos = await ModeloDocumentoService.getByType('recibo', true);
+      const empresaId = (cliente as { empresa_id?: number | null }).empresa_id ?? (titulo as { empresa_id?: number | null }).empresa_id ?? null;
+      let modelos = await ModeloDocumentoService.getByType('recibo', true, empresaId);
       if (modelos.length === 0) {
-        const todosModelos = await ModeloDocumentoService.list({ ativo: true });
+        const todosModelos = await ModeloDocumentoService.list({ ativo: true, empresa_id: empresaId ?? undefined });
         modelos = todosModelos.data.filter(
           (m: ModeloDocumento & { conteudo_recibo?: string }) => m.conteudo_recibo && m.conteudo_recibo.trim().length > 0
         );

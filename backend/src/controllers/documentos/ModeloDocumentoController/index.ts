@@ -14,6 +14,12 @@ import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../..
 import { logger } from '../../../utils/logger';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
+function pertenceEmpresa(doc: { empresa_id?: number | null }, empresaId: number | null): boolean {
+  const eid = doc.empresa_id;
+  if (empresaId == null) return true;
+  return eid === empresaId || eid === null;
+}
+
 export class ModeloDocumentoController {
   /**
    * Listar todos os documentos do sistema
@@ -40,10 +46,11 @@ export class ModeloDocumentoController {
   static async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const documento = await ModeloDocumentoService.getById(id);
 
-      if (!documento) {
+      if (!documento || !pertenceEmpresa(documento, empresaId)) {
         sendNotFound(res, 'Documento não encontrado');
         return;
       }
@@ -102,16 +109,19 @@ export class ModeloDocumentoController {
     try {
       const { id } = req.params;
       const documentoData = req.body;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const documento = await ModeloDocumentoService.getById(id);
 
-      if (!documento) {
+      if (!documento || !pertenceEmpresa(documento, empresaId)) {
         sendNotFound(res, 'Documento não encontrado');
         return;
       }
 
       const dadosAnteriores = documento.toJSON();
-      const documentoAtualizado = await ModeloDocumentoService.update(id, documentoData);
+      const payload = { ...documentoData };
+      if (empresaId != null) payload.empresa_id = documento.empresa_id;
+      const documentoAtualizado = await ModeloDocumentoService.update(id, payload);
 
       const dadosNovos = documentoAtualizado.toJSON() as unknown as Record<string, unknown>;
       
@@ -148,10 +158,11 @@ export class ModeloDocumentoController {
   static async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const documento = await ModeloDocumentoService.getById(id);
 
-      if (!documento) {
+      if (!documento || !pertenceEmpresa(documento, empresaId)) {
         sendNotFound(res, 'Documento não encontrado');
         return;
       }
@@ -237,6 +248,12 @@ export class ModeloDocumentoController {
   static async generatePdf(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+      const documento = await ModeloDocumentoService.getById(id);
+      if (!documento || !pertenceEmpresa(documento, empresaId)) {
+        sendNotFound(res, 'Documento não encontrado');
+        return;
+      }
       await ModeloDocumentoPdfService.gerarPdf(Number(id), res);
     } catch (error) {
       sendError(res, error, 'Erro ao gerar PDF', 500, true);
@@ -249,6 +266,12 @@ export class ModeloDocumentoController {
   static async generateTestPdf(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
+      const documento = await ModeloDocumentoService.getById(id);
+      if (!documento || !pertenceEmpresa(documento, empresaId)) {
+        sendNotFound(res, 'Documento não encontrado');
+        return;
+      }
       const { cliente_id, contrato_id } = req.query;
       await ModeloDocumentoPdfService.gerarTestPdf(
         Number(id),
@@ -285,6 +308,12 @@ export class ModeloDocumentoController {
         sendValidationError(res, 'ID do modelo de documento e modelo são obrigatórios');
         return;
       }
+      const empresaId = getEmpresaIdOrNull(req);
+      const doc = await ModeloDocumentoService.getById(modelo_documento_id);
+      if (!doc || !pertenceEmpresa(doc, empresaId)) {
+        sendNotFound(res, 'Modelo de documento não encontrado');
+        return;
+      }
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo', modelo);
       if (result.success) {
         sendSuccess(res, result.data, result.message);
@@ -301,6 +330,12 @@ export class ModeloDocumentoController {
       const { modelo_documento_id, modelo } = req.body;
       if (!modelo_documento_id || modelo === undefined || modelo === null) {
         sendValidationError(res, 'ID do modelo de documento e modelo são obrigatórios');
+        return;
+      }
+      const empresaId = getEmpresaIdOrNull(req);
+      const doc = await ModeloDocumentoService.getById(modelo_documento_id);
+      if (!doc || !pertenceEmpresa(doc, empresaId)) {
+        sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_adesao', modelo);
@@ -321,6 +356,12 @@ export class ModeloDocumentoController {
         sendValidationError(res, 'ID do modelo de documento e modelo são obrigatórios');
         return;
       }
+      const empresaId = getEmpresaIdOrNull(req);
+      const doc = await ModeloDocumentoService.getById(modelo_documento_id);
+      if (!doc || !pertenceEmpresa(doc, empresaId)) {
+        sendNotFound(res, 'Modelo de documento não encontrado');
+        return;
+      }
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_permanencia', modelo);
       if (result.success) {
         sendSuccess(res, result.data, result.message);
@@ -337,6 +378,12 @@ export class ModeloDocumentoController {
       const { modelo_documento_id, modelo } = req.body;
       if (!modelo_documento_id || modelo === undefined || modelo === null) {
         sendValidationError(res, 'ID do modelo de documento e modelo são obrigatórios');
+        return;
+      }
+      const empresaId = getEmpresaIdOrNull(req);
+      const doc = await ModeloDocumentoService.getById(modelo_documento_id);
+      if (!doc || !pertenceEmpresa(doc, empresaId)) {
+        sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_recibo', modelo);
@@ -357,6 +404,12 @@ export class ModeloDocumentoController {
         sendValidationError(res, 'ID do modelo de documento e modelo são obrigatórios');
         return;
       }
+      const empresaId = getEmpresaIdOrNull(req);
+      const doc = await ModeloDocumentoService.getById(modelo_documento_id);
+      if (!doc || !pertenceEmpresa(doc, empresaId)) {
+        sendNotFound(res, 'Modelo de documento não encontrado');
+        return;
+      }
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_carta', modelo);
       if (result.success) {
         sendSuccess(res, result.data, result.message);
@@ -374,10 +427,11 @@ export class ModeloDocumentoController {
   static async getModelosByModeloContrato(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const modeloDocumento = await ModeloDocumentoService.getById(id);
 
-      if (!modeloDocumento) {
+      if (!modeloDocumento || !pertenceEmpresa(modeloDocumento, empresaId)) {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
@@ -402,9 +456,10 @@ export class ModeloDocumentoController {
     try {
       const { id } = req.params;
       const { conteudo } = req.body;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const documento = await ModeloDocumentoService.getById(Number(id));
-      if (!documento) {
+      if (!documento || !pertenceEmpresa(documento, empresaId)) {
         sendNotFound(res, 'Documento não encontrado');
         return;
       }
@@ -431,9 +486,10 @@ export class ModeloDocumentoController {
     try {
       const { id } = req.params;
       const { cliente_id, conteudo } = req.body;
+      const empresaId = getEmpresaIdOrNull(req);
 
       const documento = await ModeloDocumentoService.getById(Number(id));
-      if (!documento) {
+      if (!documento || !pertenceEmpresa(documento, empresaId)) {
         sendNotFound(res, 'Documento não encontrado');
         return;
       }

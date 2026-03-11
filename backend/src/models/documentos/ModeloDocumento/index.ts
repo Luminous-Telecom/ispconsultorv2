@@ -83,6 +83,9 @@ ModeloDocumento.init(
     empresa_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      references: { model: 'adm_dados_empresa', key: 'id' },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
     },
     nome: {
       type: DataTypes.STRING(255),
@@ -176,6 +179,9 @@ ModeloDocumento.init(
       },
       {
         fields: ['tipo'],
+      },
+      {
+        fields: ['empresa_id'],
       },
     ],
   }
