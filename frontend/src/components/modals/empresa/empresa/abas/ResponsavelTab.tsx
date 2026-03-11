@@ -4,6 +4,9 @@ import { FormField } from '@/components/ui';
 import { DadosEmpresaTabProps } from '../types';
 import { useI18n } from '@/contexts/I18nContext';
 
+/** Desativado provisoriamente - trocar para true para reativar */
+const SHOW_ASSINATURA_RESPONSAVEL = false;
+
 const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (file: File | null) => void }> = ({
   dados,
   onChange,
@@ -61,7 +64,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
       </div>
 
       {/* Assinatura do Responsável */}
-      <div className="row mt-4 pt-3 border-top">
+      {SHOW_ASSINATURA_RESPONSAVEL && <div className="row mt-4 pt-3 border-top">
         <div className="col-md-12">
           <label htmlFor="assinatura" className="form-label small fw-bold">{t('company.responsibleSignature')}</label>
           <div className="d-flex align-items-start gap-3">
@@ -105,7 +108,7 @@ const ResponsavelTab: React.FC<DadosEmpresaTabProps & { onAssinaturaChange: (fil
             </div>
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 };
