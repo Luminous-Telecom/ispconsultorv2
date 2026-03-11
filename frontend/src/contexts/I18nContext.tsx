@@ -950,6 +950,7 @@ export interface TranslationKeys {
 
   'saas.manualUnblock': string;
   'saas.confirmManualUnblock': string;
+  'saas.dataNaoBloquearAte': string;
 
   // Placeholders
   'placeholder.cnpj': string;
@@ -2281,6 +2282,7 @@ const translations: Translations = {
 
     'saas.manualUnblock': 'Desbloquear manualmente',
     'saas.confirmManualUnblock': 'Desbloquear empresa manualmente? Ela terá o prazo configurado para regularizar os títulos.',
+    'saas.dataNaoBloquearAte': 'Data de não bloquear até',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -3637,6 +3639,7 @@ const translations: Translations = {
 
     'saas.manualUnblock': 'Manual unblock',
     'saas.confirmManualUnblock': 'Manually unblock company? It will have the configured period to regularize titles.',
+    'saas.dataNaoBloquearAte': 'Do not block until',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -4995,6 +4998,7 @@ const translations: Translations = {
 
     'saas.manualUnblock': 'Desbloquear manualmente',
     'saas.confirmManualUnblock': '¿Desbloquear empresa manualmente? Tendrá el plazo configurado para regularizar los títulos.',
+    'saas.dataNaoBloquearAte': 'Fecha de no bloquear hasta',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',

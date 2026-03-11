@@ -7,10 +7,11 @@ import FormField from '@/components/ui/FormField';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useFormReset } from '@/hooks/useFormReset';
 import { saasContratoService, saasDiasVencimentoService, type SaasContrato } from '@/services/saas/saasCrudService';
+import { saasEmpresasService } from '@/services/saas/saasEmpresasService';
 import { saasPlanoService } from '@/services/saas/saasPlanoService';
 import { saasBancoService } from '@/services/saas/saasConfigService';
 
-interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; empresaId: number; }
+interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; empresaId: number; dataFimDesbloqueioManual?: string | null; }
 
 interface Form {
   banco_id: number | '';
@@ -21,11 +22,12 @@ interface Form {
   tipo: 'mensal' | 'anual';
   valor: number | '';
   observacoes: string;
+  data_fim_desbloqueio_manual: string;
 }
 
-const INITIAL: Form = { banco_id: '', dia_vencimento: '', plano_id: '', data_inicio: '', data_fim: '', tipo: 'mensal', valor: '', observacoes: '' };
+const INITIAL: Form = { banco_id: '', dia_vencimento: '', plano_id: '', data_inicio: '', data_fim: '', tipo: 'mensal', valor: '', observacoes: '', data_fim_desbloqueio_manual: '' };
 
-const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId, empresaId }) => {
+const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId, empresaId, dataFimDesbloqueioManual }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
@@ -84,9 +86,17 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
     if (valor > 0) setForm(p => ({ ...p, valor }));
   }, [show, isEditing, form.plano_id, form.tipo, planos]);
 
-  useFormReset({ show: show && !isEditing, initialData: { ...INITIAL, data_inicio: new Date().toISOString().slice(0, 10) }, setFormData: setForm, setErrors });
   useFormReset({
-    show: show && isEditing, initialData: INITIAL, setFormData: setForm, setErrors,
+    show: show && !isEditing,
+    initialData: { ...INITIAL, data_inicio: new Date().toISOString().slice(0, 10) },
+    setFormData: setForm,
+    setErrors,
+  });
+  useFormReset({
+    show: show && isEditing,
+    initialData: INITIAL,
+    setFormData: setForm,
+    setErrors,
     customData: data?.data ? (() => {
       const d = data.data as unknown as SaasContrato;
       return {
@@ -98,9 +108,15 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
         tipo: d.tipo ?? 'mensal',
         valor: d.valor ?? '',
         observacoes: d.observacoes ?? '',
+        data_fim_desbloqueio_manual: (dataFimDesbloqueioManual ?? '').toString().slice(0, 10),
       } as Form;
     })() : undefined,
   });
+  useEffect(() => {
+    if (show && dataFimDesbloqueioManual !== undefined) {
+      setForm(p => ({ ...p, data_fim_desbloqueio_manual: dataFimDesbloqueioManual ?? '' }));
+    }
+  }, [show, dataFimDesbloqueioManual]);
 
   const createMutation = useMutation({
     mutationFn: (d: Partial<SaasContrato>) => saasContratoService.create(d),
@@ -112,7 +128,13 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
     onSuccess: () => { success(t('messages.success')); queryClient.invalidateQueries({ queryKey: ['saas-contratos'] }); onSuccess?.(); },
     onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
   });
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const updateDataFimMutation = useMutation({
+    mutationFn: (payload: { empresaId: number; data_fim_desbloqueio_manual: string | null }) =>
+      saasEmpresasService.updateDataFimDesbloqueioManual(payload.empresaId, payload.data_fim_desbloqueio_manual),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['saas-contratos'] }); onSuccess?.(); },
+    onError: (e: unknown) => error((e as { response?: { data?: { message?: string } } })?.response?.data?.message || t('messages.error')),
+  });
+  const isPending = createMutation.isPending || updateMutation.isPending || updateDataFimMutation.isPending;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,6 +157,11 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
       };
       if (isEditing) await updateMutation.mutateAsync(payload);
       else await createMutation.mutateAsync(payload);
+      const novoValor = form.data_fim_desbloqueio_manual?.trim() || null;
+      const valorAtual = (dataFimDesbloqueioManual?.trim() || null) ?? null;
+      if (novoValor !== valorAtual) {
+        await updateDataFimMutation.mutateAsync({ empresaId, data_fim_desbloqueio_manual: novoValor });
+      }
     } catch { /* tratado no mutation */ }
   };
 
@@ -223,6 +250,16 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
           <div className="col-md-12">
             <FormField name="observacoes" type="textarea" label={t('form.observations')} value={form.observacoes}
               onChange={v => setForm(p => ({ ...p, observacoes: String(v ?? '') }))} size="md" />
+          </div>
+          <div className="col-md-12">
+            <FormField
+              name="data_fim_desbloqueio_manual"
+              type="date"
+              label={t('saas.dataNaoBloquearAte')}
+              value={form.data_fim_desbloqueio_manual}
+              onChange={v => setForm(p => ({ ...p, data_fim_desbloqueio_manual: String(v ?? '') }))}
+              size="md"
+            />
           </div>
         </div>
       </form>

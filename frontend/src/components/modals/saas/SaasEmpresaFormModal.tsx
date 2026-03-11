@@ -217,7 +217,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   }, [titulosParaFiltro, showCanceladosTitulos]);
 
   const contratosRes = useMemo(() => {
-    const res = contratosData?.data as { data?: SaasContrato[]; status_empresa?: { bloqueado_por_atraso: boolean; em_atraso: boolean } } | undefined;
+    const res = contratosData?.data as { data?: SaasContrato[]; status_empresa?: { bloqueado_por_atraso: boolean; em_atraso: boolean; data_fim_desbloqueio_manual?: string | null } } | undefined;
     return { rows: res?.data ?? [], statusEmpresa: res?.status_empresa };
   }, [contratosData]);
 
@@ -827,8 +827,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
           </div>
         </div>
       </form>
-      <SaasContratoFormModal show={showContratoCreate} onClose={() => setShowContratoCreate(false)} empresaId={empresaId!} onSuccess={() => refetchContratos()} />
-      <SaasContratoFormModal show={showContratoEdit && !!selectedContratoId} onClose={() => { setShowContratoEdit(false); setSelectedContratoId(null); }} itemId={selectedContratoId} empresaId={empresaId!} onSuccess={() => refetchContratos()} />
+      <SaasContratoFormModal show={showContratoCreate} onClose={() => setShowContratoCreate(false)} empresaId={empresaId!} dataFimDesbloqueioManual={statusEmpresa?.data_fim_desbloqueio_manual} onSuccess={() => refetchContratos()} />
+      <SaasContratoFormModal show={showContratoEdit && !!selectedContratoId} onClose={() => { setShowContratoEdit(false); setSelectedContratoId(null); }} itemId={selectedContratoId} empresaId={empresaId!} dataFimDesbloqueioManual={statusEmpresa?.data_fim_desbloqueio_manual} onSuccess={() => refetchContratos()} />
       <SaasTenantUsuarioFormModal show={showUsuarioCreate} onClose={() => setShowUsuarioCreate(false)} empresaId={empresaId!} onSuccess={() => refetchUsuarios()} />
       <SaasTenantUsuarioFormModal show={showUsuarioEdit && !!selectedUsuarioId} onClose={() => { setShowUsuarioEdit(false); setSelectedUsuarioId(null); }} usuarioId={selectedUsuarioId} empresaId={empresaId!} onSuccess={() => refetchUsuarios()} />
       <SaasTituloFormModal show={showTituloCreate} onClose={() => setShowTituloCreate(false)} empresaId={empresaId!} onSuccess={() => refetchTitulos()} />

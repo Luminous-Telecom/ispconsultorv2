@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import Joi from 'joi';
+import SaasDadosEmpresa from '../../../models/saas/SaasDadosEmpresa';
 import { SaasDadosEmpresaService } from '../../../services/saas/SaasDadosEmpresaService';
 import { DesbloqueioManualService } from '../../../services/saas/DesbloqueioManualService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
@@ -123,6 +124,31 @@ export class SaasDadosEmpresaController {
       sendSuccess(res, stats);
     } catch (err) {
       sendError(res, err, 'Erro ao buscar estatísticas', 500, true);
+    }
+  }
+
+  static async updateDataFimDesbloqueioManual(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const id = Number(req.params.id);
+      const { data_fim_desbloqueio_manual } = req.body as { data_fim_desbloqueio_manual?: string | null };
+      if (!id || Number.isNaN(id)) {
+        sendValidationError(res, 'ID inválido');
+        return;
+      }
+      const value = data_fim_desbloqueio_manual == null || data_fim_desbloqueio_manual === ''
+        ? null
+        : String(data_fim_desbloqueio_manual).trim().slice(0, 10) || null;
+      const [affected] = await SaasDadosEmpresa.update(
+        { data_fim_desbloqueio_manual: value },
+        { where: { id } }
+      );
+      if (affected === 0) {
+        sendNotFound(res, 'Empresa não encontrada');
+        return;
+      }
+      sendSuccess(res, { data_fim_desbloqueio_manual: value }, 'Data atualizada');
+    } catch (err) {
+      sendError(res, err, 'Erro ao atualizar data', 500, true);
     }
   }
 

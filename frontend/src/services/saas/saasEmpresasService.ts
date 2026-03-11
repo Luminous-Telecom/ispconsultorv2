@@ -45,4 +45,6 @@ export const saasEmpresasService = {
     defaultApiClient.get<{ success: boolean; data: { total: number; totalUsuarios: number } }>('/saas/empresas/stats'),
   desbloquearManual: (id: number) =>
     defaultApiClient.post<{ success: boolean; message: string; data?: { data_fim_desbloqueio_manual: string } }>(`/saas/empresas/${id}/desbloquear-manual`),
+  updateDataFimDesbloqueioManual: (id: number, dataFimDesbloqueioManual: string | null) =>
+    defaultApiClient.patch<ApiResponse<{ data_fim_desbloqueio_manual: string | null }>>(`/saas/empresas/${id}/data-fim-desbloqueio-manual`, { data_fim_desbloqueio_manual: dataFimDesbloqueioManual }),
 };

@@ -267,9 +267,9 @@ export class SaasTituloResumoService {
 
 // ─── Contratos ─────────────────────────────────────────────────────────────────
 
-async function getStatusEmpresa(empresaId: number): Promise<{ bloqueado_por_atraso: boolean; em_atraso: boolean }> {
+async function getStatusEmpresa(empresaId: number): Promise<{ bloqueado_por_atraso: boolean; em_atraso: boolean; data_fim_desbloqueio_manual?: string | null }> {
   const [empresa, countEmAtraso] = await Promise.all([
-    SaasDadosEmpresa.findByPk(empresaId, { attributes: ['bloqueado_por_atraso'] }),
+    SaasDadosEmpresa.findByPk(empresaId, { attributes: ['bloqueado_por_atraso', 'data_fim_desbloqueio_manual'] }),
     SaasTitulo.count({
       where: {
         empresa_id: empresaId,
@@ -282,6 +282,7 @@ async function getStatusEmpresa(empresaId: number): Promise<{ bloqueado_por_atra
   return {
     bloqueado_por_atraso: !!empresa?.bloqueado_por_atraso,
     em_atraso: countEmAtraso > 0,
+    data_fim_desbloqueio_manual: empresa?.data_fim_desbloqueio_manual ?? null,
   };
 }
 
