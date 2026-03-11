@@ -1,7 +1,5 @@
-import { Op } from 'sequelize';
 import { Request, Response } from 'express';
 import { DiasVencimentoService } from '../../../services/cadastros/DiasVencimentoService';
-import { logger } from '../../../utils/logger';
 import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
@@ -14,7 +12,7 @@ export class DiasVencimentoController {
   static async get(req: Request, res: Response): Promise<void> {
     try {
       const empresaId = getEmpresaIdOrNull(req);
-      const dias = await DiasVencimentoService.list(undefined, empresaId);
+      const dias = await DiasVencimentoService.list({ ativo: true }, empresaId);
 
       sendSuccess(res, dias, 'Dias de vencimento encontrados');
     } catch (error) {
@@ -23,23 +21,16 @@ export class DiasVencimentoController {
   }
 
   /**
-   * Atualizar configuração de dias de vencimento
+   * Atualizar configuração de dias de vencimento (apenas da empresa)
    */
   static async update(req: Request, res: Response): Promise<void> {
     try {
-      const { dias } = req.body;
+      const { dias } = req.body ?? {};
       const empresaId = getEmpresaIdOrNull(req);
-
-      const whereEmpresa = empresaId != null ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] } : {};
       const diasAntes = await DiasVencimentoService.list(undefined, empresaId);
       const dadosAnteriores = diasAntes.map(d => d.toJSON());
-      
-      await DiasVencimentoService.updateStatus(false, Object.keys(whereEmpresa).length > 0 ? whereEmpresa : undefined);
-      
-      if (dias.length > 0) {
-        const whereAtivo = empresaId != null ? { dia: dias, ...whereEmpresa } : { dia: dias };
-        await DiasVencimentoService.updateStatus(true, whereAtivo);
-      }
+
+      await DiasVencimentoService.upsertDias(Array.isArray(dias) ? dias : [], empresaId);
 
       const diasDepois = await DiasVencimentoService.list(undefined, empresaId);
       const dadosNovos = diasDepois.map(d => d.toJSON());
@@ -70,16 +61,9 @@ export class DiasVencimentoController {
 
   static async create(req: Request, res: Response): Promise<void> {
     try {
-      const { dias } = req.body;
+      const { dias } = req.body ?? {};
       const empresaId = getEmpresaIdOrNull(req);
-
-      const whereEmpresa = empresaId != null ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] } : {};
-      await DiasVencimentoService.updateStatus(false, Object.keys(whereEmpresa).length > 0 ? whereEmpresa : undefined);
-      
-      if (dias.length > 0) {
-        const whereAtivo = empresaId != null ? { dia: dias, ...whereEmpresa } : { dia: dias };
-        await DiasVencimentoService.updateStatus(true, whereAtivo);
-      }
+      await DiasVencimentoService.upsertDias(Array.isArray(dias) ? dias : [], empresaId);
 
       const diasDepois = await DiasVencimentoService.list({ ativo: true }, empresaId);
       for (const dia of diasDepois) {

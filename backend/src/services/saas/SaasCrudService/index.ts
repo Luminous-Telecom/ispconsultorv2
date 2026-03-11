@@ -102,17 +102,9 @@ export class SaasDiasVencimentoService {
     await SaasDiasVencimento.destroy({ where: { id } });
   }
 
-  /** Obter config (dias ativos) por empresa - mesmo formato do admin */
+  /** Obter config (dias ativos) por empresa - retorna apenas os dias ativos que pertencem à empresa */
   static async getConfig(empresaId: number) {
-    let rows = await SaasDiasVencimento.findAll({ where: { empresa_id: empresaId }, order: [['dia', 'ASC']] });
-    if (rows.length === 0) {
-      const defaultDias = [5, 10, 15, 20, 25, 30];
-      for (let dia = 1; dia <= 30; dia++) {
-        await SaasDiasVencimento.create({ empresa_id: empresaId, dia, dia_padrao: dia, ativo: defaultDias.includes(dia) } as never);
-      }
-      rows = await SaasDiasVencimento.findAll({ where: { empresa_id: empresaId }, order: [['dia', 'ASC']] });
-    }
-    return rows;
+    return SaasDiasVencimento.findAll({ where: { empresa_id: empresaId, ativo: true }, order: [['dia', 'ASC']] });
   }
 
   /** Atualizar config (dias ativos) - mesmo formato do admin */

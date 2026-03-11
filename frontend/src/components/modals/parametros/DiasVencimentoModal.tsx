@@ -21,7 +21,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
   skipWrapper = false,
 }) => {
   const isMobile = useIsMobile();
-  const [diasAtivos, setDiasAtivos] = useState<number[]>([5, 10, 15, 20, 25, 30]);
+  const [diasAtivos, setDiasAtivos] = useState<number[]>([]);
   const { success, error } = useNotificationContext();
 
   const loadDiasAtivosErp = useCallback(async () => {
@@ -31,7 +31,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
         .filter((item: DiasVencimento) => item.ativo)
         .map((item: DiasVencimento) => item.dia ?? item.dia_padrao)
         .filter((dia): dia is number => dia !== undefined);
-      if (dias.length > 0) setDiasAtivos(dias);
+      setDiasAtivos(dias);
     }
   }, []);
 
@@ -43,8 +43,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({
         .filter((item: DiasVencimento) => item.ativo)
         .map((item: DiasVencimento) => item.dia ?? item.dia_padrao)
         .filter((dia): dia is number => dia !== undefined);
-      if (dias.length > 0) setDiasAtivos(dias);
-      else setDiasAtivos([5, 10, 15, 20, 25, 30]);
+      setDiasAtivos(dias);
     }
   }, []);
 
