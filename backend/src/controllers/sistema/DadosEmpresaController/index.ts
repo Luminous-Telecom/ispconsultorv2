@@ -12,6 +12,7 @@ import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
 import { SaasTituloBoletoService } from '../../../services/saas/SaasTituloBoletoService';
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
@@ -209,7 +210,8 @@ export class DadosEmpresaController {
   // Rota exclusiva do sistema administrativo - requer autenticação (validada pelo authMiddleware via cookie)
   static async get(req: Request, res: Response): Promise<void> {
     try {
-      let dadosEmpresa = await DadosEmpresaService.findOne();
+      const empresaId = getEmpresaIdOrNull(req);
+      let dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
 
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresaService.create(DadosEmpresaController.getDefaultData());
@@ -231,12 +233,13 @@ export class DadosEmpresaController {
 
   static async update(req: Request, res: Response): Promise<void> {
     try {
+      const empresaId = getEmpresaIdOrNull(req);
       const dadosAtualizados = { ...req.body };
-      
+
       dadosAtualizados.logo = DadosEmpresaController.normalizePath(dadosAtualizados.logo);
       dadosAtualizados.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosAtualizados.responsavel_assinatura);
 
-      let dadosEmpresa = await DadosEmpresaService.findOne();
+      let dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
       const dadosAnteriores = dadosEmpresa ? dadosEmpresa.toJSON() : null;
 
       if (!dadosEmpresa) {
@@ -252,7 +255,7 @@ export class DadosEmpresaController {
           // Não interromper o fluxo
         }
       } else {
-        dadosEmpresa = await DadosEmpresaService.update(dadosAtualizados);
+        dadosEmpresa = await DadosEmpresaService.update(dadosAtualizados, empresaId ?? undefined);
         await dadosEmpresa.reload();
         try {
           await registrarAtualizacao(
@@ -314,8 +317,9 @@ export class DadosEmpresaController {
       }
 
       // Sempre usar o mesmo caminho para substituir o arquivo antigo
+      const empresaId = getEmpresaIdOrNull(req);
       const filePath = `/arquivos/empresa/logo.png`;
-      let dadosEmpresa = await DadosEmpresaService.findOne();
+      let dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
 
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), logo: filePath });
@@ -351,7 +355,7 @@ export class DadosEmpresaController {
           }
         }
         const dadosAnteriores = dadosEmpresa.toJSON();
-        dadosEmpresa = await DadosEmpresaService.update({ logo: filePath });
+        dadosEmpresa = await DadosEmpresaService.update({ logo: filePath }, empresaId ?? undefined);
         await dadosEmpresa.reload();
         
         try {
@@ -378,7 +382,8 @@ export class DadosEmpresaController {
 
   static async getLogo(req: Request, res: Response): Promise<void> {
     try {
-      const dadosEmpresa = await DadosEmpresaService.findOne();
+      const empresaId = getEmpresaIdOrNull(req);
+      const dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
       
       if (!dadosEmpresa || !dadosEmpresa.logo) {
         sendNotFound(res, 'Logo não encontrada');
@@ -428,8 +433,9 @@ export class DadosEmpresaController {
       }
 
       // Sempre usar o mesmo caminho para substituir o arquivo antigo
+      const empresaId = getEmpresaIdOrNull(req);
       const filePath = `/arquivos/empresa/assinatura.png`;
-      let dadosEmpresa = await DadosEmpresaService.findOne();
+      let dadosEmpresa = await DadosEmpresaService.findOne(empresaId ?? undefined);
 
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), responsavel_assinatura: filePath });
@@ -454,7 +460,7 @@ export class DadosEmpresaController {
             // Ignorar erro ao deletar assinatura antiga
           }
         }
-        dadosEmpresa = await DadosEmpresaService.update({ responsavel_assinatura: filePath });
+        dadosEmpresa = await DadosEmpresaService.update({ responsavel_assinatura: filePath }, empresaId ?? undefined);
       }
 
       sendSuccess(res, { success: true, responsavel_assinatura: filePath });

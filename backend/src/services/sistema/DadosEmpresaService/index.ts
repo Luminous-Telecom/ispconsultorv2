@@ -4,16 +4,18 @@ import { slugify } from '../../../utils/slugify';
 
 export class DadosEmpresaService {
   /**
-   * Buscar dados da empresa (único registro)
+   * Buscar dados da empresa. Se empresaId for fornecido, filtra por id (multi-tenant).
+   * Caso contrário, retorna o primeiro registro (legado para superadmin).
    */
-  static async findOne(): Promise<DadosEmpresa | null> {
-    const cacheKey = 'dados_empresa:config';
+  static async findOne(empresaId?: number): Promise<DadosEmpresa | null> {
+    const cacheKey = empresaId != null ? `dados_empresa:config:${empresaId}` : 'dados_empresa:config';
     const cached = cache.get<DadosEmpresa>(cacheKey);
     if (cached) {
       return cached;
     }
 
-    const dados = await DadosEmpresa.findOne();
+    const where = empresaId != null ? { where: { id: empresaId } } : {};
+    const dados = await DadosEmpresa.findOne(where);
     if (dados) {
       cache.set(cacheKey, dados, 600000); // Cache por 10 minutos
     }
@@ -36,19 +38,21 @@ export class DadosEmpresaService {
   }
 
   /**
-   * Atualizar dados da empresa
+   * Atualizar dados da empresa. Se empresaId for fornecido, filtra por id (multi-tenant).
    */
-  static async update(dados: Partial<DadosEmpresa>): Promise<DadosEmpresa> {
-    const dadosEmpresa = await DadosEmpresa.findOne();
-    
+  static async update(dados: Partial<DadosEmpresa>, empresaId?: number): Promise<DadosEmpresa> {
+    const where = empresaId != null ? { where: { id: empresaId } } : {};
+    const dadosEmpresa = await DadosEmpresa.findOne(where);
+
     if (!dadosEmpresa) {
       throw new Error('Dados da empresa não encontrados');
     }
-    
+
     await dadosEmpresa.update(dados);
     await dadosEmpresa.reload();
-    
-    cache.delete('dados_empresa:config');
+
+    const cacheKey = empresaId != null ? `dados_empresa:config:${empresaId}` : 'dados_empresa:config';
+    cache.delete(cacheKey);
     return dadosEmpresa;
   }
 }
