@@ -2,7 +2,6 @@ import { Op } from 'sequelize';
 import { SaasServidorEmail } from '../../../models/saas/SaasServidorEmail';
 import { SaasServidorWhatsapp } from '../../../models/saas/SaasServidorWhatsapp';
 import { SaasBanco } from '../../../models/saas/SaasBanco';
-import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 
 interface ListFilters {
   page?: number;
@@ -14,33 +13,26 @@ interface ListFilters {
   sortDirection?: 'asc' | 'desc';
 }
 
-const empresaInclude = {
-  model: SaasDadosEmpresa,
-  as: 'empresa',
-  attributes: ['id', 'nome_empresa', 'cnpj', 'email'],
-};
-
 // ─── Servidores Email ────────────────────────────────────────────────────────
 
 export class SaasServidorEmailService {
   static async list(filters: ListFilters) {
-    const { page = 1, limit = 20, search, empresa_id, sortColumn = 'id', sortDirection = 'desc' } = filters;
+    const { page = 1, limit = 20, search, sortColumn = 'id', sortDirection = 'desc' } = filters;
     const allowed = ['id', 'nome', 'host_smtp', 'status', 'created_at'];
     const col = allowed.includes(sortColumn) ? sortColumn : 'id';
     const offset = (page - 1) * limit;
     const where: Record<string, unknown> = {};
-    if (empresa_id) where.empresa_id = empresa_id;
     if (search) where[Op.or as unknown as string] = [
       { nome: { [Op.like]: `%${search}%` } },
       { host_smtp: { [Op.like]: `%${search}%` } },
     ];
     const { count, rows } = await SaasServidorEmail.findAndCountAll({
-      where, include: [empresaInclude], order: [[col, sortDirection.toUpperCase()]], limit, offset,
+      where, order: [[col, sortDirection.toUpperCase()]], limit, offset,
     });
     return { data: rows, pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) } };
   }
 
-  static async getById(id: number) { return SaasServidorEmail.findByPk(id, { include: [empresaInclude] }); }
+  static async getById(id: number) { return SaasServidorEmail.findByPk(id); }
 
   static async create(data: Partial<SaasServidorEmail>) {
     return SaasServidorEmail.create(data as SaasServidorEmail['_creationAttributes']);
@@ -57,23 +49,22 @@ export class SaasServidorEmailService {
 
 export class SaasServidorWhatsappService {
   static async list(filters: ListFilters) {
-    const { page = 1, limit = 20, search, empresa_id, sortColumn = 'id', sortDirection = 'desc' } = filters;
+    const { page = 1, limit = 20, search, sortColumn = 'id', sortDirection = 'desc' } = filters;
     const allowed = ['id', 'nome', 'url_api', 'status', 'created_at'];
     const col = allowed.includes(sortColumn) ? sortColumn : 'id';
     const offset = (page - 1) * limit;
     const where: Record<string, unknown> = {};
-    if (empresa_id) where.empresa_id = empresa_id;
     if (search) where[Op.or as unknown as string] = [
       { nome: { [Op.like]: `%${search}%` } },
       { numero: { [Op.like]: `%${search}%` } },
     ];
     const { count, rows } = await SaasServidorWhatsapp.findAndCountAll({
-      where, include: [empresaInclude], order: [[col, sortDirection.toUpperCase()]], limit, offset,
+      where, order: [[col, sortDirection.toUpperCase()]], limit, offset,
     });
     return { data: rows, pagination: { total: count as number, page, limit, totalPages: Math.ceil((count as number) / limit) } };
   }
 
-  static async getById(id: number) { return SaasServidorWhatsapp.findByPk(id, { include: [empresaInclude] }); }
+  static async getById(id: number) { return SaasServidorWhatsapp.findByPk(id); }
 
   static async create(data: Partial<SaasServidorWhatsapp>) {
     return SaasServidorWhatsapp.create(data as SaasServidorWhatsapp['_creationAttributes']);

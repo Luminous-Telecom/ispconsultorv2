@@ -21,7 +21,6 @@ export class SaasTipoCobranca extends Model<
   InferCreationAttributes<SaasTipoCobranca>
 > {
   declare id: CreationOptional<number>;
-  declare empresa_id: number;
   declare nome: string;
   declare quantidade_titulos: number;
   declare periodicidade: SaasPeriodicidade;
@@ -33,7 +32,6 @@ export class SaasTipoCobranca extends Model<
 SaasTipoCobranca.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    empresa_id: { type: DataTypes.INTEGER, allowNull: false },
     nome: { type: DataTypes.STRING(100), allowNull: false },
     quantidade_titulos: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
     periodicidade: {

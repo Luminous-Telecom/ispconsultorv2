@@ -10,7 +10,6 @@ import { saasServidorWhatsappService, type SaasServidorWhatsapp } from '@/servic
 interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; }
 
 interface Form {
-  empresa_id: number | '';
   nome: string;
   url_api: string;
   token: string;
@@ -19,7 +18,7 @@ interface Form {
   limite_mensagens: number | '';
 }
 
-const INITIAL: Form = { empresa_id: '', nome: '', url_api: '', token: '', numero: '', status: 'ativo', limite_mensagens: '' };
+const INITIAL: Form = { nome: '', url_api: '', token: '', numero: '', status: 'ativo', limite_mensagens: '' };
 
 const SaasServidorWhatsappFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const queryClient = useQueryClient();
@@ -38,7 +37,6 @@ const SaasServidorWhatsappFormModal: React.FC<Props> = ({ show, onClose, onSucce
   useFormReset({
     show: show && isEditing, initialData: INITIAL, setFormData: setForm, setErrors,
     customData: data?.data ? {
-      empresa_id: (data.data as SaasServidorWhatsapp).empresa_id,
       nome: (data.data as SaasServidorWhatsapp).nome,
       url_api: (data.data as SaasServidorWhatsapp).url_api,
       token: (data.data as SaasServidorWhatsapp).token || '',
@@ -65,12 +63,11 @@ const SaasServidorWhatsappFormModal: React.FC<Props> = ({ show, onClose, onSucce
     const errs: Partial<Record<keyof Form, string>> = {};
     if (!form.nome.trim()) errs.nome = 'Nome é obrigatório';
     if (!form.url_api.trim()) errs.url_api = 'URL da API é obrigatória';
-    if (form.empresa_id === '') errs.empresa_id = 'Empresa é obrigatória';
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
     try {
       const payload: Partial<SaasServidorWhatsapp> = {
-        empresa_id: Number(form.empresa_id), nome: form.nome, url_api: form.url_api,
+        nome: form.nome, url_api: form.url_api,
         token: form.token || null, numero: form.numero || null, status: form.status,
         limite_mensagens: form.limite_mensagens !== '' ? Number(form.limite_mensagens) : null,
       };
@@ -88,12 +85,7 @@ const SaasServidorWhatsappFormModal: React.FC<Props> = ({ show, onClose, onSucce
     >
       <form id="saas-servidor-whatsapp-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
         <div className="row g-1">
-          <div className="col-md-6">
-            <FormField name="empresa_id" type="number" label="ID da Empresa *" value={form.empresa_id === '' ? '' : form.empresa_id}
-              onChange={v => { setForm(p => ({ ...p, empresa_id: v !== '' && v != null ? Number(v) : '' })); if (errors.empresa_id) setErrors(p => ({ ...p, empresa_id: undefined })); }}
-              min={1} required size="sm" error={errors.empresa_id} />
-          </div>
-          <div className="col-md-6">
+          <div className="col-md-12">
             <FormField name="nome" type="text" label="Nome *" value={form.nome}
               onChange={v => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(p => ({ ...p, nome: undefined })); }}
               required size="sm" error={errors.nome} />

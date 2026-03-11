@@ -10,7 +10,6 @@ import { saasServidorEmailService, type SaasServidorEmail } from '@/services/saa
 interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; }
 
 interface Form {
-  empresa_id: number | '';
   nome: string;
   host_smtp: string;
   porta: number;
@@ -20,7 +19,7 @@ interface Form {
   status: 'ativo' | 'inativo' | 'erro';
 }
 
-const INITIAL: Form = { empresa_id: '', nome: '', host_smtp: '', porta: 587, usuario: '', senha_criptografada: '', ssl: true, status: 'ativo' };
+const INITIAL: Form = { nome: '', host_smtp: '', porta: 587, usuario: '', senha_criptografada: '', ssl: true, status: 'ativo' };
 
 const SaasServidorEmailFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const queryClient = useQueryClient();
@@ -39,7 +38,6 @@ const SaasServidorEmailFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
   useFormReset({
     show: show && isEditing, initialData: INITIAL, setFormData: setForm, setErrors,
     customData: data?.data ? {
-      empresa_id: (data.data as SaasServidorEmail).empresa_id,
       nome: (data.data as SaasServidorEmail).nome,
       host_smtp: (data.data as SaasServidorEmail).host_smtp,
       porta: (data.data as SaasServidorEmail).porta,
@@ -69,11 +67,10 @@ const SaasServidorEmailFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
     if (!form.host_smtp.trim()) errs.host_smtp = 'Host SMTP é obrigatório';
     if (!form.usuario.trim()) errs.usuario = 'Usuário é obrigatório';
     if (!form.senha_criptografada.trim()) errs.senha_criptografada = 'Senha é obrigatória';
-    if (form.empresa_id === '') errs.empresa_id = 'Empresa é obrigatória';
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
     try {
-      const payload = { ...form, empresa_id: Number(form.empresa_id) };
+      const payload = { ...form };
       if (isEditing) await updateMutation.mutateAsync(payload);
       else await createMutation.mutateAsync(payload);
     } catch { /* tratado no mutation */ }
@@ -88,12 +85,7 @@ const SaasServidorEmailFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
     >
       <form id="saas-servidor-email-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
         <div className="row g-1">
-          <div className="col-md-6">
-            <FormField name="empresa_id" type="number" label="ID da Empresa *" value={form.empresa_id === '' ? '' : form.empresa_id}
-              onChange={v => { setForm(p => ({ ...p, empresa_id: v !== '' && v != null ? Number(v) : '' })); if (errors.empresa_id) setErrors(p => ({ ...p, empresa_id: undefined })); }}
-              min={1} required size="sm" error={errors.empresa_id} />
-          </div>
-          <div className="col-md-6">
+          <div className="col-md-12">
             <FormField name="nome" type="text" label="Nome *" value={form.nome}
               onChange={v => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(p => ({ ...p, nome: undefined })); }}
               required size="sm" error={errors.nome} />

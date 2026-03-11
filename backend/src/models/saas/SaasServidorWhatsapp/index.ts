@@ -6,7 +6,6 @@ export class SaasServidorWhatsapp extends Model<
   InferCreationAttributes<SaasServidorWhatsapp>
 > {
   declare id: CreationOptional<number>;
-  declare empresa_id: number;
   declare nome: string;
   declare url_api: string;
   declare token: CreationOptional<string | null>;
@@ -20,7 +19,6 @@ export class SaasServidorWhatsapp extends Model<
 SaasServidorWhatsapp.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    empresa_id: { type: DataTypes.INTEGER, allowNull: false },
     nome: { type: DataTypes.STRING(100), allowNull: false },
     url_api: { type: DataTypes.STRING(500), allowNull: false },
     token: { type: DataTypes.STRING(500), allowNull: true },

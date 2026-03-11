@@ -1,6 +1,5 @@
 import { Op } from 'sequelize';
 import { logger } from '../../../utils/logger';
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasTipoCobranca } from '../../../models/saas/SaasTipoCobranca';
 import { SaasDiasVencimento } from '../../../models/saas/SaasDiasVencimento';
 import { SaasTitulo } from '../../../models/saas/SaasTitulo';
@@ -18,26 +17,18 @@ interface ListFilters {
   sortDirection?: 'asc' | 'desc';
 }
 
-const empresaInclude = {
-  model: DadosEmpresa,
-  as: 'empresa',
-  attributes: ['id', 'razao_social', 'nome_fantasia'],
-};
-
 // ─── Tipos de Cobrança ──────────────────────────────────────────────────────
 
 export class SaasTipoCobrancaService {
   static async list(filters: ListFilters) {
-    const { page = 1, limit = 20, search, empresa_id, sortColumn = 'id', sortDirection = 'desc' } = filters;
+    const { page = 1, limit = 20, search, sortColumn = 'id', sortDirection = 'desc' } = filters;
     const allowed = ['id', 'nome', 'periodicidade', 'ativo', 'created_at'];
     const col = allowed.includes(sortColumn || '') ? sortColumn! : 'id';
     const offset = (page - 1) * limit;
     const where: Record<string, unknown> = {};
-    if (empresa_id) where.empresa_id = empresa_id;
     if (search) where[Op.or as unknown as string] = [{ nome: { [Op.like]: `%${search}%` } }];
     const { count, rows } = await SaasTipoCobranca.findAndCountAll({
       where,
-      include: [empresaInclude],
       order: [[col, (sortDirection || 'desc').toUpperCase()]],
       limit,
       offset,
@@ -46,7 +37,7 @@ export class SaasTipoCobrancaService {
   }
 
   static async getById(id: number) {
-    return SaasTipoCobranca.findByPk(id, { include: [empresaInclude] });
+    return SaasTipoCobranca.findByPk(id);
   }
 
   static async create(data: Partial<SaasTipoCobranca>) {
@@ -66,19 +57,17 @@ export class SaasTipoCobrancaService {
 
 export class SaasDiasVencimentoService {
   static async list(filters: ListFilters) {
-    const { page = 1, limit = 20, search, empresa_id, sortColumn = 'id', sortDirection = 'desc' } = filters;
+    const { page = 1, limit = 20, search, sortColumn = 'id', sortDirection = 'desc' } = filters;
     const allowed = ['id', 'dia', 'dia_padrao', 'ativo', 'created_at'];
     const col = allowed.includes(sortColumn || '') ? sortColumn! : 'id';
     const offset = (page - 1) * limit;
     const where: Record<string, unknown> = {};
-    if (empresa_id) where.empresa_id = empresa_id;
     if (search) {
       const diaNum = parseInt(search, 10);
       if (!isNaN(diaNum)) where[Op.or as unknown as string] = [{ dia: diaNum }, { dia_padrao: diaNum }];
     }
     const { count, rows } = await SaasDiasVencimento.findAndCountAll({
       where,
-      include: [empresaInclude],
       order: [[col, (sortDirection || 'desc').toUpperCase()]],
       limit,
       offset,
@@ -87,7 +76,7 @@ export class SaasDiasVencimentoService {
   }
 
   static async getById(id: number) {
-    return SaasDiasVencimento.findByPk(id, { include: [empresaInclude] });
+    return SaasDiasVencimento.findByPk(id);
   }
 
   static async create(data: Partial<SaasDiasVencimento>) {
@@ -102,22 +91,22 @@ export class SaasDiasVencimentoService {
     await SaasDiasVencimento.destroy({ where: { id } });
   }
 
-  /** Obter config (dias ativos) por empresa - retorna apenas os dias ativos que pertencem à empresa */
-  static async getConfig(empresaId: number) {
-    return SaasDiasVencimento.findAll({ where: { empresa_id: empresaId, ativo: true }, order: [['dia', 'ASC']] });
+  /** Obter config (dias ativos) - global, sem empresa_id */
+  static async getConfig() {
+    return SaasDiasVencimento.findAll({ where: { ativo: true }, order: [['dia', 'ASC']] });
   }
 
-  /** Atualizar config (dias ativos) - mesmo formato do admin */
-  static async updateConfig(empresaId: number, dias: number[]) {
-    const existingRows = await SaasDiasVencimento.findAll({ where: { empresa_id: empresaId }, attributes: ['dia'] });
-    await SaasDiasVencimento.update({ ativo: false }, { where: { empresa_id: empresaId } });
+  /** Atualizar config (dias ativos) - mesmo formato do admin, global */
+  static async updateConfig(dias: number[]) {
+    const existingRows = await SaasDiasVencimento.findAll({ attributes: ['dia'] });
+    await SaasDiasVencimento.update({ ativo: false }, { where: {} });
     const existingDias = new Set(existingRows.map((r: { dia: number | null }) => r.dia));
     for (const dia of dias) {
       if (dia >= 1 && dia <= 30) {
         if (existingDias.has(dia)) {
-          await SaasDiasVencimento.update({ ativo: true }, { where: { empresa_id: empresaId, dia } });
+          await SaasDiasVencimento.update({ ativo: true }, { where: { dia } });
         } else {
-          await SaasDiasVencimento.create({ empresa_id: empresaId, dia, dia_padrao: dia, ativo: true } as never);
+          await SaasDiasVencimento.create({ dia, dia_padrao: dia, ativo: true } as never);
         }
       }
     }

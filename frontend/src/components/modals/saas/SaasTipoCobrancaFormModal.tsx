@@ -20,14 +20,13 @@ const PERIODICIDADES = [
 ];
 
 interface Form {
-  empresa_id: number | '';
   nome: string;
   quantidade_titulos: number;
   periodicidade: string;
   ativo: boolean;
 }
 
-const INITIAL: Form = { empresa_id: '', nome: '', quantidade_titulos: 1, periodicidade: 'mensal', ativo: true };
+const INITIAL: Form = { nome: '', quantidade_titulos: 1, periodicidade: 'mensal', ativo: true };
 
 const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const queryClient = useQueryClient();
@@ -47,7 +46,7 @@ const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, 
     show: show && isEditing, initialData: INITIAL, setFormData: setForm, setErrors,
     customData: data?.data ? (() => {
       const d = data.data as unknown as SaasTipoCobranca;
-      return { empresa_id: d.empresa_id, nome: d.nome, quantidade_titulos: d.quantidade_titulos ?? 1, periodicidade: d.periodicidade ?? 'mensal', ativo: d.ativo ?? true };
+      return { nome: d.nome, quantidade_titulos: d.quantidade_titulos ?? 1, periodicidade: d.periodicidade ?? 'mensal', ativo: d.ativo ?? true };
     })() : undefined,
   });
 
@@ -67,13 +66,11 @@ const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, 
     e.preventDefault();
     const errs: Partial<Record<keyof Form, string>> = {};
     if (!form.nome.trim()) errs.nome = 'Nome é obrigatório';
-    if (form.empresa_id === '') errs.empresa_id = 'Empresa é obrigatória';
     if (form.quantidade_titulos < 1) errs.quantidade_titulos = 'Quantidade mínima é 1';
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
     try {
       const payload: Partial<SaasTipoCobranca> = {
-        empresa_id: Number(form.empresa_id),
         nome: form.nome,
         quantidade_titulos: form.quantidade_titulos,
         periodicidade: form.periodicidade as SaasTipoCobranca['periodicidade'],
@@ -95,12 +92,7 @@ const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, 
     >
       <form id="saas-tipo-cobranca-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
         <div className="row g-1">
-          <div className="col-md-6">
-            <FormField name="empresa_id" type="number" label="ID da Empresa *" value={form.empresa_id === '' ? '' : form.empresa_id}
-              onChange={v => { setForm(p => ({ ...p, empresa_id: v !== '' && v != null ? Number(v) : '' })); if (errors.empresa_id) setErrors(e => ({ ...e, empresa_id: undefined })); }}
-              min={1} required size="sm" error={errors.empresa_id} />
-          </div>
-          <div className="col-md-6">
+          <div className="col-md-12">
             <FormField name="nome" type="text" label="Nome *" value={form.nome}
               onChange={v => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(e => ({ ...e, nome: undefined })); }}
               required size="sm" error={errors.nome} />

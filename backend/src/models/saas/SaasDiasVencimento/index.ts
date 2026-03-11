@@ -12,7 +12,6 @@ export class SaasDiasVencimento extends Model<
   InferCreationAttributes<SaasDiasVencimento>
 > {
   declare id: CreationOptional<number>;
-  declare empresa_id: number;
   declare dia: number | null;
   declare dia_padrao: number;
   declare ativo: boolean;
@@ -23,7 +22,6 @@ export class SaasDiasVencimento extends Model<
 SaasDiasVencimento.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    empresa_id: { type: DataTypes.INTEGER, allowNull: false },
     dia: { type: DataTypes.INTEGER, allowNull: true },
     dia_padrao: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 5 },
     ativo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },

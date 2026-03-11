@@ -12,8 +12,6 @@ export type { SaasConfigListResponse, SaasCrudFilters };
 
 export interface SaasTipoCobranca {
   id: number;
-  empresa_id: number;
-  empresa?: { id: number; razao_social: string };
   nome: string;
   quantidade_titulos: number;
   periodicidade: string;
@@ -26,8 +24,6 @@ export const saasTipoCobrancaService = createSaasCrudService<SaasTipoCobranca>('
 
 export interface SaasDiasVencimento {
   id: number;
-  empresa_id: number;
-  empresa?: { id: number; razao_social: string };
   dia: number | null;
   dia_padrao: number;
   ativo: boolean;
@@ -35,10 +31,8 @@ export interface SaasDiasVencimento {
 
 export const saasDiasVencimentoService = {
   ...createSaasCrudService<SaasDiasVencimento>('/saas/dias-vencimento'),
-  getConfig: (empresaId?: number) =>
-    defaultApiClient.get<{ success: boolean; data: SaasDiasVencimento[] }>(
-      empresaId != null ? `/saas/dias-vencimento/config?empresa_id=${empresaId}` : '/saas/dias-vencimento/config'
-    ),
+  getConfig: () =>
+    defaultApiClient.get<{ success: boolean; data: SaasDiasVencimento[] }>('/saas/dias-vencimento/config'),
   updateConfig: (dias: number[]) => defaultApiClient.put('/saas/dias-vencimento/config', { dias }),
 };
 

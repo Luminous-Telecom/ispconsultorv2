@@ -31,7 +31,6 @@ const listParams = (req: SaasAuthenticatedRequest) => {
 // ─── Servidor Email ──────────────────────────────────────────────────────────
 
 const emailSchema = Joi.object({
-  empresa_id: Joi.number().integer().required(),
   nome: Joi.string().max(100).required(),
   host_smtp: Joi.string().max(255).required(),
   porta: Joi.number().integer().optional(),
@@ -41,7 +40,7 @@ const emailSchema = Joi.object({
   status: Joi.string().valid('ativo', 'inativo', 'erro').optional(),
 });
 
-const emailUpdateSchema = emailSchema.fork(['empresa_id', 'nome', 'host_smtp', 'usuario', 'senha_criptografada'], s => s.optional());
+const emailUpdateSchema = emailSchema.fork(['nome', 'host_smtp', 'usuario', 'senha_criptografada'], s => s.optional());
 
 export class SaasServidorEmailController {
   static async list(req: SaasAuthenticatedRequest, res: Response) {
@@ -92,7 +91,6 @@ export class SaasServidorEmailController {
 // ─── Servidor WhatsApp ───────────────────────────────────────────────────────
 
 const whatsappSchema = Joi.object({
-  empresa_id: Joi.number().integer().required(),
   nome: Joi.string().max(100).required(),
   url_api: Joi.string().max(500).required(),
   token: Joi.string().max(500).optional().allow('', null),
@@ -101,7 +99,7 @@ const whatsappSchema = Joi.object({
   limite_mensagens: Joi.number().integer().optional().allow(null),
 });
 
-const whatsappUpdateSchema = whatsappSchema.fork(['empresa_id', 'nome', 'url_api'], s => s.optional());
+const whatsappUpdateSchema = whatsappSchema.fork(['nome', 'url_api'], s => s.optional());
 
 export class SaasServidorWhatsappController {
   static async list(req: SaasAuthenticatedRequest, res: Response) {

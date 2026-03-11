@@ -54,9 +54,9 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
   });
 
   const { data: diasRes } = useQuery({
-    queryKey: ['saas-dias-vencimento-config', empresaId],
-    queryFn: () => saasDiasVencimentoService.getConfig(empresaId),
-    enabled: show && !!empresaId,
+    queryKey: ['saas-dias-vencimento-config'],
+    queryFn: () => saasDiasVencimentoService.getConfig(),
+    enabled: show,
   });
 
   const planos = useMemo(() => (Array.isArray((planosRes as { data?: unknown[] })?.data) ? (planosRes as { data: unknown[] }).data : []) as { id: number; nome: string; valor_mensal?: number; valor_anual?: number }[], [planosRes]);

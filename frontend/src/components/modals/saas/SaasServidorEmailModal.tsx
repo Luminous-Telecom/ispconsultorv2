@@ -59,7 +59,7 @@ const SaasServidorEmailModal: React.FC<Props> = ({ show, onClose, skipWrapper = 
 
   const columns: TableConfig<SaasServidorEmail>['columns'] = useMemo(() => [
     { key: 'id', label: 'ID', sortable: true, width: '50px', render: i => <span>{i.id}</span> },
-    { key: 'nome', label: 'Nome', sortable: true, render: i => <div><div className="fw-semibold">{i.nome}</div><small className="text-muted">{(i.empresa as { nome_empresa?: string })?.nome_empresa}</small></div> },
+    { key: 'nome', label: 'Nome', sortable: true, render: i => <span>{i.nome}</span> },
     { key: 'host_smtp', label: 'Host SMTP', sortable: true, render: i => <span>{i.host_smtp}:{i.porta}</span> },
     { key: 'usuario', label: 'Usuário', sortable: true, render: i => <span>{i.usuario}</span> },
     { key: 'status', label: 'Status', sortable: true, width: '90px', render: i => <span className={`badge bg-${STATUS_COLOR[i.status] || 'secondary'}`}>{i.status}</span> },

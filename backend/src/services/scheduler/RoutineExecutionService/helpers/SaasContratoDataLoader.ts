@@ -72,7 +72,7 @@ export class SaasContratoDataLoader {
 
   /**
    * Obtém para cada empresa: primeiro banco ativo, primeiro dia vencimento ativo.
-   * Sacado do boleto vem de saas_dados_empresa (empresa/tenant).
+   * Dias de vencimento SaaS são globais (sem empresa_id).
    */
   static async loadEmpresaDefaults(empresaIds: number[]): Promise<EmpresaDefaults> {
     const { SaasBanco } = await import('../../../../models/saas/SaasBanco');
@@ -86,20 +86,20 @@ export class SaasContratoDataLoader {
         limit: 1,
       }),
       SaasDiasVencimento.findAll({
-        where: { empresa_id: { [Op.in]: empresaIds }, ativo: true },
-        attributes: ['id', 'empresa_id', 'dia', 'dia_padrao'],
+        where: { ativo: true },
+        attributes: ['id', 'dia', 'dia_padrao'],
         order: [['id', 'ASC']],
+        limit: 1,
       }),
     ]);
 
     const bancoPadrao = bancos[0];
+    const diaVenc = diasVenc[0];
     const mapa: EmpresaDefaults = new Map();
 
-    for (const empId of empresaIds) {
-      const diaVenc = diasVenc.find((d) => d.empresa_id === empId);
-
-      if (bancoPadrao && diaVenc) {
-        const dia = diaVenc.dia ?? diaVenc.dia_padrao ?? 10;
+    if (bancoPadrao && diaVenc) {
+      const dia = diaVenc.dia ?? diaVenc.dia_padrao ?? 10;
+      for (const empId of empresaIds) {
         mapa.set(empId, {
           conta_boleto: bancoPadrao.id,
           dia_vencimento_id: diaVenc.id,

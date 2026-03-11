@@ -5,8 +5,6 @@ import type { ApiResponse } from '../../types';
 
 export interface SaasServidorEmail {
   id: number;
-  empresa_id: number;
-  empresa?: { id: number; razao_social: string; nome_fantasia?: string };
   nome: string;
   host_smtp: string;
   porta: number;
@@ -20,8 +18,6 @@ export interface SaasServidorEmail {
 
 export interface SaasServidorWhatsapp {
   id: number;
-  empresa_id: number;
-  empresa?: { id: number; razao_social: string; nome_fantasia?: string };
   nome: string;
   url_api: string;
   token?: string | null;

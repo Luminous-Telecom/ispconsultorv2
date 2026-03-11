@@ -8,7 +8,6 @@ import {
   SaasTituloResumoService,
   SaasContratoService,
 } from '../../../services/saas/SaasCrudService';
-import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasTituloBoletoService } from '../../../services/saas/SaasTituloBoletoService';
 import { SaasTitulo } from '../../../models/saas/SaasTitulo';
 import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
@@ -51,7 +50,6 @@ const listParams = (req: SaasAuthenticatedRequest) => {
 // ─── Tipo Cobrança ────────────────────────────────────────────────────────────
 
 const tipoCobrancaSchema = Joi.object({
-  empresa_id: Joi.number().integer().required(),
   nome: Joi.string().max(100).required(),
   quantidade_titulos: Joi.number().integer().min(1).optional(),
   periodicidade: Joi.string()
@@ -83,7 +81,7 @@ export class SaasTipoCobrancaController {
   }
   static async update(req: SaasAuthenticatedRequest, res: Response) {
     try {
-      const { error, value } = tipoCobrancaSchema.fork(['empresa_id'], (s) => s.optional()).validate(req.body, { abortEarly: false, stripUnknown: true });
+      const { error, value } = tipoCobrancaSchema.fork(['nome'], (s) => s.optional()).validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
       const antigo = await SaasTipoCobrancaService.getById(Number(req.params.id));
       await SaasTipoCobrancaService.update(Number(req.params.id), value);
@@ -108,25 +106,16 @@ export class SaasTipoCobrancaController {
 // ─── Dias Vencimento ─────────────────────────────────────────────────────────
 
 const diasVencimentoSchema = Joi.object({
-  empresa_id: Joi.number().integer().required(),
   dia: Joi.number().integer().min(1).max(31).optional().allow(null),
   dia_padrao: Joi.number().integer().min(1).max(31).optional(),
   ativo: Joi.boolean().optional(),
 });
 
 export class SaasDiasVencimentoController {
-  /** Config em saas_dias_vencimento (tabela dedicada, igual adm_dias_vencimento) */
+  /** Config em saas_dias_vencimento (tabela dedicada, global para SaaS) */
   static async getConfig(req: SaasAuthenticatedRequest, res: Response) {
     try {
-      const empresaIdParam = req.query.empresa_id;
-      let empresaId: number;
-      if (empresaIdParam != null && empresaIdParam !== '') {
-        empresaId = parseInt(String(empresaIdParam), 10);
-      } else {
-        const empresa = await DadosEmpresa.findOne({ attributes: ['id'], order: [['id', 'ASC']] });
-        empresaId = empresa?.id ?? 1;
-      }
-      const rows = await SaasDiasVencimentoService.getConfig(empresaId);
+      const rows = await SaasDiasVencimentoService.getConfig();
       const data = rows
         .filter((r) => r.ativo)
         .map((r) => ({ dia: r.dia ?? r.dia_padrao, dia_padrao: r.dia_padrao, ativo: true }));
@@ -134,15 +123,13 @@ export class SaasDiasVencimentoController {
     } catch (err) { sendError(res, err, 'Erro ao buscar dias de vencimento', 500, true); }
   }
 
-  /** Config em saas_dias_vencimento (tabela dedicada) */
+  /** Config em saas_dias_vencimento (tabela dedicada, global) */
   static async updateConfig(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { dias } = req.body;
       if (!Array.isArray(dias)) { sendValidationError(res, 'dias (array) é obrigatório'); return; }
       const validos = dias.filter((d: unknown) => typeof d === 'number' && d >= 1 && d <= 31).sort((a, b) => a - b);
-      const empresa = await DadosEmpresa.findOne({ attributes: ['id'], order: [['id', 'ASC']] });
-      const empresaId = empresa?.id ?? 1;
-      await SaasDiasVencimentoService.updateConfig(empresaId, validos);
+      await SaasDiasVencimentoService.updateConfig(validos);
       sendSuccess(res, undefined, 'Dias de vencimento atualizados com sucesso');
     } catch (err) { sendError(res, err, 'Erro ao atualizar dias de vencimento', 500, true); }
   }
@@ -169,7 +156,7 @@ export class SaasDiasVencimentoController {
   }
   static async update(req: SaasAuthenticatedRequest, res: Response) {
     try {
-      const { error, value } = diasVencimentoSchema.fork(['empresa_id'], (s) => s.optional()).validate(req.body, { abortEarly: false, stripUnknown: true });
+      const { error, value } = diasVencimentoSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
       if (error) { sendValidationError(res, 'Dados inválidos', toErrors(error.details)); return; }
       const antigo = await SaasDiasVencimentoService.getById(Number(req.params.id));
       await SaasDiasVencimentoService.update(Number(req.params.id), value);

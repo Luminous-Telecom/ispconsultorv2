@@ -61,7 +61,6 @@ const SaasTipoCobrancaModal: React.FC<Props> = ({ show, onClose, skipWrapper = f
   const columns: TableConfig<SaasTipoCobranca>['columns'] = useMemo(() => [
     { key: 'id', label: t('table.id'), sortable: true, width: '42px', render: i => <span>{i.id}</span> },
     { key: 'nome', label: t('form.name'), sortable: true, render: i => <span className="fw-semibold">{i.nome}</span> },
-    { key: 'empresa', label: t('menu.companyData'), sortable: false, render: i => <span className="text-muted">{i.empresa?.razao_social || '—'}</span> },
     { key: 'quantidade_titulos', label: 'Qtd. Títulos', sortable: true, width: '100px', render: i => <span>{i.quantidade_titulos}</span> },
     { key: 'periodicidade', label: t('table.periodicity'), sortable: true, width: '120px', render: i => <span>{PERIODICIDADE_LABEL[i.periodicidade] || i.periodicidade}</span> },
     { key: 'ativo', label: t('table.status'), sortable: true, width: '80px', render: i => <span className={`badge bg-${i.ativo ? 'success' : 'secondary'}`}>{i.ativo ? t('status.active') : t('status.inactive')}</span> },

@@ -6,7 +6,6 @@ export class SaasServidorEmail extends Model<
   InferCreationAttributes<SaasServidorEmail>
 > {
   declare id: CreationOptional<number>;
-  declare empresa_id: number;
   declare nome: string;
   declare host_smtp: string;
   declare porta: CreationOptional<number>;
@@ -21,7 +20,6 @@ export class SaasServidorEmail extends Model<
 SaasServidorEmail.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    empresa_id: { type: DataTypes.INTEGER, allowNull: false },
     nome: { type: DataTypes.STRING(100), allowNull: false },
     host_smtp: { type: DataTypes.STRING(255), allowNull: false },
     porta: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 587 },
