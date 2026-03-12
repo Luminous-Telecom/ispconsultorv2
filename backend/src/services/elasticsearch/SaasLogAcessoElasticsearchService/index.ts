@@ -28,6 +28,7 @@ export async function registrarLogAcessoSaasElasticsearch(payload: RegistroSaasL
 
       const doc = {
         log_tipo: LOG_TIPO,
+        saas: true,
         usuario_id: payload.usuario_id,
         empresa_id: payload.empresa_id ?? null,
         acao: payload.acao,

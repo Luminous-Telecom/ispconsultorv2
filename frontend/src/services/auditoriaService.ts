@@ -27,6 +27,7 @@ export interface AuditoriaFilters {
   acao?: string;
   entidade?: string;
   usuario_id?: number;
+  empresa_id?: number;
   data_inicio?: string;
   data_fim?: string;
   sortColumn?: string;
@@ -55,6 +56,7 @@ class AuditoriaService {
     if (filters.acao) params.append('acao', filters.acao);
     if (filters.entidade) params.append('entidade', filters.entidade);
     if (filters.usuario_id) params.append('usuario_id', filters.usuario_id.toString());
+    if (filters.empresa_id) params.append('empresa_id', filters.empresa_id.toString());
     if (filters.data_inicio) params.append('data_inicio', filters.data_inicio);
     if (filters.data_fim) params.append('data_fim', filters.data_fim);
     if (filters.sortColumn) params.append('sortColumn', filters.sortColumn);
@@ -157,6 +159,39 @@ class AuditoriaService {
         } as PaginatedResponse<AuditoriaLog>
       };
     }
+  }
+
+  /**
+   * Listar logs de auditoria por tenant (painel SaaS) - usa endpoint /saas/auditoria
+   */
+  async listByTenant(filters: AuditoriaFilters & { empresa_id: number }): Promise<ApiResponse<PaginatedResponse<AuditoriaLog>>> {
+    const params = new URLSearchParams();
+    params.append('empresa_id', filters.empresa_id.toString());
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.search) params.append('search', filters.search);
+    if (filters.acao) params.append('acao', filters.acao);
+    if (filters.entidade) params.append('entidade', filters.entidade);
+    if (filters.usuario_id) params.append('usuario_id', filters.usuario_id.toString());
+    if (filters.data_inicio) params.append('data_inicio', filters.data_inicio);
+    if (filters.data_fim) params.append('data_fim', filters.data_fim);
+    if (filters.sortColumn) params.append('sortColumn', filters.sortColumn);
+    if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
+
+    const url = `/saas/auditoria?${params.toString()}`;
+    const response = await defaultApiClient.get<PaginatedResponse<AuditoriaLog>>(url);
+    if (response.success && response.data) {
+      const rd = response.data as unknown as Record<string, unknown>;
+      if (rd && 'data' in rd && 'pagination' in rd) {
+        return { success: true, data: rd as unknown as PaginatedResponse<AuditoriaLog> };
+      }
+    }
+    const emptyPagination = { current_page: 1, last_page: 1, per_page: 20, total: 0, from: 0, to: 0 };
+    return {
+      success: response.success ?? false,
+      message: (response as { message?: string }).message,
+      data: { success: true, data: [], pagination: emptyPagination }
+    };
   }
 
   /**

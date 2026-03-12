@@ -30,7 +30,15 @@ interface DadosAuditoria {
   rota?: string;
   metodo_http?: string;
   observacoes?: string | null;
+  /** Override para empresa_id (ex.: operações SaaS onde req não tem tenant) */
+  empresa_id?: number | null;
 }
+
+/** Entidades SaaS onde entidade_id = empresa_id (registro da empresa/tenant) */
+const ENTIDADES_EMPRESA_IS_ID = ['SaasDadosEmpresa', 'SaasDadosEmpresaCrud'];
+
+/** Entidades com empresa_id nos dados */
+const ENTIDADES_COM_EMPRESA_NO_DADOS = ['SaasContrato', 'SaasTitulo', 'Usuario'];
 
 /**
  * Obter IP do cliente da requisição
@@ -122,7 +130,19 @@ export async function registrarAuditoriaElasticsearch(
 
       // Obter dados do usuário e empresa (tenant)
       const userData = getUserData(req);
-      const empresaId = getEmpresaIdForAudit(req);
+      let empresaId = dados.empresa_id ?? getEmpresaIdForAudit(req);
+      // Quando SaaS admin (empresaId null), inferir da entidade/dados
+      if (empresaId == null) {
+        if (ENTIDADES_EMPRESA_IS_ID.includes(dados.entidade) && dados.entidade_id) {
+          empresaId = dados.entidade_id;
+        } else if (ENTIDADES_COM_EMPRESA_NO_DADOS.includes(dados.entidade)) {
+          const novo = dados.dados_novos as Record<string, unknown> | undefined;
+          const antigo = dados.dados_anteriores as Record<string, unknown> | undefined;
+          const idNovo = novo?.empresa_id != null ? Number(novo.empresa_id) : null;
+          const idAntigo = antigo?.empresa_id != null ? Number(antigo.empresa_id) : null;
+          empresaId = idNovo ?? idAntigo ?? null;
+        }
+      }
 
       // Limpar dados removendo apenas campos internos do Sequelize e campos muito grandes
       const limparDados = (dados: Record<string, unknown> | null): Record<string, unknown> | null => {
@@ -270,8 +290,12 @@ export async function registrarAuditoriaElasticsearch(
       const dadosAnterioresLimpos = limparDados(dados.dados_anteriores || null);
       const dadosNovosLimpos = limparDados(dados.dados_novos || null);
 
+      const reqAny = req as AuthenticatedRequest & { saasUser?: unknown };
+      const isSaas = !!reqAny.saasUser;
+
       const document = {
         log_tipo: 'auditoria',
+        saas: isSaas,
         empresa_id: empresaId ?? null,
         usuario_id: userData.id,
         usuario_nome: userData.nome,
@@ -450,6 +474,7 @@ export async function registrarAtualizacaoElasticsearchSistema(
 
     const document = {
       log_tipo: 'auditoria',
+      saas: false,
       usuario_id: null,
       usuario_nome: 'Sistema',
       usuario_email: null,

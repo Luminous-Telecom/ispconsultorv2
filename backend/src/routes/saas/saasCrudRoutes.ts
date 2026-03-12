@@ -7,6 +7,7 @@ import {
 } from '../../controllers/saas/SaasCrudController';
 import { SaasTenantUsuarioController } from '../../controllers/saas/SaasTenantUsuarioController';
 import { SaasDashboardController } from '../../controllers/saas/SaasDashboardController';
+import { SaasAuditoriaController } from '../../controllers/saas/SaasAuditoriaController';
 import { saasAuthMiddleware } from '../../middleware/saasAuthMiddleware';
 
 const router = Router();
@@ -14,6 +15,9 @@ router.use(saasAuthMiddleware);
 
 // Dashboard
 router.get('/dashboard', SaasDashboardController.getDashboardData);
+
+// Auditoria por tenant (logs do painel SaaS)
+router.get('/auditoria', SaasAuditoriaController.listByTenant);
 
 // Tipos de Cobrança
 router.get('/tipos-cobranca', SaasTipoCobrancaController.list);

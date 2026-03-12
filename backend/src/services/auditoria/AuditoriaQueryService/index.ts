@@ -15,8 +15,9 @@ export class AuditoriaQueryService {
     dataInicio?: string;
     dataFim?: string;
     empresaId?: number | null;
+    excludeSaasEntities?: boolean;
   }): { must: any[]; must_not?: any[] } {
-    const { search, acao, entidade, usuario_id, dataInicio, dataFim, empresaId } = params;
+    const { search, acao, entidade, usuario_id, dataInicio, dataFim, empresaId, excludeSaasEntities = true } = params;
     const must: any[] = [
       { bool: { should: [{ term: { log_tipo: 'auditoria' } }, { bool: { must: [{ bool: { must_not: { exists: { field: 'log_tipo' } } } }, { exists: { field: 'acao' } }] } }], minimum_should_match: 1 } }
     ];
@@ -93,10 +94,30 @@ export class AuditoriaQueryService {
 
     const must_not: any[] = [];
 
-    // Tenant: excluir entidades SaaS e filtrar somente por empresa_id da empresa atual
+    // Filtrar por empresa_id quando aplicável
     if (empresaId != null && empresaId > 0) {
-      must_not.push({ terms: { entidade: this.ENTIDADES_SAAS } });
-      must.push({ term: { empresa_id: empresaId } });
+      // Para SaaS admin vendo tenant: incluir logs com empresa_id OU logs de entidades onde entidade_id=empresa OU dados.empresa_id=empresa (legado)
+      const tenantFilter: any = {
+        bool: {
+          should: [
+            { term: { empresa_id: empresaId } },
+            { bool: { must: [{ term: { entidade: 'SaasDadosEmpresa' } }, { term: { entidade_id: empresaId } }] } },
+            { bool: { must: [{ term: { entidade: 'SaasDadosEmpresaCrud' } }, { term: { entidade_id: empresaId } }] } },
+            { bool: { must: [{ term: { entidade: 'SaasContrato' } }, { term: { 'dados_novos.empresa_id': empresaId } }] } },
+            { bool: { must: [{ term: { entidade: 'SaasContrato' } }, { term: { 'dados_anteriores.empresa_id': empresaId } }] } },
+            { bool: { must: [{ term: { entidade: 'SaasTitulo' } }, { term: { 'dados_novos.empresa_id': empresaId } }] } },
+            { bool: { must: [{ term: { entidade: 'SaasTitulo' } }, { term: { 'dados_anteriores.empresa_id': empresaId } }] } },
+            { bool: { must: [{ term: { entidade: 'Usuario' } }, { term: { 'dados_novos.empresa_id': empresaId } }] } },
+            { bool: { must: [{ term: { entidade: 'Usuario' } }, { term: { 'dados_anteriores.empresa_id': empresaId } }] } },
+          ],
+          minimum_should_match: 1
+        }
+      };
+      must.push(tenantFilter);
+      // Tenant vendo próprio contexto: excluir entidades SaaS; Admin vendo tenant: incluir todas
+      if (excludeSaasEntities) {
+        must_not.push({ terms: { entidade: this.ENTIDADES_SAAS } });
+      }
     }
 
     return must_not.length > 0 ? { must, must_not } : { must };
@@ -117,6 +138,7 @@ export class AuditoriaQueryService {
     sortColumn?: string;
     sortDirection?: string;
     empresaId?: number | null;
+    excludeSaasEntities?: boolean;
   }): Promise<{ logs: any[]; total: number }> {
     const elasticsearchService = getElasticsearchService();
     const client = elasticsearchService.getClient();
@@ -125,8 +147,8 @@ export class AuditoriaQueryService {
       throw new Error('Elasticsearch client não disponível');
     }
 
-    const { page, limit, sortColumn, sortDirection, ...queryParams } = params;
-    const { must, must_not } = this.buildElasticsearchQuery(queryParams);
+    const { page, limit, sortColumn, sortDirection, excludeSaasEntities, ...queryParams } = params;
+    const { must, must_not } = this.buildElasticsearchQuery({ ...queryParams, excludeSaasEntities });
 
     // Construir ordenação para Elasticsearch
     // Mapear colunas do frontend para campos do Elasticsearch (o índice não tem campo 'id')

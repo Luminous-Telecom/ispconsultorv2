@@ -39,7 +39,14 @@ export class AuditoriaController {
       const dataFim = req.query.data_fim as string;
       const sortColumn = req.query.sortColumn as string;
       const sortDirection = req.query.sortDirection as string;
-      const empresaId = getEmpresaIdOrNull(req);
+      const authEmpresaId = getEmpresaIdOrNull(req);
+      const queryEmpresaId = req.query.empresa_id ? parseInt(req.query.empresa_id as string) : undefined;
+      // Só permite empresa_id na query quando usuário não tem tenant (admin/superadmin)
+      if (queryEmpresaId != null && authEmpresaId != null) {
+        sendForbidden(res, 'Acesso negado: filtro empresa_id só disponível para administradores');
+        return;
+      }
+      const empresaId = queryEmpresaId ?? authEmpresaId;
 
       const maxResultWindow = 50000;
       const maxLastPage = Math.max(1, Math.floor(maxResultWindow / limit));
@@ -56,7 +63,8 @@ export class AuditoriaController {
         dataFim,
         sortColumn,
         sortDirection,
-        empresaId
+        empresaId,
+        excludeSaasEntities: authEmpresaId != null
       });
 
       const lastPage = Math.min(Math.ceil(total / limit), maxLastPage);

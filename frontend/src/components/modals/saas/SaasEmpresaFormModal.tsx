@@ -23,7 +23,8 @@ import SaasContratoFormModal from './SaasContratoFormModal';
 import SaasTenantUsuarioFormModal from './SaasTenantUsuarioFormModal';
 import SaasTituloFormModal from './SaasTituloFormModal';
 import SaasReceberModal from './SaasReceberModal';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, formatDateTime } from '@/utils/formatters';
+import { auditoriaService, type AuditoriaLog } from '@/services/auditoriaService';
 import type { FormValue } from '@/types/common';
 import type { ApiResponse } from '@/types';
 
@@ -55,7 +56,7 @@ const INITIAL: Form = {
   responsavel_nome: '', responsavel_cpf: '', responsavel_cargo: '', site: '',
 };
 
-type TabId = 'dados-basicos' | 'endereco' | 'contato' | 'contratos' | 'usuarios' | 'financeiro';
+type TabId = 'dados-basicos' | 'endereco' | 'contato' | 'contratos' | 'usuarios' | 'financeiro' | 'logs';
 
 const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId }) => {
   const { t } = useI18n();
@@ -68,6 +69,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const contratosTf = useTableFilters({ initialPage: 1, initialLimit: 500, resetPageOnFilterChange: false });
   const titulosTf = useTableFilters({ initialPage: 1, initialLimit: 500, initialSortColumn: 'id', initialSortDirection: 'desc', resetPageOnFilterChange: false });
   const usuariosTf = useTableFilters({ initialPage: 1, initialLimit: 500, initialSortColumn: 'id', initialSortDirection: 'desc', resetPageOnFilterChange: false });
+  const logsTf = useTableFilters({ initialPage: 1, initialLimit: 20, initialSortColumn: 'timestamp', initialSortDirection: 'desc', resetPageOnFilterChange: false });
   const [internalCreatedId, setInternalCreatedId] = useState<number | null>(null);
   const effectiveId = itemId ?? internalCreatedId;
   const isEditing = !!effectiveId;
@@ -93,6 +95,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
   const [tituloReceber, setTituloReceber] = useState<SaasTitulo | null>(null);
+  const [selectedLog, setSelectedLog] = useState<AuditoriaLog | null>(null);
+  const [showLogDetailsModal, setShowLogDetailsModal] = useState(false);
 
   const { data } = useQuery({
     queryKey: ['saas-empresa', effectiveId],
@@ -138,6 +142,19 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     if (show) setActiveTab('dados-basicos');
     else setSelectedTitulos([]);
   }, [show]);
+
+  const formatLogAcao = useCallback((acao: string) => {
+    const acoes: Record<string, string> = { create: t('audit.actions.create'), update: t('audit.actions.update'), delete: t('audit.actions.delete'), login: t('audit.actions.login'), logout: t('audit.actions.logout'), export: t('audit.actions.export'), import: t('audit.actions.import') };
+    return acoes[acao] || acao;
+  }, [t]);
+  const getLogAcaoBadgeClass = useCallback((acao: string) => {
+    const classes: Record<string, string> = { create: 'success', update: 'primary', delete: 'danger', login: 'info', logout: 'secondary', export: 'warning', import: 'warning' };
+    return classes[acao] || 'secondary';
+  }, []);
+  const handleViewLog = useCallback((log: AuditoriaLog) => {
+    setSelectedLog(log);
+    setShowLogDetailsModal(true);
+  }, []);
 
   const createMutation = useMutation({
     mutationFn: (d: Partial<SaasEmpresa>) => saasEmpresasService.create(d) as Promise<ApiResponse<SaasEmpresa>>,
@@ -290,6 +307,24 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     queryKey: ['saas-tenant-usuarios', empresaId, usuariosTf.sortColumn, usuariosTf.sortDirection],
     queryFn: () => saasTenantUsuariosService.list({ empresa_id: empresaId!, limit: 500, sortColumn: usuariosTf.sortColumn, sortDirection: usuariosTf.sortDirection }),
     enabled: !!empresaId && (activeTab === 'usuarios'),
+  });
+
+  const logsFilters = useMemo(() => ({
+    page: logsTf.page,
+    limit: logsTf.limit,
+    search: logsTf.debouncedSearch || undefined,
+    sortColumn: logsTf.sortColumn,
+    sortDirection: logsTf.sortDirection,
+    empresa_id: empresaId ?? undefined,
+  }), [logsTf.page, logsTf.limit, logsTf.debouncedSearch, logsTf.sortColumn, logsTf.sortDirection, empresaId]);
+  const { data: logsData, refetch: refetchLogs } = useQuery({
+    queryKey: ['auditoria', 'tenant', empresaId, logsFilters],
+    queryFn: async () => {
+      const res = await auditoriaService.listByTenant({ ...logsFilters, empresa_id: empresaId! });
+      if (!res.success) throw new Error(res.message || 'Erro ao carregar logs');
+      return res.data;
+    },
+    enabled: !!empresaId && (activeTab === 'logs'),
   });
 
   const titulosRaw: SaasTitulo[] = useMemo(() => {
@@ -597,6 +632,9 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
           <li className="nav-item" role="presentation">
             <button className={`nav-link modal-tab-hover ${activeTab === 'financeiro' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('financeiro')} disabled={!empresaId}>{t('tabs.financial')}</button>
           </li>
+          <li className="nav-item" role="presentation">
+            <button className={`nav-link modal-tab-hover ${activeTab === 'logs' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('logs')} disabled={!empresaId}>Logs</button>
+          </li>
         </ul>
       </div>
     </div>
@@ -606,7 +644,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     <DraggableModal show={show} onClose={onClose} title={isEditing ? `${t('actions.edit')} ${t('modal.clientsTenants')}` : `${t('actions.create')} ${t('modal.clientsTenants')}`} size="xl" modalId="saas-empresa-form" headerActions={headerActionsContent}>
       <form id="saas-empresa-form-id" onSubmit={handleSubmit}>
         <div className="cliente-modal-content">
-          <div className={`tab-content cliente-tab-content ${(activeTab === 'financeiro' || activeTab === 'contratos' || activeTab === 'usuarios') ? 'cliente-tab-content-scrollable' : 'cliente-tab-content-padded'}`} id="saas-empresa-tab-content">
+          <div className={`tab-content cliente-tab-content ${(activeTab === 'financeiro' || activeTab === 'contratos' || activeTab === 'usuarios' || activeTab === 'logs') ? 'cliente-tab-content-scrollable' : 'cliente-tab-content-padded'}`} id="saas-empresa-tab-content">
           {activeTab === 'dados-basicos' && (
             <div className="row g-2 p-3">
               <div className="col-md-6">
@@ -926,6 +964,74 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
             </div>
           )}
 
+          {activeTab === 'logs' && empresaId && (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+                <Table
+                  key={`saas-logs-${empresaId}`}
+                  title="Logs"
+                  syncWithHeader={false}
+                  config={{
+                    columns: [
+                      { key: 'id', label: t('table.id'), sortable: true, width: 42, resizable: true, render: (log: AuditoriaLog) => <span className="text-muted small">{String(log.id).substring(0, 8)}...</span> },
+                      { key: 'timestamp', label: t('audit.timestamp'), sortable: true, width: 130, render: (log: AuditoriaLog) => <span className="small">{formatDateTime(log.timestamp)}</span> },
+                      { key: 'acao', label: t('table.action'), sortable: true, width: 90, render: (log: AuditoriaLog) => {
+                        const acoes: Record<string, string> = { create: t('audit.actions.create'), update: t('audit.actions.update'), delete: t('audit.actions.delete'), login: t('audit.actions.login'), logout: t('audit.actions.logout'), export: t('audit.actions.export'), import: t('audit.actions.import') };
+                        const classes: Record<string, string> = { create: 'success', update: 'primary', delete: 'danger', login: 'info', logout: 'secondary', export: 'warning', import: 'warning' };
+                        const acao = acoes[log.acao] || log.acao;
+                        const cls = classes[log.acao] || 'secondary';
+                        return <span className={`badge bg-${cls}`}>{acao}</span>;
+                      } },
+                      { key: 'entidade', label: t('audit.entity'), sortable: true, width: 130, render: (log: AuditoriaLog) => <span className="small">{log.entidade}</span> },
+                      { key: 'usuario_email', label: t('audit.user'), sortable: true, width: 160, render: (log: AuditoriaLog) => <span className="small">{log.usuario_email || 'N/A'}</span> },
+                      { key: 'rota', label: t('audit.route'), sortable: true, render: (log: AuditoriaLog) => <span className="small text-muted">{log.rota || '-'}</span> },
+                    ],
+                    data: (logsData?.data as AuditoriaLog[]) ?? [],
+                    loading: activeTab === 'logs' && !logsData,
+                    emptyMessage: 'Nenhum log encontrado para este tenant',
+                    searchable: true,
+                    searchPlaceholder: 'Buscar logs...',
+                    sortable: true,
+                    sortColumn: logsTf.sortColumn,
+                    sortDirection: logsTf.sortDirection,
+                    striped: true,
+                    hover: true,
+                    responsive: true,
+                    selectable: true,
+                    multiSelect: false,
+                    bulkActions: [
+                      {
+                        key: 'visualizar',
+                        label: t('audit.viewDetails'),
+                        variant: 'primary' as const,
+                        disabled: (s: AuditoriaLog[]) => s.length === 0,
+                        onClick: (s: AuditoriaLog[]) => { if (s[0]) handleViewLog(s[0]); },
+                      },
+                    ],
+                    pagination: logsData?.pagination
+                      ? {
+                          current_page: (logsData.pagination as { current_page?: number }).current_page ?? 1,
+                          last_page: (logsData.pagination as { last_page?: number }).last_page ?? 1,
+                          per_page: (logsData.pagination as { per_page?: number }).per_page ?? 20,
+                          total: (logsData.pagination as { total?: number }).total ?? 0,
+                          from: (logsData.pagination as { from?: number }).from,
+                          to: (logsData.pagination as { to?: number }).to,
+                        }
+                      : undefined,
+                    className: 'no-padding',
+                  }}
+                  onRefresh={refetchLogs}
+                  onSort={logsTf.setSort}
+                  onSearch={(s) => logsTf.setSearch(s)}
+                  search={logsTf.search}
+                  onPageChange={(p) => logsTf.setPage(p)}
+                  onPageSizeChange={(l) => logsTf.setLimit(l)}
+                  onRowDoubleClick={(log) => handleViewLog(log)}
+                />
+              </div>
+            </div>
+          )}
+
           </div>
         </div>
       </form>
@@ -949,6 +1055,76 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
         empresaNome={form.nome_fantasia || form.razao_social}
         onSuccess={() => { setShowReceberModal(false); setTituloReceber(null); refetchTitulos(); refetchContratos(); }}
       />
+      {selectedLog && (
+        <DraggableModal
+          show={showLogDetailsModal}
+          onClose={() => { setShowLogDetailsModal(false); setSelectedLog(null); }}
+          title={t('audit.detailsTitle')}
+          size="lg"
+          modalId="saas-log-details-modal"
+        >
+          <div style={{ padding: '16px' }}>
+            <div className="mb-3">
+              <h6 className="mb-2">{t('audit.generalInfo')}</h6>
+              <div className="row g-2">
+                <div className="col-md-6">
+                  <small className="text-muted">{t('table.action')}:</small><br />
+                  <span className={`badge bg-${getLogAcaoBadgeClass(selectedLog.acao)}`}>
+                    {formatLogAcao(selectedLog.acao)}
+                  </span>
+                </div>
+                <div className="col-md-6">
+                  <small className="text-muted">{t('audit.entity')}:</small><br />
+                  <span>{selectedLog.entidade}</span>
+                </div>
+                <div className="col-md-6">
+                  <small className="text-muted">{t('audit.entityId')}:</small><br />
+                  <span>{selectedLog.entidade_id ?? 'N/A'}</span>
+                </div>
+                <div className="col-md-6">
+                  <small className="text-muted">{t('audit.timestamp')}:</small><br />
+                  <span>{formatDateTime(selectedLog.timestamp)}</span>
+                </div>
+                <div className="col-md-6">
+                  <small className="text-muted">{t('audit.user')}:</small><br />
+                  <span>{selectedLog.usuario_email ?? 'N/A'}</span>
+                  {selectedLog.usuario_nome && <div className="text-muted small">{selectedLog.usuario_nome}</div>}
+                </div>
+                <div className="col-md-6">
+                  <small className="text-muted">{t('audit.ip')}:</small><br />
+                  <span>{selectedLog.ip_address ?? 'N/A'}</span>
+                </div>
+                {selectedLog.rota && (
+                  <div className="col-12">
+                    <small className="text-muted">{t('audit.route')}:</small><br />
+                    <code>{selectedLog.metodo_http ?? 'N/A'} {selectedLog.rota}</code>
+                  </div>
+                )}
+                {selectedLog.observacoes && (
+                  <div className="col-12">
+                    <small className="text-muted">{t('table.observations')}:</small><br />
+                    <span>{selectedLog.observacoes}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            {(selectedLog.dados_anteriores || selectedLog.dados_novos) && (
+              <div>
+                <h6 className="mb-2">{t('audit.data')}</h6>
+                <pre className="p-3 bg-light rounded small mb-0" style={{ maxHeight: '300px', overflow: 'auto' }}>
+                  {JSON.stringify(
+                    selectedLog.dados_anteriores && selectedLog.dados_novos
+                      ? { anterior: selectedLog.dados_anteriores, novo: selectedLog.dados_novos }
+                      : selectedLog.dados_novos ?? selectedLog.dados_anteriores,
+                    null,
+                    2
+                  )}
+                </pre>
+              </div>
+            )}
+          </div>
+        </DraggableModal>
+      )}
     </DraggableModal>
   );
 };

@@ -12,6 +12,7 @@ const LOG_TIPO = 'rotina';
 interface ExecutionLogDoc {
   id?: string;
   log_tipo: string;
+  saas: boolean;
   routine_id: number;
   routine_nome?: string;
   routine_tipo?: string;
@@ -47,6 +48,7 @@ export async function criarLogExecucaoElasticsearch(
 
   const doc: ExecutionLogDoc = {
     log_tipo: LOG_TIPO,
+    saas: false,
     routine_id: routineId,
     routine_nome: routineNome,
     routine_tipo: routineTipo,
