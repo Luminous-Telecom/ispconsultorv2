@@ -1159,8 +1159,8 @@ button,
 }
 
 .table-search-combined:focus-within {
-  border-color: var(--btn-primary-color) !important;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15) !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(107, 155, 209, 0.25) !important;
 }
 
 /* Filtros na linha de paginação */
@@ -1626,12 +1626,6 @@ textarea:focus {
 
 .table tbody tr:hover {
   background-color: var(--bg-tertiary) !important;
-}
-
-/* Active/Selected - cor de acento mais saturada */
-.table tbody tr.table-active {
-  background-color: rgba(107, 155, 209, 0.9) !important;
-  border-left: none !important;
 }
 
 [data-theme="light"] .form-control::placeholder {

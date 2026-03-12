@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export type Theme = 'light' | 'dark';
+
+const STORAGE_KEY_SITE = 'theme-site';
+const STORAGE_KEY_SYSTEM = 'theme-system';
 
 interface ThemeContextType {
   theme: Theme;
@@ -12,45 +16,43 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
   children: ReactNode;
+  /** Chave do localStorage: 'site' ou 'system' — temas independentes */
+  storageKey?: 'site' | 'system';
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+/** Provider que escolhe theme-site ou theme-system conforme a rota. Deve estar dentro de Router. */
+export const RouteAwareThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const isSystem = location.pathname.startsWith('/adm') || location.pathname.startsWith('/saas') || location.pathname === '/login';
+  return <ThemeProvider storageKey={isSystem ? 'system' : 'site'}>{children}</ThemeProvider>;
+};
+
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, storageKey = 'system' }) => {
+  const key = storageKey === 'site' ? STORAGE_KEY_SITE : STORAGE_KEY_SYSTEM;
+
   const [theme, setTheme] = useState<Theme>(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    return savedTheme || 'light';
+    const saved = localStorage.getItem(key) as Theme;
+    return (saved === 'light' || saved === 'dark') ? saved : 'light';
   });
 
-  // Aplicar tema na inicialização (evita flash antes do React)
+  // Quando trocar de site para sistema (ou vice-versa), carregar o tema da nova chave
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    const initialTheme = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'light';
-    document.documentElement.setAttribute('data-theme', initialTheme);
-    document.documentElement.setAttribute('data-bs-theme', initialTheme);
-    if (initialTheme === 'dark') {
-      document.body.classList.add('dark-theme');
-      document.body.classList.remove('light-theme');
-    } else {
-      document.body.classList.add('light-theme');
-      document.body.classList.remove('dark-theme');
-    }
-  }, []);
+    const saved = localStorage.getItem(key) as Theme;
+    const newTheme = (saved === 'light' || saved === 'dark') ? saved : 'light';
+    setTheme(newTheme);
+  }, [key]);
 
-  // Atualizar tema quando mudar
   useEffect(() => {
-    localStorage.setItem('theme', theme);
+    localStorage.setItem(key, theme);
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.setAttribute('data-bs-theme', theme);
-    if (theme === 'dark') {
-      document.body.classList.add('dark-theme');
-      document.body.classList.remove('light-theme');
-    } else {
-      document.body.classList.add('light-theme');
-      document.body.classList.remove('dark-theme');
-    }
-  }, [theme]);
+    document.body.setAttribute('data-theme', theme);
+    document.body.classList.toggle('dark-theme', theme === 'dark');
+    document.body.classList.toggle('light-theme', theme === 'light');
+  }, [theme, key]);
 
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   return (

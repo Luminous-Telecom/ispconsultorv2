@@ -526,7 +526,7 @@
    SEARCH & FILTER - DESIGN ELEGANTE
    ============================================ */
 
-/* Container de busca elegante */
+/* Container de busca elegante - sem contorno azul no focus */
 .navbar-search-container {
   position: relative;
   display: flex;
@@ -542,10 +542,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.navbar-search-container:focus-within {
-  border: none;
-}
-
+.navbar-search-container:focus-within,
 .navbar-search-container:hover,
 .navbar-search-container:focus,
 .navbar-search-container:active {
@@ -703,8 +700,8 @@
 }
 
 .navbar-mobile-search-wrapper:focus-within {
-  border: none;
-  box-shadow: 0 0 0 0.125rem rgba(13, 110, 253, 0.1);
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 
 .navbar-mobile-search-field {
@@ -886,46 +883,21 @@
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .navbar-search-container:hover,
+[data-theme="dark"] .navbar-search-container:focus-within,
 [data-theme="dark"] .navbar-mobile-search-wrapper:focus-within {
-  border: none;
-  box-shadow: 0 0 0 0.125rem rgba(13, 110, 253, 0.15);
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
 [data-theme="dark"] .navbar-inline-search {
   background: var(--bg-tertiary);
 }
 
-/* ============================================
-   REMOÇÃO COMPLETA DE BORDAS AZUIS
-   ============================================ */
-
-/* Garantir que nenhum elemento tenha bordas azuis ou box-shadow */
-.navbar-search-container *,
-.navbar-search-field,
-.navbar-search-input,
-.navbar-mobile-search-field,
-.navbar-mobile-search-input,
-.navbar-search-container:hover *,
-.navbar-search-container:focus *,
-.navbar-search-container:focus-within *,
-.navbar-search-container:active * {
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-.navbar-search-field:hover,
-.navbar-search-input:hover,
-.navbar-mobile-search-field:hover,
-.navbar-mobile-search-input:hover {
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-.navbar-search-field:active,
-.navbar-search-input:active,
-.navbar-mobile-search-field:active,
-.navbar-mobile-search-input:active {
+/* Remove box-shadow/outline dos elementos internos da busca (container mantém borda azul no focus) */
+.navbar-search-container .navbar-search-field,
+.navbar-search-container .navbar-search-input,
+.navbar-mobile-search-wrapper .navbar-mobile-search-field,
+.navbar-mobile-search-wrapper .navbar-mobile-search-input {
   box-shadow: none !important;
   outline: none !important;
 }
@@ -933,7 +905,7 @@
 /* Navbar - tema claro e escuro */
 .main-navbar {
   background-color: var(--navbar-bg) !important;
-  border-bottom: 1px solid var(--navbar-border) !important;
+  border-bottom: none !important;
   color: var(--navbar-text) !important;
 }
 

@@ -2,28 +2,16 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" type="image/x-icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png" />
     <script>
       (function () {
         try {
-          // Evita "flash" da favicon do sistema no site público.
-          // No site (rota "/") usamos a logo da empresa; no sistema, mantém a favicon fixa.
-          var isPublicHome = window.location.pathname === '/' || window.location.pathname === '';
-          var href = isPublicHome ? '/api/dados-empresa/logo' : '/favicon.ico';
-
-          var link = document.createElement('link');
-          link.rel = 'icon';
-          link.type = 'image/x-icon';
-          link.href = href;
-          document.head.appendChild(link);
-        } catch (e) {
-          // noop
-        }
-      })();
-    </script>
-    <script>
-      (function () {
-        try {
-          var t = localStorage.getItem('theme');
+          var p = window.location.pathname;
+          var isSystem = /^\/(adm|saas)(\/|$)|^\/login$/.test(p);
+          var key = isSystem ? 'theme-system' : 'theme-site';
+          var t = localStorage.getItem(key) || localStorage.getItem('theme');
           var theme = (t === 'light' || t === 'dark') ? t : 'light';
           document.documentElement.setAttribute('data-theme', theme);
           document.documentElement.setAttribute('data-bs-theme', theme);

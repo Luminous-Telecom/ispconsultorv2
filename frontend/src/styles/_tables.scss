@@ -250,41 +250,42 @@ label {
   background: var(--bg-tertiary);
 }
 
-/* Garantir hover visível no modo claro */
-:root .table tbody tr:hover {
+/* Hover em linhas não selecionadas - aplicar em tr e td */
+.table tbody tr:not(.table-active):hover,
+.table tbody tr:not(.table-active):nth-child(even):hover,
+.table tbody tr:not(.table-active):nth-child(odd):hover {
   background-color: var(--bg-tertiary) !important;
 }
 
-:root .table tbody tr:nth-child(even):hover {
+.table tbody tr:not(.table-active):hover td,
+.table tbody tr:not(.table-active):hover th,
+.table tbody tr:not(.table-active):nth-child(even):hover td,
+.table tbody tr:not(.table-active):nth-child(odd):hover td {
   background-color: var(--bg-tertiary) !important;
 }
 
-:root .table tbody tr:nth-child(odd):hover {
-  background-color: var(--bg-tertiary) !important;
-}
-
-/* Linha selecionada - Deve sobrescrever todas as outras regras */
-:root .table tbody tr.table-active,
-:root .table tbody tr.table-active:nth-child(even),
-:root .table tbody tr.table-active:nth-child(odd) {
+/* Linha selecionada - azul (#6B9BD1) - cor aplicada em tr e td para garantir visibilidade */
+.table tbody tr.table-active,
+.table tbody tr.table-active:nth-child(even),
+.table tbody tr.table-active:nth-child(odd) {
   background-color: rgba(107, 155, 209, 0.9) !important;
   border-left: none !important;
 }
 
-:root .table tbody tr.table-active td,
-:root .table tbody tr.table-active th,
-:root .table tbody tr.table-active:nth-child(even) td,
-:root .table tbody tr.table-active:nth-child(even) th,
-:root .table tbody tr.table-active:nth-child(odd) td,
-:root .table tbody tr.table-active:nth-child(odd) th {
-  background-color: transparent !important;
+.table tbody tr.table-active td,
+.table tbody tr.table-active th,
+.table tbody tr.table-active:nth-child(even) td,
+.table tbody tr.table-active:nth-child(even) th,
+.table tbody tr.table-active:nth-child(odd) td,
+.table tbody tr.table-active:nth-child(odd) th {
+  background-color: rgba(107, 155, 209, 0.9) !important;
   color: var(--text-primary) !important;
 }
 
 /* Hover em linha selecionada - tom mais claro para diferenciar */
-:root .table tbody tr.table-active:hover,
-:root .table tbody tr.table-active:nth-child(even):hover,
-:root .table tbody tr.table-active:nth-child(odd):hover {
+.table tbody tr.table-active:hover,
+.table tbody tr.table-active:nth-child(even):hover,
+.table tbody tr.table-active:nth-child(odd):hover {
   background-color: rgba(107, 155, 209, 1) !important;
 }
 
@@ -294,7 +295,7 @@ label {
 .table tbody tr.table-active:nth-child(even):hover th,
 .table tbody tr.table-active:nth-child(odd):hover td,
 .table tbody tr.table-active:nth-child(odd):hover th {
-  background-color: transparent !important;
+  background-color: rgba(107, 155, 209, 1) !important;
   color: var(--text-primary) !important;
 }
 
@@ -399,7 +400,15 @@ label {
   background-color: var(--bg-tertiary) !important;
 }
 
-/* Linhas selecionadas no tema dark - devem sobrescrever todas as outras regras */
+/* Hover em linhas não selecionadas - tema dark */
+[data-theme="dark"] .table tbody tr:not(.table-active):hover td,
+[data-theme="dark"] .table tbody tr:not(.table-active):hover th,
+[data-theme="dark"] .table tbody tr:not(.table-active):nth-child(even):hover td,
+[data-theme="dark"] .table tbody tr:not(.table-active):nth-child(odd):hover td {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Linhas selecionadas no tema dark - cor em tr e td */
 [data-theme="dark"] .table tbody tr.table-active,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even),
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd) {
@@ -412,11 +421,11 @@ label {
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even) th,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd) td,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd) th {
-  background-color: transparent !important;
+  background-color: rgba(99, 102, 241, 0.8) !important;
   color: var(--text-primary) !important;
 }
 
-/* Hover em linha selecionada no tema dark - tom mais claro para diferenciar */
+/* Hover em linha selecionada no tema dark */
 [data-theme="dark"] .table tbody tr.table-active:hover,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover {
@@ -429,7 +438,7 @@ label {
 [data-theme="dark"] .table tbody tr.table-active:nth-child(even):hover th,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover td,
 [data-theme="dark"] .table tbody tr.table-active:nth-child(odd):hover th {
-  background-color: transparent !important;
+  background-color: rgba(99, 102, 241, 0.85) !important;
   color: var(--text-primary) !important;
 }
 

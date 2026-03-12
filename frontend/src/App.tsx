@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './components/notifications/NotificationProvider';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { RouteAwareThemeProvider } from './contexts/ThemeContext';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
 import { TableHeaderProvider } from './contexts/TableHeaderContext';
@@ -87,10 +87,10 @@ function AppContent() {
     >
       <ProtectionLayer>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
             <NotificationProvider>
               <SaasAuthProvider>
               <Router>
+                <RouteAwareThemeProvider>
                 <RouteAppContext />
                 <Suspense fallback={<Loading message={t('ui.loadingApplication')} />}>
                   <Routes>
@@ -181,10 +181,10 @@ function AppContent() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Suspense>
+                </RouteAwareThemeProvider>
               </Router>
               </SaasAuthProvider>
             </NotificationProvider>
-          </ThemeProvider>
         </QueryClientProvider>
       </ProtectionLayer>
     </ErrorBoundary>
