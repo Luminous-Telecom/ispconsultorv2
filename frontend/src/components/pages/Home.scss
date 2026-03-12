@@ -339,6 +339,103 @@ $secondary: #f3f4f6;
   object-fit: contain;
 }
 
+/* Compare — É para você? */
+.home-compare {
+  background: linear-gradient(135deg, rgba($primary, 0.06) 0%, rgba($accent, 0.06) 100%);
+}
+
+.home-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  max-width: 56rem;
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+}
+
+.home-compare-col {
+  padding: 2rem;
+  border-radius: 0.75rem;
+  border: 1px solid $border;
+  background: $background;
+}
+
+.home-compare-antigo {
+  border-color: rgba(#dc2626, 0.35);
+  background: rgba(#dc2626, 0.03);
+
+  .home-compare-col-title {
+    color: #991b1b;
+
+    .bi {
+      color: #dc2626;
+    }
+  }
+
+  .home-compare-list li .bi {
+    color: #dc2626;
+  }
+}
+
+.home-compare-novo {
+  border-color: rgba($accent, 0.4);
+  background: rgba($accent, 0.04);
+
+  .home-compare-col-title {
+    color: darken($accent, 15%);
+
+    .bi {
+      color: $accent;
+    }
+  }
+
+  .home-compare-list li .bi {
+    color: $accent;
+  }
+}
+
+.home-compare-col-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 1.25rem;
+
+  .bi {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+}
+
+.home-compare-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    font-size: 0.9375rem;
+    color: $foreground;
+    line-height: 1.45;
+
+    .bi {
+      flex-shrink: 0;
+      margin-top: 0.15rem;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+  }
+}
+
 /* Section comum — full-width de um lado a outro (estilo Brisanet) */
 .home-section {
   width: 100%;
@@ -1191,4 +1288,55 @@ $faixa-accent: #1e3a8a; /* azul escuro do tema do site */
 
 [data-theme="dark"] .home-autoatendimento-arrow {
   color: #22c55e;
+}
+
+[data-theme="dark"] .home-compare {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
+}
+
+[data-theme="dark"] .home-compare-col {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .home-compare-antigo {
+  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(220, 38, 38, 0.08);
+
+  .home-compare-col-title {
+    color: #fca5a5;
+
+    .bi {
+      color: #f87171;
+    }
+  }
+
+  .home-compare-list li {
+    color: #e2e8f0;
+
+    .bi {
+      color: #f87171;
+    }
+  }
+}
+
+[data-theme="dark"] .home-compare-novo {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.08);
+
+  .home-compare-col-title {
+    color: #86efac;
+
+    .bi {
+      color: #22c55e;
+    }
+  }
+
+  .home-compare-list li {
+    color: #e2e8f0;
+
+    .bi {
+      color: #22c55e;
+    }
+  }
 }

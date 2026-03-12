@@ -42,6 +42,24 @@ const FEATURES = [
   },
 ];
 
+/* Comparativo: quem ainda usa planilha/manual vs BackNet */
+const COMPARE_ANTES = [
+  'Planilhas ou cadernos espalhados — clientes, contratos e contas em vários lugares',
+  'Precisa enviar cobranças manualmente — depende de alguém lembrar e às vezes esquece',
+  'Clientes e contratos desatualizados ou perdidos',
+  'NFS-e e contratos feitos na mão, um por um',
+  'Difícil saber quem pagou, quem está em atraso ou o status financeiro',
+  'Sem auditoria — não sabe quem alterou ou quando',
+];
+const COMPARE_DEPOIS = [
+  'Tudo centralizado em um único sistema',
+  'Cobranças e lembretes automáticos no vencimento (e-mail e WhatsApp)',
+  'Histórico completo de clientes e contratos',
+  'NFS-e e assinatura digital automáticas',
+  'Relatórios financeiros — inadimplentes, pagamentos em dia e contas a pagar/receber',
+  'Auditoria completa de todas as operações na plataforma',
+];
+
 const INTEGRATIONS = [
   { emoji: '🔌', title: 'API REST', desc: 'Integre seus sistemas através da API REST com autenticação por token' },
   { emoji: '🔗', title: 'Webhooks', desc: 'Receba notificações em tempo real de eventos do sistema' },
@@ -184,6 +202,9 @@ const Home: React.FC = () => {
         <div className="home-header-inner">
           <BackNetLogo width={120} height={38} className="home-logo" />
           <nav className="home-nav home-nav-desktop">
+            <button type="button" className="home-nav-link" onClick={() => scrollTo('compare')}>
+              É para você?
+            </button>
             <button type="button" className="home-nav-link" onClick={() => scrollTo('recursos')}>
               Recursos
             </button>
@@ -235,6 +256,9 @@ const Home: React.FC = () => {
         </div>
         {isMenuOpen && (
           <div className="home-nav-mobile">
+            <button type="button" className="home-nav-link" onClick={() => scrollTo('compare')}>
+              É para você?
+            </button>
             <button type="button" className="home-nav-link" onClick={() => scrollTo('recursos')}>
               Recursos
             </button>
@@ -300,6 +324,47 @@ const Home: React.FC = () => {
           <div className="home-hero-visual">
             <div className="home-hero-visual-glow" />
             <img src="/dashboard.png" alt="BackNet Dashboard" className="home-hero-visual-img" />
+          </div>
+        </section>
+
+        <section id="compare" className="home-section home-compare">
+          <div className="home-section-inner">
+            <div className="home-section-header">
+              <h2 className="home-section-title">É para você?</h2>
+              <p className="home-section-desc">
+                Se você se identificou com o lado esquerdo, o BackNet foi feito para sua consultoria.
+              </p>
+            </div>
+            <div className="home-compare-grid">
+              <div className="home-compare-col home-compare-antigo">
+                <h3 className="home-compare-col-title">
+                  <span className="bi bi-x-circle" />
+                  Planilha ou sistema descentralizado
+                </h3>
+                <ul className="home-compare-list">
+                  {COMPARE_ANTES.map((item) => (
+                    <li key={item}>
+                      <span className="bi bi-x" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="home-compare-col home-compare-novo">
+                <h3 className="home-compare-col-title">
+                  <span className="bi bi-check-circle-fill" />
+                  Com o BackNet
+                </h3>
+                <ul className="home-compare-list">
+                  {COMPARE_DEPOIS.map((item) => (
+                    <li key={item}>
+                      <span className="bi bi-check-lg" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -506,6 +571,7 @@ const Home: React.FC = () => {
             </div>
             <div className="home-footer-links">
               <h3>Produto</h3>
+              <a href="#compare" onClick={(e) => { e.preventDefault(); scrollTo('compare'); }}>É para você?</a>
               <a href="#recursos" onClick={(e) => { e.preventDefault(); scrollTo('recursos'); }}>Recursos</a>
               <a href="#integracoes" onClick={(e) => { e.preventDefault(); scrollTo('integracoes'); }}>Integrações</a>
               <a href="#autoatendimento" onClick={(e) => { e.preventDefault(); scrollTo('autoatendimento'); }}>Autoatendimento</a>
