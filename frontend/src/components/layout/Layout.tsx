@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useNotificationContext } from '../notifications/NotificationProvider';
-import NotificationContainer from '../notifications/NotificationContainer';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { authService, CurrentUser } from '@/services/authService';
@@ -23,14 +22,7 @@ import { MODAL_MODULO_MAP } from '@/constants/planoModulos';
 const Layout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const {
-    notifications,
-    removeNotification,
-    pauseNotification,
-    resumeNotification,
-    success,
-    
-  } = useNotificationContext();
+  const { success } = useNotificationContext();
   const { theme, toggleTheme } = useTheme();
   const { t, language, setLanguage, availableLanguages } = useI18n();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -817,16 +809,6 @@ const Layout: React.FC = () => {
         <main className="main-content">
           <Outlet />
         </main>
-
-          {/* Notifications */}
-          <NotificationContainer
-            position="bottom-right"
-            notifications={notifications}
-            onRemove={removeNotification}
-            onPause={pauseNotification}
-            onResume={resumeNotification}
-            onActionClick={() => {}}
-          />
 
       {/* Single Modal Wrapper - Mantém o shell do modal sempre montado */}
       {/* Elimina flickering ao trocar entre modais, pois apenas o conteúdo interno muda */}

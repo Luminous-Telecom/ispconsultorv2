@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import NotificationContainer from '@/components/notifications/NotificationContainer';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSaasAuth } from '@/contexts/SaasAuthContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -19,7 +18,7 @@ const SaasLayout: React.FC = () => {
   const navigate = useNavigate();
   const tableHeader = useTableHeader();
   const { currentUser, logout, isAuthenticated, isLoading: authLoading } = useSaasAuth();
-  const { notifications, removeNotification, pauseNotification, resumeNotification, success } = useNotificationContext();
+  const { success } = useNotificationContext();
   const { theme, toggleTheme } = useTheme();
   const { openModal } = useModal();
   const isMobile = useIsMobile();
@@ -318,15 +317,6 @@ const SaasLayout: React.FC = () => {
         <main className="main-content">
           <Outlet />
         </main>
-
-        <NotificationContainer
-          position="bottom-right"
-          notifications={notifications}
-          onRemove={removeNotification}
-          onPause={pauseNotification}
-          onResume={resumeNotification}
-          onActionClick={() => {}}
-        />
 
         <SingleModalWrapper />
       </div>

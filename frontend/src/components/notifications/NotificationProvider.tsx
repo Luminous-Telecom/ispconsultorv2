@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { NotificationProviderProps, NotificationContextValue } from './types';
 import { useNotification } from './useNotification';
+import GlobalNotificationContainer from './GlobalNotificationContainer';
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
@@ -83,6 +84,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   return (
     <NotificationContext.Provider value={contextValue}>
+      <GlobalNotificationContainer />
       {children}
     </NotificationContext.Provider>
   );
