@@ -170,7 +170,17 @@ const Home: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showContato, setShowContato] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const ctaButtonsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!lightboxSrc) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxSrc(null);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [lightboxSrc]);
 
   useEffect(() => {
     if (!showContato) return;
@@ -323,7 +333,9 @@ const Home: React.FC = () => {
           </div>
           <div className="home-hero-visual">
             <div className="home-hero-visual-glow" />
-            <img src="/dashboard.png" alt="BackNet Dashboard" className="home-hero-visual-img" />
+            <button type="button" className="home-hero-visual-link" onClick={() => setLightboxSrc('/dashboard.png')}>
+              <img src="/dashboard.png" alt="BackNet Dashboard" className="home-hero-visual-img" />
+            </button>
           </div>
         </section>
 
@@ -449,7 +461,9 @@ const Home: React.FC = () => {
           <div className="home-section-inner home-benefits-inner">
           <div className="home-benefits-visual">
             <div className="home-benefits-glow" />
-            <img src="/dashboard%20clara.png" alt="BackNet Dashboard" className="home-benefits-img" />
+            <button type="button" className="home-benefits-visual-link" onClick={() => setLightboxSrc('/dashboard%20clara.png')}>
+              <img src="/dashboard%20clara.png" alt="BackNet Dashboard" className="home-benefits-img" />
+            </button>
           </div>
           <div className="home-benefits-content">
             <h2 className="home-section-title">Por que escolher BackNet?</h2>
@@ -591,6 +605,16 @@ const Home: React.FC = () => {
           </div>
         </footer>
       </main>
+
+      {lightboxSrc && (
+        <div
+          className="home-lightbox"
+          onClick={() => setLightboxSrc(null)}
+          aria-label="Fechar imagem (clique fora)"
+        >
+          <img src={lightboxSrc} alt="BackNet Dashboard" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 };

@@ -329,6 +329,37 @@ $secondary: #f3f4f6;
   filter: blur(48px);
 }
 
+.home-hero-visual-link {
+  display: block;
+  cursor: pointer;
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 100%;
+}
+
+.home-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  cursor: pointer;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    cursor: default;
+    border-radius: 0.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+}
+
 .home-hero-visual-img {
   position: relative;
   width: 100%;
@@ -854,6 +885,16 @@ $faixa-accent: #1e3a8a; /* azul escuro do tema do site */
   background: linear-gradient(135deg, rgba($primary, 0.1) 0%, rgba($accent, 0.1) 100%);
   border-radius: 1rem;
   filter: blur(48px);
+}
+
+.home-benefits-visual-link {
+  display: block;
+  cursor: pointer;
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 100%;
 }
 
 .home-benefits-img {
