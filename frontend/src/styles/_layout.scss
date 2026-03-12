@@ -930,9 +930,13 @@
   outline: none !important;
 }
 
-/* Tema escuro */
+/* Navbar - tema claro e escuro */
+.main-navbar {
+  background-color: var(--navbar-bg) !important;
+  border-bottom: 1px solid var(--navbar-border) !important;
+  color: var(--navbar-text) !important;
+}
+
 [data-theme="dark"] .main-navbar {
-  background-color: var(--bg-primary) !important;
-  border-color: var(--border-color) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }

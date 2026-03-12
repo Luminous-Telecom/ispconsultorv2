@@ -20,6 +20,16 @@
         }
       })();
     </script>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          var theme = (t === 'light' || t === 'dark') ? t : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.setAttribute('data-bs-theme', theme);
+        } catch (e) { /* noop */ }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet" />

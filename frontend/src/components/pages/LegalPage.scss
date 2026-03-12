@@ -1,0 +1,215 @@
+/* Páginas legais: Privacidade, Termos, Cookies */
+$primary: #1e3a8a;
+$primary-foreground: #f3f4f6;
+$foreground: #1f2937;
+$muted: #6b7280;
+$border: #e5e7eb;
+$background: #ffffff;
+
+.legal-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: $background;
+  color: $foreground;
+}
+
+.legal-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: $primary;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.legal-header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.legal-logo-link {
+  display: block;
+  text-decoration: none;
+}
+
+.legal-logo {
+  display: block;
+}
+
+.legal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.legal-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  color: $primary-foreground;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.legal-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.legal-btn-outline {
+  background: transparent;
+  color: $primary-foreground;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $primary-foreground;
+  }
+}
+
+.legal-main {
+  flex: 1;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.legal-content {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.legal-title {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: $foreground;
+  margin: 0 0 2rem;
+}
+
+.legal-body {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: $foreground;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 2rem 0 1rem;
+    color: $foreground;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  p {
+    margin: 0 0 1rem;
+    color: $muted;
+  }
+
+  ul {
+    margin: 0 0 1rem;
+    padding-left: 1.5rem;
+    color: $muted;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+
+  a {
+    color: $primary;
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+}
+
+.legal-footer {
+  background: $foreground;
+  color: $primary-foreground;
+  padding: 2rem 1.5rem;
+}
+
+.legal-footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+.legal-footer-links {
+  display: flex;
+  gap: 1.5rem;
+
+  a {
+    color: rgba($primary-foreground, 0.8);
+    text-decoration: none;
+    transition: color 0.2s;
+
+    &:hover {
+      color: $primary-foreground;
+    }
+  }
+}
+
+/* Tema escuro */
+[data-theme="dark"] .legal-page {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .legal-title,
+[data-theme="dark"] .legal-body h2,
+[data-theme="dark"] .legal-body h3 {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .legal-body p,
+[data-theme="dark"] .legal-body li {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .legal-body a {
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .legal-footer {
+  background: #020617;
+}

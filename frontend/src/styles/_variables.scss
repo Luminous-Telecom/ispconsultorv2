@@ -1,6 +1,21 @@
 /* Variáveis CSS para temas */
 :root {
-  /* Cores base - Paleta moderna e vibrante */
+  /* Border radius, transições e font sizes (comuns aos temas) */
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  --border-radius: 8px;
+  --border-radius-sm: 4px;
+  --border-radius-lg: 12px;
+  --font-size-xs: 0.6875rem;
+  --font-size-sm: 0.75rem;
+  --font-size-base: 0.8125rem;
+  --font-size-lg: 0.875rem;
+  --font-size-xl: 1rem;
+}
+
+/* Tema claro (default) */
+[data-theme="light"],
+:root {
   --primary-color: #0d6efd;
   --primary-hover: #0b5ed7;
   --btn-primary-color: #0d6efd;
@@ -10,90 +25,38 @@
   --danger-color: #dc3545;
   --warning-color: #ffc107;
   --info-color: #0dcaf0;
-  
-  /* Cores de fundo - Paleta Azul Ardósia Profundo (Slate Blue) - Dashboard Profissional */
-  /* Background principal: azul ardósia escuro - base do dashboard (body) */
-  --bg-primary: #2F3D48;
-  /* Background secundário: azul ardósia médio - para cards e containers */
-  --bg-secondary: #3D4E5C;
-  /* Elementos terciários: azul ardósia claro - para modais e overlays */
-  --bg-tertiary: #4A5D6E;
-  /* Modais: levemente mais claro que cards para hierarquia */
-  --bg-modal: #4A5D6E;
-  /* Dropdowns: mais claro que o fundo para destacar */
-  --bg-dropdown: #56718A;
-  --bg-dropdown-hover: #627e99;
-  /* Bordas sutis: azul ardósia médio-claro */
-  --border-color: #5A6D7E;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-modal: #ffffff;
+  --bg-dropdown: #ffffff;
+  --bg-dropdown-hover: #f1f5f9;
+  --border-color: #e2e8f0;
+  --border-light: #e2e8f0;
   --btn-close-filter: none;
-  
-  /* Cores de texto - Alto contraste (claro sobre fundo escuro) */
-  --text-primary: #FFFFFF;
-  --text-secondary: #F5F7FA;
-  --text-muted: #E8EDF2;
-  /* Bordas leves: azul ardósia médio */
-  --border-light: #5A6D7E;
-  
-  /* Sombras modernas */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  
-  /* Sidebar - harmonizada com paleta Azul Ardósia Profundo */
-  --sidebar-bg: #2F3D48;
-  --sidebar-text: #E8EDF2;
-  --sidebar-hover: rgba(61, 90, 122, 0.15);
-  --sidebar-active: #3D5A7A;
-  
-  /* Transições suaves */
-  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Border radius padronizado */
-  --border-radius: 8px;
-  --border-radius-sm: 4px;
-  --border-radius-lg: 12px;
-
-  /* Font sizes ainda menores */
-  --font-size-xs: 0.6875rem;  /* 11px */
-  --font-size-sm: 0.75rem;    /* 12px */
-  --font-size-base: 0.8125rem; /* 13px */
-  --font-size-lg: 0.875rem;   /* 14px */
-  --font-size-xl: 1rem;       /* 16px */
-
-  /* mobile fix: P9 — escala de fonte mais confortável para leitura mobile */
-  @media (max-width: 767.98px) {
-    --font-size-xs: 0.75rem;    /* 12px */
-    --font-size-sm: 0.8125rem;  /* 13px */
-    --font-size-base: 0.875rem; /* 14px */
-    --font-size-lg: 1rem;       /* 16px */
-    --font-size-xl: 1.125rem;   /* 18px */
-  }
-
-  /* Navbar - Header: #06b6d4 */
+  --sidebar-bg: #1e3a8a;
+  --sidebar-text: #f3f4f6;
+  --sidebar-hover: rgba(255, 255, 255, 0.1);
+  --sidebar-active: #2563eb;
   --navbar-bg: #06b6d4;
   --navbar-text: #ffffff;
   --navbar-border: #0891b2;
   --navbar-input-bg: rgba(255, 255, 255, 0.2);
   --navbar-input-text: #ffffff;
-  
-  /* Accent colors: cores vibrantes para gráficos e elementos interativos */
-  --primary-color: #6B9BD1;
-  --primary-hover: #5A8BC1;
-  --btn-primary-color: #6B9BD1;
-  --btn-primary-hover: #5A8BC1;
   --accent-pending: #E8B44C;
   --accent-complete: #8FB369;
-  
-  /* Cores de borda para cards por seção - cores de acento harmonizadas */
-  --card-border-primary: #3D5A7A;
-  --card-border-success: #8FB369;
-  --card-border-warning: #E8B44C;
-  --card-border-info: #3D5A7A;
-  --card-border-default: #5A6D7E;
-  
-  /* Cores para gráficos e visualizações - paleta completa */
+  --card-border-primary: #3b82f6;
+  --card-border-success: #22c55e;
+  --card-border-warning: #eab308;
+  --card-border-info: #0ea5e9;
+  --card-border-default: #e2e8f0;
   --chart-color-1: #6B9BD1;
   --chart-color-2: #8FB369;
   --chart-color-3: #E8B44C;
@@ -102,9 +65,18 @@
   --chart-color-6: #5DA6CC;
   --chart-color-7: #A3CB7A;
   --chart-color-8: #F2B950;
-  
-  /* Bootstrap Form Select - seta nativa com cor visível */
-  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+/* mobile fix: P9 - font sizes */
+@media (max-width: 767.98px) {
+  :root {
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.8125rem;
+    --font-size-base: 0.875rem;
+    --font-size-lg: 1rem;
+    --font-size-xl: 1.125rem;
+  }
 }
 
 /* Tema escuro */
@@ -164,4 +136,5 @@
   /* Sidebar - Modo escuro */
   --sidebar-active: #6366f1;
   --sidebar-hover: rgba(99, 102, 241, 0.15);
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f8fafc' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }

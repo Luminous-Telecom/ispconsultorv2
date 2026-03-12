@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import BackNetLogo from '@/components/common/BackNetLogo';
 import { useTheme } from '@/contexts/ThemeContext';
 import './Home.scss';
@@ -45,6 +46,16 @@ const INTEGRATIONS = [
   { emoji: '🔌', title: 'API REST', desc: 'Integre seus sistemas através da API REST com autenticação por token' },
   { emoji: '🔗', title: 'Webhooks', desc: 'Receba notificações em tempo real de eventos do sistema' },
   { emoji: '📚', title: 'Documentação', desc: 'Documentação completa para integração e desenvolvimento' },
+];
+
+/* Autoatendimento — containers de um lado a outro (estilo Brisanet) */
+const AUTOATENDIMENTO = [
+  { icon: 'bi-box-arrow-in-right', title: 'Acessar Sistema', desc: 'Entre no painel com seu login e senha para gerenciar sua operação' },
+  { icon: 'bi-receipt', title: '2ª via da fatura', desc: 'Consulte e baixe suas faturas pelo painel ou Central do Assinante' },
+  { icon: 'bi-question-circle', title: 'Central de ajuda', desc: 'Documentação e tutoriais para tirar o máximo do BackNet' },
+  { icon: 'bi-headset', title: 'Suporte', desc: 'Entre em contato pelo WhatsApp ou Telegram para suporte dedicado' },
+  { icon: 'bi-file-earmark-text', title: 'Contratos', desc: 'Visualize e assine contratos digitalmente na Central do Assinante' },
+  { icon: 'bi-chat-dots', title: 'Contato', desc: 'Agende demonstração ou tire dúvidas sobre planos e funcionalidades' },
 ];
 
 const FUTURE_FEATURES = [
@@ -180,6 +191,9 @@ const Home: React.FC = () => {
             <button type="button" className="home-nav-link" onClick={() => scrollTo('integracoes')}>
               Integrações
             </button>
+            <button type="button" className="home-nav-link" onClick={() => scrollTo('autoatendimento')}>
+              Autoatendimento
+            </button>
             <button type="button" className="home-nav-link" onClick={() => scrollTo('beneficios')}>
               Benefícios
             </button>
@@ -227,6 +241,9 @@ const Home: React.FC = () => {
             </button>
             <button type="button" className="home-nav-link" onClick={() => scrollTo('integracoes')}>
               Integrações
+            </button>
+            <button type="button" className="home-nav-link" onClick={() => scrollTo('autoatendimento')}>
+              Autoatendimento
             </button>
             <button type="button" className="home-nav-link" onClick={() => scrollTo('beneficios')}>
               Benefícios
@@ -288,44 +305,70 @@ const Home: React.FC = () => {
         </section>
 
         <section id="recursos" className="home-section home-features">
-          <div className="home-section-header">
-            <h2 className="home-section-title">Recursos Completos</h2>
-            <p className="home-section-desc">
-              Todas as ferramentas que você precisa para gerenciar sua consultoria de telecomunicações
-            </p>
-          </div>
-          <div className="home-features-grid">
-            {FEATURES.map((f) => (
-              <article key={f.title} className="home-feature-card">
-                <div className="home-feature-icon-wrap">
-                  <span className={`bi ${f.icon}`} />
-                </div>
-                <h3 className="home-feature-title">{f.title}</h3>
-                <p className="home-feature-desc">{f.description}</p>
-              </article>
-            ))}
+          <div className="home-section-inner">
+            <div className="home-section-header">
+              <h2 className="home-section-title">Recursos Completos</h2>
+              <p className="home-section-desc">
+                Todas as ferramentas que você precisa para gerenciar sua consultoria de telecomunicações
+              </p>
+            </div>
+            <div className="home-features-grid">
+              {FEATURES.map((f) => (
+                <article key={f.title} className="home-feature-card">
+                  <div className="home-feature-icon-wrap">
+                    <span className={`bi ${f.icon}`} />
+                  </div>
+                  <h3 className="home-feature-title">{f.title}</h3>
+                  <p className="home-feature-desc">{f.description}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
         <section id="integracoes" className="home-section home-integrations">
-          <div className="home-section-header">
-            <h2 className="home-section-title">Integração com API</h2>
-            <p className="home-section-desc">
-              Conecte seus sistemas através da API do BackNet
-            </p>
+          <div className="home-section-inner">
+            <div className="home-section-header">
+              <h2 className="home-section-title">Integração com API</h2>
+              <p className="home-section-desc">
+                Conecte seus sistemas através da API do BackNet
+              </p>
+            </div>
+            <div className="home-integrations-grid">
+              {INTEGRATIONS.map((item) => (
+                <div key={item.title} className="home-integration-card">
+                  <div className="home-integration-icon">{item.emoji}</div>
+                  <h3 className="home-integration-title">{item.title}</h3>
+                  <p className="home-integration-desc">{item.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="home-integrations-grid">
-            {INTEGRATIONS.map((item) => (
-              <div key={item.title} className="home-integration-card">
-                <div className="home-integration-icon">{item.emoji}</div>
-                <h3 className="home-integration-title">{item.title}</h3>
-                <p className="home-integration-desc">{item.desc}</p>
-              </div>
-            ))}
+        </section>
+
+        <section id="autoatendimento" className="home-section home-autoatendimento">
+          <div className="home-section-inner">
+            <div className="home-section-header">
+              <h2 className="home-section-title">Autoatendimento para clientes</h2>
+              <p className="home-section-desc">
+                Acesse rapidamente os recursos disponíveis no BackNet
+              </p>
+            </div>
+            <div className="home-autoatendimento-grid">
+              {AUTOATENDIMENTO.map((item) => (
+                <div key={item.title} className="home-autoatendimento-card">
+                  <span className={`bi ${item.icon} home-autoatendimento-icon`} />
+                  <h3 className="home-autoatendimento-title">{item.title}</h3>
+                  <p className="home-autoatendimento-desc">{item.desc}</p>
+                  <span className="bi bi-chevron-right home-autoatendimento-arrow" />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         <section id="beneficios" className="home-section home-benefits">
+          <div className="home-section-inner home-benefits-inner">
           <div className="home-benefits-visual">
             <div className="home-benefits-glow" />
             <img src="/dashboard%20clara.png" alt="BackNet Dashboard" className="home-benefits-img" />
@@ -347,18 +390,22 @@ const Home: React.FC = () => {
               ))}
             </div>
           </div>
+          </div>
         </section>
 
         <section id="planos" className="home-section home-planos">
+          <div className="home-section-inner">
           <div className="home-section-header">
             <h2 className="home-section-title">Planos</h2>
             <p className="home-section-desc home-planos-soon">
               <span className="bi bi-clock-history" /> Planos em breve. Entre em contato para uma proposta personalizada.
             </p>
           </div>
+          </div>
         </section>
 
         <section id="faq" className="home-section home-faq">
+          <div className="home-section-inner">
           <div className="home-section-header">
             <h2 className="home-section-title">Perguntas Frequentes</h2>
             <p className="home-section-desc">
@@ -381,9 +428,11 @@ const Home: React.FC = () => {
               </div>
             ))}
           </div>
+          </div>
         </section>
 
         <section id="recursos-futuros" className="home-section home-future-features">
+          <div className="home-section-inner">
           <div className="home-section-header">
             <h2 className="home-section-title">Recursos em breve</h2>
             <p className="home-section-desc">
@@ -401,6 +450,7 @@ const Home: React.FC = () => {
                 <p className="home-feature-desc">{f.description}</p>
               </article>
             ))}
+          </div>
           </div>
         </section>
 
@@ -445,6 +495,7 @@ const Home: React.FC = () => {
               <h3>Produto</h3>
               <a href="#recursos" onClick={(e) => { e.preventDefault(); scrollTo('recursos'); }}>Recursos</a>
               <a href="#integracoes" onClick={(e) => { e.preventDefault(); scrollTo('integracoes'); }}>Integrações</a>
+              <a href="#autoatendimento" onClick={(e) => { e.preventDefault(); scrollTo('autoatendimento'); }}>Autoatendimento</a>
               <a href="#beneficios" onClick={(e) => { e.preventDefault(); scrollTo('beneficios'); }}>Benefícios</a>
               <a href="#recursos-futuros" onClick={(e) => { e.preventDefault(); scrollTo('recursos-futuros'); }}>Em breve</a>
               <a href="#planos" onClick={(e) => { e.preventDefault(); scrollTo('planos'); }}>Planos</a>
@@ -454,9 +505,9 @@ const Home: React.FC = () => {
           <div className="home-footer-bottom">
             <p>© {new Date().getFullYear()} BackNet. Todos os direitos reservados.</p>
             <div className="home-footer-legal">
-              <button type="button" className="home-footer-legal-link">Privacidade</button>
-              <button type="button" className="home-footer-legal-link">Termos</button>
-              <button type="button" className="home-footer-legal-link">Cookies</button>
+              <Link to="/privacidade" className="home-footer-legal-link">Privacidade</Link>
+              <Link to="/termos" className="home-footer-legal-link">Termos</Link>
+              <Link to="/cookies" className="home-footer-legal-link">Cookies</Link>
             </div>
           </div>
         </footer>

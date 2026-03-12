@@ -20,13 +20,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     return savedTheme || 'light';
   });
 
-  // Aplicar tema na inicialização
+  // Aplicar tema na inicialização (evita flash antes do React)
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme;
-    const initialTheme = savedTheme || 'light';
+    const initialTheme = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'light';
     document.documentElement.setAttribute('data-theme', initialTheme);
-    
-    // Aplicar classes CSS para o tema
+    document.documentElement.setAttribute('data-bs-theme', initialTheme);
     if (initialTheme === 'dark') {
       document.body.classList.add('dark-theme');
       document.body.classList.remove('light-theme');
@@ -40,8 +39,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
-    
-    // Aplicar classes CSS para o tema
+    document.documentElement.setAttribute('data-bs-theme', theme);
     if (theme === 'dark') {
       document.body.classList.add('dark-theme');
       document.body.classList.remove('light-theme');

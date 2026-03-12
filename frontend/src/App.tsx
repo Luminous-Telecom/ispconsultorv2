@@ -20,6 +20,9 @@ const Dashboard = lazy(() => import('./components/pages/Dashboard'));
 const Login = lazy(() => import('./components/pages/Login'));
 const PagamentoPublico = lazy(() => import('./components/pages/PagamentoPublico'));
 const CentralAssinante = lazy(() => import('./components/pages/CentralAssinante'));
+const Privacidade = lazy(() => import('./components/pages/Privacidade'));
+const Termos = lazy(() => import('./components/pages/Termos'));
+const Cookies = lazy(() => import('./components/pages/Cookies'));
 
 // SaaS Admin Pages
 const SaasLogin = lazy(() => import('./components/pages/saas/SaasLogin'));
@@ -98,6 +101,21 @@ function AppContent() {
                     <Route path="/central-assinante/:slug" element={
                       <Suspense fallback={<Loading message={t('ui.loadingSubscriberCenter')} />}>
                         <CentralAssinante />
+                      </Suspense>
+                    } />
+                    <Route path="/privacidade" element={
+                      <Suspense fallback={<Loading message={t('ui.loadingPage')} />}>
+                        <Privacidade />
+                      </Suspense>
+                    } />
+                    <Route path="/termos" element={
+                      <Suspense fallback={<Loading message={t('ui.loadingPage')} />}>
+                        <Termos />
+                      </Suspense>
+                    } />
+                    <Route path="/cookies" element={
+                      <Suspense fallback={<Loading message={t('ui.loadingPage')} />}>
+                        <Cookies />
                       </Suspense>
                     } />
                     <Route path="/adm" element={

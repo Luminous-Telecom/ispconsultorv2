@@ -218,15 +218,15 @@ $secondary: #f3f4f6;
   flex: 1;
 }
 
-/* Hero */
+/* Hero — full-width */
 .home-hero {
   display: grid;
   grid-template-columns: 1fr;
   gap: 3rem;
   align-items: center;
   padding: 4rem 1rem 6rem;
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 
   @media (min-width: 640px) {
     padding: 4rem 1.5rem 6rem;
@@ -236,6 +236,8 @@ $secondary: #f3f4f6;
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
     padding: 6rem 2rem 8rem;
+    max-width: 1536px;
+    margin: 0 auto;
   }
 }
 
@@ -337,19 +339,30 @@ $secondary: #f3f4f6;
   object-fit: contain;
 }
 
-/* Section comum */
+/* Section comum — full-width de um lado a outro (estilo Brisanet) */
 .home-section {
+  width: 100%;
   padding: 4rem 1rem;
-  max-width: 1280px;
-  margin: 0 auto;
+  box-sizing: border-box;
 
   @media (min-width: 640px) {
     padding: 4rem 1.5rem;
   }
 
   @media (min-width: 1024px) {
-    padding: 6rem 2rem;
+    padding: 5rem 2rem;
   }
+
+  @media (min-width: 1280px) {
+    padding: 6rem 2.5rem;
+  }
+}
+
+/* Container interno — usa toda a largura disponível até 1536px */
+.home-section-inner {
+  max-width: 1536px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .home-section-header {
@@ -383,12 +396,17 @@ $secondary: #f3f4f6;
   grid-template-columns: 1fr;
   gap: 1.5rem;
 
-  @media (min-width: 768px) {
+  @media (min-width: 640px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
   @media (min-width: 1024px) {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
   }
 }
 
@@ -537,16 +555,32 @@ $secondary: #f3f4f6;
 .home-integrations-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
-  margin-top: 4rem;
+  gap: 1.5rem;
+  margin-top: 3rem;
 
-  @media (min-width: 768px) {
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
     grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
   }
 }
 
+/* Cards de integração — estilo container Brisanet */
 .home-integration-card {
   text-align: center;
+  background: $background;
+  border: 1px solid $border;
+  border-radius: 0.75rem;
+  padding: 2rem 1.5rem;
+  transition: box-shadow 0.2s, border-color 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-color: rgba($primary, 0.3);
+  }
 }
 
 .home-integration-icon {
@@ -575,24 +609,91 @@ $secondary: #f3f4f6;
   margin: 0;
 }
 
+/* Autoatendimento — 6 containers lado a lado (estilo Brisanet) */
+.home-autoatendimento {
+  background: $background;
+}
+
+.home-autoatendimento-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+  }
+}
+
+.home-autoatendimento-card {
+  background: rgba($primary, 0.06);
+  border: 1px solid $border;
+  border-radius: 0.75rem;
+  padding: 1.5rem 1.25rem;
+  position: relative;
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border-color: rgba($primary, 0.25);
+    background: rgba($primary, 0.08);
+  }
+}
+
+.home-autoatendimento-icon {
+  display: block;
+  font-size: 1.75rem;
+  color: $primary;
+  margin-bottom: 1rem;
+}
+
+.home-autoatendimento-title {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: $foreground;
+  margin: 0 0 0.5rem;
+}
+
+.home-autoatendimento-desc {
+  font-size: 0.8125rem;
+  color: $muted;
+  line-height: 1.45;
+  margin: 0 0 1rem;
+}
+
+.home-autoatendimento-arrow {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  font-size: 1rem;
+  color: $accent;
+  opacity: 0.8;
+}
+
 /* Benefits */
-.home-benefits {
+.home-benefits .home-section-inner {
   display: grid;
   grid-template-columns: 1fr;
   gap: 3rem;
   align-items: center;
-  background: rgba($secondary, 0.3);
-  padding: 4rem 1rem;
-
-  @media (min-width: 640px) {
-    padding: 4rem 1.5rem;
-  }
 
   @media (min-width: 1024px) {
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
-    padding: 6rem 2rem;
   }
+}
+
+.home-benefits {
+  background: rgba($secondary, 0.3);
 }
 
 .home-benefits-visual {
@@ -866,9 +967,150 @@ $secondary: #f3f4f6;
   font: inherit;
   color: rgba($primary-foreground, 0.7);
   cursor: pointer;
+  text-decoration: none;
   transition: color 0.2s;
 
   &:hover {
     color: $primary-foreground;
   }
+}
+
+/* ============================================
+   TEMA ESCURO - Página Home
+   ============================================ */
+[data-theme="dark"] .home-page {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .home-hero-title {
+  color: #f8fafc;
+
+  .home-hero-accent {
+    color: #93c5fd;
+  }
+}
+
+[data-theme="dark"] .home-hero-desc,
+[data-theme="dark"] .home-hero-check {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .home-section-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .home-section-desc,
+[data-theme="dark"] .home-benefits-intro,
+[data-theme="dark"] .home-feature-desc,
+[data-theme="dark"] .home-integration-desc,
+[data-theme="dark"] .home-benefit-desc,
+[data-theme="dark"] .home-faq-answer {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .home-features {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+[data-theme="dark"] .home-feature-card {
+  background: #1e293b;
+  border-color: #334155;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+[data-theme="dark"] .home-feature-title,
+[data-theme="dark"] .home-integration-title,
+[data-theme="dark"] .home-benefit-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .home-btn-outline {
+  color: #e2e8f0;
+  border-color: #475569;
+
+  &:hover {
+    background: #1e293b;
+  }
+}
+
+[data-theme="dark"] .home-hero-visual-img,
+[data-theme="dark"] .home-benefits-img {
+  border-color: #334155;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .home-integrations {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .home-benefits {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+[data-theme="dark"] .home-planos,
+[data-theme="dark"] .home-future-features {
+  background: #0f172a;
+  border-top-color: #334155;
+}
+
+[data-theme="dark"] .home-feature-card-future {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+[data-theme="dark"] .home-faq {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+[data-theme="dark"] .home-faq-item {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .home-faq-question {
+  color: #f8fafc;
+
+  &:hover {
+    color: #93c5fd;
+  }
+}
+
+[data-theme="dark"] .home-planos-soon {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .home-footer {
+  background: #020617;
+}
+
+[data-theme="dark"] .home-autoatendimento {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .home-autoatendimento-card {
+  background: rgba(30, 58, 138, 0.15);
+  border-color: #334155;
+
+  &:hover {
+    background: rgba(30, 58, 138, 0.25);
+    border-color: #475569;
+  }
+}
+
+[data-theme="dark"] .home-autoatendimento-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .home-autoatendimento-desc {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .home-autoatendimento-icon {
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .home-autoatendimento-arrow {
+  color: #22c55e;
 }
