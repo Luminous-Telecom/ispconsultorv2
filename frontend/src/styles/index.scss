@@ -11,26 +11,18 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
-/* Estilos base */
+/* Estilos base (globais + site/sistema por data-app) */
 @import 'base';
 
-/* Sidebar */
-@import 'sidebar';
-
-/* Layout */
-@import 'layout';
-
-/* Componentes */
-@import 'components';
-
-/* Tabelas */
-@import 'tables';
-
-/* Dashboard */
-@import 'dashboard';
-
-/* Tema */
-@import 'themes';
+/* Estilos do SISTEMA (Login, /adm, /saas) - isolado do site */
+body[data-app="system"] {
+  @import 'sidebar';
+  @import 'layout';
+  @import 'components';
+  @import 'tables';
+  @import 'dashboard';
+  @import 'themes';
+}
 
 /* CSS customizado adicional legível */
 @import '../index.css';

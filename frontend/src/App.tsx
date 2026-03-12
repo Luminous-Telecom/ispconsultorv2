@@ -1,5 +1,5 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './components/notifications/NotificationProvider';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -54,6 +54,16 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Define data-app no body para isolar estilos site vs sistema */
+function RouteAppContext() {
+  const location = useLocation();
+  useEffect(() => {
+    const isSystem = location.pathname.startsWith('/adm') || location.pathname.startsWith('/saas') || location.pathname === '/login';
+    document.body.setAttribute('data-app', isSystem ? 'system' : 'site');
+  }, [location.pathname]);
+  return null;
+}
+
 function AppContent() {
   const { t } = useI18n();
   
@@ -81,6 +91,7 @@ function AppContent() {
             <NotificationProvider>
               <SaasAuthProvider>
               <Router>
+                <RouteAppContext />
                 <Suspense fallback={<Loading message={t('ui.loadingApplication')} />}>
                   <Routes>
                     <Route path="/" element={

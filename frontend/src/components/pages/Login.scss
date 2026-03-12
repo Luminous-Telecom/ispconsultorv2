@@ -1,0 +1,50 @@
+/* Login — sempre usa tema do sistema, nunca do site */
+/* Força isolamento total: cores, fontes e variáveis do ERP */
+
+.login-page {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif !important;
+  min-height: 100vh;
+
+  .card {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .card-body,
+  .card-footer {
+    background: inherit !important;
+    color: inherit !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .text-muted,
+  .small,
+  small {
+    color: var(--text-secondary) !important;
+  }
+
+  .form-label {
+    color: var(--text-primary) !important;
+  }
+
+  .form-control {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .form-control::placeholder {
+    color: var(--text-muted) !important;
+  }
+
+  .btn-link {
+    color: var(--text-secondary) !important;
+  }
+
+  .btn-link:hover {
+    color: var(--text-primary) !important;
+  }
+}

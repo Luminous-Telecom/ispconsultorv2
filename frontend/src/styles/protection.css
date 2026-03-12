@@ -1,9 +1,10 @@
 /* Proteções contra cópia - BackNet */
+/* Apenas no sistema (adm/saas) - evita interferir no site público */
 
 /* Proteção contra seleção de texto apenas em dashboards e tabelas */
-.table,
-.card,
-.badge {
+body[data-app="system"] .table,
+body[data-app="system"] .card,
+body[data-app="system"] .badge {
   -webkit-user-select: none !important;
   -moz-user-select: none !important;
   -ms-user-select: none !important;
@@ -11,29 +12,29 @@
   -webkit-touch-callout: none !important;
 }
 
-/* Permitir seleção em formulários, editores e inputs */
-input,
-textarea,
-select,
-option,
-[contenteditable="true"],
-.form-control,
-.form-select,
-.ckeditor-wrapper *,
-.ck-editor *,
-.ck-content * {
+/* Permitir seleção em formulários, editores e inputs (sistema) */
+body[data-app="system"] input,
+body[data-app="system"] textarea,
+body[data-app="system"] select,
+body[data-app="system"] option,
+body[data-app="system"] [contenteditable="true"],
+body[data-app="system"] .form-control,
+body[data-app="system"] .form-select,
+body[data-app="system"] .ckeditor-wrapper *,
+body[data-app="system"] .ck-editor *,
+body[data-app="system"] .ck-content * {
   -webkit-user-select: text !important;
   -moz-user-select: text !important;
   -ms-user-select: text !important;
   user-select: text !important;
 }
 
-/* Proteção contra impressão */
+/* Proteção contra impressão - apenas no sistema */
 @media print {
-  * {
+  body[data-app="system"] * {
     display: none !important;
   }
-  body::after {
+  body[data-app="system"]::after {
     content: "Impressão não autorizada";
     display: block !important;
     font-size: 24px;
@@ -42,8 +43,8 @@ option,
   }
 }
 
-/* Proteção contra drag and drop */
-* {
+/* Proteção contra drag and drop - apenas no sistema */
+body[data-app="system"] * {
   -webkit-user-drag: none !important;
   -khtml-user-drag: none !important;
   -moz-user-drag: none !important;

@@ -44,6 +44,9 @@
     <title></title>
   </head>
   <body>
+    <script>
+      (function(){try{var p=window.location.pathname;document.body.setAttribute('data-app',/^\/(adm|saas)(\/|$)|^\/login$/.test(p)?'system':'site');}catch(e){}})();
+    </script>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
   </body>

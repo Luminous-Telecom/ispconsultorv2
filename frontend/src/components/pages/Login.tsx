@@ -4,11 +4,10 @@ import { authService } from '@/services/authService';
 import { removeAuthToken } from '@/services/core';
 import BackNetLogo from '@/components/common/BackNetLogo';
 import { useI18n } from '@/contexts/I18nContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import './Login.scss';
 
 const Login: React.FC = () => {
   const { t } = useI18n();
-  const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -78,17 +77,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid vh-100 d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
-      <button
-        type="button"
-        className="btn btn-link position-absolute top-0 end-0 m-3 p-2 rounded"
-        onClick={toggleTheme}
-        title={theme === 'light' ? (t('layout.darkMode') || 'Modo escuro') : (t('layout.lightMode') || 'Modo claro')}
-        aria-label={theme === 'light' ? 'Modo escuro' : 'Modo claro'}
-        style={{ zIndex: 10, color: 'var(--text-secondary)' }}
-      >
-        <i className={`bi ${theme === 'light' ? 'bi-moon' : 'bi-sun'} fs-5`} />
-      </button>
+    <div className="login-page container-fluid vh-100 d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-12 col-sm-8 col-md-6" style={{ maxWidth: '380px' }}>
