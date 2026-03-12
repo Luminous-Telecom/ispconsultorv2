@@ -386,6 +386,9 @@ $secondary: #f3f4f6;
   line-height: 1.6;
 }
 
+/* Faixas: alternância de fundos entre seções (estilo "Pronto para transformar") */
+$faixa-accent: #2563eb; /* azul royal para faixas destacadas */
+
 /* Features */
 .home-features {
   background: rgba($secondary, 0.3);
@@ -450,9 +453,22 @@ $secondary: #f3f4f6;
   margin: 0;
 }
 
-/* Planos */
+/* Planos — faixa destacada */
 .home-planos {
-  background: $background;
+  background: linear-gradient(135deg, $faixa-accent 0%, darken($faixa-accent, 8%) 100%);
+  color: $primary-foreground;
+
+  .home-section-title {
+    color: $primary-foreground;
+  }
+
+  .home-planos-soon {
+    color: rgba($primary-foreground, 0.9);
+
+    .bi {
+      color: $primary-foreground;
+    }
+  }
 }
 
 .home-planos-soon {
@@ -547,9 +563,35 @@ $secondary: #f3f4f6;
   border-radius: 0.25rem;
 }
 
-/* Integrations */
+/* Integrations — faixa destacada */
 .home-integrations {
-  background: $background;
+  background: linear-gradient(135deg, $faixa-accent 0%, darken($faixa-accent, 8%) 100%);
+  color: $primary-foreground;
+
+  .home-section-title {
+    color: $primary-foreground;
+  }
+
+  .home-section-desc {
+    color: rgba($primary-foreground, 0.9);
+  }
+
+  .home-integration-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .home-integration-title {
+    color: $primary-foreground;
+  }
+
+  .home-integration-desc {
+    color: rgba($primary-foreground, 0.85);
+  }
+
+  .home-integration-icon {
+    background: rgba(255, 255, 255, 0.15);
+  }
 }
 
 .home-integrations-grid {
@@ -609,7 +651,7 @@ $secondary: #f3f4f6;
   margin: 0;
 }
 
-/* Autoatendimento — 6 containers lado a lado (estilo Brisanet) */
+/* Autoatendimento */
 .home-autoatendimento {
   background: $background;
 }
@@ -628,7 +670,7 @@ $secondary: #f3f4f6;
   }
 
   @media (min-width: 1280px) {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 1rem;
   }
 }
@@ -646,6 +688,10 @@ $secondary: #f3f4f6;
     border-color: rgba($primary, 0.25);
     background: rgba($primary, 0.08);
   }
+}
+
+.home-autoatendimento-card-clickable {
+  cursor: pointer;
 }
 
 .home-autoatendimento-icon {
@@ -1044,14 +1090,41 @@ $secondary: #f3f4f6;
 }
 
 [data-theme="dark"] .home-integrations {
-  background: #0f172a;
+  background: linear-gradient(135deg, $faixa-accent 0%, darken($faixa-accent, 8%) 100%);
+
+  .home-section-title,
+  .home-integration-title {
+    color: $primary-foreground;
+  }
+
+  .home-section-desc,
+  .home-integration-desc {
+    color: rgba($primary-foreground, 0.9);
+  }
+
+  .home-integration-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
 }
 
 [data-theme="dark"] .home-benefits {
   background: rgba(15, 23, 42, 0.5);
 }
 
-[data-theme="dark"] .home-planos,
+[data-theme="dark"] .home-planos {
+  background: linear-gradient(135deg, $faixa-accent 0%, darken($faixa-accent, 8%) 100%);
+
+  .home-section-title,
+  .home-planos-soon {
+    color: $primary-foreground;
+  }
+}
+
+[data-theme="dark"] .home-planos .home-planos-soon .bi {
+  color: $primary-foreground;
+}
+
 [data-theme="dark"] .home-future-features {
   background: #0f172a;
   border-top-color: #334155;

@@ -55,7 +55,6 @@ const AUTOATENDIMENTO = [
   { icon: 'bi-question-circle', title: 'Central de ajuda', desc: 'Documentação e tutoriais para tirar o máximo do BackNet' },
   { icon: 'bi-headset', title: 'Suporte', desc: 'Entre em contato pelo WhatsApp ou Telegram para suporte dedicado' },
   { icon: 'bi-file-earmark-text', title: 'Contratos', desc: 'Visualize e assine contratos digitalmente na Central do Assinante' },
-  { icon: 'bi-chat-dots', title: 'Contato', desc: 'Agende demonstração ou tire dúvidas sobre planos e funcionalidades' },
 ];
 
 const FUTURE_FEATURES = [
@@ -355,14 +354,28 @@ const Home: React.FC = () => {
               </p>
             </div>
             <div className="home-autoatendimento-grid">
-              {AUTOATENDIMENTO.map((item) => (
-                <div key={item.title} className="home-autoatendimento-card">
+              {AUTOATENDIMENTO.map((item) => {
+                const isSuporte = item.title === 'Suporte';
+                const isAcessarSistema = item.title === 'Acessar Sistema';
+                const isClickable = isSuporte || isAcessarSistema;
+                const handleClick = isSuporte ? () => { setShowContato(true); scrollTo('cta'); } : isAcessarSistema ? () => window.open('/login', '_blank', 'noopener,noreferrer') : undefined;
+                const handleKeyDown = isClickable ? (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick?.(); } } : undefined;
+                return (
+                <div
+                  key={item.title}
+                  className={`home-autoatendimento-card ${isClickable ? 'home-autoatendimento-card-clickable' : ''}`}
+                  role={isClickable ? 'button' : undefined}
+                  tabIndex={isClickable ? 0 : undefined}
+                  onClick={handleClick}
+                  onKeyDown={handleKeyDown}
+                >
                   <span className={`bi ${item.icon} home-autoatendimento-icon`} />
                   <h3 className="home-autoatendimento-title">{item.title}</h3>
                   <p className="home-autoatendimento-desc">{item.desc}</p>
                   <span className="bi bi-chevron-right home-autoatendimento-arrow" />
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
         </section>
@@ -454,7 +467,7 @@ const Home: React.FC = () => {
           </div>
         </section>
 
-        <section className="home-cta">
+        <section id="cta" className="home-cta">
           <div className="home-cta-inner">
             <h2 className="home-cta-title">Pronto para transformar sua gestão?</h2>
             <p className="home-cta-desc">
