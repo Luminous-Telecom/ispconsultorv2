@@ -200,7 +200,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         }
       })
       .catch((err) => {
-        lastCnpjConsulted.current = '';
+        /* Não resetar lastCnpjConsulted em erro — evita loop infinito */
         if (err?.response?.status === 404) {
           info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
         } else {

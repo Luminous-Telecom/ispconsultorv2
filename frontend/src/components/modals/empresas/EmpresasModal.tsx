@@ -166,7 +166,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
         }
       })
       .catch((err) => {
-        lastCnpjConsulted.current = '';
+        /* Não resetar lastCnpjConsulted em erro — evita loop infinito */
         if (err?.response?.status === 404) {
           info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
         } else {
@@ -198,7 +198,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
           success('Dados do CEP preenchidos automaticamente!');
         }
       })
-      .catch(() => { lastCepConsulted.current = ''; });
+      .catch(() => { /* Não resetar em erro — evita loop infinito ao re-tentar o mesmo CEP */ });
   }, [form.cep, form.endereco, form.bairro, form.cidade, form.estado, showForm, parametros?.data?.validar_cep, success]);
 
   useEffect(() => {

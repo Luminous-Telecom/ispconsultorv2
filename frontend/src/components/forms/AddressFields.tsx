@@ -77,7 +77,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
         })
         .catch(() => {
           isSearching.current = false;
-          lastSearchedCep.current = '';
+          // Não resetar lastSearchedCep em caso de erro — manter para não re-tentar o mesmo CEP (evitar loop infinito)
         });
     } else if (cepNumbers.length !== 8) {
       // Reset quando o CEP não tem 8 dígitos

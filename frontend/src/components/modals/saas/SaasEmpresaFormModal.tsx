@@ -203,7 +203,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
         }
       })
       .catch((err) => {
-        lastCnpjConsulted.current = '';
+        /* Não resetar lastCnpjConsulted em erro — evita loop infinito */
         if (err?.response?.status === 404) {
           info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
         } else {
@@ -235,7 +235,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
           success('Dados do CEP preenchidos automaticamente!');
         }
       })
-      .catch(() => { lastCepConsulted.current = ''; });
+      .catch(() => { /* Não resetar em erro — evita loop infinito ao re-tentar o mesmo CEP */ });
   }, [form.cep, form.endereco, form.bairro, form.cidade, form.estado, show, parametros?.data?.validar_cep, success]);
 
   const handleSubmit = async (e: React.FormEvent) => {
