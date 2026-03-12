@@ -58,6 +58,7 @@ const COMPARE_DEPOIS = [
   'NFS-e e assinatura digital automáticas',
   'Relatórios financeiros — inadimplentes, pagamentos em dia e contas a pagar/receber',
   'Auditoria completa de todas as operações na plataforma',
+  'Em breve: Acesso SSH, Backup na Rede, Calculadora IP e Teste de Portas — ferramentas de telecom integradas',
 ];
 
 const INTEGRATIONS = [
@@ -344,7 +345,7 @@ const Home: React.FC = () => {
             <div className="home-section-header">
               <h2 className="home-section-title">É para você?</h2>
               <p className="home-section-desc">
-                Se você se identificou com o lado esquerdo, o BackNet foi feito para sua consultoria.
+                Se você se identificou com "Planilha ou sistema descentralizado", o BackNet foi feito para sua consultoria.
               </p>
             </div>
             <div className="home-compare-grid">
