@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import fs from 'fs';
 import { BackupService } from '../../../services/sistema/BackupService';
+import { registrarCriacao, registrarExclusao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
 import { sendSuccess, sendError, sendNotFound } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class BackupController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -25,6 +27,10 @@ export class BackupController {
         return;
       }
       await BackupService.delete(nome);
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req);
+        await registrarExclusao(req as any, 'Backup', 0, { nome }, 'Backup removido', empresaIdAudit);
+      } catch { /* não crítico */ }
       sendSuccess(res, undefined, 'Backup removido com sucesso');
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Erro ao remover backup';
@@ -80,6 +86,10 @@ export class BackupController {
         return;
       }
       const result = await BackupService.restore(nome);
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req);
+        await registrarAtualizacao(req as any, 'Backup', 0, { nome }, { nome, restaurado: true }, 'Restore de backup', empresaIdAudit);
+      } catch { /* não crítico */ }
       sendSuccess(res, result, result.message);
     } catch (error) {
       const msg = error instanceof Error ? error.message : '';
@@ -102,6 +112,10 @@ export class BackupController {
         return;
       }
       const nome = req.file.filename;
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req);
+        await registrarCriacao(req as any, 'Backup', 0, { nome, tamanho: req.file.size }, 'Upload de backup', empresaIdAudit);
+      } catch { /* não crítico */ }
       logger.info('Backup importado via upload', { arquivo: nome, tamanho: req.file.size });
       sendSuccess(res, { nome }, 'Backup importado com sucesso');
     } catch (error) {
@@ -128,6 +142,10 @@ export class BackupController {
         res.status(500).json({ success: false, message: result.message });
         return;
       }
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req);
+        await registrarCriacao(req as any, 'Backup', 0, { tipo, message: result.message }, 'Backup manual executado', empresaIdAudit);
+      } catch { /* não crítico */ }
       sendSuccess(res, result, result.message);
     } catch (error) {
       sendError(res, error, 'Erro ao executar backup manual', 500, true, {

@@ -19,8 +19,9 @@ export class AuditoriaQueryService {
     dataFim?: string;
     empresaId?: number | null;
     excludeSaasEntities?: boolean;
+    filterSaasOnly?: boolean;
   }): { must: any[]; must_not?: any[] } {
-    const { search, acao, entidade, usuario_id, dataInicio, dataFim, empresaId, excludeSaasEntities = true } = params;
+    const { search, acao, entidade, usuario_id, dataInicio, dataFim, empresaId, excludeSaasEntities = true, filterSaasOnly = false } = params;
     const must: any[] = [
       { bool: { should: [{ term: { log_tipo: 'auditoria' } }, { bool: { must: [{ bool: { must_not: { exists: { field: 'log_tipo' } } } }, { exists: { field: 'acao' } }] } }], minimum_should_match: 1 } }
     ];
@@ -97,6 +98,11 @@ export class AuditoriaQueryService {
 
     const must_not: any[] = [];
 
+    // Painel SaaS: mostrar apenas logs com saas=true
+    if (filterSaasOnly) {
+      must.push({ term: { saas: true } });
+    }
+
     // Filtrar por empresa_id: cada operação do tenant no ADM deve salvar empresa_id
     if (empresaId != null && empresaId > 0) {
       must.push({ term: { empresa_id: empresaId } });
@@ -125,6 +131,7 @@ export class AuditoriaQueryService {
     sortDirection?: string;
     empresaId?: number | null;
     excludeSaasEntities?: boolean;
+    filterSaasOnly?: boolean;
   }): Promise<{ logs: any[]; total: number }> {
     const elasticsearchService = getElasticsearchService();
     const client = elasticsearchService.getClient();

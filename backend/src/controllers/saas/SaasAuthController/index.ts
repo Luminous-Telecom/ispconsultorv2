@@ -6,6 +6,7 @@ import { sendSuccess, sendError, sendValidationError, sendUnauthorized } from '.
 import { isProduction } from '../../../utils/envUtils';
 import { logger } from '../../../utils/logger';
 import { registrarLogAcessoSaasElasticsearch } from '../../../services/elasticsearch/SaasLogAcessoElasticsearchService';
+import { registrarLogin, registrarLogout, registrarAtualizacao } from '../../../services/sistema/AuditoriaService';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 
 const loginSchema = Joi.object({
@@ -83,6 +84,13 @@ export class SaasAuthController {
 
       await SaasAuthService.updateUltimoLogin(usuario.id);
 
+      (req as unknown as { saasUser?: { sub: string; email?: string; nome?: string } }).saasUser = {
+        sub: String(usuario.id),
+        email: usuario.email,
+        nome: usuario.nome ?? undefined
+      };
+      await registrarLogin(req as unknown as SaasAuthenticatedRequest, usuario.id, 'Login SaaS');
+
       registrarLogAcessoSaasElasticsearch({
         usuario_id: usuario.id,
         acao: 'login',
@@ -120,7 +128,20 @@ export class SaasAuthController {
     }
   }
 
-  static async logout(_req: Request, res: Response): Promise<void> {
+  static async logout(req: Request, res: Response): Promise<void> {
+    const cookieToken = (req as Request & { cookies?: Record<string, string> }).cookies?.saas_auth_token;
+    if (cookieToken) {
+      try {
+        const payload = jwt.decode(cookieToken) as { sub?: string; email?: string; nome?: string } | null;
+        if (payload?.sub) {
+          const usuarioId = parseInt(payload.sub, 10);
+          (req as unknown as { saasUser?: object }).saasUser = { sub: payload.sub, email: payload.email, nome: payload.nome };
+          registrarLogout(req as unknown as SaasAuthenticatedRequest, usuarioId, 'Logout SaaS').catch(() => {});
+        }
+      } catch {
+        /* ignora falha ao decodificar */
+      }
+    }
     res.clearCookie('saas_auth_token', {
       httpOnly: true,
       secure: isProduction(),
@@ -172,8 +193,13 @@ export class SaasAuthController {
       }
 
       const id = Number(req.saasUser?.sub);
+      const usuarioAntes = await SaasAuthService.getById(id);
       await SaasAuthService.updateSenha(id, value.novaSenha);
-
+      if (usuarioAntes) {
+        const dadosAntes = usuarioAntes.toJSON ? usuarioAntes.toJSON() as Record<string, unknown> : {};
+        delete (dadosAntes as Record<string, unknown>).senha_hash;
+        await registrarAtualizacao(req as unknown as SaasAuthenticatedRequest, 'SaasUsuarioSuper', id, dadosAntes, { ...dadosAntes, senha_hash: '[ALTERADO]' }, 'Troca de senha', null);
+      }
       sendSuccess(res, null, 'Senha alterada com sucesso');
     } catch (err) {
       sendError(res, err, 'Erro ao trocar senha', 500, true);

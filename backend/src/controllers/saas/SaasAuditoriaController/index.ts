@@ -60,7 +60,8 @@ export class SaasAuditoriaController {
         sortColumn,
         sortDirection,
         empresaId,
-        excludeSaasEntities: false
+        excludeSaasEntities: false,
+        filterSaasOnly: true
       });
 
       const lastPage = Math.min(Math.ceil(total / limit), maxLastPage);

@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import Joi from 'joi';
 import { SaasDadosEmpresaCrudService } from '../../../services/saas/SaasDadosEmpresaCrudService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
-import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 
@@ -82,8 +81,7 @@ export class SaasDadosEmpresaCrudController {
         return;
       }
       const empresa = await SaasDadosEmpresaCrudService.create(value);
-      const empresaIdAudit = getEmpresaIdOrNull(req) ?? empresa.id ?? null;
-      await registrarCriacao(req as any, 'SaasDadosEmpresaCrud', empresa.id, empresa.toJSON() as Record<string, unknown>, undefined, empresaIdAudit);
+      await registrarCriacao(req as any, 'SaasDadosEmpresaCrud', empresa.id, empresa.toJSON() as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Empresa criada com sucesso', data: empresa });
     } catch (err) {
       sendError(res, err, 'Erro ao criar empresa', 500, true);
@@ -105,11 +103,10 @@ export class SaasDadosEmpresaCrudController {
       const empresaAntiga = await SaasDadosEmpresaCrudService.getById(Number(req.params.id));
       await SaasDadosEmpresaCrudService.update(Number(req.params.id), value);
       if (empresaAntiga) {
-        const empresaIdAudit = getEmpresaIdOrNull(req) ?? empresaAntiga.id ?? null;
         await registrarAtualizacao(req as any, 'SaasDadosEmpresaCrud', Number(req.params.id),
           empresaAntiga.toJSON() as Record<string, unknown>,
           { ...empresaAntiga.toJSON(), ...value } as Record<string, unknown>,
-          undefined, empresaIdAudit);
+          undefined, null);
       }
       sendSuccess(res, null, 'Empresa atualizada com sucesso');
     } catch (err) {
@@ -122,8 +119,7 @@ export class SaasDadosEmpresaCrudController {
       const empresaAntiga = await SaasDadosEmpresaCrudService.getById(Number(req.params.id));
       await SaasDadosEmpresaCrudService.delete(Number(req.params.id));
       if (empresaAntiga) {
-        const empresaIdAudit = getEmpresaIdOrNull(req) ?? empresaAntiga.id ?? null;
-        await registrarExclusao(req as any, 'SaasDadosEmpresaCrud', Number(req.params.id), empresaAntiga.toJSON() as Record<string, unknown>, undefined, empresaIdAudit);
+        await registrarExclusao(req as any, 'SaasDadosEmpresaCrud', Number(req.params.id), empresaAntiga.toJSON() as Record<string, unknown>, undefined, null);
       }
       sendSuccess(res, null, 'Empresa removida');
     } catch (err) {
@@ -136,8 +132,14 @@ export class SaasDadosEmpresaCrudController {
       const id = Number(req.params.id);
       const file = (req as Request & { file?: Express.Multer.File }).file;
       if (!file) return sendValidationError(res, 'Arquivo não enviado');
+      const empresaAntiga = await SaasDadosEmpresaCrudService.getById(id);
       const relPath = `/arquivos/saas-empresa/${id}/logo.png`;
       await SaasDadosEmpresaCrudService.update(id, { logo: relPath, logo_url: relPath });
+      if (empresaAntiga) {
+        const dadosAnteriores = empresaAntiga.toJSON() as Record<string, unknown>;
+        const dadosNovos = { ...dadosAnteriores, logo: relPath, logo_url: relPath };
+        await registrarAtualizacao(req as any, 'SaasDadosEmpresaCrud', id, dadosAnteriores, dadosNovos, 'Upload de logo', null);
+      }
       sendSuccess(res, { logo: relPath });
     } catch (err) {
       sendError(res, err, 'Erro ao enviar logo', 500, true);
@@ -149,8 +151,14 @@ export class SaasDadosEmpresaCrudController {
       const id = Number(req.params.id);
       const file = (req as Request & { file?: Express.Multer.File }).file;
       if (!file) return sendValidationError(res, 'Arquivo não enviado');
+      const empresaAntiga = await SaasDadosEmpresaCrudService.getById(id);
       const relPath = `/arquivos/saas-empresa/${id}/assinatura.png`;
       await SaasDadosEmpresaCrudService.update(id, { responsavel_assinatura: relPath });
+      if (empresaAntiga) {
+        const dadosAnteriores = empresaAntiga.toJSON() as Record<string, unknown>;
+        const dadosNovos = { ...dadosAnteriores, responsavel_assinatura: relPath };
+        await registrarAtualizacao(req as any, 'SaasDadosEmpresaCrud', id, dadosAnteriores, dadosNovos, 'Upload de assinatura', null);
+      }
       sendSuccess(res, { responsavel_assinatura: relPath });
     } catch (err) {
       sendError(res, err, 'Erro ao enviar assinatura', 500, true);

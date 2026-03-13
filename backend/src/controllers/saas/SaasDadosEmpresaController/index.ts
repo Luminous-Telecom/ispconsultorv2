@@ -4,7 +4,6 @@ import SaasDadosEmpresa from '../../../models/saas/SaasDadosEmpresa';
 import { SaasDadosEmpresaService } from '../../../services/saas/SaasDadosEmpresaService';
 import { DesbloqueioManualService } from '../../../services/saas/DesbloqueioManualService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
-import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 
@@ -74,8 +73,7 @@ export class SaasDadosEmpresaController {
         return;
       }
       const empresa = await SaasDadosEmpresaService.create(value);
-      const empresaIdAudit = getEmpresaIdOrNull(req) ?? empresa.id ?? null;
-      await registrarCriacao(req as any, 'SaasDadosEmpresa', empresa.id, empresa.toJSON() as Record<string, unknown>, undefined, empresaIdAudit);
+      await registrarCriacao(req as any, 'SaasDadosEmpresa', empresa.id, empresa.toJSON() as Record<string, unknown>, undefined, null);
       res.status(201).json({ success: true, message: 'Empresa criada com sucesso', data: empresa });
     } catch (err) {
       sendError(res, err, 'Erro ao criar empresa', 500, true);
@@ -97,11 +95,10 @@ export class SaasDadosEmpresaController {
       const empresaAntiga = await SaasDadosEmpresaService.getById(Number(req.params.id));
       await SaasDadosEmpresaService.update(Number(req.params.id), value);
       if (empresaAntiga) {
-        const empresaIdAudit = getEmpresaIdOrNull(req) ?? empresaAntiga.id ?? null;
         await registrarAtualizacao(req as any, 'SaasDadosEmpresa', Number(req.params.id),
           empresaAntiga.toJSON() as Record<string, unknown>,
           { ...empresaAntiga.toJSON(), ...value } as Record<string, unknown>,
-          undefined, empresaIdAudit);
+          undefined, null);
       }
       sendSuccess(res, null, 'Empresa atualizada com sucesso');
     } catch (err) {
@@ -114,8 +111,7 @@ export class SaasDadosEmpresaController {
       const empresaAntiga = await SaasDadosEmpresaService.getById(Number(req.params.id));
       await SaasDadosEmpresaService.delete(Number(req.params.id));
       if (empresaAntiga) {
-        const empresaIdAudit = getEmpresaIdOrNull(req) ?? empresaAntiga.id ?? null;
-        await registrarExclusao(req as any, 'SaasDadosEmpresa', Number(req.params.id), empresaAntiga.toJSON() as Record<string, unknown>, undefined, empresaIdAudit);
+        await registrarExclusao(req as any, 'SaasDadosEmpresa', Number(req.params.id), empresaAntiga.toJSON() as Record<string, unknown>, undefined, null);
       }
       sendSuccess(res, null, 'Empresa removida com sucesso');
     } catch (err) {
@@ -143,6 +139,7 @@ export class SaasDadosEmpresaController {
       const value = data_fim_desbloqueio_manual == null || data_fim_desbloqueio_manual === ''
         ? null
         : String(data_fim_desbloqueio_manual).trim().slice(0, 10) || null;
+      const empresaAntiga = await SaasDadosEmpresaService.getById(id);
       const [affected] = await SaasDadosEmpresa.update(
         { data_fim_desbloqueio_manual: value },
         { where: { id } }
@@ -150,6 +147,11 @@ export class SaasDadosEmpresaController {
       if (affected === 0) {
         sendNotFound(res, 'Empresa não encontrada');
         return;
+      }
+      if (empresaAntiga) {
+        const dadosAnteriores = empresaAntiga.toJSON() as Record<string, unknown>;
+        const dadosNovos = { ...dadosAnteriores, data_fim_desbloqueio_manual: value };
+        await registrarAtualizacao(req as any, 'SaasDadosEmpresa', id, dadosAnteriores, dadosNovos, 'Atualização data fim desbloqueio manual', null);
       }
       sendSuccess(res, { data_fim_desbloqueio_manual: value }, 'Data atualizada');
     } catch (err) {
@@ -164,10 +166,20 @@ export class SaasDadosEmpresaController {
         sendValidationError(res, 'ID inválido');
         return;
       }
+      const empresaAntiga = await SaasDadosEmpresaService.getById(id);
       const result = await DesbloqueioManualService.desbloquear(id);
       if (!result.success) {
         sendError(res, new Error(result.message), result.message, 400, false);
         return;
+      }
+      if (empresaAntiga) {
+        const dadosAnteriores = empresaAntiga.toJSON() as Record<string, unknown>;
+        const dadosNovos = {
+          ...dadosAnteriores,
+          bloqueado_por_atraso: false,
+          data_fim_desbloqueio_manual: result.data?.data_fim_desbloqueio_manual ?? null
+        };
+        await registrarAtualizacao(req as any, 'SaasDadosEmpresa', id, dadosAnteriores, dadosNovos, 'Desbloqueio manual', null);
       }
       sendSuccess(res, result.data, result.message);
     } catch (err) {

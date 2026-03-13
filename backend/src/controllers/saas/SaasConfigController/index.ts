@@ -255,14 +255,17 @@ export class SaasBancoController {
   }
   static async gerarWebhookSecret(req: SaasAuthenticatedRequest, res: Response) {
     try {
-      const item = await SaasBancoService.getById(Number(req.params.id));
+      const id = Number(req.params.id);
+      const item = await SaasBancoService.getById(id);
       if (!item) { sendNotFound(res, 'Banco não encontrado'); return; }
       if (item.tipo_banco !== 'asaas') {
         sendValidationError(res, 'Webhook secret disponível apenas para bancos do tipo Asaas');
         return;
       }
+      const dadosAnteriores = item.toJSON() as Record<string, unknown>;
       const novoSecret = randomBytes(32).toString('hex');
-      await SaasBancoService.update(Number(req.params.id), { webhook_secret: novoSecret });
+      await SaasBancoService.update(id, { webhook_secret: novoSecret });
+      await registrarAtualizacao(req as any, 'SaasBanco', id, dadosAnteriores, { ...dadosAnteriores, webhook_secret: '[GERADO]' }, 'Webhook secret regenerado', null);
       sendSuccess(res, { webhook_secret: novoSecret }, 'Webhook secret gerado com sucesso');
     } catch (err) { sendError(res, err, 'Erro ao gerar webhook secret', 500, true); }
   }

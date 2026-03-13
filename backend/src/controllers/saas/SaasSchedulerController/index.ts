@@ -116,7 +116,12 @@ export class SaasSchedulerController {
         sendValidationError(res, 'ID da rotina inválido');
         return;
       }
+      const routine = await SaasScheduledRoutineService.getById(routineId);
       await SchedulerService.getInstance().executeSaasRoutineManually(routineId);
+      if (routine) {
+        const dados = routine.toJSON ? routine.toJSON() as Record<string, unknown> : routine as unknown as Record<string, unknown>;
+        await registrarAtualizacao(req as any, 'SaasScheduledRoutine', routineId, dados, dados, 'Execução manual da rotina', null);
+      }
       sendSuccess(res, { message: 'Rotina iniciada em background' }, 'Rotina iniciada em background');
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao executar rotina', 500, true, {
