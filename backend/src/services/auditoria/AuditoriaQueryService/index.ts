@@ -94,26 +94,9 @@ export class AuditoriaQueryService {
 
     const must_not: any[] = [];
 
-    // Filtrar por empresa_id quando aplicável
+    // Filtrar por empresa_id: cada operação do tenant no ADM deve salvar empresa_id
     if (empresaId != null && empresaId > 0) {
-      // Para SaaS admin vendo tenant: incluir logs com empresa_id OU logs de entidades onde entidade_id=empresa OU dados.empresa_id=empresa (legado)
-      const tenantFilter: any = {
-        bool: {
-          should: [
-            { term: { empresa_id: empresaId } },
-            { bool: { must: [{ term: { entidade: 'SaasDadosEmpresa' } }, { term: { entidade_id: empresaId } }] } },
-            { bool: { must: [{ term: { entidade: 'SaasDadosEmpresaCrud' } }, { term: { entidade_id: empresaId } }] } },
-            { bool: { must: [{ term: { entidade: 'SaasContrato' } }, { term: { 'dados_novos.empresa_id': empresaId } }] } },
-            { bool: { must: [{ term: { entidade: 'SaasContrato' } }, { term: { 'dados_anteriores.empresa_id': empresaId } }] } },
-            { bool: { must: [{ term: { entidade: 'SaasTitulo' } }, { term: { 'dados_novos.empresa_id': empresaId } }] } },
-            { bool: { must: [{ term: { entidade: 'SaasTitulo' } }, { term: { 'dados_anteriores.empresa_id': empresaId } }] } },
-            { bool: { must: [{ term: { entidade: 'Usuario' } }, { term: { 'dados_novos.empresa_id': empresaId } }] } },
-            { bool: { must: [{ term: { entidade: 'Usuario' } }, { term: { 'dados_anteriores.empresa_id': empresaId } }] } },
-          ],
-          minimum_should_match: 1
-        }
-      };
-      must.push(tenantFilter);
+      must.push({ term: { empresa_id: empresaId } });
       // Tenant vendo próprio contexto: excluir entidades SaaS; Admin vendo tenant: incluir todas
       if (excludeSaasEntities) {
         must_not.push({ terms: { entidade: this.ENTIDADES_SAAS } });

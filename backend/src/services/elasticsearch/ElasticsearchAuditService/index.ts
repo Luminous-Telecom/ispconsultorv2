@@ -34,12 +34,6 @@ interface DadosAuditoria {
   empresa_id?: number | null;
 }
 
-/** Entidades SaaS onde entidade_id = empresa_id (registro da empresa/tenant) */
-const ENTIDADES_EMPRESA_IS_ID = ['SaasDadosEmpresa', 'SaasDadosEmpresaCrud'];
-
-/** Entidades com empresa_id nos dados */
-const ENTIDADES_COM_EMPRESA_NO_DADOS = ['SaasContrato', 'SaasTitulo', 'Usuario'];
-
 /**
  * Obter IP do cliente da requisição
  */
@@ -128,21 +122,9 @@ export async function registrarAuditoriaElasticsearch(
         // Garantir que o índice existe
         await elasticsearchService.ensureIndex();
 
-      // Obter dados do usuário e empresa (tenant)
+      // Obter dados do usuário e empresa (tenant) - sem fallback
       const userData = getUserData(req);
-      let empresaId = dados.empresa_id ?? getEmpresaIdForAudit(req);
-      // Quando SaaS admin (empresaId null), inferir da entidade/dados
-      if (empresaId == null) {
-        if (ENTIDADES_EMPRESA_IS_ID.includes(dados.entidade) && dados.entidade_id) {
-          empresaId = dados.entidade_id;
-        } else if (ENTIDADES_COM_EMPRESA_NO_DADOS.includes(dados.entidade)) {
-          const novo = dados.dados_novos as Record<string, unknown> | undefined;
-          const antigo = dados.dados_anteriores as Record<string, unknown> | undefined;
-          const idNovo = novo?.empresa_id != null ? Number(novo.empresa_id) : null;
-          const idAntigo = antigo?.empresa_id != null ? Number(antigo.empresa_id) : null;
-          empresaId = idNovo ?? idAntigo ?? null;
-        }
-      }
+      const empresaId = dados.empresa_id ?? getEmpresaIdForAudit(req);
 
       // Limpar dados removendo apenas campos internos do Sequelize e campos muito grandes
       const limparDados = (dados: Record<string, unknown> | null): Record<string, unknown> | null => {
@@ -411,14 +393,16 @@ export async function registrarCriacaoElasticsearch(
   entidade: string,
   entidadeId: number,
   dadosNovos: Record<string, unknown>,
-  observacoes?: string
+  observacoes?: string,
+  empresa_id?: number | null
 ): Promise<void> {
   await registrarAuditoriaElasticsearch(req, {
     acao: 'create',
     entidade,
     entidade_id: entidadeId,
     dados_novos: dadosNovos,
-    observacoes
+    observacoes,
+    empresa_id
   });
 }
 
@@ -431,7 +415,8 @@ export async function registrarAtualizacaoElasticsearch(
   entidadeId: number,
   dadosAnteriores: Record<string, unknown>,
   dadosNovos: Record<string, unknown>,
-  observacoes?: string
+  observacoes?: string,
+  empresa_id?: number | null
 ): Promise<void> {
   await registrarAuditoriaElasticsearch(req, {
     acao: 'update',
@@ -439,7 +424,8 @@ export async function registrarAtualizacaoElasticsearch(
     entidade_id: entidadeId,
     dados_anteriores: dadosAnteriores,
     dados_novos: dadosNovos,
-    observacoes
+    observacoes,
+    empresa_id
   });
 }
 
@@ -514,14 +500,16 @@ export async function registrarExclusaoElasticsearch(
   entidade: string,
   entidadeId: number,
   dadosAnteriores: Record<string, unknown>,
-  observacoes?: string
+  observacoes?: string,
+  empresa_id?: number | null
 ): Promise<void> {
   await registrarAuditoriaElasticsearch(req, {
     acao: 'delete',
     entidade,
     entidade_id: entidadeId,
     dados_anteriores: dadosAnteriores,
-    observacoes
+    observacoes,
+    empresa_id
   });
 }
 

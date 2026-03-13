@@ -61,9 +61,10 @@ export async function registrarCriacao(
   entidade: string,
   entidadeId: number,
   dadosNovos: Record<string, unknown>,
-  observacoes?: string
+  observacoes?: string,
+  empresa_id?: number | null
 ): Promise<void> {
-  await registrarCriacaoElasticsearch(req, entidade, entidadeId, dadosNovos, observacoes);
+  await registrarCriacaoElasticsearch(req, entidade, entidadeId, dadosNovos, observacoes, empresa_id);
 }
 
 /**
@@ -75,9 +76,10 @@ export async function registrarAtualizacao(
   entidadeId: number,
   dadosAnteriores: Record<string, unknown>,
   dadosNovos: Record<string, unknown>,
-  observacoes?: string
+  observacoes?: string,
+  empresa_id?: number | null
 ): Promise<void> {
-  await registrarAtualizacaoElasticsearch(req, entidade, entidadeId, dadosAnteriores, dadosNovos, observacoes);
+  await registrarAtualizacaoElasticsearch(req, entidade, entidadeId, dadosAnteriores, dadosNovos, observacoes, empresa_id);
 }
 
 /**
@@ -101,9 +103,10 @@ export async function registrarExclusao(
   entidade: string,
   entidadeId: number,
   dadosAnteriores: Record<string, unknown>,
-  observacoes?: string
+  observacoes?: string,
+  empresa_id?: number | null
 ): Promise<void> {
-  await registrarExclusaoElasticsearch(req, entidade, entidadeId, dadosAnteriores, observacoes);
+  await registrarExclusaoElasticsearch(req, entidade, entidadeId, dadosAnteriores, observacoes, empresa_id);
 }
 
 /**
