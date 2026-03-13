@@ -6,8 +6,9 @@ package-lock.json
 .env
 .env.local
 
-# Logs
+# Logs (não ignora frontend modals/logs)
 logs/
+!frontend/src/components/modals/logs/
 *.log
 
 # Build artifacts
