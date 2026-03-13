@@ -7,6 +7,7 @@ import { registrarCriacao, registrarAtualizacao } from '../../sistema/AuditoriaS
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import type { Request } from 'express';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 interface PagamentoData {
   valor: number;
@@ -80,12 +81,15 @@ export class ContaPagarOperationService {
     setAuditData(req, dadosAnteriores, dadosNovos);
 
     try {
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? conta.empresa_id ?? null;
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'ContaPagar',
         conta.id,
         dadosAnteriores,
-        dadosNovos
+        dadosNovos,
+        undefined,
+        empresaIdAudit
       );
     } catch (auditError) {
       logger.warn('Erro ao registrar auditoria de pagamento', {
@@ -121,12 +125,15 @@ export class ContaPagarOperationService {
     setAuditData(req, dadosAnteriores, dadosNovos);
 
     try {
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? conta.empresa_id ?? null;
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'ContaPagar',
         conta.id,
         dadosAnteriores,
-        dadosNovos
+        dadosNovos,
+        undefined,
+        empresaIdAudit
       );
     } catch (auditError) {
       logger.warn('Erro ao registrar auditoria de cancelamento', {
@@ -171,11 +178,14 @@ export class ContaPagarOperationService {
     });
 
     try {
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? novaConta.empresa_id ?? null;
       await registrarCriacao(
         req as AuthenticatedRequest,
         'ContaPagar',
         novaConta.id,
-        novaConta.toJSON() as Record<string, unknown>
+        novaConta.toJSON() as Record<string, unknown>,
+        undefined,
+        empresaIdAudit
       );
       logger.info('Auditoria de duplicação registrada', {
         conta_original_id: contaId,
