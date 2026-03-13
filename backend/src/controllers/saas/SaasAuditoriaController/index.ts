@@ -61,12 +61,12 @@ export class SaasAuditoriaController {
         sortDirection,
         empresaId,
         excludeSaasEntities: false,
-        filterSaasOnly: true
+        filterSaasOnly: false
       });
 
       const lastPage = Math.min(Math.ceil(total / limit), maxLastPage);
 
-      await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs as Record<string, unknown>[], true);
+      await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs as Record<string, unknown>[], true, true);
 
       sendSuccess(res, {
         data: logs,
