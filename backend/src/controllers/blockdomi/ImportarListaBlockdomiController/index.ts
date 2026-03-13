@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ImportarListaBlockdomiService } from '../../../services/blockdomi/ImportarListaBlockdomiService';
 import { VersaoBlockdomiService } from '../../../services/blockdomi/VersaoBlockdomiService';
+import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { logger } from '../../../utils/logger';
@@ -36,6 +37,7 @@ export class ImportarListaBlockdomiController {
         return;
       }
 
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
       const result = await ImportarListaBlockdomiService.importar({
         dominios: dominiosArr,
         ipv4: ipv4Arr,
@@ -46,8 +48,24 @@ export class ImportarListaBlockdomiController {
         link_oficio_anatel: link_oficio_anatel ?? null,
         link_oficio_justica: link_oficio_justica ?? null,
         link_planilha_dominios: link_planilha_dominios ?? null,
-        empresa_id: getEmpresaIdOrNull(req) ?? null
+        empresa_id: empresaIdAudit
       });
+
+      try {
+        const totalAlterados = result.dominios.created + result.dominios.updated + result.ipv4.created + result.ipv4.updated + result.ipv6.created + result.ipv6.updated;
+        if (totalAlterados > 0) {
+          await registrarCriacao(
+            req,
+            'BlockdomiLista',
+            0,
+            { versao_lista: result.versao_lista, dominios: result.dominios, ipv4: result.ipv4, ipv6: result.ipv6 },
+            `Importação lista: v${result.versao_lista} - D:${result.dominios.created}+${result.dominios.updated} I4:${result.ipv4.created}+${result.ipv4.updated} I6:${result.ipv6.created}+${result.ipv6.updated}`,
+            empresaIdAudit
+          );
+        }
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       const parts = [`Lista versão ${result.versao_lista}`];
       if (result.dominios.created + result.dominios.updated > 0) {
@@ -113,7 +131,20 @@ export class ImportarListaBlockdomiController {
    */
   static async gerarVersao(req: Request, res: Response): Promise<void> {
     try {
-      const versao = await VersaoBlockdomiService.criarVersao(undefined, getEmpresaIdOrNull(req) ?? null);
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
+      const versao = await VersaoBlockdomiService.criarVersao(undefined, empresaIdAudit);
+      try {
+        await registrarCriacao(
+          req,
+          'VersaoBlockdomi',
+          versao.id,
+          { id: versao.id, numero: versao.numero },
+          `Versão ${versao.numero} gerada`,
+          empresaIdAudit
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       sendSuccess(res, versao, `Versão ${versao.numero} gerada.`, 201);
     } catch (error) {
       sendError(res, error, 'Erro ao gerar versão', 500, true, {

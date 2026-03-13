@@ -4,6 +4,7 @@ import { ServidorWhatsAppValidatorService } from '../ServidorWhatsAppValidatorSe
 import { logger } from '../../../utils/logger';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { registrarCriacao, registrarAtualizacao } from '../../sistema/AuditoriaService';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export interface ServidorWhatsAppData {
   tipo_api?: 'evolution' | 'whatsapp_cloud';
@@ -60,12 +61,15 @@ export class ServidorWhatsAppProcessorService {
     await ServidorWhatsAppService.updateInstance(servidor, servidorData as Partial<ServidorWhatsApp>);
     
     try {
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? (servidor as { empresa_id?: number | null }).empresa_id ?? null;
       await registrarAtualizacao(
         req,
         'ServidorWhatsApp',
         servidor.id,
         dadosAnteriores as unknown as Record<string, unknown>,
-        servidor.toJSON() as unknown as Record<string, unknown>
+        servidor.toJSON() as unknown as Record<string, unknown>,
+        undefined,
+        empresaIdAudit
       );
     } catch (auditError) {
       logger.warn('Erro ao registrar auditoria', { error: auditError });
@@ -127,11 +131,14 @@ export class ServidorWhatsAppProcessorService {
     });
     
     try {
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? (novoServidor as { empresa_id?: number | null }).empresa_id ?? null;
       await registrarCriacao(
         req,
         'ServidorWhatsApp',
         novoServidor.id,
-        novoServidor.toJSON() as unknown as Record<string, unknown>
+        novoServidor.toJSON() as unknown as Record<string, unknown>,
+        undefined,
+        empresaIdAudit
       );
     } catch (auditError) {
       logger.warn('Erro ao registrar auditoria', { error: auditError });

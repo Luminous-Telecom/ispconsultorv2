@@ -229,7 +229,23 @@ export class PlanoController {
         return;
       }
 
+      const planoAntes = await PlanoService.getById(id);
       const plano = await PlanoService.updateStatus(id, status);
+
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? plano.empresa_id ?? null;
+        await registrarAtualizacao(
+          req,
+          'Plano',
+          plano.id,
+          planoAntes ? (planoAntes.toJSON() as Record<string, unknown>) : {},
+          plano.toJSON() as Record<string, unknown>,
+          `Status alterado para ${status}`,
+          empresaIdAudit
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       sendSuccess(res, {
         id: plano.id,

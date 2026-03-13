@@ -75,6 +75,7 @@ export class DominioController {
         return s === '' ? null : s;
       };
 
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
       const result = await DominioService.bulkCreate(items, {
         nome_oficio: trimOrNull(nome_oficio),
         data_inicio_bloqueio: dataInicio,
@@ -82,8 +83,23 @@ export class DominioController {
         link_oficio_anatel: trimOrNull(link_oficio_anatel),
         link_oficio_justica: trimOrNull(link_oficio_justica),
         link_planilha_dominios: trimOrNull(link_planilha_dominios),
-        empresa_id: getEmpresaIdOrNull(req) ?? null
+        empresa_id: empresaIdAudit
       });
+
+      try {
+        if (result.created > 0 || result.updated > 0) {
+          await registrarCriacao(
+            req,
+            'Dominio',
+            0,
+            { bulk: true, created: result.created, updated: result.updated, skipped: result.skipped },
+            `Importação em lote: ${result.created} criados, ${result.updated} atualizados, ${result.skipped} ignorados`,
+            empresaIdAudit
+          );
+        }
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       const parts = [`Criados ${result.created} domínio(s)`];
       if (result.updated > 0) parts.push(`atualizados ${result.updated}`);
@@ -259,7 +275,22 @@ export class DominioController {
         return;
       }
 
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
       const { deleted, versao } = await DominioService.bulkDelete(ids);
+      try {
+        if (deleted > 0) {
+          await registrarExclusao(
+            req,
+            'Dominio',
+            0,
+            { bulk: true, deleted, ids },
+            `Exclusão em lote: ${deleted} domínio(s) removidos`,
+            empresaIdAudit
+          );
+        }
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       sendSuccess(
         res,
         { deleted, versao },

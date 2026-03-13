@@ -5,7 +5,7 @@ import { NotaFiscalPdfService } from '../../../services/nfse/NotaFiscalPdfServic
 import { TituloService } from '../../../services/financeiro/TituloService';
 import { logger } from '../../../utils/logger';
 import Joi from 'joi';
-import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
+import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
@@ -226,9 +226,27 @@ export class NotaFiscalController {
         return;
       }
 
+      const dadosAnteriores = notaFiscal.toJSON() as Record<string, unknown>;
       const resultado = await NFeService.cancelarNFe(parseInt(id, 10), justificativa);
 
       if (resultado.success) {
+        try {
+          const notaAtualizada = await NotaFiscalService.getById(parseInt(id, 10));
+          const empresaIdAudit = empresaId ?? (notaFiscal as { empresa_id?: number | null }).empresa_id ?? null;
+          if (notaAtualizada) {
+            await registrarAtualizacao(
+              req as AuthenticatedRequest,
+              'NotaFiscal',
+              parseInt(id, 10),
+              dadosAnteriores,
+              notaAtualizada.toJSON() as Record<string, unknown>,
+              `NFS-e cancelada: ${justificativa}`,
+              empresaIdAudit
+            );
+          }
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
         sendSuccess(res, undefined, resultado.mensagem || 'NFS-e cancelada com sucesso');
       } else {
         sendError(res, new Error(resultado.mensagem || 'Erro ao cancelar NFS-e'), resultado.mensagem || 'Erro ao cancelar NFS-e', 400, false, {

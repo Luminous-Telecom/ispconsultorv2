@@ -397,8 +397,24 @@ export class BancoController {
         return;
       }
 
+      const dadosAnteriores = banco.toJSON() as Record<string, unknown>;
       const novoSecret = randomBytes(32).toString('hex');
-      await BancoService.update(id, { webhook_secret: novoSecret });
+      const bancoAtualizado = await BancoService.update(id, { webhook_secret: novoSecret });
+
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? bancoAtualizado.empresa_id ?? null;
+        await registrarAtualizacao(
+          req,
+          'Banco',
+          banco.id,
+          { ...dadosAnteriores, webhook_secret: '[REDACTED]' },
+          { ...bancoAtualizado.toJSON(), webhook_secret: '[REDACTED]' } as Record<string, unknown>,
+          'Webhook secret regenerado',
+          empresaIdAudit
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       logger.info('Webhook secret Asaas gerado manualmente', {
         banco_id: banco.id

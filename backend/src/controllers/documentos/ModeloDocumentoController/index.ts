@@ -323,8 +323,26 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
+      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo', modelo);
       if (result.success) {
+        try {
+          const docAtualizado = await ModeloDocumentoService.getById(modelo_documento_id);
+          const empresaIdAudit = empresaId ?? doc.empresa_id ?? null;
+          if (docAtualizado) {
+            await registrarAtualizacao(
+              req as AuthenticatedRequest,
+              'ModeloDocumento',
+              doc.id,
+              dadosAnteriores,
+              (docAtualizado.toJSON?.() ?? docAtualizado) as unknown as Record<string, unknown>,
+              'Modelo contrato conteúdo atualizado',
+              empresaIdAudit
+            );
+          }
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
         sendSuccess(res, result.data, result.message);
       } else {
         sendNotFound(res, result.message);
@@ -347,8 +365,26 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
+      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_adesao', modelo);
       if (result.success) {
+        try {
+          const docAtualizado = await ModeloDocumentoService.getById(modelo_documento_id);
+          const empresaIdAudit = empresaId ?? doc.empresa_id ?? null;
+          if (docAtualizado) {
+            await registrarAtualizacao(
+              req as AuthenticatedRequest,
+              'ModeloDocumento',
+              doc.id,
+              dadosAnteriores,
+              (docAtualizado.toJSON?.() ?? docAtualizado) as unknown as Record<string, unknown>,
+              'Modelo termo adesão atualizado',
+              empresaIdAudit
+            );
+          }
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
         sendSuccess(res, result.data, result.message);
       } else {
         sendNotFound(res, result.message);
@@ -371,8 +407,26 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
+      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_permanencia', modelo);
       if (result.success) {
+        try {
+          const docAtualizado = await ModeloDocumentoService.getById(modelo_documento_id);
+          const empresaIdAudit = empresaId ?? doc.empresa_id ?? null;
+          if (docAtualizado) {
+            await registrarAtualizacao(
+              req as AuthenticatedRequest,
+              'ModeloDocumento',
+              doc.id,
+              dadosAnteriores,
+              (docAtualizado.toJSON?.() ?? docAtualizado) as unknown as Record<string, unknown>,
+              'Modelo contrato permanência atualizado',
+              empresaIdAudit
+            );
+          }
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
         sendSuccess(res, result.data, result.message);
       } else {
         sendNotFound(res, result.message);
@@ -395,8 +449,26 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
+      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_recibo', modelo);
       if (result.success) {
+        try {
+          const docAtualizado = await ModeloDocumentoService.getById(modelo_documento_id);
+          const empresaIdAudit = empresaId ?? doc.empresa_id ?? null;
+          if (docAtualizado) {
+            await registrarAtualizacao(
+              req as AuthenticatedRequest,
+              'ModeloDocumento',
+              doc.id,
+              dadosAnteriores,
+              (docAtualizado.toJSON?.() ?? docAtualizado) as unknown as Record<string, unknown>,
+              'Modelo recibo atualizado',
+              empresaIdAudit
+            );
+          }
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
         sendSuccess(res, result.data, result.message);
       } else {
         sendNotFound(res, result.message);
@@ -419,8 +491,26 @@ export class ModeloDocumentoController {
         sendNotFound(res, 'Modelo de documento não encontrado');
         return;
       }
+      const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
       const result = await ModeloDocumentoContentService.salvarConteudo(Number(modelo_documento_id), 'conteudo_carta', modelo);
       if (result.success) {
+        try {
+          const docAtualizado = await ModeloDocumentoService.getById(modelo_documento_id);
+          const empresaIdAudit = empresaId ?? doc.empresa_id ?? null;
+          if (docAtualizado) {
+            await registrarAtualizacao(
+              req as AuthenticatedRequest,
+              'ModeloDocumento',
+              doc.id,
+              dadosAnteriores,
+              (docAtualizado.toJSON?.() ?? docAtualizado) as unknown as Record<string, unknown>,
+              'Modelo carta atualizado',
+              empresaIdAudit
+            );
+          }
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
         sendSuccess(res, result.data, result.message);
       } else {
         sendNotFound(res, result.message);

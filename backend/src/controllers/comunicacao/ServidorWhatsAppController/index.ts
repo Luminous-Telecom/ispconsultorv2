@@ -306,7 +306,24 @@ export class ServidorWhatsAppController {
         return;
       }
 
+      const dadosAnteriores = servidor.toJSON();
       await ServidorWhatsAppConnectionService.connectInstance(servidor);
+      await servidor.reload();
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? servidor.empresa_id ?? null;
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ServidorWhatsApp',
+          servidor.id,
+          dadosAnteriores as unknown as Record<string, unknown>,
+          servidor.toJSON() as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
+
       sendSuccess(res, undefined, 'Iniciando conexão com a instância...');
     } catch (error: unknown) {
       sendError(res, error, 'Erro ao conectar instância', 500, true);

@@ -245,7 +245,24 @@ export class TermoContratoController {
         return;
       }
 
+      const dadosAnteriores = termo.toJSON() as Record<string, unknown>;
       await termo.marcarComoAceito(aceito_por);
+      await termo.reload();
+
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? termo.empresa_id ?? null;
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'TermoContrato',
+          termo.id,
+          dadosAnteriores,
+          termo.toJSON() as Record<string, unknown>,
+          `Termo aceito por ${aceito_por}`,
+          empresaIdAudit
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       sendSuccess(res, termo, 'Termo marcado como aceito');
     } catch (error) {
@@ -270,8 +287,24 @@ export class TermoContratoController {
         return;
       }
 
+      const dadosAnteriores = termo.toJSON() as Record<string, unknown>;
       termo.ativo = false;
       await termo.save();
+
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? termo.empresa_id ?? null;
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'TermoContrato',
+          termo.id,
+          dadosAnteriores,
+          termo.toJSON() as Record<string, unknown>,
+          'Termo desativado',
+          empresaIdAudit
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       sendSuccess(res, undefined, 'Termo desativado com sucesso');
     } catch (error) {

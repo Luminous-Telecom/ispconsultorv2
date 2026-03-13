@@ -453,6 +453,19 @@ export class DadosEmpresaController {
 
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), responsavel_assinatura: filePath });
+        try {
+          const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'DadosEmpresa',
+            dadosEmpresa.id,
+            dadosEmpresa.toJSON() as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       } else {
         if (dadosEmpresa.responsavel_assinatura) {
           try {
@@ -471,7 +484,23 @@ export class DadosEmpresaController {
             // Ignorar erro ao deletar assinatura antiga
           }
         }
+        const dadosAnteriores = dadosEmpresa.toJSON();
         dadosEmpresa = await DadosEmpresaService.update({ responsavel_assinatura: filePath }, empresaId ?? undefined);
+        await dadosEmpresa.reload();
+        try {
+          const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'DadosEmpresa',
+            dadosEmpresa.id,
+            dadosAnteriores as Record<string, unknown>,
+            dadosEmpresa.toJSON() as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
+          );
+        } catch (auditError) {
+          // Não interromper o fluxo
+        }
       }
 
       sendSuccess(res, { success: true, responsavel_assinatura: filePath });

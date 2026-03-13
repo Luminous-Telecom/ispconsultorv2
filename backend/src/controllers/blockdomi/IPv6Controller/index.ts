@@ -69,6 +69,7 @@ export class IPv6Controller {
         return;
       }
 
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
       const result = await IPv6Service.bulkCreate(items, {
         nome_oficio: nome_oficio ?? null,
         data_inicio_bloqueio: data_inicio_bloqueio ?? null,
@@ -76,8 +77,23 @@ export class IPv6Controller {
         link_oficio_anatel: link_oficio_anatel ?? null,
         link_oficio_justica: link_oficio_justica ?? null,
         link_planilha_dominios: link_planilha_dominios ?? null,
-        empresa_id: getEmpresaIdOrNull(req) ?? null
+        empresa_id: empresaIdAudit
       });
+
+      try {
+        if (result.created > 0 || result.updated > 0) {
+          await registrarCriacao(
+            req,
+            'IPv6',
+            0,
+            { bulk: true, created: result.created, updated: result.updated, skipped: result.skipped },
+            `Importação em lote: ${result.created} criados, ${result.updated} atualizados, ${result.skipped} ignorados`,
+            empresaIdAudit
+          );
+        }
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       const parts = [`Criados ${result.created} IPv6`];
       if (result.updated > 0) parts.push(`atualizados ${result.updated}`);
@@ -251,7 +267,22 @@ export class IPv6Controller {
         return;
       }
 
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
       const { deleted, versao } = await IPv6Service.bulkDelete(ids);
+      try {
+        if (deleted > 0) {
+          await registrarExclusao(
+            req,
+            'IPv6',
+            0,
+            { bulk: true, deleted, ids },
+            `Exclusão em lote: ${deleted} IPv6 removidos`,
+            empresaIdAudit
+          );
+        }
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
       sendSuccess(
         res,
         { deleted, versao },

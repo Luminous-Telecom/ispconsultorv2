@@ -229,8 +229,24 @@ export class UsuarioController {
         return;
       }
 
+      const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]', webhook_secret: '[REDACTED]' } as Record<string, unknown>;
       const novoSecret = randomBytes(32).toString('hex');
-      await UsuarioService.update(id, { webhook_secret: novoSecret });
+      const usuarioAtualizado = await UsuarioService.update(id, { webhook_secret: novoSecret });
+
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? usuarioAtualizado.empresa_id ?? null;
+        await registrarAtualizacao(
+          req,
+          'Usuario',
+          usuario.id,
+          dadosAnteriores,
+          { ...usuarioAtualizado.toJSON(), password_hash: '[REDACTED]', webhook_secret: '[REDACTED]' } as Record<string, unknown>,
+          'Webhook secret regenerado',
+          empresaIdAudit
+        );
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
 
       logger.info('Webhook secret gerado para usuário', {
         usuario_id: usuario.id
