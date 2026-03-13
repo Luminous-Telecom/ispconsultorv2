@@ -14,6 +14,7 @@ export interface IpPermitidoFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   sortColumn?: string;
   sortDirection?: string;
 }

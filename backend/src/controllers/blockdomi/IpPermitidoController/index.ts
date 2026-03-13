@@ -23,6 +23,7 @@ export class IpPermitidoController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 15;
       const search = req.query.search as string;
+      const searchField = req.query.searchField as string;
       const sortColumn = req.query.sortColumn as string;
       const sortDirection = req.query.sortDirection as string;
 
@@ -30,6 +31,7 @@ export class IpPermitidoController {
         page,
         limit,
         search,
+        searchField,
         sortColumn,
         sortDirection
       });

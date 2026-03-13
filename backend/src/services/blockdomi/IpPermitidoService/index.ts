@@ -5,6 +5,7 @@ export interface ListIpPermitidoFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   sortColumn?: string;
   sortDirection?: string;
 }
@@ -23,20 +24,39 @@ export interface ListIpPermitidoResponse {
 
 export class IpPermitidoService {
   static async list(filters: ListIpPermitidoFilters): Promise<ListIpPermitidoResponse> {
-    const { page = 1, limit = 15, search, sortColumn = 'id', sortDirection = 'DESC' } = filters;
+    const { page = 1, limit = 15, search, searchField, sortColumn = 'id', sortDirection = 'DESC' } = filters;
     const offset = (page - 1) * limit;
     const dir = sortDirection?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     const whereConditions: WhereOptions<IpPermitidoBlockdomi>[] = [];
     if (search?.trim()) {
-      whereConditions.push({
-        [Op.or]: [
-          { faixa_ips: { [Op.like]: `%${search}%` } },
-          { '$cliente.razao_social$': { [Op.like]: `%${search}%` } },
-          { '$cliente.nome_fantasia$': { [Op.like]: `%${search}%` } },
-          { '$cliente.cnpj$': { [Op.like]: `%${search}%` } }
-        ]
-      } as WhereOptions<IpPermitidoBlockdomi>);
+      const term = search.trim();
+      const likePattern = `%${term}%`;
+      if (searchField === 'id') {
+        const num = /^\d+$/.test(term) ? parseInt(term, 10) : null;
+        if (num !== null) {
+          whereConditions.push({ id: num } as WhereOptions<IpPermitidoBlockdomi>);
+        }
+      } else if (searchField === 'faixa_ips') {
+        whereConditions.push({ faixa_ips: { [Op.like]: likePattern } } as WhereOptions<IpPermitidoBlockdomi>);
+      } else if (searchField === 'cliente_nome') {
+        whereConditions.push({
+          [Op.or]: [
+            { '$cliente.razao_social$': { [Op.like]: likePattern } },
+            { '$cliente.nome_fantasia$': { [Op.like]: likePattern } },
+            { '$cliente.cnpj$': { [Op.like]: likePattern } }
+          ]
+        } as WhereOptions<IpPermitidoBlockdomi>);
+      } else {
+        whereConditions.push({
+          [Op.or]: [
+            { faixa_ips: { [Op.like]: likePattern } },
+            { '$cliente.razao_social$': { [Op.like]: likePattern } },
+            { '$cliente.nome_fantasia$': { [Op.like]: likePattern } },
+            { '$cliente.cnpj$': { [Op.like]: likePattern } }
+          ]
+        } as WhereOptions<IpPermitidoBlockdomi>);
+      }
     }
 
     const where: WhereOptions<IpPermitidoBlockdomi> =

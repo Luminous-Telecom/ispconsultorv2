@@ -51,6 +51,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
 
   const { data: ipsData, isLoading, refetch } = useIpsPermitidos({
     search: tableFilters.debouncedSearch || undefined,
+    searchField: tableFilters.searchField || undefined,
     page: tableFilters.page,
     limit: tableFilters.limit,
     sortColumn: tableFilters.sortColumn,
@@ -62,6 +63,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
   const defaultTitle = title || t('blockdomi.ipsPermitidos');
 
   const searchFields = [
+    { key: 'id', label: t('table.id') },
     { key: 'cliente_nome', label: t('blockdomi.cliente') },
     { key: 'faixa_ips', label: t('blockdomi.faixaIps') }
   ];
@@ -262,6 +264,9 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
               setTimeout(() => tableFilters.setSort(column, direction), 0);
             }}
             onSearch={(search, field) => handleSearchChange(search, field)}
+            onSearchFieldChange={(field) => {
+              setTimeout(() => tableFilters.setSearchField(field), 0);
+            }}
             search={tableFilters.search}
             onRowDoubleClick={(item) => {
               setSelectedId(item.id);
