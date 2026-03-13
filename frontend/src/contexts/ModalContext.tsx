@@ -23,9 +23,7 @@ export type ModalType =
   | 'nfse'
   | 'documentos-sistema'
   | 'dias-vencimento'
-  | 'atualizacoes'
   | 'agendador-tarefas'
-  | 'backups'
   | 'assinatura-digital'
   | 'blockdomi-dominios'
   | 'blockdomi-ipv4'
@@ -33,7 +31,7 @@ export type ModalType =
   | 'blockdomi-importar-lista'
   | 'blockdomi-ips-permitidos'
   | 'blockdomi-logs-acesso'
-  // SaaS Super Admin
+  // SaaS Super Admin (rotas exclusivas /api/saas/*)
   | 'saas-planos'
   | 'saas-usuarios'
   | 'saas-servidores-email'
@@ -47,6 +45,11 @@ export type ModalType =
   | 'saas-recursos-sistema'
   | 'saas-agendador-tarefas'
   | 'saas-nfse'
+  | 'saas-auditoria'
+  | 'saas-historico-whatsapp'
+  | 'saas-historico-email'
+  | 'saas-atualizacoes'
+  | 'saas-backups'
   | null;
 
 interface ModalContextType {

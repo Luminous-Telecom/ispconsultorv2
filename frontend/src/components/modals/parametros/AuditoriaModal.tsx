@@ -13,9 +13,10 @@ interface AuditoriaModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
+  variant?: 'erp' | 'saas';
 }
 
-const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrapper = false }) => {
+const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrapper = false, variant = 'erp' }) => {
   const { t } = useI18n();
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditoriaLog | null>(null);
@@ -59,9 +60,11 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
   }), [tableFilters.page, tableFilters.limit, tableFilters.search, acaoFilter, entidadeFilter, tableFilters.sortColumn, tableFilters.sortDirection]);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['auditoria', filters],
+    queryKey: ['auditoria', variant, filters],
     queryFn: async () => {
-      const response = await auditoriaService.list(filters);
+      const response = variant === 'saas'
+        ? await auditoriaService.listSaasAll(filters)
+        : await auditoriaService.list(filters);
       if (!response.success) {
         throw new Error(response.message || 'Erro ao carregar logs de auditoria');
       }

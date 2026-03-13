@@ -6,10 +6,10 @@ import { CACHE_CONFIG } from '../config/api';
 // Para React Query v5, use gcTime ao invés de cacheTime
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
-// Hook para listar mensagens históricas
-export const useMensagensHistorico = (filters: MensagemHistoricoFilters = {}) => {
+// Hook para listar mensagens históricas (variant força rota exclusiva)
+export const useMensagensHistorico = (filters: MensagemHistoricoFilters = {}, variant?: 'erp' | 'saas') => {
   const location = useLocation();
-  const isSaas = location.pathname.startsWith('/saas');
+  const isSaas = variant ? variant === 'saas' : location.pathname.startsWith('/saas');
   const service = getMensagemHistoricoService(isSaas);
 
   return useQuery({
@@ -23,9 +23,9 @@ export const useMensagensHistorico = (filters: MensagemHistoricoFilters = {}) =>
 };
 
 // Hook para buscar mensagem histórica por ID
-export const useMensagemHistorico = (id: number) => {
+export const useMensagemHistorico = (id: number, variant?: 'erp' | 'saas') => {
   const location = useLocation();
-  const isSaas = location.pathname.startsWith('/saas');
+  const isSaas = variant ? variant === 'saas' : location.pathname.startsWith('/saas');
   const service = getMensagemHistoricoService(isSaas);
 
   return useQuery({
@@ -41,10 +41,11 @@ export const useMensagemHistorico = (id: number) => {
 export const useMensagensHistoricoByEntity = (
   entidadeTipo: string,
   entidadeId: number,
-  filters: { page?: number; limit?: number } = {}
+  filters: { page?: number; limit?: number } = {},
+  variant?: 'erp' | 'saas'
 ) => {
   const location = useLocation();
-  const isSaas = location.pathname.startsWith('/saas');
+  const isSaas = variant ? variant === 'saas' : location.pathname.startsWith('/saas');
   const service = getMensagemHistoricoService(isSaas);
 
   return useQuery({
@@ -57,11 +58,11 @@ export const useMensagensHistoricoByEntity = (
 };
 
 // Hook específico para mensagens WhatsApp
-export const useMensagensWhatsApp = (filters: Omit<MensagemHistoricoFilters, 'tipo'> = {}) => {
-  return useMensagensHistorico({ ...filters, tipo: 'whatsapp' });
+export const useMensagensWhatsApp = (filters: Omit<MensagemHistoricoFilters, 'tipo'> = {}, variant?: 'erp' | 'saas') => {
+  return useMensagensHistorico({ ...filters, tipo: 'whatsapp' }, variant);
 };
 
 // Hook específico para mensagens Email
-export const useMensagensEmail = (filters: Omit<MensagemHistoricoFilters, 'tipo'> = {}) => {
-  return useMensagensHistorico({ ...filters, tipo: 'email' });
+export const useMensagensEmail = (filters: Omit<MensagemHistoricoFilters, 'tipo'> = {}, variant?: 'erp' | 'saas') => {
+  return useMensagensHistorico({ ...filters, tipo: 'email' }, variant);
 };

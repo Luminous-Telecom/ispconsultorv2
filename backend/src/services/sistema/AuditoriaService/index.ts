@@ -5,7 +5,8 @@ import {
   registrarAtualizacaoElasticsearch,
   registrarAtualizacaoElasticsearchSistema,
   registrarExclusaoElasticsearch,
-  registrarLoginElasticsearch
+  registrarLoginElasticsearch,
+  registrarLogoutElasticsearch
 } from '../../elasticsearch/ElasticsearchAuditService';
 
 /**
@@ -118,4 +119,15 @@ export async function registrarLogin(
   observacoes?: string
 ): Promise<void> {
   await registrarLoginElasticsearch(req, usuarioId, observacoes);
+}
+
+/**
+ * Registrar logout (Elasticsearch)
+ */
+export async function registrarLogout(
+  req: Request | AuthenticatedRequest,
+  usuarioId: number,
+  observacoes?: string
+): Promise<void> {
+  await registrarLogoutElasticsearch(req, usuarioId, observacoes);
 }

@@ -14,6 +14,7 @@ import MensagemDetalhesModal from './MensagemDetalhesModal';
 interface WhatsAppHistoricoModalProps {
   show: boolean;
   onClose: () => void;
+  variant?: 'erp' | 'saas';
 }
 
 interface MensagemItem {
@@ -33,10 +34,8 @@ interface MensagemItem {
   created_at: string;
 }
 
-const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
-  show,
-  onClose
-}) => {
+const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = (props) => {
+  const { show, onClose } = props;
   const { t } = useI18n();
   const [showDetalhesModal, setShowDetalhesModal] = useState(false);
   const [mensagemSelecionada, setMensagemSelecionada] = useState<MensagemItem | null>(null);
@@ -64,7 +63,7 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = ({
     tableFilters.sortDirection
   ]);
 
-  const { data, isLoading, refetch } = useMensagensWhatsApp(filters);
+  const { data, isLoading, refetch } = useMensagensWhatsApp(filters, props.variant);
 
   // Usar hook customizado para gerenciar seleção
   const {

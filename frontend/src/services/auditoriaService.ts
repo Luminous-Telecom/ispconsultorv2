@@ -41,6 +41,8 @@ export interface AuditoriaStats {
   usuarios: Array<{ key: string; doc_count: number }>;
 }
 
+const ENTIDADES_SAAS = ['SaasPlano', 'SaasContrato', 'SaasDadosEmpresa', 'SaasDadosEmpresaCrud', 'SaasBanco', 'SaasTitulo', 'SaasTipoCobranca', 'SaasDiasVencimento', 'SaasNFSeConfig', 'SaasParametros', 'SaasServidorEmail', 'SaasServidorWhatsapp', 'SaasUsuarioSuper', 'SaasScheduledRoutine'];
+
 class AuditoriaService {
   private baseEndpoint = '/auditoria';
 
@@ -162,7 +164,39 @@ class AuditoriaService {
   }
 
   /**
-   * Listar logs de auditoria por tenant (painel SaaS) - usa endpoint /saas/auditoria
+   * Listar todos os logs de auditoria (painel SaaS, super admin) - usa /api/saas/auditoria sem empresa_id
+   */
+  async listSaasAll(filters: AuditoriaFilters = {}): Promise<ApiResponse<PaginatedResponse<AuditoriaLog>>> {
+    const params = new URLSearchParams();
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.search) params.append('search', filters.search);
+    if (filters.acao) params.append('acao', filters.acao);
+    if (filters.entidade) params.append('entidade', filters.entidade);
+    if (filters.usuario_id) params.append('usuario_id', filters.usuario_id.toString());
+    if (filters.data_inicio) params.append('data_inicio', filters.data_inicio);
+    if (filters.data_fim) params.append('data_fim', filters.data_fim);
+    if (filters.sortColumn) params.append('sortColumn', filters.sortColumn);
+    if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
+
+    const url = `/saas/auditoria?${params.toString()}`;
+    const response = await defaultApiClient.get<PaginatedResponse<AuditoriaLog>>(url);
+    if (response.success && response.data) {
+      const rd = response.data as unknown as Record<string, unknown>;
+      if (rd && 'data' in rd && 'pagination' in rd) {
+        return { success: true, data: rd as unknown as PaginatedResponse<AuditoriaLog> };
+      }
+    }
+    const emptyPagination = { current_page: 1, last_page: 1, per_page: 20, total: 0, from: 0, to: 0 };
+    return {
+      success: response.success ?? false,
+      message: (response as { message?: string }).message,
+      data: { success: true, data: [], pagination: emptyPagination }
+    };
+  }
+
+  /**
+   * Listar logs de auditoria por tenant (painel SaaS) - usa endpoint /saas/auditoria com empresa_id
    */
   async listByTenant(filters: AuditoriaFilters & { empresa_id: number }): Promise<ApiResponse<PaginatedResponse<AuditoriaLog>>> {
     const params = new URLSearchParams();
@@ -219,16 +253,20 @@ class AuditoriaService {
     return defaultApiClient.get<AuditoriaLog[]>(`${this.baseEndpoint}/entity?${params.toString()}`);
   }
 
+  private static readonly ENTIDADES_SAAS = ['SaasPlano', 'SaasContrato', 'SaasDadosEmpresa', 'SaasDadosEmpresaCrud', 'SaasBanco', 'SaasTitulo', 'SaasTipoCobranca', 'SaasDiasVencimento', 'SaasNFSeConfig', 'SaasParametros', 'SaasServidorEmail', 'SaasServidorWhatsapp', 'SaasUsuarioSuper', 'SaasScheduledRoutine'];
+
   /**
    * Gerar PDF de auditoria para uma entidade específica
-   * Retorna um Blob para ser exibido no ImprimirModal
+   * Usa /api/saas/auditoria/pdf para entidades SaaS, /api/auditoria/pdf para ERP
    */
   async generatePdf(entidade: string, entidadeId: number): Promise<Blob> {
     const params = new URLSearchParams();
     params.append('entidade', entidade);
     params.append('entidade_id', entidadeId.toString());
-    
-    const url = `${this.baseEndpoint}/pdf?${params.toString()}`;
+    const baseUrl = ENTIDADES_SAAS.includes(entidade)
+      ? '/saas/auditoria'
+      : this.baseEndpoint;
+    const url = `${baseUrl}/pdf?${params.toString()}`;
     
     try {
       interface ApiClientWithApi {

@@ -87,14 +87,18 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'servidor-whatsapp': { component: ServidorWhatsappModal, titleKey: 'modal.whatsappServer', loadingMessageKey: 'ui.loadingPage' },
   nfse: { component: NFSeModal, titleKey: 'modal.nfse', loadingMessageKey: 'ui.loadingPage' },
   'dias-vencimento': { component: DiasVencimentoModal, titleKey: 'modal.dueDays', loadingMessageKey: 'ui.loadingPage' },
-  atualizacoes: { component: AtualizacoesModal, titleKey: 'modal.updates', loadingMessageKey: 'ui.loadingPage' },
   'agendador-tarefas': { component: AgendadorTarefasModal, titleKey: 'modal.taskScheduler', loadingMessageKey: 'ui.loadingPage' },
-  backups: { component: BackupsModal, titleKey: 'modal.backups', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'assinatura-digital': { component: AssinaturaDigitalModal, titleKey: 'modal.digitalSignature', loadingMessageKey: 'ui.loadingPage' },
   auditoria: { component: AuditoriaModal, titleKey: 'modal.auditLogs', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'documentos-sistema': { component: DocumentosSistemaModal, titleKey: 'modal.systemDocuments', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'historico-whatsapp': { component: WhatsAppHistoricoModal, titleKey: 'modal.whatsappHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'historico-email': { component: EmailHistoricoModal, titleKey: 'modal.emailHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  // SaaS exclusivos (rotas /api/saas/* apenas)
+  'saas-auditoria': { component: AuditoriaModal, titleKey: 'modal.auditLogs', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  'saas-historico-whatsapp': { component: WhatsAppHistoricoModal, titleKey: 'modal.whatsappHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  'saas-historico-email': { component: EmailHistoricoModal, titleKey: 'modal.emailHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  'saas-atualizacoes': { component: AtualizacoesModal, titleKey: 'modal.updates', loadingMessageKey: 'ui.loadingPage' },
+  'saas-backups': { component: BackupsModal, titleKey: 'modal.backups', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'blockdomi-dominios': { component: DominioListModal, titleKey: 'modal.domains', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'blockdomi-ipv4': { component: IPv4ListModal, titleKey: 'modal.ipv4', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'blockdomi-ipv6': { component: IPv6ListModal, titleKey: 'modal.ipv6', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
@@ -161,9 +165,12 @@ const SingleModalWrapper: React.FC = () => {
     // Para saas-dias-vencimento, reaproveita DiasVencimentoModal com variant saas
     ...(activeModal === 'saas-dias-vencimento' && { variant: 'saas' }),
     ...(activeModal === 'saas-titulos' && { variant: 'saas' }),
-    // Servidores e históricos: reaproveitam modais do adm no SaaS
+    // SaaS exclusivos — variant força uso exclusivo de /api/saas/*
     ...(activeModal === 'saas-servidores-email' && { variant: 'saas' }),
     ...(activeModal === 'saas-servidores-whatsapp' && { variant: 'saas' }),
+    ...(activeModal === 'saas-auditoria' && { variant: 'saas' }),
+    ...(activeModal === 'saas-historico-whatsapp' && { variant: 'saas' }),
+    ...(activeModal === 'saas-historico-email' && { variant: 'saas' }),
     // Para outros modais, passamos os dados adicionais normalmente
     ...(!isClienteModal && modalData && modalData),
   };

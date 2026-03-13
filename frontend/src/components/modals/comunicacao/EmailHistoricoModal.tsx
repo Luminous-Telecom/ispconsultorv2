@@ -14,6 +14,7 @@ import MensagemDetalhesModal from './MensagemDetalhesModal';
 interface EmailHistoricoModalProps {
   show: boolean;
   onClose: () => void;
+  variant?: 'erp' | 'saas';
 }
 
 interface MensagemItem {
@@ -35,7 +36,8 @@ interface MensagemItem {
 
 const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
   show,
-  onClose
+  onClose,
+  variant
 }) => {
   const { t } = useI18n();
   const [showDetalhesModal, setShowDetalhesModal] = useState(false);
@@ -64,7 +66,7 @@ const EmailHistoricoModal: React.FC<EmailHistoricoModalProps> = ({
     tableFilters.sortDirection
   ]);
 
-  const { data, isLoading, refetch } = useMensagensEmail(filters);
+  const { data, isLoading, refetch } = useMensagensEmail(filters, variant);
 
   // Usar hook customizado para gerenciar seleção
   const {

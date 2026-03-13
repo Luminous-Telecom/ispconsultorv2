@@ -16,7 +16,8 @@ router.use(saasAuthMiddleware);
 // Dashboard
 router.get('/dashboard', SaasDashboardController.getDashboardData);
 
-// Auditoria por tenant (logs do painel SaaS)
+// Auditoria (logs do painel SaaS — empresa_id opcional para ver todos)
+router.get('/auditoria/pdf', SaasAuditoriaController.generatePdf);
 router.get('/auditoria', SaasAuditoriaController.listByTenant);
 
 // Tipos de Cobrança

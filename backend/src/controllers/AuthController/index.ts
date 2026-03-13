@@ -4,7 +4,7 @@ import jwt, { JwtPayload, Secret, SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { logger } from '../../utils/logger';
 import { UsuarioService } from '../../services/cadastros/UsuarioService';
-import { registrarLogin } from '../../services/sistema/AuditoriaService/index';
+import { registrarLogin, registrarLogout } from '../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest as AuthRequest } from '../../types/auth';
 import { sendSuccess, sendError, sendValidationError, sendUnauthorized, sendNotFound } from '../../utils/responseUtils';
 import { isProduction } from '../../utils/envUtils';
@@ -146,7 +146,21 @@ export class AuthController {
     }
   }
 
-  static async logout(_req: Request, res: Response): Promise<void> {
+  static async logout(req: Request, res: Response): Promise<void> {
+    const cookieToken = (req as Request & { cookies?: Record<string, string> }).cookies?.auth_token;
+    if (cookieToken) {
+      try {
+        const payload = jwt.decode(cookieToken) as { sub?: string; email?: string } | null;
+        if (payload?.sub) {
+          const usuarioId = parseInt(payload.sub, 10);
+          const authReq = req as unknown as AuthRequest;
+          authReq.user = { sub: payload.sub, email: payload.email };
+          registrarLogout(authReq, usuarioId, 'Logout realizado com sucesso').catch(() => { /* não crítico */ });
+        }
+      } catch {
+        /* ignora falha ao decodificar — logout continua */
+      }
+    }
     res.clearCookie('auth_token', {
       httpOnly: true,
       secure: isProduction(),
