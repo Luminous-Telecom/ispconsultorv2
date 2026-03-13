@@ -9,7 +9,7 @@ export interface AuditoriaLog {
   usuario_email: string | null;
   empresa_id: number | null;
   empresa_nome: string | null;
-  acao: 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import';
+  acao: 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import' | 'executar';
   entidade: string;
   entidade_id: number | null;
   dados_anteriores: Record<string, unknown> | null;
@@ -34,6 +34,12 @@ export interface AuditoriaFilters {
   data_fim?: string;
   sortColumn?: string;
   sortDirection?: string;
+  /** Excluir logs sem usuário (operações anônimas/sistema) */
+  comUsuarioObrigatorio?: boolean;
+  /** Apenas logs sem usuário (operações do agendador/sistema) */
+  semUsuarioObrigatorio?: boolean;
+  /** Filtrar por origem (agendador, webhook, sistema) */
+  origemAuditoria?: string;
 }
 
 export interface AuditoriaStats {
@@ -65,6 +71,9 @@ class AuditoriaService {
     if (filters.data_fim) params.append('data_fim', filters.data_fim);
     if (filters.sortColumn) params.append('sortColumn', filters.sortColumn);
     if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
+    if (filters.comUsuarioObrigatorio) params.append('com_usuario_obrigatorio', 'true');
+    if (filters.semUsuarioObrigatorio) params.append('sem_usuario_obrigatorio', 'true');
+    if (filters.origemAuditoria) params.append('origem_auditoria', filters.origemAuditoria);
 
     const url = `${this.baseEndpoint}?${params.toString()}`;
     

@@ -1,18 +1,13 @@
 import React from 'react';
 import DraggableModal from '../../common/DraggableModal';
 import { formatDateTime } from '../../../utils/formatters';
-import { Badge } from '../../ui';
+import { useI18n } from '../../../contexts/I18nContext';
 
 const stripHtml = (html: string): string => {
-  // Remove scripts e estilos primeiro
   let cleaned = html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-
-  // Remove todas as tags HTML
   cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, '');
-
-  // Decodifica entidades HTML comuns
   cleaned = cleaned
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
@@ -24,15 +19,11 @@ const stripHtml = (html: string): string => {
     .replace(/&#x2F;/g, '/')
     .replace(/&#x60;/g, '`')
     .replace(/&#x3D;/g, '=')
-    .replace(/&\w+;/g, ' '); // Remove outras entidades HTML
-
-  // Limpa espaços e quebras de linha
-  cleaned = cleaned
-    .replace(/\s+/g, ' ') // Remove espaços múltiplos
-    .replace(/\n\s*\n/g, '\n') // Remove linhas vazias extras
+    .replace(/&\w+;/g, ' ');
+  return cleaned
+    .replace(/\s+/g, ' ')
+    .replace(/\n\s*\n/g, '\n')
     .trim();
-
-  return cleaned;
 };
 
 interface MensagemDetalhesModalProps {
@@ -61,142 +52,138 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
   onClose,
   mensagem
 }) => {
+  const { t } = useI18n();
   if (!mensagem) return null;
 
-  const getTipoBadgeClass = (tipo: string) => {
-    return tipo === 'email' ? 'primary' : 'success';
-  };
-
-  const getStatusBadgeClass = (status: string) => {
-    return status === 'enviada' ? 'success' : 'danger';
-  };
-
-  const formatTipo = (tipo: string) => {
-    return tipo === 'email' ? 'Email' : 'WhatsApp';
-  };
-
-  const formatStatus = (status: string) => {
-    return status === 'enviada' ? 'Enviada' : 'Erro';
-  };
+  const formatTipo = (tipo: string) => (tipo === 'email' ? t('history.email') : t('history.whatsapp'));
+  const formatStatus = (status: string) => (status === 'enviada' ? t('history.sent') : t('history.errorStatus'));
+  const clienteText = [mensagem.cliente_nome, mensagem.cliente_email, mensagem.cliente_telefone]
+    .filter(Boolean)
+    .join(' / ') || '-';
+  const usuarioText = mensagem.usuario
+    ? `${mensagem.usuario.nome} (${mensagem.usuario.email})`
+    : t('history.system');
 
   return (
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={`Detalhes da Mensagem ${formatTipo(mensagem.tipo)}`}
+      title={t('audit.detailsTitle')}
       size="lg"
+      modalId="logs-mensagem-details-modal"
     >
-      <div style={{ padding: '12px' }}>
-        {/* Informações Gerais */}
-        <div className="mb-2">
-          <h6 className="mb-2" style={{ fontSize: '0.9rem' }}>Informações Gerais</h6>
-          <div className="row g-1">
-            <div className="col-md-3">
-              <small className="text-muted" style={{ fontSize: '0.75rem' }}>ID:</small><br />
-              <span className="fw-medium" style={{ fontSize: '0.8rem' }}>#{mensagem.id}</span>
+      <div className="p-3 logs-auditoria-details">
+        <div className="mb-3">
+          <div className="row g-2">
+            <div className="col-md-6">
+              <label className="form-label small text-muted mb-1">{t('table.id')}</label>
+              <input
+                type="text"
+                className="form-control form-control-sm bg-secondary bg-opacity-10"
+                value={String(mensagem.id)}
+                readOnly
+              />
             </div>
-            <div className="col-md-3">
-              <small className="text-muted" style={{ fontSize: '0.75rem' }}>Tipo:</small><br />
-              <div style={{ fontSize: '0.7rem' }}>
-                <Badge variant={getTipoBadgeClass(mensagem.tipo) as 'primary' | 'success'}>
-                  {formatTipo(mensagem.tipo)}
-                </Badge>
+            <div className="col-md-6">
+              <label className="form-label small text-muted mb-1">{t('history.type')}</label>
+              <input
+                type="text"
+                className="form-control form-control-sm bg-secondary bg-opacity-10"
+                value={formatTipo(mensagem.tipo)}
+                readOnly
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small text-muted mb-1">{t('history.status')}</label>
+              <input
+                type="text"
+                className="form-control form-control-sm bg-secondary bg-opacity-10"
+                value={formatStatus(mensagem.status)}
+                readOnly
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small text-muted mb-1">{t('history.dateTime')}</label>
+              <input
+                type="text"
+                className="form-control form-control-sm bg-secondary bg-opacity-10"
+                value={formatDateTime(mensagem.created_at)}
+                readOnly
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small text-muted mb-1">{t('history.client')}</label>
+              <input
+                type="text"
+                className="form-control form-control-sm bg-secondary bg-opacity-10"
+                value={clienteText}
+                readOnly
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label small text-muted mb-1">{t('history.recipient')}</label>
+              <input
+                type="text"
+                className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace"
+                value={mensagem.destinatario}
+                readOnly
+              />
+            </div>
+            {mensagem.tipo === 'email' && (
+              <div className="col-md-6">
+                <label className="form-label small text-muted mb-1">{t('history.subject')}</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm bg-secondary bg-opacity-10"
+                  value={mensagem.titulo || '-'}
+                  readOnly
+                />
               </div>
-            </div>
-            <div className="col-md-3">
-              <small className="text-muted" style={{ fontSize: '0.75rem' }}>Status:</small><br />
-              <div style={{ fontSize: '0.7rem' }}>
-                <Badge variant={getStatusBadgeClass(mensagem.status) as 'success' | 'danger'}>
-                  {formatStatus(mensagem.status)}
-                </Badge>
+            )}
+            {(mensagem.entidade_tipo || mensagem.entidade_id) && (
+              <div className="col-md-6">
+                <label className="form-label small text-muted mb-1">{t('history.entity')}</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm bg-secondary bg-opacity-10"
+                  value={mensagem.entidade_tipo && mensagem.entidade_id
+                    ? `${mensagem.entidade_tipo} #${mensagem.entidade_id}`
+                    : '-'}
+                  readOnly
+                />
               </div>
-            </div>
-            <div className="col-md-3">
-              <small className="text-muted" style={{ fontSize: '0.75rem' }}>Data/Hora:</small><br />
-              <span style={{ fontSize: '0.75rem' }}>{formatDateTime(mensagem.created_at)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Cliente */}
-        {mensagem.cliente_nome && (
-          <div className="mb-2">
-            <small className="text-muted" style={{ fontSize: '0.75rem' }}>Cliente:</small><br />
-            <span className="fw-medium" style={{ fontSize: '0.8rem' }}>{mensagem.cliente_nome}</span>
-            {mensagem.cliente_email && (
-              <div className="text-muted" style={{ fontSize: '0.75rem' }}>{mensagem.cliente_email}</div>
             )}
-            {mensagem.cliente_telefone && (
-              <div className="text-muted" style={{ fontSize: '0.75rem' }}>{mensagem.cliente_telefone}</div>
+            <div className="col-md-6">
+              <label className="form-label small text-muted mb-1">{t('history.user')}</label>
+              <input
+                type="text"
+                className="form-control form-control-sm bg-secondary bg-opacity-10"
+                value={usuarioText}
+                readOnly
+              />
+            </div>
+            {mensagem.erro_mensagem && (
+              <div className="col-12">
+                <label className="form-label small text-muted mb-1">{t('history.error')}</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm bg-secondary bg-opacity-10 text-danger"
+                  value={mensagem.erro_mensagem}
+                  readOnly
+                />
+              </div>
             )}
           </div>
-        )}
-
-        {/* Destinatário */}
-        <div className="mb-2">
-          <small className="text-muted" style={{ fontSize: '0.75rem' }}>Destinatário:</small><br />
-          <span className="text-monospace fw-medium" style={{ fontSize: '0.8rem' }}>{mensagem.destinatario}</span>
         </div>
-
-        {/* Assunto (apenas para email) */}
-        {mensagem.tipo === 'email' && mensagem.titulo && (
-          <div className="mb-2">
-            <small className="text-muted" style={{ fontSize: '0.75rem' }}>Assunto:</small><br />
-            <span className="fw-medium" style={{ fontSize: '0.8rem' }}>{mensagem.titulo}</span>
-          </div>
-        )}
-
-        {/* Entidade relacionada */}
-        {mensagem.entidade_tipo && mensagem.entidade_id && (
-          <div className="mb-2">
-            <small className="text-muted" style={{ fontSize: '0.75rem' }}>Entidade Relacionada:</small><br />
-            <span className="text-capitalize fw-medium" style={{ fontSize: '0.8rem' }}>
-              {mensagem.entidade_tipo} #{mensagem.entidade_id}
-            </span>
-          </div>
-        )}
-
-        {/* Usuário */}
-        <div className="mb-2">
-          <small className="text-muted" style={{ fontSize: '0.75rem' }}>Enviado por:</small><br />
-          {mensagem.usuario ? (
-            <>
-              <span className="fw-medium" style={{ fontSize: '0.8rem' }}>{mensagem.usuario.nome}</span>
-              <div className="text-muted" style={{ fontSize: '0.75rem' }}>{mensagem.usuario.email}</div>
-            </>
-          ) : (
-            <span className="text-muted" style={{ fontSize: '0.8rem' }}>Sistema Automático</span>
-          )}
-        </div>
-
-        {/* Mensagem de erro */}
-        {mensagem.erro_mensagem && (
-          <div className="mb-2">
-            <small className="text-muted text-danger" style={{ fontSize: '0.75rem' }}>Erro:</small><br />
-            <div className="alert alert-danger mt-1 mb-0" style={{ padding: '6px 8px', fontSize: '0.75rem' }}>
-              <small className="fw-medium" style={{ fontSize: '0.75rem' }}>{mensagem.erro_mensagem}</small>
-            </div>
-          </div>
-        )}
-
-        {/* Conteúdo da Mensagem */}
-        <div>
-          <small className="text-muted" style={{ fontSize: '0.75rem' }}>Conteúdo da Mensagem:</small><br />
-          <div
-            className="border rounded p-2 mt-1"
-            style={{
-              backgroundColor: 'var(--bg-secondary)',
-              maxHeight: '250px',
-              overflow: 'auto',
-              fontSize: '0.75rem',
-              lineHeight: '1.3',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              border: '1px solid var(--border-color)'
-            }}
-          >
-            {stripHtml(mensagem.mensagem)}
-          </div>
+        <div className="mt-3">
+          <h6 className="mb-2">{t('history.message')}</h6>
+          <textarea
+            className="form-control font-monospace small bg-secondary bg-opacity-10"
+            value={stripHtml(mensagem.mensagem)}
+            readOnly
+            rows={12}
+            style={{ resize: 'none' }}
+          />
         </div>
       </div>
     </DraggableModal>

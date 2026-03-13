@@ -5,6 +5,7 @@ import { logger } from '../../../utils/logger';
 import { buildCronExpression, validateCronExpression } from '../../../utils/SchedulerUtils';
 import { RoutineExecutionService } from '../RoutineExecutionService';
 import { RoutineLogService } from '../RoutineLogService';
+import { registrarExecucaoRotinaAuditoria } from '../../elasticsearch/ElasticsearchAuditService';
 import type { JsonValue } from '../../../types/index';
 import type {
   SchedulerStatus,
@@ -161,17 +162,19 @@ export class RoutineScheduleService {
 
   /**
    * Executa imediatamente uma rotina SaaS (para chamada manual)
+   * @param usuario - Usuário que executou manualmente (quando presente)
+   * @param ipAddress - IP do cliente (quando manual)
    */
-  public async executeSaasRoutineNow(routine: SaasScheduledRoutine): Promise<void> {
-    await this.runAnyRoutine(routine, 'saas');
+  public async executeSaasRoutineNow(routine: SaasScheduledRoutine, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
+    await this.runAnyRoutine(routine, 'saas', usuario, ipAddress);
   }
 
   /**
-   * Executa uma rotina (chamado pelo CRON job)
+   * Executa uma rotina (chamado pelo CRON job ou manualmente)
    */
-  private async runAnyRoutine(routine: AnyRoutine, source: RoutineSource): Promise<void> {
+  private async runAnyRoutine(routine: AnyRoutine, source: RoutineSource, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
     if (source === 'saas') {
-      await this.runSaasRoutine(routine as SaasScheduledRoutine);
+      await this.runSaasRoutine(routine as SaasScheduledRoutine, usuario, ipAddress);
     } else {
       await this.runRoutine(routine as ScheduledRoutine);
     }
@@ -206,6 +209,18 @@ export class RoutineScheduleService {
       // Atualizar contadores da rotina
       await this.logService.updateRoutineCounters(routine, statusFinal as 'sucesso' | 'erro', endTime);
 
+      // Registrar na auditoria principal (Logs de Agenda de Tarefas)
+      await registrarExecucaoRotinaAuditoria({
+        routineId: routine.id,
+        routineNome: routine.nome ?? 'Rotina',
+        routineTipo: routine.tipo ?? 'unknown',
+        status: statusFinal as 'sucesso' | 'erro',
+        duracaoMs: duration,
+        empresaId: (routine as { empresa_id?: number }).empresa_id,
+        saas: false,
+        resultado: resultado as Record<string, unknown>
+      });
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
@@ -227,21 +242,48 @@ export class RoutineScheduleService {
 
       // Atualizar contadores da rotina mesmo em caso de erro
       await this.logService.updateRoutineCounters(routine, 'erro', endTime);
+
+      // Registrar falha na auditoria principal
+      await registrarExecucaoRotinaAuditoria({
+        routineId: routine.id,
+        routineNome: routine.nome ?? 'Rotina',
+        routineTipo: routine.tipo ?? 'unknown',
+        status: 'erro',
+        duracaoMs: duration,
+        empresaId: (routine as { empresa_id?: number }).empresa_id,
+        saas: false,
+        erro: errorMessage
+      });
     }
   }
 
   /**
-   * Executa uma rotina do SaaS (chamado pelo CRON job)
+   * Executa uma rotina do SaaS (chamado pelo CRON job ou manualmente)
+   * @param usuario - Usuário que executou manualmente (quando presente)
+   * @param ipAddress - IP do cliente (quando manual)
    */
-  private async runSaasRoutine(routine: SaasScheduledRoutine): Promise<void> {
+  private async runSaasRoutine(routine: SaasScheduledRoutine, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
     const startTime = new Date();
 
     try {
       const resultado = await this.executionService.executeRoutineByType(routine);
       const endTime = new Date();
+      const duration = endTime.getTime() - startTime.getTime();
       const statusFinal = 'success' in resultado && resultado.success === false ? 'erro' : 'sucesso';
 
       await this.logService.updateRoutineCounters(routine, statusFinal as 'sucesso' | 'erro', endTime);
+
+      await registrarExecucaoRotinaAuditoria({
+        routineId: routine.id,
+        routineNome: routine.nome ?? 'Rotina',
+        routineTipo: routine.tipo ?? 'unknown',
+        status: statusFinal as 'sucesso' | 'erro',
+        duracaoMs: duration,
+        saas: true,
+        resultado: resultado as Record<string, unknown>,
+        usuario: usuario ?? undefined,
+        ipAddress: ipAddress ?? undefined
+      });
 
       logger.info('Rotina SaaS executada', {
         context: 'RoutineScheduleService',
@@ -252,8 +294,21 @@ export class RoutineScheduleService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const endTime = new Date();
+      const duration = endTime.getTime() - startTime.getTime();
 
       await this.logService.updateRoutineCounters(routine, 'erro', endTime);
+
+      await registrarExecucaoRotinaAuditoria({
+        routineId: routine.id,
+        routineNome: routine.nome ?? 'Rotina',
+        routineTipo: routine.tipo ?? 'unknown',
+        status: 'erro',
+        duracaoMs: duration,
+        saas: true,
+        erro: errorMessage,
+        usuario: usuario ?? undefined,
+        ipAddress: ipAddress ?? undefined
+      });
 
       logger.error('Erro ao executar rotina SaaS', {
         context: 'RoutineScheduleService',

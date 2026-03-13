@@ -56,13 +56,16 @@ export class AssinaturaWebhookService {
           `Status atualizado via webhook Assinafy: ${event}`
         );
 
+        const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarAtualizacaoElasticsearch(
           reqSimulado,
           'AssinaturaDigital',
           assinatura.id,
           dadosAnteriores,
           dadosNovos,
-          `Status atualizado via webhook Assinafy: ${event}`
+          `Status atualizado via webhook Assinafy: ${event}`,
+          empresaId,
+          'webhook'
         );
       } catch (error) {
         logger.error('Erro ao registrar auditoria de atualização de assinatura', { error });
@@ -124,13 +127,16 @@ export class AssinaturaWebhookService {
           `Status atualizado via webhook Zapsign: ${event}`
         );
 
+        const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarAtualizacaoElasticsearch(
           reqSimulado,
           'AssinaturaDigital',
           assinatura.id,
           dadosAnteriores,
           dadosNovos,
-          `Status atualizado via webhook Zapsign: ${event}`
+          `Status atualizado via webhook Zapsign: ${event}`,
+          empresaId,
+          'webhook'
         );
       } catch (error) {
         logger.error('Erro ao registrar auditoria de atualização de assinatura', { error });

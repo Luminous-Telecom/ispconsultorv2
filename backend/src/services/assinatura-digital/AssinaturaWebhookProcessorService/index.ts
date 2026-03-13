@@ -39,13 +39,16 @@ export class AssinaturaWebhookProcessorService {
       
       if (req) {
         try {
+          const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
           await registrarAtualizacaoElasticsearch(
             req,
             'AssinaturaDigital',
             assinatura.id,
             dadosAnteriores,
             dadosNovos,
-            `Atualização via webhook (URL assinatura) - Provider: ${provider || 'desconhecido'}`
+            `Atualização via webhook (URL assinatura) - Provider: ${provider || 'desconhecido'}`,
+            empresaId,
+            'webhook'
           );
         } catch (auditError) {
           logger.warn('Erro ao registrar auditoria de webhook (URL assinatura)', {
@@ -101,13 +104,16 @@ export class AssinaturaWebhookProcessorService {
     
     if (req) {
       try {
+        const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarAtualizacaoElasticsearch(
           req,
           'AssinaturaDigital',
           assinatura.id,
           dadosAnteriores,
           dadosNovos,
-          `Atualização via webhook (cancelamento) - Provider: ${provider || 'desconhecido'}`
+          `Atualização via webhook (cancelamento) - Provider: ${provider || 'desconhecido'}`,
+          empresaId,
+          'webhook'
         );
       } catch (auditError) {
         logger.warn('Erro ao registrar auditoria de webhook (cancelamento)', {
@@ -186,13 +192,16 @@ export class AssinaturaWebhookProcessorService {
     
     if (req) {
       try {
+        const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarAtualizacaoElasticsearch(
           req,
           'AssinaturaDigital',
           assinatura.id,
           dadosAnteriores,
           dadosNovos,
-          `Atualização via webhook (assinatura completa) - Provider: ${provider || 'desconhecido'}`
+          `Atualização via webhook (assinatura completa) - Provider: ${provider || 'desconhecido'}`,
+          empresaId,
+          'webhook'
         );
       } catch (auditError) {
         logger.warn('Erro ao registrar auditoria de webhook (assinatura completa)', {
@@ -247,12 +256,15 @@ export class AssinaturaWebhookProcessorService {
             const dadosNovos = arquivoCriado.toJSON 
               ? arquivoCriado.toJSON() as Record<string, unknown> 
               : (arquivoCriado as unknown as Record<string, unknown>);
+            const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
             await registrarCriacaoElasticsearch(
               req,
               'ClienteArquivo',
               typeof arquivoCriado.id === 'number' ? arquivoCriado.id : parseInt(String(arquivoCriado.id), 10),
               dadosNovos,
-              `Criação via webhook (assinatura digital) - Provider: ${provider || 'desconhecido'}`
+              `Criação via webhook (assinatura digital) - Provider: ${provider || 'desconhecido'}`,
+              empresaId,
+              'webhook'
             );
           } catch (auditError) {
             logger.warn('Erro ao registrar auditoria de webhook (criação arquivo)', {
@@ -294,13 +306,16 @@ export class AssinaturaWebhookProcessorService {
       
       if (req) {
         try {
+          const empresaId = (assinatura as { empresa_id?: number | null }).empresa_id ?? null;
           await registrarAtualizacaoElasticsearch(
             req,
             'TermoContrato',
             termoAtualizado.id,
             dadosAnteriores,
             dadosNovos,
-            `Atualização via webhook (assinatura digital) - Provider: ${provider || 'desconhecido'}`
+            `Atualização via webhook (assinatura digital) - Provider: ${provider || 'desconhecido'}`,
+            empresaId,
+            'webhook'
           );
         } catch (auditError) {
           logger.warn('Erro ao registrar auditoria de webhook (termo contrato)', {

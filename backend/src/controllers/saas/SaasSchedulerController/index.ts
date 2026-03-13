@@ -117,7 +117,16 @@ export class SaasSchedulerController {
         return;
       }
       const routine = await SaasScheduledRoutineService.getById(routineId);
-      await SchedulerService.getInstance().executeSaasRoutineManually(routineId);
+      const payload = (req as { user?: { sub?: string; email?: string; nome?: string }; saasUser?: { sub?: string; email?: string; nome?: string } }).user
+        ?? (req as { user?: { sub?: string; email?: string; nome?: string }; saasUser?: { sub?: string; email?: string; nome?: string } }).saasUser;
+      const usuario = payload
+        ? { id: parseInt(String(payload.sub ?? 0), 10), nome: payload.nome ?? null, email: payload.email ?? null }
+        : undefined;
+      const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+        || (req.headers['x-real-ip'] as string)
+        || req.socket?.remoteAddress
+        || null;
+      await SchedulerService.getInstance().executeSaasRoutineManually(routineId, usuario, ipAddress);
       if (routine) {
         const dados = routine.toJSON ? routine.toJSON() as Record<string, unknown> : routine as unknown as Record<string, unknown>;
         await registrarAtualizacao(req as any, 'SaasScheduledRoutine', routineId, dados, dados, 'Execução manual da rotina', null);

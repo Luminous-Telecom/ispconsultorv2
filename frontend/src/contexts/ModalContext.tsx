@@ -18,8 +18,6 @@ export type ModalType =
   | 'recursos-sistema'
   | 'servidor-email'
   | 'servidor-whatsapp'
-  | 'historico-whatsapp'
-  | 'historico-email'
   | 'nfse'
   | 'documentos-sistema'
   | 'dias-vencimento'
@@ -31,6 +29,14 @@ export type ModalType =
   | 'blockdomi-importar-lista'
   | 'blockdomi-ips-permitidos'
   | 'blockdomi-logs-acesso'
+  // Logs
+  | 'logs-usuarios'
+  | 'logs-agenda-tarefas'
+  | 'logs-webhook'
+  | 'logs-email'
+  | 'logs-whatsapp'
+  | 'logs-assinatura-digital'
+  | 'logs-acesso-sistema'
   // SaaS Super Admin (rotas exclusivas /api/saas/*)
   | 'saas-planos'
   | 'saas-usuarios'

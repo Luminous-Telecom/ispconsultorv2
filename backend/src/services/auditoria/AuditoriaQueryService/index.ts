@@ -20,8 +20,14 @@ export class AuditoriaQueryService {
     empresaId?: number | null;
     excludeSaasEntities?: boolean;
     filterSaasOnly?: boolean;
+    /** Excluir logs sem usuário (operações do sistema/anônimas) */
+    comUsuarioObrigatorio?: boolean;
+    /** Apenas logs sem usuário (operações do agendador/sistema) */
+    semUsuarioObrigatorio?: boolean;
+    /** Filtrar por origem (ex.: agendador) */
+    origemAuditoria?: string;
   }): { must: any[]; must_not?: any[] } {
-    const { search, acao, entidade, usuario_id, dataInicio, dataFim, empresaId, excludeSaasEntities = true, filterSaasOnly = false } = params;
+    const { search, acao, entidade, usuario_id, dataInicio, dataFim, empresaId, excludeSaasEntities = true, filterSaasOnly = false, comUsuarioObrigatorio = false, semUsuarioObrigatorio = false, origemAuditoria } = params;
     const must: any[] = [
       { bool: { should: [{ term: { log_tipo: 'auditoria' } }, { bool: { must: [{ bool: { must_not: { exists: { field: 'log_tipo' } } } }, { exists: { field: 'acao' } }] } }], minimum_should_match: 1 } }
     ];
@@ -74,7 +80,12 @@ export class AuditoriaQueryService {
     }
 
     if (acao) {
-      must.push({ term: { acao: acao } });
+      const acoes = acao.split(',').map((a) => a.trim()).filter(Boolean);
+      if (acoes.length === 1) {
+        must.push({ term: { acao: acoes[0] } });
+      } else if (acoes.length > 1) {
+        must.push({ terms: { acao: acoes } });
+      }
     }
 
     if (entidade) {
@@ -83,6 +94,20 @@ export class AuditoriaQueryService {
 
     if (usuario_id) {
       must.push({ term: { usuario_id: usuario_id } });
+    }
+
+    if (comUsuarioObrigatorio) {
+      must.push({ exists: { field: 'usuario_id' } });
+    }
+
+    const must_not: any[] = [];
+
+    if (semUsuarioObrigatorio) {
+      must_not.push({ exists: { field: 'usuario_id' } });
+    }
+
+    if (origemAuditoria) {
+      must.push({ term: { origem_auditoria: origemAuditoria } });
     }
 
     if (dataInicio || dataFim) {
@@ -95,8 +120,6 @@ export class AuditoriaQueryService {
       }
       must.push({ range: { timestamp: range } });
     }
-
-    const must_not: any[] = [];
 
     // Painel SaaS: mostrar apenas logs com saas=true
     if (filterSaasOnly) {
@@ -132,6 +155,9 @@ export class AuditoriaQueryService {
     empresaId?: number | null;
     excludeSaasEntities?: boolean;
     filterSaasOnly?: boolean;
+    comUsuarioObrigatorio?: boolean;
+    semUsuarioObrigatorio?: boolean;
+    origemAuditoria?: string;
   }): Promise<{ logs: any[]; total: number }> {
     const elasticsearchService = getElasticsearchService();
     const client = elasticsearchService.getClient();
@@ -140,8 +166,8 @@ export class AuditoriaQueryService {
       throw new Error('Elasticsearch client não disponível');
     }
 
-    const { page, limit, sortColumn, sortDirection, excludeSaasEntities, ...queryParams } = params;
-    const { must, must_not } = this.buildElasticsearchQuery({ ...queryParams, excludeSaasEntities });
+    const { page, limit, sortColumn, sortDirection, excludeSaasEntities, origemAuditoria, ...restParams } = params;
+    const { must, must_not } = this.buildElasticsearchQuery({ ...restParams, excludeSaasEntities, origemAuditoria });
 
     // Construir ordenação para Elasticsearch
     // Mapear colunas do frontend para campos do Elasticsearch (o índice não tem campo 'id')

@@ -196,6 +196,17 @@ export interface TranslationKeys {
   'layout.closeMenu': string;
   'layout.folderCadastros': string;
   'layout.folderFinanceiro': string;
+  'layout.folderLogs': string;
+
+  // Logs
+  'logs.usuarios': string;
+  'logs.agendaTarefas': string;
+  'logs.webhook': string;
+  'logs.email': string;
+  'logs.whatsapp': string;
+  'logs.assinaturaDigital': string;
+  'logs.acessoSistema': string;
+  'logs.comingSoon': string;
 
   // Menu Items
   'menu.clients': string;
@@ -1058,6 +1069,7 @@ export interface TranslationKeys {
   'audit.actions.logout': string;
   'audit.actions.export': string;
   'audit.actions.import': string;
+  'audit.actions.executar': string;
 
   // Variables
   'variables.title': string;
@@ -1564,6 +1576,17 @@ const translations: Translations = {
     'layout.closeMenu': 'Recolher menu',
     'layout.folderCadastros': 'Cadastros',
     'layout.folderFinanceiro': 'Financeiro',
+    'layout.folderLogs': 'Logs',
+
+    // Logs
+    'logs.usuarios': 'Logs de Usuários',
+    'logs.agendaTarefas': 'Logs de Agenda de Tarefas',
+    'logs.webhook': 'Logs de Webhook',
+    'logs.email': 'Logs de Email',
+    'logs.whatsapp': 'Logs de WhatsApp',
+    'logs.assinaturaDigital': 'Logs de Assinatura Digital',
+    'logs.acessoSistema': 'Logs de Acesso ao Sistema',
+    'logs.comingSoon': 'Funcionalidade em desenvolvimento.',
 
     // Menu Items
     'menu.clients': 'Clientes',
@@ -2424,6 +2447,7 @@ const translations: Translations = {
     'audit.actions.logout': 'Logout',
     'audit.actions.export': 'Exportar',
     'audit.actions.import': 'Importar',
+    'audit.actions.executar': 'Executar',
 
     // Variables
     'variables.title': 'Variáveis Disponíveis',
@@ -2925,6 +2949,17 @@ const translations: Translations = {
     'layout.closeMenu': 'Close menu',
     'layout.folderCadastros': 'Registers',
     'layout.folderFinanceiro': 'Financial',
+    'layout.folderLogs': 'Logs',
+
+    // Logs
+    'logs.usuarios': 'User Logs',
+    'logs.agendaTarefas': 'Task Scheduler Logs',
+    'logs.webhook': 'Webhook Logs',
+    'logs.email': 'Email Logs',
+    'logs.whatsapp': 'WhatsApp Logs',
+    'logs.assinaturaDigital': 'Digital Signature Logs',
+    'logs.acessoSistema': 'System Access Logs',
+    'logs.comingSoon': 'Feature coming soon.',
 
     // Menu Items
     'menu.clients': 'Clients',
@@ -3785,6 +3820,7 @@ const translations: Translations = {
     'audit.actions.logout': 'Logout',
     'audit.actions.export': 'Export',
     'audit.actions.import': 'Import',
+    'audit.actions.executar': 'Execute',
 
     // Variables
     'variables.title': 'Available Variables',
@@ -4286,7 +4322,18 @@ const translations: Translations = {
     'layout.closeMenu': 'Cerrar menú',
     'layout.folderCadastros': 'Registros',
     'layout.folderFinanceiro': 'Financiero',
+    'layout.folderLogs': 'Logs',
     'layout.logoutSuccess': 'Cerrado de sesión exitoso',
+
+    // Logs
+    'logs.usuarios': 'Registros de Usuarios',
+    'logs.agendaTarefas': 'Registros de Agenda de Tareas',
+    'logs.webhook': 'Registros de Webhook',
+    'logs.email': 'Registros de Email',
+    'logs.whatsapp': 'Registros de WhatsApp',
+    'logs.assinaturaDigital': 'Registros de Firma Digital',
+    'logs.acessoSistema': 'Registros de Acceso al Sistema',
+    'logs.comingSoon': 'Funcionalidad en desarrollo.',
     'layout.closeSearch': 'Cerrar búsqueda',
 
     // Menu Items
@@ -5148,6 +5195,7 @@ const translations: Translations = {
     'audit.actions.logout': 'Logout',
     'audit.actions.export': 'Exportar',
     'audit.actions.import': 'Importar',
+    'audit.actions.executar': 'Ejecutar',
 
     // Variables
     'variables.title': 'Variables Disponibles',

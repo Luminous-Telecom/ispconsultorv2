@@ -19,7 +19,10 @@ import { getElasticsearchService } from '../ElasticsearchService';
 import { logger } from '../../../utils/logger';
 import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
 
-export type AcaoAuditoria = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import';
+export type AcaoAuditoria = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import' | 'executar';
+
+/** Origem da operação de auditoria - identifica quem executou */
+export type OrigemAuditoria = 'usuario' | 'agendador' | 'webhook' | 'sistema';
 
 interface DadosAuditoria {
   acao: AcaoAuditoria;
@@ -32,19 +35,26 @@ interface DadosAuditoria {
   observacoes?: string | null;
   /** Override para empresa_id (ex.: operações SaaS onde req não tem tenant) */
   empresa_id?: number | null;
+  /** Origem da operação - agendador, webhook, sistema. Default: usuario */
+  origem_auditoria?: OrigemAuditoria;
+  /** Override para IP (ex.: webhook - capturar antes do processamento em background) */
+  ip_address?: string | null;
 }
 
 /**
  * Obter IP do cliente da requisição
  */
 function getClientIp(req: Request): string | null {
+  const reqAny = req as Request & { ip?: string; webhookClientIp?: string };
   const headers = req.headers;
   return (
+    (typeof reqAny.webhookClientIp === 'string' && reqAny.webhookClientIp.trim()) ||
     (headers['cf-connecting-ip'] as string)?.trim() ||
     (headers['x-client-ip'] as string)?.trim() ||
     (headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
     (headers['x-real-ip'] as string)?.trim() ||
     (headers['true-client-ip'] as string)?.trim() ||
+    (typeof reqAny.ip === 'string' && reqAny.ip.trim()) ||
     req.socket?.remoteAddress?.trim() ||
     null
   );
@@ -95,7 +105,7 @@ export async function registrarAuditoriaElasticsearch(
   // Capturar IP e dados do usuário de forma síncrona (antes do setImmediate)
   // para evitar req/socket indisponível quando o callback executar
   const userData = getUserData(req);
-  const ipAddress = getClientIp(req);
+  const ipAddress = dados.ip_address ?? getClientIp(req);
   const empresaId = dados.empresa_id ?? getEmpresaIdForAudit(req);
   const rota = dados.rota ?? req.originalUrl ?? null;
   const metodoHttp = dados.metodo_http ?? req.method ?? null;
@@ -278,7 +288,7 @@ export async function registrarAuditoriaElasticsearch(
       const reqAny = req as AuthenticatedRequest & { saasUser?: unknown };
       const isSaas = !!reqAny.saasUser;
 
-      const document = {
+      const document: Record<string, unknown> = {
         log_tipo: 'auditoria',
         saas: isSaas,
         empresa_id: empresaId ?? null,
@@ -297,6 +307,9 @@ export async function registrarAuditoriaElasticsearch(
         observacoes: dados.observacoes || null,
         timestamp: safeFormatDateISOLocal(new Date()) || ''
       };
+      if (dados.origem_auditoria) {
+        document.origem_auditoria = dados.origem_auditoria;
+      }
 
       // Validar se o documento pode ser serializado antes de enviar
       try {
@@ -314,7 +327,7 @@ export async function registrarAuditoriaElasticsearch(
       }
 
       // Indexar documento no Elasticsearch
-      const result = await client.index({
+      await client.index({
         index: elasticsearchService.getIndexName(),
         document
       });
@@ -397,7 +410,8 @@ export async function registrarCriacaoElasticsearch(
   entidadeId: number,
   dadosNovos: Record<string, unknown>,
   observacoes?: string,
-  empresa_id?: number | null
+  empresa_id?: number | null,
+  origem_auditoria?: OrigemAuditoria
 ): Promise<void> {
   await registrarAuditoriaElasticsearch(req, {
     acao: 'create',
@@ -405,7 +419,8 @@ export async function registrarCriacaoElasticsearch(
     entidade_id: entidadeId,
     dados_novos: dadosNovos,
     observacoes,
-    empresa_id
+    empresa_id,
+    origem_auditoria
   });
 }
 
@@ -419,7 +434,8 @@ export async function registrarAtualizacaoElasticsearch(
   dadosAnteriores: Record<string, unknown>,
   dadosNovos: Record<string, unknown>,
   observacoes?: string,
-  empresa_id?: number | null
+  empresa_id?: number | null,
+  origem_auditoria?: OrigemAuditoria
 ): Promise<void> {
   await registrarAuditoriaElasticsearch(req, {
     acao: 'update',
@@ -428,7 +444,8 @@ export async function registrarAtualizacaoElasticsearch(
     dados_anteriores: dadosAnteriores,
     dados_novos: dadosNovos,
     observacoes,
-    empresa_id
+    empresa_id,
+    origem_auditoria
   });
 }
 
@@ -477,7 +494,8 @@ export async function registrarAtualizacaoElasticsearchSistema(
       rota: null,
       metodo_http: null,
       observacoes: observacoes || null,
-      timestamp: safeFormatDateISOLocal(new Date()) || ''
+      timestamp: safeFormatDateISOLocal(new Date()) || '',
+      origem_auditoria: 'agendador' as const
     };
 
     await client.index({
@@ -490,6 +508,81 @@ export async function registrarAtualizacaoElasticsearchSistema(
       action: 'registrarAtualizacaoElasticsearchSistema',
       entidade,
       entidade_id: entidadeId,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+}
+
+/** Dados do usuário para auditoria de execução manual */
+export interface UsuarioAuditoria {
+  id: number;
+  nome: string | null;
+  email: string | null;
+}
+
+/**
+ * Registrar execução de rotina agendada na auditoria principal.
+ * Chamado sempre que o agendador executa uma rotina (sucesso ou erro).
+ * Se executada manualmente, passar usuario para exibir quem executou.
+ */
+export async function registrarExecucaoRotinaAuditoria(params: {
+  routineId: number;
+  routineNome: string;
+  routineTipo: string;
+  status: 'sucesso' | 'erro';
+  duracaoMs: number;
+  empresaId?: number | null;
+  saas?: boolean;
+  erro?: string;
+  resultado?: Record<string, unknown>;
+  /** Usuário que executou manualmente - quando presente, exibe o usuário; quando ausente, execução automática */
+  usuario?: UsuarioAuditoria | null;
+  /** IP do cliente - quando execução manual */
+  ipAddress?: string | null;
+}): Promise<void> {
+  try {
+    const elasticsearchService = getElasticsearchService();
+    const client = elasticsearchService.getClient();
+    if (!client) return;
+    const isConnected = await elasticsearchService.checkConnection();
+    if (!isConnected) return;
+    await elasticsearchService.ensureIndex();
+
+    const { routineId, routineNome, routineTipo, status, duracaoMs, empresaId, saas = false, erro, resultado, usuario, ipAddress } = params;
+    const observacoes = status === 'sucesso'
+      ? `Rotina "${routineNome}" (${routineTipo}) executada em ${duracaoMs}ms`
+      : `Rotina "${routineNome}" (${routineTipo}) falhou: ${erro || 'Erro desconhecido'}`;
+
+    const document = {
+      log_tipo: 'auditoria',
+      saas,
+      usuario_id: usuario?.id ?? null,
+      usuario_nome: usuario?.nome ?? 'Sistema',
+      usuario_email: usuario?.email ?? null,
+      acao: 'executar' as const,
+      entidade: 'ScheduledRoutine',
+      entidade_id: routineId,
+      dados_anteriores: null,
+      dados_novos: { executado: true, status, duracao_ms: duracaoMs, resultado: resultado || null },
+      ip_address: (usuario && ipAddress) ? ipAddress : null,
+      user_agent: 'Agendador de tarefas',
+      rota: null,
+      metodo_http: null,
+      observacoes,
+      timestamp: safeFormatDateISOLocal(new Date()) || '',
+      origem_auditoria: 'agendador' as const,
+      empresa_id: empresaId ?? null
+    };
+
+    await client.index({
+      index: elasticsearchService.getIndexName(),
+      document
+    });
+  } catch (error) {
+    logger.warn('Falha ao registrar execução de rotina na auditoria', {
+      context: 'ElasticsearchAuditService',
+      action: 'registrarExecucaoRotinaAuditoria',
+      routineId: params.routineId,
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }

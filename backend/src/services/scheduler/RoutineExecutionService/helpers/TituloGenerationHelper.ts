@@ -317,7 +317,9 @@ export class TituloGenerationHelper {
           'Titulo',
           titulo.id,
           tituloData,
-          'Título gerado automaticamente pelo agendador de tarefas'
+          'Título gerado automaticamente pelo agendador de tarefas',
+          undefined,
+          'agendador'
         );
 
         await registrarCriacaoElasticsearch(
@@ -325,7 +327,9 @@ export class TituloGenerationHelper {
           'Titulo',
           titulo.id,
           tituloData,
-          'Título gerado automaticamente pelo agendador de tarefas'
+          'Título gerado automaticamente pelo agendador de tarefas',
+          undefined,
+          'agendador'
         );
       } catch (error) {
         logger.warn('Erro ao registrar auditoria de título gerado', {

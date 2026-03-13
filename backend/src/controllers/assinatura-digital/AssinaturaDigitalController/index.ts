@@ -341,7 +341,8 @@ export class AssinaturaDigitalController {
    */
   static async webhookAssinafy(req: Request, res: Response): Promise<void> {
     const timestamp = getCurrentTimestamp();
-    
+    (req as Request & { webhookClientIp?: string }).webhookClientIp = req.ip || req.socket.remoteAddress || 'unknown';
+
     try {
       sendSuccess(res, { timestamp }, 'Webhook Assinafy recebido', 200);
 
@@ -388,6 +389,8 @@ export class AssinaturaDigitalController {
    * Webhook específico para ZAPSIGN
    */
   static async webhookZapsign(req: Request, res: Response): Promise<void> {
+    (req as Request & { webhookClientIp?: string }).webhookClientIp = req.ip || req.socket.remoteAddress || 'unknown';
+
     try {
       sendSuccess(res, undefined, 'Webhook ZAPSIGN recebido', 200);
 
@@ -432,7 +435,8 @@ export class AssinaturaDigitalController {
    */
   static async webhook(req: Request, res: Response): Promise<void> {
     const timestamp = getCurrentTimestamp();
-    
+    (req as Request & { webhookClientIp?: string }).webhookClientIp = req.ip || req.socket.remoteAddress || 'unknown';
+
     try {
       sendSuccess(res, { timestamp }, 'Webhook recebido', 200);
 

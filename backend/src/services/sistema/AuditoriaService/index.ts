@@ -1,5 +1,6 @@
 import { Request } from 'express';
 import { AuthenticatedRequest } from '../../../types/auth';
+import type { OrigemAuditoria } from '../../elasticsearch/ElasticsearchAuditService';
 import {
   registrarCriacaoElasticsearch,
   registrarAtualizacaoElasticsearch,
@@ -63,9 +64,10 @@ export async function registrarCriacao(
   entidadeId: number,
   dadosNovos: Record<string, unknown>,
   observacoes?: string,
-  empresa_id?: number | null
+  empresa_id?: number | null,
+  origem_auditoria?: OrigemAuditoria
 ): Promise<void> {
-  await registrarCriacaoElasticsearch(req, entidade, entidadeId, dadosNovos, observacoes, empresa_id);
+  await registrarCriacaoElasticsearch(req, entidade, entidadeId, dadosNovos, observacoes, empresa_id, origem_auditoria);
 }
 
 /**

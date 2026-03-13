@@ -5,6 +5,7 @@ import { calculateNextExecution } from '../../../utils/SchedulerUtils';
 import { RoutineScheduleService } from '../RoutineScheduleService';
 import { RoutineExecutionService } from '../RoutineExecutionService';
 import { RoutineLogService } from '../RoutineLogService';
+import { registrarExecucaoRotinaAuditoria } from '../../elasticsearch/ElasticsearchAuditService';
 import type { JsonValue } from '../../../types/index';
 import type {
   SchedulerStatus,
@@ -90,8 +91,11 @@ export class SchedulerService {
 
   /**
    * Executa uma rotina SaaS manualmente (em background, retorna imediatamente)
+   * @param id - ID da rotina
+   * @param usuario - Dados do usuário que executou (quando manual)
+   * @param ipAddress - IP do cliente (quando manual)
    */
-  public async executeSaasRoutineManually(id: number): Promise<void> {
+  public async executeSaasRoutineManually(id: number, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
     const routine = await SaasScheduledRoutine.findByPk(id);
     if (!routine) {
       throw new Error('Rotina não encontrada');
@@ -99,7 +103,7 @@ export class SchedulerService {
     if (!routine.ativo) {
       throw new Error('Rotina está inativa');
     }
-    this.scheduleService.executeSaasRoutineNow(routine).catch((error) => {
+    this.scheduleService.executeSaasRoutineNow(routine, usuario, ipAddress).catch((error) => {
       logger.error('Erro ao executar rotina SaaS em background', {
         context: 'SchedulerService',
         action: 'executeSaasRoutineManually',
@@ -201,16 +205,18 @@ export class SchedulerService {
   /**
    * Executa uma rotina manualmente
    * @param id - ID da rotina
+   * @param usuario - Dados do usuário que executou (quando manual)
+   * @param ipAddress - IP do cliente (quando manual)
    * @returns Mensagem de confirmação
    */
-  public async executeRoutineManually(id: number): Promise<{ message: string }> {
+  public async executeRoutineManually(id: number, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<{ message: string }> {
     const routine = await ScheduledRoutine.findByPk(id);
     if (!routine) {
       throw new Error('Rotina não encontrada');
     }
 
     // Executar em background sem aguardar
-    this.executeRoutineInBackground(routine).catch((error) => {
+    this.executeRoutineInBackground(routine, usuario, ipAddress).catch((error) => {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
       logger.error('Erro ao executar rotina em background', {
@@ -228,8 +234,10 @@ export class SchedulerService {
   /**
    * Executa uma rotina em background (usado por executeRoutineManually)
    * @param routine - Rotina a ser executada
+   * @param usuario - Usuário que executou manualmente (quando presente)
+   * @param ipAddress - IP do cliente (quando manual)
    */
-  private async executeRoutineInBackground(routine: ScheduledRoutine): Promise<void> {
+  private async executeRoutineInBackground(routine: ScheduledRoutine, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
     const startTime = new Date();
     let executionLog: { id: string } | null = null;
 
@@ -250,6 +258,19 @@ export class SchedulerService {
 
       // Atualizar contadores da rotina
       await this.logService.updateRoutineCounters(routine, statusFinal as 'sucesso' | 'erro', endTime);
+
+      await registrarExecucaoRotinaAuditoria({
+        routineId: routine.id,
+        routineNome: routine.nome ?? 'Rotina',
+        routineTipo: routine.tipo ?? 'unknown',
+        status: statusFinal as 'sucesso' | 'erro',
+        duracaoMs: duration,
+        empresaId: (routine as { empresa_id?: number }).empresa_id,
+        saas: false,
+        resultado: resultado as Record<string, unknown>,
+        usuario: usuario ?? undefined,
+        ipAddress: ipAddress ?? undefined
+      });
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -276,6 +297,19 @@ export class SchedulerService {
 
       // Atualizar contadores da rotina mesmo em caso de erro
       await this.logService.updateRoutineCounters(routine, 'erro', endTime);
+
+      await registrarExecucaoRotinaAuditoria({
+        routineId: routine.id,
+        routineNome: routine.nome ?? 'Rotina',
+        routineTipo: routine.tipo ?? 'unknown',
+        status: 'erro',
+        duracaoMs: duration,
+        empresaId: (routine as { empresa_id?: number }).empresa_id,
+        saas: false,
+        erro: errorMessage,
+        usuario: usuario ?? undefined,
+        ipAddress: ipAddress ?? undefined
+      });
     }
   }
 

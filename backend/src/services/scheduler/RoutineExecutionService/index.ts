@@ -101,30 +101,15 @@ export class RoutineExecutionService {
 
     switch (routine.tipo) {
       case 'geracao_titulos':
-        logger.info('RoutineExecutionService.executeRoutine - Executando geração de títulos', {
-          context: 'RoutineExecutionService',
-          routineId: routine.id,
-          saas
-        });
         if (saas) {
           return await this.executeGeracaoTitulosSaas(routine as SaasScheduledRoutine);
         }
         return await this.executeGeracaoTitulos(routine as ScheduledRoutine);
 
       case 'envio_boletos':
-        logger.info('RoutineExecutionService.executeRoutine - Executando envio de boletos', {
-          context: 'RoutineExecutionService',
-          routineId: routine.id,
-          saas
-        });
         return await this.executeEnvioBoletos(routine, saas);
 
       case 'remessa_bancaria':
-        logger.info('RoutineExecutionService.executeRoutine - Executando remessa bancária', {
-          context: 'RoutineExecutionService',
-          routineId: routine.id,
-          saas
-        });
         if (saas) {
           return await this.executeRemessaBancariaSaas(routine as SaasScheduledRoutine);
         }
@@ -216,31 +201,6 @@ export class RoutineExecutionService {
         servicosAdicionaisTodos
       );
 
-      // Log resumo: contratos por cliente e quais têm taxa isenta (para debug: cliente com 2 contratos e 1 isento)
-      const contratosPorCliente = new Map<number, Array<{ id: number; isento_mensalidade: boolean }>>();
-      for (const c of contratos) {
-        const contratoAny = c as unknown as { id: number; cliente_id: number; isento_mensalidade?: boolean };
-        const clienteId = contratoAny.cliente_id;
-        if (!contratosPorCliente.has(clienteId)) {
-          contratosPorCliente.set(clienteId, []);
-        }
-        contratosPorCliente.get(clienteId)!.push({
-          id: contratoAny.id,
-          isento_mensalidade: contratoAny.isento_mensalidade === true
-        });
-      }
-      logger.info('RoutineExecutionService.executeGeracaoTitulos - Contratos ativos carregados', {
-        totalContratos: contratos.length,
-        totalClientesComContrato: contratosPorCliente.size,
-        clientesComMaisDeUmContrato: [...contratosPorCliente.entries()]
-          .filter(([, list]) => list.length > 1)
-          .map(([clienteId, list]) => ({
-            cliente_id: clienteId,
-            contratos: list,
-            algumIsento: list.some(x => x.isento_mensalidade)
-          }))
-      });
-
       let titulosGerados = 0;
       let contratosProcessados = 0;
       let erros = 0;
@@ -249,29 +209,8 @@ export class RoutineExecutionService {
         try {
           const contratoWithCliente = contrato as unknown as ContratoWithCliente;
           const contratoAny = contrato as unknown as { id: number; cliente_id: number; isento_mensalidade?: boolean; conta_boleto?: number | null; dia_vencimento_id?: number | null };
-          logger.info('RoutineExecutionService.executeGeracaoTitulos - Processando contrato', {
-            contratoId: contratoAny.id,
-            clienteId: contratoAny.cliente_id,
-            isento_mensalidade: contratoAny.isento_mensalidade === true,
-            conta_boleto: contratoAny.conta_boleto ?? null,
-            dia_vencimento_id: contratoAny.dia_vencimento_id ?? null,
-            clienteAtivo: contratoWithCliente.cliente?.ativo ?? null
-          });
 
-          if (!TituloGenerationHelper.validateContrato(contratoWithCliente)) {
-            const motivo =
-              contratoAny.isento_mensalidade === true ? 'isento_mensalidade' :
-              !contratoWithCliente.cliente ? 'cliente_ausente' :
-              !contratoWithCliente.cliente.ativo ? 'cliente_inativo' :
-              !contratoAny.conta_boleto ? 'sem_conta_boleto' :
-              !contratoAny.dia_vencimento_id ? 'sem_dia_vencimento' : 'desconhecido';
-            logger.info('RoutineExecutionService.executeGeracaoTitulos - Contrato ignorado (não gera títulos)', {
-              contratoId: contratoAny.id,
-              clienteId: contratoAny.cliente_id,
-              motivo
-            });
-            continue;
-          }
+          if (!TituloGenerationHelper.validateContrato(contratoWithCliente)) continue;
 
           const contratoValidado = contratoWithCliente as ContratoWithCliente & {
             dia_vencimento_id: number;
@@ -299,14 +238,6 @@ export class RoutineExecutionService {
             servicosAdicionais
           );
 
-          logger.info('RoutineExecutionService.executeGeracaoTitulos - Resultado do contrato', {
-            contratoId: contratoWithPlano.id,
-            clienteId: contratoWithPlano.cliente_id,
-            titulosGeradosNesteContrato: resultado.titulosGerados,
-            titulosEmAberto: titulosEmAberto.length,
-            todosTitulos: todosTitulos.length
-          });
-
           titulosGerados += resultado.titulosGerados;
           if (resultado.titulosGerados > 0) {
             contratosProcessados++;
@@ -328,14 +259,6 @@ export class RoutineExecutionService {
           erros++;
         }
       }
-
-      logger.info('RoutineExecutionService.executeGeracaoTitulos - Concluído', {
-        success: true,
-        titulos_gerados: titulosGerados,
-        contratos_processados: contratosProcessados,
-        contratos_com_erro: erros,
-        total_contratos_ativos: contratos.length
-      });
 
       return {
         success: true,
@@ -401,13 +324,7 @@ export class RoutineExecutionService {
       for (const contrato of contratos) {
         try {
           const defaults = empresaDefaults.get(contrato.empresa_id);
-          if (!defaults) {
-            logger.info('RoutineExecutionService.executeGeracaoTitulosSaas - Empresa sem banco ou dia de vencimento configurado', {
-              contratoId: contrato.id,
-              empresaId: contrato.empresa_id,
-            });
-            continue;
-          }
+          if (!defaults) continue;
 
           const contratoPlain = contrato.get({ plain: true }) as Record<string, unknown> & { banco_id?: number | null };
           const contaBoleto = contratoPlain.banco_id ?? defaults.conta_boleto;
@@ -418,13 +335,7 @@ export class RoutineExecutionService {
             plano: (contrato as { plano?: unknown }).plano,
           } as SaasContratoWithPlano;
 
-          if (!SaasTituloGenerationHelper.validateContrato(contratoEnriquecido)) {
-            logger.info('RoutineExecutionService.executeGeracaoTitulosSaas - Contrato ignorado', {
-              contratoId: contrato.id,
-              empresaId: contrato.empresa_id,
-            });
-            continue;
-          }
+          if (!SaasTituloGenerationHelper.validateContrato(contratoEnriquecido)) continue;
 
           const titulosEmAberto = titulosEmAbertoPorContrato.get(contrato.id) || [];
           const todosTitulos = todosTitulosPorContrato.get(contrato.id) || [];
@@ -451,13 +362,6 @@ export class RoutineExecutionService {
           erros++;
         }
       }
-
-      logger.info('RoutineExecutionService.executeGeracaoTitulosSaas - Concluído', {
-        titulos_gerados: titulosGerados,
-        contratos_processados: contratosProcessados,
-        contratos_com_erro: erros,
-        total_contratos_ativos: contratos.length,
-      });
 
       return {
         success: true,

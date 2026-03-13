@@ -317,7 +317,17 @@ export class SchedulerController {
         return;
       }
 
-      const resultado = await this.schedulerService.executeRoutineManually(Number(id));
+      const payload = (req as { user?: { sub?: string; email?: string; nome?: string }; saasUser?: { sub?: string; email?: string; nome?: string } }).user
+        ?? (req as { user?: { sub?: string; email?: string; nome?: string }; saasUser?: { sub?: string; email?: string; nome?: string } }).saasUser;
+      const usuario = payload
+        ? { id: parseInt(String(payload.sub ?? 0), 10), nome: payload.nome ?? null, email: payload.email ?? null }
+        : undefined;
+      const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+        || (req.headers['x-real-ip'] as string)
+        || req.socket?.remoteAddress
+        || null;
+
+      const resultado = await this.schedulerService.executeRoutineManually(Number(id), usuario, ipAddress);
 
       sendSuccess(res, resultado, 'Rotina iniciada em background');
     } catch (error: unknown) {

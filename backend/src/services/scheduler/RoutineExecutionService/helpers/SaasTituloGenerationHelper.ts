@@ -1,7 +1,8 @@
 import type { Transaction } from 'sequelize';
+import type { Request } from 'express';
 import { logger } from '../../../../utils/logger';
 import { normalizeDateForDb, formatDate } from '../../../../utils/dateUtils';
-import { TituloGenerationHelper } from './TituloGenerationHelper';
+import { registrarCriacaoElasticsearch } from '../../../elasticsearch/ElasticsearchAuditService';
 
 interface SaasContratoWithPlano {
   id: number;
@@ -62,16 +63,23 @@ export class SaasTituloGenerationHelper {
   }
 
   static async registerAuditForTitulos(
-    titulos: Array<{ id: number; toJSON: () => Record<string, unknown> }>
+    titulos: Array<{ id: number; empresa_id?: number; toJSON: () => Record<string, unknown> }>
   ): Promise<void> {
+    const reqSimulado = { headers: {}, socket: { remoteAddress: null }, user: undefined } as unknown as Request;
     for (const titulo of titulos) {
       try {
-        logger.info('SaasTituloGenerationHelper - Título SaaS gerado pelo agendador', {
-          titulo_id: titulo.id,
-          context: 'SaasTituloGenerationHelper',
-        });
+        const tituloData = titulo.toJSON() as Record<string, unknown>;
+        await registrarCriacaoElasticsearch(
+          reqSimulado,
+          'SaasTitulo',
+          titulo.id,
+          tituloData,
+          'Título SaaS gerado automaticamente pelo agendador de tarefas',
+          titulo.empresa_id ?? undefined,
+          'agendador'
+        );
       } catch (error) {
-        logger.warn('Erro ao registrar log de título SaaS gerado', {
+        logger.warn('Erro ao registrar auditoria de título SaaS gerado', {
           titulo_id: titulo.id,
           error: error instanceof Error ? error.message : 'Erro desconhecido',
         });

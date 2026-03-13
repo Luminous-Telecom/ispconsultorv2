@@ -39,6 +39,9 @@ export class AuditoriaController {
       const dataFim = req.query.data_fim as string;
       const sortColumn = req.query.sortColumn as string;
       const sortDirection = req.query.sortDirection as string;
+      const comUsuarioObrigatorio = req.query.com_usuario_obrigatorio === 'true' || req.query.comUsuarioObrigatorio === 'true';
+      const semUsuarioObrigatorio = req.query.sem_usuario_obrigatorio === 'true' || req.query.semUsuarioObrigatorio === 'true';
+      const origemAuditoria = req.query.origem_auditoria as string | undefined;
       const authEmpresaId = getEmpresaIdOrNull(req);
       const queryEmpresaId = req.query.empresa_id ? parseInt(req.query.empresa_id as string) : undefined;
       // Usuários só podem ver auditoria da própria empresa
@@ -64,7 +67,10 @@ export class AuditoriaController {
         sortColumn,
         sortDirection,
         empresaId,
-        excludeSaasEntities: authEmpresaId != null
+        excludeSaasEntities: authEmpresaId != null,
+        comUsuarioObrigatorio,
+        semUsuarioObrigatorio,
+        origemAuditoria
       });
 
       const lastPage = Math.min(Math.ceil(total / limit), maxLastPage);

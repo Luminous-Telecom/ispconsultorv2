@@ -2,6 +2,35 @@
    COMPONENTES - Cards, botões, tabelas e formulários
    ============================================ */
 
+/* Logs - inputs somente leitura: remove todos os estilos de foco e movimento */
+.logs-auditoria-details input.form-control[readonly],
+.logs-auditoria-details input.form-control:read-only,
+.logs-auditoria-details textarea.form-control[readonly],
+.logs-auditoria-details textarea.form-control:read-only,
+.draggable-modal-body-custom .logs-auditoria-details input.form-control[readonly],
+.draggable-modal-body-custom .logs-auditoria-details textarea.form-control[readonly],
+.draggable-modal-container-custom .logs-auditoria-details input.form-control[readonly],
+.draggable-modal-container-custom .logs-auditoria-details textarea.form-control[readonly],
+.responsive-dialog-mobile-custom .logs-auditoria-details input.form-control[readonly],
+.responsive-dialog-mobile-custom .logs-auditoria-details textarea.form-control[readonly] {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  border-color: var(--border-color) !important;
+  transition: none !important;
+  &:focus,
+  &:focus-visible,
+  &:active {
+    outline: none !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    border-color: var(--border-color) !important;
+    background-color: var(--bg-secondary) !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 /* Login - IP copiável */
 .login-ip-copy {
   cursor: pointer;

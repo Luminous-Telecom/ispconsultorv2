@@ -245,8 +245,6 @@ const Layout: React.FC = () => {
     { id: 'agendador-tarefas', modalId: 'agendador-tarefas', label: t('params.taskScheduler'), icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
     { id: 'servidor-email', modalId: 'servidor-email', label: t('params.emailServer'), icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
     { id: 'servidor-whatsapp', modalId: 'servidor-whatsapp', label: t('params.whatsappServer'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
-    { id: 'historico-whatsapp', modalId: 'historico-whatsapp', label: t('menu.whatsappHistory'), icon: 'bi-chat-dots', onClick: () => handleOpenModal('historico-whatsapp') },
-    { id: 'historico-email', modalId: 'historico-email', label: t('menu.emailHistory'), icon: 'bi-envelope-paper', onClick: () => handleOpenModal('historico-email') },
     { id: 'nfse', modalId: 'nfse', label: t('params.nfse'), icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('nfse') },
     { id: 'documentos-sistema', modalId: 'documentos-sistema', label: t('params.systemDocuments'), icon: 'bi-folder', onClick: () => handleOpenModal('documentos-sistema') },
     { id: 'assinatura-digital', modalId: 'assinatura-digital', label: t('params.digitalSignature'), icon: 'bi-pen', onClick: () => handleOpenModal('assinatura-digital') },
@@ -261,6 +259,16 @@ const Layout: React.FC = () => {
     { id: 'importar-lista', modalId: 'blockdomi-importar-lista', label: t('modal.importList'), icon: 'bi-list-ul', onClick: () => handleOpenModal('blockdomi-importar-lista') },
     { id: 'ips-permitidos', modalId: 'blockdomi-ips-permitidos', label: t('blockdomi.ipsPermitidos'), icon: 'bi-shield-check', onClick: () => handleOpenModal('blockdomi-ips-permitidos') },
     { id: 'logs-acesso', modalId: 'blockdomi-logs-acesso', label: t('blockdomi.logsAcesso'), icon: 'bi-journal-text', onClick: () => handleOpenModal('blockdomi-logs-acesso') },
+  ].filter((item) => filterByModulo(item.modalId));
+
+  const logsFolderItems = [
+    { id: 'logs-usuarios', modalId: 'logs-usuarios', label: t('logs.usuarios'), icon: 'bi-people-fill', onClick: () => handleOpenModal('logs-usuarios') },
+    { id: 'logs-agenda-tarefas', modalId: 'logs-agenda-tarefas', label: t('logs.agendaTarefas'), icon: 'bi-clock-history', onClick: () => handleOpenModal('logs-agenda-tarefas') },
+    { id: 'logs-webhook', modalId: 'logs-webhook', label: t('logs.webhook'), icon: 'bi-link-45deg', onClick: () => handleOpenModal('logs-webhook') },
+    { id: 'logs-email', modalId: 'logs-email', label: t('logs.email'), icon: 'bi-envelope', onClick: () => handleOpenModal('logs-email') },
+    { id: 'logs-whatsapp', modalId: 'logs-whatsapp', label: t('logs.whatsapp'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('logs-whatsapp') },
+    { id: 'logs-assinatura-digital', modalId: 'logs-assinatura-digital', label: t('logs.assinaturaDigital'), icon: 'bi-pen', onClick: () => handleOpenModal('logs-assinatura-digital') },
+    { id: 'logs-acesso-sistema', modalId: 'logs-acesso-sistema', label: t('logs.acessoSistema'), icon: 'bi-door-open', onClick: () => handleOpenModal('logs-acesso-sistema') },
   ].filter((item) => filterByModulo(item.modalId));
 
   if (isServerUnavailable) {
@@ -493,6 +501,59 @@ const Layout: React.FC = () => {
               </div>
             </div>
             )}
+
+            {/* Menu Pasta para Logs usando Bootstrap Accordion */}
+            <div className="accordion sidebar-accordion" id="logsAccordion">
+              <div className="accordion-item border-0 bg-transparent">
+                <h2 className="accordion-header">
+                  <button
+                    className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#logsCollapse"
+                    aria-expanded="false"
+                    aria-controls="logsCollapse"
+                    onClick={(e) => {
+                      const button = e.currentTarget;
+                      const folderIcon = button.querySelector('.folder-icon');
+                      setTimeout(() => {
+                        if (folderIcon && button.classList.contains('collapsed')) {
+                          folderIcon.className = 'bi bi-folder folder-icon me-2';
+                        } else if (folderIcon) {
+                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
+                        }
+                      }, 10);
+                    }}
+                  >
+                    <i className="bi bi-folder folder-icon me-2"></i>
+                    <span>{t('layout.folderLogs')}</span>
+                  </button>
+                </h2>
+                <div
+                  id="logsCollapse"
+                  className="accordion-collapse collapse"
+                  aria-labelledby="logsHeading"
+                  data-bs-parent="#logsAccordion"
+                >
+                  <div className="accordion-body p-0">
+                    {logsFolderItems.map((item) => (
+                      <button
+                        key={item.id}
+                        className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"
+                        onClick={() => {
+                          item.onClick();
+                          setSidebarOpen(false);
+                        }}
+                        type="button"
+                      >
+                        <i className={`bi ${item.icon} me-2`}></i>
+                        <span>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Menu Pasta para Parâmetros usando Bootstrap Accordion */}
             <div className="accordion sidebar-accordion" id="parametrosAccordion">

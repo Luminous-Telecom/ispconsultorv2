@@ -33,8 +33,8 @@ export const MODAL_MODULO_MAP: Record<string, PlanoModuloId> = {
   'blockdomi-logs-acesso': 'blockdomi',
   'servidor-whatsapp': 'envio_notificacoes',
   'servidor-email': 'envio_notificacoes',
-  'historico-whatsapp': 'historico_notificacoes',
-  'historico-email': 'historico_notificacoes',
+  'logs-email': 'historico_notificacoes',
+  'logs-whatsapp': 'historico_notificacoes',
   'assinatura-digital': 'assinatura_digital',
   nfse: 'nfse',
 };

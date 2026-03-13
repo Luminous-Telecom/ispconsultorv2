@@ -58,7 +58,8 @@ export function enviarReciboSeAdmin(resolved: ResolvedTitulo): void {
 }
 
 /**
- * Registra auditoria no Elasticsearch
+ * Registra auditoria no Elasticsearch com origem webhook e empresa_id do título.
+ * Permite filtrar Logs de Webhook por tenant.
  */
 export async function registrarAuditoriaWebhook(
   req: Request | undefined,
@@ -69,6 +70,7 @@ export async function registrarAuditoriaWebhook(
 ): Promise<void> {
   if (!req) return;
   const nomeEntidade = resolved.saas ? 'SaasTitulo' : 'Titulo';
+  const empresaId = (resolved.titulo as { empresa_id?: number | null }).empresa_id ?? null;
   try {
     await registrarAtualizacaoElasticsearch(
       req,
@@ -76,7 +78,9 @@ export async function registrarAuditoriaWebhook(
       (resolved.titulo as { id: number }).id,
       dadosAnteriores,
       dadosNovos,
-      mensagem
+      mensagem,
+      empresaId,
+      'webhook'
     );
   } catch (auditError) {
     logger.warn(`Erro ao registrar auditoria de webhook ${nomeEntidade}`, {

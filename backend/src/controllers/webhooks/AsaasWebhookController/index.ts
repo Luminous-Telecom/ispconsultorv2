@@ -18,6 +18,7 @@ export class AsaasWebhookController {
     (req as import('../../../types/webhooks').WebhookRequest).webhookEmpresaIdentifier = req.params?.empresaIdentifier;
     const startTime = Date.now();
     const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    (req as Request & { webhookClientIp?: string }).webhookClientIp = clientIp;
     const userAgent = req.get('user-agent') || 'unknown';
     
     try {
