@@ -64,7 +64,8 @@ export class TipoCobrancaContratoController {
         ativo: ativo !== false
       });
       try {
-        await registrarCriacao(req, 'TipoCobrancaContrato', item.id, item.toJSON() as Record<string, unknown>);
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? item.empresa_id ?? null;
+        await registrarCriacao(req, 'TipoCobrancaContrato', item.id, item.toJSON() as Record<string, unknown>, undefined, empresaIdAudit);
       } catch {
         // não interromper
       }
@@ -90,12 +91,15 @@ export class TipoCobrancaContratoController {
       if (ativo !== undefined) dados.ativo = ativo;
       const item = await TipoCobrancaContratoService.update(id, dados);
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? item.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'TipoCobrancaContrato',
           item.id,
           existing.toJSON() as Record<string, unknown>,
-          item.toJSON() as Record<string, unknown>
+          item.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch {
         // não interromper
@@ -117,7 +121,8 @@ export class TipoCobrancaContratoController {
       const dadosAnteriores = existing.toJSON() as Record<string, unknown>;
       await TipoCobrancaContratoService.delete(id);
       try {
-        await registrarExclusao(req, 'TipoCobrancaContrato', existing.id, dadosAnteriores);
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? existing.empresa_id ?? null;
+        await registrarExclusao(req, 'TipoCobrancaContrato', existing.id, dadosAnteriores, undefined, empresaIdAudit);
       } catch {
         // não interromper
       }

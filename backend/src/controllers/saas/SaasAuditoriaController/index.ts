@@ -65,6 +65,8 @@ export class SaasAuditoriaController {
 
       const lastPage = Math.min(Math.ceil(total / limit), maxLastPage);
 
+      await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs as Record<string, unknown>[], true);
+
       sendSuccess(res, {
         data: logs,
         pagination: {
@@ -136,6 +138,8 @@ export class SaasAuditoriaController {
         sendNotFound(res, 'Nenhum log de auditoria encontrado para este registro');
         return;
       }
+
+      await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs as Record<string, unknown>[], true);
 
       const html = await AuditoriaPDFService.generateAuditPdfHtml(logs, entidade as string, undefined, undefined);
       const { PDFGenerationService } = await import('../../../services/pdf-generation/PDFGenerationService');

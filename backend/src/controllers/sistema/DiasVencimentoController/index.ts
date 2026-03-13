@@ -43,12 +43,15 @@ export class DiasVencimentoController {
             ? (diaAntigo as unknown as Record<string, unknown>)
             : ({ dia: diaNovo.dia, ativo: false } as Record<string, unknown>);
           
+          const empresaIdAudit = empresaId ?? (diaNovo as { empresa_id?: number | null }).empresa_id ?? null;
           await registrarAtualizacao(
             req as AuthenticatedRequest,
             'DiasVencimento',
             diaNovo.id as number,
             dadosAnterioresAudit,
-            diaNovo as unknown as Record<string, unknown>
+            diaNovo as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         }
       }
@@ -67,12 +70,15 @@ export class DiasVencimentoController {
 
       const diasDepois = await DiasVencimentoService.list({ ativo: true }, empresaId);
       for (const dia of diasDepois) {
+        const empresaIdAudit = empresaId ?? dia.empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'DiasVencimento',
           dia.id,
           { dia: dia.dia, ativo: false } as unknown as Record<string, unknown>,
-          dia.toJSON() as unknown as Record<string, unknown>
+          dia.toJSON() as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       }
 

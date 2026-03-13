@@ -8,7 +8,7 @@ import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
-import { getEmpresaIdOrNull, isSuperAdmin } from '../../../utils/tenantUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class UsuarioController {
   private static createSchema = Joi.object({
@@ -32,10 +32,9 @@ export class UsuarioController {
       const { page = 1, limit = 10, search = '', ativo, sortColumn, sortDirection } = req.query;
       const pageNum = Number(page);
       const limitNum = Number(limit);
-      const isAdmin = isSuperAdmin(req);
-      const empresaId = isAdmin ? null : getEmpresaIdOrNull(req);
+      const empresaId = getEmpresaIdOrNull(req);
 
-      if (!isAdmin && (empresaId === null || empresaId === undefined)) {
+      if (empresaId === null || empresaId === undefined) {
         sendSuccess(res, { success: true, data: [], pagination: { current_page: pageNum, per_page: limitNum, total: 0, last_page: 0, from: 0, to: 0 } });
         return;
       }
@@ -101,11 +100,14 @@ export class UsuarioController {
 
       // Registrar auditoria
       try {
+        const empresaId = getEmpresaIdOrNull(req) ?? usuario.empresa_id ?? null;
         await registrarCriacao(
           req,
           'Usuario',
           usuario.id,
-          { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>
+          { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>,
+          undefined,
+          empresaId
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -159,12 +161,15 @@ export class UsuarioController {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaId = getEmpresaIdOrNull(req) ?? usuarioAtualizado.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'Usuario',
           usuario.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaId
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -192,11 +197,14 @@ export class UsuarioController {
       
       // Registrar auditoria
       try {
+        const empresaId = getEmpresaIdOrNull(req) ?? usuario.empresa_id ?? null;
         await registrarExclusao(
           req,
           'Usuario',
           usuario.id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaId
         );
       } catch (auditError) {
         // Não interromper o fluxo

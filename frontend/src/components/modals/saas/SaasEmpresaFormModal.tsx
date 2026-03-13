@@ -986,6 +986,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                       { key: 'usuario_nome', label: t('table.name'), sortable: true, width: 140, render: (log: AuditoriaLog) => <span className="small">{log.usuario_nome || '-'}</span> },
                       { key: 'usuario_email', label: t('audit.user'), sortable: true, width: 160, render: (log: AuditoriaLog) => <span className="small">{log.usuario_email || 'N/A'}</span> },
                       { key: 'ip_address', label: t('audit.ip'), sortable: true, width: 120, render: (log: AuditoriaLog) => <span className="small text-muted">{log.ip_address || '-'}</span> },
+                      { key: 'empresa_nome', label: t('audit.tenant'), sortable: true, width: 140, render: (log: AuditoriaLog) => <span className="small">{log.empresa_nome || '-'}</span> },
                       { key: 'rota', label: t('audit.route'), sortable: true, render: (log: AuditoriaLog) => <span className="small text-muted">{log.rota || '-'}</span> },
                     ],
                     data: (logsData?.data as AuditoriaLog[]) ?? [],
@@ -1095,6 +1096,10 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.ip')}:</small><br />
                   <span>{selectedLog.ip_address ?? 'N/A'}</span>
+                </div>
+                <div className="col-md-6">
+                  <small className="text-muted">{t('audit.tenant')}:</small><br />
+                  <span>{selectedLog.empresa_nome ?? '-'}</span>
                 </div>
                 {selectedLog.rota && (
                   <div className="col-12">

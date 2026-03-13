@@ -242,11 +242,14 @@ export class ClienteController {
       // Registrar auditoria
       if (clienteCriado) {
         try {
+          const empresaId = getEmpresaIdOrNull(req) ?? clienteCriado.empresa_id ?? null;
           await registrarCriacao(
             req,
             'Cliente',
             clienteCriado.id,
-            clienteCriado.toJSON() as Record<string, unknown>
+            clienteCriado.toJSON() as Record<string, unknown>,
+            undefined,
+            empresaId
           );
         } catch (auditError) {
           // Não interromper o fluxo
@@ -385,12 +388,15 @@ export class ClienteController {
       setAuditData(req, dadosAnteriores, dadosNovos);
 
       // Registrar auditoria
+      const empresaId = getEmpresaIdOrNull(req) ?? clienteAtualizado.empresa_id ?? null;
       await registrarAtualizacao(
         req,
         'Cliente',
         clienteAtualizado.id,
         dadosAnteriores,
-        dadosNovos
+        dadosNovos,
+        undefined,
+        empresaId
       );
 
       logger.debug('Cliente atualizado com sucesso, buscando dados atualizados com relacionamentos', {
@@ -481,11 +487,14 @@ export class ClienteController {
       }
       
       // Registrar auditoria
+      const empresaId = getEmpresaIdOrNull(req) ?? cliente.empresa_id ?? null;
       await registrarExclusao(
         req,
         'Cliente',
         cliente.id,
-        dadosAnteriores
+        dadosAnteriores,
+        undefined,
+        empresaId
       );
 
       sendSuccess(res, undefined, 'Cliente excluído com sucesso');

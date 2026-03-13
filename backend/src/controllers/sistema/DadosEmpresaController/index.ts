@@ -246,11 +246,14 @@ export class DadosEmpresaController {
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresaService.create(dadosAtualizados);
         try {
+          const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
           await registrarCriacao(
             req as AuthenticatedRequest,
             'DadosEmpresa',
             dadosEmpresa.id,
-            dadosEmpresa.toJSON() as Record<string, unknown>
+            dadosEmpresa.toJSON() as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo
@@ -259,12 +262,15 @@ export class DadosEmpresaController {
         dadosEmpresa = await DadosEmpresaService.update(dadosAtualizados, empresaId ?? undefined);
         await dadosEmpresa.reload();
         try {
+          const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
           await registrarAtualizacao(
             req as AuthenticatedRequest,
             'DadosEmpresa',
             dadosEmpresa.id,
             dadosAnteriores as Record<string, unknown>,
-            dadosEmpresa.toJSON() as Record<string, unknown>
+            dadosEmpresa.toJSON() as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo
@@ -326,11 +332,14 @@ export class DadosEmpresaController {
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresaService.create({ ...DadosEmpresaController.getDefaultData(), logo: filePath });
         try {
+          const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
           await registrarCriacao(
             req as AuthenticatedRequest,
             'DadosEmpresa',
             dadosEmpresa.id,
-            dadosEmpresa.toJSON() as Record<string, unknown>
+            dadosEmpresa.toJSON() as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo
@@ -360,12 +369,15 @@ export class DadosEmpresaController {
         await dadosEmpresa.reload();
         
         try {
+          const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
           await registrarAtualizacao(
             req as AuthenticatedRequest,
             'DadosEmpresa',
             dadosEmpresa.id,
             dadosAnteriores as Record<string, unknown>,
-            dadosEmpresa.toJSON() as Record<string, unknown>
+            dadosEmpresa.toJSON() as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo

@@ -5,7 +5,7 @@ import { slugify } from '../../../utils/slugify';
 export class DadosEmpresaService {
   /**
    * Buscar dados da empresa. Se empresaId for fornecido, filtra por id (multi-tenant).
-   * Caso contrário, retorna o primeiro registro (legado para superadmin).
+   * Caso contrário, retorna o primeiro registro.
    */
   static async findOne(empresaId?: number): Promise<DadosEmpresa | null> {
     const cacheKey = empresaId != null ? `dados_empresa:config:${empresaId}` : 'dados_empresa:config';

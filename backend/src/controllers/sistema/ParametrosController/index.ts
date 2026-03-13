@@ -114,11 +114,14 @@ export class ParametrosController {
       logger.info('ParametrosController.update: iniciando auditoria');
       if (parametrosAntes.created_at.getTime() === parametrosAntes.updated_at.getTime()) {
         try {
+          const empresaIdAudit = empresaId ?? parametros.empresa_id ?? null;
           await registrarCriacao(
             req as AuthenticatedRequest,
             'Parametros',
             parametros.id,
-            parametros.toJSON() as unknown as Record<string, unknown>
+            parametros.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo
@@ -128,12 +131,15 @@ export class ParametrosController {
           camposAtualizados: Object.keys(value)
         });
         try {
+          const empresaIdAudit = empresaId ?? parametros.empresa_id ?? null;
           await registrarAtualizacao(
             req as AuthenticatedRequest,
             'Parametros',
             parametros.id,
             dadosAnteriores as unknown as Record<string, unknown>,
-            parametros.toJSON() as unknown as Record<string, unknown>
+            parametros.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo

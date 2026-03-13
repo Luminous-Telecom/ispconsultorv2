@@ -119,11 +119,14 @@ export class IPv6Controller {
       
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? ipv6Criado.empresa_id ?? null;
         await registrarCriacao(
           req,
           'IPv6',
           ipv6Criado.id,
-          ipv6Criado.toJSON() as Record<string, unknown>
+          ipv6Criado.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -175,12 +178,15 @@ export class IPv6Controller {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? ipv6Atualizado.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'IPv6',
           ipv6Atualizado.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -214,11 +220,14 @@ export class IPv6Controller {
       
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? ipv6.empresa_id ?? null;
         await registrarExclusao(
           req,
           'IPv6',
           ipv6.id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

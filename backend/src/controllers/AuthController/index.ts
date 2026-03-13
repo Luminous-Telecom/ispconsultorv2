@@ -94,6 +94,11 @@ export class AuthController {
         return;
       }
 
+      if (usuario.empresa_id == null) {
+        sendUnauthorized(res, 'Usuário sem empresa vinculada não pode acessar o ADM');
+        return;
+      }
+
       const token = buildToken({
         sub: String(usuario.id),
         email: usuario.email,
@@ -104,9 +109,9 @@ export class AuthController {
 
       await UsuarioService.updateUltimoLogin(usuario.id);
 
-      // Registrar login na auditoria
+      // Registrar login na auditoria (empresa_id para exibir tenant nos logs)
       const authReq = req as unknown as AuthRequest;
-      authReq.user = { id: usuario.id, nome: usuario.nome, email: usuario.email };
+      authReq.user = { id: usuario.id, nome: usuario.nome, email: usuario.email, empresa_id: usuario.empresa_id ?? null };
       await registrarLogin(authReq, usuario.id, 'Login realizado com sucesso');
 
       const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '24h';
@@ -151,11 +156,11 @@ export class AuthController {
     const cookieToken = (req as Request & { cookies?: Record<string, string> }).cookies?.auth_token;
     if (cookieToken) {
       try {
-        const payload = jwt.decode(cookieToken) as { sub?: string; email?: string } | null;
+        const payload = jwt.decode(cookieToken) as { sub?: string; email?: string; empresa_id?: number | null } | null;
         if (payload?.sub) {
           const usuarioId = parseInt(payload.sub, 10);
           const authReq = req as unknown as AuthRequest;
-          authReq.user = { sub: payload.sub, email: payload.email };
+          authReq.user = { sub: payload.sub, email: payload.email, empresa_id: payload.empresa_id ?? null };
           registrarLogout(authReq, usuarioId, 'Logout realizado com sucesso').catch(() => { /* não crítico */ });
         }
       } catch {

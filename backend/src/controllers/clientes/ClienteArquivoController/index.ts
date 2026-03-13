@@ -112,11 +112,14 @@ export class ClienteArquivoController {
       const arquivo = await ClienteArquivoService.create(createData);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? arquivo.empresa_id ?? null;
         await registrarCriacao(
           req as AuthenticatedRequest,
           'ClienteArquivo',
           arquivo.id,
-          arquivo.toJSON() as Record<string, unknown>
+          arquivo.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -152,12 +155,15 @@ export class ClienteArquivoController {
       setAuditData(req, dadosAnteriores as Record<string, unknown>, dadosNovos);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? arquivo.empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'ClienteArquivo',
           arquivo.id,
           dadosAnteriores as Record<string, unknown>,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -182,11 +188,14 @@ export class ClienteArquivoController {
 
       if (arquivo && dadosAnteriores) {
         try {
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? arquivo.empresa_id ?? null;
           await registrarExclusao(
             req as AuthenticatedRequest,
             'ClienteArquivo',
             arquivo.id,
-            dadosAnteriores as Record<string, unknown>
+            dadosAnteriores as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo

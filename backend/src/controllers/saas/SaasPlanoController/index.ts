@@ -2,6 +2,7 @@ import { Response } from 'express';
 import Joi from 'joi';
 import { SaasPlanoService } from '../../../services/saas/SaasPlanoService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 
@@ -48,7 +49,8 @@ export class SaasPlanoController {
         return;
       }
       const plano = await SaasPlanoService.create(value);
-      await registrarCriacao(req as any, 'SaasPlano', plano.id, plano.toJSON() as Record<string, unknown>);
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
+      await registrarCriacao(req as any, 'SaasPlano', plano.id, plano.toJSON() as Record<string, unknown>, undefined, empresaIdAudit);
       res.status(201).json({ success: true, message: 'Plano criado com sucesso', data: plano });
     } catch (err) {
       sendError(res, err, 'Erro ao criar plano', 500, true);
@@ -70,9 +72,11 @@ export class SaasPlanoController {
       const planoAntigo = await SaasPlanoService.getById(Number(req.params.id));
       await SaasPlanoService.update(Number(req.params.id), value);
       if (planoAntigo) {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
         await registrarAtualizacao(req as any, 'SaasPlano', Number(req.params.id),
           planoAntigo.toJSON() as Record<string, unknown>,
-          { ...planoAntigo.toJSON(), ...value } as Record<string, unknown>);
+          { ...planoAntigo.toJSON(), ...value } as Record<string, unknown>,
+          undefined, empresaIdAudit);
       }
       sendSuccess(res, null, 'Plano atualizado com sucesso');
     } catch (err) {
@@ -85,7 +89,8 @@ export class SaasPlanoController {
       const planoAntigo = await SaasPlanoService.getById(Number(req.params.id));
       await SaasPlanoService.delete(Number(req.params.id));
       if (planoAntigo) {
-        await registrarExclusao(req as any, 'SaasPlano', Number(req.params.id), planoAntigo.toJSON() as Record<string, unknown>);
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
+        await registrarExclusao(req as any, 'SaasPlano', Number(req.params.id), planoAntigo.toJSON() as Record<string, unknown>, undefined, empresaIdAudit);
       }
       sendSuccess(res, null, 'Plano removido com sucesso');
     } catch (err) {

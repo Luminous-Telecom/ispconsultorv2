@@ -9,6 +9,7 @@ import { AuthenticatedRequest } from '../../../types/auth';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 import { registrarCriacao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendValidationError, sendNotFound, sendForbidden } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 interface GitHubRelease {
   tag_name: string;
@@ -447,6 +448,7 @@ export class AtualizacoesController {
       // Registrar auditoria da atualização do sistema
       const authenticatedReq = req as AuthenticatedRequest;
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(authenticatedReq) ?? null;
         await registrarCriacao(
           authenticatedReq,
           'SistemaAtualizacao',
@@ -462,7 +464,9 @@ export class AtualizacoesController {
               pm2Reload: { success: pm2ReloadResult.success }
             },
             message: result.message
-          } as Record<string, unknown>
+          } as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

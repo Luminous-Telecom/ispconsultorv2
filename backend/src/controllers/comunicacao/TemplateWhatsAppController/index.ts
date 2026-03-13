@@ -49,7 +49,8 @@ export class TemplateWhatsAppController {
         empresa_id: empresaId,
       });
       try {
-        await registrarCriacao(req as AuthenticatedRequest, 'TemplateWhatsApp', template.id, (template.get ? template.get({ plain: true }) : template) as unknown as Record<string, unknown>);
+        const empresaId = getEmpresaIdOrNull(req) ?? (template as { empresa_id?: number | null }).empresa_id ?? null;
+        await registrarCriacao(req as AuthenticatedRequest, 'TemplateWhatsApp', template.id, (template.get ? template.get({ plain: true }) : template) as unknown as Record<string, unknown>, undefined, empresaId);
       } catch (auditError) {
         // Não interromper o fluxo
       }
@@ -86,7 +87,8 @@ export class TemplateWhatsAppController {
       await TemplateWhatsAppService.update(id, updates);
       const updated = await TemplateWhatsAppService.getById(id);
       try {
-        await registrarAtualizacao(req as AuthenticatedRequest, 'TemplateWhatsApp', id, dadosAnteriores as unknown as Record<string, unknown>, (updated?.get ? updated.get({ plain: true }) : updated) as unknown as Record<string, unknown>);
+        const empresaId = getEmpresaIdOrNull(req) ?? (updated as { empresa_id?: number | null })?.empresa_id ?? null;
+        await registrarAtualizacao(req as AuthenticatedRequest, 'TemplateWhatsApp', id, dadosAnteriores as unknown as Record<string, unknown>, (updated?.get ? updated.get({ plain: true }) : updated) as unknown as Record<string, unknown>, undefined, empresaId);
       } catch (auditError) {
         // Não interromper o fluxo
       }
@@ -112,7 +114,8 @@ export class TemplateWhatsAppController {
       const dadosAnteriores = template.get ? template.get({ plain: true }) : template;
       await TemplateWhatsAppService.delete(id);
       try {
-        await registrarExclusao(req as AuthenticatedRequest, 'TemplateWhatsApp', id, dadosAnteriores as unknown as Record<string, unknown>);
+        const empresaId = getEmpresaIdOrNull(req) ?? (template as { empresa_id?: number | null })?.empresa_id ?? null;
+        await registrarExclusao(req as AuthenticatedRequest, 'TemplateWhatsApp', id, dadosAnteriores as unknown as Record<string, unknown>, undefined, empresaId);
       } catch (auditError) {
         // Não interromper o fluxo
       }

@@ -142,11 +142,14 @@ export class ContratoPlanoAdicionalController {
       const servicoComPlano = await ContratoPlanoAdicionalService.getById(servico.id, true);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? contrato.empresa_id ?? servico.empresa_id ?? null;
         await registrarCriacao(
           req as AuthenticatedRequest,
           'ContratoPlanoAdicional',
           servico.id,
-          servicoComPlano?.toJSON() as Record<string, unknown>
+          servicoComPlano?.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -233,12 +236,15 @@ export class ContratoPlanoAdicionalController {
       setAuditData(req, dadosAnteriores, dadosNovos);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? contrato?.empresa_id ?? servico.empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'ContratoPlanoAdicional',
           servico.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -288,11 +294,14 @@ export class ContratoPlanoAdicionalController {
       await ContratoPlanoAdicionalService.delete(servicoId);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? contrato?.empresa_id ?? servico.empresa_id ?? null;
         await registrarExclusao(
           req as AuthenticatedRequest,
           'ContratoPlanoAdicional',
           servico.id,
-          dadosAnteriores as Record<string, unknown>
+          dadosAnteriores as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

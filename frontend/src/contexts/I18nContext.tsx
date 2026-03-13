@@ -1042,6 +1042,7 @@ export interface TranslationKeys {
   'audit.entityId': string;
   'audit.user': string;
   'audit.ip': string;
+  'audit.tenant': string;
   'audit.route': string;
   'audit.userAgent': string;
   'audit.viewDetails': string;
@@ -2407,6 +2408,7 @@ const translations: Translations = {
     'audit.entityId': 'ID da Entidade',
     'audit.user': 'Usuário',
     'audit.ip': 'IP',
+    'audit.tenant': 'Tenant',
     'audit.route': 'Rota',
     'audit.userAgent': 'User-Agent',
     'audit.viewDetails': 'Ver Detalhes',
@@ -3767,6 +3769,7 @@ const translations: Translations = {
     'audit.entityId': 'Entity ID',
     'audit.user': 'User',
     'audit.ip': 'IP',
+    'audit.tenant': 'Tenant',
     'audit.route': 'Route',
     'audit.userAgent': 'User-Agent',
     'audit.viewDetails': 'View Details',
@@ -5129,6 +5132,7 @@ const translations: Translations = {
     'audit.entityId': 'ID de la Entidad',
     'audit.user': 'Usuario',
     'audit.ip': 'IP',
+    'audit.tenant': 'Tenant',
     'audit.route': 'Ruta',
     'audit.userAgent': 'User-Agent',
     'audit.viewDetails': 'Ver Detalles',

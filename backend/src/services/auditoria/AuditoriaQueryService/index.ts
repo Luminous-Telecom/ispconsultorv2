@@ -1,4 +1,7 @@
+import { Op } from 'sequelize';
 import { getElasticsearchService } from '../../elasticsearch/ElasticsearchService';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 
 export class AuditoriaQueryService {
   /**
@@ -141,6 +144,8 @@ export class AuditoriaQueryService {
       'created_at': 'timestamp',
       'acao': 'acao',
       'entidade': 'entidade',
+      'empresa_id': 'empresa_id',
+      'empresa_nome': 'empresa_id',
       'usuario': 'usuario_nome',
       'usuario_nome': 'usuario_nome',
       'usuario_email': 'usuario_email',
@@ -193,5 +198,54 @@ export class AuditoriaQueryService {
       }));
 
       return { logs, total };
+  }
+
+  /**
+   * Enriquece logs com empresa_nome (tenant) para exibição
+   * @param isSaas - true para painel SaaS (usa SaasDadosEmpresa), false para ERP (usa DadosEmpresa)
+   * @param mixed - true quando a lista pode ter logs ERP e SaaS (usa ambos os modelos)
+   */
+  static async enrichLogsWithEmpresaNome(logs: Record<string, unknown>[], isSaas: boolean, mixed = false): Promise<void> {
+    const idsBySaas = { saas: new Set<number>(), erp: new Set<number>() };
+    for (const log of logs) {
+      const eid = log.empresa_id as number | null | undefined;
+      if (eid == null || eid <= 0) continue;
+      if (mixed) {
+        (log.saas ? idsBySaas.saas : idsBySaas.erp).add(eid);
+      } else {
+        (isSaas ? idsBySaas.saas : idsBySaas.erp).add(eid);
+      }
+    }
+
+    const saasMap = new Map<number, string>();
+    const erpMap = new Map<number, string>();
+    if (idsBySaas.saas.size > 0) {
+      const rows = await SaasDadosEmpresa.findAll({
+        where: { id: { [Op.in]: [...idsBySaas.saas] } },
+        attributes: ['id', 'razao_social', 'nome_fantasia']
+      });
+      for (const r of rows) {
+        saasMap.set(r.id, r.razao_social || r.nome_fantasia || `Empresa ${r.id}`);
+      }
+    }
+    if (idsBySaas.erp.size > 0) {
+      const rows = await DadosEmpresa.findAll({
+        where: { id: { [Op.in]: [...idsBySaas.erp] } },
+        attributes: ['id', 'razao_social', 'nome_fantasia']
+      });
+      for (const r of rows) {
+        erpMap.set(r.id, r.razao_social || (r.nome_fantasia ?? `Empresa ${r.id}`));
+      }
+    }
+
+    for (const log of logs) {
+      const eid = log.empresa_id as number | null | undefined;
+      if (eid == null || eid <= 0) {
+        log.empresa_nome = null;
+        continue;
+      }
+      const map = (mixed && log.saas) || (!mixed && isSaas) ? saasMap : erpMap;
+      log.empresa_nome = map.get(eid) ?? `#${eid}`;
+    }
   }
 }

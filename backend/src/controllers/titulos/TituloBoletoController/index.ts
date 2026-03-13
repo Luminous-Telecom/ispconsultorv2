@@ -10,6 +10,7 @@ import { TituloComRelacoes } from '../TituloHelpers/types';
 import { registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { PaymentCommonService } from '../../../services/webhooks/PaymentCommonService';
 import { ReciboPagamentoService } from '../../../services/comunicacao/ReciboPagamentoService';
 
@@ -49,12 +50,15 @@ export class TituloBoletoController {
       await titulo.marcarComoPago(valor_pago, dataPagamentoNormalizada);
       await titulo.reload();
 
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'Titulo',
         titulo.id,
         dadosAnteriores as Record<string, unknown>,
-        titulo.toJSON() as Record<string, unknown>
+        titulo.toJSON() as Record<string, unknown>,
+        undefined,
+        empresaIdAudit
       );
 
       if (titulo.pago) {
@@ -87,12 +91,15 @@ export class TituloBoletoController {
       await titulo.reload();
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'Titulo',
           titulo.id,
           dadosAnteriores as Record<string, unknown>,
-          titulo.toJSON() as Record<string, unknown>
+          titulo.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -143,12 +150,15 @@ export class TituloBoletoController {
           await titulo.reload();
 
           try {
+            const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
             await registrarAtualizacao(
               req as AuthenticatedRequest,
               'Titulo',
               titulo.id,
               dadosAnteriores as Record<string, unknown>,
-              titulo.toJSON() as Record<string, unknown>
+              titulo.toJSON() as Record<string, unknown>,
+              undefined,
+              empresaIdAudit
             );
           } catch (auditError) {
             // Não interromper o fluxo
@@ -191,12 +201,15 @@ export class TituloBoletoController {
       await titulo.reload();
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'Titulo',
           titulo.id,
           dadosAnteriores as Record<string, unknown>,
-          titulo.toJSON() as Record<string, unknown>
+          titulo.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

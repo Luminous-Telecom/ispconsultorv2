@@ -36,7 +36,7 @@ export class ServidorEmailController {
     empresaId: number | null
   ): boolean {
     const sid = (servidor as { empresa_id?: number | null }).empresa_id;
-    if (empresaId == null) return true; // superadmin
+    if (empresaId == null) return false;
     return sid === empresaId || sid === null; // próprio ou global
   }
 
@@ -94,11 +94,14 @@ export class ServidorEmailController {
       });
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? servidor.empresa_id ?? null;
         await registrarCriacao(
           req as AuthenticatedRequest,
           'ServidorEmail',
           servidor.id,
-          servidor.toJSON() as unknown as Record<string, unknown>
+          servidor.toJSON() as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -149,12 +152,15 @@ export class ServidorEmailController {
       await ServidorEmailService.updateInstance(servidor, servidorData);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? (servidor as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'ServidorEmail',
           servidor.id,
           dadosAnteriores as unknown as Record<string, unknown>,
-          servidor.toJSON() as unknown as Record<string, unknown>
+          servidor.toJSON() as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -196,11 +202,14 @@ export class ServidorEmailController {
       await ServidorEmailService.delete(servidor.id);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? (servidor as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarExclusao(
           req as AuthenticatedRequest,
           'ServidorEmail',
           servidor.id,
-          dadosAnteriores as unknown as Record<string, unknown>
+          dadosAnteriores as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -383,12 +392,15 @@ export class ServidorEmailController {
         await ServidorEmailService.updateInstance(servidor, servidorData);
         
         try {
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? (servidor as { empresa_id?: number | null }).empresa_id ?? null;
           await registrarAtualizacao(
             req as AuthenticatedRequest,
             'ServidorEmail',
             servidor.id,
             dadosAnteriores as unknown as Record<string, unknown>,
-            servidor.toJSON() as unknown as Record<string, unknown>
+            servidor.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo
@@ -417,11 +429,14 @@ export class ServidorEmailController {
         });
         
         try {
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? novoServidor.empresa_id ?? null;
           await registrarCriacao(
             req as AuthenticatedRequest,
             'ServidorEmail',
             novoServidor.id,
-            novoServidor.toJSON() as unknown as Record<string, unknown>
+            novoServidor.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo
@@ -509,21 +524,26 @@ export class ServidorEmailController {
           const dadosAnteriores = mensagem.toJSON();
           mensagem = await MensagemEmailService.update(mensagem.id, mensagemData);
           
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? mensagem.empresa_id ?? null;
           await registrarAtualizacao(
             req as AuthenticatedRequest,
             'MensagemEmail',
             mensagem.id,
             dadosAnteriores as unknown as Record<string, unknown>,
-            mensagem.toJSON() as unknown as Record<string, unknown>
+            mensagem.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } else {
           mensagem = await MensagemEmailService.create(mensagemData);
-          
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? mensagem.empresa_id ?? null;
           await registrarCriacao(
             req as AuthenticatedRequest,
             'MensagemEmail',
             mensagem.id,
-            mensagem.toJSON() as unknown as Record<string, unknown>
+            mensagem.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         }
       } catch (dbError) {

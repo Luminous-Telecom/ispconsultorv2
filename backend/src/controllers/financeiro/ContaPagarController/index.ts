@@ -188,11 +188,14 @@ export class ContaPagarController {
         for (const conta of contasCriadas) {
           try {
             const contaData = conta.toJSON() as Record<string, unknown>;
+            const empresaIdAudit = getEmpresaIdOrNull(req) ?? conta.empresa_id ?? null;
             await registrarCriacao(
               req as AuthenticatedRequest,
               'ContaPagar',
               conta.id,
-              contaData
+              contaData,
+              undefined,
+              empresaIdAudit
             );
             logger.info('Auditoria de criação em lote registrada com sucesso', {
               context: 'ContaPagarController',
@@ -234,11 +237,14 @@ export class ContaPagarController {
 
         // Registrar auditoria
         try {
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? conta.empresa_id ?? null;
           await registrarCriacao(
             req,
             'ContaPagar',
             conta.id,
-            conta.toJSON() as Record<string, unknown>
+            conta.toJSON() as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
           logger.info('Auditoria de criação registrada com sucesso', {
             context: 'ContaPagarController',
@@ -357,12 +363,15 @@ export class ContaPagarController {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? contaAtualizadaCompleta.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'ContaPagar',
           contaAtualizada.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo, mas logar o erro
@@ -406,11 +415,14 @@ export class ContaPagarController {
 
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? conta.empresa_id ?? null;
         await registrarExclusao(
           req,
           'ContaPagar',
           id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo, mas logar o erro

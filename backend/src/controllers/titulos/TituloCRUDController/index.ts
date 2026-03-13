@@ -303,11 +303,14 @@ export class TituloCRUDController {
       // Registrar auditoria (já registra no Elasticsearch internamente)
       const tituloData = titulo.toJSON() as Record<string, unknown>;
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
         await registrarCriacao(
           req,
           'Titulo',
           titulo.id,
-          tituloData
+          tituloData,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -450,12 +453,15 @@ export class TituloCRUDController {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? tituloAtualizado.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'Titulo',
           titulo.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não bloquear o fluxo se a auditoria falhar
@@ -510,11 +516,14 @@ export class TituloCRUDController {
 
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
         await registrarExclusao(
           req,
           'Titulo',
           titulo.id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

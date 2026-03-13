@@ -13,6 +13,7 @@ import { registrarCriacao } from '../../../services/sistema/AuditoriaService/ind
 import { FinancialCalculationsService } from '../../../services/FinancialCalculationsService';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class TituloBulkController {
   
@@ -103,7 +104,8 @@ export class TituloBulkController {
       for (const titulo of titulosCriados) {
         const tituloData = titulo.toJSON() as Record<string, unknown>;
         try {
-          await registrarCriacao(req as AuthenticatedRequest, 'Titulo', titulo.id, tituloData);
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
+          await registrarCriacao(req as AuthenticatedRequest, 'Titulo', titulo.id, tituloData, undefined, empresaIdAudit);
         } catch (auditError) {
           // Não interromper o fluxo
         }

@@ -5,7 +5,7 @@ import { ScheduledRoutine } from '../../../models';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
-import { getEmpresaIdOrNull, isSuperAdmin } from '../../../utils/tenantUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { getModulosDoPlano, tenantTemModulo } from '../../../services/saas/PlanoModulosService';
 
 export class SchedulerController {
@@ -19,10 +19,9 @@ export class SchedulerController {
   public async index(req: Request, res: Response): Promise<void> {
     try {
       const { page = 1, limit = 15, search, sort = 'created_at', direction = 'desc' } = req.query;
-      const isAdmin = isSuperAdmin(req);
-      const empresaId = isAdmin ? null : getEmpresaIdOrNull(req);
+      const empresaId = getEmpresaIdOrNull(req);
 
-      if (!isAdmin && (empresaId === null || empresaId === undefined)) {
+      if (empresaId === null || empresaId === undefined) {
         res.json({
           success: true,
           data: [],
@@ -52,15 +51,12 @@ export class SchedulerController {
   public async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const isAdmin = isSuperAdmin(req);
-      const empresaId = isAdmin ? null : getEmpresaIdOrNull(req);
-      if (!isAdmin && (empresaId === null || empresaId === undefined)) {
+      const empresaId = getEmpresaIdOrNull(req);
+      if (empresaId === null || empresaId === undefined) {
         sendNotFound(res, 'Rotina não encontrada');
         return;
       }
-      const routine = empresaId !== null
-        ? await ScheduledRoutineService.getById(Number(id), empresaId)
-        : await this.schedulerService.getRoutineById(Number(id));
+      const routine = await ScheduledRoutineService.getById(Number(id), empresaId);
 
       if (!routine) {
         sendNotFound(res, 'Rotina não encontrada');
@@ -104,11 +100,14 @@ export class SchedulerController {
 
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? (routine as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarCriacao(
           req,
           'ScheduledRoutine',
           routine.id,
-          routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>)
+          routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>),
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -129,7 +128,12 @@ export class SchedulerController {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
+      const empresaId = getEmpresaIdOrNull(req);
+
+      if (empresaId === null || empresaId === undefined) {
+        sendNotFound(res, 'Rotina não encontrada');
+        return;
+      }
 
       if (updateData.tipo === 'desbloquear_blockdomi') {
         if (empresaId != null) {
@@ -165,12 +169,15 @@ export class SchedulerController {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? (routineAtualizada as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'ScheduledRoutine',
           Number(id),
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -191,23 +198,34 @@ export class SchedulerController {
   public async destroy(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
+      const empresaId = getEmpresaIdOrNull(req);
+
+      if (empresaId === null || empresaId === undefined) {
+        sendNotFound(res, 'Rotina não encontrada');
+        return;
+      }
 
       // Buscar rotina antes de deletar para capturar dados anteriores
-      const routine = await ScheduledRoutineService.getById(Number(id), empresaId ?? undefined);
-      if (routine) {
-        const dadosAnteriores = routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>);
-        
-        // Disponibilizar dados para o middleware
-        setAuditData(req, dadosAnteriores);
-        
-        // Registrar auditoria
+      const routine = await ScheduledRoutineService.getById(Number(id), empresaId);
+      if (!routine) {
+        sendNotFound(res, 'Rotina não encontrada');
+        return;
+      }
+
+      const dadosAnteriores = routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>);
+      setAuditData(req, dadosAnteriores);
+      try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? (routine as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarExclusao(
           req,
           'ScheduledRoutine',
           Number(id),
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaIdAudit
         );
+      } catch (auditError) {
+        // Não interromper o fluxo
       }
 
       await this.schedulerService.deleteRoutine(Number(id));
@@ -227,7 +245,12 @@ export class SchedulerController {
     try {
       const { id } = req.params;
       const { ativo } = req.body;
-      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
+      const empresaId = getEmpresaIdOrNull(req);
+
+      if (empresaId === null || empresaId === undefined) {
+        sendNotFound(res, 'Rotina não encontrada');
+        return;
+      }
 
       if (typeof ativo !== 'boolean') {
         sendValidationError(res, 'Campo "ativo" deve ser um booleano');
@@ -254,12 +277,15 @@ export class SchedulerController {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? (routineAtualizada as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'ScheduledRoutine',
           Number(id),
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -280,8 +306,12 @@ export class SchedulerController {
   public async execute(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const empresaId = isSuperAdmin(req) ? null : getEmpresaIdOrNull(req);
-      const routine = await ScheduledRoutineService.getById(Number(id), empresaId ?? undefined);
+      const empresaId = getEmpresaIdOrNull(req);
+      if (empresaId === null || empresaId === undefined) {
+        sendNotFound(res, 'Rotina não encontrada');
+        return;
+      }
+      const routine = await ScheduledRoutineService.getById(Number(id), empresaId);
       if (!routine) {
         sendNotFound(res, 'Rotina não encontrada');
         return;

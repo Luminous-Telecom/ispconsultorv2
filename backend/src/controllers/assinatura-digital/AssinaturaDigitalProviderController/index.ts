@@ -152,23 +152,29 @@ export class AssinaturaDigitalProviderController {
 
       if (created) {
         try {
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? (providerConfig as { empresa_id?: number | null }).empresa_id ?? null;
           await registrarCriacao(
             req as AuthenticatedRequest,
             'AssinaturaDigitalProvider',
             providerConfig.id,
-            providerConfig.toJSON() as unknown as Record<string, unknown>
+            providerConfig.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo
         }
       } else if (dadosAnteriores) {
         try {
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? (providerConfig as { empresa_id?: number | null }).empresa_id ?? null;
           await registrarAtualizacao(
             req as AuthenticatedRequest,
             'AssinaturaDigitalProvider',
             providerConfig.id,
             dadosAnteriores as unknown as Record<string, unknown>,
-            providerConfig.toJSON() as unknown as Record<string, unknown>
+            providerConfig.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo
@@ -235,12 +241,15 @@ export class AssinaturaDigitalProviderController {
       });
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? (providerAtualizado as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'AssinaturaDigitalProvider',
           providerAtualizado.id,
           dadosAnteriores as unknown as Record<string, unknown>,
-          providerAtualizado.toJSON() as unknown as Record<string, unknown>
+          providerAtualizado.toJSON() as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -276,11 +285,14 @@ export class AssinaturaDigitalProviderController {
       await AssinaturaDigitalProviderService.delete(provider as AssinaturaDigitalProviderType, empresaId);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? (providerConfig as { empresa_id?: number | null }).empresa_id ?? null;
         await registrarExclusao(
           req as AuthenticatedRequest,
           'AssinaturaDigitalProvider',
           providerConfig.id,
-          dadosAnteriores as unknown as Record<string, unknown>
+          dadosAnteriores as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

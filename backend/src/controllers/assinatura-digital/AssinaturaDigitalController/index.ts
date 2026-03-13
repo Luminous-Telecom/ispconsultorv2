@@ -307,12 +307,14 @@ export class AssinaturaDigitalController {
       await assinatura.save();
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? assinatura.empresa_id ?? null;
         await registrarExclusao(
           req as AuthenticatedRequest,
           'AssinaturaDigital',
           assinatura.id,
           dadosAnteriores as Record<string, unknown>,
-          'Assinatura cancelada'
+          'Assinatura cancelada',
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

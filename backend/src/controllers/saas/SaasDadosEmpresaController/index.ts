@@ -4,6 +4,7 @@ import SaasDadosEmpresa from '../../../models/saas/SaasDadosEmpresa';
 import { SaasDadosEmpresaService } from '../../../services/saas/SaasDadosEmpresaService';
 import { DesbloqueioManualService } from '../../../services/saas/DesbloqueioManualService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 
@@ -73,7 +74,8 @@ export class SaasDadosEmpresaController {
         return;
       }
       const empresa = await SaasDadosEmpresaService.create(value);
-      await registrarCriacao(req as any, 'SaasDadosEmpresa', empresa.id, empresa.toJSON() as Record<string, unknown>);
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? empresa.id ?? null;
+      await registrarCriacao(req as any, 'SaasDadosEmpresa', empresa.id, empresa.toJSON() as Record<string, unknown>, undefined, empresaIdAudit);
       res.status(201).json({ success: true, message: 'Empresa criada com sucesso', data: empresa });
     } catch (err) {
       sendError(res, err, 'Erro ao criar empresa', 500, true);
@@ -95,9 +97,11 @@ export class SaasDadosEmpresaController {
       const empresaAntiga = await SaasDadosEmpresaService.getById(Number(req.params.id));
       await SaasDadosEmpresaService.update(Number(req.params.id), value);
       if (empresaAntiga) {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? empresaAntiga.id ?? null;
         await registrarAtualizacao(req as any, 'SaasDadosEmpresa', Number(req.params.id),
           empresaAntiga.toJSON() as Record<string, unknown>,
-          { ...empresaAntiga.toJSON(), ...value } as Record<string, unknown>);
+          { ...empresaAntiga.toJSON(), ...value } as Record<string, unknown>,
+          undefined, empresaIdAudit);
       }
       sendSuccess(res, null, 'Empresa atualizada com sucesso');
     } catch (err) {
@@ -110,7 +114,8 @@ export class SaasDadosEmpresaController {
       const empresaAntiga = await SaasDadosEmpresaService.getById(Number(req.params.id));
       await SaasDadosEmpresaService.delete(Number(req.params.id));
       if (empresaAntiga) {
-        await registrarExclusao(req as any, 'SaasDadosEmpresa', Number(req.params.id), empresaAntiga.toJSON() as Record<string, unknown>);
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? empresaAntiga.id ?? null;
+        await registrarExclusao(req as any, 'SaasDadosEmpresa', Number(req.params.id), empresaAntiga.toJSON() as Record<string, unknown>, undefined, empresaIdAudit);
       }
       sendSuccess(res, null, 'Empresa removida com sucesso');
     } catch (err) {

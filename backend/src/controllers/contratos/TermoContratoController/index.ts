@@ -8,6 +8,7 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../../../types/auth';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
+import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 
 export class TermoContratoController {
   // Listar termos de um contrato específico
@@ -128,11 +129,14 @@ export class TermoContratoController {
       });
 
       try {
+        const empresaId = getEmpresaIdOrNull(req) ?? termo.empresa_id ?? null;
         await registrarCriacao(
           req as AuthenticatedRequest,
           'TermoContrato',
           termo.id,
-          termo.toJSON() as Record<string, unknown>
+          termo.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaId
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -198,12 +202,15 @@ export class TermoContratoController {
       setAuditData(req, dadosAnteriores as Record<string, unknown>, dadosNovos);
 
       try {
+        const empresaId = getEmpresaIdOrNull(req) ?? termo.empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'TermoContrato',
           termo.id,
           dadosAnteriores as Record<string, unknown>,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaId
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -296,11 +303,14 @@ export class TermoContratoController {
       await TermoContratoService.delete(id);
 
       try {
+        const empresaId = getEmpresaIdOrNull(req) ?? termo.empresa_id ?? null;
         await registrarExclusao(
           req as AuthenticatedRequest,
           'TermoContrato',
           termo.id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaId
         );
       } catch (auditError) {
         // Não interromper o fluxo

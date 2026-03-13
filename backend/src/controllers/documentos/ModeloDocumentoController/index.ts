@@ -80,11 +80,14 @@ export class ModeloDocumentoController {
       });
 
       try {
+        const empresaId = getEmpresaIdOrNull(req) ?? documento.empresa_id ?? null;
         await registrarCriacao(
           req as AuthenticatedRequest,
           'ModeloDocumento',
           documento.id,
-          documento.toJSON() as unknown as Record<string, unknown>
+          documento.toJSON() as unknown as Record<string, unknown>,
+          undefined,
+          empresaId
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -129,12 +132,15 @@ export class ModeloDocumentoController {
       setAuditData(req, dadosAnteriores as unknown as Record<string, unknown>, dadosNovos);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? documentoAtualizado.empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'ModeloDocumento',
           documentoAtualizado.id,
           dadosAnteriores as unknown as Record<string, unknown>,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -175,11 +181,14 @@ export class ModeloDocumentoController {
       await ModeloDocumentoService.delete(id);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? documento.empresa_id ?? null;
         await registrarExclusao(
           req as AuthenticatedRequest,
           'ModeloDocumento',
           documento.id,
-          dadosAnteriores as unknown as Record<string, unknown>
+          dadosAnteriores as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

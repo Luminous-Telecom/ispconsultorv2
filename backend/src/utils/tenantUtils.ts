@@ -22,7 +22,6 @@ export const getEmpresaId = (req: Request): number => {
 
 /**
  * Extrai o empresa_id de forma segura — retorna null se não houver.
- * Útil para superadmin que pode não ter empresa_id.
  */
 export const getEmpresaIdOrNull = (req: Request): number | null => {
   try {
@@ -30,13 +29,4 @@ export const getEmpresaIdOrNull = (req: Request): number | null => {
   } catch {
     return null;
   }
-};
-
-/**
- * Verifica se o usuário é superadmin (sem restrição de empresa).
- */
-export const isSuperAdmin = (req: Request): boolean => {
-  const authReq = req as AuthenticatedRequest;
-  const user = authReq.user as AuthTokenPayload;
-  return user?.role === 'superadmin';
 };

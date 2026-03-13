@@ -96,11 +96,14 @@ export class ModeloTermoController {
         criptografia: false,
       });
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? doc.empresa_id ?? null;
         await registrarCriacao(
           req as AuthenticatedRequest,
           'ModeloTermo',
           doc.id,
-          doc.toJSON() as unknown as Record<string, unknown>
+          doc.toJSON() as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -134,12 +137,15 @@ export class ModeloTermoController {
         ativo: body.ativo,
       });
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? updated.empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'ModeloTermo',
           updated.id,
           dadosAnteriores,
-          updated.toJSON() as unknown as Record<string, unknown>
+          updated.toJSON() as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -167,11 +173,14 @@ export class ModeloTermoController {
       const dadosAnteriores = doc.toJSON() as unknown as Record<string, unknown>;
       await ModeloDocumentoService.delete(id);
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? doc.empresa_id ?? null;
         await registrarExclusao(
           req as AuthenticatedRequest,
           'ModeloTermo',
           doc.id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

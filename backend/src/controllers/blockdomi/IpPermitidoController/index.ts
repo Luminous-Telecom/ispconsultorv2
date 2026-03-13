@@ -81,7 +81,8 @@ export class IpPermitidoController {
       });
       const json = row.toJSON() as Record<string, unknown>;
       try {
-        await registrarCriacao(req, 'IpPermitido', row.id, json);
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? row.empresa_id ?? null;
+        await registrarCriacao(req, 'IpPermitido', row.id, json, undefined, empresaIdAudit);
       } catch {
         // Não interromper o fluxo
       }
@@ -123,7 +124,8 @@ export class IpPermitidoController {
       const row = await IpPermitidoService.update(id, { faixa_ips });
       const dadosNovos = row.toJSON() as Record<string, unknown>;
       try {
-        await registrarAtualizacao(req, 'IpPermitido', row.id, dadosAnteriores, dadosNovos);
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? row.empresa_id ?? null;
+        await registrarAtualizacao(req, 'IpPermitido', row.id, dadosAnteriores, dadosNovos, undefined, empresaIdAudit);
       } catch {
         // Não interromper o fluxo
       }
@@ -157,7 +159,8 @@ export class IpPermitidoController {
       const dadosAnteriores = existing.toJSON() as Record<string, unknown>;
       await IpPermitidoService.delete(id);
       try {
-        await registrarExclusao(req, 'IpPermitido', existing.id, dadosAnteriores);
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? existing.empresa_id ?? null;
+        await registrarExclusao(req, 'IpPermitido', existing.id, dadosAnteriores, undefined, empresaIdAudit);
       } catch {
         // Não interromper o fluxo
       }

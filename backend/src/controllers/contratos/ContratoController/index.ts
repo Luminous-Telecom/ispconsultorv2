@@ -325,11 +325,14 @@ export class ContratoController {
 
       // Registrar auditoria
       try {
+        const empresaId = getEmpresaIdOrNull(req) ?? resultado.contrato.empresa_id ?? null;
         await registrarCriacao(
           req,
           'Contrato',
           resultado.contrato.id,
-          resultado.contrato.toJSON() as Record<string, unknown>
+          resultado.contrato.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaId
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -471,12 +474,15 @@ export class ContratoController {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaId = getEmpresaIdOrNull(req) ?? contratoAtualizado.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'Contrato',
           contrato.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaId
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -520,11 +526,14 @@ export class ContratoController {
 
       // Registrar auditoria
       try {
+        const empresaId = getEmpresaIdOrNull(req) ?? contrato.empresa_id ?? null;
         await registrarExclusao(
           req,
           'Contrato',
           contrato.id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaId
         );
       } catch (auditError) {
         // Não interromper o fluxo

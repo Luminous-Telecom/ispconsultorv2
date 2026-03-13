@@ -7,6 +7,8 @@ export interface AuditoriaLog {
   usuario_id: number | null;
   usuario_nome: string | null;
   usuario_email: string | null;
+  empresa_id: number | null;
+  empresa_nome: string | null;
   acao: 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import';
   entidade: string;
   entidade_id: number | null;

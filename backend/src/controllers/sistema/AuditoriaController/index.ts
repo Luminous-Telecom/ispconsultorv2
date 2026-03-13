@@ -41,9 +41,9 @@ export class AuditoriaController {
       const sortDirection = req.query.sortDirection as string;
       const authEmpresaId = getEmpresaIdOrNull(req);
       const queryEmpresaId = req.query.empresa_id ? parseInt(req.query.empresa_id as string) : undefined;
-      // Só permite empresa_id na query quando usuário não tem tenant (admin/superadmin)
+      // Usuários só podem ver auditoria da própria empresa
       if (queryEmpresaId != null && authEmpresaId != null) {
-        sendForbidden(res, 'Acesso negado: filtro empresa_id só disponível para administradores');
+        sendForbidden(res, 'Acesso negado: não é permitido filtrar por outra empresa');
         return;
       }
       const empresaId = queryEmpresaId ?? authEmpresaId;
@@ -68,6 +68,8 @@ export class AuditoriaController {
       });
 
       const lastPage = Math.min(Math.ceil(total / limit), maxLastPage);
+
+      await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs, false, empresaId == null);
 
       sendSuccess(res, {
         data: logs,
@@ -315,6 +317,8 @@ export class AuditoriaController {
         sendNotFound(res, 'Nenhum log de auditoria encontrado para este registro');
         return;
       }
+
+      await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs, false);
 
       const html = await AuditoriaPDFService.generateAuditPdfHtml(logs, entidade as string, undefined, empresaId);
       const { PDFGenerationService } = await import('../../../services/pdf-generation/PDFGenerationService');

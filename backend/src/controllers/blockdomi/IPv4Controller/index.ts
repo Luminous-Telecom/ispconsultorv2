@@ -119,11 +119,14 @@ export class IPv4Controller {
       
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? ipv4Criado.empresa_id ?? null;
         await registrarCriacao(
           req,
           'IPv4',
           ipv4Criado.id,
-          ipv4Criado.toJSON() as Record<string, unknown>
+          ipv4Criado.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -175,12 +178,15 @@ export class IPv4Controller {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? ipv4Atualizado.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'IPv4',
           ipv4Atualizado.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -214,11 +220,14 @@ export class IPv4Controller {
       
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? ipv4.empresa_id ?? null;
         await registrarExclusao(
           req,
           'IPv4',
           ipv4.id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

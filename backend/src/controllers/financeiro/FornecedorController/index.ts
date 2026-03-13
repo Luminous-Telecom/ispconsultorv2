@@ -102,11 +102,14 @@ export class FornecedorController {
 
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? fornecedor.empresa_id ?? null;
         await registrarCriacao(
           req,
           'Fornecedor',
           fornecedor.id,
-          fornecedor.toJSON() as Record<string, unknown>
+          fornecedor.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo, mas logar o erro
@@ -173,12 +176,15 @@ export class FornecedorController {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? fornecedorAtualizado.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'Fornecedor',
           fornecedorAtualizado.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo, mas logar o erro
@@ -226,11 +232,14 @@ export class FornecedorController {
 
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? fornecedor.empresa_id ?? null;
         await registrarExclusao(
           req,
           'Fornecedor',
           id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo, mas logar o erro

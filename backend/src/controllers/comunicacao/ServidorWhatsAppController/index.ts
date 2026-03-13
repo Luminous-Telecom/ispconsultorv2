@@ -23,7 +23,7 @@ export class ServidorWhatsAppController {
     empresaId: number | null
   ): boolean {
     const sid = servidor.empresa_id;
-    if (empresaId == null) return true; // superadmin
+    if (empresaId == null) return false;
     return sid === empresaId || sid === null; // próprio ou global
   }
 
@@ -85,11 +85,14 @@ export class ServidorWhatsAppController {
       });
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? servidor.empresa_id ?? null;
         await registrarCriacao(
           req as AuthenticatedRequest,
           'ServidorWhatsApp',
           servidor.id,
-          servidor.toJSON() as unknown as Record<string, unknown>
+          servidor.toJSON() as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -132,12 +135,15 @@ export class ServidorWhatsAppController {
       await ServidorWhatsAppService.updateInstance(servidor, servidorData);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? servidor.empresa_id ?? null;
         await registrarAtualizacao(
           req as AuthenticatedRequest,
           'ServidorWhatsApp',
           servidor.id,
           dadosAnteriores as unknown as Record<string, unknown>,
-          servidor.toJSON() as unknown as Record<string, unknown>
+          servidor.toJSON() as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -179,11 +185,14 @@ export class ServidorWhatsAppController {
       await ServidorWhatsAppService.delete(servidor.id);
 
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? servidor.empresa_id ?? null;
         await registrarExclusao(
           req as AuthenticatedRequest,
           'ServidorWhatsApp',
           servidor.id,
-          dadosAnteriores as unknown as Record<string, unknown>
+          dadosAnteriores as unknown as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -439,12 +448,15 @@ export class ServidorWhatsAppController {
           logger.info('Mensagem atualizada com sucesso:', { id: mensagem.id });
           
           try {
+            const empresaIdAudit = getEmpresaIdOrNull(req) ?? mensagem.empresa_id ?? null;
             await registrarAtualizacao(
               req as AuthenticatedRequest,
               'MensagemWhatsApp',
               mensagem.id,
               dadosAnteriores as unknown as Record<string, unknown>,
-              mensagem.toJSON() as unknown as Record<string, unknown>
+              mensagem.toJSON() as unknown as Record<string, unknown>,
+              undefined,
+              empresaIdAudit
             );
           } catch (auditError) {
             // Não interromper o fluxo
@@ -459,11 +471,14 @@ export class ServidorWhatsAppController {
           logger.info('Mensagem criada com sucesso:', { id: mensagem.id, tipo });
           
           try {
+            const empresaIdAudit = getEmpresaIdOrNull(req) ?? mensagem.empresa_id ?? null;
             await registrarCriacao(
               req as AuthenticatedRequest,
               'MensagemWhatsApp',
               mensagem.id,
-              mensagem.toJSON() as unknown as Record<string, unknown>
+              mensagem.toJSON() as unknown as Record<string, unknown>,
+              undefined,
+              empresaIdAudit
             );
           } catch (auditError) {
             // Não interromper o fluxo

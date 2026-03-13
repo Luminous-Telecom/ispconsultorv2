@@ -137,11 +137,14 @@ export class NotaFiscalController {
       if (resultado.success && resultado.notaFiscal) {
         try {
           const notaData = resultado.notaFiscal.toJSON() as Record<string, unknown>;
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? resultado.notaFiscal.empresa_id ?? null;
           await registrarCriacao(
             req,
             'NotaFiscal',
             resultado.notaFiscal.id,
-            notaData
+            notaData,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           logger.error('Erro ao registrar auditoria de criação da NFS-e', {

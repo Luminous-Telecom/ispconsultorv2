@@ -112,11 +112,14 @@ export class BancoController {
       
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? banco.empresa_id ?? null;
         await registrarCriacao(
           req,
           'Banco',
           banco.id,
-          banco.toJSON() as Record<string, unknown>
+          banco.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -223,12 +226,15 @@ export class BancoController {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? bancoAtualizado.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'Banco',
           bancoAtualizado.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -289,11 +295,14 @@ export class BancoController {
       
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? banco.empresa_id ?? null;
         await registrarExclusao(
           req,
           'Banco',
           banco.id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

@@ -152,6 +152,15 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         )
       },
       {
+        key: 'empresa_nome',
+        label: t('audit.tenant'),
+        sortable: true,
+        width: '140px',
+        render: (log: AuditoriaLog) => (
+          <span className="small">{log.empresa_nome || '-'}</span>
+        )
+      },
+      {
         key: 'acao',
         label: t('table.action'),
         sortable: true,
@@ -434,6 +443,10 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
                     <small className="text-muted">{t('audit.ip')}:</small><br />
                     <span>{selectedLog.ip_address || 'N/A'}</span>
                   </div>
+                  <div className="col-md-6">
+                    <small className="text-muted">{t('audit.tenant')}:</small><br />
+                    <span>{selectedLog.empresa_nome || '-'}</span>
+                  </div>
                   {selectedLog.rota && (
                     <div className="col-md-12">
                       <small className="text-muted">{t('audit.route')}:</small><br />
@@ -550,6 +563,10 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.ip')}:</small><br />
                   <span>{selectedLog.ip_address || 'N/A'}</span>
+                </div>
+                <div className="col-md-6">
+                  <small className="text-muted">{t('audit.tenant')}:</small><br />
+                  <span>{selectedLog.empresa_nome || '-'}</span>
                 </div>
                 {selectedLog.rota && (
                   <div className="col-md-12">

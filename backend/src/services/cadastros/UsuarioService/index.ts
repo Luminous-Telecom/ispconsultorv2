@@ -185,7 +185,7 @@ export class UsuarioService {
     nome: string;
     email: string;
     password: string;
-    role?: 'admin' | 'user' | 'superadmin';
+    role?: 'admin' | 'user';
     ativo?: boolean;
     empresa_id?: number;
   }): Promise<Usuario> {

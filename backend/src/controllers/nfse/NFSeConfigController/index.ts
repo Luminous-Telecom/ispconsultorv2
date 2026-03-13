@@ -46,11 +46,14 @@ export class NFSeConfigController {
       // Registrar criação se for novo
       if (config.created_at.getTime() === config.updated_at.getTime()) {
         try {
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? config.empresa_id ?? null;
           await registrarCriacao(
             req as AuthenticatedRequest,
             'NFSeConfig',
             config.id,
-            config.toJSON() as unknown as Record<string, unknown>
+            config.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo
@@ -116,11 +119,14 @@ export class NFSeConfigController {
       // Se foi criado agora, registrar criação
       if (foiCriadoAgora) {
         try {
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? configAtualizado.empresa_id ?? null;
           await registrarCriacao(
             req as AuthenticatedRequest,
             'NFSeConfig',
             configAtualizado.id,
-            configAtualizado.toJSON() as unknown as Record<string, unknown>
+            configAtualizado.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo
@@ -128,12 +134,15 @@ export class NFSeConfigController {
       } else {
         // Se já existia, registrar atualização
         try {
+          const empresaIdAudit = getEmpresaIdOrNull(req) ?? configAtualizado.empresa_id ?? null;
           await registrarAtualizacao(
             req as AuthenticatedRequest,
             'NFSeConfig',
             configAtualizado.id,
             dadosAnteriores as unknown as Record<string, unknown>,
-            configAtualizado.toJSON() as unknown as Record<string, unknown>
+            configAtualizado.toJSON() as unknown as Record<string, unknown>,
+            undefined,
+            empresaIdAudit
           );
         } catch (auditError) {
           // Não interromper o fluxo

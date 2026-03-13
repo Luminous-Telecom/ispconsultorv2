@@ -79,11 +79,14 @@ export class PlanoController {
       
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? plano.empresa_id ?? null;
         await registrarCriacao(
           req,
           'Plano',
           plano.id,
-          plano.toJSON() as Record<string, unknown>
+          plano.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -126,12 +129,15 @@ export class PlanoController {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? plano.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'Plano',
           plano.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -175,11 +181,14 @@ export class PlanoController {
       
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? plano.empresa_id ?? null;
         await registrarExclusao(
           req,
           'Plano',
           plano.id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo

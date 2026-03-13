@@ -126,11 +126,14 @@ export class DominioController {
       
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? dominioCriado.empresa_id ?? null;
         await registrarCriacao(
           req,
           'Dominio',
           dominioCriado.id,
-          dominioCriado.toJSON() as Record<string, unknown>
+          dominioCriado.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -183,12 +186,15 @@ export class DominioController {
       setAuditData(req, dadosAnteriores, dadosNovos);
       
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? dominioAtualizado.empresa_id ?? null;
         await registrarAtualizacao(
           req,
           'Dominio',
           dominioAtualizado.id,
           dadosAnteriores,
-          dadosNovos
+          dadosNovos,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
@@ -222,11 +228,14 @@ export class DominioController {
       
       // Registrar auditoria
       try {
+        const empresaIdAudit = getEmpresaIdOrNull(req) ?? dominio.empresa_id ?? null;
         await registrarExclusao(
           req,
           'Dominio',
           dominio.id,
-          dadosAnteriores
+          dadosAnteriores,
+          undefined,
+          empresaIdAudit
         );
       } catch (auditError) {
         // Não interromper o fluxo
