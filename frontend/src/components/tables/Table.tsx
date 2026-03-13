@@ -433,8 +433,8 @@ function Table<T extends { id: number | string }>({
     return hasId ? 'id' : (configSearchField || configSearchFields[0].key);
   });
 
-  // Determinar qual campo e função usar, priorizando o header se estiver disponível
-  const selectedSearchField = headerSearchField || localSearchField;
+  // Determinar qual campo usar: com sync usamos header; sem sync usamos apenas local
+  const selectedSearchField = syncWithHeader ? (headerSearchField || localSearchField) : localSearchField;
 
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 

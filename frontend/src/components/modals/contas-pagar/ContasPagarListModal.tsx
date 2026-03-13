@@ -632,6 +632,9 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
             }, 0);
           }}
           onSearch={(search, field) => handleSearchChange(search, field)}
+          onSearchFieldChange={(field) => {
+            setTimeout(() => tableFilters.setSearchField(field), 0);
+          }}
           search={tableFilters.search}
           syncWithHeader={false}
           onFilter={(filters) => {
