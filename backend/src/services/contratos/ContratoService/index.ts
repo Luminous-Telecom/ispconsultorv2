@@ -116,25 +116,25 @@ export class ContratoService {
           (whereClause as Record<symbol, unknown>)[Op.or] = conditions;
         } else {
           const dbField = searchField === 'valor_final_num' ? 'valor_final' : searchField;
-          (whereClause as Record<symbol, unknown>)[Op.or] = [
-            { [dbField]: { [Op.like]: searchPattern } }
-          ];
+          const numExactField = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
+          const isNumericField = dbField === 'valor_final' || dbField === 'id';
+          const fieldCondition = (isNumericField && numExactField !== null)
+            ? { [dbField]: numExactField }
+            : { [dbField]: { [Op.like]: searchPattern } };
+          (whereClause as Record<symbol, unknown>)[Op.or] = [fieldCondition];
         }
       } else {
+        const numExact = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
         const conditions: any[] = [
-          { id: { [Op.like]: searchPattern } },
           { status: { [Op.like]: searchPattern } },
-          { valor_final: { [Op.like]: searchPattern } },
           sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes WHERE adm_clientes.id = Contrato.cliente_id AND (adm_clientes.razao_social LIKE '${escapedPattern}' OR adm_clientes.nome_fantasia LIKE '${escapedPattern}'))`),
           sequelize.literal(`EXISTS (SELECT 1 FROM adm_planos WHERE adm_planos.id = Contrato.plano_id AND adm_planos.nome_plano LIKE '${escapedPattern}')`)
         ];
-        const clienteIdNum = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
-        if (clienteIdNum !== null) {
-          conditions.push({ cliente_id: clienteIdNum });
-        }
-        const planoIdNum = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
-        if (planoIdNum !== null) {
-          conditions.push({ plano_id: planoIdNum });
+        if (numExact !== null) {
+          conditions.unshift({ id: numExact });
+          conditions.push({ cliente_id: numExact }, { plano_id: numExact }, { valor_final: numExact });
+        } else {
+          conditions.unshift({ id: { [Op.like]: searchPattern } });
         }
         (whereClause as Record<symbol, unknown>)[Op.or] = conditions;
       }

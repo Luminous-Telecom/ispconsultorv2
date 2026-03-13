@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Spinner } from '../ui';
 import Button from '../ui/Button';
+import SearchBar from '../ui/SearchBar';
 
 interface DataTableColumn<T = Record<string, unknown>> {
   key: string;
@@ -56,8 +57,7 @@ const DataTable = <T extends Record<string, unknown> = Record<string, unknown>>(
 }: DataTableProps<T>) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleSearchChange = (value: string) => {
     setSearchTerm(value);
     if (onSearch) {
       onSearch(value);
@@ -96,13 +96,16 @@ const DataTable = <T extends Record<string, unknown> = Record<string, unknown>>(
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div className="d-flex align-items-center gap-2">
             {onSearch && (
-              <div className="input-group" style={{ maxWidth: '300px' }}>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder={searchPlaceholder}
+              <div style={{ maxWidth: '300px' }}>
+                <SearchBar
+                  id="datatable-search"
+                  variant="table"
                   value={searchTerm}
                   onChange={handleSearchChange}
+                  onSearch={handleSearchChange}
+                  placeholder={searchPlaceholder}
+                  searchFields={[]}
+                  className="flex-grow-1"
                 />
               </div>
             )}

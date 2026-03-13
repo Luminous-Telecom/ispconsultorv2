@@ -8,6 +8,7 @@ import { BANCO_SORT_CONFIG } from '../../../config/sortConfigs';
 
 export interface ListBancosFilters {
   search?: string;
+  searchField?: string;
   status?: string;
   tipo_banco?: string;
   page?: number;
@@ -68,7 +69,7 @@ export class BancoService {
    * Listar bancos com filtros e paginação
    */
   static async list(filters: ListBancosFilters): Promise<ListBancosResponse> {
-    const { search, status, tipo_banco, page = 1, limit = 15, sortColumn, sortDirection, empresa_id } = filters;
+    const { search, searchField, status, tipo_banco, page = 1, limit = 15, sortColumn, sortDirection, empresa_id } = filters;
     
     const where: WhereOptions<Banco> = {};
 
@@ -77,14 +78,27 @@ export class BancoService {
     }
     
     if (search) {
-      (where as Record<symbol, unknown>)[Op.or] = [
-        { id: { [Op.like]: `%${search}%` } },
-        { nome: { [Op.like]: `%${search}%` } },
-        { descricao: { [Op.like]: `%${search}%` } },
-        { tipo_banco: { [Op.like]: `%${search}%` } },
-        { sandbox: { [Op.like]: `%${search}%` } },
-        { ativo: { [Op.like]: `%${search}%` } }
-      ];
+      const searchPattern = `%${search}%`;
+      const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
+      let orConditions: any[] = [];
+      if (searchField === 'id') {
+        orConditions = numExact !== null ? [{ id: numExact }] : [{ id: { [Op.lt]: 0 } }];
+      } else if (searchField === 'nome' || searchField === 'descricao' || searchField === 'tipo_banco' || searchField === 'sandbox' || searchField === 'ativo') {
+        orConditions = [{ [searchField]: { [Op.like]: searchPattern } }];
+      } else {
+        orConditions = [
+          { nome: { [Op.like]: searchPattern } },
+          { descricao: { [Op.like]: searchPattern } },
+          { tipo_banco: { [Op.like]: searchPattern } },
+          { sandbox: { [Op.like]: searchPattern } }
+        ];
+        if (numExact !== null) {
+          orConditions.unshift({ id: numExact });
+        } else {
+          orConditions.unshift({ id: { [Op.like]: searchPattern } });
+        }
+      }
+      (where as Record<symbol, unknown>)[Op.or] = orConditions;
     }
     
     if (status) {

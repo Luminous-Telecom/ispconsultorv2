@@ -5,6 +5,7 @@ import { TIPO_COBRANCA_CONTRATO_SORT_CONFIG } from '../../../config/sortConfigs'
 
 export interface ListTipoCobrancaContratoFilters {
   search?: string;
+  searchField?: string;
   ativo?: string;
   page?: number;
   limit?: number;
@@ -28,7 +29,7 @@ export interface ListTipoCobrancaContratoResponse {
 
 export class TipoCobrancaContratoService {
   static async list(filters: ListTipoCobrancaContratoFilters): Promise<ListTipoCobrancaContratoResponse> {
-    const { search, ativo, page = 1, limit = 15, sortColumn, sortDirection, empresa_id } = filters;
+    const { search, searchField, ativo, page = 1, limit = 15, sortColumn, sortDirection, empresa_id } = filters;
     const andConditions: WhereOptions<TipoCobrancaContrato>[] = [];
 
     if (empresa_id != null) {
@@ -36,13 +37,33 @@ export class TipoCobrancaContratoService {
     }
 
     if (search) {
-      andConditions.push({
-        [Op.or]: [
-          { id: { [Op.like]: `%${search}%` } },
-          { nome: { [Op.like]: `%${search}%` } },
-          { quantidade_titulos: { [Op.like]: `%${search}%` } }
-        ]
-      } as WhereOptions<TipoCobrancaContrato>);
+      const searchPattern = `%${search}%`;
+      const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
+      let orConditions: Array<WhereOptions<TipoCobrancaContrato>> = [];
+
+      if (searchField === 'id') {
+        orConditions = numExact !== null
+          ? [{ id: numExact } as WhereOptions<TipoCobrancaContrato>]
+          : [{ id: { [Op.lt]: 0 } } as WhereOptions<TipoCobrancaContrato>]; /* termo não numérico: nenhum id corresponde */
+      } else if (searchField === 'quantidade_titulos') {
+        orConditions = numExact !== null
+          ? [{ quantidade_titulos: numExact } as WhereOptions<TipoCobrancaContrato>]
+          : [{ quantidade_titulos: { [Op.lt]: 0 } } as WhereOptions<TipoCobrancaContrato>]; /* termo não numérico: nenhum corresponde */
+      } else if (searchField === 'nome') {
+        orConditions = [{ nome: { [Op.like]: searchPattern } }];
+      } else {
+        orConditions = [{ nome: { [Op.like]: searchPattern } }];
+        if (numExact !== null) {
+          orConditions.unshift({ id: numExact } as WhereOptions<TipoCobrancaContrato>);
+          orConditions.push({ quantidade_titulos: numExact } as WhereOptions<TipoCobrancaContrato>);
+        } else {
+          orConditions.unshift({ id: { [Op.like]: searchPattern } } as WhereOptions<TipoCobrancaContrato>);
+        }
+      }
+
+      if (orConditions.length > 0) {
+        andConditions.push({ [Op.or]: orConditions } as WhereOptions<TipoCobrancaContrato>);
+      }
     }
 
     if (ativo !== undefined && ativo !== '') {

@@ -10,6 +10,7 @@ export interface ListUsuariosFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   ativo?: string;
   sortColumn?: string;
   sortDirection?: string;
@@ -34,7 +35,7 @@ export class UsuarioService {
    * Listar usuários com filtros e paginação
    */
   static async list(filters: ListUsuariosFilters): Promise<ListUsuariosResponse> {
-    const { page = 1, limit = 10, search = '', ativo, sortColumn, sortDirection, empresa_id } = filters;
+    const { page = 1, limit = 10, search = '', searchField, ativo, sortColumn, sortDirection, empresa_id } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
@@ -46,13 +47,26 @@ export class UsuarioService {
     }
     
     if (search) {
-      (whereClause as Record<symbol, unknown>)[Op.or] = [
-        { id: { [Op.like]: `%${search}%` } },
-        { nome: { [Op.like]: `%${search}%` } },
-        { email: { [Op.like]: `%${search}%` } },
-        { role: { [Op.like]: `%${search}%` } },
-        { ativo: { [Op.like]: `%${search}%` } }
-      ];
+      const searchPattern = `%${search}%`;
+      const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
+      let orConditions: any[] = [];
+      if (searchField === 'id') {
+        orConditions = numExact !== null ? [{ id: numExact }] : [{ id: { [Op.lt]: 0 } }];
+      } else if (searchField === 'nome' || searchField === 'email' || searchField === 'role') {
+        orConditions = [{ [searchField]: { [Op.like]: searchPattern } }];
+      } else {
+        orConditions = [
+          { nome: { [Op.like]: searchPattern } },
+          { email: { [Op.like]: searchPattern } },
+          { role: { [Op.like]: searchPattern } }
+        ];
+        if (numExact !== null) {
+          orConditions.unshift({ id: numExact });
+        } else {
+          orConditions.unshift({ id: { [Op.like]: searchPattern } });
+        }
+      }
+      (whereClause as Record<symbol, unknown>)[Op.or] = orConditions;
     }
 
     if (ativo !== undefined) {

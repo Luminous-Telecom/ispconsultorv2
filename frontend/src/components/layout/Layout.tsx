@@ -13,6 +13,7 @@ import { useLoading } from '@/contexts/LoadingContext';
 import { useApiLoading } from '@/hooks/useApiLoading';
 import LoadingDots from '../common/LoadingDots';
 import SingleModalWrapper from '../common/SingleModalWrapper';
+import SearchBar from '../ui/SearchBar';
 import BackNetLogo from '../common/BackNetLogo';
 import BloqueioAtrasoOverlayComponent from '../common/BloqueioAtrasoOverlay';
 import { DadosEmpresaService } from '@/services/dadosEmpresaService';
@@ -636,63 +637,43 @@ const Layout: React.FC = () => {
               <div className="d-flex justify-content-center flex-grow-1">
                 {/* Search Bar Elegante Centralizada */}
                 {!isMobile && (
-                  <div className="navbar-search-container">
-                    <select
-                      id="desktop-search-field"
-                      name="searchField"
-                      className="navbar-search-field"
-                      value={tableHeader.searchField}
-                      onChange={(e) => tableHeader.setSearchField(e.target.value)}
-                      aria-label={t('layout.search')}
-                    >
-                      {tableHeader.availableSearchFields.map(field => (
-                        <option key={field.id} value={field.id}>{field.label}</option>
-                      ))}
-                    </select>
-
-                    <form
-                      className="mb-0 flex-grow-1"
-                      role="search"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (tableHeader.onSearchClick) {
-                          tableHeader.onSearchClick();
-                        } else if (location.pathname !== '/adm' && location.pathname !== '/adm/dashboard') {
-                          // Se não estiver no dashboard e não houver callback, abre o modal de clientes
-                          handleOpenModal('clientes');
-                        }
-                        // No Dashboard, o próprio componente Dashboard.tsx reage ao searchValue
-                      }}
-                    >
-                      <input
-                        id="desktop-search-input"
-                        name="search"
-                        type="search"
-                        className="navbar-search-input"
-                        placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
-                        aria-label={t('layout.search')}
-                        value={tableHeader.searchValue}
-                        onChange={(e) => tableHeader.setSearchValue(e.target.value)}
-                      />
-                    </form>
-
-                    <i className="bi bi-search navbar-search-icon"></i>
-                  </div>
+                  <SearchBar
+                    id="desktop-search"
+                    variant="navbar"
+                    value={tableHeader.searchValue}
+                    onChange={tableHeader.setSearchValue}
+                    onSearch={(value) => {
+                      if (tableHeader.onSearchClick) {
+                        tableHeader.onSearchClick(value);
+                      } else if (location.pathname !== '/adm' && location.pathname !== '/adm/dashboard') {
+                        handleOpenModal('clientes');
+                      }
+                    }}
+                    placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
+                    searchField={tableHeader.searchField}
+                    onSearchFieldChange={tableHeader.setSearchField}
+                    searchFields={tableHeader.availableSearchFields}
+                    autoComplete="off"
+                  />
                 )}
 
                 {/* Mobile: barra de busca inline entre o hambúrguer e o usuário */}
                 {isMobile && (
-                  <div className="navbar-inline-search">
-                    <i className="bi bi-search navbar-inline-search-icon"></i>
-                    <input
-                      type="search"
-                      className="navbar-inline-search-input"
-                      placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
-                      value={tableHeader.searchValue}
-                      onChange={(e) => tableHeader.setSearchValue(e.target.value)}
-                      aria-label={t('layout.search')}
-                    />
-                  </div>
+                  <SearchBar
+                    id="mobile-inline-search"
+                    variant="inline"
+                    value={tableHeader.searchValue}
+                    onChange={tableHeader.setSearchValue}
+                    onSearch={(value) => {
+                      if (tableHeader.onSearchClick) tableHeader.onSearchClick(value);
+                      else if (location.pathname !== '/adm' && location.pathname !== '/adm/dashboard') handleOpenModal('clientes');
+                    }}
+                    placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
+                    searchField={tableHeader.searchField}
+                    onSearchFieldChange={tableHeader.setSearchField}
+                    searchFields={tableHeader.availableSearchFields}
+                    autoComplete="off"
+                  />
                 )}
               </div>
 
@@ -829,31 +810,18 @@ const Layout: React.FC = () => {
         {isMobile && tableHeader.showMobileSearch && tableHeader.showSearch && (
           <div className="navbar-mobile-search-container">
             <div className="navbar-mobile-search-wrapper">
-              <select
-                id="mobile-search-field"
-                name="mobileSearchField"
-                className="navbar-mobile-search-field"
-                value={tableHeader.searchField}
-                onChange={(e) => tableHeader.setSearchField(e.target.value)}
-                aria-label={t('layout.search')}
-              >
-                {tableHeader.availableSearchFields.map(field => (
-                  <option key={field.id} value={field.id}>{field.label}</option>
-                ))}
-              </select>
-
-              <input
-                id="mobile-search-input"
-                name="mobileSearch"
-                type="text"
-                className="navbar-mobile-search-input"
-                placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
+              <SearchBar
+                id="mobile-search"
+                variant="mobile"
                 value={tableHeader.searchValue}
-                onChange={(e) => tableHeader.setSearchValue(e.target.value)}
-                autoFocus
-                aria-label={t('layout.search')}
+                onChange={tableHeader.setSearchValue}
+                onSearch={(value) => tableHeader.onSearchClick?.(value)}
+                placeholder={tableHeader.searchPlaceholder || t('layout.searchPlaceholder')}
+                searchField={tableHeader.searchField}
+                onSearchFieldChange={tableHeader.setSearchField}
+                searchFields={tableHeader.availableSearchFields}
+                className="flex-grow-1"
               />
-
               <button
                 type="button"
                 className="navbar-mobile-search-close"

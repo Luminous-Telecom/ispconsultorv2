@@ -56,6 +56,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
 
   const { data: tiposData, isLoading, refetch } = useTipoCobrancaContratos({
     search: tableFilters.debouncedSearch || undefined,
+    searchField: tableFilters.searchField || undefined,
     page: tableFilters.page,
     limit: tableFilters.limit,
     sortColumn: tableFilters.sortColumn,
@@ -203,7 +204,6 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            syncWithHeader={false}
             title={defaultTitle}
             config={{
               columns: tableColumns,

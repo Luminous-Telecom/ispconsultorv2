@@ -17,6 +17,7 @@ export interface ListDominiosFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   ativo?: boolean;
   sortColumn?: string;
   sortDirection?: string;
@@ -39,24 +40,37 @@ export class DominioService {
    * Listar domínios com filtros e paginação
    */
   static async list(filters: ListDominiosFilters): Promise<ListDominiosResponse> {
-    const { page = 1, limit = 15, search, ativo, sortColumn, sortDirection } = filters;
+    const { page = 1, limit = 15, search, searchField, ativo, sortColumn, sortDirection } = filters;
     const offset = (page - 1) * limit;
 
     // Construir filtros
     const whereConditions: Array<WhereOptions<Dominio>> = [];
     
     if (search) {
-      whereConditions.push({
-        [Op.or]: [
-          { id: { [Op.like]: `%${search}%` } },
-          { dominio: { [Op.like]: `%${search}%` } },
-          { descricao: { [Op.like]: `%${search}%` } },
-          { nome_oficio: { [Op.like]: `%${search}%` } },
-          { link_oficio_anatel: { [Op.like]: `%${search}%` } },
-          { link_oficio_justica: { [Op.like]: `%${search}%` } },
-          { link_planilha_dominios: { [Op.like]: `%${search}%` } }
-        ]
-      } as WhereOptions<Dominio>);
+      const searchPattern = `%${search}%`;
+      const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
+      const textFields = ['dominio', 'descricao', 'nome_oficio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'];
+      let orConditions: Array<WhereOptions<Dominio>> = [];
+      if (searchField === 'id') {
+        orConditions = numExact !== null ? [{ id: numExact } as WhereOptions<Dominio>] : [{ id: { [Op.lt]: 0 } } as WhereOptions<Dominio>];
+      } else if (textFields.includes(searchField || '')) {
+        orConditions = [{ [searchField!]: { [Op.like]: searchPattern } } as WhereOptions<Dominio>];
+      } else {
+        orConditions = [
+          { dominio: { [Op.like]: searchPattern } },
+          { descricao: { [Op.like]: searchPattern } },
+          { nome_oficio: { [Op.like]: searchPattern } },
+          { link_oficio_anatel: { [Op.like]: searchPattern } },
+          { link_oficio_justica: { [Op.like]: searchPattern } },
+          { link_planilha_dominios: { [Op.like]: searchPattern } }
+        ] as Array<WhereOptions<Dominio>>;
+        if (numExact !== null) {
+          orConditions.unshift({ id: numExact } as WhereOptions<Dominio>);
+        } else {
+          orConditions.unshift({ id: { [Op.like]: searchPattern } } as WhereOptions<Dominio>);
+        }
+      }
+      whereConditions.push({ [Op.or]: orConditions } as WhereOptions<Dominio>);
     }
 
     if (ativo !== undefined) {

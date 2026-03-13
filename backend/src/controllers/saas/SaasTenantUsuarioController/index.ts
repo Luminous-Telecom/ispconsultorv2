@@ -25,7 +25,7 @@ const updateSchema = Joi.object({
 export class SaasTenantUsuarioController {
   static async list(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { page, limit, search, ativo, sortColumn, sortDirection, empresa_id } = req.query as Record<string, string>;
+      const { page, limit, search, searchField, ativo, sortColumn, sortDirection, empresa_id } = req.query as Record<string, string>;
       const empresaId = empresa_id ? parseInt(empresa_id, 10) : undefined;
       if (!empresaId || isNaN(empresaId)) {
         sendValidationError(res, 'empresa_id é obrigatório na listagem');
@@ -35,6 +35,7 @@ export class SaasTenantUsuarioController {
         page: page ? parseInt(page) : 1,
         limit: limit ? parseInt(limit) : 500,
         search: search || '',
+        searchField,
         ativo,
         sortColumn,
         sortDirection: sortDirection as 'asc' | 'desc' | undefined,

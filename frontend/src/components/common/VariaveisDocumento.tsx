@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Spinner } from '@/components/ui';
+import SearchBar from '@/components/ui/SearchBar';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface Variavel {
@@ -69,12 +70,14 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
             title={`${t('variables.tip')} ${onInserirVariavel ? t('variables.clickToInsert') : t('variables.clickToCopy')}`}
           />
         </label>
-        <input
-          type="text"
-          className="form-control form-control-sm"
-          placeholder={t('variables.searchPlaceholder')}
+        <SearchBar
+          id="variaveis-documento-search"
+          variant="table"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={setSearchTerm}
+          onSearch={setSearchTerm}
+          placeholder={t('variables.searchPlaceholder')}
+          searchFields={[]}
         />
       </div>
 

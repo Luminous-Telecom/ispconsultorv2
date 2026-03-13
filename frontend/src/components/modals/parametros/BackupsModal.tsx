@@ -270,7 +270,6 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       />
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         <Table
-          syncWithHeader={false}
           title={t('backup.title')}
           config={{
             columns: tableColumns,

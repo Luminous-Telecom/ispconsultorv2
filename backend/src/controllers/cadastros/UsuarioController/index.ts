@@ -29,7 +29,7 @@ export class UsuarioController {
 
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 10, search = '', ativo, sortColumn, sortDirection } = req.query;
+      const { page = 1, limit = 10, search = '', searchField, ativo, sortColumn, sortDirection } = req.query;
       const pageNum = Number(page);
       const limitNum = Number(limit);
       const empresaId = getEmpresaIdOrNull(req);
@@ -43,6 +43,7 @@ export class UsuarioController {
         page: pageNum,
         limit: limitNum,
         search: search as string,
+        searchField: searchField as string,
         ativo: ativo as string,
         sortColumn: sortColumn as string,
         sortDirection: sortDirection as string,

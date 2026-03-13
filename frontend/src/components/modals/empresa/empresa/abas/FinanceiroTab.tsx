@@ -6,6 +6,7 @@ import { formatDate, formatCurrency } from '@/utils/formatters';
 import { useI18n } from '@/contexts/I18nContext';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import Spinner from '@/components/ui/Spinner';
+import SearchBar from '@/components/ui/SearchBar';
 import Table from '@/components/tables/Table';
 import { TableConfig, BulkAction, SortDirection } from '@/components/tables/types';
 import ImprimirModal from '@/components/common/ImprimirModal';
@@ -228,28 +229,19 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
   }
 
   const searchControls = (
-    <div className="d-flex align-items-center gap-2 table-search-combined" style={{ flex: 1, minWidth: 0 }}>
-      <select
-        className="form-select form-select-sm table-search-field-select"
-        style={{ width: 'auto', minWidth: 130 }}
-        value={searchField}
-        onChange={(e) => setSearchField(e.target.value)}
-      >
-        {searchFields.map((f) => (
-          <option key={f.key} value={f.key}>{f.label}</option>
-        ))}
-      </select>
-      <div className="position-relative" style={{ flex: 1, minWidth: 150 }}>
-        <input
-          type="search"
-          className="form-control form-control-sm table-search-input"
-          placeholder={t('layout.searchPlaceholder')}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          autoComplete="off"
-        />
-      </div>
-    </div>
+    <SearchBar
+      id="empresa-financeiro-search"
+      variant="table"
+      value={searchTerm}
+      onChange={setSearchTerm}
+      onSearch={(value) => setSearchTerm(value)}
+      placeholder={t('layout.searchPlaceholder')}
+      searchField={searchField}
+      onSearchFieldChange={setSearchField}
+      searchFields={searchFields}
+      className="flex-grow-1"
+      autoComplete="off"
+    />
   );
 
   return (
@@ -258,7 +250,6 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
         <Table
           key={`dados-empresa-faturas-tab-${tipo}`}
           title={tipo === 'abertas' ? t('tabs.faturasAbertas') : t('tabs.faturasPagas')}
-          syncWithHeader={false}
           config={{
             columns,
             data: titulosFiltrados,

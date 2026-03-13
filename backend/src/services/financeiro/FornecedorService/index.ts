@@ -48,17 +48,24 @@ export class FornecedorService {
     
     if (search) {
       const searchPattern = `%${search}%`;
-      if (searchField) {
-        const allowedFields = ['nome_razao_social', 'nome_fantasia', 'cpf_cnpj', 'cidade', 'estado'];
+      const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
+      if (searchField === 'id') {
+        where.id = numExact !== null ? numExact : { [Op.lt]: 0 };
+      } else if (searchField) {
+        const allowedFields = ['nome_razao_social', 'nome_fantasia', 'cpf_cnpj', 'cep', 'logradouro', 'bairro', 'cidade', 'estado', 'pais'];
         if (allowedFields.includes(searchField)) {
           where[searchField as keyof typeof where] = { [Op.like]: searchPattern };
         }
       } else {
-        (where as Record<symbol, unknown>)[Op.or] = [
+        const orConditions: any[] = [
           { nome_razao_social: { [Op.like]: searchPattern } },
           { nome_fantasia: { [Op.like]: searchPattern } },
           { cpf_cnpj: { [Op.like]: searchPattern } }
         ];
+        if (numExact !== null) {
+          orConditions.unshift({ id: numExact });
+        }
+        (where as Record<symbol, unknown>)[Op.or] = orConditions;
       }
     }
 

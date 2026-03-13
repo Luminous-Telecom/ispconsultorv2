@@ -7,10 +7,11 @@ import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 export class TipoCobrancaContratoController {
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { search, ativo, page, limit, sortColumn, sortDirection } = req.query;
+      const { search, searchField, ativo, page, limit, sortColumn, sortDirection } = req.query;
       const empresaId = getEmpresaIdOrNull(req);
       const result = await TipoCobrancaContratoService.list({
         search: search as string | undefined,
+        searchField: searchField as string | undefined,
         ativo: ativo as string | undefined,
         page: page ? Number(page) : 1,
         limit: limit ? Number(limit) : 15,

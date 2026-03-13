@@ -999,7 +999,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     loading: isLoadingData,
     searchable: true,
     searchPlaceholder: '',
-    searchField: 'numero_titulo',
+    searchField: 'id',
     searchFields: isSaas
       ? [{ key: 'numero_titulo', label: t('table.titleNumber') }, { key: 'id', label: t('table.id') }]
       : [

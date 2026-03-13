@@ -190,18 +190,18 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
   ], [t]);
 
   const searchFields = [
-    { key: 'nome_razao_social', label: 'Nome/Razão Social' },
-    { key: 'nome_fantasia', label: 'Nome Fantasia' },
-    { key: 'cpf_cnpj', label: 'CPF/CNPJ' },
-    { key: 'cep', label: 'CEP' },
-    { key: 'logradouro', label: 'Logradouro' },
-    { key: 'bairro', label: 'Bairro' },
-    { key: 'cidade', label: 'Cidade' },
-    { key: 'estado', label: 'Estado' },
-    { key: 'pais', label: 'País' }
+    { key: 'id', label: t('table.id') },
+    { key: 'nome_razao_social', label: t('table.nameCompanyNameShort') },
+    { key: 'nome_fantasia', label: t('table.tradeNameShort') },
+    { key: 'cpf_cnpj', label: t('table.cpfCnpj') },
+    { key: 'cep', label: t('table.zipCodeShort') },
+    { key: 'logradouro', label: t('table.streetShort') },
+    { key: 'bairro', label: t('table.neighborhood') },
+    { key: 'cidade', label: t('table.city') },
+    { key: 'estado', label: t('table.state') },
+    { key: 'pais', label: t('table.country') }
   ];
 
-  // Hook para buscar fornecedores usando parâmetros do useTableFilters
   const { data: fornecedoresData, isLoading, refetch } = useFornecedores({
     search: tableFilters.debouncedSearch || undefined,
     searchField: tableFilters.searchField || undefined,
@@ -341,7 +341,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
               data: modalData,
               loading: isLoading,
               searchable: true,
-              searchPlaceholder: 'Buscar...',
+              searchPlaceholder: t('layout.searchPlaceholder'),
               searchFields,
               sortable: true,
               sortColumn: tableFilters.sortColumn,

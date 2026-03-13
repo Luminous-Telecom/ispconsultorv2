@@ -380,7 +380,6 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            syncWithHeader={false}
             title={defaultTitle}
             config={{
               columns: tableColumns,

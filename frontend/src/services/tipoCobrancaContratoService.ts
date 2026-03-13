@@ -12,6 +12,7 @@ export interface TipoCobrancaContrato {
 
 export interface TipoCobrancaContratoFilters {
   search?: string;
+  searchField?: string;
   ativo?: string;
   page?: number;
   limit?: number;
@@ -36,6 +37,7 @@ export class TipoCobrancaContratoService {
   static async list(filters: TipoCobrancaContratoFilters = {}): Promise<PaginatedTipoCobrancaContrato> {
     const params = new URLSearchParams();
     if (filters.search) params.append('search', filters.search);
+    if (filters.searchField) params.append('searchField', filters.searchField);
     if (filters.ativo) params.append('ativo', filters.ativo);
     if (filters.page) params.append('page', String(filters.page));
     if (filters.limit) params.append('limit', String(filters.limit));

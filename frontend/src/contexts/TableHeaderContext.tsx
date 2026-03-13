@@ -13,8 +13,8 @@ interface TableHeaderContextType {
   setShowSearch: (show: boolean) => void;
   showReload: boolean;
   setShowReload: (show: boolean) => void;
-  onSearchClick: (() => void) | null;
-  setOnSearchClick: (callback: (() => void) | null) => void;
+  onSearchClick: ((value?: string) => void) | null;
+  setOnSearchClick: (callback: ((value?: string) => void) | null) => void;
   onReloadClick: (() => void) | null;
   setOnReloadClick: (callback: (() => void) | null) => void;
   searchPlaceholder: string;
@@ -37,11 +37,11 @@ export const TableHeaderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [title, setTitle] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(true);
   const [showReload, setShowReload] = useState(false);
-  const [onSearchClick, setOnSearchClick] = useState<(() => void) | null>(null);
+  const [onSearchClick, setOnSearchClick] = useState<((value?: string) => void) | null>(null);
   const [onReloadClick, setOnReloadClick] = useState<(() => void) | null>(null);
   const [searchPlaceholder, setSearchPlaceholder] = useState('Buscar...');
   const [searchValue, setSearchValue] = useState('');
-  const [searchField, setSearchField] = useState('razao_social');
+  const [searchField, setSearchField] = useState('id');
   const [availableSearchFields, setAvailableSearchFields] = useState<SearchField[]>([
     { id: 'id', label: 'ID' },
     { id: 'cnpj', label: 'CNPJ' },
@@ -118,7 +118,7 @@ export const useTableHeader = () => {
       setSearchPlaceholder: () => {},
       searchValue: '',
       setSearchValue: () => {},
-      searchField: 'razao_social',
+      searchField: 'id',
       setSearchField: () => {},
       availableSearchFields: [
         { id: 'id', label: 'ID' },

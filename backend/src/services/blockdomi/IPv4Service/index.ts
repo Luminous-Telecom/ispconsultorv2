@@ -11,6 +11,7 @@ export interface ListIPv4Filters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   ativo?: boolean;
   sortColumn?: string;
   sortDirection?: string;
@@ -33,24 +34,37 @@ export class IPv4Service {
    * Listar IPv4 com filtros e paginação
    */
   static async list(filters: ListIPv4Filters): Promise<ListIPv4Response> {
-    const { page = 1, limit = 15, search, ativo, sortColumn, sortDirection } = filters;
+    const { page = 1, limit = 15, search, searchField, ativo, sortColumn, sortDirection } = filters;
     const offset = (page - 1) * limit;
 
     // Construir filtros
     const whereConditions: Array<WhereOptions<IPv4>> = [];
     
     if (search) {
-      whereConditions.push({
-        [Op.or]: [
-          { id: { [Op.like]: `%${search}%` } },
-          { ip: { [Op.like]: `%${search}%` } },
-          { descricao: { [Op.like]: `%${search}%` } },
-          { nome_oficio: { [Op.like]: `%${search}%` } },
-          { link_oficio_anatel: { [Op.like]: `%${search}%` } },
-          { link_oficio_justica: { [Op.like]: `%${search}%` } },
-          { link_planilha_dominios: { [Op.like]: `%${search}%` } }
-        ]
-      } as WhereOptions<IPv4>);
+      const searchPattern = `%${search}%`;
+      const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
+      const textFields = ['ip', 'descricao', 'nome_oficio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'];
+      let orConditions: Array<WhereOptions<IPv4>> = [];
+      if (searchField === 'id') {
+        orConditions = numExact !== null ? [{ id: numExact } as WhereOptions<IPv4>] : [{ id: { [Op.lt]: 0 } } as WhereOptions<IPv4>];
+      } else if (textFields.includes(searchField || '')) {
+        orConditions = [{ [searchField!]: { [Op.like]: searchPattern } } as WhereOptions<IPv4>];
+      } else {
+        orConditions = [
+          { ip: { [Op.like]: searchPattern } },
+          { descricao: { [Op.like]: searchPattern } },
+          { nome_oficio: { [Op.like]: searchPattern } },
+          { link_oficio_anatel: { [Op.like]: searchPattern } },
+          { link_oficio_justica: { [Op.like]: searchPattern } },
+          { link_planilha_dominios: { [Op.like]: searchPattern } }
+        ] as Array<WhereOptions<IPv4>>;
+        if (numExact !== null) {
+          orConditions.unshift({ id: numExact } as WhereOptions<IPv4>);
+        } else {
+          orConditions.unshift({ id: { [Op.like]: searchPattern } } as WhereOptions<IPv4>);
+        }
+      }
+      whereConditions.push({ [Op.or]: orConditions } as WhereOptions<IPv4>);
     }
 
     if (ativo !== undefined) {

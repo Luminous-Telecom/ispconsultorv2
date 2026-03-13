@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import DraggableModal from '@/components/common/DraggableModal';
+import SearchBar from '@/components/ui/SearchBar';
 import Table from '@/components/tables/Table';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from '@/services/auditoriaService';
 import { formatDateTime } from '@/utils/formatters';
@@ -279,16 +280,21 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
   const customFilters = showSearchFilter ? (
     <div className="row mb-1">
       <div className="col-md-12">
-        <label className="form-label small">{t('buttons.search')}</label>
-        <input
-          type="text"
-          className="form-control form-control-sm"
-          placeholder=""
+        <SearchBar
+          id="logs-auditoria-search"
+          variant="table"
           value={searchOverride}
-          onChange={(e) => {
-            setSearchOverride(e.target.value);
+          onChange={(v) => {
+            setSearchOverride(v);
             tableFilters.setPage(1);
           }}
+          onSearch={(v) => {
+            setSearchOverride(v);
+            tableFilters.setPage(1);
+          }}
+          placeholder={t('buttons.search')}
+          searchFields={[]}
+          className="flex-grow-1"
         />
       </div>
     </div>

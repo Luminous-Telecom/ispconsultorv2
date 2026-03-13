@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Button, Spinner } from '@/components/ui';
+import SearchBar from '@/components/ui/SearchBar';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface ResponsiveDialogProps {
@@ -302,13 +303,17 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
         <div
           className="p-2 border-bottom d-flex align-items-center gap-2 bg-light responsive-dialog-mobile-search"
         >
-          <input
-            type="text"
-            className="form-control form-control-sm"
-            placeholder={tableHeader.searchPlaceholder}
+          <SearchBar
+            id="responsive-dialog-mobile-search"
+            variant="mobile"
             value={tableHeader.searchValue}
-            onChange={(e) => tableHeader.setSearchValue(e.target.value)}
-            autoFocus
+            onChange={tableHeader.setSearchValue}
+            onSearch={(value) => tableHeader.onSearchClick?.(value)}
+            placeholder={tableHeader.searchPlaceholder}
+            searchField={tableHeader.searchField}
+            onSearchFieldChange={tableHeader.setSearchField}
+            searchFields={tableHeader.availableSearchFields}
+            className="flex-grow-1"
           />
           <button
             type="button"

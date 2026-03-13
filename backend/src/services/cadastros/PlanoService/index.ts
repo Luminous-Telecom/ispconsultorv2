@@ -11,6 +11,7 @@ export interface ListPlanosFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   status?: string;
   tipo_servico?: string;
   sortColumn?: string;
@@ -35,7 +36,7 @@ export class PlanoService {
    * Listar planos com filtros e paginação
    */
   static async list(filters: ListPlanosFilters): Promise<ListPlanosResponse> {
-    const { page = 1, limit = 15, search, status, tipo_servico, sortColumn, sortDirection, empresa_id } = filters;
+    const { page = 1, limit = 15, search, searchField, status, tipo_servico, sortColumn, sortDirection, empresa_id } = filters;
     const offset = (page - 1) * limit;
 
     // Cache key para planos ativos sem filtros
@@ -53,18 +54,34 @@ export class PlanoService {
     const whereConditions: Array<WhereOptions<Plano>> = [];
     
     if (search) {
-      whereConditions.push({
-        [Op.or]: [
-          { id: { [Op.like]: `%${search}%` } },
-          { nome_plano: { [Op.like]: `%${search}%` } },
-          { descricao: { [Op.like]: `%${search}%` } },
-          { tipo_servico: { [Op.like]: `%${search}%` } },
-          { valor_mensal: { [Op.like]: `%${search}%` } },
-          { quantidade_usuarios: { [Op.like]: `%${search}%` } },
-          { periodicidade: { [Op.like]: `%${search}%` } },
-          { status: { [Op.like]: `%${search}%` } }
-        ]
-      } as WhereOptions<Plano>);
+      const searchPattern = `%${search}%`;
+      const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
+      let orConditions: Array<WhereOptions<Plano>> = [];
+      if (searchField === 'id') {
+        orConditions = numExact !== null ? [{ id: numExact } as WhereOptions<Plano>] : [{ id: { [Op.lt]: 0 } } as WhereOptions<Plano>];
+      } else if (searchField === 'valor_mensal' || searchField === 'quantidade_usuarios') {
+        orConditions = numExact !== null ? [{ [searchField]: numExact } as WhereOptions<Plano>] : [{ [searchField]: { [Op.lt]: 0 } } as WhereOptions<Plano>];
+      } else if (searchField === 'nome_plano' || searchField === 'descricao' || searchField === 'tipo_servico' || searchField === 'periodicidade' || searchField === 'status') {
+        orConditions = [{ [searchField]: { [Op.like]: searchPattern } } as WhereOptions<Plano>];
+      } else {
+        orConditions = [
+          { nome_plano: { [Op.like]: searchPattern } },
+          { descricao: { [Op.like]: searchPattern } },
+          { tipo_servico: { [Op.like]: searchPattern } },
+          { periodicidade: { [Op.like]: searchPattern } },
+          { status: { [Op.like]: searchPattern } }
+        ] as Array<WhereOptions<Plano>>;
+        if (numExact !== null) {
+          orConditions.unshift({ id: numExact } as WhereOptions<Plano>);
+          orConditions.push(
+            { valor_mensal: numExact } as WhereOptions<Plano>,
+            { quantidade_usuarios: numExact } as WhereOptions<Plano>
+          );
+        } else {
+          orConditions.unshift({ id: { [Op.like]: searchPattern } } as WhereOptions<Plano>);
+        }
+      }
+      whereConditions.push({ [Op.or]: orConditions } as WhereOptions<Plano>);
     }
 
     if (status) {

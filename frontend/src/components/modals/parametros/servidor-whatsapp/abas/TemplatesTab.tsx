@@ -132,7 +132,6 @@ const TemplatesTab: React.FC<TemplatesTabProps> = () => {
         <div className="list-modal-scroll-wrapper" style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         <Table
           title=""
-          syncWithHeader={false}
           config={{
             columns: tableColumns,
             data: filteredTemplates,

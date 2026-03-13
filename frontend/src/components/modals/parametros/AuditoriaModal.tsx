@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import DraggableModal from '@/components/common/DraggableModal';
+import SearchBar from '@/components/ui/SearchBar';
 import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from '@/services/auditoriaService';
@@ -275,13 +276,15 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
   const customFilters = (
     <div className="row mb-1">
       <div className="col-md-4">
-        <label className="form-label small">{t('buttons.search')}</label>
-        <input
-          type="text"
-          className="form-control form-control-sm"
-          placeholder=""
+        <SearchBar
+          id="auditoria-search"
+          variant="table"
           value={tableFilters.search}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          onChange={(v) => handleSearchChange(v)}
+          onSearch={(v) => handleSearchChange(v)}
+          placeholder={t('buttons.search')}
+          searchFields={[]}
+          className="flex-grow-1"
         />
       </div>
       <div className="col-md-3">

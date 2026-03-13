@@ -6,6 +6,7 @@ import { useTable } from './useTable';
 import { useColumnResizing } from '@/hooks/useColumnResizing';
 import TableColumn from './TableColumn';
 import Spinner from '../ui/Spinner';
+import SearchBar from '../ui/SearchBar';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -109,6 +110,16 @@ function Table<T extends { id: number | string }>({
   
   // Detectar mobile
   const isMobile = useIsMobile();
+
+  // Em modais (syncWithHeader=false), esperar 1 paint para evitar que o header (com busca) não apareça na primeira abertura
+  const [headerReady, setHeaderReady] = useState(syncWithHeader);
+  useEffect(() => {
+    if (!syncWithHeader) {
+      const id = requestAnimationFrame(() => requestAnimationFrame(() => setHeaderReady(true)));
+      return () => cancelAnimationFrame(id);
+    }
+    setHeaderReady(true);
+  }, [syncWithHeader]);
   
   // Internationalization
   const { t } = useI18n();
@@ -185,7 +196,6 @@ function Table<T extends { id: number | string }>({
   const buttonRefs = useRef<Map<number | string, HTMLButtonElement>>(new Map());
   const fabDropdownRef = useRef<HTMLDivElement | null>(null);
   const fabContainerRef = useRef<HTMLDivElement | null>(null);
-  const searchFieldSelectRef = useRef<HTMLSelectElement | null>(null);
 
   // Ajustar posição do FAB dinamicamente quando há legendas visíveis
   useEffect(() => {
@@ -416,9 +426,11 @@ function Table<T extends { id: number | string }>({
   const defaultEmptyMessage = emptyMessage || t('messages.noData');
   const defaultLoadingMessage = _loadingMessage || t('messages.loading');
 
-  // Se houver contexto, usar o campo de busca do contexto, senão usar estado local
+  // Padrão: 'id' quando disponível nos searchFields, senão primeiro da lista
   const [localSearchField, setLocalSearchField] = useState<string>(() => {
-    return configSearchField || (configSearchFields && configSearchFields.length > 0 ? configSearchFields[0].key : '');
+    if (!configSearchFields?.length) return configSearchField || '';
+    const hasId = configSearchFields.some((f: { key: string }) => f.key === 'id');
+    return hasId ? 'id' : (configSearchField || configSearchFields[0].key);
   });
 
   // Determinar qual campo e função usar, priorizando o header se estiver disponível
@@ -573,38 +585,6 @@ function Table<T extends { id: number | string }>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [normalizedPagination ? 'ready' : 'waiting']);
 
-  // Ajustar largura do select de campo de busca baseado no texto selecionado
-  useEffect(() => {
-    if (searchFieldSelectRef.current && configSearchFields) {
-      const select = searchFieldSelectRef.current;
-      const selectedOption = configSearchFields.find(field => field.key === selectedSearchField);
-
-      if (selectedOption) {
-        // Criar um elemento temporário para medir a largura do texto
-        const tempSpan = document.createElement('span');
-        tempSpan.style.visibility = 'hidden';
-        tempSpan.style.position = 'absolute';
-        tempSpan.style.whiteSpace = 'nowrap';
-        tempSpan.style.fontSize = window.getComputedStyle(select).fontSize;
-        tempSpan.style.fontFamily = window.getComputedStyle(select).fontFamily;
-        tempSpan.style.fontWeight = window.getComputedStyle(select).fontWeight;
-        tempSpan.style.padding = '0 8px'; // Mesmo padding do select
-        tempSpan.textContent = selectedOption.label;
-
-        document.body.appendChild(tempSpan);
-        const textWidth = tempSpan.offsetWidth + 24; // +24px para o ícone do dropdown
-        document.body.removeChild(tempSpan);
-
-        // Aplicar largura com limites
-        const minWidth = 42;
-        const maxWidth = 120;
-        const finalWidth = Math.max(minWidth, Math.min(maxWidth, textWidth));
-
-        select.style.width = `${finalWidth}px`;
-      }
-    }
-  }, [selectedSearchField, configSearchFields]);
-
   // Handler para o botão de auditar com gerenciamento de loading
   const handleAuditClick = useCallback(async () => {
     if (!onAudit || state.selectedItems.length !== 1) {
@@ -721,11 +701,18 @@ function Table<T extends { id: number | string }>({
     currentSelectedSearchFieldRef.current = selectedSearchField;
   }, [state.searchTerm, selectedSearchField]);
 
-  // Callback estável para o clique de busca no header (executa busca com valor atual do input)
-  const handleHeaderSearchClickRef = useRef<() => void>(() => {});
-  handleHeaderSearchClickRef.current = () => tableActions.executeSearch();
-  const handleHeaderSearchClick = useCallback(() => {
-    handleHeaderSearchClickRef.current();
+  // Callback para busca no header: usa valor passado (do input) para evitar estado desatualizado
+  const handleHeaderSearchClickRef = useRef<(value?: string) => void>(() => {});
+  handleHeaderSearchClickRef.current = (value?: string) => {
+    if (value !== undefined) {
+      tableActions.setSearchTerm(value);
+      onSearchRef.current?.(value, selectedSearchFieldRef.current || '');
+    } else {
+      tableActions.executeSearch();
+    }
+  };
+  const handleHeaderSearchClick = useCallback((value?: string) => {
+    handleHeaderSearchClickRef.current(value);
   }, []);
 
   // Estabilizar configSearchFields para evitar loops de renderização
@@ -761,7 +748,8 @@ function Table<T extends { id: number | string }>({
           setHeaderAvailableSearchFields(fields);
         }
 
-        const initialField = configSearchField || parsedFields[0].key;
+        const hasId = parsedFields.some((f: { key: string }) => f.key === 'id');
+        const initialField = hasId ? 'id' : (configSearchField || parsedFields[0]?.key || '');
         if (initialField && headerSearchField !== initialField) {
           setHeaderSearchField(initialField);
         }
@@ -1359,7 +1347,7 @@ function Table<T extends { id: number | string }>({
     >
       
       {/* Header com botões de ação e filtros - Oculto no mobile */}
-          {!isMobile && (bulkActions.length > 0 || searchable || normalizedPagination || (!normalizedPagination && data.length > 0)) && (
+          {headerReady && !isMobile && (bulkActions.length > 0 || searchable || normalizedPagination || (!normalizedPagination && data.length > 0)) && (
         <div className="border-bottom table-header-custom">
           {/* Primeira linha: Botões de ação */}
           {(bulkActions.length > 0 || customControlsAfterActions) && (
@@ -1489,66 +1477,28 @@ function Table<T extends { id: number | string }>({
             )}
             {/* Campo de busca local - apenas quando searchable estiver habilitado */}
             {searchable && (
-              <div className="table-search-combined">
-                {/* Seletor de campo de busca - apenas quando houver múltiplos campos */}
-                {configSearchFields && configSearchFields.length > 1 && (
-                  <select
-                    ref={searchFieldSelectRef}
-                    id={`${uniqueTableId}-search-field`}
-                    className="form-select form-select-sm table-search-field-select"
-                    value={selectedSearchField}
-                    onChange={(e) => {
-                      const newField = e.target.value;
-                      if (headerSearchField) {
-                        // Se estiver usando o header, atualizar lá
-                        setHeaderSearchField?.(newField);
-                      } else {
-                        // Caso contrário, atualizar estado local
-                        setLocalSearchField(newField);
-                      }
-                      // Disparar busca quando mudar o campo
-                      if (onSearchFieldChange) {
-                        onSearchFieldChange(newField);
-                      }
-                    }}
-                  >
-                    {configSearchFields.map(field => (
-                      <option key={field.key} value={field.key}>
-                        {field.label}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {/* Input de busca */}
-                <div className="position-relative">
-                  <input
-                    type="search"
-                    id={`${uniqueTableId}-search`}
-                    className="form-control form-control-sm table-search-input"
-                    placeholder={defaultSearchPlaceholder}
-                    value={state.searchInputValue}
-                    onChange={(e) => {
-                      tableActions.setSearchInputValue(e.target.value);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        tableActions.executeSearch();
-                      }
-                    }}
-                  />
-                  {/* Ícone de busca - clicável */}
-                  <button
-                    type="button"
-                    className="table-search-icon btn btn-link p-0 border-0"
-                    onClick={() => tableActions.executeSearch()}
-                    aria-label={t('layout.searchPlaceholder')}
-                  >
-                    <i className="bi bi-search text-muted"></i>
-                  </button>
-                </div>
-              </div>
+              <SearchBar
+                id={`${uniqueTableId}-search`}
+                variant="table"
+                value={state.searchInputValue}
+                onChange={tableActions.setSearchInputValue}
+                onSearch={(value) => {
+                  tableActions.setSearchTerm(value);
+                  onSearch?.(value, selectedSearchField);
+                }}
+                placeholder={defaultSearchPlaceholder}
+                searchField={selectedSearchField}
+                onSearchFieldChange={(newField) => {
+                  if (headerSearchField && syncWithHeader) {
+                    setHeaderSearchField(newField);
+                  } else {
+                    setLocalSearchField(newField);
+                  }
+                  onSearchFieldChange?.(newField);
+                }}
+                searchFields={configSearchFields || []}
+                autoComplete="off"
+              />
             )}
             {customControls && (
               <div className="table-custom-controls">

@@ -279,7 +279,8 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     setState(prev => {
       const term = prev.searchInputValue;
       if (prev.searchTerm === term) return prev;
-      onSearchRef.current?.(term, '');
+      // Não chamar onSearch dentro do updater: causa "Cannot update a component while rendering a different component"
+      queueMicrotask(() => onSearchRef.current?.(term, ''));
       return { ...prev, searchTerm: term };
     });
   }, []);

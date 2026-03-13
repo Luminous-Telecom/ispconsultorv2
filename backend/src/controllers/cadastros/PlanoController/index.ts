@@ -12,6 +12,7 @@ export class PlanoController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 15;
       const search = req.query.search as string;
+      const searchField = req.query.searchField as string;
       const status = req.query.status as string;
       const tipo_servico = req.query.tipo_servico as string;
       const sortColumn = req.query.sortColumn as string;
@@ -23,6 +24,7 @@ export class PlanoController {
         page,
         limit,
         search,
+        searchField,
         status,
         tipo_servico,
         sortColumn,

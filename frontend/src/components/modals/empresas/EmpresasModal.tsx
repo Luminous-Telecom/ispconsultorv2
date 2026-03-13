@@ -307,7 +307,6 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
         onPageChange={tableFilters.setPage}
         onPageSizeChange={tableFilters.setLimit}
         onRefresh={refetch}
-        syncWithHeader={false}
       />
 
       {showForm && (
