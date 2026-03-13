@@ -60,6 +60,9 @@ export class NotaFiscalService {
     const limitNumber = parseInt(String(limit), 10);
     const offset = (pageNumber - 1) * limitNumber;
 
+    // Include customizado para busca por cliente (INNER JOIN + where)
+    let clienteSearchInclude: { model: typeof Cliente; as: string; required: boolean; attributes: string[]; where: WhereOptions } | null = null;
+
     // Construir filtros usando helpers
     const whereConditions: (WhereOptions | null)[] = [];
 
@@ -128,9 +131,18 @@ export class NotaFiscalService {
             }
             break;
           case 'cliente':
-            orConditions.push(
-              sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes WHERE adm_clientes.id = adm_notas_fiscais.cliente_id AND (adm_clientes.razao_social LIKE '${searchTerm.replace(/'/g, "''")}' OR adm_clientes.nome_fantasia LIKE '${searchTerm.replace(/'/g, "''")}'))`) as any
-            );
+            clienteSearchInclude = {
+              model: Cliente,
+              as: 'cliente',
+              required: true,
+              attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj'],
+              where: {
+                [Op.or]: [
+                  { razao_social: { [Op.like]: likePattern } },
+                  { nome_fantasia: { [Op.like]: likePattern } }
+                ]
+              }
+            };
             break;
           default:
             orConditions.push(
@@ -186,7 +198,7 @@ export class NotaFiscalService {
       const result = await NotaFiscal.findAndCountAll({
         where,
         include: [
-          {
+          clienteSearchInclude ?? {
             model: Cliente,
             as: 'cliente',
             attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj']
@@ -203,7 +215,7 @@ export class NotaFiscalService {
         error: queryError.message,
         stack: queryError.stack,
         where: JSON.stringify(where).substring(0, 200),
-        order: JSON.stringify(order).substring(0, 200)
+        order: JSON.stringify(order)
       });
       throw queryError;
     }
