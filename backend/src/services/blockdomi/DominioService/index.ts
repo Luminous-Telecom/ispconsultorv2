@@ -252,7 +252,7 @@ export class DominioService {
       getVersoesForNewRecords?: (count: number) => Promise<Array<{ id: number; numero: string }>>;
       versaoId?: number;
     }
-  ): Promise<{ created: number; updated: number; skipped: number; errors: string[]; primeiraVersao?: string }> {
+  ): Promise<{ created: number; updated: number; skipped: number; errors: string[]; primeiraVersao?: string; createdIds: number[]; updatedIds: number[] }> {
     const sanitized = items.map((d) => sanitizeDominio(d)).filter(Boolean) as string[];
     const existingMap = sanitized.length > 0 ? await this.findByDominiosWithData(sanitized) : new Map();
     const toCreate: Array<{ dominio: string; [key: string]: unknown }> = [];
@@ -338,9 +338,19 @@ export class DominioService {
       created += batch.length;
     }
 
+    let createdIds: number[] = [];
+    if (toCreate.length > 0) {
+      const dominiosCriados = await Dominio.findAll({
+        where: { dominio: { [Op.in]: toCreate.map((c) => c.dominio) } },
+        attributes: ['id'],
+        raw: true
+      });
+      createdIds = dominiosCriados.map((r) => r.id as number);
+    }
+
     let updated = 0;
+    const updatedIds = toUpdate.map((u) => u.id);
     if (toUpdate.length > 0 && versaoId != null) {
-      const ids = toUpdate.map((u) => u.id);
       await Dominio.update(
         {
           nome_oficio: emptyToNull(metadata.nome_oficio ?? null),
@@ -351,7 +361,7 @@ export class DominioService {
           link_planilha_dominios: emptyToNull(metadata.link_planilha_dominios ?? null),
           versao_id: versaoId
         },
-        { where: { id: { [Op.in]: ids } } }
+        { where: { id: { [Op.in]: updatedIds } } }
       );
       updated = toUpdate.length;
     }
@@ -361,7 +371,7 @@ export class DominioService {
     }
 
     const skipped = items.length - toCreate.length - toUpdate.length - errors.length;
-    return { created, updated, skipped, errors, primeiraVersao };
+    return { created, updated, skipped, errors, primeiraVersao, createdIds, updatedIds };
   }
 
   /**

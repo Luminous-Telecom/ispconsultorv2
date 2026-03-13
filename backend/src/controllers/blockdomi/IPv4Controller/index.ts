@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import { IPv4Service } from '../../../services/blockdomi/IPv4Service';
-import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
+import { IPv4 } from '../../../models/blockdomi/IPv4';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { isValidIPv4 } from '../../../utils/sanitize';
@@ -81,15 +83,18 @@ export class IPv4Controller {
       });
 
       try {
-        if (result.created > 0 || result.updated > 0) {
-          await registrarCriacao(
-            req,
-            'IPv4',
-            0,
-            { bulk: true, created: result.created, updated: result.updated, skipped: result.skipped },
-            `Importação em lote: ${result.created} criados, ${result.updated} atualizados, ${result.skipped} ignorados`,
-            empresaIdAudit
-          );
+        const allIds = [...result.createdIds, ...result.updatedIds];
+        if (allIds.length > 0) {
+          const ipv4s = await IPv4.findAll({ where: { id: { [Op.in]: allIds } } });
+          const ipv4Map = new Map(ipv4s.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+          for (const id of result.createdIds) {
+            const dados = ipv4Map.get(id);
+            if (dados) await registrarCriacao(req, 'IPv4', id, dados, 'Importação em lote', empresaIdAudit);
+          }
+          for (const id of result.updatedIds) {
+            const dados = ipv4Map.get(id);
+            if (dados) await registrarAtualizacao(req, 'IPv4', id, { id }, dados, 'Importação em lote', empresaIdAudit);
+          }
         }
       } catch (auditError) {
         // Não interromper o fluxo
@@ -267,18 +272,15 @@ export class IPv4Controller {
         return;
       }
 
+      const idsNum = ids.map((id: unknown) => Number(id)).filter((n: number) => !Number.isNaN(n));
       const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
+
+      const ipv4sAntes = idsNum.length > 0 ? await IPv4.findAll({ where: { id: { [Op.in]: idsNum } } }) : [];
       const { deleted, versao } = await IPv4Service.bulkDelete(ids);
+
       try {
-        if (deleted > 0) {
-          await registrarExclusao(
-            req,
-            'IPv4',
-            0,
-            { bulk: true, deleted, ids },
-            `Exclusão em lote: ${deleted} IPv4 removidos`,
-            empresaIdAudit
-          );
+        for (const d of ipv4sAntes) {
+          await registrarExclusao(req, 'IPv4', d.id, d.toJSON() as Record<string, unknown>, 'Exclusão em lote', empresaIdAudit);
         }
       } catch (auditError) {
         // Não interromper o fluxo

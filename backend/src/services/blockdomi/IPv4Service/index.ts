@@ -191,7 +191,7 @@ export class IPv4Service {
       getVersoesForNewRecords?: (count: number) => Promise<Array<{ id: number; numero: string }>>;
       versaoId?: number;
     }
-  ): Promise<{ created: number; updated: number; skipped: number; errors: string[]; primeiraVersao?: string }> {
+  ): Promise<{ created: number; updated: number; skipped: number; errors: string[]; primeiraVersao?: string; createdIds: number[]; updatedIds: number[] }> {
     const valid = items.filter((ip) => isValidIPv4(ip));
     const existingMap = valid.length > 0 ? await this.findByIpsWithData(valid) : new Map();
     const toCreate: Array<Record<string, unknown>> = [];
@@ -276,9 +276,20 @@ export class IPv4Service {
       created += batch.length;
     }
 
+    let createdIds: number[] = [];
+    if (toCreate.length > 0) {
+      const ipsCriados = toCreate.map((c) => c.ip as string);
+      const registros = await IPv4.findAll({
+        where: { ip: { [Op.in]: ipsCriados } },
+        attributes: ['id'],
+        raw: true
+      });
+      createdIds = registros.map((r) => r.id as number);
+    }
+
     let updated = 0;
+    const updatedIds = toUpdate.map((u) => u.id);
     if (toUpdate.length > 0 && versaoId != null) {
-      const ids = toUpdate.map((u) => u.id);
       await IPv4.update(
         {
           nome_oficio: metadata.nome_oficio ?? null,
@@ -289,13 +300,13 @@ export class IPv4Service {
           link_planilha_dominios: metadata.link_planilha_dominios ?? null,
           versao_id: versaoId
         },
-        { where: { id: { [Op.in]: ids } } }
+        { where: { id: { [Op.in]: updatedIds } } }
       );
       updated = toUpdate.length;
     }
 
     const skipped = items.length - toCreate.length - toUpdate.length - errors.length;
-    return { created, updated, skipped, errors, primeiraVersao };
+    return { created, updated, skipped, errors, primeiraVersao, createdIds, updatedIds };
   }
 
   /**

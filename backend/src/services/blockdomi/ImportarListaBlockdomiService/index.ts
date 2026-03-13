@@ -18,9 +18,9 @@ export interface ImportarListaPayload {
 
 export interface ImportarListaResult {
   versao_lista: string;
-  dominios: { created: number; updated: number; skipped: number; errors: string[] };
-  ipv4: { created: number; updated: number; skipped: number; errors: string[] };
-  ipv6: { created: number; updated: number; skipped: number; errors: string[] };
+  dominios: { created: number; updated: number; skipped: number; errors: string[]; createdIds: number[]; updatedIds: number[] };
+  ipv4: { created: number; updated: number; skipped: number; errors: string[]; createdIds: number[]; updatedIds: number[] };
+  ipv6: { created: number; updated: number; skipped: number; errors: string[]; createdIds: number[]; updatedIds: number[] };
 }
 
 /**
@@ -42,7 +42,7 @@ export class ImportarListaBlockdomiService {
       versaoId: versaoLista.id
     };
 
-    const empty = { created: 0, updated: 0, skipped: 0, errors: [] as string[] };
+    const empty = { created: 0, updated: 0, skipped: 0, errors: [] as string[], createdIds: [] as number[], updatedIds: [] as number[] };
     const [domRes, ipv4Res, ipv6Res] = await Promise.all([
       payload.dominios.length > 0 ? DominioService.bulkCreate(payload.dominios, metadata) : Promise.resolve(empty),
       payload.ipv4.length > 0 ? IPv4Service.bulkCreate(payload.ipv4, metadata) : Promise.resolve(empty),

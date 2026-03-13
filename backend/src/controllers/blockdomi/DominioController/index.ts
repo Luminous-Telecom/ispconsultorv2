@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import { DominioService } from '../../../services/blockdomi/DominioService';
+import { Dominio } from '../../../models/blockdomi/Dominio';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
@@ -87,15 +89,18 @@ export class DominioController {
       });
 
       try {
-        if (result.created > 0 || result.updated > 0) {
-          await registrarCriacao(
-            req,
-            'Dominio',
-            0,
-            { bulk: true, created: result.created, updated: result.updated, skipped: result.skipped },
-            `Importação em lote: ${result.created} criados, ${result.updated} atualizados, ${result.skipped} ignorados`,
-            empresaIdAudit
-          );
+        const allIds = [...result.createdIds, ...result.updatedIds];
+        if (allIds.length > 0) {
+          const dominios = await Dominio.findAll({ where: { id: { [Op.in]: allIds } } });
+          const domMap = new Map(dominios.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+          for (const id of result.createdIds) {
+            const dados = domMap.get(id);
+            if (dados) await registrarCriacao(req, 'Dominio', id, dados, 'Importação em lote', empresaIdAudit);
+          }
+          for (const id of result.updatedIds) {
+            const dados = domMap.get(id);
+            if (dados) await registrarAtualizacao(req, 'Dominio', id, { id }, dados, 'Importação em lote', empresaIdAudit);
+          }
         }
       } catch (auditError) {
         // Não interromper o fluxo
@@ -275,18 +280,15 @@ export class DominioController {
         return;
       }
 
+      const idsNum = ids.map((id: unknown) => Number(id)).filter((n: number) => !Number.isNaN(n));
       const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
+
+      const dominiosAntes = idsNum.length > 0 ? await Dominio.findAll({ where: { id: { [Op.in]: idsNum } } }) : [];
       const { deleted, versao } = await DominioService.bulkDelete(ids);
+
       try {
-        if (deleted > 0) {
-          await registrarExclusao(
-            req,
-            'Dominio',
-            0,
-            { bulk: true, deleted, ids },
-            `Exclusão em lote: ${deleted} domínio(s) removidos`,
-            empresaIdAudit
-          );
+        for (const d of dominiosAntes) {
+          await registrarExclusao(req, 'Dominio', d.id, d.toJSON() as Record<string, unknown>, 'Exclusão em lote', empresaIdAudit);
         }
       } catch (auditError) {
         // Não interromper o fluxo

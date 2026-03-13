@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import { IPv6Service } from '../../../services/blockdomi/IPv6Service';
+import { IPv6 } from '../../../models/blockdomi/IPv6';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
@@ -81,15 +83,18 @@ export class IPv6Controller {
       });
 
       try {
-        if (result.created > 0 || result.updated > 0) {
-          await registrarCriacao(
-            req,
-            'IPv6',
-            0,
-            { bulk: true, created: result.created, updated: result.updated, skipped: result.skipped },
-            `Importação em lote: ${result.created} criados, ${result.updated} atualizados, ${result.skipped} ignorados`,
-            empresaIdAudit
-          );
+        const allIds = [...result.createdIds, ...result.updatedIds];
+        if (allIds.length > 0) {
+          const ipv6s = await IPv6.findAll({ where: { id: { [Op.in]: allIds } } });
+          const ipv6Map = new Map(ipv6s.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+          for (const id of result.createdIds) {
+            const dados = ipv6Map.get(id);
+            if (dados) await registrarCriacao(req, 'IPv6', id, dados, 'Importação em lote', empresaIdAudit);
+          }
+          for (const id of result.updatedIds) {
+            const dados = ipv6Map.get(id);
+            if (dados) await registrarAtualizacao(req, 'IPv6', id, { id }, dados, 'Importação em lote', empresaIdAudit);
+          }
         }
       } catch (auditError) {
         // Não interromper o fluxo
@@ -267,18 +272,15 @@ export class IPv6Controller {
         return;
       }
 
+      const idsNum = ids.map((id: unknown) => Number(id)).filter((n: number) => !Number.isNaN(n));
       const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
+
+      const ipv6sAntes = idsNum.length > 0 ? await IPv6.findAll({ where: { id: { [Op.in]: idsNum } } }) : [];
       const { deleted, versao } = await IPv6Service.bulkDelete(ids);
+
       try {
-        if (deleted > 0) {
-          await registrarExclusao(
-            req,
-            'IPv6',
-            0,
-            { bulk: true, deleted, ids },
-            `Exclusão em lote: ${deleted} IPv6 removidos`,
-            empresaIdAudit
-          );
+        for (const d of ipv6sAntes) {
+          await registrarExclusao(req, 'IPv6', d.id, d.toJSON() as Record<string, unknown>, 'Exclusão em lote', empresaIdAudit);
         }
       } catch (auditError) {
         // Não interromper o fluxo
