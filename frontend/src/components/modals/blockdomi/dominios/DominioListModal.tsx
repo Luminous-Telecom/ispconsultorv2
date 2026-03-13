@@ -407,6 +407,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
               pagination: pagination
             }}
             tableId="dominios-list-modal"
+            syncWithHeader={false}
             onSelectionChange={(items) => {
               handleSelectionChange(items);
             }}

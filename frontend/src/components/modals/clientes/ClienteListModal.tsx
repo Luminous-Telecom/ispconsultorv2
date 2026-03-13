@@ -388,6 +388,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
               pagination: pagination
             }}
             tableId="clientes-list-modal"
+            syncWithHeader={false}
             onSelectionChange={handleSelectionChange}
             onRowClick={onSelectClient ? (item) => {
               onSelectClient(item);

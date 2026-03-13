@@ -662,6 +662,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
             pagination: pagination
           }}
           tableId="contrato-list-modal"
+          syncWithHeader={false}
           onSelectionChange={(items) => {
             setSelectedItems(items);
             if (onSelectContrato) {

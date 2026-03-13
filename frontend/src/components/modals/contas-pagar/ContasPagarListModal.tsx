@@ -39,7 +39,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
   const [selectedContaPagarId, setSelectedContaPagarId] = useState<number | null>(null);
-  const [searchField, setSearchField] = useState<string>('numero_documento');
   
   // Sem filtro de data por padrão - exibe todos os registros (ao abrir do dashboard aplica initialFilters)
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>('');
@@ -302,6 +301,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
     ];
 
   const searchFields = [
+    { key: 'id', label: t('table.id') },
     { key: 'numero_documento', label: t('table.documentNumber') },
     { key: 'nota_fiscal', label: t('form.invoiceNumber') },
     { key: 'fornecedor', label: t('table.supplier') },
@@ -337,7 +337,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   // Hook para buscar contas a pagar usando parâmetros do useTableFilters
   const { data: contasPagarData, isLoading, refetch } = useContasPagar({
     search: tableFilters.debouncedSearch || undefined,
-    searchField: searchField || undefined,
+    searchField: tableFilters.searchField || undefined,
     page: tableFilters.page,
     limit: tableFilters.limit,
     sortColumn: tableFilters.sortColumn || undefined,
@@ -541,13 +541,11 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
   ];
 
   const handleSearchChange = useCallback((search: string, field?: string) => {
-    // Usar setTimeout para evitar atualização durante render cycle
     setTimeout(() => {
       tableFilters.setSearch(search);
-      if (field) setSearchField(field);
+      if (field) tableFilters.setSearchField(field);
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableFilters.setSearch]);
+  }, [tableFilters]);
 
   const modalData = useMemo(() => (contasPagarData?.data || []).filter(item => item.id != null), [contasPagarData?.data]);
   const hasResumo = show && modalData.length > 0;
@@ -633,15 +631,9 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
               tableFilters.setSort(column, direction);
             }, 0);
           }}
-          onSearch={(search, field) => {
-            handleSearchChange(search, field);
-            if (field) {
-              setTimeout(() => {
-                setSearchField(field);
-              }, 0);
-            }
-          }}
+          onSearch={(search, field) => handleSearchChange(search, field)}
           search={tableFilters.search}
+          syncWithHeader={false}
           onFilter={(filters) => {
             setTimeout(() => {
               const convertedFilters: Partial<ContaPagarFilters> = {};

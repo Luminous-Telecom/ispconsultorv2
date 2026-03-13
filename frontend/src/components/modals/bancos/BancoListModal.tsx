@@ -311,6 +311,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
               pagination: pagination
             }}
             tableId="bancos-list-modal"
+            syncWithHeader={false}
             onSelectionChange={(items) => {
               handleSelectionChange(items);
             }}

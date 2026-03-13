@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { ContaPagarService } from '../services/contaPagarService';
 import { UpdateContaPagar, ContaPagarFilters } from '../types';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
@@ -16,6 +16,7 @@ export const useContasPagar = (filters: ContaPagarFilters = {}) => {
     gcTime: DEFAULT_CACHE_TIME,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
+    placeholderData: keepPreviousData,
   });
 };
 

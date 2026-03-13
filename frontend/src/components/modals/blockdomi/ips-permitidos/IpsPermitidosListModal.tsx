@@ -238,6 +238,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
               pagination
             }}
             tableId="ips-permitidos-list"
+            syncWithHeader={false}
             onSelectionChange={(items) => {
               const next = items || [];
               setSelectedItems(prev => {

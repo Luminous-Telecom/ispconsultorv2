@@ -376,6 +376,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
               pagination: pagination
             }}
             tableId="planos-list-modal"
+            syncWithHeader={false}
             onSelectionChange={(items) => {
               handleSelectionChange(items);
             }}

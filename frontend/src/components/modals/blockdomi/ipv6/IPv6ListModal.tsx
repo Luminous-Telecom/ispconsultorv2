@@ -386,6 +386,7 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
               pagination: pagination
             }}
             tableId="ipv6-list-modal"
+            syncWithHeader={false}
             onSelectionChange={(items) => {
               handleSelectionChange(items);
             }}

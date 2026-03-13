@@ -231,6 +231,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
               pagination
             }}
             tableId="tipos-cobranca-contrato-modal"
+            syncWithHeader={false}
             onSelectionChange={handleSelectionChange}
             onRowClick={onSelectTipo ? (item) => { onSelectTipo(item); onClose(); } : undefined}
             onRefresh={refetch}

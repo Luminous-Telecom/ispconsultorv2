@@ -811,6 +811,14 @@ function Table<T extends { id: number | string }>({
     }
   }, [syncWithHeader, headerSearchValue, state.searchTerm, tableActions, search]);
 
+  // Sincronizar busca: Table -> Header (quando usuário digita na tabela, manter header em dia para evitar overwrite)
+  useEffect(() => {
+    if (!syncWithHeader) return;
+    if (state.searchTerm !== headerSearchValue) {
+      setHeaderSearchValue(state.searchTerm);
+    }
+  }, [syncWithHeader, state.searchTerm, headerSearchValue, setHeaderSearchValue]);
+
   // Propagar mudança de campo para o componente pai e estado local
   useEffect(() => {
     if (!syncWithHeader) return;

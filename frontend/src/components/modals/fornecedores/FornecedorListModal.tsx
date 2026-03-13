@@ -362,6 +362,7 @@ const FornecedorListModal: React.FC<FornecedorListModalProps> = ({
               pagination: pagination
             }}
             tableId="fornecedores-list-modal"
+            syncWithHeader={false}
             onSelectionChange={(items) => {
               handleSelectionChange(items);
             }}

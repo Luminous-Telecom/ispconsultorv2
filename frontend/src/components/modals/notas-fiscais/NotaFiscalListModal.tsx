@@ -363,6 +363,7 @@ const NotaFiscalListModal: React.FC<NotaFiscalListModalProps> = ({
               pagination: pagination
             }}
             tableId="notas-fiscais-list-modal"
+            syncWithHeader={false}
             onSelectionChange={() => {}}
             onRefresh={handleRefresh}
             onAudit={handleAudit}

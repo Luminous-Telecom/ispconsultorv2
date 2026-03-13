@@ -1087,6 +1087,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
             onRefresh={refetchData}
             onAudit={handleAudit}
             auditEntity={isSaas ? 'SaasTitulo' : 'Titulo'}
+            syncWithHeader={false}
           />
       </div>
 

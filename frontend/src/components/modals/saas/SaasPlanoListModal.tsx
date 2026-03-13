@@ -171,6 +171,7 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
               emptyMessage: t('messages.noData'),
             }}
             tableId="saas-planos-list"
+            syncWithHeader={false}
             onSelectionChange={handleSelectionChange}
             onRowDoubleClick={(item) => { setSelectedPlanoId(item.id); setShowEditModal(true); }}
             onRefresh={refetch}

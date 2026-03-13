@@ -87,8 +87,16 @@ export class ContaPagarService {
 
     if (search && search.trim()) {
       const searchTerm = search.trim();
-      
+      const numExact = /^\d+$/.test(searchTerm) ? parseInt(searchTerm, 10) : null;
+
       switch (searchField) {
+        case 'id':
+          if (numExact !== null) {
+            whereConditions.push({ id: numExact });
+          } else {
+            whereConditions.push({ id: { [Op.like]: `%${searchTerm}%` } });
+          }
+          break;
         case 'numero_documento':
           whereConditions.push({ numero_documento: { [Op.like]: `%${searchTerm}%` } });
           break;
@@ -115,13 +123,17 @@ export class ContaPagarService {
         case 'tipo':
           whereConditions.push({ tipo_pagamento: { [Op.like]: `%${searchTerm.toUpperCase()}%` } });
           break;
-        default:
-          whereConditions.push({
-            [Op.or]: [
-              { numero_documento: { [Op.like]: `%${searchTerm}%` } },
-              { nota_fiscal: { [Op.like]: `%${searchTerm}%` } }
-            ]
-          } as WhereOptions);
+        default: {
+          const orConditions: WhereOptions[] = [
+            { numero_documento: { [Op.like]: `%${searchTerm}%` } },
+            { nota_fiscal: { [Op.like]: `%${searchTerm}%` } }
+          ];
+          if (numExact !== null) {
+            orConditions.unshift({ id: numExact });
+          }
+          whereConditions.push({ [Op.or]: orConditions } as WhereOptions);
+          break;
+        }
       }
     }
 
