@@ -156,7 +156,22 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
   const token = cookieToken || headerToken;
 
+  // Permitir saas_auth_token (super admin) para /api/auditoria — painel SaaS usa mesmo modal
   if (!token) {
+    const saasCookie = (req as Request & { cookies?: Record<string, string> }).cookies?.saas_auth_token;
+    const SAAS_CROSS_ROUTES = [/^\/api\/auditoria(\/.*)?$/i];
+    if (saasCookie && SAAS_CROSS_ROUTES.some(r => r.test(cleanedPath))) {
+      try {
+        const saasPayload = jwt.verify(saasCookie, jwtSecret) as jwt.JwtPayload & { saas?: boolean; tipo?: string };
+        if (saasPayload?.saas && saasPayload?.tipo === 'super_admin') {
+          req.user = { ...saasPayload, empresa_id: undefined, role: 'superadmin' } as jwt.JwtPayload;
+          next();
+          return;
+        }
+      } catch {
+        /* token inválido — seguir para 404 */
+      }
+    }
     if (req.path.includes('/notas-fiscais') || req.path.includes('/nfse')) {
       logger.warn('Requisição bloqueada - sem token de autenticação', {
         path: req.path,
