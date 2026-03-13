@@ -142,7 +142,7 @@ export class SaasAuditoriaController {
 
       await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs as Record<string, unknown>[], true);
 
-      const html = await AuditoriaPDFService.generateAuditPdfHtml(logs, entidade as string, undefined, undefined);
+      const html = await AuditoriaPDFService.generateAuditPdfHtml(logs, entidade as string, undefined, undefined, true);
       const { PDFGenerationService } = await import('../../../services/pdf-generation/PDFGenerationService');
       const pdfBuffer = await PDFGenerationService.generateFromHtml(
         html,

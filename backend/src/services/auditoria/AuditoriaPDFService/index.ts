@@ -6,12 +6,14 @@ export class AuditoriaPDFService {
   /**
    * Gera HTML do PDF de auditoria
    * @param empresaId - ID da empresa para buscar dados (multi-tenant)
+   * @param showTenant - Exibir tenant no relatório (apenas para SaaS)
    */
   static async generateAuditPdfHtml(
     logs: any[],
     entidade: string,
     dadosEmpresa?: any,
-    empresaId?: number | null
+    empresaId?: number | null,
+    showTenant = false
   ): Promise<string> {
     const empresa = dadosEmpresa || await DadosEmpresaService.findOne(empresaId ?? undefined);
     
@@ -267,7 +269,9 @@ export class AuditoriaPDFService {
       const dataFormatada = formatDateLocal(log.timestamp);
       const usuarioNome = log.usuario_nome || log.usuario_email || 'N/A';
       const ipAddress = log.ip_address || '-';
-      const tenantNome = log.empresa_nome || '-';
+      const tenantPart = showTenant
+        ? `<strong>Tenant:</strong> ${escapeHtml(log.empresa_nome || '-')} | `
+        : '';
       const dadosHtml = gerarCamposHtml(log.dados_anteriores, log.dados_novos);
       const marginTop = index > 0 ? 'margin-top: 10px;' : '';
 
@@ -277,8 +281,7 @@ export class AuditoriaPDFService {
             <thead>
               <tr>
                 <td colspan="2" style="font-weight: normal;">
-                  <strong>Tenant:</strong> ${escapeHtml(tenantNome)} | 
-                  <strong>Usuário:</strong> ${escapeHtml(usuarioNome)} | 
+                  ${tenantPart}<strong>Usuário:</strong> ${escapeHtml(usuarioNome)} | 
                   <strong>IP:</strong> ${escapeHtml(ipAddress)} | 
                   <strong>Operação:</strong> ${escapeHtml(acaoFormatada)} | 
                   <strong>Data:</strong> ${escapeHtml(dataFormatada)}
