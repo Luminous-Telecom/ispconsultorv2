@@ -983,7 +983,9 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                         return <span className={`badge bg-${cls}`}>{acao}</span>;
                       } },
                       { key: 'entidade', label: t('audit.entity'), sortable: true, width: 130, render: (log: AuditoriaLog) => <span className="small">{log.entidade}</span> },
+                      { key: 'usuario_nome', label: t('table.name'), sortable: true, width: 140, render: (log: AuditoriaLog) => <span className="small">{log.usuario_nome || '-'}</span> },
                       { key: 'usuario_email', label: t('audit.user'), sortable: true, width: 160, render: (log: AuditoriaLog) => <span className="small">{log.usuario_email || 'N/A'}</span> },
+                      { key: 'ip_address', label: t('audit.ip'), sortable: true, width: 120, render: (log: AuditoriaLog) => <span className="small text-muted">{log.ip_address || '-'}</span> },
                       { key: 'rota', label: t('audit.route'), sortable: true, render: (log: AuditoriaLog) => <span className="small text-muted">{log.rota || '-'}</span> },
                     ],
                     data: (logsData?.data as AuditoriaLog[]) ?? [],

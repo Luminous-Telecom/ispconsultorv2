@@ -391,7 +391,7 @@ export class ClienteController {
       
       // Registrar dados para auditoria
       setAuditData(req, dadosAnteriores, dadosNovos);
-      
+
       // Registrar auditoria
       await registrarAtualizacao(
         req,

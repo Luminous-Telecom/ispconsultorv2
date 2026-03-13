@@ -38,10 +38,14 @@ interface DadosAuditoria {
  * Obter IP do cliente da requisição
  */
 function getClientIp(req: Request): string | null {
+  const headers = req.headers;
   return (
-    (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-    (req.headers['x-real-ip'] as string) ||
-    req.socket.remoteAddress ||
+    (headers['cf-connecting-ip'] as string)?.trim() ||
+    (headers['x-client-ip'] as string)?.trim() ||
+    (headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+    (headers['x-real-ip'] as string)?.trim() ||
+    (headers['true-client-ip'] as string)?.trim() ||
+    req.socket?.remoteAddress?.trim() ||
     null
   );
 }
@@ -124,6 +128,7 @@ export async function registrarAuditoriaElasticsearch(
 
       // Obter dados do usuário e empresa (tenant) - sem fallback
       const userData = getUserData(req);
+      const ipAddress = getClientIp(req);
       const empresaId = dados.empresa_id ?? getEmpresaIdForAudit(req);
 
       // Limpar dados removendo apenas campos internos do Sequelize e campos muito grandes
@@ -287,7 +292,7 @@ export async function registrarAuditoriaElasticsearch(
         entidade_id: dados.entidade_id || null,
         dados_anteriores: dadosAnterioresLimpos,
         dados_novos: dadosNovosLimpos,
-        ip_address: getClientIp(req),
+        ip_address: ipAddress,
         user_agent: getUserAgent(req),
         rota: dados.rota || req.originalUrl || null,
         metodo_http: dados.metodo_http || req.method || null,

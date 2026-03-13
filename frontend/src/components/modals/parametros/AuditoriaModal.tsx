@@ -134,6 +134,24 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         )
       },
       {
+        key: 'usuario_nome',
+        label: t('table.name'),
+        sortable: true,
+        width: '150px',
+        render: (log: AuditoriaLog) => (
+          <span className="small">{log.usuario_nome || '-'}</span>
+        )
+      },
+      {
+        key: 'ip_address',
+        label: t('audit.ip'),
+        sortable: true,
+        width: '120px',
+        render: (log: AuditoriaLog) => (
+          <span className="small text-muted">{log.ip_address || '-'}</span>
+        )
+      },
+      {
         key: 'acao',
         label: t('table.action'),
         sortable: true,
@@ -163,15 +181,6 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         )
       },
       {
-        key: 'usuario_nome',
-        label: t('table.name'),
-        sortable: true,
-        width: '150px',
-        render: (log: AuditoriaLog) => (
-          <span className="small text-muted">{log.usuario_nome || '-'}</span>
-        )
-      },
-      {
         key: 'metodo_http',
         label: t('audit.method'),
         sortable: true,
@@ -187,15 +196,6 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         width: '200px',
         render: (log: AuditoriaLog) => (
           <span className="small">{log.rota || '-'}</span>
-        )
-      },
-      {
-        key: 'ip_address',
-        label: t('audit.ip'),
-        sortable: true,
-        width: '120px',
-        render: (log: AuditoriaLog) => (
-          <span className="small text-muted">{log.ip_address || '-'}</span>
         )
       },
       {

@@ -97,6 +97,7 @@ export class AuthController {
       const token = buildToken({
         sub: String(usuario.id),
         email: usuario.email,
+        nome: usuario.nome ?? null,
         role: usuario.role,
         empresa_id: usuario.empresa_id ?? null,
       });
