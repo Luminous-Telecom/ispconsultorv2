@@ -190,7 +190,12 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   const sanitized = { ...obj } as T;
 
   // Campos que são URLs/paths e não devem ter / escapado nem HTML encoding
-  const urlFields = ['url_retorno', 'url_boleto', 'api_url', 'url', 'webhook_url', 'notification_url', 'redirect_url', 'callback_url', 'assinatura_digital_api_url', 'url_assinatura', 'pdf_assinado_url'];
+  const urlFields = [
+    'url_retorno', 'url_boleto', 'api_url', 'url', 'webhook_url', 'notification_url', 'redirect_url', 'callback_url',
+    'assinatura_digital_api_url', 'url_assinatura', 'pdf_assinado_url',
+    'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios', // Blockdomi - links de ofícios/planilhas
+    'evolution_api_url', 'portal_nacional_base_url', 'logo_url', 'url_api'
+  ];
   
   // Campos que não devem ter nenhuma sanitização (caminhos de arquivo gerados pelo sistema)
   // Apenas remover caracteres de controle perigosos, sem HTML encoding
@@ -201,8 +206,13 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   // Observação: isso permite scripts; use apenas em endpoints/admin confiáveis.
   const rawHtmlFields = ['html'];
   
-  // Campos que não devem ter HTML encoding (CPF/CNPJ, códigos, nomes, JSON, etc)
+  // Campos que não devem ter HTML encoding (CPF/CNPJ, códigos, nomes, JSON, IPs, hosts, etc)
   const noHtmlEncodeFields = [
+    'faixa_ips', // IPs e faixas (IPv4, IPv6, CIDR) - podem ter : / ; etc
+    'ip', // IPv4 e IPv6 (Blockdomi)
+    'dominio', 'dominios', // Domínios (Blockdomi) - campo e array na importação
+    'host', 'host_smtp', // Servidores de email/SMTP - podem ser IP ou hostname
+    'dominio_customizado', // Domínio customizado SaaS (ex: meusite.com)
     'variables', // JSON array - preservar aspas
     'template_mapping', // JSON - mapeamento de templates
     'configuracao_extra', // JSON - configurações
