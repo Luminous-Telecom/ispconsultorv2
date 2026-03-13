@@ -266,14 +266,6 @@ export class ClienteController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      
-      logger.info('Iniciando atualização de cliente', {
-        context: 'ClienteController',
-        action: 'update',
-        clienteId: id,
-        bodyKeys: Object.keys(req.body || {}),
-        bodySize: JSON.stringify(req.body || {}).length
-      });
 
       // Normalizar CNPJ (remover HTML entities se houver)
       const bodyNormalizado = { ...req.body };
@@ -445,12 +437,6 @@ export class ClienteController {
           return titulo;
         });
       }
-
-      logger.info('Cliente atualizado com sucesso', {
-        context: 'ClienteController',
-        action: 'update',
-        clienteId: id
-      });
 
       sendSuccess(res, clienteData || clienteComRelacionamentos, 'Cliente atualizado com sucesso');
     } catch (error) {
