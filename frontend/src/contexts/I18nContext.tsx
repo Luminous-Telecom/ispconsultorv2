@@ -363,6 +363,14 @@ export interface TranslationKeys {
   'blockdomi.logsSearchPlaceholder': string;
   'blockdomi.logsEmpty': string;
   'blockdomi.logsReal': string;
+  'blockdomi.whois': string;
+  'blockdomi.whoisOrganizacao': string;
+  'blockdomi.whoisBloco': string;
+  'blockdomi.whoisCidr': string;
+  'blockdomi.whoisNetname': string;
+  'blockdomi.whoisPais': string;
+  'blockdomi.whoisAsn': string;
+  'blockdomi.whoisNenhumDado': string;
 
   // Parameters Menu
   'params.users': string;
@@ -1743,6 +1751,14 @@ const translations: Translations = {
     'blockdomi.logsSearchPlaceholder': 'Buscar por IP, rota...',
     'blockdomi.logsEmpty': 'Nenhum log encontrado',
     'blockdomi.logsReal': 'Logs real',
+    'blockdomi.whois': 'Whois',
+    'blockdomi.whoisOrganizacao': 'Organização',
+    'blockdomi.whoisBloco': 'Bloco de IP',
+    'blockdomi.whoisCidr': 'CIDR',
+    'blockdomi.whoisNetname': 'Netname',
+    'blockdomi.whoisPais': 'País',
+    'blockdomi.whoisAsn': 'ASN',
+    'blockdomi.whoisNenhumDado': 'Nenhum dado encontrado para este IP.',
 
   // Parameters Menu
     'params.users': 'Usuários',
@@ -3116,6 +3132,14 @@ const translations: Translations = {
     'blockdomi.logsSearchPlaceholder': 'Search by IP, route...',
     'blockdomi.logsEmpty': 'No logs found',
     'blockdomi.logsReal': 'Real-time logs',
+    'blockdomi.whois': 'Whois',
+    'blockdomi.whoisOrganizacao': 'Organization',
+    'blockdomi.whoisBloco': 'IP Block',
+    'blockdomi.whoisCidr': 'CIDR',
+    'blockdomi.whoisNetname': 'Netname',
+    'blockdomi.whoisPais': 'Country',
+    'blockdomi.whoisAsn': 'ASN',
+    'blockdomi.whoisNenhumDado': 'No data found for this IP.',
 
   // Parameters Menu
     'params.users': 'Users',
@@ -4491,6 +4515,14 @@ const translations: Translations = {
     'blockdomi.logsSearchPlaceholder': 'Buscar por IP, ruta...',
     'blockdomi.logsEmpty': 'Ningún log encontrado',
     'blockdomi.logsReal': 'Logs en tiempo real',
+    'blockdomi.whois': 'Whois',
+    'blockdomi.whoisOrganizacao': 'Organización',
+    'blockdomi.whoisBloco': 'Bloque de IP',
+    'blockdomi.whoisCidr': 'CIDR',
+    'blockdomi.whoisNetname': 'Netname',
+    'blockdomi.whoisPais': 'País',
+    'blockdomi.whoisAsn': 'ASN',
+    'blockdomi.whoisNenhumDado': 'No se encontraron datos para esta IP.',
 
   // Parameters Menu
     'params.users': 'Usuarios',

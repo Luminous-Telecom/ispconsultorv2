@@ -97,11 +97,12 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   };
 
   const { data: contratosData, isLoading, refetch } = useQuery({
-    queryKey: ['contratos', 'list', tableFilters.page, tableFilters.limit, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection, listFilters],
+    queryKey: ['contratos', 'list', tableFilters.page, tableFilters.limit, tableFilters.search, tableFilters.searchField, tableFilters.sortColumn, tableFilters.sortDirection, listFilters],
     queryFn: () => ContratoService.list({
       page: tableFilters.page,
       limit: tableFilters.limit,
       search: tableFilters.search,
+      searchField: tableFilters.searchField,
       sortColumn: tableFilters.sortColumn,
       sortDirection: tableFilters.sortDirection,
       ...listFilters

@@ -93,29 +93,50 @@ export class ContratoService {
       const searchString = typeof search === 'string' ? search : String(search);
       const searchPattern = `%${searchString}%`;
       const escapedSearch = searchString.replace(/'/g, "''");
+      const escapedPattern = `%${escapedSearch}%`;
       
       if (searchField && typeof searchField === 'string') {
-        if (searchField === 'cliente') {
-          (whereClause as Record<symbol, unknown>)[Op.or] = [
-            sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes WHERE adm_clientes.id = adm_contratos.cliente_id AND adm_clientes.razao_social LIKE '${escapedSearch}')`)
+        if (searchField === 'cliente' || searchField === 'cliente_razao_social') {
+          const clienteIdNum = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
+          const conditions: any[] = [
+            sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes WHERE adm_clientes.id = Contrato.cliente_id AND (adm_clientes.razao_social LIKE '${escapedPattern}' OR adm_clientes.nome_fantasia LIKE '${escapedPattern}'))`)
           ];
-        } else if (searchField === 'plano') {
-          (whereClause as Record<symbol, unknown>)[Op.or] = [
-            sequelize.literal(`EXISTS (SELECT 1 FROM adm_planos WHERE adm_planos.id = adm_contratos.plano_id AND adm_planos.nome_plano LIKE '${escapedSearch}')`)
+          if (clienteIdNum !== null) {
+            conditions.push(sequelize.literal(`Contrato.cliente_id = ${clienteIdNum}`));
+          }
+          (whereClause as Record<symbol, unknown>)[Op.or] = conditions;
+        } else if (searchField === 'plano' || searchField === 'plano_nome') {
+          const planoIdNum = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
+          const conditions: any[] = [
+            sequelize.literal(`EXISTS (SELECT 1 FROM adm_planos WHERE adm_planos.id = Contrato.plano_id AND adm_planos.nome_plano LIKE '${escapedPattern}')`)
           ];
+          if (planoIdNum !== null) {
+            conditions.push(sequelize.literal(`Contrato.plano_id = ${planoIdNum}`));
+          }
+          (whereClause as Record<symbol, unknown>)[Op.or] = conditions;
         } else {
+          const dbField = searchField === 'valor_final_num' ? 'valor_final' : searchField;
           (whereClause as Record<symbol, unknown>)[Op.or] = [
-            { [searchField]: { [Op.like]: searchPattern } }
+            { [dbField]: { [Op.like]: searchPattern } }
           ];
         }
       } else {
-        (whereClause as Record<symbol, unknown>)[Op.or] = [
+        const conditions: any[] = [
           { id: { [Op.like]: searchPattern } },
           { status: { [Op.like]: searchPattern } },
           { valor_final: { [Op.like]: searchPattern } },
-          sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes WHERE adm_clientes.id = adm_contratos.cliente_id AND adm_clientes.razao_social LIKE '${escapedSearch}')`),
-          sequelize.literal(`EXISTS (SELECT 1 FROM adm_planos WHERE adm_planos.id = adm_contratos.plano_id AND adm_planos.nome_plano LIKE '${escapedSearch}')`)
+          sequelize.literal(`EXISTS (SELECT 1 FROM adm_clientes WHERE adm_clientes.id = Contrato.cliente_id AND (adm_clientes.razao_social LIKE '${escapedPattern}' OR adm_clientes.nome_fantasia LIKE '${escapedPattern}'))`),
+          sequelize.literal(`EXISTS (SELECT 1 FROM adm_planos WHERE adm_planos.id = Contrato.plano_id AND adm_planos.nome_plano LIKE '${escapedPattern}')`)
         ];
+        const clienteIdNum = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
+        if (clienteIdNum !== null) {
+          conditions.push({ cliente_id: clienteIdNum });
+        }
+        const planoIdNum = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
+        if (planoIdNum !== null) {
+          conditions.push({ plano_id: planoIdNum });
+        }
+        (whereClause as Record<symbol, unknown>)[Op.or] = conditions;
       }
     }
 
@@ -183,7 +204,7 @@ export class ContratoService {
       count = result.count as number;
       rows = result.rows;
     } catch (queryError: any) {
-      logger.error('ContratoService.list - Erro na query', {
+      logger.error('[ContratoService.list] Erro na query', {
         error: queryError.message,
         errorName: queryError.name,
         sql: queryError.sql,

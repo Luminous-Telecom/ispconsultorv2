@@ -85,6 +85,7 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     filteredData: Array.isArray(data) ? data : [],
     selectedItems: [],
     searchTerm: '',
+    searchInputValue: '',
     sortColumn: propSortColumn || '',
     sortDirection: propSortDirection || 'asc',
     filters: {},
@@ -262,19 +263,26 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
 
   const setSearchTerm = useCallback((term: string) => {
     setState(prev => {
-      if (prev.searchTerm === term) return prev;
-      return { ...prev, searchTerm: term };
+      if (prev.searchTerm === term && prev.searchInputValue === term) return prev;
+      return { ...prev, searchTerm: term, searchInputValue: term };
     });
   }, []);
 
-  // Efeito para disparar onSearch de forma segura
-  const lastSearchTerm = useRef(state.searchTerm);
-  useEffect(() => {
-    if (lastSearchTerm.current !== state.searchTerm) {
-      lastSearchTerm.current = state.searchTerm;
-      onSearchRef.current?.(state.searchTerm, '');
-    }
-  }, [state.searchTerm]);
+  const setSearchInputValue = useCallback((term: string) => {
+    setState(prev => {
+      if (prev.searchInputValue === term) return prev;
+      return { ...prev, searchInputValue: term };
+    });
+  }, []);
+
+  const executeSearch = useCallback(() => {
+    setState(prev => {
+      const term = prev.searchInputValue;
+      if (prev.searchTerm === term) return prev;
+      onSearchRef.current?.(term, '');
+      return { ...prev, searchTerm: term };
+    });
+  }, []);
 
   const setSort = useCallback((column: string, direction: SortDirection) => {
     setState(prev => {
@@ -421,6 +429,8 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     setData,
     setSelectedItems,
     setSearchTerm,
+    setSearchInputValue,
+    executeSearch,
     setSort,
     setFilter,
     setFilters,
@@ -435,6 +445,8 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     setData,
     setSelectedItems,
     setSearchTerm,
+    setSearchInputValue,
+    executeSearch,
     setSort,
     setFilter,
     setFilters,

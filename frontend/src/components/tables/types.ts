@@ -136,6 +136,8 @@ export interface TableState<T = Record<string, unknown>> {
   filteredData: T[];
   selectedItems: T[];
   searchTerm: string;
+  /** Valor digitado no input (antes de executar busca com Enter/lupa) */
+  searchInputValue: string;
   sortColumn: string;
   sortDirection: SortDirection;
   filters: Record<string, FilterValue>;
@@ -150,6 +152,8 @@ export interface TableActions<T = Record<string, unknown>> {
   setData: (data: T[]) => void;
   setSelectedItems: (items: T[]) => void;
   setSearchTerm: (term: string) => void;
+  setSearchInputValue: (term: string) => void;
+  executeSearch: () => void;
   setSort: (column: string, direction: SortDirection) => void;
   setFilter: (key: string, value: FilterValue) => void;
   setFilters: (filters: Record<string, FilterValue>) => void;

@@ -1,12 +1,12 @@
-import React, { useMemo, useCallback, useEffect, useState } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { useBlockdomiLogs } from '@/hooks/useBlockdomiLogs';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useI18n } from '@/contexts/I18nContext';
 import DraggableModal from '@/components/common/DraggableModal';
 import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
-import { Button } from '@/components/ui';
 import BlockdomiLogsRealModal from './BlockdomiLogsRealModal';
+import WhoisModal from './WhoisModal';
 import type { BlockdomiLogAcessoItem } from '@/services/blockdomiLogAcessoService';
 
 interface BlockdomiLogsAcessoModalProps {
@@ -22,10 +22,11 @@ const BlockdomiLogsAcessoModal: React.FC<BlockdomiLogsAcessoModalProps> = ({
   onClose,
   title,
   skipWrapper = false,
-  onHeaderActionsReady
+  onHeaderActionsReady: _onHeaderActionsReady
 }) => {
   const { t } = useI18n();
   const [showLogsRealModal, setShowLogsRealModal] = useState(false);
+  const [whoisIp, setWhoisIp] = useState<string | null>(null);
 
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -146,67 +147,80 @@ const BlockdomiLogsAcessoModal: React.FC<BlockdomiLogsAcessoModalProps> = ({
   const modalData = useMemo(() => logsData?.data ?? [], [logsData?.data]);
 
   const handleSearchChange = useCallback((search: string, field?: string) => {
-    setTimeout(() => {
-      tableFilters.setSearch(search);
-      if (field) tableFilters.setSearchField(field);
-    }, 0);
+    tableFilters.setSearch(search);
+    if (field) tableFilters.setSearchField(field);
   }, [tableFilters]);
 
+  const bulkActions = useMemo(() => [
+    {
+      label: t('blockdomi.logsReal'),
+      variant: 'primary' as const,
+      requiresSelection: false,
+      action: () => setShowLogsRealModal(true)
+    },
+    {
+      label: t('blockdomi.whois'),
+      variant: 'primary' as const,
+      disabled: (items: BlockdomiLogAcessoItem[]) => items.length !== 1 || !items[0]?.ip?.trim(),
+      action: (items: BlockdomiLogAcessoItem[]) => {
+        const ip = items[0]?.ip?.trim();
+        if (ip) setWhoisIp(ip);
+      }
+    }
+  ], [t]);
+
   const modalContent = (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div className="d-flex justify-content-end mb-2 px-2">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={() => setShowLogsRealModal(true)}
-        >
-          {t('blockdomi.logsReal')}
-        </Button>
+    <>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table<BlockdomiLogAcessoItem>
+            syncWithHeader={false}
+            title={defaultTitle}
+            config={{
+              columns: tableColumns,
+              data: modalData,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: t('layout.searchPlaceholder'),
+              searchFields,
+              sortable: true,
+              sortColumn: tableFilters.sortColumn,
+              sortDirection: tableFilters.sortDirection,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: false,
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                variant: action.variant,
+                requiresSelection: action.requiresSelection
+              })),
+              emptyMessage: t('blockdomi.logsEmpty'),
+              pagination
+            }}
+            tableId="blockdomi-logs-acesso"
+            onRefresh={refetch}
+            onPageChange={(page) => {
+              setTimeout(() => tableFilters.setPage(page), 0);
+            }}
+            onPageSizeChange={(limit) => {
+              setTimeout(() => tableFilters.setLimit(limit), 0);
+            }}
+            onSort={(column, direction) => {
+              setTimeout(() => tableFilters.setSort(column, direction), 0);
+            }}
+            onSearch={(search, field) => handleSearchChange(search, field)}
+            search={tableFilters.search}
+          />
+        </div>
       </div>
-      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table<BlockdomiLogAcessoItem>
-          syncWithHeader={false}
-          title={defaultTitle}
-          config={{
-            columns: tableColumns,
-            data: modalData,
-            loading: isLoading,
-            searchable: true,
-            searchPlaceholder: t('blockdomi.logsSearchPlaceholder'),
-            searchFields,
-            sortable: true,
-            sortColumn: tableFilters.sortColumn,
-            sortDirection: tableFilters.sortDirection,
-            striped: true,
-            hover: true,
-            responsive: true,
-            emptyMessage: t('blockdomi.logsEmpty'),
-            pagination
-          }}
-          tableId="blockdomi-logs-acesso"
-          onRefresh={refetch}
-          onPageChange={(page) => {
-            setTimeout(() => tableFilters.setPage(page), 0);
-          }}
-          onPageSizeChange={(limit) => {
-            setTimeout(() => tableFilters.setLimit(limit), 0);
-          }}
-          onSort={(column, direction) => {
-            setTimeout(() => tableFilters.setSort(column, direction), 0);
-          }}
-          onSearch={(search, field) => handleSearchChange(search, field)}
-          search={tableFilters.search}
-        />
-      </div>
-    </div>
+    </>
   );
 
-  useEffect(() => {
-    if (skipWrapper && onHeaderActionsReady) {
-      onHeaderActionsReady(null);
-    }
-  }, [skipWrapper, onHeaderActionsReady]);
 
   const logsRealModal = (
     <BlockdomiLogsRealModal
@@ -215,11 +229,20 @@ const BlockdomiLogsAcessoModal: React.FC<BlockdomiLogsAcessoModalProps> = ({
     />
   );
 
+  const whoisModal = (
+    <WhoisModal
+      show={!!whoisIp}
+      onClose={() => setWhoisIp(null)}
+      ip={whoisIp ?? ''}
+    />
+  );
+
   if (skipWrapper) {
     return (
       <>
         {modalContent}
         {logsRealModal}
+        {whoisModal}
       </>
     );
   }
@@ -230,13 +253,14 @@ const BlockdomiLogsAcessoModal: React.FC<BlockdomiLogsAcessoModalProps> = ({
         show={show}
         onClose={onClose}
         title={defaultTitle}
-        size="xl"
+        size="lg"
         modalId="blockdomi-logs-acesso-modal"
         className="no-padding"
       >
         {modalContent}
       </DraggableModal>
       {logsRealModal}
+      {whoisModal}
     </>
   );
 };

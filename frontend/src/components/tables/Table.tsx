@@ -90,7 +90,7 @@ function Table<T extends { id: number | string }>({
   onSelectionChange,
   onSort,
   onFilter,
-  search = '',
+  search,
   onSearch,
   onPageChange,
   onPageSizeChange,
@@ -651,12 +651,8 @@ function Table<T extends { id: number | string }>({
   const currentSearchTermRef = useRef(state.searchTerm);
   const currentSelectedSearchFieldRef = useRef(selectedSearchField);
 
-  // Aplicar prop search quando ela mudar (tem prioridade sobre contexto)
-  useEffect(() => {
-    if (search !== undefined && search !== state.searchTerm) {
-      tableActions.setSearchTerm(search);
-    }
-  }, [search, state.searchTerm, tableActions]);
+  // Não sincronizar search prop -> state: quando o pai passa search, o input já usa value={search}.
+  // O sync causava loop: usuário digitava "21", pai passava "2" (desatualizado), sync sobrescrevia com "2".
 
   // Calcular valores de paginação
   const paginationValues = useMemo(() => {
@@ -725,11 +721,11 @@ function Table<T extends { id: number | string }>({
     currentSelectedSearchFieldRef.current = selectedSearchField;
   }, [state.searchTerm, selectedSearchField]);
 
-  // Callback estável para o clique de busca no header
+  // Callback estável para o clique de busca no header (executa busca com valor atual do input)
+  const handleHeaderSearchClickRef = useRef<() => void>(() => {});
+  handleHeaderSearchClickRef.current = () => tableActions.executeSearch();
   const handleHeaderSearchClick = useCallback(() => {
-    if (onSearchRef.current) {
-      onSearchRef.current(currentSearchTermRef.current, currentSelectedSearchFieldRef.current);
-    }
+    handleHeaderSearchClickRef.current();
   }, []);
 
   // Estabilizar configSearchFields para evitar loops de renderização
@@ -744,26 +740,27 @@ function Table<T extends { id: number | string }>({
   useEffect(() => {
     if (!syncWithHeader) return;
     const timeoutId = setTimeout(() => {
+      // 1. Atualizar Provider primeiro (evita "Cannot update Table while rendering Provider")
       setHeaderTitle(title || 'Lista');
       setHeaderShowSearch(searchable || false);
       setHeaderShowReload(true);
-      setHeaderOnSearchClick(handleHeaderSearchClick);
+      // Wrapper evita que React invoque o callback (setState trata função como updater)
+      setHeaderOnSearchClick(() => handleHeaderSearchClick);
       setHeaderSearchPlaceholder(defaultSearchPlaceholder);
-      setHeaderOnReloadClick(handleReloadClick);
-      
+      setHeaderOnReloadClick(() => handleReloadClick);
+
       const parsedFields = configSearchFields || [];
-      
+
       // Configurar campos de busca disponíveis
       if (parsedFields.length > 0) {
         const fields = parsedFields.map(f => ({ id: f.key, label: f.label }));
         const currentFieldsJson = JSON.stringify(headerAvailableSearchFields);
         const newFieldsJson = JSON.stringify(fields);
-        
+
         if (currentFieldsJson !== newFieldsJson) {
           setHeaderAvailableSearchFields(fields);
         }
 
-        // Sincronizar campo de busca inicial: Tabela -> Header
         const initialField = configSearchField || parsedFields[0].key;
         if (initialField && headerSearchField !== initialField) {
           setHeaderSearchField(initialField);
@@ -784,17 +781,18 @@ function Table<T extends { id: number | string }>({
         }
       }
 
-      // Lógica de sincronização inicial de valor de busca
+      // 2. Sync inicial Table <-> Header em macrotask separado (evita setState durante render)
       if (!initialSyncRef.current) {
-        if (search !== undefined) {
-          // Prop search tem prioridade sobre contexto
-          tableActions.setSearchTerm(search);
-        } else if (headerSearchValue && !state.searchTerm) {
-          tableActions.setSearchTerm(headerSearchValue);
-        } else if (state.searchTerm && !headerSearchValue) {
-          setHeaderSearchValue(state.searchTerm);
-        }
         initialSyncRef.current = true;
+        setTimeout(() => {
+          if (search !== undefined) {
+            tableActions.setSearchTerm(search);
+          } else if (headerSearchValue && !state.searchTerm) {
+            tableActions.setSearchTerm(headerSearchValue);
+          } else if (state.searchTerm && !headerSearchValue) {
+            setHeaderSearchValue(state.searchTerm);
+          }
+        }, 0);
       }
     }, 0);
 
@@ -1529,24 +1527,26 @@ function Table<T extends { id: number | string }>({
                     id={`${uniqueTableId}-search`}
                     className="form-control form-control-sm table-search-input"
                     placeholder={defaultSearchPlaceholder}
-                    value={onSearch ? (search ?? '') : state.searchTerm}
+                    value={state.searchInputValue}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      tableActions.setSearchTerm(value);
-                      if (onSearch) {
-                        onSearch(value, selectedSearchField);
-                      }
+                      tableActions.setSearchInputValue(e.target.value);
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && onSearch) {
+                      if (e.key === 'Enter') {
                         e.preventDefault();
+                        tableActions.executeSearch();
                       }
                     }}
                   />
-                  {/* Ícone de busca */}
-                  <div className="table-search-icon">
+                  {/* Ícone de busca - clicável */}
+                  <button
+                    type="button"
+                    className="table-search-icon btn btn-link p-0 border-0"
+                    onClick={() => tableActions.executeSearch()}
+                    aria-label={t('layout.searchPlaceholder')}
+                  >
                     <i className="bi bi-search text-muted"></i>
-                  </div>
+                  </button>
                 </div>
               </div>
             )}

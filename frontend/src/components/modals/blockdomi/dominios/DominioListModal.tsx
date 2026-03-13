@@ -359,10 +359,8 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   const modalData = useMemo(() => dominiosData?.data || [], [dominiosData?.data]);
 
   const handleSearchChange = useCallback((search: string, field?: string) => {
-    setTimeout(() => {
-      tableFilters.setSearch(search);
-      if (field) tableFilters.setSearchField(field);
-    }, 0);
+    tableFilters.setSearch(search);
+    if (field) tableFilters.setSearchField(field);
   }, [tableFilters]);
 
   const handleSelectAllPages = useCallback(async (): Promise<Dominio[]> => {
@@ -382,6 +380,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
+            syncWithHeader={false}
             title={defaultTitle}
             config={{
               columns: tableColumns,
