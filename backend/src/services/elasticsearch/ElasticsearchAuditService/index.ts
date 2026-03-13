@@ -92,14 +92,21 @@ export async function registrarAuditoriaElasticsearch(
   req: Request | AuthenticatedRequest,
   dados: DadosAuditoria
 ): Promise<void> {
-  // Executar de forma assíncrona sem bloquear
-    setImmediate(async () => {
+  // Capturar IP e dados do usuário de forma síncrona (antes do setImmediate)
+  // para evitar req/socket indisponível quando o callback executar
+  const userData = getUserData(req);
+  const ipAddress = getClientIp(req);
+  const empresaId = dados.empresa_id ?? getEmpresaIdForAudit(req);
+  const rota = dados.rota ?? req.originalUrl ?? null;
+  const metodoHttp = dados.metodo_http ?? req.method ?? null;
+  const userAgent = getUserAgent(req);
+
+  setImmediate(async () => {
       try {
         const elasticsearchService = getElasticsearchService();
         const client = elasticsearchService.getClient();
 
         if (!client) {
-          // Cliente Elasticsearch não disponível
           logger.warn('Cliente Elasticsearch não disponível', {
             context: 'ElasticsearchAuditService',
             action: 'registrarAuditoriaElasticsearch',
@@ -109,11 +116,8 @@ export async function registrarAuditoriaElasticsearch(
           return;
         }
 
-        // Verificar conexão
         const isConnected = await elasticsearchService.checkConnection();
-        
         if (!isConnected) {
-          // Elasticsearch não disponível
           logger.warn('Elasticsearch não disponível', {
             context: 'ElasticsearchAuditService',
             action: 'registrarAuditoriaElasticsearch',
@@ -123,13 +127,7 @@ export async function registrarAuditoriaElasticsearch(
           return;
         }
 
-        // Garantir que o índice existe
         await elasticsearchService.ensureIndex();
-
-      // Obter dados do usuário e empresa (tenant) - sem fallback
-      const userData = getUserData(req);
-      const ipAddress = getClientIp(req);
-      const empresaId = dados.empresa_id ?? getEmpresaIdForAudit(req);
 
       // Limpar dados removendo apenas campos internos do Sequelize e campos muito grandes
       const limparDados = (dados: Record<string, unknown> | null): Record<string, unknown> | null => {
@@ -293,9 +291,9 @@ export async function registrarAuditoriaElasticsearch(
         dados_anteriores: dadosAnterioresLimpos,
         dados_novos: dadosNovosLimpos,
         ip_address: ipAddress,
-        user_agent: getUserAgent(req),
-        rota: dados.rota || req.originalUrl || null,
-        metodo_http: dados.metodo_http || req.method || null,
+        user_agent: userAgent,
+        rota,
+        metodo_http: metodoHttp,
         observacoes: dados.observacoes || null,
         timestamp: safeFormatDateISOLocal(new Date()) || ''
       };
