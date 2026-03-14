@@ -114,7 +114,7 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
             <FormField name="nome" type="text" label={`${t('form.name')} *`} value={form.nome} onChange={(v) => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(e => ({ ...e, nome: undefined })); }} required size="sm" error={errors.nome} />
           </div>
           <div className="col-12">
-            <FormField name="email" type="email" label={`${t('form.email')} *`} value={form.email} onChange={(v) => { setForm(p => ({ ...p, email: String(v ?? '') })); if (errors.email) setErrors(e => ({ ...e, email: undefined })); }} required size="sm" error={errors.email} readOnly={isEditing} />
+            <FormField name="email" type="email" label={`${t('form.email')} *`} value={form.email} onChange={(v) => { setForm(p => ({ ...p, email: String(v ?? '') })); if (errors.email) setErrors(e => ({ ...e, email: undefined })); }} required size="sm" error={errors.email} />
           </div>
           <div className="col-12">
             <FormField
