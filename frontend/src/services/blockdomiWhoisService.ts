@@ -1,6 +1,11 @@
 import { defaultApiClient } from './core';
 import type { ApiResponse } from '@/types';
 
+export interface WhoisRecord {
+  key: string;
+  value: string;
+}
+
 export interface WhoisResult {
   ip: string;
   organizacao: string | null;
@@ -9,6 +14,7 @@ export interface WhoisResult {
   netname: string | null;
   pais: string | null;
   asn: string | null;
+  blocks?: WhoisRecord[][];
 }
 
 export class BlockdomiWhoisService {

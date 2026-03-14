@@ -371,6 +371,9 @@ export interface TranslationKeys {
   'blockdomi.whoisPais': string;
   'blockdomi.whoisAsn': string;
   'blockdomi.whoisNenhumDado': string;
+  'blockdomi.whoisInfo': string;
+  'blockdomi.whoisBlocos': string;
+  'blockdomi.whoisContato': string;
 
   // Parameters Menu
   'params.users': string;
@@ -1759,6 +1762,9 @@ const translations: Translations = {
     'blockdomi.whoisPais': 'País',
     'blockdomi.whoisAsn': 'ASN',
     'blockdomi.whoisNenhumDado': 'Nenhum dado encontrado para este IP.',
+    'blockdomi.whoisInfo': 'Informações',
+    'blockdomi.whoisBlocos': 'Blocos',
+    'blockdomi.whoisContato': 'Contato',
 
   // Parameters Menu
     'params.users': 'Usuários',
@@ -3140,6 +3146,9 @@ const translations: Translations = {
     'blockdomi.whoisPais': 'Country',
     'blockdomi.whoisAsn': 'ASN',
     'blockdomi.whoisNenhumDado': 'No data found for this IP.',
+    'blockdomi.whoisInfo': 'Information',
+    'blockdomi.whoisBlocos': 'Blocks',
+    'blockdomi.whoisContato': 'Contact',
 
   // Parameters Menu
     'params.users': 'Users',
@@ -4523,6 +4532,9 @@ const translations: Translations = {
     'blockdomi.whoisPais': 'País',
     'blockdomi.whoisAsn': 'ASN',
     'blockdomi.whoisNenhumDado': 'No se encontraron datos para esta IP.',
+    'blockdomi.whoisInfo': 'Información',
+    'blockdomi.whoisBlocos': 'Bloques',
+    'blockdomi.whoisContato': 'Contacto',
 
   // Parameters Menu
     'params.users': 'Usuarios',
