@@ -52,13 +52,15 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = (props) =>
   const filters: MensagemHistoricoFilters = useMemo(() => ({
     page: tableFilters.page,
     limit: tableFilters.limit,
-    destinatario: tableFilters.debouncedSearch || undefined,
+    search: tableFilters.debouncedSearch || undefined,
+    searchField: tableFilters.searchField || (tableFilters.debouncedSearch ? 'destinatario' : undefined),
     sortColumn: tableFilters.sortColumn,
     sortDirection: tableFilters.sortDirection
   }), [
     tableFilters.page,
     tableFilters.limit,
     tableFilters.debouncedSearch,
+    tableFilters.searchField,
     tableFilters.sortColumn,
     tableFilters.sortDirection
   ]);
@@ -320,7 +322,11 @@ const WhatsAppHistoricoModal: React.FC<WhatsAppHistoricoModalProps> = (props) =>
                 }, 0);
               }}
               onSearch={(search, field) => handleSearchChange(search, field)}
+              onSearchFieldChange={(field) => {
+                setTimeout(() => tableFilters.setSearchField(field), 0);
+              }}
               search={tableFilters.search}
+              syncWithHeader={false}
             />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { Response as ExpressResponse } from 'express';
 import { Op } from 'sequelize';
+import { sequelize } from '../../../config/database';
 import { SaasMensagemHistorico } from '../../../models/saas/SaasMensagemHistorico';
 import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 import { logger } from '../../../utils/logger';
@@ -18,6 +19,8 @@ export class SaasMensagemHistoricoController {
         tipo,
         status,
         destinatario,
+        search,
+        searchField,
         entidade_tipo,
         entidade_id,
         empresa_id,
@@ -37,7 +40,29 @@ export class SaasMensagemHistoricoController {
       if (status) {
         where.status = status;
       }
-      if (destinatario) {
+
+      const searchTerm = (search as string)?.trim();
+      const field = (searchField as string)?.trim() || 'destinatario';
+      if (searchTerm) {
+        if (field === 'id') {
+          const num = parseInt(searchTerm, 10);
+          if (!Number.isNaN(num) && String(num) === searchTerm) {
+            where.id = num;
+          } else {
+            (where as Record<string | symbol, unknown>)[Op.and] = [
+              sequelize.where(sequelize.cast(sequelize.col('id'), 'CHAR'), { [Op.like]: `%${searchTerm}%` })
+            ];
+          }
+        } else if (field === 'tipo') {
+          where.tipo = searchTerm;
+        } else if (field === 'status') {
+          where.status = searchTerm;
+        } else if (['cliente_nome', 'titulo', 'destinatario', 'mensagem'].includes(field)) {
+          (where as Record<string, unknown>)[field] = { [Op.like]: `%${searchTerm}%` };
+        } else {
+          where.destinatario = { [Op.like]: `%${searchTerm}%` };
+        }
+      } else if (destinatario) {
         where.destinatario = { [Op.like]: `%${destinatario}%` };
       }
       if (entidade_tipo) {
@@ -61,7 +86,7 @@ export class SaasMensagemHistoricoController {
       }
 
       const order: [string, string][] = [];
-      const validSortColumns = ['id', 'tipo', 'destinatario', 'titulo', 'status', 'created_at', 'updated_at', 'empresa_id'];
+      const validSortColumns = ['id', 'tipo', 'destinatario', 'titulo', 'status', 'created_at', 'updated_at', 'empresa_id', 'cliente_nome', 'mensagem'];
       const validSortDirections = ['asc', 'desc'];
       const sortDirectionStr = Array.isArray(sortDirection) ? sortDirection[0] : sortDirection;
       const sortDirectionValue = typeof sortDirectionStr === 'string' ? sortDirectionStr : 'desc';

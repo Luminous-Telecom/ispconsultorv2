@@ -1,9 +1,8 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import DraggableModal from '@/components/common/DraggableModal';
-import SearchBar from '@/components/ui/SearchBar';
 import Table from '@/components/tables/Table';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from '@/services/auditoriaService';
 import { formatDateTime } from '@/utils/formatters';
@@ -61,17 +60,21 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
     resetPageOnFilterChange: true,
   });
 
-  const [searchOverride, setSearchOverride] = useState(preset.search ?? '');
-
-  useEffect(() => {
-    setSearchOverride(preset.search ?? '');
-  }, [effectiveLogType, preset.search]);
+  const handleSearchChange = useCallback(
+    (search: string, field?: string) => {
+      tableFilters.setSearch(search);
+      if (field) tableFilters.setSearchField(field);
+      tableFilters.setPage(1);
+    },
+    [tableFilters]
+  );
 
   const filters: AuditoriaFilters = useMemo(
     () => ({
       page: tableFilters.page,
       limit: tableFilters.limit,
-      search: searchOverride || tableFilters.search || preset.search || undefined,
+      search: tableFilters.search || preset.search || undefined,
+      searchField: tableFilters.searchField || (tableFilters.search ? 'id' : undefined),
       acao: preset.acao,
       entidade: preset.entidade,
       comUsuarioObrigatorio: preset.comUsuarioObrigatorio,
@@ -84,10 +87,10 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
       tableFilters.page,
       tableFilters.limit,
       tableFilters.search,
+      tableFilters.searchField,
       tableFilters.sortColumn,
       tableFilters.sortDirection,
       preset,
-      searchOverride,
     ]
   );
 
@@ -275,31 +278,6 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
 
   const modalData = useMemo(() => data?.data || [], [data?.data]);
 
-  const showSearchFilter = preset.search !== undefined;
-
-  const customFilters = showSearchFilter ? (
-    <div className="row mb-1">
-      <div className="col-md-12">
-        <SearchBar
-          id="logs-auditoria-search"
-          variant="table"
-          value={searchOverride}
-          onChange={(v) => {
-            setSearchOverride(v);
-            tableFilters.setPage(1);
-          }}
-          onSearch={(v) => {
-            setSearchOverride(v);
-            tableFilters.setPage(1);
-          }}
-          placeholder={t('buttons.search')}
-          searchFields={[]}
-          className="flex-grow-1"
-        />
-      </div>
-    </div>
-  ) : null;
-
   const detailsModal = selectedLog && (
     <DraggableModal
       show={showDetailsModal}
@@ -426,38 +404,27 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
   );
 
   const modalContent = (
-    <div
-      className="row"
-      style={{
-        height: '100%',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        margin: 0,
-        padding: 0,
-      }}
-    >
-      <div
-        className="col-12"
-        style={{
-          height: '100%',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: 0,
-        }}
-      >
-        <div style={{ padding: '16px', paddingBottom: '8px', flexShrink: 0 }}>
-          {customFilters}
-        </div>
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-          <Table
-            title={t('audit.title')}
-            config={{
-              columns: tableColumns,
-              data: modalData,
-              loading: isLoading,
-              searchable: false,
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        <Table
+          title={t('audit.title')}
+          config={{
+            columns: tableColumns,
+            data: modalData,
+            loading: isLoading,
+            searchable: true,
+            searchPlaceholder: t('layout.searchPlaceholder'),
+            searchFields: [
+              { key: 'id', label: t('table.id') },
+              { key: 'timestamp', label: t('audit.timestamp') },
+              { key: 'usuario_nome', label: t('table.name') },
+              { key: 'usuario_email', label: t('audit.user') },
+              { key: 'ip_address', label: t('audit.ip') },
+              { key: 'acao', label: t('table.action') },
+              { key: 'entidade', label: t('audit.entity') },
+              { key: 'observacoes', label: t('table.observations') },
+              { key: 'rota', label: t('audit.route') },
+            ],
               sortable: true,
               sortColumn: tableFilters.sortColumn,
               sortDirection: tableFilters.sortDirection,
@@ -488,8 +455,13 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
             onSort={(column, direction) => {
               setTimeout(() => tableFilters.setSort(column, direction), 0);
             }}
+            onSearch={handleSearchChange}
+            onSearchFieldChange={(field) => {
+              setTimeout(() => tableFilters.setSearchField(field), 0);
+            }}
+            search={tableFilters.search}
+            syncWithHeader={false}
           />
-        </div>
       </div>
     </div>
   );

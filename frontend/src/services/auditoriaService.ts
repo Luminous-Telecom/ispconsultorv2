@@ -26,6 +26,7 @@ export interface AuditoriaFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   acao?: string;
   entidade?: string;
   usuario_id?: number;
@@ -63,6 +64,7 @@ class AuditoriaService {
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
+    if (filters.searchField) params.append('searchField', filters.searchField);
     if (filters.acao) params.append('acao', filters.acao);
     if (filters.entidade) params.append('entidade', filters.entidade);
     if (filters.usuario_id) params.append('usuario_id', filters.usuario_id.toString());
@@ -182,6 +184,7 @@ class AuditoriaService {
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
+    if (filters.searchField) params.append('searchField', filters.searchField);
     if (filters.acao) params.append('acao', filters.acao);
     if (filters.entidade) params.append('entidade', filters.entidade);
     if (filters.usuario_id) params.append('usuario_id', filters.usuario_id.toString());
@@ -215,6 +218,7 @@ class AuditoriaService {
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
+    if (filters.searchField) params.append('searchField', filters.searchField);
     if (filters.acao) params.append('acao', filters.acao);
     if (filters.entidade) params.append('entidade', filters.entidade);
     if (filters.usuario_id) params.append('usuario_id', filters.usuario_id.toString());

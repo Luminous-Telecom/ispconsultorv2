@@ -31,6 +31,10 @@ export interface MensagemHistorico {
 export interface MensagemHistoricoFilters {
   tipo?: 'email' | 'whatsapp';
   status?: 'enviada' | 'erro';
+  /** Termo de busca (usa searchField quando informado) */
+  search?: string;
+  /** Campo para buscar: id, tipo, cliente_nome, titulo, destinatario, mensagem, status */
+  searchField?: string;
   destinatario?: string;
   entidade_tipo?: string;
   entidade_id?: number;

@@ -12,6 +12,7 @@ export class AuditoriaQueryService {
 
   static buildElasticsearchQuery(params: {
     search?: string;
+    searchField?: string;
     acao?: string;
     entidade?: string;
     usuario_id?: number;
@@ -27,55 +28,112 @@ export class AuditoriaQueryService {
     /** Filtrar por origem (ex.: agendador) */
     origemAuditoria?: string;
   }): { must: any[]; must_not?: any[] } {
-    const { search, acao, entidade, usuario_id, dataInicio, dataFim, empresaId, excludeSaasEntities = true, filterSaasOnly = false, comUsuarioObrigatorio = false, semUsuarioObrigatorio = false, origemAuditoria } = params;
+    const { search, searchField, acao, entidade, usuario_id, dataInicio, dataFim, empresaId, excludeSaasEntities = true, filterSaasOnly = false, comUsuarioObrigatorio = false, semUsuarioObrigatorio = false, origemAuditoria } = params;
     const must: any[] = [
       { bool: { should: [{ term: { log_tipo: 'auditoria' } }, { bool: { must: [{ bool: { must_not: { exists: { field: 'log_tipo' } } } }, { exists: { field: 'acao' } }] } }], minimum_should_match: 1 } }
     ];
 
     if (search) {
-      const isRoute = search.startsWith('/api/');
-      const isEmail = search.includes('@');
-      const isEntity = /^[A-Z][a-zA-Z]*$/.test(search.trim()) && search.trim().length > 2 && !search.includes(' ');
-      
-      if (isRoute) {
-        must.push({
-          bool: {
-            should: [
-              { match_phrase: { rota: { query: search } } },
-              { wildcard: { rota: { value: `*${search.toLowerCase()}*` } } }
-            ],
-            minimum_should_match: 1
+      const fieldMap: Record<string, string> = {
+        id: '_id',
+        timestamp: 'timestamp',
+        usuario_nome: 'usuario_nome',
+        usuario_email: 'usuario_email',
+        entidade: 'entidade',
+        acao: 'acao',
+        observacoes: 'observacoes',
+        rota: 'rota',
+        ip_address: 'ip_address',
+      };
+      const esField = searchField ? fieldMap[searchField] : null;
+      const escapeWildcard = (s: string) => s.replace(/\\/g, '\\\\').replace(/\*/g, '\\*').replace(/\?/g, '\\?');
+
+      if (esField) {
+        if (esField === '_id') {
+          must.push({ prefix: { _id: { value: search } } });
+        } else if (esField === 'timestamp') {
+          const t = search.trim().replace(/\D/g, '');
+          const len = t.length;
+          let gte: string | undefined;
+          let lte: string | undefined;
+          if (len >= 4) {
+            let y: string, m: string, d: string;
+            if (len >= 8) {
+              const yyyy = t.slice(0, 4), mm = t.slice(4, 6), dd = t.slice(6, 8);
+              if (yyyy.startsWith('19') || yyyy.startsWith('20')) {
+                y = yyyy; m = mm; d = dd;
+              } else {
+                y = t.slice(4, 8); m = t.slice(2, 4); d = t.slice(0, 2);
+              }
+              gte = `${y}-${m}-${d}T00:00:00`;
+              lte = `${y}-${m}-${d}T23:59:59`;
+            } else if (len >= 6) {
+              y = t.slice(0, 4); m = t.slice(4, 6);
+              gte = `${y}-${m}-01T00:00:00`;
+              lte = `${y}-${m}-31T23:59:59`;
+            } else {
+              y = t.slice(0, 4);
+              gte = `${y}-01-01T00:00:00`;
+              lte = `${y}-12-31T23:59:59`;
+            }
           }
-        });
-      } else if (isEmail) {
-        must.push({
-          bool: {
-            should: [
-              { match_phrase: { usuario_email: { query: search } } },
-              { wildcard: { usuario_email: { value: `*${search.toLowerCase()}*` } } }
-            ],
-            minimum_should_match: 1
+          if (gte && lte) {
+            must.push({ range: { timestamp: { gte, lte } } });
           }
-        });
-      } else if (isEntity) {
-        must.push({
-          bool: {
-            should: [
-              { term: { entidade: search } },
-              { match_phrase: { entidade: { query: search } } }
-            ],
-            minimum_should_match: 1
+        } else if (esField === 'observacoes') {
+          must.push({
+            bool: {
+              should: [
+                { match: { observacoes: { query: search, operator: 'or' } } },
+                { match_phrase: { observacoes: { query: search } } }
+              ],
+              minimum_should_match: 1
+            }
+          });
+        } else if (esField === 'ip_address') {
+          const ipPart = search.trim();
+          const parts = ipPart.split('.').filter(Boolean);
+          if (parts.length === 4 && /^\d{1,3}(\.\d{1,3}){3}$/.test(ipPart)) {
+            must.push({ term: { ip_address: ipPart } });
+          } else if (parts.length >= 1 && parts.length <= 4 && parts.every((p) => /^\d{1,3}$/.test(p))) {
+            const base = parts.join('.');
+            const pad = parts.length;
+            const min = base + '.' + Array(4 - pad).fill('0').join('.');
+            const max = base + '.' + Array(4 - pad).fill('255').join('.');
+            must.push({ range: { ip_address: { gte: min, lte: max } } });
+          } else {
+            must.push({ term: { ip_address: ipPart } });
           }
-        });
+        } else {
+          const safeVal = escapeWildcard(search);
+          must.push({
+            wildcard: { [esField]: { value: `*${safeVal}*`, case_insensitive: true } }
+          });
+        }
       } else {
-        must.push({
-          multi_match: {
-            query: search,
-            fields: ['observacoes', 'rota', 'usuario_email', 'usuario_nome'],
-            type: 'best_fields',
-            operator: 'or'
-          }
-        });
+        const isRoute = search.startsWith('/api/');
+        const isEmail = search.includes('@');
+        const isEntity = /^[A-Z][a-zA-Z]*$/.test(search.trim()) && search.trim().length > 2 && !search.includes(' ');
+
+        if (isRoute) {
+          const safeRota = escapeWildcard(search);
+          must.push({ wildcard: { rota: { value: `*${safeRota}*`, case_insensitive: true } } });
+        } else if (isEmail) {
+          const safeEmail = escapeWildcard(search);
+          must.push({ wildcard: { usuario_email: { value: `*${safeEmail}*`, case_insensitive: true } } });
+        } else if (isEntity) {
+          const safeEnt = escapeWildcard(search);
+          must.push({ wildcard: { entidade: { value: `*${safeEnt}*`, case_insensitive: true } } });
+        } else {
+          must.push({
+            multi_match: {
+              query: search,
+              fields: ['observacoes', 'rota', 'usuario_email', 'usuario_nome'],
+              type: 'best_fields',
+              operator: 'or'
+            }
+          });
+        }
       }
     }
 
@@ -145,6 +203,7 @@ export class AuditoriaQueryService {
     page: number;
     limit: number;
     search?: string;
+    searchField?: string;
     acao?: string;
     entidade?: string;
     usuario_id?: number;

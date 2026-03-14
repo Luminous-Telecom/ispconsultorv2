@@ -214,6 +214,7 @@ const BlockdomiLogsAcessoModal: React.FC<BlockdomiLogsAcessoModalProps> = ({
             }}
             onSearch={(search, field) => handleSearchChange(search, field)}
             search={tableFilters.search}
+            syncWithHeader={false}
           />
         </div>
       </div>
