@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect } from 'react';
-import { Table } from '@/components/tables';
-import { saasEmpresasService, type SaasEmpresa } from '@/services/saas/saasEmpresasService';
+import { Table } from 'components/tables';
+import { saasEmpresasService, type SaasEmpresa } from 'services/saas/saasEmpresasService';
 import { useQuery } from '@tanstack/react-query';
-import { formatDateTime } from '@/utils/formatters';
-import { useModal } from '@/contexts/ModalContext';
-import { useTableFilters } from '@/hooks/useTableFilters';
+import { formatDateTime } from 'utils/formatters';
+import { useModal } from 'contexts/ModalContext';
+import { useTableFilters } from 'hooks/useTableFilters';
 
 interface SaasDashboardSearchResultProps {
   searchTerm: string;

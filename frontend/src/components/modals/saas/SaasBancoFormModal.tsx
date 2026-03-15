@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
 import { useQueryClient } from '@tanstack/react-query';
-import { useI18n } from '@/contexts/I18nContext';
-import { useFormPrefix } from '@/hooks/useFormId';
-import { useSaasBancoForm } from '@/hooks/useSaasBancoForm';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button, Spinner } from '@/components/ui';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
+import { useFormPrefix } from 'hooks/useFormId';
+import { useSaasBancoForm } from 'hooks/useSaasBancoForm';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button, Spinner } from 'components/ui';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from '../bancos/banco';
 import { BancoForm } from '../bancos/banco/types';
 import AsaasForm from '../bancos/banco/especificos/AsaasForm';
 import EfiForm from '../bancos/banco/especificos/EfiForm';
-import { saasBancoService } from '@/services/saas/saasConfigService';
+import { saasBancoService } from 'services/saas/saasConfigService';
 
 interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; }
 

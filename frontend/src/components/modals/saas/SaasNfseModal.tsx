@@ -2,9 +2,9 @@
  * NFS-e - isolado para SaaS (usa saas_nfse_config)
  */
 import React, { useState, useRef } from 'react';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
 import SaasNFSeConfigSection from './SaasNFSeConfigSection';
 
 interface SaasNfseModalProps {

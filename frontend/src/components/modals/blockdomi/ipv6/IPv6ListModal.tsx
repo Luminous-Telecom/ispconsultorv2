@@ -1,21 +1,21 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useIPv6s, useDeleteIPv6 } from '@/hooks/useIPv6';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { IPv6 } from '@/types';
-import { useI18n } from '@/contexts/I18nContext';
-import { formatDateTime, formatDate } from '@/utils/formatters';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { useIPv6s, useDeleteIPv6 } from 'hooks/useIPv6';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { IPv6 } from 'types';
+import { useI18n } from 'contexts/I18nContext';
+import { formatDateTime, formatDate } from 'utils/formatters';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 import { IPv6Modal } from './index';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { IPv6Service } from '@/services/ipv6Service';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { IPv6Service } from 'services/ipv6Service';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface IPv6ListModalProps {
   show: boolean;

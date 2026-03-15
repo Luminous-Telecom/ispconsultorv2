@@ -1,12 +1,12 @@
 import React, { useCallback, useMemo, useEffect } from 'react';
-import { Titulo } from '@/types/entities';
-import Table from '@/components/tables/Table';
+import { Titulo } from 'types/entities';
+import Table from 'components/tables/Table';
 import { BulkAction } from '../types';
-import { TableColumn } from '@/components/tables/types';
-import { SortDirection } from '@/components/tables/types';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useI18n } from '@/contexts/I18nContext';
-import { formatCurrency } from '@/utils/formatters';
+import { TableColumn } from 'components/tables/types';
+import { SortDirection } from 'components/tables/types';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useI18n } from 'contexts/I18nContext';
+import { formatCurrency } from 'utils/formatters';
 
 interface FinanceiroTabProps {
   isLoading: boolean;

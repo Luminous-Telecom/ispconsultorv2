@@ -1,17 +1,17 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
 import {
   ClassifiedList,
   classifyLine,
   classifyLines
-} from '@/components/modals/blockdomi/ImportarListaBlockdomiModal';
-import { DominioService } from '@/services/dominioService';
-import { IPv4Service } from '@/services/ipv4Service';
-import { IPv6Service } from '@/services/ipv6Service';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useI18n } from '@/contexts/I18nContext';
+} from 'components/modals/blockdomi/ImportarListaBlockdomiModal';
+import { DominioService } from 'services/dominioService';
+import { IPv4Service } from 'services/ipv4Service';
+import { IPv6Service } from 'services/ipv6Service';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
 
 export interface DominiosExtraidosVisualizacaoMetadata {
   nomeOficio?: string;

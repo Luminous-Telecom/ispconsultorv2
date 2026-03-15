@@ -1,15 +1,15 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import { useI18n } from '@/contexts/I18nContext';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { TableConfig } from '@/components/tables/types';
-import { saasEmpresasService, type SaasEmpresa, type SaasConfigListResponse } from '@/services/saas/saasEmpresasService';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useAuditoria } from 'hooks/useAuditoria';
+import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { TableConfig } from 'components/tables/types';
+import { saasEmpresasService, type SaasEmpresa, type SaasConfigListResponse } from 'services/saas/saasEmpresasService';
 import SaasEmpresaFormModal from './SaasEmpresaFormModal';
 
 interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onHeaderActionsReady?: (a: React.ReactNode) => void; empresaId?: number; initialFilters?: { created_at_inicio?: string; created_at_fim?: string }; }

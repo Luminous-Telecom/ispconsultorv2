@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { TermoContrato } from '@/services/termoContratoService';
-import { Cliente } from '@/types';
-import { AssinaturaDigitalService, EnviarAssinaturaRequest } from '@/services/assinaturaDigitalService';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { TermoContrato } from 'services/termoContratoService';
+import { Cliente } from 'types';
+import { AssinaturaDigitalService, EnviarAssinaturaRequest } from 'services/assinaturaDigitalService';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useIsMobile } from 'hooks/useMediaQuery';
 
 interface EnviarAssinaturaModalProps {
   show: boolean;

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useSaasAuth } from '@/contexts/SaasAuthContext';
-import BackNetLogo from '@/components/common/BackNetLogo';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useSaasAuth } from 'contexts/SaasAuthContext';
+import BackNetLogo from 'components/common/BackNetLogo';
 
 const SaasLogin: React.FC = () => {
   const navigate = useNavigate();

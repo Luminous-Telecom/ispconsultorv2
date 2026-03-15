@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useFormReset } from '@/hooks/useFormReset';
-import { saasPlanoService, type SaasPlano } from '@/services/saas/saasPlanoService';
-import { PLANO_MODULOS } from '@/constants/planoModulos';
-import type { PlanoModuloId } from '@/services/planoModulosService';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useFormReset } from 'hooks/useFormReset';
+import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
+import { PLANO_MODULOS } from 'constants/planoModulos';
+import type { PlanoModuloId } from 'services/planoModulosService';
 
 function extractModulosFromRecursos(recursos: unknown): PlanoModuloId[] {
   let obj: Record<string, unknown> | null = null;

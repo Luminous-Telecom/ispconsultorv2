@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { ParametrosService } from '@/services/parametrosService';
-import { useFormReset } from '@/hooks/useFormReset';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { ParametrosService } from 'services/parametrosService';
+import { useFormReset } from 'hooks/useFormReset';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
 interface ParametrosModalProps {
   show: boolean;
   onClose: () => void;

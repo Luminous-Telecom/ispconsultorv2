@@ -1,16 +1,16 @@
 import React from 'react';
-import { formatCurrency, formatNumber } from '@/utils/formatters';
-import { useDashboard } from '@/hooks/useDashboard';
-import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { useDashboardCharts } from '@/hooks/useDashboardCharts';
-import { useChartHiddenItems } from '@/hooks/useChartHiddenItems';
-import { useDashboardChartClicks } from '@/hooks/useDashboardChartClicks';
-import { BarChart, ValueChart, ResponsiveLineChart, DualLineChart, ResponsivePieChart } from '@/components/charts';
-import { Spinner } from '@/components/ui';
-import { useTableHeader } from '@/contexts/TableHeaderContext';
-import { useModal } from '@/contexts/ModalContext';
-import { useI18n } from '@/contexts/I18nContext';
+import { formatCurrency, formatNumber } from 'utils/formatters';
+import { useDashboard } from 'hooks/useDashboard';
+import { useDashboardFilters } from 'contexts/DashboardFiltersContext';
+import { useDashboardStats } from 'hooks/useDashboardStats';
+import { useDashboardCharts } from 'hooks/useDashboardCharts';
+import { useChartHiddenItems } from 'hooks/useChartHiddenItems';
+import { useDashboardChartClicks } from 'hooks/useDashboardChartClicks';
+import { BarChart, ValueChart, ResponsiveLineChart, DualLineChart, ResponsivePieChart } from 'components/charts';
+import { Spinner } from 'components/ui';
+import { useTableHeader } from 'contexts/TableHeaderContext';
+import { useModal } from 'contexts/ModalContext';
+import { useI18n } from 'contexts/I18nContext';
 import DashboardSearchResult from '../dashboard/DashboardSearchResult';
 
 const Dashboard: React.FC = () => {

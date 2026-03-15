@@ -1,7 +1,7 @@
 import React from 'react';
 import { ButtonHTMLAttributes } from 'react';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useI18n } from '@/contexts/I18nContext';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useI18n } from 'contexts/I18nContext';
 
 export type ButtonVariant = 
   | 'primary' 

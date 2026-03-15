@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { useTableHeader } from '@/contexts/TableHeaderContext';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Button, Spinner } from '@/components/ui';
-import SearchBar from '@/components/ui/SearchBar';
-import { useI18n } from '@/contexts/I18nContext';
+import { useTableHeader } from 'contexts/TableHeaderContext';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { Button, Spinner } from 'components/ui';
+import SearchBar from 'components/ui/SearchBar';
+import { useI18n } from 'contexts/I18nContext';
 
 interface ResponsiveDialogProps {
   isOpen: boolean;

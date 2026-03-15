@@ -1,16 +1,16 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
-import { TableConfig } from '@/components/tables/types';
-import { saasServidorEmailService, type SaasServidorEmail, type SaasConfigListResponse } from '@/services/saas/saasConfigService';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useAuditoria } from 'hooks/useAuditoria';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import ImprimirModal from 'components/common/ImprimirModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
+import { TableConfig } from 'components/tables/types';
+import { saasServidorEmailService, type SaasServidorEmail, type SaasConfigListResponse } from 'services/saas/saasConfigService';
 import SaasServidorEmailFormModal from './SaasServidorEmailFormModal';
 
 interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onHeaderActionsReady?: (a: React.ReactNode) => void; }

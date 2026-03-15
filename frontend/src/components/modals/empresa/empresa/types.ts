@@ -1,5 +1,5 @@
-import { DadosEmpresa as DadosEmpresaType } from '@/services/dadosEmpresaService';
-import { FormValue } from '@/types/common';
+import { DadosEmpresa as DadosEmpresaType } from 'services/dadosEmpresaService';
+import { FormValue } from 'types/common';
 
 export interface DadosEmpresaForm extends DadosEmpresaType {}
 

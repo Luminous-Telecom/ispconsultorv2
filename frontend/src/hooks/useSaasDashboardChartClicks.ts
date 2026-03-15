@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { useModal } from '@/contexts/ModalContext';
-import { ChartDataItem } from '@/components/charts/types';
-import { ModalType } from '@/contexts/ModalContext';
+import { useModal } from 'contexts/ModalContext';
+import { ChartDataItem } from 'components/charts/types';
+import { ModalType } from 'contexts/ModalContext';
 
 export const useSaasDashboardChartClicks = () => {
   const { openModal } = useModal();

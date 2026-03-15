@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { Cliente } from '@/types';
-import { useI18n } from '@/contexts/I18nContext';
-import FormField from '@/components/ui/FormField';
+import { Cliente } from 'types';
+import { useI18n } from 'contexts/I18nContext';
+import FormField from 'components/ui/FormField';
 import { ContratoForm } from '../types';
 
 interface EnderecoTabProps {

@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { ContratoPlanoAdicional, CreateContratoPlanoAdicional, UpdateContratoPlanoAdicional } from '@/services/contratoPlanoAdicionalService';
-import { useCreateContratoPlanoAdicional, useUpdateContratoPlanoAdicional } from '@/hooks/useContratoPlanosAdicionais';
-import { usePlanos } from '@/hooks/usePlanos';
-import { Plano } from '@/types/entities';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import EntitySelectField from '@/components/ui/EntitySelectField';
-import PlanoListModal from '@/components/modals/planos/PlanoListModal';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { ContratoPlanoAdicional, CreateContratoPlanoAdicional, UpdateContratoPlanoAdicional } from 'services/contratoPlanoAdicionalService';
+import { useCreateContratoPlanoAdicional, useUpdateContratoPlanoAdicional } from 'hooks/useContratoPlanosAdicionais';
+import { usePlanos } from 'hooks/usePlanos';
+import { Plano } from 'types/entities';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import EntitySelectField from 'components/ui/EntitySelectField';
+import PlanoListModal from 'components/modals/planos/PlanoListModal';
 
 interface ServicoAdicionalModalProps {
   show: boolean;

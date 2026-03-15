@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { DiasVencimentoService, type DiasVencimento } from '@/services/diasVencimentoService';
-import { saasDiasVencimentoService } from '@/services/saas/saasCrudService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { DiasVencimentoService, type DiasVencimento } from 'services/diasVencimentoService';
+import { saasDiasVencimentoService } from 'services/saas/saasCrudService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
 
 interface DiasVencimentoModalProps {
   show: boolean;

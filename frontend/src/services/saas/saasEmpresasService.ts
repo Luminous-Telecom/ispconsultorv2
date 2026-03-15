@@ -1,5 +1,5 @@
 import { defaultApiClient } from '../core';
-import type { ApiResponse } from '@/types';
+import type { ApiResponse } from 'types';
 
 export interface SaasConfigListResponse<T> {
   data: T[];

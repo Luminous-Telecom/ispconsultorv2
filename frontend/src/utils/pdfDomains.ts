@@ -1,14 +1,22 @@
 /**
  * Extrai texto de um PDF e retorna apenas os domínios encontrados na tabela anexo.
  * Pensado para PDFs de ofícios (ex.: Anatel) com tabela de domínios.
+ * pdfjs-dist é carregado sob demanda (dynamic import) para não pesar o bundle inicial.
  */
-import * as pdfjsLib from 'pdfjs-dist';
-import { sanitizeDominio } from '@/utils/stringUtils';
-import { isValidIPv4, isValidIPv6 } from '@/utils/validators';
+import { sanitizeDominio } from 'utils/stringUtils';
+import { isValidIPv4, isValidIPv6 } from 'utils/validators';
 
-// Worker do pdfjs (CDN para evitar copiar arquivo para public)
-if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs`;
+let pdfjsLibPromise: Promise<typeof import('pdfjs-dist')> | null = null;
+
+async function getPdfjs() {
+  if (!pdfjsLibPromise) {
+    pdfjsLibPromise = import('pdfjs-dist');
+  }
+  const pdfjsLib = await pdfjsLibPromise;
+  if (typeof window !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs`;
+  }
+  return pdfjsLib;
 }
 
 /**
@@ -34,6 +42,7 @@ interface RowBbox {
  * Extrai todo o texto de um PDF a partir de um ArrayBuffer, mantendo informações de página.
  */
 export async function extractTextFromPdf(arrayBuffer: ArrayBuffer): Promise<string> {
+  const pdfjsLib = await getPdfjs();
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
   const pdf = await loadingTask.promise;
   const numPages = pdf.numPages;
@@ -66,6 +75,7 @@ interface PdfItem {
  * Usado para detectar região de tabela e extrair domínios apenas de dentro da tabela.
  */
 async function extractTextByPage(arrayBuffer: ArrayBuffer): Promise<PageText[]> {
+  const pdfjsLib = await getPdfjs();
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
   const pdf = await loadingTask.promise;
   const numPages = pdf.numPages;

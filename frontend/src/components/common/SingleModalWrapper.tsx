@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
-import { useModal } from '@/contexts/ModalContext';
-import { useI18n, TranslationKeys } from '@/contexts/I18nContext';
+import { useModal } from 'contexts/ModalContext';
+import { useI18n, TranslationKeys } from 'contexts/I18nContext';
 import Loading from './Loading';
 import DraggableModal from './DraggableModal';
 
@@ -37,7 +37,7 @@ const IPv6ListModal = lazy(() => import('../modals/blockdomi/ipv6').then(m => ({
 const ImportarListaBlockdomiModal = lazy(() => import('../modals/blockdomi/ImportarListaBlockdomiModal'));
 const IpsPermitidosListModal = lazy(() => import('../modals/blockdomi/ips-permitidos').then(m => ({ default: m.IpsPermitidosListModal })));
 const BlockdomiLogsAcessoModal = lazy(() => import('../modals/blockdomi/BlockdomiLogsAcessoModal'));
-const LogsAuditoriaModal = lazy(() => import('@/components/modals/logs/LogsAuditoriaModal'));
+const LogsAuditoriaModal = lazy(() => import('components/modals/logs/LogsAuditoriaModal'));
 
 // SaaS Super Admin
 const SaasPlanoListModal = lazy(() => import('../modals/saas/SaasPlanoListModal'));

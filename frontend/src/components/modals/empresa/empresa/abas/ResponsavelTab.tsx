@@ -1,8 +1,8 @@
 import React from 'react';
-import { formatCPF } from '@/utils/formatters';
-import { FormField } from '@/components/ui';
+import { formatCPF } from 'utils/formatters';
+import { FormField } from 'components/ui';
 import { DadosEmpresaTabProps } from '../types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 /** Desativado provisoriamente - trocar para true para reativar */
 const SHOW_ASSINATURA_RESPONSAVEL = false;

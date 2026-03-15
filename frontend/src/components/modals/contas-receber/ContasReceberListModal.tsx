@@ -1,25 +1,25 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTitulosFinanceiro } from '@/hooks/useTitulosFinanceiro';
-import { Titulo, TituloFilters } from '@/types';
-import { TituloItem } from '@/types/cliente';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { TituloService } from '@/services/tituloService';
-import { saasTituloService, type SaasTitulo } from '@/services/saas/saasCrudService';
-import { formatDate, formatDateTime } from '@/utils/formatters';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig, BulkAction } from '@/components/tables/types';
-import { TituloModal } from '@/components/modals/titulos';
-import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
-import { useI18n } from '@/contexts/I18nContext';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import GerarNFeModal from '@/components/modals/notas-fiscais/GerarNFeModal';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useTitulosFinanceiro } from 'hooks/useTitulosFinanceiro';
+import { Titulo, TituloFilters } from 'types';
+import { TituloItem } from 'types/cliente';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { TituloService } from 'services/tituloService';
+import { saasTituloService, type SaasTitulo } from 'services/saas/saasCrudService';
+import { formatDate, formatDateTime } from 'utils/formatters';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig, BulkAction } from 'components/tables/types';
+import { TituloModal } from 'components/modals/titulos';
+import ReceberModal from 'components/modals/pagamentos/ReceberModal';
+import { useI18n } from 'contexts/I18nContext';
+import ImprimirModal from 'components/common/ImprimirModal';
+import GerarNFeModal from 'components/modals/notas-fiscais/GerarNFeModal';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useAuditoria } from 'hooks/useAuditoria';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 type TituloItemUnion = Titulo | SaasTitulo;
 
@@ -639,7 +639,7 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
     
     try {
       const ids = itensComNFSe.map(item => item.id).join(',');
-      const { defaultApiClient } = await import('@/services/core/ApiClient');
+      const { defaultApiClient } = await import('services/core/ApiClient');
       
       const response = await defaultApiClient.get(`/notas-fiscais/nfse/multiplos?ids=${ids}&print=true`, {
         responseType: 'blob'

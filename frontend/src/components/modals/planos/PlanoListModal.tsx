@@ -1,19 +1,19 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { usePlanos, useDeletePlano } from '@/hooks/usePlanos';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { Plano, PlanoFilters } from '@/types';
-import { useI18n } from '@/contexts/I18nContext';
-import { formatDateTime } from '@/utils/formatters';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { usePlanos, useDeletePlano } from 'hooks/usePlanos';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { Plano, PlanoFilters } from 'types';
+import { useI18n } from 'contexts/I18nContext';
+import { formatDateTime } from 'utils/formatters';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 import PlanoModal from './PlanoModal';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface PlanoListModalProps {
   show: boolean;

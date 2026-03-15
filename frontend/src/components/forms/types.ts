@@ -1,5 +1,5 @@
 // Tipos para sistema de formulários unificado
-import { FormValue } from '@/types/common';
+import { FormValue } from 'types/common';
 
 export type ValidationRule = 
   | { type: 'required'; message?: string }

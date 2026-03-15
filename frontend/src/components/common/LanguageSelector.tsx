@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { useI18n } from '@/contexts/I18nContext';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useI18n } from 'contexts/I18nContext';
+import { useIsMobile } from 'hooks/useMediaQuery';
 
 interface LanguageSelectorProps {
   usePortal?: boolean;

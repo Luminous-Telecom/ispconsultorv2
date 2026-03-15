@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { ServidorWhatsAppService, MensagemWhatsApp } from '@/services/servidorWhatsAppService';
-import { defaultApiClient } from '@/services/core';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button, Spinner } from '@/components/ui';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { ServidorWhatsAppService, MensagemWhatsApp } from 'services/servidorWhatsAppService';
+import { defaultApiClient } from 'services/core';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button, Spinner } from 'components/ui';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
 import TemplatesTab from './abas/TemplatesTab';
 import TemplatesMetaTab from './abas/TemplatesMetaTab';
 import TemplateSelectModal from './TemplateSelectModal';
-import { useI18n } from '@/contexts/I18nContext';
-import SaasServidorWhatsappModal from '@/components/modals/saas/SaasServidorWhatsappModal';
+import { useI18n } from 'contexts/I18nContext';
+import SaasServidorWhatsappModal from 'components/modals/saas/SaasServidorWhatsappModal';
 
 interface GrupoVariaveis {
   titulo: string;

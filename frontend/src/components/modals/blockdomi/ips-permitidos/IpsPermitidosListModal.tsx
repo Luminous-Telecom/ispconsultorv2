@@ -1,19 +1,19 @@
 import React, { useState, useCallback, useMemo, useLayoutEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useIpsPermitidos, useDeleteIpPermitido } from '@/hooks/useIpsPermitidos';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { useI18n } from '@/contexts/I18nContext';
-import { formatDateTime } from '@/utils/formatters';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { useIpsPermitidos, useDeleteIpPermitido } from 'hooks/useIpsPermitidos';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useI18n } from 'contexts/I18nContext';
+import { formatDateTime } from 'utils/formatters';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 import IpsPermitidoModal from './IpsPermitidoModal';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
-import { Button } from '@/components/ui';
-import type { IpPermitido } from '@/services/ipsPermitidosService';
+import { useAuditoria } from 'hooks/useAuditoria';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ImprimirModal from 'components/common/ImprimirModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
+import { Button } from 'components/ui';
+import type { IpPermitido } from 'services/ipsPermitidosService';
 
 interface IpsPermitidosListModalProps {
   show: boolean;

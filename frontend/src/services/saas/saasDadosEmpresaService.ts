@@ -4,7 +4,7 @@
  */
 
 import { defaultApiClient } from '../core';
-import type { ApiResponse } from '@/types';
+import type { ApiResponse } from 'types';
 
 export interface SaasDadosEmpresaItem {
   id: number;

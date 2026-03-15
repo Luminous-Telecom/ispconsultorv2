@@ -1,18 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useSaasAuth } from '@/contexts/SaasAuthContext';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useLoading } from '@/contexts/LoadingContext';
-import { useApiLoading } from '@/hooks/useApiLoading';
-import LoadingDots from '@/components/common/LoadingDots';
-import SearchBar from '@/components/ui/SearchBar';
-import BackNetLogo from '@/components/common/BackNetLogo';
-import SingleModalWrapper from '@/components/common/SingleModalWrapper';
-import { useModal, type ModalType } from '@/contexts/ModalContext';
-import { useI18n } from '@/contexts/I18nContext';
-import { useTableHeader } from '@/contexts/TableHeaderContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useTheme } from 'contexts/ThemeContext';
+import { useSaasAuth } from 'contexts/SaasAuthContext';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useLoading } from 'contexts/LoadingContext';
+import { useApiLoading } from 'hooks/useApiLoading';
+import LoadingDots from 'components/common/LoadingDots';
+import SearchBar from 'components/ui/SearchBar';
+import BackNetLogo from 'components/common/BackNetLogo';
+import SingleModalWrapper from 'components/common/SingleModalWrapper';
+import { useModal, type ModalType } from 'contexts/ModalContext';
+import { useI18n } from 'contexts/I18nContext';
+import { useTableHeader } from 'contexts/TableHeaderContext';
 
 const SaasLayout: React.FC = () => {
   const { t } = useI18n();

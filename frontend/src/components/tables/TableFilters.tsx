@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TableFilter } from './types';
-import { FilterValue } from '@/types/common';
-import { useI18n } from '@/contexts/I18nContext';
+import { FilterValue } from 'types/common';
+import { useI18n } from 'contexts/I18nContext';
 import FormField from '../ui/FormField';
 import Button from '../ui/Button';
 

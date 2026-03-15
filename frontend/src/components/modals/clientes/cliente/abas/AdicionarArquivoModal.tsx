@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useClienteArquivos } from '@/hooks/useClienteArquivos';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import { FormValue } from '@/types/common';
+import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useClienteArquivos } from 'hooks/useClienteArquivos';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import { FormValue } from 'types/common';
 
 interface AdicionarArquivoModalProps {
   show: boolean;

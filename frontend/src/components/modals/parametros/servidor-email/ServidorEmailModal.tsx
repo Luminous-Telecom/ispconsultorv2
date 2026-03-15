@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useI18n } from '@/contexts/I18nContext';
-import { ServidorEmailService, MensagemEmail } from '@/services/servidorEmailService';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button, Spinner } from '@/components/ui';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useI18n } from 'contexts/I18nContext';
+import { ServidorEmailService, MensagemEmail } from 'services/servidorEmailService';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button, Spinner } from 'components/ui';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
-import SaasServidorEmailModal from '@/components/modals/saas/SaasServidorEmailModal';
+import SaasServidorEmailModal from 'components/modals/saas/SaasServidorEmailModal';
 
 const INITIAL_FORM_DATA: ServidorEmailForm = {
   host: '',

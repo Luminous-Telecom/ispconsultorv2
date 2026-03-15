@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { usePlanoForm } from '@/hooks/usePlanoForm';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button, Spinner } from '@/components/ui';
+import { usePlanoForm } from 'hooks/usePlanoForm';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button, Spinner } from 'components/ui';
 import { InformacoesBasicasTab, ServicosObservacoesTab } from './plano';
 
 interface PlanoModalProps {

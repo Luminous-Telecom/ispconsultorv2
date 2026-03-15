@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from '../common/DraggableModal';
-import { Button } from '@/components/ui';
+import { Button } from 'components/ui';
 import Loading from './Loading';
 
 interface ImprimirModalProps {

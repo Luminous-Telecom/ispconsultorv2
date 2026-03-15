@@ -1,16 +1,16 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useI18n } from '@/contexts/I18nContext';
-import { useNotasFiscais } from '@/hooks/useNotasFiscais';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import { NotaFiscalService } from '@/services/notaFiscalService';
-import { NotaFiscal } from '@/types';
-import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
-import ImprimirModal from '@/components/common/ImprimirModal';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
+import { useNotasFiscais } from 'hooks/useNotasFiscais';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useAuditoria } from 'hooks/useAuditoria';
+import { NotaFiscalService } from 'services/notaFiscalService';
+import { NotaFiscal } from 'types';
+import { formatCurrency, formatDate, formatDateTime } from 'utils/formatters';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
+import ImprimirModal from 'components/common/ImprimirModal';
 import CancelarNotaFiscalModal from './CancelarNotaFiscalModal';
 
 interface NotaFiscalListModalProps {

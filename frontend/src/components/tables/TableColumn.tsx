@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 import { TableColumn as TableColumnType, SortDirection } from './types';
 
 interface TableColumnProps<T = Record<string, unknown>> {

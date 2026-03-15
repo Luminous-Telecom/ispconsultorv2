@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { planoModulosService, type PlanoModuloId } from '@/services/planoModulosService';
+import { planoModulosService, type PlanoModuloId } from 'services/planoModulosService';
 
 function isServerUnavailableError(error: unknown): boolean {
   if (!error) return false;

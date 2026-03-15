@@ -1,5 +1,5 @@
 import { defaultApiClient } from './core';
-import type { PaginatedResponse } from '@/types';
+import type { PaginatedResponse } from 'types';
 
 export interface IpPermitido {
   id: number;

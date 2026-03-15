@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
-import { useCreateTipoCobrancaContrato, useUpdateTipoCobrancaContrato, useTipoCobrancaContrato } from '@/hooks/useTipoCobrancaContratos';
-import { useFormReset } from '@/hooks/useFormReset';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button, Spinner } from '@/components/ui';
+import { useI18n } from 'contexts/I18nContext';
+import { useCreateTipoCobrancaContrato, useUpdateTipoCobrancaContrato, useTipoCobrancaContrato } from 'hooks/useTipoCobrancaContratos';
+import { useFormReset } from 'hooks/useFormReset';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button, Spinner } from 'components/ui';
 
 const PERIODICIDADES = [
   { value: 'mensal', key: 'form.periodicityMonthly' },
@@ -99,10 +99,10 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
       if (isEdit && tipoId) {
         await updateMutation.mutateAsync({
           id: tipoId,
-          data: formData as Partial<import('@/services/tipoCobrancaContratoService').TipoCobrancaContrato>
+          data: formData as Partial<import('services/tipoCobrancaContratoService').TipoCobrancaContrato>
         });
       } else {
-        await createMutation.mutateAsync(formData as Partial<import('@/services/tipoCobrancaContratoService').TipoCobrancaContrato>);
+        await createMutation.mutateAsync(formData as Partial<import('services/tipoCobrancaContratoService').TipoCobrancaContrato>);
       }
       onSuccess?.();
     } catch {
@@ -197,7 +197,7 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
             >
               {PERIODICIDADES.map(p => (
                 <option key={p.value} value={p.value}>
-                  {t(p.key as keyof import('@/contexts/I18nContext').TranslationKeys)}
+                  {t(p.key as keyof import('contexts/I18nContext').TranslationKeys)}
                 </option>
               ))}
             </select>

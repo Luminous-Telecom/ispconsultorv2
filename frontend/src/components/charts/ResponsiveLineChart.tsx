@@ -1,5 +1,9 @@
 import React, { useRef, useLayoutEffect, useEffect, useCallback, useMemo, memo, useState } from 'react';
-import * as d3 from 'd3';
+import * as d3Selection from 'd3-selection';
+import * as d3Scale from 'd3-scale';
+import * as d3Axis from 'd3-axis';
+import * as d3Shape from 'd3-shape';
+import * as d3Ease from 'd3-ease';
 import { LineChartProps } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 
@@ -71,7 +75,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     const svg = svgRef.current;
     if (!svg || dimensions.width === 0 || dimensions.height === 0 || chartData.length === 0) return;
 
-    d3.select(svg).selectAll('*').remove();
+    d3Selection.select(svg).selectAll('*').remove();
 
     const margin = { top: 16, right: 20, left: 48, bottom: 50 };
     const chartWidth = dimensions.width - margin.left - margin.right;
@@ -85,30 +89,30 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     const yAxisFormat = (v: number) =>
       format === 'currency' ? v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : v.toLocaleString('pt-BR');
 
-    const xScale = d3
+    const xScale = d3Scale
       .scaleLinear()
       .domain([0, chartData.length - 1])
       .range([0, chartWidth]);
 
     const yMin = Math.max(0, minValue - valueRange * 0.05);
-    const yScale = d3
+    const yScale = d3Scale
       .scaleLinear()
       .domain([yMin, maxValue + valueRange * 0.1])
       .range([chartHeight, 0]);
 
-    const lineGenerator = d3
+    const lineGenerator = d3Shape
       .line<{ name: string; value: number }>()
       .x((_, i) => xScale(i))
       .y((d) => yScale(Math.max(yMin, d.value)))
-      .curve(d3.curveCatmullRom.alpha(0.5));
+      .curve(d3Shape.curveCatmullRom.alpha(0.5));
 
-    const g = d3.select(svg).attr('width', dimensions.width).attr('height', dimensions.height).append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+    const g = d3Selection.select(svg).attr('width', dimensions.width).attr('height', dimensions.height).append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
     const textColor = 'var(--text-muted)';
     const gridColor = 'var(--border-color)';
 
     const yAxisTicks = yScale.ticks(5).filter((t) => t >= 0);
-    const yAxis = d3
+    const yAxis = d3Axis
       .axisLeft(yScale)
       .tickValues(yAxisTicks.length > 0 ? yAxisTicks : [0])
       .tickFormat((d) => yAxisFormat(Number(d)));
@@ -133,7 +137,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
         .attr('stroke-width', 1);
     });
 
-    const defs = d3.select(svg).append('defs');
+    const defs = d3Selection.select(svg).append('defs');
     const gradientId = `line-gradient-${svgRef.current?.id || Math.random().toString(36).slice(2)}`;
     const gradient = defs
       .append('linearGradient')
@@ -225,7 +229,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
       .attr('transform', (_, i) => `translate(${xScale(i)},0)`)
       .each(function (d, i) {
         if (i % labelStep !== 0 && i !== chartData.length - 1) return;
-        d3.select(this)
+        d3Selection.select(this)
           .append('text')
           .attr('x', 0)
           .attr('y', 28)
@@ -263,7 +267,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     const tooltipFilterId = `tooltip-shadow-${Math.random().toString(36).slice(2)}`;
     defs.append('filter').attr('id', tooltipFilterId).attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%').append('feDropShadow').attr('dx', 0).attr('dy', 4).attr('stdDeviation', 6).attr('flood-opacity', 0.25);
 
-    const tooltipG = d3.select(svg).append('g').attr('class', 'chart-tooltip').style('opacity', 0).style('pointer-events', 'none');
+    const tooltipG = d3Selection.select(svg).append('g').attr('class', 'chart-tooltip').style('opacity', 0).style('pointer-events', 'none');
     const tooltipBg = tooltipG.append('rect').attr('rx', 6).attr('ry', 6).attr('fill', 'var(--bg-tertiary)').attr('stroke', 'var(--border-color)').attr('stroke-width', 1).attr('filter', `url(#${tooltipFilterId})`);
 
     const tooltipContent = tooltipG.append('g').attr('transform', 'translate(12,12)');
@@ -273,7 +277,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     const padding = { x: 16, y: 12 };
     const container = containerRef.current;
     if (!container) return;
-    d3.select(container).on('mousemove.tooltip', function (event: MouseEvent) {
+    d3Selection.select(container).on('mousemove.tooltip', function (event: MouseEvent) {
       if (chartData.length === 0) return;
       const rect = container.getBoundingClientRect();
       if (!rect) return;
@@ -288,12 +292,12 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
         }
       }
       if (minDistance >= 40) {
-        tooltipG.transition().duration(120).ease(d3.easeCubicOut).style('opacity', 0);
+        tooltipG.transition().duration(120).ease(d3Ease.easeCubicOut).style('opacity', 0);
         pointsG
           .selectAll('circle')
           .transition()
           .duration(120)
-          .ease(d3.easeCubicOut)
+          .ease(d3Ease.easeCubicOut)
           .attr('r', 4);
         return;
       }
@@ -301,7 +305,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
         .selectAll('circle')
         .transition()
         .duration(120)
-        .ease(d3.easeCubicOut)
+        .ease(d3Ease.easeCubicOut)
         .attr('r', (_, i) => (i === closestIndex ? 6 : 4));
       const point = chartData[closestIndex];
       tooltipContent.select('.tooltip-label').text(point.name);
@@ -320,19 +324,19 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
       if (ty + h > dimensions.height - 8) ty = dimensions.height - h - 8;
       if (ty < 8) ty = 8;
       tooltipG.attr('transform', `translate(${tx},${ty})`);
-      tooltipG.transition().duration(180).ease(d3.easeCubicOut).style('opacity', 1);
+      tooltipG.transition().duration(180).ease(d3Ease.easeCubicOut).style('opacity', 1);
     }).on('mouseleave.tooltip', () => {
-      tooltipG.transition().duration(150).ease(d3.easeCubicOut).style('opacity', 0);
+      tooltipG.transition().duration(150).ease(d3Ease.easeCubicOut).style('opacity', 0);
       pointsG
         .selectAll('circle')
         .transition()
         .duration(120)
-        .ease(d3.easeCubicOut)
+        .ease(d3Ease.easeCubicOut)
         .attr('r', 4);
     });
 
     return () => {
-      d3.select(container).on('mousemove.tooltip', null).on('mouseleave.tooltip', null);
+      d3Selection.select(container).on('mousemove.tooltip', null).on('mouseleave.tooltip', null);
     };
   }, [chartData, dimensions, format, onPointClick, data, formatLabel, formatValue]);
 

@@ -1,15 +1,15 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
-import { useClienteArquivos } from '@/hooks/useClienteArquivos';
-import { ClienteArquivo } from '@/services/clienteArquivoService';
-import { formatDateTime } from '@/utils/formatters';
-import Table from '@/components/tables/Table';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import ImageViewerModal from '@/components/common/ImageViewerModal';
+import { useI18n } from 'contexts/I18nContext';
+import { useClienteArquivos } from 'hooks/useClienteArquivos';
+import { ClienteArquivo } from 'services/clienteArquivoService';
+import { formatDateTime } from 'utils/formatters';
+import Table from 'components/tables/Table';
+import ImprimirModal from 'components/common/ImprimirModal';
+import ImageViewerModal from 'components/common/ImageViewerModal';
 import AdicionarArquivoModal from './AdicionarArquivoModal';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
-import { useTableFilters } from '@/hooks/useTableFilters';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
+import { useTableFilters } from 'hooks/useTableFilters';
 
 interface ArquivosTabProps {
   clienteId?: number | null;

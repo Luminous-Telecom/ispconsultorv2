@@ -1,7 +1,7 @@
 import React from 'react';
-import { FormValue } from '@/types/common';
-import { useI18n } from '@/contexts/I18nContext';
-import FormField from '@/components/ui/FormField';
+import { FormValue } from 'types/common';
+import { useI18n } from 'contexts/I18nContext';
+import FormField from 'components/ui/FormField';
 import { PlanoTabProps } from '../types';
 
 const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({

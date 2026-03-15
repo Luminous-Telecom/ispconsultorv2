@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
-import { useFornecedor, useCreateFornecedor, useUpdateFornecedor } from '@/hooks/useFornecedores';
-import { useFormPrefix } from '@/hooks/useFormId';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useCep } from '@/hooks/useCep';
-import { formatCPF, formatCNPJ, formatCEP } from '@/utils/formatters';
-import { isValidCPF, isValidCNPJ } from '@/utils/validators';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button, Spinner } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import { CreateFornecedor } from '@/types';
-import { FornecedorService } from '@/services/fornecedorService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
+import { useFornecedor, useCreateFornecedor, useUpdateFornecedor } from 'hooks/useFornecedores';
+import { useFormPrefix } from 'hooks/useFormId';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useCep } from 'hooks/useCep';
+import { formatCPF, formatCNPJ, formatCEP } from 'utils/formatters';
+import { isValidCPF, isValidCNPJ } from 'utils/validators';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button, Spinner } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import { CreateFornecedor } from 'types';
+import { FornecedorService } from 'services/fornecedorService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { AxiosError } from 'axios';
 
 interface FornecedorModalProps {

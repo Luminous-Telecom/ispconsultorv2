@@ -1,19 +1,19 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 import { AxiosError } from 'axios';
-import { useUsuarios, useDeleteUsuario } from '@/hooks/useUsuarios';
-import { Usuario } from '@/types';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { formatDateTime } from '@/utils/formatters';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { useUsuarios, useDeleteUsuario } from 'hooks/useUsuarios';
+import { Usuario } from 'types';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { formatDateTime } from 'utils/formatters';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 import UsuarioFormModal from './UsuarioFormModal';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface UsuariosModalProps {
   show: boolean;

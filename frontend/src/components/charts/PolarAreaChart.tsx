@@ -11,7 +11,9 @@
  */
 
 import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
-import * as d3 from 'd3';
+import * as d3Selection from 'd3-selection';
+import * as d3Scale from 'd3-scale';
+import * as d3Shape from 'd3-shape';
 
 export interface NetworkData {
   label: string;
@@ -87,15 +89,15 @@ export const PolarAreaChart: React.FC<PolarAreaChartProps> = ({
 
     const radiusScaleFn =
       radiusScale === 'sqrt'
-        ? d3.scaleSqrt().domain([0, maxValue]).range([0, maxRadius])
-        : d3.scaleLinear().domain([0, maxValue]).range([0, maxRadius]);
+        ? d3Scale.scaleSqrt().domain([0, maxValue]).range([0, maxRadius])
+        : d3Scale.scaleLinear().domain([0, maxValue]).range([0, maxRadius]);
 
     const pieData = filteredData.map((d, i) => ({
       ...d,
       color: DEFAULT_COLORS[i % DEFAULT_COLORS.length]
     }));
 
-    const pie = d3
+    const pie = d3Shape
       .pie<typeof pieData[0]>()
       .value(equalAngles ? () => 1 : (d) => d.value)
       .sort(null)
@@ -104,7 +106,7 @@ export const PolarAreaChart: React.FC<PolarAreaChartProps> = ({
 
     const arcs = pie(pieData);
 
-    const svg = d3.select(svgRef.current);
+    const svg = d3Selection.select(svgRef.current);
     svg.selectAll('*').remove();
 
     svg.attr('width', w).attr('height', h).attr('viewBox', `0 0 ${w} ${h}`);
@@ -120,8 +122,8 @@ export const PolarAreaChart: React.FC<PolarAreaChartProps> = ({
       const outerR = radiusScaleFn(d.data.value);
       const innerR = outerR * innerRadiusRatio;
 
-      const arcGen = d3
-        .arc<d3.PieArcDatum<typeof pieData[0]>>()
+      const arcGen = d3Shape
+        .arc<d3Shape.PieArcDatum<typeof pieData[0]>>()
         .innerRadius(innerR)
         .outerRadius(outerR)
         .cornerRadius(Math.min(8, (outerR - innerR) * 0.4))

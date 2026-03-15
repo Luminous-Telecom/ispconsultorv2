@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ChartDataItem, ChartFormat } from './types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 interface DualBarChartProps {
   receberData: ChartDataItem[];

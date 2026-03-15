@@ -1,7 +1,7 @@
 import React from 'react';
-import { FormField, Checkbox, Button } from '@/components/ui';
+import { FormField, Checkbox, Button } from 'components/ui';
 import { ServidorTabProps } from '../types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 const ServidorTab: React.FC<ServidorTabProps> = ({
   formData,

@@ -1,14 +1,14 @@
 import React, { useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import { TemplateWhatsAppService, TemplateWhatsApp } from '@/services/templateWhatsAppService';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
-import { useI18n } from '@/contexts/I18nContext';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import ImprimirModal from '@/components/common/ImprimirModal';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useAuditoria } from 'hooks/useAuditoria';
+import { TemplateWhatsAppService, TemplateWhatsApp } from 'services/templateWhatsAppService';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
+import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import ImprimirModal from 'components/common/ImprimirModal';
 
 export interface TemplatesTabProps {
   /** Placeholder para compatibilidade */

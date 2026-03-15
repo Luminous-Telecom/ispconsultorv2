@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useFormReset } from '@/hooks/useFormReset';
-import { saasTenantUsuariosService, type SaasTenantUsuario } from '@/services/saas/saasTenantUsuariosService';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useFormReset } from 'hooks/useFormReset';
+import { saasTenantUsuariosService, type SaasTenantUsuario } from 'services/saas/saasTenantUsuariosService';
 
 interface Props {
   show: boolean;

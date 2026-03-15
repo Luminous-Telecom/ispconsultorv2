@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { defaultApiClient } from '@/services/core';
-import { formatDate } from '@/utils/formatters';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { Spinner } from '@/components/ui';
+import { defaultApiClient } from 'services/core';
+import { formatDate } from 'utils/formatters';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { Spinner } from 'components/ui';
 import './PagamentoPublico.css';
 
 interface TituloPublico {

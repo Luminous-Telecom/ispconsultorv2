@@ -1,5 +1,5 @@
 import { apiService } from '../api';
-import type { ApiResponse } from '@/types';
+import type { ApiResponse } from 'types';
 
 export interface SaasNFSeConfig {
   id: number;

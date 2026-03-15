@@ -1,8 +1,8 @@
 import React from 'react';
-import FormField from '@/components/ui/FormField';
-import { Button } from '@/components/ui';
+import FormField from 'components/ui/FormField';
+import { Button } from 'components/ui';
 import { BancoTabProps } from '../types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
   formData,

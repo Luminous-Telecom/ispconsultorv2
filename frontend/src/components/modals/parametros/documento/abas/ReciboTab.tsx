@@ -1,7 +1,7 @@
-import React, { useRef } from 'react';
-import RichTextEditor, { type RichTextEditorRef } from '@/components/common/RichTextEditor';
+import React, { Suspense, useRef } from 'react';
+import { RichTextEditor, RichTextEditorFallback, type RichTextEditorRef } from 'components/common/RichTextEditorLazy';
 import { DocumentoTabProps } from '../types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 const ReciboTab: React.FC<DocumentoTabProps> = ({
   value,
@@ -12,7 +12,8 @@ const ReciboTab: React.FC<DocumentoTabProps> = ({
   const editorRef = useRef<RichTextEditorRef | null>(null);
 
   return (
-    <RichTextEditor
+    <Suspense fallback={<RichTextEditorFallback />}>
+      <RichTextEditor
       ref={editorRef}
       key={editorKey}
       id="conteudo_recibo"
@@ -22,7 +23,8 @@ const ReciboTab: React.FC<DocumentoTabProps> = ({
       onChange={onChange}
       placeholder={t('placeholder.receiptContent')}
       height="100%"
-    />
+      />
+    </Suspense>
   );
 };
 

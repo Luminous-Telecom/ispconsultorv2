@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { TableColumn } from '@/components/tables/types';
+import { TableColumn } from 'components/tables/types';
 
 interface UseColumnResizingOptions<T = Record<string, unknown>> {
   tableId: string;

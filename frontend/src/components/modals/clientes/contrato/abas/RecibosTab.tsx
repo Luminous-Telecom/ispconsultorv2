@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import ModeloReciboService, { ModeloRecibo } from '@/services/modeloReciboService';
-import { formatDateTime } from '@/utils/formatters';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import DocumentoModal from '@/components/modals/parametros/documento/DocumentoModal';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import ModeloReciboService, { ModeloRecibo } from 'services/modeloReciboService';
+import { formatDateTime } from 'utils/formatters';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModal from 'components/common/ImprimirModal';
+import DocumentoModal from 'components/modals/parametros/documento/DocumentoModal';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface RecibosTabProps {
   contratoId?: number | null;

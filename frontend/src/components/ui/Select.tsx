@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 import { BaseComponentProps, ValidationProps, TooltipProps, InputSize, ChangeEvent, SelectOption } from './types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 interface SelectProps extends BaseComponentProps, ValidationProps, TooltipProps {
   size?: InputSize;

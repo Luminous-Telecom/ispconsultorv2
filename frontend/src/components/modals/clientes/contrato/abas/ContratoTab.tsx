@@ -1,12 +1,12 @@
 import React from 'react';
-import { Plano, Banco, PaginatedResponse } from '@/types';
-import { FormValue } from '@/types/common';
-import { useI18n } from '@/contexts/I18nContext';
-import { DocumentoSistema } from '@/services/documentoSistemaService';
-import { DiasVencimento } from '@/services/diasVencimentoService';
-import { TipoCobrancaContrato } from '@/services/tipoCobrancaContratoService';
-import EntitySelectField from '@/components/ui/EntitySelectField';
-import FormField from '@/components/ui/FormField';
+import { Plano, Banco, PaginatedResponse } from 'types';
+import { FormValue } from 'types/common';
+import { useI18n } from 'contexts/I18nContext';
+import { DocumentoSistema } from 'services/documentoSistemaService';
+import { DiasVencimento } from 'services/diasVencimentoService';
+import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
+import EntitySelectField from 'components/ui/EntitySelectField';
+import FormField from 'components/ui/FormField';
 import { ContratoForm } from '../types';
 
 interface ContratoTabProps {

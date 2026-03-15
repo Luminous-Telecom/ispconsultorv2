@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DraggableModal from './DraggableModal';
 import Table from '../tables/Table';
-import { formatDateTime } from '@/utils/formatters';
-import { Spinner } from '@/components/ui';
+import { formatDateTime } from 'utils/formatters';
+import { Spinner } from 'components/ui';
 
 interface LogsModalProps {
   show: boolean;

@@ -1,17 +1,17 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { useTipoCobrancaContratos, useDeleteTipoCobrancaContrato } from '@/hooks/useTipoCobrancaContratos';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { TipoCobrancaContrato } from '@/services/tipoCobrancaContratoService';
-import { useI18n } from '@/contexts/I18nContext';
-import { formatDateTime } from '@/utils/formatters';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { useTipoCobrancaContratos, useDeleteTipoCobrancaContrato } from 'hooks/useTipoCobrancaContratos';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { TipoCobrancaContrato } from 'services/tipoCobrancaContratoService';
+import { useI18n } from 'contexts/I18nContext';
+import { formatDateTime } from 'utils/formatters';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 import TipoCobrancaContratoModal from './TipoCobrancaContratoModal';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 const PERIODICIDADE_LABELS: Record<string, string> = {
   mensal: 'form.periodicityMonthly',
@@ -104,7 +104,7 @@ const TipoCobrancaContratoListModal: React.FC<TipoCobrancaContratoListModalProps
       key: 'periodicidade',
       label: t('table.periodicity'),
       sortable: true,
-      render: (item) => t((PERIODICIDADE_LABELS[item.periodicidade] || 'form.periodicityMonthly') as keyof import('@/contexts/I18nContext').TranslationKeys)
+      render: (item) => t((PERIODICIDADE_LABELS[item.periodicidade] || 'form.periodicityMonthly') as keyof import('contexts/I18nContext').TranslationKeys)
     },
     {
       key: 'ativo',

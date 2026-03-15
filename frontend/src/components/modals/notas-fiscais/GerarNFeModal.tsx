@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useI18n } from '@/contexts/I18nContext';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { NotaFiscalService } from '@/services/notaFiscalService';
-import { NFSeConfigService } from '@/services/nfseConfigService';
-import { CreateNotaFiscal, Cliente, CarneParcela } from '@/types';
-import { TituloItem } from '@/types/cliente';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { NotaFiscalService } from 'services/notaFiscalService';
+import { NFSeConfigService } from 'services/nfseConfigService';
+import { CreateNotaFiscal, Cliente, CarneParcela } from 'types';
+import { TituloItem } from 'types/cliente';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { formatCurrency, parseCurrency } from '@/utils/formatters';
+import { formatCurrency, parseCurrency } from 'utils/formatters';
 
 interface GerarNFeModalProps {
   show: boolean;

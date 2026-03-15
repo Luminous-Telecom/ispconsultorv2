@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Spinner } from '@/components/ui';
-import SearchBar from '@/components/ui/SearchBar';
-import { useI18n } from '@/contexts/I18nContext';
+import { Spinner } from 'components/ui';
+import SearchBar from 'components/ui/SearchBar';
+import { useI18n } from 'contexts/I18nContext';
 
 interface Variavel {
   variavel: string;

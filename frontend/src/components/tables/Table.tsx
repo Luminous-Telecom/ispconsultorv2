@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { TableConfig, TableAction, BulkAction, SortDirection, TablePagination } from './types';
-import { FilterValue } from '@/types/common';
+import { FilterValue } from 'types/common';
 import { useTable } from './useTable';
-import { useColumnResizing } from '@/hooks/useColumnResizing';
+import { useColumnResizing } from 'hooks/useColumnResizing';
 import TableColumn from './TableColumn';
 import Spinner from '../ui/Spinner';
 import SearchBar from '../ui/SearchBar';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useTableHeader } from '@/contexts/TableHeaderContext';
-import { useI18n } from '@/contexts/I18nContext';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useTableHeader } from 'contexts/TableHeaderContext';
+import { useI18n } from 'contexts/I18nContext';
 
 // Calcula minWidth dinâmico a partir dos labels do badge (~7px/char + 24px padding)
 function getMinWidthFromBadgeLabels(labels: string[]): number {

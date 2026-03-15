@@ -14,7 +14,8 @@
  */
 
 import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
-import * as d3 from 'd3';
+import * as d3Selection from 'd3-selection';
+import * as d3Shape from 'd3-shape';
 
 export interface ChartData {
   name: string;
@@ -101,7 +102,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
     /* d3.pie() - Calcula ângulos de cada fatia proporcionalmente ao value.
        O ângulo de cada fatia = (value / sum(values)) * 2π */
-    const pie = d3
+    const pie = d3Shape
       .pie<typeof pieData[0]>()
       .value((d) => d.value)
       .sort(null)
@@ -112,18 +113,18 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
     /* d3.arc() - Gera o path SVG para cada fatia do donut.
        innerRadius e outerRadius formam o "buraco" central. */
-    const arc = d3
-      .arc<d3.PieArcDatum<typeof pieData[0]>>()
+    const arc = d3Shape
+      .arc<d3Shape.PieArcDatum<typeof pieData[0]>>()
       .innerRadius(innerRadius)
       .outerRadius(outerRadius)
       .cornerRadius(Math.min(6, (outerRadius - innerRadius) * 0.25));
 
-    const arcLabel = d3
-      .arc<d3.PieArcDatum<typeof pieData[0]>>()
+    const arcLabel = d3Shape
+      .arc<d3Shape.PieArcDatum<typeof pieData[0]>>()
       .innerRadius(innerRadius + (outerRadius - innerRadius) * 0.5)
       .outerRadius(innerRadius + (outerRadius - innerRadius) * 0.5);
 
-    const svg = d3.select(svgRef.current);
+    const svg = d3Selection.select(svgRef.current);
     svg.selectAll('*').remove();
 
     svg.attr('width', w).attr('height', h).attr('viewBox', `0 0 ${w} ${h}`);
@@ -149,7 +150,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
       if (showTooltip && tooltipRef.current) {
         path
           .on('mouseenter', function () {
-            d3.select(this).style('opacity', 0.9);
+            d3Selection.select(this).style('opacity', 0.9);
             const tooltip = tooltipRef.current!;
             tooltip.textContent = `${d.data.name}: ${d.data.value.toLocaleString('pt-BR')} (${d.data.percent.toFixed(1)}%)`;
             tooltip.style.opacity = '1';
@@ -163,7 +164,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
             }
           })
           .on('mouseleave', function () {
-            d3.select(this).style('opacity', 1);
+            d3Selection.select(this).style('opacity', 1);
             if (tooltipRef.current) {
               tooltipRef.current.style.opacity = '0';
               tooltipRef.current.style.visibility = 'hidden';

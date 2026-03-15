@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { formatDate } from '@/utils/formatters';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { apiService } from '@/services/api';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import { ApiResponse } from '@/types/api';
-import { API_CONFIG } from '@/config/api';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
-import { useI18n } from '@/contexts/I18nContext';
-import { waitForBackendHealth } from '@/utils/healthCheck';
+import { formatDate } from 'utils/formatters';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { apiService } from 'services/api';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import { ApiResponse } from 'types/api';
+import { API_CONFIG } from 'config/api';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
+import { useI18n } from 'contexts/I18nContext';
+import { waitForBackendHealth } from 'utils/healthCheck';
 
 interface Atualizacao {
   versao: string;

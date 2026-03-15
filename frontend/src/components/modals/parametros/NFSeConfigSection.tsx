@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { NFSeConfigService, type NFSeConfigUpdate } from '@/services/nfseConfigService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useI18n } from '@/contexts/I18nContext';
+import { NFSeConfigService, type NFSeConfigUpdate } from 'services/nfseConfigService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
 
 interface NFSeConfigSectionProps {
   disabled?: boolean;

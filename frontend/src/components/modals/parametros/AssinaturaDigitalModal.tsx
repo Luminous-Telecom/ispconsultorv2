@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect, useLayoutEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from '@/services/assinaturaDigitalProviderService';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import { useI18n } from '@/contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from 'services/assinaturaDigitalProviderService';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
 
 interface AssinaturaDigitalModalProps {
   show: boolean;

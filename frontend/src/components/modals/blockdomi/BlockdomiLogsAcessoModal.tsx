@@ -1,13 +1,13 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { useBlockdomiLogs } from '@/hooks/useBlockdomiLogs';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { useBlockdomiLogs } from 'hooks/useBlockdomiLogs';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 import BlockdomiLogsRealModal from './BlockdomiLogsRealModal';
 import WhoisModal from './WhoisModal';
-import type { BlockdomiLogAcessoItem } from '@/services/blockdomiLogAcessoService';
+import type { BlockdomiLogAcessoItem } from 'services/blockdomiLogAcessoService';
 
 interface BlockdomiLogsAcessoModalProps {
   show: boolean;

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Viewer from 'viewerjs';
 import 'viewerjs/dist/viewer.css';
 import DraggableModal from './DraggableModal';
-import { Spinner } from '@/components/ui';
+import { Spinner } from 'components/ui';
 
 interface ImageViewerModalProps {
   show: boolean;

@@ -15,6 +15,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: backnet-frontend
+    deploy:
+      resources:
+        limits:
+          memory: 2G
     environment:
       - CHOKIDAR_USEPOLLING=true
       - HOST=0.0.0.0
@@ -58,6 +62,10 @@ services:
     image: mysql:8.0
     container_name: backnet-mysql
     restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: backnet
@@ -88,6 +96,10 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     container_name: backnet-elasticsearch
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false

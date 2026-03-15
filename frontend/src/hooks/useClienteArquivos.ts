@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import ClienteArquivoService, { CreateClienteArquivoRequest, UpdateClienteArquivoRequest } from '@/services/clienteArquivoService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import ClienteArquivoService, { CreateClienteArquivoRequest, UpdateClienteArquivoRequest } from 'services/clienteArquivoService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 
 interface UseClienteArquivosOptions {
   clienteId?: number | null;

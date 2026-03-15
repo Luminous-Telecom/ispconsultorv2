@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useFormReset } from '@/hooks/useFormReset';
-import { saasContratoService, saasDiasVencimentoService, type SaasContrato } from '@/services/saas/saasCrudService';
-import { saasEmpresasService } from '@/services/saas/saasEmpresasService';
-import { saasPlanoService } from '@/services/saas/saasPlanoService';
-import { saasBancoService } from '@/services/saas/saasConfigService';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useFormReset } from 'hooks/useFormReset';
+import { saasContratoService, saasDiasVencimentoService, type SaasContrato } from 'services/saas/saasCrudService';
+import { saasEmpresasService } from 'services/saas/saasEmpresasService';
+import { saasPlanoService } from 'services/saas/saasPlanoService';
+import { saasBancoService } from 'services/saas/saasConfigService';
 
 interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; empresaId: number; dataFimDesbloqueioManual?: string | null; }
 

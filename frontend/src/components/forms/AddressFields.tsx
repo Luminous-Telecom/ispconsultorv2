@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { FormValue } from '@/types/common';
-import { useI18n } from '@/contexts/I18nContext';
+import { FormValue } from 'types/common';
+import { useI18n } from 'contexts/I18nContext';
 import FormField from '../ui/FormField';
-import { ParametrosService } from '@/services/parametrosService';
-import { ClienteService } from '@/services/clienteService';
+import { ParametrosService } from 'services/parametrosService';
+import { ClienteService } from 'services/clienteService';
 
 interface AddressFieldsProps {
   prefix?: string;

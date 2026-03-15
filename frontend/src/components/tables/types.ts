@@ -1,6 +1,6 @@
 // Tipos para sistema de tabelas unificado
 import React from 'react';
-import { RenderFunction, FilterValue } from '@/types/common';
+import { RenderFunction, FilterValue } from 'types/common';
 
 export type SortDirection = 'asc' | 'desc';
 export type TableSize = 'sm' | 'md' | 'lg';

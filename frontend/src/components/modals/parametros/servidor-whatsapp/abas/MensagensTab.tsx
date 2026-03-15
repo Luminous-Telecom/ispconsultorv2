@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { FormField } from '@/components/ui';
-import EntitySelectField from '@/components/ui/EntitySelectField';
+import { FormField } from 'components/ui';
+import EntitySelectField from 'components/ui/EntitySelectField';
 import { MensagensTabProps } from '../types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 const MensagensTab: React.FC<MensagensTabProps> = ({
   mensagemType,

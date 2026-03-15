@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
-import { useSelectedEntity } from '@/hooks/useSelectedEntity';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { useSelectedEntity } from 'hooks/useSelectedEntity';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
 import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
 import DocumentoTab from './abas/DocumentoTab';

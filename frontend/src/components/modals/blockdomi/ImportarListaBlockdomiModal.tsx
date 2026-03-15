@@ -1,20 +1,20 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import { isValidIPv4, isValidIPv6 } from '@/utils/validators';
-import { sanitizeDominio } from '@/utils/stringUtils';
-import PdfExtractService from '@/services/pdfExtract';
-import { DominioService } from '@/services/dominioService';
-import { IPv4Service } from '@/services/ipv4Service';
-import { IPv6Service } from '@/services/ipv6Service';
-import { BlockdomiService } from '@/services/blockdomiService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useI18n } from '@/contexts/I18nContext';
-import { useLoading } from '@/contexts/LoadingContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import { isValidIPv4, isValidIPv6 } from 'utils/validators';
+import { sanitizeDominio } from 'utils/stringUtils';
+import PdfExtractService from 'services/pdfExtract';
+import { DominioService } from 'services/dominioService';
+import { IPv4Service } from 'services/ipv4Service';
+import { IPv6Service } from 'services/ipv6Service';
+import { BlockdomiService } from 'services/blockdomiService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
+import { useLoading } from 'contexts/LoadingContext';
 import DominiosExtraidosVisualizacaoModal, {
   type DominiosExtraidosVisualizacaoMetadata
-} from '@/components/modals/blockdomi/DominiosExtraidosVisualizacaoModal';
+} from 'components/modals/blockdomi/DominiosExtraidosVisualizacaoModal';
 
 export interface ClassifiedList {
   dominios: string[];

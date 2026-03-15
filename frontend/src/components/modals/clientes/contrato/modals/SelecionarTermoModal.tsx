@@ -1,11 +1,11 @@
 import React, { useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { useModelosTermo } from '@/hooks/useModelosTermo';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useModelosTermo } from 'hooks/useModelosTermo';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 
 interface Termo {
   id: number;

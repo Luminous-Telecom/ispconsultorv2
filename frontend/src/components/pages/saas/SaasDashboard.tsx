@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react';
-import { formatCurrency, formatNumber } from '@/utils/formatters';
-import { useSaasDashboard } from '@/hooks/useSaasDashboard';
-import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { useDashboardCharts } from '@/hooks/useDashboardCharts';
-import { useChartHiddenItems } from '@/hooks/useChartHiddenItems';
-import { useSaasDashboardChartClicks } from '@/hooks/useSaasDashboardChartClicks';
-import { BarChart, ValueChart, ResponsiveLineChart, ResponsivePieChart } from '@/components/charts';
-import { Spinner } from '@/components/ui';
-import { useModal } from '@/contexts/ModalContext';
-import { useI18n } from '@/contexts/I18nContext';
-import { useTableHeader } from '@/contexts/TableHeaderContext';
+import { formatCurrency, formatNumber } from 'utils/formatters';
+import { useSaasDashboard } from 'hooks/useSaasDashboard';
+import { useDashboardFilters } from 'contexts/DashboardFiltersContext';
+import { useDashboardStats } from 'hooks/useDashboardStats';
+import { useDashboardCharts } from 'hooks/useDashboardCharts';
+import { useChartHiddenItems } from 'hooks/useChartHiddenItems';
+import { useSaasDashboardChartClicks } from 'hooks/useSaasDashboardChartClicks';
+import { BarChart, ValueChart, ResponsiveLineChart, ResponsivePieChart } from 'components/charts';
+import { Spinner } from 'components/ui';
+import { useModal } from 'contexts/ModalContext';
+import { useI18n } from 'contexts/I18nContext';
+import { useTableHeader } from 'contexts/TableHeaderContext';
 import SaasDashboardSearchResult from './SaasDashboardSearchResult';
 
 const SAAS_SEARCH_FIELDS = [

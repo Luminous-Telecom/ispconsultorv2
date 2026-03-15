@@ -1,8 +1,8 @@
 import React from 'react';
-import { formatCNPJ } from '@/utils/formatters';
-import { FormField } from '@/components/ui';
+import { formatCNPJ } from 'utils/formatters';
+import { FormField } from 'components/ui';
 import { DadosEmpresaTabProps } from '../types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: File | null) => void }> = ({
   dados,

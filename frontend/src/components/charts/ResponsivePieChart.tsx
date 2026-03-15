@@ -1,5 +1,8 @@
 import React, { useRef, useEffect, useMemo, memo, useState, useLayoutEffect, useCallback } from 'react';
-import * as d3 from 'd3';
+import * as d3Selection from 'd3-selection';
+import * as d3Shape from 'd3-shape';
+import * as d3Ease from 'd3-ease';
+import * as d3Interpolate from 'd3-interpolate';
 import { PieChartProps } from './types';
 import { ChartDataItem } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
@@ -123,7 +126,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
   useEffect(() => {
     if (!svgRef.current) return;
     if (visibleData.length === 0 || total <= 0) {
-      d3.select(svgRef.current).selectAll('*').remove();
+      d3Selection.select(svgRef.current).selectAll('*').remove();
       return;
     }
 
@@ -151,20 +154,20 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       };
     });
 
-    const getOuterRadius = (d: d3.PieArcDatum<PieDatum>) => {
+    const getOuterRadius = (d: d3Shape.PieArcDatum<PieDatum>) => {
       const ratio = RADIUS_MIN_RATIO + (d.data.percent / 100) * (RADIUS_MAX_RATIO - RADIUS_MIN_RATIO);
       return outerRadius * ratio;
     };
 
-    const pie = d3
+    const pie = d3Shape
       .pie<PieDatum>()
       .value((d) => d.value)
       .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
       .padAngle(0.02)
       .startAngle(-Math.PI / 2);
 
-    const arc = d3
-      .arc<d3.PieArcDatum<PieDatum>>()
+    const arc = d3Shape
+      .arc<d3Shape.PieArcDatum<PieDatum>>()
       .innerRadius(innerRadius)
       .outerRadius(getOuterRadius)
       .cornerRadius(4);
@@ -181,7 +184,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
     const angleOrderMap = new Map<number, number>();
     arcsByAngle.forEach((a, i) => angleOrderMap.set(a.data.index, i));
 
-    const svg = d3.select(svgRef.current);
+    const svg = d3Selection.select(svgRef.current);
     svg.selectAll('*').remove();
 
     svg.attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
@@ -197,7 +200,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       y: -r * Math.cos(angle)
     });
 
-    arcs.forEach((d: d3.PieArcDatum<PieDatum>) => {
+    arcs.forEach((d: d3Shape.PieArcDatum<PieDatum>) => {
       const midAngle = (d.startAngle + d.endAngle) / 2;
       const order = angleOrderMap.get(d.data.index) ?? 0;
       const staggeredDistance = LABEL_DISTANCE_BASE + order * LABEL_STAGGER;
@@ -288,7 +291,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       }
     });
 
-    arcsBySize.forEach((d: d3.PieArcDatum<PieDatum>) => {
+    arcsBySize.forEach((d: d3Shape.PieArcDatum<PieDatum>) => {
       const sliceGroup = arcsG
         .append('g')
         .attr('class', 'pie-slice')
@@ -311,10 +314,10 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
 
       sliceGroup
         .on('mouseenter', function () {
-          d3.select(this).transition().duration(150).attr('transform', `scale(${HOVER_SCALE})`);
+          d3Selection.select(this).transition().duration(150).attr('transform', `scale(${HOVER_SCALE})`);
         })
         .on('mouseleave', function () {
-          d3.select(this).transition().duration(150).attr('transform', 'scale(1)');
+          d3Selection.select(this).transition().duration(150).attr('transform', 'scale(1)');
         });
 
       if (isAnimatingIn) {
@@ -325,9 +328,9 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
           .datum(endDatum)
           .transition()
           .duration(HIDE_ANIMATION_MS)
-          .ease(d3.easeCubicInOut)
+          .ease(d3Ease.easeCubicInOut)
           .attrTween('d', function () {
-            const interp = d3.interpolate(
+            const interp = d3Interpolate.interpolate(
               { ...endDatum, endAngle: endDatum.startAngle },
               endDatum
             );
@@ -344,13 +347,13 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
           .select<SVGLineElement>(`line[data-index="${idx}"]`)
           .transition()
           .duration(HIDE_ANIMATION_MS)
-          .ease(d3.easeCubicInOut)
+          .ease(d3Ease.easeCubicInOut)
           .style('opacity', 1);
         labelsG
           .select<SVGGElement>(`g.pie-radial-label[data-index="${idx}"]`)
           .transition()
           .duration(HIDE_ANIMATION_MS)
-          .ease(d3.easeCubicInOut)
+          .ease(d3Ease.easeCubicInOut)
           .style('opacity', 1);
       }
     });
@@ -362,7 +365,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       g.select('.pie-lines')
         .selectAll('line')
         .filter(function () {
-          return parseInt(d3.select(this).attr('data-index') ?? '', 10) === idx;
+          return parseInt(d3Selection.select(this).attr('data-index') ?? '', 10) === idx;
         })
         .transition()
         .duration(HIDE_ANIMATION_MS)
@@ -372,7 +375,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         .select('.pie-labels')
         .selectAll('.pie-radial-label')
         .filter(function () {
-          return parseInt(d3.select(this).attr('data-index') ?? '', 10) === idx;
+          return parseInt(d3Selection.select(this).attr('data-index') ?? '', 10) === idx;
         })
         .transition()
         .duration(HIDE_ANIMATION_MS)
@@ -381,7 +384,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       arcsG
         .selectAll('.pie-slice')
         .filter(function () {
-          return parseInt(d3.select(this).attr('data-index') ?? '', 10) === idx;
+          return parseInt(d3Selection.select(this).attr('data-index') ?? '', 10) === idx;
         })
         .select('path')
         .transition()
@@ -389,7 +392,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         .attrTween('d', function () {
           const startAngle = arcDatum.startAngle;
           const endAngle = arcDatum.endAngle;
-          const interpolate = d3.interpolate(endAngle, startAngle);
+          const interpolate = d3Interpolate.interpolate(endAngle, startAngle);
           return (t: number) => {
             const dAnimated = { ...arcDatum, endAngle: interpolate(t) };
             return arc(dAnimated) ?? '';

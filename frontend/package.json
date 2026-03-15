@@ -35,10 +35,10 @@
     "zod": "^4.1.12"
   },
   "scripts": {
-    "start": "cross-env BROWSER=none BROWSER_ARGS='' craco start",
-    "dev": "cross-env BROWSER=none BROWSER_ARGS='' craco start",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' craco build",
-    "test": "craco test",
+    "start": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSER=none react-scripts start",
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSER=none react-scripts start",
+    "build": "GENERATE_SOURCEMAP=false NODE_OPTIONS='--max-old-space-size=4096' react-scripts build",
+    "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix"
@@ -62,11 +62,9 @@
     ]
   },
   "devDependencies": {
-    "@craco/craco": "^7.1.0",
     "@types/bootstrap": "^5.2.10",
     "@types/d3": "^7.4.3",
     "cross-env": "^10.1.0",
-    "sass": "^1.97.2",
-    "webpack-bundle-analyzer": "^4.10.2"
+    "sass": "^1.97.2"
   }
 }

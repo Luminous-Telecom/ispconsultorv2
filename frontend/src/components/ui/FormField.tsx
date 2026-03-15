@@ -1,7 +1,7 @@
 import React from 'react';
 import { BaseComponentProps, ValidationProps, TooltipProps } from './types';
-import { FormValue, ChangeHandler } from '@/types/common';
-import { useI18n } from '@/contexts/I18nContext';
+import { FormValue, ChangeHandler } from 'types/common';
+import { useI18n } from 'contexts/I18nContext';
 import Input from './Input';
 import Select from './Select';
 import Checkbox from './Checkbox';

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useIPv4, useCreateIPv4, useUpdateIPv4 } from '@/hooks/useIPv4';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import { isValidIPv4 } from '@/utils/validators';
+import { useIPv4, useCreateIPv4, useUpdateIPv4 } from 'hooks/useIPv4';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import { isValidIPv4 } from 'utils/validators';
 
 interface IPv4ModalProps {
   show: boolean;

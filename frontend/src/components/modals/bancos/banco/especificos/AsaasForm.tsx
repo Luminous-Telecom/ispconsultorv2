@@ -1,9 +1,9 @@
 import React from 'react';
-import { FormValue } from '@/types/common';
-import FormField from '@/components/ui/FormField';
-import { Button } from '@/components/ui';
+import { FormValue } from 'types/common';
+import FormField from 'components/ui/FormField';
+import { Button } from 'components/ui';
 import { BancoForm } from '../types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 interface AsaasFormProps {
   formData: BancoForm;

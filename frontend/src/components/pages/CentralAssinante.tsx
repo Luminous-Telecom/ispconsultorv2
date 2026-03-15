@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { CentralAssinanteService, DadosCentralAssinante, LoginCentralAssinanteRequest, RecuperarSenhaRequest, TrocarSenhaRequest } from '@/services/centralAssinanteService';
-import { DadosEmpresaService } from '@/services/dadosEmpresaService';
-import { ParametrosService } from '@/services/parametrosService';
-import { formatCurrency, formatDate } from '@/utils/formatters';
-import { Spinner, Button, Badge, Card, Input } from '@/components/ui';
-import { useNotificationContext, NotificationContainer } from '@/components/notifications';
-import '@/styles/CentralAssinante.scss';
+import { CentralAssinanteService, DadosCentralAssinante, LoginCentralAssinanteRequest, RecuperarSenhaRequest, TrocarSenhaRequest } from 'services/centralAssinanteService';
+import { DadosEmpresaService } from 'services/dadosEmpresaService';
+import { ParametrosService } from 'services/parametrosService';
+import { formatCurrency, formatDate } from 'utils/formatters';
+import { Spinner, Button, Badge, Card, Input } from 'components/ui';
+import { useNotificationContext, NotificationContainer } from 'components/notifications';
+import 'styles/CentralAssinante.scss';
 
 const CentralAssinante: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();

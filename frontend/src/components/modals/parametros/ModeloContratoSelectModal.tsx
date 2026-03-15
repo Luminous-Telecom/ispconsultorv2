@@ -1,13 +1,13 @@
 import React, { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { formatDate } from '@/utils/formatters';
-import DocumentoSistemaService, { DocumentoSistema } from '@/services/documentoSistemaService';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { formatDate } from 'utils/formatters';
+import DocumentoSistemaService, { DocumentoSistema } from 'services/documentoSistemaService';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
+import { useI18n } from 'contexts/I18nContext';
 
 interface ModeloContratoSelectModalProps {
   show: boolean;

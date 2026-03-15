@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import Spinner from '@/components/ui/Spinner';
-import { BlockdomiWhoisService, type WhoisResult } from '@/services/blockdomiWhoisService';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import Spinner from 'components/ui/Spinner';
+import { BlockdomiWhoisService, type WhoisResult } from 'services/blockdomiWhoisService';
 
 interface WhoisModalProps {
   show: boolean;

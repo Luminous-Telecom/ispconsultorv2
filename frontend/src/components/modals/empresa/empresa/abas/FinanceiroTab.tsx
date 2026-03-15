@@ -1,15 +1,15 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { DadosEmpresaService } from '@/services/dadosEmpresaService';
-import type { SaasTitulo } from '@/services/saas/saasCrudService';
-import { formatDate, formatCurrency } from '@/utils/formatters';
-import { useI18n } from '@/contexts/I18nContext';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import Spinner from '@/components/ui/Spinner';
-import SearchBar from '@/components/ui/SearchBar';
-import Table from '@/components/tables/Table';
-import { TableConfig, BulkAction, SortDirection } from '@/components/tables/types';
-import ImprimirModal from '@/components/common/ImprimirModal';
+import { DadosEmpresaService } from 'services/dadosEmpresaService';
+import type { SaasTitulo } from 'services/saas/saasCrudService';
+import { formatDate, formatCurrency } from 'utils/formatters';
+import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import Spinner from 'components/ui/Spinner';
+import SearchBar from 'components/ui/SearchBar';
+import Table from 'components/tables/Table';
+import { TableConfig, BulkAction, SortDirection } from 'components/tables/types';
+import ImprimirModal from 'components/common/ImprimirModal';
 
 interface FinanceiroTabProps {
   empresaId?: number | null;

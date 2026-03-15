@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect } from 'react';
 import { Table } from '../tables';
-import { useClientes } from '@/hooks/useClientes';
-import { Cliente } from '@/types';
-import { formatDateTime } from '@/utils/formatters';
-import { useModal } from '@/contexts/ModalContext';
-import { useTableFilters } from '@/hooks/useTableFilters';
+import { useClientes } from 'hooks/useClientes';
+import { Cliente } from 'types';
+import { formatDateTime } from 'utils/formatters';
+import { useModal } from 'contexts/ModalContext';
+import { useTableFilters } from 'hooks/useTableFilters';
 
 interface DashboardSearchResultProps {
   searchTerm: string;

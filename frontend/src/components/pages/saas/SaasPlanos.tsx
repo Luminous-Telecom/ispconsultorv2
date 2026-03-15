@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { saasPlanoService, type SaasPlano } from '@/services/saas/saasPlanoService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 
 const EMPTY_FORM: Partial<SaasPlano> = {
   nome: '',

@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { SchedulerService, type CreateRotinaData, type UpdateRotinaData } from '@/services/schedulerService';
-import { SaasSchedulerService } from '@/services/saas/saasSchedulerService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { usePlanoModulos } from '@/hooks/usePlanoModulos';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button, Spinner } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
+import { SchedulerService, type CreateRotinaData, type UpdateRotinaData } from 'services/schedulerService';
+import { SaasSchedulerService } from 'services/saas/saasSchedulerService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { usePlanoModulos } from 'hooks/usePlanoModulos';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button, Spinner } from 'components/ui';
+import FormField from 'components/ui/FormField';
 
 const TIPO_OPTIONS_ERP_BASE = [
   { value: 'geracao_titulos', label: 'Geração de Títulos' },

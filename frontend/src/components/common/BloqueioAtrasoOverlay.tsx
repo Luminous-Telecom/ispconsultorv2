@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { defaultApiClient } from '@/services/core';
-import { useI18n } from '@/contexts/I18nContext';
+import { defaultApiClient } from 'services/core';
+import { useI18n } from 'contexts/I18nContext';
 
 interface BloqueioAtrasoData {
   code?: string;

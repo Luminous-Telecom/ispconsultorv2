@@ -2,15 +2,15 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useI18n } from '@/contexts/I18nContext';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { formatDate } from '@/utils/formatters';
-import { receberSchema, ReceberFormData } from '@/schemas/receber.schema';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import { saasTituloService, type SaasTitulo } from '@/services/saas/saasCrudService';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { formatDate } from 'utils/formatters';
+import { receberSchema, ReceberFormData } from 'schemas/receber.schema';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import { saasTituloService, type SaasTitulo } from 'services/saas/saasCrudService';
 
 interface SaasReceberModalProps {
   isOpen: boolean;

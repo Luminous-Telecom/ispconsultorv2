@@ -1,10 +1,10 @@
 import React from 'react';
-import { Contrato } from '@/hooks/useContratos';
-import { useI18n } from '@/contexts/I18nContext';
-import { formatDate, formatDateTime, formatCurrency } from '@/utils/formatters';
-import Table from '@/components/tables/Table';
+import { Contrato } from 'hooks/useContratos';
+import { useI18n } from 'contexts/I18nContext';
+import { formatDate, formatDateTime, formatCurrency } from 'utils/formatters';
+import Table from 'components/tables/Table';
 import { ContratosTabProps } from '../types';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useIsMobile } from 'hooks/useMediaQuery';
 
 const ContratosTab: React.FC<ContratosTabProps> = ({
   clienteId,

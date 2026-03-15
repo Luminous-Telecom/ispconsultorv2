@@ -1,14 +1,14 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import DraggableModal from '@/components/common/DraggableModal';
-import SearchBar from '@/components/ui/SearchBar';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
-import { auditoriaService, AuditoriaLog, AuditoriaFilters } from '@/services/auditoriaService';
-import { formatDateTime } from '@/utils/formatters';
-import { useI18n } from '@/contexts/I18nContext';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import DraggableModal from 'components/common/DraggableModal';
+import SearchBar from 'components/ui/SearchBar';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
+import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/auditoriaService';
+import { formatDateTime } from 'utils/formatters';
+import { useI18n } from 'contexts/I18nContext';
 
 interface AuditoriaModalProps {
   show: boolean;

@@ -1,20 +1,20 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { useContasPagar, useDeleteContaPagar, useDuplicarContaPagar } from '@/hooks/useContasPagar';
-import { useFornecedores } from '@/hooks/useFornecedores';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useI18n } from '@/contexts/I18nContext';
-import { formatDateTime, formatDate, formatCurrency } from '@/utils/formatters';
-import { ContaPagar, ContaPagarFilters } from '@/types';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import DraggableModal from '@/components/common/DraggableModal';
+import { useContasPagar, useDeleteContaPagar, useDuplicarContaPagar } from 'hooks/useContasPagar';
+import { useFornecedores } from 'hooks/useFornecedores';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useAuditoria } from 'hooks/useAuditoria';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useI18n } from 'contexts/I18nContext';
+import { formatDateTime, formatDate, formatCurrency } from 'utils/formatters';
+import { ContaPagar, ContaPagarFilters } from 'types';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
+import ImprimirModal from 'components/common/ImprimirModal';
+import DraggableModal from 'components/common/DraggableModal';
 import ContaPagarModal from './ContaPagarModal';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface ContasPagarListModalProps {
   show: boolean;

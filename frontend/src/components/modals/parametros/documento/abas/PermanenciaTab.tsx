@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import RichTextEditor, { type RichTextEditorRef } from '@/components/common/RichTextEditor';
+import React, { Suspense, useRef } from 'react';
+import { RichTextEditor, RichTextEditorFallback, type RichTextEditorRef } from 'components/common/RichTextEditorLazy';
 import { DocumentoTabProps } from '../types';
 
 const PermanenciaTab: React.FC<DocumentoTabProps> = ({
@@ -11,17 +11,19 @@ const PermanenciaTab: React.FC<DocumentoTabProps> = ({
   const editorRef = useRef<RichTextEditorRef | null>(null);
 
   return (
-    <RichTextEditor
-      ref={editorRef}
-      key={editorKey}
-      id="conteudo_permanencia"
-      name="conteudo_permanencia"
-      ariaLabelledBy="conteudo-label"
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      height="100%"
-    />
+    <Suspense fallback={<RichTextEditorFallback />}>
+      <RichTextEditor
+        ref={editorRef}
+        key={editorKey}
+        id="conteudo_permanencia"
+        name="conteudo_permanencia"
+        ariaLabelledBy="conteudo-label"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        height="100%"
+      />
+    </Suspense>
   );
 };
 

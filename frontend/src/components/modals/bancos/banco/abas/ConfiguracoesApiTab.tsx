@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react';
-import FormField from '@/components/ui/FormField';
-import { Button, Input } from '@/components/ui';
+import FormField from 'components/ui/FormField';
+import { Button, Input } from 'components/ui';
 import { BancoTabProps } from '../types';
-import { useI18n } from '@/contexts/I18nContext';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 
 const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
   formData,

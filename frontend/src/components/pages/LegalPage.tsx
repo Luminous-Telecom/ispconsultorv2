@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import BackNetLogo from '@/components/common/BackNetLogo';
-import { useTheme } from '@/contexts/ThemeContext';
+import BackNetLogo from 'components/common/BackNetLogo';
+import { useTheme } from 'contexts/ThemeContext';
 import './LegalPage.scss';
 
 interface LegalPageProps {

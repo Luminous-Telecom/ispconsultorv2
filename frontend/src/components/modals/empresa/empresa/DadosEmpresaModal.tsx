@@ -1,25 +1,25 @@
 import React, { useState, useMemo, useLayoutEffect, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from '@/services/dadosEmpresaService';
-import { saasDadosEmpresaService, type SaasDadosEmpresaItem } from '@/services/saas/saasDadosEmpresaService';
-import { ParametrosService } from '@/services/parametrosService';
-import { SaasParametrosService } from '@/services/saas/saasParametrosService';
-import { ClienteService } from '@/services/clienteService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useI18n } from '@/contexts/I18nContext';
-import { ApiError } from '@/services/core/ErrorHandler';
-import { useFormReset } from '@/hooks/useFormReset';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from 'services/dadosEmpresaService';
+import { saasDadosEmpresaService, type SaasDadosEmpresaItem } from 'services/saas/saasDadosEmpresaService';
+import { ParametrosService } from 'services/parametrosService';
+import { SaasParametrosService } from 'services/saas/saasParametrosService';
+import { ClienteService } from 'services/clienteService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
+import { ApiError } from 'services/core/ErrorHandler';
+import { useFormReset } from 'hooks/useFormReset';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import EnderecoTab from './abas/EnderecoTab';
 import ContatoTab from './abas/ContatoTab';
 import ResponsavelTab from './abas/ResponsavelTab';
 import FinanceiroTab from './abas/FinanceiroTab';
-import { isValidCNPJ } from '@/utils/validators';
+import { isValidCNPJ } from 'utils/validators';
 
 function toFormData(item: SaasDadosEmpresaItem): DadosEmpresaForm {
   return {

@@ -7,9 +7,9 @@ import {
   SaasNFSeConfigService,
   type SaasNFSeConfigUpdate,
   type SaasNFSeConfigTestAuth,
-} from '@/services/saas/saasNfseConfigService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useI18n } from '@/contexts/I18nContext';
+} from 'services/saas/saasNfseConfigService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
 
 interface SaasNFSeConfigSectionProps {
   disabled?: boolean;

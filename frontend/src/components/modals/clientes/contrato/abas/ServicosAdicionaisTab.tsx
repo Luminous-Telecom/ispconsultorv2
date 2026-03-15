@@ -1,9 +1,9 @@
 import React from 'react';
-import { ContratoPlanoAdicional } from '@/services/contratoPlanoAdicionalService';
-import Table from '@/components/tables/Table';
+import { ContratoPlanoAdicional } from 'services/contratoPlanoAdicionalService';
+import Table from 'components/tables/Table';
 import { BulkAction } from '../types';
-import { TableColumn } from '@/components/tables/types';
-import { useI18n } from '@/contexts/I18nContext';
+import { TableColumn } from 'components/tables/types';
+import { useI18n } from 'contexts/I18nContext';
 
 interface ServicosAdicionaisTabProps {
   isLoading: boolean;

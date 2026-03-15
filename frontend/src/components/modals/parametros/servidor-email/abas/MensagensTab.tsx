@@ -1,8 +1,8 @@
-import React from 'react';
-import { FormField } from '@/components/ui';
-import RichTextEditor from '@/components/common/RichTextEditor';
+import React, { Suspense } from 'react';
+import { FormField } from 'components/ui';
+import { RichTextEditor, RichTextEditorFallback } from 'components/common/RichTextEditorLazy';
 import { MensagensTabProps } from '../types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 const MensagensTab: React.FC<MensagensTabProps> = ({
   mensagemType,
@@ -93,8 +93,9 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                 </span>
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
-                <RichTextEditor
-                  key={`mensagem-manual-email-${mensagemType || 'none'}-${editorKey}`}
+                <Suspense fallback={<RichTextEditorFallback />}>
+                  <RichTextEditor
+                    key={`mensagem-manual-email-${mensagemType || 'none'}-${editorKey}`}
                   id="mensagem_manual_email"
                   name="mensagem_manual_email"
                   ariaLabelledBy="mensagem-manual-label"
@@ -102,7 +103,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   onChange={onMensagemManualChange || (() => {})}
                   placeholder={t('placeholder.manualSend')}
                   height="100%"
-                />
+                  />
+                </Suspense>
               </div>
             </div>
           ) : (
@@ -112,16 +114,18 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                 <span id="mensagem-label" className="form-label small mb-0">{t('settings.messages.emailLabel')} <span className="text-danger">*</span></span>
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
-                <RichTextEditor
-                  key={`mensagem-email-${mensagemType || 'none'}-${editorKey}`}
+                <Suspense fallback={<RichTextEditorFallback />}>
+                  <RichTextEditor
+                    key={`mensagem-email-${mensagemType || 'none'}-${editorKey}`}
                   id="mensagem_texto_email"
                   name="mensagem_texto_email"
                   ariaLabelledBy="mensagem-label"
                   value={mensagemTexto || '<p></p>'}
                   onChange={onMensagemTextoChange}
                   placeholder={t('placeholder.defaultEmail')}
-                  height="100%"
-                />
+                    height="100%"
+                  />
+                </Suspense>
               </div>
             </div>
           )}

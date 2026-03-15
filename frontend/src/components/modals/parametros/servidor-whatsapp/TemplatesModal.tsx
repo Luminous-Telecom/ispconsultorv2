@@ -1,8 +1,8 @@
 import React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
 import TemplatesMetaTab from './abas/TemplatesMetaTab';
 
 interface TemplatesModalProps {

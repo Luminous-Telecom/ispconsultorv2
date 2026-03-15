@@ -1,7 +1,7 @@
 import React from 'react';
-import { FormValue } from '@/types/common';
-import { formatCEP } from '@/utils/formatters';
-import { AddressFields } from '@/components/forms';
+import { FormValue } from 'types/common';
+import { formatCEP } from 'utils/formatters';
+import { AddressFields } from 'components/forms';
 import { DadosEmpresaTabProps } from '../types';
 
 interface EnderecoTabProps extends DadosEmpresaTabProps {

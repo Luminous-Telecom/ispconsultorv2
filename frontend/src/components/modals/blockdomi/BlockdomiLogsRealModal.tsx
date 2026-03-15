@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useBlockdomiLogs } from '@/hooks/useBlockdomiLogs';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import SearchBar from '@/components/ui/SearchBar';
-import { getSocketToken } from '@/services/core';
-import type { BlockdomiLogAcessoItem } from '@/services/blockdomiLogAcessoService';
+import { useBlockdomiLogs } from 'hooks/useBlockdomiLogs';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import SearchBar from 'components/ui/SearchBar';
+import { getSocketToken } from 'services/core';
+import type { BlockdomiLogAcessoItem } from 'services/blockdomiLogAcessoService';
 
 const INITIAL_LIMIT = 80;
 

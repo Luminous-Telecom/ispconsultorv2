@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useLoading } from '@/contexts/LoadingContext';
-import { ApiClient } from '@/services/core/ApiClient';
+import { useLoading } from 'contexts/LoadingContext';
+import { ApiClient } from 'services/core/ApiClient';
 
 /**
  * Hook que registra automaticamente o setLoading do contexto no ApiClient

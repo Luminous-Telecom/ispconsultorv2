@@ -1,18 +1,18 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { useClientes, useDeleteCliente } from '@/hooks/useClientes';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { formatDateTime } from '@/utils/formatters';
-import { useI18n } from '@/contexts/I18nContext';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { useClientes, useDeleteCliente } from 'hooks/useClientes';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { formatDateTime } from 'utils/formatters';
+import { useI18n } from 'contexts/I18nContext';
+import { useAuditoria } from 'hooks/useAuditoria';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 import ClienteModal from './cliente/ClienteModal';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { Cliente, ClienteFilters } from '@/types';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { Cliente, ClienteFilters } from 'types';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface ClienteListModalProps {
   show: boolean;

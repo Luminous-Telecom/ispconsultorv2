@@ -1,15 +1,15 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import { useI18n } from '@/contexts/I18nContext';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { TableConfig } from '@/components/tables/types';
-import { saasBancoService, type SaasBanco, type SaasConfigListResponse } from '@/services/saas/saasConfigService';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useAuditoria } from 'hooks/useAuditoria';
+import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { TableConfig } from 'components/tables/types';
+import { saasBancoService, type SaasBanco, type SaasConfigListResponse } from 'services/saas/saasConfigService';
 import SaasBancoFormModal from './SaasBancoFormModal';
 
 interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onHeaderActionsReady?: (a: React.ReactNode) => void; }

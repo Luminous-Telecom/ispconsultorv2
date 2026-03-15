@@ -1,13 +1,13 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { FormValue } from '@/types/common';
-import { useI18n } from '@/contexts/I18nContext';
-import FormField from '@/components/ui/FormField';
-import ContactFields from '@/components/forms/ContactFields';
+import { FormValue } from 'types/common';
+import { useI18n } from 'contexts/I18nContext';
+import FormField from 'components/ui/FormField';
+import ContactFields from 'components/forms/ContactFields';
 import { ClienteTabProps } from '../types';
-import { Button } from '@/components/ui';
-import { DadosEmpresaService } from '@/services/dadosEmpresaService';
-import { slugify } from '@/utils/stringUtils';
+import { Button } from 'components/ui';
+import { DadosEmpresaService } from 'services/dadosEmpresaService';
+import { slugify } from 'utils/stringUtils';
 
 const ContatoTab: React.FC<ClienteTabProps> = ({
   formData,

@@ -1,8 +1,8 @@
 import React, { useMemo, useCallback } from 'react';
 import { TableAction, BulkAction } from './types';
 import Button from '../ui/Button';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface TableActionsProps<T = Record<string, unknown>> {
   item?: T;

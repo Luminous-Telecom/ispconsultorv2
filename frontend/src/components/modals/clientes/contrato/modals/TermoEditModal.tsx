@@ -1,12 +1,12 @@
 import React from 'react';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { TermoContrato } from '@/services/termoContratoService';
-import { useCreateTermoContrato, useUpdateTermoContrato } from '@/hooks/useTermosContrato';
-import { useModelosTermo } from '@/hooks/useModelosTermo';
-import EntitySelectField from '@/components/ui/EntitySelectField';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { TermoContrato } from 'services/termoContratoService';
+import { useCreateTermoContrato, useUpdateTermoContrato } from 'hooks/useTermosContrato';
+import { useModelosTermo } from 'hooks/useModelosTermo';
+import EntitySelectField from 'components/ui/EntitySelectField';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
 import { TermoFormData } from '../types';
 
 interface TermoEditModalProps {

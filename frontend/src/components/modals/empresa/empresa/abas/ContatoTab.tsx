@@ -1,6 +1,6 @@
 import React from 'react';
-import { formatPhone } from '@/utils/formatters';
-import { FormField } from '@/components/ui';
+import { formatPhone } from 'utils/formatters';
+import { FormField } from 'components/ui';
 import { DadosEmpresaTabProps } from '../types';
 
 const ContatoTab: React.FC<DadosEmpresaTabProps> = ({

@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { saasDadosEmpresaService, type SaasDadosEmpresaItem, type SaasDadosEmpresaListResponse } from '@/services/saas/saasDadosEmpresaService';
+import { saasDadosEmpresaService, type SaasDadosEmpresaItem, type SaasDadosEmpresaListResponse } from 'services/saas/saasDadosEmpresaService';
 import { DadosEmpresaModal } from '../empresa/empresa';
 
 interface Props {

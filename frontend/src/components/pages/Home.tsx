@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import BackNetLogo from '@/components/common/BackNetLogo';
-import { useTheme } from '@/contexts/ThemeContext';
+import BackNetLogo from 'components/common/BackNetLogo';
+import { useTheme } from 'contexts/ThemeContext';
 import './Home.scss';
 
 const FEATURES = [

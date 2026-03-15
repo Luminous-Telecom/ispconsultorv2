@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import DocumentoSistemaService from '@/services/documentoSistemaService';
-import ModeloReciboService from '@/services/modeloReciboService';
-import ModeloCartaService from '@/services/modeloCartaService';
-import ModeloTermoService from '@/services/modeloTermoService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import DraggableModal from '@/components/common/DraggableModal';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import EntitySelectField from '@/components/ui/EntitySelectField';
+import DocumentoSistemaService from 'services/documentoSistemaService';
+import ModeloReciboService from 'services/modeloReciboService';
+import ModeloCartaService from 'services/modeloCartaService';
+import ModeloTermoService from 'services/modeloTermoService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import DraggableModal from 'components/common/DraggableModal';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import EntitySelectField from 'components/ui/EntitySelectField';
 import { DocumentoForm, DocumentoModalProps, DocumentoUnion } from './types';
 import ContratoTab from './abas/ContratoTab';
 import AdesaoTab from './abas/AdesaoTab';
@@ -19,9 +19,9 @@ import PermanenciaTab from './abas/PermanenciaTab';
 import ReciboTab from './abas/ReciboTab';
 import CartaTab from './abas/CartaTab';
 import ConteudoTab from './abas/ConteudoTab';
-import { useCliente, useClientes } from '@/hooks/useClientes';
-import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
-import { useI18n } from '@/contexts/I18nContext';
+import { useCliente, useClientes } from 'hooks/useClientes';
+import ClienteListModal from 'components/modals/clientes/ClienteListModal';
+import { useI18n } from 'contexts/I18nContext';
 
 const emptyForm: DocumentoForm = {
   nome: '',

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useFormReset } from '@/hooks/useFormReset';
-import { saasServidorEmailService, type SaasServidorEmail } from '@/services/saas/saasConfigService';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useFormReset } from 'hooks/useFormReset';
+import { saasServidorEmailService, type SaasServidorEmail } from 'services/saas/saasConfigService';
 
 interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; }
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { authService } from '@/services/authService';
-import { removeAuthToken } from '@/services/core';
-import BackNetLogo from '@/components/common/BackNetLogo';
-import { useI18n } from '@/contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { authService } from 'services/authService';
+import { removeAuthToken } from 'services/core';
+import BackNetLogo from 'components/common/BackNetLogo';
+import { useI18n } from 'contexts/I18nContext';
 import './Login.scss';
 
 const Login: React.FC = () => {

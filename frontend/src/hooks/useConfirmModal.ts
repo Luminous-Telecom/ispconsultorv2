@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { ConfirmVariant } from '@/components/modals/ConfirmModal';
+import { ConfirmVariant } from 'components/modals/ConfirmModal';
 
 export interface ConfirmConfig {
   /**

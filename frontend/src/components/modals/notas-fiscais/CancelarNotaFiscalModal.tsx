@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { NotaFiscal } from '@/types';
-import { NotaFiscalService } from '@/services/notaFiscalService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { NotaFiscal } from 'types';
+import { NotaFiscalService } from 'services/notaFiscalService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 
 interface CancelarNotaFiscalModalProps {
   show: boolean;

@@ -1,16 +1,16 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useEmpresas, useCreateEmpresa, useUpdateEmpresa, useDeleteEmpresa } from '@/hooks/useEmpresas';
-import { Empresa, CreateEmpresa } from '@/types';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import Table from '@/components/tables/Table';
-import { TableConfig, SortDirection } from '@/components/tables/types';
-import DraggableModal from '@/components/common/DraggableModal';
-import { ParametrosService } from '@/services/parametrosService';
-import { ClienteService } from '@/services/clienteService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { formatCNPJ, formatCEP } from '@/utils/formatters';
-import { isValidCNPJ } from '@/utils/validators';
+import { useEmpresas, useCreateEmpresa, useUpdateEmpresa, useDeleteEmpresa } from 'hooks/useEmpresas';
+import { Empresa, CreateEmpresa } from 'types';
+import { useTableFilters } from 'hooks/useTableFilters';
+import Table from 'components/tables/Table';
+import { TableConfig, SortDirection } from 'components/tables/types';
+import DraggableModal from 'components/common/DraggableModal';
+import { ParametrosService } from 'services/parametrosService';
+import { ClienteService } from 'services/clienteService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { formatCNPJ, formatCEP } from 'utils/formatters';
+import { isValidCNPJ } from 'utils/validators';
 
 interface EmpresasModalProps {
   show: boolean;

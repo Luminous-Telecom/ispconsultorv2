@@ -1,21 +1,21 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useIPv4s, useDeleteIPv4 } from '@/hooks/useIPv4';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { IPv4 } from '@/types';
-import { useI18n } from '@/contexts/I18nContext';
-import { formatDateTime, formatDate } from '@/utils/formatters';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { useIPv4s, useDeleteIPv4 } from 'hooks/useIPv4';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { IPv4 } from 'types';
+import { useI18n } from 'contexts/I18nContext';
+import { formatDateTime, formatDate } from 'utils/formatters';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 import IPv4Modal from './IPv4Modal';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { IPv4Service } from '@/services/ipv4Service';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { IPv4Service } from 'services/ipv4Service';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface IPv4ListModalProps {
   show: boolean;

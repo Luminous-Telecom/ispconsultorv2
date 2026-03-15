@@ -2,7 +2,7 @@
  * Exemplo de uso do PolarAreaChart (Coxcomb)
  *
  * Uso:
- * import { PolarAreaChart, NetworkData } from '@/components/charts';
+ * import { PolarAreaChart, NetworkData } from 'components/charts';
  */
 
 import React from 'react';

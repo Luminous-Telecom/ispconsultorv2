@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import DraggableModal from './DraggableModal';
 import { Table } from '../tables';
-import { ListModalProps } from '@/types/modal';
-import { FilterValue } from '@/types/common';
+import { ListModalProps } from 'types/modal';
+import { FilterValue } from 'types/common';
 
 function ListModal<T extends { id: number | string }>({
   show,

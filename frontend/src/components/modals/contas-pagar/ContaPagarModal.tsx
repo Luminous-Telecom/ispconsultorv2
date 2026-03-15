@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useContaPagar, useCreateContaPagar, useUpdateContaPagar, usePagarContaPagar } from '@/hooks/useContasPagar';
-import { useFornecedores } from '@/hooks/useFornecedores';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useEntitySelectField } from '@/hooks/useEntitySelectField';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button, Spinner } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import EntitySelectField from '@/components/ui/EntitySelectField';
-import FornecedorListModal from '@/components/modals/fornecedores/FornecedorListModal';
-import { CreateContaPagar } from '@/types';
-import { formatCurrency, formatCPF, formatCNPJ, formatLinhaDigitavel } from '@/utils/formatters';
-import { getTodayISO } from '@/utils/dateUtils';
+import { useContaPagar, useCreateContaPagar, useUpdateContaPagar, usePagarContaPagar } from 'hooks/useContasPagar';
+import { useFornecedores } from 'hooks/useFornecedores';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useEntitySelectField } from 'hooks/useEntitySelectField';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button, Spinner } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import EntitySelectField from 'components/ui/EntitySelectField';
+import FornecedorListModal from 'components/modals/fornecedores/FornecedorListModal';
+import { CreateContaPagar } from 'types';
+import { formatCurrency, formatCPF, formatCNPJ, formatLinhaDigitavel } from 'utils/formatters';
+import { getTodayISO } from 'utils/dateUtils';
 
 interface ContaPagarModalProps {
   show: boolean;

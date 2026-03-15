@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useCreateIpPermitido, useUpdateIpPermitido } from '@/hooks/useIpsPermitidos';
-import { IpsPermitidosService, type IpPermitido } from '@/services/ipsPermitidosService';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import EntitySelectField from '@/components/ui/EntitySelectField';
-import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
+import { useCreateIpPermitido, useUpdateIpPermitido } from 'hooks/useIpsPermitidos';
+import { IpsPermitidosService, type IpPermitido } from 'services/ipsPermitidosService';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import EntitySelectField from 'components/ui/EntitySelectField';
+import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 
 interface IpsPermitidoModalProps {
   show: boolean;

@@ -1,7 +1,7 @@
-import { DocumentoSistema } from '@/services/documentoSistemaService';
-import { ModeloRecibo } from '@/services/modeloReciboService';
-import { ModeloCarta } from '@/services/modeloCartaService';
-import { ModeloTermo } from '@/services/modeloTermoService';
+import { DocumentoSistema } from 'services/documentoSistemaService';
+import { ModeloRecibo } from 'services/modeloReciboService';
+import { ModeloCarta } from 'services/modeloCartaService';
+import { ModeloTermo } from 'services/modeloTermoService';
 
 export type TipoDocumento = 'contrato' | 'recibo' | 'carta_cobranca' | 'termo';
 

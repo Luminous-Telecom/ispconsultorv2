@@ -1,10 +1,10 @@
 import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { defaultApiClient } from '@/services/core';
-import { TemplateWhatsAppService } from '@/services/templateWhatsAppService';
-import { Button, Spinner } from '@/components/ui';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { defaultApiClient } from 'services/core';
+import { TemplateWhatsAppService } from 'services/templateWhatsAppService';
+import { Button, Spinner } from 'components/ui';
 
 interface Template {
   name: string;

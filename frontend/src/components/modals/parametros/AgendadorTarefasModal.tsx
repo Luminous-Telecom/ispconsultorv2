@@ -1,21 +1,21 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { SchedulerService, type RotinaAgendada } from '@/services/schedulerService';
-import { SaasSchedulerService } from '@/services/saas/saasSchedulerService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { formatDateTime } from '@/utils/formatters';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { SchedulerService, type RotinaAgendada } from 'services/schedulerService';
+import { SaasSchedulerService } from 'services/saas/saasSchedulerService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { formatDateTime } from 'utils/formatters';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
-import { useI18n } from '@/contexts/I18nContext';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
+import { useI18n } from 'contexts/I18nContext';
 
 const TIPO_LABELS_ERP: Record<string, string> = {
   geracao_titulos: 'Geração de Títulos',

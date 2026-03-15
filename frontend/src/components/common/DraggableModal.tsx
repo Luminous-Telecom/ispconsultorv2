@@ -5,8 +5,8 @@
  */
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { useI18n } from '@/contexts/I18nContext';
-import { modalStack } from '@/utils/modalStack';
+import { useI18n } from 'contexts/I18nContext';
+import { modalStack } from 'utils/modalStack';
 import ResponsiveDialog from './ResponsiveDialog';
 
 interface DraggableModalProps {

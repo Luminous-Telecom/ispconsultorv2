@@ -1,23 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TituloService } from '@/services/tituloService';
-import { PlanoService } from '@/services/planoService';
-import { ClienteService } from '@/services/clienteService';
-import { ContratoService } from '@/services/contratoService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Contrato, Plano, CarneParcela } from '@/types';
-import { FormValue } from '@/types/common';
-import { useEntitySelectField } from '@/hooks/useEntitySelectField';
-import { useTituloForm } from '@/hooks/useTituloForm';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button, Spinner } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import EntitySelectField from '@/components/ui/EntitySelectField';
-import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
-import PlanoListModal from '@/components/modals/planos/PlanoListModal';
+import { TituloService } from 'services/tituloService';
+import { PlanoService } from 'services/planoService';
+import { ClienteService } from 'services/clienteService';
+import { ContratoService } from 'services/contratoService';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useIsMobile } from 'hooks/useMediaQuery';
+import { Contrato, Plano, CarneParcela } from 'types';
+import { FormValue } from 'types/common';
+import { useEntitySelectField } from 'hooks/useEntitySelectField';
+import { useTituloForm } from 'hooks/useTituloForm';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button, Spinner } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import EntitySelectField from 'components/ui/EntitySelectField';
+import ClienteListModal from 'components/modals/clientes/ClienteListModal';
+import PlanoListModal from 'components/modals/planos/PlanoListModal';
 import { TituloModalProps } from './types';
-import { useI18n } from '@/contexts/I18nContext';
+import { useI18n } from 'contexts/I18nContext';
 
 const TituloModal: React.FC<TituloModalProps> = ({ 
   show, 

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useI18n } from '@/contexts/I18nContext';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import { Dominio } from '@/types';
-import { DominioService } from '@/services/dominioService';
+import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import { Dominio } from 'types';
+import { DominioService } from 'services/dominioService';
 
 interface DominioBulkEditModalProps {
   show: boolean;

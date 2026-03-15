@@ -1,10 +1,10 @@
 import React from 'react';
-import { TermoContrato } from '@/services/termoContratoService';
-import Table from '@/components/tables/Table';
+import { TermoContrato } from 'services/termoContratoService';
+import Table from 'components/tables/Table';
 import { BulkAction } from '../types';
-import { TableColumn } from '@/components/tables/types';
-import { SortDirection } from '@/components/tables/types';
-import { useI18n } from '@/contexts/I18nContext';
+import { TableColumn } from 'components/tables/types';
+import { SortDirection } from 'components/tables/types';
+import { useI18n } from 'contexts/I18nContext';
 
 interface TermosTabProps {
   isLoading: boolean;

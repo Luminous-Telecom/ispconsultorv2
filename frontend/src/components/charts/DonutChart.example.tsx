@@ -2,7 +2,7 @@
  * Exemplo de uso do DonutChart
  *
  * Como integrar:
- * 1. Importe: import { DonutChart, ChartData } from '@/components/charts';
+ * 1. Importe: import { DonutChart, ChartData } from 'components/charts';
  * 2. Prepare os dados no formato ChartData[]
  * 3. Renderize: <DonutChart data={data} />
  */

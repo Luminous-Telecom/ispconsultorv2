@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { UseTableOptions, UseTableReturn, TableState, TableActions, SortDirection, TablePagination } from './types';
-import { FilterValue } from '@/types/common';
+import { FilterValue } from 'types/common';
 
 // Helper para normalizar paginação (aceita snake_case da API ou camelCase interno)
 const normalizePagination = (pagination: UseTableOptions<unknown>['pagination']): TablePagination | undefined => {

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useIPv6, useCreateIPv6, useUpdateIPv6 } from '@/hooks/useIPv6';
-import { useI18n } from '@/contexts/I18nContext';
-import DraggableModal from '@/components/common/DraggableModal';
-import { Button } from '@/components/ui';
-import FormField from '@/components/ui/FormField';
-import { isValidIPv6 } from '@/utils/validators';
+import { useIPv6, useCreateIPv6, useUpdateIPv6 } from 'hooks/useIPv6';
+import { useI18n } from 'contexts/I18nContext';
+import DraggableModal from 'components/common/DraggableModal';
+import { Button } from 'components/ui';
+import FormField from 'components/ui/FormField';
+import { isValidIPv6 } from 'utils/validators';
 
 interface IPv6ModalProps {
   show: boolean;

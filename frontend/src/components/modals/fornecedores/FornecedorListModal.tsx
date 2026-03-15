@@ -1,18 +1,18 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { useFornecedores, useDeleteFornecedor } from '@/hooks/useFornecedores';
-import { useModalSelect } from '@/hooks/useModalSelect';
-import { useTableFilters } from '@/hooks/useTableFilters';
-import { useI18n } from '@/contexts/I18nContext';
-import { formatDateTime } from '@/utils/formatters';
-import { Fornecedor } from '@/types';
-import DraggableModal from '@/components/common/DraggableModal';
-import Table from '@/components/tables/Table';
-import { TableConfig } from '@/components/tables/types';
+import { useFornecedores, useDeleteFornecedor } from 'hooks/useFornecedores';
+import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
+import { useI18n } from 'contexts/I18nContext';
+import { formatDateTime } from 'utils/formatters';
+import { Fornecedor } from 'types';
+import DraggableModal from 'components/common/DraggableModal';
+import Table from 'components/tables/Table';
+import { TableConfig } from 'components/tables/types';
 import FornecedorModal from './FornecedorModal';
-import ImprimirModal from '@/components/common/ImprimirModal';
-import { useAuditoria } from '@/hooks/useAuditoria';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useAuditoria } from 'hooks/useAuditoria';
+import { useConfirmModal } from 'hooks/useConfirmModal';
+import ConfirmModal from 'components/modals/ConfirmModal';
 
 interface FornecedorListModalProps {
   show: boolean;
