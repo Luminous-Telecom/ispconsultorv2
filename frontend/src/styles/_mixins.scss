@@ -1,6 +1,7 @@
 /* ============================================
    MIXINS - Funções reutilizáveis de CSS
    ============================================ */
+@use "sass:color";
 
 /* Mixin para responsividade */
 @mixin responsive($breakpoint) {
@@ -70,7 +71,7 @@
 }
 
 /* Mixin para botões */
-@mixin button-variant($color, $hover-color: darken($color, 10%)) {
+@mixin button-variant($color, $hover-color: color.adjust($color, $lightness: -10%)) {
   background-color: $color;
   border-color: $color;
   color: white;

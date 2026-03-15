@@ -1,5 +1,6 @@
 /* Home — igual ao site na pasta site/ */
 /* Cores do site: primary #1e3a8a, accent #059669, foreground #1f2937 */
+@use "sass:color";
 
 $primary: #1e3a8a;
 $primary-foreground: #f3f4f6;
@@ -180,7 +181,7 @@ $secondary: #f3f4f6;
   color: $primary-foreground;
 
   &:hover {
-    background: darken($primary, 5%);
+    background: color.adjust($primary, $lightness: -5%);
   }
 }
 
@@ -189,7 +190,7 @@ $secondary: #f3f4f6;
   color: $accent-foreground;
 
   &:hover {
-    background: darken($accent, 8%);
+    background: color.adjust($accent, $lightness: -8%);
   }
 }
 
@@ -417,7 +418,7 @@ $secondary: #f3f4f6;
   background: rgba($accent, 0.04);
 
   .home-compare-col-title {
-    color: darken($accent, 15%);
+    color: color.adjust($accent, $lightness: -15%);
 
     .bi {
       color: $accent;
@@ -583,7 +584,7 @@ $faixa-accent: #1e3a8a; /* azul escuro do tema do site */
 
 /* Planos — faixa destacada */
 .home-planos {
-  background: linear-gradient(135deg, $faixa-accent 0%, darken($faixa-accent, 8%) 100%);
+  background: linear-gradient(135deg, $faixa-accent 0%, color.adjust($faixa-accent, $lightness: -8%) 100%);
   color: $primary-foreground;
 
   .home-section-title {
@@ -693,7 +694,7 @@ $faixa-accent: #1e3a8a; /* azul escuro do tema do site */
 
 /* Integrations — faixa destacada */
 .home-integrations {
-  background: linear-gradient(135deg, $faixa-accent 0%, darken($faixa-accent, 8%) 100%);
+  background: linear-gradient(135deg, $faixa-accent 0%, color.adjust($faixa-accent, $lightness: -8%) 100%);
   color: $primary-foreground;
 
   .home-section-title {
@@ -959,7 +960,7 @@ $faixa-accent: #1e3a8a; /* azul escuro do tema do site */
 /* CTA */
 .home-cta {
   padding: 4rem 1rem;
-  background: linear-gradient(135deg, $primary 0%, darken($primary, 5%) 100%);
+  background: linear-gradient(135deg, $primary 0%, color.adjust($primary, $lightness: -5%) 100%);
 
   @media (min-width: 640px) {
     padding: 4rem 1.5rem;
@@ -1233,7 +1234,7 @@ $faixa-accent: #1e3a8a; /* azul escuro do tema do site */
 }
 
 [data-theme="dark"] .home-integrations {
-  background: linear-gradient(135deg, $faixa-accent 0%, darken($faixa-accent, 8%) 100%);
+  background: linear-gradient(135deg, $faixa-accent 0%, color.adjust($faixa-accent, $lightness: -8%) 100%);
 
   .home-section-title,
   .home-integration-title {
@@ -1256,7 +1257,7 @@ $faixa-accent: #1e3a8a; /* azul escuro do tema do site */
 }
 
 [data-theme="dark"] .home-planos {
-  background: linear-gradient(135deg, $faixa-accent 0%, darken($faixa-accent, 8%) 100%);
+  background: linear-gradient(135deg, $faixa-accent 0%, color.adjust($faixa-accent, $lightness: -8%) 100%);
 
   .home-section-title,
   .home-planos-soon {

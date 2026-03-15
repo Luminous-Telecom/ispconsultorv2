@@ -1,6 +1,7 @@
 // Central do Assinante Styles
 // Estilos totalmente isolados - não são afetados pelo tema claro/escuro do sistema
 // Todos os estilos usam !important para garantir isolamento total
+@use "sass:color";
 
 // Paleta de cores moderna e harmoniosa
 $bg-primary: #0f1419;
@@ -1318,7 +1319,7 @@ body[data-theme="light"] .central-assinante-container {
     
     &:hover:not(:disabled) {
       background-color: $bg-hover !important;
-      border-color: lighten($border-color, 5%) !important;
+      border-color: color.adjust($border-color, $lightness: 5%) !important;
       color: $text-primary !important;
     }
   }
@@ -1652,7 +1653,7 @@ body[data-theme="light"] .central-assinante-container {
     color: $text-primary !important;
     
     &:hover {
-      color: lighten($text-primary, 10%) !important;
+      color: color.adjust($text-primary, $lightness: 10%) !important;
     }
     
     &:visited {
@@ -1918,14 +1919,14 @@ body[data-theme="light"] .central-assinante-container {
     
     &:hover:not(:disabled) {
       background-color: transparent !important;
-      color: lighten($text-primary, 10%) !important;
+      color: color.adjust($text-primary, $lightness: 10%) !important;
       text-decoration: underline !important;
     }
     
     &:active:not(:disabled),
     &:focus:not(:disabled) {
       background-color: transparent !important;
-      color: lighten($text-primary, 10%) !important;
+      color: color.adjust($text-primary, $lightness: 10%) !important;
       box-shadow: none !important;
     }
   }

@@ -35,10 +35,10 @@
     "zod": "^4.1.12"
   },
   "scripts": {
-    "start": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSER=none react-scripts start",
-    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSER=none react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false NODE_OPTIONS='--max-old-space-size=4096' react-scripts build",
-    "test": "react-scripts test",
+    "start": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSER=none craco start",
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSER=none craco start",
+    "build": "GENERATE_SOURCEMAP=false NODE_OPTIONS='--max-old-space-size=4096' craco build",
+    "test": "craco test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix"
@@ -62,6 +62,7 @@
     ]
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "@types/bootstrap": "^5.2.10",
     "@types/d3": "^7.4.3",
     "cross-env": "^10.1.0",
