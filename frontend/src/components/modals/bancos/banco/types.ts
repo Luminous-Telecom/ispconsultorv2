@@ -50,7 +50,5 @@ export interface BancoTabProps {
   isPending: boolean;
   formPrefix: string;
   renderBancoEspecificoCampos: () => React.ReactNode;
-  handleTestConnection: () => void;
-  testResult: string;
 }
 

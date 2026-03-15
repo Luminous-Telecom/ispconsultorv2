@@ -3,7 +3,7 @@
  * Mesma estrutura do useBancoForm, usando saasBancoService
  */
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -64,7 +64,10 @@ const mapSaasBancoToForm = (d: SaasBanco): BancoForm => {
 }
 
 export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormParams) => {
-  const isEditing = !!bancoId;
+  const lastCreatedBancoIdRef = useRef<number | null>(null);
+  const [lastCreatedBancoId, setLastCreatedBancoId] = useState<number | null>(null);
+  const effectiveBancoId = bancoId ?? lastCreatedBancoId ?? lastCreatedBancoIdRef.current;
+  const isEditing = !!effectiveBancoId;
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   const submittingRef = useRef(false);
@@ -86,9 +89,9 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
   }, [rhfErrors]);
 
   const { data: bancoRes, isLoading: isLoadingBanco } = useQuery({
-    queryKey: ['saas-banco', bancoId],
-    queryFn: () => saasBancoService.getById(bancoId!),
-    enabled: isEditing && !!bancoId,
+    queryKey: ['saas-banco', effectiveBancoId ?? undefined],
+    queryFn: () => saasBancoService.getById(effectiveBancoId!),
+    enabled: !!effectiveBancoId,
     staleTime: 60 * 1000,
   });
 
@@ -97,6 +100,8 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
 
   useEffect(() => {
     if (!show) {
+      lastCreatedBancoIdRef.current = null;
+      setLastCreatedBancoId(null);
       submittingRef.current = false;
       reset(initialFormData as ZodBancoFormData);
       return;
@@ -109,11 +114,11 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
   }, [show, customFormData, isEditing, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: BancoForm & { empresa_id?: number }) => saasBancoService.update(bancoId!, data),
-    onSuccess: () => {
+    mutationFn: ({ id, data }: { id: number; data: BancoForm & { empresa_id?: number } }) => saasBancoService.update(id, data),
+    onSuccess: (_, { id }) => {
       success('Banco atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['saas-bancos'] });
-      queryClient.invalidateQueries({ queryKey: ['saas-banco', bancoId] });
+      queryClient.invalidateQueries({ queryKey: ['saas-banco', id] });
       onSuccess?.();
     },
     onError: (err) => {
@@ -124,7 +129,12 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
 
   const createMutation = useMutation({
     mutationFn: (data: BancoForm) => saasBancoService.create(data),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      const created = (res as { data?: SaasBanco })?.data;
+      if (created?.id != null) {
+        lastCreatedBancoIdRef.current = created.id;
+        setLastCreatedBancoId(created.id);
+      }
       success('Banco criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['saas-bancos'] });
       onSuccess?.();
@@ -212,8 +222,9 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
     submittingRef.current = true;
     const payload = toSaasPayload(data as BancoForm);
     const opts = { onSettled: () => { submittingRef.current = false; } };
-    if (isEditing) {
-      updateMutation.mutate(payload as unknown as BancoForm & { empresa_id?: number }, opts);
+    const effectiveId = bancoId ?? lastCreatedBancoIdRef.current ?? null;
+    if (effectiveId) {
+      updateMutation.mutate({ id: effectiveId, data: payload as unknown as BancoForm & { empresa_id?: number } }, opts);
     } else {
       createMutation.mutate(payload as unknown as BancoForm, opts);
     }
@@ -229,7 +240,14 @@ export const useSaasBancoForm = ({ bancoId, show, onSuccess }: UseSaasBancoFormP
   };
 
   return {
-    formData, errors, isSubmitting, isLoadingBanco: !!isEditing && isLoadingBanco,
-    handleInputChange, handleSubmit, banco, isEditing,
+    formData,
+    errors,
+    isSubmitting,
+    isLoadingBanco: !!effectiveBancoId && isLoadingBanco,
+    handleInputChange,
+    handleSubmit,
+    banco,
+    isEditing,
+    effectiveBancoId: effectiveBancoId ?? null,
   };
 };

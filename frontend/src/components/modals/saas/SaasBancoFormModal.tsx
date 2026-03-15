@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AxiosError } from 'axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
@@ -27,26 +27,22 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
   const errors = formHook.errors;
   const isLoading = formHook.isLoadingBanco;
 
-  const [testResult, setTestResult] = useState('');
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
   const { success, error, warning } = useNotificationContext();
   const queryClient = useQueryClient();
 
-  useEffect(() => { if (show) setTestResult(''); }, [show]);
-
   const handleCancel = () => {
-    setTestResult('');
     setIsGeneratingSecret(false);
     onClose();
   };
 
   const handleTestConnection = async () => {
-    if (!itemId) {
+    const idToUse = formHook.effectiveBancoId ?? itemId ?? null;
+    if (!idToUse) {
       error(t('messages.saveBankBeforeTest'));
       return;
     }
-    setTestResult(t('messages.testingConnection'));
     try {
       const dataToSave: BancoForm = { ...formData };
       if (!dataToSave.api_key?.trim()) delete (dataToSave as Partial<BancoForm>).api_key;
@@ -54,39 +50,37 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
       if (!dataToSave.client_secret_producao?.trim()) delete (dataToSave as Partial<BancoForm>).client_secret_producao;
       if (!dataToSave.api_secret?.trim()) delete (dataToSave as Partial<BancoForm>).api_secret;
       delete (dataToSave as Partial<BancoForm>).has_api_key;
-      await saasBancoService.update(itemId, dataToSave);
+      await saasBancoService.update(idToUse, dataToSave);
       queryClient.invalidateQueries({ queryKey: ['saas-bancos'] });
-      queryClient.invalidateQueries({ queryKey: ['saas-banco', itemId] });
-      const resultado = await saasBancoService.testarConexao(itemId) as { success?: boolean; data?: unknown; message?: string };
+      queryClient.invalidateQueries({ queryKey: ['saas-banco', idToUse] });
+      const resultado = await saasBancoService.testarConexao(idToUse) as { success?: boolean; data?: unknown; message?: string };
       const ok = resultado?.success ?? true;
       const msg = resultado?.message || (resultado?.data as { message?: string })?.message || t('messages.connectionSuccess');
       if (ok) {
-        setTestResult('✅ ' + msg);
         success(msg);
       } else {
-        setTestResult('❌ ' + msg);
         error(msg);
       }
     } catch (err) {
       const axiosError = err as AxiosError;
       const msg = (axiosError?.response?.data as { message?: string } | undefined)?.message || axiosError?.message || t('messages.error');
-      setTestResult('❌ ' + msg);
       error(msg);
     }
   };
 
   const handleGenerateWebhookSecret = async () => {
-    if (!itemId) {
+    const idToUse = formHook.effectiveBancoId ?? itemId ?? null;
+    if (!idToUse) {
       error(t('messages.saveBankBeforeWebhook'));
       return;
     }
     try {
       setIsGeneratingSecret(true);
-      const res = await saasBancoService.gerarWebhookSecret(itemId);
+      const res = await saasBancoService.gerarWebhookSecret(idToUse);
       const data = (res?.data || res) as { webhook_secret?: string };
       if (data?.webhook_secret) {
         formHook.handleInputChange('webhook_secret', data.webhook_secret);
-        queryClient.invalidateQueries({ queryKey: ['saas-banco', itemId] });
+        queryClient.invalidateQueries({ queryKey: ['saas-banco', idToUse] });
         queryClient.invalidateQueries({ queryKey: ['saas-bancos'] });
         success(t('messages.webhookTokenGenerated'));
       } else {
@@ -127,7 +121,7 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
             onGenerateWebhookSecret={handleGenerateWebhookSecret}
             onCopyWebhookSecret={handleCopyWebhookSecret}
             isGeneratingSecret={isGeneratingSecret}
-            isBancoPersisted={!!itemId}
+            isBancoPersisted={formHook.effectiveBancoId != null}
           />
         );
       default:
@@ -147,9 +141,20 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
       headerActions={
         !(isEdit && isLoading) ? (
           <div className="banco-header-unified">
-            <div className="banco-header-buttons modal-header-actions">
+            <div className="banco-header-buttons modal-header-actions d-flex align-items-center gap-2 flex-wrap">
               <Button type="button" variant="primary" size="sm" onClick={handleCancel} disabled={formHook.isSubmitting}>{t('buttons.cancel')}</Button>
               <Button type="submit" form="saas-banco-form-id" variant="primary" size="sm" disabled={formHook.isSubmitting}>{t('buttons.save')}</Button>
+              {(formHook.effectiveBancoId != null) && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleTestConnection}
+                  disabled={formHook.isSubmitting}
+                >
+                  {t('buttons.testConnection')}
+                </Button>
+              )}
             </div>
             <div className="banco-header-tabs">
               <ul className={`nav nav-tabs banco-tabs-unified ${isMobile ? 'banco-tabs-mobile' : ''}`} role="tablist" style={{ margin: 0, padding: 0, borderBottom: 'none', backgroundColor: 'transparent' }}>
@@ -187,8 +192,6 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
                     isPending={formHook.isSubmitting}
                     formPrefix={formPrefix}
                     renderBancoEspecificoCampos={renderBancoEspecificoCampos}
-                    handleTestConnection={handleTestConnection}
-                    testResult={testResult}
                   />
                 </>
               )}
@@ -200,8 +203,6 @@ const SaasBancoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId 
                   isPending={formHook.isSubmitting}
                   formPrefix={formPrefix}
                   renderBancoEspecificoCampos={renderBancoEspecificoCampos}
-                  handleTestConnection={handleTestConnection}
-                  testResult={testResult}
                 />
               )}
             </div>

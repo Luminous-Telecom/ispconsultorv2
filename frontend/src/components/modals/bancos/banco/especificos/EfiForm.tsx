@@ -22,6 +22,7 @@ const EfiForm: React.FC<EfiFormProps> = ({ formData, isPending, handleInputChang
               name="identificador_conta"
               type="text"
               label={t('form.accountIdentifier')}
+              description={t('form.accountIdentifierEfiHelp')}
               placeholder={t('placeholder.accountIdentifierHelp')}
               required={true}
               size="sm"
@@ -30,7 +31,6 @@ const EfiForm: React.FC<EfiFormProps> = ({ formData, isPending, handleInputChang
               disabled={isPending}
               autoComplete="off"
             />
-            <small className="text-secondary">{t('form.accountIdentifierEfiHelp')}</small>
           </div>
         </div>
       </div>

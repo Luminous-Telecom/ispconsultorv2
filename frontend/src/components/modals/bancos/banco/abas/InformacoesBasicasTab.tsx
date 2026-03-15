@@ -1,6 +1,5 @@
 import React from 'react';
 import FormField from 'components/ui/FormField';
-import { Button } from 'components/ui';
 import { BancoTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -9,9 +8,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
   errors,
   handleInputChange,
   isPending,
-  formPrefix,
-  handleTestConnection,
-  testResult
+  formPrefix
 }) => {
   const { t } = useI18n();
 
@@ -24,6 +21,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
               name="nome"
               type="text"
               label={t('table.bankName')}
+              description={t('form.bankNameHelp')}
               placeholder={t('placeholder.bankName')}
               required={true}
               size="sm"
@@ -34,7 +32,6 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
               disabled={isPending}
               autoComplete="organization"
             />
-            <small className="text-secondary">{t('form.bankNameHelp')}</small>
           </div>
         </div>
       </div>
@@ -46,6 +43,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
               name="tipo_banco"
               type="select"
               label={t('table.bankType')}
+              description={t('form.bankTypeHelp')}
               size="sm"
               value={formData.tipo_banco}
               onChange={(value) => handleInputChange('tipo_banco', value)}
@@ -56,7 +54,6 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
                 { value: 'asaas', label: 'Asaas (Código: 461)' }
               ]}
             />
-            <small className="text-secondary">{t('form.bankTypeHelp')}</small>
           </div>
         </div>
 
@@ -90,22 +87,6 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
         />
       </div>
 
-      <div className="mt-3">
-        <Button
-          type="button"
-          variant="outline-primary"
-          size="sm"
-          onClick={handleTestConnection}
-          disabled={isPending}
-        >
-          {t('buttons.testConnection')}
-        </Button>
-        {testResult && (
-          <span className={`ms-2 badge ${testResult.includes('✅') ? 'bg-success' : 'bg-danger'}`}>
-            {testResult}
-          </span>
-        )}
-      </div>
     </>
   );
 };

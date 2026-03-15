@@ -5,7 +5,7 @@
  * Refatorado para usar React Hook Form + Zod internamente
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -45,6 +45,9 @@ interface UseBancoFormReturn {
   
   // Flag de edição
   isEditing: boolean;
+  
+  // ID efetivo (prop ou recém-criado) para Testar conexão
+  effectiveBancoId: number | null;
 }
 
 const initialFormData: BancoForm = {
@@ -138,7 +141,10 @@ export const useBancoForm = ({
   show,
   onSuccess
 }: UseBancoFormParams): UseBancoFormReturn => {
-  const isEditing = !!bancoId;
+  const lastCreatedBancoIdRef = useRef<number | null>(null);
+  const [lastCreatedBancoId, setLastCreatedBancoId] = useState<number | null>(null);
+  const effectiveBancoId = bancoId ?? lastCreatedBancoId ?? lastCreatedBancoIdRef.current;
+  const isEditing = !!effectiveBancoId;
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -181,9 +187,9 @@ export const useBancoForm = ({
 
   // Buscar dados do banco (apenas se estiver editando)
   const { data: banco, isLoading: isLoadingBanco } = useQuery({
-    queryKey: ['banco', bancoId],
-    queryFn: () => BancoService.getById(bancoId!),
-    enabled: isEditing && !!bancoId,
+    queryKey: ['banco', effectiveBancoId ?? undefined],
+    queryFn: () => BancoService.getById(effectiveBancoId!),
+    enabled: !!effectiveBancoId,
     staleTime: 60 * 1000,
     refetchOnMount: false,
   });
@@ -205,6 +211,8 @@ export const useBancoForm = ({
   // Resetar formulário quando modal abrir/fechar ou quando banco carregar
   useEffect(() => {
     if (!show) {
+      lastCreatedBancoIdRef.current = null;
+      setLastCreatedBancoId(null);
       reset(initialFormData as ZodBancoFormData);
       return;
     }
@@ -224,13 +232,13 @@ export const useBancoForm = ({
     }
   }, [show, customFormData, isEditing, reset, dadosEmpresa]);
 
-  // Mutation para atualizar banco
+  // Mutation para atualizar banco (aceita id explícito para uso após create)
   const updateBancoMutation = useMutation({
-    mutationFn: (data: BancoForm) => BancoService.update(bancoId!, data),
-    onSuccess: (updatedBanco) => {
+    mutationFn: ({ id, data }: { id: number; data: BancoForm }) => BancoService.update(id, data),
+    onSuccess: (updatedBanco, { id }) => {
       success('Banco atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
-      queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
+      queryClient.invalidateQueries({ queryKey: ['banco', id] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       onSuccess?.(updatedBanco);
     },
@@ -244,6 +252,10 @@ export const useBancoForm = ({
   const createBancoMutation = useMutation({
     mutationFn: (data: BancoForm) => BancoService.create(data),
     onSuccess: (createdBanco) => {
+      if (createdBanco?.id != null) {
+        lastCreatedBancoIdRef.current = createdBanco.id;
+        setLastCreatedBancoId(createdBanco.id);
+      }
       success('Banco criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
@@ -333,16 +345,16 @@ export const useBancoForm = ({
   };
 
   // Handler de submit usando React Hook Form
+  // effectiveId: bancoId da prop ou ID do banco recém-criado (evita criar de novo ao salvar outra vez logo após criar)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = (data: any) => {
     try {
       const typedData = data as ZodBancoFormData;
-      
-      // Preparar dados para envio
       const dataToSend: BancoForm = { ...typedData } as BancoForm;
+      const effectiveId = effectiveBancoId ?? null;
 
-      if (isEditing) {
-        // Modo edição - não enviar campos de senha vazios
+      if (effectiveId) {
+        // Modo edição (ou salvando de novo após criar) - não enviar campos de senha vazios
         if (!dataToSend.api_key || dataToSend.api_key.trim() === '') {
           delete (dataToSend as Partial<BancoForm>).api_key;
         }
@@ -359,8 +371,8 @@ export const useBancoForm = ({
           delete (dataToSend as Partial<BancoForm>).webhook_secret;
         }
         delete (dataToSend as Partial<BancoForm>).has_api_key;
-        
-        updateBancoMutation.mutate(dataToSend);
+
+        updateBancoMutation.mutate({ id: effectiveId, data: dataToSend });
       } else {
         // Modo criação
         if (!dataToSend.webhook_secret || dataToSend.webhook_secret.trim() === '') {
@@ -370,7 +382,7 @@ export const useBancoForm = ({
           delete (dataToSend as Partial<BancoForm>).api_secret;
         }
         delete (dataToSend as Partial<BancoForm>).has_api_key;
-        
+
         createBancoMutation.mutate(dataToSend);
       }
     } catch (err) {
@@ -404,7 +416,8 @@ export const useBancoForm = ({
     handleSubmit,
     validateForm,
     banco,
-    isEditing
+    isEditing,
+    effectiveBancoId: effectiveBancoId ?? null,
   };
 };
 

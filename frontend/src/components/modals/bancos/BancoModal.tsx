@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useI18n } from 'contexts/I18nContext';
@@ -46,32 +46,23 @@ const BancoModal: React.FC<BancoModalProps> = ({
   const isLoading = formHook.isLoadingBanco;
 
   // Estados locais para funcionalidades específicas do modal
-  const [testResult, setTestResult] = useState<string>('');
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
   const { success, error, warning } = useNotificationContext();
   const queryClient = useQueryClient();
 
-  // Limpar resultado do teste quando o modal abre
-  useEffect(() => {
-    if (show) {
-      setTestResult('');
-    }
-  }, [show]);
-
   const handleCancel = () => {
-    setTestResult('');
     setIsGeneratingSecret(false);
     onClose();
   };
 
   const handleTestConnection = async () => {
-    if (!bancoId) {
+    const idToUse = formHook.effectiveBancoId ?? bancoId ?? null;
+    if (!idToUse) {
       error(t('messages.saveBankBeforeTest'));
       return;
     }
 
-    setTestResult(t('messages.testingConnection'));
     try {
       // Preparar dados para salvar
       const dataToSave: BancoForm = { ...formData };
@@ -97,15 +88,14 @@ const BancoModal: React.FC<BancoModalProps> = ({
       delete (dataToSave as Partial<BancoForm>).has_api_key;
       
       // Salvar dados primeiro (sem fechar o modal)
-      await BancoService.update(bancoId, dataToSave);
+      await BancoService.update(idToUse, dataToSave);
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
-      queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
+      queryClient.invalidateQueries({ queryKey: ['banco', idToUse] });
       
       // Testar conexão
-      const resultado = await BancoService.testarConexao(bancoId);
+      const resultado = await BancoService.testarConexao(idToUse);
       
       if (resultado.success) {
-        setTestResult('✅ ' + (resultado.message || t('messages.connectionSuccess')));
         success(resultado.message || t('messages.connectionSuccess'));
       } else {
         let mensagemErro = resultado.message || t('messages.connectionFailed');
@@ -117,7 +107,6 @@ const BancoModal: React.FC<BancoModalProps> = ({
             : t('messages.credentialsNotConfiguredEfi');
         }
         
-        setTestResult('❌ ' + mensagemErro);
         error(mensagemErro);
       }
     } catch (err) {
@@ -131,7 +120,6 @@ const BancoModal: React.FC<BancoModalProps> = ({
           : t('messages.credentialsNotConfiguredEfi');
       }
       
-      setTestResult('❌ ' + errorMessage);
       error(errorMessage);
     }
   };
@@ -235,8 +223,6 @@ const BancoModal: React.FC<BancoModalProps> = ({
                 isPending={formHook.isSubmitting}
                 formPrefix={formPrefix}
                 renderBancoEspecificoCampos={renderBancoEspecificoCampos}
-                handleTestConnection={handleTestConnection}
-                testResult={testResult}
               />
             )}
 
@@ -249,8 +235,6 @@ const BancoModal: React.FC<BancoModalProps> = ({
                 isPending={formHook.isSubmitting}
                 formPrefix={formPrefix}
                 renderBancoEspecificoCampos={renderBancoEspecificoCampos}
-                handleTestConnection={handleTestConnection}
-                testResult={testResult}
               />
             )}
           </div>
@@ -273,7 +257,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
         !(isEdit && isLoading) ? (
           <div className="banco-header-unified">
             {/* Botões à direita */}
-            <div className="banco-header-buttons modal-header-actions">
+            <div className="banco-header-buttons modal-header-actions d-flex align-items-center gap-2 flex-wrap">
               <Button
                 type="button"
                 variant="primary"
@@ -292,6 +276,17 @@ const BancoModal: React.FC<BancoModalProps> = ({
               >
                 {t('buttons.save')}
               </Button>
+              {(formHook.effectiveBancoId != null) && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleTestConnection}
+                  disabled={formHook.isSubmitting}
+                >
+                  {t('buttons.testConnection')}
+                </Button>
+              )}
             </div>
 
             {/* Abas na parte inferior do header */}

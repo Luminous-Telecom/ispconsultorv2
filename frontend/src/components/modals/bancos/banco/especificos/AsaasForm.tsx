@@ -37,6 +37,7 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
               name="api_key"
               type="password"
               label={t('form.apiKey')}
+              description={t('form.apiKeyAsaasHelp')}
               placeholder={t('placeholder.apiKeyAsaas')}
               required={true}
               size="sm"
@@ -45,9 +46,6 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
               disabled={isPending}
               autoComplete="off"
             />
-            <small className="text-secondary d-block mt-1">
-              {t('form.apiKeyAsaasHelp')}
-            </small>
           </div>
         </div>
       </div>
@@ -59,6 +57,7 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
               name="webhook_secret"
               type="text"
               label={t('form.webhookSecret')}
+              description={formData.webhook_secret ? t('form.webhookSecretAsaasHelp') : t('form.generateWebhookSecretHelp')}
               placeholder={t('placeholder.webhookSecretHelp')}
               size="sm"
               value={formData.webhook_secret}
@@ -86,11 +85,6 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
                 {t('buttons.copy')}
               </Button>
             </div>
-            <small className="text-secondary d-block mt-1">
-              {formData.webhook_secret
-                ? t('form.webhookSecretAsaasHelp')
-                : t('form.generateWebhookSecretHelp')}
-            </small>
           </div>
         </div>
       </div>
