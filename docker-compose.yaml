@@ -1,9 +1,14 @@
 # Em desenvolvimento: backend e frontend rodam no host (npm/pm2).
 # Docker sobe só nginx, db, redis e elasticsearch.
+# Para usar variáveis do backend: docker-compose --env-file backend/.env up -d
+# Ou crie .env na raiz do projeto com as mesmas variáveis.
+
 services:
   nginx:
     image: nginx:alpine
     container_name: backnet-nginx
+    env_file:
+      - backend/.env
     ports:
       - "80:80"
     volumes:
@@ -15,15 +20,17 @@ services:
     image: mysql:8.0
     container_name: backnet-mysql
     restart: always
+    env_file:
+      - backend/.env
     deploy:
       resources:
         limits:
           memory: 512M
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: backnet
-      MYSQL_USER: backnet
-      MYSQL_PASSWORD: amine
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-backnet}
+      MYSQL_USER: ${DB_USER:-backnet}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-amine}
     ports:
       - "3306:3306"
     volumes:
@@ -38,10 +45,13 @@ services:
     image: redis:7-alpine
     container_name: backnet-redis
     restart: always
+    env_file:
+      - backend/.env
+    command: ["sh", "-c", "exec redis-server $$([ -n \"$$REDIS_PASSWORD\" ] && echo \"--requirepass $$REDIS_PASSWORD\")"]
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "sh", "-c", "redis-cli $$([ -n \"$$REDIS_PASSWORD\" ] && echo \"-a $$REDIS_PASSWORD\") ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,14 +59,16 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     container_name: backnet-elasticsearch
+    env_file:
+      - backend/.env
     deploy:
       resources:
         limits:
           memory: 1536M
     environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     ports:
       - "9200:9200"
     volumes:

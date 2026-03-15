@@ -128,7 +128,6 @@ const publicEndpointLimiter = rateLimit({
  */
 export const rateLimitMiddleware = () => {
   if (!ENABLE_RATE_LIMIT) {
-    logger.info('Rate limiting está desabilitado. Para habilitar, defina ENABLE_RATE_LIMIT=true');
     return (req: Request, res: Response, next: () => void) => {
       next();
     };

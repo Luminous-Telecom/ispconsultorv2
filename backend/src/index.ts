@@ -217,11 +217,6 @@ app.use(ddosProtectionMiddleware({
   ]
 }));
 
-logger.info('Middleware de proteção DDoS habilitado', {
-  maxProcessingTime: `${ddosMaxProcessingTime}ms`,
-  maxConcurrentRequests: ddosMaxConcurrentRequests
-});
-
 // Aplicar rate limiting nas rotas da API
 // Deve vir antes das rotas mas depois do parsing de JSON
 app.use('/api', rateLimitMiddleware());
@@ -316,6 +311,7 @@ const startServer = async () => {
     logger.info(`🚀 Iniciando aplicação em modo: ${environment}`);
 
     await sequelize.authenticate();
+    logger.info('Conexão com banco de dados estabelecida');
 
     httpServer.once('error', (error: NodeJS.ErrnoException) => {
       if (error.code === 'EADDRINUSE') {
@@ -341,17 +337,28 @@ const startServer = async () => {
 
 
       try {
+        const { connectRedis } = await import('./config/redis');
+        const redisOk = await connectRedis();
+        if (!redisOk) logger.info('Redis não configurado ou indisponível');
+      } catch {
+        logger.info('Redis não configurado ou indisponível');
+      }
+
+      try {
         const { getElasticsearchService } = await import('./services/elasticsearch');
         const elasticsearchService = getElasticsearchService();
         
         setTimeout(async () => {
           const isConnected = await elasticsearchService.checkConnection();
           if (isConnected) {
+            logger.info('Elasticsearch conectado');
             await elasticsearchService.ensureIndex();
+          } else {
+            logger.info('Elasticsearch não configurado ou indisponível');
           }
         }, 3000);
-      } catch (error) {
-        // Ignorar erro do Elasticsearch no startup
+      } catch {
+        logger.info('Elasticsearch não configurado ou indisponível');
       }
     });
   } catch (error) {

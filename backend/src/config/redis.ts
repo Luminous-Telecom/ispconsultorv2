@@ -40,6 +40,7 @@ export async function connectRedis(): Promise<boolean> {
   if (!c) return false;
   try {
     await c.connect();
+    logger.info('Redis conectado');
     return true;
   } catch (err) {
     logger.error('Falha ao conectar Redis', { error: err instanceof Error ? err.message : String(err) });
