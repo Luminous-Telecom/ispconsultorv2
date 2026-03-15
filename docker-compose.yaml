@@ -12,7 +12,7 @@ services:
 
   frontend:
     build:
-      context: ../frontend
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: backnet-frontend
     environment:
@@ -20,23 +20,23 @@ services:
       - HOST=0.0.0.0
       - BACKEND_URL=http://backend:3001
     volumes:
-      - ../frontend:/app
+      - ./frontend:/app
       - /app/node_modules
     depends_on:
       - backend
 
   backend:
     build:
-      context: ../backend
+      context: ./backend
       dockerfile: Dockerfile
     container_name: backnet-backend
     ports:
       - "3001:3001"
     volumes:
-      - ../backend:/app
+      - ./backend:/app
       - /app/node_modules
     env_file:
-      - ../backend/.env
+      - ./backend/.env
     environment:
       - DB_HOST=db
       - DB_PORT=3306

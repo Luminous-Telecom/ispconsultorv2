@@ -76,7 +76,7 @@ jobs:
             fi
             
             # Verificar mudanças em arquivos de configuração/documentação na raiz
-            if echo "${CHANGED_FILES}" | grep -qE '^(README\.md|docker-compose\.yaml|ecosystem\.config\.js|\.gitignore|package\.json|docker/)'; then
+            if echo "${CHANGED_FILES}" | grep -qE '^(README\.md|docker-compose\.yaml|nginx\.docker\.conf|ecosystem\.config\.js|\.gitignore|package\.json)$'; then
               CONFIG_CHANGED="true"
             else
               CONFIG_CHANGED="false"
@@ -673,18 +673,14 @@ jobs:
               echo "✓ README.md copiado"
             fi
             
-            # Pasta docker/ e docker-compose
-            if [ -d "../docker" ]; then
-              rm -rf docker
-              cp -r ../docker docker
-              echo "✓ Pasta docker/ copiada"
-              # Criar docker-compose.yaml na raiz (include) para manter compatibilidade
-              echo "include:" > docker-compose.yaml
-              echo "  - docker/compose.yaml" >> docker-compose.yaml
-              echo "✓ docker-compose.yaml (include) criado"
-            elif [ -f "../docker-compose.yaml" ]; then
+            # docker-compose.yaml e nginx.docker.conf
+            if [ -f "../docker-compose.yaml" ]; then
               cp ../docker-compose.yaml docker-compose.yaml
               echo "✓ docker-compose.yaml copiado"
+            fi
+            if [ -f "../nginx.docker.conf" ]; then
+              cp ../nginx.docker.conf nginx.docker.conf
+              echo "✓ nginx.docker.conf copiado"
             fi
             
             # package.json da raiz (se existir)

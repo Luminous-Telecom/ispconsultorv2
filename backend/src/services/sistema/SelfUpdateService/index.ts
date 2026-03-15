@@ -7,7 +7,6 @@ import { BuildService } from '../BuildService';
 import { MigrationService } from '../MigrationService';
 import { Pm2Service } from '../Pm2Service';
 import { HealthCheckService } from '../HealthCheckService';
-import { NginxUpdateService } from '../NginxUpdateService';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -18,7 +17,6 @@ export interface UpdateResult {
   message: string;
   steps: {
     gitPull: CommandResult;
-    nginx: CommandResult;
     npmInstall: CommandResult;
     build: CommandResult;
     migrate: CommandResult;
@@ -43,8 +41,6 @@ export class SelfUpdateService {
   private readonly migrationService: MigrationService;
   private readonly pm2Service: Pm2Service;
   private readonly healthCheckService: HealthCheckService;
-  private readonly nginxUpdateService: NginxUpdateService;
-
   constructor() {
     const currentDir = __dirname;
     logger.debug('Inicializando SelfUpdateService', { currentDir });
@@ -73,7 +69,6 @@ export class SelfUpdateService {
     this.migrationService = new MigrationService(this.backendPath);
     this.pm2Service = new Pm2Service(this.projectRoot, this.backendPath, this.pm2ProcessName);
     this.healthCheckService = new HealthCheckService(this.backendUrl);
-    this.nginxUpdateService = new NginxUpdateService(this.projectRoot);
     
     logger.debug('SelfUpdateService Configurado', {
       currentDir,
@@ -150,7 +145,6 @@ export class SelfUpdateService {
         message: `Comandos necessários não encontrados: ${commandCheck.missing.join(', ')}`,
         steps: {
           gitPull: { success: false, stdout: '', stderr: `Comandos faltando: ${commandCheck.missing.join(', ')}` },
-          nginx: { success: false, stdout: '', stderr: '' },
           npmInstall: { success: false, stdout: '', stderr: '' },
           build: { success: false, stdout: '', stderr: '' },
           migrate: { success: false, stdout: '', stderr: '' },
@@ -167,7 +161,6 @@ export class SelfUpdateService {
 
     const steps = {
       gitPull: { success: false, stdout: '', stderr: '' } as CommandResult,
-      nginx: { success: false, stdout: '', stderr: '' } as CommandResult,
       npmInstall: { success: false, stdout: '', stderr: '' } as CommandResult,
       build: { success: false, stdout: '', stderr: '' } as CommandResult,
       migrate: { success: false, stdout: '', stderr: '' } as CommandResult,
@@ -201,22 +194,7 @@ export class SelfUpdateService {
       logs: ['✓ Git Pull concluído']
     });
 
-    // Passo 1.5: Atualizar Nginx se versão mudou
-    onProgress?.({
-      step: 'nginx',
-      progress: 22,
-      message: 'Verificando configuração do Nginx...',
-      logs: ['→ Verificando versão do Nginx...']
-    });
-    steps.nginx = await this.nginxUpdateService.apply();
-    onProgress?.({
-      step: 'nginx',
-      progress: 25,
-      message: steps.nginx.stdout || 'Nginx verificado',
-      logs: [steps.nginx.success ? `✓ ${steps.nginx.stdout}` : `⚠ Nginx: ${steps.nginx.error || steps.nginx.stderr}`]
-    });
-
-    // Passo 1.6: Atualizar versão
+    // Passo 1.5: Atualizar versão
     onProgress?.({
       step: 'versao',
       progress: 25,
