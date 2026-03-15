@@ -4,9 +4,9 @@ module.exports = {
     {
       name: 'backend-dev',
       cwd: './backend',
-      script: 'npm',
-      args: 'run dev',
+      script: 'run-dev.js',
       interpreter: 'node',
+      node_args: '--watch',
       instances: 1,
       exec_mode: 'fork',
       watch: false,

@@ -1,8 +1,5 @@
 import React, { useRef, useLayoutEffect, useEffect, useCallback, useMemo, memo, useState } from 'react';
-import * as d3Selection from 'd3-selection';
-import * as d3Scale from 'd3-scale';
-import * as d3Axis from 'd3-axis';
-import * as d3Ease from 'd3-ease';
+import * as d3 from 'd3';
 import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 
@@ -60,14 +57,14 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
     const svg = svgRef.current;
     if (!svg || dimensions.width === 0 || chartData.length === 0) return;
 
-    d3Selection.select(svg).selectAll('*').remove();
+    d3.select(svg).selectAll('*').remove();
 
     const barHeight = 18;
     const barGap = 6;
     const totalRowHeight = barHeight + barGap;
 
     // margem esquerda dinâmica: mede o label mais longo
-    const tempSvg = d3Selection.select(svg);
+    const tempSvg = d3.select(svg);
     const testText = tempSvg.append('text')
       .attr('font-size', '10px')
       .attr('font-family', 'system-ui, -apple-system, sans-serif')
@@ -93,9 +90,9 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
     const barsHeight = chartData.length * totalRowHeight - barGap;
     const svgHeight = margin.top + barsHeight + margin.bottom;
 
-    const xScale = d3Scale.scaleLinear().domain([0, maxValue]).range([0, chartWidth]).nice();
+    const xScale = d3.scaleLinear().domain([0, maxValue]).range([0, chartWidth]).nice();
 
-    const g = d3Selection
+    const g = d3
       .select(svg)
       .attr('width', dimensions.width)
       .attr('height', svgHeight)
@@ -106,7 +103,7 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
     const gridColor = 'var(--border-color)';
 
     // Eixo X + linhas de grade verticais
-    const xAxis = d3Axis.axisBottom(xScale).ticks(5).tickSize(-barsHeight).tickFormat((d) => d.toLocaleString('pt-BR'));
+    const xAxis = d3.axisBottom(xScale).ticks(5).tickSize(-barsHeight).tickFormat((d) => d.toLocaleString('pt-BR'));
     const xAxisG = g
       .append('g')
       .attr('class', 'x-axis')
@@ -132,7 +129,7 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
     barGroups.each(function (d, i) {
       const y = i * totalRowHeight;
       const barWidth = Math.max(xScale(d.value), 2);
-      const el = d3Selection.select(this);
+      const el = d3.select(this);
 
       el.append('rect')
         .attr('x', 0).attr('y', y)
@@ -165,13 +162,13 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
     });
 
     // Tooltip
-    const defs = d3Selection.select(svg).append('defs');
+    const defs = d3.select(svg).append('defs');
     const tooltipFilterId = `tooltip-shadow-bar-${Math.random().toString(36).slice(2)}`;
     defs.append('filter').attr('id', tooltipFilterId)
       .attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%')
       .append('feDropShadow').attr('dx', 0).attr('dy', 4).attr('stdDeviation', 6).attr('flood-opacity', 0.25);
 
-    const tooltipG = d3Selection.select(svg).append('g').attr('class', 'chart-tooltip').style('opacity', 0).style('pointer-events', 'none');
+    const tooltipG = d3.select(svg).append('g').attr('class', 'chart-tooltip').style('opacity', 0).style('pointer-events', 'none');
     const tooltipBg = tooltipG.append('rect').attr('rx', 6).attr('ry', 6)
       .attr('fill', 'var(--bg-tertiary)').attr('stroke', 'var(--border-color)')
       .attr('stroke-width', 1).attr('filter', `url(#${tooltipFilterId})`);
@@ -204,10 +201,10 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
         if (ty < 8) ty = 8;
         if (ty + h > svgHeight) ty = event.clientY - rect.top - h - 8;
         tooltipG.attr('transform', `translate(${tx},${ty})`);
-        tooltipG.transition().duration(180).ease(d3Ease.easeCubicOut).style('opacity', 1);
+        tooltipG.transition().duration(180).ease(d3.easeCubicOut).style('opacity', 1);
       })
       .on('mouseleave', () => {
-        tooltipG.transition().duration(150).ease(d3Ease.easeCubicOut).style('opacity', 0);
+        tooltipG.transition().duration(150).ease(d3.easeCubicOut).style('opacity', 0);
       });
 
     return () => { barGroups.on('mouseenter', null).on('mouseleave', null); };
