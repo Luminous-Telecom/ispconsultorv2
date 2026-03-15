@@ -52,7 +52,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 1536M
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
