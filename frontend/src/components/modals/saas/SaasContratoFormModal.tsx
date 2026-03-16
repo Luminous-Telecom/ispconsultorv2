@@ -24,11 +24,15 @@ interface Form {
   data_fim: string;
   tipo: 'mensal' | 'anual';
   valor: number | '';
+  desconto_percentual: number;
+  desconto_valor: number;
+  data_validade_desconto: string;
+  isento_mensalidade: boolean;
   observacoes: string;
   data_fim_desbloqueio_manual: string;
 }
 
-const INITIAL: Form = { banco_id: '', dia_vencimento: '', plano_id: '', data_inicio: '', data_fim: '', tipo: 'mensal', valor: '', observacoes: '', data_fim_desbloqueio_manual: '' };
+const INITIAL: Form = { banco_id: '', dia_vencimento: '', plano_id: '', data_inicio: '', data_fim: '', tipo: 'mensal', valor: '', desconto_percentual: 0, desconto_valor: 0, data_validade_desconto: '', isento_mensalidade: false, observacoes: '', data_fim_desbloqueio_manual: '' };
 
 const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemId, empresaId, dataFimDesbloqueioManual }) => {
   const { t } = useI18n();
@@ -39,6 +43,8 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
   const [showPlanoSelectModal, setShowPlanoSelectModal] = useState(false);
   const [showBancoSelectModal, setShowBancoSelectModal] = useState(false);
+  const [descontoPercentualDisplay, setDescontoPercentualDisplay] = useState('');
+  const [descontoValorDisplay, setDescontoValorDisplay] = useState('');
 
   const { data } = useQuery({
     queryKey: ['saas-contrato', itemId],
@@ -78,15 +84,28 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
     return list.filter((r) => r.ativo === true).map((r) => ({ id: r.id ?? 0, dia: r.dia ?? r.dia_padrao ?? 10 }));
   }, [diasRes]);
 
-  useEffect(() => {
-    if (!show || isEditing || !form.plano_id) return;
+  const valorPlanoBase = useMemo(() => {
+    if (!form.plano_id) return 0;
     const plano = planos.find(p => p.id === form.plano_id);
-    if (!plano) return;
+    if (!plano) return 0;
     const valorMensal = Number(plano.valor_mensal) || 0;
     const valorAnual = plano.valor_anual != null ? Number(plano.valor_anual) : valorMensal * 12;
-    const valor = form.tipo === 'anual' ? valorAnual : valorMensal;
-    if (valor > 0) setForm(p => ({ ...p, valor }));
-  }, [show, isEditing, form.plano_id, form.tipo, planos]);
+    return form.tipo === 'anual' ? valorAnual : valorMensal;
+  }, [form.plano_id, form.tipo, planos]);
+
+  useEffect(() => {
+    if (!show || isEditing || !form.plano_id) return;
+    if (form.isento_mensalidade) {
+      setForm(p => ({ ...p, valor: 0 }));
+      return;
+    }
+    const base = valorPlanoBase;
+    const descVal = form.desconto_valor || 0;
+    const descPct = form.desconto_percentual || 0;
+    const desconto = descVal > 0 ? descVal : (base * descPct / 100);
+    const valor = Math.max(0, Math.round((base - desconto) * 100) / 100);
+    setForm(p => (p.valor === '' || Number(p.valor) !== valor ? { ...p, valor } : p));
+  }, [show, isEditing, form.plano_id, form.tipo, form.isento_mensalidade, form.desconto_valor, form.desconto_percentual, valorPlanoBase]);
 
   useFormReset({
     show: show && !isEditing,
@@ -109,16 +128,74 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
         data_fim: d.data_fim ? String(d.data_fim).slice(0, 10) : '',
         tipo: d.tipo ?? 'mensal',
         valor: d.valor ?? '',
+        desconto_percentual: Number(d.desconto_percentual) || 0,
+        desconto_valor: Number(d.desconto_valor) || 0,
+        data_validade_desconto: d.data_validade_desconto ? String(d.data_validade_desconto).slice(0, 10) : '',
+        isento_mensalidade: d.isento_mensalidade ?? false,
         observacoes: d.observacoes ?? '',
         data_fim_desbloqueio_manual: (dataFimDesbloqueioManual ?? '').toString().slice(0, 10),
       } as Form;
     })() : undefined,
   });
   useEffect(() => {
+    setDescontoPercentualDisplay(form.desconto_percentual > 0 ? String(form.desconto_percentual) : '');
+  }, [form.desconto_percentual]);
+  useEffect(() => {
+    setDescontoValorDisplay(form.desconto_valor > 0 ? String(form.desconto_valor) : '');
+  }, [form.desconto_valor]);
+  useEffect(() => {
     if (show && dataFimDesbloqueioManual !== undefined) {
       setForm(p => ({ ...p, data_fim_desbloqueio_manual: dataFimDesbloqueioManual ?? '' }));
     }
   }, [show, dataFimDesbloqueioManual]);
+
+  const handleDescontoPercentualChange = (v: unknown) => {
+    const s = String(v ?? '').trim();
+    setDescontoPercentualDisplay(s);
+    if (!s) {
+      setForm(p => ({ ...p, desconto_percentual: 0, desconto_valor: 0 }));
+      setDescontoValorDisplay('');
+      return;
+    }
+    const pct = Math.round(Number(s) * 100) / 100;
+    if (isNaN(pct)) return;
+    setForm(prev => {
+      const next = { ...prev, desconto_percentual: pct };
+      if (pct > 0 && valorPlanoBase > 0) {
+        const val = Math.round((valorPlanoBase * pct / 100) * 100) / 100;
+        next.desconto_valor = val;
+        setDescontoValorDisplay(String(val));
+      } else {
+        next.desconto_valor = 0;
+        setDescontoValorDisplay('');
+      }
+      return next;
+    });
+  };
+
+  const handleDescontoValorChange = (v: unknown) => {
+    const s = String(v ?? '').trim();
+    setDescontoValorDisplay(s);
+    if (!s) {
+      setForm(p => ({ ...p, desconto_valor: 0, desconto_percentual: 0 }));
+      setDescontoPercentualDisplay('');
+      return;
+    }
+    const val = Math.round(Number(s) * 100) / 100;
+    if (isNaN(val)) return;
+    setForm(prev => {
+      const next = { ...prev, desconto_valor: val };
+      if (val > 0 && valorPlanoBase > 0) {
+        const pct = Math.round((val / valorPlanoBase * 100) * 100) / 100;
+        next.desconto_percentual = pct;
+        setDescontoPercentualDisplay(String(pct));
+      } else {
+        next.desconto_percentual = 0;
+        setDescontoPercentualDisplay('');
+      }
+      return next;
+    });
+  };
 
   const createMutation = useMutation({
     mutationFn: (d: Partial<SaasContrato>) => saasContratoService.create(d),
@@ -155,6 +232,10 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
         data_fim: form.data_fim || null,
         tipo: form.tipo,
         valor: form.valor === '' ? 0 : Number(form.valor),
+        desconto_percentual: form.desconto_percentual > 0 ? form.desconto_percentual : null,
+        desconto_valor: form.desconto_valor > 0 ? form.desconto_valor : null,
+        data_validade_desconto: form.data_validade_desconto?.trim() || null,
+        isento_mensalidade: form.isento_mensalidade,
         observacoes: form.observacoes || null,
       };
       if (isEditing) await updateMutation.mutateAsync(payload);
@@ -274,6 +355,29 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
               <FormField name="valor" type="number" label={t('form.value')} value={form.valor === '' ? '' : form.valor}
                 onChange={v => setForm(p => ({ ...p, valor: v !== '' && v != null ? Number(v) : '' }))}
                 min={0} step={0.01} size="md" />
+            </div>
+          </div>
+          <div className="d-flex gap-2">
+            <div className="flex-fill">
+              <FormField name="desconto_percentual" type="number" label={t('form.discountPercent')} placeholder="0.00" size="md"
+                value={descontoPercentualDisplay} onChange={handleDescontoPercentualChange} min={0} max={100} step="any" />
+            </div>
+            <div className="flex-fill">
+              <FormField name="desconto_valor" type="number" label={t('form.discountValue')} placeholder={t('placeholder.discountValue')} size="md"
+                value={descontoValorDisplay} onChange={handleDescontoValorChange} min={0} step={0.01} />
+            </div>
+          </div>
+          <div className="d-flex gap-2 align-items-end">
+            <div className="flex-fill">
+              <FormField name="data_validade_desconto" type="date" label={t('form.discountValidity')} size="md"
+                value={form.data_validade_desconto} onChange={v => setForm(p => ({ ...p, data_validade_desconto: String(v ?? '') }))} />
+            </div>
+            <div className="flex-fill">
+              <div className="form-check form-switch">
+                <input className="form-check-input" type="checkbox" role="switch" id="saas_contrato_isento" name="isento_mensalidade"
+                  checked={form.isento_mensalidade} onChange={e => setForm(p => ({ ...p, isento_mensalidade: e.target.checked }))} style={{ cursor: 'pointer' }} />
+                <label className="form-check-label" htmlFor="saas_contrato_isento" style={{ cursor: 'pointer' }}>{t('form.exemptFromMonthlyFee')}</label>
+              </div>
             </div>
           </div>
           <FormField name="observacoes" type="textarea" label={t('form.observations')} value={form.observacoes}

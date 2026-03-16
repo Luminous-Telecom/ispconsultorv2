@@ -51,6 +51,10 @@ export interface SaasContrato {
   tipo: 'mensal' | 'anual';
   status: 'ativo' | 'cancelado' | 'expirado' | 'pendente';
   valor: number;
+  desconto_percentual?: number | null;
+  desconto_valor?: number | null;
+  data_validade_desconto?: string | null;
+  isento_mensalidade?: boolean;
   observacoes?: string | null;
 }
 

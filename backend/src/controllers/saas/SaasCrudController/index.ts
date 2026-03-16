@@ -457,6 +457,10 @@ const contratoSchema = Joi.object({
   tipo: Joi.string().valid('mensal', 'anual').optional(),
   status: Joi.string().valid('ativo', 'cancelado', 'expirado', 'pendente').optional(),
   valor: Joi.number().min(0).optional(),
+  desconto_percentual: Joi.number().min(0).max(100).optional().allow(null),
+  desconto_valor: Joi.number().min(0).optional().allow(null),
+  data_validade_desconto: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).optional().allow(null, ''),
+  isento_mensalidade: Joi.boolean().optional(),
   observacoes: Joi.string().max(1000).optional().allow('', null),
 });
 

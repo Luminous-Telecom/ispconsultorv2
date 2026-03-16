@@ -21,6 +21,10 @@ export class SaasContrato extends Model<
   declare tipo: CreationOptional<'mensal' | 'anual'>;
   declare status: CreationOptional<'ativo' | 'cancelado' | 'expirado' | 'pendente'>;
   declare valor: number;
+  declare desconto_percentual: CreationOptional<number | null>;
+  declare desconto_valor: CreationOptional<number | null>;
+  declare data_validade_desconto: CreationOptional<string | null>;
+  declare isento_mensalidade: CreationOptional<boolean>;
   declare observacoes: CreationOptional<string | null>;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
@@ -42,6 +46,10 @@ SaasContrato.init(
       defaultValue: 'ativo',
     },
     valor: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
+    desconto_percentual: { type: DataTypes.DECIMAL(5, 2), allowNull: true },
+    desconto_valor: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
+    data_validade_desconto: { type: DataTypes.DATEONLY, allowNull: true },
+    isento_mensalidade: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     observacoes: { type: DataTypes.TEXT, allowNull: true },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
