@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import { useI18n } from 'contexts/I18nContext';
 
 const EMPTY_FORM: Partial<SaasPlano> = {
   nome: '',
@@ -13,6 +14,7 @@ const EMPTY_FORM: Partial<SaasPlano> = {
 };
 
 const SaasPlanos: React.FC = () => {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
   const [showForm, setShowForm] = useState(false);
@@ -108,7 +110,7 @@ const SaasPlanos: React.FC = () => {
       {showForm && (
         <div className="card mb-4 border-primary">
           <div className="card-header d-flex align-items-center justify-content-between">
-            <h6 className="mb-0">{editingId ? 'Editar Plano' : 'Novo Plano'}</h6>
+            <h6 className="mb-0">{t('modal.editPlan')}</h6>
             <button type="button" className="btn-close" onClick={() => setShowForm(false)} />
           </div>
           <div className="card-body">

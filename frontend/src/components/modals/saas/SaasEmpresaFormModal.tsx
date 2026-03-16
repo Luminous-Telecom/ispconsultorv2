@@ -641,7 +641,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   ), [activeTab, isMobile, isPending, empresaId, onClose, t]);
 
   return (
-    <DraggableModal show={show} onClose={onClose} title={isEditing ? `${t('actions.edit')} ${t('modal.clientsTenants')}` : `${t('actions.create')} ${t('modal.clientsTenants')}`} size="xl" modalId="saas-empresa-form" headerActions={headerActionsContent}>
+    <DraggableModal show={show} onClose={onClose} title={t('modal.clientsTenants')} size="xl" modalId="saas-empresa-form" headerActions={headerActionsContent}>
       <form id="saas-empresa-form-id" onSubmit={handleSubmit}>
         <div className="cliente-modal-content">
           <div className={`tab-content cliente-tab-content ${(activeTab === 'financeiro' || activeTab === 'contratos' || activeTab === 'usuarios' || activeTab === 'logs') ? 'cliente-tab-content-scrollable' : 'cliente-tab-content-padded'}`} id="saas-empresa-tab-content">

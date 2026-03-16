@@ -28,7 +28,7 @@ export const contratoSchema = z.object({
   dia_vencimento_id: z
     .number()
     .int('ID do dia de vencimento deve ser um número inteiro')
-    .min(1, 'Dia de vencimento é obrigatório'),
+    .min(1),
   
   conta_boleto: z
     .number()

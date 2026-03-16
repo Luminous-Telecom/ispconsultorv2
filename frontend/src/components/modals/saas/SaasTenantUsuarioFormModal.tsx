@@ -98,7 +98,7 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={isEditing ? `${t('actions.edit')} Usuário` : 'Novo Usuário'}
+      title="Usuário"
       size="md"
       modalId="saas-tenant-usuario-form"
       headerActions={

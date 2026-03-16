@@ -77,7 +77,7 @@ const SaasServidorEmailFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
   };
 
   return (
-    <DraggableModal show={show} onClose={onClose} title={isEditing ? 'Editar Servidor Email' : 'Novo Servidor Email'} size="md" modalId="saas-servidor-email-form"
+    <DraggableModal show={show} onClose={onClose} title="Servidor Email" size="md" modalId="saas-servidor-email-form"
       headerActions={<div className="d-flex gap-2 modal-header-actions">
         <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>Cancelar</Button>
         <Button type="submit" form="saas-servidor-email-form-id" variant="primary" size="sm" disabled={isPending}>Salvar</Button>

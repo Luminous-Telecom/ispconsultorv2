@@ -77,7 +77,7 @@ const SaasServidorWhatsappFormModal: React.FC<Props> = ({ show, onClose, onSucce
   };
 
   return (
-    <DraggableModal show={show} onClose={onClose} title={isEditing ? 'Editar Servidor WhatsApp' : 'Novo Servidor WhatsApp'} size="md" modalId="saas-servidor-whatsapp-form"
+    <DraggableModal show={show} onClose={onClose} title="Servidor WhatsApp" size="md" modalId="saas-servidor-whatsapp-form"
       headerActions={<div className="d-flex gap-2 modal-header-actions">
         <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>Cancelar</Button>
         <Button type="submit" form="saas-servidor-whatsapp-form-id" variant="primary" size="sm" disabled={isPending}>Salvar</Button>

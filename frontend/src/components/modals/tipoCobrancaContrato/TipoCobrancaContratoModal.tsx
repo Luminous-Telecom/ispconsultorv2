@@ -114,7 +114,7 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={isEdit ? t('actions.edit') + ' - ' + t('modal.billingType') : t('actions.create') + ' - ' + t('modal.billingType')}
+      title={t('modal.billingType')}
       size="md"
       modalId="tipo-cobranca-contrato-modal"
       headerActions={

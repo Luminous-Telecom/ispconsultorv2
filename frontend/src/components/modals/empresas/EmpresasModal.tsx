@@ -313,7 +313,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
         <DraggableModal
           show={showForm}
           onClose={handleCloseForm}
-          title={editingId ? 'Editar Empresa' : 'Criar Empresa'}
+          title="Empresa"
           size="lg"
         >
           <div className="p-3">

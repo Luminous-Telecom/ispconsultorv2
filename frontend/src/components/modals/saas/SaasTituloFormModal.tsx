@@ -100,7 +100,7 @@ const SaasTituloFormModal: React.FC<Props> = ({ show, onClose, onSuccess, empres
   const bancoOptions = bancosAtivos.map((b) => ({ value: String(b.id), label: b.nome || b.banco }));
 
   return (
-    <DraggableModal show={show} onClose={onClose} title={`${t('actions.create')} ${t('modal.createTitle')}`} size="md" modalId="saas-titulo-form"
+    <DraggableModal show={show} onClose={onClose} title={t('modal.createTitle')} size="md" modalId="saas-titulo-form"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
           <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>{t('buttons.cancel')}</Button>

@@ -82,7 +82,7 @@ const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, 
   };
 
   return (
-    <DraggableModal show={show} onClose={onClose} title={isEditing ? 'Editar Tipo de Cobrança' : 'Novo Tipo de Cobrança'} size="md" modalId="saas-tipo-cobranca-form"
+    <DraggableModal show={show} onClose={onClose} title="Tipo de Cobrança" size="md" modalId="saas-tipo-cobranca-form"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
           <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>Cancelar</Button>

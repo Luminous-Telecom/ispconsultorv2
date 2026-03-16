@@ -250,7 +250,7 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
 
   return (
     <>
-    <DraggableModal show={show} onClose={onClose} title={isEditing ? `${t('actions.edit')} ${t('nav.contracts')}` : `${t('actions.create')} ${t('nav.contracts')}`} size="md" modalId="saas-contrato-form"
+    <DraggableModal show={show} onClose={onClose} title={t('nav.contracts')} size="md" modalId="saas-contrato-form"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
           <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>{t('buttons.cancel')}</Button>
