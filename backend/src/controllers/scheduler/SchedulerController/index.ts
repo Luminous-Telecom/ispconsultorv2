@@ -339,7 +339,6 @@ export class SchedulerController {
     }
   }
 
-
   // Status do scheduler
   public async status(req: Request, res: Response): Promise<void> {
     try {
