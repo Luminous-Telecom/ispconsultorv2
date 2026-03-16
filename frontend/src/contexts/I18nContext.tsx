@@ -1173,6 +1173,9 @@ export interface TranslationKeys {
   'scheduler.deactivate': string;
   'scheduler.type': string;
   'scheduler.routine': string;
+  'scheduler.queueWaiting': string;
+  'scheduler.queueRunning': string;
+  'scheduler.queueConcurrency': string;
 
   // Updates
   'updates.title': string;
@@ -2563,6 +2566,9 @@ const translations: Translations = {
     'scheduler.deactivate': 'Desativar',
     'scheduler.type': 'Tipo',
     'scheduler.routine': 'Rotina',
+    'scheduler.queueWaiting': 'Na fila',
+    'scheduler.queueRunning': 'Executando',
+    'scheduler.queueConcurrency': 'Concorrência máx.',
 
     // Updates
     'updates.title': 'Atualizações do Sistema',
@@ -3948,6 +3954,9 @@ const translations: Translations = {
     'scheduler.deactivate': 'Deactivate',
     'scheduler.type': 'Type',
     'scheduler.routine': 'Routine',
+    'scheduler.queueWaiting': 'Waiting',
+    'scheduler.queueRunning': 'Running',
+    'scheduler.queueConcurrency': 'Max concurrency',
 
     // Updates
     'updates.title': 'System Updates',
@@ -5335,6 +5344,9 @@ const translations: Translations = {
     'scheduler.deactivate': 'Desactivar',
     'scheduler.type': 'Tipo',
     'scheduler.routine': 'Rutina',
+    'scheduler.queueWaiting': 'En cola',
+    'scheduler.queueRunning': 'Ejecutando',
+    'scheduler.queueConcurrency': 'Concurrencia máx.',
 
     // Updates
     'updates.title': 'Actualizaciones del Sistema',

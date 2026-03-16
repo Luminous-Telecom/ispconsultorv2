@@ -5,6 +5,8 @@ import { logger } from '../../../utils/logger';
 import { buildCronExpression, validateCronExpression } from '../../../utils/SchedulerUtils';
 import { RoutineExecutionService } from '../RoutineExecutionService';
 import { RoutineLogService } from '../RoutineLogService';
+import { RoutineExecutionQueue } from '../RoutineExecutionQueue';
+import type { RoutineJobData } from '../RoutineExecutionQueue/types';
 import { registrarExecucaoRotinaAuditoria } from '../../elasticsearch/ElasticsearchAuditService';
 import type { JsonValue } from '../../../types/index';
 import type {
@@ -32,10 +34,12 @@ export class RoutineScheduleService {
   private isRunning = false;
   private executionService: RoutineExecutionService;
   private logService: RoutineLogService;
+  private executionQueue: RoutineExecutionQueue;
 
   constructor() {
     this.executionService = new RoutineExecutionService();
     this.logService = new RoutineLogService();
+    this.executionQueue = new RoutineExecutionQueue((data) => this.processRoutineJob(data));
   }
 
   /**
@@ -60,6 +64,7 @@ export class RoutineScheduleService {
 
     this.cronJobs.forEach((job) => job.destroy());
     this.cronJobs.clear();
+    await this.executionQueue.close();
     this.isRunning = false;
   }
 
@@ -123,14 +128,7 @@ export class RoutineScheduleService {
     }
 
     const job = cron.schedule(cronExpression, () => {
-      this.runAnyRoutine(routine, source).catch((error) => {
-        logger.error('Erro ao executar rotina em background', {
-          context: 'RoutineScheduleService',
-          rotinaId: routine.id,
-          source,
-          error: error instanceof Error ? error.message : String(error)
-        });
-      });
+      this.executionQueue.enqueue({ source, routineId: routine.id });
     });
 
     job.start();
@@ -151,6 +149,13 @@ export class RoutineScheduleService {
     this.unscheduleAnyRoutine('saas', routineId);
   }
 
+  /**
+   * Retorna a Queue BullMQ para monitoramento (Bull Board). null quando usa fila em memória.
+   */
+  public getQueueForMonitoring(): ReturnType<RoutineExecutionQueue['getQueue']> {
+    return this.executionQueue.getQueue();
+  }
+
   private unscheduleAnyRoutine(source: RoutineSource, routineId: number): void {
     const key = jobKey(source, routineId);
     const job = this.cronJobs.get(key);
@@ -165,8 +170,42 @@ export class RoutineScheduleService {
    * @param usuario - Usuário que executou manualmente (quando presente)
    * @param ipAddress - IP do cliente (quando manual)
    */
-  public async executeSaasRoutineNow(routine: SaasScheduledRoutine, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
-    await this.runAnyRoutine(routine, 'saas', usuario, ipAddress);
+  public executeSaasRoutineNow(routine: SaasScheduledRoutine, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): void {
+    this.executionQueue.enqueue({
+      source: 'saas',
+      routineId: routine.id,
+      usuario: usuario ?? undefined,
+      ipAddress: ipAddress ?? undefined
+    });
+  }
+
+  /**
+   * Processa um job da fila (chamado pelo worker BullMQ ou fila em memória)
+   */
+  public async processRoutineJob(data: RoutineJobData): Promise<void> {
+    const { source, routineId, usuario, ipAddress } = data;
+    const routine = source === 'erp'
+      ? await ScheduledRoutine.findByPk(routineId)
+      : await SaasScheduledRoutine.findByPk(routineId);
+
+    if (!routine) {
+      logger.warn('Rotina não encontrada para execução', {
+        context: 'RoutineScheduleService',
+        source,
+        routineId
+      });
+      return;
+    }
+    if (!routine.ativo) {
+      logger.debug('Rotina inativa, ignorando execução', {
+        context: 'RoutineScheduleService',
+        source,
+        routineId
+      });
+      return;
+    }
+
+    await this.runAnyRoutine(routine as AnyRoutine, source, usuario ?? null, ipAddress ?? null);
   }
 
   /**
@@ -322,14 +361,18 @@ export class RoutineScheduleService {
    * Retorna o status atual do scheduler
    * @returns Status do scheduler
    */
-  public getStatus(): SchedulerStatus {
+  public async getStatus(): Promise<SchedulerStatus> {
     const erpIds = Array.from(this.cronJobs.keys())
       .filter((k) => k.startsWith('erp:'))
       .map((k) => parseInt(k.split(':')[1], 10));
+    const queueStats = await this.executionQueue.getQueueStats();
     return {
       isRunning: this.isRunning,
       activeJobs: this.cronJobs.size,
-      scheduledRoutines: erpIds
+      scheduledRoutines: erpIds,
+      queueSize: queueStats.queueSize,
+      queueRunning: queueStats.queueRunning,
+      queueConcurrency: queueStats.queueConcurrency
     };
   }
 
@@ -356,12 +399,15 @@ export class RoutineScheduleService {
    * Retorna o status de saúde do scheduler
    * @returns Health status
    */
-  public getHealthStatus(): HealthStatus {
+  public async getHealthStatus(): Promise<HealthStatus> {
+    const queueStats = await this.executionQueue.getQueueStats();
     return {
       status: this.isRunning ? 'healthy' : 'stopped',
       isRunning: this.isRunning,
       activeJobs: this.cronJobs.size,
-      uptime: process.uptime()
+      uptime: process.uptime(),
+      queueSize: queueStats.queueSize,
+      queueRunning: queueStats.queueRunning
     };
   }
 
@@ -369,12 +415,16 @@ export class RoutineScheduleService {
    * Retorna estatísticas detalhadas do scheduler e sistema
    * @returns Estatísticas detalhadas
    */
-  public getDetailedStats(): DetailedStats {
+  public async getDetailedStats(): Promise<DetailedStats> {
+    const queueStats = await this.executionQueue.getQueueStats();
     return {
       scheduler: {
         isRunning: this.isRunning,
         activeJobs: this.cronJobs.size,
-        uptime: process.uptime()
+        uptime: process.uptime(),
+        queueSize: queueStats.queueSize,
+        queueRunning: queueStats.queueRunning,
+        queueConcurrency: queueStats.queueConcurrency
       },
       system: {
         memoryUsage: process.memoryUsage(),

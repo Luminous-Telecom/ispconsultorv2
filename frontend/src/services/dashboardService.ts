@@ -53,6 +53,12 @@ export interface DashboardData {
     clientesComTitulos: number;
     ticketMedio: number;
   };
+  /** SaaS: estatísticas da fila de rotinas (BullMQ) */
+  queueStats?: {
+    queueSize: number;
+    queueRunning: number;
+    queueConcurrency: number;
+  };
 }
 
 export interface DashboardFilters {

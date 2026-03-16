@@ -52,7 +52,7 @@ export class WorkerController {
       }
 
       const schedulerService = SchedulerService.getInstance();
-      const stats = schedulerService.getDetailedStats();
+      const stats = await schedulerService.getDetailedStats();
 
       sendSuccess(res, stats);
     } catch (error: unknown) {

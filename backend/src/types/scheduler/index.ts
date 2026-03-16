@@ -59,6 +59,9 @@ export interface SchedulerStatus {
   isRunning: boolean;
   activeJobs: number;
   scheduledRoutines: number[];
+  queueSize: number;
+  queueRunning: number;
+  queueConcurrency: number;
 }
 
 /**
@@ -82,6 +85,8 @@ export interface HealthStatus {
   isRunning: boolean;
   activeJobs: number;
   uptime: number;
+  queueSize: number;
+  queueRunning: number;
 }
 
 /**
@@ -92,6 +97,9 @@ export interface DetailedStats {
     isRunning: boolean;
     activeJobs: number;
     uptime: number;
+    queueSize: number;
+    queueRunning: number;
+    queueConcurrency: number;
   };
   system: {
     memoryUsage: NodeJS.MemoryUsage;

@@ -125,6 +125,28 @@ const SaasDashboard: React.FC = () => {
               <ValueChart data={charts.ticketMedioChartData} title={t('dashboard.averageTicket')} format="currency" />
             </div>
           </div>
+
+          {dashboardData?.queueStats != null && (
+            <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+              <div className="chart-card">
+                <h6 className="chart-title mb-3">{t('scheduler.title')}</h6>
+                <div className="d-flex flex-column gap-2">
+                  <div className="d-flex justify-content-between">
+                    <span className="text-muted">{t('scheduler.queueWaiting')}</span>
+                    <strong>{dashboardData.queueStats.queueSize}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span className="text-muted">{t('scheduler.queueRunning')}</span>
+                    <strong>{dashboardData.queueStats.queueRunning}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span className="text-muted">{t('scheduler.queueConcurrency')}</span>
+                    <strong>{dashboardData.queueStats.queueConcurrency}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="row g-3">

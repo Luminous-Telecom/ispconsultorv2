@@ -60,6 +60,13 @@ export class SchedulerService {
   }
 
   /**
+   * Retorna a Queue BullMQ para monitoramento (Bull Board). null quando Redis não está disponível.
+   */
+  public getQueueForMonitoring(): ReturnType<RoutineScheduleService['getQueueForMonitoring']> {
+    return this.scheduleService.getQueueForMonitoring();
+  }
+
+  /**
    * Agenda uma rotina específica
    * @param routine - Rotina a ser agendada
    */
@@ -103,15 +110,7 @@ export class SchedulerService {
     if (!routine.ativo) {
       throw new Error('Rotina está inativa');
     }
-    this.scheduleService.executeSaasRoutineNow(routine, usuario, ipAddress).catch((error) => {
-      logger.error('Erro ao executar rotina SaaS em background', {
-        context: 'SchedulerService',
-        action: 'executeSaasRoutineManually',
-        rotinaId: id,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      });
-    });
+    this.scheduleService.executeSaasRoutineNow(routine, usuario, ipAddress);
   }
 
   /**
@@ -317,8 +316,8 @@ export class SchedulerService {
    * Retorna o status atual do scheduler
    * @returns Status do scheduler
    */
-  public getStatus(): SchedulerStatus {
-    return this.scheduleService.getStatus();
+  public async getStatus(): Promise<SchedulerStatus> {
+    return await this.scheduleService.getStatus();
   }
 
   /**
@@ -350,16 +349,16 @@ export class SchedulerService {
    * Retorna o status de saúde do scheduler
    * @returns Health status
    */
-  public getHealthStatus(): HealthStatus {
-    return this.scheduleService.getHealthStatus();
+  public async getHealthStatus(): Promise<HealthStatus> {
+    return await this.scheduleService.getHealthStatus();
   }
 
   /**
    * Retorna estatísticas detalhadas do scheduler e sistema
    * @returns Estatísticas detalhadas
    */
-  public getDetailedStats(): DetailedStats {
-    return this.scheduleService.getDetailedStats();
+  public async getDetailedStats(): Promise<DetailedStats> {
+    return await this.scheduleService.getDetailedStats();
   }
 
   /**

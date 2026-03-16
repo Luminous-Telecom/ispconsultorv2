@@ -343,7 +343,7 @@ export class SchedulerController {
   // Status do scheduler
   public async status(req: Request, res: Response): Promise<void> {
     try {
-      const status = this.schedulerService.getStatus();
+      const status = await this.schedulerService.getStatus();
 
       sendSuccess(res, status);
     } catch (error: unknown) {

@@ -80,7 +80,7 @@ router.get('/health', async (_req: Request, res: Response): Promise<void> => {
     await sequelize.authenticate();
 
     const scheduler = SchedulerService.getInstance();
-    const schedulerHealth = scheduler.getHealthStatus();
+    const schedulerHealth = await scheduler.getHealthStatus();
 
     res.json({
       status: 'ok',
@@ -120,7 +120,7 @@ router.get('/health/detailed', async (_req: Request, res: Response): Promise<voi
     await sequelize.authenticate();
 
     const scheduler = SchedulerService.getInstance();
-    const stats = scheduler.getDetailedStats();
+    const stats = await scheduler.getDetailedStats();
 
     res.json({
       status: 'ok',

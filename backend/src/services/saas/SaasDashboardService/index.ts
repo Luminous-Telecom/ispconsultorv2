@@ -46,7 +46,7 @@ export class SaasDashboardService {
     const fimPeriodo = new Date(parsedEnd);
     fimPeriodo.setHours(23, 59, 59, 999);
 
-    const [empresas, planos, contratos, contratosTodos, titulos, receitaUltimosMeses, aReceberPeriodo, recebidosPeriodo, clientesPorTipoPlano, resumoPeriodo, contasPagarUltimosMeses, statusContratos] = await Promise.all([
+    const [empresas, planos, contratos, contratosTodos, titulos, receitaUltimosMeses, aReceberPeriodo, recebidosPeriodo, clientesPorTipoPlano, resumoPeriodo, contasPagarUltimosMeses, statusContratos, queueStats] = await Promise.all([
       this.getEmpresasCompat(),
       this.getPlanosCompat(),
       this.getContratosCompat(inicioPeriodo, fimPeriodo),
@@ -59,6 +59,7 @@ export class SaasDashboardService {
       this.getResumoFinanceiroPeriodo(parsedStart, parsedEnd),
       this.getContasPagarUltimos12Meses(),
       this.getStatusContratosSaaS(),
+      this.getQueueStats(),
     ]);
 
     return {
@@ -96,7 +97,22 @@ export class SaasDashboardService {
         endDate: formatDateISOForAPI(parsedEnd) || '',
       },
       resumoPeriodo,
+      queueStats,
     };
+  }
+
+  private static async getQueueStats(): Promise<{ queueSize: number; queueRunning: number; queueConcurrency: number }> {
+    try {
+      const { SchedulerService } = await import('../../scheduler/SchedulerService');
+      const status = await SchedulerService.getInstance().getStatus();
+      return {
+        queueSize: status.queueSize,
+        queueRunning: status.queueRunning,
+        queueConcurrency: status.queueConcurrency,
+      };
+    } catch {
+      return { queueSize: 0, queueRunning: 0, queueConcurrency: 0 };
+    }
   }
 
   private static async getEmpresasCompat() {
