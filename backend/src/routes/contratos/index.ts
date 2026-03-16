@@ -20,6 +20,7 @@ router.delete('/servicos-adicionais/:id', ContratoPlanoAdicionalController.delet
 // Rotas genéricas de contratos (devem vir depois das rotas específicas)
 router.get('/:id', ContratoController.getById);
 router.post('/', ContratoController.create);
+router.post('/:id/gerar-titulos', ContratoController.gerarTitulos);
 router.put('/:id', ContratoController.update);
 router.delete('/:id', ContratoController.delete);
 

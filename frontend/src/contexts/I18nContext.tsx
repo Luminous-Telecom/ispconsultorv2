@@ -572,6 +572,7 @@ export interface TranslationKeys {
   'financial.toReceive': string;
   'financial.toPayLabel': string;
   'financial.value': string;
+  'financial.generateTitles': string;
 
   // Buttons
   'buttons.confirmPayment': string;
@@ -1961,6 +1962,7 @@ const translations: Translations = {
     'financial.toReceive': 'A Receber',
     'financial.toPayLabel': 'A Pagar',
     'financial.value': 'Valor',
+    'financial.generateTitles': 'Gerar Financeiro',
 
     // Buttons
     'buttons.confirmPayment': 'Confirmar Pagamento',
@@ -3345,6 +3347,7 @@ const translations: Translations = {
     'financial.toReceive': 'To Receive',
     'financial.toPayLabel': 'To Pay',
     'financial.value': 'Value',
+    'financial.generateTitles': 'Generate Titles',
 
     // Buttons
     'buttons.confirmPayment': 'Confirm Payment',
@@ -4731,6 +4734,7 @@ const translations: Translations = {
     'financial.toReceive': 'A Recibir',
     'financial.toPayLabel': 'A Pagar',
     'financial.value': 'Valor',
+    'financial.generateTitles': 'Gerar Financeiro',
 
     // Buttons
     'buttons.confirmPayment': 'Confirmar Pago',

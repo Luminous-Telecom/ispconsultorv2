@@ -18,7 +18,7 @@ interface FinanceiroTabProps {
   sortedData: Titulo[];
   selectedItems: Titulo[];
   setSelectedItems: (items: Titulo[]) => void;
-  columns: TableColumn<Titulo>[]; 
+  columns: TableColumn<Titulo>[];
   onRefresh?: () => void;
   showCancelados: boolean;
   setShowCancelados: (show: boolean) => void;
@@ -108,13 +108,14 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
         const disabledValue = action.disabled;
         disabledFunc = () => disabledValue;
       }
-      
+
       return {
         key: action.label,
         label: action.label,
         variant: action.variant || 'primary',
         onClick: action.action,
         disabled: disabledFunc,
+        requiresSelection: action.requiresSelection,
         dropdown: action.dropdown
       };
     });

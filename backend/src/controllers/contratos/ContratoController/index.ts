@@ -18,6 +18,9 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError, sendForbidden } from '../../../utils/responseUtils';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { ContratoDataLoader } from '../../../services/scheduler/RoutineExecutionService/helpers/ContratoDataLoader';
+import { ContratoTituloProcessor } from '../../../services/scheduler/RoutineExecutionService/helpers/ContratoTituloProcessor';
+import { TituloGenerationHelper } from '../../../services/scheduler/RoutineExecutionService/helpers/TituloGenerationHelper';
 
 export class ContratoController {
   // Função auxiliar para normalizar data (evitar problemas de timezone)
@@ -546,6 +549,108 @@ export class ContratoController {
       sendError(res, error, 'Erro ao excluir contrato', 500, true, {
         context: 'ContratoController',
         action: 'delete',
+        contratoId: req.params.id
+      });
+    }
+  }
+
+  /**
+   * Gera títulos do contrato manualmente (dispara a mesma lógica da rotina agendada para um único contrato)
+   */
+  static async gerarTitulos(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const contratoId = parseInt(id, 10);
+      if (isNaN(contratoId) || contratoId < 1) {
+        sendValidationError(res, 'ID do contrato inválido');
+        return;
+      }
+
+      const empresaId = getEmpresaIdOrNull(req);
+      const { Plano: PlanoModel } = await import('../../../models/cadastros/Plano');
+      const { Cliente: ClienteModel } = await import('../../../models/clientes/Cliente');
+      const { TipoCobrancaContrato } = await import('../../../models/cadastros/TipoCobrancaContrato');
+      const { default: Parametros } = await import('../../../models/sistema/Parametros');
+
+      const contrato = await Contrato.findByPk(contratoId, {
+        include: [
+          { model: PlanoModel, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal', 'periodicidade'] },
+          { model: ClienteModel, as: 'cliente', attributes: ['id', 'ativo'] },
+          { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', attributes: ['id', 'quantidade_titulos', 'periodicidade'], required: false }
+        ]
+      });
+
+      if (!contrato) {
+        sendNotFound(res, 'Contrato não encontrado');
+        return;
+      }
+
+      if (empresaId !== null && (contrato as unknown as { empresa_id?: number | null }).empresa_id !== empresaId) {
+        sendNotFound(res, 'Contrato não encontrado');
+        return;
+      }
+
+      const contratoAny = contrato as unknown as { status: string; dia_vencimento_id?: number | null; conta_boleto?: number | null };
+      if (contratoAny.status !== 'ativo') {
+        sendValidationError(res, 'Apenas contratos ativos podem ter títulos gerados');
+        return;
+      }
+
+      if (!TituloGenerationHelper.validateContrato(contrato as unknown as Parameters<typeof TituloGenerationHelper.validateContrato>[0])) {
+        sendValidationError(res, 'Contrato não possui dados suficientes para geração de títulos (dia de vencimento, banco, cliente ativo)');
+        return;
+      }
+
+      const contratoValidado = contrato as unknown as {
+        id: number;
+        dia_vencimento_id: number;
+        conta_boleto: number;
+        tipoCobrancaContrato?: { quantidade_titulos: number } | null;
+      };
+
+      const diaVencimentoIds = [contratoValidado.dia_vencimento_id].filter(Boolean);
+      const { titulosEmAbertoTodos, todosTitulosTodos, diasVencimentoTodos, servicosAdicionaisTodos } =
+        await ContratoDataLoader.loadRelatedData([contratoId], diaVencimentoIds);
+
+      const { titulosEmAbertoPorContrato, todosTitulosPorContrato, diasVencimentoPorId, servicosAdicionaisPorContrato } =
+        ContratoDataLoader.groupDataByContrato(
+          titulosEmAbertoTodos,
+          todosTitulosTodos,
+          diasVencimentoTodos,
+          servicosAdicionaisTodos
+        );
+
+      const titulosEmAberto = titulosEmAbertoPorContrato.get(contratoId) || [];
+      const todosTitulos = todosTitulosPorContrato.get(contratoId) || [];
+      const diaVencimentoConfig = diasVencimentoPorId.get(contratoValidado.dia_vencimento_id);
+      const diaVencimento = (diaVencimentoConfig && 'dia' in diaVencimentoConfig && typeof diaVencimentoConfig.dia === 'number')
+        ? diaVencimentoConfig.dia
+        : 15;
+      const servicosAdicionais = (servicosAdicionaisPorContrato.get(contratoId) || []) as Parameters<typeof ContratoTituloProcessor.processContrato>[6];
+      const parametros = await Parametros.findOne();
+      const quantidadeTitulos = contratoValidado.tipoCobrancaContrato?.quantidade_titulos ?? 12;
+
+      const contratoWithPlano = contrato as unknown as Parameters<typeof ContratoTituloProcessor.processContrato>[0] & { conta_boleto: number; dia_vencimento_id: number };
+      const resultado = await ContratoTituloProcessor.processContrato(
+        contratoWithPlano,
+        titulosEmAberto,
+        todosTitulos,
+        diaVencimento,
+        quantidadeTitulos,
+        parametros,
+        servicosAdicionais
+      );
+
+      sendSuccess(res, {
+        titulos_gerados: resultado.titulosGerados,
+        message: resultado.titulosGerados > 0
+          ? `${resultado.titulosGerados} título(s) gerado(s) com sucesso`
+          : 'Nenhum título novo gerado. O contrato já possui a quantidade configurada em aberto.'
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao gerar títulos do contrato', 500, true, {
+        context: 'ContratoController',
+        action: 'gerarTitulos',
         contratoId: req.params.id
       });
     }

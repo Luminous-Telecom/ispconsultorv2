@@ -10,6 +10,7 @@ import { useContratoForm } from 'hooks/useContratoForm';
 import { useTermosContrato, useDeleteTermoContrato } from 'hooks/useTermosContrato';
 import { TermoContrato } from 'services/termoContratoService';
 import { TituloService } from 'services/tituloService';
+import { ContratoService } from 'services/contratoService';
 import { ClienteService } from 'services/clienteService';
 import { Titulo, Plano, Cliente } from 'types';
 import ModeloTermoService from 'services/modeloTermoService';
@@ -123,7 +124,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [selectedAvulsosItems, setSelectedAvulsosItems] = useState<Titulo[]>([]);
   const [selectedTermosItems, setSelectedTermosItems] = useState<TermoContrato[]>([]);
   const [selectedServicosAdicionaisItems, setSelectedServicosAdicionaisItems] = useState<ContratoPlanoAdicional[]>([]);
-  
+  const [isGerandoFinanceiro, setIsGerandoFinanceiro] = useState(false);
+
   // Função para mudar de aba e limpar seleções
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
@@ -575,6 +577,27 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   // Bulk actions para títulos (apenas no modo edição)
   const bulkActions: BulkAction<Titulo>[] = isEditMode ? [
+    {
+      label: t('financial.generateTitles'),
+      variant: 'primary',
+      requiresSelection: false,
+      disabled: () => isGerandoFinanceiro,
+      action: async () => {
+        if (!internalContratoId) return;
+        setIsGerandoFinanceiro(true);
+        try {
+          const resultado = await ContratoService.gerarTitulos(internalContratoId);
+          success(resultado.message);
+          await queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
+          refetchTitulos();
+        } catch (err) {
+          const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+          error(msg || 'Erro ao gerar financeiro do contrato');
+        } finally {
+          setIsGerandoFinanceiro(false);
+        }
+      }
+    },
     {
       label: t('actions.edit'),
       action: (selectedItems: Titulo[]) => {

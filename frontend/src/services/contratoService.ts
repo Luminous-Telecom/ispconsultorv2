@@ -51,6 +51,13 @@ class ContratoServiceClass extends BaseService<Contrato, CreateContratoData, Upd
   async getAtivos(): Promise<ApiResponse<Contrato[]>> {
     return this.customGet<Contrato[]>(`/ativos`);
   }
+
+  /**
+   * Gerar títulos do contrato manualmente
+   */
+  async gerarTitulos(id: number): Promise<ApiResponse<{ titulos_gerados: number; message: string }>> {
+    return this.customPost<{ titulos_gerados: number; message: string }>(`/${id}/gerar-titulos`, {});
+  }
 }
 
 // Instância única do serviço
@@ -128,5 +135,16 @@ export class ContratoService {
    */
   static async delete(id: number): Promise<void> {
     await contratoServiceInstance.delete(id);
+  }
+
+  /**
+   * Gerar títulos do contrato manualmente
+   */
+  static async gerarTitulos(id: number): Promise<{ titulos_gerados: number; message: string }> {
+    const response = await contratoServiceInstance.gerarTitulos(id);
+    if (response.data) {
+      return response.data;
+    }
+    return response as unknown as { titulos_gerados: number; message: string };
   }
 }
