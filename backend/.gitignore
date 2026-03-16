@@ -30,6 +30,7 @@ coverage/
 scripts/*
 !scripts/build.js
 !scripts/extrair-dominios.py
+!scripts/test-scheduler-queue.ts
 
 # Dependency versions tracking (local configuration)
 .dependency-versions.json

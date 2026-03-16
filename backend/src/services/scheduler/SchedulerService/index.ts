@@ -213,103 +213,11 @@ export class SchedulerService {
     if (!routine) {
       throw new Error('Rotina não encontrada');
     }
-
-    // Executar em background sem aguardar
-    this.executeRoutineInBackground(routine, usuario, ipAddress).catch((error) => {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao executar rotina em background', {
-        context: 'SchedulerService',
-        action: 'executeRoutineManually',
-        rotinaId: id,
-        error: errorMessage,
-        stack: errorStack
-      });
-    });
-    
-    return { message: 'Rotina iniciada em background' };
-  }
-
-  /**
-   * Executa uma rotina em background (usado por executeRoutineManually)
-   * @param routine - Rotina a ser executada
-   * @param usuario - Usuário que executou manualmente (quando presente)
-   * @param ipAddress - IP do cliente (quando manual)
-   */
-  private async executeRoutineInBackground(routine: ScheduledRoutine, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): Promise<void> {
-    const startTime = new Date();
-    let executionLog: { id: string } | null = null;
-
-    try {
-      executionLog = await this.logService.createExecutionLog(routine, startTime);
-      const resultado = await this.executionService.executeRoutineByType(routine);
-      const endTime = new Date();
-      const duration = endTime.getTime() - startTime.getTime();
-      const statusFinal = 'success' in resultado && resultado.success === false ? 'erro' : 'sucesso';
-
-      // Atualizar log com status correto
-      await this.logService.updateExecutionLog(executionLog.id, {
-        status: statusFinal as 'sucesso' | 'erro',
-        data_fim: endTime,
-        duracao_ms: duration,
-        resultado: resultado as Record<string, JsonValue>
-      });
-
-      // Atualizar contadores da rotina
-      await this.logService.updateRoutineCounters(routine, statusFinal as 'sucesso' | 'erro', endTime);
-
-      await registrarExecucaoRotinaAuditoria({
-        routineId: routine.id,
-        routineNome: routine.nome ?? 'Rotina',
-        routineTipo: routine.tipo ?? 'unknown',
-        status: statusFinal as 'sucesso' | 'erro',
-        duracaoMs: duration,
-        empresaId: (routine as { empresa_id?: number }).empresa_id,
-        saas: false,
-        resultado: resultado as Record<string, unknown>,
-        usuario: usuario ?? undefined,
-        ipAddress: ipAddress ?? undefined
-      });
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-
-      logger.error('=== ERRO CRÍTICO EM executeRoutineInBackground ===', {
-        context: 'SchedulerService',
-        action: 'executeRoutineInBackground',
-        rotinaId: routine.id,
-        rotinaNome: routine.nome,
-        rotinaTipo: routine.tipo,
-        rotinaAtiva: routine.ativo,
-        executionLogId: executionLog?.id || null,
-        error: errorMessage,
-        stack: errorStack
-      });
-
-      const endTime = new Date();
-      const duration = endTime.getTime() - startTime.getTime();
-
-      if (executionLog) {
-        await this.logService.updateExecutionLogError(executionLog.id, errorMessage, endTime, duration);
-      }
-
-      // Atualizar contadores da rotina mesmo em caso de erro
-      await this.logService.updateRoutineCounters(routine, 'erro', endTime);
-
-      await registrarExecucaoRotinaAuditoria({
-        routineId: routine.id,
-        routineNome: routine.nome ?? 'Rotina',
-        routineTipo: routine.tipo ?? 'unknown',
-        status: 'erro',
-        duracaoMs: duration,
-        empresaId: (routine as { empresa_id?: number }).empresa_id,
-        saas: false,
-        erro: errorMessage,
-        usuario: usuario ?? undefined,
-        ipAddress: ipAddress ?? undefined
-      });
+    if (!routine.ativo) {
+      throw new Error('Rotina está inativa');
     }
+    this.scheduleService.executeRoutineNow(routine, usuario, ipAddress);
+    return { message: 'Rotina iniciada em background' };
   }
 
   /**

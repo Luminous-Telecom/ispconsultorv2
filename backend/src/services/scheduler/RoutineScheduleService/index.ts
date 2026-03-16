@@ -166,7 +166,19 @@ export class RoutineScheduleService {
   }
 
   /**
-   * Executa imediatamente uma rotina SaaS (para chamada manual)
+   * Executa imediatamente uma rotina ERP (para chamada manual). Passa pela fila.
+   */
+  public executeRoutineNow(routine: ScheduledRoutine, usuario?: { id: number; nome: string | null; email: string | null } | null, ipAddress?: string | null): void {
+    this.executionQueue.enqueue({
+      source: 'erp',
+      routineId: routine.id,
+      usuario: usuario ?? undefined,
+      ipAddress: ipAddress ?? undefined
+    });
+  }
+
+  /**
+   * Executa imediatamente uma rotina SaaS (para chamada manual). Passa pela fila.
    * @param usuario - Usuário que executou manualmente (quando presente)
    * @param ipAddress - IP do cliente (quando manual)
    */
