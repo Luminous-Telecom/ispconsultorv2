@@ -1290,9 +1290,22 @@ button,
   }
 }
 
-/* Entity select field */
-.entity-select-input {
-  border-right: none !important;
+/* Entity select field - bordas visíveis para divisão entre ID, nome e botão */
+.input-group .id-field,
+[data-theme="light"] .input-group .id-field,
+[data-theme="dark"] .input-group .id-field {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.entity-select-input,
+.input-group .entity-select-input,
+[data-theme="light"] .input-group .entity-select-input,
+[data-theme="dark"] .input-group .entity-select-input {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
 }
 
 .entity-select-icon {
@@ -3743,18 +3756,33 @@ textarea:focus {
   justify-content: center;
 }
 
-/* ContratoModals - Estilos gerais */
+/* ContratoModals - Botão listar (lupa) */
 .input-group .search-button {
-  border: 1px solid #4a5568;
-  border-left: none;
+  border: 1px solid #6b7280;
   border-radius: 0 var(--border-radius) var(--border-radius) 0;
-  color: #4a5568;
+  color: #374151;
   padding: 0.375rem 0.75rem;
-  background-color: transparent;
+  background-color: #e5e7eb;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.input-group .search-button:hover {
+  background-color: #d1d5db;
+  color: #1f2937;
+}
+
+[data-theme="dark"] .input-group .search-button {
+  border-color: #4a5568;
+  color: #94a3b8;
+  background-color: rgba(30, 41, 59, 0.5);
+}
+
+[data-theme="dark"] .input-group .search-button:hover {
+  background-color: rgba(51, 65, 85, 0.6);
+  color: #cbd5e1;
 }
 
 .input-group .id-field {

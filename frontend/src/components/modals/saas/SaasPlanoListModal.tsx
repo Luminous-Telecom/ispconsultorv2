@@ -16,9 +16,11 @@ interface Props {
   onClose: () => void;
   skipWrapper?: boolean;
   onHeaderActionsReady?: (actions: React.ReactNode) => void;
+  onSelectPlano?: (plano: SaasPlano) => void;
+  title?: string;
 }
 
-const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }) => {
+const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, onSelectPlano, title }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { error } = useNotificationContext();
@@ -27,7 +29,9 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
 
-  const { selectedItem, handleSelectionChange, clearSelection } = useModalSelect<SaasPlano>();
+  const { selectedItem, handleSelectionChange, clearSelection } = useModalSelect<SaasPlano>(
+    onSelectPlano ? (plano) => { onSelectPlano(plano); onClose(); } : undefined
+  );
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['saas-planos'],
@@ -121,7 +125,30 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
     },
   ], [t]);
 
-  const bulkActions = useMemo(() => [
+  const handleSelect = useCallback((selectedItems?: SaasPlano[]) => {
+    const item = selectedItems?.length ? selectedItems[0] : selectedItem;
+    if (item) {
+      clearSelection();
+      if (onSelectPlano) {
+        onSelectPlano(item);
+        onClose();
+      }
+    }
+  }, [selectedItem, clearSelection, onSelectPlano, onClose]);
+
+  const bulkActions = useMemo(() => onSelectPlano ? [
+    {
+      label: t('buttons.cancel'),
+      variant: 'primary' as const,
+      action: () => { clearSelection(); onClose(); },
+    },
+    {
+      label: t('buttons.select'),
+      variant: 'primary' as const,
+      disabled: (items: SaasPlano[]) => items.length === 0 && !selectedItem,
+      action: handleSelect,
+    },
+  ] : [
     {
       label: t('actions.create'),
       variant: 'primary' as const,
@@ -138,14 +165,14 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
       disabled: (items: SaasPlano[]) => items.length === 0 && !selectedItem,
       action: handleDelete,
     },
-  ], [selectedItem, handleEdit, handleDelete, t]);
+  ], [selectedItem, handleEdit, handleDelete, onSelectPlano, clearSelection, onClose, handleSelect, t]);
 
   const modalContent = (
     <>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            title={t('modal.plans')}
+            title={title ?? (onSelectPlano ? t('ui.selectPlan') : t('modal.plans'))}
             config={{
               columns,
               data: planos,
@@ -173,7 +200,7 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
             tableId="saas-planos-list"
             syncWithHeader={false}
             onSelectionChange={handleSelectionChange}
-            onRowDoubleClick={(item) => { setSelectedPlanoId(item.id); setShowEditModal(true); }}
+            onRowDoubleClick={(item) => { if (onSelectPlano) handleSelect([item]); else { setSelectedPlanoId(item.id); setShowEditModal(true); } }}
             onRefresh={refetch}
             onAudit={handleAudit}
             auditEntity="SaasPlano"
@@ -222,7 +249,7 @@ const SaasPlanoListModal: React.FC<Props> = ({ show, onClose, skipWrapper = fals
       <DraggableModal
         show={show}
         onClose={() => { clearSelection(); onClose(); }}
-        title={t('modal.plans')}
+        title={title ?? (onSelectPlano ? t('ui.selectPlan') : t('modal.plans'))}
         size="lg"
         modalId="saas-planos-list-modal"
         className="no-padding"

@@ -12,9 +12,9 @@ import { TableConfig } from 'components/tables/types';
 import { saasBancoService, type SaasBanco, type SaasConfigListResponse } from 'services/saas/saasConfigService';
 import SaasBancoFormModal from './SaasBancoFormModal';
 
-interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onHeaderActionsReady?: (a: React.ReactNode) => void; }
+interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onHeaderActionsReady?: (a: React.ReactNode) => void; onSelectBanco?: (banco: SaasBanco) => void; title?: string; }
 
-const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }) => {
+const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, onSelectBanco, title }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { error } = useNotificationContext();
@@ -22,7 +22,9 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const { selectedItem, handleSelectionChange, clearSelection } = useModalSelect<SaasBanco>();
+  const { selectedItem, handleSelectionChange, clearSelection } = useModalSelect<SaasBanco>(
+    onSelectBanco ? (banco) => { onSelectBanco(banco); onClose(); } : undefined
+  );
 
   const tf = useTableFilters({ initialPage: 1, initialLimit: 15, searchDebounceMs: 300, resetPageOnFilterChange: true });
 
@@ -53,6 +55,17 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }
     catch { error(t('messages.error')); }
   }, [selectedItem, queryClient, refetch, error, t]);
 
+  const handleSelect = useCallback((sel?: SaasBanco[]) => {
+    const item = sel?.length ? sel[0] : selectedItem;
+    if (item) {
+      clearSelection();
+      if (onSelectBanco) {
+        onSelectBanco(item);
+        onClose();
+      }
+    }
+  }, [selectedItem, clearSelection, onSelectBanco, onClose]);
+
   const searchFields = [
     { key: 'id', label: t('table.id') },
     { key: 'nome', label: t('form.name') },
@@ -76,21 +89,24 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }
   ];
   }, [t]);
 
-  const bulkActions = useMemo(() => [
+  const bulkActions = useMemo(() => onSelectBanco ? [
+    { label: t('buttons.cancel'), variant: 'primary' as const, action: () => { clearSelection(); onClose(); } },
+    { label: t('buttons.select'), variant: 'primary' as const, disabled: (s: SaasBanco[]) => s.length === 0 && !selectedItem, action: handleSelect },
+  ] : [
     { label: t('actions.create'), variant: 'primary' as const, action: () => setShowCreate(true) },
     { label: t('actions.edit'), variant: 'primary' as const, disabled: (s: SaasBanco[]) => s.length === 0 && !selectedItem, action: handleEdit },
     { label: t('actions.delete'), disabled: (s: SaasBanco[]) => s.length === 0 && !selectedItem, action: handleDelete },
-  ], [selectedItem, handleEdit, handleDelete, t]);
+  ], [selectedItem, handleEdit, handleDelete, onSelectBanco, clearSelection, onClose, handleSelect, t]);
 
   const modalContent = (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        <Table title={t('modal.banks')} config={{ columns, data: items, loading: isLoading, searchable: true, searchPlaceholder: t('layout.searchPlaceholder'), searchFields, sortable: true, sortColumn: tf.sortColumn, sortDirection: tf.sortDirection, striped: true, hover: true, responsive: true, selectable: true, multiSelect: false,
+        <Table title={title ?? (onSelectBanco ? t('ui.selectBank') : t('modal.banks'))} config={{ columns, data: items, loading: isLoading, searchable: true, searchPlaceholder: t('layout.searchPlaceholder'), searchFields, sortable: true, sortColumn: tf.sortColumn, sortDirection: tf.sortDirection, striped: true, hover: true, responsive: true, selectable: true, multiSelect: false,
           bulkActions: bulkActions.map(a => ({ key: a.label.toLowerCase().replace(/\s+/g, '-'), label: a.label, onClick: (s: SaasBanco[]) => { const u = s.length > 0 ? s : (selectedItem ? [selectedItem] : []); a.action(u); }, disabled: a.disabled, variant: a.variant })),
           emptyMessage: 'Nenhum banco encontrado', pagination,
         }}
           tableId="saas-bancos-list" onSelectionChange={handleSelectionChange}
-          onRowDoubleClick={i => { setSelectedId(i.id); setShowEdit(true); }}
+          onRowDoubleClick={i => { if (onSelectBanco) handleSelect([i]); else { setSelectedId(i.id); setShowEdit(true); } }}
           onRefresh={refetch} onAudit={i => auditoria.handleAudit('SaasBanco', i.id)} auditEntity="SaasBanco"
           onPageChange={tf.setPage} onPageSizeChange={tf.setLimit} onSort={(c, d) => tf.setSort(c, d)}
           onSearch={(s, f) => setTimeout(() => { tf.setSearch(s); if (f) tf.setSearchField(f); }, 0)} search={tf.search}
@@ -110,7 +126,7 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false }
   if (skipWrapper) return <>{modalContent}{auxiliaryModals}</>;
   return (
     <>
-      <DraggableModal show={show} onClose={() => { clearSelection(); onClose(); }} title={t('modal.banks')} size="lg" modalId="saas-bancos-modal" className="no-padding">
+      <DraggableModal show={show} onClose={() => { clearSelection(); onClose(); }} title={title ?? (onSelectBanco ? t('ui.selectBank') : t('modal.banks'))} size="lg" modalId="saas-bancos-modal" className="no-padding">
         {modalContent}
       </DraggableModal>
       {auxiliaryModals}

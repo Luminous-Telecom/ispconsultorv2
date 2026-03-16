@@ -4,12 +4,15 @@ import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
 import { Button } from 'components/ui';
 import FormField from 'components/ui/FormField';
+import EntitySelectField from 'components/ui/EntitySelectField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasContratoService, saasDiasVencimentoService, type SaasContrato } from 'services/saas/saasCrudService';
 import { saasEmpresasService } from 'services/saas/saasEmpresasService';
 import { saasPlanoService } from 'services/saas/saasPlanoService';
 import { saasBancoService } from 'services/saas/saasConfigService';
+import SaasPlanoListModal from './SaasPlanoListModal';
+import SaasBancosModal from './SaasBancosModal';
 
 interface Props { show: boolean; onClose: () => void; onSuccess?: () => void; itemId?: number | null; empresaId: number; dataFimDesbloqueioManual?: string | null; }
 
@@ -34,6 +37,8 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
   const isEditing = !!itemId;
   const [form, setForm] = useState<Form>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
+  const [showPlanoSelectModal, setShowPlanoSelectModal] = useState(false);
+  const [showBancoSelectModal, setShowBancoSelectModal] = useState(false);
 
   const { data } = useQuery({
     queryKey: ['saas-contrato', itemId],
@@ -67,13 +72,10 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
     return list.filter((b) => b.ativo !== false) as { id: number; nome?: string; banco: string }[];
   }, [bancosRes]);
 
-  const diasOptions = useMemo(() => {
+  const diasVencimentoList = useMemo(() => {
     const data = (diasRes as { data?: unknown } | undefined)?.data;
-    const list = Array.isArray(data) ? data : ((data as { data?: unknown[] })?.data ?? []) as { dia?: number; dia_padrao?: number }[];
-    return list.map((r) => {
-      const d = r.dia ?? r.dia_padrao ?? 10;
-      return { value: String(d), label: `Dia ${d}` };
-    });
+    const list = Array.isArray(data) ? data : ((data as { data?: unknown[] })?.data ?? []) as { id?: number; dia?: number; dia_padrao?: number; ativo?: boolean }[];
+    return list.filter((r) => r.ativo === true).map((r) => ({ id: r.id ?? 0, dia: r.dia ?? r.dia_padrao ?? 10 }));
   }, [diasRes]);
 
   useEffect(() => {
@@ -165,10 +167,8 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
     } catch { /* tratado no mutation */ }
   };
 
-  const planoOptions = (planos as { id: number; nome: string }[]).map(p => ({ value: String(p.id), label: p.nome }));
-  const bancoOptions = bancosAtivos.map(b => ({ value: String(b.id), label: b.nome || b.banco }));
-
   return (
+    <>
     <DraggableModal show={show} onClose={onClose} title={isEditing ? `${t('actions.edit')} ${t('nav.contracts')}` : `${t('actions.create')} ${t('nav.contracts')}`} size="md" modalId="saas-contrato-form"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
@@ -177,93 +177,146 @@ const SaasContratoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, item
         </div>
       }
     >
-      <form id="saas-contrato-form-id" onSubmit={handleSubmit} style={{ padding: '16px' }}>
-        <div className="row g-2">
-          <div className="col-md-12">
-            <FormField name="banco_id" type="select" label={`${t('menu.banks')}`}
-              value={String(form.banco_id)}
-              onChange={v => { setForm(p => ({ ...p, banco_id: v ? Number(v) : '' })); if (errors.banco_id) setErrors(e => ({ ...e, banco_id: undefined })); }}
-              options={[{ value: '', label: '—' }, ...bancoOptions]} size="md" error={errors.banco_id} />
-          </div>
-          {diasOptions.length > 0 && (
-            <div className="col-md-12">
-              <FormField name="dia_vencimento" type="select" label={t('form.dueDay')}
-                value={String(form.dia_vencimento)}
-                onChange={v => setForm(p => ({ ...p, dia_vencimento: v ? Number(v) : '' }))}
-                options={[{ value: '', label: '—' }, ...diasOptions]} size="md" />
+      <form id="saas-contrato-form-id" onSubmit={handleSubmit} className="p-3">
+        <div className="d-flex flex-column gap-2">
+          <EntitySelectField
+            label={t('form.plan')}
+            required
+            value={Number(form.plano_id) || 0}
+            onChange={(value) => {
+              const planoId: Form['plano_id'] = value ? value : '';
+              setForm(prev => {
+                const next: Form = { ...prev, plano_id: planoId };
+                if (planoId && planos.length) {
+                  const plano = (planos as { id: number; valor_mensal?: number; valor_anual?: number }[]).find(p => p.id === planoId);
+                  if (plano) {
+                    const valorMensal = Number(plano.valor_mensal) || 0;
+                    const valorAnual = plano.valor_anual != null ? Number(plano.valor_anual) : valorMensal * 12;
+                    next.valor = prev.tipo === 'anual' ? valorAnual : valorMensal;
+                  }
+                } else {
+                  next.valor = '';
+                }
+                return next;
+              });
+              if (errors.plano_id) setErrors(e => ({ ...e, plano_id: undefined }));
+            }}
+            onShowModal={() => setShowPlanoSelectModal(true)}
+            entities={planos.map((p) => ({ id: p.id, nome: p.nome }))}
+            error={errors.plano_id}
+            idFieldTitle={t('form.enterClientId')}
+          />
+          <div className="d-flex gap-2">
+            <div className="flex-fill">
+              <FormField name="data_inicio" type="date" label={t('form.startDate')} required size="md" value={form.data_inicio}
+                onChange={v => setForm(p => ({ ...p, data_inicio: String(v ?? '') }))} error={errors.data_inicio} />
             </div>
-          )}
-          <div className="col-md-12">
-            <FormField name="plano_id" type="select" label={`${t('form.plan')} *`} value={String(form.plano_id)}
-              onChange={v => {
-                const planoId: Form['plano_id'] = v ? Number(v) : '';
-                setForm(prev => {
-                  const next: Form = { ...prev, plano_id: planoId };
-                  if (planoId && planos.length) {
-                    const plano = (planos as { id: number; valor_mensal?: number; valor_anual?: number }[]).find(p => p.id === planoId);
-                    if (plano) {
-                      const valorMensal = Number(plano.valor_mensal) || 0;
-                      const valorAnual = plano.valor_anual != null ? Number(plano.valor_anual) : valorMensal * 12;
-                      next.valor = prev.tipo === 'anual' ? valorAnual : valorMensal;
+            <div className="flex-fill">
+              <FormField name="data_fim" type="date" label={t('form.endDate')} size="md" value={form.data_fim}
+                onChange={v => setForm(p => ({ ...p, data_fim: String(v ?? '') }))} />
+            </div>
+          </div>
+          <div className="d-flex gap-2">
+            <div className="flex-fill">
+              <label htmlFor="dia_vencimento_saas" className="form-label">
+                {t('form.dueDay')} <span className="text-danger ms-1">*</span>
+              </label>
+              <select
+                id="dia_vencimento_saas"
+                name="dia_vencimento"
+                className="form-select"
+                value={form.dia_vencimento === '' ? '' : form.dia_vencimento}
+                onChange={(e) => setForm(p => ({ ...p, dia_vencimento: e.target.value ? Number(e.target.value) : '' }))}
+              >
+                <option value="">{t('ui.selectOption')}</option>
+                {diasVencimentoList.map((item) => (
+                  <option key={item.dia} value={item.dia}>
+                    {t('other.day')} {String(item.dia).padStart(2, '0')}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-fill">
+              <EntitySelectField
+                label={t('form.bank')}
+                value={Number(form.banco_id) || 0}
+                onChange={(value) => {
+                  setForm(p => ({ ...p, banco_id: value ? value : '' }));
+                  if (errors.banco_id) setErrors(e => ({ ...e, banco_id: undefined }));
+                }}
+                onShowModal={() => setShowBancoSelectModal(true)}
+                entities={bancosAtivos.map((b) => ({ id: b.id, nome: b.nome || b.banco }))}
+                error={errors.banco_id}
+              />
+            </div>
+          </div>
+          <div className="d-flex gap-2">
+            <div className="flex-fill">
+              <FormField name="tipo" type="select" label={t('form.type')} value={form.tipo}
+                onChange={v => {
+                  const novoTipo = (v as 'mensal' | 'anual') || 'mensal';
+                  setForm(prev => {
+                    const next = { ...prev, tipo: novoTipo };
+                    if (prev.plano_id && planos.length) {
+                      const plano = (planos as { id: number; valor_mensal?: number; valor_anual?: number }[]).find(p => p.id === prev.plano_id);
+                      if (plano) {
+                        const valorMensal = Number(plano.valor_mensal) || 0;
+                        const valorAnual = plano.valor_anual != null ? Number(plano.valor_anual) : valorMensal * 12;
+                        next.valor = novoTipo === 'anual' ? valorAnual : valorMensal;
+                      }
                     }
-                  } else {
-                    next.valor = '';
-                  }
-                  return next;
-                });
-                if (errors.plano_id) setErrors(e => ({ ...e, plano_id: undefined }));
-              }}
-              options={[{ value: '', label: '—' }, ...planoOptions]} required size="md" error={errors.plano_id} />
+                    return next;
+                  });
+                }}
+                options={[{ value: 'mensal', label: t('form.periodicityMonthly') ?? 'Mensal' }, { value: 'anual', label: t('form.periodicityAnnual') ?? 'Anual' }]} size="md" />
+            </div>
+            <div className="flex-fill">
+              <FormField name="valor" type="number" label={t('form.value')} value={form.valor === '' ? '' : form.valor}
+                onChange={v => setForm(p => ({ ...p, valor: v !== '' && v != null ? Number(v) : '' }))}
+                min={0} step={0.01} size="md" />
+            </div>
           </div>
-          <div className="col-md-6">
-            <FormField name="data_inicio" type="date" label={`${t('form.startDate')} *`} value={form.data_inicio}
-              onChange={v => setForm(p => ({ ...p, data_inicio: String(v ?? '') }))} required size="md" error={errors.data_inicio} />
-          </div>
-          <div className="col-md-6">
-            <FormField name="data_fim" type="date" label={t('form.endDate')} value={form.data_fim}
-              onChange={v => setForm(p => ({ ...p, data_fim: String(v ?? '') }))} size="md" />
-          </div>
-          <div className="col-md-6">
-            <FormField name="tipo" type="select" label={t('form.type')} value={form.tipo}
-              onChange={v => {
-                const novoTipo = (v as 'mensal' | 'anual') || 'mensal';
-                setForm(prev => {
-                  const next = { ...prev, tipo: novoTipo };
-                  if (prev.plano_id && planos.length) {
-                    const plano = (planos as { id: number; valor_mensal?: number; valor_anual?: number }[]).find(p => p.id === prev.plano_id);
-                    if (plano) {
-                      const valorMensal = Number(plano.valor_mensal) || 0;
-                      const valorAnual = plano.valor_anual != null ? Number(plano.valor_anual) : valorMensal * 12;
-                      next.valor = novoTipo === 'anual' ? valorAnual : valorMensal;
-                    }
-                  }
-                  return next;
-                });
-              }}
-              options={[{ value: 'mensal', label: t('form.periodicityMonthly') ?? 'Mensal' }, { value: 'anual', label: t('form.periodicityAnnual') ?? 'Anual' }]} size="md" />
-          </div>
-          <div className="col-md-6">
-            <FormField name="valor" type="number" label={t('form.value')} value={form.valor === '' ? '' : form.valor}
-              onChange={v => setForm(p => ({ ...p, valor: v !== '' && v != null ? Number(v) : '' }))}
-              min={0} step={0.01} size="md" />
-          </div>
-          <div className="col-md-12">
-            <FormField name="observacoes" type="textarea" label={t('form.observations')} value={form.observacoes}
-              onChange={v => setForm(p => ({ ...p, observacoes: String(v ?? '') }))} size="md" />
-          </div>
-          <div className="col-md-12">
-            <FormField
-              name="data_fim_desbloqueio_manual"
-              type="date"
-              label={t('saas.dataNaoBloquearAte')}
-              value={form.data_fim_desbloqueio_manual}
-              onChange={v => setForm(p => ({ ...p, data_fim_desbloqueio_manual: String(v ?? '') }))}
-              size="md"
-            />
-          </div>
+          <FormField name="observacoes" type="textarea" label={t('form.observations')} value={form.observacoes}
+            onChange={v => setForm(p => ({ ...p, observacoes: String(v ?? '') }))} size="md" rows={3} />
+          <FormField
+            name="data_fim_desbloqueio_manual"
+            type="date"
+            label={t('saas.dataNaoBloquearAte')}
+            value={form.data_fim_desbloqueio_manual}
+            onChange={v => setForm(p => ({ ...p, data_fim_desbloqueio_manual: String(v ?? '') }))}
+            size="md"
+          />
         </div>
       </form>
     </DraggableModal>
+
+    <SaasPlanoListModal
+      show={showPlanoSelectModal}
+      onClose={() => setShowPlanoSelectModal(false)}
+      title={t('ui.selectPlan')}
+      onSelectPlano={(plano) => {
+        setForm(prev => {
+          const next = { ...prev, plano_id: plano.id };
+          const valorMensal = Number(plano.valor_mensal) || 0;
+          const valorAnual = plano.valor_anual != null ? Number(plano.valor_anual) : valorMensal * 12;
+          next.valor = prev.tipo === 'anual' ? valorAnual : valorMensal;
+          return next;
+        });
+        if (errors.plano_id) setErrors(e => ({ ...e, plano_id: undefined }));
+        setShowPlanoSelectModal(false);
+      }}
+    />
+    <SaasBancosModal
+      show={showBancoSelectModal}
+      onClose={() => setShowBancoSelectModal(false)}
+      title={t('ui.selectBank')}
+      onSelectBanco={(banco) => {
+        setForm(p => ({ ...p, banco_id: banco.id }));
+        if (errors.banco_id) setErrors(e => ({ ...e, banco_id: undefined }));
+        setShowBancoSelectModal(false);
+      }}
+    />
+  </>
   );
 };
 

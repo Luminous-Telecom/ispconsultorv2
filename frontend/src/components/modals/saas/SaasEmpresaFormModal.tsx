@@ -23,7 +23,7 @@ import SaasContratoFormModal from './SaasContratoFormModal';
 import SaasTenantUsuarioFormModal from './SaasTenantUsuarioFormModal';
 import SaasTituloFormModal from './SaasTituloFormModal';
 import SaasReceberModal from './SaasReceberModal';
-import { formatCurrency, formatDateTime } from 'utils/formatters';
+import { formatCurrency, formatDate, formatDateTime } from 'utils/formatters';
 import { auditoriaService, type AuditoriaLog } from 'services/auditoriaService';
 import type { FormValue } from 'types/common';
 import type { ApiResponse } from 'types';
@@ -718,17 +718,23 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   config={{
                     columns: [
                       { key: 'id', label: t('table.id'), sortable: true, searchable: true, width: 42, resizable: true, render: (i: SaasContrato) => i.id },
-                      { key: 'plano', label: t('form.plan'), sortable: true, searchable: true, render: (i: SaasContrato) => i.plano?.nome ?? '—' },
-                      { key: 'banco', label: t('menu.banks'), sortable: true, searchable: true, render: (i: SaasContrato) => i.banco?.nome || i.banco?.banco || '—' },
-                      { key: 'data_inicio', label: t('form.startDate'), sortable: true, searchable: false, render: (i: SaasContrato) => new Date(i.data_inicio).toLocaleDateString('pt-BR') },
-                      { key: 'data_fim', label: t('form.endDate'), sortable: true, searchable: false, render: (i: SaasContrato) => i.data_fim ? new Date(i.data_fim).toLocaleDateString('pt-BR') : '—' },
-                      { key: 'valor', label: t('form.value'), sortable: true, searchable: false, render: (i: SaasContrato) => formatCurrency(i.valor ?? 0) },
-                      { key: 'status', label: t('table.status'), sortable: true, searchable: true, badgeLabels: [t('status.active'), t('status.inactive'), t('status.blocked'), t('status.inArrears')], render: (i: SaasContrato) => {
+                      { key: 'plano', label: t('table.plan'), sortable: true, searchable: true, render: (i: SaasContrato) => i.plano?.nome ?? '—' },
+                      { key: 'valor_mensal', label: t('table.planValue'), sortable: true, searchable: false, render: (i: SaasContrato) => i.plano?.valor_mensal != null ? formatCurrency(i.plano.valor_mensal) : '—' },
+                      { key: 'status', label: t('form.status'), sortable: true, searchable: true, badgeLabels: [t('status.active'), t('status.inactive')], render: (i: SaasContrato) => {
                         const displayStatus = statusEmpresa?.bloqueado_por_atraso ? 'bloqueado' : statusEmpresa?.em_atraso ? 'em_atraso' : i.status === 'ativo' ? 'ativo' : 'inativo';
                         const label = displayStatus === 'bloqueado' ? t('status.blocked') : displayStatus === 'em_atraso' ? t('status.inArrears') : i.status === 'ativo' ? t('status.active') : t('status.inactive');
                         const variant = displayStatus === 'bloqueado' ? 'danger' : displayStatus === 'em_atraso' ? 'warning' : i.status === 'ativo' ? 'success' : 'secondary';
                         return <span className={`badge bg-${variant}`}>{label}</span>;
                       } },
+                      { key: 'desconto_percentual', label: t('table.discountPercent'), sortable: true, searchable: true, render: () => '—' },
+                      { key: 'desconto_valor', label: t('table.discountValue'), sortable: true, searchable: true, render: () => '—' },
+                      { key: 'valor_final', label: t('table.finalValue'), sortable: true, searchable: true, render: (i: SaasContrato) => formatCurrency(i.valor ?? 0) },
+                      { key: 'data_inicio', label: t('table.contractStartDate'), sortable: true, searchable: false, render: (i: SaasContrato) => formatDate(i.data_inicio) },
+                      { key: 'data_fim', label: t('table.contractEndDate'), sortable: true, searchable: false, render: (i: SaasContrato) => i.data_fim ? formatDate(i.data_fim) : '—' },
+                      { key: 'isento_mensalidade', label: t('table.exempt'), sortable: true, searchable: true, badgeLabels: [t('ui.yes'), t('ui.no')], render: () => <span className="badge bg-secondary">{t('ui.no')}</span> },
+                      { key: 'dia_vencimento', label: t('table.dueDay'), sortable: true, searchable: true, render: (i: SaasContrato) => i.dia_vencimento != null ? String(i.dia_vencimento).padStart(2, '0') : '—' },
+                      { key: 'banco', label: t('form.bank'), sortable: true, searchable: true, render: (i: SaasContrato) => i.banco?.nome || i.banco?.banco || '—' },
+                      { key: 'created_at', label: t('table.createdAt'), sortable: true, searchable: false, render: () => '—' },
                     ],
                     data: contratos,
                     loading: !contratosData,
@@ -737,10 +743,12 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                     searchPlaceholder: '',
                     searchFields: [
                       { key: 'id', label: t('table.id') },
-                      { key: 'plano', label: t('form.plan') },
-                      { key: 'banco', label: t('menu.banks') },
-                      { key: 'status', label: t('table.status') },
-                      { key: 'valor', label: t('form.value') },
+                      { key: 'plano', label: t('table.plan') },
+                      { key: 'status', label: t('form.status') },
+                      { key: 'valor_final', label: t('table.finalValue') },
+                      { key: 'desconto_percentual', label: t('table.discountPercent') },
+                      { key: 'desconto_valor', label: t('table.discountValue') },
+                      { key: 'banco', label: t('form.bank') },
                     ],
                     sortable: true,
                     sortColumn: contratosTf.sortColumn,
@@ -1050,6 +1058,14 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
         isGenerating={isGeneratingPdf}
         title={t('financial.viewDocument')}
         modalId="saas-empresa-imprimir-modal"
+      />
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
+        title={t('modal.auditLogs')}
+        modalId="saas-empresa-audit-pdf-modal"
       />
       <SaasReceberModal
         isOpen={showReceberModal}
