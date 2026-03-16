@@ -2,6 +2,7 @@ import React from 'react';
 import { FormValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
+import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import { PlanoTabProps } from '../types';
 
 const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
@@ -11,6 +12,15 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
   isSubmitting
 }) => {
   const { t } = useI18n();
+  const { modulos } = usePlanoModulos();
+  const temBlockdomi = modulos !== null && modulos.includes('blockdomi');
+  const planoJaBlockdomi = formData.tipo_servico === 'blockdomi';
+
+  const tipoServicoOptions = [
+    { value: 'infraestrutura', label: t('form.serviceTypeInfrastructure') },
+    { value: 'consultoria', label: t('form.serviceTypeConsulting') },
+    ...(temBlockdomi || planoJaBlockdomi ? [{ value: 'blockdomi', label: t('form.serviceTypeBlockdomi') }] : [])
+  ];
   return (
     <>
       <div className="row g-2">
@@ -51,11 +61,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
               error={errors.tipo_servico}
               isInvalid={!!errors.tipo_servico}
               disabled={isSubmitting}
-              options={[
-                { value: 'infraestrutura', label: t('form.serviceTypeInfrastructure') },
-                { value: 'consultoria', label: t('form.serviceTypeConsulting') },
-                { value: 'blockdomi', label: t('form.serviceTypeBlockdomi') }
-              ]}
+              options={tipoServicoOptions}
             />
           </div>
         </div>
