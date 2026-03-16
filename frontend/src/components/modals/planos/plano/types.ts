@@ -4,7 +4,6 @@ export interface PlanoForm {
   descricao: string;
   valor_mensal: number;
   quantidade_usuarios: number;
-  periodicidade: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   servicos_inclusos: string[];
   renovacao_automatica: boolean;
   status: 'ativo' | 'inativo';

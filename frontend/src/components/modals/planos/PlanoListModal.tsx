@@ -145,26 +145,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       )
     },
     {
-      key: 'periodicidade',
-      label: t('table.periodicity'),
-      sortable: true,
-      width: '110px',
-      render: (item: Plano) => {
-        const periodicidades: { [key: string]: string } = {
-          mensal: t('form.periodicityMonthly'),
-          trimestral: t('form.periodicityQuarterly'),
-          semestral: t('form.periodicitySemiannual'),
-          anual: t('form.periodicityAnnual'),
-          bimestral: t('form.periodicityBimonthly'),
-          quinzenal: t('form.periodicityBiweekly'),
-          semanal: t('form.periodicityWeekly')
-        };
-        return (
-          <span className="text-capitalize">{item.periodicidade ? (periodicidades[item.periodicidade] || item.periodicidade) : '-'}</span>
-        );
-      }
-    },
-    {
       key: 'status',
       label: t('table.status'),
       sortable: true,
@@ -211,7 +191,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     { key: 'tipo_servico', label: t('table.serviceType') },
     { key: 'valor_mensal', label: t('table.monthlyValue') },
     { key: 'quantidade_usuarios', label: t('form.usersQuantity') },
-    { key: 'periodicidade', label: t('table.periodicity') },
     { key: 'status', label: t('table.status') }
   ];
 

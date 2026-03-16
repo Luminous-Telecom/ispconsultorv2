@@ -42,11 +42,6 @@ export const planoSchema = z.object({
     .min(1, 'Quantidade de usuários deve ser pelo menos 1')
     .default(1),
   
-  periodicidade: z.string().refine(
-    (val) => ['mensal', 'trimestral', 'semestral', 'anual', 'bimestral', 'quinzenal', 'semanal'].includes(val),
-    { message: 'Periodicidade inválida' }
-  ).default('mensal' as const),
-  
   servicos_inclusos: z
     .array(z.string())
     .default([]),

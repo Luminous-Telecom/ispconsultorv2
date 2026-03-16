@@ -16,32 +16,6 @@ const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
         <div className="col-md-4">
           <div className="mb-0">
             <FormField
-              name="periodicidade"
-              type="select"
-              label="Periodicidade"
-              size="sm"
-              value={formData.periodicidade}
-              onChange={(value: FormValue) => {
-                const stringValue = typeof value === 'string' ? value : String(value || '');
-                handleInputChange('periodicidade', stringValue as PlanoTabProps['formData']['periodicidade']);
-              }}
-              disabled={isSubmitting}
-              options={[
-                { value: 'mensal', label: 'Mensal' },
-                { value: 'trimestral', label: 'Trimestral' },
-                { value: 'semestral', label: 'Semestral' },
-                { value: 'anual', label: 'Anual' },
-                { value: 'bimestral', label: 'Bimestral' },
-                { value: 'quinzenal', label: 'Quinzenal' },
-                { value: 'semanal', label: 'Semanal' }
-              ]}
-            />
-          </div>
-        </div>
-
-        <div className="col-md-4">
-          <div className="mb-0">
-            <FormField
               name="status"
               type="select"
               label={t('form.status')}

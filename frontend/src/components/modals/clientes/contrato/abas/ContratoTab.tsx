@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Plano, Banco, PaginatedResponse } from 'types';
 import { FormValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
@@ -74,6 +74,18 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
 
   const valorPlano = Number(planoSelecionado?.valor_mensal || 0);
 
+  const planosList = useMemo(
+    () => (Array.isArray(planosData) ? planosData : (planosData?.data ?? [])),
+    [planosData]
+  );
+  const planosEntities = useMemo(() => {
+    const base = planosList.map((p: Plano) => ({ id: p.id, nome: p.nome_plano }));
+    if (planoSelecionado?.id && !base.some((e) => e.id === planoSelecionado.id)) {
+      return [{ id: planoSelecionado.id, nome: planoSelecionado.nome_plano }, ...base];
+    }
+    return base;
+  }, [planosList, planoSelecionado?.id, planoSelecionado?.nome_plano]);
+
   const handleDescontoPercentualChange = (value: FormValue) => {
     const stringValue = String(value || '');
     setDescontoPercentualDisplay(stringValue);
@@ -143,16 +155,13 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
       <EntitySelectField
         value={planoSelecionado?.id || 0}
         onChange={(value) => {
-          const plano = (Array.isArray(planosData) ? planosData : planosData?.data || []).find((p: Plano) => p.id === value);
+          const plano = planosList.find((p: Plano) => p.id === value) ?? (planoSelecionado?.id === value ? planoSelecionado : null);
           if (plano) {
             onPlanoSelect(plano);
           }
         }}
         onShowModal={onShowPlanoModal}
-        entities={(Array.isArray(planosData) ? planosData : planosData?.data || []).map((p: Plano) => ({
-          id: p.id,
-          nome: p.nome_plano
-        }))}
+        entities={planosEntities}
         label={t('form.plan')}
         idFieldTitle={t('form.enterClientId')}
         error={errors.plano_id}

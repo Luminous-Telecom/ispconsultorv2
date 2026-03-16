@@ -162,33 +162,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
       </div>
 
       <div className="row g-2">
-        <div className="col-md-4">
-          <div className="mb-0">
-            <FormField
-              name="periodicidade"
-              type="select"
-              label={t('table.periodicity')}
-              size="sm"
-              value={formData.periodicidade}
-              onChange={(value: FormValue) => {
-                const stringValue = typeof value === 'string' ? value : String(value || '');
-                handleInputChange('periodicidade', stringValue as PlanoTabProps['formData']['periodicidade']);
-              }}
-              disabled={isSubmitting}
-              options={[
-                { value: 'mensal', label: t('form.periodicityMonthly') },
-                { value: 'trimestral', label: t('form.periodicityQuarterly') },
-                { value: 'semestral', label: t('form.periodicitySemiannual') },
-                { value: 'anual', label: t('form.periodicityAnnual') },
-                { value: 'bimestral', label: t('form.periodicityBimonthly') },
-                { value: 'quinzenal', label: t('form.periodicityBiweekly') },
-                { value: 'semanal', label: t('form.periodicityWeekly') }
-              ]}
-            />
-          </div>
-        </div>
-
-        <div className="col-md-4">
+        <div className="col-md-6">
           <div className="mb-0">
             <FormField
               name="status"
@@ -205,7 +179,7 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
           </div>
         </div>
 
-        <div className="col-md-4">
+        <div className="col-md-6">
           <div className="mb-0">
             <FormField
               name="renovacao_automatica"
