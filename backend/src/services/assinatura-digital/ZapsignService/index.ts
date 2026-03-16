@@ -373,7 +373,6 @@ export class ZapsignService {
     try {
       const pdfBuffer = await PDFGenerationService.generateFromContent(
         conteudoHtml,
-        'html-pdf-node',
         {
           format: 'A4',
           margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },

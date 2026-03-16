@@ -12,7 +12,7 @@ export class NotaFiscalPdfService {
     notaFiscal: NotaFiscal & { cliente?: Cliente | null }
   ): Promise<Buffer> {
     const html = await NotaFiscalHtmlService.processarNfseHtml(notaFiscal);
-    return PDFGenerationService.generateFromHtml(html, 'html-pdf-node', {
+    return PDFGenerationService.generateFromHtml(html, {
       format: 'A4',
       margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
       printBackground: true

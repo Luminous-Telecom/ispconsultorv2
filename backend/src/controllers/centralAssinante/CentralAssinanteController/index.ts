@@ -436,7 +436,6 @@ export class CentralAssinanteController {
 
       const pdfBuffer = await PDFGenerationService.generateFromContent(
         conteudoProcessado,
-        'html-pdf-node',
         {
           format: 'A4',
           margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
@@ -524,7 +523,6 @@ export class CentralAssinanteController {
 
       const pdfBuffer = await PDFGenerationService.generateFromContent(
         conteudoProcessado,
-        'html-pdf-node',
         {
           format: 'A4',
           margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
@@ -678,13 +676,10 @@ export class CentralAssinanteController {
 
       logger.info('Gerando PDF do boleto');
       
-      // Gerar PDF a partir do HTML do boleto
-      // Usar Puppeteer que é mais robusto para HTML complexo com Handlebars
       let pdfBuffer: Buffer;
       try {
         pdfBuffer = await PDFGenerationService.generateFromContent(
           boletoHtml,
-          'puppeteer',
           {
             format: 'A4',
             margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
@@ -878,7 +873,6 @@ export class CentralAssinanteController {
       
       const pdfBuffer = await PDFGenerationService.generateFromContent(
         conteudoProcessado,
-        'html-pdf-node',
         {
           format: 'A4',
           margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },

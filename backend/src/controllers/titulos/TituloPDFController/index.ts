@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { TituloService } from '../../../services/financeiro/TituloService';
 import { TituloPDFService } from '../../../services/titulos/TituloPDFService';
+import { PDFGenerationService } from '../../../services/pdf-generation/PDFGenerationService';
 import { BancoApiService } from '../../../services/bancos/BancoApiService';
 import { logger } from '../../../utils/logger';
 import { TituloComRelacoes } from '../TituloHelpers/types';
@@ -464,45 +465,23 @@ export class TituloPDFController {
       
       
 
-      // Limpar variáveis não processadas (remover placeholders handlebars não substituídos)
       const templateLimpo = template.replace(/\{\{[^}]+\}\}/g, '');
 
-      // Converter HTML para PDF usando html-pdf-node
       let pdfBuffer: Buffer;
       try {
         logger.debug('Iniciando conversão HTML para PDF', {
           template_length: templateLimpo.length,
           quantidade_boletos: boletosHtml.length
         });
-        
-        const htmlPdfModule = await import('html-pdf-node');
-        const file = { content: templateLimpo };
-        const options: any = {
-          format: 'A4',
-          margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
-          printBackground: true,
-          displayHeaderFooter: false
-        };
-        
-        logger.debug('Chamando html-pdf-node.generatePdf', {
-          template_length: templateLimpo.length
-        });
-        
-        // html-pdf-node usa callback, então precisamos promisificar
-        pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-          htmlPdfModule.generatePdf(file, options, (err: Error | null, buffer: Buffer) => {
-            if (err) {
-              logger.error('Erro no callback do html-pdf-node', {
-                error: err.message,
-                stack: err.stack
-              });
-              reject(err);
-            } else {
-              resolve(buffer);
-            }
-          });
-        });
-        
+
+        pdfBuffer = await PDFGenerationService.generateFromHtml(
+          templateLimpo,
+          {
+            format: 'A4',
+            margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
+            printBackground: true
+          }
+        );
       } catch (pdfError: unknown) {
         logger.error('Erro ao gerar PDF', {
           error: pdfError instanceof Error ? pdfError.message : 'Erro desconhecido'

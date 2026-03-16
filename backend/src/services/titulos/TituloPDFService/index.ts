@@ -1,6 +1,6 @@
 import * as fs from 'fs';
-import puppeteer from 'puppeteer';
 import { logger } from '../../../utils/logger';
+import { PDFGenerationService } from '../../pdf-generation/PDFGenerationService';
 import { DadosEmpresaService } from '../../sistema/DadosEmpresaService';
 import { BarcodeService } from '../../bancos/BarcodeService';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
@@ -15,27 +15,15 @@ export class TituloPDFService {
   static async gerarPdfBase64(titulo: TituloComRelacoes): Promise<string | null> {
     try {
       const html = await this.processarBoletoHtml(titulo);
-      
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
-
-      const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
-
-      const pdfBuffer = await page.pdf({
-        format: 'a4',
-        printBackground: true,
-        margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' }
-      });
-
-      await browser.close();
-      
-      if (Buffer.isBuffer(pdfBuffer)) {
-        return pdfBuffer.toString('base64');
-      }
-      return Buffer.from(pdfBuffer).toString('base64');
+      const pdfBuffer = await PDFGenerationService.generateFromContent(
+        html,
+        {
+          format: 'A4',
+          margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
+          printBackground: true
+        }
+      );
+      return pdfBuffer.toString('base64');
       
     } catch (error: unknown) {
       let errorMessage = 'Erro desconhecido';
@@ -322,14 +310,13 @@ export class TituloPDFService {
       </html>
     `;
     const templateLimpo = template.replace(/\{\{[^}]+\}\}/g, '');
-    const htmlPdfModule = await import('html-pdf-node');
-    const file = { content: templateLimpo };
-    const options = { format: 'A4' as const, margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' }, printBackground: true, displayHeaderFooter: false };
-    return new Promise<Buffer>((resolve, reject) => {
-      htmlPdfModule.generatePdf(file, options, (err: Error | null, buffer: Buffer) => {
-        if (err) reject(err);
-        else resolve(buffer);
-      });
-    });
+    return PDFGenerationService.generateFromHtml(
+      templateLimpo,
+      {
+        format: 'A4',
+        margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
+        printBackground: true
+      }
+    );
   }
 }

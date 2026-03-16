@@ -26,7 +26,6 @@ export class ModeloDocumentoPdfService {
 
     const pdfBuffer = await PDFGenerationService.generateFromContent(
       documento.conteudo,
-      'html-pdf-node',
       {
         format: 'A4',
         margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
@@ -99,7 +98,6 @@ export class ModeloDocumentoPdfService {
 
     const pdfBuffer = await PDFGenerationService.generateFromContent(
       conteudoProcessado,
-      'html-pdf-node',
       {
         format: 'A4',
         margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },

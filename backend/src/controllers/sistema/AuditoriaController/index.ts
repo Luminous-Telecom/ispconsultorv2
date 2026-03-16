@@ -332,7 +332,6 @@ export class AuditoriaController {
       const { PDFGenerationService } = await import('../../../services/pdf-generation/PDFGenerationService');
       const pdfBuffer = await PDFGenerationService.generateFromHtml(
         html,
-        'html-pdf-node',
         {
           format: 'A4',
           margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' },
