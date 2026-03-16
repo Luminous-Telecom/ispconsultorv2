@@ -2106,7 +2106,7 @@ const translations: Translations = {
     'form.enterContractModelId': 'Digite o ID do modelo de contrato',
     'form.selectContractModelHelp': 'Selecione um modelo de contrato',
     'form.dueDay': 'Dia de Vencimento',
-    'form.exemptFromMonthlyFee': 'Isento de Taxa Mensal',
+    'form.exemptFromMonthlyFee': 'Isento',
     'form.selectClientForTest': 'Selecione um cliente para visualizar o documento com dados reais',
     'form.validationErrors': 'Erros de validação:',
     'form.briefDescription': 'Breve descrição',
