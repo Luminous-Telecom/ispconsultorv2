@@ -17,6 +17,7 @@
     "client": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
     "build:ios": "cd frontend && npm run build:ios",
+    "build:android": "cd frontend && npm run build:android",
     "start": "cd backend && npm start",
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "docker:frontend": "docker compose up -d --build frontend"
