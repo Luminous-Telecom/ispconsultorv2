@@ -2,8 +2,6 @@
   "name": "BackNet",
   "short_name": "BackNet",
   "description": "Sistema para assessoria técnica em provedores de internet",
-  "id": "/",
-  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6366f1",
