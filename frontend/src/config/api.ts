@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { ensureRelativeUrl } from '../utils/urlUtils';
 
 interface AppConfig {
@@ -16,16 +17,16 @@ declare global {
 
 const getDynamicConfig = (): AppConfig => {
   // SEMPRE priorizar window.__APP_CONFIG__ (configuração dinâmica do backend)
-  // Valores padrão hardcoded (não precisa de variáveis de ambiente)
   if (typeof window !== 'undefined' && window.__APP_CONFIG__) {
     return window.__APP_CONFIG__;
   }
-  // Fallback com valores padrão (não depende de .env)
+  // App nativo (iOS/Android): usa REACT_APP_API_URL do build (URL completa do backend)
+  const envApiUrl = process.env.REACT_APP_API_URL;
   return {
-    REACT_APP_API_URL: '/api',
-    REACT_APP_API_TIMEOUT: '10000',
-    REACT_APP_API_RETRY_ATTEMPTS: '3',
-    REACT_APP_API_RETRY_DELAY: '1000',
+    REACT_APP_API_URL: envApiUrl || '/api',
+    REACT_APP_API_TIMEOUT: process.env.REACT_APP_API_TIMEOUT || '10000',
+    REACT_APP_API_RETRY_ATTEMPTS: process.env.REACT_APP_API_RETRY_ATTEMPTS || '3',
+    REACT_APP_API_RETRY_DELAY: process.env.REACT_APP_API_RETRY_DELAY || '1000',
   };
 };
 
@@ -33,16 +34,19 @@ export const API_CONFIG = {
   get BASE_URL() {
     const config = getDynamicConfig();
     const apiUrl = config.REACT_APP_API_URL || '/api';
-    
-    // Remover protocolo se houver
-    let path = apiUrl;
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      const url = new URL(path);
-      path = url.pathname || '/api';
+
+    // App nativo (iOS/Android): URL completa é necessária (não mesma origem)
+    const isNative = Capacitor.isNativePlatform();
+    if (isNative && (apiUrl.startsWith('http://') || apiUrl.startsWith('https://'))) {
+      return apiUrl.replace(/\/+$/, '');
     }
-    
-    // Garantir que seja relativa
-    return ensureRelativeUrl(path) || '/api';
+
+    // Web: manter URL relativa
+    if (apiUrl.startsWith('http://') || apiUrl.startsWith('https://')) {
+      const url = new URL(apiUrl);
+      return ensureRelativeUrl(url.pathname || '/api') || '/api';
+    }
+    return ensureRelativeUrl(apiUrl) || '/api';
   },
   get BASE_URL_WITHOUT_API() {
     return '/';
