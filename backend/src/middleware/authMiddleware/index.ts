@@ -126,6 +126,7 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
       /^\/api\/contratos(\/.*)?$/i,
       /^\/api\/titulos(\/.*)?$/i,
       /^\/api\/dados-empresa(\/.*)?$/i,
+      /^\/api\/blockdomi-publico(\/.*)?$/i,
     ];
 
     const usuario = await UsuarioService.findByWebhookSecret(headerToken);
