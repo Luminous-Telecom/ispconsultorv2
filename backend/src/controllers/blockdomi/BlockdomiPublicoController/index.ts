@@ -1,10 +1,11 @@
 /**
  * Controller público do Blockdomi - API exclusiva para o site público.
- * Não utiliza autenticação nem restrição de IP.
+ * Requer token de API (Bearer) gerado em Parâmetros → Usuários → Gerar token.
  */
 import { Request, Response } from 'express';
 import { BlockdomiPublicoService } from '../../../services/blockdomi/BlockdomiPublicoService';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
+import { logger } from '../../../utils/logger';
 
 export class BlockdomiPublicoController {
   /**
@@ -12,6 +13,10 @@ export class BlockdomiPublicoController {
    */
   static async listar(req: Request, res: Response): Promise<void> {
     try {
+      logger.info('[BlockdomiPublico] GET /api/blockdomi-publico - listar', {
+        hasAuth: !!req.get('Authorization'),
+        requestId: (req as Request & { requestId?: string }).requestId
+      });
       const data = await BlockdomiPublicoService.listarDadosPublicos();
       sendSuccess(res, data, 'Dados do Blockdomi listados com sucesso');
     } catch (error) {

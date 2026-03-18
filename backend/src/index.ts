@@ -282,6 +282,10 @@ app.use(errorHandlerMiddleware);
 // Em produção: mensagem genérica para não expor estrutura interna
 app.use('/api/*', (req, res) => {
   const isProd = process.env.NODE_ENV === 'production';
+  logger.warn('[404] Rota API não encontrada', {
+    path: req.originalUrl,
+    method: req.method
+  });
   res.status(404).json({
     error: isProd ? 'Recurso não encontrado' : 'Rota não encontrada',
     ...(!isProd && { path: req.originalUrl })

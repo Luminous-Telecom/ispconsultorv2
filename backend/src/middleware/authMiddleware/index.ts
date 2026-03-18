@@ -132,6 +132,9 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
     const usuario = await UsuarioService.findByWebhookSecret(headerToken);
     if (usuario && usuario.ativo && usuario.empresa_id) {
       const isAllowed = API_TOKEN_ALLOWED_ROUTES.some(r => r.test(cleanedPath));
+      if (isAllowed) {
+        logger.info('[auth] Token de API válido', { path: cleanedPath, usuario_id: usuario.id });
+      }
       if (!isAllowed) {
         res.status(403).json({ success: false, message: 'Rota não disponível via token de API' });
         return;
@@ -151,6 +154,7 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
       return;
     }
     // Token de API inválido — não tentar JWT (evita "jwt malformed")
+    logger.warn('[auth] Token de API inválido ou usuário inativo', { path: cleanedPath });
     res.status(401).json({ success: false, message: 'Token de API inválido. Gere um novo em Parâmetros → Usuários → Gerar token.' });
     return;
   }
@@ -158,12 +162,12 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
   const token = cookieToken || headerToken;
 
   if (!token) {
-    if (req.path.includes('/notas-fiscais') || req.path.includes('/nfse')) {
-      logger.warn('Requisição bloqueada - sem token de autenticação', {
-        path: req.path,
-        originalUrl: req.originalUrl
-      });
-    }
+    logger.warn('[auth] Requisição sem token', {
+      path: req.path,
+      originalUrl: req.originalUrl,
+      hasCookie: !!cookieToken,
+      hasAuthHeader: !!authHeader
+    });
     res.status(404).end();
     return;
   }
