@@ -4,17 +4,16 @@ Instalação direta no sistema para Debian/Ubuntu.
 
 ## Script automático
 
+O script lê `backend/.env` (ou `.env.example` se `.env` não existir) e cria as configurações correspondentes: usuário MySQL, Redis com ou sem senha, etc.
+
 ```bash
-# Carregue as variáveis do .env e rode (ex: DB_PASSWORD definido)
+# 1. Configure backend/.env com DB_PASSWORD (e opcionalmente REDIS_PASSWORD)
+# 2. Execute o script
 cd /home/lucas/projetos/BackNet-ERP
-sudo -E bash scripts/setup-local.sh
+sudo bash scripts/setup-local.sh
 ```
 
-Ou com valores na mão:
-
-```bash
-sudo DB_NAME=backnet DB_USER=backnet DB_PASSWORD=sua_senha bash scripts/setup-local.sh
-```
+Se `backend/.env` não existir, o script cria a partir do `.env.example` e aplica as configurações.
 
 ## Instalação manual
 
