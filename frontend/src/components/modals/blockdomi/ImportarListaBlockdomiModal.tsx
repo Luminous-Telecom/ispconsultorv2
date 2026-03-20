@@ -46,8 +46,18 @@ export function classifyLine(line: string): { type: 'dominio' | 'ipv4' | 'ipv6' 
   return { type: 'invalido', value: trimmed };
 }
 
+/**
+ * Extrai itens da lista: divide por quebra de linha E por espaços na mesma linha.
+ * Ex: "a.com b.com c.com" vira ["a.com", "b.com", "c.com"]
+ */
+export function parseListItems(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .flatMap((line) => line.split(/\s+/).map((t) => t.trim()).filter(Boolean));
+}
+
 export function classifyLines(text: string): ClassifiedList {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const items = parseListItems(text);
   const dominios: string[] = [];
   const ipv4: string[] = [];
   const ipv6: string[] = [];
@@ -59,8 +69,8 @@ export function classifyLines(text: string): ClassifiedList {
   const seenInvalidos = new Set<string>();
   const seenDuplicados = new Set<string>();
 
-  for (const line of lines) {
-    const { type, value } = classifyLine(line);
+  for (const item of items) {
+    const { type, value } = classifyLine(item);
     if (type === 'dominio') {
       if (!seenDominios.has(value)) {
         seenDominios.add(value);
@@ -401,8 +411,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, pdfOficioAnatel, pdfOficioJustica, pdfFile, success, error, onSuccess, queryClient, t]);
 
   const domainCount = useMemo(() => {
-    const lines = rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-    return lines.length;
+    return parseListItems(rawText).length;
   }, [rawText]);
 
   const handlePaste = useCallback(async () => {
@@ -433,18 +442,18 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   );
 
   const dominiosBruto = useMemo(() => {
-    return rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    return parseListItems(rawText);
   }, [rawText]);
 
   const dominiosFiltrados = useMemo(() => {
     const seen = new Set<string>();
     const result: { raw: string; fixed: string }[] = [];
-    for (const line of dominiosBruto) {
-      if (seen.has(line)) continue;
-      seen.add(line);
-      const { type, value } = classifyLine(line);
+    for (const item of dominiosBruto) {
+      if (seen.has(item)) continue;
+      seen.add(item);
+      const { type, value } = classifyLine(item);
       if (type === 'invalido') continue;
-      if (line !== value) result.push({ raw: line, fixed: value });
+      if (item !== value) result.push({ raw: item, fixed: value });
     }
     return result;
   }, [dominiosBruto]);
