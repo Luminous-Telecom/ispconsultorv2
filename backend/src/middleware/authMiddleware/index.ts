@@ -132,9 +132,6 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
     const usuario = await UsuarioService.findByWebhookSecret(headerToken);
     if (usuario && usuario.ativo && usuario.empresa_id) {
       const isAllowed = API_TOKEN_ALLOWED_ROUTES.some(r => r.test(cleanedPath));
-      if (isAllowed) {
-        logger.info('[auth] Token de API válido', { path: cleanedPath, usuario_id: usuario.id });
-      }
       if (!isAllowed) {
         res.status(403).json({ success: false, message: 'Rota não disponível via token de API' });
         return;
