@@ -146,7 +146,7 @@ export class AsaasWebhookService {
           event: evento,
           target: urlRetorno,
           apiVersion: 3,
-          name: `BackNet ERP - ${evento}`,
+          name: `BackNet - ${evento}`,
           enabled: true
         };
 

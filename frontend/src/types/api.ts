@@ -1,6 +1,6 @@
 /**
  * Tipos de API - Respostas e Erros
- * BackNet ERP
+ * BackNet
  */
 
 /**

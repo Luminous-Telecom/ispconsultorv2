@@ -1,4 +1,4 @@
-# BackNet ERP
+# BackNet
 
 Sistema ERP completo para gestão de clientes, contratos e cobrança com integração direta aos gateways **Asaas** e **Efí (Gerencianet)**. O projeto inclui backend em Node.js/Express, frontend em React e suporte para deploy com Nginx.
 
@@ -514,8 +514,8 @@ PING
 ### 1. Clonar o Repositório
 
 ```bash
-git clone https://github.com/Luminous-Telecom/BackNet-ERP.git
-cd BackNet-ERP
+git clone https://github.com/Luminous-Telecom/BackNet.git
+cd BackNet
 ```
 
 ### 2. Instalar Dependências
@@ -852,7 +852,7 @@ server {
 
     # Arquivos estáticos do frontend
     # ⚠️ IMPORTANTE: Ajuste o caminho abaixo conforme seu ambiente!
-    # Desenvolvimento: /home/projetos/BackNet-ERP/frontend/build
+    # Desenvolvimento: /home/projetos/BackNet/frontend/build
     # Produção: /opt/backnet.prod/frontend/build (ou o caminho onde está seu frontend)
     location / {
         root /opt/backnet.prod/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
@@ -1005,7 +1005,7 @@ server {
 
     # Arquivos estáticos do frontend
     # ⚠️ IMPORTANTE: Ajuste o caminho abaixo conforme seu ambiente!
-    # Desenvolvimento: /home/projetos/BackNet-ERP/frontend/build
+    # Desenvolvimento: /home/projetos/BackNet/frontend/build
     # Produção: /opt/backnet.prod/frontend/build (ou o caminho onde está seu frontend)
     location / {
         root /opt/backnet.prod/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
@@ -1170,7 +1170,7 @@ sudo apt install -y python3 python3-pip
 ### Estrutura de Deploy
 
 ```
-/home/projetos/BackNet-ERP/
+/home/projetos/BackNet/
 ├── backend/
 │   ├── dist/              # Código compilado do backend
 │   │   └── scripts/       # Scripts Python (extrair-dominios.py)

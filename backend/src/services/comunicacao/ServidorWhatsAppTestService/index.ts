@@ -44,7 +44,7 @@ export class ServidorWhatsAppTestService {
       };
     }
 
-    const mensagemTexto = mensagem || 'Mensagem de teste do BackNet ERP';
+    const mensagemTexto = mensagem || 'Mensagem de teste do BackNet';
 
     try {
       if (servidor.tipo_api === 'whatsapp_cloud') {

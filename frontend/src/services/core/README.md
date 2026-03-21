@@ -1,6 +1,6 @@
 # Core Services - Sistema de API Unificado
 
-Este diretório contém a estrutura base para serviços de API unificados do BackNet ERP.
+Este diretório contém a estrutura base para serviços de API unificados do BackNet.
 
 ## 📁 Estrutura
 

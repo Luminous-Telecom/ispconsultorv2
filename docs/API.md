@@ -1,4 +1,4 @@
-# BackNet ERP — Documentação de Rotas da API
+# BackNet — Documentação de Rotas da API
 
 ## Tipos de Autenticação
 

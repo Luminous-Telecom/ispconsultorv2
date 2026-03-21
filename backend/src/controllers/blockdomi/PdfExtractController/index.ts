@@ -52,7 +52,7 @@ async function runExtractFromUrlBackground(jobId: string, url: string): Promise<
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 120000);
     const response = await fetch(url, {
-      headers: { 'User-Agent': 'BackNet-ERP/1.0' },
+      headers: { 'User-Agent': 'BackNet/1.0' },
       signal: controller.signal
     });
     clearTimeout(timeoutId);

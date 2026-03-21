@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
 
-interface UseSeleBackNetodalReturn {
+interface UseSelectModalReturn {
   showModal: boolean;
   openModal: () => void;
   closeModal: () => void;
   toggleModal: () => void;
 }
 
-export const useSeleBackNetodal = (): UseSeleBackNetodalReturn => {
+export const useSelectModal = (): UseSelectModalReturn => {
   const [showModal, setShowModal] = useState(false);
 
   const openModal = useCallback(() => {

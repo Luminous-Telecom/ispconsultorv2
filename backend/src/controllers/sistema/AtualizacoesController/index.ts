@@ -66,7 +66,7 @@ export class AtualizacoesController {
       // Montar headers com token se disponível
       const headers: Record<string, string> = {
         'Accept': 'application/vnd.github+json',
-        'User-Agent': 'BackNet-Telecom-ERP'
+        'User-Agent': 'BackNet'
       };
       
       if (githubToken) {

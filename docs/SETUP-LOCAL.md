@@ -9,7 +9,7 @@ O script lê `backend/.env` (ou `.env.example` se `.env` não existir) e cria as
 ```bash
 # 1. Configure backend/.env com DB_PASSWORD (e opcionalmente REDIS_PASSWORD)
 # 2. Execute o script
-cd /home/lucas/projetos/BackNet-ERP
+cd /home/lucas/projetos/BackNet
 sudo bash scripts/setup-local.sh
 ```
 

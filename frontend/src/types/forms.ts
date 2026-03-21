@@ -1,6 +1,6 @@
 /**
  * Tipos de Formulários
- * BackNet ERP
+ * BackNet
  */
 
 import { FormValue } from './common';

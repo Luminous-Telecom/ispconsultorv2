@@ -1,6 +1,6 @@
-# Componentes BackNet ERP
+# Componentes BackNet
 
-Este documento descreve os componentes principais do sistema BackNet ERP.
+Este documento descreve os componentes principais do sistema BackNet.
 
 ## 📁 Estrutura de Pastas
 

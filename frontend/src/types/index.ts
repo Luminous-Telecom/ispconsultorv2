@@ -1,5 +1,5 @@
 /**
- * Tipos para o sistema BackNet ERP - Frontend
+ * Tipos para o sistema BackNet - Frontend
  * 
  * Este arquivo serve como ponto central de exportação de todos os tipos.
  * 

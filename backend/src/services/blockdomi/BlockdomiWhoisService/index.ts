@@ -158,7 +158,7 @@ export class BlockdomiWhoisService {
       const url = `${REGISTRO_BR_RDAP_URL}/${encodeURIComponent(trimmed)}`;
       const res = await axios.get<RdapResponse>(url, {
         timeout: 10000,
-        headers: { 'User-Agent': 'BackNet-ERP/1.0' }
+        headers: { 'User-Agent': 'BackNet/1.0' }
       });
 
       const rdap = res.data;
