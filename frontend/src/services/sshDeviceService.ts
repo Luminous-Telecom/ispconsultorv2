@@ -62,7 +62,7 @@ export class SshDeviceService {
   }
 
   static async queueManualBackup(id: string): Promise<{ message: string }> {
-    const response = await defaultApiClient.post<{ message: string }>(`/ssh-manager/devices/${id}/backup`, {});
+    const response = await defaultApiClient.post<{ message: string }>(`/ssh-manager/devices/${id}/backup`, {}, { timeout: 120000 });
     if (response.success === false) {
       throw new Error(response.message || response.error || 'Erro ao enfileirar backup');
     }
