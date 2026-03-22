@@ -52,6 +52,6 @@ function extrairModulosDoPlano(plano: SaasPlano): PlanoModuloId[] {
   if (recursos.equipamentos === true) validos.push('equipamentos');
   if (recursos.whatsapp === true) validos.push('envio_notificacoes');
   if (recursos.nfse === true) validos.push('nfse');
-  validos.push('historico_notificacoes', 'assinatura_digital');
+  validos.push('assinatura_digital');
   return [...new Set(validos)];
 }

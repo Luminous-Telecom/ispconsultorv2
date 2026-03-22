@@ -8,7 +8,6 @@ export const PLANO_MODULOS = [
   { id: 'blockdomi', label: 'Blockdomi' },
   { id: 'equipamentos', label: 'Equipamentos e Túneis' },
   { id: 'envio_notificacoes', label: 'Envio de Notificações' },
-  { id: 'historico_notificacoes', label: 'Histórico de Notificações' },
   { id: 'assinatura_digital', label: 'Assinatura Digital' },
   { id: 'nfse', label: 'NFS-e' },
 ] as const;
@@ -38,8 +37,8 @@ export const MODAL_MODULO_MAP: Record<string, PlanoModuloId> = {
   'ssh-devices': 'equipamentos',
   'servidor-whatsapp': 'envio_notificacoes',
   'servidor-email': 'envio_notificacoes',
-  'logs-email': 'historico_notificacoes',
-  'logs-whatsapp': 'historico_notificacoes',
+  'logs-email': 'envio_notificacoes',
+  'logs-whatsapp': 'envio_notificacoes',
   'assinatura-digital': 'assinatura_digital',
   nfse: 'nfse',
 };

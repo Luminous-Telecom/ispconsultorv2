@@ -6,7 +6,6 @@ export type PlanoModuloId =
   | 'blockdomi'
   | 'equipamentos'
   | 'envio_notificacoes'
-  | 'historico_notificacoes'
   | 'assinatura_digital'
   | 'nfse';
 
