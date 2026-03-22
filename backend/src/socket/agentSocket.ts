@@ -113,7 +113,6 @@ export function registerAgentNamespace(io: SocketIOServer): void {
     socket.on('shell:data', ({ sessionId, data }: { sessionId: string; data: string }) => {
       const session = getShellSession(sessionId);
       if (!session) return;
-      // Encaminhar para o socket do frontend no namespace /agent-terminal
       ns.server.of('/agent-terminal').to(session.frontendSocketId).emit('terminal:output', {
         sessionId,
         data,
@@ -200,7 +199,6 @@ export function registerAgentNamespace(io: SocketIOServer): void {
         ip: getAgentIp(socket),
       });
       unregisterAgent(agentId);
-      logger.info('Agent: desconectado', { agentId, agentName, socketId: socket.id });
     });
   });
 }
@@ -252,8 +250,6 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
     const user = (socket as Socket & { data: { user: JwtPayload } }).data.user;
     const userId = String(user.sub ?? 'unknown');
     const ip = getFrontendIp(socket);
-
-    logger.info('Agent terminal: frontend conectado', { socketId: socket.id, userId });
 
     // Frontend quer abrir um terminal no agente (shell local)
     const clampColsRows = (val: number, def: number, isRow: boolean) =>
@@ -310,7 +306,6 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       (socket as Socket & { _agentSessions?: string[] })._agentSessions = sessions;
 
       socket.emit('terminal:created', { sessionId });
-      logger.info('Agent terminal: sessão criada (shell local)', { sessionId, agentId, userId, ip });
       try {
         await registrarExecucaoParaSocket(userId, ip, 'Agent', `Acesso ao terminal do agente ${agent.name}`, { agentId, agentName: agent.name }, agent.empresa_id ?? undefined);
       } catch { /* não crítico */ }
@@ -401,9 +396,6 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       (socket as Socket & { _agentSessions?: string[] })._agentSessions = sessions;
 
       socket.emit('terminal:created', { sessionId });
-      logger.info('Agent terminal: sessão proxy SSH criada', {
-        sessionId, agentId: device.agent_id, deviceId, userId, ip,
-      });
       try {
         await registrarExecucaoParaSocket(userId, ip, 'SshDevice', `Acesso ao terminal do equipamento ${device.name} (via agente)`, { deviceId: device.id, deviceName: device.name, agentId: device.agent_id }, device.empresa_id ?? undefined);
       } catch { /* não crítico */ }
@@ -534,8 +526,6 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
     });
 
     socket.on('disconnect', () => {
-      logger.info('Agent terminal: frontend desconectado', { socketId: socket.id, userId });
-
       const closeSession = (sessionId: string) => {
         agentCommandBuffers.delete(sessionId);
         const session = getShellSession(sessionId);

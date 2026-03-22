@@ -69,7 +69,6 @@ export function unregisterAgent(agentId: string): void {
   for (const [sid, sess] of shellSessions) {
     if (sess.agentId === agentId) shellSessions.delete(sid);
   }
-  logger.info('Agent: desconectado', { agentId });
 }
 
 export function getAgent(agentId: string): ConnectedAgent | undefined {

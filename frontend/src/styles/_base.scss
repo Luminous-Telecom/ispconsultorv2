@@ -79,7 +79,7 @@ body[data-app="system"] {
   .card *,
   .card-body *,
   .draggable-modal-container-custom *,
-  .draggable-modal-body-custom * {
+  .draggable-modal-body-custom *:not(.xterm):not(.xterm *) {
     color: inherit;
   }
 
@@ -177,6 +177,23 @@ body[data-app="system"] *:focus-visible {
 body[data-app="system"]::selection {
   background-color: rgba(13, 110, 253, 0.2);
   color: var(--text-primary);
+}
+
+/* Terminal modais — fundo escuro e cores garantidas */
+.terminal-modal-dark {
+  background: #0d1117 !important;
+
+  .xterm {
+    background: #0d1117 !important;
+  }
+
+  .xterm .xterm-viewport {
+    background-color: #0d1117 !important;
+  }
+
+  .xterm .xterm-screen {
+    background-color: #0d1117 !important;
+  }
 }
 
 /* Utility classes */

@@ -50,6 +50,7 @@ const SshTerminalModal: React.FC<SshTerminalModalProps> = ({ show, onClose, devi
 
       // ── Inicializa xterm ──────────────────────────────────────────────────
       const xterm = new Terminal({
+        allowTransparency: false,
         theme: {
           background: '#0d1117',
           foreground: '#c9d1d9',
@@ -232,7 +233,7 @@ const SshTerminalModal: React.FC<SshTerminalModalProps> = ({ show, onClose, devi
       className="no-padding"
       headerActions={<div className="ms-2">{statusBadge}</div>}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, background: '#0d1117', padding: '8px' }}>
+      <div className="terminal-modal-dark" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, background: '#0d1117', padding: '8px' }}>
         {errorMsg && status === 'error' && (
           <div className="alert alert-danger m-2 py-2 small flex-shrink-0">
             <i className="bi bi-exclamation-triangle-fill me-1" />

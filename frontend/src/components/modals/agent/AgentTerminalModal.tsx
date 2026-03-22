@@ -55,19 +55,32 @@ const AgentTerminalModal: React.FC<AgentTerminalModalProps> = ({
       if (!termRef.current) return;
 
       const xterm = new Terminal({
+        allowTransparency: false,
         cursorBlink: true,
         fontSize: 14,
         fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace',
         convertEol: true,
         theme: {
-          background: '#0d1117', foreground: '#e6edf3',
-          cursor: '#58a6ff', selectionBackground: '#264f78',
-          black: '#484f58', red: '#ff7b72', green: '#3fb950',
-          yellow: '#d29922', blue: '#58a6ff', magenta: '#bc8cff',
-          cyan: '#39c5cf', white: '#b1bac4',
-          brightBlack: '#6e7681', brightRed: '#ffa198', brightGreen: '#56d364',
-          brightYellow: '#e3b341', brightBlue: '#79c0ff', brightMagenta: '#d2a8ff',
-          brightCyan: '#56d4dd', brightWhite: '#f0f6fc',
+          background: '#0d1117',
+          foreground: '#e6edf3',
+          cursor: '#58a6ff',
+          selectionBackground: '#264f78',
+          black: '#484f58',
+          red: '#ff7b72',
+          green: '#3fb950',
+          yellow: '#d29922',
+          blue: '#58a6ff',
+          magenta: '#bc8cff',
+          cyan: '#39c5cf',
+          white: '#b1bac4',
+          brightBlack: '#6e7681',
+          brightRed: '#ffa198',
+          brightGreen: '#56d364',
+          brightYellow: '#e3b341',
+          brightBlue: '#79c0ff',
+          brightMagenta: '#d2a8ff',
+          brightCyan: '#56d4dd',
+          brightWhite: '#f0f6fc',
         },
       });
 
@@ -243,6 +256,7 @@ const AgentTerminalModal: React.FC<AgentTerminalModalProps> = ({
       headerActions={<div className="ms-2">{statusBadge}</div>}
     >
       <div
+        className="terminal-modal-dark"
         style={{
           display: 'flex',
           flexDirection: 'column',

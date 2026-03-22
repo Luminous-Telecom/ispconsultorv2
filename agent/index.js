@@ -156,7 +156,9 @@ function getSafeEnv() {
   const env = {
     ...process.env,
     TERM: 'xterm-256color',
-    COLORTERM: 'true',
+    COLORTERM: 'truecolor',
+    FORCE_COLOR: '1',
+    CLICOLOR: '1',
   };
   for (const key of Object.keys(env)) {
     const upper = key.toUpperCase();
