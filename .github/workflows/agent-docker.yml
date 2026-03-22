@@ -1,0 +1,38 @@
+name: Publicar imagem do agente (Docker Hub)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'agent/**'
+      - '.github/workflows/agent-docker.yml'
+  workflow_dispatch:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build e push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./agent
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/backnet-agent:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/backnet-agent:${{ github.sha }}
+          build-args: |
+            BACKNET_AGENT_CHANNEL=prod
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
