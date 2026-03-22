@@ -55,3 +55,56 @@ function extrairModulosDoPlano(plano: SaasPlano): PlanoModuloId[] {
   validos.push('assinatura_digital');
   return [...new Set(validos)];
 }
+
+export interface EquipamentosLimites {
+  temModulo: boolean;
+  limite_equipamentos: number;
+  limite_tuneis: number;
+  limite_backups: number;
+}
+
+const DEFAULTS = { limite_equipamentos: 5, limite_tuneis: 5, limite_backups: 1 };
+
+function extrairNumero(recursos: Record<string, unknown> | null, key: string, fallback: number): number {
+  const raw = recursos?.[key];
+  return typeof raw === 'number' && !Number.isNaN(raw) && raw >= 0 ? raw : fallback;
+}
+
+/**
+ * Retorna os limites de equipamentos do plano do tenant.
+ * null = sem contrato SaaS ativo (sem restrição).
+ * temModulo=false = tem contrato mas plano sem módulo equipamentos (bloqueia).
+ * temModulo=true = tem contrato com equipamentos (valida limites).
+ */
+export async function getEquipamentosLimites(empresaId: number): Promise<EquipamentosLimites | null> {
+  const contrato = await SaasContrato.findOne({
+    where: { empresa_id: empresaId, status: 'ativo' },
+    include: [{ model: SaasPlano, as: 'plano', required: true }],
+    order: [['data_inicio', 'DESC']],
+  }) as (SaasContrato & { plano?: SaasPlano }) | null;
+
+  if (!contrato?.plano) {
+    return null;
+  }
+
+  const modulos = extrairModulosDoPlano(contrato.plano);
+  if (!modulos.includes('equipamentos' as PlanoModuloId)) {
+    return { temModulo: false, limite_equipamentos: 0, limite_tuneis: 0, limite_backups: 0 };
+  }
+
+  let recursos = contrato.plano.recursos as Record<string, unknown> | string | null | undefined;
+  if (typeof recursos === 'string') {
+    try {
+      recursos = JSON.parse(recursos) as Record<string, unknown>;
+    } catch {
+      return { temModulo: true, limite_equipamentos: DEFAULTS.limite_equipamentos, limite_tuneis: DEFAULTS.limite_tuneis, limite_backups: DEFAULTS.limite_backups };
+    }
+  }
+  const obj = recursos && typeof recursos === 'object' ? recursos : null;
+  return {
+    temModulo: true,
+    limite_equipamentos: extrairNumero(obj as Record<string, unknown>, 'equipamentos_limite_equipamentos', DEFAULTS.limite_equipamentos),
+    limite_tuneis: extrairNumero(obj as Record<string, unknown>, 'equipamentos_limite_tuneis', DEFAULTS.limite_tuneis),
+    limite_backups: extrairNumero(obj as Record<string, unknown>, 'equipamentos_limite_backups', DEFAULTS.limite_backups),
+  };
+}

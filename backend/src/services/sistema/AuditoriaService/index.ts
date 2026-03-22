@@ -1,6 +1,5 @@
 import { Request } from 'express';
 import { AuthenticatedRequest } from '../../../types/auth';
-import { logger } from '../../../utils/logger';
 import type { OrigemAuditoria } from '../../elasticsearch/ElasticsearchAuditService';
 import {
   registrarCriacaoElasticsearch,
@@ -69,9 +68,6 @@ export async function registrarCriacao(
   empresa_id?: number | null,
   origem_auditoria?: OrigemAuditoria
 ): Promise<void> {
-  if (entidade === 'Agent') {
-    logger.info('AuditoriaService.registrarCriacao: Agent', { entidadeId, entity_id_str: dadosNovos?.entity_id_str });
-  }
   await registrarCriacaoElasticsearch(req, entidade, entidadeId, dadosNovos, observacoes, empresa_id, origem_auditoria);
 }
 
@@ -87,9 +83,6 @@ export async function registrarAtualizacao(
   observacoes?: string,
   empresa_id?: number | null
 ): Promise<void> {
-  if (entidade === 'Agent') {
-    logger.info('AuditoriaService.registrarAtualizacao: Agent', { entidadeId, entity_id_str: dadosNovos?.entity_id_str });
-  }
   await registrarAtualizacaoElasticsearch(req, entidade, entidadeId, dadosAnteriores, dadosNovos, observacoes, empresa_id);
 }
 
@@ -117,9 +110,6 @@ export async function registrarExclusao(
   observacoes?: string,
   empresa_id?: number | null
 ): Promise<void> {
-  if (entidade === 'Agent') {
-    logger.info('AuditoriaService.registrarExclusao: Agent', { entidadeId, entity_id_str: dadosAnteriores?.entity_id_str });
-  }
   await registrarExclusaoElasticsearch(req, entidade, entidadeId, dadosAnteriores, observacoes, empresa_id);
 }
 

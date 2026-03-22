@@ -20,7 +20,7 @@ import {
   sendValidationError,
   sendNotFound,
 } from '../../../utils/responseUtils';
-import { Op, WhereOptions } from 'sequelize';
+import { Op, WhereOptions, literal } from 'sequelize';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { JwtPayload } from 'jsonwebtoken';
 import {
@@ -29,6 +29,7 @@ import {
   resolveEmpresaScopeForList,
   resolveEmpresaIdForScopedCreate,
 } from '../../../utils/tenantUtils';
+import { getEquipamentosLimites } from '../../../services/saas/PlanoModulosService';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 
@@ -180,6 +181,39 @@ export class DeviceController {
         sendValidationError(res, resolved.message);
         return;
       }
+      const empresaId = resolved.empresa_id;
+      if (empresaId != null) {
+        const limites = await getEquipamentosLimites(empresaId);
+        if (limites !== null) {
+          if (!limites.temModulo) {
+            sendValidationError(res, 'O plano não inclui o módulo de equipamentos.');
+            return;
+          }
+          const count = await SshDevice.count({ where: { empresa_id: empresaId } });
+          if (count >= limites.limite_equipamentos) {
+            sendValidationError(res, `Limite de equipamentos do plano atingido (${limites.limite_equipamentos}).`);
+            return;
+          }
+          const willHaveTunel = !!(value.agent_id?.trim());
+          if (willHaveTunel && limites.limite_tuneis > 0) {
+            const countTuneis = await SshDevice.count({
+              where: { [Op.and]: [{ empresa_id: empresaId }, literal('agent_id IS NOT NULL')] },
+            });
+            if (countTuneis >= limites.limite_tuneis) {
+              sendValidationError(res, `Limite de túneis do plano atingido (${limites.limite_tuneis}).`);
+              return;
+            }
+          }
+          const willHaveBackup = value.backup_enabled === true;
+          if (willHaveBackup && limites.limite_backups > 0) {
+            const countBackups = await SshDevice.count({ where: { empresa_id: empresaId, backup_enabled: true } });
+            if (countBackups >= limites.limite_backups) {
+              sendValidationError(res, `Limite de backups do plano atingido (${limites.limite_backups}).`);
+              return;
+            }
+          }
+        }
+      }
       const { empresa_id: _e, ...restValue } = value;
       const device = await SshDevice.create({
         ...restValue,
@@ -221,6 +255,33 @@ export class DeviceController {
       if (error) {
         sendValidationError(res, error.details.map((d) => d.message).join('; '));
         return;
+      }
+
+      const devEmpresaId = device.empresa_id;
+      if (devEmpresaId != null && (value.agent_id !== undefined || value.backup_enabled !== undefined)) {
+        const limites = await getEquipamentosLimites(devEmpresaId);
+        if (limites !== null && limites.temModulo) {
+          const willHaveTunel = (value.agent_id !== undefined && value.agent_id !== '' ? !!value.agent_id?.trim() : !!device.agent_id);
+          if (willHaveTunel && limites.limite_tuneis > 0) {
+            const countTuneis = await SshDevice.count({
+              where: { [Op.and]: [{ empresa_id: devEmpresaId }, literal('agent_id IS NOT NULL')] },
+            });
+            const isAddingTunel = !device.agent_id && willHaveTunel;
+            if (isAddingTunel && countTuneis >= limites.limite_tuneis) {
+              sendValidationError(res, `Limite de túneis do plano atingido (${limites.limite_tuneis}).`);
+              return;
+            }
+          }
+          const willHaveBackup = value.backup_enabled !== undefined ? value.backup_enabled === true : !!device.backup_enabled;
+          if (willHaveBackup && limites.limite_backups > 0) {
+            const countBackups = await SshDevice.count({ where: { empresa_id: devEmpresaId, backup_enabled: true } });
+            const isEnablingBackup = !device.backup_enabled && willHaveBackup;
+            if (isEnablingBackup && countBackups >= limites.limite_backups) {
+              sendValidationError(res, `Limite de backups do plano atingido (${limites.limite_backups}).`);
+              return;
+            }
+          }
+        }
       }
 
       const updateData: Partial<typeof value> = { ...value };

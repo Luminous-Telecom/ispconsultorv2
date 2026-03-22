@@ -152,7 +152,6 @@ export class AgentController {
       });
 
       try {
-        logger.info('AgentController.store: iniciando auditoria create', { agentId: agent.id });
         const dados = agent.toJSON() as Record<string, unknown>;
         const dadosAudit: Record<string, unknown> = {
           entity_id_str: agent.id,
@@ -164,7 +163,6 @@ export class AgentController {
           created_at: dados.created_at instanceof Date ? dados.created_at.toISOString() : dados.created_at,
         };
         await registrarCriacao(req as AuthenticatedRequest, 'Agent', 0, dadosAudit, undefined, resolved.empresa_id ?? undefined);
-        logger.info('AgentController.store: auditoria create chamada com sucesso', { agentId: agent.id });
       } catch (auditErr) {
         logger.warn('AgentController.store: falha ao registrar auditoria', { agentId: agent.id, error: auditErr });
       }
@@ -195,12 +193,10 @@ export class AgentController {
       delete dadosAntes.id;
       await agent.update(value);
       try {
-        logger.info('AgentController.update: iniciando auditoria', { agentId: agent.id });
         const dadosDepois = agent.toJSON() as Record<string, unknown>;
         delete dadosDepois.token_hash;
         delete dadosDepois.id;
         await registrarAtualizacao(req as AuthenticatedRequest, 'Agent', 0, { ...dadosAntes, entity_id_str: agent.id }, { ...dadosDepois, entity_id_str: agent.id }, undefined, empresaId ?? undefined);
-        logger.info('AgentController.update: auditoria chamada com sucesso', { agentId: agent.id });
       } catch (auditErr) {
         logger.warn('AgentController.update: falha ao registrar auditoria', { agentId: agent.id, error: auditErr });
       }
@@ -227,9 +223,7 @@ export class AgentController {
       delete dadosAntes.id;
       await agent.destroy();
       try {
-        logger.info('AgentController.destroy: iniciando auditoria', { agentId: agent.id });
         await registrarExclusao(req as AuthenticatedRequest, 'Agent', 0, { ...dadosAntes, entity_id_str: agent.id }, undefined, empresaId ?? undefined);
-        logger.info('AgentController.destroy: auditoria chamada com sucesso', { agentId: agent.id });
       } catch (auditErr) {
         logger.warn('AgentController.destroy: falha ao registrar auditoria', { agentId: agent.id, error: auditErr });
       }

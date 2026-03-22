@@ -103,9 +103,6 @@ export async function registrarAuditoriaElasticsearch(
   dados: DadosAuditoria
 ): Promise<void> {
   const isAgent = dados.entidade === 'Agent';
-  if (isAgent) {
-    logger.info('ElasticsearchAuditService: recebido Agent', { acao: dados.acao });
-  }
 
   // Capturar IP e dados do usuário de forma síncrona (antes do setImmediate)
   // para evitar req/socket indisponível quando o callback executar
@@ -116,17 +113,8 @@ export async function registrarAuditoriaElasticsearch(
   const metodoHttp = dados.metodo_http ?? req.method ?? null;
   const userAgent = getUserAgent(req);
 
-  if (isAgent) {
-    logger.info('ElasticsearchAuditService: dados capturados', {
-      usuario_id: userData.id,
-      ip: ipAddress,
-      empresa_id: empresaId,
-    });
-  }
-
   setImmediate(async () => {
       try {
-        if (isAgent) logger.info('ElasticsearchAuditService: setImmediate executando');
         const elasticsearchService = getElasticsearchService();
         const client = elasticsearchService.getClient();
 
@@ -137,12 +125,10 @@ export async function registrarAuditoriaElasticsearch(
             acao: dados.acao,
             entidade: dados.entidade
           });
-          if (isAgent) logger.info('ElasticsearchAuditService: ABORTO - client null');
           return;
         }
 
         const isConnected = await elasticsearchService.checkConnection();
-        if (isAgent) logger.info('ElasticsearchAuditService: isConnected', { isConnected });
         if (!isConnected) {
           logger.warn('Elasticsearch não disponível', {
             context: 'ElasticsearchAuditService',
@@ -150,12 +136,10 @@ export async function registrarAuditoriaElasticsearch(
             acao: dados.acao,
             entidade: dados.entidade
           });
-          if (isAgent) logger.info('ElasticsearchAuditService: ABORTO - não conectado');
           return;
         }
 
         await elasticsearchService.ensureIndex();
-        if (isAgent) logger.info('ElasticsearchAuditService: índice garantido, limpando dados');
 
       // Limpar dados removendo apenas campos internos do Sequelize e campos muito grandes
       const limparDados = (dados: Record<string, unknown> | null): Record<string, unknown> | null => {
@@ -345,13 +329,11 @@ export async function registrarAuditoriaElasticsearch(
       }
 
       // Indexar documento no Elasticsearch
-      if (isAgent) logger.info('ElasticsearchAuditService: enviando client.index', { index: elasticsearchService.getIndexName() });
       await client.index({
         index: elasticsearchService.getIndexName(),
         document,
         refresh: isAgent ? 'wait_for' : false
       });
-      if (isAgent) logger.info('ElasticsearchAuditService: auditoria Agent indexada com sucesso');
 
       // Log removido para evitar poluição do console
     } catch (error) {
