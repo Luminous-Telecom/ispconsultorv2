@@ -53,7 +53,6 @@ const BlockdomiLogsAcessoModal: React.FC<BlockdomiLogsAcessoModalProps> = ({
   ];
 
   const tableColumns: TableConfig<BlockdomiLogAcessoItem>['columns'] = useMemo(() => [
-    { key: 'id', label: t('table.id'), sortable: true, width: '60px', render: (item) => item.id },
     {
       key: 'ip',
       label: t('blockdomi.logsIp'),

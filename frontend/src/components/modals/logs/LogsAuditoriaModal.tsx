@@ -52,6 +52,8 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
     [effectiveLogType]
   );
 
+  const showIdColumn = effectiveLogType === 'email' || effectiveLogType === 'whatsapp';
+
   const tableFilters = useTableFilters({
     initialSearch: preset.search ?? '',
     initialPage: 1,
@@ -74,7 +76,7 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
       page: tableFilters.page,
       limit: tableFilters.limit,
       search: tableFilters.search || preset.search || undefined,
-      searchField: tableFilters.searchField || (tableFilters.search ? 'id' : undefined),
+      searchField: tableFilters.searchField || (tableFilters.search && showIdColumn ? 'id' : undefined),
       acao: preset.acao,
       entidade: preset.entidade,
       comUsuarioObrigatorio: preset.comUsuarioObrigatorio,
@@ -91,6 +93,7 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
       tableFilters.sortColumn,
       tableFilters.sortDirection,
       preset,
+      showIdColumn,
     ]
   );
 
@@ -150,15 +153,19 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
 
   const tableColumns = useMemo(
     () => [
-      {
-        key: 'id',
-        label: t('table.id'),
-        sortable: true,
-        width: '42px',
-        render: (log: AuditoriaLog) => (
-          <span className="text-muted small">{String(log.id).substring(0, 8)}...</span>
-        ),
-      },
+      ...(showIdColumn
+        ? [
+            {
+              key: 'id' as const,
+              label: t('table.id'),
+              sortable: true,
+              width: '42px',
+              render: (log: AuditoriaLog) => (
+                <span className="text-muted small">{String(log.id).substring(0, 8)}...</span>
+              ),
+            },
+          ]
+        : []),
       {
         key: 'timestamp',
         label: t('audit.timestamp'),
@@ -221,7 +228,7 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
         ),
       },
     ],
-    [t, formatAcao, getAcaoBadgeClass, formatTimestamp]
+    [t, formatAcao, getAcaoBadgeClass, formatTimestamp, showIdColumn]
   );
 
   const handleViewDetails = useCallback((log: AuditoriaLog) => {
@@ -415,7 +422,7 @@ const LogsAuditoriaModal: React.FC<LogsAuditoriaModalProps> = ({
             searchable: true,
             searchPlaceholder: t('layout.searchPlaceholder'),
             searchFields: [
-              { key: 'id', label: t('table.id') },
+              ...(showIdColumn ? [{ key: 'id' as const, label: t('table.id') }] : []),
               { key: 'timestamp', label: t('audit.timestamp') },
               { key: 'usuario_nome', label: t('table.name') },
               { key: 'usuario_email', label: t('audit.user') },

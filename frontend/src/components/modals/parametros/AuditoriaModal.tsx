@@ -119,15 +119,6 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
 
   const tableColumns: TableConfig<AuditoriaLog>['columns'] = useMemo(() => [
       {
-        key: 'id',
-        label: t('table.id'),
-        sortable: true,
-        width: '42px',
-        render: (log: AuditoriaLog) => (
-          <span className="text-muted small">{String(log.id).substring(0, 8)}...</span>
-        )
-      },
-      {
         key: 'timestamp',
         label: t('audit.timestamp'),
         sortable: true,

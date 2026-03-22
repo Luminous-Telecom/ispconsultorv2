@@ -981,7 +981,6 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   syncWithHeader={false}
                   config={{
                     columns: [
-                      { key: 'id', label: t('table.id'), sortable: true, width: 42, resizable: true, render: (log: AuditoriaLog) => <span className="text-muted small">{String(log.id).substring(0, 8)}...</span> },
                       { key: 'timestamp', label: t('audit.timestamp'), sortable: true, width: 130, render: (log: AuditoriaLog) => <span className="small">{formatDateTime(log.timestamp)}</span> },
                       { key: 'acao', label: t('table.action'), sortable: true, width: 90, render: (log: AuditoriaLog) => {
                         const acoes: Record<string, string> = { create: t('audit.actions.create'), update: t('audit.actions.update'), delete: t('audit.actions.delete'), login: t('audit.actions.login'), logout: t('audit.actions.logout'), export: t('audit.actions.export'), import: t('audit.actions.import') };
