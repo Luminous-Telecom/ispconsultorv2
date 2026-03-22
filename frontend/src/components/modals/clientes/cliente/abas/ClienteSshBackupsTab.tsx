@@ -1,0 +1,271 @@
+import React, { useMemo, useCallback, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useI18n } from 'contexts/I18nContext';
+import { SshDeviceBackupService } from 'services/sshDeviceBackupService';
+import Table from 'components/tables/Table';
+import TextPreviewModal from 'components/common/TextPreviewModal';
+import type { TableConfig } from 'components/tables/types';
+
+const TEXT_PREVIEW_EXTENSIONS = ['.rsc', '.txt', '.cfg', '.conf', '.log'];
+
+function isTextPreviewSupported(fileName: string): boolean {
+  const lower = fileName.toLowerCase();
+  return TEXT_PREVIEW_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return '—';
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  return `${parseFloat((bytes / k ** i).toFixed(i === 0 ? 0 : 1))} ${sizes[i]}`;
+}
+
+interface ClienteBackupRow {
+  id: string;
+  device_id: string;
+  device_name: string;
+  fileName: string;
+  size: number;
+  modifiedAt: string;
+}
+
+interface ClienteSshBackupsTabProps {
+  clienteId?: number;
+}
+
+const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }) => {
+  const { t } = useI18n();
+  const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
+  const [, setSelectedItems] = useState<ClienteBackupRow[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewContent, setPreviewContent] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewTitle, setPreviewTitle] = useState('');
+
+  const { data: files = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ['ssh-device-backups', 'cliente', clienteId],
+    queryFn: () => SshDeviceBackupService.listByCliente(clienteId!),
+    enabled: clienteId != null && clienteId > 0,
+  });
+
+  const tableData = useMemo<ClienteBackupRow[]>(() => {
+    return (files ?? []).map((f) => {
+      const did = f.device_id ?? '';
+      return {
+        id: `${did}:${f.fileName}`,
+        device_id: did,
+        device_name: (f.device_name?.trim() || did) || '—',
+        fileName: f.fileName,
+        size: f.size,
+        modifiedAt: f.modifiedAt,
+      };
+    });
+  }, [files]);
+
+  const handleDownloadOne = useCallback(async (row: ClienteBackupRow) => {
+    if (!row.device_id) return;
+    setDownloadingKey(row.id);
+    try {
+      await SshDeviceBackupService.download(row.device_id, row.fileName);
+    } finally {
+      setDownloadingKey(null);
+    }
+  }, []);
+
+  const handleView = useCallback(async (row: ClienteBackupRow) => {
+    if (!row.device_id || !isTextPreviewSupported(row.fileName)) return;
+    setShowPreview(true);
+    setPreviewContent(null);
+    setPreviewError(null);
+    setPreviewTitle(`${row.device_name} — ${row.fileName}`);
+    setPreviewLoading(true);
+    try {
+      const text = await SshDeviceBackupService.fetchAsText(row.device_id, row.fileName);
+      setPreviewContent(text);
+    } catch (err) {
+      setPreviewError(err instanceof Error ? err.message : 'Erro ao carregar');
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, []);
+
+  const closePreview = useCallback(() => {
+    setShowPreview(false);
+    setPreviewContent(null);
+    setPreviewError(null);
+  }, []);
+
+  const tableColumns: TableConfig<ClienteBackupRow>['columns'] = useMemo(
+    () => [
+      {
+        key: 'device_name',
+        label: t('sshDevice.backupDeviceColumn'),
+        sortable: false,
+        searchable: true,
+        width: '160px',
+        render: (row) => <span className="small">{row.device_name}</span>,
+      },
+      {
+        key: 'fileName',
+        label: t('sshDevice.backupFileColumn'),
+        sortable: false,
+        searchable: true,
+        render: (row) => <span className="small text-break">{row.fileName}</span>,
+      },
+      {
+        key: 'size',
+        label: t('sshDevice.backupSizeColumn'),
+        sortable: false,
+        searchable: false,
+        align: 'right',
+        headerAlign: 'right',
+        width: '88px',
+        render: (row) => <span className="small">{formatBytes(row.size)}</span>,
+      },
+      {
+        key: 'modifiedAt',
+        label: t('sshDevice.backupDateColumn'),
+        sortable: false,
+        searchable: false,
+        width: '150px',
+        render: (row) => (
+          <span className="small">
+            {row.modifiedAt
+              ? new Date(row.modifiedAt).toLocaleString(undefined, {
+                  dateStyle: 'short',
+                  timeStyle: 'short',
+                })
+              : '—'}
+          </span>
+        ),
+      },
+    ],
+    [t]
+  );
+
+  const bulkActions = useMemo(
+    () => [
+      {
+        key: 'view-backup',
+        label: t('buttons.view'),
+        variant: 'primary' as const,
+        disabled: (items: ClienteBackupRow[]) =>
+          items.length !== 1 ||
+          !items[0].device_id ||
+          !isTextPreviewSupported(items[0].fileName) ||
+          previewLoading,
+        onClick: async (items: ClienteBackupRow[]) => {
+          if (items.length !== 1) return;
+          await handleView(items[0]);
+        },
+      },
+      {
+        key: 'download-selected',
+        label: t('buttons.download'),
+        variant: 'primary' as const,
+        disabled: (items: ClienteBackupRow[]) =>
+          items.length === 0 || downloadingKey !== null || items.some((r) => !r.device_id),
+        onClick: async (items: ClienteBackupRow[]) => {
+          if (items.length === 0) return;
+          for (const row of items) {
+            if (!row.device_id) continue;
+            await handleDownloadOne(row);
+          }
+        },
+      },
+    ],
+    [t, downloadingKey, handleDownloadOne, previewLoading, handleView]
+  );
+
+  if (!clienteId) {
+    return (
+      <div className="alert alert-info">
+        {t('messages.saveClientFirstSshBackups')}
+      </div>
+    );
+  }
+
+  return (
+    <>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div
+        className="row"
+        style={{
+          height: '100%',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          margin: 0,
+          padding: 0,
+          flex: 1,
+          minHeight: 0,
+        }}
+      >
+        <div
+          className="col-12"
+          style={{
+            height: '100%',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: 0,
+          }}
+        >
+          <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+            <Table<ClienteBackupRow>
+              key="cliente-ssh-backups-tab-table"
+              title={t('tabs.sshDeviceBackups')}
+              className="no-padding"
+              config={{
+                columns: tableColumns,
+                data: isError ? [] : tableData,
+                loading: isLoading,
+                searchable: true,
+                searchPlaceholder: t('layout.searchPlaceholder'),
+                searchFields: [
+                  { key: 'device_name', label: t('sshDevice.backupDeviceColumn') },
+                  { key: 'fileName', label: t('sshDevice.backupFileColumn') },
+                  { key: 'size', label: t('sshDevice.backupSizeColumn') },
+                  { key: 'modifiedAt', label: t('sshDevice.backupDateColumn') },
+                ],
+                sortable: false,
+                striped: true,
+                hover: true,
+                responsive: true,
+                selectable: true,
+                multiSelect: true,
+                emptyMessage: isError ? t('sshDevice.backupsLoadError') : t('sshDevice.backupsEmpty'),
+                bulkActions: bulkActions.map((action) => ({
+                  key: action.key,
+                  label: action.label,
+                  onClick: action.onClick,
+                  disabled: action.disabled,
+                  variant: action.variant,
+                })),
+              }}
+              tableId="cliente-ssh-backups"
+              syncWithHeader={false}
+              onRefresh={refetch}
+              onSelectionChange={setSelectedItems}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <TextPreviewModal
+      show={showPreview}
+      onClose={closePreview}
+      title={previewTitle}
+      content={previewContent}
+      isLoading={previewLoading}
+      error={previewError}
+      modalId="cliente-ssh-backup-text-preview"
+    />
+    </>
+  );
+};
+
+export default ClienteSshBackupsTab;

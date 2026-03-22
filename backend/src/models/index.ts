@@ -51,6 +51,13 @@ import { IPv6 } from './blockdomi/IPv6';
 import { VersaoBlockdomi } from './blockdomi/VersaoBlockdomi';
 import { IpPermitidoBlockdomi } from './blockdomi/IpPermitidoBlockdomi';
 
+// SSH Manager
+import { SshDevice } from './ssh-manager/SshDevice';
+import { SshDeviceBackup } from './ssh-manager/SshDeviceBackup';
+
+// Agent
+import { Agent } from './agent/Agent';
+
 // SaaS
 import { SaasPlano } from './saas/SaasPlano';
 import { SaasDadosEmpresa } from './saas/SaasDadosEmpresa';
@@ -348,6 +355,68 @@ Titulo.belongsTo(NotaFiscal, {
   as: 'nota_fiscal'
 });
 
+// Agent — pertence a DadosEmpresa (multi-tenant)
+Agent.belongsTo(DadosEmpresa, {
+  foreignKey: 'empresa_id',
+  as: 'empresa',
+});
+
+DadosEmpresa.hasMany(Agent, {
+  foreignKey: 'empresa_id',
+  as: 'agents',
+});
+
+// SSH Manager — SshDevice pertence a Agent (opcional) e DadosEmpresa (multi-tenant)
+SshDevice.belongsTo(DadosEmpresa, {
+  foreignKey: 'empresa_id',
+  as: 'empresa',
+});
+
+DadosEmpresa.hasMany(SshDevice, {
+  foreignKey: 'empresa_id',
+  as: 'ssh_devices',
+});
+
+SshDevice.belongsTo(Agent, {
+  foreignKey: 'agent_id',
+  as: 'agent',
+});
+
+Agent.hasMany(SshDevice, {
+  foreignKey: 'agent_id',
+  as: 'ssh_devices',
+});
+
+Cliente.hasMany(Agent, {
+  foreignKey: 'cliente_id',
+  as: 'agents',
+});
+
+Agent.belongsTo(Cliente, {
+  foreignKey: 'cliente_id',
+  as: 'cliente',
+});
+
+Cliente.hasMany(SshDevice, {
+  foreignKey: 'cliente_id',
+  as: 'ssh_devices',
+});
+
+SshDevice.belongsTo(Cliente, {
+  foreignKey: 'cliente_id',
+  as: 'cliente',
+});
+
+SshDevice.hasMany(SshDeviceBackup, {
+  foreignKey: 'ssh_device_id',
+  as: 'ssh_device_backups',
+});
+
+SshDeviceBackup.belongsTo(SshDevice, {
+  foreignKey: 'ssh_device_id',
+  as: 'ssh_device',
+});
+
 // Exportar todos os modelos
 export {
   Cliente,
@@ -395,4 +464,7 @@ export {
   SaasScheduledRoutine,
   SaasNFSeConfig,
   SaasMensagemHistorico,
+  SshDevice,
+  SshDeviceBackup,
+  Agent,
 };

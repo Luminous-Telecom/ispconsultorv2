@@ -7,6 +7,39 @@ export interface EmpresaFilters {
   search?: string;
 }
 
+const emptyPagination: PaginatedResponse<Empresa>['pagination'] = {
+  current_page: 1,
+  per_page: 15,
+  total: 0,
+  last_page: 0,
+  from: 0,
+  to: 0,
+};
+
+/**
+ * O backend envia sendSuccess({ success, data: rows, pagination }), gerando
+ * { success, data: { success, data: rows, pagination } } — normaliza para PaginatedResponse.
+ */
+function normalizeEmpresaListResponse(res: ApiResponse<unknown>): PaginatedResponse<Empresa> {
+  const outer = res.data;
+  if (Array.isArray(outer)) {
+    return { success: true, data: outer, pagination: { ...emptyPagination, total: outer.length } };
+  }
+  if (outer && typeof outer === 'object' && 'data' in outer) {
+    const block = outer as { data?: unknown; pagination?: PaginatedResponse<Empresa>['pagination'] };
+    if (Array.isArray(block.data)) {
+      return {
+        success: true,
+        data: block.data,
+        pagination: block.pagination
+          ? { ...emptyPagination, ...block.pagination }
+          : emptyPagination,
+      };
+    }
+  }
+  return { success: true, data: [], pagination: emptyPagination };
+}
+
 export const EmpresaService = {
   async list(filters: EmpresaFilters = {}): Promise<PaginatedResponse<Empresa>> {
     const params = new URLSearchParams();
@@ -14,9 +47,9 @@ export const EmpresaService = {
     if (filters.limit) params.append('limit', String(filters.limit));
     if (filters.search) params.append('search', filters.search);
 
-
     const query = params.toString() ? `?${params.toString()}` : '';
-    return defaultApiClient.get<PaginatedResponse<Empresa>>(`/empresas${query}`) as Promise<PaginatedResponse<Empresa>>;
+    const raw = await defaultApiClient.get<unknown>(`/empresas${query}`);
+    return normalizeEmpresaListResponse(raw);
   },
 
   async getById(id: number): Promise<ApiResponse<Empresa>> {

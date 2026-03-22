@@ -1,5 +1,8 @@
+import { Op, type WhereOptions } from 'sequelize';
 import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
 import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
+import { SshDevice } from '../../../models/ssh-manager/SshDevice';
+import { getSshDeviceBackupQueue } from '../../ssh-manager/SshDeviceBackupQueue';
 import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
 import { logger } from '../../../utils/logger';
 import { BarcodeService } from '../../bancos/BarcodeService';
@@ -119,6 +122,10 @@ export class RoutineExecutionService {
         if (saas) return { success: false, message: 'Tipo não suportado no SaaS' };
         return await this.executeDesbloquearBlockdomi(routine as ScheduledRoutine);
 
+      case 'backup_equipamentos_ssh':
+        if (saas) return { success: false, message: 'Tipo exclusivo do ERP' };
+        return await this.executeBackupEquipamentosSsh(routine as ScheduledRoutine);
+
       case 'bloquear_saas_atraso':
         if (!saas) return { success: false, message: 'Tipo exclusivo do SaaS' };
         return await this.executeBloquearSaasAtraso();
@@ -131,6 +138,36 @@ export class RoutineExecutionService {
         });
         return { message: 'Tipo de rotina não implementado' };
     }
+  }
+
+  /**
+   * Enfileira um job de backup por equipamento SSH (backup_enabled, ativo).
+   * Dispositivos com túnel por agente são enfileirados; o runner executa /export via agente.
+   */
+  private async executeBackupEquipamentosSsh(routine: ScheduledRoutine): Promise<RoutineExecutionResult> {
+    const parts: WhereOptions<SshDevice>[] = [{ backup_enabled: true }, { is_active: true }];
+    if (routine.empresa_id != null) {
+      parts.push({ empresa_id: routine.empresa_id });
+    }
+    const where: WhereOptions<SshDevice> = { [Op.and]: parts };
+
+    const rows = await SshDevice.findAll({
+      where,
+      attributes: ['id'],
+    });
+
+    const queue = getSshDeviceBackupQueue();
+    for (const d of rows) {
+      queue.enqueue(d.id);
+    }
+
+    return {
+      success: true,
+      message: `Enfileirados ${rows.length} backup(s) na fila.`,
+      jobs_enqueued: rows.length,
+      skipped_tunnel: 0,
+      devices_eligible: rows.length,
+    };
   }
 
   /**

@@ -218,6 +218,12 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   overflow: hidden !important;
 }
 
+/* TextPreviewModal: preencher todo o espaço do modal */
+.draggable-modal-container-custom.text-preview-modal .draggable-modal-body-custom > .text-preview-content {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+}
+
 /* ============================================
    RESPONSIVE DIALOG - Substitutos para estilos inline
    ============================================ */

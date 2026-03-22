@@ -30,6 +30,9 @@ import ContratosTab from './abas/ContratosTab';
 import FinanceiroTab from './abas/FinanceiroTab';
 import ObservacoesTab from './abas/ObservacoesTab';
 import ArquivosTab from './abas/ArquivosTab';
+import ClienteTunelTab from './abas/ClienteTunelTab';
+import ClienteSshDevicesTab from './abas/ClienteSshDevicesTab';
+import ClienteSshBackupsTab from './abas/ClienteSshBackupsTab';
 
 interface ClienteModalProps {
   show: boolean;
@@ -416,7 +419,7 @@ const ClienteModal = ({
           {/* Conteúdo das Abas - Com Scroll */}
           <div
             className={`tab-content cliente-tab-content ${
-              (activeTab === 'contratos' || activeTab === 'financeiro' || activeTab === 'arquivos')
+              (activeTab === 'contratos' || activeTab === 'financeiro' || activeTab === 'arquivos' || activeTab === 'tunel' || activeTab === 'ssh-devices' || activeTab === 'ssh-backups')
                 ? 'cliente-tab-content-scrollable'
                 : 'cliente-tab-content-padded'
             }`}
@@ -520,6 +523,18 @@ const ClienteModal = ({
                 onAudit={(arquivo) => auditoria.handleAudit('ClienteArquivo', arquivo.id)}
                 auditEntity="ClienteArquivo"
               />
+            )}
+
+            {activeTab === 'tunel' && (
+              <ClienteTunelTab clienteId={effectiveClienteIdForParcelas} />
+            )}
+
+            {activeTab === 'ssh-devices' && (
+              <ClienteSshDevicesTab clienteId={effectiveClienteIdForParcelas} />
+            )}
+
+            {activeTab === 'ssh-backups' && (
+              <ClienteSshBackupsTab clienteId={effectiveClienteIdForParcelas} />
             )}
           </div>
       </div>
@@ -636,6 +651,36 @@ const ClienteModal = ({
                       disabled={!canEditContratosFinanceiro}
                     >
                       {t('tabs.files')}
+                    </button>
+                  </li>
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link modal-tab-hover ${activeTab === 'tunel' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('tunel')}
+                      type="button"
+                      disabled={!canEditContratosFinanceiro}
+                    >
+                      {t('tabs.tunnelAgents')}
+                    </button>
+                  </li>
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link modal-tab-hover ${activeTab === 'ssh-devices' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('ssh-devices')}
+                      type="button"
+                      disabled={!canEditContratosFinanceiro}
+                    >
+                      {t('tabs.sshDevicesSection')}
+                    </button>
+                  </li>
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link modal-tab-hover ${activeTab === 'ssh-backups' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('ssh-backups')}
+                      type="button"
+                      disabled={!canEditContratosFinanceiro}
+                    >
+                      {t('tabs.sshDeviceBackups')}
                     </button>
                   </li>
                 </ul>

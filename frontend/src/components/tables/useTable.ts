@@ -131,19 +131,23 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
         newData.some((item, index) => !prev.data[index] || prev.data[index].id !== item.id);
       
       if (dataChanged || prev.data !== newData) {
-        // Filtrar selectedItems para manter apenas os que ainda existem nos novos dados
-        const newIds = new Set(newData.map(item => item.id));
-        const validSelectedItems = prev.selectedItems.filter(item => newIds.has(item.id));
-        const selectionChanged = validSelectedItems.length !== prev.selectedItems.length ||
-          validSelectedItems.some((item, i) => prev.selectedItems[i]?.id !== item.id);
-        if (selectionChanged) {
-          queueMicrotask(() => setPendingSelectionChange(validSelectedItems));
+        // Manter seleção por id, mas apontar para os objetos atuais de newData (evita stale após refetch)
+        const idToItem = new Map(newData.map(item => [item.id, item]));
+        const syncedSelectedItems = prev.selectedItems
+          .map(sel => idToItem.get(sel.id))
+          .filter((item): item is T => item !== undefined);
+        const selectionIdsChanged =
+          syncedSelectedItems.length !== prev.selectedItems.length ||
+          syncedSelectedItems.some((item, i) => item.id !== prev.selectedItems[i]?.id);
+        const selectionRefsStale = syncedSelectedItems.some((item, i) => item !== prev.selectedItems[i]);
+        if (selectionIdsChanged || selectionRefsStale) {
+          queueMicrotask(() => setPendingSelectionChange(syncedSelectedItems));
         }
         return {
           ...prev,
           data: newData,
           filteredData: newData,
-          selectedItems: validSelectedItems,
+          selectedItems: syncedSelectedItems,
         };
       }
       return prev;

@@ -1,0 +1,151 @@
+import { Client as SshClient, ClientChannel } from 'ssh2';
+import { randomUUID } from 'crypto';
+import { SshDevice } from '../../../models/ssh-manager/SshDevice';
+import { openDeviceConnection } from '../SshConnectionService';
+import { logSshAudit } from '../SshAuditService';
+import { logger } from '../../../utils/logger';
+
+interface TerminalSession {
+  sessionId: string;
+  stream: ClientChannel;
+  deviceConn: SshClient;
+  deviceId: string;
+  userId: string;
+  ip: string;
+  openedAt: Date;
+  onOutput: (data: string) => void;
+  onClose: (reason: string) => void;
+}
+
+const sessions = new Map<string, TerminalSession>();
+
+/**
+ * Abre um shell interativo para o device e retorna o sessionId.
+ */
+export async function createTerminalSession(
+  device: SshDevice,
+  userId: string,
+  ip: string,
+  onOutput: (data: string) => void,
+  onClose: (reason: string) => void
+): Promise<string> {
+  const deviceConn = await openDeviceConnection(device);
+  const sessionId = randomUUID();
+
+  return new Promise((resolve, reject) => {
+    deviceConn.shell({ term: 'xterm-256color', cols: 80, rows: 24 }, (err, stream) => {
+      if (err) {
+        try { deviceConn.end(); } catch { /* ignora */ }
+        reject(new Error(`Erro ao abrir shell: ${err.message}`));
+        return;
+      }
+
+      const session: TerminalSession = {
+        sessionId,
+        stream,
+        deviceConn,
+        deviceId: device.id,
+        userId,
+        ip,
+        openedAt: new Date(),
+        onOutput,
+        onClose,
+      };
+
+      sessions.set(sessionId, session);
+
+      stream.on('data', (data: Buffer) => {
+        onOutput(data.toString('utf8'));
+      });
+
+      stream.stderr?.on('data', (data: Buffer) => {
+        onOutput(data.toString('utf8'));
+      });
+
+      stream.on('close', () => {
+        sessions.delete(sessionId);
+        try { deviceConn.end(); } catch { /* ignora */ }
+
+        logSshAudit({
+          action: 'TERMINAL_CLOSE',
+          userId,
+          deviceId: device.id,
+          deviceName: device.name,
+          success: true,
+          ip,
+          duration: Date.now() - session.openedAt.getTime(),
+        });
+
+        logger.info('SSH terminal: sessão encerrada pelo servidor', { sessionId, device: device.name });
+        onClose('Sessão encerrada pelo servidor');
+      });
+
+      stream.on('error', (streamErr: Error) => {
+        sessions.delete(sessionId);
+        try { deviceConn.end(); } catch { /* ignora */ }
+        logger.warn('SSH terminal: erro no stream', { sessionId, error: streamErr.message });
+        onClose(`Erro no terminal: ${streamErr.message}`);
+      });
+
+      logSshAudit({
+        action: 'TERMINAL_OPEN',
+        userId,
+        deviceId: device.id,
+        deviceName: device.name,
+        success: true,
+        ip,
+      });
+
+      logger.info('SSH terminal: sessão aberta', { sessionId, device: device.name, userId });
+      resolve(sessionId);
+    });
+  });
+}
+
+/**
+ * Escreve dados no stdin do terminal.
+ */
+export function writeToTerminal(sessionId: string, data: string): void {
+  const session = sessions.get(sessionId);
+  if (!session) {
+    logger.warn('SSH terminal: sessão não encontrada para escrita', { sessionId });
+    return;
+  }
+  session.stream.write(data);
+}
+
+/**
+ * Redimensiona o PTY do terminal.
+ */
+export function resizeTerminal(sessionId: string, cols: number, rows: number): void {
+  const session = sessions.get(sessionId);
+  if (!session) return;
+  session.stream.setWindow(rows, cols, 0, 0);
+}
+
+/**
+ * Encerra uma sessão de terminal.
+ */
+export function closeTerminalSession(sessionId: string): void {
+  const session = sessions.get(sessionId);
+  if (!session) return;
+
+  sessions.delete(sessionId);
+
+  try { session.stream.end(); } catch { /* ignora */ }
+  try { session.deviceConn.end(); } catch { /* ignora */ }
+
+  logger.info('SSH terminal: sessão encerrada pelo cliente', { sessionId });
+}
+
+export function hasTerminalSession(sessionId: string): boolean {
+  return sessions.has(sessionId);
+}
+
+export function getSessionsByUser(userId: string): string[] {
+  const result: string[] = [];
+  for (const [id, session] of sessions) {
+    if (session.userId === userId) result.push(id);
+  }
+  return result;
+}

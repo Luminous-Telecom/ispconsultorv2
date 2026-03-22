@@ -43,16 +43,19 @@ export const devToolsDetectionMiddleware = (req: Request, res: Response, next: N
 };
 
 export const fileProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  if (req.path.startsWith('/api/agents/files/')) {
+    return next();
+  }
   const sensitiveFiles = ['.env', '.git', 'package.json', 'package-lock.json', 'yarn.lock', 'tsconfig.json', 'webpack.config.js', 'babel.config.js', '.eslintrc', '.prettierrc', 'README.md', 'LICENSE', 'CHANGELOG.md'];
   const requestedFile = req.path.split('/').pop();
-  
+
   if (requestedFile && sensitiveFiles.includes(requestedFile)) {
     return res.status(403).json({
       error: 'Acesso negado',
       message: 'Arquivo não encontrado'
     });
   }
-  
+
   return next();
 };
 

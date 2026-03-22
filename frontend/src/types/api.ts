@@ -146,3 +146,18 @@ export interface IPv4Filters extends BaseFilters {
 export interface IPv6Filters extends BaseFilters {
   ativo?: boolean;
 }
+
+export interface SshDeviceFilters extends BaseFilters {
+  agentId?: string;
+  cliente_id?: number;
+  device_type?: string;
+  is_active?: boolean;
+}
+
+export interface SshAuditFilters extends BaseFilters {
+  deviceId?: string;
+  userId?: string;
+  action?: string;
+  startDate?: string;
+  endDate?: string;
+}

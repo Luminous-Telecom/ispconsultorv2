@@ -117,7 +117,7 @@ export type { PlanoInfo, BancoInfo, ContratoItem, TituloItem, BulkActionItem, No
 
 // Todos os filtros estão em api.ts agora
 // Mantendo apenas para compatibilidade com código existente
-export type { ClienteFilters, PlanoFilters, BancoFilters, CarneFilters, CarneParcelaFilters, FornecedorFilters, ContaPagarFilters, NotaFiscalFilters, DominioFilters, IPv4Filters, IPv6Filters } from './api';
+export type { ClienteFilters, PlanoFilters, BancoFilters, CarneFilters, CarneParcelaFilters, FornecedorFilters, ContaPagarFilters, NotaFiscalFilters, DominioFilters, IPv4Filters, IPv6Filters, SshDeviceFilters, SshAuditFilters } from './api';
 
 // ============================================
 // TIPOS DE CRIAÇÃO E ATUALIZAÇÃO

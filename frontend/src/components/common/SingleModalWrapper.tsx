@@ -52,6 +52,13 @@ const SaasAgendadorTarefasModal = lazy(() => import('../modals/saas/SaasAgendado
 const SaasNfseModal = lazy(() => import('../modals/saas/SaasNfseModal'));
 /* eslint-enable @typescript-eslint/no-unused-vars */
 
+// SSH Manager
+const SshDeviceListModal = lazy(() => import('../modals/ssh-manager').then(m => ({ default: m.SshDeviceListModal })));
+const SshAuditModal = lazy(() => import('../modals/ssh-manager').then(m => ({ default: m.SshAuditModal })));
+
+// Agents / Tunnels
+const AgentListModal = lazy(() => import('../modals/agent').then(m => ({ default: m.AgentListModal })));
+
 interface ModalComponentProps {
   show: boolean;
   onClose: () => void;
@@ -98,6 +105,11 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'saas-historico-email': { component: EmailHistoricoModal, titleKey: 'modal.emailHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'saas-atualizacoes': { component: AtualizacoesModal, titleKey: 'modal.updates', loadingMessageKey: 'ui.loadingPage' },
   'saas-backups': { component: BackupsModal, titleKey: 'modal.backups', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  // SSH Manager
+  'ssh-devices': { component: SshDeviceListModal, titleKey: 'modal.sshDevices', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'ssh-audit':   { component: SshAuditModal,      titleKey: 'modal.sshAudit',   loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  // Agents / Tunnels
+  'agents':       { component: AgentListModal,       titleKey: 'modal.agents',      loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'blockdomi-dominios': { component: DominioListModal, titleKey: 'modal.domains', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'blockdomi-ipv4': { component: IPv4ListModal, titleKey: 'modal.ipv4', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'blockdomi-ipv6': { component: IPv6ListModal, titleKey: 'modal.ipv6', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },

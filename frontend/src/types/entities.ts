@@ -644,7 +644,7 @@ export interface BulkAction<T = unknown> {
 export interface RotinaAgendada {
   id: number;
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'outros';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'outros';
   descricao?: string;
   configuracao?: Record<string, unknown>;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
@@ -783,3 +783,150 @@ export interface IPv6 {
   created_at_formatada?: string | null;
 }
 
+
+// ============================================
+// SSH Manager — Devices
+// ============================================
+export type SshDeviceType = 'mikrotik' | 'cisco' | 'huawei';
+
+export type SshAuditAction =
+  | 'CONNECT'
+  | 'DISCONNECT'
+  | 'COMMAND'
+  | 'AUTH_FAIL'
+  | 'TERMINAL_OPEN'
+  | 'TERMINAL_CLOSE';
+
+export type SshClienteRef = Pick<Cliente, 'id' | 'razao_social' | 'nome_fantasia'>;
+
+export interface SshDevice {
+  id: string;
+  agent_id?: string | null;
+  cliente_id?: number | null;
+  name: string;
+  host: string;
+  port: number;
+  username: string;
+  device_type: SshDeviceType;
+  description?: string | null;
+  is_active: boolean;
+  backup_enabled?: boolean;
+  tags?: string[] | null;
+  agent?: Pick<Agent, 'id' | 'name' | 'online'>;
+  cliente?: SshClienteRef | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateSshDevice {
+  agent_id?: string | null;
+  cliente_id?: number | null;
+  empresa_id?: number;
+  name: string;
+  host: string;
+  port?: number;
+  username: string;
+  password: string;
+  private_key?: string | null;
+  device_type?: SshDeviceType;
+  description?: string | null;
+  is_active?: boolean;
+  backup_enabled?: boolean;
+  tags?: string[] | null;
+}
+
+export interface UpdateSshDevice {
+  agent_id?: string | null;
+  cliente_id?: number | null;
+  name?: string;
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  private_key?: string | null;
+  device_type?: SshDeviceType;
+  description?: string | null;
+  is_active?: boolean;
+  backup_enabled?: boolean;
+  tags?: string[] | null;
+}
+
+// ============================================
+// SSH Manager — Auditoria
+// ============================================
+export interface SshAuditLog {
+  id?: string;
+  timestamp: string;
+  action: SshAuditAction;
+  userId: string;
+  deviceId?: string | null;
+  deviceName?: string | null;
+  clienteId?: number | null;
+  clienteName?: string | null;
+  command?: string | null;
+  output?: string | null;
+  success: boolean;
+  errorMessage?: string | null;
+  ip: string;
+  duration?: number | null;
+}
+
+// ============================================
+// SSH Manager — Teste de Conexão
+// ============================================
+export interface SshConnectionTestResult {
+  success: boolean;
+  latency: number | null;
+  error: string | null;
+}
+
+// ============================================
+// SSH Manager — Execução de Comando
+// ============================================
+export interface SshCommandResult {
+  output: string;
+  duration: number;
+}
+
+// ============================================
+// Agents
+// ============================================
+export interface Agent {
+  id: string;
+  cliente_id?: number | null;
+  cliente?: SshClienteRef | null;
+  name: string;
+  token_hint: string | null;
+  description?: string | null;
+  is_active: boolean;
+  online: boolean;
+  last_seen_at?: string | null;
+  version?: string | null;
+  hostname?: string | null;
+  os_info?: string | null;
+  ip_address?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  /** Retornado somente na criação/regeneração */
+  token?: string;
+}
+
+export interface CreateAgent {
+  name: string;
+  description?: string | null;
+  cliente_id?: number | null;
+  empresa_id?: number;
+}
+
+export interface UpdateAgent {
+  name?: string;
+  description?: string | null;
+  is_active?: boolean;
+  cliente_id?: number | null;
+}
+
+export interface AgentConnectionTestResult {
+  success: boolean;
+  latency: number | null;
+  error: string | null;
+}

@@ -56,6 +56,11 @@ export type ModalType =
   | 'saas-historico-email'
   | 'saas-atualizacoes'
   | 'saas-backups'
+  // SSH Manager
+  | 'ssh-devices'
+  | 'ssh-audit'
+  // Agents / Tunnels
+  | 'agents'
   | null;
 
 interface ModalContextType {

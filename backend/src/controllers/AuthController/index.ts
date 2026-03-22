@@ -176,6 +176,20 @@ export class AuthController {
     sendSuccess(res, null, 'Logout realizado com sucesso');
   }
 
+  /**
+   * Retorna o token JWT para uso no Socket.IO.
+   * O token é lido do cookie HttpOnly e devolvido no corpo da resposta.
+   * Necessário pois o Socket.IO não tem acesso a cookies HttpOnly nativamente.
+   */
+  static socketToken(req: Request, res: Response): void {
+    const token = (req as Request & { cookies?: Record<string, string> }).cookies?.auth_token;
+    if (!token) {
+      sendUnauthorized(res, 'Sessão não encontrada');
+      return;
+    }
+    sendSuccess(res, { token }, 'Token obtido com sucesso');
+  }
+
   static async me(req: Request, res: Response): Promise<void> {
     try {
       const authenticatedReq = req as AuthenticatedRequest;

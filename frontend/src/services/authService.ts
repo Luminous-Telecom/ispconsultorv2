@@ -46,6 +46,23 @@ export const authService = {
     return defaultApiClient.get<CurrentUser>('/auth/me');
   },
 
+  /**
+   * Recupera o token JWT do servidor (lido do cookie HttpOnly).
+   * Necessário após reload de página, quando o token em memória foi perdido.
+   */
+  async restoreSocketToken(): Promise<string | null> {
+    try {
+      const response = await defaultApiClient.get<{ token: string }>('/auth/socket-token');
+      if (response.success && response.data?.token) {
+        setAuthToken(response.data.token);
+        return response.data.token;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
   async logout(): Promise<void> {
     try {
       // Limpa o cookie HttpOnly no servidor

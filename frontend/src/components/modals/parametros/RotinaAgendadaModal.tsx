@@ -16,6 +16,7 @@ const TIPO_OPTIONS_ERP_BASE = [
   { value: 'remessa_bancaria', label: 'Remessa Bancária' },
   { value: 'verificar_vencimentos', label: 'Verificar Vencimentos' },
   { value: 'desbloquear_blockdomi', label: 'Desbloquear domínios (data fim)' },
+  { value: 'backup_equipamentos_ssh', label: 'Backup equipamentos SSH' },
 ];
 
 const TIPO_OPTIONS_SAAS = [
@@ -31,6 +32,7 @@ const NOMES_POR_TIPO_ERP: Record<string, string> = {
   remessa_bancaria: 'Remessa Bancária',
   verificar_vencimentos: 'Verificar Vencimentos',
   desbloquear_blockdomi: 'Desbloquear domínios (data fim)',
+  backup_equipamentos_ssh: 'Backup equipamentos SSH',
 };
 
 const NOMES_POR_TIPO_SAAS: Record<string, string> = {

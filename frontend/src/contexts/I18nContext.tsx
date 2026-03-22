@@ -249,6 +249,23 @@ export interface TranslationKeys {
   'modal.domains': string;
   'modal.ipv4': string;
   'modal.ipv6': string;
+  'modal.sshDevices': string;
+  'modal.sshAudit': string;
+  'sshDevice.backupEnabled': string;
+  'sshDevice.backupEnabledHint': string;
+  'sshDevice.columnBackup': string;
+  'sshDevice.backupsSection': string;
+  'sshDevice.backupsEmpty': string;
+  'sshDevice.backupFileColumn': string;
+  'sshDevice.backupDeviceColumn': string;
+  'sshDevice.backupSizeColumn': string;
+  'sshDevice.backupDateColumn': string;
+  'sshDevice.downloadBackup': string;
+  'sshDevice.backupsLoadError': string;
+  'sshDevice.manualBackup': string;
+  'sshDevice.manualBackupQueued': string;
+  'tabs.sshDeviceBackups': string;
+  'modal.agents': string;
   'modal.systemDocuments': string;
   'modal.whatsappHistory': string;
   'modal.emailHistory': string;
@@ -443,6 +460,8 @@ export interface TranslationKeys {
   'ui.close': string;
   'ui.selectClient': string;
   'ui.selectPlan': string;
+  'ui.selectCompany': string;
+  'ui.selectAgent': string;
   'ui.selectBank': string;
   'ui.yes': string;
   'ui.no': string;
@@ -931,6 +950,8 @@ export interface TranslationKeys {
   'tabs.faturasPagas': string;
   'tabs.observations': string;
   'tabs.files': string;
+  'tabs.tunnelAgents': string;
+  'tabs.sshDevicesSection': string;
   'tabs.salePlan': string;
   'tabs.servicesObservations': string;
   'tabs.contractData': string;
@@ -1228,6 +1249,9 @@ export interface TranslationKeys {
   'confirm.deleteFiles': string;
   'confirm.deleteFilesTitle': string;
   'messages.saveClientFirst': string;
+  'messages.saveClientFirstTunnel': string;
+  'messages.saveClientFirstSshDevices': string;
+  'messages.saveClientFirstSshBackups': string;
   'messages.saveBankBeforeTest': string;
   'messages.testingConnection': string;
   'messages.connectionSuccess': string;
@@ -1646,6 +1670,25 @@ const translations: Translations = {
     'modal.domains': 'Domínios',
     'modal.ipv4': 'IPv4',
     'modal.ipv6': 'IPv6',
+    'modal.sshDevices': 'Devices SSH',
+    'modal.sshAudit': 'Auditoria SSH',
+    'sshDevice.backupEnabled': 'Ativar backup do equipamento',
+    'sshDevice.backupEnabledHint':
+      'Quando ativo, o equipamento fica elegível para rotinas de backup automático da configuração (quando o recurso estiver disponível no sistema).',
+    'sshDevice.columnBackup': 'Backup',
+    'sshDevice.backupsSection': 'Arquivos de backup',
+    'sshDevice.backupsEmpty': 'Nenhum arquivo de backup ainda. Ative o backup do equipamento e aguarde a rotina agendada.',
+    'sshDevice.backupFileColumn': 'Arquivo',
+    'sshDevice.backupDeviceColumn': 'Equipamento',
+    'sshDevice.backupSizeColumn': 'Tamanho',
+    'sshDevice.backupDateColumn': 'Data',
+    'sshDevice.downloadBackup': 'Baixar',
+    'sshDevice.backupsLoadError': 'Não foi possível carregar os backups.',
+    'sshDevice.manualBackup': 'Backup manual',
+    'sshDevice.manualBackupQueued':
+      'Backup enfileirado. Em instantes o arquivo deve aparecer na lista; se falhar, verifique os logs do servidor.',
+    'tabs.sshDeviceBackups': 'Backups SSH',
+    'modal.agents': 'Túneis (Agentes)',
     'modal.emailHistory': 'Histórico de Mensagens Email',
     'modal.importList': 'Importar lista',
 
@@ -1836,6 +1879,8 @@ const translations: Translations = {
     'ui.close': 'Fechar',
     'ui.selectClient': 'Selecionar Cliente',
     'ui.selectPlan': 'Selecionar Plano',
+    'ui.selectCompany': 'Selecionar empresa',
+    'ui.selectAgent': 'Selecionar agente',
     'ui.selectBank': 'Selecionar Banco',
     'ui.yes': 'Sim',
     'ui.no': 'Não',
@@ -2294,6 +2339,8 @@ const translations: Translations = {
     'tabs.faturasPagas': 'Faturas pagas',
     'tabs.observations': 'Observações',
     'tabs.files': 'Arquivos',
+    'tabs.tunnelAgents': 'Túneis (agentes)',
+    'tabs.sshDevicesSection': 'Devices SSH',
     'tabs.salePlan': 'Plano de Venda',
     'tabs.servicesObservations': 'Observações',
     'tabs.contractData': 'Dados do Contrato',
@@ -2620,6 +2667,9 @@ const translations: Translations = {
     'confirm.deleteFiles': 'Tem certeza que deseja deletar ${count} arquivo(s)?',
     'confirm.deleteFilesTitle': 'Deletar arquivos',
     'messages.saveClientFirst': 'Salve o cliente primeiro para adicionar arquivos.',
+    'messages.saveClientFirstTunnel': 'Salve o cliente primeiro para gerenciar túneis (agentes).',
+    'messages.saveClientFirstSshDevices': 'Salve o cliente primeiro para gerenciar devices SSH.',
+    'messages.saveClientFirstSshBackups': 'Salve o cliente primeiro para ver os backups dos equipamentos.',
     'messages.saveBankBeforeTest': 'Salve o banco antes de testar a conexão',
     'messages.testingConnection': 'Testando conexão...',
     'messages.connectionSuccess': 'Conexão testada com sucesso!',
@@ -3034,6 +3084,25 @@ const translations: Translations = {
     'modal.domains': 'Domains',
     'modal.ipv4': 'IPv4',
     'modal.ipv6': 'IPv6',
+    'modal.sshDevices': 'SSH Devices',
+    'modal.sshAudit': 'SSH Audit',
+    'sshDevice.backupEnabled': 'Enable device backup',
+    'sshDevice.backupEnabledHint':
+      'When enabled, the device is eligible for automatic configuration backup routines when available.',
+    'sshDevice.columnBackup': 'Backup',
+    'sshDevice.backupsSection': 'Backup files',
+    'sshDevice.backupsEmpty': 'No backup files yet. Enable device backup and wait for the scheduled routine.',
+    'sshDevice.backupFileColumn': 'File',
+    'sshDevice.backupDeviceColumn': 'Device',
+    'sshDevice.backupSizeColumn': 'Size',
+    'sshDevice.backupDateColumn': 'Date',
+    'sshDevice.downloadBackup': 'Download',
+    'sshDevice.backupsLoadError': 'Could not load backups.',
+    'sshDevice.manualBackup': 'Manual backup',
+    'sshDevice.manualBackupQueued':
+      'Backup queued. The file should appear shortly; if it fails, check the server logs.',
+    'tabs.sshDeviceBackups': 'SSH backups',
+    'modal.agents': 'Tunnels (Agents)',
     'modal.emailHistory': 'Email Message History',
     'modal.importList': 'Import list',
 
@@ -3224,6 +3293,8 @@ const translations: Translations = {
     'ui.close': 'Close',
     'ui.selectClient': 'Select Client',
     'ui.selectPlan': 'Select Plan',
+    'ui.selectCompany': 'Select company',
+    'ui.selectAgent': 'Select agent',
     'ui.selectBank': 'Select Bank',
     'ui.yes': 'Yes',
     'ui.no': 'No',
@@ -3682,6 +3753,8 @@ const translations: Translations = {
     'tabs.faturasPagas': 'Paid invoices',
     'tabs.observations': 'Observations',
     'tabs.files': 'Files',
+    'tabs.tunnelAgents': 'Tunnels (agents)',
+    'tabs.sshDevicesSection': 'SSH devices',
     'tabs.salePlan': 'Sale Plan',
     'tabs.servicesObservations': 'Observations',
     'tabs.contractData': 'Contract Data',
@@ -4008,6 +4081,9 @@ const translations: Translations = {
     'confirm.deleteFiles': 'Are you sure you want to delete ${count} file(s)?',
     'confirm.deleteFilesTitle': 'Delete files',
     'messages.saveClientFirst': 'Save the client first to add files.',
+    'messages.saveClientFirstTunnel': 'Save the client first to manage tunnels (agents).',
+    'messages.saveClientFirstSshDevices': 'Save the client first to manage SSH devices.',
+    'messages.saveClientFirstSshBackups': 'Save the client first to view equipment backups.',
     'messages.saveBankBeforeTest': 'Save the bank before testing the connection',
     'messages.testingConnection': 'Testing connection...',
     'messages.connectionSuccess': 'Connection tested successfully!',
@@ -4424,6 +4500,25 @@ const translations: Translations = {
     'modal.domains': 'Dominios',
     'modal.ipv4': 'IPv4',
     'modal.ipv6': 'IPv6',
+    'modal.sshDevices': 'Dispositivos SSH',
+    'modal.sshAudit': 'Auditoría SSH',
+    'sshDevice.backupEnabled': 'Activar copia de seguridad del equipo',
+    'sshDevice.backupEnabledHint':
+      'Si está activo, el equipo podrá incluirse en copias automáticas de configuración cuando el sistema lo permita.',
+    'sshDevice.columnBackup': 'Respaldo',
+    'sshDevice.backupsSection': 'Archivos de copia',
+    'sshDevice.backupsEmpty': 'Aún no hay copias. Active el respaldo del equipo y espere la rutina programada.',
+    'sshDevice.backupFileColumn': 'Archivo',
+    'sshDevice.backupDeviceColumn': 'Equipo',
+    'sshDevice.backupSizeColumn': 'Tamaño',
+    'sshDevice.backupDateColumn': 'Fecha',
+    'sshDevice.downloadBackup': 'Descargar',
+    'sshDevice.backupsLoadError': 'No se pudieron cargar las copias.',
+    'sshDevice.manualBackup': 'Copia manual',
+    'sshDevice.manualBackupQueued':
+      'Copia en cola. El archivo debería aparecer en breve; si falla, revise los logs del servidor.',
+    'tabs.sshDeviceBackups': 'Copias SSH',
+    'modal.agents': 'Túneles (Agentes)',
     'modal.emailHistory': 'Historial de Mensajes Email',
     'modal.importList': 'Importar lista',
 
@@ -4614,6 +4709,8 @@ const translations: Translations = {
     'ui.close': 'Cerrar',
     'ui.selectClient': 'Seleccionar Cliente',
     'ui.selectPlan': 'Seleccionar Plan',
+    'ui.selectCompany': 'Seleccionar empresa',
+    'ui.selectAgent': 'Seleccionar agente',
     'ui.selectBank': 'Seleccionar Banco',
     'ui.yes': 'Sí',
     'ui.no': 'No',
@@ -5072,6 +5169,8 @@ const translations: Translations = {
     'tabs.faturasPagas': 'Facturas pagadas',
     'tabs.observations': 'Observaciones',
     'tabs.files': 'Archivos',
+    'tabs.tunnelAgents': 'Túneles (agentes)',
+    'tabs.sshDevicesSection': 'Dispositivos SSH',
     'tabs.salePlan': 'Plan de Venta',
     'tabs.servicesObservations': 'Observaciones',
     'tabs.contractData': 'Datos del Contrato',
@@ -5394,6 +5493,9 @@ const translations: Translations = {
     'confirm.deleteFiles': '¿Estás seguro de que deseas eliminar ${count} archivo(s)?',
     'confirm.deleteFilesTitle': 'Eliminar archivos',
     'messages.saveClientFirst': 'Guarde al cliente primero para agregar archivos.',
+    'messages.saveClientFirstTunnel': 'Guarde al cliente primero para gestionar túneles (agentes).',
+    'messages.saveClientFirstSshDevices': 'Guarde al cliente primero para gestionar dispositivos SSH.',
+    'messages.saveClientFirstSshBackups': 'Guarde al cliente primero para ver las copias de los equipos.',
     'messages.saveBankBeforeTest': 'Guarde el banco antes de probar la conexión',
     'messages.testingConnection': 'Probando conexión...',
     'messages.connectionSuccess': '¡Conexión probada con éxito!',

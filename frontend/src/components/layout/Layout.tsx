@@ -253,6 +253,12 @@ const Layout: React.FC = () => {
   ];
   const parametrosFolderItems = parametrosBaseItems.filter((item) => filterByModulo(item.modalId));
 
+  const sshManagerFolderItems = [
+    { id: 'agents',      modalId: 'agents',      label: 'Túneis (Agentes)', icon: 'bi-plugin',       onClick: () => handleOpenModal('agents') },
+    { id: 'ssh-devices', modalId: 'ssh-devices', label: 'Devices SSH',      icon: 'bi-terminal',     onClick: () => handleOpenModal('ssh-devices') },
+    { id: 'ssh-audit',   modalId: 'ssh-audit',   label: 'Auditoria SSH',    icon: 'bi-journal-code', onClick: () => handleOpenModal('ssh-audit') },
+  ].filter((item) => filterByModulo(item.modalId));
+
   const blockdomiFolderItems = [
     { id: 'dominios', modalId: 'blockdomi-dominios', label: t('modal.domains'), icon: 'bi-globe', onClick: () => handleOpenModal('blockdomi-dominios') },
     { id: 'ipv4', modalId: 'blockdomi-ipv4', label: t('modal.ipv4'), icon: 'bi-router', onClick: () => handleOpenModal('blockdomi-ipv4') },
@@ -429,6 +435,61 @@ const Layout: React.FC = () => {
                 >
                   <div className="accordion-body p-0">
                     {financeiroFolderItems.map((item) => (
+                      <button
+                        key={item.id}
+                        className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"
+                        onClick={() => {
+                          item.onClick();
+                          setSidebarOpen(false);
+                        }}
+                        type="button"
+                      >
+                        <i className={`bi ${item.icon} me-2`}></i>
+                        <span>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* SSH Manager */}
+            {!isLoadingModulos && sshManagerFolderItems.length > 0 && (
+            <div className="accordion sidebar-accordion" id="sshManagerAccordion">
+              <div className="accordion-item border-0 bg-transparent">
+                <h2 className="accordion-header">
+                  <button
+                    className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#sshManagerCollapse"
+                    aria-expanded="false"
+                    aria-controls="sshManagerCollapse"
+                    onClick={(e) => {
+                      const button = e.currentTarget;
+                      const folderIcon = button.querySelector('.folder-icon');
+                      setTimeout(() => {
+                        if (folderIcon && button.classList.contains('collapsed')) {
+                          folderIcon.className = 'bi bi-folder folder-icon me-2';
+                        } else if (folderIcon) {
+                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
+                        }
+                      }, 10);
+                    }}
+                  >
+                    <i className="bi bi-folder folder-icon me-2"></i>
+                    <span>SSH Manager</span>
+                  </button>
+                </h2>
+                <div
+                  id="sshManagerCollapse"
+                  className="accordion-collapse collapse"
+                  aria-labelledby="sshManagerHeading"
+                  data-bs-parent="#sshManagerAccordion"
+                >
+                  <div className="accordion-body p-0">
+                    {sshManagerFolderItems.map((item) => (
                       <button
                         key={item.id}
                         className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"

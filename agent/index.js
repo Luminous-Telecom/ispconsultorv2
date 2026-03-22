@@ -450,8 +450,28 @@ socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKe
 socket.on(
   'proxy:ssh:exec',
   ({ execId, host, port, username, password, privateKey, command, timeoutMs }) => {
-    if (!execId || !host || !username || !command) return;
+    if (!execId || !host || !username || !command) {
+      console.warn('[backnet-agent] proxy:ssh:exec parâmetros inválidos', {
+        hasExecId: Boolean(execId),
+        hasHost: Boolean(host),
+        hasUsername: Boolean(username),
+        hasCommand: Boolean(command),
+      });
+      if (execId) {
+        socket.emit('proxy:ssh:exec:result', {
+          execId,
+          ok: false,
+          error: 'Parâmetros inválidos (execId/host/username/command)',
+        });
+      }
+      return;
+    }
     const timeout = Math.min(Math.max(Number(timeoutMs) || 120000, 5000), 600000);
+    const p = Number(port) || 22;
+    const useKey = typeof privateKey === 'string' && privateKey.trim().length > 0;
+    console.log(
+      `[backnet-agent] proxy:ssh:exec início execId=${execId} → ${host}:${p} user=${username} auth=${useKey ? 'key' : 'password'} timeout=${timeout}ms cmd=${JSON.stringify(command)}`
+    );
     const conn = new SshClient();
     let settled = false;
 
@@ -459,6 +479,7 @@ socket.on(
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      console.warn(`[backnet-agent] proxy:ssh:exec falha execId=${execId}`, String(error));
       try {
         conn.destroy();
       } catch {
@@ -472,6 +493,7 @@ socket.on(
     }, timeout);
 
     conn.on('ready', () => {
+      console.log(`[backnet-agent] proxy:ssh:exec SSH ready execId=${execId} → executando comando`);
       conn.exec(command, (err, stream) => {
         if (err) {
           fail(err.message);
@@ -491,6 +513,10 @@ socket.on(
           clearTimeout(timer);
           const combined = (errOut ? `${out}\n[stderr]: ${errOut}` : out).trim();
           const ok = code === 0;
+          const outBytes = Buffer.byteLength(combined, 'utf8');
+          console.log(
+            `[backnet-agent] proxy:ssh:exec fim execId=${execId} exit=${code} ok=${ok} outputBytes=${outBytes}`
+          );
           socket.emit('proxy:ssh:exec:result', {
             execId,
             ok,
@@ -514,10 +540,9 @@ socket.on(
     });
 
     try {
-      const useKey = typeof privateKey === 'string' && privateKey.trim().length > 0;
       conn.connect({
         host,
-        port: port || 22,
+        port: p,
         username,
         readyTimeout: 15000,
         algorithms: SSH_LEGACY_ALGORITHMS,

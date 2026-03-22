@@ -60,6 +60,9 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { method: 'GET', path: /^\/api\/fornecedores\/consultar-cnpj\/.+$/i }, // Consultar CNPJ (público para uso em formulários)
   // Rotas SaaS — autenticação gerenciada pelo saasAuthMiddleware (separado do ERP)
   { path: /^\/api\/saas\//i },
+  // Agente — arquivos do agente e script de instalação (acessados pelo servidor remoto, sem sessão)
+  { method: 'GET', path: /^\/api\/agents\/files\/[a-zA-Z0-9._-]+$/i },
+  { method: 'GET', path: /^\/api\/agents\/[a-f0-9-]+\/install-script$/i },
 ];
 
 const isPublicRoute = (req: Request): boolean => {

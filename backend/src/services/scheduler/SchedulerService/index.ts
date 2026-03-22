@@ -50,6 +50,8 @@ export class SchedulerService {
    */
   public async start(): Promise<void> {
     await this.scheduleService.start();
+    const { getSshDeviceBackupQueue } = await import('../../ssh-manager/SshDeviceBackupQueue');
+    getSshDeviceBackupQueue();
   }
 
   /**
@@ -57,6 +59,12 @@ export class SchedulerService {
    */
   public async stop(): Promise<void> {
     await this.scheduleService.stop();
+    try {
+      const { getSshDeviceBackupQueue } = await import('../../ssh-manager/SshDeviceBackupQueue');
+      await getSshDeviceBackupQueue().close();
+    } catch {
+      /* fila pode não ter sido inicializada */
+    }
   }
 
   /**

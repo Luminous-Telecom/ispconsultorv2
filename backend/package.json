@@ -47,6 +47,7 @@
     "qrcode": "^1.5.4",
     "sequelize": "^6.35.2",
     "socket.io": "^4.8.3",
+    "ssh2": "^1.17.0",
     "winston": "^3.17.0"
   },
   "devDependencies": {
@@ -63,6 +64,7 @@
     "@types/multer": "^1.4.13",
     "@types/node": "^20.10.4",
     "@types/nodemailer": "^7.0.2",
+    "@types/ssh2": "^1.15.5",
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",

@@ -1,6 +1,8 @@
 import type { Server as SocketIOServer } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { logger } from '../utils/logger';
+import { registerSshNamespaces } from './sshManagerSocket';
+import { registerAgentNamespace, registerAgentTerminalNamespace } from './agentSocket';
 
 let io: SocketIOServer | null = null;
 
@@ -28,6 +30,10 @@ export function setIO(server: SocketIOServer): void {
     socket.on('subscribe-blockdomi-logs', () => socket.join(BLOCKDOMI_LOGS_ROOM));
     socket.on('disconnect', () => socket.leave(BLOCKDOMI_LOGS_ROOM));
   });
+
+  registerSshNamespaces(io);
+  registerAgentNamespace(io);
+  registerAgentTerminalNamespace(io);
 }
 
 export function getIO(): SocketIOServer | null {

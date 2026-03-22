@@ -23,6 +23,7 @@ const TIPO_LABELS_ERP: Record<string, string> = {
   remessa_bancaria: 'Remessa Bancária',
   verificar_vencimentos: 'Verificar Vencimentos',
   desbloquear_blockdomi: 'Desbloquear domínios',
+  backup_equipamentos_ssh: 'Backup equipamentos SSH',
   outros: 'Outros',
 };
 

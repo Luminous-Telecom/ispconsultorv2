@@ -59,6 +59,8 @@ import saasSchedulerRoutes from './saas/saasSchedulerRoutes';
 import saasAtualizacoesRoutes from './saas/saasAtualizacoesRoutes';
 import saasBackupsRoutes from './saas/saasBackupsRoutes';
 import tenantRoutes from './tenantRoutes';
+import sshManagerRoutes from './sshManagerRoutes';
+import agentRoutes from './agentRoutes';
 
 const router = Router();
 
@@ -107,6 +109,7 @@ const routes = [
     { path: '/api/blockdomi', route: blockdomiRoutes },
     { path: '/api/ips-permitidos', route: ipsPermitidosRoutes },
     { path: '/api/pdf-extract', route: pdfExtractRoutes },
+    { path: '/api/agents', route: agentRoutes },
     { path: '/api', route: centralAssinanteRoutes },
 
     // Rotas de webhook
@@ -131,6 +134,7 @@ const routes = [
     { path: '/api/saas/backups', route: saasBackupsRoutes },
     { path: '/api/saas', route: saasCrudRoutes },
     { path: '/api/tenant', route: tenantRoutes },
+    { path: '/api/ssh-manager', route: sshManagerRoutes },
 
     // API pública Blockdomi (site público) - sem auth, sem IP
     { path: '/api/blockdomi-publico', route: blockdomiPublicoRoutes },
