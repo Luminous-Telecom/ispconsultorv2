@@ -153,7 +153,11 @@ const SENSITIVE_ENV_KEYS = new Set([
 ]);
 
 function getSafeEnv() {
-  const env = { ...process.env, TERM: 'xterm-256color' };
+  const env = {
+    ...process.env,
+    TERM: 'xterm-256color',
+    COLORTERM: 'true',
+  };
   for (const key of Object.keys(env)) {
     const upper = key.toUpperCase();
     if (SENSITIVE_ENV_KEYS.has(key) || SENSITIVE_ENV_KEYS.has(upper) || upper.startsWith('BACKNET_')) {
