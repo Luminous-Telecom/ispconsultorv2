@@ -38,6 +38,7 @@ export type ModalType =
   | 'logs-assinatura-digital'
   | 'logs-acesso-sistema'
   | 'logs-equipamentos'
+  | 'logs-agentes'
   // SaaS Super Admin (rotas exclusivas /api/saas/*)
   | 'saas-planos'
   | 'saas-usuarios'

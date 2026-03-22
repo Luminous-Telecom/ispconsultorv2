@@ -17,7 +17,7 @@ interface LogsEquipamentosModalProps {
   skipWrapper?: boolean;
 }
 
-const ACTION_BADGE: Record<SshAuditAction, { cls: string; label: string }> = {
+const EQUIPAMENTOS_ACTION_BADGE: Record<string, { cls: string; label: string }> = {
   CONNECT:        { cls: 'bg-success',          label: 'Conectado' },
   DISCONNECT:     { cls: 'bg-secondary',         label: 'Desconectado' },
   COMMAND:        { cls: 'bg-primary',           label: 'Comando' },
@@ -27,7 +27,7 @@ const ACTION_BADGE: Record<SshAuditAction, { cls: string; label: string }> = {
   TERMINAL_CLOSE: { cls: 'bg-secondary',         label: 'Terminal Fechado' },
 };
 
-const SSH_ACTIONS: SshAuditAction[] = [
+const EQUIPAMENTOS_ACTIONS: SshAuditAction[] = [
   'CONNECT', 'DISCONNECT', 'COMMAND', 'TERMINAL_COMMAND', 'AUTH_FAIL', 'TERMINAL_OPEN', 'TERMINAL_CLOSE',
 ];
 
@@ -107,6 +107,7 @@ const LogsEquipamentosModal: React.FC<LogsEquipamentosModalProps> = ({ show, onC
       endDate: filterEndDate || undefined,
     }],
     queryFn: () => SshAuditService.list({
+      logType: 'equipamentos',
       page: tableFilters.page,
       limit: tableFilters.limit,
       search: tableFilters.debouncedSearch || undefined,
@@ -184,7 +185,7 @@ const LogsEquipamentosModal: React.FC<LogsEquipamentosModalProps> = ({ show, onC
       sortable: false,
       width: '130px',
       render: (item: SshAuditLog) => {
-        const a = ACTION_BADGE[item.action] ?? { cls: 'bg-secondary', label: item.action };
+        const a = EQUIPAMENTOS_ACTION_BADGE[item.action] ?? { cls: 'bg-secondary', label: item.action };
         return <span className={`badge ${a.cls}`}>{a.label}</span>;
       },
     },
@@ -269,8 +270,8 @@ const LogsEquipamentosModal: React.FC<LogsEquipamentosModalProps> = ({ show, onC
           style={{ width: 'auto', fontSize: '0.65rem', height: '1.25rem', lineHeight: 1, boxSizing: 'border-box' }}
         >
           <option value="">{t('audit.actions.all')}</option>
-          {SSH_ACTIONS.map((a) => (
-            <option key={a} value={a}>{ACTION_BADGE[a]?.label ?? a}</option>
+          {EQUIPAMENTOS_ACTIONS.map((a) => (
+            <option key={a} value={a}>{EQUIPAMENTOS_ACTION_BADGE[a]?.label ?? a}</option>
           ))}
         </select>
       </div>
@@ -370,7 +371,7 @@ const LogsEquipamentosModal: React.FC<LogsEquipamentosModalProps> = ({ show, onC
               <input
                 type="text"
                 className="form-control form-control-sm bg-secondary bg-opacity-10"
-                value={ACTION_BADGE[selectedLog.action]?.label ?? selectedLog.action}
+                value={EQUIPAMENTOS_ACTION_BADGE[selectedLog.action]?.label ?? selectedLog.action}
                 readOnly
               />
             </div>

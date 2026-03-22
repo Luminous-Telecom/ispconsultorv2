@@ -11,7 +11,9 @@ export type SshAuditAction =
   | 'TERMINAL_COMMAND'
   | 'AUTH_FAIL'
   | 'TERMINAL_OPEN'
-  | 'TERMINAL_CLOSE';
+  | 'TERMINAL_CLOSE'
+  | 'AGENT_CONNECT'
+  | 'AGENT_DISCONNECT';
 
 export interface SshAuditData {
   action: SshAuditAction;
@@ -101,10 +103,14 @@ function escapeWildcard(s: string): string {
 /**
  * Busca logs SSH paginados do Elasticsearch.
  */
+export type SshAuditLogType = 'equipamentos' | 'agentes';
+
 export async function searchSshAuditLogs(params: {
   deviceId?: string;
   userId?: string;
   action?: SshAuditAction;
+  /** Filtra por tipo: equipamentos (exclui agentes) ou agentes (só connect/disconnect) */
+  logType?: SshAuditLogType;
   startDate?: string;
   endDate?: string;
   search?: string;
@@ -132,6 +138,13 @@ export async function searchSshAuditLogs(params: {
   const from = (page - 1) * limit;
 
   const must: Record<string, unknown>[] = [];
+  const mustNot: Record<string, unknown>[] = [];
+
+  if (params.logType === 'equipamentos') {
+    mustNot.push({ terms: { action: ['AGENT_CONNECT', 'AGENT_DISCONNECT'] } });
+  } else if (params.logType === 'agentes') {
+    must.push({ terms: { action: ['AGENT_CONNECT', 'AGENT_DISCONNECT'] } });
+  }
 
   if (params.deviceId) must.push({ term: { deviceId: params.deviceId } });
   if (params.userId) must.push({ term: { userId: params.userId } });
@@ -185,7 +198,10 @@ export async function searchSshAuditLogs(params: {
     }
   }
 
-  const query = must.length > 0 ? { bool: { must } } : { match_all: {} };
+  const boolQuery: Record<string, unknown> = {};
+  if (must.length > 0) boolQuery.must = must;
+  if (mustNot.length > 0) boolQuery.must_not = mustNot;
+  const query = Object.keys(boolQuery).length > 0 ? { bool: boolQuery } : { match_all: {} };
 
   const response = await client.search({
     index: SSH_AUDIT_INDEX,

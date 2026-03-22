@@ -158,6 +158,7 @@ export interface SshAuditFilters extends BaseFilters {
   deviceId?: string;
   userId?: string;
   action?: string;
+  logType?: 'equipamentos' | 'agentes';
   startDate?: string;
   endDate?: string;
 }

@@ -207,6 +207,9 @@ export interface TranslationKeys {
   'logs.assinaturaDigital': string;
   'logs.acessoSistema': string;
   'logs.equipamentos': string;
+  'logs.agentes': string;
+  'logs.agentesEmpty': string;
+  'logs.agentColumn': string;
   'logs.comingSoon': string;
 
   // Menu Items
@@ -1634,6 +1637,9 @@ const translations: Translations = {
     'logs.assinaturaDigital': 'Logs de Assinatura Digital',
     'logs.acessoSistema': 'Logs de Acesso ao Sistema',
     'logs.equipamentos': 'Logs Equipamentos',
+    'logs.agentes': 'Logs Agentes',
+    'logs.agentesEmpty': 'Nenhum log de agente encontrado',
+    'logs.agentColumn': 'Agente',
     'logs.comingSoon': 'Funcionalidade em desenvolvimento.',
 
     // Menu Items
@@ -3055,6 +3061,9 @@ const translations: Translations = {
     'logs.assinaturaDigital': 'Digital Signature Logs',
     'logs.acessoSistema': 'System Access Logs',
     'logs.equipamentos': 'Equipment Logs',
+    'logs.agentes': 'Agent Logs',
+    'logs.agentesEmpty': 'No agent log found',
+    'logs.agentColumn': 'Agent',
     'logs.comingSoon': 'Feature coming soon.',
 
     // Menu Items
@@ -4477,6 +4486,9 @@ const translations: Translations = {
     'logs.assinaturaDigital': 'Registros de Firma Digital',
     'logs.acessoSistema': 'Registros de Acceso al Sistema',
     'logs.equipamentos': 'Registros de Equipos',
+    'logs.agentes': 'Registros de Agentes',
+    'logs.agentesEmpty': 'No se encontró registro de agente',
+    'logs.agentColumn': 'Agente',
     'logs.comingSoon': 'Funcionalidad en desarrollo.',
     'layout.closeSearch': 'Cerrar búsqueda',
 

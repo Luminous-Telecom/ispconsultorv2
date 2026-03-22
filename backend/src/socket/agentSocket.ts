@@ -66,6 +66,14 @@ export function registerAgentNamespace(io: SocketIOServer): void {
       os_info?: string;
       version?: string;
     }) => {
+      logSshAudit({
+        action: 'AGENT_CONNECT',
+        userId: 'sistema',
+        deviceId: agentId,
+        deviceName: agentName,
+        success: true,
+        ip,
+      });
       registerAgent(agentId, socket, {
         hostname: info.hostname ?? 'unknown',
         osInfo: info.os_info ?? 'unknown',
@@ -184,6 +192,14 @@ export function registerAgentNamespace(io: SocketIOServer): void {
     // ── Desconexão ────────────────────────────────────────────────────────────
 
     socket.on('disconnect', () => {
+      logSshAudit({
+        action: 'AGENT_DISCONNECT',
+        userId: 'sistema',
+        deviceId: agentId,
+        deviceName: agentName,
+        success: true,
+        ip: getAgentIp(socket),
+      });
       unregisterAgent(agentId);
       logger.info('Agent: desconectado', { agentId, agentName, socketId: socket.id });
     });
@@ -267,6 +283,15 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       }
 
       if (!sendToAgent(agentId, 'ping', {})) {
+        logSshAudit({
+          action: 'AUTH_FAIL',
+          userId,
+          deviceId: agentId,
+          deviceName: `Agente: ${agent.name}`,
+          success: false,
+          errorMessage: 'Agente offline',
+          ip,
+        });
         socket.emit('terminal:error', { message: `Agente "${agent.name}" está offline` });
         return;
       }
@@ -331,6 +356,15 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       }
 
       if (!sendToAgent(device.agent_id, 'ping', {})) {
+        logSshAudit({
+          action: 'AUTH_FAIL',
+          userId,
+          deviceId: device.id,
+          deviceName: device.name,
+          success: false,
+          errorMessage: `Agente "${agent.name}" offline`,
+          ip,
+        });
         socket.emit('terminal:error', { message: `Agente "${agent.name}" está offline` });
         return;
       }

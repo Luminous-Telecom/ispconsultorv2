@@ -796,7 +796,9 @@ export type SshAuditAction =
   | 'TERMINAL_COMMAND'
   | 'AUTH_FAIL'
   | 'TERMINAL_OPEN'
-  | 'TERMINAL_CLOSE';
+  | 'TERMINAL_CLOSE'
+  | 'AGENT_CONNECT'
+  | 'AGENT_DISCONNECT';
 
 export type SshClienteRef = Pick<Cliente, 'id' | 'razao_social' | 'nome_fantasia'>;
 

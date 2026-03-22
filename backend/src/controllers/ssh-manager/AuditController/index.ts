@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { searchSshAuditLogs, SshAuditAction } from '../../../services/ssh-manager/SshAuditService';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
+import { Agent } from '../../../models/agent/Agent';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Usuario } from '../../../models/cadastros/Usuario';
@@ -68,6 +69,59 @@ async function enrichSshAuditLogsWithCliente(
   });
 }
 
+const AGENT_ACTIONS: readonly SshAuditAction[] = ['AGENT_CONNECT', 'AGENT_DISCONNECT'] as const;
+
+function isAgentAction(a: unknown): a is SshAuditAction {
+  return typeof a === 'string' && (AGENT_ACTIONS as readonly string[]).includes(a);
+}
+
+async function enrichAgentLogsWithCliente(
+  logs: Record<string, unknown>[]
+): Promise<Record<string, unknown>[]> {
+  const agentLogs = logs.filter((l) => isAgentAction(l.action));
+  if (agentLogs.length === 0) return logs;
+
+  const agentIds = [
+    ...new Set(
+      agentLogs
+        .map((l) => l.deviceId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    ),
+  ];
+
+  const agents = await Agent.findAll({
+    where: { id: { [Op.in]: agentIds } },
+    attributes: ['id', 'cliente_id'],
+    include: [
+      { model: Cliente, as: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia'], required: false },
+    ],
+  });
+
+  const agentClienteMap = new Map<string, { clienteId: number | null; clienteName: string | null }>();
+  for (const a of agents) {
+    const plain = a.get({ plain: true }) as {
+      id: string;
+      cliente_id: number | null;
+      cliente?: { id: number; razao_social: string; nome_fantasia: string | null } | null;
+    };
+    agentClienteMap.set(plain.id, {
+      clienteId: plain.cliente_id ?? null,
+      clienteName: clienteDisplayName(plain.cliente ?? null),
+    });
+  }
+
+  return logs.map((log) => {
+    if (!isAgentAction(log.action)) return log;
+    const agentId = typeof log.deviceId === 'string' ? log.deviceId : '';
+    const info = agentId ? agentClienteMap.get(agentId) : undefined;
+    return {
+      ...log,
+      clienteId: info?.clienteId ?? log.clienteId ?? null,
+      clienteName: info?.clienteName ?? log.clienteName ?? null,
+    };
+  });
+}
+
 async function enrichSshAuditLogsWithUsuario(
   logs: Record<string, unknown>[]
 ): Promise<Record<string, unknown>[]> {
@@ -107,6 +161,7 @@ export class SshAuditController {
         deviceId,
         userId,
         action,
+        logType,
         startDate,
         endDate,
         search,
@@ -137,6 +192,7 @@ export class SshAuditController {
         deviceId,
         userId,
         action: action as SshAuditAction | undefined,
+        logType: logType === 'equipamentos' || logType === 'agentes' ? logType : undefined,
         startDate,
         endDate,
         search,
@@ -147,6 +203,7 @@ export class SshAuditController {
       });
 
       let enrichedLogs = await enrichSshAuditLogsWithCliente(logs);
+      enrichedLogs = await enrichAgentLogsWithCliente(enrichedLogs);
       enrichedLogs = await enrichSshAuditLogsWithUsuario(enrichedLogs);
 
       const lastPage = Math.ceil(total / limitNum);
