@@ -251,6 +251,11 @@ export interface TranslationKeys {
   'modal.ipv6': string;
   'modal.sshDevices': string;
   'modal.sshAudit': string;
+  'sshAudit.command': string;
+  'sshAudit.duration': string;
+  'sshAudit.error': string;
+  'sshAudit.emptyMessage': string;
+  'sshAudit.result': string;
   'sshDevice.backupEnabled': string;
   'sshDevice.backupEnabledHint': string;
   'sshDevice.columnBackup': string;
@@ -1672,6 +1677,11 @@ const translations: Translations = {
     'modal.ipv6': 'IPv6',
     'modal.sshDevices': 'Equipamentos',
     'modal.sshAudit': 'Auditoria SSH',
+    'sshAudit.command': 'Comando',
+    'sshAudit.duration': 'Duração',
+    'sshAudit.error': 'Erro',
+    'sshAudit.emptyMessage': 'Nenhum log de auditoria SSH encontrado',
+    'sshAudit.result': 'Resultado',
     'sshDevice.backupEnabled': 'Ativar backup do equipamento',
     'sshDevice.backupEnabledHint':
       'Quando ativo, o equipamento fica elegível para rotinas de backup automático da configuração (quando o recurso estiver disponível no sistema).',
@@ -3085,6 +3095,11 @@ const translations: Translations = {
     'modal.ipv6': 'IPv6',
     'modal.sshDevices': 'Equipment',
     'modal.sshAudit': 'SSH Audit',
+    'sshAudit.command': 'Command',
+    'sshAudit.duration': 'Duration',
+    'sshAudit.error': 'Error',
+    'sshAudit.emptyMessage': 'No SSH audit log found',
+    'sshAudit.result': 'Result',
     'sshDevice.backupEnabled': 'Enable device backup',
     'sshDevice.backupEnabledHint':
       'When enabled, the device is eligible for automatic configuration backup routines when available.',
@@ -4500,6 +4515,11 @@ const translations: Translations = {
     'modal.ipv6': 'IPv6',
     'modal.sshDevices': 'Equipos',
     'modal.sshAudit': 'Auditoría SSH',
+    'sshAudit.command': 'Comando',
+    'sshAudit.duration': 'Duración',
+    'sshAudit.error': 'Error',
+    'sshAudit.emptyMessage': 'No se encontró registro de auditoría SSH',
+    'sshAudit.result': 'Resultado',
     'sshDevice.backupEnabled': 'Activar copia de seguridad del equipo',
     'sshDevice.backupEnabledHint':
       'Si está activo, el equipo podrá incluirse en copias automáticas de configuración cuando el sistema lo permita.',
