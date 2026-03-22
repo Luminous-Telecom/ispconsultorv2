@@ -224,6 +224,25 @@ body .draggable-modal-container-custom .modal-body.draggable-modal-body-custom:h
   min-height: 0 !important;
 }
 
+/* Modal tabs - conteúdo com padding (estilo reutilizável para todos os modais com abas) */
+.cliente-tab-content-padded,
+.contrato-tab-content-padded,
+.plano-tab-content-padded,
+.fornecedor-tab-content-padded,
+.banco-tab-content-padded,
+.documento-tab-content-padded,
+.empresa-tab-content-padded,
+.whatsapp-tab-content-padded,
+.email-tab-content-padded,
+.sistema-tab-content-padded {
+  flex: 0 1 auto;
+  padding: 16px;
+
+  .row > * {
+    margin-top: 0;
+  }
+}
+
 /* ============================================
    RESPONSIVE DIALOG - Substitutos para estilos inline
    ============================================ */
@@ -1870,10 +1889,6 @@ textarea:focus {
   min-height: 0;
 }
 
-.contrato-tab-content-padded {
-  padding: 0 16px 16px 16px;
-}
-
 .contrato-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
@@ -2102,10 +2117,6 @@ textarea:focus {
   flex: 1;
   overflow: auto;
   min-height: 0;
-}
-
-.plano-tab-content-padded {
-  padding: 16px;
 }
 
 .plano-tab-disabled {
@@ -2359,10 +2370,6 @@ textarea:focus {
   min-height: 0;
 }
 
-.fornecedor-tab-content-padded {
-  padding: 0 16px 16px 16px;
-}
-
 .fornecedor-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
@@ -2532,10 +2539,6 @@ textarea:focus {
   flex: 1;
   overflow: auto;
   min-height: 0;
-}
-
-.banco-tab-content-padded {
-  padding: 1.25rem 16px 16px 16px;
 }
 
 .banco-tab-disabled {
@@ -2709,10 +2712,6 @@ textarea:focus {
   min-height: 0;
 }
 
-.documento-tab-content-padded {
-  padding: 0 16px 16px 16px;
-}
-
 .documento-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
@@ -2882,10 +2881,6 @@ textarea:focus {
   flex: 1;
   overflow: auto;
   min-height: 0;
-}
-
-.empresa-tab-content-padded {
-  padding: 0 16px 16px 16px;
 }
 
 /* Tabela de faturas em largura total (compensa o padding do tab-content) */
@@ -3067,10 +3062,6 @@ textarea:focus {
   min-height: 0;
 }
 
-.whatsapp-tab-content-padded {
-  padding: 16px;
-}
-
 .whatsapp-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
@@ -3240,10 +3231,6 @@ textarea:focus {
   flex: 1;
   overflow: auto;
   min-height: 0;
-}
-
-.email-tab-content-padded {
-  padding: 0 16px 16px 16px;
 }
 
 .email-tab-disabled {
@@ -3417,10 +3404,6 @@ textarea:focus {
   min-height: 0;
 }
 
-.sistema-tab-content-padded {
-  padding: 0 16px 16px 16px;
-}
-
 .sistema-tab-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
@@ -3590,10 +3573,6 @@ textarea:focus {
   flex: 1;
   overflow: auto;
   min-height: 0;
-}
-
-.cliente-tab-content-padded {
-  padding: 0 16px 16px 16px;
 }
 
 .cliente-tab-disabled {
@@ -3766,10 +3745,6 @@ textarea:focus {
   flex: 1;
   overflow: auto;
   min-height: 0;
-}
-
-.contrato-tab-content-padded {
-  padding: 0 16px 16px 16px;
 }
 
 /* ContratoModal - Estados dos botões desabilitados */
@@ -4403,7 +4378,6 @@ textarea:focus {
 }
 
 .form-field .form-text {
-  margin-top: 0.25rem;
   font-size: 0.875rem;
 }
 
@@ -4413,9 +4387,6 @@ textarea:focus {
   margin-bottom: 0.25rem !important;
 }
 
-.modal-content .form-field {
-  margin-bottom: 0.5rem !important;
-}
 
 /* Botão com loading */
 .btn .spinner-border-sm {

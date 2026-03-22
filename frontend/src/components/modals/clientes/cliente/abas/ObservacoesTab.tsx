@@ -1,5 +1,7 @@
 import React from 'react';
+import { FormValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
+import FormField from 'components/ui/FormField';
 import { ClienteTabProps } from '../types';
 
 const ObservacoesTab: React.FC<ClienteTabProps> = ({
@@ -10,25 +12,20 @@ const ObservacoesTab: React.FC<ClienteTabProps> = ({
 }) => {
   const { t } = useI18n();
   return (
-    <div className="row">
+    <div className="row g-2">
       <div className="col-12">
-        <div className="mb-3">
-          <label htmlFor={`${formPrefix}-observacoes`} className="form-label">{t('form.observations')}</label>
-          <textarea
-            className={`form-control ${errors.observacoes ? 'is-invalid' : ''}`}
-            id={`${formPrefix}-observacoes`}
-            name="observacoes"
-            rows={8}
-            value={formData.observacoes}
-            onChange={(e) => handleInputChange('observacoes', e.target.value)}
-            placeholder={t('placeholder.observations')}
-          />
-          {errors.observacoes && (
-            <div className="invalid-feedback">
-              {errors.observacoes}
-            </div>
-          )}
-        </div>
+        <FormField
+          name="observacoes"
+          type="textarea"
+          label={t('form.observations')}
+          placeholder={t('placeholder.observations')}
+          size="md"
+          value={formData.observacoes || ''}
+          onChange={(value: FormValue) => handleInputChange('observacoes', value as string)}
+          formPrefix={formPrefix}
+          error={errors.observacoes}
+          rows={8}
+        />
       </div>
     </div>
   );

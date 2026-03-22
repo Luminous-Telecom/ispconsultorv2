@@ -11,14 +11,14 @@ const ServicosObservacoesTab: React.FC<PlanoTabProps> = ({
 }) => {
   const { t } = useI18n();
   return (
-    <>
-      <div className="mb-0">
+    <div className="row g-2">
+      <div className="col-12">
         <FormField
           name="observacoes"
           type="textarea"
           label={t('form.observations')}
           placeholder={t('form.planObservationsPlaceholder')}
-          size="sm"
+          size="md"
           value={formData.observacoes}
           onChange={(value: FormValue) => {
             const stringValue = typeof value === 'string' ? value : String(value || '');
@@ -28,7 +28,7 @@ const ServicosObservacoesTab: React.FC<PlanoTabProps> = ({
           rows={4}
         />
       </div>
-    </>
+    </div>
   );
 };
 

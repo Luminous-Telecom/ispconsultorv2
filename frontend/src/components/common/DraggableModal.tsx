@@ -454,7 +454,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           className={`modal-body draggable-modal-body-custom ${className?.includes('no-padding') ? 'no-scroll' : ''} ${className?.includes('list-modal-no-body-scroll') ? 'list-modal-no-body-scroll' : ''}`}
           style={{
             ...(className?.includes('no-padding') || className?.includes('list-modal-no-body-scroll') 
-              ? { overflow: 'hidden', overflowY: 'hidden', overflowX: 'hidden' } 
+              ? { overflow: 'hidden', overflowY: 'hidden', overflowX: 'hidden', padding: 0 } 
               : {})
           }}
         >

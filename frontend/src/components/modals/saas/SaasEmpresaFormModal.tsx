@@ -646,7 +646,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
         <div className="cliente-modal-content">
           <div className={`tab-content cliente-tab-content ${(activeTab === 'financeiro' || activeTab === 'contratos' || activeTab === 'usuarios' || activeTab === 'logs') ? 'cliente-tab-content-scrollable' : 'cliente-tab-content-padded'}`} id="saas-empresa-tab-content">
           {activeTab === 'dados-basicos' && (
-            <div className="row g-2 p-3">
+            <div className="row g-2">
               <div className="col-md-6">
                 <FormField name="razao_social" type="text" label={`${t('company.razaoSocial')} *`} value={form.razao_social}
                   onChange={v => handleInputChange('razao_social', String(v ?? ''))} required size="md" error={errors.razao_social} />
@@ -675,7 +675,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
           )}
 
           {activeTab === 'endereco' && (
-            <div className="p-3">
+            <div>
               <AddressFields
                 required={false}
                 size="md"
@@ -688,7 +688,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
           )}
 
           {activeTab === 'contato' && (
-            <div className="row g-2 p-3">
+            <div className="row g-2">
               <div className="col-md-4">
                 <FormField name="email" type="email" label={`${t('form.email')} *`} value={form.email}
                   onChange={v => handleInputChange('email', String(v ?? ''))} required size="md" error={errors.email} />

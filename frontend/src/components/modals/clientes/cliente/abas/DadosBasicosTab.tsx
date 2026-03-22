@@ -14,9 +14,10 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
 }) => {
   const { t } = useI18n();
   return (
-    <div className="d-flex flex-column gap-2">
-      <FormField
-        name="cnpj"
+    <div className="row g-2">
+      <div className="col-12">
+        <FormField
+          name="cnpj"
         type="text"
         label={t('form.cnpj')}
         placeholder={t('placeholder.cnpj')}
@@ -27,9 +28,11 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
         disabled={isSubmitting}
         formPrefix={formPrefix}
         error={errors.cnpj}
-      />
-      <FormField
-        name="razao_social"
+        />
+      </div>
+      <div className="col-md-6">
+        <FormField
+          name="razao_social"
         type="text"
         label={t('form.companyName')}
         placeholder={t('placeholder.companyName')}
@@ -40,9 +43,11 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
         disabled={isSubmitting}
         formPrefix={formPrefix}
         error={errors.razao_social}
-      />
-      <FormField
-        name="nome_fantasia"
+        />
+      </div>
+      <div className="col-md-6">
+        <FormField
+          name="nome_fantasia"
         type="text"
         label={t('form.tradeName')}
         placeholder={t('placeholder.tradeName')}
@@ -52,13 +57,16 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
         disabled={isSubmitting}
         formPrefix={formPrefix}
         error={errors.nome_fantasia}
-      />
-      <AtivoInativoField
+        />
+      </div>
+      <div className="col-12">
+        <AtivoInativoField
         value={formData.ativo}
         onChange={(v) => handleInputChange('ativo', v)}
         name={formPrefix ? `${formPrefix}-ativo` : 'cliente-ativo'}
         disabled={isSubmitting}
-      />
+        />
+      </div>
     </div>
   );
 };

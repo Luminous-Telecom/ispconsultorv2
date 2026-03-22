@@ -525,8 +525,8 @@ const FornecedorModal: React.FC<FornecedorModalProps> = ({
 
             {/* Aba Observações */}
             {activeTab === 'observacoes' && (
-              <div className="row">
-                <div className="col-md-12 mb-1">
+              <div className="row g-2">
+                <div className="col-12">
                   <FormField
                     name="observacoes"
                     type="textarea"
