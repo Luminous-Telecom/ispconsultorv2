@@ -61,7 +61,6 @@ export function registerAgent(agentId: string, socket: Socket, info: {
     ipAddress: info.ipAddress,
     connectedAt: new Date(),
   });
-  logger.info('Agent: registrado', { agentId, hostname: info.hostname, ip: info.ipAddress });
 }
 
 export function unregisterAgent(agentId: string): void {

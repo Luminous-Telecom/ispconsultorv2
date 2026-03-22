@@ -58,7 +58,6 @@ export function registerAgentNamespace(io: SocketIOServer): void {
     const { agentId, agentName } = (socket as Socket & { data: { agentId: string; agentName: string } }).data;
     const ip = getAgentIp(socket);
 
-    logger.info('Agent: conectado', { agentId, agentName, ip, socketId: socket.id });
 
     // Agente envia suas informações logo após conectar
     socket.on('agent:info', async (info: {
