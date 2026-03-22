@@ -1,4 +1,8 @@
-name: Publicar imagem do agente (Docker Hub)
+# Imagem pública: {DOCKERHUB_USERNAME}/backnet-tunnel
+# Código-fonte: pasta agent/ (nome interno do pacote continua backnet-agent).
+# Tags :dev e :prod — iguais ao AgentModal / AgentInstallService (midia181/backnet-tunnel).
+
+name: Publicar backnet-tunnel (Docker Hub)
 
 on:
   push:
@@ -24,15 +28,27 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build e push
+      - name: Build e push (canal prod → :prod e :latest)
         uses: docker/build-push-action@v6
         with:
           context: ./agent
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/backnet-agent:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/backnet-agent:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/backnet-tunnel:prod
+            ${{ secrets.DOCKERHUB_USERNAME }}/backnet-tunnel:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/backnet-tunnel:sha-${{ github.sha }}
           build-args: |
             BACKNET_AGENT_CHANNEL=prod
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build e push (canal dev → :dev)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./agent
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/backnet-tunnel:dev
+          build-args: |
+            BACKNET_AGENT_CHANNEL=dev
           cache-from: type=gha
           cache-to: type=gha,mode=max
