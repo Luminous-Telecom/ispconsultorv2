@@ -260,8 +260,8 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
 
   const filterControls = (
     <div className="d-flex flex-nowrap align-items-center justify-content-center small filter-compact" style={{ gap: 2 }}>
-      <div className="d-flex flex-column" style={{ width: 'fit-content' }}>
-        <label className="form-label mb-0" style={{ fontSize: '0.65rem' }}>{t('table.action')}</label>
+      <div className="d-flex align-items-center filter-compact" style={{ gap: 2 }}>
+        <span className="text-muted" style={{ fontSize: '0.65rem', lineHeight: 1 }}>{t('table.action')}:</span>
         <select
           className="form-select form-select-sm"
           value={filterAction}
