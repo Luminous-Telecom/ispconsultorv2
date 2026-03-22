@@ -16,11 +16,12 @@ const toErrors = (details: Joi.ValidationErrorItem[]) =>
   }, {});
 
 const listParams = (req: SaasAuthenticatedRequest) => {
-  const { page, limit, search, empresa_id, ativo, sortColumn, sortDirection } = req.query as Record<string, string>;
+  const { page, limit, search, searchField, empresa_id, ativo, sortColumn, sortDirection } = req.query as Record<string, string>;
   return {
     page: page ? parseInt(page) : 1,
     limit: limit ? parseInt(limit) : 20,
     search,
+    searchField,
     empresa_id: empresa_id ? parseInt(empresa_id) : undefined,
     ativo: ativo === 'true' ? true : ativo === 'false' ? false : undefined,
     sortColumn,

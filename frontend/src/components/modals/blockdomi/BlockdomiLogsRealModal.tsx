@@ -32,17 +32,20 @@ function formatLogLine(item: BlockdomiLogAcessoItem): string {
   return `[${time}] ${ip} | ${item.metodo} ${item.rota} | ${status} ${ok}${msg}`;
 }
 
-function matchesSearch(item: BlockdomiLogAcessoItem, q: string): boolean {
+function matchesSearch(item: BlockdomiLogAcessoItem, q: string, field?: string): boolean {
   if (!q.trim()) return true;
   const lower = q.toLowerCase();
-  const ip = (item.ip ?? '').toLowerCase();
-  const rota = (item.rota ?? '').toLowerCase();
-  const metodo = (item.metodo ?? '').toLowerCase();
-  const msg = (item.mensagem_erro ?? '').toLowerCase();
-  const status = String(item.status_http ?? '').toLowerCase();
-  const time = (item.created_at_formatada ?? item.created_at ?? '').toString().toLowerCase();
-  return ip.includes(lower) || rota.includes(lower) || metodo.includes(lower) ||
-    msg.includes(lower) || status.includes(lower) || time.includes(lower);
+  const getVal = (f: string) => {
+    if (f === 'ip') return (item.ip ?? '').toLowerCase();
+    if (f === 'rota') return (item.rota ?? '').toLowerCase();
+    if (f === 'metodo') return (item.metodo ?? '').toLowerCase();
+    if (f === 'mensagem_erro') return (item.mensagem_erro ?? '').toLowerCase();
+    if (f === 'status_http') return String(item.status_http ?? '').toLowerCase();
+    if (f === 'created_at') return (item.created_at_formatada ?? item.created_at ?? '').toString().toLowerCase();
+    return '';
+  };
+  if (field) return getVal(field).includes(lower);
+  return ['ip', 'rota', 'metodo', 'mensagem_erro', 'status_http', 'created_at'].some((f) => getVal(f).includes(lower));
 }
 
 const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, onClose }) => {
@@ -51,6 +54,7 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
   const initialLoadedRef = useRef(false);
   const [lines, setLines] = useState<BlockdomiLogAcessoItem[]>([]);
   const [search, setSearch] = useState('');
+  const [searchField, setSearchField] = useState('');
 
   const { data: logsData, isLoading } = useBlockdomiLogs(
     { limit: INITIAL_LIMIT, page: 1, sortColumn: 'id', sortDirection: 'desc' },
@@ -58,8 +62,8 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
   );
 
   const filteredLines = useMemo(
-    () => lines.filter((item) => matchesSearch(item, search)),
-    [lines, search]
+    () => lines.filter((item) => matchesSearch(item, search, searchField || undefined)),
+    [lines, search, searchField]
   );
 
   useEffect(() => {
@@ -121,8 +125,16 @@ const BlockdomiLogsRealModal: React.FC<BlockdomiLogsRealModalProps> = ({ show, o
           value={search}
           onChange={setSearch}
           onSearch={setSearch}
+          onSearchFieldChange={setSearchField}
           placeholder={t('layout.searchPlaceholder')}
-          searchFields={[]}
+          searchField={searchField || 'ip'}
+          searchFields={[
+            { key: 'ip', label: t('blockdomi.logsIp') },
+            { key: 'rota', label: t('blockdomi.logsRota') },
+            { key: 'metodo', label: t('blockdomi.logsMetodo') },
+            { key: 'mensagem_erro', label: t('blockdomi.logsMensagemErro') },
+            { key: 'status_http', label: t('blockdomi.logsStatus') },
+          ]}
           className="flex-shrink-0"
         />
         <div

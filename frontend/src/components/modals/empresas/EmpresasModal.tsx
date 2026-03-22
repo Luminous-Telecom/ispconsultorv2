@@ -66,6 +66,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
     page: tableFilters.page,
     limit: tableFilters.limit,
     search: tableFilters.debouncedSearch || undefined,
+    searchField: tableFilters.searchField || undefined,
   });
 
   const createEmpresa = useCreateEmpresa();
@@ -251,7 +252,17 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
     pagination,
     sortColumn: tableFilters.sortColumn,
     sortDirection: tableFilters.sortDirection,
-    searchPlaceholder: 'Buscar empresa...',
+    searchable: true,
+    searchPlaceholder: '',
+    searchField: tableFilters.searchField || 'razao_social',
+    searchFields: [
+      { key: 'id', label: 'ID' },
+      { key: 'razao_social', label: 'Razão Social' },
+      { key: 'nome_fantasia', label: 'Fantasia' },
+      { key: 'cnpj', label: 'CNPJ' },
+      { key: 'email', label: 'E-mail' },
+      { key: 'cidade', label: 'Cidade' },
+    ],
     emptyMessage: 'Nenhuma empresa cadastrada',
     columns: [
       { key: 'id', label: 'ID', sortable: true, render: (v) => String(v) },
@@ -265,7 +276,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
       { key: 'editar', label: 'Editar', variant: 'secondary', onClick: (e: Empresa) => handleOpenEdit(e) },
       { key: 'excluir', label: 'Excluir', variant: 'danger', onClick: (e: Empresa) => handleDelete(e) },
     ],
-  }), [empresas, isLoading, pagination, tableFilters.sortColumn, tableFilters.sortDirection, handleOpenEdit, handleDelete]);
+  }), [empresas, isLoading, pagination, tableFilters.sortColumn, tableFilters.sortDirection, tableFilters.searchField, handleOpenEdit, handleDelete]);
 
   const isPending = createEmpresa.isPending || updateEmpresa.isPending;
 
@@ -303,7 +314,9 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
       <Table
         config={tableConfig}
         onSort={(col, dir) => tableFilters.setSort(col, dir as SortDirection)}
-        onSearch={(term) => tableFilters.setSearch(term)}
+        onSearch={(term, field) => { tableFilters.setSearch(term); if (field) tableFilters.setSearchField(field); }}
+        onSearchFieldChange={(f) => tableFilters.setSearchField(f)}
+        search={tableFilters.search}
         onPageChange={tableFilters.setPage}
         onPageSizeChange={tableFilters.setLimit}
         onRefresh={refetch}

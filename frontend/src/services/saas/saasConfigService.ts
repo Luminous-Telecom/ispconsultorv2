@@ -87,6 +87,7 @@ export interface SaasConfigFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   empresa_id?: number;
   ativo?: boolean;
   sortColumn?: string;

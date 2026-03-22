@@ -65,7 +65,18 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
 
   const { handleSelectionChange, clearSelection } = useModalSelect<SshDevice>();
 
-  const modalData = useMemo(() => data?.data ?? [], [data]);
+  const rawData = useMemo(() => data?.data ?? [], [data]);
+  const modalData = useMemo(() => {
+    const term = (tableFilters.search || '').toLowerCase().trim();
+    if (!term) return rawData;
+    const field = tableFilters.searchField || 'name';
+    return rawData.filter((d: SshDevice) => {
+      const val = field === 'host'
+        ? `${d.host}:${d.port}`
+        : String((d as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      return val.toLowerCase().includes(term);
+    });
+  }, [rawData, tableFilters.search, tableFilters.searchField]);
   const pagination = useMemo(() => data?.pagination, [data]);
 
   const handleDelete = useCallback(async (device: SshDevice) => {
@@ -290,7 +301,13 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
             data: modalData,
             loading: isLoading,
             searchable: true,
-            searchPlaceholder: 'Buscar por nome, host, tipo...',
+            searchPlaceholder: '',
+            searchFields: [
+              { key: 'id', label: 'ID' },
+              { key: 'name', label: 'Nome' },
+              { key: 'host', label: t('audit.ip') },
+              { key: 'device_type', label: 'Tipo' },
+            ],
             sortable: true,
             sortColumn: tableFilters.sortColumn,
             sortDirection: tableFilters.sortDirection,
@@ -316,7 +333,8 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
           onPageChange={(page) => setTimeout(() => tableFilters.setPage(page), 0)}
           onPageSizeChange={(limit) => setTimeout(() => tableFilters.setLimit(limit), 0)}
           onSort={(col, dir) => setTimeout(() => tableFilters.setSort(col, dir), 0)}
-          onSearch={(search) => tableFilters.setSearch(search)}
+          onSearch={(s, f) => { tableFilters.setSearch(s); if (f) tableFilters.setSearchField(f); }}
+          onSearchFieldChange={(f) => tableFilters.setSearchField(f)}
           search={tableFilters.search}
           onAudit={handleAudit}
           auditEntity="SshDevice"

@@ -37,6 +37,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   const [actionLoading, setActionLoading] = useState<{ delete?: string; download?: string; restore?: string; upload?: boolean }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchField, setSearchField] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('data');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -139,12 +140,12 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
   const filteredData = useMemo(() => {
     if (!searchTerm.trim()) return modalData;
     const term = searchTerm.toLowerCase().trim();
-    return modalData.filter(
-      item =>
-        item.nome.toLowerCase().includes(term) ||
-        item.tipo.toLowerCase().includes(term)
-    );
-  }, [modalData, searchTerm]);
+    const field = searchField || 'nome';
+    return modalData.filter((item) => {
+      const val = field === 'tipo' ? item.tipo.toLowerCase() : item.nome.toLowerCase();
+      return val.includes(term);
+    });
+  }, [modalData, searchTerm, searchField]);
 
   const sortedData = useMemo(() => {
     const sorted = [...filteredData];
@@ -280,6 +281,7 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
             sortDirection,
             searchable: true,
             searchPlaceholder: t('layout.searchPlaceholder'),
+            searchField: searchField || 'nome',
             searchFields: [
               { key: 'nome', label: t('backup.columnName') },
               { key: 'tipo', label: t('backup.columnType') }
@@ -295,7 +297,8 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
           }}
           tableId="backups-list"
           onRefresh={refetch}
-          onSearch={(term) => setSearchTerm(term)}
+          onSearch={(term, field) => { setSearchTerm(term); if (field) setSearchField(field); }}
+          onSearchFieldChange={(f) => setSearchField(f)}
           onSort={handleSort}
           search={searchTerm}
         />

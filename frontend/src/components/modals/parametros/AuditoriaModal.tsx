@@ -41,6 +41,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
   const handleClearFilters = useCallback(() => {
     setTimeout(() => {
       tableFilters.setSearch('');
+      setSearchField('usuario_email');
       setAcaoFilter('');
       setEntidadeFilter('');
       tableFilters.setPage(1);
@@ -49,16 +50,18 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
 
   const [acaoFilter, setAcaoFilter] = useState<string>('');
   const [entidadeFilter, setEntidadeFilter] = useState<string>('');
+  const [searchField, setSearchField] = useState<string>('usuario_email');
 
   const filters: AuditoriaFilters = useMemo(() => ({
     page: tableFilters.page,
     limit: tableFilters.limit,
     search: tableFilters.search || undefined,
+    searchField: searchField || undefined,
     acao: acaoFilter || undefined,
     entidade: entidadeFilter || undefined,
     sortColumn: tableFilters.sortColumn,
     sortDirection: tableFilters.sortDirection
-  }), [tableFilters.page, tableFilters.limit, tableFilters.search, acaoFilter, entidadeFilter, tableFilters.sortColumn, tableFilters.sortDirection]);
+  }), [tableFilters.page, tableFilters.limit, tableFilters.search, searchField, acaoFilter, entidadeFilter, tableFilters.sortColumn, tableFilters.sortDirection]);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['auditoria', variant, filters],
@@ -276,7 +279,18 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
           onChange={(v) => handleSearchChange(v)}
           onSearch={(v) => handleSearchChange(v)}
           placeholder={t('buttons.search')}
-          searchFields={[]}
+          searchField={searchField || 'usuario_email'}
+          searchFields={[
+            { key: 'usuario_email', label: t('emailServer.userEmail') },
+            { key: 'usuario_nome', label: t('audit.user') },
+            { key: 'acao', label: t('table.action') },
+            { key: 'entidade', label: t('audit.entity') },
+            { key: 'ip_address', label: t('audit.ip') },
+            { key: 'observacoes', label: t('table.observations') },
+            { key: 'rota', label: t('audit.route') },
+            { key: 'timestamp', label: t('audit.timestamp') }
+          ]}
+          onSearchFieldChange={(f) => { setSearchField(f); tableFilters.setPage(1); }}
           className="flex-grow-1"
         />
       </div>

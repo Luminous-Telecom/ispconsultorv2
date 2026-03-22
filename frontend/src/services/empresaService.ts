@@ -5,6 +5,7 @@ export interface EmpresaFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
 }
 
 const emptyPagination: PaginatedResponse<Empresa>['pagination'] = {
@@ -46,6 +47,7 @@ export const EmpresaService = {
     if (filters.page) params.append('page', String(filters.page));
     if (filters.limit) params.append('limit', String(filters.limit));
     if (filters.search) params.append('search', filters.search);
+    if (filters.searchField) params.append('searchField', filters.searchField);
 
     const query = params.toString() ? `?${params.toString()}` : '';
     const raw = await defaultApiClient.get<unknown>(`/empresas${query}`);

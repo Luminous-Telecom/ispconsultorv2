@@ -56,7 +56,8 @@ export class EmpresaController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 15;
       const search = req.query.search as string;
-      const result = await EmpresaService.list({ page, limit, search });
+      const searchField = req.query.searchField as string;
+      const result = await EmpresaService.list({ page, limit, search, searchField });
       sendSuccess(res, result);
     } catch (error) {
       sendError(res, error, 'Erro ao listar empresas', 500, true);

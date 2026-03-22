@@ -7,6 +7,7 @@ interface ListFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   empresa_id?: number;
   ativo?: boolean;
   sortColumn?: string;
@@ -17,15 +18,28 @@ interface ListFilters {
 
 export class SaasServidorEmailService {
   static async list(filters: ListFilters) {
-    const { page = 1, limit = 20, search, sortColumn = 'id', sortDirection = 'desc' } = filters;
+    const { page = 1, limit = 20, search, searchField, sortColumn = 'id', sortDirection = 'desc' } = filters;
     const allowed = ['id', 'nome', 'host_smtp', 'status', 'created_at'];
     const col = allowed.includes(sortColumn) ? sortColumn : 'id';
     const offset = (page - 1) * limit;
     const where: Record<string, unknown> = {};
-    if (search) where[Op.or as unknown as string] = [
-      { nome: { [Op.like]: `%${search}%` } },
-      { host_smtp: { [Op.like]: `%${search}%` } },
-    ];
+    if (search) {
+      const searchCols = ['nome', 'host_smtp', 'id', 'status'];
+      const field = searchField && searchCols.includes(searchField) ? searchField : null;
+      if (field) {
+        if (field === 'id') {
+          const n = parseInt(search, 10);
+          if (!Number.isNaN(n)) where[field] = n;
+        } else {
+          (where as Record<string, { [Op.like]: string }>)[field] = { [Op.like]: `%${search}%` };
+        }
+      } else {
+        where[Op.or as unknown as string] = [
+          { nome: { [Op.like]: `%${search}%` } },
+          { host_smtp: { [Op.like]: `%${search}%` } },
+        ];
+      }
+    }
     const { count, rows } = await SaasServidorEmail.findAndCountAll({
       where, order: [[col, sortDirection.toUpperCase()]], limit, offset,
     });
@@ -49,15 +63,28 @@ export class SaasServidorEmailService {
 
 export class SaasServidorWhatsappService {
   static async list(filters: ListFilters) {
-    const { page = 1, limit = 20, search, sortColumn = 'id', sortDirection = 'desc' } = filters;
+    const { page = 1, limit = 20, search, searchField, sortColumn = 'id', sortDirection = 'desc' } = filters;
     const allowed = ['id', 'nome', 'url_api', 'status', 'created_at'];
     const col = allowed.includes(sortColumn) ? sortColumn : 'id';
     const offset = (page - 1) * limit;
     const where: Record<string, unknown> = {};
-    if (search) where[Op.or as unknown as string] = [
-      { nome: { [Op.like]: `%${search}%` } },
-      { numero: { [Op.like]: `%${search}%` } },
-    ];
+    if (search) {
+      const searchCols = ['nome', 'numero', 'id', 'status'];
+      const field = searchField && searchCols.includes(searchField) ? searchField : null;
+      if (field) {
+        if (field === 'id') {
+          const n = parseInt(search, 10);
+          if (!Number.isNaN(n)) where[field] = n;
+        } else {
+          (where as Record<string, { [Op.like]: string }>)[field] = { [Op.like]: `%${search}%` };
+        }
+      } else {
+        where[Op.or as unknown as string] = [
+          { nome: { [Op.like]: `%${search}%` } },
+          { numero: { [Op.like]: `%${search}%` } },
+        ];
+      }
+    }
     const { count, rows } = await SaasServidorWhatsapp.findAndCountAll({
       where, order: [[col, sortDirection.toUpperCase()]], limit, offset,
     });

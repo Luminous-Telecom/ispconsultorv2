@@ -78,12 +78,11 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
     const search = (tableFilters.search || '').toLowerCase().trim();
     let result = templates;
     if (search) {
-      result = templates.filter(
-        (t) =>
-          String(t.nome).toLowerCase().includes(search) ||
-          String(t.idioma).toLowerCase().includes(search) ||
-          String(t.id).includes(search)
-      );
+      const field = tableFilters.searchField || 'nome';
+      result = templates.filter((t) => {
+        const val = field === 'id' ? String(t.id) : String((t as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+        return (field === 'id' ? val : val.toLowerCase()).includes(search);
+      });
     }
     const col = tableFilters.sortColumn;
     const dir = tableFilters.sortDirection;
@@ -94,7 +93,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
       const cmp = String(av ?? '').localeCompare(String(bv ?? ''), undefined, { numeric: true });
       return dir === 'asc' ? cmp : -cmp;
     });
-  }, [templates, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection]);
+  }, [templates, tableFilters.search, tableFilters.searchField, tableFilters.sortColumn, tableFilters.sortDirection]);
 
   const tableColumns: TableConfig<TemplateWhatsApp>['columns'] = useMemo(() => [
     {
@@ -148,7 +147,9 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
                 data: filteredTemplates,
                 loading: isLoading,
                 searchable: true,
-                searchPlaceholder: t('layout.searchPlaceholder'),
+                searchPlaceholder: '',
+                searchField: tableFilters.searchField || 'nome',
+                searchFields: [{ key: 'id', label: t('table.id') }, { key: 'nome', label: t('form.name') }, { key: 'idioma', label: 'Idioma' }],
                 sortable: true,
                 sortColumn: tableFilters.sortColumn,
                 sortDirection: tableFilters.sortDirection,
@@ -169,9 +170,8 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
               onSort={(column, direction) => {
                 setTimeout(() => tableFilters.setSort(column, direction), 0);
               }}
-              onSearch={(search) => {
-                tableFilters.setSearch(search);
-              }}
+              onSearch={(s, f) => { tableFilters.setSearch(s); if (f) tableFilters.setSearchField(f); }}
+              onSearchFieldChange={(f) => tableFilters.setSearchField(f)}
               search={tableFilters.search}
             />
           </div>

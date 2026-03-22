@@ -6,6 +6,7 @@ export interface ListEmpresasFilters {
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
 }
 
 export interface ListEmpresasResponse {
@@ -42,17 +43,28 @@ export interface CreateEmpresaData {
 
 export class EmpresaService {
   static async list(filters: ListEmpresasFilters = {}): Promise<ListEmpresasResponse> {
-    const { page = 1, limit = 15, search } = filters;
+    const { page = 1, limit = 15, search, searchField } = filters;
     const offset = (page - 1) * limit;
 
     const where: WhereOptions = {};
 
     if (search) {
-      (where as Record<symbol, unknown>)[Op.or] = [
-        { razao_social: { [Op.like]: `%${search}%` } },
-        { nome_fantasia: { [Op.like]: `%${search}%` } },
-        { cnpj: { [Op.like]: `%${search}%` } },
-      ];
+      const searchCols = ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email', 'cidade'];
+      const field = searchField && searchCols.includes(searchField) ? searchField : null;
+      if (field) {
+        if (field === 'id') {
+          const n = parseInt(search, 10);
+          if (!Number.isNaN(n)) (where as Record<string, number>)[field] = n;
+        } else {
+          (where as Record<string, { [Op.like]: string }>)[field] = { [Op.like]: `%${search}%` };
+        }
+      } else {
+        (where as Record<symbol, unknown>)[Op.or] = [
+          { razao_social: { [Op.like]: `%${search}%` } },
+          { nome_fantasia: { [Op.like]: `%${search}%` } },
+          { cnpj: { [Op.like]: `%${search}%` } },
+        ];
+      }
     }
 
     const { count, rows } = await DadosEmpresa.findAndCountAll({

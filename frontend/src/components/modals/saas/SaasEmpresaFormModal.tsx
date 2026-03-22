@@ -387,14 +387,12 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
   const usuarios: SaasTenantUsuario[] = useMemo(() => {
     const term = (usuariosTf.search || '').toLowerCase().trim();
     if (!term) return usuariosRaw;
+    const field = usuariosTf.searchField || 'nome';
     return usuariosRaw.filter((u) => {
-      const id = String(u.id);
-      const nome = (u.nome ?? '').toLowerCase();
-      const email = (u.email ?? '').toLowerCase();
-      const role = (u.role ?? '').toLowerCase();
-      return id.includes(term) || nome.includes(term) || email.includes(term) || role.includes(term);
+      const val = field === 'id' ? String(u.id) : String((u as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      return (field === 'id' ? val : val).toLowerCase().includes(term);
     });
-  }, [usuariosRaw, usuariosTf.search]);
+  }, [usuariosRaw, usuariosTf.search, usuariosTf.searchField]);
 
   const handleDeleteUsuario = useCallback(async (sel: SaasTenantUsuario[]) => {
     const u = sel[0];
@@ -837,6 +835,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                     emptyMessage: 'Nenhum usuário cadastrado',
                     searchable: true,
                     searchPlaceholder: '',
+                    searchField: usuariosTf.searchField || 'nome',
                     searchFields: [
                       { key: 'id', label: t('table.id') },
                       { key: 'nome', label: t('form.name') },
@@ -863,7 +862,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   onRowDoubleClick={(i: SaasTenantUsuario) => { setSelectedUsuarioId(i.id); setShowUsuarioEdit(true); }}
                   onRefresh={refetchUsuarios}
                   onSort={usuariosTf.setSort}
-                  onSearch={(s) => usuariosTf.setSearch(s)}
+                  onSearch={(s, f) => { usuariosTf.setSearch(s); if (f) usuariosTf.setSearchField(f); }}
+                  onSearchFieldChange={(f) => usuariosTf.setSearchField(f)}
                   search={usuariosTf.search}
                 />
               </div>
