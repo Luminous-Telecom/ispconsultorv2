@@ -94,6 +94,10 @@ export function logSshAudit(data: SshAuditData): void {
   });
 }
 
+function escapeWildcard(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/\*/g, '\\*').replace(/\?/g, '\\?');
+}
+
 /**
  * Busca logs SSH paginados do Elasticsearch.
  */
@@ -103,6 +107,10 @@ export async function searchSshAuditLogs(params: {
   action?: SshAuditAction;
   startDate?: string;
   endDate?: string;
+  search?: string;
+  searchField?: string;
+  /** IDs de usuário resolvidos por nome (quando searchField=userId e busca é por nome) */
+  searchUserIds?: string[];
   page?: number;
   limit?: number;
 }): Promise<{ logs: Record<string, unknown>[]; total: number }> {
@@ -134,6 +142,47 @@ export async function searchSshAuditLogs(params: {
     if (params.startDate) range['gte'] = params.startDate;
     if (params.endDate) range['lte'] = params.endDate;
     must.push({ range: { timestamp: range } });
+  }
+
+  if (params.search && params.search.trim()) {
+    const term = params.search.trim();
+    const safe = escapeWildcard(term);
+    const field = params.searchField?.trim();
+
+    const buildFieldClause = (esField: string, useWildcard: boolean) => {
+      if (useWildcard) {
+        return { wildcard: { [esField]: `*${safe}*` } };
+      }
+      return { match: { [esField]: { query: term, operator: 'or' } } };
+    };
+
+    if (field === 'id') {
+      must.push({ wildcard: { _id: `*${safe}*` } });
+    } else if (field === 'command') {
+      must.push(buildFieldClause('command', false));
+    } else if (field === 'deviceName') {
+      must.push(buildFieldClause('deviceName', true));
+    } else if (field === 'userId') {
+      if (params.searchUserIds && params.searchUserIds.length > 0) {
+        must.push({ terms: { userId: params.searchUserIds } });
+      } else {
+        must.push(buildFieldClause('userId', true));
+      }
+    } else if (field === 'errorMessage') {
+      must.push(buildFieldClause('errorMessage', false));
+    } else {
+      must.push({
+        bool: {
+          should: [
+            { match: { command: { query: term, operator: 'or' } } },
+            { match: { errorMessage: { query: term, operator: 'or' } } },
+            { wildcard: { deviceName: `*${safe}*` } },
+            { wildcard: { userId: `*${safe}*` } },
+          ],
+          minimum_should_match: 1,
+        },
+      });
+    }
   }
 
   const query = must.length > 0 ? { bool: { must } } : { match_all: {} };

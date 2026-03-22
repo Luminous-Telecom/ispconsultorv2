@@ -1457,11 +1457,11 @@ function Table<T extends { id: number | string }>({
             </div>
           )}
 
-        {/* Botões de reload e auditar + paginação no header */}
-        <div className="d-flex align-items-center justify-content-between table-pagination-header">
-          {/* Controles customizados à esquerda */}
-          <div className="d-flex align-items-center gap-3">
-            {/* Checkbox selecionar todos (incluindo outras páginas) - exibido quando todos da página atual estão selecionados */}
+        {/* Segunda linha: filtros (customControls) + paginação + refresh */}
+        <div className="d-flex align-items-center justify-content-between flex-nowrap table-pagination-header">
+          {/* Filtros/customControls à esquerda */}
+          <div className="d-flex align-items-center gap-3 flex-nowrap flex-shrink-0">
+            {/* Checkbox selecionar todos (incluindo outras páginas) */}
             {showSelectAllPagesCheckbox && (
               <div className="d-flex align-items-center gap-2">
                 <input

@@ -8,6 +8,7 @@ import { formatDateTime } from 'utils/formatters';
 import { SshAuditLog, SshAuditAction } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
+import { DateRangeFilter } from 'components/ui';
 import { TableConfig } from 'components/tables/types';
 
 interface SshAuditModalProps {
@@ -50,8 +51,31 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
 
   const { selectedItem, handleSelectionChange, clearSelection } = useModalSelect<SshAuditLogRow>();
 
+  const handleSearchChange = useCallback(
+    (value: string, field?: string) => {
+      setTimeout(() => {
+        tableFilters.setSearch(value);
+        if (field) tableFilters.setSearchField(field);
+        tableFilters.setPage(1);
+      }, 0);
+    },
+    [tableFilters]
+  );
+
+  const handleSearchFieldChange = useCallback(
+    (field: string) => {
+      setTimeout(() => {
+        tableFilters.setSearchField(field);
+        tableFilters.setPage(1);
+      }, 0);
+    },
+    [tableFilters]
+  );
+
   const handleClearFilters = useCallback(() => {
     setTimeout(() => {
+      tableFilters.setSearch('');
+      tableFilters.setSearchField('');
       setFilterAction('');
       setFilterStartDate('');
       setFilterEndDate('');
@@ -76,6 +100,8 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
     queryKey: ['ssh-audit', {
       page: tableFilters.page,
       limit: tableFilters.limit,
+      search: tableFilters.debouncedSearch || undefined,
+      searchField: tableFilters.searchField || undefined,
       action: filterAction || undefined,
       startDate: filterStartDate || undefined,
       endDate: filterEndDate || undefined,
@@ -83,6 +109,8 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
     queryFn: () => SshAuditService.list({
       page: tableFilters.page,
       limit: tableFilters.limit,
+      search: tableFilters.debouncedSearch || undefined,
+      searchField: tableFilters.searchField || undefined,
       action: filterAction || undefined,
       startDate: filterStartDate || undefined,
       endDate: filterEndDate || undefined,
@@ -230,14 +258,15 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
     },
   ], [t, formatTimestamp]);
 
-  const customFilters = (
-    <div className="row mb-1">
-      <div className="col-md-3">
-        <label className="form-label small">{t('table.action')}</label>
+  const filterControls = (
+    <div className="d-flex flex-nowrap align-items-center justify-content-center small filter-compact" style={{ gap: 2 }}>
+      <div className="d-flex flex-column" style={{ width: 'fit-content' }}>
+        <label className="form-label mb-0" style={{ fontSize: '0.65rem' }}>{t('table.action')}</label>
         <select
           className="form-select form-select-sm"
           value={filterAction}
           onChange={(e) => { setFilterAction(e.target.value); tableFilters.setPage(1); }}
+          style={{ width: 'auto', fontSize: '0.65rem', height: '1.25rem', lineHeight: 1, boxSizing: 'border-box' }}
         >
           <option value="">{t('audit.actions.all')}</option>
           {SSH_ACTIONS.map((a) => (
@@ -245,42 +274,26 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
           ))}
         </select>
       </div>
-      <div className="col-md-3">
-        <label className="form-label small">{t('form.startDate')}</label>
-        <input
-          type="date"
-          className="form-control form-control-sm"
-          value={filterStartDate}
-          onChange={(e) => { setFilterStartDate(e.target.value); tableFilters.setPage(1); }}
-        />
-      </div>
-      <div className="col-md-3">
-        <label className="form-label small">{t('form.endDate')}</label>
-        <input
-          type="date"
-          className="form-control form-control-sm"
-          value={filterEndDate}
-          onChange={(e) => { setFilterEndDate(e.target.value); tableFilters.setPage(1); }}
-        />
-      </div>
-      <div className="col-md-3 d-flex align-items-end">
-        <button
-          type="button"
-          className="btn btn-sm btn-outline-primary w-100"
-          onClick={handleClearFilters}
-        >
-          {t('buttons.clear')}
-        </button>
-      </div>
+      <DateRangeFilter
+        startDate={filterStartDate}
+        endDate={filterEndDate}
+        onStartDateChange={(v) => { setFilterStartDate(v); tableFilters.setPage(1); }}
+        onEndDateChange={(v) => { setFilterEndDate(v); tableFilters.setPage(1); }}
+      />
+      <button
+        type="button"
+        className="btn btn-sm btn-outline-primary"
+        style={{ fontSize: '0.65rem', height: '1.25rem', lineHeight: 1, boxSizing: 'border-box' }}
+        onClick={handleClearFilters}
+      >
+        {t('buttons.clear')}
+      </button>
     </div>
   );
 
   const modalContent = (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
-        <div style={{ padding: '16px', paddingBottom: '8px', flexShrink: 0 }}>
-          {customFilters}
-        </div>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             title={t('modal.sshAudit')}
@@ -288,13 +301,22 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
               columns: tableColumns,
               data: modalData,
               loading: isLoading,
-              searchable: false,
+              searchable: true,
+              searchPlaceholder: t('layout.searchPlaceholder'),
+              searchField: tableFilters.searchField || 'command',
+              searchFields: [
+                { key: 'command', label: t('sshAudit.command') },
+                { key: 'deviceName', label: t('sshDevice.backupDeviceColumn') },
+                { key: 'userId', label: t('audit.user') },
+                { key: 'errorMessage', label: t('sshAudit.error') },
+              ],
               sortable: false,
               striped: true,
               hover: true,
               responsive: true,
               selectable: true,
               multiSelect: false,
+              customControls: filterControls,
               bulkActions: bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,
@@ -311,7 +333,9 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
             onRefresh={refetch}
             onPageChange={(page) => setTimeout(() => tableFilters.setPage(page), 0)}
             onPageSizeChange={(limit) => setTimeout(() => tableFilters.setLimit(limit), 0)}
-            search=""
+            onSearch={handleSearchChange}
+            onSearchFieldChange={handleSearchFieldChange}
+            search={tableFilters.search}
           />
         </div>
       </div>

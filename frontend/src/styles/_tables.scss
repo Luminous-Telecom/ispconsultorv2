@@ -1415,6 +1415,7 @@ label {
 /* Table pagination header */
 .table-pagination-header {
   padding: 0 1rem 0.5rem 1rem !important;
+  flex-wrap: nowrap !important;
 }
 
 /* Garantir altura consistente na barra de paginação */
@@ -1428,6 +1429,33 @@ label {
   max-height: 28px !important;
   line-height: 1.25 !important;
   box-sizing: border-box !important;
+}
+
+/* Filtros compactos - padding simétrico */
+.table-pagination-header .filter-compact .form-control,
+.table-pagination-header .filter-compact .form-select {
+  padding: 2px 0.4rem !important;
+}
+.table-pagination-header .filter-compact input[type="date"].form-control {
+  padding: 2px 0.4rem !important;
+}
+/* Zerar espaços internos do input date - evita soma de padding (webkit) */
+.table-pagination-header .filter-compact input[type="date"].form-control::-webkit-datetime-edit,
+.table-pagination-header .filter-compact input[type="date"].form-control::-webkit-datetime-edit-fields-wrapper,
+.table-pagination-header .filter-compact input[type="date"].form-control::-webkit-datetime-edit-text,
+.table-pagination-header .filter-compact input[type="date"].form-control::-webkit-datetime-edit-month-field,
+.table-pagination-header .filter-compact input[type="date"].form-control::-webkit-datetime-edit-day-field,
+.table-pagination-header .filter-compact input[type="date"].form-control::-webkit-datetime-edit-year-field {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.table-pagination-header .filter-compact input[type="date"].form-control::-webkit-calendar-picker-indicator {
+  margin-left: -16px !important;
+  margin-right: 0 !important;
+  cursor: pointer;
+}
+.table-pagination-header .filter-compact .btn {
+  padding: 2px 0.4rem !important;
 }
 
 /* Botões no estilo da paginação (page-link) */

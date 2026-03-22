@@ -109,6 +109,8 @@ export class SshAuditController {
         action,
         startDate,
         endDate,
+        search,
+        searchField,
         page,
         limit,
       } = req.query as Record<string, string | undefined>;
@@ -116,12 +118,30 @@ export class SshAuditController {
       const pageNum = Math.max(1, parseInt(page ?? '1', 10));
       const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '20', 10)));
 
+      let searchUserIds: string[] | undefined;
+      if (searchField === 'userId' && search?.trim()) {
+        const term = search.trim();
+        const users = await Usuario.findAll({
+          where: { nome: { [Op.like]: `%${term}%` } },
+          attributes: ['id'],
+        });
+        const ids = users.map((u) => String(u.id));
+        const idNum = parseInt(term, 10);
+        if (Number.isFinite(idNum) && idNum > 0 && !ids.includes(String(idNum))) {
+          ids.push(String(idNum));
+        }
+        searchUserIds = ids.length > 0 ? ids : ['__none__'];
+      }
+
       const { logs, total } = await searchSshAuditLogs({
         deviceId,
         userId,
         action: action as SshAuditAction | undefined,
         startDate,
         endDate,
+        search,
+        searchField,
+        searchUserIds,
         page: pageNum,
         limit: limitNum,
       });

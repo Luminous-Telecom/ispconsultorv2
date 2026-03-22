@@ -880,6 +880,8 @@ export interface TranslationKeys {
   // Filter Labels
   'filter.startDate': string;
   'filter.endDate': string;
+  'filter.date': string;
+  'filter.until': string;
 
   // Document Labels
   'document.title': string;
@@ -2445,6 +2447,8 @@ const translations: Translations = {
     // Filter Labels
     'filter.startDate': 'Data Inicial:',
     'filter.endDate': 'Data Final:',
+    'filter.date': 'Data',
+    'filter.until': 'até',
 
     // Document Labels
     'document.title': 'Título:',
@@ -3863,6 +3867,8 @@ const translations: Translations = {
     // Filter Labels
     'filter.startDate': 'Start Date:',
     'filter.endDate': 'End Date:',
+    'filter.date': 'Date',
+    'filter.until': 'to',
 
     // Document Labels
     'document.title': 'Title:',
@@ -5283,6 +5289,8 @@ const translations: Translations = {
     // Filter Labels
     'filter.startDate': 'Fecha Inicial:',
     'filter.endDate': 'Fecha Final:',
+    'filter.date': 'Fecha',
+    'filter.until': 'hasta',
 
     // Document Labels
     'document.title': 'Título:',

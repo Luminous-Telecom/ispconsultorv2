@@ -9,6 +9,8 @@ export { default as EntitySelectField } from './EntitySelectField';
 export { default as Card } from './Card';
 export type { CardProps, CardVariant, CardPadding } from './Card';
 export { default as Badge } from './Badge';
+export { default as DateRangeFilter } from './DateRangeFilter';
+export type { DateRangeFilterProps } from './DateRangeFilter';
 export type { BadgeProps, BadgeVariant } from './Badge';
 export { default as Spinner } from './Spinner';
 export type { SpinnerProps, SpinnerSize, SpinnerVariant } from './Spinner';
