@@ -19,6 +19,8 @@ export type RunSshDeviceBackupContext = {
   ip?: string;
 };
 
+export type RunSshDeviceBackupResult = { success: boolean; message: string };
+
 /**
  * Executa backup de configuração (MikroTik: /export) e grava em arquivos/ssh-device-backups.
  * Com agente túnel: comando roda no agente (SSH até o equipamento na rede local).
@@ -27,7 +29,7 @@ export type RunSshDeviceBackupContext = {
 export async function runSshDeviceBackup(
   deviceId: string,
   context?: RunSshDeviceBackupContext
-): Promise<void> {
+): Promise<RunSshDeviceBackupResult> {
   const manual = context?.manual === true;
   const auditUserId = manual ? (context?.userId ?? 'user') : 'scheduler';
   const auditIp = context?.ip ?? '127.0.0.1';
@@ -42,7 +44,7 @@ export async function runSshDeviceBackup(
   const device = await SshDevice.findByPk(deviceId);
   if (!device) {
     logger.warn('Backup SSH: device não encontrado', { context: 'SshDeviceBackupRunner', deviceId, manual });
-    return;
+    return { success: false, message: 'Device não encontrado.' };
   }
 
   if (!device.is_active) {
@@ -52,7 +54,7 @@ export async function runSshDeviceBackup(
       name: device.name,
       manual,
     });
-    return;
+    return { success: false, message: 'Device inativo não pode receber backup.' };
   }
 
   if (!manual && !device.backup_enabled) {
@@ -61,7 +63,7 @@ export async function runSshDeviceBackup(
       deviceId,
       name: device.name,
     });
-    return;
+    return { success: false, message: 'Backup desabilitado para este device.' };
   }
 
   if (device.device_type !== 'mikrotik') {
@@ -71,7 +73,7 @@ export async function runSshDeviceBackup(
       device_type: device.device_type,
       manual,
     });
-    return;
+    return { success: false, message: 'Backup não suportado para este tipo de equipamento.' };
   }
 
   const baseDir = resolveArquivosPath('ssh-device-backups');
@@ -116,10 +118,10 @@ export async function runSshDeviceBackup(
           ip: auditIp,
           duration: Date.now() - started,
         });
-        return;
+        return { success: false, message: msg };
       }
       if (!isAgentOnline(device.agent_id!)) {
-        const msg = 'Agente offline.';
+        const msg = 'Agente offline. Mantenha o túnel conectado para o backup via agente.';
         logger.warn('Backup SSH via agente abortado', {
           context: 'SshDeviceBackupRunner',
           deviceId,
@@ -136,7 +138,7 @@ export async function runSshDeviceBackup(
           ip: auditIp,
           duration: Date.now() - started,
         });
-        return;
+        return { success: false, message: msg };
       }
 
       let password: string;
@@ -156,7 +158,7 @@ export async function runSshDeviceBackup(
           ip: auditIp,
           duration: Date.now() - started,
         });
-        return;
+        return { success: false, message: msg };
       }
 
       let privateKey: string | undefined;
@@ -219,7 +221,7 @@ export async function runSshDeviceBackup(
           ip: auditIp,
           duration: Date.now() - started,
         });
-        return;
+        return { success: false, message: msg };
       }
 
       output = via.output ?? '';
@@ -260,6 +262,7 @@ export async function runSshDeviceBackup(
       ip: auditIp,
       duration,
     });
+    return { success: true, message: 'Backup concluído com sucesso.' };
   } catch (err) {
     const duration = Date.now() - started;
     const msg = err instanceof Error ? err.message : String(err);
@@ -284,6 +287,7 @@ export async function runSshDeviceBackup(
       ip: auditIp,
       duration,
     });
+    return { success: false, message: `Falha no backup: ${msg}` };
   } finally {
     if (usedPool) {
       sshPool.releaseDevice(deviceId);

@@ -13,7 +13,7 @@ import {
   listBackupsForDeviceIds,
   resolveBackupFileForDownload,
 } from '../../../services/ssh-manager/SshDeviceBackupStorageService';
-import { getSshDeviceBackupQueue } from '../../../services/ssh-manager/SshDeviceBackupQueue';
+import { runSshDeviceBackup } from '../../../services/ssh-manager/SshDeviceBackupRunner';
 import {
   sendSuccess,
   sendError,
@@ -30,6 +30,7 @@ import {
   resolveEmpresaIdForScopedCreate,
 } from '../../../utils/tenantUtils';
 import { logger } from '../../../utils/logger';
+import { registrarCriacao } from '../../../services/sistema/AuditoriaService';
 
 function parseClienteIdQuery(raw: unknown): number | null {
   if (raw === undefined || raw === null || raw === '') return null;
@@ -503,7 +504,7 @@ export class DeviceController {
 
       const userId = getUserId(req);
       const ip = getClientIp(req);
-      logger.info('Backup SSH manual: enfileirando', {
+      logger.info('Backup SSH manual: executando', {
         context: 'DeviceController.queueManualBackup',
         deviceId: device.id,
         deviceName: device.name,
@@ -511,18 +512,25 @@ export class DeviceController {
         ip,
       });
 
-      getSshDeviceBackupQueue().enqueue(device.id, {
+      const result = await runSshDeviceBackup(device.id, {
         manual: true,
         userId,
         ip,
       });
 
-      sendSuccess(res, {
-        message:
-          'Backup enfileirado. Em alguns instantes o arquivo aparecerá na aba de backups; em caso de falha, verifique os logs do servidor.',
-      });
+      if (!result.success) {
+        sendError(res, new Error(result.message), result.message, 500, true, {
+          context: 'DeviceController.queueManualBackup',
+        });
+        return;
+      }
+
+      try {
+        await registrarCriacao(req as AuthenticatedRequest, 'SshDeviceBackup', 0, { deviceId: device.id, message: result.message }, 'Backup manual executado', empresaId);
+      } catch { /* não crítico */ }
+      sendSuccess(res, { message: result.message }, result.message);
     } catch (error) {
-      logger.error('Backup SSH manual: falha ao enfileirar', {
+      logger.error('Backup SSH manual: falha ao executar', {
         context: 'DeviceController.queueManualBackup',
         deviceId: req.params.id,
         error: error instanceof Error ? error.message : String(error),

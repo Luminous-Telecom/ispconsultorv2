@@ -1685,8 +1685,7 @@ const translations: Translations = {
     'sshDevice.downloadBackup': 'Baixar',
     'sshDevice.backupsLoadError': 'Não foi possível carregar os backups.',
     'sshDevice.manualBackup': 'Backup manual',
-    'sshDevice.manualBackupQueued':
-      'Backup enfileirado. Em instantes o arquivo deve aparecer na lista; se falhar, verifique os logs do servidor.',
+    'sshDevice.manualBackupQueued': 'Backup concluído com sucesso.',
     'tabs.sshDeviceBackups': 'Backups SSH',
     'modal.agents': 'Túneis (Agentes)',
     'modal.emailHistory': 'Histórico de Mensagens Email',
@@ -3099,8 +3098,7 @@ const translations: Translations = {
     'sshDevice.downloadBackup': 'Download',
     'sshDevice.backupsLoadError': 'Could not load backups.',
     'sshDevice.manualBackup': 'Manual backup',
-    'sshDevice.manualBackupQueued':
-      'Backup queued. The file should appear shortly; if it fails, check the server logs.',
+    'sshDevice.manualBackupQueued': 'Backup completed successfully.',
     'tabs.sshDeviceBackups': 'SSH backups',
     'modal.agents': 'Tunnels (Agents)',
     'modal.emailHistory': 'Email Message History',
@@ -4515,8 +4513,7 @@ const translations: Translations = {
     'sshDevice.downloadBackup': 'Descargar',
     'sshDevice.backupsLoadError': 'No se pudieron cargar las copias.',
     'sshDevice.manualBackup': 'Copia manual',
-    'sshDevice.manualBackupQueued':
-      'Copia en cola. El archivo debería aparecer en breve; si falla, revise los logs del servidor.',
+    'sshDevice.manualBackupQueued': 'Copia completada con éxito.',
     'tabs.sshDeviceBackups': 'Copias SSH',
     'modal.agents': 'Túneles (Agentes)',
     'modal.emailHistory': 'Historial de Mensajes Email',

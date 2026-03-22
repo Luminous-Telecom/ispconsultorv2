@@ -106,6 +106,6 @@ export const useQueueManualSshDeviceBackup = () => {
       success(data.message?.trim() || t('sshDevice.manualBackupQueued'));
       queryClient.invalidateQueries({ queryKey: ['ssh-device', deviceId] });
     },
-    onError: (err) => error(getErrorMessage(err, 'Erro ao enfileirar backup')),
+    onError: (err) => error(getErrorMessage(err, 'Erro ao executar backup')),
   });
 };
