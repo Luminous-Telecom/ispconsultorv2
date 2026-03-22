@@ -19,6 +19,10 @@ import Table from 'components/tables/Table';
 import { DateRangeFilter } from 'components/ui';
 import { TableConfig } from 'components/tables/types';
 import MensagemDetalhesModal from 'components/modals/comunicacao/MensagemDetalhesModal';
+import BlockdomiLogsRealModal from 'components/modals/blockdomi/BlockdomiLogsRealModal';
+import WhoisModal from 'components/modals/blockdomi/WhoisModal';
+import { useBlockdomiLogs } from 'hooks/useBlockdomiLogs';
+import type { BlockdomiLogAcessoItem } from 'services/blockdomiLogAcessoService';
 
 export type LogsModalType =
   | 'equipamentos'
@@ -29,7 +33,8 @@ export type LogsModalType =
   | 'email'
   | 'whatsapp'
   | 'assinatura-digital'
-  | 'acesso-sistema';
+  | 'acesso-sistema'
+  | 'blockdomi-acesso';
 
 const LOGS_AUDITORIA_CONFIG: Record<string, { entidade?: string; acao?: string; comUsuarioObrigatorio?: boolean; origemAuditoria?: string }> = {
   usuarios: { comUsuarioObrigatorio: true },
@@ -86,12 +91,13 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant?: 'erp' |
   const isAuditoria = ['usuarios', 'agenda-tarefas', 'webhook', 'assinatura-digital', 'acesso-sistema'].includes(logType);
   const isEmail = logType === 'email';
   const isWhatsapp = logType === 'whatsapp';
+  const isBlockdomiAcesso = logType === 'blockdomi-acesso';
 
   const preset = useMemo(() => LOGS_AUDITORIA_CONFIG[logType] || {}, [logType]);
   const tableFilters = useTableFilters({
     initialSearch: '',
     initialPage: 1,
-    initialLimit: isSsh ? 15 : 20,
+    initialLimit: isSsh || isBlockdomiAcesso ? 15 : 20,
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
   });
@@ -163,9 +169,19 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant?: 'erp' |
     refetchOnWindowFocus: false,
   });
 
-  const data = isSsh ? sshQuery.data : isAuditoria ? auditoriaQuery.data : mensagemQuery.data;
-  const isLoading = isSsh ? sshQuery.isLoading : isAuditoria ? auditoriaQuery.isLoading : mensagemQuery.isLoading;
-  const refetch = isSsh ? sshQuery.refetch : isAuditoria ? auditoriaQuery.refetch : mensagemQuery.refetch;
+  const blockdomiFilters = useMemo(() => ({
+    search: tableFilters.debouncedSearch || undefined,
+    page: tableFilters.page,
+    limit: tableFilters.limit,
+    sortColumn: tableFilters.sortColumn,
+    sortDirection: tableFilters.sortDirection,
+  }), [tableFilters.page, tableFilters.limit, tableFilters.debouncedSearch, tableFilters.sortColumn, tableFilters.sortDirection]);
+
+  const blockdomiQuery = useBlockdomiLogs(blockdomiFilters, { enabled: show && isBlockdomiAcesso });
+
+  const data = isSsh ? sshQuery.data : isAuditoria ? auditoriaQuery.data : isBlockdomiAcesso ? blockdomiQuery.data : mensagemQuery.data;
+  const isLoading = isSsh ? sshQuery.isLoading : isAuditoria ? auditoriaQuery.isLoading : isBlockdomiAcesso ? blockdomiQuery.isLoading : mensagemQuery.isLoading;
+  const refetch = isSsh ? sshQuery.refetch : isAuditoria ? auditoriaQuery.refetch : isBlockdomiAcesso ? blockdomiQuery.refetch : mensagemQuery.refetch;
 
   return {
     tableFilters,
@@ -190,6 +206,7 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant?: 'erp' |
     isEquipamentos: logType === 'equipamentos',
     isAuditoria,
     isEmail,
+    isBlockdomiAcesso,
     showIdColumn: logType === 'email' || logType === 'whatsapp',
   };
 }
@@ -197,6 +214,8 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant?: 'erp' |
 const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType = 'usuarios', variant }) => {
   const { t } = useI18n();
   const ctx = useLogsContent(logType, show, variant);
+  const [showBlockdomiLogsReal, setShowBlockdomiLogsReal] = useState(false);
+  const [whoisIp, setWhoisIp] = useState<string | null>(null);
 
   const {
     tableFilters,
@@ -221,6 +240,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     isEquipamentos,
     isAuditoria,
     isEmail,
+    isBlockdomiAcesso,
     showIdColumn,
   } = ctx;
 
@@ -344,6 +364,17 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     { key: 'observacoes' as const, label: t('table.observations'), sortable: true, render: (log: AuditoriaLog) => <span className="small">{log.observacoes || '-'}</span> },
   ], [t, formatTimestamp, formatAcao, getAcaoBadgeClass, showIdColumn]);
 
+  // --- Blockdomi columns ---
+  const blockdomiColumns: TableConfig<BlockdomiLogAcessoItem>['columns'] = useMemo(() => [
+    { key: 'ip' as const, label: t('blockdomi.logsIp'), sortable: true, width: '140px', render: (i) => i.ip ?? '-' },
+    { key: 'rota' as const, label: t('blockdomi.logsRota'), sortable: true, width: '120px', render: (i) => i.rota },
+    { key: 'metodo' as const, label: t('blockdomi.logsMetodo'), sortable: true, width: '70px', render: (i) => i.metodo },
+    { key: 'status_http' as const, label: t('blockdomi.logsStatus'), sortable: true, width: '80px', render: (i) => i.status_http ?? '-' },
+    { key: 'sucesso' as const, label: t('blockdomi.logsSucesso'), sortable: true, width: '90px', render: (i) => <span className={`badge bg-${i.sucesso ? 'success' : 'danger'}`}>{i.sucesso ? t('blockdomi.logsSucessoOk') : t('blockdomi.logsSucessoErro')}</span> },
+    { key: 'mensagem_erro' as const, label: t('blockdomi.logsMensagemErro'), sortable: false, width: '200px', render: (i) => <span className="text-break text-muted small">{i.mensagem_erro ?? '-'}</span> },
+    { key: 'created_at' as const, label: t('table.createdAt'), sortable: true, width: '150px', render: (i) => (i.created_at_formatada ?? i.created_at ?? '-') },
+  ], [t]);
+
   // --- Mensagem columns ---
   const mensagemColumns: TableConfig<MensagemItem>['columns'] = useMemo(() => [
     { key: 'id' as const, label: t('table.id'), sortable: true, width: '42px', render: (i: MensagemItem) => <span>{i.id}</span> },
@@ -363,8 +394,11 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     if (isSsh) {
       return (d as (SshAuditLog & { id?: string })[]).map((item, idx) => ({ ...item, id: item.id ?? `audit-${idx}` }));
     }
+    if (isBlockdomiAcesso) {
+      return (d as BlockdomiLogAcessoItem[]) as { id: number | string }[];
+    }
     return d as { id: number | string }[];
-  }, [data, isSsh]);
+  }, [data, isSsh, isBlockdomiAcesso]);
 
   const handleViewDetails = useCallback((item: unknown) => {
     if (isSsh) { setSelectedSsh(item as SshAuditLog); setShowDetailsModal(true); }
@@ -372,12 +406,21 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     else { setSelectedMensagem(item as MensagemItem); setShowDetailsModal(true); }
   }, [isSsh, isAuditoria, setSelectedSsh, setSelectedAuditoria, setSelectedMensagem, setShowDetailsModal]);
 
-  const bulkActions = useMemo(() => [{
-    label: isAuditoria || isSsh ? t('audit.viewDetails') : t('history.view'),
-    variant: 'primary' as const,
-    disabled: (items: unknown[]) => items.length === 0 && !selectedItem,
-    action: (items: unknown[]) => { const it = items.length > 0 ? items[0] : selectedItem; if (it) handleViewDetails(it); },
-  }], [t, selectedItem, handleViewDetails, isAuditoria, isSsh]);
+  const bulkActions = useMemo(() => {
+    if (isBlockdomiAcesso) {
+      return [
+        { label: t('blockdomi.logsReal'), variant: 'primary' as const, disabled: () => false, requiresSelection: false, action: () => setShowBlockdomiLogsReal(true) },
+        { label: t('blockdomi.whois'), variant: 'primary' as const, disabled: (items: unknown[]) => items.length !== 1 || !(items[0] as BlockdomiLogAcessoItem)?.ip?.trim(), requiresSelection: true, action: (items: unknown[]) => { const ip = (items[0] as BlockdomiLogAcessoItem)?.ip?.trim(); if (ip) setWhoisIp(ip); } },
+      ];
+    }
+    return [{
+      label: isAuditoria || isSsh ? t('audit.viewDetails') : t('history.view'),
+      variant: 'primary' as const,
+      disabled: (items: unknown[]) => items.length === 0 && !selectedItem,
+      requiresSelection: true,
+      action: (items: unknown[]) => { const it = items.length > 0 ? items[0] : selectedItem; if (it) handleViewDetails(it); },
+    }];
+  }, [t, selectedItem, handleViewDetails, isAuditoria, isSsh, isBlockdomiAcesso]);
 
   const sshFilterControls = isSsh && (
     <div className="d-flex flex-nowrap align-items-center justify-content-center small filter-compact" style={{ gap: 2 }}>
@@ -397,18 +440,21 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
 
   const title = isSsh ? (isEquipamentos ? t('logs.equipamentos') : t('logs.agentes'))
     : isAuditoria ? t('audit.title')
+    : isBlockdomiAcesso ? t('blockdomi.logsAcesso')
     : isEmail ? t('history.emailTitle') : t('history.whatsappTitle');
-  const emptyMessage = isSsh ? (isEquipamentos ? t('sshAudit.emptyMessage') : t('logs.agentesEmpty')) : isAuditoria ? 'Nenhum log encontrado' : t('history.noMessages');
+  const emptyMessage = isSsh ? (isEquipamentos ? t('sshAudit.emptyMessage') : t('logs.agentesEmpty')) : isBlockdomiAcesso ? t('blockdomi.logsEmpty') : isAuditoria ? 'Nenhum log encontrado' : t('history.noMessages');
 
-  const columns = isSsh ? sshColumns : isAuditoria ? auditoriaColumns : mensagemColumns;
+  const columns = isSsh ? sshColumns : isAuditoria ? auditoriaColumns : isBlockdomiAcesso ? blockdomiColumns : mensagemColumns;
   const searchFields = isSsh
     ? (isEquipamentos ? [{ key: 'command', label: t('sshAudit.command') }, { key: 'deviceName', label: t('sshDevice.backupDeviceColumn') }, { key: 'userId', label: t('audit.user') }, { key: 'errorMessage', label: t('sshAudit.error') }] : [{ key: 'deviceName', label: t('logs.agentColumn') }, { key: 'ip', label: t('audit.ip') }])
     : isAuditoria
       ? [...(showIdColumn ? [{ key: 'id' as const, label: t('table.id') }] : []), { key: 'timestamp', label: t('audit.timestamp') }, { key: 'usuario_nome', label: t('table.name') }, { key: 'usuario_email', label: t('audit.user') }, { key: 'ip_address', label: t('audit.ip') }, { key: 'acao', label: t('table.action') }, { key: 'entidade', label: t('audit.entity') }, { key: 'observacoes', label: t('table.observations') }]
-      : [{ key: 'id', label: t('table.id') }, { key: 'cliente_nome', label: t('history.client') }, { key: 'destinatario', label: isEmail ? t('history.recipient') : t('history.phone') }, { key: 'mensagem', label: t('history.message') }, { key: 'status', label: t('history.status') }];
+      : isBlockdomiAcesso
+        ? [{ key: 'ip', label: t('blockdomi.logsIp') }, { key: 'rota', label: t('blockdomi.logsRota') }, { key: 'mensagem_erro', label: t('blockdomi.logsMensagemErro') }]
+        : [{ key: 'id', label: t('table.id') }, { key: 'cliente_nome', label: t('history.client') }, { key: 'destinatario', label: isEmail ? t('history.recipient') : t('history.phone') }, { key: 'mensagem', label: t('history.message') }, { key: 'status', label: t('history.status') }];
 
-  const defaultSearchField = isSsh ? (isEquipamentos ? 'command' : 'deviceName') : isAuditoria ? 'timestamp' : 'destinatario';
-  const searchPlaceholder = isSsh ? t('layout.searchPlaceholder') : (isEmail ? t('history.searchEmail') : t('history.searchPhone'));
+  const defaultSearchField = isSsh ? (isEquipamentos ? 'command' : 'deviceName') : isBlockdomiAcesso ? 'ip' : isAuditoria ? 'timestamp' : 'destinatario';
+  const searchPlaceholder = isSsh ? t('layout.searchPlaceholder') : (isBlockdomiAcesso ? t('layout.searchPlaceholder') : (isEmail ? t('history.searchEmail') : t('history.searchPhone')));
 
   const tableContent = (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -423,7 +469,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
             searchPlaceholder,
             searchField: tableFilters.searchField || defaultSearchField,
             searchFields,
-            sortable: !isSsh,
+            sortable: !isSsh || isBlockdomiAcesso,
             sortColumn: tableFilters.sortColumn,
             sortDirection: tableFilters.sortDirection,
             striped: true,
@@ -431,8 +477,15 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
             responsive: true,
             selectable: true,
             multiSelect: false,
-            customControls: sshFilterControls,
-            bulkActions: bulkActions.map((a) => ({ key: a.label.toLowerCase().replace(/\s+/g, '-'), label: a.label, onClick: a.action, disabled: a.disabled, variant: a.variant })),
+            customControls: isSsh ? sshFilterControls : undefined,
+            bulkActions: bulkActions.map((a) => ({
+              key: a.label.toLowerCase().replace(/\s+/g, '-'),
+              label: a.label,
+              onClick: a.action,
+              disabled: a.disabled,
+              variant: a.variant,
+              requiresSelection: a.requiresSelection,
+            })),
             emptyMessage,
             pagination,
           }}
@@ -509,10 +562,18 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     return null;
   })();
 
+  const blockdomiSubModals = isBlockdomiAcesso && (
+    <>
+      <BlockdomiLogsRealModal show={showBlockdomiLogsReal} onClose={() => setShowBlockdomiLogsReal(false)} />
+      <WhoisModal show={!!whoisIp} onClose={() => setWhoisIp(null)} ip={whoisIp ?? ''} />
+    </>
+  );
+
   return (
     <>
       {tableContent}
       {detailsModal}
+      {blockdomiSubModals}
     </>
   );
 };

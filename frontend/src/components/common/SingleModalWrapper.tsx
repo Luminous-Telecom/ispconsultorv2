@@ -34,7 +34,6 @@ const IPv4ListModal = lazy(() => import('../modals/blockdomi/ipv4').then(m => ({
 const IPv6ListModal = lazy(() => import('../modals/blockdomi/ipv6').then(m => ({ default: m.IPv6ListModal })));
 const ImportarListaBlockdomiModal = lazy(() => import('../modals/blockdomi/ImportarListaBlockdomiModal'));
 const IpsPermitidosListModal = lazy(() => import('../modals/blockdomi/ips-permitidos').then(m => ({ default: m.IpsPermitidosListModal })));
-const BlockdomiLogsAcessoModal = lazy(() => import('../modals/blockdomi/BlockdomiLogsAcessoModal'));
 
 // SaaS Super Admin
 const SaasPlanoListModal = lazy(() => import('../modals/saas/SaasPlanoListModal'));
@@ -111,7 +110,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'blockdomi-ipv6': { component: IPv6ListModal, titleKey: 'modal.ipv6', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'blockdomi-importar-lista': { component: ImportarListaBlockdomiModal, titleKey: 'modal.importList', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
   'blockdomi-ips-permitidos': { component: IpsPermitidosListModal, titleKey: 'blockdomi.ipsPermitidos', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
-  'blockdomi-logs-acesso': { component: BlockdomiLogsAcessoModal, titleKey: 'blockdomi.logsAcesso', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'blockdomi-logs-acesso': { component: LogsModal, titleKey: 'blockdomi.logsAcesso', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   // Logs (modal compartilhado, conteúdo por logType)
   'logs-usuarios': { component: LogsModal, titleKey: 'logs.usuarios', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
   'logs-agenda-tarefas': { component: LogsModal, titleKey: 'logs.agendaTarefas', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
@@ -180,8 +179,8 @@ const SingleModalWrapper: React.FC = () => {
     // Para o cliente-modal, passamos clienteId como prop específica
     ...(isClienteModal && { clienteId }),
     // Modal unificado de logs: passar logType derivado do activeModal
-    ...((activeModal.startsWith('logs-') || activeModal === 'saas-historico-email' || activeModal === 'saas-historico-whatsapp') && {
-      logType: activeModal.startsWith('logs-') ? activeModal.replace('logs-', '') : (activeModal === 'saas-historico-email' ? 'email' : 'whatsapp'),
+    ...((activeModal.startsWith('logs-') || activeModal === 'saas-historico-email' || activeModal === 'saas-historico-whatsapp' || activeModal === 'blockdomi-logs-acesso') && {
+      logType: activeModal === 'blockdomi-logs-acesso' ? 'blockdomi-acesso' : (activeModal.startsWith('logs-') ? activeModal.replace('logs-', '') : (activeModal === 'saas-historico-email' ? 'email' : 'whatsapp')),
     }),
     // Para saas-dias-vencimento, reaproveita DiasVencimentoModal com variant saas
     ...(activeModal === 'saas-dias-vencimento' && { variant: 'saas' }),
