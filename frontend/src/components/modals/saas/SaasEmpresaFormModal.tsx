@@ -574,6 +574,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
 
   const titulosBulkActions = useMemo(() => [
     { key: 'novo', label: t('actions.create'), variant: 'primary' as const, requiresSelection: false, onClick: () => setShowTituloCreate(true) },
+    { key: 'excluir', label: t('buttons.delete'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => s.length === 0, onClick: handleDeleteTitulo },
     { key: 'receber', label: t('actions.receive'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
       const items = s.length > 0 ? s : selectedTitulos;
       const emAberto = items.filter(i => !i.pago && (i as { status?: string }).status !== 'cancelado');
@@ -590,7 +591,6 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
       const items = s.length > 0 ? s : selectedTitulos;
       return items.length === 0 || items.every(i => i.status === 'pago' || i.status === 'cancelado');
     }, onClick: handleCancelarTitulo },
-    { key: 'excluir', label: t('buttons.delete'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => s.length === 0, onClick: handleDeleteTitulo },
     { key: 'estornar', label: t('buttons.reverse'), variant: 'primary' as const, disabled: (s: SaasTitulo[]) => {
       const items = s.length > 0 ? s : selectedTitulos;
       const statusPago = (st: string) => st === 'pago' || st === 'pago_atraso' || st === 'parcial';

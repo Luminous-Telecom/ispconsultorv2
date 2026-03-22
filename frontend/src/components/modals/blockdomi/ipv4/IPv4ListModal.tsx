@@ -283,6 +283,26 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
       }
     },
     {
+      label: t('actions.delete'),
+      disabled: (selectedItems: IPv4[]) => selectedItems.length === 0 && !selectedItem,
+      action: async (selectedItems: IPv4[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        if (items.length === 0) return;
+
+        const msg = items.length === 1
+          ? t('messages.confirmDelete')
+          : `Tem certeza que deseja excluir ${items.length} IPv4?`;
+        const confirmed = window.confirm(msg);
+        if (confirmed) {
+          if (items.length === 1) {
+            handleDelete(items[0].id);
+          } else {
+            handleBulkDelete(items.map((i) => i.id));
+          }
+        }
+      }
+    },
+    {
       label: t('blockdomi.anatel'),
       variant: 'primary' as const,
       disabled: (selectedItems: IPv4[]) => {
@@ -321,26 +341,6 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
       action: (selectedItems: IPv4[]) => {
         const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
         items.filter((i) => i.link_planilha_dominios?.trim()).forEach((i) => window.open(i.link_planilha_dominios!, '_blank', 'noopener,noreferrer'));
-      }
-    },
-    {
-      label: t('actions.delete'),
-      disabled: (selectedItems: IPv4[]) => selectedItems.length === 0 && !selectedItem,
-      action: async (selectedItems: IPv4[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        if (items.length === 0) return;
-
-        const msg = items.length === 1
-          ? t('messages.confirmDelete')
-          : `Tem certeza que deseja excluir ${items.length} IPv4?`;
-        const confirmed = window.confirm(msg);
-        if (confirmed) {
-          if (items.length === 1) {
-            handleDelete(items[0].id);
-          } else {
-            handleBulkDelete(items.map((i) => i.id));
-          }
-        }
       }
     }
   ], [onSelectIPv4, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, t]);

@@ -757,6 +757,39 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
         },
         disabled: (s: TituloItemUnion[]): boolean => s.length !== 1
       });
+    }
+
+    actions.push({
+      key: 'excluir',
+      label: t('buttons.delete'),
+      variant: 'primary' as const,
+      onClick: (s: TituloItemUnion[]) => {
+        if (isSaas) handleDeleteSaas(s as SaasTitulo[]);
+        else (async () => {
+          const isDeletavel = (t: Titulo) => t.status === 'cancelado' || (!t.pago && !(t.charge_id || t.nosso_numero || t.codigo_barras || t.linha_digitavel || t.url_boleto));
+          const deletaveis = (s as Titulo[]).filter(isDeletavel);
+          if (deletaveis.length === 0) return;
+          const msg = deletaveis.length === 1 ? t('financial.confirmDeleteTitle') : t('financial.confirmDeleteTitles', { count: deletaveis.length });
+          if (!window.confirm(msg)) return;
+          let okCount = 0, errCount = 0;
+          for (const item of deletaveis) {
+            try { await TituloService.delete(item.id); okCount++; } catch { errCount++; }
+          }
+          await handleRefreshData();
+          setSelectedItems([]);
+          if (okCount > 0) success(okCount === 1 ? t('financial.successDeleteTitle') : t('financial.successDeleteTitles', { count: okCount }));
+          if (errCount > 0) error(errCount === 1 ? t('financial.errorDeleteTitle') : t('financial.errorDeleteTitles', { count: errCount }));
+        })();
+      },
+      disabled: (s: TituloItemUnion[]): boolean => {
+        if (s.length === 0) return true;
+        if (isSaas) return false;
+        const isDeletavel = (t: Titulo) => t.status === 'cancelado' || (!t.pago && !(t.charge_id || t.nosso_numero || t.codigo_barras || t.linha_digitavel || t.url_boleto));
+        return (s as Titulo[]).every(t => !isDeletavel(t));
+      },
+    } as BulkAction<TituloItemUnion>);
+
+    if (!isSaas) {
       actions.push({
         key: 'receber',
         label: t('buttons.receive'),
@@ -816,36 +849,6 @@ const ContasReceberListModal: React.FC<ContasReceberListModalProps> = ({
       disabled: (s: TituloItemUnion[]): boolean => {
         if (s.length === 0) return true;
         return (s as (Titulo | SaasTitulo)[]).every(i => i.status === 'pago' || i.status === 'cancelado');
-      },
-    } as BulkAction<TituloItemUnion>);
-
-    actions.push({
-      key: 'excluir',
-      label: t('buttons.delete'),
-      variant: 'primary' as const,
-      onClick: (s: TituloItemUnion[]) => {
-        if (isSaas) handleDeleteSaas(s as SaasTitulo[]);
-        else (async () => {
-          const isDeletavel = (t: Titulo) => t.status === 'cancelado' || (!t.pago && !(t.charge_id || t.nosso_numero || t.codigo_barras || t.linha_digitavel || t.url_boleto));
-          const deletaveis = (s as Titulo[]).filter(isDeletavel);
-          if (deletaveis.length === 0) return;
-          const msg = deletaveis.length === 1 ? t('financial.confirmDeleteTitle') : t('financial.confirmDeleteTitles', { count: deletaveis.length });
-          if (!window.confirm(msg)) return;
-          let okCount = 0, errCount = 0;
-          for (const item of deletaveis) {
-            try { await TituloService.delete(item.id); okCount++; } catch { errCount++; }
-          }
-          await handleRefreshData();
-          setSelectedItems([]);
-          if (okCount > 0) success(okCount === 1 ? t('financial.successDeleteTitle') : t('financial.successDeleteTitles', { count: okCount }));
-          if (errCount > 0) error(errCount === 1 ? t('financial.errorDeleteTitle') : t('financial.errorDeleteTitles', { count: errCount }));
-        })();
-      },
-      disabled: (s: TituloItemUnion[]): boolean => {
-        if (s.length === 0) return true;
-        if (isSaas) return false;
-        const isDeletavel = (t: Titulo) => t.status === 'cancelado' || (!t.pago && !(t.charge_id || t.nosso_numero || t.codigo_barras || t.linha_digitavel || t.url_boleto));
-        return (s as Titulo[]).every(t => !isDeletavel(t));
       },
     } as BulkAction<TituloItemUnion>);
 

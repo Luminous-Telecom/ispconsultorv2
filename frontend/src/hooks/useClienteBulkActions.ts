@@ -381,6 +381,16 @@ export const useClienteBulkActions = ({
       }
     },
     {
+      key: 'excluir',
+      label: t('actions.delete'),
+      variant: 'primary',
+      disabled: (selectedItems) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => !isTituloDeletavel(item));
+      },
+      onClick: handleDeletarTitulos
+    },
+    {
       key: 'receber',
       label: t('actions.receive'),
       variant: 'primary',
@@ -407,16 +417,6 @@ export const useClienteBulkActions = ({
         return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
       },
       onClick: handleCancelarTitulos
-    },
-    {
-      key: 'excluir',
-      label: t('actions.delete'),
-      variant: 'primary',
-      disabled: (selectedItems) => {
-        if (selectedItems.length === 0) return true;
-        return selectedItems.every(item => !isTituloDeletavel(item));
-      },
-      onClick: handleDeletarTitulos
     },
     {
       key: 'estornar',

@@ -182,6 +182,21 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
         }
       },
       {
+        key: 'delete-selected',
+        label: t('actions.delete'),
+        disabled: (selectedItems: ClienteArquivo[]) => selectedItems.length === 0 || deleteMutation.isPending,
+        onClick: async (selectedItems: ClienteArquivo[]) => {
+          if (selectedItems.length === 0) return;
+          
+          const confirmed = window.confirm(t('confirm.deleteFiles', { count: selectedItems.length }));
+          if (confirmed) {
+            for (const item of selectedItems) {
+              await deleteMutation.mutateAsync(item.id);
+            }
+          }
+        }
+      },
+      {
         key: 'view',
         label: t('buttons.view'),
         disabled: (items: ClienteArquivo[]) => {
@@ -209,21 +224,6 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
           // Baixar todos os arquivos selecionados
           for (const item of selectedItems) {
             handleDownload(item);
-          }
-        }
-      },
-      {
-        key: 'delete-selected',
-        label: t('actions.delete'),
-        disabled: (selectedItems: ClienteArquivo[]) => selectedItems.length === 0 || deleteMutation.isPending,
-        onClick: async (selectedItems: ClienteArquivo[]) => {
-          if (selectedItems.length === 0) return;
-          
-          const confirmed = window.confirm(t('confirm.deleteFiles', { count: selectedItems.length }));
-          if (confirmed) {
-            for (const item of selectedItems) {
-              await deleteMutation.mutateAsync(item.id);
-            }
           }
         }
       }

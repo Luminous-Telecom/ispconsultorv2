@@ -213,6 +213,28 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
       action: () => setShowCreateModal(true),
     },
     {
+      label: t('actions.edit'),
+      variant: 'primary' as const,
+      disabled: (selectedItems: SshDevice[]) => selectedItems.length !== 1,
+      action: (selectedItems: SshDevice[]) => {
+        if (selectedItems.length !== 1) return;
+        setSelectedDeviceId(selectedItems[0].id);
+        setShowEditModal(true);
+      },
+    },
+    {
+      label: t('actions.delete'),
+      variant: 'primary' as const,
+      disabled: (selectedItems: SshDevice[]) => selectedItems.length === 0,
+      action: async (selectedItems: SshDevice[]) => {
+        if (selectedItems.length === 0) return;
+        const d = selectedItems[0];
+        if (!window.confirm(`Remover o device "${d.name}"?`)) return;
+        await handleDelete(d);
+        queryClient.invalidateQueries({ queryKey: ['ssh-devices'] });
+      },
+    },
+    {
       label: 'Terminal',
       variant: 'primary' as const,
       disabled: (selectedItems: SshDevice[]) => selectedItems.length !== 1,
@@ -240,28 +262,6 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
       action: async (selectedItems: SshDevice[]) => {
         if (selectedItems.length !== 1) return;
         await queueManualBackupMutation.mutateAsync(selectedItems[0].id);
-      },
-    },
-    {
-      label: t('actions.edit'),
-      variant: 'primary' as const,
-      disabled: (selectedItems: SshDevice[]) => selectedItems.length !== 1,
-      action: (selectedItems: SshDevice[]) => {
-        if (selectedItems.length !== 1) return;
-        setSelectedDeviceId(selectedItems[0].id);
-        setShowEditModal(true);
-      },
-    },
-    {
-      label: t('actions.delete'),
-      variant: 'primary' as const,
-      disabled: (selectedItems: SshDevice[]) => selectedItems.length === 0,
-      action: async (selectedItems: SshDevice[]) => {
-        if (selectedItems.length === 0) return;
-        const d = selectedItems[0];
-        if (!window.confirm(`Remover o device "${d.name}"?`)) return;
-        await handleDelete(d);
-        queryClient.invalidateQueries({ queryKey: ['ssh-devices'] });
       },
     },
   ], [t, handleTest, handleDelete, queryClient, canQueueManualBackup, queueManualBackupMutation]);

@@ -286,6 +286,14 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
         action: handleEdit,
       },
+      {
+        label: t('actions.delete'),
+        disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
+        action: (selectedItems: RotinaAgendada[]) => {
+          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+          if (item) handleDelete(item);
+        },
+      },
       ...(hasExecute
         ? [
             {
@@ -312,17 +320,9 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
                 const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
                 if (item) handleToggle(item);
               },
-            },
-          ]
+          },
+        ]
         : []),
-      {
-        label: t('actions.delete'),
-        disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
-        action: (selectedItems: RotinaAgendada[]) => {
-          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-          if (item) handleDelete(item);
-        },
-      },
     ];
     return actions;
   }, [t, selectedItem, handleCreate, handleEdit, handleExecute, handleToggle, handleDelete, hasExecute, hasToggle]);

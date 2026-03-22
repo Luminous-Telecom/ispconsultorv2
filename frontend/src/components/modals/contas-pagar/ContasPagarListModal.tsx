@@ -500,6 +500,19 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
       }
     },
     {
+      label: t('buttons.delete'),
+      disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
+      action: async (selectedItems: ContaPagar[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+        if (!item) return;
+        
+        const confirmed = window.confirm(t('messages.confirmDeleteAccountPayable'));
+        if (confirmed) {
+          handleDelete(item.id);
+        }
+      }
+    },
+    {
       label: t('actions.pay'),
       variant: 'primary' as const,
       disabled: (selectedItems: ContaPagar[]) => {
@@ -522,19 +535,6 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
         const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
         if (item) {
           handleDuplicar(item.id);
-        }
-      }
-    },
-    {
-      label: t('buttons.delete'),
-      disabled: (selectedItems: ContaPagar[]) => selectedItems.length === 0,
-      action: async (selectedItems: ContaPagar[]) => {
-        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-        if (!item) return;
-        
-        const confirmed = window.confirm(t('messages.confirmDeleteAccountPayable'));
-        if (confirmed) {
-          handleDelete(item.id);
         }
       }
     }

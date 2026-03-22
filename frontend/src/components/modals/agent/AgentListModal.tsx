@@ -207,6 +207,15 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
       },
     },
     {
+      label: 'Deletar',
+      variant: 'primary' as const,
+      disabled: (items: Agent[]) => items.length !== 1,
+      onClick: async (items: Agent[]) => {
+        if (items.length !== 1) return;
+        await handleDelete(items[0]);
+      },
+    },
+    {
       label: 'Terminal',
       variant: 'primary' as const,
       disabled: (items: Agent[]) => items.length !== 1 || !items[0]?.online,
@@ -247,15 +256,6 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
           },
         },
       ],
-    },
-    {
-      label: 'Deletar',
-      variant: 'primary' as const,
-      disabled: (items: Agent[]) => items.length !== 1,
-      onClick: async (items: Agent[]) => {
-        if (items.length !== 1) return;
-        await handleDelete(items[0]);
-      },
     },
   ];
   }, [

@@ -293,6 +293,26 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       }
     },
     {
+      label: t('actions.delete'),
+      disabled: (selectedItems: Dominio[]) => selectedItems.length === 0 && !selectedItem,
+      action: async (selectedItems: Dominio[]) => {
+        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
+        if (items.length === 0) return;
+
+        const msg = items.length === 1
+          ? t('messages.confirmDelete')
+          : `Tem certeza que deseja excluir ${items.length} domínio(s)?`;
+        const confirmed = window.confirm(msg);
+        if (confirmed) {
+          if (items.length === 1) {
+            handleDelete(items[0].id);
+          } else {
+            handleBulkDelete(items.map((i) => i.id));
+          }
+        }
+      }
+    },
+    {
       label: t('blockdomi.anatel'),
       variant: 'primary' as const,
       disabled: (selectedItems: Dominio[]) => {
@@ -332,26 +352,6 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       action: (selectedItems: Dominio[]) => {
         const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
         items.filter((i) => i.link_planilha_dominios?.trim()).forEach((i) => window.open(i.link_planilha_dominios!, '_blank', 'noopener,noreferrer'));
-      }
-    },
-    {
-      label: t('actions.delete'),
-      disabled: (selectedItems: Dominio[]) => selectedItems.length === 0 && !selectedItem,
-      action: async (selectedItems: Dominio[]) => {
-        const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
-        if (items.length === 0) return;
-
-        const msg = items.length === 1
-          ? t('messages.confirmDelete')
-          : `Tem certeza que deseja excluir ${items.length} domínio(s)?`;
-        const confirmed = window.confirm(msg);
-        if (confirmed) {
-          if (items.length === 1) {
-            handleDelete(items[0].id);
-          } else {
-            handleBulkDelete(items.map((i) => i.id));
-          }
-        }
       }
     }
   ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, t]);

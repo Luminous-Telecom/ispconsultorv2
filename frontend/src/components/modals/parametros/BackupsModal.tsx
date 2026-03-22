@@ -211,14 +211,6 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
       }))
     },
     {
-      key: 'importar',
-      label: t('backup.import'),
-      variant: 'primary' as const,
-      requiresSelection: false,
-      disabled: (_items: BackupWithId[]) => !!(actionLoading.upload),
-      onClick: () => handleImportClick()
-    },
-    {
       key: 'deletar',
       label: t('actions.delete'),
       variant: 'primary' as const,
@@ -227,6 +219,14 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
         const item = items[0];
         if (item) handleDelete(item);
       }
+    },
+    {
+      key: 'importar',
+      label: t('backup.import'),
+      variant: 'primary' as const,
+      requiresSelection: false,
+      disabled: (_items: BackupWithId[]) => !!(actionLoading.upload),
+      onClick: () => handleImportClick()
     },
     {
       key: 'baixar',
