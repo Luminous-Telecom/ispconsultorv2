@@ -16,8 +16,7 @@ export class SaasPlanoService {
   static async update(id: number, data: Partial<SaasPlano>): Promise<void> {
     const updateData = { ...data };
     if (data.recursos != null && typeof data.recursos === 'object') {
-      const modulos = (data.recursos as Record<string, unknown>)?.modulos;
-      updateData.recursos = { modulos };
+      updateData.recursos = data.recursos as Record<string, unknown>;
     }
     await SaasPlano.update(updateData, { where: { id } });
   }

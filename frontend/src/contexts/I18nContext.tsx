@@ -1010,6 +1010,8 @@ export interface TranslationKeys {
   'saas.manualUnblock': string;
   'saas.confirmManualUnblock': string;
   'saas.dataNaoBloquearAte': string;
+  'saas.planModules': string;
+  'saas.planModulesHelp': string;
 
   // Placeholders
   'placeholder.cnpj': string;
@@ -2408,6 +2410,8 @@ const translations: Translations = {
     'saas.manualUnblock': 'Desbloquear manualmente',
     'saas.confirmManualUnblock': 'Desbloquear empresa manualmente? Ela terá o prazo configurado para regularizar os títulos.',
     'saas.dataNaoBloquearAte': 'Data de não bloquear até',
+    'saas.planModules': 'Módulos do plano',
+    'saas.planModulesHelp': 'Selecione os módulos que este plano inclui. Clientes com este plano terão acesso apenas aos módulos marcados.',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -3833,6 +3837,8 @@ const translations: Translations = {
     'saas.manualUnblock': 'Manual unblock',
     'saas.confirmManualUnblock': 'Manually unblock company? It will have the configured period to regularize titles.',
     'saas.dataNaoBloquearAte': 'Do not block until',
+    'saas.planModules': 'Plan modules',
+    'saas.planModulesHelp': 'Select the modules this plan includes. Clients with this plan will only have access to the checked modules.',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',
@@ -5260,6 +5266,8 @@ const translations: Translations = {
     'saas.manualUnblock': 'Desbloquear manualmente',
     'saas.confirmManualUnblock': '¿Desbloquear empresa manualmente? Tendrá el plazo configurado para regularizar los títulos.',
     'saas.dataNaoBloquearAte': 'Fecha de no bloquear hasta',
+    'saas.planModules': 'Módulos del plan',
+    'saas.planModulesHelp': 'Seleccione los módulos que incluye este plan. Los clientes con este plan solo tendrán acceso a los módulos marcados.',
 
     // Placeholders
     'placeholder.cnpj': '00.000.000/0000-00',

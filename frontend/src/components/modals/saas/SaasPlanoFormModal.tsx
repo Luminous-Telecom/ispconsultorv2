@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
+import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import { Button } from 'components/ui';
 import FormField from 'components/ui/FormField';
@@ -10,20 +11,37 @@ import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService
 import { PLANO_MODULOS } from 'constants/planoModulos';
 import type { PlanoModuloId } from 'services/planoModulosService';
 
-function extractModulosFromRecursos(recursos: unknown): PlanoModuloId[] {
-  let obj: Record<string, unknown> | null = null;
+function getRecursosObj(recursos: unknown): Record<string, unknown> | null {
   if (recursos && typeof recursos === 'object' && !Array.isArray(recursos)) {
-    obj = recursos as Record<string, unknown>;
-  } else if (typeof recursos === 'string') {
+    return recursos as Record<string, unknown>;
+  }
+  if (typeof recursos === 'string') {
     try {
       const parsed = JSON.parse(recursos);
-      obj = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null;
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null;
     } catch {
-      obj = null;
+      return null;
     }
   }
+  return null;
+}
+
+function extractModulosFromRecursos(recursos: unknown): PlanoModuloId[] {
+  const obj = getRecursosObj(recursos);
   const modulos = obj?.modulos;
   return Array.isArray(modulos) ? modulos.filter((m): m is PlanoModuloId => typeof m === 'string') : [];
+}
+
+function extractEquipamentosFromRecursos(recursos: unknown): ConfigEquipamentos {
+  const obj = getRecursosObj(recursos);
+  if (!obj) return INITIAL_EQUIPAMENTOS;
+  const def = (key: keyof ConfigEquipamentos, val: unknown) =>
+    val != null ? (typeof val === 'number' && !Number.isNaN(val) && val >= 0 ? val : INITIAL_EQUIPAMENTOS[key]) : INITIAL_EQUIPAMENTOS[key];
+  return {
+    limite_equipamentos: def('limite_equipamentos', obj.equipamentos_limite_equipamentos),
+    limite_tuneis: def('limite_tuneis', obj.equipamentos_limite_tuneis),
+    limite_backups: def('limite_backups', obj.equipamentos_limite_backups),
+  };
 }
 
 interface Props {
@@ -33,6 +51,12 @@ interface Props {
   planoId?: number | null;
 }
 
+type ConfigEquipamentos = {
+  limite_equipamentos: number;
+  limite_tuneis: number;
+  limite_backups: number;
+};
+
 interface PlanoForm {
   nome: string;
   descricao: string;
@@ -41,7 +65,14 @@ interface PlanoForm {
   limite_usuarios: number;
   ativo: boolean;
   modulos: PlanoModuloId[];
+  equipamentos: ConfigEquipamentos;
 }
+
+const INITIAL_EQUIPAMENTOS: ConfigEquipamentos = {
+  limite_equipamentos: 5,
+  limite_tuneis: 5,
+  limite_backups: 1,
+};
 
 const INITIAL: PlanoForm = {
   nome: '',
@@ -51,15 +82,23 @@ const INITIAL: PlanoForm = {
   limite_usuarios: 5,
   ativo: true,
   modulos: [],
+  equipamentos: INITIAL_EQUIPAMENTOS,
 };
 
 const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId }) => {
   const { t } = useI18n();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
   const isEditing = !!planoId;
   const [form, setForm] = useState<PlanoForm>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof PlanoForm, string>>>({});
+  const [activeTab, setActiveTab] = useState<'geral' | 'equipamentos'>('geral');
+  const hasEquipamentos = form.modulos.includes('equipamentos');
+
+  useEffect(() => {
+    if (!hasEquipamentos && activeTab === 'equipamentos') setActiveTab('geral');
+  }, [hasEquipamentos, activeTab]);
 
   const { data: planoData } = useQuery({
     queryKey: ['saas-plano', planoId],
@@ -83,6 +122,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
       ? (() => {
           const p = planoData.data as SaasPlano;
           const modulos = extractModulosFromRecursos(p.recursos);
+          const equipamentos = extractEquipamentosFromRecursos(p.recursos);
           const valorAnual: number | '' = p.valor_anual == null ? '' : Number(p.valor_anual);
           const formData = {
             nome: p.nome,
@@ -92,6 +132,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
             limite_usuarios: p.limite_usuarios,
             ativo: p.ativo,
             modulos,
+            equipamentos,
           } as PlanoForm;
           return formData;
         })()
@@ -138,6 +179,16 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
     const baseRecursos = (isEditing && planoData?.data?.recursos && typeof planoData.data.recursos === 'object')
       ? { ...(planoData.data.recursos as Record<string, unknown>) }
       : {};
+    const recursos: Record<string, unknown> = { ...baseRecursos, modulos: form.modulos };
+    if (form.modulos.includes('equipamentos')) {
+      recursos.equipamentos_limite_equipamentos = form.equipamentos.limite_equipamentos;
+      recursos.equipamentos_limite_tuneis = form.equipamentos.limite_tuneis;
+      recursos.equipamentos_limite_backups = form.equipamentos.limite_backups;
+    } else {
+      delete recursos.equipamentos_limite_equipamentos;
+      delete recursos.equipamentos_limite_tuneis;
+      delete recursos.equipamentos_limite_backups;
+    }
     const payload: Partial<SaasPlano> = {
       nome: form.nome,
       descricao: form.descricao,
@@ -145,7 +196,7 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
       valor_anual: form.valor_anual !== '' ? Number(form.valor_anual) : undefined,
       limite_usuarios: form.limite_usuarios,
       ativo: form.ativo,
-      recursos: { ...baseRecursos, modulos: form.modulos },
+      recursos,
     };
 
     try {
@@ -167,113 +218,217 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
       size="lg"
       modalId="saas-plano-form-modal"
       headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
-          <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>
-            {t('buttons.cancel')}
-          </Button>
-          <Button type="submit" form="saas-plano-form" variant="primary" size="sm" disabled={isPending}>
-            {t('buttons.save')}
-          </Button>
+        <div className="plano-header-unified">
+          <div className="plano-header-buttons modal-header-actions d-flex gap-2">
+            <Button type="button" variant="primary" size="sm" onClick={onClose} disabled={isPending}>
+              {t('buttons.cancel')}
+            </Button>
+            <Button type="submit" form="saas-plano-form" variant="primary" size="sm" disabled={isPending}>
+              {t('buttons.save')}
+            </Button>
+          </div>
+          <div className="plano-header-tabs">
+            <ul
+              className={`nav nav-tabs plano-tabs-unified ${isMobile ? 'plano-tabs-mobile' : ''}`}
+              role="tablist"
+              style={{ margin: 0, padding: 0, borderBottom: 'none', backgroundColor: 'transparent' }}
+            >
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link modal-tab-hover ${activeTab === 'geral' ? 'active' : ''}`}
+                  type="button"
+                  onClick={() => setActiveTab('geral')}
+                >
+                  Geral
+                </button>
+              </li>
+              {hasEquipamentos && (
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link modal-tab-hover ${activeTab === 'equipamentos' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('equipamentos')}
+                  >
+                    Equipamentos
+                  </button>
+                </li>
+              )}
+            </ul>
+          </div>
         </div>
       }
     >
-      <form id="saas-plano-form" onSubmit={handleSubmit} style={{ padding: '16px' }}>
-        <div className="row g-1">
-          <div className="col-md-8">
-            <FormField
-              name="nome"
-              type="text"
-              label={`${t('table.planName')} *`}
-              value={form.nome}
-              onChange={(v) => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(p => ({ ...p, nome: undefined })); }}
-              required
-              size="sm"
-              error={errors.nome}
-            />
-          </div>
-          <div className="col-md-4">
-            <FormField
-              name="ativo"
-              type="checkbox"
-              label={form.ativo ? t('status.active') : t('status.inactive')}
-              value={form.ativo}
-              onChange={(v) => setForm(p => ({ ...p, ativo: Boolean(v) }))}
-              switch
-              size="sm"
-            />
-          </div>
-          <div className="col-md-4">
-            <FormField
-              name="valor_mensal"
-              type="number"
-              label="Valor Mensal (R$) *"
-              value={form.valor_mensal}
-              onChange={(v) => { setForm(p => ({ ...p, valor_mensal: Number(v ?? 0) })); if (errors.valor_mensal) setErrors(p => ({ ...p, valor_mensal: undefined })); }}
-              min={0}
-              step={0.01}
-              required
-              size="sm"
-              error={errors.valor_mensal}
-            />
-          </div>
-          <div className="col-md-4">
-            <FormField
-              name="valor_anual"
-              type="number"
-              label="Valor Anual (R$)"
-              value={form.valor_anual === '' ? '' : form.valor_anual}
-              onChange={(v) => setForm(p => ({ ...p, valor_anual: v !== '' && v !== null && v !== undefined ? Number(v) : '' }))}
-              min={0}
-              step={0.01}
-              size="sm"
-            />
-          </div>
-          <div className="col-md-4">
-            <FormField
-              name="limite_usuarios"
-              type="number"
-              label="Limite de Usuários"
-              value={form.limite_usuarios}
-              onChange={(v) => setForm(p => ({ ...p, limite_usuarios: Number(v ?? 5) }))}
-              min={1}
-              size="sm"
-            />
-          </div>
-          <div className="col-12">
-            <FormField
-              name="descricao"
-              type="textarea"
-              label={t('form.description')}
-              value={form.descricao}
-              onChange={(v) => setForm(p => ({ ...p, descricao: String(v ?? '') }))}
-              rows={3}
-              size="sm"
-            />
-          </div>
-          <div className="col-12">
-            <label className="form-label small">Módulos do plano</label>
-            <p className="text-muted small mb-2">
-              Selecione os módulos que este plano inclui. Clientes com este plano terão acesso apenas aos módulos marcados.
-            </p>
-            <div className="d-flex flex-wrap gap-3">
-              {PLANO_MODULOS.map((mod) => (
-                <label key={mod.id} className="d-flex align-items-center gap-2 small">
-                  <input
-                    type="checkbox"
-                    checked={form.modulos.includes(mod.id)}
-                    onChange={(e) => {
-                      setForm((p) => ({
-                        ...p,
-                        modulos: e.target.checked
-                          ? [...p.modulos, mod.id]
-                          : p.modulos.filter((m) => m !== mod.id),
-                      }));
-                    }}
-                  />
-                  <span>{mod.label}</span>
+      <form id="saas-plano-form" onSubmit={handleSubmit}>
+        <div className="plano-modal-content">
+          <div className="tab-content plano-tab-content plano-tab-content-padded">
+          {activeTab === 'geral' && (
+            <>
+              <div className="row g-2">
+                <div className="col-md-8">
+                  <div className="mb-0">
+                    <FormField
+                      name="nome"
+                      type="text"
+                      label={`${t('table.planName')} *`}
+                      value={form.nome}
+                      onChange={(v) => { setForm(p => ({ ...p, nome: String(v ?? '') })); if (errors.nome) setErrors(p => ({ ...p, nome: undefined })); }}
+                      required
+                      size="sm"
+                      error={errors.nome}
+                    />
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="mb-0">
+                    <FormField
+                      name="ativo"
+                      type="checkbox"
+                      label={form.ativo ? t('status.active') : t('status.inactive')}
+                      value={form.ativo}
+                      onChange={(v) => setForm(p => ({ ...p, ativo: Boolean(v) }))}
+                      switch
+                      size="sm"
+                    />
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="mb-0">
+                    <FormField
+                      name="valor_mensal"
+                      type="number"
+                      label="Valor Mensal (R$) *"
+                      value={form.valor_mensal}
+                      onChange={(v) => { setForm(p => ({ ...p, valor_mensal: Number(v ?? 0) })); if (errors.valor_mensal) setErrors(p => ({ ...p, valor_mensal: undefined })); }}
+                      min={0}
+                      step={0.01}
+                      required
+                      size="sm"
+                      error={errors.valor_mensal}
+                    />
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="mb-0">
+                    <FormField
+                      name="valor_anual"
+                      type="number"
+                      label="Valor Anual (R$)"
+                      value={form.valor_anual === '' ? '' : form.valor_anual}
+                      onChange={(v) => setForm(p => ({ ...p, valor_anual: v !== '' && v !== null && v !== undefined ? Number(v) : '' }))}
+                      min={0}
+                      step={0.01}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="mb-0">
+                    <FormField
+                      name="limite_usuarios"
+                      type="number"
+                      label="Limite de Usuários"
+                      value={form.limite_usuarios}
+                      onChange={(v) => setForm(p => ({ ...p, limite_usuarios: Number(v ?? 5) }))}
+                      min={1}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+                <div className="col-12">
+                  <div className="mb-0">
+                    <FormField
+                      name="descricao"
+                      type="textarea"
+                      label={t('form.description')}
+                      value={form.descricao}
+                      onChange={(v) => setForm(p => ({ ...p, descricao: String(v ?? '') }))}
+                      rows={3}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="mb-2">
+                <label className="form-label small">
+                  {t('saas.planModules')}
+                  <i className="bi bi-info-circle text-muted ms-1" style={{ cursor: 'help', fontSize: '0.85rem' }} title={t('saas.planModulesHelp')} />
                 </label>
-              ))}
-            </div>
+                <div className="d-flex flex-wrap gap-3">
+                  {PLANO_MODULOS.map((mod) => (
+                    <label key={mod.id} className="d-flex align-items-center gap-2 small">
+                      <input
+                        type="checkbox"
+                        checked={form.modulos.includes(mod.id)}
+                        onChange={(e) => {
+                          setForm((p) => ({
+                            ...p,
+                            modulos: e.target.checked
+                              ? [...p.modulos, mod.id]
+                              : p.modulos.filter((m) => m !== mod.id),
+                          }));
+                        }}
+                      />
+                      <span>{mod.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+          {activeTab === 'equipamentos' && hasEquipamentos && (
+            <>
+              <div className="row g-2">
+                <div className="col-md-4">
+                  <div className="mb-0">
+                    <FormField
+                      name="equipamentos_limite_equipamentos"
+                      type="number"
+                      label="Limite de equipamentos"
+                      value={form.equipamentos.limite_equipamentos}
+                      onChange={(v) => setForm(p => ({
+                        ...p,
+                        equipamentos: { ...p.equipamentos, limite_equipamentos: Number(v ?? 0) },
+                      }))}
+                      min={0}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="mb-0">
+                    <FormField
+                      name="equipamentos_limite_tuneis"
+                      type="number"
+                      label="Limite de túneis"
+                      value={form.equipamentos.limite_tuneis}
+                      onChange={(v) => setForm(p => ({
+                        ...p,
+                        equipamentos: { ...p.equipamentos, limite_tuneis: Number(v ?? 0) },
+                      }))}
+                      min={0}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="mb-0">
+                    <FormField
+                      name="equipamentos_limite_backups"
+                      type="number"
+                      label="Limite de backups"
+                      value={form.equipamentos.limite_backups}
+                      onChange={(v) => setForm(p => ({
+                        ...p,
+                        equipamentos: { ...p.equipamentos, limite_backups: Number(v ?? 0) },
+                      }))}
+                      min={0}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
           </div>
         </div>
       </form>
