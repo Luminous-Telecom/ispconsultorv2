@@ -29,15 +29,12 @@ const BackupsModal = lazy(() => import('../modals/parametros/BackupsModal'));
 const AssinaturaDigitalModal = lazy(() => import('../modals/parametros/AssinaturaDigitalModal'));
 const AuditoriaModal = lazy(() => import('../modals/parametros/AuditoriaModal'));
 const DocumentosSistemaModal = lazy(() => import('../modals/parametros/documentos-sistema').then(m => ({ default: m.DocumentosSistemaModal })));
-const WhatsAppHistoricoModal = lazy(() => import('../modals/comunicacao/WhatsAppHistoricoModal'));
-const EmailHistoricoModal = lazy(() => import('../modals/comunicacao/EmailHistoricoModal'));
 const DominioListModal = lazy(() => import('../modals/blockdomi/dominios').then(m => ({ default: m.DominioListModal })));
 const IPv4ListModal = lazy(() => import('../modals/blockdomi/ipv4').then(m => ({ default: m.IPv4ListModal })));
 const IPv6ListModal = lazy(() => import('../modals/blockdomi/ipv6').then(m => ({ default: m.IPv6ListModal })));
 const ImportarListaBlockdomiModal = lazy(() => import('../modals/blockdomi/ImportarListaBlockdomiModal'));
 const IpsPermitidosListModal = lazy(() => import('../modals/blockdomi/ips-permitidos').then(m => ({ default: m.IpsPermitidosListModal })));
 const BlockdomiLogsAcessoModal = lazy(() => import('../modals/blockdomi/BlockdomiLogsAcessoModal'));
-const LogsAuditoriaModal = lazy(() => import('components/modals/logs/LogsAuditoriaModal'));
 
 // SaaS Super Admin
 const SaasPlanoListModal = lazy(() => import('../modals/saas/SaasPlanoListModal'));
@@ -54,8 +51,7 @@ const SaasNfseModal = lazy(() => import('../modals/saas/SaasNfseModal'));
 
 // SSH Manager
 const SshDeviceListModal = lazy(() => import('../modals/ssh-manager').then(m => ({ default: m.SshDeviceListModal })));
-const LogsEquipamentosModal = lazy(() => import('../modals/logs/LogsEquipamentosModal'));
-const LogsAgentesModal = lazy(() => import('../modals/logs/LogsAgentesModal'));
+const LogsModal = lazy(() => import('../modals/logs/LogsModal'));
 
 // Agents / Tunnels
 const AgentListModal = lazy(() => import('../modals/agent').then(m => ({ default: m.AgentListModal })));
@@ -102,14 +98,12 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'documentos-sistema': { component: DocumentosSistemaModal, titleKey: 'modal.systemDocuments', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   // SaaS exclusivos (rotas /api/saas/* apenas)
   'saas-auditoria': { component: AuditoriaModal, titleKey: 'modal.auditLogs', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
-  'saas-historico-whatsapp': { component: WhatsAppHistoricoModal, titleKey: 'modal.whatsappHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
-  'saas-historico-email': { component: EmailHistoricoModal, titleKey: 'modal.emailHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
+  'saas-historico-whatsapp': { component: LogsModal, titleKey: 'modal.whatsappHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
+  'saas-historico-email': { component: LogsModal, titleKey: 'modal.emailHistory', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
   'saas-atualizacoes': { component: AtualizacoesModal, titleKey: 'modal.updates', loadingMessageKey: 'ui.loadingPage' },
   'saas-backups': { component: BackupsModal, titleKey: 'modal.backups', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   // SSH Manager
   'ssh-devices': { component: SshDeviceListModal, titleKey: 'modal.sshDevices', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  'logs-equipamentos': { component: LogsEquipamentosModal, titleKey: 'logs.equipamentos', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  'logs-agentes': { component: LogsAgentesModal, titleKey: 'logs.agentes', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   // Agents / Tunnels
   'agents':       { component: AgentListModal,       titleKey: 'modal.agents',      loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'blockdomi-dominios': { component: DominioListModal, titleKey: 'modal.domains', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
@@ -118,14 +112,16 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'blockdomi-importar-lista': { component: ImportarListaBlockdomiModal, titleKey: 'modal.importList', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
   'blockdomi-ips-permitidos': { component: IpsPermitidosListModal, titleKey: 'blockdomi.ipsPermitidos', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'blockdomi-logs-acesso': { component: BlockdomiLogsAcessoModal, titleKey: 'blockdomi.logsAcesso', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  // Logs
-  'logs-usuarios': { component: LogsAuditoriaModal, titleKey: 'logs.usuarios', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
-  'logs-agenda-tarefas': { component: LogsAuditoriaModal, titleKey: 'logs.agendaTarefas', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
-  'logs-webhook': { component: LogsAuditoriaModal, titleKey: 'logs.webhook', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
-  'logs-email': { component: EmailHistoricoModal, titleKey: 'logs.email', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
-  'logs-whatsapp': { component: WhatsAppHistoricoModal, titleKey: 'logs.whatsapp', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
-  'logs-assinatura-digital': { component: LogsAuditoriaModal, titleKey: 'logs.assinaturaDigital', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
-  'logs-acesso-sistema': { component: LogsAuditoriaModal, titleKey: 'logs.acessoSistema', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
+  // Logs (modal compartilhado, conteúdo por logType)
+  'logs-usuarios': { component: LogsModal, titleKey: 'logs.usuarios', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
+  'logs-agenda-tarefas': { component: LogsModal, titleKey: 'logs.agendaTarefas', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
+  'logs-webhook': { component: LogsModal, titleKey: 'logs.webhook', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
+  'logs-email': { component: LogsModal, titleKey: 'logs.email', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
+  'logs-whatsapp': { component: LogsModal, titleKey: 'logs.whatsapp', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
+  'logs-assinatura-digital': { component: LogsModal, titleKey: 'logs.assinaturaDigital', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
+  'logs-acesso-sistema': { component: LogsModal, titleKey: 'logs.acessoSistema', loadingMessageKey: 'ui.loadingPage', className: 'no-padding', size: 'xl' },
+  'logs-equipamentos': { component: LogsModal, titleKey: 'logs.equipamentos', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'logs-agentes': { component: LogsModal, titleKey: 'logs.agentes', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   // SaaS Super Admin
   'saas-planos': { component: SaasPlanoListModal, titleKey: 'modal.plans', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
   'saas-usuarios': { component: SaasUsuariosModal, titleKey: 'modal.users', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
@@ -183,9 +179,9 @@ const SingleModalWrapper: React.FC = () => {
     ...(['clientes', 'planos', 'bancos', 'tipos-cobranca-contrato', 'contratos', 'saas-bancos'].includes(activeModal) && { title: modalTitle }),
     // Para o cliente-modal, passamos clienteId como prop específica
     ...(isClienteModal && { clienteId }),
-    // Para modais de logs (exceto email/whatsapp que usam histórico), derivar logType do activeModal
-    ...(activeModal.startsWith('logs-') && !['logs-email', 'logs-whatsapp'].includes(activeModal) && {
-      logType: activeModal.replace('logs-', '') as 'usuarios' | 'agenda-tarefas' | 'webhook' | 'assinatura-digital' | 'acesso-sistema',
+    // Modal unificado de logs: passar logType derivado do activeModal
+    ...((activeModal.startsWith('logs-') || activeModal === 'saas-historico-email' || activeModal === 'saas-historico-whatsapp') && {
+      logType: activeModal.startsWith('logs-') ? activeModal.replace('logs-', '') : (activeModal === 'saas-historico-email' ? 'email' : 'whatsapp'),
     }),
     // Para saas-dias-vencimento, reaproveita DiasVencimentoModal com variant saas
     ...(activeModal === 'saas-dias-vencimento' && { variant: 'saas' }),
@@ -194,8 +190,7 @@ const SingleModalWrapper: React.FC = () => {
     ...(activeModal === 'saas-servidores-email' && { variant: 'saas' }),
     ...(activeModal === 'saas-servidores-whatsapp' && { variant: 'saas' }),
     ...(activeModal === 'saas-auditoria' && { variant: 'saas' }),
-    ...(activeModal === 'saas-historico-whatsapp' && { variant: 'saas' }),
-    ...(activeModal === 'saas-historico-email' && { variant: 'saas' }),
+    ...((activeModal === 'saas-historico-whatsapp' || activeModal === 'saas-historico-email') && { variant: 'saas' as const }),
     // Para outros modais, passamos os dados adicionais normalmente
     ...(!isClienteModal && modalData && modalData),
   };

@@ -199,6 +199,7 @@ export interface TranslationKeys {
   'layout.folderLogs': string;
 
   // Logs
+  'logs.title': string;
   'logs.usuarios': string;
   'logs.agendaTarefas': string;
   'logs.webhook': string;
@@ -1629,6 +1630,7 @@ const translations: Translations = {
     'layout.folderLogs': 'Logs',
 
     // Logs
+    'logs.title': 'Logs',
     'logs.usuarios': 'Logs de Usuários',
     'logs.agendaTarefas': 'Logs de Agenda de Tarefas',
     'logs.webhook': 'Logs de Webhook',
@@ -3053,6 +3055,7 @@ const translations: Translations = {
     'layout.folderLogs': 'Logs',
 
     // Logs
+    'logs.title': 'Logs',
     'logs.usuarios': 'User Logs',
     'logs.agendaTarefas': 'Task Scheduler Logs',
     'logs.webhook': 'Webhook Logs',
@@ -4478,6 +4481,7 @@ const translations: Translations = {
     'layout.logoutSuccess': 'Cerrado de sesión exitoso',
 
     // Logs
+    'logs.title': 'Registros',
     'logs.usuarios': 'Registros de Usuarios',
     'logs.agendaTarefas': 'Registros de Agenda de Tareas',
     'logs.webhook': 'Registros de Webhook',
