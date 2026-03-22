@@ -14,6 +14,17 @@
  *   BACKNET_SERVER=https://... BACKNET_TOKEN=<token> node index.js
  *
  * Imagem Docker :dev / :prod: URLs fixas abaixo; canal via ENV BACKNET_AGENT_CHANNEL (build da imagem).
+ *
+ * Variáveis de ambiente:
+ * | Variável                  | Padrão   | Descrição                                                                    |
+ * |---------------------------|----------|------------------------------------------------------------------------------|
+ * | BACKNET_TOKEN             | —        | Token de autenticação (formato Cloudflare base64 {s,t})                      |
+ * | BACKNET_SERVER            | —        | URL do servidor Backnet                                                      |
+ * | BACKNET_AGENT_CHANNEL     | —        | dev ou prod (define URL automaticamente)                                     |
+ * | BACKNET_ALLOWED_BASE_PATH | /tmp     | Caminhos permitidos para file transfer (separados por vírgula)               |
+ * | BACKNET_MAX_SHELLS        | 10       | Máximo de sessões de shell simultâneas                                       |
+ * | BACKNET_SSH_STRICT_HOST   | false    | true = bloqueia conexões SSH sem fingerprint verificado                      |
+ * | BACKNET_SSH_WARN_LEGACY   | true     | false = suprime aviso de algoritmos SSH legados                              |
  */
 
 const { io } = require('socket.io-client');
@@ -72,6 +83,10 @@ function getConfig() {
 }
 
 const config = getConfig();
+
+const SSH_STRICT_HOST = process.env.BACKNET_SSH_STRICT_HOST === 'true';
+const SSH_WARN_LEGACY = process.env.BACKNET_SSH_WARN_LEGACY !== 'false';
+const MAX_CONCURRENT_SHELLS = parseInt(process.env.BACKNET_MAX_SHELLS || '10', 10);
 
 /** Base paths permitidos para file transfer (segurança: evita path traversal). Ex: /tmp,/home/user/dados */
 const ALLOWED_BASE_PATHS = (process.env.BACKNET_ALLOWED_BASE_PATH || '/tmp')
@@ -181,10 +196,18 @@ function spawnShell(cols, rows) {
     stdio: ['pipe', 'pipe', 'pipe'],
   });
 
+  const nativeKill = child.kill.bind(child);
+  child.kill = () => {
+    try { nativeKill('SIGTERM'); } catch { /* ignora */ }
+  };
+
+  child.stdin.on('error', () => {
+    try { child.kill(); } catch { /* ignora */ }
+  });
+
   // Adapta a interface para ser compatível com node-pty
   child.write = (data) => child.stdin.write(data);
   child.resize = () => {};
-  child.kill = () => child.kill();
   child.onData = (cb) => {
     child.stdout.on('data', (d) => cb(d.toString()));
     child.stderr.on('data', (d) => cb(d.toString()));
@@ -333,6 +356,11 @@ setInterval(() => {
 // ── Shell local ───────────────────────────────────────────────────────────────
 
 socket.on('shell:open', ({ sessionId, cols, rows }) => {
+  if (shells.size + proxySessions.size >= MAX_CONCURRENT_SHELLS) {
+    console.warn(`[backnet-agent] Limite de sessões atingido (${MAX_CONCURRENT_SHELLS}). Rejeitando sessão ${sessionId}.`);
+    socket.emit('shell:exit', { sessionId, code: 1 });
+    return;
+  }
   console.log(`[backnet-agent] Abrindo shell — sessão ${sessionId}`);
 
   try {
@@ -358,13 +386,21 @@ socket.on('shell:open', ({ sessionId, cols, rows }) => {
 const MAX_INPUT_BYTES = 65536;
 
 socket.on('shell:write', ({ sessionId, data }) => {
+  if (typeof data !== 'string' || data.length > MAX_INPUT_BYTES) return;
+
   const shell = shells.get(sessionId);
   if (shell) {
-    if (typeof data === 'string' && data.length <= MAX_INPUT_BYTES) shell.write(data);
+    shell.write(data);
     return;
   }
+
   const stream = proxySessions.get(sessionId);
-  if (stream && typeof data === 'string' && data.length <= MAX_INPUT_BYTES) stream.write(data);
+  if (stream) {
+    stream.write(data);
+    return;
+  }
+
+  console.warn(`[backnet-agent] shell:write ignorado: sessão desconhecida ${sessionId}`);
 });
 
 socket.on('shell:resize', ({ sessionId, cols, rows }) => {
@@ -420,8 +456,15 @@ const SSH_LEGACY_ALGORITHMS = {
   ],
 };
 
-socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKey }) => {
+socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKey, hostFingerprint }) => {
   if (!testId || !host || !username) return;
+  const p = Number(port) || 22;
+  if (SSH_WARN_LEGACY) {
+    console.warn(
+      `[backnet-agent] Conexão SSH para ${host}:${p} usa algoritmos legados (inclui DH group1, 3DES, MD5). ` +
+      'Defina BACKNET_SSH_WARN_LEGACY=false para suprimir este aviso.'
+    );
+  }
   const start = Date.now();
   const conn = new SshClient();
   conn.on('ready', () => {
@@ -436,10 +479,24 @@ socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKe
     const useKey = typeof privateKey === 'string' && privateKey.trim().length > 0;
     conn.connect({
       host,
-      port: port || 22,
+      port: p,
       username,
       readyTimeout: 15000,
       algorithms: SSH_LEGACY_ALGORITHMS,
+      hostHash: 'sha256',
+      hostVerifier: (fingerprint) => {
+        if (hostFingerprint) {
+          const match = fingerprint === hostFingerprint;
+          if (!match) console.error(`[backnet-agent] SSH fingerprint mismatch para ${host}: esperado ${hostFingerprint}, recebido ${fingerprint}`);
+          return match;
+        }
+        if (SSH_STRICT_HOST) {
+          console.error(`[backnet-agent] Conexão SSH bloqueada: fingerprint ausente e BACKNET_SSH_STRICT_HOST=true (host: ${host})`);
+          return false;
+        }
+        console.warn(`[backnet-agent] SSH: fingerprint não verificado para ${host}:${p}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`);
+        return true;
+      },
       ...(useKey ? { privateKey: privateKey.trim() } : { password }),
     });
   } catch (e) {
@@ -449,7 +506,7 @@ socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKe
 
 socket.on(
   'proxy:ssh:exec',
-  ({ execId, host, port, username, password, privateKey, command, timeoutMs }) => {
+  ({ execId, host, port, username, password, privateKey, command, timeoutMs, hostFingerprint }) => {
     if (!execId || !host || !username || !command) {
       console.warn('[backnet-agent] proxy:ssh:exec parâmetros inválidos', {
         hasExecId: Boolean(execId),
@@ -469,6 +526,12 @@ socket.on(
     const timeout = Math.min(Math.max(Number(timeoutMs) || 120000, 5000), 600000);
     const p = Number(port) || 22;
     const useKey = typeof privateKey === 'string' && privateKey.trim().length > 0;
+    if (SSH_WARN_LEGACY) {
+      console.warn(
+        `[backnet-agent] Conexão SSH para ${host}:${p} usa algoritmos legados (inclui DH group1, 3DES, MD5). ` +
+        'Defina BACKNET_SSH_WARN_LEGACY=false para suprimir este aviso.'
+      );
+    }
     console.log(
       `[backnet-agent] proxy:ssh:exec início execId=${execId} → ${host}:${p} user=${username} auth=${useKey ? 'key' : 'password'} timeout=${timeout}ms cmd=${JSON.stringify(command)}`
     );
@@ -546,6 +609,20 @@ socket.on(
         username,
         readyTimeout: 15000,
         algorithms: SSH_LEGACY_ALGORITHMS,
+        hostHash: 'sha256',
+        hostVerifier: (fingerprint) => {
+          if (hostFingerprint) {
+            const match = fingerprint === hostFingerprint;
+            if (!match) console.error(`[backnet-agent] SSH fingerprint mismatch para ${host}: esperado ${hostFingerprint}, recebido ${fingerprint}`);
+            return match;
+          }
+          if (SSH_STRICT_HOST) {
+            console.error(`[backnet-agent] Conexão SSH bloqueada: fingerprint ausente e BACKNET_SSH_STRICT_HOST=true (host: ${host})`);
+            return false;
+          }
+          console.warn(`[backnet-agent] SSH: fingerprint não verificado para ${host}:${p}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`);
+          return true;
+        },
         ...(useKey ? { privateKey: privateKey.trim() } : { password }),
       });
     } catch (e) {
@@ -554,8 +631,20 @@ socket.on(
   }
 );
 
-socket.on('proxy:ssh:open', ({ sessionId, host, port, username, password, cols, rows }) => {
-  console.log(`[backnet-agent] Proxy SSH → ${host}:${port} (${username}) — sessão ${sessionId}`);
+socket.on('proxy:ssh:open', ({ sessionId, host, port, username, password, privateKey, cols, rows, hostFingerprint }) => {
+  if (shells.size + proxySessions.size >= MAX_CONCURRENT_SHELLS) {
+    console.warn(`[backnet-agent] Limite de sessões atingido (${MAX_CONCURRENT_SHELLS}). Rejeitando sessão ${sessionId}.`);
+    socket.emit('shell:exit', { sessionId, code: 1 });
+    return;
+  }
+  const p = Number(port) || 22;
+  if (SSH_WARN_LEGACY) {
+    console.warn(
+      `[backnet-agent] Conexão SSH para ${host}:${p} usa algoritmos legados (inclui DH group1, 3DES, MD5). ` +
+      'Defina BACKNET_SSH_WARN_LEGACY=false para suprimir este aviso.'
+    );
+  }
+  console.log(`[backnet-agent] Proxy SSH → ${host}:${p} (${username}) — sessão ${sessionId}`);
 
   const c = Math.min(Math.max(Number(cols) || 80, 8), 500);
   const r = Math.min(Math.max(Number(rows) || 24, 4), 200);
@@ -598,7 +687,29 @@ socket.on('proxy:ssh:open', ({ sessionId, host, port, username, password, cols, 
     proxySessions.delete(sessionId);
   });
 
-  conn.connect({ host, port: port || 22, username, password, readyTimeout: 15000 });
+  const useKey = typeof privateKey === 'string' && privateKey.trim().length > 0;
+  conn.connect({
+    host,
+    port: p,
+    username,
+    readyTimeout: 15000,
+    algorithms: SSH_LEGACY_ALGORITHMS,
+    hostHash: 'sha256',
+    hostVerifier: (fingerprint) => {
+      if (hostFingerprint) {
+        const match = fingerprint === hostFingerprint;
+        if (!match) console.error(`[backnet-agent] SSH fingerprint mismatch para ${host}: esperado ${hostFingerprint}, recebido ${fingerprint}`);
+        return match;
+      }
+      if (SSH_STRICT_HOST) {
+        console.error(`[backnet-agent] Conexão SSH bloqueada: fingerprint ausente e BACKNET_SSH_STRICT_HOST=true (host: ${host})`);
+        return false;
+      }
+      console.warn(`[backnet-agent] SSH: fingerprint não verificado para ${host}:${p}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`);
+      return true;
+    },
+    ...(useKey ? { privateKey: privateKey.trim() } : { password }),
+  });
 });
 
 socket.on('proxy:ssh:resize', ({ sessionId, cols, rows }) => {
