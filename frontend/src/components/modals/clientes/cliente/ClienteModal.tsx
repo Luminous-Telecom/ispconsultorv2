@@ -9,6 +9,7 @@ import { useClienteImpressao } from 'hooks/useClienteImpressao';
 import { useClienteBulkActions } from 'hooks/useClienteBulkActions';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { useAuditoria } from 'hooks/useAuditoria';
+import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import { useI18n } from 'contexts/I18nContext';
 import { formatCurrency, formatDate, formatDateTime } from 'utils/formatters';
 import { CarneParcela } from 'types';
@@ -48,10 +49,11 @@ const ClienteModal = ({
   onSuccess
 }: ClienteModalProps) => {
   const { t } = useI18n();
+  const { hasModulo } = usePlanoModulos();
   const formPrefix = useFormPrefix('ClienteEditModal');
   const isMobile = useIsMobile();
-  
-  
+  const hasModuloEquipamentos = hasModulo('equipamentos');
+
   // Estados de modais aninhados
   const [activeTab, setActiveTab] = useState('dados-basicos');
   const [showCancelados, setShowCancelados] = useState(false);
@@ -65,12 +67,18 @@ const ClienteModal = ({
   const [showGerarNFeModal, setShowGerarNFeModal] = useState(false);
   const [selectedTituloForNFe, setSelectedTituloForNFe] = useState<CarneParcela | null>(null);
 
-  // Resetar aba ativa quando modal abrir
+  // Resetar aba ativa quando modal abrir ou quando módulo equipamentos for desativado
   useEffect(() => {
     if (show) {
       setActiveTab('dados-basicos');
     }
   }, [show]);
+
+  useEffect(() => {
+    if (!hasModuloEquipamentos && ['tunel', 'ssh-devices', 'ssh-backups'].includes(activeTab)) {
+      setActiveTab('dados-basicos');
+    }
+  }, [hasModuloEquipamentos, activeTab]);
 
   // Hook de formulário
   const formHook = useClienteForm({
@@ -525,15 +533,15 @@ const ClienteModal = ({
               />
             )}
 
-            {activeTab === 'tunel' && (
+            {hasModuloEquipamentos && activeTab === 'tunel' && (
               <ClienteTunelTab clienteId={effectiveClienteIdForParcelas} />
             )}
 
-            {activeTab === 'ssh-devices' && (
+            {hasModuloEquipamentos && activeTab === 'ssh-devices' && (
               <ClienteSshDevicesTab clienteId={effectiveClienteIdForParcelas} />
             )}
 
-            {activeTab === 'ssh-backups' && (
+            {hasModuloEquipamentos && activeTab === 'ssh-backups' && (
               <ClienteSshBackupsTab clienteId={effectiveClienteIdForParcelas} />
             )}
           </div>
@@ -653,41 +661,45 @@ const ClienteModal = ({
                       {t('tabs.files')}
                     </button>
                   </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link modal-tab-hover ${activeTab === 'tunel' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('tunel')}
-                      type="button"
-                      disabled={!canEditContratosFinanceiro}
-                    >
-                      {t('tabs.tunnelAgents')}
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link modal-tab-hover ${activeTab === 'ssh-devices' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('ssh-devices')}
-                      type="button"
-                      disabled={!canEditContratosFinanceiro}
-                    >
-                      {t('tabs.sshDevicesSection')}
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link modal-tab-hover ${activeTab === 'ssh-backups' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('ssh-backups')}
-                      type="button"
-                      disabled={!canEditContratosFinanceiro}
-                    >
-                      {t('tabs.sshDeviceBackups')}
-                    </button>
-                  </li>
+                  {hasModuloEquipamentos && (
+                    <>
+                      <li className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link modal-tab-hover ${activeTab === 'tunel' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('tunel')}
+                          type="button"
+                          disabled={!canEditContratosFinanceiro}
+                        >
+                          {t('tabs.tunnelAgents')}
+                        </button>
+                      </li>
+                      <li className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link modal-tab-hover ${activeTab === 'ssh-devices' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('ssh-devices')}
+                          type="button"
+                          disabled={!canEditContratosFinanceiro}
+                        >
+                          {t('tabs.sshDevicesSection')}
+                        </button>
+                      </li>
+                      <li className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link modal-tab-hover ${activeTab === 'ssh-backups' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('ssh-backups')}
+                          type="button"
+                          disabled={!canEditContratosFinanceiro}
+                        >
+                          {t('tabs.sshDeviceBackups')}
+                        </button>
+                      </li>
+                    </>
+                  )}
                 </ul>
               </div>
             </div>
     );
-  }, [formHook.isLoadingCliente, formHook.isEditing, formHook.cliente, formHook.isSubmitting, formHook.handleSubmit, canEditContratosFinanceiro, activeTab, isMobile, handleClose, t]);
+  }, [formHook.isLoadingCliente, formHook.isEditing, formHook.cliente, formHook.isSubmitting, formHook.handleSubmit, canEditContratosFinanceiro, activeTab, isMobile, handleClose, t, hasModuloEquipamentos]);
 
 
   const renderModalContent = () => {
