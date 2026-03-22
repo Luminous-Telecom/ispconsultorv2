@@ -54,7 +54,7 @@ const SaasNfseModal = lazy(() => import('../modals/saas/SaasNfseModal'));
 
 // SSH Manager
 const SshDeviceListModal = lazy(() => import('../modals/ssh-manager').then(m => ({ default: m.SshDeviceListModal })));
-const SshAuditModal = lazy(() => import('../modals/ssh-manager').then(m => ({ default: m.SshAuditModal })));
+const LogsEquipamentosModal = lazy(() => import('../modals/logs/LogsEquipamentosModal'));
 
 // Agents / Tunnels
 const AgentListModal = lazy(() => import('../modals/agent').then(m => ({ default: m.AgentListModal })));
@@ -107,7 +107,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'saas-backups': { component: BackupsModal, titleKey: 'modal.backups', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   // SSH Manager
   'ssh-devices': { component: SshDeviceListModal, titleKey: 'modal.sshDevices', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
-  'ssh-audit':   { component: SshAuditModal,      titleKey: 'modal.sshAudit',   loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'logs-equipamentos': { component: LogsEquipamentosModal, titleKey: 'logs.equipamentos', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   // Agents / Tunnels
   'agents':       { component: AgentListModal,       titleKey: 'modal.agents',      loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'blockdomi-dominios': { component: DominioListModal, titleKey: 'modal.domains', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },

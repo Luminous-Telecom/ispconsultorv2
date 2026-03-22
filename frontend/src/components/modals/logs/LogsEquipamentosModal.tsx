@@ -11,7 +11,7 @@ import Table from 'components/tables/Table';
 import { DateRangeFilter } from 'components/ui';
 import { TableConfig } from 'components/tables/types';
 
-interface SshAuditModalProps {
+interface LogsEquipamentosModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
@@ -33,7 +33,7 @@ const SSH_ACTIONS: SshAuditAction[] = [
 
 type SshAuditLogRow = SshAuditLog & { id: string };
 
-const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrapper = false }) => {
+const LogsEquipamentosModal: React.FC<LogsEquipamentosModalProps> = ({ show, onClose, skipWrapper = false }) => {
   const { t } = useI18n();
   const [filterAction, setFilterAction] = useState('');
   const [filterStartDate, setFilterStartDate] = useState('');
@@ -97,7 +97,7 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
   }, []);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['ssh-audit', {
+    queryKey: ['logs-equipamentos', {
       page: tableFilters.page,
       limit: tableFilters.limit,
       search: tableFilters.debouncedSearch || undefined,
@@ -296,7 +296,7 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
-            title={t('modal.sshAudit')}
+            title={t('logs.equipamentos')}
             config={{
               columns: tableColumns,
               data: modalData,
@@ -327,7 +327,7 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
               emptyMessage: t('sshAudit.emptyMessage'),
               pagination,
             }}
-            tableId="ssh-audit-list"
+            tableId="logs-equipamentos-list"
             syncWithHeader={false}
             onSelectionChange={handleSelectionChange}
             onRefresh={refetch}
@@ -351,7 +351,7 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
       }}
       title={t('audit.detailsTitle')}
       size="lg"
-      modalId="ssh-audit-details-modal"
+      modalId="logs-equipamentos-details-modal"
     >
       <div className="p-3">
         <div className="mb-3">
@@ -485,9 +485,9 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
           clearSelection();
           onClose();
         }}
-        title={t('modal.sshAudit')}
+        title={t('logs.equipamentos')}
         size="xl"
-        modalId="ssh-audit-modal"
+        modalId="logs-equipamentos-modal"
         className="no-padding"
       >
         {modalContent}
@@ -497,4 +497,4 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
   );
 };
 
-export default SshAuditModal;
+export default LogsEquipamentosModal;

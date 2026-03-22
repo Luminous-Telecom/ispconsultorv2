@@ -37,6 +37,7 @@ export type ModalType =
   | 'logs-whatsapp'
   | 'logs-assinatura-digital'
   | 'logs-acesso-sistema'
+  | 'logs-equipamentos'
   // SaaS Super Admin (rotas exclusivas /api/saas/*)
   | 'saas-planos'
   | 'saas-usuarios'
@@ -58,7 +59,6 @@ export type ModalType =
   | 'saas-backups'
   // SSH Manager
   | 'ssh-devices'
-  | 'ssh-audit'
   // Agents / Tunnels
   | 'agents'
   | null;

@@ -206,6 +206,7 @@ export interface TranslationKeys {
   'logs.whatsapp': string;
   'logs.assinaturaDigital': string;
   'logs.acessoSistema': string;
+  'logs.equipamentos': string;
   'logs.comingSoon': string;
 
   // Menu Items
@@ -1632,6 +1633,7 @@ const translations: Translations = {
     'logs.whatsapp': 'Logs de WhatsApp',
     'logs.assinaturaDigital': 'Logs de Assinatura Digital',
     'logs.acessoSistema': 'Logs de Acesso ao Sistema',
+    'logs.equipamentos': 'Logs Equipamentos',
     'logs.comingSoon': 'Funcionalidade em desenvolvimento.',
 
     // Menu Items
@@ -3052,6 +3054,7 @@ const translations: Translations = {
     'logs.whatsapp': 'WhatsApp Logs',
     'logs.assinaturaDigital': 'Digital Signature Logs',
     'logs.acessoSistema': 'System Access Logs',
+    'logs.equipamentos': 'Equipment Logs',
     'logs.comingSoon': 'Feature coming soon.',
 
     // Menu Items
@@ -4473,6 +4476,7 @@ const translations: Translations = {
     'logs.whatsapp': 'Registros de WhatsApp',
     'logs.assinaturaDigital': 'Registros de Firma Digital',
     'logs.acessoSistema': 'Registros de Acceso al Sistema',
+    'logs.equipamentos': 'Registros de Equipos',
     'logs.comingSoon': 'Funcionalidad en desarrollo.',
     'layout.closeSearch': 'Cerrar búsqueda',
 

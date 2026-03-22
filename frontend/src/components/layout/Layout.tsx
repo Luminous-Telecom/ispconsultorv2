@@ -256,7 +256,6 @@ const Layout: React.FC = () => {
   const sshManagerFolderItems = [
     { id: 'agents',      modalId: 'agents',      label: 'Túneis (Agentes)', icon: 'bi-plugin',       onClick: () => handleOpenModal('agents') },
     { id: 'ssh-devices', modalId: 'ssh-devices', label: 'Equipamentos',     icon: 'bi-terminal',     onClick: () => handleOpenModal('ssh-devices') },
-    { id: 'ssh-audit',   modalId: 'ssh-audit',   label: 'Auditoria SSH',    icon: 'bi-journal-code', onClick: () => handleOpenModal('ssh-audit') },
   ].filter((item) => filterByModulo(item.modalId));
 
   const blockdomiFolderItems = [
@@ -276,6 +275,7 @@ const Layout: React.FC = () => {
     { id: 'logs-whatsapp', modalId: 'logs-whatsapp', label: t('logs.whatsapp'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('logs-whatsapp') },
     { id: 'logs-assinatura-digital', modalId: 'logs-assinatura-digital', label: t('logs.assinaturaDigital'), icon: 'bi-pen', onClick: () => handleOpenModal('logs-assinatura-digital') },
     { id: 'logs-acesso-sistema', modalId: 'logs-acesso-sistema', label: t('logs.acessoSistema'), icon: 'bi-door-open', onClick: () => handleOpenModal('logs-acesso-sistema') },
+    { id: 'logs-equipamentos', modalId: 'logs-equipamentos', label: t('logs.equipamentos'), icon: 'bi-journal-code', onClick: () => handleOpenModal('logs-equipamentos') },
   ].filter((item) => filterByModulo(item.modalId));
 
   if (isServerUnavailable) {
