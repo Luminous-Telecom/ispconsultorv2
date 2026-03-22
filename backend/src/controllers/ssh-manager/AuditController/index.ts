@@ -4,6 +4,7 @@ import { searchSshAuditLogs, SshAuditAction } from '../../../services/ssh-manage
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
 import { Cliente } from '../../../models/clientes/Cliente';
+import { Usuario } from '../../../models/cadastros/Usuario';
 
 function clienteDisplayName(c: {
   razao_social?: string | null;
@@ -67,6 +68,38 @@ async function enrichSshAuditLogsWithCliente(
   });
 }
 
+async function enrichSshAuditLogsWithUsuario(
+  logs: Record<string, unknown>[]
+): Promise<Record<string, unknown>[]> {
+  const userIds = [
+    ...new Set(
+      logs
+        .map((l) => l.userId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0 && id !== 'unknown' && id !== 'scheduler' && id !== 'user')
+    ),
+  ].map((id) => parseInt(id, 10)).filter((n) => Number.isFinite(n) && n > 0);
+
+  if (userIds.length === 0) {
+    return logs.map((log) => ({ ...log, userName: null }));
+  }
+
+  const users = await Usuario.findAll({
+    where: { id: { [Op.in]: userIds } },
+    attributes: ['id', 'nome'],
+  });
+
+  const userMap = new Map<number, string>();
+  for (const u of users) {
+    userMap.set(u.id, u.nome?.trim() || String(u.id));
+  }
+
+  return logs.map((log) => {
+    const uid = typeof log.userId === 'string' ? parseInt(log.userId, 10) : NaN;
+    const userName = Number.isFinite(uid) && uid > 0 ? (userMap.get(uid) ?? null) : null;
+    return { ...log, userName };
+  });
+}
+
 export class SshAuditController {
   static async index(req: Request, res: Response): Promise<void> {
     try {
@@ -93,7 +126,8 @@ export class SshAuditController {
         limit: limitNum,
       });
 
-      const enrichedLogs = await enrichSshAuditLogsWithCliente(logs);
+      let enrichedLogs = await enrichSshAuditLogsWithCliente(logs);
+      enrichedLogs = await enrichSshAuditLogsWithUsuario(enrichedLogs);
 
       const lastPage = Math.ceil(total / limitNum);
 

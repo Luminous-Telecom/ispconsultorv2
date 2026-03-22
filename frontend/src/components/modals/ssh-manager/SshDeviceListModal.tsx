@@ -100,6 +100,13 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
 
   const tableColumns: TableConfig<SshDevice>['columns'] = useMemo(() => [
     {
+      key: 'id',
+      label: 'ID',
+      sortable: false,
+      width: '70px',
+      render: (item: SshDevice) => <span className="font-monospace small">{item.id}</span>,
+    },
+    {
       key: 'name',
       label: 'Nome',
       sortable: true,
@@ -270,7 +277,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         <Table
-          title={tableTitle ?? 'Devices SSH'}
+          title={tableTitle ?? 'Equipamentos'}
           config={{
             columns: tableColumns,
             data: modalData,
@@ -292,7 +299,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
               disabled: action.disabled,
               variant: action.variant,
             })),
-            emptyMessage: 'Nenhum device SSH cadastrado',
+            emptyMessage: 'Nenhum equipamento cadastrado',
             pagination: pagination,
           }}
           tableId="ssh-devices-list"
@@ -346,7 +353,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
       <DraggableModal
         show={show}
         onClose={() => { clearSelection(); onClose(); }}
-        title="Devices SSH"
+        title="Equipamentos"
         size="xl"
         modalId="ssh-devices-list-modal"
         className="no-padding"

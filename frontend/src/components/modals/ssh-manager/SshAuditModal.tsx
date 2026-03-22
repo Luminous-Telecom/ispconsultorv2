@@ -17,13 +17,14 @@ const ACTION_BADGE: Record<SshAuditAction, { cls: string; label: string }> = {
   CONNECT:        { cls: 'bg-success',          label: 'Conectado' },
   DISCONNECT:     { cls: 'bg-secondary',         label: 'Desconectado' },
   COMMAND:        { cls: 'bg-primary',           label: 'Comando' },
+  TERMINAL_COMMAND: { cls: 'bg-primary',        label: 'Comando Terminal' },
   AUTH_FAIL:      { cls: 'bg-danger',            label: 'Falha de Auth' },
   TERMINAL_OPEN:  { cls: 'bg-info text-dark',    label: 'Terminal Aberto' },
   TERMINAL_CLOSE: { cls: 'bg-secondary',         label: 'Terminal Fechado' },
 };
 
 const SSH_ACTIONS: SshAuditAction[] = [
-  'CONNECT', 'DISCONNECT', 'COMMAND', 'AUTH_FAIL', 'TERMINAL_OPEN', 'TERMINAL_CLOSE',
+  'CONNECT', 'DISCONNECT', 'COMMAND', 'TERMINAL_COMMAND', 'AUTH_FAIL', 'TERMINAL_OPEN', 'TERMINAL_CLOSE',
 ];
 
 const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrapper = false }) => {
@@ -107,8 +108,8 @@ const SshAuditModal: React.FC<SshAuditModalProps> = ({ show, onClose, skipWrappe
       key: 'userId',
       label: 'Usuário',
       sortable: false,
-      width: '80px',
-      render: (item: SshAuditLog) => item.userId ?? '-',
+      width: '120px',
+      render: (item: SshAuditLog) => item.userName?.trim() || item.userId || '-',
     },
     {
       key: 'success',

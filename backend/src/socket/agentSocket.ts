@@ -15,6 +15,7 @@ import {
   resolveAgentSshExecResult,
   resolveAgentPingResult,
 } from '../services/agent/AgentService';
+import { logSshAudit } from '../services/ssh-manager/SshAuditService';
 import { logger } from '../utils/logger';
 
 function hashToken(token: string): string {
@@ -331,7 +332,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       }
 
       const sessionId = randomUUID();
-      createShellSession(sessionId, device.agent_id, socket.id, true);
+      createShellSession(sessionId, device.agent_id, socket.id, true, { deviceId: device.id, deviceName: device.name });
 
       let password: string;
       try {
@@ -368,11 +369,43 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       });
     });
 
+    const agentCommandBuffers = new Map<string, string>();
     socket.on('terminal:input', ({ sessionId, data }: { sessionId: string; data: string }) => {
       const session = getShellSession(sessionId);
       if (!session) return;
       const str = typeof data === 'string' ? data.slice(0, 65536) : '';
-      if (str) sendToAgent(session.agentId, 'shell:write', { sessionId, data: str });
+      if (str) {
+        if (session.isProxy && session.deviceId && session.deviceName) {
+          let buf = agentCommandBuffers.get(sessionId) ?? '';
+          buf += str;
+          const lines: string[] = [];
+          const parts = buf.split(/\r\n|\r|\n/);
+          if (parts.length > 1) {
+            for (let i = 0; i < parts.length - 1; i++) {
+              lines.push(parts[i]!);
+            }
+            agentCommandBuffers.set(sessionId, parts[parts.length - 1] ?? '');
+          } else {
+            agentCommandBuffers.set(sessionId, buf);
+          }
+          const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/[\x00-\x1f\x7f]/g, '').trim();
+          for (const line of lines) {
+            const cmd = stripAnsi(line);
+            if (cmd.length > 0 && cmd.length < 2000) {
+              logSshAudit({
+                action: 'TERMINAL_COMMAND',
+                userId,
+                deviceId: session.deviceId,
+                deviceName: session.deviceName,
+                command: cmd,
+                success: true,
+                ip,
+              });
+            }
+          }
+        }
+        sendToAgent(session.agentId, 'shell:write', { sessionId, data: str });
+      }
     });
 
     socket.on('terminal:resize', ({ sessionId, cols, rows }: {
@@ -387,6 +420,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
     });
 
     socket.on('terminal:close', ({ sessionId }: { sessionId: string }) => {
+      agentCommandBuffers.delete(sessionId);
       const session = getShellSession(sessionId);
       if (session) {
         const event = session.isProxy ? 'proxy:ssh:close' : 'shell:close';
@@ -463,6 +497,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       logger.info('Agent terminal: frontend desconectado', { socketId: socket.id, userId });
 
       const closeSession = (sessionId: string) => {
+        agentCommandBuffers.delete(sessionId);
         const session = getShellSession(sessionId);
         if (session) {
           const event = session.isProxy ? 'proxy:ssh:close' : 'shell:close';

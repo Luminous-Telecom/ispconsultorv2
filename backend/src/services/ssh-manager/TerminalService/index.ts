@@ -10,6 +10,7 @@ interface TerminalSession {
   stream: ClientChannel;
   deviceConn: SshClient;
   deviceId: string;
+  deviceName: string;
   userId: string;
   ip: string;
   openedAt: Date;
@@ -18,6 +19,11 @@ interface TerminalSession {
 }
 
 const sessions = new Map<string, TerminalSession>();
+const commandBuffers = new Map<string, string>();
+
+function stripAnsiAndControl(str: string): string {
+  return str.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/[\x00-\x1f\x7f]/g, '').trim();
+}
 
 /**
  * Abre um shell interativo para o device e retorna o sessionId.
@@ -45,6 +51,7 @@ export async function createTerminalSession(
         stream,
         deviceConn,
         deviceId: device.id,
+        deviceName: device.name,
         userId,
         ip,
         openedAt: new Date(),
@@ -64,6 +71,7 @@ export async function createTerminalSession(
 
       stream.on('close', () => {
         sessions.delete(sessionId);
+        commandBuffers.delete(sessionId);
         try { deviceConn.end(); } catch { /* ignora */ }
 
         logSshAudit({
@@ -82,6 +90,7 @@ export async function createTerminalSession(
 
       stream.on('error', (streamErr: Error) => {
         sessions.delete(sessionId);
+        commandBuffers.delete(sessionId);
         try { deviceConn.end(); } catch { /* ignora */ }
         logger.warn('SSH terminal: erro no stream', { sessionId, error: streamErr.message });
         onClose(`Erro no terminal: ${streamErr.message}`);
@@ -104,6 +113,7 @@ export async function createTerminalSession(
 
 /**
  * Escreve dados no stdin do terminal.
+ * Captura linhas completas (ao pressionar Enter) para auditoria.
  */
 export function writeToTerminal(sessionId: string, data: string): void {
   const session = sessions.get(sessionId);
@@ -111,6 +121,37 @@ export function writeToTerminal(sessionId: string, data: string): void {
     logger.warn('SSH terminal: sessão não encontrada para escrita', { sessionId });
     return;
   }
+
+  let buf = commandBuffers.get(sessionId) ?? '';
+  buf += data;
+
+  const lines: string[] = [];
+  let remaining = buf;
+  const parts = remaining.split(/\r\n|\r|\n/);
+  if (parts.length > 1) {
+    for (let i = 0; i < parts.length - 1; i++) {
+      lines.push(parts[i]!);
+    }
+    remaining = parts[parts.length - 1] ?? '';
+  }
+
+  commandBuffers.set(sessionId, remaining);
+
+  for (const line of lines) {
+    const cmd = stripAnsiAndControl(line);
+    if (cmd.length > 0 && cmd.length < 2000) {
+      logSshAudit({
+        action: 'TERMINAL_COMMAND',
+        userId: session.userId,
+        deviceId: session.deviceId,
+        deviceName: session.deviceName,
+        command: cmd,
+        success: true,
+        ip: session.ip,
+      });
+    }
+  }
+
   session.stream.write(data);
 }
 
@@ -131,6 +172,7 @@ export function closeTerminalSession(sessionId: string): void {
   if (!session) return;
 
   sessions.delete(sessionId);
+  commandBuffers.delete(sessionId);
 
   try { session.stream.end(); } catch { /* ignora */ }
   try { session.deviceConn.end(); } catch { /* ignora */ }

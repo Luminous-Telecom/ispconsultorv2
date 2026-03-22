@@ -255,7 +255,7 @@ const Layout: React.FC = () => {
 
   const sshManagerFolderItems = [
     { id: 'agents',      modalId: 'agents',      label: 'Túneis (Agentes)', icon: 'bi-plugin',       onClick: () => handleOpenModal('agents') },
-    { id: 'ssh-devices', modalId: 'ssh-devices', label: 'Devices SSH',      icon: 'bi-terminal',     onClick: () => handleOpenModal('ssh-devices') },
+    { id: 'ssh-devices', modalId: 'ssh-devices', label: 'Equipamentos',     icon: 'bi-terminal',     onClick: () => handleOpenModal('ssh-devices') },
     { id: 'ssh-audit',   modalId: 'ssh-audit',   label: 'Auditoria SSH',    icon: 'bi-journal-code', onClick: () => handleOpenModal('ssh-audit') },
   ].filter((item) => filterByModulo(item.modalId));
 
@@ -454,7 +454,7 @@ const Layout: React.FC = () => {
             </div>
             )}
 
-            {/* SSH Manager */}
+            {/* Equipamentos */}
             {!isLoadingModulos && sshManagerFolderItems.length > 0 && (
             <div className="accordion sidebar-accordion" id="sshManagerAccordion">
               <div className="accordion-item border-0 bg-transparent">
@@ -479,7 +479,7 @@ const Layout: React.FC = () => {
                     }}
                   >
                     <i className="bi bi-folder folder-icon me-2"></i>
-                    <span>SSH Manager</span>
+                    <span>Equipamentos</span>
                   </button>
                 </h2>
                 <div

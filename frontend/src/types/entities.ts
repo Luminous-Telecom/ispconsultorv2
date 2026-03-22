@@ -793,6 +793,7 @@ export type SshAuditAction =
   | 'CONNECT'
   | 'DISCONNECT'
   | 'COMMAND'
+  | 'TERMINAL_COMMAND'
   | 'AUTH_FAIL'
   | 'TERMINAL_OPEN'
   | 'TERMINAL_CLOSE';
@@ -859,6 +860,7 @@ export interface SshAuditLog {
   timestamp: string;
   action: SshAuditAction;
   userId: string;
+  userName?: string | null;
   deviceId?: string | null;
   deviceName?: string | null;
   clienteId?: number | null;

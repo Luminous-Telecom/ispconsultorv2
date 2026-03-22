@@ -8,6 +8,7 @@ export type SshAuditAction =
   | 'CONNECT'
   | 'DISCONNECT'
   | 'COMMAND'
+  | 'TERMINAL_COMMAND'
   | 'AUTH_FAIL'
   | 'TERMINAL_OPEN'
   | 'TERMINAL_CLOSE';

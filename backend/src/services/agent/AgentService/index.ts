@@ -22,6 +22,10 @@ export interface AgentShellSession {
   openedAt: Date;
   /** true quando é proxy SSH para outro host na rede do agente */
   isProxy: boolean;
+  /** deviceId quando isProxy (terminal no equipamento via agente) */
+  deviceId?: string;
+  /** deviceName quando isProxy */
+  deviceName?: string;
 }
 
 export interface AgentFileTransfer {
@@ -114,9 +118,15 @@ export function createShellSession(
   sessionId: string,
   agentId: string,
   frontendSocketId: string,
-  isProxy = false
+  isProxy = false,
+  deviceInfo?: { deviceId: string; deviceName: string }
 ): void {
-  shellSessions.set(sessionId, { sessionId, agentId, frontendSocketId, openedAt: new Date(), isProxy });
+  const sess: AgentShellSession = { sessionId, agentId, frontendSocketId, openedAt: new Date(), isProxy };
+  if (deviceInfo) {
+    sess.deviceId = deviceInfo.deviceId;
+    sess.deviceName = deviceInfo.deviceName;
+  }
+  shellSessions.set(sessionId, sess);
 }
 
 export function getShellSession(sessionId: string): AgentShellSession | undefined {

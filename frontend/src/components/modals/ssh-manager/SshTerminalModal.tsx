@@ -86,7 +86,7 @@ const SshTerminalModal: React.FC<SshTerminalModalProps> = ({ show, onClose, devi
       fitAddonRef.current = fitAddon;
 
       xterm.writeln('\x1b[1;34m╔═══════════════════════════════════════╗\x1b[0m');
-      xterm.writeln(`\x1b[1;34m║  SSH Manager — Backnet                  ║\x1b[0m`);
+      xterm.writeln(`\x1b[1;34m║  Equipamentos — Backnet                  ║\x1b[0m`);
       xterm.writeln(`\x1b[1;34m║  Device: \x1b[1;37m${device.name.slice(0, 28).padEnd(28)}\x1b[1;34m ║\x1b[0m`);
       xterm.writeln('\x1b[1;34m╚═══════════════════════════════════════╝\x1b[0m');
       xterm.writeln('');

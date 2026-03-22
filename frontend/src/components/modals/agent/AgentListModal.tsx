@@ -102,6 +102,13 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
 
   const tableColumns: TableConfig<Agent>['columns'] = useMemo(() => [
     {
+      key: 'id',
+      label: 'ID',
+      sortable: false,
+      width: '70px',
+      render: (item: Agent) => <span className="font-monospace small">{item.id}</span>,
+    },
+    {
       key: 'online',
       label: 'Status',
       width: '90px',
