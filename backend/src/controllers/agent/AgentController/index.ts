@@ -20,6 +20,8 @@ function parseClienteIdQuery(raw: unknown): number | null {
 import { installAgent } from '../../../services/agent/AgentInstallService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { AuthenticatedRequest } from '../../../types/auth';
 import {
   getEmpresaIdOrNull,
   parseEmpresaIdQuery,
@@ -149,6 +151,24 @@ export class AgentController {
         cliente_id: value.cliente_id ?? null,
       });
 
+      try {
+        logger.info('AgentController.store: iniciando auditoria create', { agentId: agent.id });
+        const dados = agent.toJSON() as Record<string, unknown>;
+        const dadosAudit: Record<string, unknown> = {
+          entity_id_str: agent.id,
+          name: dados.name,
+          description: dados.description ?? null,
+          empresa_id: dados.empresa_id ?? null,
+          cliente_id: dados.cliente_id ?? null,
+          is_active: dados.is_active ?? true,
+          created_at: dados.created_at instanceof Date ? dados.created_at.toISOString() : dados.created_at,
+        };
+        await registrarCriacao(req as AuthenticatedRequest, 'Agent', 0, dadosAudit, undefined, resolved.empresa_id ?? undefined);
+        logger.info('AgentController.store: auditoria create chamada com sucesso', { agentId: agent.id });
+      } catch (auditErr) {
+        logger.warn('AgentController.store: falha ao registrar auditoria', { agentId: agent.id, error: auditErr });
+      }
+
       // Retorna o token UMA VEZ — nunca mais será exibido
       sendSuccess(res, {
         ...agent.toJSON(),
@@ -170,7 +190,20 @@ export class AgentController {
       if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
+      const dadosAntes = agent.toJSON() as Record<string, unknown>;
+      delete dadosAntes.token_hash;
+      delete dadosAntes.id;
       await agent.update(value);
+      try {
+        logger.info('AgentController.update: iniciando auditoria', { agentId: agent.id });
+        const dadosDepois = agent.toJSON() as Record<string, unknown>;
+        delete dadosDepois.token_hash;
+        delete dadosDepois.id;
+        await registrarAtualizacao(req as AuthenticatedRequest, 'Agent', 0, { ...dadosAntes, entity_id_str: agent.id }, { ...dadosDepois, entity_id_str: agent.id }, undefined, empresaId ?? undefined);
+        logger.info('AgentController.update: auditoria chamada com sucesso', { agentId: agent.id });
+      } catch (auditErr) {
+        logger.warn('AgentController.update: falha ao registrar auditoria', { agentId: agent.id, error: auditErr });
+      }
       if (!agent.is_active) {
         disconnectAgentById(agent.id, { sessionEnd: 'inactive' });
       }
@@ -189,7 +222,17 @@ export class AgentController {
       if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
+      const dadosAntes = agent.toJSON() as Record<string, unknown>;
+      delete dadosAntes.token_hash;
+      delete dadosAntes.id;
       await agent.destroy();
+      try {
+        logger.info('AgentController.destroy: iniciando auditoria', { agentId: agent.id });
+        await registrarExclusao(req as AuthenticatedRequest, 'Agent', 0, { ...dadosAntes, entity_id_str: agent.id }, undefined, empresaId ?? undefined);
+        logger.info('AgentController.destroy: auditoria chamada com sucesso', { agentId: agent.id });
+      } catch (auditErr) {
+        logger.warn('AgentController.destroy: falha ao registrar auditoria', { agentId: agent.id, error: auditErr });
+      }
       sendSuccess(res, null, 'Agente removido');
     } catch (err) {
       sendError(res, 'Erro ao remover agente');
@@ -217,6 +260,9 @@ export class AgentController {
         return;
       }
       const result = await pingAgent(agent.id);
+      try {
+        await registrarAtualizacao(req as AuthenticatedRequest, 'Agent', 0, { entity_id_str: agent.id, name: agent.name }, { entity_id_str: agent.id, name: agent.name }, 'Teste de conexão no agente', getEmpresaIdOrNull(req) ?? undefined);
+      } catch { /* não crítico */ }
       sendSuccess(res, result);
     } catch (err) {
       logger.warn('AgentController.testConnection: erro', { error: err });

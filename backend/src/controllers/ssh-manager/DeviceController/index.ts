@@ -30,7 +30,7 @@ import {
   resolveEmpresaIdForScopedCreate,
 } from '../../../utils/tenantUtils';
 import { logger } from '../../../utils/logger';
-import { registrarCriacao } from '../../../services/sistema/AuditoriaService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 
 function parseClienteIdQuery(raw: unknown): number | null {
   if (raw === undefined || raw === null || raw === '') return null;
@@ -190,6 +190,14 @@ export class DeviceController {
         private_key: value.private_key ? encrypt(value.private_key) : null,
       });
 
+      try {
+        const dados = device.toJSON() as Record<string, unknown>;
+        delete dados.password;
+        delete dados.private_key;
+        delete dados.id;
+        await registrarCriacao(req as AuthenticatedRequest, 'SshDevice', 0, { ...dados, entity_id_str: device.id }, undefined, resolved.empresa_id ?? undefined);
+      } catch { /* não crítico */ }
+
       sendSuccess(res, device, 'Device SSH criado com sucesso', 201);
     } catch (error) {
       sendError(res, error, 'Erro ao criar device SSH', 500, true, { context: 'DeviceController.store' });
@@ -225,7 +233,18 @@ export class DeviceController {
         sshPool.releaseDevice(device.id);
       }
 
+      const dadosAntes = device.toJSON() as Record<string, unknown>;
+      delete dadosAntes.password;
+      delete dadosAntes.private_key;
+      delete dadosAntes.id;
       await device.update(updateData);
+      try {
+        const dadosDepois = device.toJSON() as Record<string, unknown>;
+        delete dadosDepois.password;
+        delete dadosDepois.private_key;
+        delete dadosDepois.id;
+        await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { ...dadosAntes, entity_id_str: device.id }, { ...dadosDepois, entity_id_str: device.id }, undefined, empresaId ?? undefined);
+      } catch { /* não crítico */ }
       sendSuccess(res, device, 'Device SSH atualizado com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao atualizar device SSH', 500, true, { context: 'DeviceController.update' });
@@ -245,8 +264,15 @@ export class DeviceController {
         return;
       }
 
+      const dadosAntes = device.toJSON() as Record<string, unknown>;
+      delete dadosAntes.password;
+      delete dadosAntes.private_key;
+      delete dadosAntes.id;
       sshPool.releaseDevice(device.id);
       await device.destroy();
+      try {
+        await registrarExclusao(req as AuthenticatedRequest, 'SshDevice', 0, { ...dadosAntes, entity_id_str: device.id }, undefined, empresaId ?? undefined);
+      } catch { /* não crítico */ }
 
       sendSuccess(res, null, 'Device SSH removido com sucesso');
     } catch (error) {
@@ -285,6 +311,9 @@ export class DeviceController {
             errorMessage: msg,
             ip: getClientIp(req),
           });
+          try {
+            await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${msg})`, getEmpresaIdOrNull(req) ?? undefined);
+          } catch { /* não crítico */ }
           sendSuccess(res, { success: false, latency: null, error: msg });
           return;
         }
@@ -300,6 +329,9 @@ export class DeviceController {
             errorMessage: msg,
             ip: getClientIp(req),
           });
+          try {
+            await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${msg})`, getEmpresaIdOrNull(req) ?? undefined);
+          } catch { /* não crítico */ }
           sendSuccess(res, { success: false, latency: null, error: msg });
           return;
         }
@@ -318,6 +350,9 @@ export class DeviceController {
             errorMessage: msg,
             ip: getClientIp(req),
           });
+          try {
+            await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${msg})`, getEmpresaIdOrNull(req) ?? undefined);
+          } catch { /* não crítico */ }
           sendSuccess(res, { success: false, latency: null, error: msg });
           return;
         }
@@ -349,6 +384,9 @@ export class DeviceController {
             ip: getClientIp(req),
             duration: viaAgent.latency ?? undefined,
           });
+          try {
+            await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, 'Teste de conexão no equipamento', getEmpresaIdOrNull(req) ?? undefined);
+          } catch { /* não crítico */ }
           sendSuccess(res, {
             success: true,
             latency: viaAgent.latency,
@@ -369,6 +407,9 @@ export class DeviceController {
           errorMessage: errorMsg,
           ip: getClientIp(req),
         });
+        try {
+          await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${errorMsg})`, getEmpresaIdOrNull(req) ?? undefined);
+        } catch { /* não crítico */ }
         sendSuccess(res, { success: false, latency: null, error: errorMsg });
         return;
       }
@@ -388,6 +429,10 @@ export class DeviceController {
         duration: latency,
       });
 
+      try {
+        await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { id: deviceId, name: deviceName }, { id: deviceId, name: deviceName }, 'Teste de conexão no equipamento', getEmpresaIdOrNull(req) ?? undefined);
+      } catch { /* não crítico */ }
+
       sendSuccess(res, { success: true, latency, error: null });
     } catch (err) {
       const errorMsg = buildFriendlyError(err instanceof Error ? err : new Error(String(err)));
@@ -401,6 +446,10 @@ export class DeviceController {
         errorMessage: errorMsg,
         ip: getClientIp(req),
       });
+
+      try {
+        await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${errorMsg})`, getEmpresaIdOrNull(req) ?? undefined);
+      } catch { /* não crítico */ }
 
       sendSuccess(res, { success: false, latency: null, error: errorMsg });
     }
@@ -526,7 +575,7 @@ export class DeviceController {
       }
 
       try {
-        await registrarCriacao(req as AuthenticatedRequest, 'SshDeviceBackup', 0, { deviceId: device.id, message: result.message }, 'Backup manual executado', empresaId);
+        await registrarCriacao(req as AuthenticatedRequest, 'SshDeviceBackup', 0, { deviceId: device.id, deviceName: device.name, message: result.message }, `Backup manual do equipamento ${device.name}`, empresaId ?? undefined);
       } catch { /* não crítico */ }
       sendSuccess(res, { message: result.message }, result.message);
     } catch (error) {

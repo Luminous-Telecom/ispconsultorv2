@@ -11,6 +11,8 @@ import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import SshDeviceModal from './SshDeviceModal';
 import SshTerminalModal from './SshTerminalModal';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useAuditoria } from 'hooks/useAuditoria';
 
 interface SshDeviceListModalProps {
   show: boolean;
@@ -33,6 +35,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success } = useNotificationContext();
+  const auditoria = useAuditoria();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -86,6 +89,10 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     if (inactive) return false;
     return String(d.device_type ?? '').toLowerCase() === 'mikrotik';
   }, []);
+
+  const handleAudit = useCallback((device: SshDevice) => {
+    auditoria.handleAudit('SshDevice', device.id);
+  }, [auditoria]);
 
   const handleTest = useCallback(async (device: SshDevice) => {
     try {
@@ -175,7 +182,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
       sortable: true,
       width: '72px',
       render: (item: SshDevice) => (
-        <span className={`badge ${item.backup_enabled ? 'bg-primary' : 'bg-light text-dark border'}`}>
+        <span className={`badge ${item.backup_enabled ? 'bg-primary' : 'bg-light text-muted border'}`}>
           {item.backup_enabled ? t('ui.yes') : t('ui.no')}
         </span>
       ),
@@ -311,6 +318,8 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
           onSort={(col, dir) => setTimeout(() => tableFilters.setSort(col, dir), 0)}
           onSearch={(search) => tableFilters.setSearch(search)}
           search={tableFilters.search}
+          onAudit={handleAudit}
+          auditEntity="SshDevice"
         />
       </div>
     </div>
@@ -343,6 +352,14 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
           device={terminalDevice}
         />
       )}
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
+        title={t('financial.executionLogs')}
+        modalId="auditoria-ssh-device-modal"
+      />
     </>
   );
 

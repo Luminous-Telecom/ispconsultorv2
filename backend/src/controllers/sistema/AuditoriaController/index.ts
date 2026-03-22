@@ -228,30 +228,70 @@ export class AuditoriaController {
         return;
       }
 
-      // Buscar todos os logs da entidade específica, ordenados por timestamp
-      const must: Record<string, unknown>[] = [
+      const entidadeIdStr = String(entidade_id).trim();
+      const isUuid = /^[a-f0-9-]{36}$/i.test(entidadeIdStr);
+
+      const mustBase: Record<string, unknown>[] = [
         { term: { entidade: entidade as string } },
-        { term: { entidade_id: parseInt(entidade_id as string) } }
+        ...(isUuid
+          ? [
+              { term: { entidade_id: 0 } },
+              {
+                bool: {
+                  should: [
+                    { term: { 'dados_novos.entity_id_str.keyword': entidadeIdStr } },
+                    { term: { 'dados_anteriores.entity_id_str.keyword': entidadeIdStr } }
+                  ],
+                  minimum_should_match: 1
+                }
+              }
+            ]
+          : [{ term: { entidade_id: parseInt(entidade_id as string) } }])
       ];
       if (empresaId != null && empresaId > 0) {
-        must.push({ term: { empresa_id: empresaId } });
+        mustBase.push({ term: { empresa_id: empresaId } });
       }
 
-      const result = await client.search({
+      let result = await client.search({
         index: elasticsearchService.getIndexName(),
         body: {
-          query: { bool: { must } },
-          sort: [
-            { timestamp: { order: 'asc' } }
-          ],
-          size: 1000 // Limite alto para pegar todos os logs
+          query: { bool: { must: mustBase } },
+          sort: [{ timestamp: { order: 'asc' } }],
+          size: 1000
         }
       });
 
-      const hits = result.hits.hits.map((hit: any) => ({
-        id: hit._id,
-        ...hit._source
-      }));
+      let hits = result.hits.hits.map((hit: any) => ({ id: hit._id, ...hit._source }));
+
+      if (hits.length === 0 && isUuid) {
+        const mustFallback: Record<string, unknown>[] = [
+          { term: { entidade: entidade as string } },
+          { term: { entidade_id: 0 } }
+        ];
+        if (empresaId != null && empresaId > 0) {
+          mustFallback.push({
+            bool: {
+              should: [
+                { term: { empresa_id: empresaId } },
+                { bool: { must_not: { exists: { field: 'empresa_id' } } } }
+              ],
+              minimum_should_match: 1
+            }
+          });
+        }
+        result = await client.search({
+          index: elasticsearchService.getIndexName(),
+          body: {
+            query: { bool: { must: mustFallback } },
+            sort: [{ timestamp: { order: 'asc' } }],
+            size: 1000
+          }
+        });
+        const allHits = result.hits.hits.map((hit: any) => ({ id: hit._id, ...hit._source }));
+        const matchEntityId = (d: any) => d && (d.entity_id_str === entidadeIdStr || String(d.entity_id_str) === entidadeIdStr);
+        const matchEmpresa = (log: any) => empresaId == null || log?.empresa_id === empresaId || log?.empresa_id == null;
+        hits = allHits.filter((log: any) => (matchEntityId(log?.dados_novos) || matchEntityId(log?.dados_anteriores)) && matchEmpresa(log));
+      }
 
       sendSuccess(res, hits);
     } catch (error) {
@@ -266,7 +306,7 @@ export class AuditoriaController {
    * Gerar PDF de auditoria para uma entidade específica
    */
   static async generatePdf(req: Request, res: Response): Promise<void> {
-    const { entidade, entidade_id } = req.query;
+    const { entidade, entidade_id } = req.query as { entidade?: string; entidade_id?: string };
     
     try {
       if (!entidade || !entidade_id) {
@@ -294,26 +334,60 @@ export class AuditoriaController {
         return;
       }
 
-      const must: Record<string, unknown>[] = [
+      const entidadeIdStr = String(entidade_id).trim();
+      const isUuid = /^[a-f0-9-]{36}$/i.test(entidadeIdStr);
+
+      const mustBase: Record<string, unknown>[] = [
         { term: { entidade: entidade as string } },
-        { term: { entidade_id: parseInt(entidade_id as string) } }
+        ...(isUuid
+          ? [
+              { term: { entidade_id: 0 } },
+              {
+                bool: {
+                  should: [
+                    { term: { 'dados_novos.entity_id_str.keyword': entidadeIdStr } },
+                    { term: { 'dados_anteriores.entity_id_str.keyword': entidadeIdStr } }
+                  ],
+                  minimum_should_match: 1
+                }
+              }
+            ]
+          : [{ term: { entidade_id: parseInt(entidade_id as string) } }])
       ];
       if (empresaId != null && empresaId > 0) {
-        must.push({ term: { empresa_id: empresaId } });
+        mustBase.push({ term: { empresa_id: empresaId } });
       }
 
-      const result = await client.search({
+      let result = await client.search({
         index: elasticsearchService.getIndexName(),
         body: {
-          query: { bool: { must } },
-          sort: [
-            { timestamp: { order: 'desc' } }
-          ],
-          size: 200
+          query: { bool: { must: mustBase } },
+          sort: [{ timestamp: { order: 'desc' } }],
+          size: 500
         }
       });
 
-      const logs = [...result.hits.hits].reverse().map((hit: any) => hit._source);
+      let logs = [...result.hits.hits].reverse().map((hit: any) => hit._source);
+
+      if (logs.length === 0 && isUuid) {
+        const indexName = elasticsearchService.getIndexName();
+        const mustFallback: Record<string, unknown>[] = [
+          { term: { entidade: entidade as string } }
+        ];
+        result = await client.search({
+          index: indexName,
+          body: {
+            query: { bool: { must: mustFallback } },
+            sort: [{ timestamp: { order: 'desc' } }],
+            size: 500
+          }
+        });
+        const allLogs = [...result.hits.hits].reverse().map((hit: any) => hit._source);
+
+        const matchEntityId = (d: any) => d && (d.entity_id_str === entidadeIdStr || String(d.entity_id_str) === entidadeIdStr);
+        const matchEmpresa = (log: any) => empresaId == null || log?.empresa_id === empresaId || log?.empresa_id == null;
+        logs = allLogs.filter((log: any) => (matchEntityId(log?.dados_novos) || matchEntityId(log?.dados_anteriores)) && matchEmpresa(log));
+      }
 
       if (logs.length === 0) {
         logger.warn('Nenhum log encontrado', {

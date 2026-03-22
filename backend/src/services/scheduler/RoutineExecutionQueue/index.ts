@@ -70,7 +70,6 @@ export class RoutineExecutionQueue {
           });
         });
         this.useBullMQ = true;
-        logger.info('RoutineExecutionQueue usando BullMQ (Redis)');
       } catch (err) {
         logger.warn('Falha ao inicializar BullMQ; usando fila em memória', {
           context: 'RoutineExecutionQueue',

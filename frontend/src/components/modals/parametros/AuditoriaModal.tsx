@@ -89,7 +89,8 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
       login: t('audit.actions.login'),
       logout: t('audit.actions.logout'),
       export: t('audit.actions.export'),
-      import: t('audit.actions.import')
+      import: t('audit.actions.import'),
+      executar: t('audit.actions.executar'),
     };
     return acoes[acao] || acao;
   }, [t]);
@@ -102,7 +103,8 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
       login: 'info',
       logout: 'secondary',
       export: 'warning',
-      import: 'warning'
+      import: 'warning',
+      executar: 'info',
     };
     return classes[acao] || 'secondary';
   }, []);
@@ -165,7 +167,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         key: 'acao',
         label: t('table.action'),
         sortable: true,
-        badgeLabels: [t('audit.actions.create'), t('audit.actions.update'), t('audit.actions.delete'), t('audit.actions.login'), t('audit.actions.logout'), t('audit.actions.export'), t('audit.actions.import')],
+        badgeLabels: [t('audit.actions.create'), t('audit.actions.update'), t('audit.actions.delete'), t('audit.actions.login'), t('audit.actions.logout'), t('audit.actions.export'), t('audit.actions.import'), t('audit.actions.executar')],
         render: (log: AuditoriaLog) => (
           <span className={`badge bg-${getAcaoBadgeClass(log.acao)}`}>
             {formatAcao(log.acao)}
@@ -303,6 +305,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
           <option value="delete">{t('audit.actions.delete')}</option>
           <option value="login">{t('audit.actions.login')}</option>
           <option value="logout">{t('audit.actions.logout')}</option>
+          <option value="executar">{t('audit.actions.executar')}</option>
         </select>
       </div>
       <div className="col-md-3">
@@ -323,6 +326,9 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
           <option value="Titulo">{t('form.title')}</option>
           <option value="Banco">{t('table.bank')}</option>
           <option value="ScheduledRoutine">{t('modal.scheduledRoutine')}</option>
+          <option value="Agent">{t('modal.agents')}</option>
+          <option value="SshDevice">{t('modal.sshDevices')}</option>
+          <option value="SshDeviceBackup">{t('sshDevice.manualBackup')}</option>
         </select>
       </div>
       <div className="col-md-2 d-flex align-items-end">

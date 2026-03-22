@@ -72,7 +72,7 @@ export class AuditoriaPDFService {
     };
 
     const gerarCamposHtml = (dadosAnt: any, dadosNov: any): string => {
-      const camposExcluir = ['created_at', 'updated_at', 'deleted_at', 'password', 'senha', 'token', 'api_key'];
+      const camposExcluir = ['created_at', 'updated_at', 'deleted_at', 'password', 'senha', 'token', 'api_key', 'empresa_id'];
       const dadosParaExibir: Record<string, { anterior?: unknown; novo?: unknown }> = {};
 
       if (dadosAnt && dadosNov) {

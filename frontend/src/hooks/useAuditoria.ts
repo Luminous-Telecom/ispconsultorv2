@@ -28,7 +28,7 @@ interface UseAuditoriaReturn {
    * @param entidade - Nome da entidade (ex: 'Cliente', 'Contrato', 'Plano')
    * @param entidadeId - ID da entidade
    */
-  handleAudit: (entidade: string, entidadeId: number) => Promise<void>;
+  handleAudit: (entidade: string, entidadeId: number | string) => Promise<void>;
   
   /**
    * Fecha o modal de preview e limpa o PDF
@@ -42,7 +42,7 @@ export const useAuditoria = (): UseAuditoriaReturn => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
-  const handleAudit = useCallback(async (entidade: string, entidadeId: number) => {
+  const handleAudit = useCallback(async (entidade: string, entidadeId: number | string) => {
     // Abrir modal imediatamente
     setShowPreview(true);
     setIsGeneratingPdf(true);

@@ -9,6 +9,8 @@ import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import AgentModal from './AgentModal';
 import AgentTerminalModal from './AgentTerminalModal';
+import ImprimirModal from 'components/common/ImprimirModal';
+import { useAuditoria } from 'hooks/useAuditoria';
 import { formatDateTime } from 'utils/formatters';
 
 interface AgentListModalProps {
@@ -34,6 +36,7 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
 }) => {
   const { t } = useI18n();
   const { success } = useNotificationContext();
+  const auditoria = useAuditoria();
 
   const agentListFilters = useMemo(() => {
     if (clienteIdFilter != null) return { cliente_id: clienteIdFilter };
@@ -88,6 +91,10 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
       await updateMutation.mutateAsync({ id: agent.id, data: { is_active: isActive } });
     } catch { /* hook notifica */ }
   }, [updateMutation]);
+
+  const handleAudit = useCallback((agent: Agent) => {
+    auditoria.handleAudit('Agent', agent.id);
+  }, [auditoria]);
 
   const handleTest = useCallback(async (agent: Agent) => {
     try {
@@ -325,6 +332,8 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
                   }
                 : undefined
             }
+            onAudit={!onSelectAgent ? handleAudit : undefined}
+            auditEntity={!onSelectAgent ? 'Agent' : undefined}
           />
         </div>
       </div>
@@ -363,6 +372,16 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
         </>
       )}
 
+      {!onSelectAgent && (
+        <ImprimirModal
+          show={auditoria.showPreview}
+          onClose={auditoria.handleClosePreview}
+          pdfUrl={auditoria.pdfUrl}
+          isGenerating={auditoria.isGeneratingPdf}
+          title={t('financial.executionLogs')}
+          modalId="auditoria-agent-modal"
+        />
+      )}
     </>
   );
 

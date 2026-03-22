@@ -10,6 +10,7 @@ import {
   getSessionsByUser,
 } from '../services/ssh-manager/TerminalService';
 import { logSshAudit } from '../services/ssh-manager/SshAuditService';
+import { registrarExecucaoParaSocket } from '../services/sistema/AuditoriaService';
 import { logger } from '../utils/logger';
 
 function verifySocketToken(token: string): JwtPayload | null {
@@ -139,6 +140,9 @@ function registerTerminalNamespace(ns: Namespace): void {
           success: true,
           ip,
         });
+        try {
+          await registrarExecucaoParaSocket(userId, ip, 'SshDevice', `Acesso ao terminal do equipamento ${device.name}`, { deviceId: device.id, deviceName: device.name }, device.empresa_id ?? undefined);
+        } catch { /* não crítico */ }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Erro ao criar sessão de terminal';
         logger.warn('SSH terminal: erro ao criar sessão', { socketId: socket.id, error: message });

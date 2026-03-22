@@ -260,10 +260,10 @@ class AuditoriaService {
   /**
    * Buscar logs de auditoria por entidade e entidade_id
    */
-  async getByEntity(entidade: string, entidadeId: number): Promise<ApiResponse<AuditoriaLog[]>> {
+  async getByEntity(entidade: string, entidadeId: number | string): Promise<ApiResponse<AuditoriaLog[]>> {
     const params = new URLSearchParams();
     params.append('entidade', entidade);
-    params.append('entidade_id', entidadeId.toString());
+    params.append('entidade_id', String(entidadeId));
     
     return defaultApiClient.get<AuditoriaLog[]>(`${this.baseEndpoint}/entity?${params.toString()}`);
   }
@@ -274,10 +274,10 @@ class AuditoriaService {
    * Gerar PDF de auditoria para uma entidade específica
    * Usa /api/saas/auditoria/pdf para entidades SaaS, /api/auditoria/pdf para ERP
    */
-  async generatePdf(entidade: string, entidadeId: number): Promise<Blob> {
+  async generatePdf(entidade: string, entidadeId: number | string): Promise<Blob> {
     const params = new URLSearchParams();
     params.append('entidade', entidade);
-    params.append('entidade_id', entidadeId.toString());
+    params.append('entidade_id', String(entidadeId));
     const baseUrl = ENTIDADES_SAAS.includes(entidade)
       ? '/saas/auditoria'
       : this.baseEndpoint;

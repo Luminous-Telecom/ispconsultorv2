@@ -16,6 +16,7 @@ import {
   resolveAgentPingResult,
 } from '../services/agent/AgentService';
 import { logSshAudit } from '../services/ssh-manager/SshAuditService';
+import { registrarExecucaoParaSocket } from '../services/sistema/AuditoriaService';
 import { logger } from '../utils/logger';
 
 function hashToken(token: string): string {
@@ -286,6 +287,9 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
 
       socket.emit('terminal:created', { sessionId });
       logger.info('Agent terminal: sessão criada (shell local)', { sessionId, agentId, userId, ip });
+      try {
+        await registrarExecucaoParaSocket(userId, ip, 'Agent', `Acesso ao terminal do agente ${agent.name}`, { agentId, agentName: agent.name }, agent.empresa_id ?? undefined);
+      } catch { /* não crítico */ }
     });
 
     // Frontend quer abrir terminal proxy SSH para um SshDevice via agente
@@ -367,6 +371,9 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       logger.info('Agent terminal: sessão proxy SSH criada', {
         sessionId, agentId: device.agent_id, deviceId, userId, ip,
       });
+      try {
+        await registrarExecucaoParaSocket(userId, ip, 'SshDevice', `Acesso ao terminal do equipamento ${device.name} (via agente)`, { deviceId: device.id, deviceName: device.name, agentId: device.agent_id }, device.empresa_id ?? undefined);
+      } catch { /* não crítico */ }
     });
 
     const agentCommandBuffers = new Map<string, string>();
