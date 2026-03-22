@@ -4,6 +4,7 @@ export type PlanoModuloId =
   | 'cadastros'
   | 'financeiro'
   | 'blockdomi'
+  | 'equipamentos'
   | 'envio_notificacoes'
   | 'historico_notificacoes'
   | 'assinatura_digital'
