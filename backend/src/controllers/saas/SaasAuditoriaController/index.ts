@@ -36,6 +36,7 @@ export class SaasAuditoriaController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const search = req.query.search as string;
+      const searchField = req.query.searchField as string;
       const acao = req.query.acao as string;
       const entidade = req.query.entidade as string;
       const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
@@ -52,6 +53,7 @@ export class SaasAuditoriaController {
         page: effectivePage,
         limit,
         search,
+        searchField,
         acao,
         entidade,
         usuario_id,

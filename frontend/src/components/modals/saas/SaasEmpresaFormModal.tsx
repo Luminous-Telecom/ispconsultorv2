@@ -313,10 +313,11 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     page: logsTf.page,
     limit: logsTf.limit,
     search: logsTf.debouncedSearch || undefined,
+    searchField: logsTf.searchField || undefined,
     sortColumn: logsTf.sortColumn,
     sortDirection: logsTf.sortDirection,
     empresa_id: empresaId ?? undefined,
-  }), [logsTf.page, logsTf.limit, logsTf.debouncedSearch, logsTf.sortColumn, logsTf.sortDirection, empresaId]);
+  }), [logsTf.page, logsTf.limit, logsTf.debouncedSearch, logsTf.searchField, logsTf.sortColumn, logsTf.sortDirection, empresaId]);
   const { data: logsData, refetch: refetchLogs } = useQuery({
     queryKey: ['auditoria', 'tenant', empresaId, logsFilters],
     queryFn: async () => {
@@ -1000,7 +1001,18 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                     loading: activeTab === 'logs' && !logsData,
                     emptyMessage: 'Nenhum log encontrado para este tenant',
                     searchable: true,
-                    searchPlaceholder: 'Buscar logs...',
+                    searchPlaceholder: '',
+                    searchField: logsTf.searchField || 'timestamp',
+                    searchFields: [
+                      { key: 'timestamp', label: t('audit.timestamp') },
+                      { key: 'acao', label: t('table.action') },
+                      { key: 'entidade', label: t('audit.entity') },
+                      { key: 'usuario_nome', label: t('table.name') },
+                      { key: 'usuario_email', label: t('audit.user') },
+                      { key: 'ip_address', label: t('audit.ip') },
+                      { key: 'rota', label: t('audit.route') },
+                      { key: 'observacoes', label: t('table.observations') },
+                    ],
                     sortable: true,
                     sortColumn: logsTf.sortColumn,
                     sortDirection: logsTf.sortDirection,
@@ -1032,7 +1044,8 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   }}
                   onRefresh={refetchLogs}
                   onSort={logsTf.setSort}
-                  onSearch={(s) => logsTf.setSearch(s)}
+                  onSearch={(s, f) => { logsTf.setSearch(s); if (f) logsTf.setSearchField(f); }}
+                  onSearchFieldChange={(f) => logsTf.setSearchField(f)}
                   search={logsTf.search}
                   onPageChange={(p) => logsTf.setPage(p)}
                   onPageSizeChange={(l) => logsTf.setLimit(l)}
