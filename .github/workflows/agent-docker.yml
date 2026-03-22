@@ -6,7 +6,7 @@ name: Publicar backnet-tunnel (Docker Hub)
 
 on:
   push:
-    branches: [main]
+    branches: [main, ssh]
     paths:
       - 'agent/**'
       - '.github/workflows/agent-docker.yml'
@@ -29,6 +29,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build e push (canal prod → :prod e :latest)
+        if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
           context: ./agent
