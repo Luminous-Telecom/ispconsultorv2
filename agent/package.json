@@ -1,0 +1,18 @@
+{
+  "name": "backnet-agent",
+  "version": "1.0.0",
+  "description": "Agente Backnet — túnel reverso para acesso seguro sem portas SSH expostas",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0",
+    "socket.io-client": "^4.7.5",
+    "ssh2": "^1.16.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}
