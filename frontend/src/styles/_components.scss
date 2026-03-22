@@ -1043,6 +1043,21 @@ button,
   font-size: var(--font-size-sm);
 }
 
+.form-check-input[type="radio"] {
+  border-radius: 50%;
+  font-size: var(--font-size-sm);
+}
+
+.form-check-input[type="radio"]:checked {
+  background-color: var(--btn-primary-color);
+  border-color: var(--btn-primary-color);
+  background-image: none;
+}
+
+.form-check-input[type="radio"]:not(:checked) {
+  background-color: transparent;
+}
+
 .form-check-input[type="checkbox"]:checked {
   background-color: var(--btn-primary-color);
   border-color: var(--btn-primary-color);
@@ -1104,6 +1119,16 @@ button,
 [data-theme="dark"] .form-check-input {
   background-color: var(--bg-secondary);
   border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-check-input[type="radio"]:not(:checked) {
+  background-color: transparent;
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-check-input[type="radio"]:checked {
+  background-color: var(--btn-primary-color);
+  border-color: var(--btn-primary-color);
 }
 
 [data-theme="dark"] .form-check-input:hover:not(:disabled) {
@@ -2080,7 +2105,7 @@ textarea:focus {
 }
 
 .plano-tab-content-padded {
-  padding: 0 16px 16px 16px;
+  padding: 16px;
 }
 
 .plano-tab-disabled {

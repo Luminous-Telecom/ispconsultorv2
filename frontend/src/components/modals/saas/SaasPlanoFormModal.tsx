@@ -4,7 +4,7 @@ import { useI18n } from 'contexts/I18nContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
 import { Button } from 'components/ui';
-import FormField from 'components/ui/FormField';
+import { FormField, AtivoInativoField } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
@@ -280,14 +280,11 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
                 </div>
                 <div className="col-md-4">
                   <div className="mb-0">
-                    <FormField
-                      name="ativo"
-                      type="checkbox"
-                      label={form.ativo ? t('status.active') : t('status.inactive')}
+                    <AtivoInativoField
                       value={form.ativo}
-                      onChange={(v) => setForm(p => ({ ...p, ativo: Boolean(v) }))}
-                      switch
-                      size="sm"
+                      onChange={(v) => setForm(p => ({ ...p, ativo: v }))}
+                      name="saas-plano-ativo"
+                      required
                     />
                   </div>
                 </div>
