@@ -4,7 +4,7 @@ import { useCreateTipoCobrancaContrato, useUpdateTipoCobrancaContrato, useTipoCo
 import { useFormReset } from 'hooks/useFormReset';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, Spinner } from 'components/ui';
+import { AtivoInativoField, Button, Spinner } from 'components/ui';
 
 const PERIODICIDADES = [
   { value: 'mensal', key: 'form.periodicityMonthly' },
@@ -203,20 +203,11 @@ const TipoCobrancaContratoModal: React.FC<TipoCobrancaContratoModalProps> = ({
             </select>
           </div>
 
-          <div className="form-check form-switch mb-3">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              role="switch"
-              id="ativo"
-              checked={formData.ativo}
-              onChange={e => handleInputChange('ativo', e.target.checked)}
-              style={{ cursor: 'pointer' }}
-            />
-            <label className="form-check-label" htmlFor="ativo" style={{ cursor: 'pointer' }}>
-              {formData.ativo ? t('status.active') : t('status.inactive')}
-            </label>
-          </div>
+          <AtivoInativoField
+            value={formData.ativo}
+            onChange={v => handleInputChange('ativo', v)}
+            disabled={isPending}
+          />
         </form>
       )}
     </DraggableModal>

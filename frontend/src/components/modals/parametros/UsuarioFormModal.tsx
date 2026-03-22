@@ -6,8 +6,7 @@ import { useIsMobile } from 'hooks/useMediaQuery';
 import { useFormReset } from 'hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret } from 'hooks/useUsuarios';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
-import FormField from 'components/ui/FormField';
+import { Button, FormField, AtivoInativoField } from 'components/ui';
 import { useI18n } from 'contexts/I18nContext';
 
 interface UsuarioForm {
@@ -248,14 +247,10 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
             />
           </div>
           <div className="col-md-6">
-            <FormField
-              name="ativo"
-              type="checkbox"
-              label={formData.ativo ? t('status.active') : t('status.inactive')}
+            <AtivoInativoField
               value={formData.ativo}
-              onChange={(value) => setFormData(prev => ({ ...prev, ativo: Boolean(value) }))}
-              switch
-              size="sm"
+              onChange={(v) => setFormData(prev => ({ ...prev, ativo: v }))}
+              name="usuario-ativo"
             />
           </div>
         </div>

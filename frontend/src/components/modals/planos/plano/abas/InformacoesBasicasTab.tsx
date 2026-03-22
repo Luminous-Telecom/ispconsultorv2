@@ -2,6 +2,7 @@ import React from 'react';
 import { FormValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
+import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import { PlanoTabProps } from '../types';
 
@@ -170,16 +171,9 @@ const InformacoesBasicasTab: React.FC<PlanoTabProps> = ({
       <div className="row g-2">
         <div className="col-md-6">
           <div className="mb-0">
-            <FormField
-              name="status"
-              type="checkbox"
-              label={formData.status === 'ativo' ? t('status.active') : t('status.inactive')}
+            <AtivoInativoField
               value={formData.status === 'ativo'}
-              onChange={(value: FormValue) =>
-                handleInputChange('status', (value ? 'ativo' : 'inativo') as PlanoTabProps['formData']['status'])
-              }
-              switch
-              size="sm"
+              onChange={v => handleInputChange('status', (v ? 'ativo' : 'inativo') as PlanoTabProps['formData']['status'])}
               disabled={isSubmitting}
             />
           </div>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
-import FormField from 'components/ui/FormField';
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+import { Button, FormField, AtivoInativoField } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasUsuariosService, type SaasUsuarioSuper, type SaasNivelAcesso } from 'services/saas/saasUsuariosService';
@@ -191,14 +191,10 @@ const SaasUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess, usuar
             />
           </div>
           <div className="col-md-6">
-            <FormField
-              name="ativo"
-              type="checkbox"
-              label={form.ativo ? 'Ativo' : 'Inativo'}
+            <AtivoInativoField
               value={form.ativo}
-              onChange={(v) => setForm(p => ({ ...p, ativo: Boolean(v) }))}
-              switch
-              size="sm"
+              onChange={(v) => setForm(p => ({ ...p, ativo: v }))}
+              name="saas-usuario-ativo"
             />
           </div>
         </div>

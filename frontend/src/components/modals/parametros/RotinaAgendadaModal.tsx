@@ -7,8 +7,7 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, Spinner } from 'components/ui';
-import FormField from 'components/ui/FormField';
+import { Button, Spinner, FormField, AtivoInativoField } from 'components/ui';
 
 const TIPO_OPTIONS_ERP_BASE = [
   { value: 'geracao_titulos', label: 'Geração de Títulos' },
@@ -263,20 +262,11 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
             </div>
 
             <div className="col-12">
-              <div className="form-check form-switch">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  id={ativoId}
-                  checked={ativo}
-                  onChange={(e) => setAtivo(e.target.checked)}
-                  style={{ cursor: 'pointer' }}
-                />
-                <label className="form-check-label" htmlFor={ativoId} style={{ cursor: 'pointer' }}>
-                  Ativo
-                </label>
-              </div>
+              <AtivoInativoField
+                value={ativo}
+                onChange={setAtivo}
+                name={ativoId}
+              />
             </div>
           </div>
         </form>

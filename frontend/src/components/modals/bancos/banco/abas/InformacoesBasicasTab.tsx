@@ -1,5 +1,5 @@
 import React from 'react';
-import FormField from 'components/ui/FormField';
+import { FormField, AtivoInativoField } from 'components/ui';
 import { BancoTabProps } from '../types';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -59,15 +59,11 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
 
         <div className="col-md-6">
           <div className="mb-0">
-            <FormField
-              name="ativo"
-              type="checkbox"
-              label={formData.ativo ? t('status.active') : t('status.inactive')}
+            <AtivoInativoField
               value={formData.ativo}
-              onChange={(value) => handleInputChange('ativo', value as boolean)}
+              onChange={(v) => handleInputChange('ativo', v)}
+              name={formPrefix ? `${formPrefix}-ativo` : 'banco-ativo'}
               disabled={isPending}
-              formPrefix={formPrefix}
-              switch={true}
             />
           </div>
         </div>

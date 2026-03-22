@@ -4,8 +4,7 @@ import { useSshDevice, useCreateSshDevice, useUpdateSshDevice } from 'hooks/useS
 import { useAgents } from 'hooks/useAgents';
 import { SshDeviceType } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
-import FormField from 'components/ui/FormField';
+import { Button, FormField, AtivoInativoField } from 'components/ui';
 import EntitySelectField from 'components/ui/EntitySelectField';
 import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 import AgentListModal from 'components/modals/agent/AgentListModal';
@@ -377,12 +376,11 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                   placeholder="Ex: Router Matriz" />
               </div>
               <div className="col-12 col-md-4">
-                <div className="form-check form-switch mt-4 pt-2">
-                  <input className="form-check-input" type="checkbox" role="switch"
-                    id="dev-is-active" checked={formData.is_active}
-                    onChange={(e) => set('is_active')(e.target.checked)} />
-                  <label className="form-check-label" htmlFor="dev-is-active">Ativo</label>
-                </div>
+                <AtivoInativoField
+                  value={!!formData.is_active}
+                  onChange={(v) => set('is_active')(v)}
+                  name="ssh-device-is-active"
+                />
               </div>
               <div className="col-12 col-md-6">
                 <label className="form-label form-label-sm fw-semibold">Tipo de dispositivo</label>

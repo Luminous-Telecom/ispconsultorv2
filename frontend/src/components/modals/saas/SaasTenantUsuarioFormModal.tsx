@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
-import FormField from 'components/ui/FormField';
+import { Button, FormField } from 'components/ui';
+import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasTenantUsuariosService, type SaasTenantUsuario } from 'services/saas/saasTenantUsuariosService';
@@ -142,7 +142,11 @@ const SaasTenantUsuarioFormModal: React.FC<Props> = ({ show, onClose, onSuccess,
             />
           </div>
           <div className="col-6">
-            <FormField name="ativo" type="checkbox" label={form.ativo ? t('status.active') : t('status.inactive')} value={form.ativo} onChange={(v) => setForm(p => ({ ...p, ativo: Boolean(v) }))} switch size="sm" />
+            <AtivoInativoField
+              value={form.ativo}
+              onChange={(v) => setForm(p => ({ ...p, ativo: v }))}
+              name="saas-tenant-usuario-ativo"
+            />
           </div>
         </div>
       </form>

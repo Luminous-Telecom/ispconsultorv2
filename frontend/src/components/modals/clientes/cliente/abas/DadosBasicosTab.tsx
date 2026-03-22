@@ -2,6 +2,7 @@ import React from 'react';
 import { FormValue } from 'types/common';
 import { useI18n } from 'contexts/I18nContext';
 import FormField from 'components/ui/FormField';
+import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { ClienteTabProps } from '../types';
 
 const DadosBasicosTab: React.FC<ClienteTabProps> = ({
@@ -52,15 +53,11 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
         formPrefix={formPrefix}
         error={errors.nome_fantasia}
       />
-      <FormField
-        name="ativo"
-        type="checkbox"
-        label={formData.ativo ? t('status.active') : t('status.inactive')}
+      <AtivoInativoField
         value={formData.ativo}
-        onChange={(value: FormValue) => handleInputChange('ativo', value as boolean)}
-        switch
+        onChange={(v) => handleInputChange('ativo', v)}
+        name={formPrefix ? `${formPrefix}-ativo` : 'cliente-ativo'}
         disabled={isSubmitting}
-        formPrefix={formPrefix}
       />
     </div>
   );

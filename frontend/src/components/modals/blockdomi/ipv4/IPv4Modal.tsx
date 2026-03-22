@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useIPv4, useCreateIPv4, useUpdateIPv4 } from 'hooks/useIPv4';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
-import FormField from 'components/ui/FormField';
+import { Button, FormField, AtivoInativoField } from 'components/ui';
 import { isValidIPv4 } from 'utils/validators';
 
 interface IPv4ModalProps {
@@ -248,19 +247,11 @@ const IPv4Modal: React.FC<IPv4ModalProps> = ({
                 />
               </div>
               <div className="col-12">
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="ativo"
-                    checked={formData.ativo}
-                    onChange={(e) => setFormData(prev => ({ ...prev, ativo: e.target.checked }))}
-                  />
-                  <label className="form-check-label" htmlFor="ativo">
-                    {t('status.active')}
-                  </label>
-                </div>
+                <AtivoInativoField
+                  value={formData.ativo}
+                  onChange={(v) => setFormData(prev => ({ ...prev, ativo: v }))}
+                  name="ipv4-ativo"
+                />
               </div>
             </div>
           </form>

@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
-import FormField from 'components/ui/FormField';
+import { Button, FormField, AtivoInativoField } from 'components/ui';
 import { Dominio } from 'types';
 import { DominioService } from 'services/dominioService';
 
@@ -198,19 +197,11 @@ const DominioBulkEditModal: React.FC<DominioBulkEditModalProps> = ({
               />
             </div>
             <div className="col-12">
-              <div className="form-check form-switch">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  id="bulk-ativo"
-                  checked={formData.ativo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, ativo: e.target.checked }))}
-                />
-                <label className="form-check-label" htmlFor="bulk-ativo">
-                  {t('status.active')}
-                </label>
-              </div>
+              <AtivoInativoField
+                value={formData.ativo}
+                onChange={(v) => setFormData(prev => ({ ...prev, ativo: v }))}
+                name="dominio-bulk-ativo"
+              />
             </div>
           </div>
         </form>

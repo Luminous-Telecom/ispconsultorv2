@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
-import FormField from 'components/ui/FormField';
+import { Button, FormField, AtivoInativoField } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useFormReset } from 'hooks/useFormReset';
 import { saasTipoCobrancaService, type SaasTipoCobranca } from 'services/saas/saasCrudService';
@@ -108,9 +107,11 @@ const SaasTipoCobrancaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, 
               options={PERIODICIDADES} size="sm" />
           </div>
           <div className="col-md-4">
-            <FormField name="ativo" type="checkbox" label={form.ativo ? 'Ativo' : 'Inativo'} value={form.ativo}
-              onChange={v => setForm(p => ({ ...p, ativo: Boolean(v) }))}
-              switch size="sm" />
+            <AtivoInativoField
+              value={form.ativo}
+              onChange={(v) => setForm(p => ({ ...p, ativo: v }))}
+              name="saas-tipo-cobranca-ativo"
+            />
           </div>
         </div>
       </form>

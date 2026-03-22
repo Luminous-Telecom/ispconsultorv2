@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDominio, useCreateDominio, useUpdateDominio } from 'hooks/useDominios';
 import { useI18n } from 'contexts/I18nContext';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button } from 'components/ui';
-import FormField from 'components/ui/FormField';
+import { Button, FormField, AtivoInativoField } from 'components/ui';
 import { sanitizeDominio } from 'utils/stringUtils';
 
 interface DominioModalProps {
@@ -251,19 +250,11 @@ const DominioModal: React.FC<DominioModalProps> = ({
                 />
               </div>
               <div className="col-12">
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="ativo"
-                    checked={formData.ativo}
-                    onChange={(e) => setFormData(prev => ({ ...prev, ativo: e.target.checked }))}
-                  />
-                  <label className="form-check-label" htmlFor="ativo">
-                    {t('status.active')}
-                  </label>
-                </div>
+                <AtivoInativoField
+                  value={formData.ativo}
+                  onChange={(v) => setFormData(prev => ({ ...prev, ativo: v }))}
+                  name="dominio-ativo"
+                />
               </div>
             </div>
           </form>

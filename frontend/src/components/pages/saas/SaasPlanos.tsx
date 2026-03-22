@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { saasPlanoService, type SaasPlano } from 'services/saas/saasPlanoService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
+import AtivoInativoField from 'components/ui/AtivoInativoField';
 import { useI18n } from 'contexts/I18nContext';
 
 const EMPTY_FORM: Partial<SaasPlano> = {
@@ -160,20 +161,12 @@ const SaasPlanos: React.FC = () => {
                   />
                 </div>
                 <div className="col-md-4">
-                  <div className="form-check form-switch">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      role="switch"
-                      id="plano-ativo-form"
-                      checked={form.ativo}
-                      onChange={(e) => setForm({ ...form, ativo: e.target.checked })}
-                      style={{ cursor: 'pointer' }}
-                    />
-                    <label className="form-check-label" htmlFor="plano-ativo-form" style={{ cursor: 'pointer' }}>
-                      {form.ativo ? 'Ativo' : 'Inativo'}
-                    </label>
-                  </div>
+                  <AtivoInativoField
+                    value={!!form.ativo}
+                    onChange={(v) => setForm({ ...form, ativo: v })}
+                    disabled={isPending}
+                    id="plano-ativo-form"
+                  />
                 </div>
                 <div className="col-12">
                   <label className="form-label">Descrição</label>
