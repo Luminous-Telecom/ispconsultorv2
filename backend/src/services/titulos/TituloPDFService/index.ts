@@ -205,7 +205,9 @@ export class TituloPDFService {
         QRCODE_HTML: titulo.qrcode_image
           ? `<img src="${titulo.qrcode_image}" style="width: 100px; height: 100px; max-width: 100px; max-height: 100px;" /><br><span style="font-size: 8px; font-weight: bold;">PIX - Pagamento Instantâneo</span>`
           : '<div style="color: #666; font-size: 8px;">QR Code PIX<br>Não disponível</div>',
-        BOLETO_BARCODE2: boletoBarcode2
+        BOLETO_BARCODE2: boletoBarcode2,
+        QUANTIDADE: '',
+        VALOR_UNITARIO: ''
       };
 
       let topoProcessado = topoTemplate;
@@ -226,7 +228,10 @@ export class TituloPDFService {
         }
       });
 
-      return `${topoProcessado}${corpoProcessado}`;
+      const htmlFinal = `${topoProcessado}${corpoProcessado}`;
+      // html-pdf-node usa Handlebars internamente com strict: true - remove placeholders não substituídos
+      const htmlSemPlaceholders = htmlFinal.replace(/\{\{[^}]*\}\}/g, '');
+      return htmlSemPlaceholders;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
