@@ -128,3 +128,30 @@ export async function resolveBackupFileForDownload(deviceId: string, fileName: s
   }
   return full;
 }
+
+/**
+ * Remove backup do device (registro no banco e arquivo em disco).
+ */
+export async function deleteBackup(deviceId: string, fileName: string): Promise<boolean> {
+  const base = path.basename(fileName);
+  if (base !== fileName || base.includes('..') || !base.startsWith(`${deviceId}_`)) {
+    return false;
+  }
+
+  const row = await SshDeviceBackup.findOne({
+    where: { ssh_device_id: deviceId, file_name: base },
+  });
+  if (!row) return false;
+
+  const root = backupDir();
+  const full = path.resolve(path.join(root, base));
+  if (full !== root && !full.startsWith(root + path.sep)) return false;
+
+  try {
+    await fs.unlink(full);
+  } catch {
+    // Continua para remover o registro
+  }
+  await row.destroy();
+  return true;
+}

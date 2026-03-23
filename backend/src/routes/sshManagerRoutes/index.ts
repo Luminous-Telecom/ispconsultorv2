@@ -28,6 +28,7 @@ router.get('/device-backups', DeviceController.listBackupsByCliente);
 router.post('/devices', DeviceController.store);
 router.get('/devices/:id', DeviceController.show);
 router.get('/devices/:id/backups', DeviceController.listDeviceBackups);
+router.delete('/devices/:id/backups', DeviceController.deleteDeviceBackup);
 router.get('/devices/:id/backups/download', DeviceController.downloadDeviceBackup);
 router.patch('/devices/:id', DeviceController.update);
 router.delete('/devices/:id', DeviceController.destroy);

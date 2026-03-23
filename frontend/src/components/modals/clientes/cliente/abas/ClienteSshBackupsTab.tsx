@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { SshDeviceBackupService } from 'services/sshDeviceBackupService';
 import Table from 'components/tables/Table';
 import TextPreviewModal from 'components/common/TextPreviewModal';
@@ -35,9 +36,21 @@ interface ClienteSshBackupsTabProps {
   clienteId?: number;
 }
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  const ax = err as { response?: { data?: { message?: string } }; message?: string };
+  if (typeof ax?.response?.data?.message === 'string' && ax.response.data.message.trim()) {
+    return ax.response.data.message;
+  }
+  if (typeof ax?.message === 'string' && ax.message.trim()) return ax.message;
+  return fallback;
+}
+
 const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }) => {
   const { t } = useI18n();
+  const { error: showError } = useNotificationContext();
+  const queryClient = useQueryClient();
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [, setSelectedItems] = useState<ClienteBackupRow[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
@@ -97,6 +110,30 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
     setPreviewContent(null);
     setPreviewError(null);
   }, []);
+
+  const handleDelete = useCallback(
+    async (items: ClienteBackupRow[]) => {
+      if (items.length === 0) return;
+      const msg =
+        items.length === 1
+          ? `Excluir o backup "${items[0].fileName}"?`
+          : `Excluir ${items.length} backup(s) selecionado(s)?`;
+      if (!window.confirm(msg)) return;
+      for (const row of items) {
+        if (!row.device_id) continue;
+        setDeletingKey(row.id);
+        try {
+          await SshDeviceBackupService.delete(row.device_id, row.fileName);
+          await queryClient.invalidateQueries({ queryKey: ['ssh-device-backups', 'cliente', clienteId] });
+        } catch (err) {
+          showError(getErrorMessage(err, 'Erro ao excluir backup'));
+        } finally {
+          setDeletingKey(null);
+        }
+      }
+    },
+    [clienteId, queryClient, showError]
+  );
 
   const tableColumns: TableConfig<ClienteBackupRow>['columns'] = useMemo(
     () => [
@@ -176,8 +213,16 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
           }
         },
       },
+      {
+        key: 'delete-selected',
+        label: t('buttons.delete'),
+        variant: 'danger' as const,
+        disabled: (items: ClienteBackupRow[]) =>
+          items.length === 0 || deletingKey !== null || items.some((r) => !r.device_id),
+        onClick: handleDelete,
+      },
     ],
-    [t, downloadingKey, handleDownloadOne, previewLoading, handleView]
+    [t, downloadingKey, deletingKey, handleDownloadOne, handleDelete, previewLoading, handleView]
   );
 
   if (!clienteId) {

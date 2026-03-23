@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
+import { SshDeviceBackup } from '../../../models/ssh-manager/SshDeviceBackup';
 import { Agent } from '../../../models/agent/Agent';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { isAgentOnline, testSshThroughAgent } from '../../../services/agent/AgentService';
@@ -12,6 +13,7 @@ import {
   listBackupsForDevice,
   listBackupsForDeviceIds,
   resolveBackupFileForDownload,
+  deleteBackup as deleteBackupStorage,
 } from '../../../services/ssh-manager/SshDeviceBackupStorageService';
 import { runSshDeviceBackup } from '../../../services/ssh-manager/SshDeviceBackupRunner';
 import {
@@ -322,6 +324,15 @@ export class DeviceController {
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessDevice(device, empresaId)) {
         sendNotFound(res, 'Device SSH não encontrado');
+        return;
+      }
+
+      const backupCount = await SshDeviceBackup.count({ where: { ssh_device_id: device.id } });
+      if (backupCount > 0) {
+        sendValidationError(
+          res,
+          `Não é possível excluir o equipamento: existem ${backupCount} backup(s) salvos. Exclua todos os backups antes de remover o equipamento.`
+        );
         return;
       }
 
@@ -670,6 +681,37 @@ export class DeviceController {
     } catch (error) {
       sendError(res, error, 'Erro ao listar backups do device', 500, true, {
         context: 'DeviceController.listDeviceBackups',
+      });
+    }
+  }
+
+  /** Remove backup do device (query `nome` = nome exato do arquivo). */
+  static async deleteDeviceBackup(req: Request, res: Response): Promise<void> {
+    try {
+      const device = await SshDevice.findByPk(req.params.id);
+      if (!device) {
+        sendNotFound(res, 'Device SSH não encontrado');
+        return;
+      }
+      const empresaId = getEmpresaIdOrNull(req);
+      if (!canAccessDevice(device, empresaId)) {
+        sendNotFound(res, 'Device SSH não encontrado');
+        return;
+      }
+      const nome = typeof req.query.nome === 'string' ? req.query.nome : '';
+      if (!nome.trim()) {
+        sendValidationError(res, 'Parâmetro "nome" é obrigatório');
+        return;
+      }
+      const removed = await deleteBackupStorage(device.id, nome.trim());
+      if (!removed) {
+        sendNotFound(res, 'Arquivo de backup não encontrado');
+        return;
+      }
+      sendSuccess(res, null, 'Backup excluído');
+    } catch (error) {
+      sendError(res, error, 'Erro ao excluir backup', 500, true, {
+        context: 'DeviceController.deleteDeviceBackup',
       });
     }
   }

@@ -39,6 +39,12 @@ export class SshDeviceBackupService {
     return res.text();
   }
 
+  static async delete(deviceId: string, fileName: string): Promise<void> {
+    await defaultApiClient.delete(
+      `/ssh-manager/devices/${encodeURIComponent(deviceId)}/backups?nome=${encodeURIComponent(fileName)}`
+    );
+  }
+
   static async download(deviceId: string, fileName: string): Promise<void> {
     const url = SshDeviceBackupService.getDownloadUrl(deviceId, fileName);
     const res = await fetch(url, { credentials: 'include' });

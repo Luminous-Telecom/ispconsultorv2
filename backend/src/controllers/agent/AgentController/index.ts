@@ -5,6 +5,7 @@ import * as path from 'path';
 import Joi from 'joi';
 import { Op, WhereOptions } from 'sequelize';
 import { Agent } from '../../../models/agent/Agent';
+import { SshDevice } from '../../../models/ssh-manager/SshDevice';
 import { Cliente } from '../../../models/clientes/Cliente';
 import {
   disconnectAgentById,
@@ -218,6 +219,14 @@ export class AgentController {
       if (!agent) { sendNotFound(res, 'Agente não encontrado'); return; }
       const empresaId = getEmpresaIdOrNull(req);
       if (!canAccessAgent(agent, empresaId)) { sendNotFound(res, 'Agente não encontrado'); return; }
+      const deviceCount = await SshDevice.count({ where: { agent_id: agent.id } });
+      if (deviceCount > 0) {
+        sendValidationError(
+          res,
+          `Não é possível excluir o agente: existem ${deviceCount} equipamento(s) vinculado(s). Remova ou desvincule os equipamentos antes de excluir o agente.`
+        );
+        return;
+      }
       const dadosAntes = agent.toJSON() as Record<string, unknown>;
       delete dadosAntes.token_hash;
       delete dadosAntes.id;
