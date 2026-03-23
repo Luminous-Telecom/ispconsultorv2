@@ -63,7 +63,7 @@ export interface EquipamentosLimites {
   limite_backups: number;
 }
 
-const DEFAULTS = { limite_equipamentos: 5, limite_tuneis: 5, limite_backups: 1 };
+const DEFAULTS = { limite_equipamentos: 0, limite_tuneis: 0, limite_backups: 0 };
 
 function extrairNumero(recursos: Record<string, unknown> | null, key: string, fallback: number): number {
   const raw = recursos?.[key];

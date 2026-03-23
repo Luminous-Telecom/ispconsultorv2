@@ -191,10 +191,12 @@ export class DeviceController {
             sendValidationError(res, 'O plano não inclui o módulo de equipamentos.');
             return;
           }
-          const count = await SshDevice.count({ where: { empresa_id: empresaId } });
-          if (count >= limites.limite_equipamentos) {
-            sendValidationError(res, `Limite de equipamentos do plano atingido (${limites.limite_equipamentos}).`);
-            return;
+          if (limites.limite_equipamentos > 0) {
+            const count = await SshDevice.count({ where: { empresa_id: empresaId } });
+            if (count >= limites.limite_equipamentos) {
+              sendValidationError(res, `Limite de equipamentos do plano atingido (${limites.limite_equipamentos}).`);
+              return;
+            }
           }
           const willHaveTunel = !!(value.agent_id?.trim());
           if (willHaveTunel && limites.limite_tuneis > 0) {

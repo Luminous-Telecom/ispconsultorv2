@@ -69,9 +69,9 @@ interface PlanoForm {
 }
 
 const INITIAL_EQUIPAMENTOS: ConfigEquipamentos = {
-  limite_equipamentos: 5,
-  limite_tuneis: 5,
-  limite_backups: 1,
+  limite_equipamentos: 0,
+  limite_tuneis: 0,
+  limite_backups: 0,
 };
 
 const INITIAL: PlanoForm = {
@@ -374,6 +374,9 @@ const SaasPlanoFormModal: React.FC<Props> = ({ show, onClose, onSuccess, planoId
           )}
           {activeTab === 'equipamentos' && hasEquipamentos && (
             <>
+              <div className="mb-2">
+                <i className="bi bi-info-circle text-muted" style={{ cursor: 'help', fontSize: '0.85rem' }} title="0 = sem limite" />
+              </div>
               <div className="row g-2">
                 <div className="col-md-4">
                   <div className="mb-0">
