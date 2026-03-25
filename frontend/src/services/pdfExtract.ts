@@ -34,7 +34,7 @@ interface PdfExtractStatusResponse {
 const POLL_INTERVAL_MS = 2000;
 const POLL_MAX_ATTEMPTS = 300; // ~10 min
 /** Timeout do upload (PDF grande pode demorar); backend responde logo após receber o arquivo */
-const UPLOAD_TIMEOUT_MS = 60000;
+const UPLOAD_TIMEOUT_MS = 120000;
 /** Timeout do POST extract-from-url (só envia URL, resposta rápida) */
 const START_JOB_TIMEOUT_MS = 30000;
 /** Timeout de cada GET de status (requisição curta) */

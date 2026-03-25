@@ -36,7 +36,7 @@ const pdfFileFilter = (
 const uploadPdf = multer({
   storage: pdfStorage,
   fileFilter: pdfFileFilter,
-  limits: { fileSize: 50 * 1024 * 1024 }
+  limits: { fileSize: 100 * 1024 * 1024 }
 });
 
 router.get('/logs-acesso', BlockdomiLogAcessoController.list);
@@ -49,7 +49,7 @@ router.post(
       if (err) {
         if (err instanceof multer.MulterError) {
           if (err.code === 'LIMIT_FILE_SIZE') {
-            res.status(400).json({ success: false, message: 'Arquivo muito grande. Máximo: 50MB' });
+            res.status(400).json({ success: false, message: 'Arquivo muito grande. Máximo: 100MB' });
             return;
           }
           res.status(400).json({ success: false, message: err.message });

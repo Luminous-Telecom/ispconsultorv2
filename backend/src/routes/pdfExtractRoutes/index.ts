@@ -5,11 +5,11 @@ import { authMiddleware } from '../../middleware/authMiddleware';
 
 const router = Router();
 
-// Configura multer para upload em memória (50MB - PDFs de planilhas/ofícios podem ser grandes)
+// Configura multer para upload em memória (100MB - PDFs de planilhas/ofícios podem ser grandes)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB
+    fileSize: 100 * 1024 * 1024, // 100MB
   },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype === 'application/pdf') {

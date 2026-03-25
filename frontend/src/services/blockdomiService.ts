@@ -62,7 +62,7 @@ export class BlockdomiService {
     const response = await defaultApiClient.post<{ success: boolean; data?: { url: string; path: string } }>(
       '/blockdomi/upload-oficio-pdf',
       formData,
-      { timeout: 60000 }
+      { timeout: 120000 }
     );
     const data = (response as { data?: { url: string; path: string } }).data;
     if (!data?.url) {
