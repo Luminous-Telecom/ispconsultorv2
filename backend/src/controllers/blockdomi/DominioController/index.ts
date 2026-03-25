@@ -120,6 +120,82 @@ export class DominioController {
     }
   }
 
+  static async bulkUpdate(req: Request, res: Response): Promise<void> {
+    try {
+      const body = req.body as {
+        ids?: unknown[];
+        nome_oficio?: unknown;
+        data_inicio_bloqueio?: unknown;
+        data_fim_bloqueio?: unknown;
+        link_oficio_anatel?: unknown;
+        link_oficio_justica?: unknown;
+        link_planilha_dominios?: unknown;
+        descricao?: unknown;
+        ativo?: unknown;
+      };
+
+      const idsRaw = Array.isArray(body.ids) ? body.ids : [];
+      const ids = idsRaw.map((id) => Number(id)).filter((n) => !Number.isNaN(n));
+      if (ids.length === 0) {
+        sendValidationError(res, 'Informe os IDs dos domínios (ids: number[]).');
+        return;
+      }
+
+      const trimOrNull = (v: unknown): string | null => {
+        if (v == null) return null;
+        const s = String(v).trim();
+        return s === '' ? null : s;
+      };
+
+      const dominiosAntes =
+        ids.length > 0 ? await Dominio.findAll({ where: { id: { [Op.in]: ids } } }) : [];
+      const antesMap = new Map(dominiosAntes.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+
+      const result = await DominioService.bulkUpdate(ids, {
+        nome_oficio: trimOrNull(body.nome_oficio),
+        data_inicio_bloqueio: trimOrNull(body.data_inicio_bloqueio),
+        data_fim_bloqueio: trimOrNull(body.data_fim_bloqueio),
+        link_oficio_anatel: trimOrNull(body.link_oficio_anatel),
+        link_oficio_justica: trimOrNull(body.link_oficio_justica),
+        link_planilha_dominios: trimOrNull(body.link_planilha_dominios),
+        descricao: trimOrNull(body.descricao),
+        ativo: typeof body.ativo === 'boolean' ? body.ativo : undefined
+      });
+
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
+
+      try {
+        const dominiosDepois = await Dominio.findAll({ where: { id: { [Op.in]: ids } } });
+        const depoisMap = new Map(dominiosDepois.map((d) => [d.id, d.toJSON() as Record<string, unknown>]));
+        for (const id of ids) {
+          const dadosAnteriores = antesMap.get(id);
+          const dadosNovos = depoisMap.get(id);
+          if (dadosAnteriores && dadosNovos) {
+            await registrarAtualizacao(
+              req,
+              'Dominio',
+              id,
+              dadosAnteriores,
+              dadosNovos,
+              'Edição em lote',
+              empresaIdAudit
+            );
+          }
+        }
+      } catch (auditError) {
+        // Não interromper o fluxo
+      }
+
+      sendSuccess(res, result, `${result.updated} domínio(s) atualizado(s).`, 200);
+    } catch (error) {
+      sendError(res, error, 'Erro ao atualizar domínios em lote', 500, true, {
+        context: 'DominioController',
+        action: 'bulkUpdate',
+        body: req.body
+      });
+    }
+  }
+
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const { dominio } = req.body;

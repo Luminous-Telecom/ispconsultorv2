@@ -7,6 +7,7 @@ const router = Router();
 router.get('/', DominioController.list);
 router.get('/:id', DominioController.getById);
 router.post('/bulk', DominioController.bulkCreate);
+router.post('/bulk-update', DominioController.bulkUpdate);
 router.post('/bulk-delete', DominioController.bulkDelete);
 router.post('/', DominioController.create);
 router.put('/:id', DominioController.update);

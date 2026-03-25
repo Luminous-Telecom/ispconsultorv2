@@ -52,6 +52,23 @@ export class DominioService {
     return data ?? { deleted: 0, versao: '' };
   }
 
+  static async bulkUpdate(payload: {
+    ids: number[];
+    nome_oficio?: string | null;
+    data_inicio_bloqueio?: string | null;
+    data_fim_bloqueio?: string | null;
+    link_oficio_anatel?: string | null;
+    link_oficio_justica?: string | null;
+    link_planilha_dominios?: string | null;
+    descricao?: string | null;
+    ativo?: boolean;
+  }): Promise<{ updated: number }> {
+    const { defaultApiClient } = await import('./core');
+    const response = await defaultApiClient.post<{ updated: number }>('/dominios/bulk-update', payload);
+    const data = (response as { data?: { updated: number } }).data;
+    return data ?? { updated: 0 };
+  }
+
   static async bulkCreate(payload: {
     items: string[];
     nome_oficio?: string | null;

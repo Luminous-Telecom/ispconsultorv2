@@ -200,6 +200,57 @@ export class DominioService {
   }
 
   /**
+   * Atualiza vários domínios com os mesmos campos (edição em lote). Gera uma única versão blockdomi.
+   * Não altera o campo `dominio` (cada registro mantém o FQDN).
+   */
+  static async bulkUpdate(
+    ids: (string | number)[],
+    dadosDominio: Partial<Dominio>
+  ): Promise<{ updated: number }> {
+    const idsNum = ids.map((id) => Number(id)).filter((n) => !Number.isNaN(n));
+    if (idsNum.length === 0) {
+      throw new Error('Informe ao menos um domínio');
+    }
+
+    const existentes = await Dominio.findAll({ where: { id: { [Op.in]: idsNum } } });
+    if (existentes.length === 0) {
+      throw new Error('Nenhum domínio encontrado para os IDs informados');
+    }
+
+    const allowedFields: Array<keyof Dominio> = [
+      'descricao',
+      'nome_oficio',
+      'data_inicio_bloqueio',
+      'data_fim_bloqueio',
+      'link_oficio_anatel',
+      'link_oficio_justica',
+      'link_planilha_dominios',
+      'ativo'
+    ];
+
+    const updateData: Partial<Dominio> = {};
+    Object.keys(dadosDominio).forEach((key) => {
+      if (allowedFields.includes(key as keyof Dominio)) {
+        const value = dadosDominio[key as keyof Dominio];
+        if (value !== undefined) {
+          (updateData as Record<string, unknown>)[key] = value;
+        }
+      }
+    });
+
+    if (Object.keys(updateData).length === 0) {
+      return { updated: 0 };
+    }
+
+    const empresaId = (existentes[0] as { empresa_id?: number | null }).empresa_id ?? null;
+    const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio', undefined, empresaId);
+    updateData.versao_id = versaoId;
+
+    const [affected] = await Dominio.update(updateData, { where: { id: { [Op.in]: idsNum } } });
+    return { updated: affected };
+  }
+
+  /**
    * Buscar domínios existentes por lista (para verificar duplicatas em lote)
    */
   static async findByDominios(dominios: string[]): Promise<Set<string>> {

@@ -60,6 +60,7 @@ const DominioBulkEditModal: React.FC<DominioBulkEditModalProps> = ({
     setIsSubmitting(true);
     try {
       const baseData = {
+        ids: dominios.map((d) => d.id),
         nome_oficio: formData.nome_oficio.trim() || null,
         data_inicio_bloqueio: formData.data_inicio_bloqueio.trim() || null,
         data_fim_bloqueio: formData.data_fim_bloqueio.trim() || null,
@@ -70,9 +71,7 @@ const DominioBulkEditModal: React.FC<DominioBulkEditModalProps> = ({
         ativo: formData.ativo
       };
 
-      for (const d of dominios) {
-        await DominioService.update(d.id, { ...baseData, dominio: d.dominio });
-      }
+      await DominioService.bulkUpdate(baseData);
 
       success(t('blockdomi.bulkEditSuccess').replace('{count}', String(dominios.length)));
       onSuccess?.();
