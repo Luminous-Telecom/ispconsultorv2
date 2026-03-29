@@ -117,7 +117,12 @@ export class ContratoService {
         } else {
           const dbField = searchField === 'valor_final_num' ? 'valor_final' : searchField;
           const numExactField = /^\d+$/.test(searchString) ? parseInt(searchString, 10) : null;
-          const isNumericField = dbField === 'valor_final' || dbField === 'id';
+          // cliente_id/plano_id com LIKE quebrava o filtro (ex.: cliente 1 retornava 10, 11, 21…)
+          const isNumericField =
+            dbField === 'valor_final' ||
+            dbField === 'id' ||
+            dbField === 'cliente_id' ||
+            dbField === 'plano_id';
           const fieldCondition = (isNumericField && numExactField !== null)
             ? { [dbField]: numExactField }
             : { [dbField]: { [Op.like]: searchPattern } };
