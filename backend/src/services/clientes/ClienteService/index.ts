@@ -54,7 +54,16 @@ export class ClienteService {
       if (searchField) {
         const allowedFields = ['id', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'whatsapp', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'];
         if (allowedFields.includes(searchField)) {
-          where[searchField as keyof typeof where] = { [Op.like]: searchPattern };
+          if (searchField === 'id') {
+            const numExact = /^\d+$/.test(String(search).trim()) ? parseInt(String(search).trim(), 10) : null;
+            if (numExact !== null) {
+              where.id = numExact;
+            } else {
+              where.id = { [Op.lt]: 0 };
+            }
+          } else {
+            where[searchField as keyof typeof where] = { [Op.like]: searchPattern };
+          }
         }
       }
     }

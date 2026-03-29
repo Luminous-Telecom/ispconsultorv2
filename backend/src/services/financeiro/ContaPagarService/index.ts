@@ -94,7 +94,7 @@ export class ContaPagarService {
           if (numExact !== null) {
             whereConditions.push({ id: numExact });
           } else {
-            whereConditions.push({ id: { [Op.like]: `%${searchTerm}%` } });
+            whereConditions.push({ id: { [Op.lt]: 0 } });
           }
           break;
         case 'numero_documento':
