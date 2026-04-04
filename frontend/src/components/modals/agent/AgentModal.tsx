@@ -33,11 +33,6 @@ function getAgentImageTag(): 'dev' | 'prod' {
   return host === 'localhost' || host === '127.0.0.1' || host.includes(DEV_URL) ? 'dev' : 'prod';
 }
 
-/** Mesmo critério do backend: container dev separado para não dar `rm -f` no agente de produção no mesmo host. */
-function getAgentContainerName(): string {
-  return getAgentImageTag() === 'dev' ? 'backnet-agent-dev' : 'backnet-agent';
-}
-
 const REQUIREMENTS = [
   'Linux (Debian, Ubuntu, CentOS, AlmaLinux, Rocky)',
   'Acesso root ou sudo',
@@ -193,8 +188,8 @@ const AgentModal: React.FC<AgentModalProps> = ({ show, onClose, onSuccess, agent
         setInstallAgent(result);
         if (result.token) {
           const tag = getAgentImageTag();
-          const cname = getAgentContainerName();
-          const cmd = `docker rm -f ${cname} 2>/dev/null; docker run -d --name ${cname} --restart unless-stopped ${DOCKER_IMAGE}:${tag} --token ${result.token}`;
+          const name = tag === 'dev' ? 'backnet-agent-dev' : 'backnet-agent';
+          const cmd = `docker rm -f ${name} 2>/dev/null; docker run -d --name ${name} --restart unless-stopped ${DOCKER_IMAGE}:${tag} --token ${result.token}`;
           setGeneratedCmd(cmd);
         }
         setActiveTab('install-manual');
@@ -306,8 +301,8 @@ const AgentModal: React.FC<AgentModalProps> = ({ show, onClose, onSuccess, agent
       const refreshed = await AgentService.regenerateToken(target.id);
       if (!refreshed.token) throw new Error('Token não retornado pelo servidor');
       const tag = getAgentImageTag();
-      const cname = getAgentContainerName();
-      const cmd = `docker rm -f ${cname} 2>/dev/null; docker run -d --name ${cname} --restart unless-stopped ${DOCKER_IMAGE}:${tag} --token ${refreshed.token}`;
+      const name = tag === 'dev' ? 'backnet-agent-dev' : 'backnet-agent';
+      const cmd = `docker rm -f ${name} 2>/dev/null; docker run -d --name ${name} --restart unless-stopped ${DOCKER_IMAGE}:${tag} --token ${refreshed.token}`;
       setGeneratedCmd(cmd);
     } catch { /* silencioso */ } finally {
       setGenerating(false);

@@ -111,7 +111,7 @@ async function checkAndInstallDocker(conn: SshClient, log: LogFn): Promise<void>
   log('✅ Docker instalado com sucesso!');
 }
 
-export function isAgentDevServerUrl(serverUrl: string): boolean {
+function isAgentDevServerUrl(serverUrl: string): boolean {
   return (
     serverUrl.includes('dev.luminoustelecom.com.br') ||
     serverUrl.includes('localhost') ||
@@ -125,7 +125,6 @@ function getDockerImage(serverUrl: string): string {
   return `midia181/backnet-tunnel:${tag}`;
 }
 
-/** Dev e prod rodam em containers com nomes distintos para não remover o ambiente errado no mesmo host. */
 export function getAgentContainerName(serverUrl: string): string {
   return isAgentDevServerUrl(serverUrl) ? 'backnet-agent-dev' : 'backnet-agent';
 }

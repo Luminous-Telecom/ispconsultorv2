@@ -41,7 +41,7 @@ export class AgentService {
   }
 
   static async testConnection(id: string): Promise<AgentConnectionTestResult> {
-    const response = await defaultApiClient.post<AgentConnectionTestResult>(`/agents/${id}/test`, {});
+    const response = await defaultApiClient.post<AgentConnectionTestResult>(`/agents/${id}/test`, {}, { timeout: 25_000 });
     const r = response as { data?: AgentConnectionTestResult };
     return r.data ?? (response as unknown as AgentConnectionTestResult);
   }
