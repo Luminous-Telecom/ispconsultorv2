@@ -111,13 +111,23 @@ async function checkAndInstallDocker(conn: SshClient, log: LogFn): Promise<void>
   log('✅ Docker instalado com sucesso!');
 }
 
-const CONTAINER_NAME = 'backnet-agent';
+export function isAgentDevServerUrl(serverUrl: string): boolean {
+  return (
+    serverUrl.includes('dev.luminoustelecom.com.br') ||
+    serverUrl.includes('localhost') ||
+    serverUrl.includes('127.0.0.1')
+  );
+}
 
 function getDockerImage(serverUrl: string): string {
   if (process.env.BACKNET_AGENT_IMAGE) return process.env.BACKNET_AGENT_IMAGE;
-  const isDev = serverUrl.includes('dev.luminoustelecom.com.br') || serverUrl.includes('localhost') || serverUrl.includes('127.0.0.1');
-  const tag = isDev ? 'dev' : 'prod';
+  const tag = isAgentDevServerUrl(serverUrl) ? 'dev' : 'prod';
   return `midia181/backnet-tunnel:${tag}`;
+}
+
+/** Dev e prod rodam em containers com nomes distintos para não remover o ambiente errado no mesmo host. */
+export function getAgentContainerName(serverUrl: string): string {
+  return isAgentDevServerUrl(serverUrl) ? 'backnet-agent-dev' : 'backnet-agent';
 }
 
 // ── Pull e run do container (imagem do Docker Hub) ─────────────────────────────
@@ -129,17 +139,18 @@ async function pullAndRunContainer(
   log: LogFn
 ): Promise<void> {
   const dockerImage = getDockerImage(serverUrl);
+  const containerName = getAgentContainerName(serverUrl);
 
   log(`📥 Baixando imagem do agente (${dockerImage})...`);
   await exec(conn, `docker pull "${dockerImage}"`, log);
 
   log('🔄 Substituindo instalação anterior (se existir)...');
-  await exec(conn, `docker rm -f ${CONTAINER_NAME} 2>/dev/null || true`, log);
+  await exec(conn, `docker rm -f ${containerName} 2>/dev/null || true`, log);
 
-  log(`🚀 Iniciando container ${CONTAINER_NAME}...`);
+  log(`🚀 Iniciando container ${containerName}...`);
   await exec(conn,
     `docker run -d ` +
-    `--name ${CONTAINER_NAME} ` +
+    `--name ${containerName} ` +
     `--restart unless-stopped ` +
     `"${dockerImage}" ` +
     `--token ${token}`,
@@ -149,11 +160,11 @@ async function pullAndRunContainer(
   log('⏳ Aguardando inicialização do agente...');
   await new Promise((r) => setTimeout(r, 3000));
 
-  const containerStatus = await execOutput(conn, `docker inspect --format='{{.State.Status}}' ${CONTAINER_NAME} 2>/dev/null`);
+  const containerStatus = await execOutput(conn, `docker inspect --format='{{.State.Status}}' ${containerName} 2>/dev/null`);
   if (containerStatus === 'running') {
     log('✅ Container rodando com sucesso!');
   } else {
-    const containerLogs = await execOutput(conn, `docker logs --tail 20 ${CONTAINER_NAME} 2>&1`);
+    const containerLogs = await execOutput(conn, `docker logs --tail 20 ${containerName} 2>&1`);
     throw new Error(`Container não está rodando (status: ${containerStatus}).\nLogs:\n${containerLogs}`);
   }
 }

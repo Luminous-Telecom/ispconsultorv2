@@ -18,7 +18,7 @@ function parseClienteIdQuery(raw: unknown): number | null {
   const n = parseInt(String(raw), 10);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
-import { installAgent } from '../../../services/agent/AgentInstallService';
+import { getAgentContainerName, installAgent, isAgentDevServerUrl } from '../../../services/agent/AgentInstallService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
@@ -382,9 +382,8 @@ export class AgentController {
       }
 
       const serverUrl = (process.env.BASE_URL || process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
-      const containerName = 'backnet-agent';
-      const isDev = serverUrl.includes('dev.luminoustelecom.com.br') || serverUrl.includes('localhost') || serverUrl.includes('127.0.0.1');
-      const imageTag = isDev ? 'dev' : 'prod';
+      const containerName = getAgentContainerName(serverUrl);
+      const imageTag = isAgentDevServerUrl(serverUrl) ? 'dev' : 'prod';
       const imageName = process.env.BACKNET_AGENT_IMAGE || `midia181/backnet-tunnel:${imageTag}`;
 
       const script = `#!/bin/bash
