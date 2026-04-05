@@ -7,6 +7,7 @@ import { Agent } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import { getSocketToken } from 'services/core';
 import { authService } from 'services/authService';
+import { logSshTerminalLatency } from 'utils/sshTerminalLatencyDebug';
 import '@xterm/xterm/css/xterm.css';
 
 interface AgentTerminalModalProps {
@@ -136,7 +137,7 @@ const AgentTerminalModal: React.FC<AgentTerminalModalProps> = ({
         if (process.env.REACT_APP_SSH_TERMINAL_LATENCY_DEBUG === 'true') {
           const tr = (socket as Socket & { io?: { engine?: { transport?: { name?: string } } } }).io
             ?.engine?.transport?.name;
-          console.info('[Agent terminal] Socket.IO transporte:', tr ?? '(indisponível)');
+          logSshTerminalLatency('[Agent terminal] Socket.IO transporte:', tr ?? '(indisponível)');
         }
         xterm.writeln('\x1b[90mSessão estabelecida, abrindo shell...\x1b[0m');
         const { cols, rows } = fitAddon.proposeDimensions() ?? { cols: 80, rows: 24 };
@@ -190,7 +191,7 @@ const AgentTerminalModal: React.FC<AgentTerminalModalProps> = ({
             latencyInputCount++;
             const now = performance.now();
             if (now - latencyWindowStart >= 3000) {
-              console.info('[Agent terminal] eventos onData (~3s):', latencyInputCount);
+              logSshTerminalLatency('[Agent terminal] eventos onData (~3s):', latencyInputCount);
               latencyInputCount = 0;
               latencyWindowStart = now;
             }

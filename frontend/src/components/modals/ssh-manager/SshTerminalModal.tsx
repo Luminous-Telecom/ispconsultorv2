@@ -7,6 +7,7 @@ import { SshDevice } from 'types';
 import DraggableModal from 'components/common/DraggableModal';
 import { getSocketToken } from 'services/core';
 import { authService } from 'services/authService';
+import { logSshTerminalLatency } from 'utils/sshTerminalLatencyDebug';
 import '@xterm/xterm/css/xterm.css';
 
 interface SshTerminalModalProps {
@@ -131,7 +132,7 @@ const SshTerminalModal: React.FC<SshTerminalModalProps> = ({ show, onClose, devi
         if (process.env.REACT_APP_SSH_TERMINAL_LATENCY_DEBUG === 'true') {
           const tr = (socket as Socket & { io?: { engine?: { transport?: { name?: string } } } }).io
             ?.engine?.transport?.name;
-          console.info('[SSH terminal] Socket.IO transporte:', tr ?? '(indisponível)');
+          logSshTerminalLatency('[SSH terminal] Socket.IO transporte:', tr ?? '(indisponível)');
         }
         xterm.writeln('\x1b[90mSocket conectado. Abrindo shell...\x1b[0m');
         if (useAgent) {
@@ -156,7 +157,7 @@ const SshTerminalModal: React.FC<SshTerminalModalProps> = ({ show, onClose, devi
             latencyInputCount++;
             const now = performance.now();
             if (now - latencyWindowStart >= 3000) {
-              console.info('[SSH terminal] eventos onData (~3s):', latencyInputCount);
+              logSshTerminalLatency('[SSH terminal] eventos onData (~3s):', latencyInputCount);
               latencyInputCount = 0;
               latencyWindowStart = now;
             }
