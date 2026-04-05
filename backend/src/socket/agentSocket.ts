@@ -213,6 +213,7 @@ import {
 } from '../services/agent/AgentService';
 import { SshDevice } from '../models/ssh-manager/SshDevice';
 import { decrypt } from '../utils/encryption';
+import { privateKeyPemForSsh2 } from '../utils/sshPrivateKey';
 
 function verifyJwt(token: string): JwtPayload | null {
   const secret = process.env.JWT_SECRET;
@@ -375,12 +376,22 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
         return;
       }
 
+      let privateKey: string | undefined;
+      if (device.private_key) {
+        try {
+          privateKey = privateKeyPemForSsh2(decrypt(device.private_key));
+        } catch {
+          privateKey = undefined;
+        }
+      }
+      const useKey = !!privateKey?.length;
+
       const sent = sendToAgent(device.agent_id, 'proxy:ssh:open', {
         sessionId,
         host: device.host,
         port: device.port,
         username: device.username,
-        password,
+        ...(useKey && privateKey ? { privateKey } : { password }),
         cols: c,
         rows: r,
       });
