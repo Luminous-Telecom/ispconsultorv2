@@ -90,7 +90,7 @@ export class EnvioBoletosRoutine {
       }
 
       return {
-        success: totalEnviados > 0,
+        success: totalErros === 0,
         message: `Envio de boletos executado: ${totalEnviados} boletos enviados, ${totalErros} erros`,
         data: {
           parcelasProcessadas: totalEnviados,
