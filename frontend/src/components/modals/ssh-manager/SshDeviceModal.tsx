@@ -197,7 +197,10 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
       port: parseInt(formData.port, 10),
       username: formData.username.trim(),
       ...(formData.password.trim() ? { password: formData.password.trim() } : {}),
-      private_key: formData.private_key.trim() || null,
+      private_key:
+        formData.device_type === 'swos'
+          ? null
+          : formData.private_key.trim() || null,
       device_type: formData.device_type,
       description: formData.description.trim() || null,
       is_active: formData.is_active,
@@ -391,6 +394,7 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                       device_type: v,
                       ...(v === 'swos' && prev.port === '22' ? { port: '80' } : {}),
                       ...(v === 'mikrotik' && prev.device_type === 'swos' && prev.port === '80' ? { port: '22' } : {}),
+                      ...(v === 'swos' ? { private_key: '' } : {}),
                     }));
                   }}
                 >
@@ -443,11 +447,13 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                   value={formData.password} onChange={set('password')} error={errors.password}
                   required={!isEditing} size="sm" />
               </div>
+              {formData.device_type !== 'swos' && (
               <div className="col-12">
                 <FormField name="private_key" type="textarea" label="Chave Privada (PEM) — opcional"
                   value={formData.private_key} onChange={set('private_key')} size="sm" rows={3}
                   placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..." />
               </div>
+              )}
               <div className="col-12">
                 <FormField name="description" type="textarea" label="Descrição"
                   value={formData.description} onChange={set('description')} size="sm" rows={2} />
