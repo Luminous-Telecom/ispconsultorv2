@@ -199,30 +199,6 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
       ),
     },
     {
-      key: 'tags',
-      label: 'Tags',
-      sortable: false,
-      width: '150px',
-      render: (item: SshDevice) => {
-        const tags = item.tags ?? [];
-        if (tags.length === 0) return <span className="text-muted">-</span>;
-        return (
-          <div className="d-flex flex-wrap gap-1">
-            {tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="badge bg-light text-dark border" style={{ fontSize: '0.65rem' }}>
-                {tag}
-              </span>
-            ))}
-            {tags.length > 3 && (
-              <span className="badge bg-light text-muted border" style={{ fontSize: '0.65rem' }}>
-                +{tags.length - 3}
-              </span>
-            )}
-          </div>
-        );
-      },
-    },
-    {
       key: 'description',
       label: 'Descrição',
       sortable: false,

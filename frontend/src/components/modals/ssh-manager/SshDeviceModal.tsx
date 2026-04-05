@@ -42,7 +42,6 @@ const emptyForm = {
   description: '',
   is_active: true,
   backup_enabled: false,
-  tags: '',
 };
 
 const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
@@ -150,7 +149,6 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
           description: deviceData.description ?? '',
           is_active: deviceData.is_active ?? true,
           backup_enabled: deviceData.backup_enabled ?? false,
-          tags: (deviceData.tags ?? []).join(', '),
         });
       } else {
         setFormData({ ...emptyForm });
@@ -190,8 +188,6 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
     e.preventDefault();
     if (!validate()) return;
 
-    const tags = formData.tags.split(',').map((t) => t.trim()).filter(Boolean);
-
     const payload = {
       agent_id: formData.agent_id || null,
       name: formData.name.trim(),
@@ -204,7 +200,6 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
       description: formData.description.trim() || null,
       is_active: formData.is_active,
       backup_enabled: formData.backup_enabled,
-      tags: tags.length > 0 ? tags : null,
     };
 
     try {
@@ -420,11 +415,6 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                 <FormField name="private_key" type="textarea" label="Chave Privada (PEM) — opcional"
                   value={formData.private_key} onChange={set('private_key')} size="sm" rows={3}
                   placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..." />
-              </div>
-              <div className="col-12">
-                <FormField name="tags" type="text" label="Tags (separadas por vírgula)"
-                  value={formData.tags} onChange={set('tags')} size="sm"
-                  placeholder="Ex: roteador, filial-sp" />
               </div>
               <div className="col-12">
                 <FormField name="description" type="textarea" label="Descrição"

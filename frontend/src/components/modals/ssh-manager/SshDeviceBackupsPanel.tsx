@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { useI18n } from 'contexts/I18nContext';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { SshDeviceBackupService, type SshDeviceBackupFile } from 'services/sshDeviceBackupService';
 import Table from 'components/tables/Table';
@@ -36,9 +38,13 @@ interface SshDeviceBackupsPanelProps {
   variant?: 'section' | 'tab';
 }
 
+type PendingBackupAction = { kind: 'download' | 'delete'; fileName: string };
+
 const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId, variant = 'section' }) => {
   const { t } = useI18n();
-  const [downloadingName, setDownloadingName] = useState<string | null>(null);
+  const { success, error: showError } = useNotificationContext();
+  const queryClient = useQueryClient();
+  const [pendingAction, setPendingAction] = useState<PendingBackupAction | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -68,14 +74,36 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
 
   const handleDownload = useCallback(
     async (row: BackupTableRow) => {
-      setDownloadingName(row.fileName);
+      setPendingAction({ kind: 'download', fileName: row.fileName });
       try {
         await SshDeviceBackupService.download(deviceId, row.fileName);
       } finally {
-        setDownloadingName(null);
+        setPendingAction(null);
       }
     },
     [deviceId]
+  );
+
+  const handleDeleteBackup = useCallback(
+    async (row: BackupTableRow) => {
+      const confirmed = window.confirm(t('backup.confirmDelete').replace('{{nome}}', row.fileName));
+      if (!confirmed) return;
+      setPendingAction({ kind: 'delete', fileName: row.fileName });
+      try {
+        await SshDeviceBackupService.delete(deviceId, row.fileName);
+        success(t('backup.deleted'));
+        await queryClient.invalidateQueries({ queryKey: ['ssh-device-backups'] });
+      } catch (err) {
+        const msg =
+          (err as AxiosError<{ message?: string }>)?.response?.data?.message ??
+          (err as Error)?.message ??
+          t('messages.error');
+        showError(msg);
+      } finally {
+        setPendingAction(null);
+      }
+    },
+    [deviceId, queryClient, showError, success, t]
   );
 
   const handleView = useCallback(
@@ -144,8 +172,9 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
     [t]
   );
 
-  const bulkActions = useMemo(
-    () => [
+  const bulkActions = useMemo(() => {
+    const isBusy = pendingAction !== null;
+    return [
       {
         key: 'view-backup',
         label: t('buttons.view'),
@@ -153,7 +182,8 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         disabled: (selectedItems: BackupTableRow[]) =>
           selectedItems.length !== 1 ||
           !isTextPreviewSupported(selectedItems[0].fileName) ||
-          previewLoading,
+          previewLoading ||
+          isBusy,
         onClick: async (selectedItems: BackupTableRow[]) => {
           if (selectedItems.length !== 1) return;
           await handleView(selectedItems[0]);
@@ -163,16 +193,24 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
         key: 'download-backup',
         label: t('buttons.download'),
         variant: 'primary' as const,
-        disabled: (selectedItems: BackupTableRow[]) =>
-          selectedItems.length !== 1 || downloadingName !== null,
+        disabled: (selectedItems: BackupTableRow[]) => selectedItems.length !== 1 || isBusy,
         onClick: async (selectedItems: BackupTableRow[]) => {
           if (selectedItems.length !== 1) return;
           await handleDownload(selectedItems[0]);
         },
       },
-    ],
-    [t, downloadingName, handleDownload, previewLoading, handleView]
-  );
+      {
+        key: 'delete-backup',
+        label: t('actions.delete'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: BackupTableRow[]) => selectedItems.length !== 1 || isBusy,
+        onClick: async (selectedItems: BackupTableRow[]) => {
+          if (selectedItems.length !== 1) return;
+          await handleDeleteBackup(selectedItems[0]);
+        },
+      },
+    ];
+  }, [t, pendingAction, handleDownload, handleDeleteBackup, previewLoading, handleView]);
 
   const rootClass = variant === 'tab' ? '' : 'mt-4 pt-3 border-top';
 
