@@ -25,6 +25,9 @@
  * | BACKNET_MAX_SHELLS        | 10       | Máximo de sessões de shell simultâneas                                       |
  * | BACKNET_SSH_STRICT_HOST   | false    | true = bloqueia conexões SSH sem fingerprint verificado                      |
  * | BACKNET_SSH_WARN_LEGACY   | true     | false = suprime aviso de algoritmos SSH legados                              |
+ *
+ * Proxy SSH: o servidor envia deviceType (mikrotik, huawei, cisco, …) em proxy:ssh:test|exec|open;
+ * sem campo, usa perfil base. Cisco adiciona KEX group15/16/18 e host key ssh-dss.
  */
 
 const { io } = require('socket.io-client');
@@ -461,9 +464,14 @@ socket.on('shell:close', ({ sessionId }) => {
 
 // ── Proxy SSH (para outros hosts na rede local) ───────────────────────────────
 
-/** Alinhado ao backend (SshConnectionService) — equipamentos com ciphers/KEX legados */
-const SSH_LEGACY_ALGORITHMS = {
+/**
+ * Alinhado ao backend (SshConnectionService.sshAlgorithmsForDeviceType).
+ * deviceType opcional nos eventos proxy:ssh:* — mikrotik/huawei/outros usam BASE; cisco inclui KEX extras e ssh-dss.
+ */
+const SSH_ALGORITHMS_BASE = {
   kex: [
+    'curve25519-sha256',
+    'curve25519-sha256@libssh.org',
     'ecdh-sha2-nistp256',
     'ecdh-sha2-nistp384',
     'ecdh-sha2-nistp521',
@@ -495,6 +503,24 @@ const SSH_LEGACY_ALGORITHMS = {
     'rsa-sha2-512',
   ],
 };
+
+const SSH_ALGORITHMS_CISCO = {
+  kex: [
+    ...SSH_ALGORITHMS_BASE.kex,
+    'diffie-hellman-group18-sha512',
+    'diffie-hellman-group16-sha512',
+    'diffie-hellman-group15-sha512',
+  ],
+  cipher: SSH_ALGORITHMS_BASE.cipher,
+  hmac: SSH_ALGORITHMS_BASE.hmac,
+  serverHostKey: ['ssh-dss', ...SSH_ALGORITHMS_BASE.serverHostKey],
+};
+
+function sshAlgorithmsForDeviceType(deviceType) {
+  const t = deviceType != null ? String(deviceType).toLowerCase().trim() : '';
+  if (t === 'cisco') return SSH_ALGORITHMS_CISCO;
+  return SSH_ALGORITHMS_BASE;
+}
 
 /** Reconstrói PEM de uma linha (colada sem \\n) — alinhado ao backend. */
 function repairSquashedPrivateKeyPem(s) {
@@ -544,7 +570,50 @@ function privateKeyPemForSsh2(raw) {
   }
 }
 
-socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKey, hostFingerprint }) => {
+function makeSshHostVerifier(host, port, hostFingerprint) {
+  return (fingerprint) => {
+    if (hostFingerprint) {
+      const match = fingerprint === hostFingerprint;
+      if (!match) {
+        console.error(
+          `[backnet-agent] SSH fingerprint mismatch para ${host}: esperado ${hostFingerprint}, recebido ${fingerprint}`
+        );
+      }
+      return match;
+    }
+    if (SSH_STRICT_HOST) {
+      console.error(
+        `[backnet-agent] Conexão SSH bloqueada: fingerprint ausente e BACKNET_SSH_STRICT_HOST=true (host: ${host})`
+      );
+      return false;
+    }
+    console.warn(
+      `[backnet-agent] SSH: fingerprint não verificado para ${host}:${port}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`
+    );
+    return true;
+  };
+}
+
+/** Opções comuns para conn.connect() no proxy SSH (test / exec / shell). deviceType: mikrotik, huawei, cisco, etc. */
+function buildProxySshConnectConfig({ host, port, username, password, privateKey, hostFingerprint, deviceType }) {
+  const p = Number(port) || 22;
+  const keyPem = privateKeyPemForSsh2(privateKey);
+  const useKey = keyPem.length > 0;
+  return {
+    host,
+    port: p,
+    username,
+    readyTimeout: 15000,
+    algorithms: sshAlgorithmsForDeviceType(deviceType),
+    hostHash: 'sha256',
+    hostVerifier: makeSshHostVerifier(host, p, hostFingerprint),
+    ...(useKey ? { privateKey: keyPem } : { password }),
+  };
+}
+
+socket.on(
+  'proxy:ssh:test',
+  ({ testId, host, port, username, password, privateKey, hostFingerprint, deviceType }) => {
   if (!testId || !host || !username) return;
   const p = Number(port) || 22;
   if (SSH_WARN_LEGACY) {
@@ -564,30 +633,17 @@ socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKe
     socket.emit('proxy:ssh:test:result', { testId, ok: false, error: err.message });
   });
   try {
-    const keyPem = privateKeyPemForSsh2(privateKey);
-    const useKey = keyPem.length > 0;
-    conn.connect({
-      host,
-      port: p,
-      username,
-      readyTimeout: 15000,
-      algorithms: SSH_LEGACY_ALGORITHMS,
-      hostHash: 'sha256',
-      hostVerifier: (fingerprint) => {
-        if (hostFingerprint) {
-          const match = fingerprint === hostFingerprint;
-          if (!match) console.error(`[backnet-agent] SSH fingerprint mismatch para ${host}: esperado ${hostFingerprint}, recebido ${fingerprint}`);
-          return match;
-        }
-        if (SSH_STRICT_HOST) {
-          console.error(`[backnet-agent] Conexão SSH bloqueada: fingerprint ausente e BACKNET_SSH_STRICT_HOST=true (host: ${host})`);
-          return false;
-        }
-        console.warn(`[backnet-agent] SSH: fingerprint não verificado para ${host}:${p}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`);
-        return true;
-      },
-      ...(useKey ? { privateKey: keyPem } : { password }),
-    });
+    conn.connect(
+      buildProxySshConnectConfig({
+        host,
+        port,
+        username,
+        password,
+        privateKey,
+        hostFingerprint,
+        deviceType,
+      })
+    );
   } catch (e) {
     socket.emit('proxy:ssh:test:result', { testId, ok: false, error: e.message });
   }
@@ -595,7 +651,7 @@ socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKe
 
 socket.on(
   'proxy:ssh:exec',
-  ({ execId, host, port, username, password, privateKey, command, timeoutMs, hostFingerprint }) => {
+  ({ execId, host, port, username, password, privateKey, command, timeoutMs, hostFingerprint, deviceType }) => {
     if (!execId || !host || !username || !command) {
       console.warn('[backnet-agent] proxy:ssh:exec parâmetros inválidos', {
         hasExecId: Boolean(execId),
@@ -693,35 +749,26 @@ socket.on(
     });
 
     try {
-      conn.connect({
-        host,
-        port: p,
-        username,
-        readyTimeout: 15000,
-        algorithms: SSH_LEGACY_ALGORITHMS,
-        hostHash: 'sha256',
-        hostVerifier: (fingerprint) => {
-          if (hostFingerprint) {
-            const match = fingerprint === hostFingerprint;
-            if (!match) console.error(`[backnet-agent] SSH fingerprint mismatch para ${host}: esperado ${hostFingerprint}, recebido ${fingerprint}`);
-            return match;
-          }
-          if (SSH_STRICT_HOST) {
-            console.error(`[backnet-agent] Conexão SSH bloqueada: fingerprint ausente e BACKNET_SSH_STRICT_HOST=true (host: ${host})`);
-            return false;
-          }
-          console.warn(`[backnet-agent] SSH: fingerprint não verificado para ${host}:${p}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`);
-          return true;
-        },
-        ...(useKey ? { privateKey: keyPem } : { password }),
-      });
+      conn.connect(
+        buildProxySshConnectConfig({
+          host,
+          port,
+          username,
+          password,
+          privateKey,
+          hostFingerprint,
+          deviceType,
+        })
+      );
     } catch (e) {
       fail(e.message);
     }
   }
 );
 
-socket.on('proxy:ssh:open', ({ sessionId, host, port, username, password, privateKey, cols, rows, hostFingerprint }) => {
+socket.on(
+  'proxy:ssh:open',
+  ({ sessionId, host, port, username, password, privateKey, cols, rows, hostFingerprint, deviceType }) => {
   if (shells.size + proxySessions.size >= MAX_CONCURRENT_SHELLS) {
     console.warn(`[backnet-agent] Limite de sessões atingido (${MAX_CONCURRENT_SHELLS}). Rejeitando sessão ${sessionId}.`);
     socket.emit('shell:exit', { sessionId, code: 1 });
@@ -781,30 +828,17 @@ socket.on('proxy:ssh:open', ({ sessionId, host, port, username, password, privat
     proxySessions.delete(sessionId);
   });
 
-  const keyPem = privateKeyPemForSsh2(privateKey);
-  const useKey = keyPem.length > 0;
-  conn.connect({
-    host,
-    port: p,
-    username,
-    readyTimeout: 15000,
-    algorithms: SSH_LEGACY_ALGORITHMS,
-    hostHash: 'sha256',
-    hostVerifier: (fingerprint) => {
-      if (hostFingerprint) {
-        const match = fingerprint === hostFingerprint;
-        if (!match) console.error(`[backnet-agent] SSH fingerprint mismatch para ${host}: esperado ${hostFingerprint}, recebido ${fingerprint}`);
-        return match;
-      }
-      if (SSH_STRICT_HOST) {
-        console.error(`[backnet-agent] Conexão SSH bloqueada: fingerprint ausente e BACKNET_SSH_STRICT_HOST=true (host: ${host})`);
-        return false;
-      }
-      console.warn(`[backnet-agent] SSH: fingerprint não verificado para ${host}:${p}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`);
-      return true;
-    },
-    ...(useKey ? { privateKey: keyPem } : { password }),
-  });
+  conn.connect(
+    buildProxySshConnectConfig({
+      host,
+      port,
+      username,
+      password,
+      privateKey,
+      hostFingerprint,
+      deviceType,
+    })
+  );
 });
 
 socket.on('proxy:ssh:resize', ({ sessionId, cols, rows }) => {
