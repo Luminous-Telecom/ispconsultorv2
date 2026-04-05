@@ -14,8 +14,69 @@ import { executeSshCommandThroughAgent, isAgentOnline } from '../../agent/AgentS
 
 const BACKUP_CMD_TIMEOUT_MS = parseInt(process.env.SSH_BACKUP_COMMAND_TIMEOUT_MS ?? '120000', 10);
 
-/** MikroTik RouterOS */
-const MIKROTIK_BACKUP_CMD = '/export';
+/**
+ * MikroTik RouterOS — espelha Oxidized `model/routeros.rb`:
+ * - Descobre major com `/system package update print` (installed-version / current-version).
+ * - Export: `remove_secret` → hide-sensitive; ROS ≥7 → show-sensitive; senão `/export`.
+ * - Pós-processamento do bloco `cmd '/export'` (ANSI, continuações, ruído, comentários de data).
+ * Env: `MIKROTIK_BACKUP_HIDE_SENSITIVE=1` força `/export hide-sensitive` (equivalente a vars :remove_secret).
+ */
+const MIKROTIK_PACKAGE_PROBE_CMD = '/system package update print';
+const MIKROTIK_OXIDIZED_AUDIT_BASE = 'RouterOS (model/routeros.rb): package print + export';
+
+function mikrotikHideSensitiveFromEnv(): boolean {
+  const v = process.env.MIKROTIK_BACKUP_HIDE_SENSITIVE ?? '';
+  return v === '1' || /^true$/i.test(v);
+}
+
+/** Igual Oxidized routeros.rb: primeiro dígito da linha installed-version / current-version. */
+function parseRouterOsMajorFromPackageUpdatePrint(out: string): number | null {
+  const line = out.split(/\r?\n/).find((l) => /installed-version:\s|current-version:\s/i.test(l));
+  if (!line) return null;
+  const m = line.match(/\d/);
+  return m ? parseInt(m[0], 10) : null;
+}
+
+function buildMikrotikExportCommand(major: number | null): string {
+  if (mikrotikHideSensitiveFromEnv()) return '/export hide-sensitive';
+  if (major != null && major >= 7) return '/export show-sensitive';
+  return '/export';
+}
+
+function stripMikrotikAnsi(text: string): string {
+  return text.replace(/\x1B\[[0-9;]*[mK]/g, '');
+}
+
+/** Pós-processamento do `cmd '/export'` em model/routeros.rb (sem :significant_changes). */
+function polishMikrotikExportOutput(cfg: string): string {
+  let s = stripMikrotikAnsi(cfg);
+  s = s.replace(/\\\r?\n\s+/g, '');
+  s = s.replace(/# inactive time\r?\n/g, '');
+  s = s.replace(/# received packet from \S+ bad format\r?\n/g, '');
+  s = s.replace(/# poe-out status: short_circuit\r?\n/g, '');
+  s = s.replace(
+    /# Firmware upgraded successfully, please reboot for changes to take effect!\r?\n/g,
+    ''
+  );
+  s = s.replace(/# \S+ not ready\r?\n/g, '');
+  s = s.replace(
+    /# .+ please restart the device in order to apply the new setting\r?\n/g,
+    ''
+  );
+  const lines = s.split(/\r?\n/).filter(
+    (line) =>
+      !/^#\s\w{3}\/\d{2}\/\d{4}/.test(line) && !/^#\s\d{4}-\d{2}-\d{2}/.test(line)
+  );
+  const body = lines.map((l) => l.replace(/\s+$/, '')).join('\n').trimEnd();
+  return body ? `${body}\n` : '';
+}
+
+function mikrotikExportLooksValid(text: string): boolean {
+  const t = text.trim();
+  if (t.length < 20) return false;
+  return /\/[a-z-]+/i.test(t);
+}
+
 /**
  * Huawei VRP — espelha Oxidized `model/vrp.rb`:
  * - cfg :ssh post_login → `screen-length 0 temporary`
@@ -113,7 +174,11 @@ type SshBackupSpec = { command: string; auditLabel: string; fileExtension: strin
 
 function sshBackupSpec(deviceType: SshDeviceType): SshBackupSpec | null {
   if (deviceType === 'mikrotik') {
-    return { command: MIKROTIK_BACKUP_CMD, auditLabel: MIKROTIK_BACKUP_CMD, fileExtension: 'rsc' };
+    return {
+      command: MIKROTIK_PACKAGE_PROBE_CMD,
+      auditLabel: MIKROTIK_OXIDIZED_AUDIT_BASE,
+      fileExtension: 'rsc',
+    };
   }
   if (deviceType === 'huawei') {
     return {
@@ -134,7 +199,7 @@ export type RunSshDeviceBackupContext = {
 export type RunSshDeviceBackupResult = { success: boolean; message: string };
 
 /**
- * Executa backup de configuração (MikroTik: /export; Huawei: como Oxidized vrp.rb — screen-length + display current-configuration all, sanitização + timestamps)
+ * Executa backup de configuração (MikroTik: Oxidized routeros.rb — probe + export dinâmico + polish; Huawei: vrp.rb)
  * e grava em arquivos/ssh-device-backups.
  * Com agente túnel: comando roda no agente (SSH até o equipamento na rede local).
  * Sem agente: SSH direto do servidor (pool).
@@ -203,6 +268,7 @@ export async function runSshDeviceBackup(
   let usedPool = false;
 
   const started = Date.now();
+  let commandAuditLabel = auditLabel;
   try {
     let output: string;
 
@@ -287,61 +353,152 @@ export async function runSshDeviceBackup(
       }
       const useKey = !!privateKey?.length;
 
-      logger.info('Backup SSH: chamando executeSshCommandThroughAgent', {
-        context: 'SshDeviceBackupRunner',
-        deviceId,
-        agentId: device.agent_id,
+      const agentSshOpts = {
         host: device.host,
         port: device.port,
         username: device.username,
-        authMode: useKey ? 'privateKey' : 'password',
-        commandTimeoutMs: BACKUP_CMD_TIMEOUT_MS,
-      });
+        deviceType: device.device_type,
+        ...(useKey && privateKey ? { privateKey } : { password }),
+      };
 
-      const via = await executeSshCommandThroughAgent(
-        device.agent_id!,
-        {
+      if (device.device_type === 'mikrotik') {
+        logger.info('Backup SSH MikroTik: probe package (Oxidized routeros.rb)', {
+          context: 'SshDeviceBackupRunner',
+          deviceId,
+          agentId: device.agent_id,
+          command: MIKROTIK_PACKAGE_PROBE_CMD,
+        });
+        const probe = await executeSshCommandThroughAgent(
+          device.agent_id!,
+          agentSshOpts,
+          MIKROTIK_PACKAGE_PROBE_CMD,
+          BACKUP_CMD_TIMEOUT_MS
+        );
+        logger.info('Backup SSH: retorno probe MikroTik via agente', {
+          context: 'SshDeviceBackupRunner',
+          deviceId,
+          success: probe.success,
+          outputBytes: probe.output != null ? Buffer.byteLength(probe.output, 'utf8') : null,
+          error: probe.error?.slice(0, 300),
+        });
+        if (!probe.success) {
+          commandAuditLabel = MIKROTIK_PACKAGE_PROBE_CMD;
+          const msg =
+            probe.error ?? `Falha no probe MikroTik via agente (${MIKROTIK_PACKAGE_PROBE_CMD})`;
+          logger.error('Backup SSH MikroTik: probe via agente falhou', {
+            context: 'SshDeviceBackupRunner',
+            deviceId,
+            name: device.name,
+            error: msg,
+          });
+          logSshAudit({
+            action: 'COMMAND',
+            userId: auditUserId,
+            deviceId: device.id,
+            deviceName: device.name,
+            command: commandAuditLabel,
+            success: false,
+            errorMessage: msg,
+            ip: auditIp,
+            duration: Date.now() - started,
+          });
+          return { success: false, message: msg };
+        }
+        const major = parseRouterOsMajorFromPackageUpdatePrint(probe.output ?? '');
+        const exportCmd = buildMikrotikExportCommand(major);
+        commandAuditLabel = `${MIKROTIK_PACKAGE_PROBE_CMD} → ${exportCmd}`;
+        logger.info('Backup SSH MikroTik: export via agente', {
+          context: 'SshDeviceBackupRunner',
+          deviceId,
+          exportCmd,
+          routerOsMajor: major,
+        });
+        const exp = await executeSshCommandThroughAgent(
+          device.agent_id!,
+          agentSshOpts,
+          exportCmd,
+          BACKUP_CMD_TIMEOUT_MS
+        );
+        logger.info('Backup SSH: retorno export MikroTik via agente', {
+          context: 'SshDeviceBackupRunner',
+          deviceId,
+          success: exp.success,
+          outputBytes: exp.output != null ? Buffer.byteLength(exp.output, 'utf8') : null,
+          error: exp.error?.slice(0, 300),
+        });
+        if (!exp.success) {
+          const msg = exp.error ?? `Falha ao executar export MikroTik via agente (${exportCmd})`;
+          logger.error('Backup SSH MikroTik: export via agente falhou', {
+            context: 'SshDeviceBackupRunner',
+            deviceId,
+            name: device.name,
+            error: msg,
+          });
+          logSshAudit({
+            action: 'COMMAND',
+            userId: auditUserId,
+            deviceId: device.id,
+            deviceName: device.name,
+            command: commandAuditLabel,
+            success: false,
+            errorMessage: msg,
+            ip: auditIp,
+            duration: Date.now() - started,
+          });
+          return { success: false, message: msg };
+        }
+        output = exp.output ?? '';
+      } else {
+        logger.info('Backup SSH: chamando executeSshCommandThroughAgent', {
+          context: 'SshDeviceBackupRunner',
+          deviceId,
+          agentId: device.agent_id,
           host: device.host,
           port: device.port,
           username: device.username,
-          deviceType: device.device_type,
-          ...(useKey && privateKey ? { privateKey } : { password }),
-        },
-        backupCommand,
-        BACKUP_CMD_TIMEOUT_MS
-      );
+          authMode: useKey ? 'privateKey' : 'password',
+          commandTimeoutMs: BACKUP_CMD_TIMEOUT_MS,
+        });
 
-      logger.info('Backup SSH: retorno executeSshCommandThroughAgent', {
-        context: 'SshDeviceBackupRunner',
-        deviceId,
-        success: via.success,
-        outputBytes: via.output != null ? Buffer.byteLength(via.output, 'utf8') : null,
-        error: via.error?.slice(0, 300),
-      });
+        const via = await executeSshCommandThroughAgent(
+          device.agent_id!,
+          agentSshOpts,
+          backupCommand,
+          BACKUP_CMD_TIMEOUT_MS
+        );
 
-      if (!via.success) {
-        const msg = via.error ?? `Falha ao executar backup via agente (${auditLabel})`;
-        logger.error('Backup SSH via agente falhou', {
+        logger.info('Backup SSH: retorno executeSshCommandThroughAgent', {
           context: 'SshDeviceBackupRunner',
           deviceId,
-          name: device.name,
-          error: msg,
+          success: via.success,
+          outputBytes: via.output != null ? Buffer.byteLength(via.output, 'utf8') : null,
+          error: via.error?.slice(0, 300),
         });
-        logSshAudit({
-          action: 'COMMAND',
-          userId: auditUserId,
-          deviceId: device.id,
-          deviceName: device.name,
-          command: auditLabel,
-          success: false,
-          errorMessage: msg,
-          ip: auditIp,
-          duration: Date.now() - started,
-        });
-        return { success: false, message: msg };
-      }
 
-      output = via.output ?? '';
+        if (!via.success) {
+          const msg = via.error ?? `Falha ao executar backup via agente (${auditLabel})`;
+          logger.error('Backup SSH via agente falhou', {
+            context: 'SshDeviceBackupRunner',
+            deviceId,
+            name: device.name,
+            error: msg,
+          });
+          logSshAudit({
+            action: 'COMMAND',
+            userId: auditUserId,
+            deviceId: device.id,
+            deviceName: device.name,
+            command: auditLabel,
+            success: false,
+            errorMessage: msg,
+            ip: auditIp,
+            duration: Date.now() - started,
+          });
+          return { success: false, message: msg };
+        }
+
+        output = via.output ?? '';
+      }
     } else {
       logger.info('Backup SSH: SSH direto do servidor', {
         context: 'SshDeviceBackupRunner',
@@ -351,7 +508,17 @@ export async function runSshDeviceBackup(
       });
       usedPool = true;
       const conn = await sshPool.getDeviceConnection(device);
-      output = await executeCommand(conn, backupCommand, device.id, { timeoutMs: BACKUP_CMD_TIMEOUT_MS });
+      if (device.device_type === 'mikrotik') {
+        const probeOut = await executeCommand(conn, MIKROTIK_PACKAGE_PROBE_CMD, device.id, {
+          timeoutMs: BACKUP_CMD_TIMEOUT_MS,
+        });
+        const major = parseRouterOsMajorFromPackageUpdatePrint(probeOut);
+        const exportCmd = buildMikrotikExportCommand(major);
+        commandAuditLabel = `${MIKROTIK_PACKAGE_PROBE_CMD} → ${exportCmd}`;
+        output = await executeCommand(conn, exportCmd, device.id, { timeoutMs: BACKUP_CMD_TIMEOUT_MS });
+      } else {
+        output = await executeCommand(conn, backupCommand, device.id, { timeoutMs: BACKUP_CMD_TIMEOUT_MS });
+      }
     }
 
     if (device.device_type === 'huawei') {
@@ -374,7 +541,7 @@ export async function runSshDeviceBackup(
           userId: auditUserId,
           deviceId: device.id,
           deviceName: device.name,
-          command: auditLabel,
+          command: commandAuditLabel,
           success: false,
           errorMessage: message,
           ip: auditIp,
@@ -383,6 +550,31 @@ export async function runSshDeviceBackup(
         return { success: false, message };
       }
       output = sanitized;
+    }
+
+    if (device.device_type === 'mikrotik') {
+      output = polishMikrotikExportOutput(output);
+      if (!mikrotikExportLooksValid(output)) {
+        const message =
+          'Backup MikroTik sem export válido após normalização (Oxidized routeros.rb). Verifique o equipamento e credenciais.';
+        logger.error('Backup SSH MikroTik: export inválido após polish', {
+          context: 'SshDeviceBackupRunner',
+          deviceId,
+          preview: output.slice(0, 400),
+        });
+        logSshAudit({
+          action: 'COMMAND',
+          userId: auditUserId,
+          deviceId: device.id,
+          deviceName: device.name,
+          command: commandAuditLabel,
+          success: false,
+          errorMessage: message,
+          ip: auditIp,
+          duration: Date.now() - started,
+        });
+        return { success: false, message };
+      }
     }
 
     await fs.writeFile(filePath, output, 'utf8');
@@ -404,7 +596,7 @@ export async function runSshDeviceBackup(
       userId: auditUserId,
       deviceId: device.id,
       deviceName: device.name,
-      command: auditLabel,
+      command: commandAuditLabel,
       output: output.slice(0, 500),
       success: true,
       ip: auditIp,
@@ -429,7 +621,7 @@ export async function runSshDeviceBackup(
       userId: auditUserId,
       deviceId: device.id,
       deviceName: device.name,
-      command: auditLabel,
+      command: commandAuditLabel,
       success: false,
       errorMessage: msg,
       ip: auditIp,
