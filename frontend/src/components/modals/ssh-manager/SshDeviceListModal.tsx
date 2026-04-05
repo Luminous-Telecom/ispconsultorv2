@@ -24,8 +24,8 @@ interface SshDeviceListModalProps {
 }
 
 const DEVICE_TYPE_LABELS: Record<string, string> = {
-  mikrotik: 'MikroTik RouterOS',
-  swos: 'MikroTik SwOS (só web)',
+  mikrotik: 'MikroTik (RouterOS)',
+  swos: 'MikroTik (SwOS)',
   cisco: 'Cisco (em breve)',
   huawei: 'Huawei NE (VRP)',
 };
@@ -90,7 +90,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     }
   }, [deleteMutation, clearSelection, refetch]);
 
-  /** Ativo e tipo com backup suportado (RouterOS SSH, Huawei, SwOS HTTP .swb). */
+  /** Ativo e tipo com backup suportado (RouterOS, Huawei, SwOS). */
   const canQueueManualBackup = useCallback((d: SshDevice | undefined) => {
     if (!d) return false;
     const activeFlag = d.is_active as boolean | number;

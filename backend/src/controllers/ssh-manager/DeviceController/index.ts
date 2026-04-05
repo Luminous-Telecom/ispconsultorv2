@@ -375,7 +375,7 @@ export class DeviceController {
 
       if (device.device_type === 'swos') {
         const msg =
-          'MikroTik SwOS não usa SSH: gerenciamento e backup são pela interface web (HTTP), como no Oxidized. Teste de conexão SSH não se aplica a este tipo.';
+          'MikroTik (SwOS) não usa SSH: gerenciamento e backup são pela interface web (HTTP), como no Oxidized. Teste de conexão SSH não se aplica a este tipo.';
         logger.info('DeviceController.testConnection: SwOS — sem SSH', { deviceId, deviceName });
         sendSuccess(res, { success: false, latency: null, error: msg });
         return;

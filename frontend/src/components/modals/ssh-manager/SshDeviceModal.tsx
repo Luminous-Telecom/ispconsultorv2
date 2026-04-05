@@ -24,8 +24,8 @@ interface SshDeviceModalProps {
 }
 
 const DEVICE_TYPE_OPTIONS: { value: SshDeviceType; label: string; disabled?: boolean }[] = [
-  { value: 'mikrotik', label: 'MikroTik RouterOS' },
-  { value: 'swos', label: 'MikroTik SwOS (HTTP — backup .swb pela API web)' },
+  { value: 'mikrotik', label: 'MikroTik (RouterOS)' },
+  { value: 'swos', label: 'MikroTik (SwOS)' },
   { value: 'cisco', label: 'Cisco IOS (em breve)', disabled: true },
   { value: 'huawei', label: 'Huawei NetEngine (VRP)' },
 ];
@@ -410,7 +410,7 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                 <FormField
                   name="port"
                   type="number"
-                  label={formData.device_type === 'swos' ? 'Porta HTTP (interface web)' : 'Porta SSH'}
+                  label={formData.device_type === 'swos' ? 'Porta HTTP' : 'Porta SSH'}
                   value={formData.port}
                   onChange={set('port')}
                   error={errors.port}
@@ -422,7 +422,7 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                 <FormField
                   name="username"
                   type="text"
-                  label={formData.device_type === 'swos' ? 'Usuário (web)' : 'Usuário SSH'}
+                  label={formData.device_type === 'swos' ? 'Usuário HTTP' : 'Usuário SSH'}
                   value={formData.username}
                   onChange={set('username')}
                   error={errors.username}
@@ -436,9 +436,9 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                   label={
                     isEditing
                       ? (formData.device_type === 'swos'
-                        ? 'Nova senha web (deixe em branco para manter)'
+                        ? 'Nova Senha HTTP (deixe em branco para manter)'
                         : 'Nova Senha (deixe em branco para manter)')
-                      : (formData.device_type === 'swos' ? 'Senha (web)' : 'Senha SSH')
+                      : (formData.device_type === 'swos' ? 'Senha HTTP' : 'Senha SSH')
                   }
                   value={formData.password} onChange={set('password')} error={errors.password}
                   required={!isEditing} size="sm" />
