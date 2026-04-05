@@ -61,6 +61,32 @@ function stripVrpOxidizedTimestampLines(cfg: string): string {
     .trim();
 }
 
+/**
+ * Remove do final prompts VRP, Info: (VTY etc.) e lixo de pager — eco típico após display no SSH exec.
+ * Aproxima o efeito do cfg.cut_both do Oxidized em model/vrp.rb.
+ */
+function stripVrpTrailingShellNoise(cfg: string): string {
+  const lines = cfg.split(/\r?\n/);
+  const vrpPromptLine = /^<\s*[\w.-]+\s*>$/;
+  const vtyInfoLine = /^Info:\s/i;
+  const morePagerLine = /^.*----\s*More\s*----\s*$/i;
+
+  while (lines.length > 0) {
+    const raw = lines[lines.length - 1];
+    const line = raw.replace(/\r$/, '').trim();
+    if (line === '') {
+      lines.pop();
+      continue;
+    }
+    if (vrpPromptLine.test(line) || vtyInfoLine.test(line) || morePagerLine.test(line)) {
+      lines.pop();
+      continue;
+    }
+    break;
+  }
+  return lines.join('\n').trimEnd();
+}
+
 /** Indica se o texto já sanitizado parece running-config VRP (linhas !). */
 function huaweiSanitizedLooksLikeConfig(sanitized: string): boolean {
   const t = sanitized.trim();
@@ -329,7 +355,9 @@ export async function runSshDeviceBackup(
     }
 
     if (device.device_type === 'huawei') {
-      const sanitized = stripVrpOxidizedTimestampLines(sanitizeHuaweiBackupOutput(output));
+      const sanitized = stripVrpTrailingShellNoise(
+        stripVrpOxidizedTimestampLines(sanitizeHuaweiBackupOutput(output))
+      );
       if (!huaweiSanitizedLooksLikeConfig(sanitized)) {
         const cliFail = huaweiBackupCliFailureMessageWhenNoConfig(output);
         const message =
