@@ -89,6 +89,34 @@ const SSH_STRICT_HOST = process.env.BACKNET_SSH_STRICT_HOST === 'true';
 const SSH_WARN_LEGACY = process.env.BACKNET_SSH_WARN_LEGACY !== 'false';
 const MAX_CONCURRENT_SHELLS = parseInt(process.env.BACKNET_MAX_SHELLS || '10', 10);
 
+/** Diagnóstico de latência (eco após stdin) — mesmo nome do backend: SSH_TERMINAL_LATENCY_DEBUG=1 */
+const SSH_TERMINAL_LATENCY_DEBUG =
+  process.env.SSH_TERMINAL_LATENCY_DEBUG === '1' ||
+  process.env.SSH_TERMINAL_LATENCY_DEBUG === 'true';
+
+/** @type {Map<string, bigint>} */
+const pendingShellWriteHr = new Map();
+
+function markAgentShellWrite(sessionId) {
+  if (!SSH_TERMINAL_LATENCY_DEBUG) return;
+  pendingShellWriteHr.set(sessionId, process.hrtime.bigint());
+}
+
+function logFirstShellDataAfterWrite(sessionId, label) {
+  if (!SSH_TERMINAL_LATENCY_DEBUG) return;
+  const t0 = pendingShellWriteHr.get(sessionId);
+  if (t0 === undefined) return;
+  const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+  console.info(
+    `[backnet-agent] latência terminal (${label}) sessão=${String(sessionId).slice(0, 8)}… delayMs=${ms.toFixed(2)} (1º chunk após shell:write)`
+  );
+  pendingShellWriteHr.delete(sessionId);
+}
+
+function clearAgentShellWritePending(sessionId) {
+  pendingShellWriteHr.delete(sessionId);
+}
+
 /** Base paths permitidos para file transfer (segurança: evita path traversal). Ex: /tmp,/home/user/dados */
 const ALLOWED_BASE_PATHS = (process.env.BACKNET_ALLOWED_BASE_PATH || '/tmp')
   .split(',')
@@ -374,10 +402,12 @@ socket.on('shell:open', ({ sessionId, cols, rows }) => {
     const shell = spawnShell(cols, rows);
 
     shell.onData((data) => {
+      logFirstShellDataAfterWrite(sessionId, 'shell-local');
       socket.emit('shell:data', { sessionId, data });
     });
 
     shell.onExit(({ exitCode }) => {
+      clearAgentShellWritePending(sessionId);
       console.log(`[backnet-agent] Shell encerrado (${exitCode}) — sessão ${sessionId}`);
       shells.delete(sessionId);
       socket.emit('shell:exit', { sessionId, code: exitCode });
@@ -397,12 +427,14 @@ socket.on('shell:write', ({ sessionId, data }) => {
 
   const shell = shells.get(sessionId);
   if (shell) {
+    markAgentShellWrite(sessionId);
     shell.write(data);
     return;
   }
 
   const stream = proxySessions.get(sessionId);
   if (stream) {
+    markAgentShellWrite(sessionId);
     stream.write(data);
     return;
   }
@@ -418,6 +450,7 @@ socket.on('shell:resize', ({ sessionId, cols, rows }) => {
 });
 
 socket.on('shell:close', ({ sessionId }) => {
+  clearAgentShellWritePending(sessionId);
   const shell = shells.get(sessionId);
   if (shell) {
     try { shell.kill(); } catch { /* ignora */ }
@@ -719,14 +752,17 @@ socket.on('proxy:ssh:open', ({ sessionId, host, port, username, password, privat
       proxySessions.set(sessionId, stream);
 
       stream.on('data', (data) => {
+        logFirstShellDataAfterWrite(sessionId, 'proxy-ssh-stdout');
         socket.emit('shell:data', { sessionId, data: data.toString('utf8') });
       });
 
       stream.stderr.on('data', (data) => {
+        logFirstShellDataAfterWrite(sessionId, 'proxy-ssh-stderr');
         socket.emit('shell:data', { sessionId, data: data.toString('utf8') });
       });
 
       stream.on('close', () => {
+        clearAgentShellWritePending(sessionId);
         proxySessions.delete(sessionId);
         socket.emit('shell:exit', { sessionId, code: 0 });
         conn.end();
@@ -735,6 +771,7 @@ socket.on('proxy:ssh:open', ({ sessionId, host, port, username, password, privat
   });
 
   conn.on('error', (err) => {
+    clearAgentShellWritePending(sessionId);
     console.error('[backnet-agent] Erro SSH:', err.message);
     socket.emit('shell:data', {
       sessionId,
@@ -778,6 +815,7 @@ socket.on('proxy:ssh:resize', ({ sessionId, cols, rows }) => {
 });
 
 socket.on('proxy:ssh:close', ({ sessionId }) => {
+  clearAgentShellWritePending(sessionId);
   const stream = proxySessions.get(sessionId);
   if (stream) {
     try { stream.end(); } catch { /* ignora */ }
