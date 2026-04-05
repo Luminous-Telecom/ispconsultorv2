@@ -14,6 +14,14 @@ import { executeHttpFetchThroughAgent, executeSshCommandThroughAgent, isAgentOnl
 import * as routeros from './models/routeros';
 import * as vrp from './models/vrp';
 
+// SwOS: HTTP Digest (interface web), não Basic — digest-fetch@2 negocia o 401.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const DigestClient = require('digest-fetch') as new (
+  user: string,
+  pass: string,
+  opts?: Record<string, unknown>
+) => { fetch(url: string, init?: { signal?: AbortSignal }): Promise<Response> };
+
 export type RunSshDeviceBackupContext = {
   manual?: boolean;
   userId?: string;
@@ -66,11 +74,8 @@ async function fetchSwosBackupBuffer(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const auth = Buffer.from(`${user}:${passwordPlain}`, 'utf8').toString('base64');
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { Authorization: `Basic ${auth}` },
-    });
+    const client = new DigestClient(user, passwordPlain);
+    const res = await client.fetch(url, { signal: controller.signal });
     clearTimeout(timer);
     if (!res.ok) {
       return { ok: false, error: `HTTP ${res.status} ao baixar backup SwOS` };

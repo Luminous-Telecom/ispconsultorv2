@@ -9,8 +9,8 @@ WORKDIR /app
 ARG BACKNET_AGENT_CHANNEL=prod
 ENV BACKNET_AGENT_CHANNEL=${BACKNET_AGENT_CHANNEL}
 
-COPY package.json ./
-RUN npm install --production
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
 COPY index.js ./
 

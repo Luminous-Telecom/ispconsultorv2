@@ -32,12 +32,116 @@
 
 const { io } = require('socket.io-client');
 const os = require('os');
-const { Client: SshClient } = require('ssh2');
-const crypto = require('crypto');
-const { randomUUID } = crypto;
 const http = require('http');
 const https = require('https');
 const { URL: NodeURL } = require('url');
+const { Client: SshClient } = require('ssh2');
+const crypto = require('crypto');
+const { randomUUID } = crypto;
+
+// ── HTTP GET + Digest (SwOS /backup.swb) — só módulos nativos (sem node-fetch/digest-fetch) ──
+
+function md5Hex(s) {
+  return crypto.createHash('md5').update(s, 'utf8').digest('hex');
+}
+
+function digVal(www, field) {
+  const q = new RegExp(`${field}\\s*=\\s*"([^"]*)"`, 'i');
+  let m = www.match(q);
+  if (m) return m[1];
+  const u = new RegExp(`${field}\\s*=\\s*([^,\\s]+)`, 'i');
+  m = www.match(u);
+  return m ? String(m[1]).replace(/,$/, '') : null;
+}
+
+function httpRequestBuffer(urlStr, requestHeaders, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const u = new NodeURL(urlStr);
+    const lib = u.protocol === 'https:' ? https : http;
+    const port = u.port ? Number(u.port) : u.protocol === 'https:' ? 443 : 80;
+    const chunks = [];
+    const req = lib.request(
+      {
+        hostname: u.hostname,
+        port,
+        path: u.pathname + u.search,
+        method: 'GET',
+        headers: requestHeaders || {},
+        timeout: timeoutMs,
+      },
+      (res) => {
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () =>
+          resolve({
+            statusCode: res.statusCode ?? 0,
+            headers: res.headers,
+            body: Buffer.concat(chunks),
+          })
+        );
+      }
+    );
+    req.on('error', reject);
+    req.setTimeout(timeoutMs, () => {
+      req.destroy();
+      reject(new Error('Timeout HTTP'));
+    });
+    req.end();
+  });
+}
+
+async function httpGetWithDigestAuth(urlStr, username, password, timeoutMs) {
+  const u = new NodeURL(urlStr);
+  const uri = `${u.pathname}${u.search || ''}` || '/';
+  const r1 = await httpRequestBuffer(urlStr, {}, timeoutMs);
+  if (r1.statusCode >= 200 && r1.statusCode < 300) {
+    if (r1.body.length > 0) return { ok: true, statusCode: r1.statusCode, body: r1.body };
+    return { ok: false, statusCode: r1.statusCode, error: 'Resposta HTTP vazia' };
+  }
+  if (r1.statusCode !== 401) {
+    return { ok: false, statusCode: r1.statusCode, error: `HTTP ${r1.statusCode}` };
+  }
+  const raw = r1.headers['www-authenticate'] || r1.headers['WWW-Authenticate'];
+  const www = Array.isArray(raw) ? raw.join(', ') : raw;
+  if (!www || !/digest/i.test(www)) {
+    return { ok: false, statusCode: 401, error: '401 sem Digest (credenciais ou equipamento)' };
+  }
+  const realm = digVal(www, 'realm');
+  const nonce = digVal(www, 'nonce');
+  if (!realm || !nonce) {
+    return { ok: false, statusCode: 401, error: '401 challenge Digest incompleto' };
+  }
+  const opaque = digVal(www, 'opaque');
+  const qopRaw = digVal(www, 'qop');
+  let qopUse = null;
+  if (qopRaw) {
+    const parts = String(qopRaw)
+      .split(',')
+      .map((x) => x.trim().replace(/^"|"$/g, ''));
+    if (parts.includes('auth')) qopUse = 'auth';
+  }
+  const nc = '00000001';
+  const cnonce = crypto.randomBytes(16).toString('hex');
+  const ha1 = md5Hex(`${username}:${realm}:${password}`);
+  const ha2 = md5Hex(`GET:${uri}`);
+  let responseDigest;
+  if (qopUse) {
+    responseDigest = md5Hex(`${ha1}:${nonce}:${nc}:${cnonce}:${qopUse}:${ha2}`);
+  } else {
+    responseDigest = md5Hex(`${ha1}:${nonce}:${ha2}`);
+  }
+  const esc = (v) => String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  let authHeader = `Digest username="${esc(username)}", realm="${esc(realm)}", nonce="${esc(nonce)}", uri="${esc(uri)}", response="${responseDigest}"`;
+  if (qopUse) {
+    authHeader += `, qop=${qopUse}, nc=${nc}, cnonce="${cnonce}"`;
+  }
+  if (opaque) authHeader += `, opaque="${esc(opaque)}"`;
+  authHeader += ', algorithm=MD5';
+  const r2 = await httpRequestBuffer(urlStr, { Authorization: authHeader }, timeoutMs);
+  if (r2.statusCode >= 200 && r2.statusCode < 300) {
+    return { ok: true, statusCode: r2.statusCode, body: r2.body };
+  }
+  return { ok: false, statusCode: r2.statusCode, error: `HTTP ${r2.statusCode}` };
+}
 
 // ── Configuração ───────────────────────────────────────────────────────────────
 
@@ -616,9 +720,10 @@ function buildProxySshConnectConfig({ host, port, username, password, privateKey
 
 /**
  * Download HTTP(S) a partir da rede local do agente (ex.: SwOS GET /backup.swb).
+ * MikroTik SwOS: HTTP Digest (RFC 2617), implementação nativa — sem dependências npm.
  * Servidor emite proxy:http:fetch → agente responde proxy:http:fetch:result.
  */
-socket.on('proxy:http:fetch', ({ fetchId, url, username, password, timeoutMs }) => {
+socket.on('proxy:http:fetch', async ({ fetchId, url, username, password, timeoutMs }) => {
   if (!fetchId || !url || typeof url !== 'string') {
     if (fetchId) {
       socket.emit('proxy:http:fetch:result', { fetchId, ok: false, error: 'URL inválida' });
@@ -626,68 +731,28 @@ socket.on('proxy:http:fetch', ({ fetchId, url, username, password, timeoutMs }) 
     return;
   }
   const t = Math.min(Math.max(Number(timeoutMs) || 120000, 5000), 600000);
-  let settled = false;
-  const fail = (err) => {
-    if (settled) return;
-    settled = true;
-    clearTimeout(timer);
-    socket.emit('proxy:http:fetch:result', { fetchId, ok: false, error: String(err) });
-  };
-  const timer = setTimeout(() => fail('Timeout ao aguardar HTTP'), t);
   try {
-    const u = new NodeURL(url);
-    const lib = u.protocol === 'https:' ? https : http;
-    const portNum = u.port ? Number(u.port) : u.protocol === 'https:' ? 443 : 80;
-    const authHeader =
-      username != null && password != null && String(username).length > 0
-        ? {
-            Authorization: `Basic ${Buffer.from(`${String(username)}:${String(password)}`, 'utf8').toString('base64')}`,
-          }
-        : {};
-    const req = lib.request(
-      {
-        hostname: u.hostname,
-        port: portNum,
-        path: u.pathname + u.search,
-        method: 'GET',
-        headers: { ...authHeader },
-        timeout: t,
-      },
-      (res) => {
-        const chunks = [];
-        res.on('data', (c) => chunks.push(c));
-        res.on('end', () => {
-          if (settled) return;
-          clearTimeout(timer);
-          settled = true;
-          const status = res.statusCode ?? 0;
-          if (status >= 400) {
-            socket.emit('proxy:http:fetch:result', {
-              fetchId,
-              ok: false,
-              error: `HTTP ${status}`,
-              statusCode: status,
-            });
-            return;
-          }
-          const buf = Buffer.concat(chunks);
-          socket.emit('proxy:http:fetch:result', {
-            fetchId,
-            ok: true,
-            bodyBase64: buf.toString('base64'),
-            statusCode: status,
-          });
-        });
-      }
-    );
-    req.on('error', fail);
-    req.setTimeout(t, () => {
-      req.destroy();
-      fail('Timeout HTTP');
+    const user = String(username ?? '');
+    const pass = String(password ?? '');
+    const result = await httpGetWithDigestAuth(url, user, pass, t);
+    if (!result.ok) {
+      socket.emit('proxy:http:fetch:result', {
+        fetchId,
+        ok: false,
+        error: result.error || `HTTP ${result.statusCode}`,
+        statusCode: result.statusCode,
+      });
+      return;
+    }
+    socket.emit('proxy:http:fetch:result', {
+      fetchId,
+      ok: true,
+      bodyBase64: result.body.toString('base64'),
+      statusCode: result.statusCode,
     });
-    req.end();
   } catch (e) {
-    fail(e.message || e);
+    const msg = String(e && typeof e === 'object' && 'message' in e ? e.message : e);
+    socket.emit('proxy:http:fetch:result', { fetchId, ok: false, error: msg });
   }
 });
 
