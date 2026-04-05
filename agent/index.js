@@ -716,21 +716,24 @@ socket.on(
         stream.stderr.on('data', (data) => {
           errOut += data.toString('utf8');
         });
-        stream.on('close', (code) => {
+        stream.on('close', (code, signal) => {
           if (settled) return;
           settled = true;
           clearTimeout(timer);
           const combined = (errOut ? `${out}\n[stderr]: ${errOut}` : out).trim();
-          const ok = code === 0;
+          // ssh2: sem exit-status do equipamento, close emite code undefined — tratar como 0 (sucesso).
+          const exitCode =
+            code === undefined ? 0 : code === null ? (signal ? 1 : 0) : code;
+          const ok = exitCode === 0;
           const outBytes = Buffer.byteLength(combined, 'utf8');
           console.log(
-            `[backnet-agent] proxy:ssh:exec fim execId=${execId} exit=${code} ok=${ok} outputBytes=${outBytes}`
+            `[backnet-agent] proxy:ssh:exec fim execId=${execId} exit=${exitCode} ok=${ok} outputBytes=${outBytes}`
           );
           socket.emit('proxy:ssh:exec:result', {
             execId,
             ok,
             output: combined,
-            ...(ok ? {} : { error: errOut || `Comando encerrou com código ${code}` }),
+            ...(ok ? {} : { error: errOut || `Comando encerrou com código ${exitCode}` }),
           });
           try {
             conn.end();

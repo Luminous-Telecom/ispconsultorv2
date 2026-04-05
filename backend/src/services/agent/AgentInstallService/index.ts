@@ -46,9 +46,11 @@ function exec(conn: SshClient, command: string, log: LogFn): Promise<void> {
       stream.stderr.on('data', (data: Buffer) => {
         data.toString().split('\n').filter(Boolean).forEach((l) => log(`  [stderr] ${l}`));
       });
-      stream.on('close', (code: number) => {
-        if (code !== 0 && code !== null) {
-          reject(new Error(`Comando encerrou com código ${code}: ${command}`));
+      stream.on('close', (code: number | null | undefined, signal?: string) => {
+        const exitCode =
+          code === undefined ? 0 : code === null ? (signal ? 1 : 0) : code;
+        if (exitCode !== 0) {
+          reject(new Error(`Comando encerrou com código ${exitCode}: ${command}`));
         } else {
           resolve();
         }

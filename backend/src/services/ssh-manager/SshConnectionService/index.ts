@@ -193,9 +193,11 @@ export function executeCommand(
         sshEvents.emit('log', { targetId, level: 'warn', message: chunk, timestamp: new Date() });
       });
 
-      stream.on('close', (code: number) => {
+      stream.on('close', (code: number | null | undefined, signal?: string) => {
         clearTimeout(timeout);
-        if (code !== 0 && stderr) {
+        const exitCode =
+          code === undefined ? 0 : code === null ? (signal ? 1 : 0) : code;
+        if (exitCode !== 0 && stderr) {
           resolve(`${output}\n[stderr]: ${stderr}`.trim());
         } else {
           resolve(output.trim());
