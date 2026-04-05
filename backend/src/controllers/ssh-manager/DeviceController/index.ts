@@ -372,10 +372,23 @@ export class DeviceController {
 
       deviceName = device.name;
 
+      logger.info('DeviceController.testConnection: início', {
+        deviceId,
+        deviceName,
+        host: device.host,
+        port: device.port,
+        deviceType: device.device_type,
+        viaAgent: Boolean(device.agent_id),
+        agentId: device.agent_id ?? null,
+        userId: getUserId(req),
+        ip: getClientIp(req),
+      });
+
       if (device.agent_id) {
         const agentRow = await Agent.findByPk(device.agent_id);
         if (!agentRow || !agentRow.is_active) {
           const msg = 'Agente não encontrado ou inativo.';
+          logger.warn('DeviceController.testConnection: falha pré-SSH', { deviceId, deviceName, reason: msg });
           logSshAudit({
             action: 'AUTH_FAIL',
             userId: getUserId(req),
@@ -394,6 +407,12 @@ export class DeviceController {
         if (!isAgentOnline(device.agent_id)) {
           const msg =
             'Agente offline. O teste de conexão usa o mesmo túnel do terminal — mantenha o agente conectado.';
+          logger.warn('DeviceController.testConnection: falha pré-SSH', {
+            deviceId,
+            deviceName,
+            agentId: device.agent_id,
+            reason: 'agente offline',
+          });
           logSshAudit({
             action: 'AUTH_FAIL',
             userId: getUserId(req),
@@ -415,6 +434,10 @@ export class DeviceController {
           password = decrypt(device.password);
         } catch {
           const msg = 'Erro ao descriptografar credenciais do device.';
+          logger.warn('DeviceController.testConnection: falha ao descriptografar credenciais', {
+            deviceId,
+            deviceName,
+          });
           logSshAudit({
             action: 'AUTH_FAIL',
             userId: getUserId(req),
@@ -449,6 +472,12 @@ export class DeviceController {
         });
 
         if (viaAgent.success) {
+          logger.info('DeviceController.testConnection: OK via agente', {
+            deviceId,
+            deviceName,
+            agentId: device.agent_id,
+            latencyMs: viaAgent.latency,
+          });
           logSshAudit({
             action: 'CONNECT',
             userId: getUserId(req),
@@ -472,6 +501,12 @@ export class DeviceController {
         const errorMsg = buildFriendlyError(
           new Error(viaAgent.errorRaw ?? 'Falha na conexão SSH')
         );
+        logger.warn('DeviceController.testConnection: falha SSH via agente', {
+          deviceId,
+          deviceName,
+          agentId: device.agent_id,
+          error: errorMsg,
+        });
         logSshAudit({
           action: 'AUTH_FAIL',
           userId: getUserId(req),
@@ -489,10 +524,12 @@ export class DeviceController {
       }
 
       const start = Date.now();
+      logger.info('DeviceController.testConnection: conexão direta ao host', { deviceId, deviceName, host: device.host });
       const conn = await openDeviceConnection(device);
       const latency = Date.now() - start;
       conn.end();
 
+      logger.info('DeviceController.testConnection: OK conexão direta', { deviceId, deviceName, latencyMs: latency });
       logSshAudit({
         action: 'CONNECT',
         userId: getUserId(req),
@@ -510,6 +547,13 @@ export class DeviceController {
       sendSuccess(res, { success: true, latency, error: null });
     } catch (err) {
       const errorMsg = buildFriendlyError(err instanceof Error ? err : new Error(String(err)));
+
+      logger.warn('DeviceController.testConnection: exceção', {
+        deviceId,
+        deviceName,
+        error: errorMsg,
+        cause: err instanceof Error ? err.message : String(err),
+      });
 
       logSshAudit({
         action: 'AUTH_FAIL',

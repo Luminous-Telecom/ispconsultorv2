@@ -254,7 +254,13 @@ export class AgentController {
         sendNotFound(res, 'Agente não encontrado');
         return;
       }
+      logger.info('AgentController.testConnection: início', {
+        agentId: agent.id,
+        name: agent.name,
+        isActive: agent.is_active,
+      });
       if (!agent.is_active) {
+        logger.warn('AgentController.testConnection: agente inativo no cadastro', { agentId: agent.id });
         sendSuccess(res, {
           success: false,
           latency: null,
@@ -263,6 +269,13 @@ export class AgentController {
         return;
       }
       const result = await pingAgent(agent.id);
+      logger.info('AgentController.testConnection: resultado', {
+        agentId: agent.id,
+        name: agent.name,
+        success: result.success,
+        latency: result.latency,
+        error: result.error,
+      });
       try {
         await registrarAtualizacao(req as AuthenticatedRequest, 'Agent', 0, { entity_id_str: agent.id, name: agent.name }, { entity_id_str: agent.id, name: agent.name }, 'Teste de conexão no agente', getEmpresaIdOrNull(req) ?? undefined);
       } catch { /* não crítico */ }

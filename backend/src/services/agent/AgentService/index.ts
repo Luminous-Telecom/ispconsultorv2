@@ -202,10 +202,15 @@ const pendingAgentPings = new Map<
 
 export function resolveAgentPingResult(pingId: string): void {
   const entry = pendingAgentPings.get(pingId);
-  if (!entry) return;
+  if (!entry) {
+    logger.warn('Agent: teste ping — pong sem pendência', { pingId });
+    return;
+  }
   clearTimeout(entry.timer);
   pendingAgentPings.delete(pingId);
-  entry.settle({ ok: true, latencyMs: Date.now() - entry.startedAt });
+  const latencyMs = Date.now() - entry.startedAt;
+  logger.info('Agent: teste ping — resposta recebida', { pingId, latencyMs });
+  entry.settle({ ok: true, latencyMs });
 }
 
 export function pingAgent(agentId: string): Promise<{
@@ -232,11 +237,13 @@ export function pingAgent(agentId: string): Promise<{
       const e = pendingAgentPings.get(pingId);
       if (!e) return;
       pendingAgentPings.delete(pingId);
+      logger.warn('Agent: teste ping — timeout', { agentId, pingId, timeoutMs: AGENT_PING_TIMEOUT_MS });
       settle({ ok: false, error: 'Timeout: agente não respondeu ao ping' });
     }, AGENT_PING_TIMEOUT_MS);
 
     pendingAgentPings.set(pingId, { timer, settle, startedAt });
 
+    logger.info('Agent: teste ping — enviado ao socket', { agentId, pingId });
     const sent = sendToAgent(agentId, 'agent:ping', { pingId });
 
     if (!sent) {
@@ -245,6 +252,7 @@ export function pingAgent(agentId: string): Promise<{
         clearTimeout(e.timer);
         pendingAgentPings.delete(pingId);
       }
+      logger.warn('Agent: teste ping — agente não conectado ao servidor', { agentId, pingId });
       settle({ ok: false, error: 'Agente offline (não conectado ao servidor)' });
     }
   });
@@ -263,9 +271,25 @@ const pendingAgentSshTests = new Map<
 
 export function resolveAgentSshTestResult(testId: string, payload: AgentSshTestPayload): void {
   const entry = pendingAgentSshTests.get(testId);
-  if (!entry) return;
+  if (!entry) {
+    logger.warn('Agent SSH test: resultado órfão (sem pendência)', {
+      testId,
+      ok: payload.ok,
+      latencyMs: payload.latencyMs,
+      errorPreview: payload.error?.slice(0, 120),
+    });
+    return;
+  }
   clearTimeout(entry.timer);
   pendingAgentSshTests.delete(testId);
+  if (payload.ok) {
+    logger.info('Agent SSH test: sucesso', { testId, latencyMs: payload.latencyMs });
+  } else {
+    logger.warn('Agent SSH test: falha reportada pelo agente', {
+      testId,
+      errorPreview: payload.error?.slice(0, 200),
+    });
+  }
   entry.settle(payload);
 }
 
@@ -297,11 +321,26 @@ export function testSshThroughAgent(
       const e = pendingAgentSshTests.get(testId);
       if (!e) return;
       pendingAgentSshTests.delete(testId);
+      logger.warn('Agent SSH test: timeout aguardando agente', {
+        agentId,
+        testId,
+        host: params.host,
+        port: params.port,
+        timeoutMs: AGENT_SSH_TEST_TIMEOUT_MS,
+      });
       settle({ ok: false, error: 'Timeout ao testar SSH via agente' });
     }, AGENT_SSH_TEST_TIMEOUT_MS);
 
     pendingAgentSshTests.set(testId, { timer, settle });
 
+    logger.info('Agent SSH test: comando enviado ao agente', {
+      agentId,
+      testId,
+      host: params.host,
+      port: params.port,
+      username: params.username,
+      authMode: params.privateKey?.trim() ? 'privateKey' : 'password',
+    });
     const sent = sendToAgent(agentId, 'proxy:ssh:test', {
       testId,
       host: params.host,
@@ -317,6 +356,7 @@ export function testSshThroughAgent(
         clearTimeout(e.timer);
         pendingAgentSshTests.delete(testId);
       }
+      logger.warn('Agent SSH test: agente não está conectado', { agentId, testId, host: params.host });
       settle({ ok: false, error: 'Agente não está conectado' });
     }
   });
