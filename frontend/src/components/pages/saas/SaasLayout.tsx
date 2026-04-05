@@ -94,6 +94,34 @@ const SaasLayout: React.FC = () => {
       ],
     },
     {
+      id: 'logs-erp-superadmin',
+      folder: t('layout.folderLogsErp'),
+      items: [
+        { id: 'logs-usuarios', label: t('logs.usuarios'), icon: 'bi-people-fill', onClick: () => handleOpenModal('logs-usuarios') },
+        { id: 'logs-webhook', label: t('logs.webhook'), icon: 'bi-link-45deg', onClick: () => handleOpenModal('logs-webhook') },
+        { id: 'logs-email', label: t('logs.email'), icon: 'bi-envelope', onClick: () => handleOpenModal('logs-email') },
+        { id: 'logs-whatsapp', label: t('logs.whatsapp'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('logs-whatsapp') },
+        { id: 'logs-assinatura-digital', label: t('logs.assinaturaDigital'), icon: 'bi-pen', onClick: () => handleOpenModal('logs-assinatura-digital') },
+        { id: 'logs-acesso-sistema', label: t('logs.acessoSistema'), icon: 'bi-door-open', onClick: () => handleOpenModal('logs-acesso-sistema') },
+        { id: 'logs-equipamentos', label: t('logs.equipamentos'), icon: 'bi-journal-code', onClick: () => handleOpenModal('logs-equipamentos') },
+        { id: 'logs-agentes', label: t('logs.agentes'), icon: 'bi-plugin', onClick: () => handleOpenModal('logs-agentes') },
+        { id: 'blockdomi-logs-acesso', label: t('blockdomi.logsAcesso'), icon: 'bi-journal-text', onClick: () => handleOpenModal('blockdomi-logs-acesso') },
+      ],
+    },
+    {
+      id: 'logs-saas-superadmin',
+      folder: t('layout.folderLogsSaas'),
+      items: [
+        { id: 'saas-logs-usuarios', label: t('logs.usuarios'), icon: 'bi-people-fill', onClick: () => handleOpenModal('saas-logs-usuarios') },
+        { id: 'saas-logs-agenda-tarefas', label: t('logs.agendaTarefas'), icon: 'bi-clock-history', onClick: () => handleOpenModal('saas-logs-agenda-tarefas') },
+        { id: 'saas-logs-webhook', label: t('logs.webhook'), icon: 'bi-link-45deg', onClick: () => handleOpenModal('saas-logs-webhook') },
+        { id: 'saas-logs-email', label: t('logs.email'), icon: 'bi-envelope', onClick: () => handleOpenModal('saas-logs-email') },
+        { id: 'saas-logs-whatsapp', label: t('logs.whatsapp'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('saas-logs-whatsapp') },
+        { id: 'saas-logs-assinatura-digital', label: t('logs.assinaturaDigital'), icon: 'bi-pen', onClick: () => handleOpenModal('saas-logs-assinatura-digital') },
+        { id: 'saas-logs-acesso-sistema', label: t('logs.acessoSistema'), icon: 'bi-door-open', onClick: () => handleOpenModal('saas-logs-acesso-sistema') },
+      ],
+    },
+    {
       id: 'parametros-saas',
       folder: 'Configurações',
       items: [

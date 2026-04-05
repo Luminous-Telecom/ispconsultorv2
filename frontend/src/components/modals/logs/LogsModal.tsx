@@ -10,7 +10,6 @@ import { useI18n } from 'contexts/I18nContext';
 import { formatDateTime } from 'utils/formatters';
 import { SshAuditService } from 'services/sshAuditService';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/auditoriaService';
-import { useLocation } from 'react-router-dom';
 import { getMensagemHistoricoService } from 'services/mensagemHistoricoService';
 import { SshAuditLog, SshAuditAction } from 'types';
 import { Badge } from 'components/ui';
@@ -79,12 +78,12 @@ interface LogsModalProps {
   onClose: () => void;
   skipWrapper?: boolean;
   logType?: LogsModalType;
+  /** Origem ERP vs SaaS — definido pelo registro de modais (não inferir pela URL). */
   variant?: 'erp' | 'saas';
 }
 
-function useLogsContent(logType: LogsModalType, show: boolean, variant?: 'erp' | 'saas') {
-  const location = useLocation();
-  const isSaas = variant ? variant === 'saas' : location.pathname.startsWith('/saas');
+function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 'saas') {
+  const isSaas = variant === 'saas';
   const mensagemService = getMensagemHistoricoService(isSaas);
 
   const isSsh = logType === 'equipamentos' || logType === 'agentes';
@@ -144,7 +143,7 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant?: 'erp' |
   }), [tableFilters, isEmail]);
 
   const sshQuery = useQuery({
-    queryKey: ['logs-ssh', logType, sshFilters],
+    queryKey: ['logs-ssh', variant, logType, sshFilters],
     queryFn: () => SshAuditService.list({ logType: logType as 'equipamentos' | 'agentes', ...sshFilters }),
     enabled: show && isSsh,
     staleTime: 15_000,
@@ -152,9 +151,12 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant?: 'erp' |
   });
 
   const auditoriaQuery = useQuery({
-    queryKey: ['auditoria-logs', logType, auditoriaFilters],
+    queryKey: ['auditoria-logs', variant, logType, auditoriaFilters],
     queryFn: async () => {
-      const r = await auditoriaService.list(auditoriaFilters);
+      const r =
+        variant === 'saas'
+          ? await auditoriaService.listSaasAll(auditoriaFilters)
+          : await auditoriaService.list(auditoriaFilters);
       if (!r.success) throw new Error(r.message);
       return r.data;
     },
@@ -177,7 +179,10 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant?: 'erp' |
     sortDirection: tableFilters.sortDirection,
   }), [tableFilters.page, tableFilters.limit, tableFilters.debouncedSearch, tableFilters.sortColumn, tableFilters.sortDirection]);
 
-  const blockdomiQuery = useBlockdomiLogs(blockdomiFilters, { enabled: show && isBlockdomiAcesso });
+  const blockdomiQuery = useBlockdomiLogs(blockdomiFilters, {
+    enabled: show && isBlockdomiAcesso,
+    scope: variant,
+  });
 
   const data = isSsh ? sshQuery.data : isAuditoria ? auditoriaQuery.data : isBlockdomiAcesso ? blockdomiQuery.data : mensagemQuery.data;
   const isLoading = isSsh ? sshQuery.isLoading : isAuditoria ? auditoriaQuery.isLoading : isBlockdomiAcesso ? blockdomiQuery.isLoading : mensagemQuery.isLoading;
@@ -211,7 +216,7 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant?: 'erp' |
   };
 }
 
-const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType = 'usuarios', variant }) => {
+const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType = 'usuarios', variant = 'erp' }) => {
   const { t } = useI18n();
   const ctx = useLogsContent(logType, show, variant);
   const [showBlockdomiLogsReal, setShowBlockdomiLogsReal] = useState(false);
@@ -489,7 +494,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
             emptyMessage,
             pagination,
           }}
-          tableId={`logs-table-${logType}`}
+          tableId={`logs-table-${variant}-${logType}`}
           syncWithHeader={false}
           onSelectionChange={(items) => handleSelectionChange(items as { id: number | string }[])}
           onRefresh={() => refetch()}

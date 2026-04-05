@@ -197,6 +197,8 @@ export interface TranslationKeys {
   'layout.folderCadastros': string;
   'layout.folderFinanceiro': string;
   'layout.folderLogs': string;
+  'layout.folderLogsErp': string;
+  'layout.folderLogsSaas': string;
 
   // Logs
   'logs.title': string;
@@ -1637,6 +1639,8 @@ const translations: Translations = {
     'layout.folderCadastros': 'Cadastros',
     'layout.folderFinanceiro': 'Financeiro',
     'layout.folderLogs': 'Logs',
+    'layout.folderLogsErp': 'Logs ERP',
+    'layout.folderLogsSaas': 'Logs SaaS',
 
     // Logs
     'logs.title': 'Logs',
@@ -3071,6 +3075,8 @@ const translations: Translations = {
     'layout.folderCadastros': 'Registers',
     'layout.folderFinanceiro': 'Financial',
     'layout.folderLogs': 'Logs',
+    'layout.folderLogsErp': 'ERP logs',
+    'layout.folderLogsSaas': 'SaaS logs',
 
     // Logs
     'logs.title': 'Logs',
@@ -4505,6 +4511,8 @@ const translations: Translations = {
     'layout.folderCadastros': 'Registros',
     'layout.folderFinanceiro': 'Financiero',
     'layout.folderLogs': 'Logs',
+    'layout.folderLogsErp': 'Logs ERP',
+    'layout.folderLogsSaas': 'Logs SaaS',
     'layout.logoutSuccess': 'Cerrado de sesión exitoso',
 
     // Logs

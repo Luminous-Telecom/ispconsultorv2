@@ -5,10 +5,10 @@ import type { BlockdomiLogAcessoFilters } from '../services/blockdomiLogAcessoSe
 
 export const useBlockdomiLogs = (
   filters: BlockdomiLogAcessoFilters = {},
-  options?: { refetchInterval?: number; enabled?: boolean }
+  options?: { refetchInterval?: number; enabled?: boolean; scope?: string }
 ) => {
   return useQuery({
-    queryKey: ['blockdomi-logs-acesso', filters],
+    queryKey: ['blockdomi-logs-acesso', options?.scope ?? 'default', filters],
     queryFn: () => BlockdomiLogAcessoService.list(filters),
     staleTime: 0,
     gcTime: CACHE_CONFIG.DEFAULT_CACHE_TIME,

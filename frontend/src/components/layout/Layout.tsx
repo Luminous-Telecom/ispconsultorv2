@@ -267,7 +267,6 @@ const Layout: React.FC = () => {
 
   const logsFolderItems = [
     { id: 'logs-usuarios', modalId: 'logs-usuarios', label: t('logs.usuarios'), icon: 'bi-people-fill', onClick: () => handleOpenModal('logs-usuarios') },
-    { id: 'logs-agenda-tarefas', modalId: 'logs-agenda-tarefas', label: t('logs.agendaTarefas'), icon: 'bi-clock-history', onClick: () => handleOpenModal('logs-agenda-tarefas') },
     { id: 'logs-webhook', modalId: 'logs-webhook', label: t('logs.webhook'), icon: 'bi-link-45deg', onClick: () => handleOpenModal('logs-webhook') },
     { id: 'logs-email', modalId: 'logs-email', label: t('logs.email'), icon: 'bi-envelope', onClick: () => handleOpenModal('logs-email') },
     { id: 'logs-whatsapp', modalId: 'logs-whatsapp', label: t('logs.whatsapp'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('logs-whatsapp') },

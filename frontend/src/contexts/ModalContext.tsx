@@ -30,7 +30,6 @@ export type ModalType =
   | 'blockdomi-logs-acesso'
   // Logs
   | 'logs-usuarios'
-  | 'logs-agenda-tarefas'
   | 'logs-webhook'
   | 'logs-email'
   | 'logs-whatsapp'
@@ -57,6 +56,13 @@ export type ModalType =
   | 'saas-historico-email'
   | 'saas-atualizacoes'
   | 'saas-backups'
+  | 'saas-logs-usuarios'
+  | 'saas-logs-agenda-tarefas'
+  | 'saas-logs-webhook'
+  | 'saas-logs-email'
+  | 'saas-logs-whatsapp'
+  | 'saas-logs-assinatura-digital'
+  | 'saas-logs-acesso-sistema'
   // SSH Manager
   | 'ssh-devices'
   // Agents / Tunnels
