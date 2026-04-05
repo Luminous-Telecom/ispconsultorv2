@@ -59,6 +59,7 @@ export function createSchedulerService(
       page?: number;
       limit?: number;
       search?: string;
+      searchField?: string;
       sort?: string;
       direction?: 'asc' | 'desc';
     }): Promise<SchedulerResponse> {

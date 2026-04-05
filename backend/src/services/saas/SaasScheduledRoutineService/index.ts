@@ -5,7 +5,9 @@ import {
   type ListScheduledRoutinesResponse
 } from '../../../utils/createScheduledRoutineService';
 
-const service = createScheduledRoutineService<SaasScheduledRoutine>(SaasScheduledRoutine);
+const service = createScheduledRoutineService<SaasScheduledRoutine>(SaasScheduledRoutine, {
+  searchFields: ['nome', 'tipo', 'descricao', 'alvo'],
+});
 
 export type { ListScheduledRoutinesFilters };
 export type ListSaasScheduledRoutinesResponse = ListScheduledRoutinesResponse<SaasScheduledRoutine>;

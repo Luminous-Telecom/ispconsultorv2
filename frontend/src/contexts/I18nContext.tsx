@@ -1213,6 +1213,7 @@ export interface TranslationKeys {
   'scheduler.successDelete': string;
   'scheduler.deactivate': string;
   'scheduler.type': string;
+  'scheduler.scope': string;
   'scheduler.routine': string;
   'scheduler.queueWaiting': string;
   'scheduler.queueRunning': string;
@@ -2651,6 +2652,7 @@ const translations: Translations = {
     'scheduler.successDelete': 'Rotina deletada com sucesso',
     'scheduler.deactivate': 'Desativar',
     'scheduler.type': 'Tipo',
+    'scheduler.scope': 'Escopo',
     'scheduler.routine': 'Rotina',
     'scheduler.queueWaiting': 'Na fila',
     'scheduler.queueRunning': 'Executando',
@@ -4084,6 +4086,7 @@ const translations: Translations = {
     'scheduler.successDelete': 'Routine deleted successfully',
     'scheduler.deactivate': 'Deactivate',
     'scheduler.type': 'Type',
+    'scheduler.scope': 'Scope',
     'scheduler.routine': 'Routine',
     'scheduler.queueWaiting': 'Waiting',
     'scheduler.queueRunning': 'Running',
@@ -5519,6 +5522,7 @@ const translations: Translations = {
     'scheduler.successDelete': 'Rutina eliminada con éxito',
     'scheduler.deactivate': 'Desactivar',
     'scheduler.type': 'Tipo',
+    'scheduler.scope': 'Ámbito',
     'scheduler.routine': 'Rutina',
     'scheduler.queueWaiting': 'En cola',
     'scheduler.queueRunning': 'Ejecutando',

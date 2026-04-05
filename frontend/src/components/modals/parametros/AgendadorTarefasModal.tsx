@@ -82,7 +82,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
       },
       {
         key: 'alvo',
-        label: 'Escopo',
+        label: t('scheduler.scope'),
         sortable: true,
         render: (item: RotinaAgendada) => (
           <span className="badge bg-secondary">
@@ -155,18 +155,28 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
   const searchFields = [
     { key: 'id', label: t('table.id') },
     { key: 'tipo', label: t('scheduler.type') },
+    { key: 'alvo', label: t('scheduler.scope') },
     { key: 'descricao', label: t('table.description') },
     { key: 'frequencia', label: t('scheduler.frequency') },
     { key: 'hora_execucao', label: t('scheduler.schedule') },
   ];
 
   const { data: rotinasData, isLoading, refetch } = useQuery({
-    queryKey: [QUERY_KEY, tableFilters.page, tableFilters.limit, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection],
+    queryKey: [
+      QUERY_KEY,
+      tableFilters.page,
+      tableFilters.limit,
+      tableFilters.debouncedSearch,
+      tableFilters.searchField,
+      tableFilters.sortColumn,
+      tableFilters.sortDirection,
+    ],
     queryFn: () =>
       SaasSchedulerService.getRotinas({
         page: tableFilters.page,
         limit: tableFilters.limit,
-        search: tableFilters.search,
+        search: tableFilters.debouncedSearch,
+        searchField: tableFilters.searchField || undefined,
         sort: tableFilters.sortColumn,
         direction: tableFilters.sortDirection,
       }),

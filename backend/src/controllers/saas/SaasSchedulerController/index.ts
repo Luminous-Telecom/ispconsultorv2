@@ -33,12 +33,13 @@ function mensagemValidacaoAlvoTipo(body: { tipo?: string; alvo?: string }): stri
 export class SaasSchedulerController {
   async index(req: Request, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 15, search, sort = 'created_at', direction = 'desc' } = req.query;
+      const { page = 1, limit = 15, search, searchField, sort = 'created_at', direction = 'desc' } = req.query;
 
       const result = await SaasScheduledRoutineService.list({
         page: Number(page),
         limit: Number(limit),
         search: search as string,
+        searchField: typeof searchField === 'string' ? searchField : undefined,
         sort: sort as string,
         direction: direction as 'asc' | 'desc'
       });

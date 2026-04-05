@@ -1,10 +1,13 @@
 import { Op, WhereOptions } from 'sequelize';
 import type { ModelStatic, Model } from 'sequelize';
+import { buildSearchFilter } from './queryFilters';
 
 export interface ListScheduledRoutinesFilters {
   page?: number;
   limit?: number;
   search?: string;
+  /** Campo da busca avançada (ex.: alvo no SaaS) */
+  searchField?: string;
   sort?: string;
   direction?: 'asc' | 'desc';
   empresa_id?: number | null;
@@ -26,10 +29,16 @@ export interface ListScheduledRoutinesResponse<T> {
   };
 }
 
-const SEARCH_FIELDS = ['nome', 'tipo', 'descricao'];
+const DEFAULT_SEARCH_FIELDS = ['nome', 'tipo', 'descricao'];
+
+export interface CreateScheduledRoutineServiceOptions {
+  /** Campos em que a busca textual atua (ex.: SaaS inclui `alvo`). */
+  searchFields?: string[];
+}
 
 export function createScheduledRoutineService<T extends Model>(
-  Model: ModelStatic<T>
+  Model: ModelStatic<T>,
+  options: CreateScheduledRoutineServiceOptions = {}
 ): {
   list: (filters: ListScheduledRoutinesFilters) => Promise<ListScheduledRoutinesResponse<T>>;
   getById: (id: number, empresaId?: number | null) => Promise<T | null>;
@@ -37,12 +46,15 @@ export function createScheduledRoutineService<T extends Model>(
   update: (id: number, dados: Partial<T>) => Promise<T>;
   delete: (id: number) => Promise<T>;
 } {
+  const searchFieldsList = options.searchFields?.length ? options.searchFields : DEFAULT_SEARCH_FIELDS;
+
   return {
     async list(filters: ListScheduledRoutinesFilters) {
       const {
         page = 1,
         limit = 15,
         search,
+        searchField,
         sort = 'created_at',
         direction = 'desc',
         empresa_id
@@ -51,7 +63,8 @@ export function createScheduledRoutineService<T extends Model>(
       const offset = (Number(page) - 1) * Number(limit);
       const conditions: WhereOptions[] = [];
       if (empresa_id !== undefined && empresa_id !== null) conditions.push({ empresa_id });
-      if (search) conditions.push({ [Op.or]: SEARCH_FIELDS.map((f) => ({ [f]: { [Op.like]: `%${search}%` } })) } as WhereOptions);
+      const searchWhere = buildSearchFilter(search, searchFieldsList, searchField);
+      if (searchWhere) conditions.push(searchWhere);
       const where: WhereOptions = conditions.length > 1 ? { [Op.and]: conditions } : (conditions[0] || {});
 
       const result = await (Model as unknown as {
