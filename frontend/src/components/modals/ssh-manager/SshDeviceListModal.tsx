@@ -24,7 +24,8 @@ interface SshDeviceListModalProps {
 }
 
 const DEVICE_TYPE_LABELS: Record<string, string> = {
-  mikrotik: 'MikroTik',
+  mikrotik: 'MikroTik RouterOS',
+  swos: 'MikroTik SwOS (só web)',
   cisco: 'Cisco (em breve)',
   huawei: 'Huawei NE (VRP)',
 };
@@ -89,22 +90,21 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     }
   }, [deleteMutation, clearSelection, refetch]);
 
-  /**
-   * Ativo e tipo com backup suportado (MikroTik, Huawei NE).
-   * Túnel/agente: o backend recusa com mensagem clara — evita falso "desabilitado" se agent_id/agent vier diferente na lista.
-   */
+  /** Ativo e tipo com backup suportado (RouterOS SSH, Huawei, SwOS HTTP .swb). */
   const canQueueManualBackup = useCallback((d: SshDevice | undefined) => {
     if (!d) return false;
     const activeFlag = d.is_active as boolean | number;
     const inactive = activeFlag === false || activeFlag === 0;
     if (inactive) return false;
     const t = String(d.device_type ?? '').toLowerCase();
-    return t === 'mikrotik' || t === 'huawei';
+    return t === 'mikrotik' || t === 'huawei' || t === 'swos';
   }, []);
 
   const handleAudit = useCallback((device: SshDevice) => {
     auditoria.handleAudit('SshDevice', device.id);
   }, [auditoria]);
+
+  const isSwos = useCallback((d: SshDevice) => String(d.device_type ?? '').toLowerCase() === 'swos', []);
 
   const handleTest = useCallback(async (device: SshDevice) => {
     try {
@@ -239,7 +239,8 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     {
       label: 'Terminal',
       variant: 'primary' as const,
-      disabled: (selectedItems: SshDevice[]) => selectedItems.length !== 1,
+      disabled: (selectedItems: SshDevice[]) =>
+        selectedItems.length !== 1 || isSwos(selectedItems[0]),
       action: (selectedItems: SshDevice[]) => {
         if (selectedItems.length !== 1) return;
         setTerminalDevice(selectedItems[0]);
@@ -248,7 +249,8 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     {
       label: 'Testar',
       variant: 'primary' as const,
-      disabled: (selectedItems: SshDevice[]) => selectedItems.length !== 1,
+      disabled: (selectedItems: SshDevice[]) =>
+        selectedItems.length !== 1 || isSwos(selectedItems[0]),
       action: (selectedItems: SshDevice[]) => {
         if (selectedItems.length !== 1) return;
         handleTest(selectedItems[0]);
@@ -266,7 +268,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
         await queueManualBackupMutation.mutateAsync(selectedItems[0].id);
       },
     },
-  ], [t, handleTest, handleDelete, queryClient, canQueueManualBackup, queueManualBackupMutation]);
+  ], [t, handleTest, handleDelete, queryClient, canQueueManualBackup, queueManualBackupMutation, isSwos]);
 
   const modalContent = (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

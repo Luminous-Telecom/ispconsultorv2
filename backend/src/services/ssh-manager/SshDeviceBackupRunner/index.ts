@@ -10,11 +10,169 @@ import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { decrypt } from '../../../utils/encryption';
 import { privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { registerSshDeviceBackupRow } from '../SshDeviceBackupStorageService';
-import { executeSshCommandThroughAgent, isAgentOnline } from '../../agent/AgentService';
+import { executeHttpFetchThroughAgent, executeSshCommandThroughAgent, isAgentOnline } from '../../agent/AgentService';
 import * as routeros from './models/routeros';
 import * as vrp from './models/vrp';
 
+export type RunSshDeviceBackupContext = {
+  manual?: boolean;
+  userId?: string;
+  ip?: string;
+};
+
+export type RunSshDeviceBackupResult = { success: boolean; message: string };
+
 const BACKUP_CMD_TIMEOUT_MS = parseInt(process.env.SSH_BACKUP_COMMAND_TIMEOUT_MS ?? '120000', 10);
+
+/** Porta HTTP da interface SwOS (campo `port` do cadastro; 22 assume 80 como no Oxidized). */
+function swosHttpPort(device: SshDevice): number {
+  const p = device.port ?? 80;
+  if (p === 22) return 80;
+  return p;
+}
+
+function swosBackupUrl(device: SshDevice): string {
+  const port = swosHttpPort(device);
+  const host = device.host.trim();
+  if (port === 80) return `http://${host}/backup.swb`;
+  return `http://${host}:${port}/backup.swb`;
+}
+
+async function fetchSwosBackupBuffer(
+  device: SshDevice,
+  passwordPlain: string,
+  timeoutMs: number
+): Promise<{ ok: true; body: Buffer } | { ok: false; error: string }> {
+  const url = swosBackupUrl(device);
+  const user = device.username.trim();
+  const viaAgent = Boolean(device.agent_id);
+
+  if (viaAgent) {
+    if (!isAgentOnline(device.agent_id!)) {
+      return { ok: false, error: 'Agente offline. O backup SwOS usa HTTP na rede do agente.' };
+    }
+    const r = await executeHttpFetchThroughAgent(device.agent_id!, {
+      url,
+      username: user,
+      password: passwordPlain,
+      timeoutMs,
+    });
+    if (!r.success || !r.body?.length) {
+      return { ok: false, error: r.error ?? 'Falha ao baixar .swb via agente' };
+    }
+    return { ok: true, body: r.body };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const auth = Buffer.from(`${user}:${passwordPlain}`, 'utf8').toString('base64');
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { Authorization: `Basic ${auth}` },
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      return { ok: false, error: `HTTP ${res.status} ao baixar backup SwOS` };
+    }
+    const arr = await res.arrayBuffer();
+    const body = Buffer.from(arr);
+    if (!body.length) {
+      return { ok: false, error: 'Resposta vazia do equipamento SwOS' };
+    }
+    return { ok: true, body };
+  } catch (e) {
+    clearTimeout(timer);
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes('abort') || msg.toLowerCase().includes('aborted')) {
+      return { ok: false, error: 'Timeout ao baixar backup SwOS (HTTP)' };
+    }
+    return { ok: false, error: msg };
+  }
+}
+
+async function runSwosHttpBackup(
+  device: SshDevice,
+  context?: RunSshDeviceBackupContext
+): Promise<RunSshDeviceBackupResult> {
+  const manual = context?.manual === true;
+  const auditUserId = manual ? (context?.userId ?? 'user') : 'scheduler';
+  const auditIp = context?.ip ?? '127.0.0.1';
+  const started = Date.now();
+  const auditLabel = `HTTP GET ${swosBackupUrl(device)}`;
+
+  const auditFail = (errorMessage: string): RunSshDeviceBackupResult => {
+    logSshAudit({
+      action: 'COMMAND',
+      userId: auditUserId,
+      deviceId: device.id,
+      deviceName: device.name,
+      command: auditLabel,
+      success: false,
+      errorMessage,
+      ip: auditIp,
+      duration: Date.now() - started,
+    });
+    return { success: false, message: errorMessage };
+  };
+
+  let passwordPlain: string;
+  try {
+    passwordPlain = decrypt(device.password);
+  } catch {
+    logger.error('Backup SwOS: credenciais', { context: 'SshDeviceBackupRunner', deviceId: device.id });
+    return auditFail('Erro ao descriptografar credenciais do device.');
+  }
+
+  if (device.agent_id) {
+    const agentRow = await Agent.findByPk(device.agent_id);
+    if (!agentRow || !agentRow.is_active) {
+      return auditFail('Agente não encontrado ou inativo.');
+    }
+  }
+
+  const got = await fetchSwosBackupBuffer(device, passwordPlain, BACKUP_CMD_TIMEOUT_MS);
+  if (!got.ok) {
+    logger.error('Backup SwOS falhou', { context: 'SshDeviceBackupRunner', deviceId: device.id, error: got.error });
+    return auditFail(got.error);
+  }
+
+  if (got.body.length < 32) {
+    return auditFail('Arquivo .swb muito pequeno ou inválido.');
+  }
+
+  const baseDir = resolveArquivosPath('ssh-device-backups');
+  await fs.mkdir(baseDir, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const safeName = device.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
+  const fileName = `${device.id}_${safeName}_${stamp}.swb`;
+  const filePath = path.join(baseDir, fileName);
+
+  await fs.writeFile(filePath, got.body);
+  const sizeBytes = got.body.length;
+  await registerSshDeviceBackupRow(device.id, fileName, sizeBytes);
+  const duration = Date.now() - started;
+
+  logger.info('Backup SwOS concluído', {
+    context: 'SshDeviceBackupRunner',
+    deviceId: device.id,
+    name: device.name,
+    bytes: sizeBytes,
+    durationMs: duration,
+  });
+  logSshAudit({
+    action: 'COMMAND',
+    userId: auditUserId,
+    deviceId: device.id,
+    deviceName: device.name,
+    command: auditLabel,
+    output: `.swb ${sizeBytes} bytes`,
+    success: true,
+    ip: auditIp,
+    duration,
+  });
+  return { success: true, message: 'Backup concluído com sucesso.' };
+}
 
 function backupSpec(deviceType: SshDeviceType): {
   command: string;
@@ -62,14 +220,6 @@ async function mikrotikProbeAndExport(exec: ExecFn): Promise<
   return { ok: true, output: exp.output ?? '', auditLabel };
 }
 
-export type RunSshDeviceBackupContext = {
-  manual?: boolean;
-  userId?: string;
-  ip?: string;
-};
-
-export type RunSshDeviceBackupResult = { success: boolean; message: string };
-
 export async function runSshDeviceBackup(
   deviceId: string,
   context?: RunSshDeviceBackupContext
@@ -99,6 +249,10 @@ export async function runSshDeviceBackup(
   if (!manual && !device.backup_enabled) {
     logger.warn('Backup SSH ignorado: backup_enabled off', { context: 'SshDeviceBackupRunner', deviceId, name: device.name });
     return { success: false, message: 'Backup desabilitado para este device.' };
+  }
+
+  if (device.device_type === 'swos') {
+    return runSwosHttpBackup(device, context);
   }
 
   const spec = backupSpec(device.device_type);
@@ -142,7 +296,7 @@ export async function runSshDeviceBackup(
   };
 
   try {
-    let output: string;
+    let output = '';
 
     if (viaAgent) {
       const agentRow = await Agent.findByPk(device.agent_id!);
@@ -278,7 +432,7 @@ export async function runSshDeviceBackup(
       name: device.name,
       manual,
       viaAgent,
-      bytes: output.length,
+      bytes: sizeBytes,
       durationMs: duration,
     });
     logSshAudit({

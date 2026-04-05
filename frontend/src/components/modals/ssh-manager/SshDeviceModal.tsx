@@ -25,6 +25,7 @@ interface SshDeviceModalProps {
 
 const DEVICE_TYPE_OPTIONS: { value: SshDeviceType; label: string; disabled?: boolean }[] = [
   { value: 'mikrotik', label: 'MikroTik RouterOS' },
+  { value: 'swos', label: 'MikroTik SwOS (HTTP — backup .swb pela API web)' },
   { value: 'cisco', label: 'Cisco IOS (em breve)', disabled: true },
   { value: 'huawei', label: 'Huawei NetEngine (VRP)' },
 ];
@@ -142,7 +143,9 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
           password: '',
           private_key: '',
           device_type:
-            deviceData.device_type === 'cisco' || deviceData.device_type === 'huawei'
+            deviceData.device_type === 'cisco' ||
+            deviceData.device_type === 'huawei' ||
+            deviceData.device_type === 'swos'
               ? deviceData.device_type
               : 'mikrotik',
           description: deviceData.description ?? '',
@@ -381,7 +384,15 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                 <select
                   className="form-select form-select-sm"
                   value={formData.device_type}
-                  onChange={(e) => set('device_type')(e.target.value as SshDeviceType)}
+                  onChange={(e) => {
+                    const v = e.target.value as SshDeviceType;
+                    setFormData((prev) => ({
+                      ...prev,
+                      device_type: v,
+                      ...(v === 'swos' && prev.port === '22' ? { port: '80' } : {}),
+                      ...(v === 'mikrotik' && prev.device_type === 'swos' && prev.port === '80' ? { port: '22' } : {}),
+                    }));
+                  }}
                 >
                   {DEVICE_TYPE_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value} disabled={opt.disabled}>
@@ -396,17 +407,39 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                   placeholder="Ex: 192.168.1.1" />
               </div>
               <div className="col-12 col-md-4">
-                <FormField name="port" type="number" label="Porta SSH" value={formData.port}
-                  onChange={set('port')} error={errors.port} required size="sm" />
+                <FormField
+                  name="port"
+                  type="number"
+                  label={formData.device_type === 'swos' ? 'Porta HTTP (interface web)' : 'Porta SSH'}
+                  value={formData.port}
+                  onChange={set('port')}
+                  error={errors.port}
+                  required
+                  size="sm"
+                />
               </div>
               <div className="col-12 col-md-6">
-                <FormField name="username" type="text" label="Usuário SSH" value={formData.username}
-                  onChange={set('username')} error={errors.username} required size="sm"
-                  placeholder="Ex: admin" />
+                <FormField
+                  name="username"
+                  type="text"
+                  label={formData.device_type === 'swos' ? 'Usuário (web)' : 'Usuário SSH'}
+                  value={formData.username}
+                  onChange={set('username')}
+                  error={errors.username}
+                  required
+                  size="sm"
+                  placeholder="Ex: admin"
+                />
               </div>
               <div className="col-12 col-md-6">
                 <FormField name="password" type="password"
-                  label={isEditing ? 'Nova Senha (deixe em branco para manter)' : 'Senha SSH'}
+                  label={
+                    isEditing
+                      ? (formData.device_type === 'swos'
+                        ? 'Nova senha web (deixe em branco para manter)'
+                        : 'Nova Senha (deixe em branco para manter)')
+                      : (formData.device_type === 'swos' ? 'Senha (web)' : 'Senha SSH')
+                  }
                   value={formData.password} onChange={set('password')} error={errors.password}
                   required={!isEditing} size="sm" />
               </div>

@@ -7,7 +7,7 @@ import {
 } from 'sequelize';
 import { sequelize } from '../../../config/database';
 
-export type SshDeviceType = 'mikrotik' | 'cisco' | 'huawei';
+export type SshDeviceType = 'mikrotik' | 'cisco' | 'huawei' | 'swos';
 
 export class SshDevice extends Model<
   InferAttributes<SshDevice>,
@@ -98,7 +98,7 @@ SshDevice.init(
       comment: 'Chave privada PEM criptografada com AES-256-CBC',
     },
     device_type: {
-      type: DataTypes.ENUM('mikrotik', 'cisco', 'huawei'),
+      type: DataTypes.ENUM('mikrotik', 'cisco', 'huawei', 'swos'),
       allowNull: false,
       defaultValue: 'mikrotik',
     },

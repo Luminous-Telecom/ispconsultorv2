@@ -1103,14 +1103,21 @@ function Table<T extends { id: number | string }>({
                             bulkActions
                               .filter(bulkAction => {
                                 const label = bulkAction.label.toLowerCase();
-                                return label.includes('editar') || 
-                                       label.includes('deletar') || 
-                                       label.includes('inserir') || 
+                                return label.includes('editar') ||
+                                       label.includes('deletar') ||
+                                       label.includes('inserir') ||
                                        label.includes('cancelar') ||
-                                       label.includes('selecionar');
+                                       label.includes('selecionar') ||
+                                       label.includes('backup') ||
+                                       label.includes('terminal') ||
+                                       label.includes('testar') ||
+                                       label.includes('test connection');
                               })
                               .map(bulkAction => {
                                 const actionKey = bulkAction.label.toLowerCase().replace(/\s+/g, '-');
+                                const isBulkDisabled = typeof bulkAction.disabled === 'function'
+                                  ? bulkAction.disabled([item])
+                                  : Boolean(bulkAction.disabled);
                                 return (
                                   <button
                                     key={actionKey}
@@ -1119,12 +1126,14 @@ function Table<T extends { id: number | string }>({
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setOpenActionDropdown(null);
+                                      if (isBulkDisabled) return;
                                       if (bulkAction.onClick) {
                                         bulkAction.onClick([item]);
                                       } else if (onBulkActionClick) {
                                         onBulkActionClick(bulkAction, [item]);
                                       }
                                     }}
+                                    disabled={isBulkDisabled}
                                   >
                                     <span>{bulkAction.label}</span>
                                   </button>
@@ -1369,7 +1378,9 @@ function Table<T extends { id: number | string }>({
               const isImprimirButton = bulkAction.label.toLowerCase().includes('imprimir');
               const noSelectionRequired = bulkAction.requiresSelection === false || isNewButton || isImprimirButton;
               const isDisabledBySelection = !noSelectionRequired && state.selectedItems.length === 0;
-              const isDisabledByCondition = bulkAction.disabled && typeof bulkAction.disabled === 'function' ? bulkAction.disabled(state.selectedItems) : false;
+              const isDisabledByCondition = typeof bulkAction.disabled === 'function'
+                ? bulkAction.disabled(state.selectedItems)
+                : Boolean(bulkAction.disabled);
               const isDisabled = isDisabledBySelection || isDisabledByCondition;
               
               // No mobile, remover "Editar" da barra superior e esconder "Novo" e "Deletar" (serão renderizados no rodapé)
@@ -1793,8 +1804,10 @@ function Table<T extends { id: number | string }>({
       {isMobile && bulkActions.length > 0 && (() => {
         // Filtrar apenas "Novo" (remover "Deletar" do FAB)
         const fabActions = bulkActions.filter(bulkAction => {
-          const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
-          return isNewButton;
+          const l = bulkAction.label.toLowerCase();
+          const isCreateLike = l.includes('nova') || l.includes('novo') || l.includes('create') || l.includes('criar');
+          const isTunnelOrBackup = l.includes('backup') || l.includes('terminal') || l.includes('testar') || l.includes('test connection');
+          return isCreateLike || isTunnelOrBackup;
         });
         
         if (fabActions.length === 0) return null;
@@ -1826,9 +1839,9 @@ function Table<T extends { id: number | string }>({
                   className="table-mobile-fab-dropdown"
                 >
                   {fabActions.map((bulkAction, index) => {
-                    const isDisabled = bulkAction.disabled && typeof bulkAction.disabled === 'function' 
-                      ? bulkAction.disabled(state.selectedItems) 
-                      : false;
+                    const isDisabled = typeof bulkAction.disabled === 'function'
+                      ? bulkAction.disabled(state.selectedItems)
+                      : Boolean(bulkAction.disabled);
                     
                     const icon = bulkAction.icon || 'plus-circle';
                     

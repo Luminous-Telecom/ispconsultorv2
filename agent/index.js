@@ -35,6 +35,9 @@ const os = require('os');
 const { Client: SshClient } = require('ssh2');
 const crypto = require('crypto');
 const { randomUUID } = crypto;
+const http = require('http');
+const https = require('https');
+const { URL: NodeURL } = require('url');
 
 // ── Configuração ───────────────────────────────────────────────────────────────
 
@@ -610,6 +613,83 @@ function buildProxySshConnectConfig({ host, port, username, password, privateKey
     ...(useKey ? { privateKey: keyPem } : { password }),
   };
 }
+
+/**
+ * Download HTTP(S) a partir da rede local do agente (ex.: SwOS GET /backup.swb).
+ * Servidor emite proxy:http:fetch → agente responde proxy:http:fetch:result.
+ */
+socket.on('proxy:http:fetch', ({ fetchId, url, username, password, timeoutMs }) => {
+  if (!fetchId || !url || typeof url !== 'string') {
+    if (fetchId) {
+      socket.emit('proxy:http:fetch:result', { fetchId, ok: false, error: 'URL inválida' });
+    }
+    return;
+  }
+  const t = Math.min(Math.max(Number(timeoutMs) || 120000, 5000), 600000);
+  let settled = false;
+  const fail = (err) => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+    socket.emit('proxy:http:fetch:result', { fetchId, ok: false, error: String(err) });
+  };
+  const timer = setTimeout(() => fail('Timeout ao aguardar HTTP'), t);
+  try {
+    const u = new NodeURL(url);
+    const lib = u.protocol === 'https:' ? https : http;
+    const portNum = u.port ? Number(u.port) : u.protocol === 'https:' ? 443 : 80;
+    const authHeader =
+      username != null && password != null && String(username).length > 0
+        ? {
+            Authorization: `Basic ${Buffer.from(`${String(username)}:${String(password)}`, 'utf8').toString('base64')}`,
+          }
+        : {};
+    const req = lib.request(
+      {
+        hostname: u.hostname,
+        port: portNum,
+        path: u.pathname + u.search,
+        method: 'GET',
+        headers: { ...authHeader },
+        timeout: t,
+      },
+      (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => {
+          if (settled) return;
+          clearTimeout(timer);
+          settled = true;
+          const status = res.statusCode ?? 0;
+          if (status >= 400) {
+            socket.emit('proxy:http:fetch:result', {
+              fetchId,
+              ok: false,
+              error: `HTTP ${status}`,
+              statusCode: status,
+            });
+            return;
+          }
+          const buf = Buffer.concat(chunks);
+          socket.emit('proxy:http:fetch:result', {
+            fetchId,
+            ok: true,
+            bodyBase64: buf.toString('base64'),
+            statusCode: status,
+          });
+        });
+      }
+    );
+    req.on('error', fail);
+    req.setTimeout(t, () => {
+      req.destroy();
+      fail('Timeout HTTP');
+    });
+    req.end();
+  } catch (e) {
+    fail(e.message || e);
+  }
+});
 
 socket.on(
   'proxy:ssh:test',

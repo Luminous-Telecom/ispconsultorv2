@@ -787,7 +787,7 @@ export interface IPv6 {
 // ============================================
 // SSH Manager — Devices
 // ============================================
-export type SshDeviceType = 'mikrotik' | 'cisco' | 'huawei';
+export type SshDeviceType = 'mikrotik' | 'cisco' | 'huawei' | 'swos';
 
 export type SshAuditAction =
   | 'CONNECT'

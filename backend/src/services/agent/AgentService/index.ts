@@ -489,3 +489,92 @@ export function executeSshCommandThroughAgent(
     }
   });
 }
+
+// ── HTTP via agente (ex.: MikroTik SwOS GET /backup.swb) ───────────────────────
+
+type AgentHttpFetchPayload = {
+  ok: boolean;
+  bodyBase64?: string;
+  error?: string;
+  statusCode?: number;
+};
+
+const pendingAgentHttpFetches = new Map<
+  string,
+  { timer: ReturnType<typeof setTimeout>; settle: (p: AgentHttpFetchPayload) => void }
+>();
+
+export function resolveAgentHttpFetchResult(fetchId: string, payload: AgentHttpFetchPayload): void {
+  const entry = pendingAgentHttpFetches.get(fetchId);
+  if (!entry) {
+    logger.warn('Agent HTTP fetch: resultado órfão (sem pendência)', {
+      context: 'AgentService.resolveAgentHttpFetchResult',
+      fetchId,
+      ok: payload.ok,
+    });
+    return;
+  }
+  clearTimeout(entry.timer);
+  pendingAgentHttpFetches.delete(fetchId);
+  entry.settle(payload);
+}
+
+const AGENT_HTTP_FETCH_SLACK_MS = 15_000;
+
+export function executeHttpFetchThroughAgent(
+  agentId: string,
+  params: { url: string; username: string; password: string; timeoutMs: number }
+): Promise<{ success: boolean; body: Buffer | null; error: string | null }> {
+  const fetchId = randomUUID();
+  const waitMs = params.timeoutMs + AGENT_HTTP_FETCH_SLACK_MS;
+
+  return new Promise((resolve) => {
+    const settle = (p: AgentHttpFetchPayload) => {
+      if (p.ok && typeof p.bodyBase64 === 'string' && p.bodyBase64.length > 0) {
+        try {
+          resolve({ success: true, body: Buffer.from(p.bodyBase64, 'base64'), error: null });
+        } catch {
+          resolve({ success: false, body: null, error: 'Resposta inválida do agente (base64)' });
+        }
+      } else {
+        resolve({
+          success: false,
+          body: null,
+          error: p.error ?? `Falha HTTP via agente${p.statusCode != null ? ` (${p.statusCode})` : ''}`,
+        });
+      }
+    };
+
+    const timer = setTimeout(() => {
+      const e = pendingAgentHttpFetches.get(fetchId);
+      if (!e) return;
+      pendingAgentHttpFetches.delete(fetchId);
+      logger.warn('Agent HTTP fetch: timeout', {
+        context: 'AgentService.executeHttpFetchThroughAgent',
+        agentId,
+        fetchId,
+        waitMs,
+      });
+      settle({ ok: false, error: 'Timeout ao baixar via HTTP pelo agente' });
+    }, waitMs);
+
+    pendingAgentHttpFetches.set(fetchId, { timer, settle });
+
+    const sent = sendToAgent(agentId, 'proxy:http:fetch', {
+      fetchId,
+      url: params.url,
+      username: params.username,
+      password: params.password,
+      timeoutMs: params.timeoutMs,
+    });
+
+    if (!sent) {
+      const e = pendingAgentHttpFetches.get(fetchId);
+      if (e) {
+        clearTimeout(e.timer);
+        pendingAgentHttpFetches.delete(fetchId);
+      }
+      settle({ ok: false, error: 'Agente não está conectado' });
+    }
+  });
+}

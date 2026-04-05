@@ -1,5 +1,5 @@
 /**
- * MikroTik RouterOS — espelha `model/routeros.rb`.
+ * MikroTik RouterOS — comportamento alinhado ao modelo Oxidized RouterOS.
  */
 
 export const PACKAGE_PROBE_CMD = '/system package update print';

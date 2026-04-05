@@ -13,6 +13,7 @@ import {
   deleteFileTransfer,
   resolveAgentSshTestResult,
   resolveAgentSshExecResult,
+  resolveAgentHttpFetchResult,
   resolveAgentPingResult,
 } from '../services/agent/AgentService';
 import { logSshAudit } from '../services/ssh-manager/SshAuditService';
@@ -192,6 +193,38 @@ export function registerAgentNamespace(io: SocketIOServer): void {
           ok: !!payload.ok,
           output: typeof payload.output === 'string' ? payload.output : undefined,
           error: payload.error,
+        });
+      }
+    );
+
+    socket.on(
+      'proxy:http:fetch:result',
+      (payload: {
+        fetchId?: string;
+        ok?: boolean;
+        bodyBase64?: string;
+        error?: string;
+        statusCode?: number;
+      }) => {
+        if (!payload?.fetchId) {
+          logger.warn('Agent: proxy:http:fetch:result sem fetchId', { agentId, agentName });
+          return;
+        }
+        const bytes =
+          typeof payload.bodyBase64 === 'string' ? Buffer.from(payload.bodyBase64, 'base64').byteLength : 0;
+        logger.info('Agent: proxy:http:fetch:result recebido', {
+          agentId,
+          fetchId: payload.fetchId,
+          ok: !!payload.ok,
+          bytes,
+          statusCode: payload.statusCode,
+          errorPreview: typeof payload.error === 'string' ? payload.error.slice(0, 200) : undefined,
+        });
+        resolveAgentHttpFetchResult(payload.fetchId, {
+          ok: !!payload.ok,
+          bodyBase64: typeof payload.bodyBase64 === 'string' ? payload.bodyBase64 : undefined,
+          error: payload.error,
+          statusCode: payload.statusCode,
         });
       }
     );

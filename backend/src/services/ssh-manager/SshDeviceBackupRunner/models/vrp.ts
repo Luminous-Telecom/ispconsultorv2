@@ -1,5 +1,5 @@
 /**
- * Huawei VRP — espelha `model/vrp.rb`.
+ * Huawei VRP — comportamento alinhado ao modelo Oxidized VRP.
  */
 
 export const DISPLAY_CMD = 'display current-configuration all';

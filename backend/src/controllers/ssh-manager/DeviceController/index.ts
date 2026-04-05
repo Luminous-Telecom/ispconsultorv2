@@ -70,7 +70,7 @@ const createSchema = Joi.object({
   username: Joi.string().min(1).max(100).required(),
   password: Joi.string().min(1).required(),
   private_key: Joi.string().allow(null, '').optional(),
-  device_type: Joi.string().valid('mikrotik', 'cisco', 'huawei').default('mikrotik'),
+  device_type: Joi.string().valid('mikrotik', 'cisco', 'huawei', 'swos').default('mikrotik'),
   description: Joi.string().max(500).allow(null, '').optional(),
   is_active: Joi.boolean().default(true),
   backup_enabled: Joi.boolean().default(false),
@@ -87,7 +87,7 @@ const updateSchema = Joi.object({
   username: Joi.string().min(1).max(100).optional(),
   password: Joi.string().min(1).optional(),
   private_key: Joi.string().allow(null, '').optional(),
-  device_type: Joi.string().valid('mikrotik', 'cisco', 'huawei').optional(),
+  device_type: Joi.string().valid('mikrotik', 'cisco', 'huawei', 'swos').optional(),
   description: Joi.string().max(500).allow(null, '').optional(),
   is_active: Joi.boolean().optional(),
   backup_enabled: Joi.boolean().optional(),
@@ -373,6 +373,14 @@ export class DeviceController {
 
       deviceName = device.name;
 
+      if (device.device_type === 'swos') {
+        const msg =
+          'MikroTik SwOS não usa SSH: gerenciamento e backup são pela interface web (HTTP), como no Oxidized. Teste de conexão SSH não se aplica a este tipo.';
+        logger.info('DeviceController.testConnection: SwOS — sem SSH', { deviceId, deviceName });
+        sendSuccess(res, { success: false, latency: null, error: msg });
+        return;
+      }
+
       logger.info('DeviceController.testConnection: início', {
         deviceId,
         deviceName,
@@ -633,7 +641,7 @@ export class DeviceController {
     }
   }
 
-  /** Enfileira backup manual (não exige backup_enabled; exige MikroTik ativo e sem agente túnel). */
+  /** Backup manual imediato (não exige backup_enabled). RouterOS/Huawei via SSH; SwOS via HTTP GET /backup.swb (direto ou pelo agente). */
   static async queueManualBackup(req: Request, res: Response): Promise<void> {
     try {
       const deviceId = req.params.id;
@@ -666,7 +674,7 @@ export class DeviceController {
           return;
         }
       }
-      if (device.device_type !== 'mikrotik' && device.device_type !== 'huawei') {
+      if (device.device_type !== 'mikrotik' && device.device_type !== 'huawei' && device.device_type !== 'swos') {
         sendValidationError(res, 'Backup não suportado para este tipo de equipamento.');
         return;
       }
