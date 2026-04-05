@@ -17,3 +17,6 @@ build/
 *.tsbuildinfo
 
 testesuploads/
+
+# Referência local Oxidized (modelos de device), não versionar
+model

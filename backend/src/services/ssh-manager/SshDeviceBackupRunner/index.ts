@@ -16,8 +16,72 @@ const BACKUP_CMD_TIMEOUT_MS = parseInt(process.env.SSH_BACKUP_COMMAND_TIMEOUT_MS
 
 /** MikroTik RouterOS */
 const MIKROTIK_BACKUP_CMD = '/export';
-/** Huawei NetEngine / VRP — saída sem paginação (-- More --). */
-const HUAWEI_NE_BACKUP_CMD = 'display current-configuration | no-more';
+/**
+ * Huawei VRP — espelha Oxidized `model/vrp.rb`:
+ * - cfg :ssh post_login → `screen-length 0 temporary`
+ * - cmd → `display current-configuration all` (sem `| no-more`; paginação já desligada)
+ * Não use `;` num único exec — vários VRP rejeitam. Duas linhas (\r\n) na mesma string costumam rodar em sequência na sessão.
+ * @see repo local `model/vrp.rb` (pasta ignorada no git, referência Oxidized)
+ */
+const HUAWEI_VRP_DISPLAY_CMD = 'display current-configuration all';
+const HUAWEI_NE_BACKUP_CMD = `screen-length 0 temporary\r\n${HUAWEI_VRP_DISPLAY_CMD}\r\n`;
+const HUAWEI_NE_BACKUP_AUDIT_LABEL = `Huawei VRP: screen-length 0 temporary + ${HUAWEI_VRP_DISPLAY_CMD}`;
+
+/**
+ * Linha contendo só timestamp (Oxidized vrp.rb filtra isso na saída do display config).
+ * Aceita offset ±HH:MM (ex.: -03:00).
+ */
+const VRP_OXIDIZED_STANDALONE_TIMESTAMP =
+  /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{3})?(\s*[+-]\d{2}:\d{2})?\s*$/;
+
+/** Corta banners, prompts (ex.: <host>) e avisos antes do bloco que começa em !Software Version (ou primeira linha !). */
+function sanitizeHuaweiBackupOutput(raw: string): string {
+  const s = raw.replace(/^\uFEFF/, '').trim();
+  const head = '!Software Version';
+  const i = s.indexOf(head);
+  if (i > 0) {
+    return s.slice(i).trim();
+  }
+  if (i === 0) {
+    return s;
+  }
+  const lines = s.split('\n');
+  const firstBang = lines.findIndex((line) => /^\s*!/.test(line));
+  if (firstBang >= 0) {
+    return lines.slice(firstBang).join('\n').trim();
+  }
+  return s;
+}
+
+function stripVrpOxidizedTimestampLines(cfg: string): string {
+  return cfg
+    .split(/\r?\n/)
+    .filter((line) => !VRP_OXIDIZED_STANDALONE_TIMESTAMP.test(line.trimEnd()))
+    .join('\n')
+    .trim();
+}
+
+/** Indica se o texto já sanitizado parece running-config VRP (linhas !). */
+function huaweiSanitizedLooksLikeConfig(sanitized: string): boolean {
+  const t = sanitized.trim();
+  if (t.length === 0) return false;
+  return /^\s*!/.test(t) || t.includes('\n!');
+}
+
+/**
+ * Falha “explicável” só quando não há config após sanitize.
+ * Banner de senha + "timed out" pode aparecer no mesmo buffer que um display bem-sucedido (~30kB).
+ */
+function huaweiBackupCliFailureMessageWhenNoConfig(raw: string): string | null {
+  const t = raw.toLowerCase();
+  if (t.includes('unrecognized command') || t.includes('unknown command')) {
+    return 'O equipamento rejeitou o comando de backup (CLI). Teste no SSH: `display current-configuration` ou `display current-configuration all` (Oxidized vrp.rb).';
+  }
+  if (t.includes('the operation timed out') && t.includes('change now')) {
+    return 'O Huawei exige troca de senha interativa no login (Change now? Y/N), o que trava o backup automático. Altere a senha no equipamento ou desative esse aviso.';
+  }
+  return null;
+}
 
 type SshBackupSpec = { command: string; auditLabel: string; fileExtension: string };
 
@@ -28,7 +92,7 @@ function sshBackupSpec(deviceType: SshDeviceType): SshBackupSpec | null {
   if (deviceType === 'huawei') {
     return {
       command: HUAWEI_NE_BACKUP_CMD,
-      auditLabel: HUAWEI_NE_BACKUP_CMD,
+      auditLabel: HUAWEI_NE_BACKUP_AUDIT_LABEL,
       fileExtension: 'cfg',
     };
   }
@@ -44,7 +108,7 @@ export type RunSshDeviceBackupContext = {
 export type RunSshDeviceBackupResult = { success: boolean; message: string };
 
 /**
- * Executa backup de configuração (MikroTik: /export; Huawei NE/VRP: display current-configuration | no-more)
+ * Executa backup de configuração (MikroTik: /export; Huawei: como Oxidized vrp.rb — screen-length + display current-configuration all, sanitização + timestamps)
  * e grava em arquivos/ssh-device-backups.
  * Com agente túnel: comando roda no agente (SSH até o equipamento na rede local).
  * Sem agente: SSH direto do servidor (pool).
@@ -262,6 +326,35 @@ export async function runSshDeviceBackup(
       usedPool = true;
       const conn = await sshPool.getDeviceConnection(device);
       output = await executeCommand(conn, backupCommand, device.id, { timeoutMs: BACKUP_CMD_TIMEOUT_MS });
+    }
+
+    if (device.device_type === 'huawei') {
+      const sanitized = stripVrpOxidizedTimestampLines(sanitizeHuaweiBackupOutput(output));
+      if (!huaweiSanitizedLooksLikeConfig(sanitized)) {
+        const cliFail = huaweiBackupCliFailureMessageWhenNoConfig(output);
+        const message =
+          cliFail ??
+          'Backup Huawei sem configuração reconhecível. Resolva avisos no login (ex.: troca de senha) e tente de novo.';
+        logger.error('Backup SSH Huawei: sem config válida após sanitize', {
+          context: 'SshDeviceBackupRunner',
+          deviceId,
+          preview: output.slice(0, 400),
+          hadCliHint: Boolean(cliFail),
+        });
+        logSshAudit({
+          action: 'COMMAND',
+          userId: auditUserId,
+          deviceId: device.id,
+          deviceName: device.name,
+          command: auditLabel,
+          success: false,
+          errorMessage: message,
+          ip: auditIp,
+          duration: Date.now() - started,
+        });
+        return { success: false, message };
+      }
+      output = sanitized;
     }
 
     await fs.writeFile(filePath, output, 'utf8');
