@@ -30,7 +30,8 @@
 const { io } = require('socket.io-client');
 const os = require('os');
 const { Client: SshClient } = require('ssh2');
-const { randomUUID } = require('crypto');
+const crypto = require('crypto');
+const { randomUUID } = crypto;
 
 // ── Configuração ───────────────────────────────────────────────────────────────
 
@@ -462,6 +463,54 @@ const SSH_LEGACY_ALGORITHMS = {
   ],
 };
 
+/** Reconstrói PEM de uma linha (colada sem \\n) — alinhado ao backend. */
+function repairSquashedPrivateKeyPem(s) {
+  if (!s.includes('BEGIN') || !s.includes('PRIVATE KEY')) return s;
+  const trimmed = s.trim();
+  const tryUnwrap = (begin, end) => {
+    if (!trimmed.startsWith(begin)) return null;
+    const endIdx = trimmed.indexOf(end);
+    if (endIdx === -1) return null;
+    const body = trimmed.slice(begin.length, endIdx).replace(/\s/g, '');
+    if (!body.length) return null;
+    const wrapped = body.match(/.{1,64}/g)?.join('\n') ?? body;
+    return `${begin}\n${wrapped}\n${end}\n`;
+  };
+  const rebuilt =
+    tryUnwrap('-----BEGIN OPENSSH PRIVATE KEY-----', '-----END OPENSSH PRIVATE KEY-----') ??
+    tryUnwrap('-----BEGIN RSA PRIVATE KEY-----', '-----END RSA PRIVATE KEY-----') ??
+    tryUnwrap('-----BEGIN EC PRIVATE KEY-----', '-----END EC PRIVATE KEY-----');
+  if (rebuilt) return rebuilt;
+  let t = s;
+  t = t.replace(/(-----BEGIN [^-]+-----)\s+(?=[^\n\r-])/g, '$1\n');
+  t = t.replace(/([A-Za-z0-9+/=])\s*(-----END [^-]+-----)/g, '$1\n$2');
+  return t;
+}
+
+/** Mesma lógica do backend (sshPrivateKey): CRLF/BOM + PEM achatada. */
+function normalizeSshPrivateKeyPem(key) {
+  if (typeof key !== 'string' || !key) return '';
+  let s = key.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  return repairSquashedPrivateKeyPem(s);
+}
+
+/** Converte OpenSSH PEM para PKCS#1/PKCS#8 — o ssh2 costuma falhar em `BEGIN OPENSSH PRIVATE KEY`. */
+function privateKeyPemForSsh2(raw) {
+  const s = normalizeSshPrivateKeyPem(raw);
+  if (!s) return '';
+  try {
+    const keyObj = crypto.createPrivateKey({ key: s, format: 'pem' });
+    const t = keyObj.asymmetricKeyType;
+    const exported =
+      t === 'rsa'
+        ? keyObj.export({ format: 'pem', type: 'pkcs1' })
+        : keyObj.export({ format: 'pem', type: 'pkcs8' });
+    return Buffer.isBuffer(exported) ? exported.toString('utf8') : exported;
+  } catch {
+    return s;
+  }
+}
+
 socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKey, hostFingerprint }) => {
   if (!testId || !host || !username) return;
   const p = Number(port) || 22;
@@ -482,7 +531,8 @@ socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKe
     socket.emit('proxy:ssh:test:result', { testId, ok: false, error: err.message });
   });
   try {
-    const useKey = typeof privateKey === 'string' && privateKey.trim().length > 0;
+    const keyPem = privateKeyPemForSsh2(privateKey);
+    const useKey = keyPem.length > 0;
     conn.connect({
       host,
       port: p,
@@ -503,7 +553,7 @@ socket.on('proxy:ssh:test', ({ testId, host, port, username, password, privateKe
         console.warn(`[backnet-agent] SSH: fingerprint não verificado para ${host}:${p}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`);
         return true;
       },
-      ...(useKey ? { privateKey: privateKey.trim() } : { password }),
+      ...(useKey ? { privateKey: keyPem } : { password }),
     });
   } catch (e) {
     socket.emit('proxy:ssh:test:result', { testId, ok: false, error: e.message });
@@ -531,7 +581,8 @@ socket.on(
     }
     const timeout = Math.min(Math.max(Number(timeoutMs) || 120000, 5000), 600000);
     const p = Number(port) || 22;
-    const useKey = typeof privateKey === 'string' && privateKey.trim().length > 0;
+    const keyPem = privateKeyPemForSsh2(privateKey);
+    const useKey = keyPem.length > 0;
     if (SSH_WARN_LEGACY) {
       console.warn(
         `[backnet-agent] Conexão SSH para ${host}:${p} usa algoritmos legados (inclui DH group1, 3DES, MD5). ` +
@@ -629,7 +680,7 @@ socket.on(
           console.warn(`[backnet-agent] SSH: fingerprint não verificado para ${host}:${p}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`);
           return true;
         },
-        ...(useKey ? { privateKey: privateKey.trim() } : { password }),
+        ...(useKey ? { privateKey: keyPem } : { password }),
       });
     } catch (e) {
       fail(e.message);
@@ -693,7 +744,8 @@ socket.on('proxy:ssh:open', ({ sessionId, host, port, username, password, privat
     proxySessions.delete(sessionId);
   });
 
-  const useKey = typeof privateKey === 'string' && privateKey.trim().length > 0;
+  const keyPem = privateKeyPemForSsh2(privateKey);
+  const useKey = keyPem.length > 0;
   conn.connect({
     host,
     port: p,
@@ -714,7 +766,7 @@ socket.on('proxy:ssh:open', ({ sessionId, host, port, username, password, privat
       console.warn(`[backnet-agent] SSH: fingerprint não verificado para ${host}:${p}. Defina BACKNET_SSH_STRICT_HOST=true para bloquear conexões sem fingerprint.`);
       return true;
     },
-    ...(useKey ? { privateKey: privateKey.trim() } : { password }),
+    ...(useKey ? { privateKey: keyPem } : { password }),
   });
 });
 

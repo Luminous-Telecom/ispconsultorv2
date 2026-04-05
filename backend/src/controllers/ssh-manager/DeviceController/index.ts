@@ -6,6 +6,7 @@ import { Agent } from '../../../models/agent/Agent';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { isAgentOnline, testSshThroughAgent } from '../../../services/agent/AgentService';
 import { encrypt, decrypt } from '../../../utils/encryption';
+import { normalizeSshPrivateKeyPem, privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { sshPool } from '../../../services/ssh-manager/SshPoolService';
 import { openDeviceConnection, executeCommand, buildFriendlyError } from '../../../services/ssh-manager/SshConnectionService';
 import { logSshAudit } from '../../../services/ssh-manager/SshAuditService';
@@ -225,7 +226,7 @@ export class DeviceController {
         agent_id: value.agent_id || null,
         cliente_id: value.cliente_id ?? null,
         password: encrypt(value.password),
-        private_key: value.private_key ? encrypt(value.private_key) : null,
+        private_key: value.private_key ? encrypt(normalizeSshPrivateKeyPem(value.private_key)) : null,
       });
 
       try {
@@ -291,7 +292,7 @@ export class DeviceController {
       const updateData: Partial<typeof value> = { ...value };
       if (value.agent_id === '' || value.agent_id === undefined) updateData.agent_id = null;
       if (value.password) updateData.password = encrypt(value.password);
-      if (value.private_key) updateData.private_key = encrypt(value.private_key);
+      if (value.private_key) updateData.private_key = encrypt(normalizeSshPrivateKeyPem(value.private_key));
       if (value.private_key === null || value.private_key === '') updateData.private_key = null;
 
       if (value.host || value.port || value.username || value.password || value.agent_id !== undefined) {
@@ -457,18 +458,18 @@ export class DeviceController {
         let privateKey: string | undefined;
         if (device.private_key) {
           try {
-            privateKey = decrypt(device.private_key);
+            privateKey = privateKeyPemForSsh2(decrypt(device.private_key));
           } catch {
             privateKey = undefined;
           }
         }
-        const useKey = !!privateKey?.trim();
+        const useKey = !!privateKey?.length;
 
         const viaAgent = await testSshThroughAgent(device.agent_id, {
           host: device.host,
           port: device.port,
           username: device.username,
-          ...(useKey ? { privateKey: privateKey!.trim() } : { password }),
+          ...(useKey && privateKey ? { privateKey } : { password }),
         });
 
         if (viaAgent.success) {

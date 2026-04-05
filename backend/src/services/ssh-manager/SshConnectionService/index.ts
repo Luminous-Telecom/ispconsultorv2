@@ -2,6 +2,7 @@ import { Client as SshClient, ConnectConfig } from 'ssh2';
 import { EventEmitter } from 'events';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
 import { decrypt } from '../../../utils/encryption';
+import { privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { logger } from '../../../utils/logger';
 
 export const sshEvents = new EventEmitter();
@@ -59,10 +60,12 @@ function buildConnectConfig(
   username: string,
   encryptedPassword: string,
   encryptedPrivateKey: string | null,
-  deviceType?: string
+  _deviceType?: string
 ): ConnectConfig {
   const password = decrypt(encryptedPassword);
-  const privateKey = encryptedPrivateKey ? decrypt(encryptedPrivateKey) : undefined;
+  const rawKey = encryptedPrivateKey ? decrypt(encryptedPrivateKey) : undefined;
+  const privateKey = rawKey ? privateKeyPemForSsh2(rawKey) : '';
+  const usePrivateKey = privateKey.length > 0;
 
   return {
     host,
@@ -70,7 +73,7 @@ function buildConnectConfig(
     username,
     readyTimeout: SSH_TIMEOUT_MS,
     algorithms: LEGACY_ALGORITHMS,
-    ...(privateKey ? { privateKey } : { password }),
+    ...(usePrivateKey ? { privateKey } : { password }),
   };
 }
 

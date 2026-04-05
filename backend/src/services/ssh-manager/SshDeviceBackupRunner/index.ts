@@ -8,6 +8,7 @@ import { logSshAudit } from '../SshAuditService';
 import { logger } from '../../../utils/logger';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { decrypt } from '../../../utils/encryption';
+import { privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { registerSshDeviceBackupRow } from '../SshDeviceBackupStorageService';
 import { executeSshCommandThroughAgent, isAgentOnline } from '../../agent/AgentService';
 
@@ -164,12 +165,12 @@ export async function runSshDeviceBackup(
       let privateKey: string | undefined;
       if (device.private_key) {
         try {
-          privateKey = decrypt(device.private_key);
+          privateKey = privateKeyPemForSsh2(decrypt(device.private_key));
         } catch {
           privateKey = undefined;
         }
       }
-      const useKey = !!privateKey?.trim();
+      const useKey = !!privateKey?.length;
 
       logger.info('Backup SSH: chamando executeSshCommandThroughAgent (/export)', {
         context: 'SshDeviceBackupRunner',
@@ -188,7 +189,7 @@ export async function runSshDeviceBackup(
           host: device.host,
           port: device.port,
           username: device.username,
-          ...(useKey ? { privateKey: privateKey!.trim() } : { password }),
+          ...(useKey && privateKey ? { privateKey } : { password }),
         },
         '/export',
         BACKUP_CMD_TIMEOUT_MS
