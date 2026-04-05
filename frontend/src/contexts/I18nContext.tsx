@@ -274,6 +274,12 @@ export interface TranslationKeys {
   'sshDevice.backupsLoadError': string;
   'sshDevice.manualBackup': string;
   'sshDevice.manualBackupQueued': string;
+  'sshDevice.backupScheduleAt': string;
+  'sshDevice.freqDiaria': string;
+  'sshDevice.freqSemanal': string;
+  'sshDevice.freqMensal': string;
+  'sshDevice.freqAnual': string;
+  'sshDevice.freqPersonalizada': string;
   'tabs.sshDeviceBackups': string;
   'modal.agents': string;
   'modal.systemDocuments': string;
@@ -1710,6 +1716,12 @@ const translations: Translations = {
     'sshDevice.backupsLoadError': 'Não foi possível carregar os backups.',
     'sshDevice.manualBackup': 'Backup manual',
     'sshDevice.manualBackupQueued': 'Backup concluído com sucesso.',
+    'sshDevice.backupScheduleAt': '· {{hora}} · {{freq}}',
+    'sshDevice.freqDiaria': 'Diária',
+    'sshDevice.freqSemanal': 'Semanal',
+    'sshDevice.freqMensal': 'Mensal',
+    'sshDevice.freqAnual': 'Anual',
+    'sshDevice.freqPersonalizada': 'Personalizada',
     'tabs.sshDeviceBackups': 'Backups SSH',
     'modal.agents': 'Túneis (Agentes)',
     'modal.emailHistory': 'Histórico de Mensagens Email',
@@ -3137,6 +3149,12 @@ const translations: Translations = {
     'sshDevice.backupsLoadError': 'Could not load backups.',
     'sshDevice.manualBackup': 'Manual backup',
     'sshDevice.manualBackupQueued': 'Backup completed successfully.',
+    'sshDevice.backupScheduleAt': '· {{hora}} · {{freq}}',
+    'sshDevice.freqDiaria': 'Daily',
+    'sshDevice.freqSemanal': 'Weekly',
+    'sshDevice.freqMensal': 'Monthly',
+    'sshDevice.freqAnual': 'Yearly',
+    'sshDevice.freqPersonalizada': 'Custom',
     'tabs.sshDeviceBackups': 'SSH backups',
     'modal.agents': 'Tunnels (Agents)',
     'modal.emailHistory': 'Email Message History',
@@ -4566,6 +4584,12 @@ const translations: Translations = {
     'sshDevice.backupsLoadError': 'No se pudieron cargar las copias.',
     'sshDevice.manualBackup': 'Copia manual',
     'sshDevice.manualBackupQueued': 'Copia completada con éxito.',
+    'sshDevice.backupScheduleAt': '· {{hora}} · {{freq}}',
+    'sshDevice.freqDiaria': 'Diaria',
+    'sshDevice.freqSemanal': 'Semanal',
+    'sshDevice.freqMensal': 'Mensal',
+    'sshDevice.freqAnual': 'Anual',
+    'sshDevice.freqPersonalizada': 'Personalizada',
     'tabs.sshDeviceBackups': 'Copias SSH',
     'modal.agents': 'Túneles (Agentes)',
     'modal.emailHistory': 'Historial de Mensajes Email',

@@ -7,7 +7,7 @@ interface SaasAgendadorTarefasModalProps {
 }
 
 const SaasAgendadorTarefasModal: React.FC<SaasAgendadorTarefasModalProps> = (props) => (
-  <AgendadorTarefasModal {...props} variant="saas" />
+  <AgendadorTarefasModal {...props} />
 );
 
 export default SaasAgendadorTarefasModal;

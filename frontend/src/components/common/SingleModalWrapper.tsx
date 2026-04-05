@@ -24,7 +24,6 @@ const UsuariosModal = lazy(() => import('../modals/parametros/UsuariosModal'));
 const RecursosSistemaModal = lazy(() => import('../modals/parametros/RecursosSistemaModal'));
 const DiasVencimentoModal = lazy(() => import('../modals/parametros/DiasVencimentoModal'));
 const AtualizacoesModal = lazy(() => import('../modals/parametros/AtualizacoesModal'));
-const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
 const BackupsModal = lazy(() => import('../modals/parametros/BackupsModal'));
 const AssinaturaDigitalModal = lazy(() => import('../modals/parametros/AssinaturaDigitalModal'));
 const AuditoriaModal = lazy(() => import('../modals/parametros/AuditoriaModal'));
@@ -44,7 +43,7 @@ const SaasTipoCobrancaModal = lazy(() => import('../modals/saas/SaasTipoCobranca
 const SaasClientesModal = lazy(() => import('../modals/saas/SaasClientesModal'));
 const SaasDadosEmpresaModal = lazy(() => import('../modals/saas/SaasDadosEmpresaModal'));
 const SaasRecursosSistemaModal = lazy(() => import('../modals/saas/SaasRecursosSistemaModal'));
-const SaasAgendadorTarefasModal = lazy(() => import('../modals/saas/SaasAgendadorTarefasModal'));
+const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
 const SaasNfseModal = lazy(() => import('../modals/saas/SaasNfseModal'));
 /* eslint-enable @typescript-eslint/no-unused-vars */
 
@@ -91,7 +90,6 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'servidor-whatsapp': { component: ServidorWhatsappModal, titleKey: 'modal.whatsappServer', loadingMessageKey: 'ui.loadingPage' },
   nfse: { component: NFSeModal, titleKey: 'modal.nfse', loadingMessageKey: 'ui.loadingPage' },
   'dias-vencimento': { component: DiasVencimentoModal, titleKey: 'modal.dueDays', loadingMessageKey: 'ui.loadingPage' },
-  'agendador-tarefas': { component: AgendadorTarefasModal, titleKey: 'modal.taskScheduler', loadingMessageKey: 'ui.loadingPage' },
   'assinatura-digital': { component: AssinaturaDigitalModal, titleKey: 'modal.digitalSignature', loadingMessageKey: 'ui.loadingPage' },
   auditoria: { component: AuditoriaModal, titleKey: 'modal.auditLogs', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
   'documentos-sistema': { component: DocumentosSistemaModal, titleKey: 'modal.systemDocuments', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
@@ -133,7 +131,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'saas-dados-empresa': { component: SaasDadosEmpresaModal, titleKey: 'modal.companyData', loadingMessageKey: 'ui.loadingPage', size: 'xl' },
   'saas-titulos': { component: ContasReceberListModal, titleKey: 'modal.accountsReceivable', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'saas-recursos-sistema': { component: SaasRecursosSistemaModal, titleKey: 'params.systemResources', loadingMessageKey: 'ui.loadingPage', size: 'lg' },
-  'saas-agendador-tarefas': { component: SaasAgendadorTarefasModal, titleKey: 'params.taskScheduler', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
+  'saas-agendador-tarefas': { component: AgendadorTarefasModal, titleKey: 'params.taskScheduler', loadingMessageKey: 'ui.loadingPage', size: 'lg', className: 'no-padding' },
   'saas-nfse': { component: SaasNfseModal, titleKey: 'params.nfse', loadingMessageKey: 'ui.loadingPage', size: 'lg' },
 });
 

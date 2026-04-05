@@ -21,7 +21,6 @@ export type ModalType =
   | 'nfse'
   | 'documentos-sistema'
   | 'dias-vencimento'
-  | 'agendador-tarefas'
   | 'assinatura-digital'
   | 'blockdomi-dominios'
   | 'blockdomi-ipv4'

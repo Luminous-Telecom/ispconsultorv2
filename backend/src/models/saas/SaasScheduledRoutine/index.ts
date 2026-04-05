@@ -6,7 +6,9 @@ import { formatCreatedAt } from '../../../utils/dateUtils';
 export interface SaasScheduledRoutineAttributes {
   id: number;
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'bloquear_saas_atraso' | 'outros';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'bloquear_saas_atraso' | 'backup_equipamentos_ssh' | 'outros';
+  /** saas = cobrança do produto; erp_global = uma rotina para todos os clientes do ERP */
+  alvo: 'saas' | 'erp_global';
   descricao?: string;
   configuracao: Record<string, JsonValue>;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
@@ -26,13 +28,14 @@ export interface SaasScheduledRoutineAttributes {
 
 export type SaasScheduledRoutineCreationAttributes = Optional<
   SaasScheduledRoutineAttributes,
-  'id' | 'created_at' | 'updated_at' | 'ultima_execucao' | 'total_execucoes' | 'execucoes_com_sucesso' | 'execucoes_com_erro'
+  'id' | 'created_at' | 'updated_at' | 'ultima_execucao' | 'total_execucoes' | 'execucoes_com_sucesso' | 'execucoes_com_erro' | 'alvo'
 >;
 
 export class SaasScheduledRoutine extends Model<SaasScheduledRoutineAttributes, SaasScheduledRoutineCreationAttributes> implements SaasScheduledRoutineAttributes {
   public id!: number;
   public nome!: string;
-  public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'bloquear_saas_atraso' | 'outros';
+  public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'bloquear_saas_atraso' | 'backup_equipamentos_ssh' | 'outros';
+  public alvo!: 'saas' | 'erp_global';
   public descricao?: string;
   public configuracao!: Record<string, JsonValue>;
   public frequencia!: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
@@ -79,8 +82,13 @@ SaasScheduledRoutine.init(
       allowNull: false
     },
     tipo: {
-      type: DataTypes.ENUM('geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'verificar_vencimentos', 'desbloquear_blockdomi', 'bloquear_saas_atraso', 'outros'),
+      type: DataTypes.ENUM('geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'verificar_vencimentos', 'desbloquear_blockdomi', 'bloquear_saas_atraso', 'backup_equipamentos_ssh', 'outros'),
       allowNull: false
+    },
+    alvo: {
+      type: DataTypes.ENUM('saas', 'erp_global'),
+      allowNull: false,
+      defaultValue: 'saas'
     },
     descricao: {
       type: DataTypes.TEXT,

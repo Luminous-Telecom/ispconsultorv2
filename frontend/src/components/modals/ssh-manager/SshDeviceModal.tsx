@@ -10,6 +10,7 @@ import ClienteListModal from 'components/modals/clientes/ClienteListModal';
 import AgentListModal from 'components/modals/agent/AgentListModal';
 import { authService } from 'services/authService';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
+import { SshDeviceService } from 'services/sshDeviceService';
 import { useI18n } from 'contexts/I18nContext';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import SshDeviceBackupsPanel from './SshDeviceBackupsPanel';
@@ -43,6 +44,28 @@ const emptyForm = {
   is_active: true,
   backup_enabled: false,
 };
+
+type BackupAgendamentoInfo = Awaited<ReturnType<typeof SshDeviceService.getBackupAgendamento>>;
+type I18nTranslateFn = ReturnType<typeof useI18n>['t'];
+
+function renderBackupAgendamentoHint(
+  ag: BackupAgendamentoInfo | undefined,
+  t: I18nTranslateFn
+): React.ReactNode {
+  if (!ag?.configurado || !ag.hora_execucao) return null;
+  const f = ag.frequencia;
+  let freqLabel = '';
+  if (f === 'diaria') freqLabel = t('sshDevice.freqDiaria');
+  else if (f === 'semanal') freqLabel = t('sshDevice.freqSemanal');
+  else if (f === 'mensal') freqLabel = t('sshDevice.freqMensal');
+  else if (f === 'anual') freqLabel = t('sshDevice.freqAnual');
+  else if (f === 'personalizada') freqLabel = t('sshDevice.freqPersonalizada');
+  else if (f) freqLabel = f;
+  const text = t('sshDevice.backupScheduleAt')
+    .replace('{{hora}}', ag.hora_execucao)
+    .replace('{{freq}}', freqLabel);
+  return <span className="text-muted small ms-1">{text}</span>;
+}
 
 const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
   show, onClose, onSuccess, deviceId, defaultClienteId,
@@ -112,6 +135,13 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
 
   const createMutation = useCreateSshDevice();
   const updateMutation = useUpdateSshDevice();
+
+  const { data: agendamentoBackup } = useQuery({
+    queryKey: ['ssh-manager', 'backup-agendamento'],
+    queryFn: () => SshDeviceService.getBackupAgendamento(),
+    enabled: show,
+    staleTime: 60_000,
+  });
 
   const [formData, setFormData] = useState({ ...emptyForm });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -471,6 +501,7 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                     />
                     <label className="form-check-label" htmlFor="dev-backup-enabled">
                       {t('sshDevice.backupEnabled')}
+                      {renderBackupAgendamentoHint(agendamentoBackup, t)}
                     </label>
                   </div>
                   <i

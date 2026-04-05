@@ -7,6 +7,8 @@ export type { RotinaAgendada, RoutineExecutionLog };
 export interface CreateRotinaData {
   nome: string;
   tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'bloquear_saas_atraso' | 'outros';
+  /** Agendador SaaS: cobrança do produto vs rotinas do ERP para todos os clientes */
+  alvo?: 'saas' | 'erp_global';
   descricao?: string;
   configuracao?: Record<string, unknown>;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
@@ -18,6 +20,7 @@ export interface CreateRotinaData {
 
 export interface UpdateRotinaData {
   nome?: string;
+  alvo?: 'saas' | 'erp_global';
   descricao?: string;
   configuracao?: Record<string, unknown>;
   frequencia?: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';

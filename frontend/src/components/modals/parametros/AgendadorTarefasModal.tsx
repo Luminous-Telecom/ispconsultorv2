@@ -3,8 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
-import { SchedulerService, type RotinaAgendada } from 'services/schedulerService';
-import { SaasSchedulerService } from 'services/saas/saasSchedulerService';
+import { SaasSchedulerService, type RotinaAgendada } from 'services/saas/saasSchedulerService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { formatDateTime } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
@@ -17,43 +16,38 @@ import { useConfirmModal } from 'hooks/useConfirmModal';
 import ConfirmModal from 'components/modals/ConfirmModal';
 import { useI18n } from 'contexts/I18nContext';
 
-const TIPO_LABELS_ERP: Record<string, string> = {
-  geracao_titulos: 'Geração de Títulos',
-  envio_boletos: 'Envio de Boletos',
-  remessa_bancaria: 'Remessa Bancária',
-  verificar_vencimentos: 'Verificar Vencimentos',
+const TIPO_LABELS: Record<string, string> = {
+  geracao_titulos: 'Geração de títulos',
+  envio_boletos: 'Envio de boletos',
+  remessa_bancaria: 'Remessa bancária',
+  verificar_vencimentos: 'Verificar vencimentos',
   desbloquear_blockdomi: 'Desbloquear domínios',
+  bloquear_saas_atraso: 'Bloquear acesso por atraso',
   backup_equipamentos_ssh: 'Backup equipamentos SSH',
   outros: 'Outros',
 };
 
-const TIPO_LABELS_SAAS: Record<string, string> = {
-  geracao_titulos: 'Geração de Títulos',
-  envio_boletos: 'Envio de Boletos',
-  remessa_bancaria: 'Remessa Bancária',
+const ALVO_LABELS_SAAS: Record<string, string> = {
+  saas: 'Cobrança SaaS',
+  erp_global: 'ERP (todos)',
 };
+
+const QUERY_KEY = 'saas-agendador-tarefas';
+const MODAL_ID = 'saas-agendador-tarefas-modal';
+const TABLE_ID = 'saas-agendador-tarefas';
+const AUDITORIA_MODAL_ID = 'saas-auditoria-scheduled-routine-modal';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
   onClose: () => void;
-  variant?: 'erp' | 'saas';
 }
 
-const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onClose, variant = 'erp' }) => {
+const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onClose }) => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
   const auditoria = useAuditoria();
   const { modalProps } = useConfirmModal();
-
-  const schedulerService = variant === 'saas' ? SaasSchedulerService : SchedulerService;
-  const queryKey = variant === 'saas' ? 'saas-agendador-tarefas' : 'agendador-tarefas';
-  const tipoLabels = variant === 'saas' ? TIPO_LABELS_SAAS : TIPO_LABELS_ERP;
-  const hasExecute = true;
-  const hasToggle = variant === 'erp';
-  const modalId = variant === 'saas' ? 'saas-agendador-tarefas-modal' : 'agendador-tarefas-modal';
-  const tableId = variant === 'saas' ? 'saas-agendador-tarefas' : 'agendador-tarefas';
-  const auditoriaModalId = variant === 'saas' ? 'saas-auditoria-scheduled-routine-modal' : 'auditoria-scheduled-routine-modal';
 
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -64,87 +58,99 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
   });
 
   const handleAudit = (rotina: RotinaAgendada) => {
-    auditoria.handleAudit('ScheduledRoutine', rotina.id);
+    auditoria.handleAudit('SaasScheduledRoutine', rotina.id);
   };
 
   const { selectedItem, handleSelectionChange, clearSelection } = useModalSelect<RotinaAgendada>();
 
-  const tableColumns: TableConfig<RotinaAgendada & { ultima_execucao_formatada?: string | null; created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
-    {
-      key: 'id',
-      label: t('table.id'),
-      sortable: true,
-      width: '42px',
-      render: (item: RotinaAgendada) => <span>{item.id}</span>,
-    },
-    {
-      key: 'tipo',
-      label: t('scheduler.type'),
-      sortable: true,
-      badgeLabels: variant === 'erp' ? ['Geração de Títulos', 'Envio de Boletos', 'Remessa Bancária', 'Verificar Vencimentos', 'Desbloquear domínios', 'Outros'] : undefined,
-      render: (item: RotinaAgendada) => (
-        <span className="badge bg-info">{tipoLabels[item.tipo] ?? item.tipo.replace(/_/g, ' ')}</span>
-      ),
-    },
-    {
-      key: 'frequencia',
-      label: t('scheduler.frequency'),
-      sortable: true,
-      render: (item: RotinaAgendada) => item.frequencia,
-    },
-    {
-      key: 'hora_execucao',
-      label: t('scheduler.schedule'),
-      sortable: true,
-      render: (item: RotinaAgendada) => item.hora_execucao || '-',
-    },
-    {
-      key: 'proxima_execucao',
-      label: t('scheduler.nextRun'),
-      render: (item: RotinaAgendada) => (item.proxima_execucao ? formatDateTime(item.proxima_execucao) : '-'),
-    },
-    {
-      key: 'ultima_execucao',
-      label: t('scheduler.lastRun'),
-      sortable: true,
-      render: (item: RotinaAgendada & { ultima_execucao_formatada?: string | null }) => {
-        if (item.ultima_execucao_formatada) return item.ultima_execucao_formatada;
-        return item.ultima_execucao ? formatDateTime(item.ultima_execucao) : '-';
+  const tableColumns: TableConfig<RotinaAgendada & { ultima_execucao_formatada?: string | null; created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(
+    () => [
+      {
+        key: 'id',
+        label: t('table.id'),
+        sortable: true,
+        width: '42px',
+        render: (item: RotinaAgendada) => <span>{item.id}</span>,
       },
-    },
-    {
-      key: 'ativo',
-      label: t('table.status'),
-      sortable: true,
-      badgeLabels: [t('status.active'), t('status.inactive')],
-      render: (item: RotinaAgendada) => (
-        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-          {item.ativo ? t('status.active') : t('status.inactive')}
-        </span>
-      ),
-    },
-    {
-      key: 'total_execucoes',
-      label: t('scheduler.executions'),
-      sortable: true,
-      render: (item: RotinaAgendada) => item.total_execucoes,
-    },
-    {
-      key: 'execucoes_com_erro',
-      label: t('scheduler.errors'),
-      sortable: true,
-      render: (item: RotinaAgendada) => item.execucoes_com_erro,
-    },
-    {
-      key: 'created_at',
-      label: t('table.createdAt'),
-      sortable: true,
-      render: (item: RotinaAgendada & { created_at?: string; created_at_formatada?: string | null }) => {
-        if (item.created_at_formatada) return item.created_at_formatada;
-        return item.created_at ? formatDateTime(item.created_at) : '-';
+      {
+        key: 'tipo',
+        label: t('scheduler.type'),
+        sortable: true,
+        render: (item: RotinaAgendada) => (
+          <span className="badge bg-info">{TIPO_LABELS[item.tipo] ?? item.tipo.replace(/_/g, ' ')}</span>
+        ),
       },
-    },
-  ], [t, variant, tipoLabels]);
+      {
+        key: 'alvo',
+        label: 'Escopo',
+        sortable: true,
+        render: (item: RotinaAgendada) => (
+          <span className="badge bg-secondary">
+            {ALVO_LABELS_SAAS[item.alvo ?? 'saas'] ?? (item.alvo === 'erp_global' ? 'ERP (todos)' : 'Cobrança SaaS')}
+          </span>
+        ),
+      },
+      {
+        key: 'frequencia',
+        label: t('scheduler.frequency'),
+        sortable: true,
+        render: (item: RotinaAgendada) => item.frequencia,
+      },
+      {
+        key: 'hora_execucao',
+        label: t('scheduler.schedule'),
+        sortable: true,
+        render: (item: RotinaAgendada) => item.hora_execucao || '-',
+      },
+      {
+        key: 'proxima_execucao',
+        label: t('scheduler.nextRun'),
+        render: (item: RotinaAgendada) => (item.proxima_execucao ? formatDateTime(item.proxima_execucao) : '-'),
+      },
+      {
+        key: 'ultima_execucao',
+        label: t('scheduler.lastRun'),
+        sortable: true,
+        render: (item: RotinaAgendada & { ultima_execucao_formatada?: string | null }) => {
+          if (item.ultima_execucao_formatada) return item.ultima_execucao_formatada;
+          return item.ultima_execucao ? formatDateTime(item.ultima_execucao) : '-';
+        },
+      },
+      {
+        key: 'ativo',
+        label: t('table.status'),
+        sortable: true,
+        badgeLabels: [t('status.active'), t('status.inactive')],
+        render: (item: RotinaAgendada) => (
+          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+            {item.ativo ? t('status.active') : t('status.inactive')}
+          </span>
+        ),
+      },
+      {
+        key: 'total_execucoes',
+        label: t('scheduler.executions'),
+        sortable: true,
+        render: (item: RotinaAgendada) => item.total_execucoes,
+      },
+      {
+        key: 'execucoes_com_erro',
+        label: t('scheduler.errors'),
+        sortable: true,
+        render: (item: RotinaAgendada) => item.execucoes_com_erro,
+      },
+      {
+        key: 'created_at',
+        label: t('table.createdAt'),
+        sortable: true,
+        render: (item: RotinaAgendada & { created_at?: string; created_at_formatada?: string | null }) => {
+          if (item.created_at_formatada) return item.created_at_formatada;
+          return item.created_at ? formatDateTime(item.created_at) : '-';
+        },
+      },
+    ],
+    [t]
+  );
 
   const searchFields = [
     { key: 'id', label: t('table.id') },
@@ -155,9 +161,9 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
   ];
 
   const { data: rotinasData, isLoading, refetch } = useQuery({
-    queryKey: [queryKey, tableFilters.page, tableFilters.limit, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection],
+    queryKey: [QUERY_KEY, tableFilters.page, tableFilters.limit, tableFilters.search, tableFilters.sortColumn, tableFilters.sortDirection],
     queryFn: () =>
-      schedulerService.getRotinas({
+      SaasSchedulerService.getRotinas({
         page: tableFilters.page,
         limit: tableFilters.limit,
         search: tableFilters.search,
@@ -190,31 +196,14 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
     };
   }, [rotinasData?.pagination]);
 
-  const handleToggle = useCallback(
-    async (rotina: RotinaAgendada) => {
-      try {
-        await (schedulerService as { toggleRotina?: (id: number, ativo: boolean) => Promise<unknown> }).toggleRotina?.(rotina.id, !rotina.ativo);
-        queryClient.invalidateQueries({ queryKey: [queryKey] });
-      } catch (error: unknown) {
-        if (error instanceof Error && 'response' in error) {
-          const axiosError = error as AxiosError<{ message?: string }>;
-          showError(`Erro ao atualizar status: ${axiosError.response?.data?.message || 'Erro desconhecido'}`);
-        } else {
-          showError('Erro ao atualizar status: Erro desconhecido');
-        }
-      }
-    },
-    [queryClient, showError, schedulerService, queryKey]
-  );
-
   const handleExecute = useCallback(
     async (rotina: RotinaAgendada) => {
       const confirmed = window.confirm(t('scheduler.confirmExecute'));
       if (!confirmed) return;
       try {
-        await (schedulerService as { executeRotina?: (id: number) => Promise<unknown> }).executeRotina?.(rotina.id);
+        await SaasSchedulerService.executeRotina?.(rotina.id);
         success(t('scheduler.routineStarted'));
-        queryClient.invalidateQueries({ queryKey: [queryKey] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       } catch (error: unknown) {
         if (error instanceof Error && 'response' in error) {
           const axiosError = error as AxiosError<{ message?: string }>;
@@ -224,7 +213,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         }
       }
     },
-    [t, success, queryClient, showError, schedulerService, queryKey]
+    [t, success, queryClient, showError]
   );
 
   const handleDelete = useCallback(
@@ -232,9 +221,9 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
       const confirmed = window.confirm(t('scheduler.confirmDelete'));
       if (!confirmed) return;
       try {
-        await schedulerService.deleteRotina(rotina.id);
+        await SaasSchedulerService.deleteRotina(rotina.id);
         success(t('scheduler.successDelete'));
-        queryClient.invalidateQueries({ queryKey: [queryKey] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       } catch (error: unknown) {
         if (error instanceof Error && 'response' in error) {
           const axiosError = error as AxiosError<{ message?: string }>;
@@ -244,7 +233,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         }
       }
     },
-    [t, success, queryClient, showError, schedulerService, queryKey]
+    [t, success, queryClient, showError]
   );
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -269,12 +258,12 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
   const handleSuccess = async () => {
     setSelectedRotinaId(null);
     clearSelection();
-    await queryClient.invalidateQueries({ queryKey: [queryKey] });
+    await queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     await refetch();
   };
 
-  const bulkActions = useMemo(() => {
-    const actions = [
+  const bulkActions = useMemo(
+    () => [
       {
         label: t('actions.new'),
         variant: 'primary' as const,
@@ -294,38 +283,18 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
           if (item) handleDelete(item);
         },
       },
-      ...(hasExecute
-        ? [
-            {
-              label: t('scheduler.execute'),
-              variant: 'primary' as const,
-              disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
-              action: (selectedItems: RotinaAgendada[]) => {
-                const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-                if (item) handleExecute(item);
-              },
-            },
-          ]
-        : []),
-      ...(hasToggle
-        ? [
-            {
-              label: t('scheduler.deactivate'),
-              variant: 'primary' as const,
-              disabled: (selectedItems: RotinaAgendada[]) => {
-                const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-                return !item || !item.ativo;
-              },
-              action: (selectedItems: RotinaAgendada[]) => {
-                const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-                if (item) handleToggle(item);
-              },
-          },
-        ]
-        : []),
-    ];
-    return actions;
-  }, [t, selectedItem, handleCreate, handleEdit, handleExecute, handleToggle, handleDelete, hasExecute, hasToggle]);
+      {
+        label: t('scheduler.execute'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
+        action: (selectedItems: RotinaAgendada[]) => {
+          const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+          if (item) handleExecute(item);
+        },
+      },
+    ],
+    [t, selectedItem, handleCreate, handleEdit, handleExecute, handleDelete]
+  );
 
   const handleSearchChange = useCallback(
     (search: string, field?: string) => {
@@ -347,7 +316,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         }}
         title={t('scheduler.title')}
         size="lg"
-        modalId={modalId}
+        modalId={MODAL_ID}
         className="no-padding"
       >
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -379,11 +348,11 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
                 emptyMessage: 'Nenhuma rotina encontrada',
                 pagination,
               }}
-              tableId={tableId}
+              tableId={TABLE_ID}
               onSelectionChange={(items) => handleSelectionChange(items)}
               onRefresh={refetch}
               onAudit={handleAudit}
-              auditEntity="ScheduledRoutine"
+              auditEntity="SaasScheduledRoutine"
               onPageChange={(page) => {
                 setTimeout(() => tableFilters.setPage(page), 0);
               }}
@@ -409,7 +378,6 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         }}
         rotinaId={showEditModal ? selectedRotinaId : null}
         onSuccess={handleSuccess}
-        variant={variant}
       />
 
       <ImprimirModal
@@ -418,7 +386,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         pdfUrl={auditoria.pdfUrl}
         isGenerating={auditoria.isGeneratingPdf}
         title="Relatórios de logs"
-        modalId={auditoriaModalId}
+        modalId={AUDITORIA_MODAL_ID}
       />
 
       {modalProps && <ConfirmModal {...modalProps} />}

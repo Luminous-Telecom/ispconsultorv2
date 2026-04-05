@@ -1,82 +1,71 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { SchedulerService, type CreateRotinaData, type UpdateRotinaData } from 'services/schedulerService';
-import { SaasSchedulerService } from 'services/saas/saasSchedulerService';
+import { SaasSchedulerService, type CreateRotinaData, type UpdateRotinaData } from 'services/saas/saasSchedulerService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import DraggableModal from 'components/common/DraggableModal';
 import { Button, Spinner, FormField, AtivoInativoField } from 'components/ui';
 
-const TIPO_OPTIONS_ERP_BASE = [
-  { value: 'geracao_titulos', label: 'Geração de Títulos' },
-  { value: 'envio_boletos', label: 'Envio de Boletos' },
-  { value: 'remessa_bancaria', label: 'Remessa Bancária' },
-  { value: 'verificar_vencimentos', label: 'Verificar Vencimentos' },
-  { value: 'desbloquear_blockdomi', label: 'Desbloquear domínios (data fim)' },
-  { value: 'backup_equipamentos_ssh', label: 'Backup equipamentos SSH' },
-];
-
-const TIPO_OPTIONS_SAAS = [
-  { value: 'geracao_titulos', label: 'Geração de Títulos' },
-  { value: 'envio_boletos', label: 'Envio de Boletos' },
-  { value: 'remessa_bancaria', label: 'Remessa Bancária' },
-  { value: 'bloquear_saas_atraso', label: 'Bloquear acesso por atraso' },
-];
-
-const NOMES_POR_TIPO_ERP: Record<string, string> = {
-  geracao_titulos: 'Geração de Títulos',
-  envio_boletos: 'Envio de Boletos',
-  remessa_bancaria: 'Remessa Bancária',
-  verificar_vencimentos: 'Verificar Vencimentos',
+const NOMES_POR_TIPO: Record<string, string> = {
+  geracao_titulos: 'Geração de títulos',
+  envio_boletos: 'Envio de boletos',
+  remessa_bancaria: 'Remessa bancária',
+  verificar_vencimentos: 'Verificar vencimentos',
   desbloquear_blockdomi: 'Desbloquear domínios (data fim)',
+  bloquear_saas_atraso: 'Bloquear acesso por atraso',
   backup_equipamentos_ssh: 'Backup equipamentos SSH',
+  outros: 'Outros',
 };
 
-const NOMES_POR_TIPO_SAAS: Record<string, string> = {
-  geracao_titulos: 'Geração de Títulos',
-  envio_boletos: 'Envio de Boletos',
-  remessa_bancaria: 'Remessa Bancária',
-  bloquear_saas_atraso: 'Bloquear acesso por atraso',
-};
+function buildTipoOptionsSaaS(alvo: 'saas' | 'erp_global', hasBlockdomi: boolean) {
+  if (alvo === 'saas') {
+    return [
+      { value: 'geracao_titulos', label: 'Geração de títulos (cobrança SaaS)' },
+      { value: 'envio_boletos', label: 'Envio de boletos (cobrança SaaS)' },
+      { value: 'remessa_bancaria', label: 'Remessa bancária (cobrança SaaS)' },
+      { value: 'bloquear_saas_atraso', label: 'Bloquear acesso por atraso' },
+    ];
+  }
+  const opts = [
+    { value: 'geracao_titulos', label: 'Geração de títulos (ERP — todos os clientes)' },
+    { value: 'envio_boletos', label: 'Envio de boletos (ERP — todos)' },
+    { value: 'remessa_bancaria', label: 'Remessa bancária (ERP — todos)' },
+    { value: 'verificar_vencimentos', label: 'Verificar vencimentos' },
+    { value: 'desbloquear_blockdomi', label: 'Desbloquear domínios (data fim)' },
+    { value: 'backup_equipamentos_ssh', label: 'Backup equipamentos SSH (ERP — todos)' },
+    { value: 'outros', label: 'Outros' },
+  ];
+  if (!hasBlockdomi) return opts.filter((o) => o.value !== 'desbloquear_blockdomi');
+  return opts;
+}
+
+const ALVO_OPTIONS_SAAS = [
+  { value: 'saas', label: 'Cobrança do produto (SaaS)' },
+  { value: 'erp_global', label: 'ERP — todos os clientes' },
+];
 
 interface RotinaAgendadaModalProps {
   show: boolean;
   onClose: () => void;
   rotinaId?: number | null;
   onSuccess?: () => void;
-  variant?: 'erp' | 'saas';
 }
 
-const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
-  show,
-  onClose,
-  rotinaId = null,
-  onSuccess,
-  variant = 'erp',
-}) => {
+const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose, rotinaId = null, onSuccess }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
   const isEditMode = !!rotinaId;
 
   const { hasModulo } = usePlanoModulos();
-  const schedulerService = variant === 'saas' ? SaasSchedulerService : SchedulerService;
-  const queryKeyPrefix = variant === 'saas' ? 'saas' : '';
-  const invalidateKey = variant === 'saas' ? 'saas-agendador-tarefas' : 'agendador-tarefas';
-  const tipoOptions = useMemo(() => {
-    if (variant === 'saas') return TIPO_OPTIONS_SAAS;
-    return TIPO_OPTIONS_ERP_BASE.filter((o) => o.value !== 'desbloquear_blockdomi' || hasModulo('blockdomi'));
-  }, [variant, hasModulo]);
-  const nomesPorTipo = variant === 'saas' ? NOMES_POR_TIPO_SAAS : NOMES_POR_TIPO_ERP;
-  const formId = variant === 'saas' ? 'saas-rotina-agendada-form' : 'rotina-agendada-form';
-  const descricaoId = variant === 'saas' ? 'saas_descricao' : 'descricao';
-  const ativoId = variant === 'saas' ? 'saas_ativo' : 'ativo';
+  const invalidateKey = 'saas-agendador-tarefas';
 
   const [formData, setFormData] = useState<CreateRotinaData>({
-    nome: 'Geração de Títulos',
+    nome: NOMES_POR_TIPO.geracao_titulos,
     tipo: 'geracao_titulos',
+    alvo: 'saas',
     descricao: '',
     frequencia: 'diaria',
     hora_execucao: '00:00',
@@ -84,20 +73,48 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
 
   const [ativo, setAtivo] = useState(true);
 
+  const tipoOptions = useMemo(() => {
+    const alvo = (formData.alvo ?? 'saas') as 'saas' | 'erp_global';
+    return buildTipoOptionsSaaS(alvo, hasModulo('blockdomi'));
+  }, [formData.alvo, hasModulo]);
+
+  const formId = 'saas-rotina-agendada-form';
+  const descricaoId = 'saas_descricao';
+  const ativoId = 'saas_ativo';
+
   const { data: rotinaData, isLoading } = useQuery({
-    queryKey: [queryKeyPrefix ? `${queryKeyPrefix}-rotina` : 'rotina', rotinaId],
+    queryKey: ['saas-rotina', rotinaId],
     queryFn: async () => {
-      const response = await schedulerService.getRotinaById(rotinaId!);
+      const response = await SaasSchedulerService.getRotinaById(rotinaId!);
       return response.data;
     },
     enabled: isEditMode && !!rotinaId && show,
   });
 
+  const resetForm = useCallback(() => {
+    setFormData({
+      nome: NOMES_POR_TIPO.geracao_titulos,
+      tipo: 'geracao_titulos',
+      alvo: 'saas',
+      descricao: '',
+      frequencia: 'diaria',
+      hora_execucao: '00:00',
+    });
+    setAtivo(true);
+  }, []);
+
+  useEffect(() => {
+    if (show && !rotinaId) {
+      resetForm();
+    }
+  }, [show, rotinaId, resetForm]);
+
   useEffect(() => {
     if (rotinaData && isEditMode) {
       setFormData({
         nome: rotinaData.nome || '',
-        tipo: rotinaData.tipo || 'envio_boletos',
+        tipo: rotinaData.tipo || 'geracao_titulos',
+        alvo: (rotinaData.alvo ?? 'saas') as 'saas' | 'erp_global',
         descricao: rotinaData.descricao || '',
         frequencia: rotinaData.frequencia || 'diaria',
         hora_execucao: rotinaData.hora_execucao || '00:00',
@@ -107,7 +124,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
   }, [rotinaData, isEditMode]);
 
   const createMutation = useMutation({
-    mutationFn: (data: CreateRotinaData) => schedulerService.createRotina(data),
+    mutationFn: (data: CreateRotinaData) => SaasSchedulerService.createRotina(data),
     onSuccess: () => {
       success('Rotina criada com sucesso!');
       queryClient.invalidateQueries({ queryKey: [invalidateKey] });
@@ -121,11 +138,11 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: UpdateRotinaData) => schedulerService.updateRotina(rotinaId!, data),
+    mutationFn: (data: UpdateRotinaData) => SaasSchedulerService.updateRotina(rotinaId!, data),
     onSuccess: () => {
       success('Rotina atualizada com sucesso!');
       queryClient.invalidateQueries({ queryKey: [invalidateKey] });
-      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix ? `${queryKeyPrefix}-rotina` : 'rotina', rotinaId] });
+      queryClient.invalidateQueries({ queryKey: ['saas-rotina', rotinaId] });
       resetForm();
       onSuccess?.();
     },
@@ -137,28 +154,20 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
-  const resetForm = () => {
-    setFormData({
-      nome: 'Geração de Títulos',
-      tipo: 'geracao_titulos',
-      descricao: '',
-      frequencia: 'diaria',
-      hora_execucao: '00:00',
-    });
-    setAtivo(true);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (isEditMode) {
-      const updateData: UpdateRotinaData = {
+      updateMutation.mutate({
         ...formData,
         ativo,
-      };
-      updateMutation.mutate(updateData);
+        alvo: formData.alvo ?? 'saas',
+      });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate({
+        ...formData,
+        alvo: formData.alvo ?? 'saas',
+      });
     }
   };
 
@@ -199,6 +208,27 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
           <div className="row g-0">
             <div className="col-12">
               <FormField
+                name="alvo"
+                label="Escopo"
+                type="select"
+                value={formData.alvo ?? 'saas'}
+                onChange={(value) => {
+                  const alvoVal = (value === 'erp_global' ? 'erp_global' : 'saas') as 'saas' | 'erp_global';
+                  const opts = buildTipoOptionsSaaS(alvoVal, hasModulo('blockdomi'));
+                  const first = (opts[0]?.value ?? 'geracao_titulos') as CreateRotinaData['tipo'];
+                  setFormData({
+                    ...formData,
+                    alvo: alvoVal,
+                    tipo: first,
+                    nome: NOMES_POR_TIPO[first] || formData.nome,
+                  });
+                }}
+                required
+                options={ALVO_OPTIONS_SAAS}
+              />
+            </div>
+            <div className="col-12">
+              <FormField
                 name="tipo"
                 label="Tipo"
                 type="select"
@@ -208,7 +238,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
                   setFormData({
                     ...formData,
                     tipo: tipoValue,
-                    nome: nomesPorTipo[tipoValue] || 'Rotina Personalizada',
+                    nome: NOMES_POR_TIPO[tipoValue] || 'Rotina Personalizada',
                   });
                 }}
                 required
@@ -262,11 +292,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
             </div>
 
             <div className="col-12">
-              <AtivoInativoField
-                value={ativo}
-                onChange={setAtivo}
-                name={ativoId}
-              />
+              <AtivoInativoField value={ativo} onChange={setAtivo} name={ativoId} />
             </div>
           </div>
         </form>

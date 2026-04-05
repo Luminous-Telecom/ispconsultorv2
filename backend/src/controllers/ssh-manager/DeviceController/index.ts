@@ -35,6 +35,7 @@ import {
 import { getEquipamentosLimites } from '../../../services/saas/PlanoModulosService';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
 
 function parseClienteIdQuery(raw: unknown): number | null {
   if (raw === undefined || raw === null || raw === '') return null;
@@ -840,6 +841,53 @@ export class DeviceController {
     } catch (error) {
       sendError(res, error, 'Erro ao listar backups do cliente', 500, true, {
         context: 'DeviceController.listBackupsByCliente',
+      });
+    }
+  }
+
+  /**
+   * Horário da rotina de backup SSH no agendador SaaS (escopo ERP global).
+   */
+  static async backupAgendamento(_req: Request, res: Response): Promise<void> {
+    try {
+      const routine = await SaasScheduledRoutine.findOne({
+        where: {
+          tipo: 'backup_equipamentos_ssh',
+          alvo: 'erp_global',
+          ativo: true
+        },
+        order: [['id', 'ASC']],
+        attributes: ['hora_execucao', 'frequencia', 'proxima_execucao']
+      });
+
+      if (!routine) {
+        sendSuccess(res, {
+          configurado: false,
+          hora_execucao: null,
+          frequencia: null,
+          proxima_execucao: null
+        });
+        return;
+      }
+
+      const raw = routine.getDataValue('hora_execucao') as unknown;
+      let horaStr: string | null = null;
+      if (typeof raw === 'string') {
+        horaStr = raw.length >= 5 ? raw.slice(0, 5) : raw;
+      } else if (raw instanceof Date) {
+        horaStr = `${String(raw.getHours()).padStart(2, '0')}:${String(raw.getMinutes()).padStart(2, '0')}`;
+      }
+
+      sendSuccess(res, {
+        configurado: true,
+        hora_execucao: horaStr,
+        frequencia: routine.frequencia,
+        proxima_execucao: routine.proxima_execucao
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao obter agendamento de backup', 500, true, {
+        context: 'DeviceController',
+        action: 'backupAgendamento'
       });
     }
   }

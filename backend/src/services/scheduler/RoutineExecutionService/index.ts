@@ -16,6 +16,7 @@ import type {
   EnvioBoletosResult,
   RemessaBancariaResult
 } from '../../../types/scheduler';
+import type { JsonValue } from '../../../types/index';
 import type { RoutineResult } from '../../../interfaces/IRoutine';
 
 /**
@@ -82,6 +83,10 @@ function isSaasRoutine(routine: AnyRoutine): routine is SaasScheduledRoutine {
   return routine instanceof SaasScheduledRoutine;
 }
 
+function saasAlvo(routine: SaasScheduledRoutine): 'saas' | 'erp_global' {
+  return routine.alvo === 'erp_global' ? 'erp_global' : 'saas';
+}
+
 export class RoutineExecutionService {
   /**
    * Executa uma rotina baseada no seu tipo (ERP ou SaaS)
@@ -93,41 +98,97 @@ export class RoutineExecutionService {
   ): Promise<RoutineExecutionResult> {
     const saas = isSaasRoutine(routine);
 
-    if (saas && !['geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'bloquear_saas_atraso'].includes(routine.tipo)) {
-      logger.warn('RoutineExecutionService - Tipo não suportado no SaaS', {
-        context: 'RoutineExecutionService',
-        tipo: routine.tipo,
-        routineId: routine.id
-      });
-      return { success: false, message: `Tipo de rotina não suportado no SaaS: ${routine.tipo}` };
+    if (saas) {
+      const alvo = saasAlvo(routine as SaasScheduledRoutine);
+      const tiposSaas = ['geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'bloquear_saas_atraso'] as const;
+      const tiposErpGlobal = [
+        'geracao_titulos',
+        'envio_boletos',
+        'remessa_bancaria',
+        'verificar_vencimentos',
+        'desbloquear_blockdomi',
+        'backup_equipamentos_ssh',
+        'outros'
+      ] as const;
+      const ok =
+        (alvo === 'saas' && (tiposSaas as readonly string[]).includes(routine.tipo)) ||
+        (alvo === 'erp_global' && (tiposErpGlobal as readonly string[]).includes(routine.tipo));
+      if (!ok) {
+        logger.warn('RoutineExecutionService - Combinação alvo/tipo inválida', {
+          context: 'RoutineExecutionService',
+          tipo: routine.tipo,
+          alvo,
+          routineId: routine.id
+        });
+        return { success: false, message: `Combinação de alvo e tipo inválida: ${routine.tipo}` };
+      }
     }
 
     switch (routine.tipo) {
       case 'geracao_titulos':
         if (saas) {
+          if (saasAlvo(routine as SaasScheduledRoutine) === 'erp_global') {
+            return await this.executeGeracaoTitulos(this.saasErpGlobalAsScheduledRoutine(routine as SaasScheduledRoutine));
+          }
           return await this.executeGeracaoTitulosSaas(routine as SaasScheduledRoutine);
         }
         return await this.executeGeracaoTitulos(routine as ScheduledRoutine);
 
-      case 'envio_boletos':
-        return await this.executeEnvioBoletos(routine, saas);
+      case 'envio_boletos': {
+        if (saas) {
+          const alvo = saasAlvo(routine as SaasScheduledRoutine);
+          const asErp = this.saasErpGlobalAsScheduledRoutine(routine as SaasScheduledRoutine);
+          return await this.executeEnvioBoletos(asErp, alvo === 'saas');
+        }
+        return await this.executeEnvioBoletos(routine, false);
+      }
 
       case 'remessa_bancaria':
         if (saas) {
+          if (saasAlvo(routine as SaasScheduledRoutine) === 'erp_global') {
+            return await this.executeRemessaBancaria(this.saasErpGlobalAsScheduledRoutine(routine as SaasScheduledRoutine));
+          }
           return await this.executeRemessaBancariaSaas(routine as SaasScheduledRoutine);
         }
         return await this.executeRemessaBancaria(routine);
 
+      case 'verificar_vencimentos': {
+        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+          return { success: false, message: 'Verificar vencimentos só pode ser agendado com alvo ERP (todos os clientes) no painel SaaS.' };
+        }
+        const { VerificarVencimentosRoutine } = await import('../routines/VerificarVencimentosRoutine');
+        const r = new VerificarVencimentosRoutine();
+        const cfg = (routine as ScheduledRoutine | SaasScheduledRoutine).configuracao || {};
+        return (await r.execute(cfg as Record<string, JsonValue>)) as RoutineExecutionResult;
+      }
+
       case 'desbloquear_blockdomi':
-        if (saas) return { success: false, message: 'Tipo não suportado no SaaS' };
+        if (saas) {
+          if (saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+            return { success: false, message: 'Configure esta rotina com alvo ERP (todos os clientes) no painel SaaS.' };
+          }
+          return await this.executeDesbloquearBlockdomiErpGlobal();
+        }
         return await this.executeDesbloquearBlockdomi(routine as ScheduledRoutine);
 
       case 'backup_equipamentos_ssh':
-        if (saas) return { success: false, message: 'Tipo exclusivo do ERP' };
-        return await this.executeBackupEquipamentosSsh(routine as ScheduledRoutine);
+        if (saas) {
+          if (saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+            return { success: false, message: 'Backup SSH deve usar escopo ERP (todos os clientes).' };
+          }
+          return await this.executeBackupEquipamentosSsh(this.saasErpGlobalAsScheduledRoutine(routine as SaasScheduledRoutine));
+        }
+        return {
+          success: false,
+          message:
+            'Backup de equipamentos SSH é configurado apenas no painel SaaS (uma rotina para todos os clientes).',
+        };
 
       case 'bloquear_saas_atraso':
         if (!saas) return { success: false, message: 'Tipo exclusivo do SaaS' };
+        if (saasAlvo(routine as SaasScheduledRoutine) !== 'saas') {
+          return { success: false, message: 'Bloquear por atraso só aplica ao alvo SaaS (cobrança do produto).' };
+        }
         return await this.executeBloquearSaasAtraso();
 
       default:
@@ -140,19 +201,34 @@ export class RoutineExecutionService {
     }
   }
 
-  /**
-   * Enfileira um job de backup por equipamento SSH (backup_enabled, ativo).
-   * Dispositivos com túnel por agente são enfileirados; o runner usa o comando por tipo (ex.: /export, display current-configuration).
-   */
-  private async executeBackupEquipamentosSsh(routine: ScheduledRoutine): Promise<RoutineExecutionResult> {
-    const parts: WhereOptions<SshDevice>[] = [{ backup_enabled: true }, { is_active: true }];
-    if (routine.empresa_id != null) {
-      parts.push({ empresa_id: routine.empresa_id });
-    }
-    const where: WhereOptions<SshDevice> = { [Op.and]: parts };
+  /** Adapta rotina SaaS para a mesma assinatura usada pelos handlers que esperam {@link ScheduledRoutine}. */
+  private saasErpGlobalAsScheduledRoutine(routine: SaasScheduledRoutine): ScheduledRoutine {
+    return routine.get({ plain: true }) as unknown as ScheduledRoutine;
+  }
 
+  /**
+   * Desbloqueio blockdomi para todos os tenants (sem filtrar empresa_id no repositório).
+   */
+  private async executeDesbloquearBlockdomiErpGlobal(): Promise<RoutineExecutionResult> {
+    try {
+      const { DesbloquearBlockdomiRoutine } = await import('../routines/DesbloquearBlockdomiRoutine');
+      const r = new DesbloquearBlockdomiRoutine();
+      return (await r.execute({})) as RoutineExecutionResult;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar desbloqueio blockdomi (ERP global)', {
+        context: 'RoutineExecutionService',
+        action: 'executeDesbloquearBlockdomiErpGlobal',
+        error: errorMessage
+      });
+      return { success: false, message: `Erro ao desbloquear blockdomi: ${errorMessage}` };
+    }
+  }
+
+  /** Enfileira backup de todos os equipamentos SSH elegíveis (rotina global no SaaS). */
+  private async executeBackupEquipamentosSsh(_routine: ScheduledRoutine): Promise<RoutineExecutionResult> {
     const rows = await SshDevice.findAll({
-      where,
+      where: { backup_enabled: true, is_active: true },
       attributes: ['id'],
     });
 

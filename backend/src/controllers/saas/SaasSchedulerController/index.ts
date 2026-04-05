@@ -5,6 +5,31 @@ import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../..
 import { calculateNextExecution } from '../../../utils/SchedulerUtils';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
 
+const TIPOS_ALVO_SAAS = ['geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'bloquear_saas_atraso'] as const;
+const TIPOS_ALVO_ERP_GLOBAL = [
+  'geracao_titulos',
+  'envio_boletos',
+  'remessa_bancaria',
+  'verificar_vencimentos',
+  'desbloquear_blockdomi',
+  'backup_equipamentos_ssh',
+  'outros'
+] as const;
+
+function mensagemValidacaoAlvoTipo(body: { tipo?: string; alvo?: string }): string | null {
+  const alvo = body.alvo === 'erp_global' ? 'erp_global' : 'saas';
+  const tipo = body.tipo;
+  if (!tipo) return null;
+  if (alvo === 'saas') {
+    if (!(TIPOS_ALVO_SAAS as readonly string[]).includes(tipo)) {
+      return 'No alvo Cobrança SaaS, use geração/envio/remessa do produto ou bloquear por atraso.';
+    }
+  } else if (!(TIPOS_ALVO_ERP_GLOBAL as readonly string[]).includes(tipo)) {
+    return 'No alvo ERP (todos os clientes), use faturamento ERP, verificar vencimentos ou desbloquear domínios.';
+  }
+  return null;
+}
+
 export class SaasSchedulerController {
   async index(req: Request, res: Response): Promise<void> {
     try {
@@ -56,8 +81,15 @@ export class SaasSchedulerController {
         return;
       }
 
+      const msgAlvo = mensagemValidacaoAlvoTipo(routineData);
+      if (msgAlvo) {
+        sendValidationError(res, msgAlvo);
+        return;
+      }
+
       const dadosComProximaExecucao = {
         ...routineData,
+        alvo: routineData.alvo === 'erp_global' ? 'erp_global' : 'saas',
         proxima_execucao: routineData.proxima_execucao ?? calculateNextExecution({
           hora_execucao: routineData.hora_execucao,
           frequencia: routineData.frequencia
@@ -85,6 +117,18 @@ export class SaasSchedulerController {
       const updateData = req.body;
 
       const routineAntiga = await SaasScheduledRoutineService.getById(Number(id));
+      const msgAlvo = mensagemValidacaoAlvoTipo({
+        tipo: updateData.tipo ?? (routineAntiga as { tipo?: string } | null)?.tipo,
+        alvo: updateData.alvo ?? (routineAntiga as { alvo?: string } | null)?.alvo
+      });
+      if (msgAlvo) {
+        sendValidationError(res, msgAlvo);
+        return;
+      }
+      if (updateData.alvo !== undefined) {
+        (updateData as { alvo?: string }).alvo = updateData.alvo === 'erp_global' ? 'erp_global' : 'saas';
+      }
+
       const routine = await SaasScheduledRoutineService.update(Number(id), updateData);
       if (routineAntiga && routine) {
         await registrarAtualizacao(req as any, 'SaasScheduledRoutine', Number(id),

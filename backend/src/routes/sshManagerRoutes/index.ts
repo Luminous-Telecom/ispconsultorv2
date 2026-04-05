@@ -24,6 +24,7 @@ const sshOperationsLimiter = rateLimit({
 
 // ── Devices ───────────────────────────────────────────────────────────────────
 router.get('/devices', DeviceController.index);
+router.get('/backup-agendamento', DeviceController.backupAgendamento);
 router.get('/device-backups', DeviceController.listBackupsByCliente);
 router.post('/devices', DeviceController.store);
 router.get('/devices/:id', DeviceController.show);

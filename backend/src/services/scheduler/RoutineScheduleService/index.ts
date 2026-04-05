@@ -25,7 +25,7 @@ function jobKey(source: RoutineSource, id: number): string {
 
 /**
  * Serviço responsável por gerenciar agendamento de rotinas (CRON jobs).
- * Suporta rotinas do ERP (scheduled_routines) e SaaS (saas_scheduled_routines).
+ * Agenda rotinas no SaaS (saas_scheduled_routines). Rotinas adm_scheduled_routines não são mais carregadas.
  *
  * @class RoutineScheduleService
  */
@@ -43,7 +43,7 @@ export class RoutineScheduleService {
   }
 
   /**
-   * Inicia o scheduler e carrega rotinas ativas do banco de dados (ERP + SaaS)
+   * Inicia o scheduler e carrega rotinas ativas do SaaS
    */
   public async start(): Promise<void> {
     if (this.isRunning) {
@@ -69,18 +69,12 @@ export class RoutineScheduleService {
   }
 
   /**
-   * Carrega rotinas ativas (ERP e SaaS) e agenda cada uma
+   * Carrega rotinas ativas do SaaS e agenda cada uma
    */
   private async loadRoutinesFromDatabase(): Promise<void> {
     try {
-      const [erpRoutines, saasRoutines] = await Promise.all([
-        ScheduledRoutine.findAll({ where: { ativo: true } }),
-        SaasScheduledRoutine.findAll({ where: { ativo: true } })
-      ]);
+      const saasRoutines = await SaasScheduledRoutine.findAll({ where: { ativo: true } });
 
-      for (const routine of erpRoutines) {
-        await this.scheduleRoutine(routine);
-      }
       for (const routine of saasRoutines) {
         await this.scheduleSaasRoutine(routine);
       }
@@ -98,7 +92,7 @@ export class RoutineScheduleService {
    * Agenda uma rotina do ERP
    */
   public async scheduleRoutine(routine: ScheduledRoutine): Promise<void> {
-    await this.scheduleAnyRoutine(routine, 'erp');
+    this.unscheduleRoutine(routine.id);
   }
 
   /**

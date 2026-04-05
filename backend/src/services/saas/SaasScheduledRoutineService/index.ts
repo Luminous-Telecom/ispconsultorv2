@@ -8,7 +8,6 @@ import {
 const service = createScheduledRoutineService<SaasScheduledRoutine>(SaasScheduledRoutine);
 
 export type { ListScheduledRoutinesFilters };
-export type ListSaasScheduledRoutinesFilters = ListScheduledRoutinesFilters;
 export type ListSaasScheduledRoutinesResponse = ListScheduledRoutinesResponse<SaasScheduledRoutine>;
 
 export class SaasScheduledRoutineService {

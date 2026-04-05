@@ -1,4 +1,5 @@
 import { BaseService, defaultApiClient } from './core';
+import { unwrapResponse } from './core/unwrapResponse';
 import {
   SshDevice,
   CreateSshDevice,
@@ -59,6 +60,24 @@ export class SshDeviceService {
     );
     const r = response as { data?: SshCommandResult };
     return r.data ?? (response as unknown as SshCommandResult);
+  }
+
+  static async getBackupAgendamento(): Promise<{
+    configurado: boolean;
+    hora_execucao: string | null;
+    frequencia: string | null;
+    proxima_execucao?: string | null;
+  }> {
+    const response = await defaultApiClient.get<{
+      configurado: boolean;
+      hora_execucao: string | null;
+      frequencia: string | null;
+      proxima_execucao?: string | null;
+    }>('/ssh-manager/backup-agendamento');
+    return unwrapResponse(response, {
+      fallback: { configurado: false, hora_execucao: null, frequencia: null },
+      throwOnFailure: false,
+    });
   }
 
   static async queueManualBackup(id: string): Promise<{ message: string }> {

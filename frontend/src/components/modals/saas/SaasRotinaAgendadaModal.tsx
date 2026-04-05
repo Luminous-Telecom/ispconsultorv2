@@ -9,7 +9,7 @@ interface SaasRotinaAgendadaModalProps {
 }
 
 const SaasRotinaAgendadaModal: React.FC<SaasRotinaAgendadaModalProps> = (props) => (
-  <RotinaAgendadaModal {...props} variant="saas" />
+  <RotinaAgendadaModal {...props} />
 );
 
 export default SaasRotinaAgendadaModal;

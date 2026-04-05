@@ -8,6 +8,9 @@ import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../..
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { getModulosDoPlano, tenantTemModulo } from '../../../services/saas/PlanoModulosService';
 
+/** Boletos, títulos, remessa e backup SSH ficam no agendador SaaS. No ERP só rotinas por tenant (ex.: outros). */
+const TIPOS_AGENDADOR_PERMITIDOS_NO_ERP = ['outros'] as const;
+
 export class SchedulerController {
   private schedulerService: SchedulerService;
 
@@ -81,6 +84,14 @@ export class SchedulerController {
       // Validações básicas
       if (!routineData.nome || !routineData.tipo || !routineData.frequencia || !routineData.hora_execucao) {
         sendValidationError(res, 'Campos obrigatórios: nome, tipo, frequencia, hora_execucao');
+        return;
+      }
+
+      if (!TIPOS_AGENDADOR_PERMITIDOS_NO_ERP.includes(routineData.tipo)) {
+        sendValidationError(
+          res,
+          'Rotinas globais (boletos, títulos, remessa, backup SSH, etc.) são configuradas no painel SaaS — Agendador, com alvo "ERP (todos os clientes)".'
+        );
         return;
       }
 
