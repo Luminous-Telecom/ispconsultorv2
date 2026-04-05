@@ -469,6 +469,7 @@ export class DeviceController {
           host: device.host,
           port: device.port,
           username: device.username,
+          deviceType: device.device_type,
           ...(useKey && privateKey ? { privateKey } : { password }),
         });
 
@@ -665,7 +666,7 @@ export class DeviceController {
           return;
         }
       }
-      if (device.device_type !== 'mikrotik') {
+      if (device.device_type !== 'mikrotik' && device.device_type !== 'huawei') {
         sendValidationError(res, 'Backup não suportado para este tipo de equipamento.');
         return;
       }

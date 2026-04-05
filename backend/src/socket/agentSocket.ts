@@ -410,6 +410,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
         ...(useKey && privateKey ? { privateKey } : { password }),
         cols: c,
         rows: r,
+        deviceType: device.device_type,
       });
 
       if (!sent) {

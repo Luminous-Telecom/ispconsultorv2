@@ -168,6 +168,21 @@ async function pullAndRunContainer(
   }
 }
 
+/** Erro de rede no SSH automático (a conexão sai do servidor da API, não do PC do usuário). */
+export function formatAgentInstallSshError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  const l = raw.toLowerCase();
+  if (
+    l.includes('econnrefused') ||
+    l.includes('connection refused') ||
+    l.includes('etimedout') ||
+    l.includes('timed out')
+  ) {
+    return `${raw}\nDica: o SSH automático parte do servidor da API (linha Servidor: acima). Libere a porta no firewall ou use instalação manual.`;
+  }
+  return raw;
+}
+
 // ── API pública ────────────────────────────────────────────────────────────────
 
 export interface InstallAgentOptions {

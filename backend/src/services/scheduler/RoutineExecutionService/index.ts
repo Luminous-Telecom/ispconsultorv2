@@ -142,7 +142,7 @@ export class RoutineExecutionService {
 
   /**
    * Enfileira um job de backup por equipamento SSH (backup_enabled, ativo).
-   * Dispositivos com túnel por agente são enfileirados; o runner executa /export via agente.
+   * Dispositivos com túnel por agente são enfileirados; o runner usa o comando por tipo (ex.: /export, display current-configuration).
    */
   private async executeBackupEquipamentosSsh(routine: ScheduledRoutine): Promise<RoutineExecutionResult> {
     const parts: WhereOptions<SshDevice>[] = [{ backup_enabled: true }, { is_active: true }];

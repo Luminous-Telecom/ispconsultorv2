@@ -23,11 +23,10 @@ interface SshDeviceModalProps {
   defaultClienteId?: number;
 }
 
-/** Remover `disabled` em cisco/huawei quando forem suportados na prática. */
 const DEVICE_TYPE_OPTIONS: { value: SshDeviceType; label: string; disabled?: boolean }[] = [
   { value: 'mikrotik', label: 'MikroTik RouterOS' },
   { value: 'cisco', label: 'Cisco IOS (em breve)', disabled: true },
-  { value: 'huawei', label: 'Huawei (em breve)', disabled: true },
+  { value: 'huawei', label: 'Huawei NetEngine (VRP)' },
 ];
 
 const emptyForm = {

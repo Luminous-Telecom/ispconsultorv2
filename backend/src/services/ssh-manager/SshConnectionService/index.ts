@@ -12,11 +12,12 @@ const SSH_TIMEOUT_MS = 10_000;
 const SSH_DEVICE_TIMEOUT_MS = parseInt(process.env.SSH_DEVICE_TIMEOUT_MS ?? '30000', 10);
 
 /**
- * Algoritmos ampliados para suportar equipamentos legados (MikroTik, Cisco, etc.)
- * que usam ciphers e KEX antigos não oferecidos por padrão pelo ssh2.
+ * Base: MikroTik, Huawei NE, Linux e a maioria dos vendors — KEX/ciphers legados + curve25519.
  */
-const LEGACY_ALGORITHMS: ConnectConfig['algorithms'] = {
+const SSH_ALGORITHMS_BASE: ConnectConfig['algorithms'] = {
   kex: [
+    'curve25519-sha256',
+    'curve25519-sha256@libssh.org',
     'ecdh-sha2-nistp256',
     'ecdh-sha2-nistp384',
     'ecdh-sha2-nistp521',
@@ -54,13 +55,33 @@ const LEGACY_ALGORITHMS: ConnectConfig['algorithms'] = {
   ],
 };
 
+/** IOS / IOS-XE / IOS-XR: KEX adicionais e host key DSS em hardware muito antigo. */
+const SSH_ALGORITHMS_CISCO = {
+  kex: [
+    ...(SSH_ALGORITHMS_BASE.kex as string[]),
+    'diffie-hellman-group18-sha512',
+    'diffie-hellman-group16-sha512',
+    'diffie-hellman-group15-sha512',
+  ],
+  cipher: SSH_ALGORITHMS_BASE.cipher,
+  hmac: SSH_ALGORITHMS_BASE.hmac,
+  serverHostKey: ['ssh-dss', ...(SSH_ALGORITHMS_BASE.serverHostKey as string[])],
+} as ConnectConfig['algorithms'];
+
+/** Alinha com o agente (`sshAlgorithmsForDeviceType`). */
+export function sshAlgorithmsForDeviceType(deviceType?: string | null): ConnectConfig['algorithms'] {
+  const t = (deviceType ?? '').toLowerCase().trim();
+  if (t === 'cisco') return SSH_ALGORITHMS_CISCO;
+  return SSH_ALGORITHMS_BASE;
+}
+
 function buildConnectConfig(
   host: string,
   port: number,
   username: string,
   encryptedPassword: string,
   encryptedPrivateKey: string | null,
-  _deviceType?: string
+  deviceType?: string | null
 ): ConnectConfig {
   const password = decrypt(encryptedPassword);
   const rawKey = encryptedPrivateKey ? decrypt(encryptedPrivateKey) : undefined;
@@ -72,7 +93,7 @@ function buildConnectConfig(
     port,
     username,
     readyTimeout: SSH_TIMEOUT_MS,
-    algorithms: LEGACY_ALGORITHMS,
+    algorithms: sshAlgorithmsForDeviceType(deviceType),
     ...(usePrivateKey ? { privateKey } : { password }),
   };
 }

@@ -93,27 +93,9 @@ const AgentModal: React.FC<AgentModalProps> = ({ show, onClose, onSuccess, agent
   // agente resolvido (existente ou recém-criado)
   const [installAgent, setInstallAgent] = useState<Agent | null>(agentData ?? null);
 
-  // ── reset ao abrir / ao fechar (evita reabrir na aba manual com estado antigo) ──
+  // Só reage a show e ao id do agente — refetch com mesmo id não dispara (evita voltar à aba Configurações).
   useEffect(() => {
-    if (show) {
-      setFormData(agentData
-        ? { name: agentData.name, description: agentData.description ?? '' }
-        : emptyForm
-      );
-      setErrors({});
-      if (!agentData) {
-        setAdminClienteId(null);
-        setAdminClienteNome('');
-      }
-      setActiveTab('config');
-      setSshForm({ host: '', port: '22', username: 'root', password: '', private_key: '' });
-      setSshErrors({});
-      setInstallStatus('idle');
-      setLogs([]);
-      setGeneratedCmd('');
-      setCmdCopied(false);
-      setInstallAgent(agentData ?? null);
-    } else {
+    if (!show) {
       setActiveTab('config');
       setGeneratedCmd('');
       setCmdCopied(false);
@@ -123,9 +105,32 @@ const AgentModal: React.FC<AgentModalProps> = ({ show, onClose, onSuccess, agent
       setLogs([]);
       setSshForm({ host: '', port: '22', username: 'root', password: '', private_key: '' });
       setSshErrors({});
+      return () => { abortRef.current?.abort(); };
     }
+
+    setFormData(
+      agentData
+        ? { name: agentData.name, description: agentData.description ?? '' }
+        : emptyForm
+    );
+    setErrors({});
+    if (!agentData) {
+      setAdminClienteId(null);
+      setAdminClienteNome('');
+    }
+    setActiveTab('config');
+    setSshForm({ host: '', port: '22', username: 'root', password: '', private_key: '' });
+    setSshErrors({});
+    setInstallStatus('idle');
+    setLogs([]);
+    setGeneratedCmd('');
+    setCmdCopied(false);
+    setInstallAgent(agentData ?? null);
+
     return () => { abortRef.current?.abort(); };
-  }, [show, agentData]);
+    // agentData omitido de propósito: mesma ref em refetch não pode resetar abas; lemos agentData ao abrir/trocar id.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps intencionais: show + agentData?.id
+  }, [show, agentData?.id]);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -146,7 +151,11 @@ const AgentModal: React.FC<AgentModalProps> = ({ show, onClose, onSuccess, agent
     setFormData((prev) => ({ ...prev, [field]: value }));
 
   const effectiveClienteId =
-    clienteId ?? adminClienteId ?? null;
+    clienteId ??
+    adminClienteId ??
+    installAgent?.cliente_id ??
+    agentData?.cliente_id ??
+    null;
 
   const clienteEdicaoLabel = useMemo(() => {
     if (!isEditing || !agentData) return '';
@@ -223,7 +232,13 @@ const AgentModal: React.FC<AgentModalProps> = ({ show, onClose, onSuccess, agent
 
   const handleInstall = async () => {
     if (!validateSsh()) return;
-    if (isAdmin && clienteId == null && adminClienteId == null) {
+    const targetAgent = installAgent ?? agentData ?? null;
+    if (
+      isAdmin &&
+      targetAgent == null &&
+      clienteId == null &&
+      adminClienteId == null
+    ) {
       setSshErrors((prev) => ({
         ...prev,
         cliente_id: 'Selecione o cliente na aba Configurações',
@@ -243,7 +258,9 @@ const AgentModal: React.FC<AgentModalProps> = ({ show, onClose, onSuccess, agent
         addLog('⚙️  Criando agente...');
         target = await AgentService.create({
           name: sshForm.host.trim(),
-          ...(effectiveClienteId != null ? { cliente_id: effectiveClienteId } : {}),
+          ...(effectiveClienteId != null && effectiveClienteId > 0
+            ? { cliente_id: effectiveClienteId }
+            : {}),
         });
         setInstallAgent(target);
         addLog(`✅ Agente criado: ${target.name}`);

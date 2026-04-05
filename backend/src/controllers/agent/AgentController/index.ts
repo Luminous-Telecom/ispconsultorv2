@@ -18,7 +18,11 @@ function parseClienteIdQuery(raw: unknown): number | null {
   const n = parseInt(String(raw), 10);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
-import { getAgentContainerName, installAgent } from '../../../services/agent/AgentInstallService';
+import {
+  formatAgentInstallSshError,
+  getAgentContainerName,
+  installAgent,
+} from '../../../services/agent/AgentInstallService';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { logger } from '../../../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
@@ -340,8 +344,8 @@ export class AgentController {
       write('INSTALL_SUCCESS');
       res.end();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
-      logger.warn('AgentController.install: erro', { error: msg });
+      const msg = formatAgentInstallSshError(err);
+      logger.warn('AgentController.install: erro', { error: err instanceof Error ? err.message : String(err) });
       try {
         res.write(`❌ Erro: ${msg}\n`);
         res.write('INSTALL_ERROR\n');

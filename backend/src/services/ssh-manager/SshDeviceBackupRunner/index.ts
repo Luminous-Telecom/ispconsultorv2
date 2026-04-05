@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { SshDevice } from '../../../models/ssh-manager/SshDevice';
+import { SshDevice, SshDeviceType } from '../../../models/ssh-manager/SshDevice';
 import { Agent } from '../../../models/agent/Agent';
 import { sshPool } from '../SshPoolService';
 import { executeCommand } from '../SshConnectionService';
@@ -14,6 +14,27 @@ import { executeSshCommandThroughAgent, isAgentOnline } from '../../agent/AgentS
 
 const BACKUP_CMD_TIMEOUT_MS = parseInt(process.env.SSH_BACKUP_COMMAND_TIMEOUT_MS ?? '120000', 10);
 
+/** MikroTik RouterOS */
+const MIKROTIK_BACKUP_CMD = '/export';
+/** Huawei NetEngine / VRP — saída sem paginação (-- More --). */
+const HUAWEI_NE_BACKUP_CMD = 'display current-configuration | no-more';
+
+type SshBackupSpec = { command: string; auditLabel: string; fileExtension: string };
+
+function sshBackupSpec(deviceType: SshDeviceType): SshBackupSpec | null {
+  if (deviceType === 'mikrotik') {
+    return { command: MIKROTIK_BACKUP_CMD, auditLabel: MIKROTIK_BACKUP_CMD, fileExtension: 'rsc' };
+  }
+  if (deviceType === 'huawei') {
+    return {
+      command: HUAWEI_NE_BACKUP_CMD,
+      auditLabel: HUAWEI_NE_BACKUP_CMD,
+      fileExtension: 'cfg',
+    };
+  }
+  return null;
+}
+
 export type RunSshDeviceBackupContext = {
   manual?: boolean;
   userId?: string;
@@ -23,7 +44,8 @@ export type RunSshDeviceBackupContext = {
 export type RunSshDeviceBackupResult = { success: boolean; message: string };
 
 /**
- * Executa backup de configuração (MikroTik: /export) e grava em arquivos/ssh-device-backups.
+ * Executa backup de configuração (MikroTik: /export; Huawei NE/VRP: display current-configuration | no-more)
+ * e grava em arquivos/ssh-device-backups.
  * Com agente túnel: comando roda no agente (SSH até o equipamento na rede local).
  * Sem agente: SSH direto do servidor (pool).
  */
@@ -67,7 +89,8 @@ export async function runSshDeviceBackup(
     return { success: false, message: 'Backup desabilitado para este device.' };
   }
 
-  if (device.device_type !== 'mikrotik') {
+  const backupSpec = sshBackupSpec(device.device_type);
+  if (!backupSpec) {
     logger.warn('Backup SSH ignorado: tipo não suportado', {
       context: 'SshDeviceBackupRunner',
       deviceId,
@@ -77,11 +100,13 @@ export async function runSshDeviceBackup(
     return { success: false, message: 'Backup não suportado para este tipo de equipamento.' };
   }
 
+  const { command: backupCommand, auditLabel, fileExtension } = backupSpec;
+
   const baseDir = resolveArquivosPath('ssh-device-backups');
   await fs.mkdir(baseDir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const safeName = device.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
-  const fileName = `${device.id}_${safeName}_${stamp}.rsc`;
+  const fileName = `${device.id}_${safeName}_${stamp}.${fileExtension}`;
   const filePath = path.join(baseDir, fileName);
 
   const viaAgent = Boolean(device.agent_id);
@@ -113,7 +138,7 @@ export async function runSshDeviceBackup(
           userId: auditUserId,
           deviceId: device.id,
           deviceName: device.name,
-          command: '/export',
+          command: auditLabel,
           success: false,
           errorMessage: msg,
           ip: auditIp,
@@ -133,7 +158,7 @@ export async function runSshDeviceBackup(
           userId: auditUserId,
           deviceId: device.id,
           deviceName: device.name,
-          command: '/export',
+          command: auditLabel,
           success: false,
           errorMessage: msg,
           ip: auditIp,
@@ -153,7 +178,7 @@ export async function runSshDeviceBackup(
           userId: auditUserId,
           deviceId: device.id,
           deviceName: device.name,
-          command: '/export',
+          command: auditLabel,
           success: false,
           errorMessage: msg,
           ip: auditIp,
@@ -172,7 +197,7 @@ export async function runSshDeviceBackup(
       }
       const useKey = !!privateKey?.length;
 
-      logger.info('Backup SSH: chamando executeSshCommandThroughAgent (/export)', {
+      logger.info('Backup SSH: chamando executeSshCommandThroughAgent', {
         context: 'SshDeviceBackupRunner',
         deviceId,
         agentId: device.agent_id,
@@ -189,9 +214,10 @@ export async function runSshDeviceBackup(
           host: device.host,
           port: device.port,
           username: device.username,
+          deviceType: device.device_type,
           ...(useKey && privateKey ? { privateKey } : { password }),
         },
-        '/export',
+        backupCommand,
         BACKUP_CMD_TIMEOUT_MS
       );
 
@@ -204,7 +230,7 @@ export async function runSshDeviceBackup(
       });
 
       if (!via.success) {
-        const msg = via.error ?? 'Falha ao executar /export via agente';
+        const msg = via.error ?? `Falha ao executar backup via agente (${auditLabel})`;
         logger.error('Backup SSH via agente falhou', {
           context: 'SshDeviceBackupRunner',
           deviceId,
@@ -216,7 +242,7 @@ export async function runSshDeviceBackup(
           userId: auditUserId,
           deviceId: device.id,
           deviceName: device.name,
-          command: '/export',
+          command: auditLabel,
           success: false,
           errorMessage: msg,
           ip: auditIp,
@@ -235,7 +261,7 @@ export async function runSshDeviceBackup(
       });
       usedPool = true;
       const conn = await sshPool.getDeviceConnection(device);
-      output = await executeCommand(conn, '/export', device.id, { timeoutMs: BACKUP_CMD_TIMEOUT_MS });
+      output = await executeCommand(conn, backupCommand, device.id, { timeoutMs: BACKUP_CMD_TIMEOUT_MS });
     }
 
     await fs.writeFile(filePath, output, 'utf8');
@@ -257,7 +283,7 @@ export async function runSshDeviceBackup(
       userId: auditUserId,
       deviceId: device.id,
       deviceName: device.name,
-      command: '/export',
+      command: auditLabel,
       output: output.slice(0, 500),
       success: true,
       ip: auditIp,
@@ -282,7 +308,7 @@ export async function runSshDeviceBackup(
       userId: auditUserId,
       deviceId: device.id,
       deviceName: device.name,
-      command: '/export',
+      command: auditLabel,
       success: false,
       errorMessage: msg,
       ip: auditIp,

@@ -301,6 +301,8 @@ export function testSshThroughAgent(
     username: string;
     password?: string;
     privateKey?: string;
+    /** mikrotik | huawei | cisco | … — perfil de algoritmos SSH no agente */
+    deviceType?: string | null;
   }
 ): Promise<{ success: boolean; latency: number | null; errorRaw: string | null }> {
   const testId = randomUUID();
@@ -348,6 +350,9 @@ export function testSshThroughAgent(
       username: params.username,
       password: params.password,
       privateKey: params.privateKey,
+      ...(params.deviceType != null && params.deviceType !== ''
+        ? { deviceType: params.deviceType }
+        : {}),
     });
 
     if (!sent) {
@@ -404,6 +409,7 @@ export function executeSshCommandThroughAgent(
     username: string;
     password?: string;
     privateKey?: string;
+    deviceType?: string | null;
   },
   command: string,
   commandTimeoutMs: number
@@ -463,6 +469,9 @@ export function executeSshCommandThroughAgent(
       privateKey: params.privateKey,
       command,
       timeoutMs: commandTimeoutMs,
+      ...(params.deviceType != null && params.deviceType !== ''
+        ? { deviceType: params.deviceType }
+        : {}),
     });
 
     if (!sent) {

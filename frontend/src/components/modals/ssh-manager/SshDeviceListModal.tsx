@@ -26,7 +26,7 @@ interface SshDeviceListModalProps {
 const DEVICE_TYPE_LABELS: Record<string, string> = {
   mikrotik: 'MikroTik',
   cisco: 'Cisco (em breve)',
-  huawei: 'Huawei (em breve)',
+  huawei: 'Huawei NE (VRP)',
 };
 
 const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
@@ -90,7 +90,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
   }, [deleteMutation, clearSelection, refetch]);
 
   /**
-   * Só regras que o usuário pode ver na tabela (ativo + MikroTik).
+   * Ativo e tipo com backup suportado (MikroTik, Huawei NE).
    * Túnel/agente: o backend recusa com mensagem clara — evita falso "desabilitado" se agent_id/agent vier diferente na lista.
    */
   const canQueueManualBackup = useCallback((d: SshDevice | undefined) => {
@@ -98,7 +98,8 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     const activeFlag = d.is_active as boolean | number;
     const inactive = activeFlag === false || activeFlag === 0;
     if (inactive) return false;
-    return String(d.device_type ?? '').toLowerCase() === 'mikrotik';
+    const t = String(d.device_type ?? '').toLowerCase();
+    return t === 'mikrotik' || t === 'huawei';
   }, []);
 
   const handleAudit = useCallback((device: SshDevice) => {
