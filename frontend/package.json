@@ -58,6 +58,18 @@
     "extends": [
       "react-app",
       "react-app/jest"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "src/utils/sshTerminalLatencyDebug.ts",
+          "src/components/modals/ssh-manager/SshTerminalModal.tsx",
+          "src/components/modals/agent/AgentTerminalModal.tsx"
+        ],
+        "rules": {
+          "no-console": "off"
+        }
+      }
     ]
   },
   "browserslist": {
