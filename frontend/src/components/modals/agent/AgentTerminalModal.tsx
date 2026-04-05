@@ -133,6 +133,11 @@ const AgentTerminalModal: React.FC<AgentTerminalModalProps> = ({
       socketRef.current = socket;
 
       socket.on('connect', () => {
+        if (process.env.REACT_APP_SSH_TERMINAL_LATENCY_DEBUG === 'true') {
+          const tr = (socket as Socket & { io?: { engine?: { transport?: { name?: string } } } }).io
+            ?.engine?.transport?.name;
+          console.info('[Agent terminal] Socket.IO transporte:', tr ?? '(indisponível)');
+        }
         xterm.writeln('\x1b[90mSessão estabelecida, abrindo shell...\x1b[0m');
         const { cols, rows } = fitAddon.proposeDimensions() ?? { cols: 80, rows: 24 };
         socket.emit('terminal:create', {
@@ -176,8 +181,20 @@ const AgentTerminalModal: React.FC<AgentTerminalModalProps> = ({
         xterm.writeln('\r\n\x1b[33m[Desconectado do servidor]\x1b[0m');
       });
 
+      let latencyInputCount = 0;
+      let latencyWindowStart = performance.now();
+
       xterm.onData((data) => {
         if (sessionIdRef.current && statusRef.current === 'connected') {
+          if (process.env.REACT_APP_SSH_TERMINAL_LATENCY_DEBUG === 'true') {
+            latencyInputCount++;
+            const now = performance.now();
+            if (now - latencyWindowStart >= 3000) {
+              console.info('[Agent terminal] eventos onData (~3s):', latencyInputCount);
+              latencyInputCount = 0;
+              latencyWindowStart = now;
+            }
+          }
           socket.emit('terminal:input', { sessionId: sessionIdRef.current, data });
         }
       });

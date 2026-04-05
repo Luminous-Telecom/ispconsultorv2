@@ -4,6 +4,7 @@ import { SshDevice } from '../../../models/ssh-manager/SshDevice';
 import { openDeviceConnection } from '../SshConnectionService';
 import { logSshAudit } from '../SshAuditService';
 import { logger } from '../../../utils/logger';
+import { hrtimeMsSince, isSshTerminalLatencyDebugEnabled } from '../../../utils/terminalLatencyDebug';
 
 interface TerminalSession {
   sessionId: string;
@@ -16,6 +17,8 @@ interface TerminalSession {
   openedAt: Date;
   onOutput: (data: string) => void;
   onClose: (reason: string) => void;
+  /** Marca hrtime após stdin — primeiro chunk de saída mede eco SSH (debug latência). */
+  awaitingEchoSince: bigint | null;
 }
 
 const sessions = new Map<string, TerminalSession>();
@@ -57,17 +60,27 @@ export async function createTerminalSession(
         openedAt: new Date(),
         onOutput,
         onClose,
+        awaitingEchoSince: null,
       };
 
       sessions.set(sessionId, session);
 
-      stream.on('data', (data: Buffer) => {
-        onOutput(data.toString('utf8'));
-      });
+      const emitOut = (data: Buffer) => {
+        const str = data.toString('utf8');
+        if (isSshTerminalLatencyDebugEnabled() && session.awaitingEchoSince !== null) {
+          logger.info('SSH terminal latência: eco após entrada (SSH direto do backend)', {
+            sessionIdShort: sessionId.slice(0, 8),
+            delayMs: hrtimeMsSince(session.awaitingEchoSince),
+            outBytes: Buffer.byteLength(str, 'utf8'),
+          });
+          session.awaitingEchoSince = null;
+        }
+        onOutput(str);
+      };
 
-      stream.stderr?.on('data', (data: Buffer) => {
-        onOutput(data.toString('utf8'));
-      });
+      stream.on('data', emitOut);
+
+      stream.stderr?.on('data', emitOut);
 
       stream.on('close', () => {
         sessions.delete(sessionId);
@@ -122,6 +135,9 @@ export function writeToTerminal(sessionId: string, data: string): void {
     return;
   }
 
+  const dbg = isSshTerminalLatencyDebugEnabled();
+  const tProc = dbg ? process.hrtime.bigint() : 0n;
+
   let buf = commandBuffers.get(sessionId) ?? '';
   buf += data;
 
@@ -152,7 +168,16 @@ export function writeToTerminal(sessionId: string, data: string): void {
     }
   }
 
+  session.awaitingEchoSince = process.hrtime.bigint();
   session.stream.write(data);
+
+  if (dbg) {
+    logger.info('SSH terminal latência: stdin escrito (SSH direto)', {
+      sessionIdShort: sessionId.slice(0, 8),
+      byteLength: Buffer.byteLength(data, 'utf8'),
+      writeToTerminalProcessMs: hrtimeMsSince(tProc),
+    });
+  }
 }
 
 /**

@@ -18,6 +18,13 @@ import {
 import { logSshAudit } from '../services/ssh-manager/SshAuditService';
 import { registrarExecucaoParaSocket } from '../services/sistema/AuditoriaService';
 import { logger } from '../utils/logger';
+import {
+  clearAgentTerminalLatencyPending,
+  hrtimeMsSince,
+  isSshTerminalLatencyDebugEnabled,
+  logAgentTerminalShellDataFromAgent,
+  markAgentTerminalBackendInput,
+} from '../utils/terminalLatencyDebug';
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -113,6 +120,7 @@ export function registerAgentNamespace(io: SocketIOServer): void {
     socket.on('shell:data', ({ sessionId, data }: { sessionId: string; data: string }) => {
       const session = getShellSession(sessionId);
       if (!session) return;
+      logAgentTerminalShellDataFromAgent(sessionId, typeof data === 'string' ? data : '');
       ns.server.of('/agent-terminal').to(session.frontendSocketId).emit('terminal:output', {
         sessionId,
         data,
@@ -122,6 +130,7 @@ export function registerAgentNamespace(io: SocketIOServer): void {
     socket.on('shell:exit', ({ sessionId, code }: { sessionId: string; code: number }) => {
       const session = getShellSession(sessionId);
       if (session) {
+        clearAgentTerminalLatencyPending(sessionId);
         ns.server.of('/agent-terminal').to(session.frontendSocketId).emit('terminal:closed', {
           sessionId,
           reason: `Processo encerrado (código ${code})`,
@@ -251,6 +260,13 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
     const user = (socket as Socket & { data: { user: JwtPayload } }).data.user;
     const userId = String(user.sub ?? 'unknown');
     const ip = getFrontendIp(socket);
+
+    if (isSshTerminalLatencyDebugEnabled()) {
+      logger.info('SSH terminal latência: conexão /agent-terminal', {
+        socketId: socket.id,
+        transport: socket.conn.transport.name,
+      });
+    }
 
     // Frontend quer abrir um terminal no agente (shell local)
     const clampColsRows = (val: number, def: number, isRow: boolean) =>
@@ -418,6 +434,8 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       if (!session) return;
       const str = typeof data === 'string' ? data.slice(0, 65536) : '';
       if (str) {
+        const dbg = isSshTerminalLatencyDebugEnabled();
+        const t0 = dbg ? process.hrtime.bigint() : 0n;
         if (session.isProxy && session.deviceId && session.deviceName) {
           let buf = agentCommandBuffers.get(sessionId) ?? '';
           buf += str;
@@ -447,6 +465,16 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
             }
           }
         }
+        if (dbg) {
+          logger.info('SSH terminal latência: entrada (/agent-terminal), antes de sendToAgent', {
+            sessionIdShort: sessionId.slice(0, 8),
+            byteLength: Buffer.byteLength(str, 'utf8'),
+            isProxy: session.isProxy,
+            transport: socket.conn.transport.name,
+            processMs: hrtimeMsSince(t0),
+          });
+          markAgentTerminalBackendInput(sessionId);
+        }
         sendToAgent(session.agentId, 'shell:write', { sessionId, data: str });
       }
     });
@@ -464,6 +492,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
 
     socket.on('terminal:close', ({ sessionId }: { sessionId: string }) => {
       agentCommandBuffers.delete(sessionId);
+      clearAgentTerminalLatencyPending(sessionId);
       const session = getShellSession(sessionId);
       if (session) {
         const event = session.isProxy ? 'proxy:ssh:close' : 'shell:close';
@@ -539,6 +568,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
     socket.on('disconnect', () => {
       const closeSession = (sessionId: string) => {
         agentCommandBuffers.delete(sessionId);
+        clearAgentTerminalLatencyPending(sessionId);
         const session = getShellSession(sessionId);
         if (session) {
           const event = session.isProxy ? 'proxy:ssh:close' : 'shell:close';

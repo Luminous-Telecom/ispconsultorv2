@@ -12,6 +12,7 @@ import {
 import { logSshAudit } from '../services/ssh-manager/SshAuditService';
 import { registrarExecucaoParaSocket } from '../services/sistema/AuditoriaService';
 import { logger } from '../utils/logger';
+import { isSshTerminalLatencyDebugEnabled } from '../utils/terminalLatencyDebug';
 
 function verifySocketToken(token: string): JwtPayload | null {
   const secret = process.env.JWT_SECRET;
@@ -101,6 +102,13 @@ function registerTerminalNamespace(ns: Namespace): void {
 
     logger.info('SSH terminal: cliente conectado', { socketId: socket.id, userId });
 
+    if (isSshTerminalLatencyDebugEnabled()) {
+      logger.info('SSH terminal latência: conexão /ssh-terminal', {
+        socketId: socket.id,
+        transport: socket.conn.transport.name,
+      });
+    }
+
     socket.on('terminal:create', async ({ deviceId }: { deviceId: string }) => {
       try {
         const device = await SshDevice.findByPk(deviceId);
@@ -151,6 +159,13 @@ function registerTerminalNamespace(ns: Namespace): void {
     });
 
     socket.on('terminal:input', ({ sessionId, data }: { sessionId: string; data: string }) => {
+      if (isSshTerminalLatencyDebugEnabled()) {
+        logger.info('SSH terminal latência: entrada recebida (/ssh-terminal)', {
+          sessionIdShort: sessionId.slice(0, 8),
+          byteLength: Buffer.byteLength(typeof data === 'string' ? data : '', 'utf8'),
+          transport: socket.conn.transport.name,
+        });
+      }
       writeToTerminal(sessionId, data);
     });
 

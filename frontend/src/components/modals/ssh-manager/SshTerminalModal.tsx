@@ -128,6 +128,11 @@ const SshTerminalModal: React.FC<SshTerminalModalProps> = ({ show, onClose, devi
       socketRef.current = socket;
 
       socket.on('connect', () => {
+        if (process.env.REACT_APP_SSH_TERMINAL_LATENCY_DEBUG === 'true') {
+          const tr = (socket as Socket & { io?: { engine?: { transport?: { name?: string } } } }).io
+            ?.engine?.transport?.name;
+          console.info('[SSH terminal] Socket.IO transporte:', tr ?? '(indisponível)');
+        }
         xterm.writeln('\x1b[90mSocket conectado. Abrindo shell...\x1b[0m');
         if (useAgent) {
           // Proxy SSH via agente — backend descriptografa credenciais
@@ -143,7 +148,19 @@ const SshTerminalModal: React.FC<SshTerminalModalProps> = ({ show, onClose, devi
         setStatusBoth('connected');
         xterm.writeln('\x1b[1;32m✓ Sessão iniciada.\x1b[0m\r\n');
 
+        let latencyInputCount = 0;
+        let latencyWindowStart = performance.now();
+
         xterm.onData((data) => {
+          if (process.env.REACT_APP_SSH_TERMINAL_LATENCY_DEBUG === 'true') {
+            latencyInputCount++;
+            const now = performance.now();
+            if (now - latencyWindowStart >= 3000) {
+              console.info('[SSH terminal] eventos onData (~3s):', latencyInputCount);
+              latencyInputCount = 0;
+              latencyWindowStart = now;
+            }
+          }
           socket.emit('terminal:input', { sessionId, data });
         });
 
