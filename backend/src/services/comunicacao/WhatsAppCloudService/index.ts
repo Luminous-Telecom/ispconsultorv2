@@ -156,7 +156,14 @@ export class WhatsAppCloudService {
           // Não falha o envio por erro no registro
         }
 
-        logger.info(`Mensagem de texto enviada via WhatsApp Cloud API para ${telefoneFormatado}`);
+        const metaIds = WhatsAppCloudService.extrairIdsRespostaMeta(responseData);
+        logger.info('Mensagem de texto aceita pela WhatsApp Cloud API (Meta enfileirou; entrega é assíncrona)', {
+          destinatario: telefoneFormatado,
+          wamid: metaIds.wamid,
+          wa_id: metaIds.waId,
+          phone_number_id: servidor.whatsapp_cloud_phone_number_id,
+          http_status: response.status,
+        });
         return true;
       } else {
         const errorMessage = errorObj?.error?.message || `Erro HTTP ${response.status}`;
@@ -503,6 +510,13 @@ export class WhatsAppCloudService {
 
         logDetails += ` | Idioma: ${languageCode}`;
 
+        const metaIds = WhatsAppCloudService.extrairIdsRespostaMeta(responseData);
+        logDetails += metaIds.wamid ? ` | wamid: ${metaIds.wamid}` : ' | wamid: (ausente na resposta)';
+        if (metaIds.waId) {
+          logDetails += ` | wa_id Meta: ${metaIds.waId}`;
+        }
+        logDetails += ` | phone_number_id: ${servidor.whatsapp_cloud_phone_number_id} | http: ${response.status}`;
+
         if (components && components.length > 0) {
           const componentDetails = components.map((comp, index) => {
             if (comp.type === 'body' && comp.parameters) {
@@ -717,7 +731,15 @@ export class WhatsAppCloudService {
           // Não falha o envio por erro no registro
         }
 
-        logger.info(`Documento enviado via WhatsApp Cloud API para ${telefoneFormatado}`);
+        const metaIdsDoc = WhatsAppCloudService.extrairIdsRespostaMeta(responseData);
+        logger.info('Documento aceito pela WhatsApp Cloud API (Meta enfileirou; entrega é assíncrona)', {
+          destinatario: telefoneFormatado,
+          wamid: metaIdsDoc.wamid,
+          wa_id: metaIdsDoc.waId,
+          phone_number_id: servidor.whatsapp_cloud_phone_number_id,
+          arquivo: filename,
+          http_status: response.status,
+        });
         return true;
       } else {
         const errorMessage = `Erro HTTP ${response.status}: ${JSON.stringify(responseData)}`;
@@ -999,6 +1021,20 @@ export class WhatsAppCloudService {
       });
       return null;
     }
+  }
+
+  /**
+   * IDs do POST /messages na Graph API (wamid + wa_id) — úteis para cruzar com Meta Business Suite e webhooks de status.
+   */
+  private static extrairIdsRespostaMeta(responseData: unknown): { wamid?: string; waId?: string } {
+    const data = responseData as {
+      messages?: Array<{ id?: string }>;
+      contacts?: Array<{ wa_id?: string }>;
+    };
+    return {
+      wamid: data?.messages?.[0]?.id,
+      waId: data?.contacts?.[0]?.wa_id,
+    };
   }
 
   /**
