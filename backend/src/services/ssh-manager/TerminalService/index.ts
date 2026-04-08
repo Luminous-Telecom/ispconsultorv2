@@ -1,5 +1,4 @@
 import { Client as SshClient, ClientChannel } from 'ssh2';
-import { randomUUID } from 'crypto';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
 import { openDeviceConnection } from '../SshConnectionService';
 import { logSshAudit } from '../SshAuditService';
@@ -35,11 +34,11 @@ export async function createTerminalSession(
   device: SshDevice,
   userId: string,
   ip: string,
+  sessionId: string,
   onOutput: (data: string) => void,
   onClose: (reason: string) => void
 ): Promise<string> {
   const deviceConn = await openDeviceConnection(device);
-  const sessionId = randomUUID();
 
   return new Promise((resolve, reject) => {
     deviceConn.shell({ term: 'xterm-256color', cols: 80, rows: 24 }, (err, stream) => {

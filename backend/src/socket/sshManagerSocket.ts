@@ -1,4 +1,5 @@
 import type { Server as SocketIOServer, Socket, Namespace } from 'socket.io';
+import { randomUUID } from 'crypto';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { SshDevice } from '../models/ssh-manager/SshDevice';
 import { sshEvents } from '../services/ssh-manager/SshConnectionService';
@@ -122,10 +123,12 @@ function registerTerminalNamespace(ns: Namespace): void {
           return;
         }
 
-        const sessionId = await createTerminalSession(
+        const sessionId = randomUUID();
+        await createTerminalSession(
           device,
           userId,
           ip,
+          sessionId,
           (data) => {
             socket.emit('terminal:output', { sessionId, data });
           },
