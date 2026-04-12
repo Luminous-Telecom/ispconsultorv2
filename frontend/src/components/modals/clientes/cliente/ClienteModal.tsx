@@ -727,7 +727,6 @@ const ClienteModal = ({
               refetchParcelas();
             }}
             onSuccess={() => {
-              setSelectedTituloId(null);
               refetchParcelas();
             }}
           />

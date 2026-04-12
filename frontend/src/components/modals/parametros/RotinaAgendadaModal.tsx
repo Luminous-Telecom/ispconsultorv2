@@ -143,7 +143,6 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
       success('Rotina atualizada com sucesso!');
       queryClient.invalidateQueries({ queryKey: [invalidateKey] });
       queryClient.invalidateQueries({ queryKey: ['saas-rotina', rotinaId] });
-      resetForm();
       onSuccess?.();
     },
     onError: (error: unknown) => {
