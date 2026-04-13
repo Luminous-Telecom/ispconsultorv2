@@ -176,19 +176,22 @@ def _validar_ipv6(s):
         return False
 
 
-# Regex para IPv6 (candidatos: hex e :, pelo menos 2 grupos)
-RE_IPV6_CANDIDATE = re.compile(
-    r'(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|'
-    r'(?:[0-9a-fA-F]{1,4}:){1,7}:|'
-    r'(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|'
-    r'(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|'
-    r'(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|'
-    r'(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|'
-    r'(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|'
-    r'[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|'
-    r':(?::[0-9a-fA-F]{1,4}){1,7}|::'
-)
+# Captura candidatos "inteiros" de IPv6 (sequência contínua de hex + ':').
+# A validação final é feita por _validar_ipv6 (ipaddress), evitando matches parciais.
+RE_IPV6_TOKEN = re.compile(r'(?<![0-9A-Fa-f:])[0-9A-Fa-f:]{2,}(?![0-9A-Fa-f:])')
 RE_IPV4 = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b')
+
+
+def _extrair_ipv6_validos(texto):
+    """Extrai IPv6 completos sem truncar, validando com ipaddress."""
+    encontrados = []
+    for m in RE_IPV6_TOKEN.finditer(texto):
+        token = m.group(0)
+        if ':' not in token:
+            continue
+        if _validar_ipv6(token):
+            encontrados.append(token)
+    return encontrados
 
 
 def extrair_dominios_de_tabelas(page, regex_dominio):
@@ -229,11 +232,9 @@ def extrair_dominios_de_tabelas(page, regex_dominio):
                                 ip = m.group(0)
                                 if _validar_ipv4(ip):
                                     dominios.append(ip)
-                            # IPv6
-                            for m in RE_IPV6_CANDIDATE.finditer(row_text):
-                                ip = m.group(0)
-                                if _validar_ipv6(ip):
-                                    dominios.append(ip)
+                            # IPv6 (token inteiro + validação forte para evitar truncamento)
+                            for ip in _extrair_ipv6_validos(row_text):
+                                dominios.append(ip)
     except Exception:
         pass
     
