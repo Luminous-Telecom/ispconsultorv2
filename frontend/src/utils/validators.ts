@@ -23,33 +23,33 @@ export const isValidIPv4 = (ip: string | null | undefined): boolean => {
 export const isValidIPv6 = (ip: string | null | undefined): boolean => {
   if (!ip || typeof ip !== 'string') return false;
   const s = ip.trim();
-  if (s.length < 2) return false;
-  if (s.startsWith(':') && !s.startsWith('::')) return false;
-  if (s.endsWith(':') && !s.endsWith('::')) return false;
-  const parts = s.split(':');
-  if (parts.length > 8) return false;
-  if (parts.length < 2) return false;
-  const emptyCount = parts.filter((p) => p === '').length;
+  if (!s) return false;
+  if (s.includes(':::')) return false;
+
+  const doubleColonMatches = s.match(/::/g);
+  if ((doubleColonMatches?.length ?? 0) > 1) return false;
+
   const hexGroup = /^[0-9a-fA-F]{1,4}$/;
-  if (emptyCount > 2) return false;
-  if (emptyCount === 2) {
-    if (parts.length !== 3) return false;
-    const nonEmpty = parts.filter((p) => p !== '');
-    if (nonEmpty.length !== 1) return false;
-    return hexGroup.test(nonEmpty[0]);
+
+  if (s.includes('::')) {
+    const [left, right] = s.split('::');
+    const leftParts = left ? left.split(':') : [];
+    const rightParts = right ? right.split(':') : [];
+
+    if (leftParts.some((part) => !hexGroup.test(part))) return false;
+    if (rightParts.some((part) => !hexGroup.test(part))) return false;
+
+    const totalGroups = leftParts.length + rightParts.length;
+    return totalGroups < 8;
   }
-  if (emptyCount === 1) {
-    const nonEmpty = parts.filter((p) => p !== '');
-    if (nonEmpty.length >= 8) return false;
-    for (const p of nonEmpty) {
-      if (!hexGroup.test(p)) return false;
-    }
-    return true;
-  }
+
+  const parts = s.split(':');
   if (parts.length !== 8) return false;
+
   for (const p of parts) {
     if (!hexGroup.test(p)) return false;
   }
+
   return true;
 };
 
