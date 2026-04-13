@@ -207,25 +207,33 @@ def extrair_dominios_de_tabelas(page, regex_dominio):
                     table_data = table.extract()
                     
                     for row in table_data:
-                        if row:
-                            for cell in row:
-                                if cell and isinstance(cell, str):
-                                    # Remove quebras de linha da mesma célula (conteúdo em 2 linhas vira 1)
-                                    texto_limpo = cell.replace(' ', '').replace('\t', '').replace('\n', '')
-                                    # Domínios (exclui IPs para evitar duplicata)
-                                    for d in re.findall(regex_dominio, texto_limpo):
-                                        if not _validar_ipv4(d) and not _validar_ipv6(d):
-                                            dominios.append(d)
-                                    # IPv4 (valida octetos 0-255)
-                                    for m in RE_IPV4.finditer(texto_limpo):
-                                        ip = m.group(0)
-                                        if _validar_ipv4(ip):
-                                            dominios.append(ip)
-                                    # IPv6
-                                    for m in RE_IPV6_CANDIDATE.finditer(texto_limpo):
-                                        ip = m.group(0)
-                                        if _validar_ipv6(ip):
-                                            dominios.append(ip)
+                        if not row:
+                            continue
+
+                        # Alguns PDFs quebram IPv6 em múltiplas células da mesma linha.
+                        # Ex.: "2606:4700:3030::" e "6815:3379" em células separadas.
+                        # Por isso, processamos também a linha inteira concatenada.
+                        row_cells = []
+                        for cell in row:
+                            if cell and isinstance(cell, str):
+                                row_cells.append(cell.replace(' ', '').replace('\t', '').replace('\n', ''))
+
+                        row_text = ''.join(row_cells)
+                        if row_text:
+                            # Domínios (exclui IPs para evitar duplicata)
+                            for d in re.findall(regex_dominio, row_text):
+                                if not _validar_ipv4(d) and not _validar_ipv6(d):
+                                    dominios.append(d)
+                            # IPv4 (valida octetos 0-255)
+                            for m in RE_IPV4.finditer(row_text):
+                                ip = m.group(0)
+                                if _validar_ipv4(ip):
+                                    dominios.append(ip)
+                            # IPv6
+                            for m in RE_IPV6_CANDIDATE.finditer(row_text):
+                                ip = m.group(0)
+                                if _validar_ipv6(ip):
+                                    dominios.append(ip)
     except Exception:
         pass
     
