@@ -335,6 +335,10 @@ export interface TranslationKeys {
   'blockdomi.placeholderOficio': string;
   'blockdomi.analyze': string;
   'blockdomi.register': string;
+  'blockdomi.modoListaBloqueio': string;
+  'blockdomi.modoListaDesbloqueio': string;
+  'blockdomi.registerRemover': string;
+  'blockdomi.removerListaConfirm': string;
   'blockdomi.classifying': string;
   'blockdomi.paste': string;
   'blockdomi.domainsDetected': string;
@@ -1778,6 +1782,10 @@ const translations: Translations = {
     'blockdomi.placeholderOficio': 'ex: Ofício nº 01/2026/ORG/SETOR/SIGLA',
     'blockdomi.analyze': 'Analisar',
     'blockdomi.register': 'Cadastrar',
+    'blockdomi.modoListaBloqueio': 'Bloqueio',
+    'blockdomi.modoListaDesbloqueio': 'Desbloqueio',
+    'blockdomi.registerRemover': 'Remover da lista',
+    'blockdomi.removerListaConfirm': 'Remover do cadastro todos os itens válidos desta lista? Esta ação não pode ser desfeita.',
     'blockdomi.classifying': 'Classificando...',
     'blockdomi.paste': 'Colar',
     'blockdomi.domainsDetected': 'itens detectados',
@@ -3214,6 +3222,10 @@ const translations: Translations = {
     'blockdomi.placeholderOficio': 'e.g. Warrant no. 01/2026/ORG/SECTOR/CODE',
     'blockdomi.analyze': 'Analyze',
     'blockdomi.register': 'Register',
+    'blockdomi.modoListaBloqueio': 'Block',
+    'blockdomi.modoListaDesbloqueio': 'Unblock',
+    'blockdomi.registerRemover': 'Remove from list',
+    'blockdomi.removerListaConfirm': 'Remove all valid items in this list from the registry? This cannot be undone.',
     'blockdomi.classifying': 'Classifying...',
     'blockdomi.paste': 'Paste',
     'blockdomi.domainsDetected': 'items detected',
@@ -4652,6 +4664,10 @@ const translations: Translations = {
     'blockdomi.placeholderOficio': 'ej: Oficio nº 01/2026/ORG/SECTOR/SIGLA',
     'blockdomi.analyze': 'Analizar',
     'blockdomi.register': 'Registrar',
+    'blockdomi.modoListaBloqueio': 'Bloqueo',
+    'blockdomi.modoListaDesbloqueio': 'Desbloqueo',
+    'blockdomi.registerRemover': 'Quitar de la lista',
+    'blockdomi.removerListaConfirm': '¿Eliminar del registro todos los elementos válidos de esta lista? Esta acción no se puede deshacer.',
     'blockdomi.classifying': 'Clasificando...',
     'blockdomi.paste': 'Pegar',
     'blockdomi.domainsDetected': 'elementos detectados',

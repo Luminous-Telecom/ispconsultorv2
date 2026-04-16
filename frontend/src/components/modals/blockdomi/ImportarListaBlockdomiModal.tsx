@@ -128,6 +128,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const [classified, setClassified] = useState<ClassifiedList | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isCadastrando, setIsCadastrando] = useState(false);
+  const [listaModo, setListaModo] = useState<'bloqueio' | 'desbloqueio'>('bloqueio');
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const [pdfExtractProgress, setPdfExtractProgress] = useState<{ current: number; total: number } | null>(null);
@@ -145,6 +146,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         if (ref.current) ref.current.value = '';
       });
       setPdfExtractProgress(null);
+      setListaModo('bloqueio');
       setDataInicioBloqueio((prev) => {
         if (prev === '') {
           const today = new Date();
@@ -322,8 +324,47 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
 
   const handleCadastrar = useCallback(async () => {
     if (!classified || totalValid === 0) return;
+    if (listaModo === 'desbloqueio' && !window.confirm(t('blockdomi.removerListaConfirm'))) {
+      return;
+    }
     setIsCadastrando(true);
     try {
+      if (listaModo === 'desbloqueio') {
+        const result = await BlockdomiService.removerLista({
+          dominios: classified.dominios,
+          ipv4: classified.ipv4,
+          ipv6: classified.ipv6
+        });
+        const parts: string[] = [];
+        if (result.dominios.deleted > 0) parts.push(`Domínios: ${result.dominios.deleted} removido(s)`);
+        if (result.ipv4.deleted > 0) parts.push(`IPv4: ${result.ipv4.deleted} removido(s)`);
+        if (result.ipv6.deleted > 0) parts.push(`IPv6: ${result.ipv6.deleted} removido(s)`);
+        const nf = result.dominios.notFound + result.ipv4.notFound + result.ipv6.notFound;
+        if (nf > 0) parts.push(`${nf} não encontrado(s) no cadastro`);
+        success(parts.length > 0 ? parts.join('. ') + '.' : 'Nenhum item removido.');
+        queryClient.invalidateQueries({ queryKey: ['dominios'] });
+        queryClient.invalidateQueries({ queryKey: ['ipv4'] });
+        queryClient.invalidateQueries({ queryKey: ['ipv6'] });
+        onSuccess?.();
+        setRawText('');
+        setClassified(null);
+        setNomeOficio('');
+        const today = new Date();
+        const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        setDataInicioBloqueio(hojeStr);
+        setDataFimBloqueio('');
+        setLinkOficioAnatel('');
+        setLinkOficioJustica('');
+        setLinkPlanilhaDominios('');
+        setPdfOficioAnatel(null);
+        setPdfOficioJustica(null);
+        setPdfFile(null);
+        [pdfFileInputRef, pdfAnatelInputRef, pdfJusticaInputRef].forEach((ref) => {
+          if (ref.current) ref.current.value = '';
+        });
+        return;
+      }
+
       const nomeOficioVal = nomeOficio.trim() || null;
       const today = new Date();
       const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -394,7 +435,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     } finally {
       setIsCadastrando(false);
     }
-  }, [classified, totalValid, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, pdfOficioAnatel, pdfOficioJustica, pdfFile, success, error, onSuccess, queryClient, t]);
+  }, [classified, totalValid, listaModo, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, pdfOficioAnatel, pdfOficioJustica, pdfFile, success, error, onSuccess, queryClient, t]);
 
   const domainCount = useMemo(() => {
     return parseListItems(rawText).length;
@@ -712,15 +753,35 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
               {t('blockdomi.analyze')}
             </Button>
             {classified && (
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleCadastrar}
-                disabled={totalValid === 0 || isCadastrando}
-              >
-                {t('blockdomi.register')}
-              </Button>
+              <>
+                <div className="btn-group btn-group-sm" role="group" aria-label={t('blockdomi.modoListaBloqueio')}>
+                  <Button
+                    type="button"
+                    variant={listaModo === 'bloqueio' ? 'primary' : 'outline-primary'}
+                    size="sm"
+                    onClick={() => setListaModo('bloqueio')}
+                  >
+                    {t('blockdomi.modoListaBloqueio')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={listaModo === 'desbloqueio' ? 'danger' : 'outline-danger'}
+                    size="sm"
+                    onClick={() => setListaModo('desbloqueio')}
+                  >
+                    {t('blockdomi.modoListaDesbloqueio')}
+                  </Button>
+                </div>
+                <Button
+                  type="button"
+                  variant={listaModo === 'desbloqueio' ? 'danger' : 'primary'}
+                  size="sm"
+                  onClick={handleCadastrar}
+                  disabled={totalValid === 0 || isCadastrando}
+                >
+                  {listaModo === 'desbloqueio' ? t('blockdomi.registerRemover') : t('blockdomi.register')}
+                </Button>
+              </>
             )}
           </div>
 

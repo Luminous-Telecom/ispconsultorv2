@@ -22,6 +22,18 @@ export interface ImportarListaResult {
   ipv6: { created: number; updated: number; skipped: number; errors: string[] };
 }
 
+export interface RemoverListaPayload {
+  dominios: string[];
+  ipv4: string[];
+  ipv6: string[];
+}
+
+export interface RemoverListaResult {
+  dominios: { deleted: number; notFound: number; versao?: string };
+  ipv4: { deleted: number; notFound: number; versao?: string };
+  ipv6: { deleted: number; notFound: number; versao?: string };
+}
+
 export interface GerarVersaoResult {
   id: number;
   numero: string;
@@ -50,6 +62,19 @@ export class BlockdomiService {
       { timeout: 120000 }
     );
     const data = (response as { data?: ImportarListaResult }).data;
+    if (!data) {
+      throw new Error('Resposta inválida do servidor');
+    }
+    return data;
+  }
+
+  static async removerLista(payload: RemoverListaPayload): Promise<RemoverListaResult> {
+    const response = await defaultApiClient.post<RemoverListaResult>(
+      '/blockdomi/remover-lista',
+      payload,
+      { timeout: 120000 }
+    );
+    const data = (response as { data?: RemoverListaResult }).data;
     if (!data) {
       throw new Error('Resposta inválida do servidor');
     }

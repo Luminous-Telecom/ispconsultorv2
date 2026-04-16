@@ -64,6 +64,7 @@ router.post(
   ImportarListaBlockdomiController.uploadOficioPdf
 );
 router.post('/importar-lista', ImportarListaBlockdomiController.importar);
+router.post('/remover-lista', ImportarListaBlockdomiController.removerLista);
 router.post('/gerar-versao', ImportarListaBlockdomiController.gerarVersao);
 
 export default router;

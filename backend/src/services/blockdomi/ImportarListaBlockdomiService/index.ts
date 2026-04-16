@@ -1,3 +1,8 @@
+import { Op } from 'sequelize';
+import { Dominio } from '../../../models/blockdomi/Dominio';
+import { IPv4 } from '../../../models/blockdomi/IPv4';
+import { IPv6 } from '../../../models/blockdomi/IPv6';
+import { sanitizeDominio } from '../../../utils/sanitize';
 import { DominioService } from '../DominioService';
 import { IPv4Service } from '../IPv4Service';
 import { IPv6Service } from '../IPv6Service';
@@ -21,6 +26,18 @@ export interface ImportarListaResult {
   dominios: { created: number; updated: number; skipped: number; errors: string[]; createdIds: number[]; updatedIds: number[] };
   ipv4: { created: number; updated: number; skipped: number; errors: string[]; createdIds: number[]; updatedIds: number[] };
   ipv6: { created: number; updated: number; skipped: number; errors: string[]; createdIds: number[]; updatedIds: number[] };
+}
+
+export interface RemoverListaPayload {
+  dominios: string[];
+  ipv4: string[];
+  ipv6: string[];
+}
+
+export interface RemoverListaResult {
+  dominios: { deleted: number; notFound: number; versao?: string };
+  ipv4: { deleted: number; notFound: number; versao?: string };
+  ipv6: { deleted: number; notFound: number; versao?: string };
 }
 
 /**
@@ -55,5 +72,90 @@ export class ImportarListaBlockdomiService {
       ipv4: ipv4Res,
       ipv6: ipv6Res
     };
+  }
+
+  /**
+   * Remove do cadastro os domínios/IPv4/IPv6 cujo valor coincide com a lista informada.
+   * Gera versão de exclusão por tipo (reutiliza bulkDelete de cada serviço).
+   */
+  static async removerPorLista(payload: RemoverListaPayload): Promise<RemoverListaResult> {
+    const seenDom = new Set<string>();
+    const dominiosUniq: string[] = [];
+    for (const raw of payload.dominios ?? []) {
+      const d = sanitizeDominio(String(raw));
+      if (!d || seenDom.has(d)) continue;
+      seenDom.add(d);
+      dominiosUniq.push(d);
+    }
+
+    const seen4 = new Set<string>();
+    const ipv4Uniq: string[] = [];
+    for (const raw of payload.ipv4 ?? []) {
+      const ip = String(raw).trim();
+      if (!ip || seen4.has(ip)) continue;
+      seen4.add(ip);
+      ipv4Uniq.push(ip);
+    }
+
+    const seen6 = new Set<string>();
+    const ipv6Uniq: string[] = [];
+    for (const raw of payload.ipv6 ?? []) {
+      const ip = String(raw).trim();
+      if (!ip || seen6.has(ip)) continue;
+      seen6.add(ip);
+      ipv6Uniq.push(ip);
+    }
+
+    const empty = { deleted: 0, notFound: 0, versao: undefined as string | undefined };
+
+    const domRes = { ...empty };
+    if (dominiosUniq.length > 0) {
+      const rows = await Dominio.findAll({
+        where: { dominio: { [Op.in]: dominiosUniq } },
+        attributes: ['id', 'dominio']
+      });
+      const encontrados = new Set(rows.map((r) => r.dominio));
+      domRes.notFound = dominiosUniq.filter((d) => !encontrados.has(d)).length;
+      const ids = rows.map((r) => r.id);
+      if (ids.length > 0) {
+        const r = await DominioService.bulkDelete(ids);
+        domRes.deleted = r.deleted;
+        domRes.versao = r.versao;
+      }
+    }
+
+    const ipv4Res = { ...empty };
+    if (ipv4Uniq.length > 0) {
+      const rows = await IPv4.findAll({
+        where: { ip: { [Op.in]: ipv4Uniq } },
+        attributes: ['id', 'ip']
+      });
+      const encontrados = new Set(rows.map((r) => r.ip));
+      ipv4Res.notFound = ipv4Uniq.filter((ip) => !encontrados.has(ip)).length;
+      const ids = rows.map((r) => r.id);
+      if (ids.length > 0) {
+        const r = await IPv4Service.bulkDelete(ids);
+        ipv4Res.deleted = r.deleted;
+        ipv4Res.versao = r.versao;
+      }
+    }
+
+    const ipv6Res = { ...empty };
+    if (ipv6Uniq.length > 0) {
+      const rows = await IPv6.findAll({
+        where: { ip: { [Op.in]: ipv6Uniq } },
+        attributes: ['id', 'ip']
+      });
+      const encontrados = new Set(rows.map((r) => r.ip));
+      ipv6Res.notFound = ipv6Uniq.filter((ip) => !encontrados.has(ip)).length;
+      const ids = rows.map((r) => r.id);
+      if (ids.length > 0) {
+        const r = await IPv6Service.bulkDelete(ids);
+        ipv6Res.deleted = r.deleted;
+        ipv6Res.versao = r.versao;
+      }
+    }
+
+    return { dominios: domRes, ipv4: ipv4Res, ipv6: ipv6Res };
   }
 }

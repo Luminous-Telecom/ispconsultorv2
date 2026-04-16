@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { ImportarListaBlockdomiService } from '../../../services/blockdomi/ImportarListaBlockdomiService';
+import { ImportarListaBlockdomiService, type RemoverListaResult } from '../../../services/blockdomi/ImportarListaBlockdomiService';
 import { VersaoBlockdomiService } from '../../../services/blockdomi/VersaoBlockdomiService';
 import { registrarCriacao, registrarAtualizacao } from '../../../services/sistema/AuditoriaService/index';
 import { sendSuccess, sendError, sendValidationError } from '../../../utils/responseUtils';
@@ -119,6 +119,53 @@ export class ImportarListaBlockdomiController {
       sendError(res, error, 'Erro ao importar lista blockdomi', 500, true, {
         context: 'ImportarListaBlockdomiController',
         action: 'importar',
+        body: req.body
+      });
+    }
+  }
+
+  static async removerLista(req: Request, res: Response): Promise<void> {
+    try {
+      const { dominios = [], ipv4 = [], ipv6 = [] } = req.body;
+      const dominiosArr = Array.isArray(dominios) ? dominios : [];
+      const ipv4Arr = Array.isArray(ipv4) ? ipv4 : [];
+      const ipv6Arr = Array.isArray(ipv6) ? ipv6 : [];
+
+      const total = dominiosArr.length + ipv4Arr.length + ipv6Arr.length;
+      if (total === 0) {
+        sendValidationError(res, 'Informe ao menos um item em dominios, ipv4 ou ipv6.');
+        return;
+      }
+
+      const result: RemoverListaResult = await ImportarListaBlockdomiService.removerPorLista({
+        dominios: dominiosArr.map((d: unknown) => String(d)),
+        ipv4: ipv4Arr.map((d: unknown) => String(d)),
+        ipv6: ipv6Arr.map((d: unknown) => String(d))
+      });
+
+      const parts: string[] = [];
+      if (result.dominios.deleted > 0) {
+        parts.push(`Domínios: ${result.dominios.deleted} removido(s)`);
+      }
+      if (result.ipv4.deleted > 0) {
+        parts.push(`IPv4: ${result.ipv4.deleted} removido(s)`);
+      }
+      if (result.ipv6.deleted > 0) {
+        parts.push(`IPv6: ${result.ipv6.deleted} removido(s)`);
+      }
+      const nf = result.dominios.notFound + result.ipv4.notFound + result.ipv6.notFound;
+      if (nf > 0) {
+        parts.push(`${nf} item(ns) não encontrado(s) no cadastro`);
+      }
+      if (parts.length === 0) {
+        parts.push('Nenhum item foi removido (nada encontrado no cadastro).');
+      }
+
+      sendSuccess(res, result, parts.join('. ') + '.', 200);
+    } catch (error) {
+      sendError(res, error, 'Erro ao remover lista blockdomi', 500, true, {
+        context: 'ImportarListaBlockdomiController',
+        action: 'removerLista',
         body: req.body
       });
     }
