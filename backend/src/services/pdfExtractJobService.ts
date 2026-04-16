@@ -14,6 +14,8 @@ export type PdfExtractJobStatus = 'processing' | 'completed' | 'failed';
 
 export interface PdfExtractJobState {
   status: PdfExtractJobStatus;
+  progress?: { current: number; total: number };
+  progressLog?: Array<{ current: number; total: number }>;
   result?: {
     dominios: string[];
     dominios_bruto?: string[];

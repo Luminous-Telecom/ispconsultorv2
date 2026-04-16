@@ -35,6 +35,13 @@ router.get(
   PdfExtractController.getJobStatus
 );
 
+// Stream de progresso em tempo real (SSE)
+router.get(
+  '/progress/:jobId',
+  authMiddleware,
+  PdfExtractController.streamProgress
+);
+
 // Extração por URL: inicia job assíncrono, retorna jobId
 router.post(
   '/extract-from-url',

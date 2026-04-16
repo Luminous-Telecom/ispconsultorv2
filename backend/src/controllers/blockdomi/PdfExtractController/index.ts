@@ -7,6 +7,39 @@ import { logger } from '../../../utils/logger';
 import { isRedisAvailable } from '../../../config/redis';
 import { setPdfExtractJob, getPdfExtractJob } from '../../../services/pdfExtractJobService';
 
+/** Clientes SSE ativos por jobId (progresso em tempo real). */
+const sseClients = new Map<string, Set<Response>>();
+
+function sseFlush(res: Response): void {
+  (res as unknown as { flush?: () => void }).flush?.();
+}
+
+function sseWrite(res: Response, payload: string): void {
+  try {
+    res.write(payload);
+    sseFlush(res);
+  } catch { /* cliente desconectado */ }
+}
+
+function ssePublish(jobId: string, event: string, data: unknown): void {
+  const clients = sseClients.get(jobId);
+  if (!clients?.size) return;
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const res of clients) {
+    sseWrite(res, payload);
+  }
+}
+
+function sseRegister(jobId: string, res: Response): void {
+  if (!sseClients.has(jobId)) sseClients.set(jobId, new Set());
+  sseClients.get(jobId)!.add(res);
+}
+
+function sseUnregister(jobId: string, res: Response): void {
+  sseClients.get(jobId)?.delete(res);
+  if (sseClients.get(jobId)?.size === 0) sseClients.delete(jobId);
+}
+
 function runPythonScript(scriptPath: string, pdfPath: string, timeoutMs: number): Promise<{ stdout: string; stderr: string; code: number | null }> {
   return new Promise((resolve, reject) => {
     const proc = spawn('python3', [scriptPath, pdfPath]);
@@ -97,10 +130,70 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
 
   let stdout = '';
   let stderr = '';
-  proc.stdout?.on('data', (d: Buffer) => { stdout += d.toString(); });
-  proc.stderr?.on('data', (d: Buffer) => { stderr += d.toString(); });
+  let stdoutBuffer = '';
+  let stderrBuffer = '';
+
+  logger.info('PdfExtract.background: processo Python iniciado', {
+    jobId,
+    pid: proc.pid,
+    scriptPath
+  });
+
+  proc.stdout?.on('data', (d: Buffer) => {
+    const chunk = d.toString();
+    stdout += chunk;
+    stdoutBuffer += chunk;
+    const lines = stdoutBuffer.split('\n');
+    stdoutBuffer = lines.pop() ?? '';
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('{')) continue;
+      logger.info('PdfExtract.background: stdout', { jobId, line: trimmed });
+    }
+  });
+
+  const pageProgressLog: Array<{ current: number; total: number }> = [];
+
+  proc.stderr?.on('data', (d: Buffer) => {
+    const chunk = d.toString();
+    stderr += chunk;
+    stderrBuffer += chunk;
+    const lines = stderrBuffer.split('\n');
+    stderrBuffer = lines.pop() ?? '';
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      logger.info('PdfExtract.background: progresso', { jobId, line: trimmed });
+
+      // Acumula progresso: "processando página X/Y"
+      const m = trimmed.match(/processando p[aá]gina\s+(\d+)\/(\d+)/i);
+      if (m) {
+        const current = parseInt(m[1], 10);
+        const total = parseInt(m[2], 10);
+        pageProgressLog.push({ current, total });
+        // Push imediato via SSE (tempo real)
+        ssePublish(jobId, 'progress', { current, total });
+        // Atualiza Redis para quem fizer polling
+        setPdfExtractJob(jobId, {
+          status: 'processing',
+          progress: { current, total },
+          progressLog: [...pageProgressLog],
+          createdAt: Date.now()
+        });
+      }
+    }
+  });
 
   proc.on('close', (code, signal) => {
+    const stdoutTail = stdoutBuffer.trim();
+    if (stdoutTail && !stdoutTail.startsWith('{')) {
+      logger.info('PdfExtract.background: stdout', { jobId, line: stdoutTail });
+    }
+    const stderrTail = stderrBuffer.trim();
+    if (stderrTail) {
+      logger.info('PdfExtract.background: progresso', { jobId, line: stderrTail });
+    }
+
     const cleanup = (): void => {
       fs.unlink(tempFilePath).catch((err) => {
         logger.error('PdfExtract.background: falha ao remover temp', { jobId, tempFilePath, error: err instanceof Error ? err.message : String(err) });
@@ -108,8 +201,42 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
     };
 
     if (signal || code !== 0) {
-      const errMsg = signal ? `Processo finalizado por signal: ${signal}` : `Python exit code ${code}`;
-      if (stderr?.trim()) logger.warn('PdfExtract.background: Python stderr', { jobId, stderr: stderr.trim() });
+      let errMsg = signal ? `Processo finalizado por signal: ${signal}` : `Python exit code ${code}`;
+      const stderrTrim = stderr?.trim();
+      const stdoutTrim = stdout?.trim();
+      if (stderrTrim) logger.warn('PdfExtract.background: Python stderr', { jobId, stderr: stderrTrim });
+      if (stdoutTrim) logger.warn('PdfExtract.background: Python stdout (exit != 0)', { jobId, stdout: stdoutTrim });
+
+      // Quando o script falha com sys.exit(1), ele ainda pode escrever JSON com "error" no stdout.
+      // Extraímos essa mensagem para retornar um erro útil ao frontend.
+      if (stdoutTrim) {
+        try {
+          const parsed = JSON.parse(stdoutTrim) as { error?: string };
+          if (parsed?.error) errMsg = parsed.error;
+        } catch {
+          const lines = stdoutTrim.split('\n');
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('{')) continue;
+            try {
+              const parsed = JSON.parse(trimmed) as { error?: string };
+              if (parsed?.error) {
+                errMsg = parsed.error;
+                break;
+              }
+            } catch {
+              continue;
+            }
+          }
+        }
+      }
+      if (errMsg.startsWith('Python exit code') && stderrTrim) {
+        // Fallback final: usa a última linha útil do stderr.
+        const lastErrLine = stderrTrim.split('\n').map((l) => l.trim()).filter(Boolean).pop();
+        if (lastErrLine) errMsg = lastErrLine;
+      }
+
+      ssePublish(jobId, 'failed', { error: errMsg });
       setPdfExtractJob(jobId, {
         status: 'failed',
         error: errMsg,
@@ -118,7 +245,31 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
       return;
     }
 
-    type PyResult = { success?: boolean; dominios?: string[]; dominios_bruto?: string[]; total?: number; total_bruto?: number; data_inicio_bloqueio?: string | null; data_fim_bloqueio?: string | null; error?: string };
+    logger.info('PdfExtract.background: processo Python concluído com sucesso', {
+      jobId,
+      code
+    });
+
+    type PyResult = {
+      success?: boolean;
+      // campos legados (versões antigas do script)
+      dominios?: string[];
+      dominios_bruto?: string[];
+      total?: number;
+      total_bruto?: number;
+      // campos atuais do script (versão com colunas específicas)
+      dominios_bloqueados?: string[];
+      novos_dominios?: string[];
+      url_host?: string[];
+      ip_host?: string[];
+      total_dominios_bloqueados?: number;
+      total_novos_dominios?: number;
+      total_url_host?: number;
+      total_ip_host?: number;
+      data_inicio_bloqueio?: string | null;
+      data_fim_bloqueio?: string | null;
+      error?: string;
+    };
     let result: PyResult | null = null;
     try {
       result = JSON.parse(stdout);
@@ -138,22 +289,38 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
     }
 
     if (result && result.success) {
+      // Suporte ao formato atual do script (colunas específicas) e legado (dominios direto)
+      const novos = result.novos_dominios ?? [];
+      const bloqueados = result.dominios_bloqueados ?? [];
+      const urlHost = result.url_host ?? [];
+      const ipHost = result.ip_host ?? [];
+
+      // Combinação de todos os itens extraídos (sem duplicatas), mantendo ordem: novos → url_host → ip_host → já bloqueados
+      const todosDedup = [...new Set([...novos, ...urlHost, ...ipHost, ...bloqueados])];
+
+      const dominios = result.dominios ?? todosDedup;
+      const dominiosBruto = result.dominios_bruto ?? todosDedup;
+
+      const jobResult = {
+        dominios,
+        dominios_bruto: dominiosBruto,
+        total: result.total ?? dominios.length,
+        total_bruto: result.total_bruto ?? dominiosBruto.length,
+        data_inicio_bloqueio: result.data_inicio_bloqueio ?? undefined,
+        data_fim_bloqueio: result.data_fim_bloqueio ?? undefined
+      };
+      ssePublish(jobId, 'completed', { result: jobResult });
       setPdfExtractJob(jobId, {
         status: 'completed',
-        result: {
-          dominios: result.dominios ?? [],
-          dominios_bruto: result.dominios_bruto ?? result.dominios,
-          total: result.total ?? 0,
-          total_bruto: result.total_bruto ?? result.total,
-          data_inicio_bloqueio: result.data_inicio_bloqueio ?? undefined,
-          data_fim_bloqueio: result.data_fim_bloqueio ?? undefined
-        },
+        result: jobResult,
         createdAt: Date.now()
       }).then(cleanup);
     } else {
+      const errMsg = result?.error ?? 'Erro ao extrair domínios';
+      ssePublish(jobId, 'failed', { error: errMsg });
       setPdfExtractJob(jobId, {
         status: 'failed',
-        error: result?.error ?? 'Erro ao extrair domínios',
+        error: errMsg,
         createdAt: Date.now()
       }).then(cleanup);
     }
@@ -253,12 +420,78 @@ class PdfExtractController {
       return;
     }
 
-    const payload: { status: string; result?: unknown; error?: string } = {
+    const payload: { status: string; progress?: { current: number; total: number }; progressLog?: Array<{ current: number; total: number }>; result?: unknown; error?: string } = {
       status: state.status
     };
+    if (state.status === 'processing') {
+      if (state.progress) payload.progress = state.progress;
+      if (state.progressLog?.length) payload.progressLog = state.progressLog;
+    }
     if (state.status === 'completed' && state.result) payload.result = state.result;
     if (state.status === 'failed' && state.error) payload.error = state.error;
     sendSuccess(res, payload);
+  }
+
+  /**
+   * SSE: stream de progresso em tempo real do job de extração.
+   * GET /api/pdf-extract/progress/:jobId
+   *
+   * Emite eventos SSE:
+   *   event: progress  data: { current, total }
+   *   event: completed data: { result }
+   *   event: failed    data: { error }
+   *
+   * Ao conectar, reenvia o histórico já acumulado no Redis e depois mantém
+   * a conexão aberta para receber eventos futuros via ssePublish().
+   */
+  async streamProgress(req: Request, res: Response): Promise<void> {
+    const jobId = (req.params.jobId as string)?.trim();
+    if (!jobId) {
+      res.status(400).end('jobId obrigatório');
+      return;
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Nginx: desabilita buffer
+    res.flushHeaders();
+
+    // Ping inicial para abrir o tubo imediatamente (força flush no cliente)
+    sseWrite(res, ': connected\n\n');
+
+    // Reenvia histórico acumulado (para reconexões ou clientes que chegaram tarde)
+    const state = await getPdfExtractJob(jobId);
+    if (state) {
+      if (state.progressLog?.length) {
+        for (const p of state.progressLog) {
+          sseWrite(res, `event: progress\ndata: ${JSON.stringify(p)}\n\n`);
+        }
+      }
+      if (state.status === 'completed' && state.result) {
+        sseWrite(res, `event: completed\ndata: ${JSON.stringify({ result: state.result })}\n\n`);
+        res.end();
+        return;
+      }
+      if (state.status === 'failed') {
+        sseWrite(res, `event: failed\ndata: ${JSON.stringify({ error: state.error })}\n\n`);
+        res.end();
+        return;
+      }
+    }
+
+    // Registra cliente para receber eventos futuros
+    sseRegister(jobId, res);
+
+    // Keep-alive a cada 15s para evitar timeout de proxy
+    const keepAlive = setInterval(() => {
+      sseWrite(res, ': keep-alive\n\n');
+    }, 15000);
+
+    req.on('close', () => {
+      clearInterval(keepAlive);
+      sseUnregister(jobId, res);
+    });
   }
 
   /**

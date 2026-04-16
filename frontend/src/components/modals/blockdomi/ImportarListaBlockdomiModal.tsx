@@ -4,7 +4,7 @@ import DraggableModal from 'components/common/DraggableModal';
 import { Button } from 'components/ui';
 import { isValidIPv4, isValidIPv6 } from 'utils/validators';
 import { sanitizeDominio } from 'utils/stringUtils';
-import PdfExtractService from 'services/pdfExtract';
+import PdfExtractService, { type PdfExtractPollProgress } from 'services/pdfExtract';
 import { DominioService } from 'services/dominioService';
 import { IPv4Service } from 'services/ipv4Service';
 import { IPv6Service } from 'services/ipv6Service';
@@ -12,9 +12,6 @@ import { BlockdomiService } from 'services/blockdomiService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useI18n } from 'contexts/I18nContext';
 import { useLoading } from 'contexts/LoadingContext';
-import DominiosExtraidosVisualizacaoModal, {
-  type DominiosExtraidosVisualizacaoMetadata
-} from 'components/modals/blockdomi/DominiosExtraidosVisualizacaoModal';
 
 export interface ClassifiedList {
   dominios: string[];
@@ -133,13 +130,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const [isCadastrando, setIsCadastrando] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isExtractingPdf, setIsExtractingPdf] = useState(false);
+  const [pdfExtractProgress, setPdfExtractProgress] = useState<{ current: number; total: number } | null>(null);
   const pdfFileInputRef = useRef<HTMLInputElement>(null);
-  const [visualizacaoExtrados, setVisualizacaoExtrados] = useState<{
-    show: boolean;
-    dominios: string[];
-    listaFiltrada: string[];
-    metadata: DominiosExtraidosVisualizacaoMetadata;
-  }>({ show: false, dominios: [], listaFiltrada: [], metadata: {} });
 
   const prevShowRef = useRef(false);
   useEffect(() => {
@@ -152,7 +144,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       [pdfFileInputRef, pdfAnatelInputRef, pdfJusticaInputRef].forEach((ref) => {
         if (ref.current) ref.current.value = '';
       });
-      setVisualizacaoExtrados({ show: false, dominios: [], listaFiltrada: [], metadata: {} });
+      setPdfExtractProgress(null);
       setDataInicioBloqueio((prev) => {
         if (prev === '') {
           const today = new Date();
@@ -166,6 +158,14 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     }
     prevShowRef.current = !!show;
   }, [show, pdfUrlToExtract]);
+
+  const handlePdfPollProgress = useCallback((p: PdfExtractPollProgress) => {
+    if (p.status === 'processing' && p.progress) {
+      setPdfExtractProgress(p.progress);
+    } else if (p.status === 'completed') {
+      setPdfExtractProgress((prev) => prev ? { current: prev.total, total: prev.total } : prev);
+    }
+  }, []);
 
   const fetchExisting = useCallback(async () => {
     const fetchAll = async <T,>(
@@ -212,75 +212,72 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   }, [rawText, fetchExisting, error]);
 
   const handleExtractFromPdf = useCallback(async () => {
-    if (pdfFile) {
-      setIsExtractingPdf(true);
-      setExtractionLoading(true);
-      await new Promise((r) => setTimeout(r, 0));
-      try {
-        const result = await PdfExtractService.extractFromPdf(pdfFile);
-
-        if (result.success && result.data) {
-          const listBruto = result.data.dominios_bruto ?? result.data.dominios;
-          const listFiltrada = result.data.dominios ?? [];
-          const dataInicio = result.data.data_inicio_bloqueio ?? dataInicioBloqueio;
-          const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
-          if (dataInicio) setDataInicioBloqueio(dataInicio);
-          if (dataFim) setDataFimBloqueio(dataFim);
-
-          let linkAnatel = linkOficioAnatel.trim() || undefined;
-          let linkJustica = linkOficioJustica.trim() || undefined;
-          let linkPlanilha = linkPlanilhaDominios.trim() || undefined;
-
-          try {
-            if (pdfOficioAnatel) {
-              const { url } = await BlockdomiService.uploadOficioPdf(pdfOficioAnatel);
-              linkAnatel = url;
-            }
-            if (pdfOficioJustica) {
-              const { url } = await BlockdomiService.uploadOficioPdf(pdfOficioJustica);
-              linkJustica = url;
-            }
-            const { url } = await BlockdomiService.uploadOficioPdf(pdfFile);
-            linkPlanilha = url;
-          } catch (uploadErr) {
-            error((uploadErr as Error)?.message ?? 'Erro ao enviar PDF. Links não serão salvos nos cadastros.');
-          }
-
-          setVisualizacaoExtrados(({
-            show: true,
-            dominios: listBruto,
-            listaFiltrada: listFiltrada,
-            metadata: {
-              nomeOficio,
-              dataInicioBloqueio: dataInicio,
-              dataFimBloqueio: dataFim,
-              linkOficioAnatel: linkAnatel,
-              linkOficioJustica: linkJustica,
-              linkPlanilhaDominios: linkPlanilha
-            }
-          }));
-          setRawText(listBruto.join('\n'));
-          setClassified(null);
-          success(`${result.data.total_bruto ?? result.data.total} itens extraídos. Abrindo visualização.`);
-        } else {
-          error(t('blockdomi.pdfExtractError'));
-        }
-        setPdfFile(null);
-        setPdfOficioAnatel(null);
-        setPdfOficioJustica(null);
-        if (pdfFileInputRef.current) pdfFileInputRef.current.value = '';
-        if (pdfAnatelInputRef.current) pdfAnatelInputRef.current.value = '';
-        if (pdfJusticaInputRef.current) pdfJusticaInputRef.current.value = '';
-      } catch (e) {
-        error((e as Error)?.message ?? 'Erro ao extrair PDF.');
-      } finally {
-        setIsExtractingPdf(false);
-        setExtractionLoading(false);
-      }
+    if (!pdfFile) {
+      error(t('blockdomi.importFromPdfIntro'));
       return;
     }
-    error(t('blockdomi.importFromPdfIntro'));
-  }, [pdfFile, pdfOficioAnatel, pdfOficioJustica, success, error, t, setExtractionLoading, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios]);
+
+    // Captura os arquivos antes de limpá-los, para upload posterior
+    const filesToUpload = { main: pdfFile, anatel: pdfOficioAnatel, justica: pdfOficioJustica };
+
+    setIsExtractingPdf(true);
+    setPdfExtractProgress(null);
+    setExtractionLoading(true);
+    await new Promise((r) => setTimeout(r, 0));
+
+    let extractionOk = false;
+
+    try {
+      const result = await PdfExtractService.extractFromPdf(pdfFile, {
+        onPollProgress: handlePdfPollProgress
+      });
+
+      if (result.success && result.data) {
+        extractionOk = true;
+        const listBruto = result.data.dominios_bruto ?? result.data.dominios;
+        const dataInicio = result.data.data_inicio_bloqueio ?? dataInicioBloqueio;
+        const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
+        if (dataInicio) setDataInicioBloqueio(dataInicio);
+        if (dataFim) setDataFimBloqueio(dataFim);
+        setRawText(listBruto.join('\n'));
+        setClassified(null);
+        success(`${result.data.total_bruto ?? result.data.total} itens extraídos.`);
+      } else {
+        error(t('blockdomi.pdfExtractError'));
+      }
+      setPdfFile(null);
+      setPdfOficioAnatel(null);
+      setPdfOficioJustica(null);
+      if (pdfFileInputRef.current) pdfFileInputRef.current.value = '';
+      if (pdfAnatelInputRef.current) pdfAnatelInputRef.current.value = '';
+      if (pdfJusticaInputRef.current) pdfJusticaInputRef.current.value = '';
+    } catch (e) {
+      const msg = (e as Error)?.message ?? 'Erro ao extrair PDF.';
+      error(msg);
+    } finally {
+      // Libera o loading imediatamente após a extração — uploads não bloqueiam a UI
+      setIsExtractingPdf(false);
+      setExtractionLoading(false);
+    }
+
+    // Upload dos PDFs em segundo plano: popula os campos de link para handleCadastrar
+    if (extractionOk) {
+      try {
+        if (filesToUpload.anatel) {
+          const { url } = await BlockdomiService.uploadOficioPdf(filesToUpload.anatel);
+          setLinkOficioAnatel(url);
+        }
+        if (filesToUpload.justica) {
+          const { url } = await BlockdomiService.uploadOficioPdf(filesToUpload.justica);
+          setLinkOficioJustica(url);
+        }
+        const { url } = await BlockdomiService.uploadOficioPdf(filesToUpload.main);
+        setLinkPlanilhaDominios(url);
+      } catch (uploadErr) {
+        error((uploadErr as Error)?.message ?? 'Erro ao enviar PDF. Links não serão salvos nos cadastros.');
+      }
+    }
+  }, [pdfFile, pdfOficioAnatel, pdfOficioJustica, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress]);
 
   const handleExtractFromPdfUrl = useCallback(async () => {
     const url = linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim();
@@ -289,33 +286,22 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       return;
     }
     setIsExtractingPdf(true);
+    setPdfExtractProgress(null);
     setExtractionLoading(true);
     await new Promise((r) => setTimeout(r, 0));
     try {
-      const result = await PdfExtractService.extractFromPdfUrl(url);
+      const result = await PdfExtractService.extractFromPdfUrl(url, {
+        onPollProgress: handlePdfPollProgress
+      });
       if (result.success && result.data) {
         const listBruto = result.data.dominios_bruto ?? result.data.dominios;
-        const listFiltrada = result.data.dominios ?? [];
         const dataInicio = result.data.data_inicio_bloqueio ?? dataInicioBloqueio;
         const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
         if (dataInicio) setDataInicioBloqueio(dataInicio);
         if (dataFim) setDataFimBloqueio(dataFim);
-        setVisualizacaoExtrados(({
-          show: true,
-          dominios: listBruto,
-          listaFiltrada: listFiltrada,
-          metadata: {
-            nomeOficio,
-            dataInicioBloqueio: dataInicio,
-            dataFimBloqueio: dataFim,
-            linkOficioAnatel: linkOficioAnatel,
-            linkOficioJustica: linkOficioJustica,
-            linkPlanilhaDominios: linkPlanilhaDominios.trim() || undefined
-          }
-        }));
         setRawText(listBruto.join('\n'));
         setClassified(null);
-        success(`${result.data.total_bruto ?? result.data.total} itens extraídos. Abrindo visualização.`);
+        success(`${result.data.total_bruto ?? result.data.total} itens extraídos.`);
       } else {
         error(t('blockdomi.pdfExtractError'));
       }
@@ -325,7 +311,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setIsExtractingPdf(false);
       setExtractionLoading(false);
     }
-  }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t, setExtractionLoading, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica]);
+  }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress]);
 
   const hasPdfUrl = Boolean(linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim());
 
@@ -637,6 +623,28 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
               {hasPdfUrl && (
                 <p className="text-muted small mt-1 mb-0">{t('blockdomi.extractFromPlanilhaUrlHelp')}</p>
               )}
+              {(isExtractingPdf || pdfExtractProgress) && (
+                <div className="mt-2">
+                  <div className="d-flex align-items-center justify-content-between mb-1">
+                    <span className="small text-muted">
+                      {isExtractingPdf ? t('blockdomi.extractingPdf') : t('blockdomi.pdfExtractSuccess')}
+                    </span>
+                    {pdfExtractProgress && (
+                      <span className="small text-muted">
+                        {pdfExtractProgress.current}/{pdfExtractProgress.total} páginas
+                      </span>
+                    )}
+                  </div>
+                  {pdfExtractProgress && (
+                    <div className="progress" style={{ height: 4 }}>
+                      <div
+                        className="progress-bar progress-bar-striped progress-bar-animated"
+                        style={{ width: `${Math.round((pdfExtractProgress.current / pdfExtractProgress.total) * 100)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -879,64 +887,19 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       </div>
   );
 
-  const handleCloseVisualizacaoExtrados = useCallback(() => {
-    setVisualizacaoExtrados({ show: false, dominios: [], listaFiltrada: [], metadata: {} });
-    setRawText('');
-    setClassified(null);
-  }, []);
-
-  const handleCadastrarSuccessExtrados = useCallback(() => {
-    const today = new Date();
-    const hojeStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    setRawText('');
-    setClassified(null);
-    setNomeOficio('');
-    setDataInicioBloqueio(hojeStr);
-    setDataFimBloqueio('');
-    setLinkOficioAnatel('');
-    setLinkOficioJustica('');
-    setLinkPlanilhaDominios('');
-    setPdfOficioAnatel(null);
-    setPdfOficioJustica(null);
-    setPdfFile(null);
-    [pdfFileInputRef, pdfAnatelInputRef, pdfJusticaInputRef].forEach((ref) => {
-      if (ref.current) ref.current.value = '';
-    });
-  }, []);
-
-  const visualizacaoModal = (
-    <DominiosExtraidosVisualizacaoModal
-      show={visualizacaoExtrados.show}
-      onClose={handleCloseVisualizacaoExtrados}
-      onSuccess={onSuccess}
-      onCadastrarSuccess={handleCadastrarSuccessExtrados}
-      dominiosExtraidos={visualizacaoExtrados.dominios}
-      listaFiltrada={visualizacaoExtrados.listaFiltrada}
-      metadata={visualizacaoExtrados.metadata}
-    />
-  );
-
   if (skipWrapper) {
-    return (
-      <>
-        {content}
-        {visualizacaoModal}
-      </>
-    );
+    return <>{content}</>;
   }
 
   return (
-    <>
-      <DraggableModal
-        show={show}
-        onClose={onClose}
-        title={t('blockdomi.titleImport')}
-        size="xl"
-      >
-        {content}
-      </DraggableModal>
-      {visualizacaoModal}
-    </>
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title={t('blockdomi.titleImport')}
+      size="xl"
+    >
+      {content}
+    </DraggableModal>
   );
 };
 

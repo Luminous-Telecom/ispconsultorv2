@@ -357,7 +357,7 @@ export interface TranslationKeys {
   'blockdomi.pdfUrlPlaceholder': string;
   'blockdomi.pdfExtractSuccess': string;
   'blockdomi.pdfExtractError': string;
-  'blockdomi.titleVisualizacaoExtrados': string;
+  'blockdomi.pdfExtractLogTitle': string;
   'blockdomi.raw': string;
   'blockdomi.filtered': string;
   'blockdomi.valid': string;
@@ -1800,7 +1800,7 @@ const translations: Translations = {
     'blockdomi.pdfUrlPlaceholder': 'https://...',
     'blockdomi.pdfExtractSuccess': 'Domínios extraídos do PDF. Clique em Analisar.',
     'blockdomi.pdfExtractError': 'Nenhum domínio ou IP encontrado no PDF.',
-    'blockdomi.titleVisualizacaoExtrados': 'Domínios extraídos - Visualização',
+    'blockdomi.pdfExtractLogTitle': 'Log do processamento (servidor)',
     'blockdomi.raw': 'Bruto',
     'blockdomi.filtered': 'Filtrados',
     'blockdomi.valid': 'Válidos',
@@ -3236,7 +3236,7 @@ const translations: Translations = {
     'blockdomi.pdfUrlPlaceholder': 'https://...',
     'blockdomi.pdfExtractSuccess': 'Domains extracted from PDF. Click Analyze.',
     'blockdomi.pdfExtractError': 'No domains or IPs found in PDF.',
-    'blockdomi.titleVisualizacaoExtrados': 'Extracted domains - View',
+    'blockdomi.pdfExtractLogTitle': 'Processing log (server)',
     'blockdomi.raw': 'Raw',
     'blockdomi.filtered': 'Filtered',
     'blockdomi.valid': 'Valid',
@@ -4674,7 +4674,7 @@ const translations: Translations = {
     'blockdomi.pdfUrlPlaceholder': 'https://...',
     'blockdomi.pdfExtractSuccess': 'Dominios extraídos del PDF. Haga clic en Analizar.',
     'blockdomi.pdfExtractError': 'No se encontraron dominios ni IPs en el PDF.',
-    'blockdomi.titleVisualizacaoExtrados': 'Dominios extraídos - Visualización',
+    'blockdomi.pdfExtractLogTitle': 'Registro de procesamiento (servidor)',
     'blockdomi.raw': 'Bruto',
     'blockdomi.filtered': 'Filtrados',
     'blockdomi.valid': 'Válidos',
