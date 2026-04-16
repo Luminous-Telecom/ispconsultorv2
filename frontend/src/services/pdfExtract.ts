@@ -1,4 +1,5 @@
-import { apiService, getAuthToken } from './api';
+import { apiService } from './api';
+import { getSocketToken } from './core';
 
 export interface PdfExtractResponse {
   success: boolean;
@@ -114,7 +115,9 @@ async function streamJobProgress(
   jobId: string,
   onProgress?: (p: PdfExtractPollProgress) => void
 ): Promise<PdfExtractResponse['data']> {
-  const token = getAuthToken();
+  // Auth igual ao ApiClient: cookie HttpOnly (credentials) + JWT em memória só para Socket/native.
+  // NUNCA usar getAuthToken() no header: ele é a flag "1" da sessão, não o JWT — gerava Bearer 1 e 401 no backend.
+  const socketToken = getSocketToken();
   const baseUrl = (window as Window & { _API_BASE?: string })._API_BASE ?? '/api';
   const url = `${baseUrl}/pdf-extract/progress/${encodeURIComponent(jobId)}`;
 
@@ -123,8 +126,9 @@ async function streamJobProgress(
 
   try {
     const response = await fetch(url, {
+      credentials: 'include',
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(socketToken ? { Authorization: `Bearer ${socketToken}` } : {}),
         Accept: 'text/event-stream',
       },
       signal: controller.signal,
