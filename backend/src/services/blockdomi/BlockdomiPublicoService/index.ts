@@ -22,6 +22,8 @@ export interface OficioPublico {
   data_inicio_bloqueio: string | null;
   data_fim_bloqueio: string | null;
   versao: string | null;
+  /** Número SEI do ofício Anatel (protocolo), quando cadastrado. */
+  numero_sei_anatel: string | null;
   detalhes?: OficioDetalhes;
 }
 
@@ -54,19 +56,19 @@ export class BlockdomiPublicoService {
     const [dominios, ipv4s, ipv6s] = await Promise.all([
       Dominio.findAll({
         where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id'],
+        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'numero_sei_anatel'],
         include: [{ model: VersaoBlockdomi, as: 'versaoRef', attributes: ['numero'], required: false }],
         raw: false
       }),
       IPv4.findAll({
         where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id'],
+        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'numero_sei_anatel'],
         include: [{ model: VersaoBlockdomi, as: 'versaoRef', attributes: ['numero'], required: false }],
         raw: false
       }),
       IPv6.findAll({
         where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id'],
+        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'numero_sei_anatel'],
         include: [{ model: VersaoBlockdomi, as: 'versaoRef', attributes: ['numero'], required: false }],
         raw: false
       })
@@ -75,15 +77,17 @@ export class BlockdomiPublicoService {
     const seen = new Set<string>();
     const oficios: OficioPublico[] = [];
 
-    const adicionar = (nome: string | null, di: string, df: string, versao: string | null) => {
-      const key = `${nome ?? ''}|${di}|${df}|${versao ?? ''}`;
+    const adicionar = (nome: string | null, di: string, df: string, versao: string | null, numeroSei: string | null) => {
+      const seiKey = (numeroSei ?? '').trim();
+      const key = `${nome ?? ''}|${di}|${df}|${versao ?? ''}|${seiKey}`;
       if (seen.has(key)) return;
       seen.add(key);
       oficios.push({
         nome_oficio: nome,
         data_inicio_bloqueio: di || null,
         data_fim_bloqueio: df || null,
-        versao
+        versao,
+        numero_sei_anatel: seiKey ? seiKey : null
       });
     };
 
@@ -94,6 +98,7 @@ export class BlockdomiPublicoService {
         data_inicio_bloqueio: p.data_inicio_bloqueio,
         data_fim_bloqueio: p.data_fim_bloqueio,
         versao_id: p.versao_id as number | null,
+        numero_sei_anatel: p.numero_sei_anatel as string | null | undefined,
         versaoRef: p.versaoRef as { numero?: string } | undefined
       };
     });
@@ -104,6 +109,7 @@ export class BlockdomiPublicoService {
         data_inicio_bloqueio: p.data_inicio_bloqueio,
         data_fim_bloqueio: p.data_fim_bloqueio,
         versao_id: p.versao_id as number | null,
+        numero_sei_anatel: p.numero_sei_anatel as string | null | undefined,
         versaoRef: p.versaoRef as { numero?: string } | undefined
       };
     });
@@ -114,6 +120,7 @@ export class BlockdomiPublicoService {
         data_inicio_bloqueio: p.data_inicio_bloqueio,
         data_fim_bloqueio: p.data_fim_bloqueio,
         versao_id: p.versao_id as number | null,
+        numero_sei_anatel: p.numero_sei_anatel as string | null | undefined,
         versaoRef: p.versaoRef as { numero?: string } | undefined
       };
     });
@@ -122,21 +129,25 @@ export class BlockdomiPublicoService {
       const di = this.normalizarDataParaChave(r.data_inicio_bloqueio as string | Date | null | undefined);
       const df = this.normalizarDataParaChave(r.data_fim_bloqueio as string | Date | null | undefined);
       const versao = r.versaoRef?.numero ?? versaoIdParaNumero.get(r.versao_id) ?? null;
-      adicionar(r.nome_oficio, di, df, versao);
+      const seiRaw = r.numero_sei_anatel;
+      const sei = seiRaw != null && String(seiRaw).trim() !== '' ? String(seiRaw).trim() : null;
+      adicionar(r.nome_oficio, di, df, versao, sei);
     }
 
     oficios.sort((a, b) => {
       const da = a.data_inicio_bloqueio || '';
       const db = b.data_inicio_bloqueio || '';
       if (da !== db) return db.localeCompare(da);
-      return (a.nome_oficio || '').localeCompare(b.nome_oficio || '');
+      const nomeCmp = (a.nome_oficio || '').localeCompare(b.nome_oficio || '');
+      if (nomeCmp !== 0) return nomeCmp;
+      return (a.numero_sei_anatel || '').localeCompare(b.numero_sei_anatel || '');
     });
 
     const versaoAtual = await this.getVersaoAtual();
 
     const detalhesPorOficio = await this.buscarDetalhesPorOficio();
     for (const o of oficios) {
-      const key = `${o.nome_oficio ?? ''}|${this.normalizarDataParaChave(o.data_inicio_bloqueio)}|${this.normalizarDataParaChave(o.data_fim_bloqueio)}|${o.versao ?? ''}`;
+      const key = `${o.nome_oficio ?? ''}|${this.normalizarDataParaChave(o.data_inicio_bloqueio)}|${this.normalizarDataParaChave(o.data_fim_bloqueio)}|${o.versao ?? ''}|${(o.numero_sei_anatel ?? '').trim()}`;
       o.detalhes = detalhesPorOficio.get(key) ?? {
         qtd_dominios: 0,
         qtd_urls: 0,
@@ -206,11 +217,18 @@ export class BlockdomiPublicoService {
       versaoIdParaNumero.set(v.id, v.numero ?? null);
     }
 
-    const buildKey = (nome: string | null, dataInicio: string | Date | null, dataFim: string | Date | null, versaoId: number | null) => {
+    const buildKey = (
+      nome: string | null,
+      dataInicio: string | Date | null,
+      dataFim: string | Date | null,
+      versaoId: number | null,
+      numeroSei: string | null | undefined
+    ) => {
       const versao = versaoIdParaNumero.get(versaoId) ?? null;
       const di = this.normalizarDataParaChave(dataInicio);
       const df = this.normalizarDataParaChave(dataFim);
-      return `${nome ?? ''}|${di}|${df}|${versao ?? ''}`;
+      const sei = (numeroSei ?? '').trim();
+      return `${nome ?? ''}|${di}|${df}|${versao ?? ''}|${sei}`;
     };
 
     const mergeCount = (key: string, field: keyof OficioDetalhes, cnt: number) => {
@@ -223,58 +241,86 @@ export class BlockdomiPublicoService {
     };
 
     const [rowsDominios, rowsUrls, rowsIpv4, rowsIpv6] = await Promise.all([
-      sequelize.query<{ nome_oficio: string | null; di: string | null; df: string | null; versao_id: number | null; cnt: string }>(
+      sequelize.query<{
+        nome_oficio: string | null;
+        di: string | null;
+        df: string | null;
+        versao_id: number | null;
+        numero_sei_anatel: string | null;
+        cnt: string;
+      }>(
         `SELECT nome_oficio,
          DATE_FORMAT(data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(data_fim_bloqueio, '%Y-%m-%d') as df,
-         versao_id, COUNT(*) as cnt
+         versao_id, numero_sei_anatel, COUNT(*) as cnt
          FROM adm_dominios WHERE ativo = true AND dominio NOT LIKE '%/%'
-         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id`,
+         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id, numero_sei_anatel`,
         { type: QueryTypes.SELECT }
       ),
-      sequelize.query<{ nome_oficio: string | null; di: string | null; df: string | null; versao_id: number | null; cnt: string }>(
+      sequelize.query<{
+        nome_oficio: string | null;
+        di: string | null;
+        df: string | null;
+        versao_id: number | null;
+        numero_sei_anatel: string | null;
+        cnt: string;
+      }>(
         `SELECT nome_oficio,
          DATE_FORMAT(data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(data_fim_bloqueio, '%Y-%m-%d') as df,
-         versao_id, COUNT(*) as cnt
+         versao_id, numero_sei_anatel, COUNT(*) as cnt
          FROM adm_dominios WHERE ativo = true AND dominio LIKE '%/%'
-         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id`,
+         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id, numero_sei_anatel`,
         { type: QueryTypes.SELECT }
       ),
-      sequelize.query<{ nome_oficio: string | null; di: string | null; df: string | null; versao_id: number | null; cnt: string }>(
+      sequelize.query<{
+        nome_oficio: string | null;
+        di: string | null;
+        df: string | null;
+        versao_id: number | null;
+        numero_sei_anatel: string | null;
+        cnt: string;
+      }>(
         `SELECT nome_oficio,
          DATE_FORMAT(data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(data_fim_bloqueio, '%Y-%m-%d') as df,
-         versao_id, COUNT(*) as cnt
+         versao_id, numero_sei_anatel, COUNT(*) as cnt
          FROM adm_ipv4 WHERE ativo = true
-         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id`,
+         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id, numero_sei_anatel`,
         { type: QueryTypes.SELECT }
       ),
-      sequelize.query<{ nome_oficio: string | null; di: string | null; df: string | null; versao_id: number | null; cnt: string }>(
+      sequelize.query<{
+        nome_oficio: string | null;
+        di: string | null;
+        df: string | null;
+        versao_id: number | null;
+        numero_sei_anatel: string | null;
+        cnt: string;
+      }>(
         `SELECT nome_oficio,
          DATE_FORMAT(data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(data_fim_bloqueio, '%Y-%m-%d') as df,
-         versao_id, COUNT(*) as cnt
+         versao_id, numero_sei_anatel, COUNT(*) as cnt
          FROM adm_ipv6 WHERE ativo = true
-         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id`,
+         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id, numero_sei_anatel`,
         { type: QueryTypes.SELECT }
       )
     ]);
 
     for (const r of rowsDominios) {
-      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id);
+      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id, r.numero_sei_anatel);
       mergeCount(key, 'qtd_dominios', parseInt(String(r.cnt), 10) || 0);
     }
     for (const r of rowsUrls) {
-      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id);
+      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id, r.numero_sei_anatel);
       mergeCount(key, 'qtd_urls', parseInt(String(r.cnt), 10) || 0);
     }
     for (const r of rowsIpv4) {
-      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id);
+      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id, r.numero_sei_anatel);
       mergeCount(key, 'qtd_ipv4', parseInt(String(r.cnt), 10) || 0);
     }
     for (const r of rowsIpv6) {
-      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id);
+      const key = buildKey(r.nome_oficio, r.di, r.df, r.versao_id, r.numero_sei_anatel);
       mergeCount(key, 'qtd_ipv6', parseInt(String(r.cnt), 10) || 0);
     }
 

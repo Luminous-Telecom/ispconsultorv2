@@ -8,7 +8,7 @@ import { sendSuccess, sendError } from '../../../utils/responseUtils';
 
 export class BlockdomiPublicoController {
   /**
-   * GET /api/blockdomi-publico - Lista ofícios, datas de bloqueio e versões (sem domínios)
+   * GET /api/blockdomi-publico - Lista ofícios, Nº SEI Anatel, datas de bloqueio e versões (sem domínios)
    */
   static async listar(req: Request, res: Response): Promise<void> {
     try {
