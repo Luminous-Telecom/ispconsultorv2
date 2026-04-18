@@ -36,8 +36,10 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
   } = config || {};
 
   return (req: Request, res: Response, next: NextFunction): void => {
-    // Verificar se a rota deve ser ignorada
-    const shouldSkip = skipRoutes.some(route => req.path.startsWith(route));
+    // Usar pathname completo (originalUrl) para skip: em alguns proxies/mounts req.path pode vir só como "/upload".
+    const pathname = (req.originalUrl || req.url || '').split('?')[0] || req.path || '';
+
+    const shouldSkip = skipRoutes.some(route => pathname.startsWith(route) || req.path.startsWith(route));
     if (shouldSkip) {
       return next();
     }
@@ -83,6 +85,7 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
         logger.warn('Timeout de processamento excedido', {
           maxProcessingTime,
           path: req.path,
+          originalUrl: req.originalUrl,
           method: req.method,
           ip: req.ip || req.socket.remoteAddress,
           activeRequests: activeRequestsCount
