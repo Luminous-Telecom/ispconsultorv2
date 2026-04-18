@@ -388,12 +388,17 @@ jobs:
           COMMIT_MSG="${COMMIT_MSG:-Deploy automático}"
 
           set -e
-          if git rev-parse "${TAG_NAME}" >/dev/null 2>&1; then
-            echo "Tag ${TAG_NAME} já existe localmente — tentando push."
+          # Tag pode já existir no remoto (redeploy ou versão igual à última tag).
+          if git ls-remote origin "refs/tags/${TAG_NAME}" | grep -q .; then
+            echo "::notice::Tag ${TAG_NAME} já existe em origin — não é necessário push."
           else
-            git tag -a "${TAG_NAME}" -m "${COMMIT_MSG}"
+            if git rev-parse "${TAG_NAME}" >/dev/null 2>&1; then
+              echo "::notice::Tag ${TAG_NAME} existe só localmente — enviando ao remoto."
+            else
+              git tag -a "${TAG_NAME}" -m "${COMMIT_MSG}"
+            fi
+            git push origin "${TAG_NAME}"
           fi
-          git push origin "${TAG_NAME}"
 
           BODY_FILE=$(mktemp)
           {
