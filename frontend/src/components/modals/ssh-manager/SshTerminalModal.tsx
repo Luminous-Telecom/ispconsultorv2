@@ -122,7 +122,7 @@ const SshTerminalModal: React.FC<SshTerminalModalProps> = ({ show, onClose, devi
       const socket = io(`${getSocketUrl()}${namespace}`, {
         path: '/socket.io',
         auth: { token },
-        transports: ['polling', 'websocket'],
+        transports: ['websocket', 'polling'],
         reconnection: false,
       });
 

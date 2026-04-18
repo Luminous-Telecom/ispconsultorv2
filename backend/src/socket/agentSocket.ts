@@ -471,32 +471,36 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
         const dbg = isSshTerminalLatencyDebugEnabled();
         const t0 = dbg ? process.hrtime.bigint() : 0n;
         if (session.isProxy && session.deviceId && session.deviceName) {
-          let buf = agentCommandBuffers.get(sessionId) ?? '';
-          buf += str;
-          const lines: string[] = [];
-          const parts = buf.split(/\r\n|\r|\n/);
-          if (parts.length > 1) {
-            for (let i = 0; i < parts.length - 1; i++) {
-              lines.push(parts[i]!);
+          if (/[\r\n]/.test(str)) {
+            let buf = agentCommandBuffers.get(sessionId) ?? '';
+            buf += str;
+            const lines: string[] = [];
+            const parts = buf.split(/\r\n|\r|\n/);
+            if (parts.length > 1) {
+              for (let i = 0; i < parts.length - 1; i++) {
+                lines.push(parts[i]!);
+              }
+              agentCommandBuffers.set(sessionId, parts[parts.length - 1] ?? '');
+            } else {
+              agentCommandBuffers.set(sessionId, buf);
             }
-            agentCommandBuffers.set(sessionId, parts[parts.length - 1] ?? '');
+            const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/[\x00-\x1f\x7f]/g, '').trim();
+            for (const line of lines) {
+              const cmd = stripAnsi(line);
+              if (cmd.length > 0 && cmd.length < 2000) {
+                logSshAudit({
+                  action: 'TERMINAL_COMMAND',
+                  userId,
+                  deviceId: session.deviceId,
+                  deviceName: session.deviceName,
+                  command: cmd,
+                  success: true,
+                  ip,
+                });
+              }
+            }
           } else {
-            agentCommandBuffers.set(sessionId, buf);
-          }
-          const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/[\x00-\x1f\x7f]/g, '').trim();
-          for (const line of lines) {
-            const cmd = stripAnsi(line);
-            if (cmd.length > 0 && cmd.length < 2000) {
-              logSshAudit({
-                action: 'TERMINAL_COMMAND',
-                userId,
-                deviceId: session.deviceId,
-                deviceName: session.deviceName,
-                command: cmd,
-                success: true,
-                ip,
-              });
-            }
+            agentCommandBuffers.set(sessionId, (agentCommandBuffers.get(sessionId) ?? '') + str);
           }
         }
         if (dbg) {

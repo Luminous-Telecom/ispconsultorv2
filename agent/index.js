@@ -368,12 +368,43 @@ console.log(`[backnet-agent] Conectando a ${config.server}...`);
 const socket = io(`${config.server}/backnet-agent`, {
   path: '/socket.io',
   auth: { token: config.token },
-  transports: ['polling', 'websocket'],
+  /** WebSocket primeiro: menos RTT que long-polling em links lentos até o Backnet. */
+  transports: ['websocket', 'polling'],
   reconnection: true,
   reconnectionDelay: 3000,
   reconnectionDelayMax: 30000,
   reconnectionAttempts: Infinity,
 });
+
+/** Agrega stdout/stderr no mesmo tick — menos pacotes Socket.IO em equipamentos que enviam chunks pequenos. */
+const shellOutPending = new Map();
+
+function queueShellData(sessionId, chunk) {
+  if (typeof chunk !== 'string' || chunk.length === 0) return;
+  let o = shellOutPending.get(sessionId);
+  if (!o) {
+    o = { buf: '', scheduled: false };
+    shellOutPending.set(sessionId, o);
+  }
+  o.buf += chunk;
+  if (!o.scheduled) {
+    o.scheduled = true;
+    setImmediate(() => {
+      const p = shellOutPending.get(sessionId);
+      if (!p) return;
+      shellOutPending.delete(sessionId);
+      const data = p.buf;
+      if (data) socket.emit('shell:data', { sessionId, data });
+    });
+  }
+}
+
+function flushShellDataNow(sessionId) {
+  const p = shellOutPending.get(sessionId);
+  if (!p) return;
+  shellOutPending.delete(sessionId);
+  if (p.buf) socket.emit('shell:data', { sessionId, data: p.buf });
+}
 
 /** Socket.IO desliga o backoff após CONNECT_ERROR (ex.: unauthorized) — precisamos agendar connect() manual. */
 const RECONNECT_DELAY_MS = 3000;
@@ -480,6 +511,7 @@ socket.on('disconnect', (reason) => {
     try { ch.end(); } catch { /* ignora */ }
   }
   proxySessions.clear();
+  shellOutPending.clear();
   uploadBuffers.clear();
 
   if (reason === 'io server disconnect') {
@@ -513,11 +545,12 @@ socket.on('shell:open', ({ sessionId, cols, rows }) => {
 
     shell.onData((data) => {
       logFirstShellDataAfterWrite(sessionId, 'shell-local');
-      socket.emit('shell:data', { sessionId, data });
+      queueShellData(sessionId, data);
     });
 
     shell.onExit(({ exitCode }) => {
       clearAgentShellWritePending(sessionId);
+      flushShellDataNow(sessionId);
       console.log(`[backnet-agent] Shell encerrado (${exitCode}) — sessão ${sessionId}`);
       shells.delete(sessionId);
       socket.emit('shell:exit', { sessionId, code: exitCode });
@@ -526,6 +559,7 @@ socket.on('shell:open', ({ sessionId, cols, rows }) => {
     shells.set(sessionId, shell);
   } catch (err) {
     console.error('[backnet-agent] Erro ao abrir shell:', err.message);
+    flushShellDataNow(sessionId);
     socket.emit('shell:exit', { sessionId, code: 1 });
   }
 });
@@ -561,6 +595,7 @@ socket.on('shell:resize', ({ sessionId, cols, rows }) => {
 
 socket.on('shell:close', ({ sessionId }) => {
   clearAgentShellWritePending(sessionId);
+  flushShellDataNow(sessionId);
   const shell = shells.get(sessionId);
   if (shell) {
     try { shell.kill(); } catch { /* ignora */ }
@@ -939,6 +974,7 @@ socket.on(
     conn.shell({ term: 'xterm-256color', cols: c, rows: r }, (err, stream) => {
       if (err) {
         console.error('[backnet-agent] Erro ao abrir shell SSH:', err.message);
+        flushShellDataNow(sessionId);
         socket.emit('shell:exit', { sessionId, code: 1 });
         conn.end();
         return;
@@ -948,16 +984,17 @@ socket.on(
 
       stream.on('data', (data) => {
         logFirstShellDataAfterWrite(sessionId, 'proxy-ssh-stdout');
-        socket.emit('shell:data', { sessionId, data: data.toString('utf8') });
+        queueShellData(sessionId, data.toString('utf8'));
       });
 
       stream.stderr.on('data', (data) => {
         logFirstShellDataAfterWrite(sessionId, 'proxy-ssh-stderr');
-        socket.emit('shell:data', { sessionId, data: data.toString('utf8') });
+        queueShellData(sessionId, data.toString('utf8'));
       });
 
       stream.on('close', () => {
         clearAgentShellWritePending(sessionId);
+        flushShellDataNow(sessionId);
         proxySessions.delete(sessionId);
         socket.emit('shell:exit', { sessionId, code: 0 });
         conn.end();
@@ -967,6 +1004,7 @@ socket.on(
 
   conn.on('error', (err) => {
     clearAgentShellWritePending(sessionId);
+    flushShellDataNow(sessionId);
     console.error('[backnet-agent] Erro SSH:', err.message);
     socket.emit('shell:data', {
       sessionId,
@@ -998,6 +1036,7 @@ socket.on('proxy:ssh:resize', ({ sessionId, cols, rows }) => {
 
 socket.on('proxy:ssh:close', ({ sessionId }) => {
   clearAgentShellWritePending(sessionId);
+  flushShellDataNow(sessionId);
   const stream = proxySessions.get(sessionId);
   if (stream) {
     try { stream.end(); } catch { /* ignora */ }

@@ -128,7 +128,7 @@ const AgentTerminalModal: React.FC<AgentTerminalModalProps> = ({
       const socket = io(`${getSocketUrl()}/agent-terminal`, {
         path: '/socket.io',
         auth: { token },
-        transports: ['polling', 'websocket'],
+        transports: ['websocket', 'polling'],
         reconnection: false,
       });
       socketRef.current = socket;
