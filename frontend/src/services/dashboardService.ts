@@ -21,6 +21,53 @@ export interface DashboardChart {
   data: number[];
 }
 
+/** Agregações do dashboard calculadas no backend (`/dashboard` e SaaS). */
+export interface DashboardStatsGraficos {
+  clientes: {
+    totalClientes: number;
+    clientesAtivos: number;
+    clientesInativos: number;
+    clientesAtivosPeriodo: number;
+  };
+  planos: {
+    totalPlanos: number;
+    planosAtivos: number;
+    planosInativos: number;
+  };
+  contratos: {
+    contratosAtivos: number;
+    contratosInativos: number;
+    contratosSuspensos: number;
+    contratosIsentos: number;
+    contratosEmAtraso: number;
+    contratosBloqueados?: number;
+  };
+  titulos: {
+    totalTitulosTodos: number;
+    taxaPagamento: number;
+  };
+  statusPagamentoMes: {
+    pagos: number;
+    pendentes: number;
+    vencidos: number;
+    cancelados: number;
+  };
+  crescimentoClientes: Array<{ mes: string; valor: number; data_inicio: string; data_fim: string }>;
+  clientesPorPlano: Array<{ plano_id: number; nome_plano: string; value: number }>;
+  totais: {
+    totalRecebidosPeriodo: number;
+    totalReceberPeriodo: number;
+    totalReceitaMensal: number;
+    totalNovosClientes: number;
+  };
+  series: {
+    receitaMensal: Array<{ mes: string; valor: number; data_inicio: string; data_fim: string }>;
+    recebidosPeriodo: Array<{ mes: string; valor: number; data_inicio: string; data_fim: string }>;
+    receberPeriodo: Array<{ mes: string; valor: number; data_inicio: string; data_fim: string }>;
+    contasReceberPagar: Array<{ mes: string; receber: number; pagar: number; data_inicio: string; data_fim: string }>;
+  };
+}
+
 export interface DashboardData {
   stats: DashboardStats;
   titulosRecentes: Titulo[];
@@ -33,7 +80,9 @@ export interface DashboardData {
   contratosAtivosTodos?: Contrato[]; // Todos os contratos ativos para gráfico "Clientes por Plano"
   clientesPorTipoPlano?: Array<{ tipo_servico: string; quantidade: number }>; // Qtd clientes (distintos) por tipo de plano
   contratosBloqueados?: number; // SaaS: empresas bloqueadas por atraso
-  contratosEmAtraso?: number; // SaaS: empresas em atraso (não bloqueadas)
+  contratosEmAtraso?: number; // SaaS: em atraso | ERP: calculado no backend (período do filtro)
+  /** ERP: ativos para o gráfico, já descontando “em atraso” no período */
+  contratosAtivosDashboard?: number;
   contratosAtivosSaaS?: number; // SaaS: ativos excluindo bloqueados/em atraso (evita duplicar)
   titulos: Titulo[]; // Títulos do período
   titulosTodos?: Titulo[]; // TODOS os títulos para gráficos
@@ -59,6 +108,7 @@ export interface DashboardData {
     queueRunning: number;
     queueConcurrency: number;
   };
+  statsGraficos?: DashboardStatsGraficos;
 }
 
 export interface DashboardFilters {

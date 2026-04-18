@@ -16,6 +16,7 @@ import { logger } from '../../../utils/logger';
 import { parseDateFromDb, formatDate } from '../../../utils/dateUtils';
 import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
+import { buildErpDashboardStatsGraficos } from '../../../services/sistema/dashboardGraficosStats';
 
 interface TituloWithCliente extends Titulo {
   cliente?: Cliente | null;
@@ -82,6 +83,50 @@ export class DashboardController {
         DashboardService.getClientesPorTipoPlano(empresaId)
       ]);
 
+      const contratosAtrasoPeriodo = DashboardService.computeContratosAtrasoPeriodo(
+        contratosTodos.map((c) => c.toJSON() as { id: number; status: string; cliente_id: number }),
+        titulosTodos.map((t) =>
+          t.toJSON() as {
+            contrato_id?: number | null;
+            cliente_id: number;
+            pago: boolean;
+            status: string;
+            data_vencimento: string | Date;
+          }
+        ),
+        parsedStart,
+        parsedEnd
+      );
+
+      const contratosParaPlano =
+        contratosAtivosTodos.length > 0 ? contratosAtivosTodos : contratos;
+
+      const statsGraficos = buildErpDashboardStatsGraficos({
+        clientesTodos: clientesTodos.map((c) => c.toJSON() as { ativo: boolean }),
+        clientesPeriodo: clientesPeriodo.map((c) => c.toJSON() as { ativo: boolean; created_at?: string }),
+        planos: planos.map((p) => p.toJSON() as { id: number; status?: string; nome_plano: string }),
+        contratosTodos: contratosTodos.map(
+          (c) => c.toJSON() as { status: string; isento_mensalidade?: boolean }
+        ),
+        titulosTodos: titulosTodos.map(
+          (t) =>
+            t.toJSON() as {
+              status: string;
+              pago?: boolean;
+              data_vencimento: string | Date;
+            }
+        ),
+        contratosEmAtraso: contratosAtrasoPeriodo.contratosEmAtraso,
+        contratosAtivosDashboard: contratosAtrasoPeriodo.contratosAtivosDashboard,
+        contratosParaPlano: contratosParaPlano.map(
+          (c) => c.toJSON() as { status: string; plano_id?: number; cliente_id?: number }
+        ),
+        receitaUltimosMeses,
+        recebidosPeriodo,
+        aReceberPeriodo,
+        contasPagarUltimosMeses,
+      });
+
       const dashboardData = {
         stats: statsData,
         titulosRecentes,
@@ -107,7 +152,10 @@ export class DashboardController {
           startDate: formatDateISOForAPI(parsedStart) || '',
           endDate: formatDateISOForAPI(parsedEnd) || ''
         },
-        resumoPeriodo
+        resumoPeriodo,
+        contratosEmAtraso: contratosAtrasoPeriodo.contratosEmAtraso,
+        contratosAtivosDashboard: contratosAtrasoPeriodo.contratosAtivosDashboard,
+        statsGraficos,
       };
 
 

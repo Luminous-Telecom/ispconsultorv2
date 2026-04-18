@@ -59,7 +59,9 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       blockdomi: t('form.serviceTypeBlockdomi')
     };
     let suffix = '';
-    if (initialFilters?.status) {
+    if (initialFilters?.em_atraso) {
+      suffix = ` - ${t('status.inArrears')}`;
+    } else if (initialFilters?.status) {
       const statusLabels: Record<string, string> = {
         ativo: t('status.active'),
         inativo: t('status.inactive'),
@@ -88,8 +90,12 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     resetPageOnFilterChange: true,
   });
   
-  const statusFilter = initialFilters?.status ?? (initialFilters?.isento_mensalidade !== undefined ? undefined : 'ativo');
+  const statusFilter =
+    initialFilters?.em_atraso === true
+      ? undefined
+      : initialFilters?.status ?? 'ativo';
   const listFilters: ContratoFilters = {
+    ...(initialFilters?.em_atraso === true && { em_atraso: true }),
     ...(statusFilter && { status: statusFilter }),
     ...(initialFilters?.isento_mensalidade !== undefined && { isento_mensalidade: initialFilters.isento_mensalidade }),
     ...(initialFilters?.plano_id && { plano_id: initialFilters.plano_id }),

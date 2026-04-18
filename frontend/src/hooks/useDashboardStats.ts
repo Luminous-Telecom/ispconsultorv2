@@ -2,115 +2,120 @@ import { useMemo } from 'react';
 import { DashboardData } from '../services/dashboardService';
 
 interface DashboardStats {
-  // Estatísticas de clientes
   totalClientes: number;
   clientesAtivos: number;
   clientesInativos: number;
   clientesAtivosPeriodo: number;
-  
-  // Estatísticas de planos
   totalPlanos: number;
   planosAtivos: number;
   planosInativos: number;
-  
-  // Estatísticas de contratos
   contratosAtivos: number;
   contratosInativos: number;
   contratosSuspensos: number;
   contratosIsentos: number;
   contratosBloqueados?: number;
   contratosEmAtraso?: number;
-  
-  // Métricas financeiras
   receitaPrevistaPeriodo: number;
   receitaPagaPeriodo: number;
   receitaPendentePeriodo: number;
   ticketMedio: number;
   clientesComTitulosPeriodo: number;
-  
-  // Taxa de pagamento
   taxaPagamento: number;
   totalTitulosTodos: number;
 }
 
-/**
- * Hook para calcular estatísticas do dashboard
- * Extrai toda a lógica de cálculo de estatísticas do componente Dashboard
- */
+function statsFromGraficos(dashboardData: DashboardData): DashboardStats {
+  const sg = dashboardData.statsGraficos!;
+  const rp = dashboardData.resumoPeriodo;
+  return {
+    totalTitulosTodos: sg.titulos.totalTitulosTodos,
+    totalClientes: sg.clientes.totalClientes,
+    clientesAtivos: sg.clientes.clientesAtivos,
+    clientesInativos: sg.clientes.clientesInativos,
+    clientesAtivosPeriodo: sg.clientes.clientesAtivosPeriodo,
+    totalPlanos: sg.planos.totalPlanos,
+    planosAtivos: sg.planos.planosAtivos,
+    planosInativos: sg.planos.planosInativos,
+    contratosAtivos: sg.contratos.contratosAtivos,
+    contratosInativos: sg.contratos.contratosInativos,
+    contratosSuspensos: sg.contratos.contratosSuspensos,
+    contratosIsentos: sg.contratos.contratosIsentos,
+    contratosBloqueados: sg.contratos.contratosBloqueados ?? dashboardData.contratosBloqueados,
+    contratosEmAtraso: sg.contratos.contratosEmAtraso,
+    receitaPrevistaPeriodo: rp?.totalPrevisto ?? 0,
+    receitaPagaPeriodo: rp?.totalRecebido ?? 0,
+    receitaPendentePeriodo: rp?.totalPendente ?? 0,
+    ticketMedio: rp?.ticketMedio ?? 0,
+    clientesComTitulosPeriodo: rp?.clientesComTitulos ?? 0,
+    taxaPagamento: sg.titulos.taxaPagamento,
+  };
+}
+
+function statsFromArrays(dashboardData: DashboardData | undefined): DashboardStats {
+  const clientes = dashboardData?.clientes || [];
+  const clientesTodos = dashboardData?.clientesTodos || [];
+  const planos = dashboardData?.planos || [];
+  const contratosTodos = dashboardData?.contratosTodos || [];
+  const titulosTodos = dashboardData?.titulosTodos || [];
+
+  const totalClientes = clientesTodos.length;
+  const clientesAtivos = clientesTodos.filter((c) => c.ativo).length;
+  const clientesInativos = totalClientes - clientesAtivos;
+  const clientesAtivosPeriodo = clientes.filter((c) => c.ativo).length;
+
+  const totalPlanos = planos.length;
+  const planosAtivos = planos.filter((p) => p.status === 'ativo').length;
+  const planosInativos = totalPlanos - planosAtivos;
+
+  const isSaasDashboard = dashboardData?.contratosAtivosSaaS != null;
+  const contratosAtivosBase = contratosTodos.filter((c) => c.status === 'ativo').length;
+  const contratosAtivos = isSaasDashboard
+    ? dashboardData!.contratosAtivosSaaS!
+    : (dashboardData?.contratosAtivosDashboard ??
+        Math.max(0, contratosAtivosBase - (dashboardData?.contratosEmAtraso ?? 0)));
+  const contratosEmAtraso = dashboardData?.contratosEmAtraso ?? 0;
+
+  const contratosInativos = contratosTodos.filter((c) => c.status === 'inativo').length;
+  const contratosSuspensos = contratosTodos.filter((c) => c.status === 'suspenso').length;
+  const contratosIsentos = contratosTodos.filter(
+    (c) => c.isento_mensalidade === true && c.status === 'ativo'
+  ).length;
+
+  const totalTitulosTodos = titulosTodos.length;
+  const titulosPagosTodos = titulosTodos.filter(
+    (t) => t.status === 'pago' || t.status === 'pago_atraso' || t.status === 'parcial'
+  ).length;
+  const taxaPagamento = totalTitulosTodos > 0 ? (titulosPagosTodos / totalTitulosTodos) * 100 : 0;
+
+  return {
+    totalTitulosTodos,
+    totalClientes,
+    clientesAtivos,
+    clientesInativos,
+    clientesAtivosPeriodo,
+    totalPlanos,
+    planosAtivos,
+    planosInativos,
+    contratosAtivos,
+    contratosInativos,
+    contratosSuspensos,
+    contratosIsentos,
+    contratosBloqueados: dashboardData?.contratosBloqueados,
+    contratosEmAtraso,
+    receitaPrevistaPeriodo: dashboardData?.resumoPeriodo?.totalPrevisto ?? 0,
+    receitaPagaPeriodo: dashboardData?.resumoPeriodo?.totalRecebido ?? 0,
+    receitaPendentePeriodo: dashboardData?.resumoPeriodo?.totalPendente ?? 0,
+    ticketMedio: dashboardData?.resumoPeriodo?.ticketMedio ?? 0,
+    clientesComTitulosPeriodo: dashboardData?.resumoPeriodo?.clientesComTitulos ?? 0,
+    taxaPagamento,
+  };
+}
+
 export const useDashboardStats = (dashboardData: DashboardData | undefined): DashboardStats => {
-  // Memoizar arrays para evitar recriação
-  const clientes = useMemo(() => dashboardData?.clientes || [], [dashboardData?.clientes]);
-  const clientesTodos = useMemo(() => dashboardData?.clientesTodos || [], [dashboardData?.clientesTodos]);
-  const planos = useMemo(() => dashboardData?.planos || [], [dashboardData?.planos]);
-  const contratosTodos = useMemo(() => dashboardData?.contratosTodos || [], [dashboardData?.contratosTodos]);
-  const titulosTodos = useMemo(() => dashboardData?.titulosTodos || [], [dashboardData?.titulosTodos]);
-
   return useMemo(() => {
-    // Estatísticas de clientes
-    const totalClientes = clientesTodos.length;
-    const clientesAtivos = clientesTodos.filter(c => c.ativo).length;
-    const clientesInativos = totalClientes - clientesAtivos;
-    const clientesAtivosPeriodo = clientes.filter(c => c.ativo).length;
-
-    // Estatísticas de planos
-    const totalPlanos = planos.length;
-    const planosAtivos = planos.filter(p => p.status === 'ativo').length;
-    const planosInativos = totalPlanos - planosAtivos;
-
-    // Estatísticas de contratos (SaaS: usa ativos ajustados para não duplicar com bloqueados/em atraso)
-    const contratosAtivos = dashboardData?.contratosAtivosSaaS != null
-      ? dashboardData.contratosAtivosSaaS
-      : contratosTodos.filter(c => c.status === 'ativo').length;
-    const contratosInativos = contratosTodos.filter(c => c.status === 'inativo').length;
-    const contratosSuspensos = contratosTodos.filter(c => c.status === 'suspenso').length;
-    const contratosIsentos = contratosTodos.filter(c => c.isento_mensalidade === true).length;
-
-    // Métricas financeiras
-    const receitaPrevistaPeriodo = dashboardData?.resumoPeriodo?.totalPrevisto ?? 0;
-    const receitaPagaPeriodo = dashboardData?.resumoPeriodo?.totalRecebido ?? 0;
-    const receitaPendentePeriodo = dashboardData?.resumoPeriodo?.totalPendente ?? 0;
-    const ticketMedio = dashboardData?.resumoPeriodo?.ticketMedio ?? 0;
-    const clientesComTitulosPeriodo = dashboardData?.resumoPeriodo?.clientesComTitulos ?? 0;
-
-    // Taxa de pagamento
-    const totalTitulosTodos = titulosTodos.length;
-    const titulosPagosTodos = titulosTodos.filter(
-      t => t.status === 'pago' || t.status === 'pago_atraso' || t.status === 'parcial'
-    ).length;
-    const taxaPagamento = totalTitulosTodos > 0 ? (titulosPagosTodos / totalTitulosTodos) * 100 : 0;
-
-    return {
-      totalTitulosTodos,
-      totalClientes,
-      clientesAtivos,
-      clientesInativos,
-      clientesAtivosPeriodo,
-      totalPlanos,
-      planosAtivos,
-      planosInativos,
-      contratosAtivos,
-      contratosInativos,
-      contratosSuspensos,
-      contratosIsentos,
-      contratosBloqueados: dashboardData?.contratosBloqueados,
-      contratosEmAtraso: dashboardData?.contratosEmAtraso,
-      receitaPrevistaPeriodo,
-      receitaPagaPeriodo,
-      receitaPendentePeriodo,
-      ticketMedio,
-      clientesComTitulosPeriodo,
-      taxaPagamento,
-    };
-  }, [
-    clientes,
-    clientesTodos,
-    planos,
-    contratosTodos,
-    titulosTodos,
-    dashboardData?.resumoPeriodo,
-    dashboardData?.contratosBloqueados,
-    dashboardData?.contratosEmAtraso,
-    dashboardData?.contratosAtivosSaaS,
-  ]);
+    if (dashboardData?.statsGraficos) {
+      return statsFromGraficos(dashboardData);
+    }
+    return statsFromArrays(dashboardData);
+  }, [dashboardData]);
 };
-

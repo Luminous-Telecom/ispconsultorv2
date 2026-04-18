@@ -15,6 +15,7 @@ export interface ContratoFilters extends BaseFilters {
   isento_mensalidade?: boolean;
   plano_id?: number;
   tipo_servico?: string;
+  em_atraso?: boolean;
   searchField?: string;
 }
 

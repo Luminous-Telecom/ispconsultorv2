@@ -5,6 +5,22 @@ import { Contrato } from '../../../models/contratos/Contrato';
 import { ContaPagar } from '../../../models/financeiro/ContaPagar';
 import { Op } from 'sequelize';
 import { sequelize } from '../../../config/database';
+import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
+
+/** Resultado do gráfico de contratos (ERP): em atraso no período e ativos sem duplicar fatia “em atraso”. */
+export interface ContratosAtrasoPeriodoResult {
+  contratosEmAtraso: number;
+  contratosAtivosDashboard: number;
+}
+
+type ContratoDashJson = { id: number; status: string; cliente_id: number };
+type TituloDashJson = {
+  contrato_id?: number | null;
+  cliente_id: number;
+  pago: boolean;
+  status: string;
+  data_vencimento: string | Date;
+};
 
 export class DashboardService {
   /**
@@ -175,10 +191,64 @@ export class DashboardService {
     if (empresaId != null) {
       where.empresa_id = empresaId;
     }
-    return await Titulo.findAll({ 
-      attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'],
+    return await Titulo.findAll({
+      attributes: [
+        'id',
+        'valor',
+        'status',
+        'data_vencimento',
+        'created_at',
+        'contrato_id',
+        'cliente_id',
+        'pago',
+      ],
       where: Object.keys(where).length ? where : undefined
     });
+  }
+
+  /**
+   * Contratos em atraso no período do dashboard e total de ativos para o gráfico (sem duplicar “em atraso”).
+   * Período = vencimento do título entre início e fim; atraso = não pago, pendente/vencido, vencimento antes de hoje.
+   */
+  static computeContratosAtrasoPeriodo(
+    contratosTodos: ContratoDashJson[],
+    titulosTodos: TituloDashJson[],
+    parsedStart: Date,
+    parsedEnd: Date
+  ): ContratosAtrasoPeriodoResult {
+    const periodoInicio = formatDateISOForAPI(parsedStart)?.slice(0, 10) ?? '';
+    const periodoFim = formatDateISOForAPI(parsedEnd)?.slice(0, 10) ?? '';
+    const hojeStr = formatDateISOForAPI(new Date())?.slice(0, 10) ?? '';
+
+    const ativoIds = new Set(contratosTodos.filter((c) => c.status === 'ativo').map((c) => c.id));
+    const ativoPorCliente = new Map<number, number>();
+    for (const c of contratosTodos) {
+      if (c.status !== 'ativo') continue;
+      if (!ativoPorCliente.has(c.cliente_id)) ativoPorCliente.set(c.cliente_id, c.id);
+    }
+
+    const ids = new Set<number>();
+    for (const t of titulosTodos) {
+      if (t.pago === true) continue;
+      if (t.status !== 'pendente' && t.status !== 'vencido') continue;
+      const venc =
+        typeof t.data_vencimento === 'string'
+          ? t.data_vencimento.slice(0, 10)
+          : (formatDateISOForAPI(t.data_vencimento as Date) ?? '').slice(0, 10);
+      if (!venc || venc < periodoInicio || venc > periodoFim) continue;
+      if (venc >= hojeStr) continue;
+      let cid = t.contrato_id;
+      if (cid == null && t.cliente_id != null) {
+        cid = ativoPorCliente.get(t.cliente_id);
+      }
+      if (cid == null || !ativoIds.has(cid)) continue;
+      ids.add(cid);
+    }
+
+    const contratosEmAtraso = ids.size;
+    const contratosAtivosBase = contratosTodos.filter((c) => c.status === 'ativo').length;
+    const contratosAtivosDashboard = Math.max(0, contratosAtivosBase - contratosEmAtraso);
+    return { contratosEmAtraso, contratosAtivosDashboard };
   }
 
   /**

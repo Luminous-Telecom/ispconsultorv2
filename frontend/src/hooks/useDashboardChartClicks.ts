@@ -54,6 +54,10 @@ export const useDashboardChartClicks = () => {
       openModal('contratos' as ModalType, {
         initialFilters: { isento_mensalidade: true }
       });
+    } else if (fv === 'em_atraso') {
+      openModal('contratos' as ModalType, {
+        initialFilters: { em_atraso: true }
+      });
     } else {
       openModal('contratos' as ModalType, {
         initialFilters: { status: fv }

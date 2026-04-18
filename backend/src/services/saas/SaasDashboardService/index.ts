@@ -7,6 +7,7 @@ import { SaasTitulo } from '../../../models/saas/SaasTitulo';
 import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
 import { getStartOfLocalDay } from '../../../utils/dateUtils';
+import { buildSaasDashboardStatsGraficos } from '../../sistema/dashboardGraficosStats';
 
 // Formato compatível com DashboardData do admin (mapeamento empresa=cliente)
 export class SaasDashboardService {
@@ -46,12 +47,13 @@ export class SaasDashboardService {
     const fimPeriodo = new Date(parsedEnd);
     fimPeriodo.setHours(23, 59, 59, 999);
 
-    const [empresas, planos, contratos, contratosTodos, titulos, receitaUltimosMeses, aReceberPeriodo, recebidosPeriodo, clientesPorTipoPlano, resumoPeriodo, contasPagarUltimosMeses, statusContratos, queueStats] = await Promise.all([
+    const [empresas, planos, contratos, contratosTodos, titulos, titulosTodos, receitaUltimosMeses, aReceberPeriodo, recebidosPeriodo, clientesPorTipoPlano, resumoPeriodo, contasPagarUltimosMeses, statusContratos, queueStats] = await Promise.all([
       this.getEmpresasCompat(),
       this.getPlanosCompat(),
       this.getContratosCompat(inicioPeriodo, fimPeriodo),
       this.getAllContratosCompat(),
       this.getTitulosCompat(inicioPeriodo, fimPeriodo),
+      this.getAllTitulosCompat(),
       this.getReceitaUltimos12Meses(),
       this.getAReceberPorPeriodo(parsedStart, parsedEnd),
       this.getRecebidosPorPeriodo(parsedStart, parsedEnd),
@@ -61,6 +63,29 @@ export class SaasDashboardService {
       this.getStatusContratosSaaS(),
       this.getQueueStats(),
     ]);
+
+    const clientesPeriodoArr = empresas.filter(e => {
+      const created = e.created_at ? new Date(e.created_at) : null;
+      return created && created >= inicioPeriodo && created <= fimPeriodo;
+    });
+    const contratosAtivosList = contratosTodos.filter((c: { status: string }) => c.status === 'ativo');
+    const contratosParaPlano = contratosAtivosList.length > 0 ? contratosAtivosList : contratos;
+
+    const statsGraficos = buildSaasDashboardStatsGraficos({
+      clientesTodos: empresas,
+      clientesPeriodo: clientesPeriodoArr,
+      planos,
+      contratosTodos,
+      titulosTodos,
+      contratosBloqueados: statusContratos.bloqueados,
+      contratosEmAtraso: statusContratos.emAtraso,
+      contratosAtivosSaaS: statusContratos.contratosAtivos,
+      contratosParaPlano,
+      receitaUltimosMeses,
+      recebidosPeriodo,
+      aReceberPeriodo,
+      contasPagarUltimosMeses,
+    });
 
     return {
       stats: {
@@ -72,10 +97,7 @@ export class SaasDashboardService {
       contratosAtivosSaaS: statusContratos.contratosAtivos,
       titulosRecentes: [],
       titulosVencidos: [],
-      clientes: empresas.filter(e => {
-        const created = e.created_at ? new Date(e.created_at) : null;
-        return created && created >= inicioPeriodo && created <= fimPeriodo;
-      }),
+      clientes: clientesPeriodoArr,
       clientesTodos: empresas,
       planos,
       contratos,
@@ -83,7 +105,7 @@ export class SaasDashboardService {
       contratosAtivosTodos: contratosTodos.filter((c: { status: string }) => c.status === 'ativo'),
       clientesPorTipoPlano,
       titulos,
-      titulosTodos: await this.getAllTitulosCompat(),
+      titulosTodos,
       receitaUltimosMeses,
       clientesPorStatus: {
         labels: ['Ativos', 'Inativos'],
@@ -98,6 +120,7 @@ export class SaasDashboardService {
       },
       resumoPeriodo,
       queueStats,
+      statsGraficos,
     };
   }
 
@@ -200,7 +223,7 @@ export class SaasDashboardService {
 
   private static async getAllTitulosCompat() {
     const rows = await SaasTitulo.findAll({
-      attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at', 'empresa_id', 'valor_pago', 'data_pagamento'],
+      attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at', 'empresa_id', 'valor_pago', 'data_pagamento', 'pago'],
     });
     return rows.map(t => ({
       id: t.id,
@@ -211,6 +234,7 @@ export class SaasDashboardService {
       cliente_id: t.empresa_id,
       valor_pago: t.valor_pago,
       data_pagamento: t.data_pagamento,
+      pago: t.pago,
     }));
   }
 
