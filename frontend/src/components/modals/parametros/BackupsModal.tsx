@@ -78,11 +78,10 @@ const BackupsModal: React.FC<BackupsModalProps> = ({ show, onClose, skipWrapper 
     }
   }, [queryClient, refetch, success, showError, t]);
 
-  const handleDownload = useCallback(async (item: BackupWithId) => {
+  const handleDownload = useCallback((item: BackupWithId) => {
     setActionLoading(prev => ({ ...prev, download: item.nome }));
     try {
-      const blob = await BackupService.downloadBackup(item.nome);
-      BackupService.triggerFileDownload(blob, item.nome);
+      BackupService.startBackupDownload(item.nome);
       success(t('backup.downloadStarted'));
     } catch (err) {
       const msg = (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? (err as Error)?.message ?? t('messages.error');

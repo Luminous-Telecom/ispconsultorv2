@@ -1,5 +1,9 @@
+import { API_CONFIG } from 'config/api';
 import { apiService } from './api';
 import { unwrapResponse } from './core';
+
+/** Backup manual/restauracao roda no servidor ate concluir; o timeout global da API (10s) corta a resposta antes. */
+const BACKUP_LONG_OPERATION_TIMEOUT_MS = 30 * 60 * 1000;
 
 export interface Backup {
   nome: string;
@@ -32,36 +36,48 @@ export class BackupService {
     unwrapResponse(response, { fallback: { success: true, message: '' } });
   }
 
-  static async downloadBackup(nome: string): Promise<Blob> {
-    const response = await apiService.get<Blob>(
-      `/saas/backups/${encodeURIComponent(nome)}/download`,
-      { responseType: 'blob' }
-    );
-    const blob = unwrapResponse<Blob>(response);
+  /** URL autenticada por cookie (mesma origem com `/api` no proxy habitual). */
+  static getBackupDownloadUrl(nome: string): string {
+    const base = API_CONFIG.BASE_URL.replace(/\/+$/, '');
+    const path = `/saas/backups/${encodeURIComponent(nome)}/download`;
+    return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+  }
 
-    if (!blob || !(blob instanceof Blob)) {
-      throw new Error('Resposta do servidor nùo ù um arquivo vùlido');
-    }
-
-    return blob;
+  /**
+   * Inicia o download pelo navegador (streaming para disco).
+   * Evita Axios+blob, que mantem o arquivo inteiro na RAM e estoura memoria/timeout em backups grandes.
+   */
+  static startBackupDownload(nome: string): void {
+    const href = BackupService.getBackupDownloadUrl(nome);
+    const a = document.createElement('a');
+    a.href = href;
+    a.setAttribute('download', nome);
+    a.rel = 'noopener noreferrer';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   static async restoreBackup(nome: string): Promise<{ success: boolean; message: string }> {
     const response = await apiService.post<{ success: boolean; message?: string }>(
-      `/saas/backups/${encodeURIComponent(nome)}/restore`
+      `/saas/backups/${encodeURIComponent(nome)}/restore`,
+      undefined,
+      { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS }
     );
     const data = unwrapResponse<{ success: boolean; message?: string }>(response);
 
     return {
       success: true,
-      message: data.message ?? 'Restauraùùo solicitada.'
+      message: data.message ?? 'Restauracao solicitada.'
     };
   }
 
   static async executeManual(tipo: BackupManualTipo): Promise<{ success: boolean; message: string }> {
     const response = await apiService.post<{ success: boolean; message?: string }>(
       '/saas/backups/manual',
-      { tipo }
+      { tipo },
+      { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS }
     );
     const data = unwrapResponse<{ success: boolean; message?: string }>(response);
 
@@ -76,7 +92,8 @@ export class BackupService {
     formData.append('arquivo', file);
     const response = await apiService.post<{ success: boolean; message?: string; data?: { nome: string } }>(
       '/saas/backups/upload',
-      formData
+      formData,
+      { timeout: BACKUP_LONG_OPERATION_TIMEOUT_MS }
     );
     const data = unwrapResponse<{ success: boolean; message?: string }>(response);
     return {
@@ -85,15 +102,5 @@ export class BackupService {
     };
   }
 
-  static triggerFileDownload(blob: Blob, filename: string): void {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  }
 }
 
