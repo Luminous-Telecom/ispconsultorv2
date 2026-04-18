@@ -21,9 +21,10 @@ export class BuildService {
   }
 
   async build(): Promise<CommandResult> {
+    // Não forçar NODE_ENV=production aqui: omite devDeps no npm ci do front e quebra o build.
     const env = {
       ...process.env,
-      NODE_ENV: 'production',
+      NPM_CONFIG_PRODUCTION: 'false',
       GENERATE_SOURCEMAP: 'false',
       NODE_OPTIONS: process.env.NODE_OPTIONS || '--max-old-space-size=4096',
     };

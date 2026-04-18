@@ -83,10 +83,10 @@ export class PackageManagerService {
   }
 
   /**
-   * Instala dependências npm
+   * Instala dependências npm (inclui devDependencies: ts-node/typescript são necessários para `npm run build` no self-update em servidor com NODE_ENV=production).
    */
   async install(): Promise<CommandResult> {
-    const command = 'npm install';
+    const command = 'npm install --include=dev';
     return this.executeCommand(command, this.backendPath, 'NPM Install');
   }
 
