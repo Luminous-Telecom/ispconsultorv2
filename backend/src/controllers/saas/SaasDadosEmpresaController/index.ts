@@ -34,7 +34,8 @@ const empresaSchema = Joi.object({
 export class SaasDadosEmpresaController {
   static async list(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { page, limit, search, sortColumn, sortDirection, created_at_inicio, created_at_fim } = req.query as Record<string, string>;
+      const { page, limit, search, sortColumn, sortDirection, created_at_inicio, created_at_fim, plano_id } = req.query as Record<string, string>;
+      const parsedPlano = plano_id ? parseInt(plano_id, 10) : undefined;
       const result = await SaasDadosEmpresaService.list({
         page: page ? parseInt(page) : 1,
         limit: limit ? parseInt(limit) : 20,
@@ -43,6 +44,7 @@ export class SaasDadosEmpresaController {
         sortDirection: sortDirection as 'asc' | 'desc',
         created_at_inicio: created_at_inicio || undefined,
         created_at_fim: created_at_fim || undefined,
+        plano_id: parsedPlano !== undefined && !Number.isNaN(parsedPlano) ? parsedPlano : undefined,
       });
       sendSuccess(res, result);
     } catch (err) {

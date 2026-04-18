@@ -12,7 +12,7 @@ import { TableConfig } from 'components/tables/types';
 import { saasEmpresasService, type SaasEmpresa, type SaasConfigListResponse } from 'services/saas/saasEmpresasService';
 import SaasEmpresaFormModal from './SaasEmpresaFormModal';
 
-interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onHeaderActionsReady?: (a: React.ReactNode) => void; empresaId?: number; initialFilters?: { created_at_inicio?: string; created_at_fim?: string }; }
+interface Props { show: boolean; onClose: () => void; skipWrapper?: boolean; onHeaderActionsReady?: (a: React.ReactNode) => void; empresaId?: number; initialFilters?: { created_at_inicio?: string; created_at_fim?: string; plano_id?: number }; }
 
 const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, empresaId, initialFilters }) => {
   const { t } = useI18n();
@@ -34,7 +34,7 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
   }, [show, empresaId]);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['saas-empresas', tf.page, tf.limit, tf.debouncedSearch, tf.sortColumn, tf.sortDirection, initialFilters?.created_at_inicio, initialFilters?.created_at_fim],
+    queryKey: ['saas-empresas', tf.page, tf.limit, tf.debouncedSearch, tf.sortColumn, tf.sortDirection, initialFilters?.created_at_inicio, initialFilters?.created_at_fim, initialFilters?.plano_id],
     queryFn: () => saasEmpresasService.list({
       page: tf.page,
       limit: tf.limit,
@@ -43,6 +43,7 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
       sortDirection: tf.sortDirection,
       ...(initialFilters?.created_at_inicio && { created_at_inicio: initialFilters.created_at_inicio }),
       ...(initialFilters?.created_at_fim && { created_at_fim: initialFilters.created_at_fim }),
+      ...(initialFilters?.plano_id != null && { plano_id: initialFilters.plano_id }),
     }),
     enabled: show, staleTime: 0,
   });

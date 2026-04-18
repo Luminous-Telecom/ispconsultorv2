@@ -1,5 +1,6 @@
 import { Op, QueryTypes, WhereOptions } from 'sequelize';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
+import { SaasContrato } from '../../../models/saas/SaasContrato';
 import { sequelize } from '../../../config/database';
 
 interface ListFilters {
@@ -10,6 +11,8 @@ interface ListFilters {
   sortDirection?: 'asc' | 'desc';
   created_at_inicio?: string;
   created_at_fim?: string;
+  /** Empresas com contrato SaaS ativo neste plano (mesma regra do gráfico "clientes por plano") */
+  plano_id?: number;
 }
 
 export class SaasDadosEmpresaService {
@@ -22,12 +25,34 @@ export class SaasDadosEmpresaService {
       sortDirection = 'desc',
       created_at_inicio,
       created_at_fim,
+      plano_id,
     } = filters;
 
     const allowedColumns = ['id', 'razao_social', 'nome_fantasia', 'cnpj', 'email', 'cidade', 'estado', 'created_at'];
     const col = allowedColumns.includes(sortColumn) ? sortColumn : 'id';
 
     const where: WhereOptions = {};
+
+    if (plano_id !== undefined && plano_id !== null && !Number.isNaN(plano_id)) {
+      const contratosRows = await SaasContrato.findAll({
+        attributes: ['empresa_id'],
+        where: { status: 'ativo', plano_id },
+        raw: true,
+      });
+      const idsPlano = [...new Set(contratosRows.map((r) => r.empresa_id))];
+      if (idsPlano.length === 0) {
+        return {
+          data: [],
+          pagination: {
+            total: 0,
+            page,
+            limit,
+            totalPages: 0,
+          },
+        };
+      }
+      where.id = { [Op.in]: idsPlano };
+    }
 
     if (created_at_inicio || created_at_fim) {
       where.created_at = {
