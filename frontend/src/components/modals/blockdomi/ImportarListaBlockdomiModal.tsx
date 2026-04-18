@@ -265,7 +265,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       return;
     }
 
-    // Captura os arquivos antes de limpá-los, para upload posterior
+    // Referências para upload em handleCadastrar (podem coincidir com o estado visível após a extração)
     const filesToUpload = { main: pdfFile, anatel: pdfOficioAnatel, justica: pdfOficioJustica };
 
     setIsExtractingPdf(true);
@@ -305,12 +305,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       } else {
         error(t('blockdomi.pdfExtractError'));
       }
-      setPdfFile(null);
-      setPdfOficioAnatel(null);
-      setPdfOficioJustica(null);
-      if (pdfFileInputRef.current) pdfFileInputRef.current.value = '';
-      if (pdfAnatelInputRef.current) pdfAnatelInputRef.current.value = '';
-      if (pdfJusticaInputRef.current) pdfJusticaInputRef.current.value = '';
     } catch (e) {
       const msg = (e as Error)?.message ?? 'Erro ao extrair PDF.';
       error(msg);
@@ -322,8 +316,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   }, [pdfFile, pdfOficioAnatel, pdfOficioJustica, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress, buildTextFromColunas]);
 
   const handleExtractFromPdfUrl = useCallback(async () => {
-    const url = linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim();
-    if (!url) {
+    const urlResolved = (linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim() || '').trim();
+    if (!urlResolved) {
       error(t('blockdomi.pdfUrlOrLinkRequired'));
       return;
     }
@@ -332,10 +326,11 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     setExtractionLoading(true);
     await new Promise((r) => setTimeout(r, 0));
     try {
-      const result = await PdfExtractService.extractFromPdfUrl(url, {
+      const result = await PdfExtractService.extractFromPdfUrl(urlResolved, {
         onPollProgress: handlePdfPollProgress
       });
       if (result.success && result.data) {
+        setLinkPlanilhaDominios(urlResolved);
         const listBruto = result.data.dominios_bruto ?? result.data.dominios;
         const dataInicio = result.data.data_inicio_bloqueio ?? dataInicioBloqueio;
         const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
@@ -653,7 +648,10 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                   type="file"
                   className="form-control"
                   accept=".pdf,application/pdf"
-                  onChange={(e) => setPdfOficioAnatel(e.target.files?.[0] ?? null)}
+                  onChange={(e) => {
+                    setPdfOficioAnatel(e.target.files?.[0] ?? null);
+                    pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, anatel: null };
+                  }}
                 />
               </div>
               <label className="form-label small mb-1 mt-2">
@@ -677,7 +675,10 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                   type="file"
                   className="form-control"
                   accept=".pdf,application/pdf"
-                  onChange={(e) => setPdfOficioJustica(e.target.files?.[0] ?? null)}
+                  onChange={(e) => {
+                    setPdfOficioJustica(e.target.files?.[0] ?? null);
+                    pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, justica: null };
+                  }}
                 />
               </div>
               <label className="form-label small mb-1 mt-2">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
@@ -694,7 +695,10 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                   type="file"
                   className="form-control"
                   accept=".pdf,application/pdf"
-                  onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                  onChange={(e) => {
+                    setPdfFile(e.target.files?.[0] ?? null);
+                    pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, main: null };
+                  }}
                 />
                 <Button
                   type="button"
