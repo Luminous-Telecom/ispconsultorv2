@@ -96,7 +96,7 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'documentos-sistema': { component: DocumentosSistemaModal, titleKey: 'modal.systemDocuments', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   // SaaS exclusivos (rotas /api/saas/* apenas)
   'saas-auditoria': { component: AuditoriaModal, titleKey: 'modal.auditLogs', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },
-  'saas-atualizacoes': { component: AtualizacoesModal, titleKey: 'modal.updates', loadingMessageKey: 'ui.loadingPage' },
+  'saas-atualizacoes': { component: AtualizacoesModal, titleKey: 'updates.title', loadingMessageKey: 'ui.loadingPage' },
   'saas-backups': { component: BackupsModal, titleKey: 'modal.backups', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   // SSH Manager
   'ssh-devices': { component: SshDeviceListModal, titleKey: 'modal.sshDevices', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
@@ -187,7 +187,6 @@ const SingleModalWrapper: React.FC = () => {
   const modalProps: ModalComponentProps = {
     show: true,
     onClose: closeModal,
-    skipWrapper: true, // Sempre usar skipWrapper para que o conteúdo seja renderizado dentro do DraggableModal único
     onHeaderActionsReady: setHeaderActions,
     ...(['clientes', 'planos', 'bancos', 'tipos-cobranca-contrato', 'contratos', 'saas-bancos'].includes(activeModal) && { title: modalTitle }),
     // Para o cliente-modal, passamos clienteId como prop específica
@@ -201,6 +200,8 @@ const SingleModalWrapper: React.FC = () => {
     ...(activeModal === 'saas-auditoria' && { variant: 'saas' }),
     // Para outros modais, passamos os dados adicionais normalmente
     ...(!isClienteModal && modalData && modalData),
+    // Por último: modalData nunca pode desativar o wrapper único (evita segundo DraggableModal / cabeçalho duplicado)
+    skipWrapper: true,
   };
 
   return (
