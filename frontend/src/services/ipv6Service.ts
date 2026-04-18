@@ -60,6 +60,7 @@ export class IPv6Service {
     link_oficio_anatel?: string | null;
     link_oficio_justica?: string | null;
     link_planilha_dominios?: string | null;
+    numero_sei_anatel?: string | null;
   }): Promise<{ created: number; updated: number; skipped: number; errors: string[] }> {
     const { defaultApiClient } = await import('./core');
     const response = await defaultApiClient.post<{ created: number; updated: number; skipped: number; errors: string[] }>('/ipv6/bulk', payload, { timeout: 120000 });

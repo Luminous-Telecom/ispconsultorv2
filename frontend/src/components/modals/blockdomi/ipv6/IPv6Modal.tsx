@@ -34,6 +34,7 @@ const IPv6Modal: React.FC<IPv6ModalProps> = ({
     link_oficio_anatel: '',
     link_oficio_justica: '',
     link_planilha_dominios: '',
+    numero_sei_anatel: '',
     ativo: true
   });
 
@@ -53,6 +54,7 @@ const IPv6Modal: React.FC<IPv6ModalProps> = ({
           link_oficio_anatel: ipv6Data.link_oficio_anatel || '',
           link_oficio_justica: ipv6Data.link_oficio_justica || '',
           link_planilha_dominios: ipv6Data.link_planilha_dominios || '',
+          numero_sei_anatel: ipv6Data.numero_sei_anatel || '',
           ativo: ipv6Data.ativo ?? true
         });
       } else {
@@ -67,6 +69,7 @@ const IPv6Modal: React.FC<IPv6ModalProps> = ({
           link_oficio_anatel: '',
           link_oficio_justica: '',
           link_planilha_dominios: '',
+          numero_sei_anatel: '',
           ativo: true
         });
       }
@@ -96,7 +99,8 @@ const IPv6Modal: React.FC<IPv6ModalProps> = ({
       data_fim_bloqueio: formData.data_fim_bloqueio.trim() || null,
       link_oficio_anatel: formData.link_oficio_anatel.trim() || null,
       link_oficio_justica: formData.link_oficio_justica.trim() || null,
-      link_planilha_dominios: formData.link_planilha_dominios.trim() || null
+      link_planilha_dominios: formData.link_planilha_dominios.trim() || null,
+      numero_sei_anatel: formData.numero_sei_anatel.trim() || null
     };
     try {
       if (isEditing && ipv6Id) {
@@ -222,6 +226,17 @@ const IPv6Modal: React.FC<IPv6ModalProps> = ({
                   onChange={(value) => setFormData(prev => ({ ...prev, link_oficio_anatel: String(value ?? '') }))}
                   size="sm"
                   placeholder="https://..."
+                />
+              </div>
+              <div className="col-12 col-md-6">
+                <FormField
+                  name="numero_sei_anatel"
+                  type="text"
+                  label={t('blockdomi.numeroSeiAnatelOptional')}
+                  value={formData.numero_sei_anatel}
+                  onChange={(value) => setFormData(prev => ({ ...prev, numero_sei_anatel: String(value ?? '').replace(/\D/g, '').slice(0, 20) }))}
+                  size="sm"
+                  placeholder="15497675"
                 />
               </div>
               <div className="col-12">

@@ -118,6 +118,13 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
       render: (item: IPv6) => item.link_oficio_anatel?.trim() ? t('ui.yes') : t('ui.no')
     },
     {
+      key: 'numero_sei_anatel',
+      label: t('blockdomi.numeroSeiAnatel'),
+      sortable: false,
+      width: '110px',
+      render: (item: IPv6) => item.numero_sei_anatel?.trim() || '-'
+    },
+    {
       key: 'oficio_justica',
       label: t('blockdomi.oficioJustica'),
       sortable: false,
@@ -163,7 +170,8 @@ const IPv6ListModal: React.FC<IPv6ListModalProps> = ({
     { key: 'id', label: t('table.id') },
     { key: 'ip', label: 'IPv6' },
     { key: 'descricao', label: t('form.description') },
-    { key: 'nome_oficio', label: t('blockdomi.nomeOficio') }
+    { key: 'nome_oficio', label: t('blockdomi.nomeOficio') },
+    { key: 'numero_sei_anatel', label: t('blockdomi.numeroSeiAnatel') }
   ];
 
   const { data: ipv6sData, isLoading, refetch } = useIPv6s({

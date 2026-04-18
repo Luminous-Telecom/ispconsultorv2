@@ -61,7 +61,7 @@ export class DominioController {
 
   static async bulkCreate(req: Request, res: Response): Promise<void> {
     try {
-      const { items, nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, link_oficio_anatel, link_oficio_justica, link_planilha_dominios } = req.body;
+      const { items, nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, link_oficio_anatel, link_oficio_justica, link_planilha_dominios, numero_sei_anatel } = req.body;
 
       if (!Array.isArray(items) || items.length === 0) {
         sendValidationError(res, 'Informe a lista de domínios (items: string[]).');
@@ -87,6 +87,7 @@ export class DominioController {
         link_oficio_anatel: trimOrNull(link_oficio_anatel),
         link_oficio_justica: trimOrNull(link_oficio_justica),
         link_planilha_dominios: trimOrNull(link_planilha_dominios),
+        numero_sei_anatel: trimOrNull(numero_sei_anatel),
         empresa_id: empresaIdAudit
       });
 
@@ -130,6 +131,7 @@ export class DominioController {
         link_oficio_anatel?: unknown;
         link_oficio_justica?: unknown;
         link_planilha_dominios?: unknown;
+        numero_sei_anatel?: unknown;
         descricao?: unknown;
         ativo?: unknown;
       };
@@ -158,6 +160,7 @@ export class DominioController {
         link_oficio_anatel: trimOrNull(body.link_oficio_anatel),
         link_oficio_justica: trimOrNull(body.link_oficio_justica),
         link_planilha_dominios: trimOrNull(body.link_planilha_dominios),
+        numero_sei_anatel: trimOrNull(body.numero_sei_anatel),
         descricao: trimOrNull(body.descricao),
         ativo: typeof body.ativo === 'boolean' ? body.ativo : undefined
       });

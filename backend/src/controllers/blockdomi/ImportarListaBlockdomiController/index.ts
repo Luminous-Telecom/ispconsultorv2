@@ -9,6 +9,8 @@ import { logger } from '../../../utils/logger';
 import { Dominio } from '../../../models/blockdomi/Dominio';
 import { IPv4 } from '../../../models/blockdomi/IPv4';
 import { IPv6 } from '../../../models/blockdomi/IPv6';
+import { SeiAnatelExtractService } from '../../../services/blockdomi/SeiAnatelExtractService';
+import fs from 'fs';
 
 export class ImportarListaBlockdomiController {
   static async importar(req: Request, res: Response): Promise<void> {
@@ -22,7 +24,8 @@ export class ImportarListaBlockdomiController {
         data_fim_bloqueio,
         link_oficio_anatel,
         link_oficio_justica,
-        link_planilha_dominios
+        link_planilha_dominios,
+        numero_sei_anatel
       } = req.body;
 
       const dominiosArr = Array.isArray(dominios) ? dominios : [];
@@ -52,6 +55,9 @@ export class ImportarListaBlockdomiController {
         link_oficio_anatel: link_oficio_anatel ?? null,
         link_oficio_justica: link_oficio_justica ?? null,
         link_planilha_dominios: link_planilha_dominios ?? null,
+        numero_sei_anatel: numero_sei_anatel != null && String(numero_sei_anatel).trim() !== ''
+          ? String(numero_sei_anatel).trim()
+          : null,
         empresa_id: empresaIdAudit
       });
 
@@ -205,6 +211,40 @@ export class ImportarListaBlockdomiController {
         context: 'ImportarListaBlockdomiController',
         action: 'uploadOficioPdf'
       });
+    }
+  }
+
+  /**
+   * Extrai o número SEI do ofício Anatel (texto nas últimas páginas / código verificador).
+   * O arquivo enviado é processado e removido do disco (não fica armazenado como ofício).
+   */
+  static async extractSeiAnatelFromPdf(req: Request, res: Response): Promise<void> {
+    const file = req.file as Express.Multer.File & { path?: string };
+    const filePath = file?.path;
+    try {
+      if (!filePath) {
+        sendValidationError(res, 'Arquivo PDF não enviado');
+        return;
+      }
+      const result = await SeiAnatelExtractService.extractFromPdfPath(filePath);
+      if (result.success && result.sei) {
+        sendSuccess(res, { sei: result.sei }, 'SEI extraído com sucesso.');
+        return;
+      }
+      sendValidationError(res, result.message || 'Não foi possível extrair o número SEI deste PDF.');
+    } catch (error) {
+      sendError(res, error, 'Erro ao extrair SEI do PDF', 500, true, {
+        context: 'ImportarListaBlockdomiController',
+        action: 'extractSeiAnatelFromPdf'
+      });
+    } finally {
+      if (filePath) {
+        try {
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        } catch {
+          /* ignore */
+        }
+      }
     }
   }
 

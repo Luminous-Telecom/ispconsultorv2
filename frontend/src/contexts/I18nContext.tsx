@@ -314,6 +314,13 @@ export interface TranslationKeys {
   'blockdomi.linkOficioAnatelOptional': string;
   'blockdomi.linkOficioJusticaOptional': string;
   'blockdomi.anatel': string;
+  'blockdomi.numeroSeiAnatel': string;
+  'blockdomi.numeroSeiAnatelOptional': string;
+  'blockdomi.seiAnatelHelp': string;
+  'blockdomi.extractSeiFromAnatelPdf': string;
+  'blockdomi.seiExtractSuccess': string;
+  'blockdomi.seiExtractError': string;
+  'blockdomi.seiExtractNoPdf': string;
   'blockdomi.justica': string;
   'blockdomi.bulkEditDomains': string;
   'blockdomi.bulkEditIntro': string;
@@ -351,6 +358,7 @@ export interface TranslationKeys {
   'blockdomi.importFromPdf': string;
   'blockdomi.importFromPdfIntro': string;
   'blockdomi.pdfFile': string;
+  'blockdomi.removePdfFile': string;
   'blockdomi.pdfUrl': string;
   'blockdomi.extractDomainsFromPdf': string;
   'blockdomi.extractingPdf': string;
@@ -1767,6 +1775,13 @@ const translations: Translations = {
     'blockdomi.linkOficioAnatelOptional': 'Link ofício Anatel (opcional)',
     'blockdomi.linkOficioJusticaOptional': 'Link decisão judicial (opcional)',
     'blockdomi.anatel': 'Anatel',
+    'blockdomi.numeroSeiAnatel': 'Nº SEI Anatel',
+    'blockdomi.numeroSeiAnatelOptional': 'Nº SEI Anatel (opcional)',
+    'blockdomi.seiAnatelHelp': 'Protocolo SEI no final do PDF assinado (ex.: código verificador na página de autenticidade). Use o botão para preencher a partir do PDF do ofício.',
+    'blockdomi.extractSeiFromAnatelPdf': 'Extrair SEI',
+    'blockdomi.seiExtractSuccess': 'Número SEI extraído do PDF.',
+    'blockdomi.seiExtractError': 'Não foi possível extrair o SEI deste PDF.',
+    'blockdomi.seiExtractNoPdf': 'Selecione o arquivo PDF do ofício Anatel antes de extrair o SEI.',
     'blockdomi.justica': 'Decisão judicial',
     'blockdomi.bulkEditDomains': 'Editar {count} domínio(s)',
     'blockdomi.bulkEditIntro': 'Os valores abaixo serão aplicados aos {count} domínio(s) selecionado(s).',
@@ -1804,6 +1819,7 @@ const translations: Translations = {
     'blockdomi.importFromPdf': 'Importar do PDF',
     'blockdomi.importFromPdfIntro': 'Envie um PDF (ofício com tabela anexo) ou informe a URL do PDF. Serão extraídos apenas os domínios e IPs da tabela.',
     'blockdomi.pdfFile': 'Arquivo PDF',
+    'blockdomi.removePdfFile': 'Remover PDF selecionado',
     'blockdomi.pdfUrl': 'Ou URL do PDF',
     'blockdomi.extractDomainsFromPdf': 'Extrair domínios',
     'blockdomi.extractingPdf': 'Extraindo texto do PDF...',
@@ -3213,6 +3229,13 @@ const translations: Translations = {
     'blockdomi.linkOficioAnatelOptional': 'Anatel warrant link (optional)',
     'blockdomi.linkOficioJusticaOptional': 'Judicial decision link (optional)',
     'blockdomi.anatel': 'Anatel',
+    'blockdomi.numeroSeiAnatel': 'Anatel SEI no.',
+    'blockdomi.numeroSeiAnatelOptional': 'Anatel SEI no. (optional)',
+    'blockdomi.seiAnatelHelp': 'SEI protocol number at the end of the signed PDF (e.g. verification code on the authenticity page). Use the button to fill it from the warrant PDF.',
+    'blockdomi.extractSeiFromAnatelPdf': 'Extract SEI',
+    'blockdomi.seiExtractSuccess': 'SEI number extracted from the PDF.',
+    'blockdomi.seiExtractError': 'Could not extract SEI from this PDF.',
+    'blockdomi.seiExtractNoPdf': 'Select the Anatel warrant PDF file before extracting the SEI.',
     'blockdomi.justica': 'Judicial decision',
     'blockdomi.bulkEditDomains': 'Edit {count} domain(s)',
     'blockdomi.bulkEditIntro': 'The values below will be applied to the {count} selected domain(s).',
@@ -3250,6 +3273,7 @@ const translations: Translations = {
     'blockdomi.importFromPdf': 'Import from PDF',
     'blockdomi.importFromPdfIntro': 'Upload a PDF (warrant with annex table) or enter the PDF URL. Only domains and IPs from the table will be extracted.',
     'blockdomi.pdfFile': 'PDF file',
+    'blockdomi.removePdfFile': 'Remove selected PDF',
     'blockdomi.pdfUrl': 'Or PDF URL',
     'blockdomi.extractDomainsFromPdf': 'Extract domains',
     'blockdomi.extractingPdf': 'Extracting text from PDF...',
@@ -4661,6 +4685,13 @@ const translations: Translations = {
     'blockdomi.linkOficioAnatelOptional': 'Enlace oficio Anatel (opcional)',
     'blockdomi.linkOficioJusticaOptional': 'Enlace decisión judicial (opcional)',
     'blockdomi.anatel': 'Anatel',
+    'blockdomi.numeroSeiAnatel': 'N.º SEI Anatel',
+    'blockdomi.numeroSeiAnatelOptional': 'N.º SEI Anatel (opcional)',
+    'blockdomi.seiAnatelHelp': 'Número de protocolo SEI al final del PDF firmado (p. ej., código verificador en la página de autenticidad). Use el botón para rellenar desde el PDF del oficio.',
+    'blockdomi.extractSeiFromAnatelPdf': 'Extraer SEI',
+    'blockdomi.seiExtractSuccess': 'Número SEI extraído del PDF.',
+    'blockdomi.seiExtractError': 'No fue posible extraer el SEI de este PDF.',
+    'blockdomi.seiExtractNoPdf': 'Seleccione el archivo PDF del oficio Anatel antes de extraer el SEI.',
     'blockdomi.justica': 'Decisión judicial',
     'blockdomi.bulkEditDomains': 'Editar {count} dominio(s)',
     'blockdomi.bulkEditIntro': 'Los valores siguientes se aplicarán a los {count} dominio(s) seleccionado(s).',
@@ -4698,6 +4729,7 @@ const translations: Translations = {
     'blockdomi.importFromPdf': 'Importar desde PDF',
     'blockdomi.importFromPdfIntro': 'Sube un PDF (oficio con tabla anexa) o ingresa la URL del PDF. Solo se extraerán los dominios e IPs de la tabla.',
     'blockdomi.pdfFile': 'Archivo PDF',
+    'blockdomi.removePdfFile': 'Quitar PDF seleccionado',
     'blockdomi.pdfUrl': 'O URL del PDF',
     'blockdomi.extractDomainsFromPdf': 'Extraer dominios',
     'blockdomi.extractingPdf': 'Extrayendo texto del PDF...',

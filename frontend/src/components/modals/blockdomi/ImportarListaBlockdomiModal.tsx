@@ -125,6 +125,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const [linkOficioAnatel, setLinkOficioAnatel] = useState('');
   const [linkOficioJustica, setLinkOficioJustica] = useState('');
   const [linkPlanilhaDominios, setLinkPlanilhaDominios] = useState('');
+  const [numeroSeiAnatel, setNumeroSeiAnatel] = useState('');
+  const [isExtractingSei, setIsExtractingSei] = useState(false);
   const [pdfOficioAnatel, setPdfOficioAnatel] = useState<File | null>(null);
   const [pdfOficioJustica, setPdfOficioJustica] = useState<File | null>(null);
   const pdfAnatelInputRef = useRef<HTMLInputElement>(null);
@@ -157,6 +159,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setColunasSeleccionadas(new Set());
       pendingPdfFilesRef.current = emptyPendingPdfFiles();
       setListaModo('bloqueio');
+      setNumeroSeiAnatel('');
       setDataInicioBloqueio((prev) => {
         if (prev === '') {
           const today = new Date();
@@ -258,6 +261,42 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     setRawText(buildTextFromColunas(colunasDisponiveis, colunasSeleccionadas));
     setClassified(null);
   }, [colunasDisponiveis, colunasSeleccionadas, buildTextFromColunas]);
+
+  const handleExtractSeiAnatel = useCallback(async () => {
+    const file = pdfOficioAnatel;
+    if (!file) {
+      error(t('blockdomi.seiExtractNoPdf'));
+      return;
+    }
+    setIsExtractingSei(true);
+    try {
+      const { sei } = await BlockdomiService.extractSeiAnatelFromPdf(file);
+      setNumeroSeiAnatel(sei);
+      success(t('blockdomi.seiExtractSuccess'));
+    } catch (e) {
+      error((e as Error)?.message ?? t('blockdomi.seiExtractError'));
+    } finally {
+      setIsExtractingSei(false);
+    }
+  }, [pdfOficioAnatel, error, success, t]);
+
+  const clearPdfAnatel = useCallback(() => {
+    setPdfOficioAnatel(null);
+    pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, anatel: null };
+    if (pdfAnatelInputRef.current) pdfAnatelInputRef.current.value = '';
+  }, []);
+
+  const clearPdfJustica = useCallback(() => {
+    setPdfOficioJustica(null);
+    pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, justica: null };
+    if (pdfJusticaInputRef.current) pdfJusticaInputRef.current.value = '';
+  }, []);
+
+  const clearPdfMain = useCallback(() => {
+    setPdfFile(null);
+    pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, main: null };
+    if (pdfFileInputRef.current) pdfFileInputRef.current.value = '';
+  }, []);
 
   const handleExtractFromPdf = useCallback(async () => {
     if (!pdfFile) {
@@ -403,6 +442,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         setLinkOficioAnatel('');
         setLinkOficioJustica('');
         setLinkPlanilhaDominios('');
+        setNumeroSeiAnatel('');
         setPdfOficioAnatel(null);
         setPdfOficioJustica(null);
         setPdfFile(null);
@@ -449,6 +489,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         linkPlanilhaVal = url;
       }
 
+      const seiVal = numeroSeiAnatel.trim() || null;
       const result = await BlockdomiService.importarLista({
         dominios: classified.dominios,
         ipv4: classified.ipv4,
@@ -458,7 +499,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         data_fim_bloqueio: dataFimVal,
         link_oficio_anatel: linkAnatelVal,
         link_oficio_justica: linkJusticaVal,
-        link_planilha_dominios: linkPlanilhaVal
+        link_planilha_dominios: linkPlanilhaVal,
+        numero_sei_anatel: seiVal
       });
       const { versao_lista: versaoLista, dominios: domRes, ipv4: ipv4Res, ipv6: ipv6Res } = result;
       const errs = [...domRes.errors, ...ipv4Res.errors, ...ipv6Res.errors];
@@ -485,6 +527,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setLinkOficioAnatel('');
       setLinkOficioJustica('');
       setLinkPlanilhaDominios('');
+      setNumeroSeiAnatel('');
       setPdfOficioAnatel(null);
       setPdfOficioJustica(null);
       setPdfFile(null);
@@ -500,7 +543,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     } finally {
       setIsCadastrando(false);
     }
-  }, [classified, totalValid, listaModo, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, pdfOficioAnatel, pdfOficioJustica, pdfFile, success, error, onSuccess, queryClient, t]);
+  }, [classified, totalValid, listaModo, nomeOficio, dataInicioBloqueio, dataFimBloqueio, linkOficioAnatel, linkOficioJustica, linkPlanilhaDominios, numeroSeiAnatel, pdfOficioAnatel, pdfOficioJustica, pdfFile, success, error, onSuccess, queryClient, t]);
 
   const domainCount = useMemo(() => {
     return parseListItems(rawText).length;
@@ -609,8 +652,27 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
 
         <div className="row g-3 mb-3">
             <div className="col-12">
-              <div className="row g-2 mb-2 w-100">
-                <div className="col-12 col-md-6">
+              <div className="row g-2 mb-2 w-100 align-items-end">
+                <div className="col-12 col-lg-3 col-md-4">
+                  <label className="form-label small mb-1 d-flex align-items-center gap-1">
+                    {t('blockdomi.numeroSeiAnatelOptional')}
+                    <i
+                      className="bi bi-info-circle text-muted"
+                      style={{ cursor: 'help', fontSize: '0.85rem' }}
+                      title={t('blockdomi.seiAnatelHelp')}
+                    />
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder="15497675"
+                    value={numeroSeiAnatel}
+                    onChange={(e) => setNumeroSeiAnatel(e.target.value.replace(/\D/g, '').slice(0, 20))}
+                  />
+                </div>
+                <div className="col-12 col-lg-5 col-md-8">
                   <label className="form-label small mb-1">{t('blockdomi.nomeOficioOptional')}</label>
                   <input
                     type="text"
@@ -620,7 +682,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                     onChange={(e) => setNomeOficio(e.target.value)}
                   />
                 </div>
-                <div className="col-6 col-md-3">
+                <div className="col-6 col-lg-2 col-md-6">
                   <label className="form-label small mb-1">{t('blockdomi.dataInicioBloqueio')}</label>
                   <input
                     type="date"
@@ -629,7 +691,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                     onChange={(e) => setDataInicioBloqueio(e.target.value)}
                   />
                 </div>
-                <div className="col-6 col-md-3">
+                <div className="col-6 col-lg-2 col-md-6">
                   <label className="form-label small mb-1">{t('blockdomi.dataFimBloqueioOptional')}</label>
                   <input
                     type="date"
@@ -640,77 +702,21 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                 </div>
               </div>
               <div className="pt-3 mt-3 border-top border-secondary pb-3 mb-3 border-bottom border-secondary">
-              <label className="form-label small mb-1 mt-2">{t('blockdomi.linkOficioAnatelOptional')}</label>
-              <div className="input-group input-group-sm mb-1">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="https://... ou arquivo PDF"
-                  value={linkOficioAnatel}
-                  onChange={(e) => setLinkOficioAnatel(e.target.value)}
-                />
-                <input
-                  ref={pdfAnatelInputRef}
-                  type="file"
-                  className="form-control"
-                  accept=".pdf,application/pdf"
-                  onChange={(e) => {
-                    setPdfOficioAnatel(e.target.files?.[0] ?? null);
-                    pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, anatel: null };
-                  }}
-                />
-              </div>
-              <label className="form-label small mb-1 mt-2">
-                {t('blockdomi.linkOficioJusticaOptional')}
-                <i
-                  className="bi bi-info-circle text-muted ms-1"
-                  style={{ cursor: 'help', fontSize: '0.85rem' }}
-                  title={t('blockdomi.separateLinksHelp')}
-                />
-              </label>
-              <div className="input-group input-group-sm mb-1">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="https://exemplo1.com, https://exemplo2.com ou arquivo PDF"
-                  value={linkOficioJustica}
-                  onChange={(e) => setLinkOficioJustica(e.target.value)}
-                />
-                <input
-                  ref={pdfJusticaInputRef}
-                  type="file"
-                  className="form-control"
-                  accept=".pdf,application/pdf"
-                  onChange={(e) => {
-                    setPdfOficioJustica(e.target.files?.[0] ?? null);
-                    pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, justica: null };
-                  }}
-                />
-              </div>
-              <label className="form-label small mb-1 mt-2">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
-              <div className="input-group input-group-sm mb-1 align-items-stretch">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="https://... ou arquivo PDF"
-                  value={linkPlanilhaDominios}
-                  onChange={(e) => setLinkPlanilhaDominios(e.target.value)}
-                />
-                <input
-                  ref={pdfFileInputRef}
-                  type="file"
-                  className="form-control"
-                  accept=".pdf,application/pdf"
-                  onChange={(e) => {
-                    setPdfFile(e.target.files?.[0] ?? null);
-                    pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, main: null };
-                  }}
-                />
+              <div className="ilb-actions mb-2">
                 <Button
                   type="button"
                   variant="primary"
                   size="sm"
-                  className="rounded-0 py-0"
+                  onClick={handleExtractSeiAnatel}
+                  disabled={isExtractingSei || !pdfOficioAnatel}
+                  title={t('blockdomi.seiAnatelHelp')}
+                >
+                  {isExtractingSei ? '…' : t('blockdomi.extractSeiFromAnatelPdf')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
                   onClick={handleExtractFromPdf}
                   disabled={isExtractingPdf || !pdfFile}
                 >
@@ -721,7 +727,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                     type="button"
                     variant="secondary"
                     size="sm"
-                    className="rounded-0 py-0"
                     onClick={handleExtractFromPdfUrl}
                     disabled={isExtractingPdf}
                   >
@@ -729,11 +734,120 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                   </Button>
                 )}
                 {isExtractingPdf && (
-                  <span className="input-group-text ilb-processing border-0 bg-transparent">
-                    <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" />
-                    <span className="small">{t('blockdomi.extractingPdf')}</span>
+                  <span className="d-inline-flex align-items-center gap-1 small text-muted">
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                    <span className="text-nowrap">{t('blockdomi.extractingPdf')}</span>
                   </span>
                 )}
+              </div>
+              <label className="form-label small mb-1 mt-2">{t('blockdomi.linkOficioAnatelOptional')}</label>
+              <div className="ilb-pdf-field-group">
+                <div className="ilb-pdf-url-file-row">
+                  <input
+                    type="text"
+                    className="form-control form-control-sm ilb-pdf-url"
+                    placeholder="https://... ou arquivo PDF"
+                    value={linkOficioAnatel}
+                    onChange={(e) => setLinkOficioAnatel(e.target.value)}
+                  />
+                  <div className="ilb-pdf-file-cell">
+                    <input
+                      ref={pdfAnatelInputRef}
+                      type="file"
+                      className="form-control form-control-sm ilb-pdf-file"
+                      accept=".pdf,application/pdf"
+                      onChange={(e) => {
+                        setPdfOficioAnatel(e.target.files?.[0] ?? null);
+                        pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, anatel: null };
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger ilb-pdf-remove-btn"
+                      onClick={clearPdfAnatel}
+                      disabled={!pdfOficioAnatel || isExtractingSei}
+                      title={t('blockdomi.removePdfFile')}
+                      aria-label={t('blockdomi.removePdfFile')}
+                    >
+                      <i className="bi bi-trash" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <label className="form-label small mb-1 mt-2">
+                {t('blockdomi.linkOficioJusticaOptional')}
+                <i
+                  className="bi bi-info-circle text-muted ms-1"
+                  style={{ cursor: 'help', fontSize: '0.85rem' }}
+                  title={t('blockdomi.separateLinksHelp')}
+                />
+              </label>
+              <div className="ilb-pdf-field-group">
+                <div className="ilb-pdf-url-file-row">
+                  <input
+                    type="text"
+                    className="form-control form-control-sm ilb-pdf-url"
+                    placeholder="https://exemplo1.com, https://exemplo2.com ou arquivo PDF"
+                    value={linkOficioJustica}
+                    onChange={(e) => setLinkOficioJustica(e.target.value)}
+                  />
+                  <div className="ilb-pdf-file-cell">
+                    <input
+                      ref={pdfJusticaInputRef}
+                      type="file"
+                      className="form-control form-control-sm ilb-pdf-file"
+                      accept=".pdf,application/pdf"
+                      onChange={(e) => {
+                        setPdfOficioJustica(e.target.files?.[0] ?? null);
+                        pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, justica: null };
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger ilb-pdf-remove-btn"
+                      onClick={clearPdfJustica}
+                      disabled={!pdfOficioJustica}
+                      title={t('blockdomi.removePdfFile')}
+                      aria-label={t('blockdomi.removePdfFile')}
+                    >
+                      <i className="bi bi-trash" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <label className="form-label small mb-1 mt-2">{t('blockdomi.linkPlanilhaDominiosOptional')}</label>
+              <div className="ilb-pdf-field-group">
+                <div className="ilb-pdf-url-file-row">
+                  <input
+                    type="text"
+                    className="form-control form-control-sm ilb-pdf-url"
+                    placeholder="https://... ou arquivo PDF"
+                    value={linkPlanilhaDominios}
+                    onChange={(e) => setLinkPlanilhaDominios(e.target.value)}
+                  />
+                  <div className="ilb-pdf-file-cell">
+                    <input
+                      ref={pdfFileInputRef}
+                      type="file"
+                      className="form-control form-control-sm ilb-pdf-file"
+                      accept=".pdf,application/pdf"
+                      onChange={(e) => {
+                        setPdfFile(e.target.files?.[0] ?? null);
+                        pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, main: null };
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger ilb-pdf-remove-btn"
+                      onClick={clearPdfMain}
+                      disabled={!pdfFile || isExtractingPdf}
+                      title={t('blockdomi.removePdfFile')}
+                      aria-label={t('blockdomi.removePdfFile')}
+                    >
+                      <i className="bi bi-trash" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
               </div>
               {hasPdfUrl && (
                 <p className="text-muted small mt-1 mb-0">{t('blockdomi.extractFromPlanilhaUrlHelp')}</p>

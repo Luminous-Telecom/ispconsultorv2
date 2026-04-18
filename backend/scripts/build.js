@@ -122,6 +122,11 @@ if (fs.existsSync(scriptsSource)) {
     fs.copyFileSync(pyScript, path.join(scriptsDest, 'extrair-dominios.py'));
     console.log('✅ extrair-dominios.py copiado');
   }
+  const pySei = path.join(scriptsSource, 'extrair-sei-anatel.py');
+  if (fs.existsSync(pySei)) {
+    fs.copyFileSync(pySei, path.join(scriptsDest, 'extrair-sei-anatel.py'));
+    console.log('✅ extrair-sei-anatel.py copiado');
+  }
   if (fs.existsSync(requirementsFile)) {
     fs.copyFileSync(requirementsFile, path.join(scriptsDest, 'requirements.txt'));
     console.log('✅ requirements.txt copiado');

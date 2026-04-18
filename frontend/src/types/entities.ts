@@ -739,6 +739,8 @@ export interface Dominio {
   link_oficio_anatel?: string | null;
   link_oficio_justica?: string | null;
   link_planilha_dominios?: string | null;
+  /** Número SEI do protocolo eletrônico (ofício Anatel). */
+  numero_sei_anatel?: string | null;
   ativo: boolean;
   created_at?: string;
   updated_at?: string;
@@ -759,6 +761,7 @@ export interface IPv4 {
   link_oficio_anatel?: string | null;
   link_oficio_justica?: string | null;
   link_planilha_dominios?: string | null;
+  numero_sei_anatel?: string | null;
   ativo: boolean;
   created_at?: string;
   updated_at?: string;
@@ -779,6 +782,7 @@ export interface IPv6 {
   link_oficio_anatel?: string | null;
   link_oficio_justica?: string | null;
   link_planilha_dominios?: string | null;
+  numero_sei_anatel?: string | null;
   ativo: boolean;
   created_at?: string;
   updated_at?: string;

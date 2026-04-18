@@ -4872,22 +4872,28 @@ input[type="week"]::-moz-calendar-picker-indicator {
   line-height: 1.25;
 }
 
-.importar-lista-blockdomi .input-group input[type='file'].form-control {
-  background-color: var(--bg-secondary, #2d2d2d) !important;
-  color: var(--text-primary, #e0e0e0) !important;
-  border-color: var(--border-color, #444) !important;
+/* File input no importar lista: mesmo visual no input-group e nas linhas em grid */
+.importar-lista-blockdomi .input-group input[type='file'].form-control,
+.importar-lista-blockdomi .ilb-pdf-url-file-row .ilb-pdf-file {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
 }
-.importar-lista-blockdomi .input-group input[type='file'].form-control::file-selector-button {
-  background-color: var(--bg-tertiary, #3d3d3d) !important;
-  color: var(--text-primary, #e0e0e0) !important;
-  border-color: var(--border-color, #444) !important;
-  border-right: 1px solid var(--border-color, #444) !important;
+
+.importar-lista-blockdomi .input-group input[type='file'].form-control::file-selector-button,
+.importar-lista-blockdomi .ilb-pdf-url-file-row .ilb-pdf-file::file-selector-button {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  border-right: 1px solid var(--border-color) !important;
 }
-.importar-lista-blockdomi .input-group input[type='file'].form-control::-webkit-file-upload-button {
-  background-color: var(--bg-tertiary, #3d3d3d) !important;
-  color: var(--text-primary, #e0e0e0) !important;
-  border-color: var(--border-color, #444) !important;
-  border-right: 1px solid var(--border-color, #444) !important;
+
+.importar-lista-blockdomi .input-group input[type='file'].form-control::-webkit-file-upload-button,
+.importar-lista-blockdomi .ilb-pdf-url-file-row .ilb-pdf-file::-webkit-file-upload-button {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  border-right: 1px solid var(--border-color) !important;
 }
 .importar-lista-blockdomi .input-group.input-group-sm .btn {
   align-self: stretch !important;
@@ -4899,10 +4905,130 @@ input[type="week"]::-moz-calendar-picker-indicator {
   min-height: 0 !important;
 }
 
+/* Link + ficheiro: gap para cada control usar o mesmo .form-control-sm que o resto do modal */
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 460px);
+  gap: 0.5rem;
+  align-items: stretch;
+  border: 0;
+  border-radius: 0;
+  margin-bottom: 0.35rem;
+}
+
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-url {
+  min-width: 0;
+}
+
+/* Coluna ficheiro + lixeira: um só controlo (tipo input-group) */
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius, 0.25rem);
+  overflow: hidden;
+  background-color: var(--bg-secondary);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell:focus-within {
+  border-color: var(--btn-primary-color, var(--primary-color)) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell .ilb-pdf-file {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+}
+
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell .ilb-pdf-file:focus,
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell .ilb-pdf-file:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell .ilb-pdf-remove-btn {
+  flex: 0 0 auto;
+  align-self: stretch;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  max-width: 2.5rem;
+  padding: 0 !important;
+  margin: 0;
+  border-radius: 0 !important;
+  line-height: 1;
+  box-sizing: border-box;
+  height: auto !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  border-left: 1px solid var(--border-color) !important;
+  background-color: var(--bg-tertiary) !important;
+  color: var(--bs-danger, #dc3545) !important;
+}
+
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell .ilb-pdf-remove-btn:not(:disabled):hover {
+  background-color: rgba(220, 53, 69, 0.12) !important;
+  color: var(--bs-danger, #dc3545) !important;
+}
+
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell .ilb-pdf-remove-btn:disabled {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-muted) !important;
+  border-left: 1px solid var(--border-color) !important;
+  opacity: 1;
+}
+
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell .ilb-pdf-remove-btn:focus,
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell .ilb-pdf-remove-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell .ilb-pdf-remove-btn > i {
+  position: relative;
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1;
+  font-size: 1rem;
+}
+
+.importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row .ilb-pdf-file-cell .ilb-pdf-remove-btn > i::before {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  line-height: 1;
+}
+
+@media (max-width: 767.98px) {
+  .importar-lista-blockdomi .ilb-pdf-field-group .ilb-pdf-url-file-row {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    gap: 0.5rem;
+  }
+}
+
 .importar-lista-blockdomi .input-group .input-group-text {
-  background-color: var(--bg-tertiary, #3d3d3d) !important;
-  color: var(--text-primary, #e0e0e0) !important;
-  border-color: var(--border-color, #444) !important;
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 /* Área de input estilo editor de código */

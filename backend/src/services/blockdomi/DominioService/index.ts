@@ -49,7 +49,7 @@ export class DominioService {
     if (search) {
       const searchPattern = `%${search}%`;
       const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
-      const textFields = ['dominio', 'descricao', 'nome_oficio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'];
+      const textFields = ['dominio', 'descricao', 'nome_oficio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios', 'numero_sei_anatel'];
       let orConditions: Array<WhereOptions<Dominio>> = [];
       if (searchField === 'id') {
         orConditions = numExact !== null ? [{ id: numExact } as WhereOptions<Dominio>] : [{ id: { [Op.lt]: 0 } } as WhereOptions<Dominio>];
@@ -62,7 +62,8 @@ export class DominioService {
           { nome_oficio: { [Op.like]: searchPattern } },
           { link_oficio_anatel: { [Op.like]: searchPattern } },
           { link_oficio_justica: { [Op.like]: searchPattern } },
-          { link_planilha_dominios: { [Op.like]: searchPattern } }
+          { link_planilha_dominios: { [Op.like]: searchPattern } },
+          { numero_sei_anatel: { [Op.like]: searchPattern } }
         ] as Array<WhereOptions<Dominio>>;
         if (numExact !== null) {
           orConditions.unshift({ id: numExact } as WhereOptions<Dominio>);
@@ -176,6 +177,7 @@ export class DominioService {
       'link_oficio_anatel',
       'link_oficio_justica',
       'link_planilha_dominios',
+      'numero_sei_anatel',
       'ativo'
     ];
     
@@ -225,6 +227,7 @@ export class DominioService {
       'link_oficio_anatel',
       'link_oficio_justica',
       'link_planilha_dominios',
+      'numero_sei_anatel',
       'ativo'
     ];
 
@@ -273,12 +276,13 @@ export class DominioService {
     link_oficio_anatel: string | null;
     link_oficio_justica: string | null;
     link_planilha_dominios: string | null;
+    numero_sei_anatel: string | null;
   }>> {
     if (dominios.length === 0) return new Map();
     const unique = [...new Set(dominios)];
     const found = await Dominio.findAll({
       where: { dominio: { [Op.in]: unique } },
-      attributes: ['id', 'dominio', 'data_fim_bloqueio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'],
+      attributes: ['id', 'dominio', 'data_fim_bloqueio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios', 'numero_sei_anatel'],
       raw: true
     });
     const map = new Map<string, {
@@ -287,6 +291,7 @@ export class DominioService {
       link_oficio_anatel: string | null;
       link_oficio_justica: string | null;
       link_planilha_dominios: string | null;
+      numero_sei_anatel: string | null;
     }>();
     for (const r of found) {
       map.set(r.dominio as string, {
@@ -294,7 +299,8 @@ export class DominioService {
         data_fim_bloqueio: r.data_fim_bloqueio as string | null,
         link_oficio_anatel: r.link_oficio_anatel as string | null,
         link_oficio_justica: r.link_oficio_justica as string | null,
-        link_planilha_dominios: r.link_planilha_dominios as string | null
+        link_planilha_dominios: r.link_planilha_dominios as string | null,
+        numero_sei_anatel: r.numero_sei_anatel as string | null
       });
     }
     return map;
@@ -313,6 +319,7 @@ export class DominioService {
       link_oficio_anatel?: string | null;
       link_oficio_justica?: string | null;
       link_planilha_dominios?: string | null;
+      numero_sei_anatel?: string | null;
       empresa_id?: number | null;
       getVersoesForNewRecords?: (count: number) => Promise<Array<{ id: number; numero: string }>>;
       versaoId?: number;
@@ -340,7 +347,9 @@ export class DominioService {
         const dataFimMudou = newDataFim !== (existing.data_fim_bloqueio ?? null);
         const hasNoUrls = !(existing.link_oficio_anatel?.trim() || existing.link_oficio_justica?.trim() || existing.link_planilha_dominios?.trim());
         const hasUrlsToAdd = !!(metadata.link_oficio_anatel?.trim() || metadata.link_oficio_justica?.trim() || metadata.link_planilha_dominios?.trim());
-        if (dataFimMudou || (hasNoUrls && hasUrlsToAdd)) {
+        const hasNoSei = !(existing.numero_sei_anatel?.trim());
+        const hasSeiToAdd = !!(metadata.numero_sei_anatel?.trim());
+        if (dataFimMudou || (hasNoUrls && hasUrlsToAdd) || (hasNoSei && hasSeiToAdd)) {
           toUpdate.push({ id: existing.id, dominio });
         }
         continue;
@@ -355,6 +364,7 @@ export class DominioService {
         link_oficio_anatel: emptyToNull(metadata.link_oficio_anatel ?? null),
         link_oficio_justica: emptyToNull(metadata.link_oficio_justica ?? null),
         link_planilha_dominios: emptyToNull(metadata.link_planilha_dominios ?? null),
+        numero_sei_anatel: emptyToNull(metadata.numero_sei_anatel ?? null),
         empresa_id: metadata.empresa_id ?? null,
         ativo: true
       });
@@ -424,6 +434,7 @@ export class DominioService {
           link_oficio_anatel: emptyToNull(metadata.link_oficio_anatel ?? null),
           link_oficio_justica: emptyToNull(metadata.link_oficio_justica ?? null),
           link_planilha_dominios: emptyToNull(metadata.link_planilha_dominios ?? null),
+          numero_sei_anatel: emptyToNull(metadata.numero_sei_anatel ?? null),
           versao_id: versaoId
         },
         { where: { id: { [Op.in]: updatedIds } } }

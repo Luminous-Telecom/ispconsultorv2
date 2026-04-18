@@ -22,6 +22,7 @@ export class Dominio extends Model<
   declare link_oficio_anatel: string | null;
   declare link_oficio_justica: string | null;
   declare link_planilha_dominios: string | null;
+  declare numero_sei_anatel: string | null;
   declare ativo: boolean;
   declare versao_id: number | null;
   declare created_at: CreationOptional<Date>;
@@ -91,6 +92,10 @@ Dominio.init(
     },
     link_planilha_dominios: {
       type: DataTypes.TEXT,
+      allowNull: true
+    },
+    numero_sei_anatel: {
+      type: DataTypes.STRING(32),
       allowNull: true
     },
     ativo: {

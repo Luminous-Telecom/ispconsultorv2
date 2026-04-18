@@ -121,6 +121,13 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       render: (item: Dominio) => item.link_oficio_anatel?.trim() ? t('ui.yes') : t('ui.no')
     },
     {
+      key: 'numero_sei_anatel',
+      label: t('blockdomi.numeroSeiAnatel'),
+      sortable: false,
+      width: '110px',
+      render: (item: Dominio) => item.numero_sei_anatel?.trim() || '-'
+    },
+    {
       key: 'oficio_justica',
       label: t('blockdomi.oficioJustica'),
       sortable: false,
@@ -166,7 +173,8 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     { key: 'id', label: t('table.id') },
     { key: 'dominio', label: t('blockdomi.domain') },
     { key: 'descricao', label: t('form.description') },
-    { key: 'nome_oficio', label: t('blockdomi.nomeOficio') }
+    { key: 'nome_oficio', label: t('blockdomi.nomeOficio') },
+    { key: 'numero_sei_anatel', label: t('blockdomi.numeroSeiAnatel') }
   ];
 
   const { data: dominiosData, isLoading, refetch } = useDominios({

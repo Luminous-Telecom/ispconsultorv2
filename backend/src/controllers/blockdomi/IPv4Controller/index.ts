@@ -61,7 +61,7 @@ export class IPv4Controller {
 
   static async bulkCreate(req: Request, res: Response): Promise<void> {
     try {
-      const { items, nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, link_oficio_anatel, link_oficio_justica, link_planilha_dominios } = req.body;
+      const { items, nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, link_oficio_anatel, link_oficio_justica, link_planilha_dominios, numero_sei_anatel } = req.body;
 
       if (!Array.isArray(items) || items.length === 0) {
         sendValidationError(res, 'Informe a lista de IPv4 (items: string[]).');
@@ -81,6 +81,7 @@ export class IPv4Controller {
         link_oficio_anatel: link_oficio_anatel ?? null,
         link_oficio_justica: link_oficio_justica ?? null,
         link_planilha_dominios: link_planilha_dominios ?? null,
+        numero_sei_anatel: numero_sei_anatel != null && String(numero_sei_anatel).trim() !== '' ? String(numero_sei_anatel).trim() : null,
         empresa_id: empresaIdAudit
       });
 

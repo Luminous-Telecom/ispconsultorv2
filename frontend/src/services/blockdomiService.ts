@@ -13,6 +13,7 @@ export interface ImportarListaPayload {
   link_oficio_anatel?: string | null;
   link_oficio_justica?: string | null;
   link_planilha_dominios?: string | null;
+  numero_sei_anatel?: string | null;
 }
 
 export interface ImportarListaResult {
@@ -94,5 +95,21 @@ export class BlockdomiService {
       throw new Error('Resposta inválida do servidor');
     }
     return { url: data.url };
+  }
+
+  /** Envia o PDF do ofício Anatel e retorna o número SEI extraído (arquivo não permanece armazenado). */
+  static async extractSeiAnatelFromPdf(file: File): Promise<{ sei: string }> {
+    const formData = new FormData();
+    formData.append('arquivo', file);
+    const response = await defaultApiClient.post<{ sei: string }>(
+      '/blockdomi/extract-sei-anatel-pdf',
+      formData,
+      { timeout: 120000 }
+    );
+    const sei = response.data?.sei;
+    if (!response.success || !sei) {
+      throw new Error(response.message || 'Não foi possível extrair o SEI deste PDF.');
+    }
+    return { sei };
   }
 }
