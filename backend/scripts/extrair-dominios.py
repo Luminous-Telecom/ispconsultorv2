@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
-Extrai domínios e IPs das colunas-alvo de PDFs.
+Extrai domínios e IPs de tabelas em PDFs.
+
+Detecção de cabeçalho 100% dinâmica: qualquer linha onde a maioria das células
+não contenha domínios/IPs válidos é tratada como cabeçalho. Os textos das células
+daquela linha viram os nomes das colunas retornadas.
 
 Uso: python extrair-dominios.py <caminho_pdf>
-Retorna: JSON com os dados extraídos
+Retorna: JSON { success, colunas: {header: [items]}, dominios_bruto: [...], total_bruto: N }
 """
 import re
 import sys
@@ -11,7 +15,6 @@ import json
 import os
 import ipaddress
 
-# Suprime outputs de bibliotecas durante o import
 _orig_out, _orig_err = sys.stdout, sys.stderr
 
 class _Null:
@@ -125,81 +128,112 @@ def _extrair_dados_celula(texto):
     return _remontar_dominios_quebrados(tokens)
 
 
-def _classificar_cabecalho(texto):
-    norm = _normalizar(texto)
-    if not norm:
-        return None
-    if 'dominios ja bloqueados' in norm or 'blocked domains' in norm:
-        return 'dominios_bloqueados'
-    if ('novos dominios' in norm and 'bloqueio' in norm) or 'new domains for blocking' in norm:
-        return 'novos_dominios'
-    if ('url' in norm and 'endereco' in norm and 'host' in norm) or \
-       ('url' in norm and 'address' in norm and 'host' in norm):
-        return 'url_host'
-    if ('ip' in norm and 'host' in norm and 'address' in norm) or 'ip host address' in norm:
-        return 'ip_host'
+def _eh_celula_cabecalho(texto):
+    """True se o texto não contém nenhum domínio ou IP válido — típico de célula de cabeçalho."""
+    t = (texto or '').strip()
+    if not t:
+        return False
+    return len(_extrair_dados_celula(t)) == 0
+
+
+def _detectar_linha_cabecalho(table_data):
+    """
+    Retorna o índice da linha de cabeçalho.
+    Verifica as primeiras 5 linhas e retorna a primeira onde
+    a maioria das células não contém domínios/IPs (ou seja, parece texto de título).
+    Retorna None se nenhuma linha qualificar.
+    """
+    for row_idx, row in enumerate((table_data or [])[:5]):
+        if not row:
+            continue
+        celulas = [str(c).strip() for c in row if c and str(c).strip()]
+        if not celulas:
+            continue
+        n_cabecalho = sum(1 for c in celulas if _eh_celula_cabecalho(c))
+        if n_cabecalho / len(celulas) > 0.5:
+            return row_idx
     return None
 
 
-_CHAVES = ('dominios_bloqueados', 'novos_dominios', 'url_host', 'ip_host')
-
-
-def _buscar_cabecalho(table_data):
-    indices = {k: None for k in _CHAVES}
-    header_row = None
-    for row_idx, row in enumerate(table_data or []):
-        for col_idx, cell in enumerate(row or []):
-            campo = _classificar_cabecalho(cell)
-            if campo and indices[campo] is None:
-                indices[campo] = col_idx
-                if header_row is None:
-                    header_row = row_idx
-    return (indices, header_row) if any(v is not None for v in indices.values()) else (None, None)
-
-
-def _detectar_coluna_por_conteudo(table_data):
-    """Detecta a coluna com ≥ 40 % de domínios/IPs válidos."""
+def _detectar_colunas_por_conteudo(table_data):
+    """
+    Fallback quando não há linha de cabeçalho detectável.
+    Retorna {col_idx: 'Coluna N'} para cada coluna com ≥ 40% de células válidas.
+    """
     if not table_data:
-        return None
+        return {}
     num_cols = max((len(r) for r in table_data if r), default=0)
-    scores = {}
+    resultado = {}
+    n = 1
     for col in range(num_cols):
         celulas = [str(r[col]) for r in table_data if r and col < len(r) and r[col] and str(r[col]).strip()]
         if celulas:
-            scores[col] = sum(1 for c in celulas if _extrair_dados_celula(c)) / len(celulas)
-    melhor = max(scores, key=scores.get, default=None)
-    if melhor is not None and scores[melhor] >= 0.40:
-        return {**{k: None for k in _CHAVES}, 'url_host': melhor}
-    return None
+            score = sum(1 for c in celulas if _extrair_dados_celula(c)) / len(celulas)
+            if score >= 0.40:
+                resultado[col] = f'Coluna {n}'
+                n += 1
+    return resultado
 
 
-def _extrair_por_indices(table_data, indices, start_row=0):
-    dados = {k: [] for k in _CHAVES}
+def _extrair_por_colunas(table_data, colunas_idx, start_row=0):
+    """
+    Extrai itens válidos de cada coluna indicada em colunas_idx {col_idx: header_text}.
+    Retorna {header_text: [items]}.
+    """
+    colunas_dados = {}
     for row in table_data[start_row:]:
         if not row:
             continue
-        for chave, col in indices.items():
-            if col is not None and col < len(row) and row[col]:
-                dados[chave].extend(_extrair_dados_celula(str(row[col])))
-    return dados
+        for col_idx, header_text in colunas_idx.items():
+            if col_idx < len(row) and row[col_idx]:
+                items = _extrair_dados_celula(str(row[col_idx]))
+                if items:
+                    if header_text not in colunas_dados:
+                        colunas_dados[header_text] = []
+                    colunas_dados[header_text].extend(items)
+    return colunas_dados
 
 
-def _merge(destino, origem):
-    for k in _CHAVES:
-        destino[k].extend(origem[k])
+def _limpar_texto_cabecalho(texto):
+    """Normaliza o texto de uma célula de cabeçalho: remove quebras de linha e espaços extras."""
+    if not texto:
+        return ''
+    return re.sub(r'\s+', ' ', str(texto).replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')).strip()
 
 
-def extrair_dados_de_tabelas(page, indices_conhecidos=None):
+def _construir_colunas_idx(td, hrow, num_cols):
+    """
+    Constrói {col_idx: header_text} para TODAS as colunas da tabela.
+    Células vazias ou ausentes no header recebem nome gerado 'Coluna N',
+    garantindo que nenhuma coluna com dados seja perdida.
+    """
+    header_row = (td[hrow] if hrow is not None and hrow < len(td) else None) or []
+    colunas_idx = {}
+    gen_n = 1
+    for col_idx in range(num_cols):
+        cell = header_row[col_idx] if col_idx < len(header_row) else None
+        text = _limpar_texto_cabecalho(cell) if cell else ''
+        if not text:
+            text = f'Coluna {gen_n}'
+            gen_n += 1
+        colunas_idx[col_idx] = text
+    return colunas_idx
+
+
+def extrair_dados_de_tabelas(page, colunas_ativas=None):
     """
     Extrai dados de todas as tabelas da página.
 
-    Prioridade:
-    1. Cabeçalho reconhecido → usa e atualiza os índices ativos.
-    2. Índices conhecidos (continuação de tabela multi-página) → reutiliza.
-    3. Último recurso: detecção por conteúdo (sem contexto anterior).
+    - Primeira ocorrência (colunas_ativas=None): detecta linha de cabeçalho; se não
+      encontrar, usa 'Coluna N' para cada coluna com conteúdo válido (fallback).
+    - Páginas de continuação (colunas_ativas definido): reutiliza a estrutura
+      conhecida sem tentar re-detectar o cabeçalho, evitando falsos positivos.
+      Exceção: se a tabela tiver mais colunas que o conhecido, re-detecta.
+
+    Retorna (colunas_agregado, novos_colunas_idx).
     """
-    dados = {k: [] for k in _CHAVES}
-    novos_indices = None
+    colunas_agregado = {}
+    novos_colunas = None
     try:
         for table in (page.find_tables() if hasattr(page, 'find_tables') else []):
             if not hasattr(table, 'extract'):
@@ -208,46 +242,80 @@ def extrair_dados_de_tabelas(page, indices_conhecidos=None):
             if not td:
                 continue
 
-            indices, hrow = _buscar_cabecalho(td)
-            if indices is not None:
-                novos_indices = indices
-                _merge(dados, _extrair_por_indices(td, indices, (hrow + 1) if hrow is not None else 0))
-            elif indices_conhecidos is not None:
-                _merge(dados, _extrair_por_indices(td, indices_conhecidos))
+            num_cols = max((len(r) for r in td if r), default=0)
+            if num_cols == 0:
+                continue
+
+            if colunas_ativas is None:
+                # Primeira vez: tenta detectar o cabeçalho
+                hrow = _detectar_linha_cabecalho(td)
+                if hrow is not None:
+                    colunas_idx = _construir_colunas_idx(td, hrow, num_cols)
+                    novos_colunas = colunas_idx
+                    start = hrow + 1
+                else:
+                    # Sem cabeçalho: inclui apenas colunas com ≥ 40% de itens válidos
+                    colunas_idx = _detectar_colunas_por_conteudo(td)
+                    start = 0
             else:
-                ic = _detectar_coluna_por_conteudo(td)
-                if ic:
-                    _merge(dados, _extrair_por_indices(td, ic))
+                # Continuação: reutiliza estrutura conhecida
+                # Só re-detecta se a tabela tiver mais colunas (nova seção do PDF)
+                if num_cols > len(colunas_ativas):
+                    hrow = _detectar_linha_cabecalho(td)
+                    if hrow is not None:
+                        colunas_idx = _construir_colunas_idx(td, hrow, num_cols)
+                        novos_colunas = colunas_idx
+                        start = hrow + 1
+                    else:
+                        colunas_idx = colunas_ativas
+                        start = 0
+                else:
+                    colunas_idx = colunas_ativas
+                    start = 0
+
+            if not colunas_idx:
+                continue
+
+            dados = _extrair_por_colunas(td, colunas_idx, start)
+            for h, items in dados.items():
+                if h not in colunas_agregado:
+                    colunas_agregado[h] = []
+                colunas_agregado[h].extend(items)
     except Exception as e:
         _log(f"Erro ao extrair dados de tabelas: {e}")
-    return dados, novos_indices
+    return colunas_agregado, novos_colunas
 
 
 def extrair_dados_pdf(caminho_pdf):
-    consolidado = {k: [] for k in _CHAVES}
+    colunas_consolidado = {}
     try:
         doc = fitz.open(caminho_pdf)
         try:
-            indices_ativos = None
+            colunas_ativas = None
             num_pages = len(doc)
             for n, page in enumerate(doc):
                 _log(f"processando página {n + 1}/{num_pages}")
-                dados_pag, novos = extrair_dados_de_tabelas(page, indices_ativos)
+                colunas_pag, novos = extrair_dados_de_tabelas(page, colunas_ativas)
                 if novos is not None:
-                    indices_ativos = novos
-                _merge(consolidado, dados_pag)
+                    colunas_ativas = novos
+                for h, items in colunas_pag.items():
+                    if h not in colunas_consolidado:
+                        colunas_consolidado[h] = []
+                    colunas_consolidado[h].extend(items)
         finally:
             doc.close()
     except Exception as e:
         _log(f"Erro ao processar PDF: {e}")
         raise
 
-    for k in _CHAVES:
-        consolidado[k] = sorted(dict.fromkeys(consolidado[k]))
+    # Deduplica, ordena e remove colunas vazias
+    colunas_consolidado = {
+        h: sorted(dict.fromkeys(v))
+        for h, v in colunas_consolidado.items()
+        if v
+    }
 
-    totais = {k: len(consolidado[k]) for k in _CHAVES}
-    _log(f"totais_por_coluna: {json.dumps(totais, ensure_ascii=False)}")
-    return consolidado
+    return colunas_consolidado
 
 
 def main():
@@ -255,11 +323,14 @@ def main():
         if len(sys.argv) < 2:
             sys.stdout.write(json.dumps({"success": False, "error": "Caminho do PDF não fornecido"}) + '\n')
             sys.exit(1)
-        r = extrair_dados_pdf(sys.argv[1])
+        colunas = extrair_dados_pdf(sys.argv[1])
+        # Lista plana de todos os itens (mantida para compatibilidade com o backend)
+        todos = sorted(dict.fromkeys(item for v in colunas.values() for item in v))
         out = {
             "success": True,
-            **r,
-            **{f"total_{k}": len(v) for k, v in r.items()},
+            "colunas": colunas,
+            "dominios_bruto": todos,
+            "total_bruto": len(todos),
         }
         sys.stdout.write(json.dumps(out, ensure_ascii=False) + '\n')
         sys.stdout.flush()

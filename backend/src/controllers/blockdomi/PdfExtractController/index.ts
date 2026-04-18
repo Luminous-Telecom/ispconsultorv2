@@ -139,12 +139,6 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
   let stderrBuffer = '';
   const pageProgressLog: Array<{ current: number; total: number }> = [];
 
-  logger.info('PdfExtract.background: processo Python iniciado', {
-    jobId,
-    pid: proc.pid,
-    scriptPath,
-    python: getPdfExtractPython()
-  });
 
   proc.stdout?.on('data', (d: Buffer) => {
     stdout += d.toString();
@@ -248,20 +242,10 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
 
     type PyResult = {
       success?: boolean;
-      // campos legados (versões antigas do script)
-      dominios?: string[];
       dominios_bruto?: string[];
-      total?: number;
       total_bruto?: number;
-      // campos atuais do script (versão com colunas específicas)
-      dominios_bloqueados?: string[];
-      novos_dominios?: string[];
-      url_host?: string[];
-      ip_host?: string[];
-      total_dominios_bloqueados?: number;
-      total_novos_dominios?: number;
-      total_url_host?: number;
-      total_ip_host?: number;
+      /** Colunas detectadas dinamicamente no PDF: {header_text: [items]} */
+      colunas?: Record<string, string[]>;
       data_inicio_bloqueio?: string | null;
       data_fim_bloqueio?: string | null;
       error?: string;
@@ -285,34 +269,27 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
     }
 
     if (result && result.success) {
-      // Suporte ao formato atual do script (colunas específicas) e legado (dominios direto)
-      const novos = result.novos_dominios ?? [];
-      const bloqueados = result.dominios_bloqueados ?? [];
-      const urlHost = result.url_host ?? [];
-      const ipHost = result.ip_host ?? [];
+      const colunas = result.colunas ?? {};
 
-      // Combinação de todos os itens extraídos (sem duplicatas), mantendo ordem: novos → url_host → ip_host → já bloqueados
-      const todosDedup = [...new Set([...novos, ...urlHost, ...ipHost, ...bloqueados])];
+      // Lista plana dedupada de todos os itens de todas as colunas
+      const todosSet = new Set<string>();
+      Object.values(colunas).forEach((arr) => arr.forEach((v) => todosSet.add(v)));
+      const todosDedup = Array.from(todosSet);
 
-      const dominios = result.dominios ?? todosDedup;
       const dominiosBruto = result.dominios_bruto ?? todosDedup;
 
-      const totaisPorColuna = {
-        dominios_bloqueados: bloqueados.length,
-        novos_dominios: novos.length,
-        url_host: urlHost.length,
-        ip_host: ipHost.length
-      };
-      logger.info('PdfExtract.background: totais por coluna', { jobId, totaisPorColuna });
+      const totaisPorColuna: Record<string, number> = {};
+      Object.entries(colunas).forEach(([k, v]) => { totaisPorColuna[k] = v.length; });
 
       const jobResult = {
-        dominios,
+        dominios: dominiosBruto,
         dominios_bruto: dominiosBruto,
-        total: result.total ?? dominios.length,
+        total: dominiosBruto.length,
         total_bruto: result.total_bruto ?? dominiosBruto.length,
         data_inicio_bloqueio: result.data_inicio_bloqueio ?? undefined,
         data_fim_bloqueio: result.data_fim_bloqueio ?? undefined,
-        totaisPorColuna
+        totaisPorColuna,
+        colunas
       };
       ssePublish(jobId, 'completed', { result: jobResult });
       setPdfExtractJob(jobId, {
@@ -382,7 +359,6 @@ class PdfExtractController {
       });
 
       const scriptPath = path.join(__dirname, relativeToRoot, 'scripts/extrair-dominios.py');
-      logger.info('PdfExtract.extractFromPdf: job criado, disparando Python em background', { jobId, fileSize: req.file.buffer.length });
 
       runPythonInBackground(scriptPath, tempFilePath, jobId);
 
@@ -540,7 +516,6 @@ class PdfExtractController {
         createdAt: Date.now()
       });
 
-      logger.info('PdfExtract.extractFromPdfUrl: job criado, processamento em background', { jobId, url: urlTrimmed });
 
       setImmediate(() => {
         runExtractFromUrlBackground(jobId, urlTrimmed).catch((err) => {

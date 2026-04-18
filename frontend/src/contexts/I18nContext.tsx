@@ -363,6 +363,11 @@ export interface TranslationKeys {
   'blockdomi.pdfExtractSuccess': string;
   'blockdomi.pdfExtractError': string;
   'blockdomi.pdfExtractLogTitle': string;
+  'blockdomi.colunasDetectadas': string;
+  'blockdomi.colunasSelecAll': string;
+  'blockdomi.colunasSelecNone': string;
+  'blockdomi.colunasAplicar': string;
+  'blockdomi.colunasItens': string;
   'blockdomi.raw': string;
   'blockdomi.filtered': string;
   'blockdomi.valid': string;
@@ -1811,6 +1816,11 @@ const translations: Translations = {
     'blockdomi.pdfExtractSuccess': 'Domínios extraídos do PDF. Clique em Analisar.',
     'blockdomi.pdfExtractError': 'Nenhum domínio ou IP encontrado no PDF.',
     'blockdomi.pdfExtractLogTitle': 'Log do processamento (servidor)',
+    'blockdomi.colunasDetectadas': 'Colunas detectadas no PDF',
+    'blockdomi.colunasSelecAll': 'Todas',
+    'blockdomi.colunasSelecNone': 'Nenhuma',
+    'blockdomi.colunasAplicar': 'Aplicar seleção',
+    'blockdomi.colunasItens': 'itens',
     'blockdomi.raw': 'Bruto',
     'blockdomi.filtered': 'Filtrados',
     'blockdomi.valid': 'Válidos',
@@ -3252,6 +3262,11 @@ const translations: Translations = {
     'blockdomi.pdfExtractSuccess': 'Domains extracted from PDF. Click Analyze.',
     'blockdomi.pdfExtractError': 'No domains or IPs found in PDF.',
     'blockdomi.pdfExtractLogTitle': 'Processing log (server)',
+    'blockdomi.colunasDetectadas': 'Columns detected in PDF',
+    'blockdomi.colunasSelecAll': 'All',
+    'blockdomi.colunasSelecNone': 'None',
+    'blockdomi.colunasAplicar': 'Apply selection',
+    'blockdomi.colunasItens': 'items',
     'blockdomi.raw': 'Raw',
     'blockdomi.filtered': 'Filtered',
     'blockdomi.valid': 'Valid',
@@ -4695,6 +4710,11 @@ const translations: Translations = {
     'blockdomi.pdfExtractSuccess': 'Dominios extraídos del PDF. Haga clic en Analizar.',
     'blockdomi.pdfExtractError': 'No se encontraron dominios ni IPs en el PDF.',
     'blockdomi.pdfExtractLogTitle': 'Registro de procesamiento (servidor)',
+    'blockdomi.colunasDetectadas': 'Columnas detectadas en el PDF',
+    'blockdomi.colunasSelecAll': 'Todas',
+    'blockdomi.colunasSelecNone': 'Ninguna',
+    'blockdomi.colunasAplicar': 'Aplicar selección',
+    'blockdomi.colunasItens': 'ítems',
     'blockdomi.raw': 'Bruto',
     'blockdomi.filtered': 'Filtrados',
     'blockdomi.valid': 'Válidos',

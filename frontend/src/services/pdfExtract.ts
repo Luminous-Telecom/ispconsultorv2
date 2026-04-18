@@ -1,12 +1,8 @@
 import { apiService } from './api';
 import { getSocketToken } from './core';
 
-export interface PdfExtractTotaisPorColuna {
-  dominios_bloqueados: number;
-  novos_dominios: number;
-  url_host: number;
-  ip_host: number;
-}
+/** Totais por coluna detectada dinamicamente no PDF. */
+export type PdfExtractTotaisPorColuna = Record<string, number>;
 
 export interface PdfExtractResponse {
   success: boolean;
@@ -19,6 +15,8 @@ export interface PdfExtractResponse {
     data_inicio_bloqueio?: string | null;
     data_fim_bloqueio?: string | null;
     totaisPorColuna?: PdfExtractTotaisPorColuna;
+    /** Colunas detectadas dinamicamente no PDF: chave = texto do cabeçalho original, valor = itens */
+    colunas?: Record<string, string[]>;
   };
   message?: string;
 }
@@ -36,6 +34,7 @@ interface PdfExtractJobStatusPayload {
     data_inicio_bloqueio?: string | null;
     data_fim_bloqueio?: string | null;
     totaisPorColuna?: PdfExtractTotaisPorColuna;
+    colunas?: Record<string, string[]>;
   };
   error?: string;
 }

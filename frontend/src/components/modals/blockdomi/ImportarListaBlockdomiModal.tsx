@@ -136,6 +136,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const [pdfExtractProgress, setPdfExtractProgress] = useState<{ current: number; total: number } | null>(null);
+  const [colunasDisponiveis, setColunasDisponiveis] = useState<Record<string, string[]> | null>(null);
+  const [colunasSeleccionadas, setColunasSeleccionadas] = useState<Set<string>>(new Set());
   const pdfFileInputRef = useRef<HTMLInputElement>(null);
   const pendingPdfFilesRef = useRef<PendingPdfFiles>(emptyPendingPdfFiles());
 
@@ -151,6 +153,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         if (ref.current) ref.current.value = '';
       });
       setPdfExtractProgress(null);
+      setColunasDisponiveis(null);
+      setColunasSeleccionadas(new Set());
       pendingPdfFilesRef.current = emptyPendingPdfFiles();
       setListaModo('bloqueio');
       setDataInicioBloqueio((prev) => {
@@ -217,6 +221,44 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     }
   }, [rawText, fetchExisting, error]);
 
+  const buildTextFromColunas = useCallback(
+    (colunas: Record<string, string[]>, selecionadas: Set<string>): string => {
+      const merged = new Set<string>();
+      Array.from(selecionadas).forEach((key) => {
+        (colunas[key] ?? []).forEach((item) => merged.add(item));
+      });
+      return Array.from(merged).join('\n');
+    },
+    []
+  );
+
+  const handleColunaToggle = useCallback(
+    (header: string) => {
+      setColunasSeleccionadas((prev) => {
+        const next = new Set(prev);
+        if (next.has(header)) next.delete(header);
+        else next.add(header);
+        return next;
+      });
+    },
+    []
+  );
+
+  const handleColunasSelectAll = useCallback(() => {
+    if (!colunasDisponiveis) return;
+    setColunasSeleccionadas(new Set(Object.keys(colunasDisponiveis)));
+  }, [colunasDisponiveis]);
+
+  const handleColunasSelectNone = useCallback(() => {
+    setColunasSeleccionadas(new Set());
+  }, []);
+
+  const handleColunasAplicar = useCallback(() => {
+    if (!colunasDisponiveis) return;
+    setRawText(buildTextFromColunas(colunasDisponiveis, colunasSeleccionadas));
+    setClassified(null);
+  }, [colunasDisponiveis, colunasSeleccionadas, buildTextFromColunas]);
+
   const handleExtractFromPdf = useCallback(async () => {
     if (!pdfFile) {
       error(t('blockdomi.importFromPdfIntro'));
@@ -242,7 +284,17 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
         if (dataInicio) setDataInicioBloqueio(dataInicio);
         if (dataFim) setDataFimBloqueio(dataFim);
-        setRawText(listBruto.join('\n'));
+        const colunas = result.data.colunas ?? null;
+        if (colunas && Object.keys(colunas).length > 0) {
+          const todas = new Set(Object.keys(colunas));
+          setColunasDisponiveis(colunas);
+          setColunasSeleccionadas(todas);
+          setRawText(buildTextFromColunas(colunas, todas));
+        } else {
+          setColunasDisponiveis(null);
+          setColunasSeleccionadas(new Set());
+          setRawText(listBruto.join('\n'));
+        }
         setClassified(null);
         pendingPdfFilesRef.current = {
           main: filesToUpload.main,
@@ -267,7 +319,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setExtractionLoading(false);
       setPdfExtractProgress(null);
     }
-  }, [pdfFile, pdfOficioAnatel, pdfOficioJustica, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress]);
+  }, [pdfFile, pdfOficioAnatel, pdfOficioJustica, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress, buildTextFromColunas]);
 
   const handleExtractFromPdfUrl = useCallback(async () => {
     const url = linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim();
@@ -289,7 +341,17 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
         if (dataInicio) setDataInicioBloqueio(dataInicio);
         if (dataFim) setDataFimBloqueio(dataFim);
-        setRawText(listBruto.join('\n'));
+        const colunas = result.data.colunas ?? null;
+        if (colunas && Object.keys(colunas).length > 0) {
+          const todas = new Set(Object.keys(colunas));
+          setColunasDisponiveis(colunas);
+          setColunasSeleccionadas(todas);
+          setRawText(buildTextFromColunas(colunas, todas));
+        } else {
+          setColunasDisponiveis(null);
+          setColunasSeleccionadas(new Set());
+          setRawText(listBruto.join('\n'));
+        }
         setClassified(null);
         pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, main: null };
         success(t('blockdomi.pdfExtractSuccess'));
@@ -303,7 +365,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setExtractionLoading(false);
       setPdfExtractProgress(null);
     }
-  }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress]);
+  }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress, buildTextFromColunas]);
 
   const hasPdfUrl = Boolean(linkPlanilhaDominios.trim() || pdfUrlToExtract?.trim());
 
@@ -695,6 +757,87 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
             </div>
           </div>
         </div>
+
+        {colunasDisponiveis && Object.keys(colunasDisponiveis).length > 0 && (
+          <div className="mb-3 border rounded" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+            <div className="d-flex align-items-center justify-content-between px-2 pt-2 pb-1">
+              <span className="small fw-semibold">{t('blockdomi.colunasDetectadas')}</span>
+              <div className="d-flex gap-2 align-items-center">
+                <button type="button" className="btn btn-link btn-sm p-0 text-muted" style={{ fontSize: '0.75rem' }} onClick={handleColunasSelectAll}>
+                  {t('blockdomi.colunasSelecAll')}
+                </button>
+                <button type="button" className="btn btn-link btn-sm p-0 text-muted" style={{ fontSize: '0.75rem' }} onClick={handleColunasSelectNone}>
+                  {t('blockdomi.colunasSelecNone')}
+                </button>
+                <button type="button" className="btn btn-primary btn-sm py-0 px-2" style={{ fontSize: '0.75rem' }} onClick={handleColunasAplicar}>
+                  {t('blockdomi.colunasAplicar')}
+                </button>
+              </div>
+            </div>
+            <div className="d-flex flex-wrap gap-2 p-2">
+              {Object.entries(colunasDisponiveis).map(([header, items]) => {
+                const selecionada = colunasSeleccionadas.has(header);
+                return (
+                  <div
+                    key={header}
+                    className="rounded"
+                    style={{
+                      minWidth: 160,
+                      maxWidth: 260,
+                      flex: '1 1 160px',
+                      border: '1px solid',
+                      borderColor: selecionada ? 'var(--bs-primary)' : 'var(--border-color)',
+                      backgroundColor: 'var(--bg-primary)',
+                      overflow: 'hidden',
+                      transition: 'border-color 0.15s'
+                    }}
+                  >
+                    <label
+                      className="d-flex align-items-center gap-2 px-2 py-1"
+                      style={{
+                        cursor: 'pointer',
+                        backgroundColor: selecionada ? 'var(--bs-primary)' : 'var(--bg-tertiary)',
+                        color: selecionada ? '#fff' : 'var(--text-primary)',
+                        userSelect: 'none',
+                        transition: 'background-color 0.15s, color 0.15s',
+                        margin: 0
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        className="form-check-input m-0 flex-shrink-0"
+                        style={{ width: '0.8rem', height: '0.8rem' }}
+                        checked={selecionada}
+                        onChange={() => handleColunaToggle(header)}
+                      />
+                      <span className="small fw-semibold text-truncate flex-grow-1" title={header}>{header}</span>
+                      <span className="small flex-shrink-0" style={{ opacity: 0.8 }}>{items.length}</span>
+                    </label>
+                    <div
+                      style={{
+                        maxHeight: 120,
+                        overflowY: 'auto',
+                        padding: '4px 8px',
+                        fontFamily: 'monospace',
+                        fontSize: '0.7rem',
+                        color: 'var(--text-muted)',
+                        lineHeight: 1.6
+                      }}
+                    >
+                      {items.length === 0 ? (
+                        <span style={{ opacity: 0.5 }}>{t('blockdomi.none')}</span>
+                      ) : (
+                        items.map((item, i) => (
+                          <div key={i} className="text-truncate" title={item}>{item}</div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className={`ilb-editor-wrapper mb-3 ${rawText.trim() ? 'has-content' : ''}`}>
             <div className="ilb-editor-header">
