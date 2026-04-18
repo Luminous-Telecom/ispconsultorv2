@@ -34,28 +34,16 @@ Agente que conecta ao servidor Backnet via WebSocket. Permite acesso terminal e 
 
 4. No painel, use o terminal do agente para testar.
 
-## Docker (teste local)
+## Produção (Node no servidor)
 
-O container precisa alcançar o host. No Linux:
-
-```bash
-docker rm -f backnet-agent 2>/dev/null
-docker run -d --name backnet-agent --restart unless-stopped \
-  --add-host=host.docker.internal:host-gateway \
-  midia181/backnet-tunnel:dev \
-  --server http://host.docker.internal:3001 --token <seu-token>
-```
-
-No Mac/Windows, `host.docker.internal` já existe — `--add-host` é opcional.
-
-## Produção
-
-Imagem: `midia181/backnet-tunnel:prod` ou `:dev`
+Use `node` com PM2, systemd ou supervisor — sem container obrigatório. Exemplo com PM2 no diretório do agent:
 
 ```bash
-docker run -d --name backnet-agent --restart unless-stopped \
-  midia181/backnet-tunnel:prod \
-  --token <token-do-painel>
+cd /caminho/do/agent
+BACKNET_AGENT_CHANNEL=prod BACKNET_TOKEN='<token-do-painel>' pm2 start index.js --name backnet-agent
+pm2 save
 ```
 
-O canal (`:dev` / `:prod`) define a URL do servidor automaticamente.
+Ou variáveis `BACKNET_SERVER` + `BACKNET_TOKEN` se não usar canal fixo.
+
+No painel, a aba **Instalar automático (SSH)** ainda pode usar Docker no equipamento remoto, se você optar por esse método (imagem pública do registry).

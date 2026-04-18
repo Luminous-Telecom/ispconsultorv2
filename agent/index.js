@@ -13,7 +13,7 @@
  * Uso (separado):
  *   BACKNET_SERVER=https://... BACKNET_TOKEN=<token> node index.js
  *
- * Imagem Docker :dev / :prod: URLs fixas abaixo; canal via ENV BACKNET_AGENT_CHANNEL (build da imagem).
+ * Canal dev/prod: defina BACKNET_AGENT_CHANNEL ou BACKNET_SERVER conforme a tabela abaixo.
  *
  * Variáveis de ambiente:
  * | Variável                  | Padrão   | Descrição                                                                    |

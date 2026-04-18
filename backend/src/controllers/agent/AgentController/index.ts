@@ -35,7 +35,7 @@ import {
 } from '../../../utils/tenantUtils';
 
 const AGENT_DIR = path.resolve(__dirname, '../../../../..', 'agent');
-const ALLOWED_FILES = new Set(['index.js', 'package.json', 'Dockerfile']);
+const ALLOWED_FILES = new Set(['index.js', 'package.json']);
 
 const installSchema = Joi.object({
   host: Joi.string().min(1).required(),
@@ -355,7 +355,7 @@ export class AgentController {
   }
 
   /**
-   * Serve os arquivos estáticos do agente (index.js, package.json, Dockerfile).
+   * Serve os arquivos estáticos do agente (index.js, package.json).
    * Rota pública — usada pelo install-script no servidor remoto.
    */
   static async serveFile(req: Request, res: Response): Promise<void> {

@@ -55,7 +55,7 @@ jobs:
             echo "${CHANGED_FILES}" | grep -qE '^backend/'  && echo "backend_changed=true"  >> $GITHUB_OUTPUT || echo "backend_changed=false"  >> $GITHUB_OUTPUT
             echo "${CHANGED_FILES}" | grep -qE '^frontend/' && echo "frontend_changed=true" >> $GITHUB_OUTPUT || echo "frontend_changed=false" >> $GITHUB_OUTPUT
             # Workflow de deploy / infra na raiz também exige build + Release
-            echo "${CHANGED_FILES}" | grep -qE '^\.github/workflows/|^scripts/|^docker-compose\.yaml|^ecosystem\.config\.js|^nginx\.docker\.conf|^package\.json$' \
+            echo "${CHANGED_FILES}" | grep -qE '^\.github/workflows/|^scripts/|^ecosystem\.config\.js|^package\.json$' \
               && echo "workflows_changed=true" >> $GITHUB_OUTPUT || echo "workflows_changed=false" >> $GITHUB_OUTPUT
           fi
 
@@ -285,7 +285,7 @@ jobs:
           rsync -a --delete ../backend/migrations/ backend/migrations/
           rsync -a --delete ../backend/config/     backend/config/
 
-          for f in .sequelizerc .gitignore Dockerfile .dockerignore tsconfig.json; do
+          for f in .sequelizerc .gitignore tsconfig.json; do
             [ -f "../backend/${f}" ] && cp "../backend/${f}" "backend/${f}"
           done
 
@@ -302,10 +302,6 @@ jobs:
             echo "AVISO: frontend/build não existe (mantendo existente)"
           fi
 
-          for f in Dockerfile .dockerignore; do
-            [ -f "../frontend/${f}" ] && cp "../frontend/${f}" "frontend/${f}"
-          done
-
           # ── scripts de setup da raiz ─────────────────────────────
           if [ -d "../scripts" ]; then
             rsync -a --delete ../scripts/ scripts/
@@ -316,8 +312,6 @@ jobs:
           # ── arquivos raiz ─────────────────────────────────────────
           [ -f "../ecosystem.config.js" ] && cp ../ecosystem.config.js ecosystem.config.js
           [ -f "../.gitignore" ]          && cp ../.gitignore          .gitignore
-          [ -f "../docker-compose.yaml" ] && cp ../docker-compose.yaml docker-compose.yaml
-          [ -f "../nginx.docker.conf" ]   && cp ../nginx.docker.conf   nginx.docker.conf
           [ -f "../package.json" ]        && cp ../package.json        package.json
 
           echo "✓ Arquivos raiz sincronizados"
