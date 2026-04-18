@@ -20,6 +20,8 @@ export interface ClassifiedList {
   invalidos: string[];
   duplicados: string[];
   jaCadastrados: string[];
+  /** Válidos que ainda não existem no cadastro (preenchido após Analisar). */
+  seraoCadastrados: string[];
 }
 
 interface ImportarListaBlockdomiModalProps {
@@ -100,7 +102,7 @@ export function classifyLines(text: string): ClassifiedList {
     }
   }
 
-  return { dominios, ipv4, ipv6, invalidos, duplicados, jaCadastrados: [] };
+  return { dominios, ipv4, ipv6, invalidos, duplicados, jaCadastrados: [], seraoCadastrados: [] };
 }
 
 /** PDFs escolhidos na extração; upload só em handleCadastrar para não ocupar armazenamento à toa. */
@@ -215,7 +217,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         ...result.ipv4.filter((ip) => existingIPv4.has(ip)),
         ...result.ipv6.filter((ip) => existingIPv6.has(ip))
       ];
-      setClassified({ ...result, jaCadastrados });
+      const seraoCadastrados: string[] = [
+        ...result.dominios.filter((d) => !existingDominios.has(d)),
+        ...result.ipv4.filter((ip) => !existingIPv4.has(ip)),
+        ...result.ipv6.filter((ip) => !existingIPv6.has(ip))
+      ];
+      setClassified({ ...result, jaCadastrados, seraoCadastrados });
     } catch (e) {
       setClassified(null);
       error((e as Error)?.message ?? 'Erro ao analisar.');
@@ -1201,6 +1208,18 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                   <span className="text-muted small">{t('blockdomi.none')}</span>
                 ) : (
                   renderList(classified.jaCadastrados)
+                )}
+              </div>
+            </div>
+            <div className="card ilb-class-card">
+              <div className="card-header bg-success text-white">
+                {t('blockdomi.willBeRegistered')} ({classified.seraoCadastrados.length})
+              </div>
+              <div className="card-body overflow-auto user-select-text">
+                {classified.seraoCadastrados.length === 0 ? (
+                  <span className="text-muted small">{t('blockdomi.none')}</span>
+                ) : (
+                  renderList(classified.seraoCadastrados)
                 )}
               </div>
             </div>

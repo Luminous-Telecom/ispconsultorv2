@@ -383,6 +383,7 @@ export interface TranslationKeys {
   'blockdomi.copyFailed': string;
   'blockdomi.duplicates': string;
   'blockdomi.invalid': string;
+  'blockdomi.willBeRegistered': string;
   'blockdomi.alreadyRegistered': string;
   'blockdomi.alreadyRegisteredIgnored': string;
   'blockdomi.none': string;
@@ -1847,6 +1848,7 @@ const translations: Translations = {
     'blockdomi.copyFailed': 'Não foi possível copiar.',
     'blockdomi.duplicates': 'Duplicados',
     'blockdomi.invalid': 'Inválidos',
+    'blockdomi.willBeRegistered': 'Serão cadastrados',
     'blockdomi.alreadyRegistered': 'Já cadastrados',
     'blockdomi.alreadyRegisteredIgnored': 'Já cadastrados (ignorados)',
     'blockdomi.none': 'Nenhum',
@@ -3304,6 +3306,7 @@ const translations: Translations = {
     'blockdomi.copyFailed': 'Could not copy.',
     'blockdomi.duplicates': 'Duplicates',
     'blockdomi.invalid': 'Invalid',
+    'blockdomi.willBeRegistered': 'To be registered',
     'blockdomi.alreadyRegistered': 'Already registered',
     'blockdomi.alreadyRegisteredIgnored': 'Already registered (ignored)',
     'blockdomi.none': 'None',
@@ -4763,6 +4766,7 @@ const translations: Translations = {
     'blockdomi.copyFailed': 'No se pudo copiar.',
     'blockdomi.duplicates': 'Duplicados',
     'blockdomi.invalid': 'Inválidos',
+    'blockdomi.willBeRegistered': 'Se registrarán',
     'blockdomi.alreadyRegistered': 'Ya registrados',
     'blockdomi.alreadyRegisteredIgnored': 'Ya registrados (ignorados)',
     'blockdomi.none': 'Ninguno',
