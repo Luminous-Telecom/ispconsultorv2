@@ -1,4 +1,8 @@
 # Dependências Python para extração de domínios de PDF (extrair-dominios.py)
-# Instalar no servidor: pip3 install -r requirements.txt
+#
+# Debian/Ubuntu (Python “externally managed” / PEP 668): use um venv, não pip3 no sistema.
+#   cd /opt/seu-projeto/backend && python3 -m venv .venv && .venv/bin/pip install -r scripts/requirements.txt
+# No .env do backend: PDF_EXTRACT_PYTHON=/opt/seu-projeto/backend/.venv/bin/python
+#
 # PyMuPDF: memória baixa, processa página a página (pdfplumber usava ~6GB em PDFs grandes)
 pymupdf>=1.24.0

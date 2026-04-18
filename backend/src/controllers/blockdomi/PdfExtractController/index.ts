@@ -40,9 +40,15 @@ function sseUnregister(jobId: string, res: Response): void {
   if (sseClients.get(jobId)?.size === 0) sseClients.delete(jobId);
 }
 
+/** Interpretador para `extrair-dominios.py`. Em Debian/Ubuntu recentes use um venv e defina `PDF_EXTRACT_PYTHON=/caminho/venv/bin/python`. */
+function getPdfExtractPython(): string {
+  const v = process.env.PDF_EXTRACT_PYTHON?.trim();
+  return v || 'python3';
+}
+
 function runPythonScript(scriptPath: string, pdfPath: string, timeoutMs: number): Promise<{ stdout: string; stderr: string; code: number | null }> {
   return new Promise((resolve, reject) => {
-    const proc = spawn('python3', [scriptPath, pdfPath]);
+    const proc = spawn(getPdfExtractPython(), [scriptPath, pdfPath]);
     let stdout = '';
     let stderr = '';
     proc.stdout.on('data', (d) => { stdout += d.toString(); });
@@ -122,7 +128,7 @@ async function runExtractFromUrlBackground(jobId: string, url: string): Promise<
  * Ao terminar, atualiza o Redis com resultado ou erro e remove o arquivo temporário.
  */
 function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: string): void {
-  const proc = spawn('python3', [scriptPath, tempFilePath], {
+  const proc = spawn(getPdfExtractPython(), [scriptPath, tempFilePath], {
     detached: true,
     stdio: ['ignore', 'pipe', 'pipe']
   });
@@ -136,7 +142,8 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
   logger.info('PdfExtract.background: processo Python iniciado', {
     jobId,
     pid: proc.pid,
-    scriptPath
+    scriptPath,
+    python: getPdfExtractPython()
   });
 
   proc.stdout?.on('data', (d: Buffer) => {
