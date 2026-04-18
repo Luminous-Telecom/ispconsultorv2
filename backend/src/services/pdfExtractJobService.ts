@@ -23,6 +23,12 @@ export interface PdfExtractJobState {
     total_bruto?: number;
     data_inicio_bloqueio?: string | null;
     data_fim_bloqueio?: string | null;
+    totaisPorColuna?: {
+      dominios_bloqueados: number;
+      novos_dominios: number;
+      url_host: number;
+      ip_host: number;
+    };
   };
   error?: string;
   createdAt: number;

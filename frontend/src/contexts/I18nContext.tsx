@@ -354,6 +354,7 @@ export interface TranslationKeys {
   'blockdomi.pdfUrl': string;
   'blockdomi.extractDomainsFromPdf': string;
   'blockdomi.extractingPdf': string;
+  'blockdomi.pdfExtractPageProgress': string;
   'blockdomi.extractFromPlanilhaUrl': string;
   'blockdomi.extractFromPlanilhaPdf': string;
   'blockdomi.extractFromPlanilhaUrlHelp': string;
@@ -1801,6 +1802,7 @@ const translations: Translations = {
     'blockdomi.pdfUrl': 'Ou URL do PDF',
     'blockdomi.extractDomainsFromPdf': 'Extrair domínios',
     'blockdomi.extractingPdf': 'Extraindo texto do PDF...',
+    'blockdomi.pdfExtractPageProgress': '${current}/${total} páginas',
     'blockdomi.extractFromPlanilhaUrl': 'Extrair da URL da planilha',
     'blockdomi.extractFromPlanilhaPdf': 'Extrair domínios do PDF da planilha',
     'blockdomi.extractFromPlanilhaUrlHelp': 'Use o link da planilha acima para extrair domínios sem fazer upload.',
@@ -3241,6 +3243,7 @@ const translations: Translations = {
     'blockdomi.pdfUrl': 'Or PDF URL',
     'blockdomi.extractDomainsFromPdf': 'Extract domains',
     'blockdomi.extractingPdf': 'Extracting text from PDF...',
+    'blockdomi.pdfExtractPageProgress': '${current}/${total} pages',
     'blockdomi.extractFromPlanilhaUrl': 'Extract from spreadsheet URL',
     'blockdomi.extractFromPlanilhaPdf': 'Extract domains from spreadsheet PDF',
     'blockdomi.extractFromPlanilhaUrlHelp': 'Use the spreadsheet link above to extract domains without uploading.',
@@ -4683,6 +4686,7 @@ const translations: Translations = {
     'blockdomi.pdfUrl': 'O URL del PDF',
     'blockdomi.extractDomainsFromPdf': 'Extraer dominios',
     'blockdomi.extractingPdf': 'Extrayendo texto del PDF...',
+    'blockdomi.pdfExtractPageProgress': '${current}/${total} páginas',
     'blockdomi.extractFromPlanilhaUrl': 'Extraer de URL de planilla',
     'blockdomi.extractFromPlanilhaPdf': 'Extraer dominios del PDF de la planilla',
     'blockdomi.extractFromPlanilhaUrlHelp': 'Use el enlace de la planilla para extraer dominios sin subir archivo.',

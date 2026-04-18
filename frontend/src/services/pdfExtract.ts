@@ -1,6 +1,13 @@
 import { apiService } from './api';
 import { getSocketToken } from './core';
 
+export interface PdfExtractTotaisPorColuna {
+  dominios_bloqueados: number;
+  novos_dominios: number;
+  url_host: number;
+  ip_host: number;
+}
+
 export interface PdfExtractResponse {
   success: boolean;
   data?: {
@@ -11,6 +18,7 @@ export interface PdfExtractResponse {
     message?: string;
     data_inicio_bloqueio?: string | null;
     data_fim_bloqueio?: string | null;
+    totaisPorColuna?: PdfExtractTotaisPorColuna;
   };
   message?: string;
 }
@@ -27,6 +35,7 @@ interface PdfExtractJobStatusPayload {
     total_bruto?: number;
     data_inicio_bloqueio?: string | null;
     data_fim_bloqueio?: string | null;
+    totaisPorColuna?: PdfExtractTotaisPorColuna;
   };
   error?: string;
 }

@@ -103,6 +103,10 @@ export function classifyLines(text: string): ClassifiedList {
   return { dominios, ipv4, ipv6, invalidos, duplicados, jaCadastrados: [] };
 }
 
+/** PDFs escolhidos na extração; upload só em handleCadastrar para não ocupar armazenamento à toa. */
+type PendingPdfFiles = { main: File | null; anatel: File | null; justica: File | null };
+const emptyPendingPdfFiles = (): PendingPdfFiles => ({ main: null, anatel: null, justica: null });
+
 const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = ({
   show,
   onClose,
@@ -133,6 +137,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const [pdfExtractProgress, setPdfExtractProgress] = useState<{ current: number; total: number } | null>(null);
   const pdfFileInputRef = useRef<HTMLInputElement>(null);
+  const pendingPdfFilesRef = useRef<PendingPdfFiles>(emptyPendingPdfFiles());
 
   const prevShowRef = useRef(false);
   useEffect(() => {
@@ -146,6 +151,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         if (ref.current) ref.current.value = '';
       });
       setPdfExtractProgress(null);
+      pendingPdfFilesRef.current = emptyPendingPdfFiles();
       setListaModo('bloqueio');
       setDataInicioBloqueio((prev) => {
         if (prev === '') {
@@ -164,8 +170,6 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
   const handlePdfPollProgress = useCallback((p: PdfExtractPollProgress) => {
     if (p.status === 'processing' && p.progress) {
       setPdfExtractProgress(p.progress);
-    } else if (p.status === 'completed') {
-      setPdfExtractProgress((prev) => prev ? { current: prev.total, total: prev.total } : prev);
     }
   }, []);
 
@@ -227,15 +231,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     setExtractionLoading(true);
     await new Promise((r) => setTimeout(r, 0));
 
-    let extractionOk = false;
-
     try {
       const result = await PdfExtractService.extractFromPdf(pdfFile, {
         onPollProgress: handlePdfPollProgress
       });
 
       if (result.success && result.data) {
-        extractionOk = true;
         const listBruto = result.data.dominios_bruto ?? result.data.dominios;
         const dataInicio = result.data.data_inicio_bloqueio ?? dataInicioBloqueio;
         const dataFim = result.data.data_fim_bloqueio ?? dataFimBloqueio;
@@ -243,7 +244,12 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         if (dataFim) setDataFimBloqueio(dataFim);
         setRawText(listBruto.join('\n'));
         setClassified(null);
-        success(`${result.data.total_bruto ?? result.data.total} itens extraídos.`);
+        pendingPdfFilesRef.current = {
+          main: filesToUpload.main,
+          anatel: filesToUpload.anatel ?? null,
+          justica: filesToUpload.justica ?? null
+        };
+        success(t('blockdomi.pdfExtractSuccess'));
       } else {
         error(t('blockdomi.pdfExtractError'));
       }
@@ -257,27 +263,9 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       const msg = (e as Error)?.message ?? 'Erro ao extrair PDF.';
       error(msg);
     } finally {
-      // Libera o loading imediatamente após a extração — uploads não bloqueiam a UI
       setIsExtractingPdf(false);
       setExtractionLoading(false);
-    }
-
-    // Upload dos PDFs em segundo plano: popula os campos de link para handleCadastrar
-    if (extractionOk) {
-      try {
-        if (filesToUpload.anatel) {
-          const { url } = await BlockdomiService.uploadOficioPdf(filesToUpload.anatel);
-          setLinkOficioAnatel(url);
-        }
-        if (filesToUpload.justica) {
-          const { url } = await BlockdomiService.uploadOficioPdf(filesToUpload.justica);
-          setLinkOficioJustica(url);
-        }
-        const { url } = await BlockdomiService.uploadOficioPdf(filesToUpload.main);
-        setLinkPlanilhaDominios(url);
-      } catch (uploadErr) {
-        error((uploadErr as Error)?.message ?? 'Erro ao enviar PDF. Links não serão salvos nos cadastros.');
-      }
+      setPdfExtractProgress(null);
     }
   }, [pdfFile, pdfOficioAnatel, pdfOficioJustica, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress]);
 
@@ -303,7 +291,8 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         if (dataFim) setDataFimBloqueio(dataFim);
         setRawText(listBruto.join('\n'));
         setClassified(null);
-        success(`${result.data.total_bruto ?? result.data.total} itens extraídos.`);
+        pendingPdfFilesRef.current = { ...pendingPdfFilesRef.current, main: null };
+        success(t('blockdomi.pdfExtractSuccess'));
       } else {
         error(t('blockdomi.pdfExtractError'));
       }
@@ -312,6 +301,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
     } finally {
       setIsExtractingPdf(false);
       setExtractionLoading(false);
+      setPdfExtractProgress(null);
     }
   }, [linkPlanilhaDominios, pdfUrlToExtract, success, error, t, setExtractionLoading, dataInicioBloqueio, dataFimBloqueio, handlePdfPollProgress]);
 
@@ -359,6 +349,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         setPdfOficioAnatel(null);
         setPdfOficioJustica(null);
         setPdfFile(null);
+        pendingPdfFilesRef.current = emptyPendingPdfFiles();
         [pdfFileInputRef, pdfAnatelInputRef, pdfJusticaInputRef].forEach((ref) => {
           if (ref.current) ref.current.value = '';
         });
@@ -375,15 +366,25 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       let linkJusticaVal = linkOficioJustica.trim() || null;
       let linkPlanilhaVal = linkPlanilhaDominios.trim() || null;
 
-      if (pdfOficioAnatel) {
+      const pend = pendingPdfFilesRef.current;
+      if (pend.anatel) {
+        const { url } = await BlockdomiService.uploadOficioPdf(pend.anatel);
+        linkAnatelVal = url;
+      } else if (pdfOficioAnatel) {
         const { url } = await BlockdomiService.uploadOficioPdf(pdfOficioAnatel);
         linkAnatelVal = url;
       }
-      if (pdfOficioJustica) {
+      if (pend.justica) {
+        const { url } = await BlockdomiService.uploadOficioPdf(pend.justica);
+        linkJusticaVal = url;
+      } else if (pdfOficioJustica) {
         const { url } = await BlockdomiService.uploadOficioPdf(pdfOficioJustica);
         linkJusticaVal = url;
       }
-      if (pdfFile) {
+      if (pend.main) {
+        const { url } = await BlockdomiService.uploadOficioPdf(pend.main);
+        linkPlanilhaVal = url;
+      } else if (pdfFile) {
         const { url } = await BlockdomiService.uploadOficioPdf(pdfFile);
         linkPlanilhaVal = url;
       }
@@ -427,6 +428,7 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       setPdfOficioAnatel(null);
       setPdfOficioJustica(null);
       setPdfFile(null);
+      pendingPdfFilesRef.current = emptyPendingPdfFiles();
       [pdfFileInputRef, pdfAnatelInputRef, pdfJusticaInputRef].forEach((ref) => {
         if (ref.current) ref.current.value = '';
       });
@@ -664,23 +666,32 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
               {hasPdfUrl && (
                 <p className="text-muted small mt-1 mb-0">{t('blockdomi.extractFromPlanilhaUrlHelp')}</p>
               )}
-              {(isExtractingPdf || pdfExtractProgress) && (
+              {isExtractingPdf && (
                 <div className="mt-2">
                   <div className="d-flex align-items-center justify-content-between mb-1">
-                    <span className="small text-muted">
-                      {isExtractingPdf ? t('blockdomi.extractingPdf') : t('blockdomi.pdfExtractSuccess')}
-                    </span>
-                    {pdfExtractProgress && (
+                    <span className="small text-muted">{t('blockdomi.extractingPdf')}</span>
+                    {pdfExtractProgress && pdfExtractProgress.total > 0 && (
                       <span className="small text-muted">
-                        {pdfExtractProgress.current}/{pdfExtractProgress.total} páginas
+                        {t('blockdomi.pdfExtractPageProgress', {
+                          current: pdfExtractProgress.current,
+                          total: pdfExtractProgress.total
+                        })}
                       </span>
                     )}
                   </div>
-                  {pdfExtractProgress && (
+                  {pdfExtractProgress && pdfExtractProgress.total > 0 ? (
                     <div className="progress" style={{ height: 4 }}>
                       <div
                         className="progress-bar progress-bar-striped progress-bar-animated"
-                        style={{ width: `${Math.round((pdfExtractProgress.current / pdfExtractProgress.total) * 100)}%` }}
+                        style={{
+                          width: `${Math.round((pdfExtractProgress.current / pdfExtractProgress.total) * 100)}%`
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="progress" style={{ height: 4 }}>
+                      <div
+                        className="progress-bar progress-bar-striped progress-bar-animated w-100"
                       />
                     </div>
                   )}

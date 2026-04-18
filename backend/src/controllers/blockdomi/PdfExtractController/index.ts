@@ -130,8 +130,8 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
 
   let stdout = '';
   let stderr = '';
-  let stdoutBuffer = '';
   let stderrBuffer = '';
+  const pageProgressLog: Array<{ current: number; total: number }> = [];
 
   logger.info('PdfExtract.background: processo Python iniciado', {
     jobId,
@@ -140,19 +140,8 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
   });
 
   proc.stdout?.on('data', (d: Buffer) => {
-    const chunk = d.toString();
-    stdout += chunk;
-    stdoutBuffer += chunk;
-    const lines = stdoutBuffer.split('\n');
-    stdoutBuffer = lines.pop() ?? '';
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('{')) continue;
-      logger.info('PdfExtract.background: stdout', { jobId, line: trimmed });
-    }
+    stdout += d.toString();
   });
-
-  const pageProgressLog: Array<{ current: number; total: number }> = [];
 
   proc.stderr?.on('data', (d: Buffer) => {
     const chunk = d.toString();
@@ -163,18 +152,14 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;
-      logger.info('PdfExtract.background: progresso', { jobId, line: trimmed });
-
-      // Acumula progresso: "processando página X/Y"
+      // Atualiza Redis/SSE com progresso por página; não registrar cada linha no log (evita poluir PM2).
       const m = trimmed.match(/processando p[aá]gina\s+(\d+)\/(\d+)/i);
       if (m) {
         const current = parseInt(m[1], 10);
         const total = parseInt(m[2], 10);
         pageProgressLog.push({ current, total });
-        // Push imediato via SSE (tempo real)
         ssePublish(jobId, 'progress', { current, total });
-        // Atualiza Redis para quem fizer polling
-        setPdfExtractJob(jobId, {
+        void setPdfExtractJob(jobId, {
           status: 'processing',
           progress: { current, total },
           progressLog: [...pageProgressLog],
@@ -185,13 +170,22 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
   });
 
   proc.on('close', (code, signal) => {
-    const stdoutTail = stdoutBuffer.trim();
-    if (stdoutTail && !stdoutTail.startsWith('{')) {
-      logger.info('PdfExtract.background: stdout', { jobId, line: stdoutTail });
-    }
-    const stderrTail = stderrBuffer.trim();
-    if (stderrTail) {
-      logger.info('PdfExtract.background: progresso', { jobId, line: stderrTail });
+    const tail = stderrBuffer.trim();
+    stderrBuffer = '';
+    if (tail) {
+      const m = tail.match(/processando p[aá]gina\s+(\d+)\/(\d+)/i);
+      if (m) {
+        const current = parseInt(m[1], 10);
+        const total = parseInt(m[2], 10);
+        pageProgressLog.push({ current, total });
+        ssePublish(jobId, 'progress', { current, total });
+        void setPdfExtractJob(jobId, {
+          status: 'processing',
+          progress: { current, total },
+          progressLog: [...pageProgressLog],
+          createdAt: Date.now()
+        });
+      }
     }
 
     const cleanup = (): void => {
@@ -245,11 +239,6 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
       return;
     }
 
-    logger.info('PdfExtract.background: processo Python concluído com sucesso', {
-      jobId,
-      code
-    });
-
     type PyResult = {
       success?: boolean;
       // campos legados (versões antigas do script)
@@ -301,13 +290,22 @@ function runPythonInBackground(scriptPath: string, tempFilePath: string, jobId: 
       const dominios = result.dominios ?? todosDedup;
       const dominiosBruto = result.dominios_bruto ?? todosDedup;
 
+      const totaisPorColuna = {
+        dominios_bloqueados: bloqueados.length,
+        novos_dominios: novos.length,
+        url_host: urlHost.length,
+        ip_host: ipHost.length
+      };
+      logger.info('PdfExtract.background: totais por coluna', { jobId, totaisPorColuna });
+
       const jobResult = {
         dominios,
         dominios_bruto: dominiosBruto,
         total: result.total ?? dominios.length,
         total_bruto: result.total_bruto ?? dominiosBruto.length,
         data_inicio_bloqueio: result.data_inicio_bloqueio ?? undefined,
-        data_fim_bloqueio: result.data_fim_bloqueio ?? undefined
+        data_fim_bloqueio: result.data_fim_bloqueio ?? undefined,
+        totaisPorColuna
       };
       ssePublish(jobId, 'completed', { result: jobResult });
       setPdfExtractJob(jobId, {

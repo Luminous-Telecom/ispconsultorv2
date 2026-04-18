@@ -68,7 +68,6 @@ def _eh_dominio_ou_ip(texto):
 
 
 def _dominio_parece_completo(texto):
-    """TLD real = somente letras. Labels com dígitos/hífens indicam fragmento de word-wrap."""
     if not texto:
         return False
     if _eh_ip(texto):
@@ -81,20 +80,6 @@ def _dominio_parece_completo(texto):
 
 
 def _remontar_dominios_quebrados(tokens):
-    """
-    Une fragmentos de domínio quebrados por word-wrap do PDF.
-
-    Um token é tratado como fragmento quando seu TLD contém dígitos ou hífens
-    (ex: 's27-u' não é um TLD real). Nesses casos concatena com os próximos
-    tokens (sem espaço) até obter um domínio com TLD real (limite: 6 fragmentos).
-
-    Exemplos:
-      ['cloud7-l2-user98745241-2.s27-u', 'sa-cloudfront-net.online']
-      → ['cloud7-l2-user98745241-2.s27-usa-cloudfront-net.online']
-
-      ['topflix.com', 'superfilmes.net']
-      → ['topflix.com', 'superfilmes.net']  (inalterado — ambos completos)
-    """
     resultado = []
     i = 0
     while i < len(tokens):
@@ -169,7 +154,6 @@ def _buscar_cabecalho(table_data):
                 indices[campo] = col_idx
                 if header_row is None:
                     header_row = row_idx
-                _log(f"    cabeçalho '{campo}' → col {col_idx}, linha {row_idx}: {str(cell)[:60]!r}")
     return (indices, header_row) if any(v is not None for v in indices.values()) else (None, None)
 
 
@@ -185,7 +169,6 @@ def _detectar_coluna_por_conteudo(table_data):
             scores[col] = sum(1 for c in celulas if _extrair_dados_celula(c)) / len(celulas)
     melhor = max(scores, key=scores.get, default=None)
     if melhor is not None and scores[melhor] >= 0.40:
-        _log(f"    detecção por conteúdo: col {melhor} → {scores[melhor]:.0%} de células válidas")
         return {**{k: None for k in _CHAVES}, 'url_host': melhor}
     return None
 
@@ -242,14 +225,13 @@ def extrair_dados_de_tabelas(page, indices_conhecidos=None):
 
 def extrair_dados_pdf(caminho_pdf):
     consolidado = {k: [] for k in _CHAVES}
-    _log(f"iniciando processamento: {caminho_pdf}")
     try:
         doc = fitz.open(caminho_pdf)
         try:
-            _log(f"pdf carregado com {len(doc)} página(s)")
             indices_ativos = None
+            num_pages = len(doc)
             for n, page in enumerate(doc):
-                _log(f"processando página {n + 1}/{len(doc)}")
+                _log(f"processando página {n + 1}/{num_pages}")
                 dados_pag, novos = extrair_dados_de_tabelas(page, indices_ativos)
                 if novos is not None:
                     indices_ativos = novos
@@ -263,7 +245,8 @@ def extrair_dados_pdf(caminho_pdf):
     for k in _CHAVES:
         consolidado[k] = sorted(dict.fromkeys(consolidado[k]))
 
-    _log(f"extração finalizada — totais: { {k: len(v) for k, v in consolidado.items()} }")
+    totais = {k: len(consolidado[k]) for k in _CHAVES}
+    _log(f"totais_por_coluna: {json.dumps(totais, ensure_ascii=False)}")
     return consolidado
 
 
@@ -278,7 +261,7 @@ def main():
             **r,
             **{f"total_{k}": len(v) for k, v in r.items()},
         }
-        sys.stdout.write(json.dumps(out, ensure_ascii=False, indent=2) + '\n')
+        sys.stdout.write(json.dumps(out, ensure_ascii=False) + '\n')
         sys.stdout.flush()
     except Exception as e:
         sys.stdout.write(json.dumps({"success": False, "error": str(e)}) + '\n')
