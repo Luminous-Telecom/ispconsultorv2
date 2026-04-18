@@ -43,7 +43,7 @@ export type SeiExtractResult = { success: boolean; sei?: string; message?: strin
  */
 export class SeiAnatelExtractService {
   static async extractFromPdfPath(pdfPath: string): Promise<SeiExtractResult> {
-    const scriptPath = path.join(__dirname, relativeToRoot, 'scripts/extrair-sei-anatel.py');
+    const scriptPath = path.join(__dirname, relativeToRoot, 'python/extrair-sei-anatel.py');
     const { stdout } = await runPythonSeiExtract(scriptPath, pdfPath, 60000);
     const line = stdout.trim().split(/\r?\n/).filter(Boolean).pop() ?? stdout.trim();
     try {

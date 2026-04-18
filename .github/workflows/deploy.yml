@@ -1,926 +1,420 @@
 name: Deploy para Produção
 
-# 1. Quando o fluxo de trabalho deve ser executado
 on:
   push:
     branches:
-      # Aciona o deploy sempre que houver um push na branch 'main'
       - main
 
-# 2. Define o Job (Trabalho) de Deploy
-# IMPORTANTE: Este workflow copia todos os arquivos necessários para o self-update funcionar:
-# - ecosystem.config.js (para PM2 reload)
-# - backend/package.json e package-lock.json (para npm install)
-# - backend/tsconfig.json (para build)
-# - backend/migrations, config/, .sequelizerc (para migrations)
-# - backend/dist (código compilado)
 jobs:
   deploy:
-    runs-on: ubuntu-latest # O ambiente onde o código será executado
+    runs-on: ubuntu-latest
 
     steps:
-      # Faz o checkout do código com histórico completo para comparação
       - name: Checkout Código Fonte
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Buscar histórico completo para comparação precisa
-          fetch-tags: true  # Buscar tags para determinar última versão
-        
-      # Configura o ambiente Node.js
+          fetch-depth: 0
+          fetch-tags: true
+
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Ajuste a versão do Node conforme necessário
+          node-version: '20'
 
-      # Verificar quais pastas foram alteradas
+      # ─────────────────────────────────────────────────────────────
+      # 1. Detectar o que mudou
+      # ─────────────────────────────────────────────────────────────
       - name: Verificar Alterações
         id: changes
         run: |
-          # Obter o commit anterior (HEAD~1) ou usar o commit atual se for o primeiro
-          # Usar ${{ github.event.before }} se disponível (commit anterior no push)
           PREV_COMMIT="${{ github.event.before }}"
           CURRENT_COMMIT="${{ github.sha }}"
-          
-          # Se não houver commit anterior no evento, tentar HEAD~1
+
           if [ -z "${PREV_COMMIT}" ] || [ "${PREV_COMMIT}" == "0000000000000000000000000000000000000000" ]; then
             PREV_COMMIT=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)
           fi
-          
-          # Se ainda não conseguir, usar o commit atual (primeiro commit)
+
           if [ -z "${PREV_COMMIT}" ] || [ "${PREV_COMMIT}" == "${CURRENT_COMMIT}" ]; then
-            echo "Primeiro commit ou não foi possível determinar commit anterior, buildando tudo"
-            BACKEND_CHANGED="true"
-            FRONTEND_CHANGED="true"
-            CONFIG_CHANGED="true"
-            DOCKER_CHANGED="true"
+            echo "Primeiro commit — buildando tudo"
+            echo "backend_changed=true"  >> $GITHUB_OUTPUT
+            echo "frontend_changed=true" >> $GITHUB_OUTPUT
           else
-            echo "Comparando commits: ${PREV_COMMIT}..${CURRENT_COMMIT}"
-            
-            # Listar todos os arquivos alterados
-            CHANGED_FILES=$(git diff --name-only ${PREV_COMMIT} ${CURRENT_COMMIT} || echo "")
-            echo "Arquivos alterados:"
-            echo "${CHANGED_FILES}"
-            
-            # Verificar mudanças no backend
-            if echo "${CHANGED_FILES}" | grep -qE '^backend/'; then
-              BACKEND_CHANGED="true"
-            else
-              BACKEND_CHANGED="false"
-            fi
-            
-            # Verificar mudanças no frontend
-            if echo "${CHANGED_FILES}" | grep -qE '^frontend/'; then
-              FRONTEND_CHANGED="true"
-            else
-              FRONTEND_CHANGED="false"
-            fi
-            
-            # Verificar mudanças em arquivos de configuração/documentação na raiz
-            if echo "${CHANGED_FILES}" | grep -qE '^(README\.md|docker-compose\.yaml|nginx\.docker\.conf|ecosystem\.config\.js|\.gitignore|package\.json)$'; then
-              CONFIG_CHANGED="true"
-            else
-              CONFIG_CHANGED="false"
-            fi
-            
-            # Verificar mudanças em arquivos Docker (Dockerfile e .dockerignore)
-            if echo "${CHANGED_FILES}" | grep -qE '(Dockerfile|\.dockerignore)'; then
-              DOCKER_CHANGED="true"
-            else
-              DOCKER_CHANGED="false"
-            fi
+            CHANGED_FILES=$(git diff --name-only "${PREV_COMMIT}" "${CURRENT_COMMIT}" || echo "")
+            echo "Arquivos alterados:" && echo "${CHANGED_FILES}"
+
+            echo "${CHANGED_FILES}" | grep -qE '^backend/'  && echo "backend_changed=true"  >> $GITHUB_OUTPUT || echo "backend_changed=false"  >> $GITHUB_OUTPUT
+            echo "${CHANGED_FILES}" | grep -qE '^frontend/' && echo "frontend_changed=true" >> $GITHUB_OUTPUT || echo "frontend_changed=false" >> $GITHUB_OUTPUT
           fi
-          
-          echo "backend_changed=${BACKEND_CHANGED}" >> $GITHUB_OUTPUT
-          echo "frontend_changed=${FRONTEND_CHANGED}" >> $GITHUB_OUTPUT
-          echo "config_changed=${CONFIG_CHANGED}" >> $GITHUB_OUTPUT
-          echo "docker_changed=${DOCKER_CHANGED}" >> $GITHUB_OUTPUT
-          
-          # Salvar commits para uso no incremento de versão
-          echo "prev_commit=${PREV_COMMIT}" >> $GITHUB_OUTPUT
+
+          echo "prev_commit=${PREV_COMMIT}"       >> $GITHUB_OUTPUT
           echo "current_commit=${CURRENT_COMMIT}" >> $GITHUB_OUTPUT
-          
-          echo "=== RESUMO DAS MUDANÇAS DETECTADAS ==="
-          echo "Backend alterado: ${BACKEND_CHANGED}"
-          echo "Frontend alterado: ${FRONTEND_CHANGED}"
-          echo "Config/Docs alterado: ${CONFIG_CHANGED}"
-          echo "Docker alterado: ${DOCKER_CHANGED}"
-          echo ""
-          echo "Commits comparados: ${PREV_COMMIT}..${CURRENT_COMMIT}"
-          echo "Total de arquivos alterados: $(echo "${CHANGED_FILES}" | wc -l)"
-      
-      # Instala as dependências e executa o build apenas do que foi alterado
+
+      # ─────────────────────────────────────────────────────────────
+      # 2. Instalar, versionar e buildar
+      # ─────────────────────────────────────────────────────────────
       - name: Instalar Dependências e Buildar Projeto
         run: |
           npm install
-          
-          # SEMPRE fazer build se não existir backend/dist ou se houver mudanças detectadas
-          # Isso garante que sempre teremos artefatos para copiar
-          BUILD_WAS_EXECUTED="false"
-          SHOULD_BUILD="false"
-          
-          # Verificar se precisa fazer build
-          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
-            SHOULD_BUILD="true"
-            echo "=== Mudanças detectadas, build necessário ==="
-          elif [ ! -d "backend/dist" ] || [ ! -f "backend/dist/index.js" ]; then
-            SHOULD_BUILD="true"
-            echo "=== backend/dist não existe, build necessário ==="
+
+          # Determinar se precisa buildar
+          if [ "${{ steps.changes.outputs.backend_changed }}"  == "true" ] || \
+             [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
+            SHOULD_BUILD=true
           else
-            echo "=== Nenhuma mudança detectada e backend/dist existe, verificando se precisa rebuild ==="
-            # Mesmo sem mudanças detectadas, fazer build se frontend não estiver integrado
-            if [ ! -d "backend/dist/frontend" ] || [ ! -f "backend/dist/frontend/index.html" ]; then
-              SHOULD_BUILD="true"
-              echo "=== Frontend não está integrado, build necessário ==="
-            fi
+            SHOULD_BUILD=false
+            echo "Nenhuma mudança em backend ou frontend — build pulado"
           fi
-          
+
           if [ "${SHOULD_BUILD}" == "true" ]; then
-            BUILD_WAS_EXECUTED="true"
-            echo "=== INICIANDO BUILD ==="
-            echo "Building frontend..."
+            # ── Frontend ──────────────────────────────────────────
+            echo "=== Buildando frontend ==="
             npm ci --prefix frontend
             npm run build --prefix frontend
-            
-            # Verificar se frontend foi buildado
-            if [ ! -d "frontend/build" ] || [ ! -f "frontend/build/index.html" ]; then
-              echo "⚠ ERRO: Frontend não foi buildado corretamente!"
-              exit 1
-            fi
-            echo "✓ Frontend buildado com sucesso"
-            
-            # Backend sempre precisa ser buildado se frontend ou backend mudaram
-            # (pois o backend integra o frontend no build)
-            echo "Building backend..."
-            npm ci --prefix backend
-            
-            # Incrementar versão automaticamente baseado em commits e arquivos alterados
-            # Segue padrão Semantic Versioning: MAIOR.MENOR.CORREÇÃO (ex: 1.0.0)
-            echo "=== Incrementando versão automaticamente ==="
-            PREV_COMMIT="${{ steps.changes.outputs.prev_commit }}"
-            CURRENT_COMMIT="${{ steps.changes.outputs.current_commit }}"
-            
-            # Obter versão atual da última tag Git do repositório de produção
-            # Buscar tags remotas do repositório de produção para pegar a versão mais recente
+            [ -f "frontend/build/index.html" ] || { echo "ERRO: frontend build falhou!"; exit 1; }
+            echo "✓ Frontend buildado"
+
+            # ── Versioning ────────────────────────────────────────
+            echo "=== Incrementando versão ==="
             GITHUB_REPO_PROD="Luminous-Telecom/backnet.prod"
             GITHUB_TOKEN_PROD="${{ secrets.PROD_PAT }}"
-            
-            # Buscar última tag do repositório de produção via API do GitHub
-            echo "🔍 Buscando última tag do repositório de produção..."
-            LAST_TAG_RESPONSE=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN_PROD}" \
+
+            LAST_TAG_RESPONSE=$(curl -sf -H "Authorization: Bearer ${GITHUB_TOKEN_PROD}" \
               -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${GITHUB_REPO_PROD}/tags?per_page=1" 2>/dev/null || echo "[]")
-            
+              "https://api.github.com/repos/${GITHUB_REPO_PROD}/tags?per_page=1" || echo "[]")
+
             LAST_TAG=$(echo "${LAST_TAG_RESPONSE}" | node -e "
               try {
-                const tags = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
-                if (tags && Array.isArray(tags) && tags.length > 0 && tags[0].name) {
-                  console.log(tags[0].name);
-                }
-              } catch(e) {}
+                const tags = JSON.parse(require('fs').readFileSync(0,'utf-8'));
+                if (Array.isArray(tags) && tags[0]?.name) console.log(tags[0].name);
+              } catch {}
             " 2>/dev/null || echo "")
-            
-            if [ -n "${LAST_TAG}" ] && [ "${LAST_TAG}" != "null" ] && [ "${LAST_TAG}" != "" ]; then
-              # Remover 'v' do início da tag e qualquer sufixo
+
+            if [ -n "${LAST_TAG}" ] && [ "${LAST_TAG}" != "null" ]; then
               OLD_VERSION=$(echo "${LAST_TAG}" | sed 's/^v//' | sed 's/-.*//')
-              echo "📦 Versão atual (última tag produção): ${OLD_VERSION} (tag: ${LAST_TAG})"
             else
-              # Fallback: usar versão do package.json
               OLD_VERSION=$(node -p "require('./backend/package.json').version.split('-')[0]")
-              echo "📦 Versão atual (package.json): ${OLD_VERSION} (nenhuma tag encontrada no repositório de produção)"
             fi
-            
-            # Determinar range de commits para análise
-            if [ -z "${PREV_COMMIT}" ] || [ "${PREV_COMMIT}" == "${CURRENT_COMMIT}" ] || [ "${PREV_COMMIT}" == "0000000000000000000000000000000000000000" ]; then
+            echo "Versão atual: ${OLD_VERSION}"
+
+            PREV_COMMIT="${{ steps.changes.outputs.prev_commit }}"
+            CURRENT_COMMIT="${{ steps.changes.outputs.current_commit }}"
+            if [ "${PREV_COMMIT}" == "${CURRENT_COMMIT}" ] || \
+               [ "${PREV_COMMIT}" == "0000000000000000000000000000000000000000" ]; then
               COMMIT_RANGE="-1"
-              echo "🔍 Analisando último commit apenas"
             else
               COMMIT_RANGE="${PREV_COMMIT}..${CURRENT_COMMIT}"
-              echo "🔍 Analisando commits: ${COMMIT_RANGE}"
             fi
-            
-            # Obter mensagens de commit
+
             COMMITS=$(git log ${COMMIT_RANGE} --pretty=format:"%s" 2>/dev/null || echo "")
-            
-            # Analisar commits para determinar tipo de incremento
-            HAS_BREAKING=false
-            HAS_FEATURE=false
-            HAS_FIX=false
-            
-            while IFS= read -r commit; do
-              COMMIT_LOWER=$(echo "${commit}" | tr '[:upper:]' '[:lower:]')
-              
-              # Verificar breaking changes
-              if echo "${COMMIT_LOWER}" | grep -qE "(breaking|breaking change|^major:|^major |!)"; then
-                HAS_BREAKING=true
-                echo "  🚨 Breaking change detectado: ${commit}"
-              fi
-              
-              # Verificar novas funcionalidades
-              if echo "${COMMIT_LOWER}" | grep -qE "^(feat|feature|add|new)[: ]"; then
-                HAS_FEATURE=true
-                echo "  ✨ Feature detectada: ${commit}"
-              fi
-              
-              # Verificar correções
-              if echo "${COMMIT_LOWER}" | grep -qE "^(fix|bugfix|patch)[: ]"; then
-                HAS_FIX=true
-                echo "  🔧 Fix detectado: ${commit}"
-              fi
-            done <<< "${COMMITS}"
-            
-            # Determinar tipo de incremento
             INCREMENT_TYPE="patch"
-            if [ "${HAS_BREAKING}" = "true" ]; then
-              INCREMENT_TYPE="major"
-              echo "🚨 Incremento MAIOR detectado (breaking change)"
-            elif [ "${HAS_FEATURE}" = "true" ]; then
-              INCREMENT_TYPE="minor"
-              echo "✨ Incremento MENOR detectado (nova funcionalidade)"
-            elif [ "${HAS_FIX}" = "true" ]; then
-              INCREMENT_TYPE="patch"
-              echo "🔧 Incremento CORREÇÃO detectado (bug fix)"
-            else
-              # Se não detectar nada específico mas houver commits, incrementar patch
-              if [ -n "${COMMITS}" ]; then
-                INCREMENT_TYPE="patch"
-                echo "📝 Incremento CORREÇÃO (mudanças detectadas)"
-              else
-                echo "⚠ Nenhuma mudança detectada, mantendo versão"
-                INCREMENT_TYPE="none"
-              fi
-            fi
-            
-            # Incrementar versão se necessário
+            while IFS= read -r commit; do
+              LOWER=$(echo "${commit}" | tr '[:upper:]' '[:lower:]')
+              echo "${LOWER}" | grep -qE "(breaking|^major:?[ !])" && INCREMENT_TYPE="major" && break
+              echo "${LOWER}" | grep -qE "^(feat|feature|add|new)[: ]" && INCREMENT_TYPE="minor"
+            done <<< "${COMMITS}"
+            [ -z "${COMMITS}" ] && INCREMENT_TYPE="none"
+
             if [ "${INCREMENT_TYPE}" != "none" ]; then
               VERSION=$(node -e "
-                const version = '${OLD_VERSION}';
-                const [major, minor, patch] = version.split('.').map(Number);
-                const type = '${INCREMENT_TYPE}';
-                let newVersion;
-                if (type === 'major') {
-                  newVersion = \`\${major + 1}.0.0\`;
-                } else if (type === 'minor') {
-                  newVersion = \`\${major}.\${minor + 1}.0\`;
-                } else {
-                  newVersion = \`\${major}.\${minor}.\${patch + 1}\`;
-                }
-                console.log(newVersion);
+                const [maj,min,pat] = '${OLD_VERSION}'.split('.').map(Number);
+                const t = '${INCREMENT_TYPE}';
+                if (t==='major') console.log(\`\${maj+1}.0.0\`);
+                else if (t==='minor') console.log(\`\${maj}.\${min+1}.0\`);
+                else console.log(\`\${maj}.\${min}.\${pat+1}\`);
               ")
-              
-              echo "✅ Nova versão: ${OLD_VERSION} → ${VERSION}"
-              
-              # Atualizar package.json
               node -e "
-                const fs = require('fs');
-                const path = './backend/package.json';
-                const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
-                pkg.version = '${VERSION}';
-                fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
+                const fs=require('fs'), p='./backend/package.json';
+                const pkg=JSON.parse(fs.readFileSync(p,'utf8'));
+                pkg.version='${VERSION}';
+                fs.writeFileSync(p,JSON.stringify(pkg,null,2)+'\n');
               "
+              echo "✓ Versão: ${OLD_VERSION} → ${VERSION}"
             else
               VERSION="${OLD_VERSION}"
-              echo "✓ Mantendo versão: ${VERSION}"
+              echo "✓ Versão mantida: ${VERSION}"
             fi
-            
-            # Salvar versão para uso posterior
-            echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+            echo "VERSION=${VERSION}"         >> $GITHUB_ENV
             echo "OLD_VERSION=${OLD_VERSION}" >> $GITHUB_ENV
-            echo "INCREMENT_TYPE=${INCREMENT_TYPE}" >> $GITHUB_ENV
-            
+
+            # ── Backend ───────────────────────────────────────────
+            echo "=== Buildando backend ==="
+            npm ci --prefix backend
             npm run build --prefix backend
-            
-            # Verificar se backend foi buildado
-            if [ ! -d "backend/dist" ]; then
-              echo "⚠ ERRO: Backend não foi buildado corretamente!"
-              exit 1
-            fi
-            echo "✓ Backend buildado com sucesso"
-            
-            # Copiar frontend buildado para backend/dist/frontend APÓS o build do backend
-            # Isso garante que o frontend não seja removido durante o build
-            echo "Integrando frontend buildado no backend..."
+            [ -d "backend/dist" ] || { echo "ERRO: backend build falhou!"; exit 1; }
+            echo "✓ Backend buildado"
+
+            # Integrar frontend no backend/dist/frontend (serve estático pelo Express)
             mkdir -p backend/dist/frontend
             cp -r frontend/build/* backend/dist/frontend/
-            
-            # Verificar se foi copiado corretamente
-            if [ -f "backend/dist/frontend/index.html" ]; then
-              echo "✓ Frontend integrado com sucesso no backend"
-              echo "✓ Arquivos do frontend:"
-              ls -la backend/dist/frontend/ | head -10
-            else
-              echo "⚠ ERRO: Frontend não foi copiado corretamente!"
-              exit 1
-            fi
+            [ -f "backend/dist/frontend/index.html" ] || { echo "ERRO: integração frontend falhou!"; exit 1; }
+            echo "✓ Frontend integrado em backend/dist/frontend"
+
+            echo "BUILD_EXECUTED=true" >> $GITHUB_ENV
           else
-            echo "✓ Build não necessário - artefatos existentes estão atualizados"
+            echo "BUILD_EXECUTED=false" >> $GITHUB_ENV
           fi
-          
-          # Salvar flag para uso posterior
-          echo "BUILD_WAS_EXECUTED=${BUILD_WAS_EXECUTED}" >> $GITHUB_ENV
-      
-      # === 3. O Passo de Deployment ===
-      
-      # Obter informações do commit atual antes de fazer checkout do repo de produção
+
+      # ─────────────────────────────────────────────────────────────
+      # 3. Informações do commit (para mensagem de deploy)
+      # ─────────────────────────────────────────────────────────────
       - name: Obter Informações do Commit
         id: commit_info
         env:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
         run: |
-          # Obter informações do último commit
-          echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "author=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
-          echo "date=$(git log -1 --pretty=%ai)" >> $GITHUB_OUTPUT
-          
-          # Tentar obter o último commit do repositório de produção via API
+          echo "hash=$(git rev-parse --short HEAD)"    >> $GITHUB_OUTPUT
+          echo "author=$(git log -1 --pretty=%an)"     >> $GITHUB_OUTPUT
+          echo "date=$(git log -1 --pretty=%ai)"       >> $GITHUB_OUTPUT
+
           GITHUB_REPO_PROD="Luminous-Telecom/backnet.prod"
-          LAST_PROD_COMMIT=""
-          
-          echo "🔍 Buscando último commit do repositório de produção..."
-          LAST_COMMIT_RESPONSE=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+          LAST_COMMIT_RESPONSE=$(curl -sf -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${GITHUB_REPO_PROD}/commits/main?per_page=1" 2>/dev/null || echo "")
-          
-          if [ -n "${LAST_COMMIT_RESPONSE}" ] && [ "${LAST_COMMIT_RESPONSE}" != "" ]; then
-            LAST_PROD_COMMIT=$(echo "${LAST_COMMIT_RESPONSE}" | node -e "
-              try {
-                const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
-                if (data && data.commit && data.commit.message) {
-                  // Extrair hash do commit original da mensagem do commit de produção
-                  const message = data.commit.message;
-                  const match = message.match(/Commit original: ([a-f0-9]+)/);
-                  if (match && match[1]) {
-                    console.log(match[1]);
-                  } else {
-                    // Se não encontrar, usar o SHA do commit de produção
-                    console.log(data.sha.substring(0, 7));
-                  }
-                }
-              } catch(e) {}
-            " 2>/dev/null || echo "")
+            "https://api.github.com/repos/${GITHUB_REPO_PROD}/commits/main" || echo "")
+
+          LAST_PROD_COMMIT=$(echo "${LAST_COMMIT_RESPONSE}" | node -e "
+            try {
+              const d = JSON.parse(require('fs').readFileSync(0,'utf-8'));
+              const m = d?.commit?.message?.match(/Commit original: ([a-f0-9]+)/);
+              console.log(m ? m[1] : (d?.sha?.substring(0,7) || ''));
+            } catch {}
+          " 2>/dev/null || echo "")
+
+          if [ -z "${LAST_PROD_COMMIT}" ]; then
+            LAST_PROD_COMMIT="${{ github.event.before }}"
           fi
-          
-          # Se não conseguir obter o commit de produção, usar o commit anterior do push
-          if [ -z "${LAST_PROD_COMMIT}" ] || [ "${LAST_PROD_COMMIT}" == "" ]; then
-            PREV_COMMIT="${{ github.event.before }}"
-            if [ -z "${PREV_COMMIT}" ] || [ "${PREV_COMMIT}" == "0000000000000000000000000000000000000000" ]; then
-              PREV_COMMIT=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)
-            fi
-            LAST_PROD_COMMIT="${PREV_COMMIT}"
-            echo "⚠ Não foi possível obter último commit de produção, usando commit anterior: ${LAST_PROD_COMMIT}"
-          else
-            echo "✓ Último commit de produção encontrado: ${LAST_PROD_COMMIT}"
-          fi
-          
-          # Obter todos os commits não enviados (desde o último commit de produção até o HEAD)
+
           CURRENT_COMMIT=$(git rev-parse HEAD)
-          
-          # Verificar se há commits não enviados
-          if [ "${LAST_PROD_COMMIT}" == "${CURRENT_COMMIT}" ]; then
-            echo "⚠ Nenhum commit novo para enviar"
-            FIRST_MESSAGE=$(git log -1 --pretty=%B | head -1)
-            echo "message=${FIRST_MESSAGE}" >> $GITHUB_OUTPUT
-            echo "all_messages=${FIRST_MESSAGE}" >> $GITHUB_OUTPUT
-          else
-            # Obter todos os commits não enviados
-            echo "📝 Coletando mensagens de commits não enviados..."
-            
-            # Obter lista de commits não enviados
-            COMMIT_LIST=$(git log ${LAST_PROD_COMMIT}..${CURRENT_COMMIT} --pretty=format:"%H" --reverse 2>/dev/null || echo "${CURRENT_COMMIT}")
-            
-            # Primeira mensagem (para compatibilidade)
-            FIRST_MESSAGE=$(git log -1 --pretty=%B | head -1)
-            echo "message=${FIRST_MESSAGE}" >> $GITHUB_OUTPUT
-            
-            # Coletar todas as mensagens formatadas em arquivo temporário
-            TEMP_FILE=$(mktemp)
-            COMMIT_COUNT=0
-            while IFS= read -r commit_hash; do
-              if [ -n "${commit_hash}" ]; then
-                COMMIT_COUNT=$((COMMIT_COUNT + 1))
-                SHORT_HASH=$(echo "${commit_hash}" | cut -c1-7)
-                COMMIT_MSG=$(git log -1 "${commit_hash}" --pretty=%B | sed 's/^[[:space:]]*//' | head -1)
-                echo "• [${SHORT_HASH}] ${COMMIT_MSG}" >> "${TEMP_FILE}"
-              fi
-            done <<< "${COMMIT_LIST}"
-            
-            # Se não coletou nenhum commit, usar o commit atual
-            if [ "${COMMIT_COUNT}" -eq 0 ]; then
-              SHORT_HASH=$(git rev-parse --short HEAD)
-              COMMIT_MSG=$(git log -1 --pretty=%B | head -1)
-              echo "• [${SHORT_HASH}] ${COMMIT_MSG}" > "${TEMP_FILE}"
-              COMMIT_COUNT=1
-            fi
-            
-            # Salvar todas as mensagens usando heredoc para suportar multi-linha
-            echo "all_messages<<EOF" >> $GITHUB_OUTPUT
-            cat "${TEMP_FILE}" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-            rm -f "${TEMP_FILE}"
-            
-            echo "✓ Coletadas mensagens de ${COMMIT_COUNT} commit(s) não enviado(s)"
+          COMMIT_LIST=$(git log "${LAST_PROD_COMMIT}..${CURRENT_COMMIT}" --pretty=format:"%H" --reverse 2>/dev/null || echo "${CURRENT_COMMIT}")
+
+          FIRST_MESSAGE=$(git log -1 --pretty=%B | head -1)
+          echo "message=${FIRST_MESSAGE}" >> $GITHUB_OUTPUT
+
+          TEMP_FILE=$(mktemp)
+          COMMIT_COUNT=0
+          while IFS= read -r hash; do
+            [ -n "${hash}" ] || continue
+            COMMIT_COUNT=$((COMMIT_COUNT + 1))
+            echo "• [$(echo ${hash} | cut -c1-7)] $(git log -1 "${hash}" --pretty=%B | head -1)" >> "${TEMP_FILE}"
+          done <<< "${COMMIT_LIST}"
+
+          if [ "${COMMIT_COUNT}" -eq 0 ]; then
+            echo "• [$(git rev-parse --short HEAD)] ${FIRST_MESSAGE}" > "${TEMP_FILE}"
           fi
-      
+
+          echo "all_messages<<EOF" >> $GITHUB_OUTPUT
+          cat "${TEMP_FILE}"       >> $GITHUB_OUTPUT
+          echo "EOF"               >> $GITHUB_OUTPUT
+          rm -f "${TEMP_FILE}"
+
+      # ─────────────────────────────────────────────────────────────
+      # 4. Checkout do repositório de produção
+      # ─────────────────────────────────────────────────────────────
       - name: Checkout Repositório de Produção
         env:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
         run: |
-          git config --global user.name "GitHub Actions Deploy"
+          git config --global user.name  "GitHub Actions Deploy"
           git config --global user.email "actions@github.com"
-          git clone https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git deployment || git clone --depth 1 https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git deployment
-      
-      - name: Copiar Artefatos para Deploy
+          git clone --depth 1 https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git deployment
+
+      # ─────────────────────────────────────────────────────────────
+      # 5. Sincronizar artefatos via rsync (sem listas de cp)
+      # ─────────────────────────────────────────────────────────────
+      - name: Sincronizar Artefatos para Deploy
         run: |
           cd deployment
-          
-          # Debug: mostrar valores das flags
-          echo "=== DEBUG: Flags de mudanças ==="
-          echo "backend_changed: ${{ steps.changes.outputs.backend_changed }}"
-          echo "frontend_changed: ${{ steps.changes.outputs.frontend_changed }}"
-          echo "config_changed: ${{ steps.changes.outputs.config_changed }}"
-          echo "docker_changed: ${{ steps.changes.outputs.docker_changed }}"
-          
-          # Criar estrutura de pastas se não existir
-          mkdir -p backend frontend
-          
-          # Verificar se backend/dist existe antes de copiar
-          echo "=== Verificando backend/dist antes de copiar ==="
+          mkdir -p backend frontend scripts
+
+          # Nunca vai para produção
+          rm -rf backend/src
+
+          # ── backend/dist ─────────────────────────────────────────
           if [ -d "../backend/dist" ]; then
-            echo "✓ backend/dist existe"
-            echo "Conteúdo de backend/dist:"
-            ls -la ../backend/dist/ | head -20
-            if [ -d "../backend/dist/frontend" ]; then
-              echo "✓ backend/dist/frontend existe"
-              echo "Conteúdo de backend/dist/frontend:"
-              ls -la ../backend/dist/frontend/ | head -10
-            else
-              echo "⚠ backend/dist/frontend NÃO existe!"
-            fi
+            rsync -a --delete ../backend/dist/ backend/dist/
+            echo "✓ backend/dist sincronizado"
           else
-            echo "⚠ ERRO: backend/dist NÃO existe!"
-            echo "⚠ Isso significa que o build não foi executado ou falhou"
-            echo "⚠ Verificando se BUILD_WAS_EXECUTED está definido..."
-            if [ -z "${BUILD_WAS_EXECUTED}" ]; then
-              echo "⚠ BUILD_WAS_EXECUTED não está definido - isso é um problema!"
-            else
-              echo "BUILD_WAS_EXECUTED=${BUILD_WAS_EXECUTED}"
-            fi
-            exit 1
+            echo "AVISO: backend/dist não existe (build não executado, mantendo existente)"
           fi
-          
-          # Copiar artefatos do backend (frontend já está integrado no backend/dist/frontend)
-          # SEMPRE copiar se backend/dist existe (mesmo sem mudanças detectadas, pode ter sido buildado)
-          # Copiar se houve mudanças detectadas OU se o build foi executado OU se backend/dist existe
-          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ] || [ "${BUILD_WAS_EXECUTED}" == "true" ] || [ -d "../backend/dist" ]; then
-            echo "=== Copiando artefatos do backend (com frontend integrado) ==="
-            # Remover backend/src se existir (não deve estar em produção)
-            rm -rf backend/src
-            rm -rf backend/dist backend/package.json backend/package-lock.json backend/.env.example
-            cp -r ../backend/dist backend/dist
-            cp ../backend/package.json backend/package.json
-            cp ../backend/package-lock.json backend/package-lock.json
-            cp ../backend/.env.example backend/.env.example
-            
-            # Verificar se package.json foi copiado corretamente (necessário para npm install no self-update)
-            if [ ! -f "backend/package.json" ]; then
-              echo "⚠ ERRO: backend/package.json não foi copiado - self-update não funcionará!"
-              exit 1
-            fi
-            echo "✓ backend/package.json copiado (necessário para self-update)"
-            
-            # Verificar se foi copiado corretamente
-            echo "=== Verificando cópia ==="
-            if [ -d "backend/dist" ]; then
-              echo "✓ backend/dist copiado"
-              if [ -d "backend/dist/frontend" ]; then
-                echo "✓ backend/dist/frontend copiado"
-                echo "Arquivos em backend/dist/frontend:"
-                ls -la backend/dist/frontend/ | head -10
-              else
-                echo "⚠ ERRO: backend/dist/frontend NÃO foi copiado!"
-                exit 1
-              fi
-            else
-              echo "⚠ ERRO: backend/dist NÃO foi copiado!"
-              exit 1
-            fi
+
+          # ── backend: dependências e configuração ─────────────────
+          rsync -a \
+            ../backend/package.json \
+            ../backend/package-lock.json \
+            ../backend/.env.example \
+            backend/
+
+          rsync -a --delete ../backend/migrations/ backend/migrations/
+          rsync -a --delete ../backend/config/     backend/config/
+
+          for f in .sequelizerc .gitignore Dockerfile .dockerignore tsconfig.json; do
+            [ -f "../backend/${f}" ] && cp "../backend/${f}" "backend/${f}"
+          done
+
+          echo "✓ Configuração do backend sincronizada"
+
+          # ── frontend/build ────────────────────────────────────────
+          # Mantém estrutura build/ — alinhado com ecosystem.config.js: serve -s build
+          if [ -d "../frontend/build" ]; then
+            mkdir -p frontend/build
+            rsync -a --delete ../frontend/build/ frontend/build/
+            [ -f "frontend/build/index.html" ] || { echo "ERRO: frontend/build/index.html ausente!"; exit 1; }
+            echo "✓ frontend/build sincronizado"
           else
-            echo "⚠ Nenhuma alteração detectada (backend_changed=${{ steps.changes.outputs.backend_changed }}, frontend_changed=${{ steps.changes.outputs.frontend_changed }})"
-            echo "⚠ Mantendo artefatos existentes (isso pode ser um problema se houver mudanças não detectadas)"
+            echo "AVISO: frontend/build não existe (mantendo existente)"
           fi
-          
-          # SEMPRE copiar arquivos necessários para migrations e configuração do Sequelize
-          # Esses arquivos são necessários para o self-update funcionar corretamente
-          echo "Copiando arquivos de configuração e migrations do Sequelize..."
-          
-          # Criar diretório config se não existir
-          mkdir -p backend/config
-          
-          # Copiar config/config.js (necessário para Sequelize CLI)
-          if [ -f "../backend/config/config.js" ]; then
-            cp ../backend/config/config.js backend/config/config.js
-            echo "✓ backend/config/config.js copiado"
-          else
-            echo "⚠ backend/config/config.js não encontrado"
-          fi
-          
-          # Copiar .sequelizerc (necessário para Sequelize CLI saber onde estão os arquivos)
-          if [ -f "../backend/.sequelizerc" ]; then
-            cp ../backend/.sequelizerc backend/.sequelizerc
-            echo "✓ backend/.sequelizerc copiado"
-          else
-            echo "⚠ backend/.sequelizerc não encontrado"
-          fi
-          
-          # Copiar migrations (necessário para executar migrations no self-update)
-          if [ -d "../backend/migrations" ]; then
-            rm -rf backend/migrations
-            cp -r ../backend/migrations backend/migrations
-            echo "✓ backend/migrations copiado"
-          else
-            echo "⚠ backend/migrations não encontrado"
-          fi
-          
-          # Copiar tsconfig.json do backend (necessário para build durante self-update)
-          if [ -f "../backend/tsconfig.json" ]; then
-            cp ../backend/tsconfig.json backend/tsconfig.json
-            echo "✓ backend/tsconfig.json copiado"
-          else
-            echo "⚠ backend/tsconfig.json não encontrado"
-          fi
-          
-          # Copiar .gitignore do backend (para manter consistência)
-          if [ -f "../backend/.gitignore" ]; then
-            cp ../backend/.gitignore backend/.gitignore
-            echo "✓ backend/.gitignore copiado"
-          fi
-          
-          # Copiar build do frontend para frontend/ (se build foi executado)
-          if [ "${BUILD_WAS_EXECUTED}" == "true" ] || [ -d "../frontend/build" ]; then
-            echo "=== Copiando build do frontend para frontend/ ==="
-            if [ -d "../frontend/build" ]; then
-              # Limpar pasta frontend/ antes de copiar (exceto Dockerfiles)
-              if [ -f "frontend/Dockerfile" ]; then
-                cp frontend/Dockerfile frontend/Dockerfile.backup
-              fi
-              if [ -f "frontend/.dockerignore" ]; then
-                cp frontend/.dockerignore frontend/.dockerignore.backup
-              fi
-              
-              rm -rf frontend/*
-              
-              # Restaurar Dockerfiles
-              if [ -f "frontend/Dockerfile.backup" ]; then
-                mv frontend/Dockerfile.backup frontend/Dockerfile
-              fi
-              if [ -f "frontend/.dockerignore.backup" ]; then
-                mv frontend/.dockerignore.backup frontend/.dockerignore
-              fi
-              
-              # Copiar build do frontend
-              cp -r ../frontend/build/* frontend/
-              
-              # Verificar se foi copiado
-              if [ -f "frontend/index.html" ]; then
-                echo "✓ Frontend build copiado para frontend/"
-                echo "Arquivos em frontend/:"
-                ls -la frontend/ | head -10
-              else
-                echo "⚠ ERRO: Frontend build não foi copiado corretamente!"
-                exit 1
-              fi
-            else
-              echo "⚠ frontend/build não existe, pulando cópia"
-            fi
-          else
-            echo "⚠ Build não foi executado, mantendo frontend/ existente"
-          fi
-          
-          # SEMPRE copiar arquivos Docker do backend e frontend (independente de mudanças)
-          echo "Copiando arquivos Docker do backend e frontend..."
-          
-          # Backend Dockerfile e .dockerignore
-          if [ -f "../backend/Dockerfile" ]; then
-            cp ../backend/Dockerfile backend/Dockerfile
-            echo "✓ backend/Dockerfile copiado"
-          else
-            echo "⚠ backend/Dockerfile não encontrado"
-          fi
-          if [ -f "../backend/.dockerignore" ]; then
-            cp ../backend/.dockerignore backend/.dockerignore
-            echo "✓ backend/.dockerignore copiado"
-          else
-            echo "⚠ backend/.dockerignore não encontrado"
-          fi
-          
-          # Frontend Dockerfile e .dockerignore
-          if [ -f "../frontend/Dockerfile" ]; then
-            cp ../frontend/Dockerfile frontend/Dockerfile
-            echo "✓ frontend/Dockerfile copiado"
-          else
-            echo "⚠ frontend/Dockerfile não encontrado"
-          fi
-          if [ -f "../frontend/.dockerignore" ]; then
-            cp ../frontend/.dockerignore frontend/.dockerignore
-            echo "✓ frontend/.dockerignore copiado"
-          else
-            echo "⚠ frontend/.dockerignore não encontrado"
-          fi
-          
-          # Verificar se os arquivos foram copiados
-          echo "Verificando arquivos Docker copiados:"
-          ls -la backend/ | grep -E "(Dockerfile|dockerignore)" || echo "Nenhum arquivo Docker encontrado em backend/"
-          ls -la frontend/ | grep -E "(Dockerfile|dockerignore)" || echo "Nenhum arquivo Docker encontrado em frontend/"
-          
-          # SEMPRE copiar pasta scripts/ (CRÍTICO para instalação automática do Elasticsearch)
-          echo "Copiando pasta scripts/ para instalação automática..."
+
+          for f in Dockerfile .dockerignore; do
+            [ -f "../frontend/${f}" ] && cp "../frontend/${f}" "frontend/${f}"
+          done
+
+          # ── scripts de setup da raiz ─────────────────────────────
           if [ -d "../scripts" ]; then
-            rm -rf scripts
-            cp -r ../scripts scripts
-            # Garantir permissões de execução nos scripts
+            rsync -a --delete ../scripts/ scripts/
             chmod +x scripts/*.sh 2>/dev/null || true
-            echo "✓ Pasta scripts/ copiada (necessária para instalação automática do Elasticsearch)"
-            echo "Arquivos em scripts/:"
-            ls -la scripts/ | head -10
-          else
-            echo "⚠ Pasta scripts/ não encontrada - instalação automática do Elasticsearch não funcionará!"
+            echo "✓ scripts/ sincronizado"
           fi
-          
-          # SEMPRE copiar arquivos de configuração essenciais para self-update
-          # Esses arquivos são necessários para o self-update funcionar corretamente
-          echo "Copiando arquivos de configuração essenciais para self-update..."
-          
-          # ecosystem.config.js (CRÍTICO para PM2 reload no self-update)
-          if [ -f "../ecosystem.config.js" ]; then
-            cp ../ecosystem.config.js ecosystem.config.js
-            echo "✓ ecosystem.config.js copiado (necessário para PM2)"
-          else
-            echo "⚠ ERRO: ecosystem.config.js não encontrado - self-update não funcionará!"
-          fi
-          
-          # .gitignore (manter consistência)
-          if [ -f "../.gitignore" ]; then
-            cp ../.gitignore .gitignore
-            echo "✓ .gitignore copiado"
-          fi
-          
-          # Copiar outros arquivos de configuração apenas se houver mudanças
-          if [ "${{ steps.changes.outputs.config_changed }}" == "true" ]; then
-            echo "Copiando outros arquivos de configuração e documentação..."
-            
-            # README.md
-            if [ -f "../README.md" ]; then
-              cp ../README.md README.md
-              echo "✓ README.md copiado"
-            fi
-            
-            # docker-compose.yaml e nginx.docker.conf
-            if [ -f "../docker-compose.yaml" ]; then
-              cp ../docker-compose.yaml docker-compose.yaml
-              echo "✓ docker-compose.yaml copiado"
-            fi
-            if [ -f "../nginx.docker.conf" ]; then
-              cp ../nginx.docker.conf nginx.docker.conf
-              echo "✓ nginx.docker.conf copiado"
-            fi
-            
-            # package.json da raiz (se existir)
-            if [ -f "../package.json" ]; then
-              cp ../package.json package.json
-              echo "✓ package.json copiado"
-            fi
-          else
-            echo "Nenhuma alteração em outros arquivos de configuração/documentação"
-          fi
-      
+
+          # ── arquivos raiz ─────────────────────────────────────────
+          [ -f "../ecosystem.config.js" ] && cp ../ecosystem.config.js ecosystem.config.js
+          [ -f "../.gitignore" ]          && cp ../.gitignore          .gitignore
+          [ -f "../docker-compose.yaml" ] && cp ../docker-compose.yaml docker-compose.yaml
+          [ -f "../nginx.docker.conf" ]   && cp ../nginx.docker.conf   nginx.docker.conf
+          [ -f "../package.json" ]        && cp ../package.json        package.json
+
+          echo "✓ Arquivos raiz sincronizados"
+
+          # ── Validações essenciais ─────────────────────────────────
+          [ -f "backend/package.json" ]  || { echo "ERRO: backend/package.json ausente!";  exit 1; }
+          [ -f "ecosystem.config.js" ]   || { echo "ERRO: ecosystem.config.js ausente!";   exit 1; }
+
+          echo "=== Artefatos sincronizados com sucesso ==="
+
+      # ─────────────────────────────────────────────────────────────
+      # 6. Commit e push para produção
+      # ─────────────────────────────────────────────────────────────
       - name: Commit e Push para Produção
         env:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
         run: |
           cd deployment
-          git config user.name "GitHub Actions"
+          git config user.name  "GitHub Actions"
           git config user.email "actions@github.com"
-          
-          # Remover backend/src se existir (não deve estar em produção)
+
           rm -rf backend/src
-          
-          # Adicionar todos os arquivos (incluindo não rastreados)
-          # Forçar adição de arquivos compilados mesmo que estejam no .gitignore
+
           git add -A
-          git add -f backend/dist/ || true
-          git add -f frontend/ || true
-          
-          # Remover backend/src do staging se foi adicionado acidentalmente
+          git add -f backend/dist/    || true
+          git add -f frontend/build/  || true
           git rm -r --cached backend/src 2>/dev/null || true
-          
-          # Verificar status antes do commit
-          echo "=== Status do Git antes do commit ==="
+
+          echo "=== Status antes do commit ==="
           git status --short
-          
-          # Se BUILD_WAS_EXECUTED=true, sempre fazer commit mesmo sem mudanças detectadas
-          # (porque o build foi executado e pode ter gerado novos arquivos)
-          FORCE_COMMIT="false"
-          if [ "${BUILD_WAS_EXECUTED}" == "true" ]; then
-            FORCE_COMMIT="true"
-            echo "⚠ Build foi executado, forçando commit mesmo sem mudanças detectadas"
-          fi
-          
-          # Verificar se há mudanças para commitar
-          if git diff --staged --quiet && [ "${FORCE_COMMIT}" != "true" ]; then
-            echo "⚠ Nenhuma mudança detectada e build não foi executado"
-            echo "⚠ Pulando commit (arquivos já estão atualizados)"
+
+          COMMIT_HASH="${{ steps.commit_info.outputs.hash }}"
+          COMMIT_MSG="${{ steps.commit_info.outputs.message }}"
+          ALL_MSGS="${{ steps.commit_info.outputs.all_messages }}"
+          COMMIT_AUTHOR="${{ steps.commit_info.outputs.author }}"
+          COMMIT_DATE="${{ steps.commit_info.outputs.date }}"
+          [ -z "${COMMIT_HASH}" ]   && COMMIT_HASH="unknown"
+          [ -z "${COMMIT_MSG}" ]    && COMMIT_MSG="Deploy automático"
+          [ -z "${COMMIT_AUTHOR}" ] && COMMIT_AUTHOR="GitHub Actions"
+          [ -z "${COMMIT_DATE}" ]   && COMMIT_DATE="$(date -Iseconds)"
+
+          MSG_FILE=$(mktemp)
+          {
+            echo "Deploy: ${COMMIT_HASH} - ${COMMIT_MSG}"
+            echo ""
+            echo "Commits incluídos neste deploy:"
+            if [ -n "${ALL_MSGS}" ]; then
+              echo "${ALL_MSGS}"
+            else
+              echo "• [${COMMIT_HASH}] ${COMMIT_MSG}"
+            fi
+            echo ""
+            echo "Detalhes:"
+            echo "- Commit original: ${COMMIT_HASH}"
+            echo "- Autor: ${COMMIT_AUTHOR}"
+            echo "- Data: ${COMMIT_DATE}"
+            echo "- Workflow: ${{ github.workflow }}"
+            echo "- Run: ${{ github.run_id }}"
+          } >> "${MSG_FILE}"
+
+          if git diff --staged --quiet; then
+            git commit --allow-empty -F "${MSG_FILE}"
+            echo "⚠ Commit vazio (artefatos já atualizados)"
           else
-            if [ "${FORCE_COMMIT}" == "true" ] && git diff --staged --quiet; then
-              echo "⚠ Build foi executado mas nenhuma mudança detectada"
-              echo "⚠ Fazendo commit vazio para registrar o deploy..."
-              
-              # Preparar mensagem do commit com todas as mensagens usando arquivo temporário
-              # Usar variáveis com valores padrão para evitar erros de printf
-              COMMIT_HASH="${{ steps.commit_info.outputs.hash }}"
-              COMMIT_MESSAGE="${{ steps.commit_info.outputs.message }}"
-              ALL_MESSAGES="${{ steps.commit_info.outputs.all_messages }}"
-              COMMIT_AUTHOR="${{ steps.commit_info.outputs.author }}"
-              COMMIT_DATE="${{ steps.commit_info.outputs.date }}"
-              
-              # Garantir que variáveis não estejam vazias
-              [ -z "${COMMIT_HASH}" ] && COMMIT_HASH="unknown"
-              [ -z "${COMMIT_MESSAGE}" ] && COMMIT_MESSAGE="Deploy automático"
-              [ -z "${COMMIT_AUTHOR}" ] && COMMIT_AUTHOR="GitHub Actions"
-              [ -z "${COMMIT_DATE}" ] && COMMIT_DATE="$(date -Iseconds)"
-              
-              COMMIT_MSG_FILE=$(mktemp)
-              {
-                echo "Deploy: ${COMMIT_HASH} - ${COMMIT_MESSAGE}"
-                echo ""
-                echo "Commits incluídos neste deploy:"
-                if [ -n "${ALL_MESSAGES}" ]; then
-                  echo "${ALL_MESSAGES}"
-                else
-                  echo "• [${COMMIT_HASH}] ${COMMIT_MESSAGE}"
-                fi
-                echo ""
-                echo "Detalhes:"
-                echo "- Commit original: ${COMMIT_HASH}"
-                echo "- Autor: ${COMMIT_AUTHOR}"
-                echo "- Data: ${COMMIT_DATE}"
-                echo "- Workflow: ${{ github.workflow }}"
-                echo "- Run: ${{ github.run_id }}"
-                echo "- Nota: Build executado mas arquivos idênticos aos existentes"
-              } >> "${COMMIT_MSG_FILE}"
-              
-              git commit --allow-empty -F "${COMMIT_MSG_FILE}"
-              rm -f "${COMMIT_MSG_FILE}"
-            else
-              echo "✓ Mudanças detectadas, fazendo commit..."
-              
-              # Preparar mensagem do commit com todas as mensagens usando arquivo temporário
-              # Usar variáveis com valores padrão para evitar erros de printf
-              COMMIT_HASH="${{ steps.commit_info.outputs.hash }}"
-              COMMIT_MESSAGE="${{ steps.commit_info.outputs.message }}"
-              ALL_MESSAGES="${{ steps.commit_info.outputs.all_messages }}"
-              COMMIT_AUTHOR="${{ steps.commit_info.outputs.author }}"
-              COMMIT_DATE="${{ steps.commit_info.outputs.date }}"
-              
-              # Garantir que variáveis não estejam vazias
-              [ -z "${COMMIT_HASH}" ] && COMMIT_HASH="unknown"
-              [ -z "${COMMIT_MESSAGE}" ] && COMMIT_MESSAGE="Deploy automático"
-              [ -z "${COMMIT_AUTHOR}" ] && COMMIT_AUTHOR="GitHub Actions"
-              [ -z "${COMMIT_DATE}" ] && COMMIT_DATE="$(date -Iseconds)"
-              
-              COMMIT_MSG_FILE=$(mktemp)
-              {
-                echo "Deploy: ${COMMIT_HASH} - ${COMMIT_MESSAGE}"
-                echo ""
-                echo "Commits incluídos neste deploy:"
-                if [ -n "${ALL_MESSAGES}" ]; then
-                  echo "${ALL_MESSAGES}"
-                else
-                  echo "• [${COMMIT_HASH}] ${COMMIT_MESSAGE}"
-                fi
-                echo ""
-                echo "Detalhes:"
-                echo "- Commit original: ${COMMIT_HASH}"
-                echo "- Autor: ${COMMIT_AUTHOR}"
-                echo "- Data: ${COMMIT_DATE}"
-                echo "- Workflow: ${{ github.workflow }}"
-                echo "- Run: ${{ github.run_id }}"
-              } >> "${COMMIT_MSG_FILE}"
-              
-              git commit -F "${COMMIT_MSG_FILE}"
-              rm -f "${COMMIT_MSG_FILE}"
-            fi
-            
-            git remote set-url origin https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git
-            
-            # Fazer fetch e pull antes do push para integrar mudanças remotas
-            echo "=== Fazendo fetch para verificar mudanças remotas ==="
-            git fetch origin main
-            
-            # Verificar se há mudanças remotas
-            if git rev-list HEAD..origin/main --count | grep -q '[1-9]'; then
-              echo "⚠ Mudanças remotas detectadas, fazendo merge..."
-              # Tentar merge com estratégia que prioriza nossas mudanças (artefatos compilados)
-              git pull origin main --no-rebase --no-edit || {
-                echo "⚠ Conflito no merge, usando estratégia ours (manter nossas mudanças de deploy)"
-                # Em caso de conflito, manter nossas mudanças (artefatos compilados são mais recentes)
-                git merge origin/main --strategy-option=ours --no-edit || {
-                  echo "⚠ Erro no merge, abortando merge e mantendo estado atual"
-                  git merge --abort 2>/dev/null || true
-                }
-              }
-            else
-              echo "✓ Nenhuma mudança remota, prosseguindo com push"
-            fi
-            
-            # Tentar push
-            echo "=== Fazendo push para produção ==="
-            git push origin main || {
-              echo "⚠ Erro no push, tentando force push (isso é seguro para repositório de deploy)"
-              git push origin main --force
-            }
+            git commit -F "${MSG_FILE}"
+            echo "✓ Commit criado"
           fi
-          
-          # Mostrar último commit para confirmação
+          rm -f "${MSG_FILE}"
+
+          git remote set-url origin https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git
+          git fetch origin main
+
+          if git rev-list HEAD..origin/main --count | grep -q '[1-9]'; then
+            git pull origin main --no-rebase --no-edit || \
+              git merge origin/main --strategy-option=ours --no-edit || \
+              git merge --abort 2>/dev/null || true
+          fi
+
+          git push origin main || git push origin main --force
+
           echo "=== Último commit no repositório de produção ==="
           git log -1 --oneline
-          
+
+      # ─────────────────────────────────────────────────────────────
+      # 7. Criar Release no GitHub
+      # ─────────────────────────────────────────────────────────────
       - name: Criar Release no GitHub
-        if: success()
+        if: success() && env.BUILD_EXECUTED == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
         run: |
           cd deployment
-          
-          # Obter versão do package.json (prioridade: backend > frontend)
-          # Verificar se há variável de ambiente VERSION (definida durante build)
-          if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "" ]; then
+
+          if [ -n "${VERSION:-}" ]; then
             CLEAN_VERSION="${VERSION}"
-            echo "✓ Usando versão incrementada do workflow: ${CLEAN_VERSION}"
           elif [ -f "backend/package.json" ]; then
             CLEAN_VERSION=$(node -p "require('./backend/package.json').version.split('-')[0]")
-            echo "✓ Versão obtida do package.json: ${CLEAN_VERSION}"
-          elif [ -f "frontend/package.json" ]; then
-            CLEAN_VERSION=$(node -p "require('./frontend/package.json').version.split('-')[0]")
-            echo "✓ Versão obtida do frontend package.json: ${CLEAN_VERSION}"
           else
             CLEAN_VERSION="1.0.0"
-            echo "⚠ Versão não encontrada, usando padrão: ${CLEAN_VERSION}"
           fi
-          
+
+          TAG_NAME="v${CLEAN_VERSION}"
           COMMIT_HASH="${{ steps.commit_info.outputs.hash }}"
-          COMMIT_MESSAGE="${{ steps.commit_info.outputs.message }}"
-          ALL_COMMITS_MESSAGES="${{ steps.commit_info.outputs.all_messages }}"
+          COMMIT_MSG="${{ steps.commit_info.outputs.message }}"
+          ALL_MSGS="${{ steps.commit_info.outputs.all_messages }}"
           COMMIT_AUTHOR="${{ steps.commit_info.outputs.author }}"
           COMMIT_DATE="${{ steps.commit_info.outputs.date }}"
-          TAG_NAME="v${CLEAN_VERSION}"
-          
-          # Garantir que variáveis não estejam vazias
           [ -z "${COMMIT_HASH}" ] && COMMIT_HASH="unknown"
-          [ -z "${COMMIT_MESSAGE}" ] && COMMIT_MESSAGE="Deploy automático"
-          [ -z "${COMMIT_AUTHOR}" ] && COMMIT_AUTHOR="GitHub Actions"
-          [ -z "${COMMIT_DATE}" ] && COMMIT_DATE="$(date -Iseconds)"
-          
-          # Criar tag no repositório de produção
-          echo "=== Criando tag ${TAG_NAME} ==="
-          git tag -a "${TAG_NAME}" -m "${COMMIT_MESSAGE}" 2>/dev/null || echo "Tag já existe localmente"
-          git push origin "${TAG_NAME}" 2>/dev/null || echo "Tag já existe no remoto"
-          
-          # Criar release usando API do GitHub no repositório de produção
-          RELEASE_BODY_FILE=$(mktemp)
+          [ -z "${COMMIT_MSG}" ]  && COMMIT_MSG="Deploy automático"
+
+          git tag -a "${TAG_NAME}" -m "${COMMIT_MSG}" 2>/dev/null || true
+          git push origin "${TAG_NAME}" 2>/dev/null || true
+
+          BODY_FILE=$(mktemp)
           {
-            echo "${COMMIT_MESSAGE}"
+            echo "${COMMIT_MSG}"
             echo ""
-            echo "**Commits incluídos neste deploy:**"
-            if [ -n "${ALL_COMMITS_MESSAGES}" ]; then
-              echo "${ALL_COMMITS_MESSAGES}"
-            else
-              echo "• [${COMMIT_HASH}] ${COMMIT_MESSAGE}"
-            fi
+            echo "**Commits incluídos:**"
+            echo "${ALL_MSGS:-• [${COMMIT_HASH}] ${COMMIT_MSG}}"
             echo ""
             echo "**Detalhes:**"
             echo "- Commit: ${COMMIT_HASH}"
             echo "- Autor: ${COMMIT_AUTHOR}"
             echo "- Data: ${COMMIT_DATE}"
             echo "- Workflow: ${{ github.workflow }}"
-          } >> "${RELEASE_BODY_FILE}"
-          RELEASE_BODY=$(cat "${RELEASE_BODY_FILE}")
-          rm -f "${RELEASE_BODY_FILE}"
-          
-          echo "=== Criando release ${TAG_NAME} no repositório Luminous-Telecom/backnet.prod ==="
-          
-          # Criar release via API usando Node.js para escapar JSON corretamente
+          } >> "${BODY_FILE}"
+
           node -e "
             const https = require('https');
-            
-            const releaseBody = \`${RELEASE_BODY}\`;
+            const body = require('fs').readFileSync('${BODY_FILE}', 'utf-8');
             const data = JSON.stringify({
-              tag_name: '${TAG_NAME}',
-              name: 'Release ${TAG_NAME}',
-              body: releaseBody,
-              draft: false,
-              prerelease: false
+              tag_name: '${TAG_NAME}', name: 'Release ${TAG_NAME}',
+              body, draft: false, prerelease: false
             });
-            
-            const options = {
+            const req = https.request({
               hostname: 'api.github.com',
               path: '/repos/Luminous-Telecom/backnet.prod/releases',
               method: 'POST',
@@ -931,48 +425,27 @@ jobs:
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(data)
               }
-            };
-            
-            const req = https.request(options, (res) => {
-              let responseData = '';
-              
-              res.on('data', (chunk) => {
-                responseData += chunk;
-              });
-              
+            }, res => {
+              let raw = '';
+              res.on('data', c => raw += c);
               res.on('end', () => {
-                if (res.statusCode === 201) {
-                  console.log('✓ Release criada com sucesso');
-                  const release = JSON.parse(responseData);
-                  console.log('Release URL:', release.html_url);
-                } else if (res.statusCode === 422) {
-                  console.log('⚠ Release já existe (422)');
-                } else {
-                  console.log('⚠ Erro ao criar release. Status:', res.statusCode);
-                  console.log('Resposta:', responseData);
-                }
+                if (res.statusCode === 201) console.log('✓ Release criada:', JSON.parse(raw).html_url);
+                else if (res.statusCode === 422) console.log('⚠ Release já existe');
+                else console.log('⚠ Status:', res.statusCode, raw);
               });
             });
-            
-            req.on('error', (e) => {
-              console.error('✗ Erro ao criar release:', e.message);
-              process.exit(1);
-            });
-            
+            req.on('error', e => { console.error(e.message); process.exit(1); });
             req.write(data);
             req.end();
           "
-          
-          echo "=== Release processada ==="
-      
+          rm -f "${BODY_FILE}"
+
+      # ─────────────────────────────────────────────────────────────
+      # 8. Limpeza
+      # ─────────────────────────────────────────────────────────────
       - name: Limpar pastas de build
+        if: always()
         run: |
           rm -rf deployment
-          
-          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ]; then
-            rm -rf backend/dist
-          fi
-          
-          if [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
-            rm -rf frontend/build
-          fi
+          rm -rf backend/dist
+          rm -rf frontend/build

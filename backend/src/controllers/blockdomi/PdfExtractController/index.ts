@@ -76,7 +76,8 @@ function runPythonScript(scriptPath: string, pdfPath: string, timeoutMs: number)
 
 /** Detecta se está rodando do dist (produção) ou src (desenvolvimento) */
 const isDist = __dirname.includes(`${path.sep}dist${path.sep}`);
-const relativeToRoot = isDist ? '../../../' : '../../../../'; // dist: 3 níveis | src: 4 níveis até backend
+// dist: 3 níveis até backend/dist/ | src: 4 níveis até backend/
+const relativeToRoot = isDist ? '../../../' : '../../../../';
 
 /**
  * Executado em background: baixa PDF da URL, salva em temp e chama o script Python.
@@ -115,7 +116,7 @@ async function runExtractFromUrlBackground(jobId: string, url: string): Promise<
     const buffer = Buffer.from(await response.arrayBuffer());
     await fs.writeFile(tempFilePath, buffer);
 
-    const scriptPath = path.join(__dirname, relativeToRoot, 'scripts/extrair-dominios.py');
+    const scriptPath = path.join(__dirname, relativeToRoot, 'python/extrair-dominios.py');
     runPythonInBackground(scriptPath, tempFilePath, jobId);
   } catch (err) {
     await fs.unlink(tempFilePath).catch(() => {});
@@ -358,7 +359,7 @@ class PdfExtractController {
         createdAt: Date.now()
       });
 
-      const scriptPath = path.join(__dirname, relativeToRoot, 'scripts/extrair-dominios.py');
+      const scriptPath = path.join(__dirname, relativeToRoot, 'python/extrair-dominios.py');
 
       runPythonInBackground(scriptPath, tempFilePath, jobId);
 
