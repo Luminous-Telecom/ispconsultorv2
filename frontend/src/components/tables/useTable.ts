@@ -361,13 +361,12 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     });
   }, []);
 
-  const lastPage = useRef(state.currentPage);
+  const lastEchoedPageRef = useRef(state.currentPage);
   useEffect(() => {
-    if (lastPage.current !== state.currentPage) {
-      lastPage.current = state.currentPage;
-      onPageChangeRef.current?.(state.currentPage);
-    }
-  }, [state.currentPage]);
+    if (lastEchoedPageRef.current === state.currentPage) return;
+    lastEchoedPageRef.current = state.currentPage;
+    if (!pagination) onPageChangeRef.current?.(state.currentPage);
+  }, [state.currentPage, pagination]);
 
   const setPageSize = useCallback((size: number) => {
     setState(prev => {

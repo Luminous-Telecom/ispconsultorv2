@@ -1,5 +1,5 @@
 // Hook unificado para gerenciar filtros, busca e ordenação em tabelas
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useSearch } from './useSearch';
 import { useFilters } from './useFilters';
 
@@ -182,7 +182,12 @@ export const useTableFilters = <
   // Estados de paginação
   const [page, setPageState] = useState(initialPage);
   const [limit, setLimitState] = useState(initialLimit);
-  
+
+  const onPageChangeRef = useRef(onPageChange);
+  useEffect(() => {
+    onPageChangeRef.current = onPageChange;
+  }, [onPageChange]);
+
   // Estados de ordenação
   const [sortColumn, setSortColumnState] = useState(initialSortColumn);
   const [sortDirection, setSortDirectionState] = useState<SortDirection>(initialSortDirection);
@@ -209,18 +214,17 @@ export const useTableFilters = <
       onFiltersChange?.(filters);
       if (resetPageOnFilterChange) {
         setPageState(1);
-        onPageChange?.(1);
+        onPageChangeRef.current?.(1);
       }
     },
   });
 
-  // Resetar página quando busca mudar (após debounce)
   useEffect(() => {
-    if (resetPageOnFilterChange && searchHook.debouncedSearch !== initialSearch) {
-      setPageState(1);
-      onPageChange?.(1);
-    }
-  }, [searchHook.debouncedSearch, resetPageOnFilterChange, initialSearch, onPageChange]);
+    if (!resetPageOnFilterChange) return;
+    if (searchHook.debouncedSearch === initialSearch) return;
+    setPageState(1);
+    onPageChangeRef.current?.(1);
+  }, [searchHook.debouncedSearch, resetPageOnFilterChange, initialSearch]);
 
   // Função para definir ordenação
   const setSort = useCallback((column: string, direction?: SortDirection) => {
@@ -231,9 +235,9 @@ export const useTableFilters = <
     
     if (resetPageOnFilterChange) {
       setPageState(1);
-      onPageChange?.(1);
+      onPageChangeRef.current?.(1);
     }
-  }, [sortColumn, sortDirection, onSortChange, resetPageOnFilterChange, onPageChange]);
+  }, [sortColumn, sortDirection, onSortChange, resetPageOnFilterChange]);
 
   // Função para alternar ordenação
   const toggleSort = useCallback((column: string) => {
@@ -250,9 +254,9 @@ export const useTableFilters = <
     
     if (resetPageOnFilterChange) {
       setPageState(1);
-      onPageChange?.(1);
+      onPageChangeRef.current?.(1);
     }
-  }, [sortColumn, sortDirection, onSortChange, resetPageOnFilterChange, onPageChange]);
+  }, [sortColumn, sortDirection, onSortChange, resetPageOnFilterChange]);
 
   // Função para limpar ordenação
   const clearSort = useCallback(() => {
@@ -264,16 +268,16 @@ export const useTableFilters = <
   // Função para definir página
   const setPage = useCallback((newPage: number) => {
     setPageState(newPage);
-    onPageChange?.(newPage);
-  }, [onPageChange]);
+    onPageChangeRef.current?.(newPage);
+  }, []);
 
   // Função para definir limite
   const setLimit = useCallback((newLimit: number) => {
     setLimitState(newLimit);
     setPageState(1); // Resetar para primeira página ao mudar limite
     onLimitChange?.(newLimit);
-    onPageChange?.(1);
-  }, [onLimitChange, onPageChange]);
+    onPageChangeRef.current?.(1);
+  }, [onLimitChange]);
 
   // Função para resetar tudo
   const resetAll = useCallback(() => {
