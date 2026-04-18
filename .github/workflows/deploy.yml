@@ -41,12 +41,16 @@ jobs:
             echo "Primeiro commit — buildando tudo"
             echo "backend_changed=true"  >> $GITHUB_OUTPUT
             echo "frontend_changed=true" >> $GITHUB_OUTPUT
+            echo "workflows_changed=true" >> $GITHUB_OUTPUT
           else
             CHANGED_FILES=$(git diff --name-only "${PREV_COMMIT}" "${CURRENT_COMMIT}" || echo "")
             echo "Arquivos alterados:" && echo "${CHANGED_FILES}"
 
             echo "${CHANGED_FILES}" | grep -qE '^backend/'  && echo "backend_changed=true"  >> $GITHUB_OUTPUT || echo "backend_changed=false"  >> $GITHUB_OUTPUT
             echo "${CHANGED_FILES}" | grep -qE '^frontend/' && echo "frontend_changed=true" >> $GITHUB_OUTPUT || echo "frontend_changed=false" >> $GITHUB_OUTPUT
+            # Workflow de deploy / infra na raiz também exige build + Release
+            echo "${CHANGED_FILES}" | grep -qE '^\.github/workflows/|^scripts/|^docker-compose\.yaml|^ecosystem\.config\.js|^nginx\.docker\.conf|^package\.json$' \
+              && echo "workflows_changed=true" >> $GITHUB_OUTPUT || echo "workflows_changed=false" >> $GITHUB_OUTPUT
           fi
 
           echo "prev_commit=${PREV_COMMIT}"       >> $GITHUB_OUTPUT
@@ -61,11 +65,12 @@ jobs:
 
           # Determinar se precisa buildar
           if [ "${{ steps.changes.outputs.backend_changed }}"  == "true" ] || \
-             [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
+             [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ] || \
+             [ "${{ steps.changes.outputs.workflows_changed }}" == "true" ]; then
             SHOULD_BUILD=true
           else
             SHOULD_BUILD=false
-            echo "Nenhuma mudança em backend ou frontend — build pulado"
+            echo "Nenhuma mudança em backend, frontend, workflows ou infra — build pulado"
           fi
 
           if [ "${SHOULD_BUILD}" == "true" ]; then
@@ -115,7 +120,32 @@ jobs:
               echo "${LOWER}" | grep -qE "(breaking|^major:?[ !])" && INCREMENT_TYPE="major" && break
               echo "${LOWER}" | grep -qE "^(feat|feature|add|new)[: ]" && INCREMENT_TYPE="minor"
             done <<< "${COMMITS}"
-            [ -z "${COMMITS}" ] && INCREMENT_TYPE="none"
+            # Nunca usar "none": range git vazio ou squash gerava mesma versão → tag/release duplicadas.
+            if [ -z "${COMMITS}" ]; then
+              echo "::notice::Range git sem commits visíveis — mantendo incremento (${INCREMENT_TYPE})."
+            fi
+
+            # Garantir package.json >= última tag do prod antes do bump (evita colisão vX já existente)
+            node -e "
+              const fs = require('fs');
+              const p = 'backend/package.json';
+              const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+              const tag = '${OLD_VERSION}'.trim();
+              const cur = (j.version || '0.0.0').split('-')[0];
+              const pa = tag.split('.').map((n) => parseInt(n, 10) || 0);
+              const pb = cur.split('.').map((n) => parseInt(n, 10) || 0);
+              for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+                const a = pa[i] || 0, b = pb[i] || 0;
+                if (a > b) {
+                  j.version = tag;
+                  fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+                  console.log('package.json alinhado à tag prod:', cur, '->', tag);
+                  process.exit(0);
+                }
+                if (b > a) process.exit(0);
+              }
+              process.exit(0);
+            " || true
 
             if [ "${INCREMENT_TYPE}" != "none" ]; then
               # npm version atualiza o package.json e imprime a nova versão
