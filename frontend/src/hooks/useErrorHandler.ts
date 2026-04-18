@@ -10,6 +10,23 @@ export interface ErrorInfo {
   url: string;
 }
 
+const MAX_STORED_ERRORS = 10;
+const MAX_MESSAGE_LEN = 800;
+const MAX_STACK_LEN = 4000;
+const MAX_URL_LEN = 500;
+const MAX_UA_LEN = 160;
+
+/** Evita que stacks enormes encham o localStorage e quebrem outras chaves (ex.: tema). */
+function narrowErrorForStorage(info: ErrorInfo): ErrorInfo {
+  return {
+    ...info,
+    message: info.message.slice(0, MAX_MESSAGE_LEN),
+    stack: info.stack?.slice(0, MAX_STACK_LEN),
+    userAgent: info.userAgent.slice(0, MAX_UA_LEN),
+    url: info.url.slice(0, MAX_URL_LEN),
+  };
+}
+
 export const useErrorHandler = () => {
   const logError = useCallback((error: Error, componentName?: string) => {
     const errorInfo: ErrorInfo = {
@@ -35,16 +52,20 @@ export const useErrorHandler = () => {
     // Por enquanto, apenas armazena no localStorage para debugging
     try {
       const existingErrors = JSON.parse(localStorage.getItem('app_errors') || '[]');
-      existingErrors.push(errorInfo);
+      existingErrors.push(narrowErrorForStorage(errorInfo));
 
-      // Mantém apenas os últimos 10 erros
-      if (existingErrors.length > 10) {
+      while (existingErrors.length > MAX_STORED_ERRORS) {
         existingErrors.shift();
       }
 
       localStorage.setItem('app_errors', JSON.stringify(existingErrors));
-    } catch (storageError) {
-      console.warn('Could not save error to localStorage:', storageError);
+    } catch {
+      try {
+        localStorage.removeItem('app_errors');
+        localStorage.setItem('app_errors', JSON.stringify([narrowErrorForStorage(errorInfo)]));
+      } catch (second) {
+        console.warn('Could not save error to localStorage:', second);
+      }
     }
   }, []);
 

@@ -27,23 +27,36 @@ export const RouteAwareThemeProvider: React.FC<{ children: ReactNode }> = ({ chi
   return <ThemeProvider storageKey={isSystem ? 'system' : 'site'}>{children}</ThemeProvider>;
 };
 
+function readStoredTheme(storageKeyName: string): Theme {
+  try {
+    const saved = localStorage.getItem(storageKeyName) as Theme;
+    return (saved === 'light' || saved === 'dark') ? saved : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
+function persistTheme(storageKeyName: string, theme: Theme): void {
+  try {
+    localStorage.setItem(storageKeyName, theme);
+  } catch {
+    // QuotaExceededError / modo privado: o valor é minúsculo; o limite costuma estar
+    // cheio por outras chaves (ex.: app_errors com stacks). Tema segue via DOM/React.
+  }
+}
+
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, storageKey = 'system' }) => {
   const key = storageKey === 'site' ? STORAGE_KEY_SITE : STORAGE_KEY_SYSTEM;
 
-  const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem(key) as Theme;
-    return (saved === 'light' || saved === 'dark') ? saved : 'light';
-  });
+  const [theme, setTheme] = useState<Theme>(() => readStoredTheme(key));
 
   // Quando trocar de site para sistema (ou vice-versa), carregar o tema da nova chave
   useEffect(() => {
-    const saved = localStorage.getItem(key) as Theme;
-    const newTheme = (saved === 'light' || saved === 'dark') ? saved : 'light';
-    setTheme(newTheme);
+    setTheme(readStoredTheme(key));
   }, [key]);
 
   useEffect(() => {
-    localStorage.setItem(key, theme);
+    persistTheme(key, theme);
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.setAttribute('data-bs-theme', theme);
     document.body.setAttribute('data-theme', theme);
