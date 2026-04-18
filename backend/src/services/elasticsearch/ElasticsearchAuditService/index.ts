@@ -16,6 +16,9 @@ function getEmpresaIdForAudit(req: Request | AuthenticatedRequest): number | nul
   return getEmpresaIdOrNull(req);
 }
 import { getElasticsearchService } from '../ElasticsearchService';
+import { ES_DATA_STREAM } from '../dataStreams';
+import { elasticsearchEventTimestamps } from '../elasticsearchTimestamps';
+import { collectRelatedEntityIds } from '../relatedEntityIds';
 import { logger } from '../../../utils/logger';
 import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
 
@@ -138,8 +141,6 @@ export async function registrarAuditoriaElasticsearch(
           });
           return;
         }
-
-        await elasticsearchService.ensureIndex();
 
       // Limpar dados removendo apenas campos internos do Sequelize e campos muito grandes
       const limparDados = (dados: Record<string, unknown> | null): Record<string, unknown> | null => {
@@ -290,6 +291,12 @@ export async function registrarAuditoriaElasticsearch(
       const reqAny = req as AuthenticatedRequest & { saasUser?: unknown };
       const isSaas = !!reqAny.saasUser;
 
+      const relatedIds = collectRelatedEntityIds({
+        entidadeId: dados.entidade_id,
+        dadosNovos: dadosNovosLimpos,
+        dadosAnteriores: dadosAnterioresLimpos
+      });
+
       const document: Record<string, unknown> = {
         log_tipo: 'auditoria',
         saas: isSaas,
@@ -307,8 +314,11 @@ export async function registrarAuditoriaElasticsearch(
         rota,
         metodo_http: metodoHttp,
         observacoes: dados.observacoes || null,
-        timestamp: safeFormatDateISOLocal(new Date()) || ''
+        ...elasticsearchEventTimestamps(new Date())
       };
+      if (relatedIds.length > 0) {
+        document.related_entity_ids = relatedIds;
+      }
       if (dados.origem_auditoria) {
         document.origem_auditoria = dados.origem_auditoria;
       }
@@ -330,7 +340,7 @@ export async function registrarAuditoriaElasticsearch(
 
       // Indexar documento no Elasticsearch
       await client.index({
-        index: elasticsearchService.getIndexName(),
+        index: ES_DATA_STREAM.AUDITORIA,
         document,
         refresh: isAgent ? 'wait_for' : false
       });
@@ -473,8 +483,6 @@ export async function registrarAtualizacaoElasticsearchSistema(
     if (!client) return;
     const isConnected = await elasticsearchService.checkConnection();
     if (!isConnected) return;
-    await elasticsearchService.ensureIndex();
-
     const limpar = (d: Record<string, unknown> | null): Record<string, unknown> | null => {
       if (!d || typeof d !== 'object') return null;
       try {
@@ -484,7 +492,15 @@ export async function registrarAtualizacaoElasticsearchSistema(
       }
     };
 
-    const document = {
+    const da = limpar(dadosAnteriores);
+    const dn = limpar(dadosNovos);
+    const relatedIds = collectRelatedEntityIds({
+      entidadeId,
+      dadosNovos: dn,
+      dadosAnteriores: da
+    });
+
+    const document: Record<string, unknown> = {
       log_tipo: 'auditoria',
       saas: false,
       usuario_id: null,
@@ -493,19 +509,22 @@ export async function registrarAtualizacaoElasticsearchSistema(
       acao: 'update' as const,
       entidade,
       entidade_id: entidadeId,
-      dados_anteriores: limpar(dadosAnteriores),
-      dados_novos: limpar(dadosNovos),
+      dados_anteriores: da,
+      dados_novos: dn,
       ip_address: null,
       user_agent: 'Rotina agendada',
       rota: null,
       metodo_http: null,
       observacoes: observacoes || null,
-      timestamp: safeFormatDateISOLocal(new Date()) || '',
+      ...elasticsearchEventTimestamps(new Date()),
       origem_auditoria: 'agendador' as const
     };
+    if (relatedIds.length > 0) {
+      document.related_entity_ids = relatedIds;
+    }
 
     await client.index({
-        index: elasticsearchService.getIndexName(),
+        index: ES_DATA_STREAM.AUDITORIA,
         document
       });
   } catch (error) {
@@ -552,14 +571,12 @@ export async function registrarExecucaoRotinaAuditoria(params: {
     if (!client) return;
     const isConnected = await elasticsearchService.checkConnection();
     if (!isConnected) return;
-    await elasticsearchService.ensureIndex();
-
     const { routineId, routineNome, routineTipo, status, duracaoMs, empresaId, saas = false, erro, resultado, usuario, ipAddress } = params;
     const observacoes = status === 'sucesso'
       ? `Rotina "${routineNome}" (${routineTipo}) executada em ${duracaoMs}ms`
       : `Rotina "${routineNome}" (${routineTipo}) falhou: ${erro || 'Erro desconhecido'}`;
 
-    const document = {
+    const document: Record<string, unknown> = {
       log_tipo: 'auditoria',
       saas,
       usuario_id: usuario?.id ?? null,
@@ -575,13 +592,14 @@ export async function registrarExecucaoRotinaAuditoria(params: {
       rota: null,
       metodo_http: null,
       observacoes,
-      timestamp: safeFormatDateISOLocal(new Date()) || '',
+      ...elasticsearchEventTimestamps(new Date()),
       origem_auditoria: 'agendador' as const,
-      empresa_id: empresaId ?? null
+      empresa_id: empresaId ?? null,
+      related_entity_ids: [String(routineId)]
     };
 
     await client.index({
-      index: elasticsearchService.getIndexName(),
+      index: ES_DATA_STREAM.AUDITORIA,
       document
     });
   } catch (error) {

@@ -8,8 +8,9 @@ import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { getElasticsearchService } from '../ElasticsearchService';
+import { ES_DATA_STREAM } from '../dataStreams';
+import { elasticsearchEventTimestamps } from '../elasticsearchTimestamps';
 import { logger } from '../../../utils/logger';
-import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
 
 interface DadosMensagemElasticsearch {
   tipo: 'email' | 'whatsapp';
@@ -117,9 +118,6 @@ export async function registrarMensagemElasticsearch(
         return;
       }
 
-      // Garantir que o índice existe
-      await elasticsearchService.ensureIndex();
-
       // Obter dados do usuário
       const userData = getUserData(req || null);
 
@@ -139,7 +137,7 @@ export async function registrarMensagemElasticsearch(
         usuario_email: userData.email,
         ip_address: getClientIp(req || null),
         user_agent: getUserAgent(req || null),
-        timestamp: safeFormatDateISOLocal(new Date()) || ''
+        ...elasticsearchEventTimestamps(new Date())
       };
 
       // Validar se o documento pode ser serializado antes de enviar
@@ -159,7 +157,7 @@ export async function registrarMensagemElasticsearch(
 
       // Indexar documento no Elasticsearch
       const result = await client.index({
-        index: elasticsearchService.getIndexName(),
+        index: ES_DATA_STREAM.MENSAGENS,
         document
       });
 
@@ -171,7 +169,7 @@ export async function registrarMensagemElasticsearch(
         entidade_tipo: dados.entidade_tipo,
         entidade_id: dados.entidade_id,
         document_id: result._id,
-        index: elasticsearchService.getIndexName()
+        index: ES_DATA_STREAM.MENSAGENS
       });
     } catch (error) {
       // Não lançar erro para não interromper o fluxo principal

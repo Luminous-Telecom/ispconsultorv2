@@ -6,7 +6,9 @@ import { createWriteStream, createReadStream } from 'fs';
 import { createInterface } from 'readline';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { logger } from '../../../utils/logger';
+import type { Client } from '@elastic/elasticsearch';
 import { getElasticsearchService } from '../../elasticsearch';
+import { ES_ALL_DATA_STREAMS, ES_DATA_STREAMS_PATTERN, resolveDataStreamFromSource } from '../../elasticsearch/dataStreams';
 import { cache } from '../../../utils/cache';
 
 export interface BackupItem {
@@ -31,6 +33,80 @@ function formatBytes(bytes: number): string {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+}
+
+function normalizeElasticsearchBackupDoc(source: Record<string, unknown>): Record<string, unknown> {
+  const s = { ...source };
+  const ts =
+    (typeof s['@timestamp'] === 'string' && s['@timestamp']) ||
+    (typeof s.timestamp === 'string' && s.timestamp) ||
+    new Date().toISOString();
+  s['@timestamp'] = ts;
+  s.timestamp = ts;
+  return s;
+}
+
+async function deleteAllBacknetDataStreams(client: Client): Promise<void> {
+  for (const name of ES_ALL_DATA_STREAMS) {
+    try {
+      const exists = await client.indices.exists({ index: name });
+      if (exists) {
+        await client.indices.deleteDataStream({ name });
+        logger.info('Data stream Elasticsearch removido para restauração', { name });
+      }
+    } catch (e) {
+      logger.warn('Não foi possível remover data stream Elasticsearch', {
+        name,
+        error: e instanceof Error ? e.message : String(e)
+      });
+    }
+  }
+}
+
+async function recreateBacknetDataStreams(client: Client): Promise<void> {
+  for (const name of ES_ALL_DATA_STREAMS) {
+    try {
+      await client.indices.createDataStream({ name });
+    } catch (e: unknown) {
+      const meta = e as { meta?: { body?: { error?: { type?: string } } } };
+      if (meta?.meta?.body?.error?.type === 'resource_already_exists_exception') {
+        continue;
+      }
+      throw e;
+    }
+  }
+}
+
+async function bulkRestoreElasticsearchNdjson(client: Client, ndjsonPath: string): Promise<number> {
+  await deleteAllBacknetDataStreams(client);
+  await recreateBacknetDataStreams(client);
+  const rl = createInterface({ input: createReadStream(ndjsonPath), crlfDelay: Infinity });
+  const BATCH = 500;
+  let batch: Array<{ index: { _index: string; _id?: string } } | Record<string, unknown>> = [];
+  let total = 0;
+  for await (const line of rl) {
+    if (!line.trim()) continue;
+    try {
+      const hit = JSON.parse(line) as { _id?: string; _source?: Record<string, unknown> };
+      if (hit._id && hit._source) {
+        const norm = normalizeElasticsearchBackupDoc({ ...hit._source });
+        const target = resolveDataStreamFromSource(norm);
+        batch.push({ index: { _index: target, _id: hit._id } });
+        batch.push(norm);
+        total++;
+        if (batch.length >= BATCH * 2) {
+          await client.bulk({ refresh: false, operations: batch });
+          batch = [];
+        }
+      }
+    } catch {
+      // linha inválida, ignorar
+    }
+  }
+  if (batch.length > 0) {
+    await client.bulk({ refresh: true, operations: batch });
+  }
+  return total;
 }
 
 function inferTipo(nome: string): string {
@@ -179,32 +255,7 @@ export class BackupService {
             const elasticService = getElasticsearchService();
             const client = elasticService.getClient();
             if (client) {
-              const indexName = elasticService.getIndexName();
-              const exists = await client.indices.exists({ index: indexName });
-              if (exists) await client.indices.delete({ index: indexName });
-              await elasticService.ensureIndex();
-              const rl = createInterface({ input: createReadStream(esNdjsonPath), crlfDelay: Infinity });
-              const BATCH = 500;
-              let batch: Array<{ index: { _index: string; _id?: string } } | Record<string, unknown>> = [];
-              let total = 0;
-              for await (const line of rl) {
-                if (!line.trim()) continue;
-                try {
-                  const hit = JSON.parse(line) as { _id?: string; _source?: Record<string, unknown> };
-                  if (hit._id && hit._source) {
-                    batch.push({ index: { _index: indexName, _id: hit._id } });
-                    batch.push(hit._source);
-                    total++;
-                    if (batch.length >= BATCH * 2) {
-                      await client.bulk({ refresh: false, operations: batch });
-                      batch = [];
-                    }
-                  }
-                } catch {
-                  // linha inválida, ignorar
-                }
-              }
-              if (batch.length > 0) await client.bulk({ refresh: true, operations: batch });
+              const total = await bulkRestoreElasticsearchNdjson(client, esNdjsonPath);
               logger.info('Restauração Elasticsearch do backup completo concluída', { documentos: total });
             }
           }
@@ -259,37 +310,7 @@ export class BackupService {
         if (!client) {
           throw new Error('Elasticsearch não configurado. Não é possível restaurar.');
         }
-        const indexName = elasticService.getIndexName();
-        const exists = await client.indices.exists({ index: indexName });
-        if (exists) {
-          await client.indices.delete({ index: indexName });
-          logger.info('Índice Elasticsearch removido para restauração', { index: indexName });
-        }
-        await elasticService.ensureIndex();
-        const rl = createInterface({ input: createReadStream(fullPath), crlfDelay: Infinity });
-        const BATCH = 500;
-        let batch: Array<{ index: { _index: string; _id?: string } } | Record<string, unknown>> = [];
-        let total = 0;
-        for await (const line of rl) {
-          if (!line.trim()) continue;
-          try {
-            const hit = JSON.parse(line) as { _id?: string; _source?: Record<string, unknown> };
-            if (hit._id && hit._source) {
-              batch.push({ index: { _index: indexName, _id: hit._id } });
-              batch.push(hit._source);
-              total++;
-              if (batch.length >= BATCH * 2) {
-                await client.bulk({ refresh: false, operations: batch });
-                batch = [];
-              }
-            }
-          } catch {
-            // linha inválida, ignorar
-          }
-        }
-        if (batch.length > 0) {
-          await client.bulk({ refresh: true, operations: batch });
-        }
+        const total = await bulkRestoreElasticsearchNdjson(client, fullPath);
         logger.info('Restauração Elasticsearch concluída', { arquivo: nomeArquivo, documentos: total });
         return { success: true, message: `Elasticsearch restaurado com sucesso (${total} documentos).` };
       }
@@ -374,15 +395,15 @@ export class BackupService {
         await fs.writeFile(path.join(outDir, 'elasticsearch.txt'), `Backup Elasticsearch em ${new Date().toISOString()}\nElasticsearch não configurado ou indisponível.\n`);
         logger.info('Elasticsearch não disponível, criado placeholder');
       } else {
-        const indexName = elasticService.getIndexName();
         const writeStream = createWriteStream(outFile, { flags: 'a' });
         let total = 0;
         const response = await client.search({
-          index: indexName,
+          index: ES_DATA_STREAMS_PATTERN,
+          allow_no_indices: true,
           scroll: '1m',
           size: 500,
           query: { match_all: {} },
-          sort: [{ timestamp: 'asc' }]
+          sort: [{ timestamp: { order: 'asc' } }, { _id: { order: 'asc' } }]
         }) as { _scroll_id?: string; hits: { hits: Array<{ _id: string; _source: unknown }> } };
         let scrollId = (response as { _scroll_id?: string })._scroll_id;
         let hits = ((response as { hits?: { hits?: unknown[] } }).hits?.hits ?? []) as Array<{ _id: string; _source: unknown }>;

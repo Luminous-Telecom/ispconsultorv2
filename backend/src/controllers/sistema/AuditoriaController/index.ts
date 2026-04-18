@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../../../types/auth';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { getElasticsearchService } from '../../../services/elasticsearch/ElasticsearchService';
+import { ES_DATA_STREAM } from '../../../services/elasticsearch/dataStreams';
 import { AuditoriaQueryService } from '../../../services/auditoria/AuditoriaQueryService';
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
 import { logger } from '../../../utils/logger';
@@ -27,8 +28,6 @@ export class AuditoriaController {
         return;
       }
 
-      await elasticsearchService.ensureIndex();
-
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 15;
       const search = req.query.search as string;
@@ -52,7 +51,7 @@ export class AuditoriaController {
       }
       const empresaId = queryEmpresaId ?? authEmpresaId;
 
-      const maxResultWindow = 50000;
+      const maxResultWindow = 10000;
       const maxLastPage = Math.max(1, Math.floor(maxResultWindow / limit));
       const effectivePage = Math.min(page, maxLastPage);
 
@@ -114,7 +113,7 @@ export class AuditoriaController {
       }
 
       const result = await client.get({
-        index: elasticsearchService.getIndexName(),
+        index: ES_DATA_STREAM.AUDITORIA,
         id
       });
 
@@ -155,7 +154,7 @@ export class AuditoriaController {
 
       // Agregações para estatísticas
       const result = await client.search({
-        index: elasticsearchService.getIndexName(),
+        index: ES_DATA_STREAM.AUDITORIA,
         body: {
           query,
           size: 0,
@@ -234,34 +233,21 @@ export class AuditoriaController {
       const mustBase: Record<string, unknown>[] = [
         { term: { entidade: entidade as string } },
         ...(isUuid
-          ? [
-              { term: { entidade_id: 0 } },
-              {
-                bool: {
-                  should: [
-                    { term: { 'dados_novos.entity_id_str.keyword': entidadeIdStr } },
-                    { term: { 'dados_anteriores.entity_id_str.keyword': entidadeIdStr } }
-                  ],
-                  minimum_should_match: 1
-                }
-              }
-            ]
+          ? [{ term: { entidade_id: 0 } }, { term: { related_entity_ids: entidadeIdStr } }]
           : [{ term: { entidade_id: parseInt(entidade_id as string) } }])
       ];
       if (empresaId != null && empresaId > 0) {
         mustBase.push({ term: { empresa_id: empresaId } });
       }
 
-      let result = await client.search({
-        index: elasticsearchService.getIndexName(),
-        body: {
-          query: { bool: { must: mustBase } },
-          sort: [{ timestamp: { order: 'asc' } }],
-          size: 1000
-        }
+      const boolQuery = { bool: { must: mustBase } };
+      let hits = await AuditoriaQueryService.fetchAuditSourcesWithPit({
+        client,
+        boolQuery,
+        sortDirection: 'asc',
+        pageSize: 500,
+        maxDocuments: 10000
       });
-
-      let hits = result.hits.hits.map((hit: any) => ({ id: hit._id, ...hit._source }));
 
       if (hits.length === 0 && isUuid) {
         const mustFallback: Record<string, unknown>[] = [
@@ -279,8 +265,8 @@ export class AuditoriaController {
             }
           });
         }
-        result = await client.search({
-          index: elasticsearchService.getIndexName(),
+        const result = await client.search({
+          index: ES_DATA_STREAM.AUDITORIA,
           body: {
             query: { bool: { must: mustFallback } },
             sort: [{ timestamp: { order: 'asc' } }],
@@ -340,49 +326,37 @@ export class AuditoriaController {
       const mustBase: Record<string, unknown>[] = [
         { term: { entidade: entidade as string } },
         ...(isUuid
-          ? [
-              { term: { entidade_id: 0 } },
-              {
-                bool: {
-                  should: [
-                    { term: { 'dados_novos.entity_id_str.keyword': entidadeIdStr } },
-                    { term: { 'dados_anteriores.entity_id_str.keyword': entidadeIdStr } }
-                  ],
-                  minimum_should_match: 1
-                }
-              }
-            ]
+          ? [{ term: { entidade_id: 0 } }, { term: { related_entity_ids: entidadeIdStr } }]
           : [{ term: { entidade_id: parseInt(entidade_id as string) } }])
       ];
       if (empresaId != null && empresaId > 0) {
         mustBase.push({ term: { empresa_id: empresaId } });
       }
 
-      let result = await client.search({
-        index: elasticsearchService.getIndexName(),
-        body: {
-          query: { bool: { must: mustBase } },
-          sort: [{ timestamp: { order: 'desc' } }],
-          size: 500
-        }
+      const boolQuery = { bool: { must: mustBase } };
+      let hits = await AuditoriaQueryService.fetchAuditSourcesWithPit({
+        client,
+        boolQuery,
+        sortDirection: 'desc',
+        pageSize: 500,
+        maxDocuments: 50000
       });
 
-      let logs = [...result.hits.hits].reverse().map((hit: any) => hit._source);
+      let logs = [...hits].reverse();
 
       if (logs.length === 0 && isUuid) {
-        const indexName = elasticsearchService.getIndexName();
         const mustFallback: Record<string, unknown>[] = [
           { term: { entidade: entidade as string } }
         ];
-        result = await client.search({
-          index: indexName,
+        const result = await client.search({
+          index: ES_DATA_STREAM.AUDITORIA,
           body: {
             query: { bool: { must: mustFallback } },
             sort: [{ timestamp: { order: 'desc' } }],
             size: 500
           }
         });
-        const allLogs = [...result.hits.hits].reverse().map((hit: any) => hit._source);
+        const allLogs = [...result.hits.hits].reverse().map((hit: any) => ({ id: hit._id, ...hit._source }));
 
         const matchEntityId = (d: any) => d && (d.entity_id_str === entidadeIdStr || String(d.entity_id_str) === entidadeIdStr);
         const matchEmpresa = (log: any) => empresaId == null || log?.empresa_id === empresaId || log?.empresa_id == null;

@@ -3,6 +3,8 @@
  * @module services/elasticsearch/RoutineLogElasticsearchService
  */
 import { getElasticsearchService } from '../ElasticsearchService';
+import { ES_DATA_STREAM } from '../dataStreams';
+import { elasticsearchEventTimestamps } from '../elasticsearchTimestamps';
 import { logger } from '../../../utils/logger';
 import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
 import type { JsonValue } from '../../../types/index';
@@ -22,6 +24,7 @@ interface ExecutionLogDoc {
   duracao_ms?: number;
   resultado?: Record<string, JsonValue>;
   erro?: string;
+  '@timestamp': string;
   timestamp: string;
 }
 
@@ -44,8 +47,8 @@ export async function criarLogExecucaoElasticsearch(
   if (!isConnected) {
     throw new Error('Elasticsearch não disponível');
   }
-  await elasticsearchService.ensureIndex();
 
+  const ts = elasticsearchEventTimestamps(new Date());
   const doc: ExecutionLogDoc = {
     log_tipo: LOG_TIPO,
     saas: false,
@@ -54,11 +57,11 @@ export async function criarLogExecucaoElasticsearch(
     routine_tipo: routineTipo,
     status: 'executando',
     data_inicio: safeFormatDateISOLocal(startTime) || startTime.toISOString(),
-    timestamp: safeFormatDateISOLocal(new Date()) || new Date().toISOString()
+    ...ts
   };
 
   const result = await client.index({
-    index: elasticsearchService.getIndexName(),
+    index: ES_DATA_STREAM.ROTINAS,
     document: doc
   });
 
@@ -85,7 +88,7 @@ export async function atualizarLogExecucaoElasticsearch(
     if (data.erro) updateBody.erro = data.erro;
 
     await client.update({
-      index: elasticsearchService.getIndexName(),
+      index: ES_DATA_STREAM.ROTINAS,
       id: logId,
       doc: updateBody
     });
@@ -106,14 +109,14 @@ export async function buscarLogsExecucaoElasticsearch(routineId?: number, limit 
     return [];
   }
   try {
-    const must: Array<Record<string, unknown>> = [{ term: { log_tipo: LOG_TIPO } }];
+    const must: Array<Record<string, unknown>> = [];
     if (routineId !== undefined) {
       must.push({ term: { routine_id: routineId } });
     }
     const result = await client.search({
-      index: elasticsearchService.getIndexName(),
+      index: ES_DATA_STREAM.ROTINAS,
       body: {
-        query: { bool: { must } },
+        query: must.length ? { bool: { must } } : { match_all: {} },
         sort: [{ timestamp: { order: 'desc' } }],
         size: limit
       }
@@ -128,36 +131,5 @@ export async function buscarLogsExecucaoElasticsearch(routineId?: number, limit 
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
     return [];
-  }
-}
-
-export async function limparLogsRotinaAntigosElasticsearch(retentionDays: number): Promise<number> {
-  const elasticsearchService = getElasticsearchService();
-  const client = elasticsearchService.getClient();
-  if (!client) return 0;
-  try {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
-    const cutoffStr = cutoffDate.toISOString();
-    const result = await client.deleteByQuery({
-      index: elasticsearchService.getIndexName(),
-      body: {
-        query: {
-          bool: {
-            must: [
-              { term: { log_tipo: LOG_TIPO } },
-              { range: { timestamp: { lt: cutoffStr } } }
-            ]
-          }
-        }
-      }
-    });
-    return result.deleted ?? 0;
-  } catch (error) {
-    logger.warn('Falha ao limpar logs antigos no Elasticsearch', {
-      context: 'RoutineLogElasticsearchService',
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
-    });
-    return 0;
   }
 }

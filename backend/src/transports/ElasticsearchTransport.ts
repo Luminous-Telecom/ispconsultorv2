@@ -3,6 +3,30 @@
  */
 import Transport from 'winston-transport';
 import { getElasticsearchService } from '../services/elasticsearch/ElasticsearchService';
+import { ES_DATA_STREAM } from '../services/elasticsearch/dataStreams';
+import { elasticsearchEventTimestamps } from '../services/elasticsearch/elasticsearchTimestamps';
+
+function buildSafeMeta(info: Record<string, unknown>): Record<string, unknown> | null {
+  const block = new Set(['level', 'message', 'timestamp', 'error', 'stack', 'splat']);
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(info)) {
+    if (block.has(k)) continue;
+    if (v === null || v === undefined) continue;
+    const t = typeof v;
+    if (t === 'string' || t === 'number' || t === 'boolean') {
+      out[k] = v;
+    } else if (v instanceof Date) {
+      out[k] = v.toISOString();
+    } else {
+      try {
+        out[k] = JSON.parse(JSON.stringify(v)) as unknown;
+      } catch {
+        out[k] = String(v).slice(0, 4000);
+      }
+    }
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
 
 export class ElasticsearchTransport extends Transport {
   constructor(opts?: Transport.TransportStreamOptions) {
@@ -23,25 +47,24 @@ export class ElasticsearchTransport extends Transport {
     if (!isConnected) return;
 
     try {
-      await elasticsearchService.ensureIndex();
-
-      const rest = Object.fromEntries(
-        Object.entries(info).filter(
-          ([k]) => !['level', 'message', 'timestamp', 'error', 'stack'].includes(k)
-        )
-      ) as Record<string, unknown>;
+      const meta = buildSafeMeta(info);
+      const ts = elasticsearchEventTimestamps(
+        typeof info.timestamp === 'string' || info.timestamp instanceof Date
+          ? new Date(info.timestamp as string | number | Date)
+          : new Date()
+      );
       const doc: Record<string, unknown> = {
         log_tipo: 'app',
         level: info.level,
         message: info.message,
-        timestamp: info.timestamp || new Date().toISOString(),
-        ...rest
+        ...ts,
+        ...(meta ? { meta } : {})
       };
       if (info.error) doc.error = String(info.error);
       if (info.stack) doc.stack = String(info.stack);
 
       await client.index({
-        index: elasticsearchService.getIndexName(),
+        index: ES_DATA_STREAM.APP,
         document: doc
       });
     } catch {

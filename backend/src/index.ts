@@ -357,7 +357,6 @@ const startServer = async () => {
           const isConnected = await elasticsearchService.checkConnection();
           if (isConnected) {
             logger.info('Elasticsearch conectado');
-            await elasticsearchService.ensureIndex();
           } else {
             logger.info('Elasticsearch não configurado ou indisponível');
           }

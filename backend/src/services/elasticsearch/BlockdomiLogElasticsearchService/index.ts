@@ -3,8 +3,9 @@
  * @module services/elasticsearch/BlockdomiLogElasticsearchService
  */
 import { getElasticsearchService } from '../ElasticsearchService';
+import { ES_DATA_STREAM } from '../dataStreams';
+import { elasticsearchEventTimestamps } from '../elasticsearchTimestamps';
 import { logger } from '../../../utils/logger';
-import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
 
 const LOG_TIPO = 'blockdomi';
 
@@ -34,7 +35,6 @@ export async function registrarLogBlockdomiElasticsearch(payload: RegistroBlockd
       if (!client) return;
       const isConnected = await elasticsearchService.checkConnection();
       if (!isConnected) return;
-      await elasticsearchService.ensureIndex();
 
       const sucesso = payload.status_http < 400;
       const doc = {
@@ -46,11 +46,11 @@ export async function registrarLogBlockdomiElasticsearch(payload: RegistroBlockd
         sucesso,
         mensagem_erro: payload.mensagem_erro ?? null,
         user_agent: payload.user_agent ?? null,
-        timestamp: safeFormatDateISOLocal(new Date()) || new Date().toISOString()
+        ...elasticsearchEventTimestamps(new Date())
       };
 
       await client.index({
-        index: elasticsearchService.getIndexName(),
+        index: ES_DATA_STREAM.BLOCKDOMI,
         document: doc
       });
     } catch (error) {
@@ -79,7 +79,7 @@ export async function listarLogsBlockdomiElasticsearch(filters: ListBlockdomiLog
     const from = (page - 1) * limit;
     const sortOrder = sortDirection?.toUpperCase() === 'ASC' ? 'asc' : 'desc';
 
-    const must: Array<Record<string, unknown>> = [{ term: { log_tipo: LOG_TIPO } }];
+    const must: Array<Record<string, unknown>> = [];
     if (typeof sucesso === 'boolean') {
       must.push({ term: { sucesso } });
     }
@@ -96,10 +96,13 @@ export async function listarLogsBlockdomiElasticsearch(filters: ListBlockdomiLog
       ? sortColumn
       : 'timestamp';
 
+    const queryBody =
+      must.length > 0 ? { bool: { must } } : { match_all: {} };
+
     const result = await client.search({
-      index: elasticsearchService.getIndexName(),
+      index: ES_DATA_STREAM.BLOCKDOMI,
       body: {
-        query: { bool: { must } },
+        query: queryBody,
         sort: [{ [sortField]: { order: sortOrder } }],
         from,
         size: limit
@@ -107,8 +110,8 @@ export async function listarLogsBlockdomiElasticsearch(filters: ListBlockdomiLog
     });
 
     const countResult = await client.count({
-      index: elasticsearchService.getIndexName(),
-      body: { query: { bool: { must } } }
+      index: ES_DATA_STREAM.BLOCKDOMI,
+      body: { query: queryBody }
     });
     const total = typeof countResult.count === 'number' ? countResult.count : 0;
 

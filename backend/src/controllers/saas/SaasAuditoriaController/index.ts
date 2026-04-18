@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
 import { getElasticsearchService } from '../../../services/elasticsearch/ElasticsearchService';
+import { ES_DATA_STREAM } from '../../../services/elasticsearch/dataStreams';
 import { AuditoriaQueryService } from '../../../services/auditoria/AuditoriaQueryService';
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
 import { logger } from '../../../utils/logger';
@@ -31,8 +32,6 @@ export class SaasAuditoriaController {
         return;
       }
 
-      await elasticsearchService.ensureIndex();
-
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const search = req.query.search as string;
@@ -45,7 +44,7 @@ export class SaasAuditoriaController {
       const sortColumn = req.query.sortColumn as string;
       const sortDirection = req.query.sortDirection as string;
 
-      const maxResultWindow = 50000;
+      const maxResultWindow = 10000;
       const maxLastPage = Math.max(1, Math.floor(maxResultWindow / limit));
       const effectivePage = Math.min(page, maxLastPage);
 
@@ -122,7 +121,7 @@ export class SaasAuditoriaController {
       ];
 
       const result = await client.search({
-        index: elasticsearchService.getIndexName(),
+        index: ES_DATA_STREAM.AUDITORIA,
         body: {
           query: { bool: { must } },
           sort: [{ timestamp: { order: 'desc' } }],

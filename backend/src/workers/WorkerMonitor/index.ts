@@ -2,10 +2,7 @@ import { EventEmitter } from 'events';
 import { WorkerManager } from '../WorkerManager';
 import ScheduledRoutine from '../../models/sistema/ScheduledRoutine';
 import { logger } from '../../utils/logger';
-import {
-  buscarLogsExecucaoElasticsearch,
-  limparLogsRotinaAntigosElasticsearch
-} from '../../services/elasticsearch/RoutineLogElasticsearchService';
+import { buscarLogsExecucaoElasticsearch } from '../../services/elasticsearch/RoutineLogElasticsearchService';
 
 export interface MonitorConfig {
   healthCheckInterval?: number;
@@ -213,8 +210,15 @@ export class WorkerMonitor extends EventEmitter {
 
   private async cleanupOldLogs(): Promise<void> {
     try {
-      const deletedCount = await limparLogsRotinaAntigosElasticsearch(this.config.logRetentionDays);
-      if (deletedCount > 0) this.emit('logsCleaned', { deletedCount });
+      // Retenção de logs de rotinas no Elasticsearch é feita por ILM (data stream logs-backnet-rotinas).
+      // logRetentionDays permanece na config para outros usos / métricas, se necessário.
+      if (this.config.logRetentionDays != null) {
+        logger.debug('WorkerMonitor: retenção de logs de rotinas delegada ao ILM do Elasticsearch', {
+          context: 'WorkerMonitor',
+          action: 'cleanupOldLogs',
+          logRetentionDays: this.config.logRetentionDays
+        });
+      }
     } catch (error) {
       logger.error('Erro na limpeza de logs', {
         context: 'WorkerMonitor',

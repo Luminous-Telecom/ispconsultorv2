@@ -3,8 +3,9 @@
  * @module services/elasticsearch/SaasLogAcessoElasticsearchService
  */
 import { getElasticsearchService } from '../ElasticsearchService';
+import { ES_DATA_STREAM } from '../dataStreams';
+import { elasticsearchEventTimestamps } from '../elasticsearchTimestamps';
 import { logger } from '../../../utils/logger';
-import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
 
 const LOG_TIPO = 'saas_acesso';
 
@@ -24,7 +25,6 @@ export async function registrarLogAcessoSaasElasticsearch(payload: RegistroSaasL
       if (!client) return;
       const isConnected = await elasticsearchService.checkConnection();
       if (!isConnected) return;
-      await elasticsearchService.ensureIndex();
 
       const doc = {
         log_tipo: LOG_TIPO,
@@ -34,11 +34,11 @@ export async function registrarLogAcessoSaasElasticsearch(payload: RegistroSaasL
         acao: payload.acao,
         ip: payload.ip ?? null,
         user_agent: payload.user_agent ?? null,
-        timestamp: safeFormatDateISOLocal(new Date()) || new Date().toISOString()
+        ...elasticsearchEventTimestamps(new Date())
       };
 
       await client.index({
-        index: elasticsearchService.getIndexName(),
+        index: ES_DATA_STREAM.SAAS_ACESSO,
         document: doc
       });
     } catch (error) {

@@ -1,11 +1,13 @@
+import { Client } from '@elastic/elasticsearch';
 import { Op } from 'sequelize';
 import { getElasticsearchService } from '../../elasticsearch/ElasticsearchService';
+import { ES_DATA_STREAM } from '../../elasticsearch/dataStreams';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
 
 export class AuditoriaQueryService {
   /**
-   * Constrói query do Elasticsearch para busca de auditoria
+   * Constrói query do Elasticsearch para busca de auditoria (somente data stream de auditoria).
    */
   /** Entidades do painel SaaS – não mostrar no ADM normal (tenant) */
   static readonly ENTIDADES_SAAS = ['SaasPlano', 'SaasContrato', 'SaasDadosEmpresa', 'SaasDadosEmpresaCrud', 'SaasBanco', 'SaasTitulo', 'SaasTipoCobranca', 'SaasDiasVencimento', 'SaasNFSeConfig', 'SaasParametros', 'SaasServidorEmail', 'SaasServidorWhatsapp', 'SaasUsuarioSuper', 'SaasScheduledRoutine'];
@@ -28,10 +30,22 @@ export class AuditoriaQueryService {
     /** Filtrar por origem (ex.: agendador) */
     origemAuditoria?: string;
   }): { must: any[]; must_not?: any[] } {
-    const { search, searchField, acao, entidade, usuario_id, dataInicio, dataFim, empresaId, excludeSaasEntities = true, filterSaasOnly = false, comUsuarioObrigatorio = false, semUsuarioObrigatorio = false, origemAuditoria } = params;
-    const must: any[] = [
-      { bool: { should: [{ term: { log_tipo: 'auditoria' } }, { bool: { must: [{ bool: { must_not: { exists: { field: 'log_tipo' } } } }, { exists: { field: 'acao' } }] } }], minimum_should_match: 1 } }
-    ];
+    const {
+      search,
+      searchField,
+      acao,
+      entidade,
+      usuario_id,
+      dataInicio,
+      dataFim,
+      empresaId,
+      excludeSaasEntities = true,
+      filterSaasOnly = false,
+      comUsuarioObrigatorio = false,
+      semUsuarioObrigatorio = false,
+      origemAuditoria
+    } = params;
+    const must: any[] = [];
 
     if (search) {
       const fieldMap: Record<string, string> = {
@@ -43,7 +57,7 @@ export class AuditoriaQueryService {
         acao: 'acao',
         observacoes: 'observacoes',
         rota: 'rota',
-        ip_address: 'ip_address',
+        ip_address: 'ip_address'
       };
       const esField = searchField ? fieldMap[searchField] : null;
       const escapeWildcard = (s: string) => s.replace(/\\/g, '\\\\').replace(/\*/g, '\\*').replace(/\?/g, '\\?');
@@ -57,18 +71,27 @@ export class AuditoriaQueryService {
           let gte: string | undefined;
           let lte: string | undefined;
           if (len >= 4) {
-            let y: string, m: string, d: string;
+            let y: string;
+            let m: string;
+            let d: string;
             if (len >= 8) {
-              const yyyy = t.slice(0, 4), mm = t.slice(4, 6), dd = t.slice(6, 8);
+              const yyyy = t.slice(0, 4);
+              const mm = t.slice(4, 6);
+              const dd = t.slice(6, 8);
               if (yyyy.startsWith('19') || yyyy.startsWith('20')) {
-                y = yyyy; m = mm; d = dd;
+                y = yyyy;
+                m = mm;
+                d = dd;
               } else {
-                y = t.slice(4, 8); m = t.slice(2, 4); d = t.slice(0, 2);
+                y = t.slice(4, 8);
+                m = t.slice(2, 4);
+                d = t.slice(0, 2);
               }
               gte = `${y}-${m}-${d}T00:00:00`;
               lte = `${y}-${m}-${d}T23:59:59`;
             } else if (len >= 6) {
-              y = t.slice(0, 4); m = t.slice(4, 6);
+              y = t.slice(0, 4);
+              m = t.slice(4, 6);
               gte = `${y}-${m}-01T00:00:00`;
               lte = `${y}-${m}-31T23:59:59`;
             } else {
@@ -104,6 +127,16 @@ export class AuditoriaQueryService {
           } else {
             must.push({ term: { ip_address: ipPart } });
           }
+        } else if (esField === 'usuario_nome' || esField === 'usuario_email' || esField === 'rota') {
+          must.push({
+            match: {
+              [`${esField}.partial`]: { query: search.trim(), operator: 'and' }
+            }
+          });
+        } else if (esField === 'entidade') {
+          must.push({
+            prefix: { entidade: { value: search.trim(), case_insensitive: true } }
+          });
         } else {
           const safeVal = escapeWildcard(search);
           must.push({
@@ -116,19 +149,24 @@ export class AuditoriaQueryService {
         const isEntity = /^[A-Z][a-zA-Z]*$/.test(search.trim()) && search.trim().length > 2 && !search.includes(' ');
 
         if (isRoute) {
-          const safeRota = escapeWildcard(search);
-          must.push({ wildcard: { rota: { value: `*${safeRota}*`, case_insensitive: true } } });
+          must.push({
+            prefix: { rota: { value: search.trim(), case_insensitive: true } }
+          });
         } else if (isEmail) {
-          const safeEmail = escapeWildcard(search);
-          must.push({ wildcard: { usuario_email: { value: `*${safeEmail}*`, case_insensitive: true } } });
+          must.push({
+            match: {
+              usuario_email: { query: search.trim(), operator: 'and' }
+            }
+          });
         } else if (isEntity) {
-          const safeEnt = escapeWildcard(search);
-          must.push({ wildcard: { entidade: { value: `*${safeEnt}*`, case_insensitive: true } } });
+          must.push({
+            prefix: { entidade: { value: search.trim(), case_insensitive: true } }
+          });
         } else {
           must.push({
             multi_match: {
               query: search,
-              fields: ['observacoes', 'rota', 'usuario_email', 'usuario_nome'],
+              fields: ['observacoes', 'rota.partial', 'usuario_email.partial', 'usuario_nome.partial'],
               type: 'best_fields',
               operator: 'or'
             }
@@ -147,11 +185,11 @@ export class AuditoriaQueryService {
     }
 
     if (entidade) {
-      must.push({ term: { entidade: entidade } });
+      must.push({ term: { entidade } });
     }
 
     if (usuario_id) {
-      must.push({ term: { usuario_id: usuario_id } });
+      must.push({ term: { usuario_id } });
     }
 
     if (comUsuarioObrigatorio) {
@@ -179,15 +217,12 @@ export class AuditoriaQueryService {
       must.push({ range: { timestamp: range } });
     }
 
-    // Painel SaaS: mostrar apenas logs com saas=true
     if (filterSaasOnly) {
       must.push({ term: { saas: true } });
     }
 
-    // Filtrar por empresa_id: cada operação do tenant no ADM deve salvar empresa_id
     if (empresaId != null && empresaId > 0) {
       must.push({ term: { empresa_id: empresaId } });
-      // Tenant vendo próprio contexto: excluir entidades SaaS; Admin vendo tenant: incluir todas
       if (excludeSaasEntities) {
         must_not.push({ terms: { entidade: this.ENTIDADES_SAAS } });
       }
@@ -197,7 +232,8 @@ export class AuditoriaQueryService {
   }
 
   /**
-   * Busca auditoria do Elasticsearch
+   * Leitura paginada (from/size) para telas — limitada a maxResultWindow.
+   * Para exportações grandes, prefira {@link fetchAuditSourcesWithPit}.
    */
   static async searchFromElasticsearch(params: {
     page: number;
@@ -228,28 +264,25 @@ export class AuditoriaQueryService {
     const { page, limit, sortColumn, sortDirection, excludeSaasEntities, origemAuditoria, ...restParams } = params;
     const { must, must_not } = this.buildElasticsearchQuery({ ...restParams, excludeSaasEntities, origemAuditoria });
 
-    // Construir ordenação para Elasticsearch
-    // Mapear colunas do frontend para campos do Elasticsearch (o índice não tem campo 'id')
     const sortFieldMap: Record<string, string> = {
-      'id': 'timestamp',
-      'timestamp': 'timestamp',
-      'created_at': 'timestamp',
-      'acao': 'acao',
-      'entidade': 'entidade',
-      'empresa_id': 'empresa_id',
-      'empresa_nome': 'empresa_id',
-      'usuario': 'usuario_nome',
-      'usuario_nome': 'usuario_nome',
-      'usuario_email': 'usuario_email',
-      'ip_address': 'ip_address',
-      'observacoes': 'observacoes',
-      'rota': 'rota',
-      'metodo_http': 'metodo_http'
+      id: 'timestamp',
+      timestamp: 'timestamp',
+      created_at: 'timestamp',
+      acao: 'acao',
+      entidade: 'entidade',
+      empresa_id: 'empresa_id',
+      empresa_nome: 'empresa_id',
+      usuario: 'usuario_nome.keyword',
+      usuario_nome: 'usuario_nome.keyword',
+      usuario_email: 'usuario_email.keyword',
+      ip_address: 'ip_address',
+      observacoes: 'observacoes',
+      rota: 'rota',
+      metodo_http: 'metodo_http'
     };
 
     const sortField = sortFieldMap[sortColumn || 'timestamp'] || 'timestamp';
     const sortOrder = (sortDirection || 'desc').toLowerCase() === 'asc' ? 'asc' : 'desc';
-
 
     const boolQuery: any = {
       must: must.length > 0 ? must : [{ match_all: {} }]
@@ -258,38 +291,93 @@ export class AuditoriaQueryService {
       boolQuery.must_not = must_not;
     }
 
-    const maxResultWindow = 50000;
+    const maxResultWindow = 10000;
     const from = Math.min((page - 1) * limit, Math.max(0, maxResultWindow - limit));
 
     const query: any = {
-      index: elasticsearchService.getIndexName(),
-        body: {
-          query: {
-            bool: boolQuery
-          },
-          sort: [{ [sortField]: { order: sortOrder } }],
-          from,
-          size: limit
+      index: ES_DATA_STREAM.AUDITORIA,
+      body: {
+        query: {
+          bool: boolQuery
+        },
+        // _id exige fielddata (desligado por padrão no ES 8); _shard_doc é o tie-breaker suportado com PIT.
+        sort: [{ [sortField]: { order: sortOrder } }, { _shard_doc: sortOrder }],
+        from,
+        size: limit
+      }
+    };
+
+    const result = await client.search(query);
+
+    const countResult = await client.count({
+      index: ES_DATA_STREAM.AUDITORIA,
+      body: {
+        query: query.body.query
+      }
+    });
+
+    const total = typeof countResult.count === 'number' ? countResult.count : (countResult.count as any).value || 0;
+
+    const logs = result.hits.hits.map((hit: any) => ({
+      id: hit._id,
+      ...hit._source
+    }));
+
+    return { logs, total };
+  }
+
+  /**
+   * Exportações pesadas (ex.: PDF com muitos eventos): Point in Time + search_after.
+   * Evita from/size profundo e reduz pressão sobre max_result_window.
+   */
+  static async fetchAuditSourcesWithPit(params: {
+    client: Client;
+    boolQuery: Record<string, unknown>;
+    sortDirection?: 'asc' | 'desc';
+    pageSize?: number;
+    maxDocuments?: number;
+  }): Promise<Array<Record<string, unknown> & { id: string }>> {
+    const pageSize = params.pageSize ?? 500;
+    const maxDocuments = params.maxDocuments ?? 50_000;
+    const order = params.sortDirection === 'asc' ? 'asc' : 'desc';
+
+    const pitResponse = await params.client.openPointInTime({
+      index: ES_DATA_STREAM.AUDITORIA,
+      keep_alive: '5m'
+    });
+    const pitId = pitResponse.id;
+    const collected: Array<Record<string, unknown> & { id: string }> = [];
+    let searchAfter: unknown[] | undefined;
+
+    try {
+      while (collected.length < maxDocuments) {
+        const res = await params.client.search({
+          pit: { id: pitId, keep_alive: '5m' },
+          query: params.boolQuery,
+          sort: [{ timestamp: { order } }, { _shard_doc: order }],
+          size: pageSize,
+          track_total_hits: false,
+          search_after: searchAfter
+        });
+
+        const hits = res.hits.hits as Array<{
+          _id: string;
+          _source?: Record<string, unknown>;
+          sort?: unknown[];
+        }>;
+        if (hits.length === 0) break;
+        for (const h of hits) {
+          if (h._source) {
+            collected.push({ id: h._id, ...h._source });
+          }
         }
-      };
+        searchAfter = hits[hits.length - 1].sort;
+      }
+    } finally {
+      await params.client.closePointInTime({ id: pitId });
+    }
 
-      const result = await client.search(query);
-
-      const countResult = await client.count({
-        index: elasticsearchService.getIndexName(),
-        body: {
-          query: query.body.query
-        }
-      });
-
-      const total = typeof countResult.count === 'number' ? countResult.count : (countResult.count as any).value || 0;
-
-      const logs = result.hits.hits.map((hit: any) => ({
-        id: hit._id,
-        ...hit._source
-      }));
-
-      return { logs, total };
+    return collected;
   }
 
   /**

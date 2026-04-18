@@ -12,6 +12,7 @@
     "migrate:undo:all": "npx sequelize-cli db:migrate:undo:all",
     "seed:webhook-logs": "ts-node scripts/seed-webhook-audit-logs.ts",
     "test:scheduler-queue": "ts-node scripts/test-scheduler-queue.ts",
+    "setup:elasticsearch": "ts-node src/scripts/setupElasticsearch.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
