@@ -679,22 +679,17 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
                       </span>
                     )}
                   </div>
-                  {pdfExtractProgress && pdfExtractProgress.total > 0 ? (
-                    <div className="progress" style={{ height: 4 }}>
-                      <div
-                        className="progress-bar progress-bar-striped progress-bar-animated"
-                        style={{
-                          width: `${Math.round((pdfExtractProgress.current / pdfExtractProgress.total) * 100)}%`
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="progress" style={{ height: 4 }}>
-                      <div
-                        className="progress-bar progress-bar-striped progress-bar-animated w-100"
-                      />
-                    </div>
-                  )}
+                  <div className="progress" style={{ height: 4 }}>
+                    <div
+                      className="progress-bar progress-bar-striped progress-bar-animated"
+                      style={{
+                        width:
+                          pdfExtractProgress && pdfExtractProgress.total > 0
+                            ? `${Math.round((pdfExtractProgress.current / pdfExtractProgress.total) * 100)}%`
+                            : '0%'
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
