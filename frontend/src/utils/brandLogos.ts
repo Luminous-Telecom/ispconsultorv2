@@ -1,60 +1,66 @@
-// Mapeamento de logos das marcas
-// As logos devem estar em /public/logos/{nome-da-marca}.png ou .svg
-// Exemplo: /logos/mikrotik.png
-
-export const brandLogos: Record<string, string> = {
-  // OLT
-  'VSOL': '/logos/vsol.png',
-  'Fiberhome': '/logos/fiberhome.png',
-  'Overteck': '/logos/overtek.png',
-  
-  // Roteador de Borda
-  'Huawei': '/logos/huawei.png',
-  'Mikrotik': '/logos/mikrotik.png',
-  
-  // Switch
-  'Intelbras': '/logos/intelbras.png',
-  'Grandstream': '/logos/grandstream.png',
-  
-  // ERPs
-  'IXC Provedor': '/logos/ixc.png',
-  'SGP': '/logos/sgp.png',
-  'Mikweb': '/logos/mikweb.png',
-  'Atlaz': '/logos/atlaz.png',
-  'MKAuth': '/logos/mkauth.png',
-  'Receitanet': '/logos/receitanet.png',
-  
-  // Virtualização
-  'Proxmox': '/logos/proxmox.png',
-  
-  // DNS
-  'Unbound': '/logos/unbound.png',
-  'Bind9': '/logos/bind9.png',
-  
-  // Monitoramento
-  'Zabbix': '/logos/zabbix.png',
-  'Grafana': '/logos/grafana.png',
-  'The Dude': '/logos/thedude.jpg',
-  'LibreNMS': '/logos/librenms.png',
-  
-  // API
-  'Bloqueio Anatel': '/logos/blockdomi.png',
-  
-  // Sistemas Operacionais
-  'Windows Server': '/logos/windows-server.png',
-  'Debian': '/logos/debian.png',
-  'Ubuntu': '/logos/ubuntu.png',
-  'Windows': '/logos/windows.png',
-
-  // Rádios
-  'Mimosa': '/logos/mimosa.png',
-  'Ubiquiti': '/logos/ubiquiti.png',
-};
-
 /**
- * Retorna o caminho da logo de uma marca, ou null se não existir
+ * Logos de marca: um único lugar no repo — `src/assets/brand-logos/`.
+ * Adicione o arquivo (ex.: `mikrotik.png`) e o webpack inclui no bundle com hash.
  */
-export const getBrandLogo = (brandName: string): string | null => {
-  return brandLogos[brandName] || null;
+
+// Webpack (CRA): require.context
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const logoContext = (require as any).context('../assets/brand-logos', false, /\.(png|jpg|jpeg|svg)$/i) as {
+  (id: string): string;
+  keys(): string[];
 };
 
+function resolveFile(filename: string): string | null {
+  const key = `./${filename}`;
+  if (!logoContext.keys().includes(key)) {
+    return null;
+  }
+  return logoContext(key) as string;
+}
+
+/** Nome exibido → nome do arquivo em `src/assets/brand-logos/` */
+const brandLogoFilename: Record<string, string> = {
+  VSOL: 'vsol.png',
+  Fiberhome: 'fiberhome.png',
+  Overteck: 'overtek.png',
+  Huawei: 'huawei.png',
+  Mikrotik: 'mikrotik.png',
+  Intelbras: 'intelbras.png',
+  Grandstream: 'grandstream.png',
+  'IXC Provedor': 'ixc.png',
+  SGP: 'sgp.png',
+  Mikweb: 'mikweb.png',
+  Atlaz: 'atlaz.png',
+  MKAuth: 'mkauth.png',
+  Receitanet: 'receitanet.png',
+  Proxmox: 'proxmox.png',
+  Unbound: 'unbound.png',
+  Bind9: 'bind9.png',
+  Zabbix: 'zabbix.png',
+  Grafana: 'grafana.png',
+  'The Dude': 'thedude.jpg',
+  LibreNMS: 'librenms.png',
+  'Bloqueio Anatel': 'blockdomi.png',
+  'Windows Server': 'windows-server.png',
+  Debian: 'debian.png',
+  Ubuntu: 'ubuntu.png',
+  Windows: 'windows.png',
+  Mimosa: 'mimosa.png',
+  Ubiquiti: 'ubiquiti.png',
+};
+
+/** URLs resolvidas pelo webpack (só entradas cujo arquivo exista na pasta). */
+export const brandLogos: Record<string, string> = Object.fromEntries(
+  Object.entries(brandLogoFilename)
+    .map(([brand, file]) => {
+      const url = resolveFile(file);
+      return url ? ([brand, url] as const) : null;
+    })
+    .filter((x): x is readonly [string, string] => x !== null)
+) as Record<string, string>;
+
+export const getBrandLogo = (brandName: string): string | null => {
+  const file = brandLogoFilename[brandName];
+  if (!file) return null;
+  return resolveFile(file);
+};

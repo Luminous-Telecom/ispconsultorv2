@@ -1,4 +1,5 @@
 import React from 'react';
+import logoBacknet from '../../assets/brand-logos/backnet.png';
 
 interface BackNetLogoProps {
   width?: number | string;
@@ -11,12 +12,9 @@ const BackNetLogo: React.FC<BackNetLogoProps> = ({
   height = 60,
   className = ''
 }) => {
-  // Usar apenas a logo principal
-  const logoSrc = '/logos/backnet.png';
-
   return (
     <img
-      src={logoSrc}
+      src={logoBacknet}
       alt="BackNet Logo"
       width={width}
       height={height}
