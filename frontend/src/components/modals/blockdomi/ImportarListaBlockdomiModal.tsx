@@ -410,6 +410,9 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
         [pdfFileInputRef, pdfAnatelInputRef, pdfJusticaInputRef].forEach((ref) => {
           if (ref.current) ref.current.value = '';
         });
+        setColunasDisponiveis(null);
+        setColunasSeleccionadas(new Set());
+        setPdfExtractProgress(null);
         return;
       }
 
@@ -489,6 +492,9 @@ const ImportarListaBlockdomiModal: React.FC<ImportarListaBlockdomiModalProps> = 
       [pdfFileInputRef, pdfAnatelInputRef, pdfJusticaInputRef].forEach((ref) => {
         if (ref.current) ref.current.value = '';
       });
+      setColunasDisponiveis(null);
+      setColunasSeleccionadas(new Set());
+      setPdfExtractProgress(null);
     } catch (e) {
       error((e as Error)?.message ?? 'Erro ao cadastrar.');
     } finally {
