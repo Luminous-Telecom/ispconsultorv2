@@ -194,14 +194,32 @@ export class Pm2Service {
       return { success: false, stdout: '', stderr: errorMsg, error: errorMsg };
     }
 
+    const apps = [
+      ...new Set(
+        (process.env.PM2_RESTART_APPS || `${this.pm2ProcessName},frontend`)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      ),
+    ];
+    const appsJson = JSON.stringify(apps);
+
     const script = `
+const { execFileSync } = require('child_process');
 const d = parseInt(process.env.PM2_DELAY || '5000', 10);
 const cwd = process.env.PM2_CWD || '.';
-const app = process.env.PM2_APP || 'backend';
+const apps = ${appsJson};
 setTimeout(() => {
-  try {
-    require('child_process').execFileSync('pm2', ['restart', app, '--update-env'], { cwd, stdio: 'inherit', maxBuffer: 10*1024*1024 });
-  } catch (e) { process.exit(1); }
+  let ok = false;
+  for (const app of apps) {
+    try {
+      execFileSync('pm2', ['restart', app, '--update-env'], { cwd, stdio: 'inherit', maxBuffer: 10 * 1024 * 1024 });
+      ok = true;
+    } catch (e) {
+      console.error('pm2 restart', app, e && e.message);
+    }
+  }
+  if (!ok) process.exit(1);
 }, d);
 `;
     const child = spawn(process.execPath, ['-e', script.trim()], {
@@ -211,14 +229,13 @@ setTimeout(() => {
         ...process.env,
         PM2_DELAY: String(delayMs),
         PM2_CWD: this.projectRoot,
-        PM2_APP: this.pm2ProcessName,
       },
     });
     child.unref();
 
     logger.info('PM2 restart agendado em processo filho', {
       delayMs,
-      processName: this.pm2ProcessName,
+      apps,
       cwd: this.projectRoot,
     });
     return {

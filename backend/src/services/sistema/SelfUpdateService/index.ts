@@ -25,9 +25,7 @@ export interface UpdateResult {
 }
 
 /**
- * Service responsável por executar o self-update da aplicação
- * Executa os comandos na ordem: git pull -> npm install -> migrations -> pm2 reload
- * Nota: Build não é executado pois o código já vem compilado em produção
+ * Self-update no servidor: git pull → npm install (backend) → build (backend + frontend) → migrations → PM2.
  */
 export class SelfUpdateService {
   private readonly projectRoot: string;
@@ -65,7 +63,7 @@ export class SelfUpdateService {
     // Inicializar serviços
     this.gitUpdateService = new GitUpdateService(this.projectRoot);
     this.packageManagerService = new PackageManagerService(this.backendPath);
-    this.buildService = new BuildService();
+    this.buildService = new BuildService(this.projectRoot);
     this.migrationService = new MigrationService(this.backendPath);
     this.pm2Service = new Pm2Service(this.projectRoot, this.backendPath, this.pm2ProcessName);
     this.healthCheckService = new HealthCheckService(this.backendUrl);
