@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      force_full_build:
+        description: "Forçar build de backend+frontend e nova release (use quando commits ficaram só em paths que não disparavam build)"
+        type: boolean
+        default: true
 
 jobs:
   deploy:
@@ -51,6 +57,14 @@ jobs:
             # Workflow de deploy / infra na raiz também exige build + Release
             echo "${CHANGED_FILES}" | grep -qE '^\.github/workflows/|^scripts/|^docker-compose\.yaml|^ecosystem\.config\.js|^nginx\.docker\.conf|^package\.json$' \
               && echo "workflows_changed=true" >> $GITHUB_OUTPUT || echo "workflows_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Último valor no GITHUB_OUTPUT vence — sobrescreve detecção por arquivo.
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.force_full_build }}" == "true" ]; then
+            echo "::notice::workflow_dispatch: forçando build completo (backend + frontend + release)."
+            echo "backend_changed=true"  >> $GITHUB_OUTPUT
+            echo "frontend_changed=true" >> $GITHUB_OUTPUT
+            echo "workflows_changed=true" >> $GITHUB_OUTPUT
           fi
 
           echo "prev_commit=${PREV_COMMIT}"       >> $GITHUB_OUTPUT
