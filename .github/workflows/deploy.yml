@@ -316,6 +316,21 @@ jobs:
 
           echo "✓ Arquivos raiz sincronizados"
 
+          # Remover do prod o que já não existe no fonte (cp sozinho deixa lixo no git)
+          for f in docker-compose.yaml nginx.docker.conf; do
+            if [ ! -f "../${f}" ] && [ -e "${f}" ]; then
+              git rm -f "${f}" 2>/dev/null || rm -f "${f}"
+              echo "::notice::Removido ${f} do clone prod (ausente no repositório fonte)."
+            fi
+          done
+          if [ ! -d "../docker" ] && [ -d "docker" ]; then
+            git rm -rf docker 2>/dev/null || rm -rf docker
+            echo "::notice::Removida pasta docker/ do clone prod (ausente no repositório fonte)."
+          fi
+
+          echo "=== Diff frontend/build vs HEAD prod (vazio = bundle igual ao commit anterior — normal se só mudou backend/infra) ==="
+          git diff --shortstat HEAD -- frontend/build/ 2>/dev/null || true
+
           # ── Validações essenciais ─────────────────────────────────
           [ -f "backend/package.json" ]  || { echo "ERRO: backend/package.json ausente!";  exit 1; }
           [ -f "ecosystem.config.js" ]   || { echo "ERRO: ecosystem.config.js ausente!";   exit 1; }
