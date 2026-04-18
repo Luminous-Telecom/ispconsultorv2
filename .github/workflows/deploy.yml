@@ -401,6 +401,46 @@ jobs:
           echo "=== Último commit no repositório de produção ==="
           git log -1 --oneline
 
+      # Repositório privado: diagnóstico via API (o workflow roda em backnet, não em backnet.prod).
+      - name: Confirmar backnet.prod na API GitHub
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
+        run: |
+          REPO="Luminous-Telecom/backnet.prod"
+          CODE=$(curl -sS -o /tmp/prod-repo.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}")
+          if [ "${CODE}" != "200" ]; then
+            echo "::warning::GET /repos/${REPO} retornou HTTP ${CODE}. Verifique PROD_PAT (escopo **repo**) e se o token tem acesso ao repositório prod."
+            cat /tmp/prod-repo.json 2>/dev/null || true
+            exit 0
+          fi
+          node -e "
+            const fs=require('fs');
+            const d=JSON.parse(fs.readFileSync('/tmp/prod-repo.json','utf8'));
+            console.log('backnet.prod default_branch=', d.default_branch);
+            console.log('backnet.prod pushed_at=', d.pushed_at);
+            if (d.default_branch !== 'main') {
+              console.log('::warning::A branch **padrão** no GitHub é \"' + d.default_branch + '\". O deploy só faz push em **main** — abra **main** no repositório prod para ver os commits de deploy.');
+            }
+          "
+          CODE2=$(curl -sS -o /tmp/prod-commit.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/commits/main")
+          if [ "${CODE2}" != "200" ]; then
+            echo "::warning::GET /commits/main retornou HTTP ${CODE2} (branch main inexistente ou sem commits?)."
+            cat /tmp/prod-commit.json 2>/dev/null || true
+            exit 0
+          fi
+          node -e "
+            const c=JSON.parse(require('fs').readFileSync('/tmp/prod-commit.json','utf8'));
+            const msg=(c.commit&&c.commit.message)?c.commit.message.split('\\n')[0]:'';
+            console.log('Último commit em main (API):', (c.sha||'').slice(0,7), msg);
+          "
+
       # ─────────────────────────────────────────────────────────────
       # 7. Criar Release no GitHub
       # ─────────────────────────────────────────────────────────────
