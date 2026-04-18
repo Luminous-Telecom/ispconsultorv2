@@ -27,9 +27,11 @@ interface ApiResponseWithVersao extends ApiResponse<Atualizacao[]> {
 interface AtualizacoesModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
+  onHeaderActionsReady?: (actions: React.ReactNode) => void;
 }
 
-const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) => {
+const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, skipWrapper = false, onHeaderActionsReady }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
@@ -217,42 +219,44 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
     return badges[tipo as keyof typeof badges] || { class: 'text-secondary', bgClass: 'bg-secondary bg-opacity-10', label: t('updates.badges.other'), icon: 'bi-circle-fill' };
   };
 
-  return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title={t('updates.title')}
-      size="md"
-      modalId="atualizacoes-modal"
-      headerActions={
-        <div className="d-flex gap-2 modal-header-actions">
-          {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              leftIcon={<i className="bi bi-arrow-clockwise"></i>}
-              onClick={handleUpdate}
-              disabled={isUpdating || updateMutation.isPending}
-              isLoading={isUpdating || updateMutation.isPending}
-            >
-              {t('updates.updateSystem')}
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={onClose}
-            disabled={isUpdating || updateMutation.isPending}
-          >
-            {t('buttons.close')}
-          </Button>
-        </div>
-      }
-    >
-      <div style={{ padding: isMobile ? '0' : '12px' }}>
+  const headerActions = (
+    <div className="d-flex gap-2 modal-header-actions">
+      {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          leftIcon={<i className="bi bi-arrow-clockwise"></i>}
+          onClick={handleUpdate}
+          disabled={isUpdating || updateMutation.isPending}
+          isLoading={isUpdating || updateMutation.isPending}
+        >
+          {t('updates.updateSystem')}
+        </Button>
+      )}
+      <Button
+        type="button"
+        variant="primary"
+        size="sm"
+        leftIcon={<i className="bi bi-x-lg"></i>}
+        onClick={onClose}
+        disabled={isUpdating || updateMutation.isPending}
+      >
+        {t('buttons.close')}
+      </Button>
+    </div>
+  );
+
+  React.useEffect(() => {
+    if (onHeaderActionsReady) {
+      onHeaderActionsReady(headerActions);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, error, atualizacoes, isUpdating, updateMutation.isPending]);
+
+  const modalContent = (
+    <>
+    <div style={{ padding: isMobile ? '0' : '12px' }}>
         {isLoading && (
           <div className="text-center py-4">
             <div className="spinner-border spinner-border-sm text-primary" role="status">
@@ -428,6 +432,23 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
       {/* ConfirmModal */}
       {modalProps && <ConfirmModal {...modalProps} />}
+    </>
+  );
+
+  if (skipWrapper) {
+    return <>{modalContent}</>;
+  }
+
+  return (
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title={t('updates.title')}
+      size="md"
+      modalId="atualizacoes-modal"
+      headerActions={headerActions}
+    >
+      {modalContent}
     </DraggableModal>
   );
 };
