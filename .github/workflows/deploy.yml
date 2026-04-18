@@ -115,19 +115,8 @@ jobs:
             [ -z "${COMMITS}" ] && INCREMENT_TYPE="none"
 
             if [ "${INCREMENT_TYPE}" != "none" ]; then
-              VERSION=$(node -e "
-                const [maj,min,pat] = '${OLD_VERSION}'.split('.').map(Number);
-                const t = '${INCREMENT_TYPE}';
-                if (t==='major') console.log(\`\${maj+1}.0.0\`);
-                else if (t==='minor') console.log(\`\${maj}.\${min+1}.0\`);
-                else console.log(\`\${maj}.\${min}.\${pat+1}\`);
-              ")
-              node -e "
-                const fs=require('fs'), p='./backend/package.json';
-                const pkg=JSON.parse(fs.readFileSync(p,'utf8'));
-                pkg.version='${VERSION}';
-                fs.writeFileSync(p,JSON.stringify(pkg,null,2)+'\n');
-              "
+              # npm version atualiza o package.json e imprime a nova versão
+              VERSION=$(cd backend && npm version ${INCREMENT_TYPE} --no-git-tag-version | sed 's/^v//')
               echo "✓ Versão: ${OLD_VERSION} → ${VERSION}"
             else
               VERSION="${OLD_VERSION}"
@@ -143,12 +132,6 @@ jobs:
             npm run build --prefix backend
             [ -d "backend/dist" ] || { echo "ERRO: backend build falhou!"; exit 1; }
             echo "✓ Backend buildado"
-
-            # Integrar frontend no backend/dist/frontend (serve estático pelo Express)
-            mkdir -p backend/dist/frontend
-            cp -r frontend/build/* backend/dist/frontend/
-            [ -f "backend/dist/frontend/index.html" ] || { echo "ERRO: integração frontend falhou!"; exit 1; }
-            echo "✓ Frontend integrado em backend/dist/frontend"
 
             echo "BUILD_EXECUTED=true" >> $GITHUB_ENV
           else
