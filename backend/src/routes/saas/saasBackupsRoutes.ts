@@ -36,10 +36,10 @@ const backupStorage = multer.diskStorage({
   }
 });
 
+/** Sem `limits.fileSize`: Busboy usa tamanho ilimitado (limitado só por disco e proxy, ex. Nginx). */
 const uploadBackup = multer({
   storage: backupStorage,
-  fileFilter: backupFileFilter,
-  limits: { fileSize: 500 * 1024 * 1024 }
+  fileFilter: backupFileFilter
 });
 
 router.get('/', BackupController.list);
@@ -48,9 +48,6 @@ router.post('/upload', (req, res, next) => {
   uploadBackup.single('arquivo')(req, res, (err) => {
     if (err) {
       if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(400).json({ success: false, message: 'Arquivo muito grande. Tamanho máximo: 500MB' });
-        }
         return res.status(400).json({ success: false, message: err.message });
       }
       return res.status(400).json({ success: false, message: err.message || 'Erro no upload' });
