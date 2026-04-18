@@ -194,9 +194,11 @@ export class Pm2Service {
       return { success: false, stdout: '', stderr: errorMsg, error: errorMsg };
     }
 
+    // Por padrão só o backend (PM2); o front costuma ser Nginx/Docker servindo frontend/build em disco.
+    // Quem usa PM2 também no front: exporte PM2_RESTART_APPS=backend,frontend
     const apps = [
       ...new Set(
-        (process.env.PM2_RESTART_APPS || `${this.pm2ProcessName},frontend`)
+        (process.env.PM2_RESTART_APPS || this.pm2ProcessName)
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean)
