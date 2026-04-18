@@ -318,6 +318,12 @@ export interface TranslationKeys {
   'blockdomi.numeroSeiAnatelOptional': string;
   'blockdomi.seiAnatelHelp': string;
   'blockdomi.extractSeiFromAnatelPdf': string;
+  'blockdomi.syncSeiAnatel': string;
+  'blockdomi.syncSeiAnatelHelp': string;
+  'blockdomi.syncSeiAnatelConfirm': string;
+  'blockdomi.syncSeiAnatelDone': string;
+  'blockdomi.syncSeiAnatelPartial': string;
+  'blockdomi.syncSeiAnatelError': string;
   'blockdomi.seiExtractSuccess': string;
   'blockdomi.seiExtractError': string;
   'blockdomi.seiExtractNoPdf': string;
@@ -1783,6 +1789,15 @@ const translations: Translations = {
     'blockdomi.numeroSeiAnatelOptional': 'Nº SEI Anatel (opcional)',
     'blockdomi.seiAnatelHelp': 'Protocolo SEI no final do PDF assinado (ex.: código verificador na página de autenticidade). Use o botão para preencher a partir do PDF do ofício.',
     'blockdomi.extractSeiFromAnatelPdf': 'Extrair SEI',
+    'blockdomi.syncSeiAnatel': 'Sincronizar SEI',
+    'blockdomi.syncSeiAnatelHelp':
+      'Extrai o número SEI de cada PDF de ofício Anatel distinto e preenche apenas domínios que ainda não têm SEI. Cada PDF é baixado e analisado uma única vez, mesmo com vários domínios apontando para o mesmo arquivo.',
+    'blockdomi.syncSeiAnatelConfirm':
+      'Sincronizar o número SEI para todos os domínios que têm link do ofício Anatel mas ainda não têm SEI cadastrado? A operação pode demorar se houver muitos PDFs distintos.',
+    'blockdomi.syncSeiAnatelDone':
+      '${atualizados} domínio(s) atualizado(s). ${pdfs} PDF(s) distinto(s) processado(s). ${candidatos} domínio(s) elegíveis (sem SEI e com link Anatel).',
+    'blockdomi.syncSeiAnatelPartial': 'Atenção: ${n} PDF(s) falharam ou não tiveram SEI extraído.',
+    'blockdomi.syncSeiAnatelError': 'Não foi possível concluir a sincronização do SEI.',
     'blockdomi.seiExtractSuccess': 'Número SEI extraído do PDF.',
     'blockdomi.seiExtractError': 'Não foi possível extrair o SEI deste PDF.',
     'blockdomi.seiExtractNoPdf': 'Selecione o arquivo PDF do ofício Anatel antes de extrair o SEI.',
@@ -3241,6 +3256,15 @@ const translations: Translations = {
     'blockdomi.numeroSeiAnatelOptional': 'Anatel SEI no. (optional)',
     'blockdomi.seiAnatelHelp': 'SEI protocol number at the end of the signed PDF (e.g. verification code on the authenticity page). Use the button to fill it from the warrant PDF.',
     'blockdomi.extractSeiFromAnatelPdf': 'Extract SEI',
+    'blockdomi.syncSeiAnatel': 'Sync SEI',
+    'blockdomi.syncSeiAnatelHelp':
+      'Extracts the SEI number from each distinct Anatel warrant PDF and fills only domains that do not have SEI yet. Each PDF is downloaded and parsed once, even when several domains share the same file.',
+    'blockdomi.syncSeiAnatelConfirm':
+      'Sync SEI for all domains that have an Anatel warrant link but no SEI yet? This may take a while if there are many distinct PDFs.',
+    'blockdomi.syncSeiAnatelDone':
+      '${atualizados} domain(s) updated. ${pdfs} distinct PDF(s) processed. ${candidatos} eligible domain(s) (no SEI, with Anatel link).',
+    'blockdomi.syncSeiAnatelPartial': 'Warning: ${n} PDF(s) failed or had no SEI extracted.',
+    'blockdomi.syncSeiAnatelError': 'Could not complete SEI synchronization.',
     'blockdomi.seiExtractSuccess': 'SEI number extracted from the PDF.',
     'blockdomi.seiExtractError': 'Could not extract SEI from this PDF.',
     'blockdomi.seiExtractNoPdf': 'Select the Anatel warrant PDF file before extracting the SEI.',
@@ -4701,6 +4725,15 @@ const translations: Translations = {
     'blockdomi.numeroSeiAnatelOptional': 'N.º SEI Anatel (opcional)',
     'blockdomi.seiAnatelHelp': 'Número de protocolo SEI al final del PDF firmado (p. ej., código verificador en la página de autenticidad). Use el botón para rellenar desde el PDF del oficio.',
     'blockdomi.extractSeiFromAnatelPdf': 'Extraer SEI',
+    'blockdomi.syncSeiAnatel': 'Sincronizar SEI',
+    'blockdomi.syncSeiAnatelHelp':
+      'Extrae el número SEI de cada PDF de oficio Anatel distinto y rellena solo dominios que aún no tienen SEI. Cada PDF se descarga y analiza una sola vez aunque varios dominios compartan el mismo archivo.',
+    'blockdomi.syncSeiAnatelConfirm':
+      '¿Sincronizar el número SEI para todos los dominios que tienen enlace del oficio Anatel pero aún no tienen SEI? La operación puede tardar si hay muchos PDFs distintos.',
+    'blockdomi.syncSeiAnatelDone':
+      '${atualizados} dominio(s) actualizado(s). ${pdfs} PDF(s) distinto(s) procesado(s). ${candidatos} dominio(s) elegibles (sin SEI y con enlace Anatel).',
+    'blockdomi.syncSeiAnatelPartial': 'Atención: ${n} PDF(s) fallaron o no tuvieron SEI extraído.',
+    'blockdomi.syncSeiAnatelError': 'No fue posible completar la sincronización del SEI.',
     'blockdomi.seiExtractSuccess': 'Número SEI extraído del PDF.',
     'blockdomi.seiExtractError': 'No fue posible extraer el SEI de este PDF.',
     'blockdomi.seiExtractNoPdf': 'Seleccione el archivo PDF del oficio Anatel antes de extraer el SEI.',

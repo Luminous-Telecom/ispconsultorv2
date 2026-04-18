@@ -2,7 +2,19 @@
  * DominioService - Serviço usando BaseService
  */
 import { BaseService, defaultApiClient } from './core';
-import { Dominio, CreateDominio, UpdateDominio, DominioFilters, PaginatedResponse } from '../types';
+import { type ApiResponse, Dominio, CreateDominio, UpdateDominio, DominioFilters, PaginatedResponse } from '../types';
+
+export type SincronizarSeiAnatelDominiosResponse = {
+  dominiosCandidatos: number;
+  pdfsDistintos: number;
+  dominiosAtualizados: number;
+  resultados: Array<{
+    link_oficio_anatel: string;
+    quantidade_dominios: number;
+    sei?: string;
+    erro?: string;
+  }>;
+};
 
 class DominioServiceClass extends BaseService<Dominio, CreateDominio, UpdateDominio, DominioFilters> {
   constructor() {
@@ -68,6 +80,20 @@ export class DominioService {
     const response = await defaultApiClient.post<{ updated: number }>('/dominios/bulk-update', payload);
     const data = (response as { data?: { updated: number } }).data;
     return data ?? { updated: 0 };
+  }
+
+  /** Sincroniza número SEI a partir dos PDFs de ofício Anatel (uma extração por link único). */
+  static async sincronizarSeiAnatel(): Promise<SincronizarSeiAnatelDominiosResponse> {
+    const { defaultApiClient } = await import('./core');
+    const response: ApiResponse<SincronizarSeiAnatelDominiosResponse> = await defaultApiClient.post(
+      '/dominios/sincronizar-sei-anatel',
+      {},
+      { timeout: 600000 }
+    );
+    if (!response.success || response.data == null) {
+      throw new Error(response.message || 'Erro ao sincronizar SEI.');
+    }
+    return response.data;
   }
 
   static async bulkCreate(payload: {

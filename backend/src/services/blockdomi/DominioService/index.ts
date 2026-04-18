@@ -1,11 +1,14 @@
 import { Dominio } from '../../../models/blockdomi/Dominio';
 import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
+import fs from 'fs/promises';
+import path from 'path';
 import { Op, WhereOptions, Order } from 'sequelize';
 import { sanitizeDominio } from '../../../utils/sanitize';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { DOMINIO_SORT_CONFIG } from '../../../config/sortConfigs';
 import { VersaoBlockdomiService } from '../VersaoBlockdomiService';
+import { SeiAnatelExtractService } from '../SeiAnatelExtractService';
 
 /** Converte string vazia em null para campos DATEONLY/TEXT que aceitam null */
 function emptyToNull<T>(v: T): T | null {
@@ -33,6 +36,80 @@ export interface ListDominiosResponse {
     from: number;
     to: number;
   };
+}
+
+export interface SincronizarSeiAnatelDominiosRow {
+  link_oficio_anatel: string;
+  quantidade_dominios: number;
+  sei?: string;
+  erro?: string;
+}
+
+export interface SincronizarSeiAnatelDominiosAuditEntry {
+  id: number;
+  antes: Record<string, unknown>;
+  depois: Record<string, unknown>;
+}
+
+export interface SincronizarSeiAnatelDominiosResult {
+  dominiosCandidatos: number;
+  pdfsDistintos: number;
+  dominiosAtualizados: number;
+  resultados: SincronizarSeiAnatelDominiosRow[];
+  auditoria: SincronizarSeiAnatelDominiosAuditEntry[];
+}
+
+function resolvePdfUrlParaDownload(link: string, publicBaseUrl: string): string {
+  const t = link.trim();
+  if (/^https?:\/\//i.test(t)) {
+    return t;
+  }
+  if (t.startsWith('/')) {
+    const base = publicBaseUrl.replace(/\/$/, '');
+    return `${base}${t}`;
+  }
+  throw new Error('Link do ofício Anatel inválido (use URL http(s) ou caminho absoluto começando com /)');
+}
+
+async function baixarPdfParaArquivoTemporario(fullUrl: string): Promise<string> {
+  const tmpDir = '/tmp/backnet-sei-sync';
+  await fs.mkdir(tmpDir, { recursive: true });
+  const tmpPath = path.join(tmpDir, `sei-${Date.now()}-${Math.random().toString(36).slice(2, 10)}.pdf`);
+  const controller = new AbortController();
+  const timeoutMs = 120000;
+  const to = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(fullUrl, {
+      headers: { 'User-Agent': 'BackNet/1.0' },
+      signal: controller.signal
+    });
+    if (!response.ok) {
+      throw new Error(`Falha ao baixar PDF (${response.status})`);
+    }
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (buffer.length < 5) {
+      throw new Error('Arquivo vazio ou inválido');
+    }
+    const pdfHeader = Buffer.from([0x25, 0x50, 0x44, 0x46]);
+    if (!buffer.subarray(0, 4).equals(pdfHeader)) {
+      throw new Error('O endereço não retornou um PDF válido');
+    }
+    const maxBytes = 45 * 1024 * 1024;
+    if (buffer.length > maxBytes) {
+      throw new Error('PDF excede o tamanho máximo permitido');
+    }
+    await fs.writeFile(tmpPath, buffer);
+    return tmpPath;
+  } catch (e) {
+    try {
+      await fs.unlink(tmpPath);
+    } catch {
+      /* arquivo pode não existir */
+    }
+    throw e;
+  } finally {
+    clearTimeout(to);
+  }
 }
 
 export class DominioService {
@@ -508,5 +585,105 @@ export class DominioService {
     );
 
     return { deleted, versao, versaoId };
+  }
+
+  /**
+   * Agrupa domínios sem SEI por `link_oficio_anatel` (trim), baixa cada PDF uma única vez,
+   * extrai o número SEI e atualiza todos os domínios daquele grupo via `bulkUpdate`.
+   */
+  static async sincronizarSeiAnatelPorPdfOficio(opts: {
+    empresaId: number | null;
+    publicBaseUrl: string;
+  }): Promise<SincronizarSeiAnatelDominiosResult> {
+    const { empresaId, publicBaseUrl } = opts;
+    const whereEmpresa: WhereOptions<Dominio> =
+      empresaId != null ? { empresa_id: empresaId } : ({} as WhereOptions<Dominio>);
+
+    const rows = await Dominio.findAll({
+      attributes: ['id', 'link_oficio_anatel', 'numero_sei_anatel', 'empresa_id'],
+      where: whereEmpresa
+    });
+
+    const candidatos = rows.filter((r) => {
+      const link = (r.link_oficio_anatel ?? '').trim();
+      const sei = (r.numero_sei_anatel ?? '').trim();
+      return link.length > 0 && sei.length === 0;
+    });
+
+    const byUrl = new Map<string, number[]>();
+    for (const r of candidatos) {
+      const url = (r.link_oficio_anatel ?? '').trim();
+      const list = byUrl.get(url) ?? [];
+      list.push(r.id as number);
+      byUrl.set(url, list);
+    }
+
+    const resultados: SincronizarSeiAnatelDominiosRow[] = [];
+    const auditoria: SincronizarSeiAnatelDominiosAuditEntry[] = [];
+    let dominiosAtualizados = 0;
+
+    for (const [link, ids] of byUrl) {
+      let tmpPath: string | null = null;
+      try {
+        const fullUrl = resolvePdfUrlParaDownload(link, publicBaseUrl);
+        tmpPath = await baixarPdfParaArquivoTemporario(fullUrl);
+        const extracted = await SeiAnatelExtractService.extractFromPdfPath(tmpPath);
+        if (!extracted.success || !extracted.sei?.trim()) {
+          resultados.push({
+            link_oficio_anatel: link,
+            quantidade_dominios: ids.length,
+            erro: extracted.message || 'Não foi possível extrair o número SEI deste PDF'
+          });
+          continue;
+        }
+        const sei = extracted.sei.trim();
+        const antesRows = await Dominio.findAll({ where: { id: { [Op.in]: ids } } });
+        const antesMap = new Map(antesRows.map((d) => [d.id as number, d.toJSON() as Record<string, unknown>]));
+        await DominioService.bulkUpdate(ids, { numero_sei_anatel: sei });
+        const depoisRows = await Dominio.findAll({ where: { id: { [Op.in]: ids } } });
+        const depoisMap = new Map(depoisRows.map((d) => [d.id as number, d.toJSON() as Record<string, unknown>]));
+        for (const id of ids) {
+          const antes = antesMap.get(id);
+          const depois = depoisMap.get(id);
+          if (antes && depois) {
+            auditoria.push({ id, antes, depois });
+          }
+        }
+        dominiosAtualizados += ids.length;
+        resultados.push({
+          link_oficio_anatel: link,
+          quantidade_dominios: ids.length,
+          sei
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+        resultados.push({
+          link_oficio_anatel: link,
+          quantidade_dominios: ids.length,
+          erro: msg
+        });
+        logger.warn('DominioService.sincronizarSeiAnatelPorPdfOficio falha por PDF', {
+          link,
+          dominios: ids.length,
+          erro: msg
+        });
+      } finally {
+        if (tmpPath) {
+          try {
+            await fs.unlink(tmpPath);
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    }
+
+    return {
+      dominiosCandidatos: candidatos.length,
+      pdfsDistintos: byUrl.size,
+      dominiosAtualizados,
+      resultados,
+      auditoria
+    };
   }
 }

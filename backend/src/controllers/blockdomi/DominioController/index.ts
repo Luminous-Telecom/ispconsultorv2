@@ -388,4 +388,52 @@ export class DominioController {
       });
     }
   }
+
+  /**
+   * Para cada link único de ofício Anatel, baixa o PDF uma vez, extrai o SEI e atualiza todos os domínios
+   * da empresa que ainda não possuem número SEI e compartilham esse PDF.
+   */
+  static async sincronizarSeiAnatel(req: Request, res: Response): Promise<void> {
+    try {
+      const empresaIdAudit = getEmpresaIdOrNull(req) ?? null;
+      const publicBaseUrl = (
+        process.env.BASE_URL ||
+        process.env.APP_URL ||
+        `${req.protocol}://${req.get('host') ?? ''}`
+      ).replace(/\/$/, '');
+
+      const result = await DominioService.sincronizarSeiAnatelPorPdfOficio({
+        empresaId: empresaIdAudit,
+        publicBaseUrl
+      });
+
+      try {
+        for (const entry of result.auditoria) {
+          await registrarAtualizacao(
+            req,
+            'Dominio',
+            entry.id,
+            entry.antes,
+            entry.depois,
+            'Sincronização SEI (ofício Anatel)',
+            empresaIdAudit
+          );
+        }
+      } catch {
+        /* auditoria não deve interromper */
+      }
+
+      const msg = [
+        `${result.dominiosAtualizados} domínio(s) atualizado(s)`,
+        `${result.pdfsDistintos} PDF(s) distinto(s) processado(s)`,
+        `${result.dominiosCandidatos} domínio(s) elegíveis (sem SEI e com link Anatel)`
+      ].join('. ');
+      sendSuccess(res, result, `${msg}.`, 200);
+    } catch (error) {
+      sendError(res, error, 'Erro ao sincronizar SEI dos ofícios Anatel', 500, true, {
+        context: 'DominioController',
+        action: 'sincronizarSeiAnatel'
+      });
+    }
+  }
 }

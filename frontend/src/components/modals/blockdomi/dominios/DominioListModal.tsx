@@ -40,7 +40,8 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
   const [selectedDominioId, setSelectedDominioId] = useState<number | null>(null);
   const [dominiosToBulkEdit, setDominiosToBulkEdit] = useState<Dominio[]>([]);
-  
+  const [isSyncingSei, setIsSyncingSei] = useState(false);
+
   const auditoria = useAuditoria();
   const { modalProps } = useConfirmModal();
   
@@ -63,7 +64,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     } : undefined
   );
 
-  const tableColumns: TableConfig<Dominio & { created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
+  const tableColumns: TableConfig<Dominio & { created_at?: string; created_at_formatada?: string | null; updated_at?: string }>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: t('table.id'),
@@ -86,11 +87,11 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       render: (item: Dominio) => item.versao || '-'
     },
     {
-      key: 'descricao',
-      label: t('form.description'),
-      sortable: true,
-      width: '250px',
-      render: (item: Dominio) => item.descricao || '-'
+      key: 'numero_sei_anatel',
+      label: t('blockdomi.numeroSeiAnatel'),
+      sortable: false,
+      width: '110px',
+      render: (item: Dominio) => item.numero_sei_anatel?.trim() || '-'
     },
     {
       key: 'nome_oficio',
@@ -121,13 +122,6 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       render: (item: Dominio) => item.link_oficio_anatel?.trim() ? t('ui.yes') : t('ui.no')
     },
     {
-      key: 'numero_sei_anatel',
-      label: t('blockdomi.numeroSeiAnatel'),
-      sortable: false,
-      width: '110px',
-      render: (item: Dominio) => item.numero_sei_anatel?.trim() || '-'
-    },
-    {
       key: 'oficio_justica',
       label: t('blockdomi.oficioJustica'),
       sortable: false,
@@ -154,6 +148,13 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       )
     },
     {
+      key: 'descricao',
+      label: t('form.description'),
+      sortable: true,
+      width: '250px',
+      render: (item: Dominio) => item.descricao || '-'
+    },
+    {
       key: 'created_at',
       label: t('table.createdAt'),
       sortable: true,
@@ -164,6 +165,13 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
         }
         return item.created_at ? formatDateTime(item.created_at) : '-';
       }
+    },
+    {
+      key: 'updated_at',
+      label: t('table.updatedAt'),
+      sortable: true,
+      width: '130px',
+      render: (item: Dominio) => (item.updated_at ? formatDateTime(item.updated_at) : '-')
     }
   ], [t]);
 
@@ -260,6 +268,29 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
     auditoria.handleAudit('Dominio', dominio.id);
   }, [auditoria]);
 
+  const handleSincronizarSeiAnatel = useCallback(async () => {
+    if (!window.confirm(t('blockdomi.syncSeiAnatelConfirm'))) {
+      return;
+    }
+    setIsSyncingSei(true);
+    try {
+      const data = await DominioService.sincronizarSeiAnatel();
+      const comErro = data.resultados.filter((r) => r.erro).length;
+      const base = t('blockdomi.syncSeiAnatelDone', {
+        atualizados: String(data.dominiosAtualizados),
+        pdfs: String(data.pdfsDistintos),
+        candidatos: String(data.dominiosCandidatos)
+      });
+      success(comErro > 0 ? `${base} ${t('blockdomi.syncSeiAnatelPartial', { n: String(comErro) })}` : base);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['dominios'] });
+    } catch (e) {
+      error((e as Error)?.message ?? t('blockdomi.syncSeiAnatelError'));
+    } finally {
+      setIsSyncingSei(false);
+    }
+  }, [t, success, error, refetch, queryClient]);
+
   const bulkActions = useMemo(() => onSelectDominio ? [
     {
       label: t('actions.cancel'),
@@ -280,6 +311,15 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       label: t('actions.create'),
       variant: 'primary' as const,
       action: () => setShowCreateModal(true)
+    },
+    {
+      label: t('blockdomi.syncSeiAnatel'),
+      variant: 'primary' as const,
+      requiresSelection: false as const,
+      disabled: (_selectedItems: Dominio[]) => isSyncingSei,
+      action: () => {
+        void handleSincronizarSeiAnatel();
+      }
     },
     {
       label: t('actions.edit'),
@@ -362,7 +402,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
         items.filter((i) => i.link_planilha_dominios?.trim()).forEach((i) => window.open(i.link_planilha_dominios!, '_blank', 'noopener,noreferrer'));
       }
     }
-  ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, t]);
+  ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, handleSincronizarSeiAnatel, isSyncingSei, t]);
 
   const modalData = useMemo(() => dominiosData?.data || [], [dominiosData?.data]);
 
@@ -392,7 +432,7 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
             config={{
               columns: tableColumns,
               data: modalData,
-              loading: isLoading,
+              loading: isLoading || isSyncingSei,
               searchable: true,
               searchPlaceholder: t('layout.searchPlaceholder'),
               searchFields,
@@ -409,7 +449,8 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
                 label: action.label,
                 onClick: action.action,
                 disabled: action.disabled,
-                variant: action.variant
+                variant: action.variant,
+                ...(action.requiresSelection === false ? { requiresSelection: false as const } : {})
               })),
               emptyMessage: 'Nenhum domínio encontrado',
               pagination: pagination

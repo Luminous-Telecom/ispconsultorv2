@@ -60,7 +60,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
     } : undefined
   );
 
-  const tableColumns: TableConfig<IPv4 & { created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(() => [
+  const tableColumns: TableConfig<IPv4 & { created_at?: string; created_at_formatada?: string | null; updated_at?: string }>['columns'] = useMemo(() => [
     {
       key: 'id',
       label: t('table.id'),
@@ -83,11 +83,11 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
       render: (item: IPv4) => item.versao || '-'
     },
     {
-      key: 'descricao',
-      label: t('form.description'),
-      sortable: true,
-      width: '250px',
-      render: (item: IPv4) => item.descricao || '-'
+      key: 'numero_sei_anatel',
+      label: t('blockdomi.numeroSeiAnatel'),
+      sortable: false,
+      width: '110px',
+      render: (item: IPv4) => item.numero_sei_anatel?.trim() || '-'
     },
     {
       key: 'nome_oficio',
@@ -118,13 +118,6 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
       render: (item: IPv4) => item.link_oficio_anatel?.trim() ? t('ui.yes') : t('ui.no')
     },
     {
-      key: 'numero_sei_anatel',
-      label: t('blockdomi.numeroSeiAnatel'),
-      sortable: false,
-      width: '110px',
-      render: (item: IPv4) => item.numero_sei_anatel?.trim() || '-'
-    },
-    {
       key: 'oficio_justica',
       label: t('blockdomi.oficioJustica'),
       sortable: false,
@@ -151,6 +144,13 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
       )
     },
     {
+      key: 'descricao',
+      label: t('form.description'),
+      sortable: true,
+      width: '250px',
+      render: (item: IPv4) => item.descricao || '-'
+    },
+    {
       key: 'created_at',
       label: t('table.createdAt'),
       sortable: true,
@@ -161,6 +161,13 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
         }
         return item.created_at ? formatDateTime(item.created_at) : '-';
       }
+    },
+    {
+      key: 'updated_at',
+      label: t('table.updatedAt'),
+      sortable: true,
+      width: '130px',
+      render: (item: IPv4) => (item.updated_at ? formatDateTime(item.updated_at) : '-')
     }
   ], [t]);
 

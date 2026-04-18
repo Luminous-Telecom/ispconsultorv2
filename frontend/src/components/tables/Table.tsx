@@ -1831,7 +1831,8 @@ function Table<T extends { id: number | string }>({
           const l = bulkAction.label.toLowerCase();
           const isCreateLike = l.includes('nova') || l.includes('novo') || l.includes('create') || l.includes('criar');
           const isTunnelOrBackup = l.includes('backup') || l.includes('terminal') || l.includes('testar') || l.includes('test connection');
-          return isCreateLike || isTunnelOrBackup;
+          const isSyncSei = l.includes('sincronizar') || l.includes('sync sei');
+          return isCreateLike || isTunnelOrBackup || isSyncSei;
         });
         
         if (fabActions.length === 0) return null;
