@@ -1,11 +1,17 @@
 /**
- * Serviço de consulta Whois de IP via Registro.br RDAP API
- * Retorna titular e bloco de IP
+ * Consulta Whois de IP via RDAP com bootstrap global (RFC 9224).
+ * Usa o serviço público de bootstrap operado pela ARIN, que redireciona ao RIR autoritativo
+ * (ARIN, RIPE, APNIC, AFRINIC, LACNIC / Registro.br etc.) — cobre o mundo sem API key.
  */
 import axios from 'axios';
 import { logger } from '../../../utils/logger';
 
-const REGISTRO_BR_RDAP_URL = 'https://rdap.registro.br/ip';
+/** Base URL até `/ip` (ex.: https://rdap-bootstrap.arin.net/bootstrap/ip). Configurável em RDAP_IP_BOOTSTRAP_BASE_URL. */
+function getRdapIpBootstrapBaseUrl(): string {
+  const fromEnv = process.env.RDAP_IP_BOOTSTRAP_BASE_URL?.trim();
+  const base = fromEnv || 'https://rdap-bootstrap.arin.net/bootstrap/ip';
+  return base.replace(/\/$/, '');
+}
 
 export interface WhoisRecord {
   key: string;
@@ -55,6 +61,8 @@ interface RdapResponse {
   type?: string;
   parentHandle?: string;
   nicbr_autnum?: number;
+  /** Extensão ARIN: AS de origem anunciados para o prefixo */
+  arin_originas0_originautnums?: Array<string | number>;
   events?: RdapEvent[];
   entities?: RdapEntity[];
   cidr0_cidrs?: RdapCidr[];
@@ -63,14 +71,18 @@ interface RdapResponse {
 function parseVcard(vcardArray: unknown[]): { fn?: string; email?: string; adr?: string } {
   const result: { fn?: string; email?: string; adr?: string } = {};
   if (!Array.isArray(vcardArray) || vcardArray[0] !== 'vcard') return result;
-  const fields = vcardArray[1] as Array<[string, object, string, string | string[]]>;
+  const fields = vcardArray[1] as Array<[string, Record<string, unknown>, string, string | string[]]>;
   if (!Array.isArray(fields)) return result;
   for (const f of fields) {
     if (!Array.isArray(f) || f.length < 4) continue;
-    const [name, , type, val] = f;
+    const [name, props, type, val] = f;
     if (name === 'fn' && type === 'text') result.fn = String(val ?? '');
     else if (name === 'email' && type === 'text') result.email = String(val ?? '');
-    else if (name === 'adr' && type === 'text' && Array.isArray(val) && val[6]) result.adr = String(val[6]);
+    else if (name === 'adr' && type === 'text') {
+      const label = props && typeof props.label === 'string' ? String(props.label).replace(/\n/g, ', ') : '';
+      if (label) result.adr = label;
+      else if (Array.isArray(val) && val[6]) result.adr = String(val[6]);
+    }
   }
   return result;
 }
@@ -82,14 +94,24 @@ function formatDate(v: string): string {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function rdapToBlocks(rdap: RdapResponse, ip: string): Array<WhoisRecord[]> {
+function extractAsn(rdap: RdapResponse): string | null {
+  if (rdap.nicbr_autnum != null) return `AS${rdap.nicbr_autnum}`;
+  const arin = rdap.arin_originas0_originautnums;
+  if (Array.isArray(arin) && arin.length > 0 && arin[0] != null && String(arin[0]).trim() !== '') {
+    return `AS${String(arin[0]).trim()}`;
+  }
+  return null;
+}
+
+function rdapToBlocks(rdap: RdapResponse): Array<WhoisRecord[]> {
   const blocks: Array<WhoisRecord[]> = [];
 
   const mainBlock: WhoisRecord[] = [];
   if (rdap.handle) mainBlock.push({ key: 'Bloco', value: rdap.handle });
   if (rdap.name) mainBlock.push({ key: 'Netname', value: rdap.name });
   if (rdap.country) mainBlock.push({ key: 'País', value: rdap.country });
-  if (rdap.nicbr_autnum != null) mainBlock.push({ key: 'AS', value: `AS${rdap.nicbr_autnum}` });
+  const asn = extractAsn(rdap);
+  if (asn) mainBlock.push({ key: 'AS', value: asn });
   if (rdap.type) mainBlock.push({ key: 'Tipo', value: rdap.type });
   if (rdap.parentHandle) mainBlock.push({ key: 'Bloco pai', value: rdap.parentHandle });
 
@@ -155,10 +177,14 @@ export class BlockdomiWhoisService {
     }
 
     try {
-      const url = `${REGISTRO_BR_RDAP_URL}/${encodeURIComponent(trimmed)}`;
+      const url = `${getRdapIpBootstrapBaseUrl()}/${encodeURIComponent(trimmed)}`;
       const res = await axios.get<RdapResponse>(url, {
-        timeout: 10000,
-        headers: { 'User-Agent': 'BackNet/1.0' }
+        timeout: 15000,
+        maxRedirects: 15,
+        headers: {
+          Accept: 'application/rdap+json',
+          'User-Agent': 'BackNet/1.0'
+        }
       });
 
       const rdap = res.data;
@@ -180,17 +206,17 @@ export class BlockdomiWhoisService {
         cidr: cidr || null,
         netname: rdap.name ?? null,
         pais: rdap.country ?? null,
-        asn: rdap.nicbr_autnum != null ? `AS${rdap.nicbr_autnum}` : null,
-        blocks: rdapToBlocks(rdap, trimmed)
+        asn: extractAsn(rdap),
+        blocks: rdapToBlocks(rdap)
       };
     } catch (err) {
       const msg = axios.isAxiosError(err)
         ? err.code === 'ECONNABORTED'
-          ? 'Timeout ao conectar com Registro.br'
+          ? 'Timeout ao consultar RDAP (bootstrap)'
           : err.response?.status === 404
-            ? 'IP não encontrado (Registro.br cobre apenas IPs brasileiros)'
+            ? 'IP não encontrado na base RDAP'
             : err.response
-              ? `Registro.br retornou ${err.response.status}`
+              ? `Serviço RDAP retornou HTTP ${err.response.status}`
               : err.message || 'Erro de rede'
         : err instanceof Error
           ? err.message
