@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
@@ -226,6 +226,22 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
     [t, success, queryClient, showError]
   );
 
+  const toggleAtivoMutation = useMutation({
+    mutationFn: ({ id, ativo }: { id: number; ativo: boolean }) => SaasSchedulerService.updateRotina(id, { ativo }),
+    onSuccess: (_data, vars) => {
+      success(vars.ativo ? t('scheduler.routineActivatedSuccess') : t('scheduler.routineDeactivatedSuccess'));
+      void queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error && 'response' in error) {
+        const axiosError = error as AxiosError<{ message?: string }>;
+        showError(`${t('messages.error')}: ${axiosError.response?.data?.message || t('messages.noData')}`);
+      } else {
+        showError(`${t('messages.error')}: ${t('messages.noData')}`);
+      }
+    },
+  });
+
   const handleDelete = useCallback(
     async (rotina: RotinaAgendada) => {
       const confirmed = window.confirm(t('scheduler.confirmDelete'));
@@ -273,35 +289,73 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
   const bulkActions = useMemo(
     () => [
       {
+        key: 'new',
         label: t('actions.new'),
         variant: 'primary' as const,
+        requiresSelection: false as const,
         action: handleCreate,
       },
       {
+        key: 'edit',
         label: t('actions.edit'),
         variant: 'primary' as const,
         disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
         action: handleEdit,
       },
       {
+        key: 'delete',
         label: t('actions.delete'),
         disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
         action: (selectedItems: RotinaAgendada[]) => {
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-          if (item) handleDelete(item);
+          if (item) void handleDelete(item);
         },
       },
       {
+        key: 'scheduler-ativo',
+        label: t('table.status'),
+        variant: 'primary' as const,
+        disabled: (selectedItems: RotinaAgendada[]) =>
+          toggleAtivoMutation.isPending || (selectedItems.length === 0 && !selectedItem),
+        dropdown: [
+          {
+            label: t('scheduler.activate'),
+            disabled: (selectedItems: RotinaAgendada[]) => {
+              if (toggleAtivoMutation.isPending) return true;
+              const r = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+              return !r || r.ativo;
+            },
+            action: (selectedItems?: RotinaAgendada[]) => {
+              const r = selectedItems?.length ? selectedItems[0] : selectedItem;
+              if (r && !r.ativo) toggleAtivoMutation.mutate({ id: r.id, ativo: true });
+            },
+          },
+          {
+            label: t('scheduler.deactivate'),
+            disabled: (selectedItems: RotinaAgendada[]) => {
+              if (toggleAtivoMutation.isPending) return true;
+              const r = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+              return !r || !r.ativo;
+            },
+            action: (selectedItems?: RotinaAgendada[]) => {
+              const r = selectedItems?.length ? selectedItems[0] : selectedItem;
+              if (r && r.ativo) toggleAtivoMutation.mutate({ id: r.id, ativo: false });
+            },
+          },
+        ],
+      },
+      {
+        key: 'execute',
         label: t('scheduler.execute'),
         variant: 'primary' as const,
         disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
         action: (selectedItems: RotinaAgendada[]) => {
           const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
-          if (item) handleExecute(item);
+          if (item) void handleExecute(item);
         },
       },
     ],
-    [t, selectedItem, handleCreate, handleEdit, handleExecute, handleDelete]
+    [t, selectedItem, handleCreate, handleEdit, handleExecute, handleDelete, toggleAtivoMutation]
   );
 
   const handleSearchChange = useCallback(
@@ -347,11 +401,13 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
                 selectable: true,
                 multiSelect: false,
                 bulkActions: bulkActions.map((action) => ({
-                  key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                  key: action.key ?? action.label.toLowerCase().replace(/\s+/g, '-'),
                   label: action.label,
                   onClick: action.action,
                   disabled: action.disabled,
                   variant: action.variant,
+                  ...(action.dropdown ? { dropdown: action.dropdown } : {}),
+                  ...(action.requiresSelection === false ? { requiresSelection: false } : {}),
                 })),
                 emptyMessage: 'Nenhuma rotina encontrada',
                 pagination,

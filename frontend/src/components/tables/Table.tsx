@@ -1111,14 +1111,38 @@ function Table<T extends { id: number | string }>({
                                        label.includes('backup') ||
                                        label.includes('terminal') ||
                                        label.includes('testar') ||
-                                       label.includes('test connection');
+                                       label.includes('test connection') ||
+                                       Boolean(bulkAction.dropdown);
                               })
-                              .map(bulkAction => {
-                                const actionKey = bulkAction.label.toLowerCase().replace(/\s+/g, '-');
+                              .flatMap(bulkAction => {
+                                const actionKey = bulkAction.key || bulkAction.label.toLowerCase().replace(/\s+/g, '-');
+                                if (bulkAction.dropdown && bulkAction.dropdown.length > 0) {
+                                  return bulkAction.dropdown.map((subItem, subIdx) => {
+                                    const isItemDisabled = typeof subItem.disabled === 'function'
+                                      ? subItem.disabled([item])
+                                      : Boolean(subItem.disabled);
+                                    return (
+                                      <button
+                                        key={`${actionKey}-dd-${subIdx}`}
+                                        type="button"
+                                        className={`table-mobile-dropdown-item ${bulkAction.variant === 'danger' ? 'danger' : ''}`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setOpenActionDropdown(null);
+                                          if (isItemDisabled) return;
+                                          subItem.action([item]);
+                                        }}
+                                        disabled={isItemDisabled}
+                                      >
+                                        <span>{subItem.label}</span>
+                                      </button>
+                                    );
+                                  });
+                                }
                                 const isBulkDisabled = typeof bulkAction.disabled === 'function'
                                   ? bulkAction.disabled([item])
                                   : Boolean(bulkAction.disabled);
-                                return (
+                                return [
                                   <button
                                     key={actionKey}
                                     type="button"
@@ -1137,7 +1161,7 @@ function Table<T extends { id: number | string }>({
                                   >
                                     <span>{bulkAction.label}</span>
                                   </button>
-                                );
+                                ];
                               })
                           )}
                         </div>

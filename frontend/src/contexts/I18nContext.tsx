@@ -1232,6 +1232,9 @@ export interface TranslationKeys {
   'scheduler.deleteRoutine': string;
   'scheduler.successDelete': string;
   'scheduler.deactivate': string;
+  'scheduler.activate': string;
+  'scheduler.routineActivatedSuccess': string;
+  'scheduler.routineDeactivatedSuccess': string;
   'scheduler.type': string;
   'scheduler.scope': string;
   'scheduler.routine': string;
@@ -2691,6 +2694,9 @@ const translations: Translations = {
     'scheduler.deleteRoutine': 'Deletar rotina',
     'scheduler.successDelete': 'Rotina deletada com sucesso',
     'scheduler.deactivate': 'Desativar',
+    'scheduler.activate': 'Ativar',
+    'scheduler.routineActivatedSuccess': 'Rotina ativada.',
+    'scheduler.routineDeactivatedSuccess': 'Rotina desativada.',
     'scheduler.type': 'Tipo',
     'scheduler.scope': 'Escopo',
     'scheduler.routine': 'Rotina',
@@ -4145,6 +4151,9 @@ const translations: Translations = {
     'scheduler.deleteRoutine': 'Delete routine',
     'scheduler.successDelete': 'Routine deleted successfully',
     'scheduler.deactivate': 'Deactivate',
+    'scheduler.activate': 'Activate',
+    'scheduler.routineActivatedSuccess': 'Routine enabled.',
+    'scheduler.routineDeactivatedSuccess': 'Routine disabled.',
     'scheduler.type': 'Type',
     'scheduler.scope': 'Scope',
     'scheduler.routine': 'Routine',
@@ -5601,6 +5610,9 @@ const translations: Translations = {
     'scheduler.deleteRoutine': 'Eliminar rutina',
     'scheduler.successDelete': 'Rutina eliminada con éxito',
     'scheduler.deactivate': 'Desactivar',
+    'scheduler.activate': 'Activar',
+    'scheduler.routineActivatedSuccess': 'Rutina activada.',
+    'scheduler.routineDeactivatedSuccess': 'Rutina desactivada.',
     'scheduler.type': 'Tipo',
     'scheduler.scope': 'Ámbito',
     'scheduler.routine': 'Rutina',

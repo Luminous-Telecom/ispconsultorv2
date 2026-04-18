@@ -46,7 +46,8 @@ export interface TableAction<T = Record<string, unknown>> {
 }
 
 export interface BulkAction<T = Record<string, unknown>> {
-  key: string;
+  /** Opcional: usado em menus mobile (fallback deriva do label). */
+  key?: string;
   label: string;
   icon?: string;
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
