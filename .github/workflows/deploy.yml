@@ -8,18 +8,21 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Runtime das actions (checkout/setup-node); build da app usa node-version abaixo.
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout Código Fonte
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           fetch-tags: true
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       # ─────────────────────────────────────────────────────────────
       # 1. Detectar o que mudou
@@ -137,6 +140,14 @@ jobs:
           else
             echo "BUILD_EXECUTED=false" >> $GITHUB_ENV
           fi
+
+      # GITHUB_ENV nem sempre é avaliado de forma fiável em `if:` do próximo step; expomos outputs explícitos.
+      - name: Metadados do build (Release)
+        id: build_meta
+        run: |
+          echo "build_executed=${BUILD_EXECUTED:-false}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION:-}" >> $GITHUB_OUTPUT
+          echo "::notice::BUILD_EXECUTED=${BUILD_EXECUTED:-<vazio>} VERSION=${VERSION:-<vazio>}"
 
       # ─────────────────────────────────────────────────────────────
       # 3. Informações do commit (para mensagem de deploy)
@@ -350,13 +361,16 @@ jobs:
       # 7. Criar Release no GitHub
       # ─────────────────────────────────────────────────────────────
       - name: Criar Release no GitHub
-        if: success() && env.BUILD_EXECUTED == 'true'
+        if: success() && steps.build_meta.outputs.build_executed == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
+          VERSION_FROM_BUILD: ${{ steps.build_meta.outputs.version }}
         run: |
           cd deployment
 
-          if [ -n "${VERSION:-}" ]; then
+          if [ -n "${VERSION_FROM_BUILD:-}" ]; then
+            CLEAN_VERSION="${VERSION_FROM_BUILD}"
+          elif [ -n "${VERSION:-}" ]; then
             CLEAN_VERSION="${VERSION}"
           elif [ -f "backend/package.json" ]; then
             CLEAN_VERSION=$(node -p "require('./backend/package.json').version.split('-')[0]")
@@ -370,11 +384,16 @@ jobs:
           ALL_MSGS="${{ steps.commit_info.outputs.all_messages }}"
           COMMIT_AUTHOR="${{ steps.commit_info.outputs.author }}"
           COMMIT_DATE="${{ steps.commit_info.outputs.date }}"
-          [ -z "${COMMIT_HASH}" ] && COMMIT_HASH="unknown"
-          [ -z "${COMMIT_MSG}" ]  && COMMIT_MSG="Deploy automático"
+          COMMIT_HASH="${COMMIT_HASH:-unknown}"
+          COMMIT_MSG="${COMMIT_MSG:-Deploy automático}"
 
-          git tag -a "${TAG_NAME}" -m "${COMMIT_MSG}" 2>/dev/null || true
-          git push origin "${TAG_NAME}" 2>/dev/null || true
+          set -e
+          if git rev-parse "${TAG_NAME}" >/dev/null 2>&1; then
+            echo "Tag ${TAG_NAME} já existe localmente — tentando push."
+          else
+            git tag -a "${TAG_NAME}" -m "${COMMIT_MSG}"
+          fi
+          git push origin "${TAG_NAME}"
 
           BODY_FILE=$(mktemp)
           {
@@ -392,7 +411,9 @@ jobs:
 
           node -e "
             const https = require('https');
-            const body = require('fs').readFileSync('${BODY_FILE}', 'utf-8');
+            const fs = require('fs');
+            const body = fs.readFileSync('${BODY_FILE}', 'utf-8');
+            const token = process.env.GITHUB_TOKEN || '';
             const data = JSON.stringify({
               tag_name: '${TAG_NAME}', name: 'Release ${TAG_NAME}',
               body, draft: false, prerelease: false
@@ -402,19 +423,30 @@ jobs:
               path: '/repos/Luminous-Telecom/backnet.prod/releases',
               method: 'POST',
               headers: {
-                'Authorization': 'token ' + process.env.GITHUB_TOKEN,
-                'Accept': 'application/vnd.github.v3+json',
-                'User-Agent': 'GitHub-Actions',
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/vnd.github+json',
+                'User-Agent': 'GitHub-Actions-Deploy',
+                'X-GitHub-Api-Version': '2022-11-28',
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(data)
               }
             }, res => {
               let raw = '';
-              res.on('data', c => raw += c);
+              res.on('data', c => { raw += c; });
               res.on('end', () => {
-                if (res.statusCode === 201) console.log('✓ Release criada:', JSON.parse(raw).html_url);
-                else if (res.statusCode === 422) console.log('⚠ Release já existe');
-                else console.log('⚠ Status:', res.statusCode, raw);
+                if (res.statusCode === 201) {
+                  try { console.log('✓ Release criada:', JSON.parse(raw).html_url); }
+                  catch { console.log('✓ Release criada (resposta não-JSON)'); }
+                  process.exit(0);
+                  return;
+                }
+                if (res.statusCode === 422) {
+                  console.log('⚠ Release ou tag já existe (422):', raw);
+                  process.exit(0);
+                  return;
+                }
+                console.error('✗ Falha ao criar Release:', res.statusCode, raw);
+                process.exit(1);
               });
             });
             req.on('error', e => { console.error(e.message); process.exit(1); });
