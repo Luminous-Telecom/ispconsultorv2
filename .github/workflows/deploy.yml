@@ -297,6 +297,11 @@ jobs:
             mkdir -p frontend/build
             rsync -a --delete ../frontend/build/ frontend/build/
             [ -f "frontend/build/index.html" ] || { echo "ERRO: frontend/build/index.html ausente!"; exit 1; }
+            # Cópia legada na raiz de frontend/ confunde deploy; só build/index.html deve existir no prod.
+            if [ -f "frontend/index.html" ]; then
+              git rm -f "frontend/index.html" 2>/dev/null || rm -f "frontend/index.html"
+              echo "::notice::Removido frontend/index.html duplicado (mantém apenas frontend/build/)."
+            fi
             echo "✓ frontend/build sincronizado"
           else
             echo "AVISO: frontend/build não existe (mantendo existente)"

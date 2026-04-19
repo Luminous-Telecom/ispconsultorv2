@@ -12,6 +12,9 @@ node_modules/
 /logs/
 *.log
 
+# Não versionar index na raiz de frontend/ — o SPA usa só public/index.html (template) e build/index.html (saída).
+/index.html
+
 # Build artifacts
 build/
 *.map
