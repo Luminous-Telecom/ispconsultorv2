@@ -1875,9 +1875,12 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         <div className="contrato-modal-content">
           {/* Conteúdo das Abas */}
           <div
-            className={`tab-content contrato-tab-content ${
-              (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'financeiro-avulso' || activeTab === 'servicos-adicionais')
-                ? 'contrato-tab-content-scrollable'
+            className={`tab-content contrato-tab-content contrato-tab-content-scrollable ${
+              activeTab === 'termos' ||
+              activeTab === 'financeiro' ||
+              activeTab === 'financeiro-avulso' ||
+              activeTab === 'servicos-adicionais'
+                ? ''
                 : 'contrato-tab-content-padded'
             }`}
           >
