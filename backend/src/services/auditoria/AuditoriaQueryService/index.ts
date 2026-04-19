@@ -12,11 +12,16 @@ export class AuditoriaQueryService {
   /** Entidades do painel SaaS – não mostrar no ADM normal (tenant) */
   static readonly ENTIDADES_SAAS = ['SaasPlano', 'SaasContrato', 'SaasDadosEmpresa', 'SaasDadosEmpresaCrud', 'SaasBanco', 'SaasTitulo', 'SaasTipoCobranca', 'SaasDiasVencimento', 'SaasNFSeConfig', 'SaasParametros', 'SaasServidorEmail', 'SaasServidorWhatsapp', 'SaasUsuarioSuper', 'SaasScheduledRoutine'];
 
+  /** Operações do módulo Blockdomi (auditoria ERP) */
+  static readonly ENTIDADES_BLOCKDOMI = ['Dominio', 'IPv4', 'IPv6', 'IpPermitido', 'VersaoBlockdomi'] as const;
+
   static buildElasticsearchQuery(params: {
     search?: string;
     searchField?: string;
     acao?: string;
     entidade?: string;
+    /** Filtra apenas entidades do módulo Blockdomi (ignora `entidade` quando true) */
+    moduloBlockdomi?: boolean;
     usuario_id?: number;
     dataInicio?: string;
     dataFim?: string;
@@ -35,6 +40,7 @@ export class AuditoriaQueryService {
       searchField,
       acao,
       entidade,
+      moduloBlockdomi,
       usuario_id,
       dataInicio,
       dataFim,
@@ -184,7 +190,9 @@ export class AuditoriaQueryService {
       }
     }
 
-    if (entidade) {
+    if (moduloBlockdomi) {
+      must.push({ terms: { entidade: [...this.ENTIDADES_BLOCKDOMI] } });
+    } else if (entidade) {
       must.push({ term: { entidade } });
     }
 
@@ -242,6 +250,7 @@ export class AuditoriaQueryService {
     searchField?: string;
     acao?: string;
     entidade?: string;
+    moduloBlockdomi?: boolean;
     usuario_id?: number;
     dataInicio?: string;
     dataFim?: string;

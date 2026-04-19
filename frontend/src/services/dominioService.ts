@@ -11,6 +11,8 @@ export type SincronizarSeiAnatelDominiosResponse = {
   resultados: Array<{
     link_oficio_anatel: string;
     quantidade_dominios: number;
+    nome_oficio?: string | null;
+    versao_numero?: string | null;
     sei?: string;
     erro?: string;
   }>;

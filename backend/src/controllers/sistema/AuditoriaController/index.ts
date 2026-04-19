@@ -42,6 +42,8 @@ export class AuditoriaController {
       const comUsuarioObrigatorio = req.query.com_usuario_obrigatorio === 'true' || req.query.comUsuarioObrigatorio === 'true';
       const semUsuarioObrigatorio = req.query.sem_usuario_obrigatorio === 'true' || req.query.semUsuarioObrigatorio === 'true';
       const origemAuditoria = req.query.origem_auditoria as string | undefined;
+      const moduloBlockdomi =
+        req.query.modulo_blockdomi === 'true' || req.query.moduloBlockdomi === 'true';
       const authEmpresaId = getEmpresaIdOrNull(req);
       const queryEmpresaId = req.query.empresa_id ? parseInt(req.query.empresa_id as string) : undefined;
       // Usuários só podem ver auditoria da própria empresa
@@ -61,7 +63,8 @@ export class AuditoriaController {
         search,
         searchField,
         acao,
-        entidade,
+        entidade: moduloBlockdomi ? undefined : entidade,
+        moduloBlockdomi: moduloBlockdomi || undefined,
         usuario_id,
         dataInicio,
         dataFim,

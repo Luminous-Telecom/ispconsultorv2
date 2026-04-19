@@ -23,7 +23,7 @@ const LOG_MODAL_BY_ID: Partial<Record<ModalId, ResolvedLogsModal>> = {
   'logs-acesso-sistema': { titleKey: 'logs.acessoSistema', logType: 'acesso-sistema', variant: 'erp' },
   'logs-equipamentos': { titleKey: 'logs.equipamentos', logType: 'equipamentos', variant: 'erp' },
   'logs-agentes': { titleKey: 'logs.agentes', logType: 'agentes', variant: 'erp' },
-  'blockdomi-logs-acesso': { titleKey: 'blockdomi.logsAcesso', logType: 'blockdomi-acesso', variant: 'erp' },
+  'logs-blockdomi-api': { titleKey: 'blockdomi.logsApi', logType: 'blockdomi-api', variant: 'erp' },
   // SaaS (SuperAdmin)
   'saas-logs-usuarios': { titleKey: 'logs.usuarios', logType: 'usuarios', variant: 'saas' },
   'saas-logs-agenda-tarefas': { titleKey: 'logs.agendaTarefas', logType: 'agenda-tarefas', variant: 'saas' },

@@ -1011,7 +1011,6 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                       { key: 'usuario_email', label: t('audit.user') },
                       { key: 'ip_address', label: t('audit.ip') },
                       { key: 'rota', label: t('audit.route') },
-                      { key: 'observacoes', label: t('table.observations') },
                     ],
                     sortable: true,
                     sortColumn: logsTf.sortColumn,
@@ -1138,7 +1137,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                 {selectedLog.observacoes && (
                   <div className="col-12">
                     <small className="text-muted">{t('table.observations')}:</small><br />
-                    <span>{selectedLog.observacoes}</span>
+                    <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedLog.observacoes}</span>
                   </div>
                 )}
               </div>

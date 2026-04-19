@@ -9,11 +9,34 @@ import { logger } from '../../../utils/logger';
 
 const LOG_TIPO = 'blockdomi';
 
+/** Rotas das listas TXT públicas (mesmo critério do blockdomiIpsPermitidosMiddleware). */
+export const ROTAS_LOG_BLOCKDOMI_API_TXT = [
+  '/domain/version',
+  '/domain/version/',
+  '/domain/all',
+  '/domain/all/',
+  '/v4/all',
+  '/v4/all/',
+  '/v6/all',
+  '/v6/all/'
+] as const;
+
+function filtroRotasApiTxtElasticsearch(): Record<string, unknown> {
+  return {
+    bool: {
+      should: ROTAS_LOG_BLOCKDOMI_API_TXT.map((r) => ({ term: { rota: r } })),
+      minimum_should_match: 1
+    }
+  };
+}
+
 export interface RegistroBlockdomiLogPayload {
   ip: string | null;
   rota: string;
   metodo: string;
   status_http: number;
+  /** Quando informado, sobrescreve o cálculo a partir de status_http (ex.: HTTP 200 com falha parcial). */
+  sucesso?: boolean;
   mensagem_erro?: string | null;
   user_agent?: string | null;
 }
@@ -25,6 +48,8 @@ export interface ListBlockdomiLogFilters {
   sortColumn?: string;
   sortDirection?: string;
   sucesso?: boolean;
+  /** `api_txt` = só acessos às listas TXT; `sistema` = demais registros do índice (ex.: sync SEI). */
+  origem?: 'api_txt' | 'sistema';
 }
 
 export async function registrarLogBlockdomiElasticsearch(payload: RegistroBlockdomiLogPayload): Promise<void> {
@@ -36,7 +61,8 @@ export async function registrarLogBlockdomiElasticsearch(payload: RegistroBlockd
       const isConnected = await elasticsearchService.checkConnection();
       if (!isConnected) return;
 
-      const sucesso = payload.status_http < 400;
+      const sucesso =
+        payload.sucesso !== undefined ? payload.sucesso : payload.status_http < 400;
       const doc = {
         log_tipo: LOG_TIPO,
         ip: payload.ip ?? null,
@@ -75,11 +101,27 @@ export async function listarLogsBlockdomiElasticsearch(filters: ListBlockdomiLog
     };
   }
   try {
-    const { page = 1, limit = 15, search, sortColumn = 'timestamp', sortDirection = 'DESC', sucesso } = filters;
+    const {
+      page = 1,
+      limit = 15,
+      search,
+      sortColumn = 'timestamp',
+      sortDirection = 'DESC',
+      sucesso,
+      origem
+    } = filters;
     const from = (page - 1) * limit;
     const sortOrder = sortDirection?.toUpperCase() === 'ASC' ? 'asc' : 'desc';
 
     const must: Array<Record<string, unknown>> = [];
+    const mustNot: Array<Record<string, unknown>> = [];
+
+    if (origem === 'api_txt') {
+      must.push(filtroRotasApiTxtElasticsearch());
+    } else if (origem === 'sistema') {
+      mustNot.push(filtroRotasApiTxtElasticsearch());
+    }
+
     if (typeof sucesso === 'boolean') {
       must.push({ term: { sucesso } });
     }
@@ -96,8 +138,19 @@ export async function listarLogsBlockdomiElasticsearch(filters: ListBlockdomiLog
       ? sortColumn
       : 'timestamp';
 
-    const queryBody =
-      must.length > 0 ? { bool: { must } } : { match_all: {} };
+    let queryBody: Record<string, unknown>;
+    if (mustNot.length > 0) {
+      queryBody = {
+        bool: {
+          must: must.length > 0 ? must : [{ match_all: {} }],
+          must_not: mustNot
+        }
+      };
+    } else if (must.length > 0) {
+      queryBody = { bool: { must } };
+    } else {
+      queryBody = { match_all: {} };
+    }
 
     const result = await client.search({
       index: ES_DATA_STREAM.BLOCKDOMI,

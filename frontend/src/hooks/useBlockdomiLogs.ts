@@ -8,7 +8,7 @@ export const useBlockdomiLogs = (
   options?: { refetchInterval?: number; enabled?: boolean; scope?: string }
 ) => {
   return useQuery({
-    queryKey: ['blockdomi-logs-acesso', options?.scope ?? 'default', filters],
+    queryKey: ['blockdomi-logs', options?.scope ?? 'default', filters],
     queryFn: () => BlockdomiLogAcessoService.list(filters),
     staleTime: 0,
     gcTime: CACHE_CONFIG.DEFAULT_CACHE_TIME,

@@ -30,7 +30,7 @@ export const MODAL_MODULO_MAP: Record<string, PlanoModuloId> = {
   'blockdomi-ipv6': 'blockdomi',
   'blockdomi-importar-lista': 'blockdomi',
   'blockdomi-ips-permitidos': 'blockdomi',
-  'blockdomi-logs-acesso': 'blockdomi',
+  'logs-blockdomi-api': 'blockdomi',
   'logs-equipamentos': 'equipamentos',
   'logs-agentes': 'equipamentos',
   'agents': 'equipamentos',

@@ -12,6 +12,9 @@ export class BlockdomiLogAcessoController {
       const sortDirection = req.query.sortDirection as string;
       const sucessoParam = req.query.sucesso as string;
       const sucesso = sucessoParam === 'true' ? true : sucessoParam === 'false' ? false : undefined;
+      const origemRaw = req.query.origem as string | undefined;
+      const origem =
+        origemRaw === 'api_txt' || origemRaw === 'sistema' ? (origemRaw as 'api_txt' | 'sistema') : undefined;
 
       const result = await BlockdomiLogAcessoService.list({
         page,
@@ -19,7 +22,8 @@ export class BlockdomiLogAcessoController {
         search,
         sortColumn,
         sortDirection,
-        sucesso
+        sucesso,
+        origem
       });
 
       sendSuccess(res, result);

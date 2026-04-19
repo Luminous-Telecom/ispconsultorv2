@@ -411,7 +411,7 @@ export interface TranslationKeys {
   'blockdomi.selectCliente': string;
   'blockdomi.noIpsPermitidos': string;
   'blockdomi.cliente': string;
-  'blockdomi.logsAcesso': string;
+  'blockdomi.logsApi': string;
   'blockdomi.logsIp': string;
   'blockdomi.logsRota': string;
   'blockdomi.logsMetodo': string;
@@ -1885,7 +1885,7 @@ const translations: Translations = {
     'blockdomi.selectCliente': 'Selecionar cliente',
     'blockdomi.noIpsPermitidos': 'Nenhum registro encontrado',
     'blockdomi.cliente': 'Cliente',
-    'blockdomi.logsAcesso': 'Logs API Blockdomi',
+    'blockdomi.logsApi': 'Logs API Blockdomi',
     'blockdomi.logsIp': 'IP',
     'blockdomi.logsRota': 'Rota',
     'blockdomi.logsMetodo': 'Método',
@@ -3352,7 +3352,7 @@ const translations: Translations = {
     'blockdomi.selectCliente': 'Select client',
     'blockdomi.noIpsPermitidos': 'No records found',
     'blockdomi.cliente': 'Client',
-    'blockdomi.logsAcesso': 'Blockdomi API logs',
+    'blockdomi.logsApi': 'Blockdomi API logs',
     'blockdomi.logsIp': 'IP',
     'blockdomi.logsRota': 'Route',
     'blockdomi.logsMetodo': 'Method',
@@ -4821,7 +4821,7 @@ const translations: Translations = {
     'blockdomi.selectCliente': 'Seleccionar cliente',
     'blockdomi.noIpsPermitidos': 'Ningún registro encontrado',
     'blockdomi.cliente': 'Cliente',
-    'blockdomi.logsAcesso': 'Logs API Blockdomi',
+    'blockdomi.logsApi': 'Logs API Blockdomi',
     'blockdomi.logsIp': 'IP',
     'blockdomi.logsRota': 'Ruta',
     'blockdomi.logsMetodo': 'Método',

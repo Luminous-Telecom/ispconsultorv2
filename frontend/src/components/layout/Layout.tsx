@@ -274,7 +274,7 @@ const Layout: React.FC = () => {
     { id: 'logs-acesso-sistema', modalId: 'logs-acesso-sistema', label: t('logs.acessoSistema'), icon: 'bi-door-open', onClick: () => handleOpenModal('logs-acesso-sistema') },
     { id: 'logs-equipamentos', modalId: 'logs-equipamentos', label: t('logs.equipamentos'), icon: 'bi-journal-code', onClick: () => handleOpenModal('logs-equipamentos') },
     { id: 'logs-agentes', modalId: 'logs-agentes', label: t('logs.agentes'), icon: 'bi-plugin', onClick: () => handleOpenModal('logs-agentes') },
-    { id: 'logs-blockdomi-acesso', modalId: 'blockdomi-logs-acesso', label: t('blockdomi.logsAcesso'), icon: 'bi-journal-text', onClick: () => handleOpenModal('blockdomi-logs-acesso') },
+    { id: 'logs-blockdomi-api', modalId: 'logs-blockdomi-api', label: t('blockdomi.logsApi'), icon: 'bi-journal-text', onClick: () => handleOpenModal('logs-blockdomi-api') },
   ].filter((item) => filterByModulo(item.modalId));
 
   if (isServerUnavailable) {

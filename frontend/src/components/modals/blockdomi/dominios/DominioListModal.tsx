@@ -281,7 +281,11 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
         pdfs: String(data.pdfsDistintos),
         candidatos: String(data.dominiosCandidatos)
       });
-      success(comErro > 0 ? `${base} ${t('blockdomi.syncSeiAnatelPartial', { n: String(comErro) })}` : base);
+      success(
+        comErro > 0
+          ? `${base} ${t('blockdomi.syncSeiAnatelPartial', { n: String(comErro) })}`
+          : base
+      );
       refetch();
       queryClient.invalidateQueries({ queryKey: ['dominios'] });
     } catch (e) {

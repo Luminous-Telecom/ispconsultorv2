@@ -41,6 +41,10 @@ export interface ListDominiosResponse {
 export interface SincronizarSeiAnatelDominiosRow {
   link_oficio_anatel: string;
   quantidade_dominios: number;
+  /** Nome do ofício (referência ao primeiro domínio do grupo com esse PDF) */
+  nome_oficio?: string | null;
+  /** Número da versão Blockdomi (adm_versoes_blockdomi.numero), exibido como "serial" nos logs */
+  versao_numero?: string | null;
   sei?: string;
   erro?: string;
 }
@@ -600,7 +604,7 @@ export class DominioService {
       empresaId != null ? { empresa_id: empresaId } : ({} as WhereOptions<Dominio>);
 
     const rows = await Dominio.findAll({
-      attributes: ['id', 'link_oficio_anatel', 'numero_sei_anatel', 'empresa_id'],
+      attributes: ['id', 'link_oficio_anatel', 'numero_sei_anatel', 'empresa_id', 'nome_oficio', 'versao_id'],
       where: whereEmpresa
     });
 
@@ -618,21 +622,45 @@ export class DominioService {
       byUrl.set(url, list);
     }
 
+    const candidatosPorId = new Map(candidatos.map((row) => [row.id as number, row]));
+    const versaoIds = [...new Set(candidatos.map((r) => r.versao_id).filter((v): v is number => v != null))];
+    const versoes =
+      versaoIds.length > 0
+        ? await VersaoBlockdomi.findAll({
+            where: { id: versaoIds },
+            attributes: ['id', 'numero']
+          })
+        : [];
+    const versaoNumeroPorId = new Map(versoes.map((v) => [v.id as number, v.numero]));
+
+    const metaPorGrupo = (ids: number[]): { nome_oficio: string | null; versao_numero: string | null } => {
+      const rep = candidatosPorId.get(ids[0]);
+      const nome = rep?.nome_oficio?.trim() ? String(rep.nome_oficio).trim() : null;
+      const vid = rep?.versao_id != null ? (rep.versao_id as number) : null;
+      const serial = vid != null ? versaoNumeroPorId.get(vid) ?? null : null;
+      return { nome_oficio: nome, versao_numero: serial };
+    };
+
     const resultados: SincronizarSeiAnatelDominiosRow[] = [];
     const auditoria: SincronizarSeiAnatelDominiosAuditEntry[] = [];
     let dominiosAtualizados = 0;
 
     for (const [link, ids] of byUrl) {
       let tmpPath: string | null = null;
+      let urlDownload: string | undefined;
       try {
-        const fullUrl = resolvePdfUrlParaDownload(link, publicBaseUrl);
-        tmpPath = await baixarPdfParaArquivoTemporario(fullUrl);
+        urlDownload = resolvePdfUrlParaDownload(link, publicBaseUrl);
+        tmpPath = await baixarPdfParaArquivoTemporario(urlDownload);
         const extracted = await SeiAnatelExtractService.extractFromPdfPath(tmpPath);
         if (!extracted.success || !extracted.sei?.trim()) {
+          const erroMsg = extracted.message || 'Não foi possível extrair o número SEI deste PDF';
+          const meta = metaPorGrupo(ids);
           resultados.push({
             link_oficio_anatel: link,
             quantidade_dominios: ids.length,
-            erro: extracted.message || 'Não foi possível extrair o número SEI deste PDF'
+            nome_oficio: meta.nome_oficio,
+            versao_numero: meta.versao_numero,
+            erro: erroMsg
           });
           continue;
         }
@@ -650,21 +678,22 @@ export class DominioService {
           }
         }
         dominiosAtualizados += ids.length;
+        const metaOk = metaPorGrupo(ids);
         resultados.push({
           link_oficio_anatel: link,
           quantidade_dominios: ids.length,
+          nome_oficio: metaOk.nome_oficio,
+          versao_numero: metaOk.versao_numero,
           sei
         });
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+        const metaErr = metaPorGrupo(ids);
         resultados.push({
           link_oficio_anatel: link,
           quantidade_dominios: ids.length,
-          erro: msg
-        });
-        logger.warn('DominioService.sincronizarSeiAnatelPorPdfOficio falha por PDF', {
-          link,
-          dominios: ids.length,
+          nome_oficio: metaErr.nome_oficio,
+          versao_numero: metaErr.versao_numero,
           erro: msg
         });
       } finally {

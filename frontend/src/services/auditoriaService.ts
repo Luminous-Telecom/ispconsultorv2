@@ -41,6 +41,8 @@ export interface AuditoriaFilters {
   semUsuarioObrigatorio?: boolean;
   /** Filtrar por origem (agendador, webhook, sistema) */
   origemAuditoria?: string;
+  /** Apenas entidades do módulo Blockdomi (Dominio, IPv4, IPv6, IP permitido, versão) */
+  moduloBlockdomi?: boolean;
 }
 
 export interface AuditoriaStats {
@@ -76,6 +78,7 @@ class AuditoriaService {
     if (filters.comUsuarioObrigatorio) params.append('com_usuario_obrigatorio', 'true');
     if (filters.semUsuarioObrigatorio) params.append('sem_usuario_obrigatorio', 'true');
     if (filters.origemAuditoria) params.append('origem_auditoria', filters.origemAuditoria);
+    if (filters.moduloBlockdomi) params.append('modulo_blockdomi', 'true');
 
     const url = `${this.baseEndpoint}?${params.toString()}`;
     

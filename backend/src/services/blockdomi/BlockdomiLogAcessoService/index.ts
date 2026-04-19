@@ -10,6 +10,7 @@ export interface RegistroLogPayload {
   rota: string;
   metodo: string;
   status_http: number;
+  sucesso?: boolean;
   mensagem_erro?: string | null;
   user_agent?: string | null;
 }
@@ -21,6 +22,7 @@ export interface ListLogAcessoFilters {
   sortColumn?: string;
   sortDirection?: string;
   sucesso?: boolean;
+  origem?: 'api_txt' | 'sistema';
 }
 
 export interface ListLogAcessoResponse {

@@ -1,12 +1,40 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { DominioService } from '../../../services/blockdomi/DominioService';
+import { DominioService, type SincronizarSeiAnatelDominiosRow } from '../../../services/blockdomi/DominioService';
 import { Dominio } from '../../../models/blockdomi/Dominio';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
+import { registrarAuditoriaElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
 import { setAuditData } from '../../../middleware/auditMiddleware';
 import { sendSuccess, sendError, sendNotFound, sendValidationError } from '../../../utils/responseUtils';
 import { sanitizeDominio } from '../../../utils/sanitize';
 import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { BlockdomiLogAcessoService } from '../../../services/blockdomi/BlockdomiLogAcessoService';
+
+function getClientIpBlockdomi(req: Request): string | null {
+  const cf = req.headers['cf-connecting-ip'] as string | undefined;
+  if (cf?.trim()) return cf.trim();
+  const xff = req.headers['x-forwarded-for'] as string | undefined;
+  if (xff) {
+    const first = xff.split(',')[0]?.trim();
+    if (first) return first;
+  }
+  const xReal = req.headers['x-real-ip'] as string | undefined;
+  if (xReal?.trim()) return xReal.trim();
+  const addr = req.socket?.remoteAddress;
+  if (addr) return addr.replace(/^::ffff:/, '');
+  return null;
+}
+
+/** Linha de observação/log: Ofício · Serial · link (N dom.) — erro */
+function formatObservacaoLinhaFalhaSei(f: SincronizarSeiAnatelDominiosRow): string {
+  const chunks: string[] = [];
+  const nome = f.nome_oficio?.trim();
+  const serial = f.versao_numero?.trim();
+  if (nome) chunks.push(`Ofício: ${nome}`);
+  if (serial) chunks.push(`Serial: ${serial}`);
+  chunks.push(f.link_oficio_anatel);
+  return `${chunks.join(' · ')} (${f.quantidade_dominios} dom.) — ${f.erro ?? ''}`;
+}
 
 export class DominioController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -421,6 +449,56 @@ export class DominioController {
         }
       } catch {
         /* auditoria não deve interromper */
+      }
+
+      const falhasSei = result.resultados.filter((r) => r.erro);
+      if (falhasSei.length > 0) {
+        const linhas = falhasSei.map((f) => formatObservacaoLinhaFalhaSei(f));
+        const mensagemErro = [`Sincronização SEI: ${falhasSei.length} PDF(s) sem SEI ou com erro.`, linhas.join('\n')].join(
+          '\n'
+        );
+        void BlockdomiLogAcessoService.registrar({
+          ip: getClientIpBlockdomi(req),
+          rota: '/api/dominios/sincronizar-sei-anatel',
+          metodo: 'POST',
+          status_http: 200,
+          sucesso: false,
+          mensagem_erro: mensagemErro.slice(0, 32000),
+          user_agent: (req.headers['user-agent'] as string | undefined) ?? null
+        });
+        const obsFalha = `[Falha] ${mensagemErro}`;
+        void registrarAuditoriaElasticsearch(req, {
+          acao: 'executar',
+          entidade: 'Dominio',
+          observacoes: obsFalha.slice(0, 32000),
+          dados_novos: {
+            sincronizacao_sei: {
+              resultado: 'falha',
+              pdfs_com_erro: falhasSei.length
+            }
+          },
+          rota: '/api/dominios/sincronizar-sei-anatel',
+          metodo_http: 'POST',
+          empresa_id: empresaIdAudit
+        });
+      } else {
+        const msgOk = `[Sucesso] Sincronização SEI concluída sem falha de PDF. ${result.dominiosAtualizados} domínio(s) atualizado(s), ${result.pdfsDistintos} PDF(s) distinto(s) processado(s), ${result.dominiosCandidatos} domínio(s) elegíveis (sem SEI e com link Anatel).`;
+        void registrarAuditoriaElasticsearch(req, {
+          acao: 'executar',
+          entidade: 'Dominio',
+          observacoes: msgOk.slice(0, 32000),
+          dados_novos: {
+            sincronizacao_sei: {
+              resultado: 'sucesso',
+              dominios_atualizados: result.dominiosAtualizados,
+              pdfs_distintos: result.pdfsDistintos,
+              dominios_candidatos: result.dominiosCandidatos
+            }
+          },
+          rota: '/api/dominios/sincronizar-sei-anatel',
+          metodo_http: 'POST',
+          empresa_id: empresaIdAudit
+        });
       }
 
       const msg = [

@@ -21,6 +21,8 @@ export interface BlockdomiLogAcessoFilters {
   sortColumn?: string;
   sortDirection?: string;
   sucesso?: boolean;
+  /** API = listas TXT; sistema = demais eventos do índice (ex. sync SEI). */
+  origem?: 'api_txt' | 'sistema';
 }
 
 export class BlockdomiLogAcessoService {

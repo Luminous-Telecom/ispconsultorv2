@@ -27,7 +27,7 @@ export type ModalType =
   | 'blockdomi-ipv6'
   | 'blockdomi-importar-lista'
   | 'blockdomi-ips-permitidos'
-  | 'blockdomi-logs-acesso'
+  | 'logs-blockdomi-api'
   // Logs
   | 'logs-usuarios'
   | 'logs-webhook'

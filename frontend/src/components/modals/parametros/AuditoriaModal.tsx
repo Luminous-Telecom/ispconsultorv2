@@ -203,14 +203,6 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         render: (log: AuditoriaLog) => (
           <span className="small">{log.rota || '-'}</span>
         )
-      },
-      {
-        key: 'observacoes',
-        label: t('table.observations'),
-        sortable: true,
-        render: (log: AuditoriaLog) => (
-          <span className="small">{log.observacoes || '-'}</span>
-        )
       }
     ], [t, formatAcao, getAcaoBadgeClass, formatTimestamp]);
 
@@ -286,7 +278,6 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
             { key: 'acao', label: t('table.action') },
             { key: 'entidade', label: t('audit.entity') },
             { key: 'ip_address', label: t('audit.ip') },
-            { key: 'observacoes', label: t('table.observations') },
             { key: 'rota', label: t('audit.route') },
             { key: 'timestamp', label: t('audit.timestamp') }
           ]}
@@ -476,7 +467,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
                   {selectedLog.observacoes && (
                     <div className="col-md-12">
                       <small className="text-muted">{t('table.observations')}:</small><br />
-                      <span>{selectedLog.observacoes}</span>
+                      <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedLog.observacoes}</span>
                     </div>
                   )}
                 </div>
@@ -597,7 +588,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
                 {selectedLog.observacoes && (
                   <div className="col-md-12">
                     <small className="text-muted">{t('table.observations')}:</small><br />
-                    <span>{selectedLog.observacoes}</span>
+                    <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedLog.observacoes}</span>
                   </div>
                 )}
               </div>
