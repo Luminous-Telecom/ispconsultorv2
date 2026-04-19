@@ -313,15 +313,6 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       action: () => setShowCreateModal(true)
     },
     {
-      label: t('blockdomi.syncSeiAnatel'),
-      variant: 'primary' as const,
-      requiresSelection: false as const,
-      disabled: (_selectedItems: Dominio[]) => isSyncingSei,
-      action: () => {
-        void handleSincronizarSeiAnatel();
-      }
-    },
-    {
       label: t('actions.edit'),
       variant: 'primary' as const,
       disabled: (selectedItems: Dominio[]) => {
@@ -400,6 +391,15 @@ const DominioListModal: React.FC<DominioListModalProps> = ({
       action: (selectedItems: Dominio[]) => {
         const items = selectedItems.length > 0 ? selectedItems : (selectedItem ? [selectedItem] : []);
         items.filter((i) => i.link_planilha_dominios?.trim()).forEach((i) => window.open(i.link_planilha_dominios!, '_blank', 'noopener,noreferrer'));
+      }
+    },
+    {
+      label: t('blockdomi.syncSeiAnatel'),
+      variant: 'primary' as const,
+      requiresSelection: false as const,
+      disabled: (_selectedItems: Dominio[]) => isSyncingSei,
+      action: () => {
+        void handleSincronizarSeiAnatel();
       }
     }
   ], [onSelectDominio, selectedItem, clearSelection, onClose, handleSelect, handleDelete, handleBulkDelete, handleSincronizarSeiAnatel, isSyncingSei, t]);
