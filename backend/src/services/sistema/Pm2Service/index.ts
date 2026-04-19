@@ -24,62 +24,29 @@ export class Pm2Service {
   /**
    * Executa um comando shell de forma segura
    */
-  private async executeCommand(
-    command: string,
-    cwd: string,
-    description: string
-  ): Promise<CommandResult> {
+  private async executeCommand(command: string, cwd: string, description: string): Promise<CommandResult> {
     try {
       if (!fs.existsSync(cwd)) {
         const errorMsg = `Diretório não existe: ${cwd}`;
         logger.error(`Erro ao executar: ${description}`, { error: errorMsg });
-        return {
-          success: false,
-          stdout: '',
-          stderr: errorMsg,
-          error: errorMsg,
-        };
+        return { success: false, stdout: '', stderr: errorMsg, error: errorMsg };
       }
-
-      logger.debug(`Executando: ${description}`, { command, cwd });
 
       const { stdout, stderr } = await execAsync(command, {
         cwd,
         maxBuffer: 10 * 1024 * 1024,
-        env: {
-          ...process.env,
-          NODE_ENV: __dirname.includes('dist') ? 'production' : 'development',
-        },
+        env: { ...process.env, NODE_ENV: __dirname.includes('dist') ? 'production' : 'development' },
       });
 
-      logger.debug(`${description} concluído`, {
-        stdoutLength: stdout.length,
-        stderrLength: stderr.length,
-      });
-
-      return {
-        success: true,
-        stdout: stdout.trim(),
-        stderr: stderr.trim(),
-      };
+      return { success: true, stdout: stdout.trim(), stderr: stderr.trim() };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorOutput = error as { stdout?: string; stderr?: string; code?: number };
-
-      const stderrPreview = errorOutput.stderr?.substring(0, 2000) || '';
-      const stdoutPreview = errorOutput.stdout?.substring(0, 2000) || '';
-      
       logger.error(`Erro ao executar: ${description}`, {
         error: errorMessage,
         code: errorOutput.code,
-        command,
-        cwd,
-        stdoutLength: errorOutput.stdout?.length || 0,
-        stderrLength: errorOutput.stderr?.length || 0,
-        stdout: stdoutPreview,
-        stderr: stderrPreview,
+        stderr: errorOutput.stderr?.substring(0, 2000) || '',
       });
-
       return {
         success: false,
         stdout: errorOutput.stdout?.trim() || '',
@@ -118,66 +85,37 @@ export class Pm2Service {
    */
   async reload(): Promise<CommandResult> {
     const processCheck = await this.checkProcess();
-    
+
     if (!processCheck.exists) {
-      logger.warn('Processo PM2 não encontrado, tentando restart', {
-        processName: this.pm2ProcessName,
-      });
-      
-      const restartCommand = `pm2 restart ${this.pm2ProcessName} --update-env`;
-      const restartResult = await this.executeCommand(restartCommand, this.projectRoot, 'PM2 Restart');
-      
+      logger.warn('Processo PM2 não encontrado, tentando restart', { processName: this.pm2ProcessName });
+
+      const restartResult = await this.executeCommand(`pm2 restart ${this.pm2ProcessName} --update-env`, this.projectRoot, 'PM2 Restart');
       if (!restartResult.success) {
-        logger.warn('PM2 restart falhou, tentando start com ecosystem.config.js');
-        
         const ecosystemPath = path.join(this.projectRoot, 'ecosystem.config.js');
         if (!fs.existsSync(ecosystemPath)) {
-          logger.error('ecosystem.config.js não encontrado', { 
-            path: ecosystemPath,
-            projectRoot: this.projectRoot,
-          });
-          return {
-            success: false,
-            stdout: '',
-            stderr: `ecosystem.config.js não encontrado em ${ecosystemPath}.`,
-            error: 'ecosystem.config.js não encontrado',
-          };
+          logger.error('ecosystem.config.js não encontrado', { path: ecosystemPath });
+          return { success: false, stdout: '', stderr: `ecosystem.config.js não encontrado em ${ecosystemPath}.`, error: 'ecosystem.config.js não encontrado' };
         }
-        
-        logger.info('Tentando PM2 start com --only', { processName: this.pm2ProcessName });
-        const startCommand = `pm2 start ecosystem.config.js --only ${this.pm2ProcessName} --update-env`;
-        const startResult = await this.executeCommand(startCommand, this.projectRoot, 'PM2 Start');
-        
+
+        const startResult = await this.executeCommand(`pm2 start ecosystem.config.js --only ${this.pm2ProcessName} --update-env`, this.projectRoot, 'PM2 Start');
         if (!startResult.success) {
-          logger.warn('PM2 start com --only falhou, tentando start sem filtro');
-          const startAllCommand = `pm2 start ecosystem.config.js --update-env`;
-          const startAllResult = await this.executeCommand(startAllCommand, this.projectRoot, 'PM2 Start (todos)');
-          
+          const startAllResult = await this.executeCommand('pm2 start ecosystem.config.js --update-env', this.projectRoot, 'PM2 Start (todos)');
           if (!startAllResult.success) {
-            logger.warn('PM2 start com ecosystem.config.js falhou, tentando start direto do script');
             const directStartCommand = `pm2 start ${path.join(this.backendPath, 'dist', 'index.js')} --name ${this.pm2ProcessName} --cwd ${this.backendPath} --update-env`;
             return this.executeCommand(directStartCommand, this.projectRoot, 'PM2 Start (direto)');
           }
-          
           return startAllResult;
         }
-        
         return startResult;
       }
-      
       return restartResult;
     }
 
-    logger.info('Reiniciando PM2 com --update-env para recarregar variáveis de ambiente');
-    const command = `pm2 restart ${this.pm2ProcessName} --update-env`;
-    const restartResult = await this.executeCommand(command, this.projectRoot, 'PM2 Restart (com --update-env)');
-    
+    const restartResult = await this.executeCommand(`pm2 restart ${this.pm2ProcessName} --update-env`, this.projectRoot, 'PM2 Restart');
     if (!restartResult.success) {
-      logger.warn('PM2 restart com --update-env falhou, tentando reload como fallback');
-      const reloadCommand = `pm2 reload ${this.pm2ProcessName}`;
-      return this.executeCommand(reloadCommand, this.projectRoot, 'PM2 Reload (fallback)');
+      logger.warn('PM2 restart falhou, tentando reload como fallback');
+      return this.executeCommand(`pm2 reload ${this.pm2ProcessName}`, this.projectRoot, 'PM2 Reload (fallback)');
     }
-    
     return restartResult;
   }
 

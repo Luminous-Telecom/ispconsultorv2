@@ -32,63 +32,27 @@ export class GitUpdateService {
   private findGitRoot(startPath: string): string | null {
     let currentPath = path.resolve(startPath);
     const rootPath = path.parse(currentPath).root;
-    const searchedPaths: string[] = [];
-    
-    logger.debug('Iniciando busca por repositório Git', {
-      startPath,
-      resolvedPath: currentPath,
-      rootPath,
-    });
-    
+
     if (!fs.existsSync(currentPath)) {
       logger.error('Diretório inicial não existe', { currentPath });
       return null;
     }
-    
+
     while (currentPath !== rootPath) {
-      searchedPaths.push(currentPath);
       const gitDir = path.join(currentPath, '.git');
-      
-      logger.debug('Verificando diretório', {
-        currentPath,
-        gitDir,
-        exists: fs.existsSync(gitDir),
-      });
-      
       if (fs.existsSync(gitDir)) {
         const gitStat = fs.statSync(gitDir);
-        if (gitStat.isDirectory() || gitStat.isFile()) {
-          logger.debug('Repositório Git encontrado', {
-            gitRoot: currentPath,
-            gitDir,
-            isDirectory: gitStat.isDirectory(),
-            isFile: gitStat.isFile(),
-            searchedPaths: searchedPaths.length,
-          });
-          return currentPath;
-        }
+        if (gitStat.isDirectory() || gitStat.isFile()) return currentPath;
       }
-      
       const parentPath = path.dirname(currentPath);
-      if (parentPath === currentPath) {
-        break;
-      }
+      if (parentPath === currentPath) break;
       currentPath = parentPath;
     }
-    
-    searchedPaths.push(rootPath);
+
     const rootGitDir = path.join(rootPath, '.git');
-    if (fs.existsSync(rootGitDir)) {
-      logger.info('Repositório Git encontrado na raiz do sistema', { gitRoot: rootPath });
-      return rootPath;
-    }
-    
-    logger.error('Repositório Git não encontrado em nenhum diretório pesquisado', {
-      startPath,
-      searchedPaths,
-      totalPaths: searchedPaths.length,
-    });
-    
+    if (fs.existsSync(rootGitDir)) return rootPath;
+
+    logger.error('Repositório Git não encontrado', { startPath });
     return null;
   }
 
@@ -128,33 +92,12 @@ export class GitUpdateService {
    */
   private async findGitRootWithRevParse(directoriesToTry: string[]): Promise<string | null> {
     for (const dir of directoriesToTry) {
-      if (!fs.existsSync(dir)) {
-        logger.debug('Diretório não existe, pulando', { dir });
-        continue;
-      }
-      
+      if (!fs.existsSync(dir)) continue;
       try {
-        const { stdout: gitTopLevel } = await execAsync('git rev-parse --show-toplevel', {
-          cwd: dir,
-          timeout: 5000,
-        });
-        
-        if (gitTopLevel && gitTopLevel.trim()) {
-          const gitRoot = gitTopLevel.trim();
-          logger.debug('Repositório Git encontrado usando git rev-parse', {
-            gitRoot,
-            triedFrom: dir,
-          });
-          return gitRoot;
-        }
-      } catch (error) {
-        logger.debug('git rev-parse falhou neste diretório', {
-          dir,
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-        });
-      }
+        const { stdout } = await execAsync('git rev-parse --show-toplevel', { cwd: dir, timeout: 5000 });
+        if (stdout?.trim()) return stdout.trim();
+      } catch { /* diretório não é um repositório git */ }
     }
-    
     return null;
   }
 
@@ -162,61 +105,23 @@ export class GitUpdateService {
    * Executa git pull na branch especificada
    */
   async pull(branch = 'main'): Promise<CommandResult> {
-    const currentDir = __dirname;
-    const directoriesToTry = [
-      currentDir,
-      this.projectRoot,
-    ];
-    
-    logger.debug('Tentando encontrar repositório Git usando git rev-parse', {
-      directoriesToTry,
-      currentDir,
-      projectRoot: this.projectRoot,
-    });
-    
-    let gitRoot: string | null = await this.findGitRootWithRevParse(directoriesToTry);
-    
+    let gitRoot: string | null = await this.findGitRootWithRevParse([__dirname, this.projectRoot]);
+
     if (!gitRoot) {
-      const gitDir = path.join(this.projectRoot, '.git');
-      
-      if (fs.existsSync(gitDir)) {
+      if (fs.existsSync(path.join(this.projectRoot, '.git'))) {
         gitRoot = this.projectRoot;
-        logger.debug('Repositório Git encontrado no projectRoot', { gitRoot });
       } else {
-        logger.warn('Diretório .git não encontrado no projectRoot, procurando em diretórios pais', {
-          projectRoot: this.projectRoot,
-          gitDir,
-        });
-        
-        const foundGitRoot = this.findGitRoot(this.projectRoot);
-        if (foundGitRoot) {
-          gitRoot = foundGitRoot;
-          logger.debug('Repositório Git encontrado em diretório pai', { gitRoot });
-        } else {
-          logger.error('Diretório .git não encontrado', {
-            projectRoot: this.projectRoot,
-            searchedFrom: this.projectRoot,
-          });
+        gitRoot = this.findGitRoot(this.projectRoot);
+        if (!gitRoot) {
+          logger.error('Repositório Git não encontrado', { projectRoot: this.projectRoot });
           return {
             success: false,
             stdout: '',
-            stderr: `Diretório .git não encontrado. Procurado em ${this.projectRoot} e diretórios pais. Certifique-se de que o repositório Git está configurado corretamente em produção.`,
+            stderr: `Diretório .git não encontrado em ${this.projectRoot}. Certifique-se de que o repositório Git está configurado corretamente em produção.`,
             error: 'Repositório Git não encontrado',
           };
         }
       }
-    }
-    
-    if (!gitRoot) {
-      logger.error('Não foi possível determinar o diretório raiz do Git', {
-        projectRoot: this.projectRoot,
-      });
-      return {
-        success: false,
-        stdout: '',
-        stderr: 'Não foi possível determinar o diretório raiz do repositório Git.',
-        error: 'Repositório Git não encontrado',
-      };
     }
 
     const gitConfig = await this.checkGitConfig(gitRoot);
@@ -230,111 +135,57 @@ export class GitUpdateService {
       };
     }
 
-    logger.debug('Configuração do Git verificada', {
-      gitRoot,
-      remote: gitConfig.remote,
-      currentBranch: gitConfig.branch,
-      targetBranch: branch,
-    });
-
-    logger.debug('Executando git fetch antes do pull');
     const fetchResult = await this.executeCommand('git fetch origin', gitRoot, 'Git Fetch');
-    
     if (!fetchResult.success) {
-      logger.warn('Git fetch falhou, mas continuando com pull', {
-        error: fetchResult.error || fetchResult.stderr,
-      });
+      logger.warn('Git fetch falhou, continuando com pull', { error: fetchResult.error || fetchResult.stderr });
     }
 
     const command = `git pull origin ${branch} --no-rebase`;
     const pullResult = await this.executeCommand(command, gitRoot, 'Git Pull');
-    
+
     if (!pullResult.success) {
       try {
-        const { stdout: status } = await execAsync('git status --porcelain', {
-          cwd: gitRoot,
-          timeout: 5000,
-        });
-        
+        const { stdout: status } = await execAsync('git status --porcelain', { cwd: gitRoot, timeout: 5000 });
         if (status.trim()) {
-          logger.warn('Há mudanças locais não commitadas', { status: status.trim() });
-          logger.info('Tentando fazer stash das mudanças locais');
+          logger.warn('Mudanças locais encontradas, executando stash', { status: status.trim() });
           await execAsync('git stash', { cwd: gitRoot, timeout: 10000 });
           const pullAfterStash = await this.executeCommand(command, gitRoot, 'Git Pull (após stash)');
-          if (pullAfterStash.success) {
-            logger.debug('Git pull bem-sucedido após stash');
-            return pullAfterStash;
-          }
+          if (pullAfterStash.success) return pullAfterStash;
         }
       } catch (error) {
-        logger.error('Erro ao verificar status do Git', {
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-        });
+        logger.error('Erro ao verificar status do Git', { error: error instanceof Error ? error.message : 'Erro desconhecido' });
       }
     }
-    
+
     return pullResult;
   }
 
   /**
    * Executa um comando shell de forma segura
    */
-  private async executeCommand(
-    command: string,
-    cwd: string,
-    description: string
-  ): Promise<CommandResult> {
+  private async executeCommand(command: string, cwd: string, description: string): Promise<CommandResult> {
     try {
       if (!fs.existsSync(cwd)) {
         const errorMsg = `Diretório não existe: ${cwd}`;
         logger.error(`Erro ao executar: ${description}`, { error: errorMsg });
-        return {
-          success: false,
-          stdout: '',
-          stderr: errorMsg,
-          error: errorMsg,
-        };
+        return { success: false, stdout: '', stderr: errorMsg, error: errorMsg };
       }
-
-      logger.debug(`Executando: ${description}`, { command, cwd });
 
       const { stdout, stderr } = await execAsync(command, {
         cwd,
         maxBuffer: 10 * 1024 * 1024,
-        env: {
-          ...process.env,
-          NODE_ENV: __dirname.includes('dist') ? 'production' : 'development',
-        },
+        env: { ...process.env, NODE_ENV: __dirname.includes('dist') ? 'production' : 'development' },
       });
 
-      logger.debug(`${description} concluído`, {
-        stdoutLength: stdout.length,
-        stderrLength: stderr.length,
-      });
-
-      return {
-        success: true,
-        stdout: stdout.trim(),
-        stderr: stderr.trim(),
-      };
+      return { success: true, stdout: stdout.trim(), stderr: stderr.trim() };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorOutput = error as { stdout?: string; stderr?: string; code?: number };
-
-      const stderrPreview = errorOutput.stderr?.substring(0, 2000) || '';
-      const stdoutPreview = errorOutput.stdout?.substring(0, 2000) || '';
-      
       logger.error(`Erro ao executar: ${description}`, {
         error: errorMessage,
         code: errorOutput.code,
-        command,
-        cwd,
-        stdoutLength: errorOutput.stdout?.length || 0,
-        stderrLength: errorOutput.stderr?.length || 0,
-        stdout: stdoutPreview,
-        stderr: stderrPreview,
+        stderr: errorOutput.stderr?.substring(0, 2000) || '',
       });
-
       return {
         success: false,
         stdout: errorOutput.stdout?.trim() || '',

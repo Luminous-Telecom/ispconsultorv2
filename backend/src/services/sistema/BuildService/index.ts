@@ -48,18 +48,11 @@ export class BuildService {
 
     try {
       if (fs.existsSync(backendBuildScriptPath(this.projectRoot))) {
-        logger.info('Self-update: build backend (ts-node — repositório com src)');
-        const be = await execAsync('npm run build --prefix backend', {
-          cwd: this.projectRoot,
-          maxBuffer: MAX_BUFFER,
-          env,
-        });
-        logger.debug('Build backend stdout length', { n: be.stdout?.length ?? 0 });
+        logger.info('Self-update: compilando backend');
+        await execAsync('npm run build --prefix backend', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
         parts.push('backend compilado');
       } else {
-        logger.info(
-          'Self-update: sem backend/src/scripts/build.ts (deploy típico) — usando backend/dist já trazido pelo git pull'
-        );
+        logger.info('Self-update: usando backend/dist do repositório (sem recompilar)');
         const distIndex = path.join(this.projectRoot, 'backend', 'dist', 'index.js');
         if (!fs.existsSync(distIndex)) {
           const msg = 'backend/dist/index.js não encontrado após pull; não é possível pular o build sem fonte.';
@@ -73,17 +66,9 @@ export class BuildService {
         fs.existsSync(frontendPkg) && fs.existsSync(frontendSourcePath(this.projectRoot));
 
       if (hasFrontendSource) {
-        logger.info('Self-update: npm ci + build frontend (repositório com src)');
-        await execAsync('npm ci --prefix frontend', {
-          cwd: this.projectRoot,
-          maxBuffer: MAX_BUFFER,
-          env,
-        });
-        await execAsync('npm run build --prefix frontend', {
-          cwd: this.projectRoot,
-          maxBuffer: MAX_BUFFER,
-          env,
-        });
+        logger.info('Self-update: compilando frontend');
+        await execAsync('npm ci --prefix frontend', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
+        await execAsync('npm run build --prefix frontend', { cwd: this.projectRoot, maxBuffer: MAX_BUFFER, env });
         const indexHtml = path.join(this.projectRoot, 'frontend', 'build', 'index.html');
         if (!fs.existsSync(indexHtml)) {
           const msg = 'frontend/build/index.html não foi gerado';
@@ -93,9 +78,7 @@ export class BuildService {
       } else {
         const indexHtml = path.join(this.projectRoot, 'frontend', 'build', 'index.html');
         if (fs.existsSync(indexHtml)) {
-          logger.info(
-            'Self-update: sem frontend/src — usando frontend/build já trazido pelo git pull'
-          );
+          logger.info('Self-update: usando frontend/build do repositório (sem recompilar)');
           parts.push('frontend build do repositório (sem recompilar)');
         } else if (fs.existsSync(frontendPkg)) {
           logger.warn('Self-update: frontend/package.json existe mas sem src e sem build/index.html');

@@ -41,10 +41,8 @@ export class SelfUpdateService {
   private readonly healthCheckService: HealthCheckService;
   constructor() {
     const currentDir = __dirname;
-    logger.debug('Inicializando SelfUpdateService', { currentDir });
-    
     const gitRoot = this.findPathWith(currentDir, '.git');
-    
+
     if (gitRoot) {
       this.projectRoot = gitRoot;
     } else {
@@ -56,25 +54,15 @@ export class SelfUpdateService {
     this.backendPath = backendRoot || path.resolve(this.projectRoot, 'backend');
 
     this.pm2ProcessName = process.env.PM2_PROCESS_NAME || 'backend';
-    
     this.backendPort = parseInt(process.env.PORT || '3001', 10);
     this.backendUrl = `http://localhost:${this.backendPort}`;
-    
-    // Inicializar serviços
+
     this.gitUpdateService = new GitUpdateService(this.projectRoot);
     this.packageManagerService = new PackageManagerService(this.backendPath);
     this.buildService = new BuildService(this.projectRoot);
     this.migrationService = new MigrationService(this.backendPath);
     this.pm2Service = new Pm2Service(this.projectRoot, this.backendPath, this.pm2ProcessName);
     this.healthCheckService = new HealthCheckService(this.backendUrl);
-    
-    logger.debug('SelfUpdateService Configurado', {
-      currentDir,
-      projectRoot: this.projectRoot,
-      backendPath: this.backendPath,
-      hasGit: fs.existsSync(path.join(this.projectRoot, '.git')),
-      hasPackageJson: fs.existsSync(path.join(this.backendPath, 'package.json'))
-    });
   }
 
   /**
@@ -199,7 +187,6 @@ export class SelfUpdateService {
       message: 'Verificando versão...',
       logs: ['→ Verificando versão no package.json...']
     });
-    logger.debug('Verificando versão no package.json (formato SemVer)');
     const updateVersionResult = await this.packageManagerService.updateVersion();
     if (!updateVersionResult.success) {
       logger.warn('Falha ao verificar versão, mas continuando o processo');
@@ -325,7 +312,6 @@ export class SelfUpdateService {
         message: 'Atualização concluída com sucesso!',
         logs: ['✓ Reinício agendado', '✓ O frontend aguardará o servidor ficar pronto antes de recarregar']
       });
-      logger.debug('PM2 restart agendado; frontend aguardará /health antes de recarregar');
     } else {
       onProgress?.({
         step: 'pm2Reload',
