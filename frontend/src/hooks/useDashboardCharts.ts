@@ -39,7 +39,7 @@ export const useDashboardCharts = (
 ): DashboardCharts => {
   const sg = dashboardData?.statsGraficos;
 
-  const clientes = useMemo(() => dashboardData?.clientes || [], [dashboardData?.clientes]);
+  const clientesTodos = useMemo(() => dashboardData?.clientesTodos || [], [dashboardData?.clientesTodos]);
   const planos = useMemo(() => dashboardData?.planos || [], [dashboardData?.planos]);
   const contratos = useMemo(() => dashboardData?.contratos || [], [dashboardData?.contratos]);
   const titulosTodos = useMemo(() => dashboardData?.titulosTodos || [], [dashboardData?.titulosTodos]);
@@ -286,7 +286,7 @@ export const useDashboardCharts = (
       const ano = String(data.getFullYear()).slice(-2);
       const mesAno = `${mes}/${ano}`;
       const range = parseMesAnoToRange(mesAno);
-      const clientesMes = clientes.filter((cliente) => {
+      const clientesMes = clientesTodos.filter((cliente) => {
         if (!cliente.created_at) return false;
         const dataCliente = new Date(cliente.created_at);
         return dataCliente.getMonth() === data.getMonth() && dataCliente.getFullYear() === data.getFullYear();
@@ -299,7 +299,7 @@ export const useDashboardCharts = (
       });
     }
     return meses;
-  }, [sg, clientes, parseMesAnoToRange]);
+  }, [sg, clientesTodos, parseMesAnoToRange]);
 
   const clientesPorPlano = useMemo(() => {
     if (sg?.clientesPorPlano?.length) {

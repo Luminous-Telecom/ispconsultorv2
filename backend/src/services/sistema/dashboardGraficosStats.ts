@@ -160,7 +160,8 @@ function computeClientesPorPlano(
 }
 
 export interface BuildErpDashboardGraficosInput {
-  clientesTodos: Array<{ ativo: boolean }>;
+  /** Todos os clientes (empresa); usado no gráfico de novos clientes / mês (últimos 12 meses). */
+  clientesTodos: Array<{ ativo: boolean; created_at?: string | Date }>;
   clientesPeriodo: Array<{ ativo: boolean; created_at?: string | Date }>;
   planos: Array<{ id: number; status?: string; nome_plano: string }>;
   contratosTodos: Array<{ status: string; isento_mensalidade?: boolean }>;
@@ -212,7 +213,7 @@ export function buildErpDashboardStatsGraficos(input: BuildErpDashboardGraficosI
   const taxaPagamento = totalTitulosTodos > 0 ? (titulosPagos / totalTitulosTodos) * 100 : 0;
 
   const statusPagamentoMes = computeStatusPagamentoMes(titulosTodos);
-  const crescimentoClientes = computeCrescimentoClientes(clientesPeriodo);
+  const crescimentoClientes = computeCrescimentoClientes(clientesTodos);
   const clientesPorPlano = computeClientesPorPlano(planos, contratosParaPlano).sort((a, b) => b.value - a.value);
 
   const receitaMensal = receitaUltimosMeses.labels.map((label, index) => {
