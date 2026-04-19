@@ -64,7 +64,7 @@ export class DashboardService {
       where.empresa_id = empresaId;
     }
     return await Contrato.findAll({
-      attributes: ['id', 'status', 'plano_id', 'cliente_id', 'valor_final'],
+      attributes: ['id', 'status', 'plano_id', 'cliente_id', 'valor_final', 'isento_mensalidade'],
       where,
       include: [
         {
@@ -674,40 +674,26 @@ export class DashboardService {
     let valorTotalPlanos = 0;
     const clientesComPlanos = new Set<number>();
 
-    interface ClienteJson {
-      id?: number;
-      ativo?: boolean;
-    }
-    
-    interface PlanoJson {
-      id?: number;
-      nome_plano?: string;
-      valor_mensal?: number | string;
-    }
-    
-    interface ContratoJson extends Record<string, unknown> {
-      cliente?: ClienteJson;
-      plano?: PlanoJson;
-    }
-    
     for (const contrato of contratosAtivos) {
-      const contratoJson = contrato.toJSON() as ContratoJson;
-      const cliente = contratoJson.cliente;
-      
-      if (cliente && cliente.ativo === true) {
-        const clienteId = contrato.cliente_id;
-        if (clienteId) {
-          clientesComPlanos.add(clienteId);
-          
-          if (contrato.valor_final && parseFloat(contrato.valor_final.toString()) > 0) {
-            valorTotalPlanos += parseFloat(contrato.valor_final.toString());
-          } else if (contratoJson.plano && contratoJson.plano.valor_mensal) {
-            const valorMensal = typeof contratoJson.plano.valor_mensal === 'string' 
-              ? parseFloat(contratoJson.plano.valor_mensal) 
-              : contratoJson.plano.valor_mensal;
-            valorTotalPlanos += valorMensal || 0;
-          }
-        }
+      if (contrato.isento_mensalidade) continue;
+
+      const row = contrato.toJSON() as {
+        cliente?: { ativo?: boolean };
+        plano?: { valor_mensal?: number | string };
+      };
+      if (!row.cliente?.ativo || !contrato.cliente_id) continue;
+
+      clientesComPlanos.add(contrato.cliente_id);
+
+      const vf = contrato.valor_final != null ? parseFloat(String(contrato.valor_final)) : 0;
+      if (vf > 0) {
+        valorTotalPlanos += vf;
+        continue;
+      }
+
+      const vm = row.plano?.valor_mensal;
+      if (vm != null && vm !== '') {
+        valorTotalPlanos += typeof vm === 'string' ? parseFloat(vm) : vm;
       }
     }
 

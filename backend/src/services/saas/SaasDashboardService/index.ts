@@ -408,9 +408,13 @@ export class SaasDashboardService {
     let valorTotalPlanos = 0;
     const clientesComPlanos = new Set<number>();
     for (const c of contratosAtivos) {
+      if (c.isento_mensalidade) continue;
       clientesComPlanos.add(c.empresa_id);
-      const pl = (c as unknown as { plano?: { valor_mensal: number } }).plano;
-      valorTotalPlanos += parseFloat(String(c.valor || 0)) || (pl ? parseFloat(String(pl.valor_mensal || 0)) : 0);
+      const valorContrato = parseFloat(String(c.valor || 0));
+      const valorPlano = parseFloat(
+        String((c as { plano?: { valor_mensal?: unknown } }).plano?.valor_mensal ?? 0)
+      );
+      valorTotalPlanos += valorContrato || valorPlano;
     }
 
     return {
