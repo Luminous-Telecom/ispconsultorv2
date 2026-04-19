@@ -17,6 +17,7 @@ jobs:
     # Runtime das actions (checkout/setup-node); build da app usa node-version abaixo.
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      PROD_REPO: Luminous-Telecom/backnet.prod
 
     steps:
       - name: Checkout Código Fonte
@@ -75,7 +76,7 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       - name: Instalar Dependências e Buildar Projeto
         run: |
-          npm install
+          npm ci
 
           # Determinar se precisa buildar
           if [ "${{ steps.changes.outputs.backend_changed }}"  == "true" ] || \
@@ -97,12 +98,9 @@ jobs:
 
             # ── Versioning ────────────────────────────────────────
             echo "=== Incrementando versão ==="
-            GITHUB_REPO_PROD="Luminous-Telecom/backnet.prod"
-            GITHUB_TOKEN_PROD="${{ secrets.PROD_PAT }}"
-
-            LAST_TAG_RESPONSE=$(curl -sf -H "Authorization: Bearer ${GITHUB_TOKEN_PROD}" \
+            LAST_TAG_RESPONSE=$(curl -sf -H "Authorization: Bearer ${{ secrets.PROD_PAT }}" \
               -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${GITHUB_REPO_PROD}/tags?per_page=1" || echo "[]")
+              "https://api.github.com/repos/${PROD_REPO}/tags?per_page=1" || echo "[]")
 
             LAST_TAG=$(echo "${LAST_TAG_RESPONSE}" | node -e "
               try {
@@ -161,14 +159,9 @@ jobs:
               process.exit(0);
             " || true
 
-            if [ "${INCREMENT_TYPE}" != "none" ]; then
-              # npm version atualiza o package.json e imprime a nova versão
-              VERSION=$(cd backend && npm version ${INCREMENT_TYPE} --no-git-tag-version | sed 's/^v//')
-              echo "✓ Versão: ${OLD_VERSION} → ${VERSION}"
-            else
-              VERSION="${OLD_VERSION}"
-              echo "✓ Versão mantida: ${VERSION}"
-            fi
+            # npm version atualiza o package.json e imprime a nova versão (INCREMENT_TYPE nunca é "none")
+            VERSION=$(cd backend && npm version ${INCREMENT_TYPE} --no-git-tag-version | sed 's/^v//')
+            echo "✓ Versão: ${OLD_VERSION} → ${VERSION}"
 
             echo "VERSION=${VERSION}"         >> $GITHUB_ENV
             echo "OLD_VERSION=${OLD_VERSION}" >> $GITHUB_ENV
@@ -205,10 +198,9 @@ jobs:
           echo "author=$(git log -1 --pretty=%an)"     >> $GITHUB_OUTPUT
           echo "date=$(git log -1 --pretty=%ai)"       >> $GITHUB_OUTPUT
 
-          GITHUB_REPO_PROD="Luminous-Telecom/backnet.prod"
           LAST_COMMIT_RESPONSE=$(curl -sf -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${GITHUB_REPO_PROD}/commits/main" || echo "")
+            "https://api.github.com/repos/${PROD_REPO}/commits/main" || echo "")
 
           LAST_PROD_COMMIT=$(echo "${LAST_COMMIT_RESPONSE}" | node -e "
             try {
@@ -254,7 +246,7 @@ jobs:
         run: |
           git config --global user.name  "GitHub Actions Deploy"
           git config --global user.email "actions@github.com"
-          git clone --depth 1 https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git deployment
+          git clone --depth 1 "https://${GITHUB_TOKEN}@github.com/${PROD_REPO}.git" deployment
 
       # ─────────────────────────────────────────────────────────────
       # 5. Sincronizar artefatos via rsync (sem listas de cp)
@@ -297,11 +289,13 @@ jobs:
             mkdir -p frontend/build
             rsync -a --delete ../frontend/build/ frontend/build/
             [ -f "frontend/build/index.html" ] || { echo "ERRO: frontend/build/index.html ausente!"; exit 1; }
-            # Cópia legada na raiz de frontend/ confunde deploy; só build/index.html deve existir no prod.
-            if [ -f "frontend/index.html" ]; then
-              git rm -f "frontend/index.html" 2>/dev/null || rm -f "frontend/index.html"
-              echo "::notice::Removido frontend/index.html duplicado (mantém apenas frontend/build/)."
-            fi
+            # Produção: só `frontend/build/` no repositório prod
+            mapfile -d '' -t _fe_rm < <(find frontend -mindepth 1 -maxdepth 1 ! -name 'build' -print0) || true
+            for p in "${_fe_rm[@]}"; do
+              [ -n "${p}" ] || continue
+              git rm -rf "${p}" 2>/dev/null || rm -rf "${p}"
+              echo "::notice::Removido do prod (só build/): ${p}"
+            done
             echo "✓ frontend/build sincronizado"
           else
             echo "AVISO: frontend/build não existe (mantendo existente)"
@@ -326,16 +320,14 @@ jobs:
             docker-compose.yaml nginx.docker.conf \
             frontend/Dockerfile frontend/.dockerignore \
             backend/Dockerfile backend/.dockerignore \
-            agent/Dockerfile agent/.dockerignore
-          do
-            if [ ! -e "../${f}" ] && [ -e "${f}" ]; then
-              git rm -f "${f}" 2>/dev/null || rm -f "${f}"
-              echo "::notice::Removido ${f} do clone prod (ausente no repositório fonte)."
-            fi
+            agent/Dockerfile agent/.dockerignore ; do
+            [ ! -e "../${f}" ] && [ -e "${f}" ] || continue
+            git rm -f "${f}" 2>/dev/null || rm -f "${f}"
+            echo "::notice::Removido ${f} (ausente no fonte)."
           done
           if [ ! -d "../docker" ] && [ -d "docker" ]; then
             git rm -rf docker 2>/dev/null || rm -rf docker
-            echo "::notice::Removida pasta docker/ do clone prod (ausente no repositório fonte)."
+            echo "::notice::Removida docker/ (ausente no fonte)."
           fi
 
           echo "=== Diff frontend/build vs HEAD prod (vazio = bundle igual ao commit anterior — normal se só mudou backend/infra) ==="
@@ -355,10 +347,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
         run: |
           cd deployment
-          git config user.name  "GitHub Actions"
-          git config user.email "actions@github.com"
-
-          rm -rf backend/src
 
           git add -A
           git add -f backend/dist/    || true
@@ -406,7 +394,7 @@ jobs:
           fi
           rm -f "${MSG_FILE}"
 
-          git remote set-url origin https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git
+          git remote set-url origin "https://${GITHUB_TOKEN}@github.com/${PROD_REPO}.git"
           git fetch origin main
 
           if git rev-list HEAD..origin/main --count | grep -q '[1-9]'; then
@@ -426,13 +414,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
         run: |
-          REPO="Luminous-Telecom/backnet.prod"
           CODE=$(curl -sS -o /tmp/prod-repo.json -w "%{http_code}" \
             -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPO}")
+            "https://api.github.com/repos/${PROD_REPO}")
           if [ "${CODE}" != "200" ]; then
-            echo "::warning::GET /repos/${REPO} retornou HTTP ${CODE}. Verifique PROD_PAT (escopo **repo**) e se o token tem acesso ao repositório prod."
+            echo "::warning::GET /repos/${PROD_REPO} retornou HTTP ${CODE}. Verifique PROD_PAT (escopo **repo**) e se o token tem acesso ao repositório prod."
             cat /tmp/prod-repo.json 2>/dev/null || true
             exit 0
           fi
@@ -448,7 +435,7 @@ jobs:
           CODE2=$(curl -sS -o /tmp/prod-commit.json -w "%{http_code}" \
             -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPO}/commits/main")
+            "https://api.github.com/repos/${PROD_REPO}/commits/main")
           if [ "${CODE2}" != "200" ]; then
             echo "::warning::GET /commits/main retornou HTTP ${CODE2} (branch main inexistente ou sem commits?)."
             cat /tmp/prod-commit.json 2>/dev/null || true
@@ -522,13 +509,14 @@ jobs:
             const fs = require('fs');
             const body = fs.readFileSync('${BODY_FILE}', 'utf-8');
             const token = process.env.GITHUB_TOKEN || '';
+            const repo = process.env.PROD_REPO || '';
             const data = JSON.stringify({
               tag_name: '${TAG_NAME}', name: 'Release ${TAG_NAME}',
               body, draft: false, prerelease: false
             });
             const req = https.request({
               hostname: 'api.github.com',
-              path: '/repos/Luminous-Telecom/backnet.prod/releases',
+              path: '/repos/' + repo + '/releases',
               method: 'POST',
               headers: {
                 'Authorization': 'Bearer ' + token,
