@@ -9,9 +9,18 @@ const execAsync = promisify(exec);
 
 const MAX_BUFFER = 50 * 1024 * 1024;
 
+const backendBuildScriptPath = (root: string) =>
+  path.join(root, 'backend', 'src', 'scripts', 'build.ts');
+
+const frontendSourcePath = (root: string) => path.join(root, 'frontend', 'src');
+
 /**
- * Build usado no self-update (git pull no servidor): recompila backend e frontend
- * para que a UI deixe de ficar presa em `frontend/build` antigo.
+ * Self-update no servidor após `git pull`.
+ *
+ * Em **backnet.prod** não há `backend/src` nem `frontend/src` — só `dist` e `build/`
+ * commitados pelo CI. Aí não roda `tsc`/CRA no servidor: o pull já trouxe os artefatos.
+ *
+ * Em clone **completo** (fonte), recompila backend e/ou frontend quando as pastas existem.
  */
 export class BuildService {
   private readonly projectRoot: string;
@@ -21,7 +30,6 @@ export class BuildService {
   }
 
   async build(): Promise<CommandResult> {
-    // Não forçar NODE_ENV=production aqui: omite devDeps no npm ci do front e quebra o build.
     const env = {
       ...process.env,
       NPM_CONFIG_PRODUCTION: 'false',
@@ -36,18 +44,36 @@ export class BuildService {
       return { success: false, stdout: '', stderr: msg, error: msg };
     }
 
+    const parts: string[] = [];
+
     try {
-      logger.info('Self-update: build backend');
-      const be = await execAsync('npm run build --prefix backend', {
-        cwd: this.projectRoot,
-        maxBuffer: MAX_BUFFER,
-        env,
-      });
-      logger.debug('Build backend stdout length', { n: be.stdout?.length ?? 0 });
+      if (fs.existsSync(backendBuildScriptPath(this.projectRoot))) {
+        logger.info('Self-update: build backend (ts-node — repositório com src)');
+        const be = await execAsync('npm run build --prefix backend', {
+          cwd: this.projectRoot,
+          maxBuffer: MAX_BUFFER,
+          env,
+        });
+        logger.debug('Build backend stdout length', { n: be.stdout?.length ?? 0 });
+        parts.push('backend compilado');
+      } else {
+        logger.info(
+          'Self-update: sem backend/src/scripts/build.ts (deploy típico) — usando backend/dist já trazido pelo git pull'
+        );
+        const distIndex = path.join(this.projectRoot, 'backend', 'dist', 'index.js');
+        if (!fs.existsSync(distIndex)) {
+          const msg = 'backend/dist/index.js não encontrado após pull; não é possível pular o build sem fonte.';
+          return { success: false, stdout: '', stderr: msg, error: msg };
+        }
+        parts.push('backend dist do repositório (sem recompilar)');
+      }
 
       const frontendPkg = path.join(this.projectRoot, 'frontend', 'package.json');
-      if (fs.existsSync(frontendPkg)) {
-        logger.info('Self-update: npm ci + build frontend');
+      const hasFrontendSource =
+        fs.existsSync(frontendPkg) && fs.existsSync(frontendSourcePath(this.projectRoot));
+
+      if (hasFrontendSource) {
+        logger.info('Self-update: npm ci + build frontend (repositório com src)');
         await execAsync('npm ci --prefix frontend', {
           cwd: this.projectRoot,
           maxBuffer: MAX_BUFFER,
@@ -63,13 +89,22 @@ export class BuildService {
           const msg = 'frontend/build/index.html não foi gerado';
           return { success: false, stdout: '', stderr: msg, error: msg };
         }
+        parts.push('frontend compilado');
       } else {
-        logger.warn('Self-update: pasta frontend ausente, apenas backend foi buildado');
+        const indexHtml = path.join(this.projectRoot, 'frontend', 'build', 'index.html');
+        if (fs.existsSync(indexHtml)) {
+          logger.info(
+            'Self-update: sem frontend/src — usando frontend/build já trazido pelo git pull'
+          );
+          parts.push('frontend build do repositório (sem recompilar)');
+        } else if (fs.existsSync(frontendPkg)) {
+          logger.warn('Self-update: frontend/package.json existe mas sem src e sem build/index.html');
+        }
       }
 
       return {
         success: true,
-        stdout: 'Build backend' + (fs.existsSync(frontendPkg) ? ' + frontend concluído' : ' concluído'),
+        stdout: parts.length ? parts.join('; ') : 'Nenhum build local necessário',
         stderr: '',
       };
     } catch (error) {
