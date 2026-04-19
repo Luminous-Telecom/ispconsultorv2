@@ -321,9 +321,14 @@ jobs:
 
           echo "✓ Arquivos raiz sincronizados"
 
-          # Remover do prod o que já não existe no fonte (cp sozinho deixa lixo no git)
-          for f in docker-compose.yaml nginx.docker.conf; do
-            if [ ! -f "../${f}" ] && [ -e "${f}" ]; then
+          # Remover do prod o que já não existe no fonte (cp/rsync não apagam arquivos removidos no backnet)
+          for f in \
+            docker-compose.yaml nginx.docker.conf \
+            frontend/Dockerfile frontend/.dockerignore \
+            backend/Dockerfile backend/.dockerignore \
+            agent/Dockerfile agent/.dockerignore
+          do
+            if [ ! -e "../${f}" ] && [ -e "${f}" ]; then
               git rm -f "${f}" 2>/dev/null || rm -f "${f}"
               echo "::notice::Removido ${f} do clone prod (ausente no repositório fonte)."
             fi
