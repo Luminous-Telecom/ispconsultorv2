@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NotificationState, NotificationAction } from './types';
 import Button from '../ui/Button';
 
@@ -21,22 +21,16 @@ const Notification: React.FC<NotificationProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const notificationRef = useRef<HTMLDivElement>(null);
 
   const { config } = notification;
   const { onShown } = config;
 
-  // Animar entrada
   useEffect(() => {
-    const timer = setTimeout(() => {
+    requestAnimationFrame(() => {
       setIsVisible(true);
       setIsAnimating(true);
-      
-      // Chamar callback onShown
       onShown?.();
-    }, 100);
-
-    return () => clearTimeout(timer);
+    });
   }, [onShown]);
 
   // Handlers de mouse
@@ -183,20 +177,23 @@ const Notification: React.FC<NotificationProps> = ({
     );
   };
 
-  // Renderizar progresso
+  // Barra de progresso por CSS (sem setInterval): duração = tempo até fechar; pausa com .notification-paused
   const renderProgress = () => {
-    if (!config.showProgress || config.duration === 0) {
+    const duration = config.duration ?? 0;
+    if (!config.showProgress || duration <= 0) {
       return null;
     }
 
     return (
       <div className="notification-progress">
-        <div 
-          className="notification-progress-bar"
-          style={{ 
-            width: `${notification.progress}%`,
-            backgroundColor: config.progressColor || 'var(--bs-primary)'
-          }}
+        <div
+          className="notification-progress-bar notification-progress-bar--animated"
+          style={
+            {
+              ...(config.progressColor ? { backgroundColor: config.progressColor } : {}),
+              '--notification-duration': `${duration}ms`,
+            } as React.CSSProperties
+          }
         />
       </div>
     );
@@ -228,7 +225,6 @@ const Notification: React.FC<NotificationProps> = ({
 
   return (
     <div
-      ref={notificationRef}
       className={finalClasses.join(' ')}
       style={getNotificationStyles()}
       onMouseEnter={handleMouseEnter}

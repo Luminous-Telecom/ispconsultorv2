@@ -3,7 +3,7 @@
  * Mantém a API original do DraggableModal para compatibilidade total
  * Agora usa ResponsiveDialog que adapta automaticamente para mobile/desktop
  */
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useI18n } from 'contexts/I18nContext';
 import { modalStack } from 'utils/modalStack';
@@ -60,10 +60,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
   const [isInitialized, setIsInitialized] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const [bodyMounted, setBodyMounted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
@@ -242,122 +238,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     return 1050 + (index * 10);
   }, [modalId, isMobile]);
 
-  // Função para aplicar estilos de overflow
-  const applyOverflowStyles = useCallback((element: HTMLDivElement, skipObserver = false) => {
-    if (!element || isMobile || !show) return;
-
-    const hasListModalTableWrapper = element.querySelector('.list-modal-table-wrapper') !== null;
-    const elementClassName = element.className || '';
-    const allClassNames = `${className || ''} ${elementClassName}`;
-    const hasNoPadding = allClassNames.includes('no-padding');
-    const hasListModalNoBodyScroll = allClassNames.includes('list-modal-no-body-scroll');
-    const shouldHideOverflow = hasNoPadding || hasListModalNoBodyScroll || hasListModalTableWrapper;
-
-    // Verificar se já está aplicado para evitar loop infinito (verificar classes, não estilos inline)
-    const hasForceNoScroll = element.classList.contains('force-no-scroll');
-    const hasNoScroll = element.classList.contains('no-scroll');
-    const alreadyApplied = (hasForceNoScroll || hasNoScroll) && shouldHideOverflow;
-
-    if (skipObserver && alreadyApplied) {
-      return; // Evitar loop infinito
-    }
-
-    if (shouldHideOverflow) {
-      // Adicionar classe específica - o CSS com !important vai aplicar o overflow hidden
-      element.classList.add('force-no-scroll');
-      element.classList.add('no-scroll');
-      if (hasListModalNoBodyScroll) {
-        element.classList.add('list-modal-no-body-scroll');
-      }
-      
-      // Aplicar estilo inline diretamente para garantir que funcione
-      element.style.overflow = 'hidden';
-      element.style.overflowY = 'hidden';
-      element.style.overflowX = 'hidden';
-    } else {
-      element.classList.remove('force-no-scroll');
-      element.classList.remove('no-scroll');
-      element.classList.remove('list-modal-no-body-scroll');
-      element.style.removeProperty('overflow');
-      element.style.removeProperty('overflow-y');
-      element.style.removeProperty('overflow-x');
-    }
-  }, [show, className, isMobile]);
-
-  // Resetar bodyMounted quando o modal fechar
-  useEffect(() => {
-    if (!show) {
-      setBodyMounted(false);
-    }
-  }, [show]);
-
-  // Callback ref que executa quando o elemento é montado
-  const bodyRefCallback = useCallback((element: HTMLDivElement | null) => {
-    bodyRef.current = element;
-    setBodyMounted(!!element);
-  }, []);
-
-  // useEffect que observa quando o elemento está disponível e aplica os estilos
-  useEffect(() => {
-    if (!bodyMounted || !bodyRef.current || isMobile || !show) {
-      return;
-    }
-
-    const element = bodyRef.current;
-    applyOverflowStyles(element);
-
-    // Aplicar após pequeno delay para garantir que o conteúdo foi renderizado
-    const timeoutIds = [
-      setTimeout(() => applyOverflowStyles(element), 0),
-      setTimeout(() => applyOverflowStyles(element), 100)
-    ];
-
-    // Observar mudanças no DOM
-    let isApplying = false;
-    const observer = new MutationObserver((mutations) => {
-      if (isApplying) {
-        return;
-      }
-
-      const relevantChange = mutations.some(mutation => {
-        if (mutation.type === 'childList') {
-          const addedHasWrapper = Array.from(mutation.addedNodes).some(node => 
-            node.nodeType === 1 && (
-              (node as Element).classList?.contains('list-modal-table-wrapper') ||
-              (node as Element).querySelector?.('.list-modal-table-wrapper')
-            )
-          );
-          const removedHasWrapper = Array.from(mutation.removedNodes).some(node => 
-            node.nodeType === 1 && (
-              (node as Element).classList?.contains('list-modal-table-wrapper') ||
-              (node as Element).querySelector?.('.list-modal-table-wrapper')
-            )
-          );
-          return addedHasWrapper || removedHasWrapper;
-        }
-        return false;
-      });
-
-      if (relevantChange) {
-        isApplying = true;
-        applyOverflowStyles(element, true);
-        setTimeout(() => {
-          isApplying = false;
-        }, 100);
-      }
-    });
-
-    observer.observe(element, {
-      childList: true,
-      subtree: true
-    });
-
-    return () => {
-      timeoutIds.forEach(id => clearTimeout(id));
-      observer.disconnect();
-    };
-  }, [bodyMounted, show, className, isMobile, applyOverflowStyles]);
-
   // Em mobile, usar ResponsiveDialog diretamente
   if (isMobile && show) {
     return (
@@ -399,7 +279,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
       {/* Modal */}
       <div
-        ref={modalRef}
         className={`modal-content draggable-modal-container draggable-modal-container-custom ${className}`}
         style={{
           left: `${position.x}px`,
@@ -414,7 +293,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       >
         {/* Header arrastável */}
         <div
-          ref={headerRef}
           className="modal-header-draggable draggable-modal-header-custom"
           onMouseDown={handleMouseDown}
         >
@@ -450,7 +328,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
         {/* Body com scroll */}
         <div
-          ref={bodyRefCallback}
           className={`modal-body draggable-modal-body-custom ${className?.includes('no-padding') ? 'no-scroll' : ''} ${className?.includes('list-modal-no-body-scroll') ? 'list-modal-no-body-scroll' : ''}`}
           style={{
             ...(className?.includes('no-padding') || className?.includes('list-modal-no-body-scroll') 

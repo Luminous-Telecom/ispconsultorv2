@@ -13,307 +13,246 @@ export const useNotification = (options: UseNotificationOptions = {}): UseNotifi
     pauseOnFocus = true,
     closeOnClick = false,
     showProgress = true,
-    zIndex = 999999, // Maior que ResponsiveDialog (99999) para aparecer acima dos modais no mobile
+    zIndex = 999999,
   } = options;
 
   const [notifications, setNotifications] = useState<NotificationState[]>([]);
-  const timersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  const progressTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const dismissTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
-  // Gerar ID único para notificação
+  const clearDismissTimer = useCallback((id: string) => {
+    const timer = dismissTimersRef.current.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      dismissTimersRef.current.delete(id);
+    }
+  }, []);
+
   const generateId = useCallback(() => {
     return `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }, []);
 
-  // Remover notificação
-  const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => {
-      const notification = prev.find(n => n.id === id);
-      if (!notification) return prev;
-
-      // Chamar callback onHide
-      notification.config.onHide?.();
-
-      // Limpar timers
-      const timer = timersRef.current.get(id);
-      if (timer) {
-        clearTimeout(timer);
-        timersRef.current.delete(id);
-      }
-
-      const progressTimer = progressTimersRef.current.get(id);
-      if (progressTimer) {
-        clearInterval(progressTimer);
-        progressTimersRef.current.delete(id);
-      }
-
-      return prev.filter(n => n.id !== id);
-    });
-  }, []);
-
-  // Adicionar notificação
-  const addNotification = useCallback((config: NotificationConfig): string => {
-    const id = config.id || generateId();
-    const now = Date.now();
-    
-    // Remover type do defaultConfig para evitar conflitos
-    const { type: _defaultType, ...defaultConfigWithoutType } = defaultConfig;
-    
-    // Construir config final, garantindo que type do config sobrescreva tudo
-    const notificationState: NotificationState = {
-      id,
-      config: {
-        ...defaultConfigWithoutType,
-        position: config.position || defaultPosition,
-        animation: config.animation || defaultAnimation,
-        size: config.size || defaultSize,
-        duration: config.duration !== undefined ? config.duration : defaultDuration,
-        pauseOnHover: config.pauseOnHover !== undefined ? config.pauseOnHover : pauseOnHover,
-        pauseOnFocus: config.pauseOnFocus !== undefined ? config.pauseOnFocus : pauseOnFocus,
-        closeOnClick: config.closeOnClick !== undefined ? config.closeOnClick : closeOnClick,
-        showProgress: config.showProgress !== undefined ? config.showProgress : showProgress,
-        zIndex: config.zIndex || zIndex,
-        ...config,
-        type: config.type || 'info', // Garantir que type sempre exista
-      },
-      isVisible: true,
-      isAnimating: false,
-      isPaused: false,
-      progress: 0,
-      timeRemaining: config.duration !== undefined ? config.duration : defaultDuration,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    setNotifications(prev => {
-      // Verificar se já existe notificação com mesma mensagem e tipo
-      const existingNotification = prev.find(n => 
-        n.config.message === config.message && 
-        n.config.type === config.type &&
-        n.config.position === notificationState.config.position
-      );
-      
-      if (existingNotification) {
-        return prev;
-      }
-
-      // Limitar número máximo de notificações
-      const newNotifications = [...prev, notificationState];
-      if (newNotifications.length > maxNotifications) {
-        // Remover a mais antiga
-        newNotifications.sort((a, b) => a.createdAt - b.createdAt);
-        newNotifications.shift();
-      }
-
-      return newNotifications;
-    });
-
-    // Chamar callback onShow
-    config.onShow?.();
-
-    // Configurar timer de remoção automática
-    if ((notificationState.config.duration || 0) > 0) {
-      const timer = setTimeout(() => {
-        removeNotification(id);
-      }, notificationState.config.duration || 0);
-      
-      timersRef.current.set(id, timer);
-    }
-
-    // Configurar timer de progresso
-    if (notificationState.config.showProgress && (notificationState.config.duration || 0) > 0) {
-      const progressInterval = 50; // Atualizar a cada 50ms
-      const totalSteps = (notificationState.config.duration || 0) / progressInterval;
-      let currentStep = 0;
-
-      const progressTimer = setInterval(() => {
-        currentStep++;
-        const progress = (currentStep / totalSteps) * 100;
-        
-        setNotifications(prev => 
-          prev.map(n => 
-            n.id === id 
-              ? { 
-                  ...n, 
-                  progress: Math.min(progress, 100),
-                  timeRemaining: Math.max(0, (n.config.duration || 0) - (currentStep * progressInterval))
-                }
-              : n
-          )
-        );
-
-        if (currentStep >= totalSteps) {
-          clearInterval(progressTimer);
-          progressTimersRef.current.delete(id);
+  const removeNotification = useCallback(
+    (id: string) => {
+      setNotifications((prev) => {
+        const notification = prev.find((n) => n.id === id);
+        if (!notification) {
+          return prev;
         }
-      }, progressInterval);
+        notification.config.onHide?.();
+        return prev.filter((n) => n.id !== id);
+      });
+      clearDismissTimer(id);
+    },
+    [clearDismissTimer]
+  );
 
-      progressTimersRef.current.set(id, progressTimer);
-    }
+  const addNotification = useCallback(
+    (config: NotificationConfig): string => {
+      const id = config.id || generateId();
+      const now = Date.now();
 
-    return id;
-  }, [defaultConfig, maxNotifications, defaultPosition, defaultDuration, defaultAnimation, defaultSize, pauseOnHover, pauseOnFocus, closeOnClick, showProgress, zIndex, generateId, removeNotification]);
+      const { type: _defaultType, ...defaultConfigWithoutType } = defaultConfig;
 
-  // Atualizar notificação
+      const notificationState: NotificationState = {
+        id,
+        config: {
+          ...defaultConfigWithoutType,
+          position: config.position || defaultPosition,
+          animation: config.animation || defaultAnimation,
+          size: config.size || defaultSize,
+          duration: config.duration !== undefined ? config.duration : defaultDuration,
+          pauseOnHover: config.pauseOnHover !== undefined ? config.pauseOnHover : pauseOnHover,
+          pauseOnFocus: config.pauseOnFocus !== undefined ? config.pauseOnFocus : pauseOnFocus,
+          closeOnClick: config.closeOnClick !== undefined ? config.closeOnClick : closeOnClick,
+          showProgress: config.showProgress !== undefined ? config.showProgress : showProgress,
+          zIndex: config.zIndex || zIndex,
+          ...config,
+          type: config.type || 'info',
+        },
+        isVisible: true,
+        isAnimating: false,
+        isPaused: false,
+        progress: 0,
+        timeRemaining: config.duration !== undefined ? config.duration : defaultDuration,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      setNotifications((prev) => {
+        const merged = [...prev, notificationState];
+        if (merged.length <= maxNotifications) {
+          return merged;
+        }
+        const sorted = [...merged].sort((a, b) => a.createdAt - b.createdAt);
+        const oldest = sorted[0];
+        if (oldest) {
+          oldest.config.onHide?.();
+          clearDismissTimer(oldest.id);
+        }
+        return sorted.slice(1);
+      });
+
+      config.onShow?.();
+
+      const duration = notificationState.config.duration || 0;
+      if (duration > 0) {
+        const timer = setTimeout(() => {
+          removeNotification(id);
+        }, duration);
+        dismissTimersRef.current.set(id, timer);
+      }
+
+      return id;
+    },
+    [
+      defaultConfig,
+      maxNotifications,
+      defaultPosition,
+      defaultDuration,
+      defaultAnimation,
+      defaultSize,
+      pauseOnHover,
+      pauseOnFocus,
+      closeOnClick,
+      showProgress,
+      zIndex,
+      generateId,
+      removeNotification,
+      clearDismissTimer,
+    ]
+  );
+
   const updateNotification = useCallback((id: string, updates: Partial<NotificationConfig>) => {
-    setNotifications(prev => 
-      prev.map(n => 
-        n.id === id 
-          ? { 
-              ...n, 
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.id === id
+          ? {
+              ...n,
               config: { ...n.config, ...updates },
-              updatedAt: Date.now()
+              updatedAt: Date.now(),
             }
           : n
       )
     );
   }, []);
 
-  // Limpar todas as notificações
   const clearAllNotifications = useCallback(() => {
-    // Limpar todos os timers
-    timersRef.current.forEach(timer => clearTimeout(timer));
-    timersRef.current.clear();
-    
-    progressTimersRef.current.forEach(timer => clearInterval(timer));
-    progressTimersRef.current.clear();
-
+    dismissTimersRef.current.forEach((timer) => clearTimeout(timer));
+    dismissTimersRef.current.clear();
     setNotifications([]);
   }, []);
 
-  // Pausar notificação
   const pauseNotification = useCallback((id: string) => {
-    setNotifications(prev => 
-      prev.map(n => 
-        n.id === id 
-          ? { ...n, isPaused: true }
-          : n
-      )
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isPaused: true } : n))
     );
+    clearDismissTimer(id);
+  }, [clearDismissTimer]);
 
-    // Pausar timers
-    const timer = timersRef.current.get(id);
-    if (timer) {
-      clearTimeout(timer);
-      timersRef.current.delete(id);
-    }
+  const resumeNotification = useCallback(
+    (id: string) => {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isPaused: false } : n))
+      );
 
-    const progressTimer = progressTimersRef.current.get(id);
-    if (progressTimer) {
-      clearInterval(progressTimer);
-      progressTimersRef.current.delete(id);
-    }
-  }, []);
+      const notification = notifications.find((n) => n.id === id);
+      if (notification && (notification.config.duration || 0) > 0) {
+        const timer = setTimeout(() => {
+          removeNotification(id);
+        }, notification.timeRemaining);
 
-  // Retomar notificação
-  const resumeNotification = useCallback((id: string) => {
-    setNotifications(prev => 
-      prev.map(n => 
-        n.id === id 
-          ? { ...n, isPaused: false }
-          : n
-      )
-    );
+        dismissTimersRef.current.set(id, timer);
+      }
+    },
+    [notifications, removeNotification]
+  );
 
-    // Recriar timers
-    const notification = notifications.find(n => n.id === id);
-    if (notification && (notification.config.duration || 0) > 0) {
-      const timer = setTimeout(() => {
-        removeNotification(id);
-      }, notification.timeRemaining);
-      
-      timersRef.current.set(id, timer);
-    }
-  }, [notifications, removeNotification]);
-
-  // Pausar todas as notificações
   const pauseAllNotifications = useCallback(() => {
-    setNotifications(prev => 
-      prev.map(n => ({ ...n, isPaused: true }))
-    );
-
-    // Pausar todos os timers
-    timersRef.current.forEach(timer => clearTimeout(timer));
-    timersRef.current.clear();
-    
-    progressTimersRef.current.forEach(timer => clearInterval(timer));
-    progressTimersRef.current.clear();
+    setNotifications((prev) => prev.map((n) => ({ ...n, isPaused: true })));
+    dismissTimersRef.current.forEach((timer) => clearTimeout(timer));
+    dismissTimersRef.current.clear();
   }, []);
 
-  // Retomar todas as notificações
   const resumeAllNotifications = useCallback(() => {
-    setNotifications(prev => 
-      prev.map(n => ({ ...n, isPaused: false }))
-    );
+    setNotifications((prev) => prev.map((n) => ({ ...n, isPaused: false })));
 
-    // Recriar timers para todas as notificações
-    notifications.forEach(notification => {
+    notifications.forEach((notification) => {
       if ((notification.config.duration || 0) > 0) {
         const timer = setTimeout(() => {
           removeNotification(notification.id);
         }, notification.timeRemaining);
-        
-        timersRef.current.set(notification.id, timer);
+
+        dismissTimersRef.current.set(notification.id, timer);
       }
     });
   }, [notifications, removeNotification]);
 
-  // Métodos de conveniência
-  const success = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
-    const opts = typeof options === 'number' ? { duration: options } : options;
-    const { type: _type, ...restOpts } = opts; // Remover type se existir
-    
-    return addNotification({
-      ...restOpts,
-      message,
-      type: 'success', // Sempre forçar tipo 'success'
-    });
-  }, [addNotification]);
+  const success = useCallback(
+    (message: string, options: Partial<NotificationConfig> | number = {}) => {
+      const opts = typeof options === 'number' ? { duration: options } : options;
+      const { type: _type, ...restOpts } = opts;
 
-  const error = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
-    const opts = typeof options === 'number' ? { duration: options } : options;
-    return addNotification({
-      type: 'error',
-      message,
-      ...opts,
-    });
-  }, [addNotification]);
+      return addNotification({
+        ...restOpts,
+        message,
+        type: 'success',
+      });
+    },
+    [addNotification]
+  );
 
-  const warning = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
-    const opts = typeof options === 'number' ? { duration: options } : options;
-    return addNotification({
-      type: 'warning',
-      message,
-      ...opts,
-    });
-  }, [addNotification]);
+  const error = useCallback(
+    (message: string, options: Partial<NotificationConfig> | number = {}) => {
+      const opts = typeof options === 'number' ? { duration: options } : options;
+      return addNotification({
+        type: 'error',
+        message,
+        ...opts,
+      });
+    },
+    [addNotification]
+  );
 
-  const info = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
-    const opts = typeof options === 'number' ? { duration: options } : options;
-    return addNotification({
-      type: 'info',
-      message,
-      ...opts,
-    });
-  }, [addNotification]);
+  const warning = useCallback(
+    (message: string, options: Partial<NotificationConfig> | number = {}) => {
+      const opts = typeof options === 'number' ? { duration: options } : options;
+      return addNotification({
+        type: 'warning',
+        message,
+        ...opts,
+      });
+    },
+    [addNotification]
+  );
 
-  const loading = useCallback((message: string, options: Partial<NotificationConfig> = {}) => {
-    return addNotification({
-      type: 'loading',
-      message,
-      duration: 0, // Não remove automaticamente
-      ...options,
-    });
-  }, [addNotification]);
+  const info = useCallback(
+    (message: string, options: Partial<NotificationConfig> | number = {}) => {
+      const opts = typeof options === 'number' ? { duration: options } : options;
+      return addNotification({
+        type: 'info',
+        message,
+        ...opts,
+      });
+    },
+    [addNotification]
+  );
 
-  // Limpar timers ao desmontar
+  const loading = useCallback(
+    (message: string, options: Partial<NotificationConfig> = {}) => {
+      return addNotification({
+        type: 'loading',
+        message,
+        duration: 0,
+        ...options,
+      });
+    },
+    [addNotification]
+  );
+
   useEffect(() => {
-    const timers = timersRef.current;
-    const progressTimers = progressTimersRef.current;
-    
+    const timers = dismissTimersRef.current;
     return () => {
-      timers.forEach(timer => clearTimeout(timer));
-      progressTimers.forEach(timer => clearInterval(timer));
+      timers.forEach((timer) => clearTimeout(timer));
     };
   }, []);
 

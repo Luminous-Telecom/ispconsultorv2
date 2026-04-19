@@ -3958,8 +3958,28 @@ textarea:focus {
 .notification-progress-bar {
   height: 100%;
   background-color: var(--bs-primary);
-  transition: width 0.1s linear;
   border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+/* Barra animada por tempo (evita setState a cada frame) */
+.notification-progress-bar--animated {
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(1);
+  transition: none;
+  animation-name: notification-progress-shrink;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-duration: var(--notification-duration, 5000ms);
+}
+
+@keyframes notification-progress-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
 }
 
 /* Tipos de notificação */

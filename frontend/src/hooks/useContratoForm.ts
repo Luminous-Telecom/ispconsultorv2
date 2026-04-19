@@ -140,7 +140,7 @@ export const useContratoForm = ({
 
   // Buscar dados do contrato (se estiver editando ou após criação)
   const contratoIdToFetch = contratoId || createdContratoId;
-  const { data: contrato, isLoading: isLoadingContrato } = useQuery({
+  const { data: contrato, isPending: isLoadingContrato } = useQuery({
     queryKey: ['contrato', contratoIdToFetch],
     queryFn: () => ContratoService.getById(contratoIdToFetch!),
     enabled: !!contratoIdToFetch,
@@ -208,6 +208,8 @@ export const useContratoForm = ({
   const createContratoMutation = useMutation({
     mutationFn: (data: CreateContratoData) => ContratoService.create(data),
     onSuccess: (novoContrato) => {
+      // Popular o cache evita isLoadingContrato ficar true de novo e o modal inteiro voltar ao spinner após criar.
+      queryClient.setQueryData(['contrato', novoContrato.id], novoContrato);
       setCreatedContratoId(novoContrato.id);
       success('Contrato criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['contratos'] });

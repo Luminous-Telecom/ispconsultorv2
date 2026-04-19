@@ -126,11 +126,11 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
   useEffect(() => {
     const newData = Array.isArray(data) ? data : [];
     setState(prev => {
-      // Verificar se os dados realmente mudaram (comparar tamanho e IDs para evitar comparação de referência)
+      // Só tamanho/ordem/ids — não usar `prev.data !== newData`: novo array a cada render do pai causava loop infinito.
       const dataChanged = prev.data.length !== newData.length || 
         newData.some((item, index) => !prev.data[index] || prev.data[index].id !== item.id);
       
-      if (dataChanged || prev.data !== newData) {
+      if (dataChanged) {
         // Manter seleção por id, mas apontar para os objetos atuais de newData (evita stale após refetch)
         const idToItem = new Map(newData.map(item => [item.id, item]));
         const syncedSelectedItems = prev.selectedItems
@@ -157,11 +157,19 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
   // Atualizar estado de paginação quando prop pagination mudar
   useEffect(() => {
     if (normalizedPagination) {
-      setState(prev => ({
-        ...prev,
-        currentPage: normalizedPagination.currentPage,
-        pageSize: normalizedPagination.perPage,
-      }));
+      setState(prev => {
+        if (
+          prev.currentPage === normalizedPagination.currentPage &&
+          prev.pageSize === normalizedPagination.perPage
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          currentPage: normalizedPagination.currentPage,
+          pageSize: normalizedPagination.perPage,
+        };
+      });
     }
   }, [normalizedPagination]);
 
