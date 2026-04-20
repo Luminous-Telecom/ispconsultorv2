@@ -97,6 +97,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const listFilters: ContratoFilters = {
     ...(initialFilters?.em_atraso === true && { em_atraso: true }),
     ...(statusFilter && { status: statusFilter }),
+    ...(initialFilters?.excluir_em_atraso === true && { excluir_em_atraso: true }),
     ...(initialFilters?.isento_mensalidade !== undefined && { isento_mensalidade: initialFilters.isento_mensalidade }),
     ...(initialFilters?.plano_id && { plano_id: initialFilters.plano_id }),
     ...(initialFilters?.tipo_servico && { tipo_servico: initialFilters.tipo_servico })

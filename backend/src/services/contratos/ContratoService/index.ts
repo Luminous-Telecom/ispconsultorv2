@@ -22,6 +22,11 @@ export interface ListContratosFilters {
   tipo_servico?: string;
   /** Contratos ativos com pelo menos um título não pago e vencido (vencimento antes de hoje) */
   em_atraso?: boolean;
+  /**
+   * Quando true (e sem `em_atraso`), exclui contratos que tenham título pendente/vencido não pago com vencimento antes de hoje.
+   * Usado para alinhar a fatia "Ativos" do dashboard com a listagem (ativos sem sobrepor "em atraso").
+   */
+  excluir_em_atraso?: boolean;
   empresa_id?: number;
 }
 
@@ -80,7 +85,21 @@ export class ContratoService {
    * Listar contratos com filtros e paginação
    */
   static async list(filters: ListContratosFilters): Promise<ListContratosResponse> {
-    const { page = 1, limit = 10, search = '', status, searchField, sortColumn, sortDirection, isento_mensalidade, plano_id, tipo_servico, em_atraso, empresa_id } = filters;
+    const {
+      page = 1,
+      limit = 10,
+      search = '',
+      status,
+      searchField,
+      sortColumn,
+      sortDirection,
+      isento_mensalidade,
+      plano_id,
+      tipo_servico,
+      em_atraso,
+      excluir_em_atraso,
+      empresa_id,
+    } = filters;
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const offset = (pageNum - 1) * limitNum;
@@ -165,6 +184,23 @@ export class ContratoService {
           : [emAtrasoLiteral];
     } else if (status) {
       whereClause.status = status;
+    }
+
+    if (excluir_em_atraso && !em_atraso) {
+      const semAtrasoLiteral = sequelize.literal(`NOT EXISTS (
+        SELECT 1 FROM adm_titulos t
+        WHERE t.contrato_id = \`Contrato\`.\`id\`
+        AND t.pago = 0
+        AND t.status IN ('pendente', 'vencido')
+        AND DATE(t.data_vencimento) < CURDATE()
+      )`);
+      const wc2 = whereClause as Record<symbol, unknown>;
+      const prevAnd2 = wc2[Op.and];
+      wc2[Op.and] = Array.isArray(prevAnd2)
+        ? [...prevAnd2, semAtrasoLiteral]
+        : prevAnd2 != null
+          ? [prevAnd2, semAtrasoLiteral]
+          : [semAtrasoLiteral];
     }
 
     if (isento_mensalidade !== undefined && isento_mensalidade !== null) {

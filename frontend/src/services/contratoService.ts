@@ -16,6 +16,8 @@ export interface ContratoFilters extends BaseFilters {
   plano_id?: number;
   tipo_servico?: string;
   em_atraso?: boolean;
+  /** Lista só contratos sem título vencido não pago (alinhado à fatia "Ativos" do dashboard) */
+  excluir_em_atraso?: boolean;
   searchField?: string;
 }
 

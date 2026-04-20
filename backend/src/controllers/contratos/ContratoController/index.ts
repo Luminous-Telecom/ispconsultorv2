@@ -100,7 +100,20 @@ export class ContratoController {
   // Listar todos os contratos com paginação
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 10, search = '', status, searchField, sortColumn, sortDirection, isento_mensalidade, plano_id, tipo_servico, em_atraso } = req.query;
+      const {
+        page = 1,
+        limit = 10,
+        search = '',
+        status,
+        searchField,
+        sortColumn,
+        sortDirection,
+        isento_mensalidade,
+        plano_id,
+        tipo_servico,
+        em_atraso,
+        excluir_em_atraso,
+      } = req.query;
       const empresaId = getEmpresaIdOrNull(req);
       const emAtrasoFlag = em_atraso === 'true';
       const result = await ContratoService.list({
@@ -115,6 +128,7 @@ export class ContratoController {
         plano_id: plano_id ? Number(plano_id) : undefined,
         tipo_servico: tipo_servico as string | undefined,
         em_atraso: emAtrasoFlag,
+        excluir_em_atraso: excluir_em_atraso === 'true' && !emAtrasoFlag,
         empresa_id: empresaId ?? undefined,
       });
 

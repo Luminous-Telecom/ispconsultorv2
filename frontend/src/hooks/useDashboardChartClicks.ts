@@ -60,7 +60,10 @@ export const useDashboardChartClicks = () => {
       });
     } else {
       openModal('contratos' as ModalType, {
-        initialFilters: { status: fv }
+        initialFilters:
+          fv === 'ativo'
+            ? { status: fv, excluir_em_atraso: true }
+            : { status: fv }
       });
     }
   }, [openModal]);
