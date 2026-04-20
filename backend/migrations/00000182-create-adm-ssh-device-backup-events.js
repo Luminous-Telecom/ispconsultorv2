@@ -15,9 +15,24 @@
  *
  * Se a tabela já existir com tipos errados (tentativa anterior com INTEGER) mas estiver vazia,
  * ela é descartada e recriada automaticamente; com dados, a migration falha para revisão manual.
+ *
+ * Para FK em colunas string (ex.: UUID char(36)), charset/collation da nova tabela devem coincidir
+ * com a coluna referenciada; caso contrário o MySQL retorna errno 150. O Sequelize não repassa
+ * charset por coluna no CREATE TABLE do dialeto MySQL, então usamos DEFAULT CHARSET/COLLATE na tabela.
  */
 
 const TBL = 'adm_ssh_device_backup_events';
+
+async function columnCharsetCollation(q, table, column) {
+  const [rows] = await q(
+    'SELECT CHARACTER_SET_NAME AS cs, COLLATION_NAME AS coll FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column LIMIT 1',
+    { replacements: { table, column } },
+  );
+  const r = rows?.[0];
+  const cs = r?.cs != null && String(r.cs).trim() !== '' ? String(r.cs) : null;
+  const coll = r?.coll != null && String(r.coll).trim() !== '' ? String(r.coll) : null;
+  return { charset: cs, collation: coll };
+}
 
 async function columnMysqlType(q, table, column) {
   const [rows] = await q(
@@ -85,6 +100,23 @@ function normColumnType(ct) {
     .replace(/\s+/g, ' ');
 }
 
+function isStringLikeMysqlType(columnType) {
+  const base = String(columnType)
+    .trim()
+    .toLowerCase()
+    .replace(/\bunsigned\b/gi, '')
+    .trim();
+  return /^char\(|^varchar\(/.test(base);
+}
+
+function stringCollationMismatch(parentCC, tableCC) {
+  const p = parentCC.collation;
+  const c = tableCC.collation;
+  if (p == null && c == null) return false;
+  if (p == null || c == null) return true;
+  return normColumnType(p) !== normColumnType(c);
+}
+
 async function tableExists(q, table) {
   const [rows] = await q(
     'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table LIMIT 1',
@@ -124,13 +156,37 @@ module.exports = {
     const sshDeviceIdType = dataTypeForInformationSchema(Sequelize, deviceIdCt);
     const empresaIdType = dataTypeForInformationSchema(Sequelize, empresaIdCt);
 
+    const devCC = await columnCharsetCollation(q, 'adm_ssh_devices', 'id');
+    const empCC = await columnCharsetCollation(q, 'adm_dados_empresa', 'id');
+    /** @type {{ engine: string, charset?: string, collate?: string }} */
+    const createTableOpts = { engine: 'InnoDB' };
+    if (devCC.charset && devCC.collation) {
+      createTableOpts.charset = devCC.charset;
+      createTableOpts.collate = devCC.collation;
+    } else if (empCC.charset && empCC.collation) {
+      createTableOpts.charset = empCC.charset;
+      createTableOpts.collate = empCC.collation;
+    }
+
     if (await tableExists(q, TBL)) {
       const existingSsh = await columnMysqlType(q, TBL, 'ssh_device_id');
       const existingEmp = await columnMysqlType(q, TBL, 'empresa_id');
-      const sshMismatch =
+      let sshMismatch =
         existingSsh != null && normColumnType(existingSsh) !== normColumnType(deviceIdCt);
-      const empMismatch =
+      let empMismatch =
         existingEmp != null && normColumnType(existingEmp) !== normColumnType(empresaIdCt);
+      if (!sshMismatch && existingSsh != null && isStringLikeMysqlType(deviceIdCt)) {
+        const evSshCC = await columnCharsetCollation(q, TBL, 'ssh_device_id');
+        if (stringCollationMismatch(devCC, evSshCC)) {
+          sshMismatch = true;
+        }
+      }
+      if (!empMismatch && existingEmp != null && isStringLikeMysqlType(empresaIdCt)) {
+        const evEmpCC = await columnCharsetCollation(q, TBL, 'empresa_id');
+        if (stringCollationMismatch(empCC, evEmpCC)) {
+          empMismatch = true;
+        }
+      }
       if (sshMismatch || empMismatch) {
         const [badTypeRows] = await q(`SELECT COUNT(*) AS c FROM \`${TBL}\``);
         const badRows = Number(badTypeRows?.[0]?.c ?? 0);
@@ -151,37 +207,41 @@ module.exports = {
     }
 
     if (!(await tableExists(q, TBL))) {
-      await queryInterface.createTable(TBL, {
-        id: {
-          type: Sequelize.INTEGER,
-          allowNull: false,
-          autoIncrement: true,
-          primaryKey: true,
+      await queryInterface.createTable(
+        TBL,
+        {
+          id: {
+            type: Sequelize.INTEGER,
+            allowNull: false,
+            autoIncrement: true,
+            primaryKey: true,
+          },
+          ssh_device_id: {
+            type: sshDeviceIdType,
+            allowNull: false,
+          },
+          empresa_id: {
+            type: empresaIdType,
+            allowNull: true,
+          },
+          status: {
+            type: Sequelize.STRING(32),
+            allowNull: false,
+            comment:
+              'falha | sucesso | somente_local | falha_envio | verificado (extensível; hoje o runner grava falha/sucesso)',
+          },
+          detail: {
+            type: Sequelize.TEXT,
+            allowNull: true,
+          },
+          created_at: {
+            type: Sequelize.DATE,
+            allowNull: false,
+            defaultValue: Sequelize.fn('NOW'),
+          },
         },
-        ssh_device_id: {
-          type: sshDeviceIdType,
-          allowNull: false,
-        },
-        empresa_id: {
-          type: empresaIdType,
-          allowNull: true,
-        },
-        status: {
-          type: Sequelize.STRING(32),
-          allowNull: false,
-          comment:
-            'falha | sucesso | somente_local | falha_envio | verificado (extensível; hoje o runner grava falha/sucesso)',
-        },
-        detail: {
-          type: Sequelize.TEXT,
-          allowNull: true,
-        },
-        created_at: {
-          type: Sequelize.DATE,
-          allowNull: false,
-          defaultValue: Sequelize.fn('NOW'),
-        },
-      });
+        createTableOpts,
+      );
     }
 
     // Não chamar addIndex em ssh_device_id aqui: addConstraint da FK cria o índice
