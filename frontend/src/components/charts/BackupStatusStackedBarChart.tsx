@@ -14,7 +14,8 @@ export interface BackupStatusDayDatum {
   verificado: number;
 }
 
-const STACK_KEYS: BackupStatusKey[] = ['sucesso', 'somente_local', 'falha_envio', 'verificado', 'falha'];
+/** No card do dashboard: só sucesso e falha (legenda sem local, falha envio, verificado). */
+const STACK_KEYS: BackupStatusKey[] = ['sucesso', 'falha'];
 
 const STATUS_COLORS: Record<BackupStatusKey, string> = {
   sucesso: '#22c55e',
@@ -66,7 +67,16 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
     );
 
     const hasAny = useMemo(
-      () => chartData.some((d) => STACK_KEYS.some((k) => (Number(d[k]) || 0) > 0)),
+      () =>
+        chartData.some(
+          (d) =>
+            (Number(d.sucesso) || 0) +
+              (Number(d.somente_local) || 0) +
+              (Number(d.falha_envio) || 0) +
+              (Number(d.verificado) || 0) +
+              (Number(d.falha) || 0) >
+            0
+        ),
       [chartData]
     );
 
@@ -112,13 +122,26 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
         .nice()
         .range([innerH, 0]);
 
-      d3.select(svg).selectAll('*').remove();
-      const g = d3
-        .select(svg)
-        .attr('width', width)
-        .attr('height', height)
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
+      const svgSel = d3.select(svg);
+      svgSel.selectAll('*').remove();
+      svgSel.attr('width', width).attr('height', height);
+
+      const defs = svgSel.append('defs');
+      const tooltipFilterId = `tooltip-shadow-${Math.random().toString(36).slice(2)}`;
+      defs
+        .append('filter')
+        .attr('id', tooltipFilterId)
+        .attr('x', '-20%')
+        .attr('y', '-20%')
+        .attr('width', '140%')
+        .attr('height', '140%')
+        .append('feDropShadow')
+        .attr('dx', 0)
+        .attr('dy', 4)
+        .attr('stdDeviation', 6)
+        .attr('flood-opacity', 0.25);
+
+      const g = svgSel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
       const axisColor = textMuted();
       const gAxis = g.append('g').attr('class', 'y-axis').call(d3.axisLeft(y).ticks(4).tickSize(-innerW));
@@ -137,6 +160,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
           .selectAll('rect')
           .data(serie)
           .join('rect')
+          .attr('data-status-key', statusKey)
           .attr('x', (d) => x(d.data.label) ?? 0)
           .attr('y', (d) => y(d[1]))
           .attr('height', (d) => Math.max(0, y(d[0]) - y(d[1])))
@@ -151,7 +175,73 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
             onSegmentClick(d.data.dataISO, statusKey);
           });
       });
-    }, [chartData, width, maxTotal, hasAny, onSegmentClick, textMuted]);
+
+      const tooltipG = svgSel.append('g').attr('class', 'chart-tooltip').style('opacity', 0).style('pointer-events', 'none');
+      const tooltipBg = tooltipG
+        .append('rect')
+        .attr('rx', 6)
+        .attr('ry', 6)
+        .attr('fill', 'var(--bg-tertiary)')
+        .attr('stroke', 'var(--border-color)')
+        .attr('stroke-width', 1)
+        .attr('filter', `url(#${tooltipFilterId})`);
+
+      const tooltipContent = tooltipG.append('g').attr('transform', 'translate(12,12)');
+      tooltipContent
+        .append('text')
+        .attr('class', 'tooltip-label')
+        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('font-size', '10px')
+        .attr('font-weight', '500')
+        .attr('fill', 'var(--text-muted)')
+        .attr('y', 0);
+      tooltipContent
+        .append('text')
+        .attr('class', 'tooltip-value')
+        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('font-size', '11px')
+        .attr('font-weight', '600')
+        .attr('fill', 'var(--text-primary)')
+        .attr('y', 16);
+
+      const padding = { x: 16, y: 12 };
+
+      const placeTooltip = (d: (typeof series)[0][0], statusKey: BackupStatusKey) => {
+        const v = Number(d.data[statusKey]) || 0;
+        const nome = legendLabels[statusKey] ?? statusKey;
+        tooltipContent.select('.tooltip-label').text(d.data.label);
+        tooltipContent.select('.tooltip-value').text(`${nome}: ${v.toLocaleString('pt-BR')}`);
+        const bbox = (tooltipContent.node() as SVGGElement | null)?.getBBox();
+        const tw = bbox ? Math.max(bbox.width + padding.x, 100) : 120;
+        const th = bbox ? bbox.height + padding.y : 42;
+        tooltipBg.attr('width', tw).attr('height', th).attr('x', 0).attr('y', 0);
+        const bx = x(d.data.label) ?? 0;
+        const pointX = margin.left + bx + x.bandwidth() / 2;
+        const pointY = margin.top + y(d[1]);
+        let tx = pointX - tw / 2;
+        let ty = pointY - th - 16;
+        if (tx + tw > width - 8) tx = width - tw - 8;
+        if (tx < 8) tx = 8;
+        if (ty < 8) ty = pointY + 20;
+        if (ty + th > height - 8) ty = height - th - 8;
+        if (ty < 8) ty = 8;
+        tooltipG.attr('transform', `translate(${tx},${ty})`);
+      };
+
+      type StackPoint = (typeof series)[0][0];
+
+      g.selectAll<SVGRectElement, StackPoint>('rect')
+        .on('mouseenter', function (_event, d) {
+          const h = y(d[0]) - y(d[1]);
+          if (h < 0.5) return;
+          const statusKey = (this.getAttribute('data-status-key') as BackupStatusKey) || STACK_KEYS[0];
+          placeTooltip(d, statusKey);
+          tooltipG.transition().duration(180).ease(d3.easeCubicOut).style('opacity', 1);
+        })
+        .on('mouseleave', () => {
+          tooltipG.transition().duration(150).ease(d3.easeCubicOut).style('opacity', 0);
+        });
+    }, [chartData, width, maxTotal, hasAny, onSegmentClick, textMuted, legendLabels]);
 
     if (chartData.length === 0 || !hasAny) {
       return (
@@ -164,11 +254,18 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
     }
 
     return (
-      <div ref={wrapRef} className="chart-container-pie chart-radial-style" style={{ height: '100%' }}>
+      <div
+        ref={wrapRef}
+        className="chart-container-pie chart-radial-style"
+        style={{ height: '100%', position: 'relative' }}
+      >
         <h6 className="chart-title-pie" style={{ marginBottom: 6 }}>
           {title}
         </h6>
-        <svg ref={svgRef} style={{ display: 'block', maxWidth: '100%' }} />
+        <svg
+          ref={svgRef}
+          style={{ display: 'block', maxWidth: '100%', overflow: 'visible' }}
+        />
         <ul
           className="d-flex flex-wrap gap-2 justify-content-center list-unstyled mb-0 mt-1"
           style={{ fontSize: '0.65rem', rowGap: '4px' }}

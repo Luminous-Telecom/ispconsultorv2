@@ -75,6 +75,20 @@ const Dashboard: React.FC = () => {
     [t]
   );
 
+  /**
+   * Gráfico no dashboard: até 7 barras, só em dias com evento de backup no período.
+   * Não usar slice(-7) no array completo: os eventos podem estar só no início do mês e os
+   * últimos 7 dias do calendário ficariam zerados → "Nenhum evento de backup no período".
+   */
+  const backupStatusGraficoUltimos7Dias = useMemo(() => {
+    const days = dashboardData?.backupStatusGrafico ?? [];
+    const comEvento = days.filter(
+      (d) =>
+        d.falha + d.sucesso + d.somente_local + d.falha_envio + d.verificado > 0
+    );
+    return comEvento.slice(-7);
+  }, [dashboardData?.backupStatusGrafico]);
+
   const handleBackupStatusSegmentClick = useCallback(
     async (dataISO: string, status: BackupStatusKey) => {
       const { items } = await DashboardService.getBackupStatusDetalhe(dataISO, status);
@@ -132,14 +146,8 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
-            <div className="chart-card chart-card-pie">
-              <ResponsivePieChart
-                data={charts.statusPagamentoData}
-                title={t('dashboard.paymentStatus')}
-                hiddenItems={hiddenPagamentos}
-                onToggleItem={togglePagamento}
-                onSliceClick={handleStatusPagamentoSliceClick}
-              />
+            <div className="chart-card">
+              <ValueChart data={charts.ticketMedioChartData} title={t('dashboard.averageTicket')} format="currency" />
             </div>
           </div>
 
@@ -158,7 +166,7 @@ const Dashboard: React.FC = () => {
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
             <div className="chart-card chart-card-pie">
               <BackupStatusStackedBarChart
-                days={dashboardData?.backupStatusGrafico ?? []}
+                days={backupStatusGraficoUltimos7Dias}
                 title={t('dashboard.backupStatusTitle')}
                 legendLabels={backupStatusLegendLabels}
                 emptyMessage={t('dashboard.backupStatusEmpty')}
@@ -180,8 +188,14 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
-            <div className="chart-card">
-              <ValueChart data={charts.ticketMedioChartData} title={t('dashboard.averageTicket')} format="currency" />
+            <div className="chart-card chart-card-pie">
+              <ResponsivePieChart
+                data={charts.statusPagamentoData}
+                title={t('dashboard.paymentStatus')}
+                hiddenItems={hiddenPagamentos}
+                onToggleItem={togglePagamento}
+                onSliceClick={handleStatusPagamentoSliceClick}
+              />
             </div>
           </div>
         </div>
