@@ -395,7 +395,7 @@ const SshDeviceModal: React.FC<SshDeviceModalProps> = ({
                   onChange={(v) => set('agent_id')(v)}
                   onShowModal={() => setShowAgentPicker(true)}
                   entities={agentEntities}
-                  idFieldTitle="UUID do agente"
+                  idFieldTitle="ID do agente"
                   searchButtonTitle={t('ui.selectAgent')}
                   helpText="Deixe vazio para conexão SSH direta ao host."
                 />

@@ -19,7 +19,7 @@ function backupDir(): string {
  * Registra no banco um arquivo já gravado em disco (metadados + janela da execução).
  */
 export async function registerSshDeviceBackupRow(
-  sshDeviceId: string,
+  sshDeviceId: string | number,
   fileName: string,
   sizeBytes: number,
   startedAt: Date,
@@ -30,9 +30,15 @@ export async function registerSshDeviceBackupRow(
     logger.warn('registerSshDeviceBackupRow: nome de arquivo inválido', { fileName });
     return;
   }
+  const sid =
+    typeof sshDeviceId === 'number' ? sshDeviceId : parseInt(String(sshDeviceId), 10);
+  if (!Number.isInteger(sid) || sid < 1) {
+    logger.warn('registerSshDeviceBackupRow: ssh_device_id inválido', { sshDeviceId });
+    return;
+  }
   try {
     await SshDeviceBackup.create({
-      ssh_device_id: sshDeviceId,
+      ssh_device_id: sid,
       file_name: base,
       size_bytes: sizeBytes,
       started_at: startedAt,
@@ -64,9 +70,11 @@ function rowToModifiedAtIso(r: BackupRow): string {
   return ts instanceof Date ? ts.toISOString() : new Date(ts).toISOString();
 }
 
-export async function listBackupsForDevice(deviceId: string): Promise<SshDeviceBackupFileMeta[]> {
+export async function listBackupsForDevice(deviceId: string | number): Promise<SshDeviceBackupFileMeta[]> {
+  const devId = parseInt(String(deviceId), 10);
+  if (!Number.isInteger(devId) || devId < 1) return [];
   const rows = (await SshDeviceBackup.findAll({
-    where: { ssh_device_id: deviceId },
+    where: { ssh_device_id: devId },
     order: [['finished_at', 'DESC']],
     raw: true,
   })) as unknown as BackupRow[];
@@ -87,37 +95,51 @@ export interface ClienteBackupFlatRow extends SshDeviceBackupFileMeta {
  * Lista backups de vários devices (já filtrados por cliente/tenant no controller).
  */
 export async function listBackupsForDeviceIds(
-  deviceIds: string[],
-  deviceIdToName: Map<string, string>
+  deviceIds: Array<string | number>,
+  deviceIdToName: Map<string | number, string>
 ): Promise<ClienteBackupFlatRow[]> {
   if (deviceIds.length === 0) return [];
 
+  const ids = deviceIds
+    .map((id) => (typeof id === 'number' ? id : parseInt(String(id), 10)))
+    .filter((n) => Number.isInteger(n) && n > 0);
+  if (ids.length === 0) return [];
+
   const rows = (await SshDeviceBackup.findAll({
-    where: { ssh_device_id: { [Op.in]: deviceIds } },
+    where: { ssh_device_id: { [Op.in]: ids } },
     order: [['finished_at', 'DESC']],
     raw: true,
   })) as unknown as BackupRow[];
 
-  return rows.map((r) => ({
-    fileName: r.file_name,
-    size: Number(r.size_bytes),
-    modifiedAt: rowToModifiedAtIso(r),
-    device_id: r.ssh_device_id ?? '',
-    device_name: deviceIdToName.get(r.ssh_device_id ?? '') ?? (r.ssh_device_id ?? ''),
-  }));
+  return rows.map((r) => {
+    const did = Number(r.ssh_device_id);
+    return {
+      fileName: r.file_name,
+      size: Number(r.size_bytes),
+      modifiedAt: rowToModifiedAtIso(r),
+      device_id: String(did),
+      device_name: deviceIdToName.get(did) ?? deviceIdToName.get(String(did)) ?? String(did),
+    };
+  });
 }
 
 /**
  * Resolve caminho seguro para download: registro no banco + arquivo no disco (sem path traversal).
  */
-export async function resolveBackupFileForDownload(deviceId: string, fileName: string): Promise<string | null> {
+export async function resolveBackupFileForDownload(
+  deviceId: string | number,
+  fileName: string
+): Promise<string | null> {
   const base = path.basename(fileName);
-  if (base !== fileName || base.includes('..') || !base.startsWith(`${deviceId}_`)) {
+  if (base !== fileName || base.includes('..')) {
     return null;
   }
 
+  const devId = parseInt(String(deviceId), 10);
+  if (!Number.isInteger(devId) || devId < 1) return null;
+
   const row = await SshDeviceBackup.findOne({
-    where: { ssh_device_id: deviceId, file_name: base },
+    where: { ssh_device_id: devId, file_name: base },
   });
   if (!row) {
     return null;
@@ -140,14 +162,17 @@ export async function resolveBackupFileForDownload(deviceId: string, fileName: s
 /**
  * Remove backup do device (registro no banco e arquivo em disco).
  */
-export async function deleteBackup(deviceId: string, fileName: string): Promise<boolean> {
+export async function deleteBackup(deviceId: string | number, fileName: string): Promise<boolean> {
   const base = path.basename(fileName);
-  if (base !== fileName || base.includes('..') || !base.startsWith(`${deviceId}_`)) {
+  if (base !== fileName || base.includes('..')) {
     return false;
   }
 
+  const devId = parseInt(String(deviceId), 10);
+  if (!Number.isInteger(devId) || devId < 1) return false;
+
   const row = await SshDeviceBackup.findOne({
-    where: { ssh_device_id: deviceId, file_name: base },
+    where: { ssh_device_id: devId, file_name: base },
   });
   if (!row) return false;
 

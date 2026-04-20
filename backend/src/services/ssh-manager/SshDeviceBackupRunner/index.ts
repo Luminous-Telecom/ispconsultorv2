@@ -240,7 +240,7 @@ async function mikrotikProbeAndExport(exec: ExecFn): Promise<
 }
 
 export async function runSshDeviceBackup(
-  deviceId: string,
+  deviceId: string | number,
   context?: RunSshDeviceBackupContext
 ): Promise<RunSshDeviceBackupResult> {
   const manual = context?.manual === true;

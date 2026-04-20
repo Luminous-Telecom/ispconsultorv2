@@ -47,12 +47,12 @@ async function enrichSshAuditLogsWithCliente(
 
   const map = new Map<string, { clienteId: number | null; clienteName: string | null }>();
   for (const d of devices) {
-    const plain = d.get({ plain: true }) as {
-      id: string;
+    const plain = d.get({ plain: true }) as unknown as {
+      id: number;
       cliente_id: number | null;
       cliente?: { id: number; razao_social: string; nome_fantasia: string | null } | null;
     };
-    map.set(plain.id, {
+    map.set(String(plain.id), {
       clienteId: plain.cliente_id ?? null,
       clienteName: clienteDisplayName(plain.cliente ?? null),
     });
@@ -99,12 +99,12 @@ async function enrichAgentLogsWithCliente(
 
   const agentClienteMap = new Map<string, { clienteId: number | null; clienteName: string | null }>();
   for (const a of agents) {
-    const plain = a.get({ plain: true }) as {
-      id: string;
+    const plain = a.get({ plain: true }) as unknown as {
+      id: number;
       cliente_id: number | null;
       cliente?: { id: number; razao_social: string; nome_fantasia: string | null } | null;
     };
-    agentClienteMap.set(plain.id, {
+    agentClienteMap.set(String(plain.id), {
       clienteId: plain.cliente_id ?? null,
       clienteName: clienteDisplayName(plain.cliente ?? null),
     });

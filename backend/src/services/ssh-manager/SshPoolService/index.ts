@@ -18,6 +18,10 @@ class SshPoolService {
 
   private devicePool = new Map<string, PoolEntry>();
 
+  private deviceKey(device: SshDevice | { id: string | number }): string {
+    return String(device.id);
+  }
+
   static getInstance(): SshPoolService {
     if (!SshPoolService.instance) {
       SshPoolService.instance = new SshPoolService();
@@ -29,7 +33,8 @@ class SshPoolService {
    * Retorna conexão existente ou cria nova para o device.
    */
   async getDeviceConnection(device: SshDevice): Promise<SshClient> {
-    const existing = this.devicePool.get(device.id);
+    const key = this.deviceKey(device);
+    const existing = this.devicePool.get(key);
     if (existing) {
       this.touchEntry(existing);
       return existing.conn;
@@ -41,11 +46,12 @@ class SshPoolService {
   /**
    * Remove e fecha a conexão de um device do pool.
    */
-  releaseDevice(deviceId: string): void {
-    const entry = this.devicePool.get(deviceId);
+  releaseDevice(deviceId: string | number): void {
+    const key = String(deviceId);
+    const entry = this.devicePool.get(key);
     if (entry) {
       this.destroyEntry(entry);
-      this.devicePool.delete(deviceId);
+      this.devicePool.delete(key);
     }
   }
 
@@ -73,10 +79,10 @@ class SshPoolService {
 
       this.startIdleTimer(entry, () => {
         logger.info('SSH pool: device ocioso, encerrando', { device: device.name });
-        this.releaseDevice(device.id);
+        this.releaseDevice(this.deviceKey(device));
       });
 
-      this.devicePool.set(device.id, entry);
+      this.devicePool.set(this.deviceKey(device), entry);
       return conn;
     } catch (err) {
       if (attempt < RECONNECT_MAX_ATTEMPTS) {
@@ -95,7 +101,7 @@ class SshPoolService {
 
   private handleDeviceDisconnect(device: SshDevice, entry: PoolEntry): void {
     if (entry.idleTimer) clearTimeout(entry.idleTimer);
-    this.devicePool.delete(device.id);
+    this.devicePool.delete(this.deviceKey(device));
     logger.info('SSH pool: device desconectado', { device: device.name });
   }
 

@@ -7,13 +7,13 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('adm_ssh_device_backup_events', {
       id: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
-        primaryKey: true,
+        type: Sequelize.INTEGER,
         allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
       },
       ssh_device_id: {
-        type: Sequelize.UUID,
+        type: Sequelize.INTEGER,
         allowNull: false,
         references: { model: 'adm_ssh_devices', key: 'id' },
         onUpdate: 'CASCADE',
@@ -50,8 +50,8 @@ module.exports = {
 
     // Backfill: cada arquivo de backup existente vira um evento "sucesso" na data do arquivo
     await queryInterface.sequelize.query(`
-      INSERT INTO adm_ssh_device_backup_events (id, ssh_device_id, empresa_id, status, detail, created_at)
-      SELECT UUID(), b.ssh_device_id, d.empresa_id, 'sucesso', NULL, b.created_at
+      INSERT INTO adm_ssh_device_backup_events (ssh_device_id, empresa_id, status, detail, created_at)
+      SELECT b.ssh_device_id, d.empresa_id, 'sucesso', NULL, b.created_at
       FROM adm_ssh_device_backups b
       INNER JOIN adm_ssh_devices d ON d.id = b.ssh_device_id
     `);

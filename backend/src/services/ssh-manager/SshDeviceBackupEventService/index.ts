@@ -9,14 +9,19 @@ import {
  * Falha na gravação não interrompe o fluxo de backup.
  */
 export async function recordSshDeviceBackupEvent(params: {
-  sshDeviceId: string;
+  sshDeviceId: string | number;
   empresaId: number | null;
   status: SshDeviceBackupEventStatus;
   detail?: string | null;
 }): Promise<void> {
+  const sid =
+    typeof params.sshDeviceId === 'number'
+      ? params.sshDeviceId
+      : parseInt(String(params.sshDeviceId), 10);
+  if (!Number.isInteger(sid) || sid < 1) return;
   try {
     await SshDeviceBackupEvent.create({
-      ssh_device_id: params.sshDeviceId,
+      ssh_device_id: sid,
       empresa_id: params.empresaId,
       status: params.status,
       detail: params.detail ?? null,

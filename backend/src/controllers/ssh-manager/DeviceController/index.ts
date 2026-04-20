@@ -43,6 +43,18 @@ function parseClienteIdQuery(raw: unknown): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+/** `agent_id` numérico no banco; body pode enviar string só com dígitos. */
+function normalizeOptionalAgentId(raw: unknown): number | null {
+  if (raw === '' || raw === undefined || raw === null) return null;
+  const n = typeof raw === 'number' ? raw : parseInt(String(raw).trim(), 10);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+const optionalAgentId = Joi.alternatives()
+  .try(Joi.number().integer().positive(), Joi.string().pattern(/^[1-9]\d*$/))
+  .allow(null, '')
+  .optional();
+
 function getClientIp(req: Request): string {
   return (
     (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
@@ -63,7 +75,7 @@ function canAccessDevice(device: SshDevice, userEmpresaId: number | null): boole
 }
 
 const createSchema = Joi.object({
-  agent_id: Joi.string().uuid().allow(null, '').optional(),
+  agent_id: optionalAgentId,
   cliente_id: Joi.number().integer().positive().allow(null).optional(),
   name: Joi.string().min(2).max(100).required(),
   host: Joi.string().min(1).max(255).required(),
@@ -80,7 +92,7 @@ const createSchema = Joi.object({
 });
 
 const updateSchema = Joi.object({
-  agent_id: Joi.string().uuid().allow(null, '').optional(),
+  agent_id: optionalAgentId,
   cliente_id: Joi.number().integer().positive().allow(null).optional(),
   name: Joi.string().min(2).max(100).optional(),
   host: Joi.string().min(1).max(255).optional(),
@@ -125,8 +137,8 @@ export class DeviceController {
       });
       const payload = devices.map((d) => {
         const row = d.toJSON() as Record<string, unknown>;
-        const ag = row.agent as { id?: string; name?: string; is_active?: boolean } | null | undefined;
-        if (ag && typeof ag === 'object' && ag.id) {
+        const ag = row.agent as { id?: string | number; name?: string; is_active?: boolean } | null | undefined;
+        if (ag && typeof ag === 'object' && ag.id != null) {
           const active = ag.is_active !== false;
           row.agent = {
             id: ag.id,
@@ -220,11 +232,12 @@ export class DeviceController {
           }
         }
       }
-      const { empresa_id: _e, ...restValue } = value;
+      const { empresa_id: _e, agent_id: _agentRaw, ...restValue } = value;
+      const agent_id = normalizeOptionalAgentId(value.agent_id);
       const device = await SshDevice.create({
         ...restValue,
         empresa_id: resolved.empresa_id,
-        agent_id: value.agent_id || null,
+        agent_id,
         cliente_id: value.cliente_id ?? null,
         password: encrypt(value.password),
         private_key: value.private_key ? encrypt(normalizeSshPrivateKeyPem(value.private_key)) : null,
@@ -267,7 +280,10 @@ export class DeviceController {
       if (devEmpresaId != null && (value.agent_id !== undefined || value.backup_enabled !== undefined)) {
         const limites = await getEquipamentosLimites(devEmpresaId);
         if (limites !== null && limites.temModulo) {
-          const willHaveTunel = (value.agent_id !== undefined && value.agent_id !== '' ? !!value.agent_id?.trim() : !!device.agent_id);
+            const willHaveTunel =
+              value.agent_id !== undefined
+                ? normalizeOptionalAgentId(value.agent_id) != null
+                : device.agent_id != null;
           if (willHaveTunel && limites.limite_tuneis > 0) {
             const countTuneis = await SshDevice.count({
               where: { [Op.and]: [{ empresa_id: devEmpresaId }, literal('agent_id IS NOT NULL')] },
@@ -291,7 +307,11 @@ export class DeviceController {
       }
 
       const updateData: Partial<typeof value> = { ...value };
-      if (value.agent_id === '' || value.agent_id === undefined) updateData.agent_id = null;
+      if (value.agent_id === undefined) {
+        delete (updateData as { agent_id?: unknown }).agent_id;
+      } else {
+        (updateData as { agent_id?: number | null }).agent_id = normalizeOptionalAgentId(value.agent_id);
+      }
       if (value.password) updateData.password = encrypt(value.password);
       if (value.private_key) updateData.private_key = encrypt(normalizeSshPrivateKeyPem(value.private_key));
       if (value.private_key === null || value.private_key === '') updateData.private_key = null;

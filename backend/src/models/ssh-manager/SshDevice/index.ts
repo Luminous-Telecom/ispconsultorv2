@@ -13,10 +13,10 @@ export class SshDevice extends Model<
   InferAttributes<SshDevice>,
   InferCreationAttributes<SshDevice>
 > {
-  declare id: CreationOptional<string>;
+  declare id: CreationOptional<number>;
   declare empresa_id: number | null;
   declare cliente_id: number | null;
-  declare agent_id: string | null;
+  declare agent_id: number | null;
   declare name: string;
   declare host: string;
   declare port: CreationOptional<number>;
@@ -42,8 +42,8 @@ export class SshDevice extends Model<
 SshDevice.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
     },
     empresa_id: {
@@ -61,7 +61,7 @@ SshDevice.init(
       onDelete: 'SET NULL',
     },
     agent_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: true,
       references: { model: 'Agent', key: 'id' },
       onUpdate: 'CASCADE',

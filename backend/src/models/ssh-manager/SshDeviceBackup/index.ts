@@ -11,8 +11,8 @@ export class SshDeviceBackup extends Model<
   InferAttributes<SshDeviceBackup>,
   InferCreationAttributes<SshDeviceBackup>
 > {
-  declare id: CreationOptional<string>;
-  declare ssh_device_id: string;
+  declare id: CreationOptional<number>;
+  declare ssh_device_id: number;
   declare file_name: string;
   declare size_bytes: number;
   /** Início da execução do backup (antes de comandos HTTP/SSH). */
@@ -25,12 +25,12 @@ export class SshDeviceBackup extends Model<
 SshDeviceBackup.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
     },
     ssh_device_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'adm_ssh_devices', key: 'id' },
       onUpdate: 'CASCADE',

@@ -162,7 +162,7 @@ export function openDeviceConnection(device: SshDevice): Promise<SshClient> {
 export function executeCommand(
   conn: SshClient,
   command: string,
-  targetId: string,
+  targetId: string | number,
   options?: { timeoutMs?: number }
 ): Promise<string> {
   const timeoutMs = options?.timeoutMs ?? SSH_TIMEOUT_MS;
@@ -184,13 +184,13 @@ export function executeCommand(
       stream.on('data', (data: Buffer) => {
         const chunk = data.toString('utf8');
         output += chunk;
-        sshEvents.emit('log', { targetId, level: 'info', message: chunk, timestamp: new Date() });
+        sshEvents.emit('log', { targetId: String(targetId), level: 'info', message: chunk, timestamp: new Date() });
       });
 
       stream.stderr.on('data', (data: Buffer) => {
         const chunk = data.toString('utf8');
         stderr += chunk;
-        sshEvents.emit('log', { targetId, level: 'warn', message: chunk, timestamp: new Date() });
+        sshEvents.emit('log', { targetId: String(targetId), level: 'warn', message: chunk, timestamp: new Date() });
       });
 
       stream.on('close', (code: number | null | undefined, signal?: string) => {

@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
       const { items } = await DashboardService.getBackupStatusDetalhe(dataISO, status);
       openModal('dashboard-backup-equipamentos', {
         items: items.map((row) => ({
-          id: row.id,
+          id: String(row.id),
           deviceId: row.deviceId,
           deviceName: row.deviceName,
           fileName: row.fileName,

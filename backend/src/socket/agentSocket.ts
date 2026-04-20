@@ -52,7 +52,7 @@ export function registerAgentNamespace(io: SocketIOServer): void {
       const agent = await Agent.findOne({ where: { token_hash: hash, is_active: true } });
       if (!agent) return next(new Error('unauthorized'));
       (socket as Socket & { data: { agentId: string; agentName: string } }).data = {
-        agentId: agent.id,
+        agentId: String(agent.id),
         agentName: agent.name,
       };
       next();

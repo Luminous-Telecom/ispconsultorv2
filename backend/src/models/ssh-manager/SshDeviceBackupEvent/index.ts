@@ -18,8 +18,8 @@ export class SshDeviceBackupEvent extends Model<
   InferAttributes<SshDeviceBackupEvent>,
   InferCreationAttributes<SshDeviceBackupEvent>
 > {
-  declare id: CreationOptional<string>;
-  declare ssh_device_id: string;
+  declare id: CreationOptional<number>;
+  declare ssh_device_id: number;
   declare empresa_id: number | null;
   declare status: SshDeviceBackupEventStatus;
   declare detail: string | null;
@@ -29,12 +29,12 @@ export class SshDeviceBackupEvent extends Model<
 SshDeviceBackupEvent.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
     },
     ssh_device_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'adm_ssh_devices', key: 'id' },
       onUpdate: 'CASCADE',

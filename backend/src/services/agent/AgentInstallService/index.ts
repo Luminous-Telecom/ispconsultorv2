@@ -188,7 +188,7 @@ export function formatAgentInstallSshError(err: unknown): string {
 // ── API pública ────────────────────────────────────────────────────────────────
 
 export interface InstallAgentOptions {
-  agentId: string;
+  agentId: string | number;
   token: string;
   serverUrl: string;
   sshConfig: InstallConfig;

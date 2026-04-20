@@ -7,13 +7,13 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('adm_ssh_device_backups', {
       id: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
-        primaryKey: true,
+        type: Sequelize.INTEGER,
         allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
       },
       ssh_device_id: {
-        type: Sequelize.UUID,
+        type: Sequelize.INTEGER,
         allowNull: false,
         references: { model: 'adm_ssh_devices', key: 'id' },
         onUpdate: 'CASCADE',

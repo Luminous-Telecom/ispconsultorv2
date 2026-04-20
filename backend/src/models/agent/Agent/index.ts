@@ -11,7 +11,7 @@ export class Agent extends Model<
   InferAttributes<Agent>,
   InferCreationAttributes<Agent>
 > {
-  declare id: CreationOptional<string>;
+  declare id: CreationOptional<number>;
   declare empresa_id: number | null;
   declare cliente_id: number | null;
   declare name: string;
@@ -31,8 +31,8 @@ export class Agent extends Model<
 Agent.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
     },
     empresa_id: {

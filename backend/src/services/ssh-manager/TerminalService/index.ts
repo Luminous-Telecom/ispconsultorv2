@@ -52,7 +52,7 @@ export async function createTerminalSession(
         sessionId,
         stream,
         deviceConn,
-        deviceId: device.id,
+        deviceId: String(device.id),
         deviceName: device.name,
         userId,
         ip,
@@ -89,7 +89,7 @@ export async function createTerminalSession(
         logSshAudit({
           action: 'TERMINAL_CLOSE',
           userId,
-          deviceId: device.id,
+          deviceId: String(device.id),
           deviceName: device.name,
           success: true,
           ip,
@@ -111,7 +111,7 @@ export async function createTerminalSession(
       logSshAudit({
         action: 'TERMINAL_OPEN',
         userId,
-        deviceId: device.id,
+        deviceId: String(device.id),
         deviceName: device.name,
         success: true,
         ip,
