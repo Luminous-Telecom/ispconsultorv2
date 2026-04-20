@@ -9,9 +9,78 @@
  *
  * up() é idempotente: tolera migração interrompida antes de gravar SequelizeMeta (errno 1061
  * em índices já existentes) e não duplica o backfill se a tabela já tiver linhas.
+ *
+ * ssh_device_id e empresa_id usam o mesmo tipo que adm_ssh_devices.id e adm_dados_empresa.id
+ * (ex.: CHAR(36) antes da 00000185), evitando errno 150 na criação das FKs.
  */
 
 const TBL = 'adm_ssh_device_backup_events';
+
+async function columnMysqlType(q, table, column) {
+  const [rows] = await q(
+    'SELECT COLUMN_TYPE AS ct FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column LIMIT 1',
+    { replacements: { table, column } },
+  );
+  const ct = rows?.[0]?.ct;
+  return ct != null ? String(ct) : null;
+}
+
+/**
+ * @param {import('sequelize').Sequelize} Sequelize
+ * @param {string} columnType valor de INFORMATION_SCHEMA.COLUMNS.COLUMN_TYPE
+ */
+function dataTypeForInformationSchema(Sequelize, columnType) {
+  if (columnType == null || String(columnType).trim() === '') {
+    throw new Error('00000182: COLUMN_TYPE vazio ao mapear tipo de coluna para FK.');
+  }
+  const raw = String(columnType).trim();
+  const unsigned = /\bunsigned\b/i.test(raw);
+  const base = raw
+    .replace(/\bunsigned\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (/^bigint/i.test(base)) {
+    const t = Sequelize.BIGINT;
+    return unsigned ? t.UNSIGNED : t;
+  }
+  if (/^mediumint/i.test(base)) {
+    const t = Sequelize.MEDIUMINT;
+    return unsigned ? t.UNSIGNED : t;
+  }
+  if (/^smallint/i.test(base)) {
+    const t = Sequelize.SMALLINT;
+    return unsigned ? t.UNSIGNED : t;
+  }
+  if (/^tinyint/i.test(base)) {
+    const t = Sequelize.TINYINT;
+    return unsigned ? t.UNSIGNED : t;
+  }
+  if (/^int/i.test(base)) {
+    const t = Sequelize.INTEGER;
+    return unsigned ? t.UNSIGNED : t;
+  }
+
+  const charM = base.match(/^char\((\d+)\)/i);
+  if (charM) {
+    return Sequelize.CHAR(parseInt(charM[1], 10));
+  }
+  const varcharM = base.match(/^varchar\((\d+)\)/i);
+  if (varcharM) {
+    return Sequelize.STRING(parseInt(varcharM[1], 10));
+  }
+
+  throw new Error(
+    `00000182: tipo INFORMATION_SCHEMA não suportado nesta migration: "${columnType}". Ajuste o schema ou estenda o mapeamento.`,
+  );
+}
+
+function normColumnType(ct) {
+  return String(ct)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
 
 async function tableExists(q, table) {
   const [rows] = await q(
@@ -42,6 +111,31 @@ module.exports = {
     const s = queryInterface.sequelize;
     const q = (sql, opts = {}) => s.query(sql, opts);
 
+    const deviceIdCt = await columnMysqlType(q, 'adm_ssh_devices', 'id');
+    const empresaIdCt = await columnMysqlType(q, 'adm_dados_empresa', 'id');
+    if (!deviceIdCt || !empresaIdCt) {
+      throw new Error(
+        '00000182: não foi possível ler adm_ssh_devices.id ou adm_dados_empresa.id. Confirme migrations 00000144 e 00000170 (ou equivalentes).',
+      );
+    }
+    const sshDeviceIdType = dataTypeForInformationSchema(Sequelize, deviceIdCt);
+    const empresaIdType = dataTypeForInformationSchema(Sequelize, empresaIdCt);
+
+    if (await tableExists(q, TBL)) {
+      const existingSsh = await columnMysqlType(q, TBL, 'ssh_device_id');
+      const existingEmp = await columnMysqlType(q, TBL, 'empresa_id');
+      if (existingSsh && normColumnType(existingSsh) !== normColumnType(deviceIdCt)) {
+        throw new Error(
+          `00000182: ${TBL} já existe com ssh_device_id incompatível com adm_ssh_devices.id (tabela: ${existingSsh}, esperado: ${deviceIdCt}). Faça backup, DROP TABLE ${TBL} e rode db:migrate novamente.`,
+        );
+      }
+      if (existingEmp && normColumnType(existingEmp) !== normColumnType(empresaIdCt)) {
+        throw new Error(
+          `00000182: ${TBL} já existe com empresa_id incompatível com adm_dados_empresa.id (tabela: ${existingEmp}, esperado: ${empresaIdCt}). Faça backup, DROP TABLE ${TBL} e rode db:migrate novamente.`,
+        );
+      }
+    }
+
     if (!(await tableExists(q, TBL))) {
       await queryInterface.createTable(TBL, {
         id: {
@@ -51,11 +145,11 @@ module.exports = {
           primaryKey: true,
         },
         ssh_device_id: {
-          type: Sequelize.INTEGER,
+          type: sshDeviceIdType,
           allowNull: false,
         },
         empresa_id: {
-          type: Sequelize.INTEGER,
+          type: empresaIdType,
           allowNull: true,
         },
         status: {
