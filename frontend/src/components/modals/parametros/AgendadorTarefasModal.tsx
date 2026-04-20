@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { SaasSchedulerService, type RotinaAgendada } from 'services/saas/saasSchedulerService';
@@ -15,6 +14,7 @@ import ImprimirModal from 'components/common/ImprimirModal';
 import { useConfirmModal } from 'hooks/useConfirmModal';
 import ConfirmModal from 'components/modals/ConfirmModal';
 import { useI18n } from 'contexts/I18nContext';
+import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
 
 const TIPO_LABELS: Record<string, string> = {
   geracao_titulos: 'Geração de títulos',
@@ -215,12 +215,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         success(t('scheduler.routineStarted'));
         queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       } catch (error: unknown) {
-        if (error instanceof Error && 'response' in error) {
-          const axiosError = error as AxiosError<{ message?: string }>;
-          showError(`${t('messages.error')}: ${axiosError.response?.data?.message || t('messages.noData')}`);
-        } else {
-          showError(`${t('messages.error')}: ${t('messages.noData')}`);
-        }
+        showError(`${t('messages.error')}: ${extractApiErrorMessageSync(error)}`);
       }
     },
     [t, success, queryClient, showError]
@@ -233,12 +228,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
       void queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (error: unknown) => {
-      if (error instanceof Error && 'response' in error) {
-        const axiosError = error as AxiosError<{ message?: string }>;
-        showError(`${t('messages.error')}: ${axiosError.response?.data?.message || t('messages.noData')}`);
-      } else {
-        showError(`${t('messages.error')}: ${t('messages.noData')}`);
-      }
+      showError(`${t('messages.error')}: ${extractApiErrorMessageSync(error)}`);
     },
   });
 
@@ -251,12 +241,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         success(t('scheduler.successDelete'));
         queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       } catch (error: unknown) {
-        if (error instanceof Error && 'response' in error) {
-          const axiosError = error as AxiosError<{ message?: string }>;
-          showError(`${t('messages.error')}: ${axiosError.response?.data?.message || t('messages.noData')}`);
-        } else {
-          showError(`${t('messages.error')}: ${t('messages.noData')}`);
-        }
+        showError(`${t('messages.error')}: ${extractApiErrorMessageSync(error)}`);
       }
     },
     [t, success, queryClient, showError]

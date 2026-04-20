@@ -178,6 +178,15 @@ export class SaasSchedulerController {
       }
       sendSuccess(res, { message: 'Rotina iniciada em background' }, 'Rotina iniciada em background');
     } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : '';
+      if (msg === 'Rotina não encontrada') {
+        sendNotFound(res, msg);
+        return;
+      }
+      if (msg === 'Rotina está inativa') {
+        sendValidationError(res, msg);
+        return;
+      }
       sendError(res, error, 'Erro ao executar rotina', 500, true, {
         context: 'SaasSchedulerController',
         action: 'execute',

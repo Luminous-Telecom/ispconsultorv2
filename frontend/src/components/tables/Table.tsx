@@ -37,6 +37,16 @@ function getColumnMinWidth(column: { badgeLabels?: string[]; minWidth?: string |
   return undefined;
 }
 
+/**
+ * Handlers podem ser `async` e usar `mutateAsync`; o `onError` do React Query já pode ter
+ * exibido o toast, mas a Promise ainda rejeita e, sem `.catch`, vira overlay de runtime.
+ */
+function drainPossiblePromise(result: unknown): void {
+  if (result != null && typeof (result as PromiseLike<unknown>).then === 'function') {
+    void Promise.resolve(result).catch(() => {});
+  }
+}
+
 // Helper para normalizar paginação (aceita snake_case da API ou camelCase interno)
 const normalizePagination = (pagination: TableConfig<unknown>['pagination']): TablePagination | undefined => {
   if (!pagination) return undefined;
@@ -970,7 +980,7 @@ function Table<T extends { id: number | string }>({
               className={`table-mobile-card ${isExpanded ? 'expanded' : ''}`}
               onClick={() => {
                 // No mobile, não selecionar ao clicar no card, apenas chamar onRowClick se existir
-                onRowClick?.(item, index);
+                drainPossiblePromise(onRowClick?.(item, index));
               }}
             >
               {/* Header do card */}
@@ -1087,9 +1097,9 @@ function Table<T extends { id: number | string }>({
                                       e.stopPropagation();
                                       setOpenActionDropdown(null);
                                       if (!isDisabled && onActionClick) {
-                                        onActionClick(action, item, index);
+                                        drainPossiblePromise(onActionClick(action, item, index));
                                       } else if (!isDisabled && action.onClick) {
-                                        action.onClick(item, index);
+                                        drainPossiblePromise(action.onClick(item, index));
                                       }
                                     }}
                                     disabled={isDisabled}
@@ -1130,7 +1140,7 @@ function Table<T extends { id: number | string }>({
                                           e.stopPropagation();
                                           setOpenActionDropdown(null);
                                           if (isItemDisabled) return;
-                                          subItem.action([item]);
+                                          drainPossiblePromise(subItem.action([item]));
                                         }}
                                         disabled={isItemDisabled}
                                       >
@@ -1152,9 +1162,9 @@ function Table<T extends { id: number | string }>({
                                       setOpenActionDropdown(null);
                                       if (isBulkDisabled) return;
                                       if (bulkAction.onClick) {
-                                        bulkAction.onClick([item]);
+                                        drainPossiblePromise(bulkAction.onClick([item]));
                                       } else if (onBulkActionClick) {
-                                        onBulkActionClick(bulkAction, [item]);
+                                        drainPossiblePromise(onBulkActionClick(bulkAction, [item]));
                                       }
                                     }}
                                     disabled={isBulkDisabled}
@@ -1241,11 +1251,11 @@ function Table<T extends { id: number | string }>({
                   tableActions.toggleSelection(item);
                 }
                 // Chamar callback de clique na linha se existir
-                onRowClick?.(item, index);
+                drainPossiblePromise(onRowClick?.(item, index));
               }}
               onDoubleClick={() => {
                 // Chamar callback de double-click na linha se existir
-                onRowDoubleClick?.(item, index);
+                drainPossiblePromise(onRowDoubleClick?.(item, index));
               }}
             >
               {/* Checkbox de seleção */}
@@ -1353,9 +1363,9 @@ function Table<T extends { id: number | string }>({
                                     e.stopPropagation();
                                     setOpenActionDropdown(null);
                                     if (!isDisabled && onActionClick) {
-                                      onActionClick(action, item, index);
+                                      drainPossiblePromise(onActionClick(action, item, index));
                                     } else if (!isDisabled && action.onClick) {
-                                      action.onClick(item, index);
+                                      drainPossiblePromise(action.onClick(item, index));
                                     }
                                   }}
                                   disabled={isDisabled}
@@ -1450,7 +1460,7 @@ function Table<T extends { id: number | string }>({
                                   e.preventDefault();
                                   e.stopPropagation();
                                   if (!isItemDisabled) {
-                                    item.action(state.selectedItems);
+                                    drainPossiblePromise(item.action(state.selectedItems));
                                     setOpenDropdown(null);
                                   }
                                 }}
@@ -1474,7 +1484,7 @@ function Table<T extends { id: number | string }>({
                   className={`btn btn-sm btn-${bulkAction.variant || 'primary'} table-flex-shrink-0`}
                   onClick={(_event) => {
                     if (!isDisabled && bulkAction.onClick) {
-                      bulkAction.onClick(state.selectedItems);
+                      drainPossiblePromise(bulkAction.onClick(state.selectedItems));
                     }
                   }}
                   disabled={isDisabled}
@@ -1880,7 +1890,7 @@ function Table<T extends { id: number | string }>({
                           e.stopPropagation();
                           if (!isDisabled && bulkAction.onClick) {
                             setIsFabOpen(false);
-                            bulkAction.onClick(state.selectedItems);
+                            drainPossiblePromise(bulkAction.onClick(state.selectedItems));
                           }
                         }}
                         disabled={isDisabled}
