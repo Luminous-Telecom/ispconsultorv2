@@ -55,6 +55,15 @@ async function step(label, fn) {
   await fn();
 }
 
+/** Remove todas as FKs que usam a coluna (cobre `…_device_fk` e `…_ibfk_N`). */
+async function dropAllFksOnColumn(q, table, column) {
+  for (const cn of await fkNamesOnTableColumn(q, table, column)) {
+    if (await fkExists(q, table, cn)) {
+      await step(`DROP FK ${table}.${cn}`, () => q(`ALTER TABLE \`${table}\` DROP FOREIGN KEY \`${cn}\``));
+    }
+  }
+}
+
 module.exports = {
   async up(queryInterface) {
     const s = queryInterface.sequelize;
@@ -64,17 +73,9 @@ module.exports = {
     try {
       await step('SET FOREIGN_KEY_CHECKS=0', () => q('SET FOREIGN_KEY_CHECKS=0'));
 
-      // ── Drop FKs que criamos (se existirem) ─────────────────────────────
-      for (const [tbl, cn] of [
-        ['adm_ssh_device_backups', 'adm_ssh_device_backups_device_fk'],
-        ['adm_ssh_device_backup_events', 'adm_ssh_device_backup_events_device_fk'],
-        // Instalações antigas: Sequelize nomeava a FK de ssh_device_id como ibfk_1
-        ['adm_ssh_device_backup_events', 'adm_ssh_device_backup_events_ibfk_1'],
-      ]) {
-        if (await fkExists(q, tbl, cn)) {
-          await step(`DROP FK ${cn}`, () => q(`ALTER TABLE \`${tbl}\` DROP FOREIGN KEY \`${cn}\``));
-        }
-      }
+      // ── Drop FKs em ssh_device_id (nomes variam: …_device_fk vs …_ibfk_N) ─
+      await dropAllFksOnColumn(q, 'adm_ssh_device_backups', 'ssh_device_id');
+      await dropAllFksOnColumn(q, 'adm_ssh_device_backup_events', 'ssh_device_id');
       // adm_ssh_devices.agent_id: pode ser `adm_ssh_devices_agent_fk` ou `…_ibfk_N` (Sequelize/InnoDB)
       for (const cn of await fkNamesOnTableColumn(q, 'adm_ssh_devices', 'agent_id')) {
         if (await fkExists(q, 'adm_ssh_devices', cn)) {
