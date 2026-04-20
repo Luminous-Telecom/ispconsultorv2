@@ -51,8 +51,8 @@ export function registerAgentNamespace(io: SocketIOServer): void {
       const hash = hashToken(token);
       const agent = await Agent.findOne({ where: { token_hash: hash, is_active: true } });
       if (!agent) return next(new Error('unauthorized'));
-      (socket as Socket & { data: { agentId: string; agentName: string } }).data = {
-        agentId: String(agent.id),
+      (socket as Socket & { data: { agentId: number; agentName: string } }).data = {
+        agentId: agent.id,
         agentName: agent.name,
       };
       next();
@@ -63,7 +63,7 @@ export function registerAgentNamespace(io: SocketIOServer): void {
   });
 
   ns.on('connection', (socket: Socket) => {
-    const { agentId, agentName } = (socket as Socket & { data: { agentId: string; agentName: string } }).data;
+    const { agentId, agentName } = (socket as Socket & { data: { agentId: number; agentName: string } }).data;
     const ip = getAgentIp(socket);
 
 
@@ -306,14 +306,15 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       Math.min(Math.max(Number(val) || def, isRow ? 4 : 8), isRow ? 200 : 500);
 
     socket.on('terminal:create', async ({
-      agentId,
+      agentId: rawAgentId,
       cols = 80,
       rows = 24,
     }: {
-      agentId: string;
+      agentId: string | number;
       cols?: number;
       rows?: number;
     }) => {
+      const agentId = Number(rawAgentId);
       const c = clampColsRows(cols, 80, false);
       const r = clampColsRows(rows, 24, true);
       const agent = await Agent.findByPk(agentId);
@@ -415,6 +416,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
 
       const sessionId = randomUUID();
       createShellSession(sessionId, device.agent_id, socket.id, true, { deviceId: device.id, deviceName: device.name });
+
 
       let password: string;
       try {
@@ -544,7 +546,8 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
 
     const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
-    socket.on('file:download', async ({ agentId, path }: { agentId: string; path: string }) => {
+    socket.on('file:download', async ({ agentId: rawAgentId, path }: { agentId: string | number; path: string }) => {
+      const agentId = Number(rawAgentId);
       if (!path || typeof path !== 'string' || path.length > 4096) {
         socket.emit('terminal:error', { message: 'Caminho inválido' });
         return;
@@ -567,9 +570,10 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
 
     // ── File upload (frontend envia, agente recebe) ───────────────────────────
 
-    socket.on('file:upload:start', async ({ agentId, path, size }: {
-      agentId: string; path: string; size: number;
+    socket.on('file:upload:start', async ({ agentId: rawAgentId, path, size }: {
+      agentId: string | number; path: string; size: number;
     }) => {
+      const agentId = Number(rawAgentId);
       if (!path || typeof path !== 'string' || path.length > 4096) {
         socket.emit('terminal:error', { message: 'Caminho inválido' });
         return;

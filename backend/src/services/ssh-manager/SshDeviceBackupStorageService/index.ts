@@ -19,7 +19,7 @@ function backupDir(): string {
  * Registra no banco um arquivo já gravado em disco (metadados + janela da execução).
  */
 export async function registerSshDeviceBackupRow(
-  sshDeviceId: string | number,
+  sshDeviceId: number,
   fileName: string,
   sizeBytes: number,
   startedAt: Date,
@@ -30,15 +30,13 @@ export async function registerSshDeviceBackupRow(
     logger.warn('registerSshDeviceBackupRow: nome de arquivo inválido', { fileName });
     return;
   }
-  const sid =
-    typeof sshDeviceId === 'number' ? sshDeviceId : parseInt(String(sshDeviceId), 10);
-  if (!Number.isInteger(sid) || sid < 1) {
+  if (!Number.isInteger(sshDeviceId) || sshDeviceId < 1) {
     logger.warn('registerSshDeviceBackupRow: ssh_device_id inválido', { sshDeviceId });
     return;
   }
   try {
     await SshDeviceBackup.create({
-      ssh_device_id: sid,
+      ssh_device_id: sshDeviceId,
       file_name: base,
       size_bytes: sizeBytes,
       started_at: startedAt,
@@ -59,10 +57,10 @@ export async function registerSshDeviceBackupRow(
  */
 type BackupRow = {
   file_name: string;
-  size_bytes: number | bigint | string;
+  size_bytes: number | bigint;
   created_at: Date | string;
   finished_at?: Date | string | null;
-  ssh_device_id?: string;
+  ssh_device_id?: number;
 };
 
 function rowToModifiedAtIso(r: BackupRow): string {
@@ -70,11 +68,10 @@ function rowToModifiedAtIso(r: BackupRow): string {
   return ts instanceof Date ? ts.toISOString() : new Date(ts).toISOString();
 }
 
-export async function listBackupsForDevice(deviceId: string | number): Promise<SshDeviceBackupFileMeta[]> {
-  const devId = parseInt(String(deviceId), 10);
-  if (!Number.isInteger(devId) || devId < 1) return [];
+export async function listBackupsForDevice(deviceId: number): Promise<SshDeviceBackupFileMeta[]> {
+  if (!Number.isInteger(deviceId) || deviceId < 1) return [];
   const rows = (await SshDeviceBackup.findAll({
-    where: { ssh_device_id: devId },
+    where: { ssh_device_id: deviceId },
     order: [['finished_at', 'DESC']],
     raw: true,
   })) as unknown as BackupRow[];
@@ -95,14 +92,12 @@ export interface ClienteBackupFlatRow extends SshDeviceBackupFileMeta {
  * Lista backups de vários devices (já filtrados por cliente/tenant no controller).
  */
 export async function listBackupsForDeviceIds(
-  deviceIds: Array<string | number>,
-  deviceIdToName: Map<string | number, string>
+  deviceIds: number[],
+  deviceIdToName: Map<number, string>
 ): Promise<ClienteBackupFlatRow[]> {
   if (deviceIds.length === 0) return [];
 
-  const ids = deviceIds
-    .map((id) => (typeof id === 'number' ? id : parseInt(String(id), 10)))
-    .filter((n) => Number.isInteger(n) && n > 0);
+  const ids = deviceIds.filter((n) => Number.isInteger(n) && n > 0);
   if (ids.length === 0) return [];
 
   const rows = (await SshDeviceBackup.findAll({
@@ -112,13 +107,13 @@ export async function listBackupsForDeviceIds(
   })) as unknown as BackupRow[];
 
   return rows.map((r) => {
-    const did = Number(r.ssh_device_id);
+    const did = r.ssh_device_id!;
     return {
       fileName: r.file_name,
       size: Number(r.size_bytes),
       modifiedAt: rowToModifiedAtIso(r),
       device_id: String(did),
-      device_name: deviceIdToName.get(did) ?? deviceIdToName.get(String(did)) ?? String(did),
+      device_name: deviceIdToName.get(did) ?? String(did),
     };
   });
 }
@@ -127,7 +122,7 @@ export async function listBackupsForDeviceIds(
  * Resolve caminho seguro para download: registro no banco + arquivo no disco (sem path traversal).
  */
 export async function resolveBackupFileForDownload(
-  deviceId: string | number,
+  deviceId: number,
   fileName: string
 ): Promise<string | null> {
   const base = path.basename(fileName);
@@ -135,11 +130,10 @@ export async function resolveBackupFileForDownload(
     return null;
   }
 
-  const devId = parseInt(String(deviceId), 10);
-  if (!Number.isInteger(devId) || devId < 1) return null;
+  if (!Number.isInteger(deviceId) || deviceId < 1) return null;
 
   const row = await SshDeviceBackup.findOne({
-    where: { ssh_device_id: devId, file_name: base },
+    where: { ssh_device_id: deviceId, file_name: base },
   });
   if (!row) {
     return null;
@@ -162,17 +156,16 @@ export async function resolveBackupFileForDownload(
 /**
  * Remove backup do device (registro no banco e arquivo em disco).
  */
-export async function deleteBackup(deviceId: string | number, fileName: string): Promise<boolean> {
+export async function deleteBackup(deviceId: number, fileName: string): Promise<boolean> {
   const base = path.basename(fileName);
   if (base !== fileName || base.includes('..')) {
     return false;
   }
 
-  const devId = parseInt(String(deviceId), 10);
-  if (!Number.isInteger(devId) || devId < 1) return false;
+  if (!Number.isInteger(deviceId) || deviceId < 1) return false;
 
   const row = await SshDeviceBackup.findOne({
-    where: { ssh_device_id: devId, file_name: base },
+    where: { ssh_device_id: deviceId, file_name: base },
   });
   if (!row) return false;
 

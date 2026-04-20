@@ -18,7 +18,7 @@ export type SshAuditAction =
 export interface SshAuditData {
   action: SshAuditAction;
   userId: string;
-  deviceId?: string | number | null;
+  deviceId?: number | null;
   deviceName?: string | null;
   command?: string | null;
   output?: string | null;
@@ -75,7 +75,7 @@ export function logSshAudit(data: SshAuditData): void {
         timestamp: safeFormatDateISOLocal(new Date()) || new Date().toISOString(),
         action: data.action,
         userId: data.userId,
-        deviceId: data.deviceId != null && data.deviceId !== '' ? String(data.deviceId) : null,
+        deviceId: data.deviceId != null ? String(data.deviceId) : null,
         deviceName: data.deviceName ?? null,
         command: data.command ?? null,
         output: data.output ? data.output.slice(0, 5000) : null,

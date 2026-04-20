@@ -162,7 +162,7 @@ export function openDeviceConnection(device: SshDevice): Promise<SshClient> {
 export function executeCommand(
   conn: SshClient,
   command: string,
-  targetId: string | number,
+  targetId: number,
   options?: { timeoutMs?: number }
 ): Promise<string> {
   const timeoutMs = options?.timeoutMs ?? SSH_TIMEOUT_MS;

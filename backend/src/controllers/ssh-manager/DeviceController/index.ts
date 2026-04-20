@@ -43,17 +43,13 @@ function parseClienteIdQuery(raw: unknown): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-/** `agent_id` numérico no banco; body pode enviar string só com dígitos. */
 function normalizeOptionalAgentId(raw: unknown): number | null {
-  if (raw === '' || raw === undefined || raw === null) return null;
-  const n = typeof raw === 'number' ? raw : parseInt(String(raw).trim(), 10);
+  if (raw == null || raw === '') return null;
+  const n = Number(raw);
   return Number.isInteger(n) && n > 0 ? n : null;
 }
 
-const optionalAgentId = Joi.alternatives()
-  .try(Joi.number().integer().positive(), Joi.string().pattern(/^[1-9]\d*$/))
-  .allow(null, '')
-  .optional();
+const optionalAgentId = Joi.number().integer().positive().allow(null).optional();
 
 function getClientIp(req: Request): string {
   return (
@@ -137,7 +133,7 @@ export class DeviceController {
       });
       const payload = devices.map((d) => {
         const row = d.toJSON() as Record<string, unknown>;
-        const ag = row.agent as { id?: string | number; name?: string; is_active?: boolean } | null | undefined;
+        const ag = row.agent as { id?: number; name?: string; is_active?: boolean } | null | undefined;
         if (ag && typeof ag === 'object' && ag.id != null) {
           const active = ag.is_active !== false;
           row.agent = {
@@ -212,7 +208,7 @@ export class DeviceController {
               return;
             }
           }
-          const willHaveTunel = !!(value.agent_id?.trim());
+          const willHaveTunel = normalizeOptionalAgentId(value.agent_id) != null;
           if (willHaveTunel && limites.limite_tuneis > 0) {
             const countTuneis = await SshDevice.count({
               where: { [Op.and]: [{ empresa_id: empresaId }, literal('agent_id IS NOT NULL')] },
@@ -377,7 +373,7 @@ export class DeviceController {
   }
 
   static async testConnection(req: Request, res: Response): Promise<void> {
-    const deviceId = req.params.id;
+    const deviceId = parseInt(req.params.id, 10);
     let deviceName = 'unknown';
 
     try {
@@ -605,7 +601,7 @@ export class DeviceController {
   }
 
   static async executeCommand(req: Request, res: Response): Promise<void> {
-    const deviceId = req.params.id;
+    const deviceId = parseInt(req.params.id, 10);
 
     try {
       const device = await SshDevice.findByPk(deviceId);

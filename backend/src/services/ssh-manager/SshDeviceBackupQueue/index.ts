@@ -28,8 +28,7 @@ function getConcurrency(): number {
 }
 
 export type SshDeviceBackupJobData = {
-  /** Sempre serializado como string na fila (BullMQ/JSON). */
-  deviceId: string;
+  deviceId: number;
   manual?: boolean;
   userId?: string;
   ip?: string;
@@ -118,8 +117,8 @@ class SshDeviceBackupQueueImpl {
     return SshDeviceBackupQueueImpl.instance;
   }
 
-  enqueue(deviceId: string | number, extra?: Omit<SshDeviceBackupJobData, 'deviceId'>): void {
-    const data: SshDeviceBackupJobData = { deviceId: String(deviceId), ...extra };
+  enqueue(deviceId: number, extra?: Omit<SshDeviceBackupJobData, 'deviceId'>): void {
+    const data: SshDeviceBackupJobData = { deviceId, ...extra };
     if (this.useBullMQ && this.queue) {
       this.queue.add('backup', data).catch((err) => {
         logger.error('Erro ao enfileirar backup SSH', {

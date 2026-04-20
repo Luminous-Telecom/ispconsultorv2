@@ -9,7 +9,7 @@ interface TerminalSession {
   sessionId: string;
   stream: ClientChannel;
   deviceConn: SshClient;
-  deviceId: string;
+  deviceId: number;
   deviceName: string;
   userId: string;
   ip: string;
@@ -52,7 +52,7 @@ export async function createTerminalSession(
         sessionId,
         stream,
         deviceConn,
-        deviceId: String(device.id),
+        deviceId: device.id,
         deviceName: device.name,
         userId,
         ip,
@@ -89,7 +89,7 @@ export async function createTerminalSession(
         logSshAudit({
           action: 'TERMINAL_CLOSE',
           userId,
-          deviceId: String(device.id),
+          deviceId: device.id,
           deviceName: device.name,
           success: true,
           ip,
@@ -111,11 +111,11 @@ export async function createTerminalSession(
       logSshAudit({
         action: 'TERMINAL_OPEN',
         userId,
-        deviceId: String(device.id),
-        deviceName: device.name,
-        success: true,
-        ip,
-      });
+          deviceId: device.id,
+          deviceName: device.name,
+          success: true,
+          ip,
+        });
 
       logger.info('SSH terminal: sessão aberta', { sessionId, device: device.name, userId });
       resolve(sessionId);

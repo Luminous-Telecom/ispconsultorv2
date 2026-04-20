@@ -5,7 +5,7 @@ import { logger } from '../../../utils/logger';
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 
 export interface ConnectedAgent {
-  agentId: string;
+  agentId: number;
   socket: Socket;
   hostname: string;
   osInfo: string;
@@ -16,21 +16,21 @@ export interface ConnectedAgent {
 
 export interface AgentShellSession {
   sessionId: string;
-  agentId: string;
+  agentId: number;
   /** socketId do cliente frontend que abriu o terminal */
   frontendSocketId: string;
   openedAt: Date;
   /** true quando é proxy SSH para outro host na rede do agente */
   isProxy: boolean;
   /** deviceId quando isProxy (terminal no equipamento via agente) */
-  deviceId?: string;
+  deviceId?: number;
   /** deviceName quando isProxy */
   deviceName?: string;
 }
 
 export interface AgentFileTransfer {
   transferId: string;
-  agentId: string;
+  agentId: number;
   frontendSocketId: string;
   direction: 'upload' | 'download';
   path: string;
@@ -40,26 +40,20 @@ export interface AgentFileTransfer {
 
 // ── Registros em memória ───────────────────────────────────────────────────────
 
-const connectedAgents = new Map<string, ConnectedAgent>();
+const connectedAgents = new Map<number, ConnectedAgent>();
 const shellSessions = new Map<string, AgentShellSession>();
 const fileTransfers = new Map<string, AgentFileTransfer>();
 
-/** Chave estável nos Maps quando o `id` do agente é numérico no banco. */
-function agentKey(agentId: string | number): string {
-  return String(agentId);
-}
-
 // ── Agents ────────────────────────────────────────────────────────────────────
 
-export function registerAgent(agentId: string | number, socket: Socket, info: {
+export function registerAgent(agentId: number, socket: Socket, info: {
   hostname: string;
   osInfo: string;
   version: string;
   ipAddress: string;
 }): void {
-  const k = agentKey(agentId);
-  connectedAgents.set(k, {
-    agentId: k,
+  connectedAgents.set(agentId, {
+    agentId,
     socket,
     hostname: info.hostname,
     osInfo: info.osInfo,
@@ -69,52 +63,49 @@ export function registerAgent(agentId: string | number, socket: Socket, info: {
   });
 }
 
-export function unregisterAgent(agentId: string | number): void {
-  const k = agentKey(agentId);
-  connectedAgents.delete(k);
-  // Encerra sessões de shell pendentes do agente
+export function unregisterAgent(agentId: number): void {
+  connectedAgents.delete(agentId);
   for (const [sid, sess] of shellSessions) {
-    if (sess.agentId === k) shellSessions.delete(sid);
+    if (sess.agentId === agentId) shellSessions.delete(sid);
   }
 }
 
-export function getAgent(agentId: string | number): ConnectedAgent | undefined {
-  return connectedAgents.get(agentKey(agentId));
+export function getAgent(agentId: number): ConnectedAgent | undefined {
+  return connectedAgents.get(agentId);
 }
 
-export function isAgentOnline(agentId: string | number): boolean {
-  return connectedAgents.has(agentKey(agentId));
+export function isAgentOnline(agentId: number): boolean {
+  return connectedAgents.has(agentId);
 }
 
 /** Online na UI: só se estiver ativo no cadastro e com socket conectado. */
-export function isAgentEffectivelyOnline(agentId: string | number, isActive: boolean): boolean {
-  return Boolean(isActive) && connectedAgents.has(agentKey(agentId));
+export function isAgentEffectivelyOnline(agentId: number, isActive: boolean): boolean {
+  return Boolean(isActive) && connectedAgents.has(agentId);
 }
 
 export type AgentSessionEndReason = 'inactive' | 'token_regenerated';
 
 /**
- * Encerra a sessão do agente no namespace (disconnect “normal”, sem forçar fechamento bruto do transporte).
+ * Encerra a sessão do agente no namespace (disconnect "normal", sem forçar fechamento bruto do transporte).
  * Emite `agent:session-ended` para o cliente logar e manter reconexão automática quando fizer sentido.
  */
 export function disconnectAgentById(
-  agentId: string | number,
+  agentId: number,
   options?: { sessionEnd?: AgentSessionEndReason }
 ): void {
-  const k = agentKey(agentId);
-  const connected = connectedAgents.get(k);
+  const connected = connectedAgents.get(agentId);
   if (!connected) return;
   const sessionEnd: AgentSessionEndReason = options?.sessionEnd ?? 'inactive';
   try {
     connected.socket.emit('agent:session-ended', { reason: sessionEnd });
     connected.socket.disconnect(false);
   } catch (err) {
-    logger.warn('Agent: falha ao desconectar socket', { agentId: k, error: err });
-    unregisterAgent(k);
+    logger.warn('Agent: falha ao desconectar socket', { agentId, error: err });
+    unregisterAgent(agentId);
   }
 }
 
-export function getOnlineAgentIds(): string[] {
+export function getOnlineAgentIds(): number[] {
   return [...connectedAgents.keys()];
 }
 
@@ -122,15 +113,14 @@ export function getOnlineAgentIds(): string[] {
 
 export function createShellSession(
   sessionId: string,
-  agentId: string | number,
+  agentId: number,
   frontendSocketId: string,
   isProxy = false,
-  deviceInfo?: { deviceId: string | number; deviceName: string }
+  deviceInfo?: { deviceId: number; deviceName: string }
 ): void {
-  const k = agentKey(agentId);
-  const sess: AgentShellSession = { sessionId, agentId: k, frontendSocketId, openedAt: new Date(), isProxy };
+  const sess: AgentShellSession = { sessionId, agentId, frontendSocketId, openedAt: new Date(), isProxy };
   if (deviceInfo) {
-    sess.deviceId = String(deviceInfo.deviceId);
+    sess.deviceId = deviceInfo.deviceId;
     sess.deviceName = deviceInfo.deviceName;
   }
   shellSessions.set(sessionId, sess);
@@ -156,14 +146,13 @@ export function getShellSessionsBySocket(frontendSocketId: string): string[] {
 
 export function createFileTransfer(
   transferId: string,
-  agentId: string | number,
+  agentId: number,
   frontendSocketId: string,
   direction: 'upload' | 'download',
   path: string
 ): void {
-  const k = agentKey(agentId);
   fileTransfers.set(transferId, {
-    transferId, agentId: k, frontendSocketId, direction, path,
+    transferId, agentId, frontendSocketId, direction, path,
     chunks: [], done: false,
   });
 }
@@ -185,15 +174,14 @@ export function deleteFileTransfer(transferId: string): void {
 
 // ── Envio de comandos para o agente ──────────────────────────────────────────
 
-export function sendToAgent(agentId: string | number, event: string, data: unknown): boolean {
-  const k = agentKey(agentId);
-  const agent = connectedAgents.get(k);
+export function sendToAgent(agentId: number, event: string, data: unknown): boolean {
+  const agent = connectedAgents.get(agentId);
   if (!agent) return false;
   try {
     agent.socket.emit(event, data);
     return true;
   } catch (err) {
-    logger.warn('Agent: erro ao enviar evento', { agentId: k, event, error: err });
+    logger.warn('Agent: erro ao enviar evento', { agentId, event, error: err });
     return false;
   }
 }
@@ -224,7 +212,7 @@ export function resolveAgentPingResult(pingId: string): void {
   entry.settle({ ok: true, latencyMs });
 }
 
-export function pingAgent(agentId: string | number): Promise<{
+export function pingAgent(agentId: number): Promise<{
   success: boolean;
   latency: number | null;
   error: string | null;
@@ -305,7 +293,7 @@ export function resolveAgentSshTestResult(testId: string, payload: AgentSshTestP
 }
 
 export function testSshThroughAgent(
-  agentId: string | number,
+  agentId: number,
   params: {
     host: string;
     port: number;
@@ -413,7 +401,7 @@ export function resolveAgentSshExecResult(execId: string, payload: AgentSshExecP
 const AGENT_SSH_EXEC_SLACK_MS = 15_000;
 
 export function executeSshCommandThroughAgent(
-  agentId: string | number,
+  agentId: number,
   params: {
     host: string;
     port: number;
@@ -533,7 +521,7 @@ export function resolveAgentHttpFetchResult(fetchId: string, payload: AgentHttpF
 const AGENT_HTTP_FETCH_SLACK_MS = 15_000;
 
 export function executeHttpFetchThroughAgent(
-  agentId: string | number,
+  agentId: number,
   params: { url: string; username: string; password: string; timeoutMs: number }
 ): Promise<{ success: boolean; body: Buffer | null; error: string | null }> {
   const fetchId = randomUUID();

@@ -16,11 +16,7 @@ interface PoolEntry {
 class SshPoolService {
   private static instance: SshPoolService;
 
-  private devicePool = new Map<string, PoolEntry>();
-
-  private deviceKey(device: SshDevice | { id: string | number }): string {
-    return String(device.id);
-  }
+  private devicePool = new Map<number, PoolEntry>();
 
   static getInstance(): SshPoolService {
     if (!SshPoolService.instance) {
@@ -33,8 +29,7 @@ class SshPoolService {
    * Retorna conexão existente ou cria nova para o device.
    */
   async getDeviceConnection(device: SshDevice): Promise<SshClient> {
-    const key = this.deviceKey(device);
-    const existing = this.devicePool.get(key);
+    const existing = this.devicePool.get(device.id);
     if (existing) {
       this.touchEntry(existing);
       return existing.conn;
@@ -46,12 +41,11 @@ class SshPoolService {
   /**
    * Remove e fecha a conexão de um device do pool.
    */
-  releaseDevice(deviceId: string | number): void {
-    const key = String(deviceId);
-    const entry = this.devicePool.get(key);
+  releaseDevice(deviceId: number): void {
+    const entry = this.devicePool.get(deviceId);
     if (entry) {
       this.destroyEntry(entry);
-      this.devicePool.delete(key);
+      this.devicePool.delete(deviceId);
     }
   }
 
@@ -79,10 +73,10 @@ class SshPoolService {
 
       this.startIdleTimer(entry, () => {
         logger.info('SSH pool: device ocioso, encerrando', { device: device.name });
-        this.releaseDevice(this.deviceKey(device));
+        this.releaseDevice(device.id);
       });
 
-      this.devicePool.set(this.deviceKey(device), entry);
+      this.devicePool.set(device.id, entry);
       return conn;
     } catch (err) {
       if (attempt < RECONNECT_MAX_ATTEMPTS) {
@@ -101,7 +95,7 @@ class SshPoolService {
 
   private handleDeviceDisconnect(device: SshDevice, entry: PoolEntry): void {
     if (entry.idleTimer) clearTimeout(entry.idleTimer);
-    this.devicePool.delete(this.deviceKey(device));
+    this.devicePool.delete(device.id);
     logger.info('SSH pool: device desconectado', { device: device.name });
   }
 
