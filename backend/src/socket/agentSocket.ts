@@ -254,7 +254,7 @@ import {
   createFileTransfer,
 } from '../services/agent/AgentService';
 import { SshDevice } from '../models/ssh-manager/SshDevice';
-import { decrypt } from '../utils/encryption';
+import { decryptSshCredential } from '../utils/encryption';
 import { privateKeyPemForSsh2 } from '../utils/sshPrivateKey';
 
 function verifyJwt(token: string): JwtPayload | null {
@@ -420,19 +420,23 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
 
       let password: string;
       try {
-        password = decrypt(device.password);
+        password = decryptSshCredential(device.password, 'senha');
       } catch (err) {
-        logger.warn('Agent terminal: falha ao descriptografar senha SSH — configure SSH_ENCRYPTION_KEY', { deviceId });
-        socket.emit('terminal:error', { message: 'Erro de configuração: SSH_ENCRYPTION_KEY não definida. Configure em .env' });
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.warn('Agent terminal: falha ao descriptografar senha SSH', { deviceId, error: msg });
+        socket.emit('terminal:error', { message: msg });
         return;
       }
 
       let privateKey: string | undefined;
       if (device.private_key) {
         try {
-          privateKey = privateKeyPemForSsh2(decrypt(device.private_key));
-        } catch {
-          privateKey = undefined;
+          privateKey = privateKeyPemForSsh2(decryptSshCredential(device.private_key, 'chave_privada'));
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          logger.warn('Agent terminal: falha ao descriptografar chave privada SSH', { deviceId, error: msg });
+          socket.emit('terminal:error', { message: msg });
+          return;
         }
       }
       const useKey = !!privateKey?.length;

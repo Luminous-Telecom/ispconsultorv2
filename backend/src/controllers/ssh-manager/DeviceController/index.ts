@@ -5,7 +5,7 @@ import { SshDeviceBackup } from '../../../models/ssh-manager/SshDeviceBackup';
 import { Agent } from '../../../models/agent/Agent';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { isAgentOnline, testSshThroughAgent } from '../../../services/agent/AgentService';
-import { encrypt, decrypt } from '../../../utils/encryption';
+import { encrypt, decryptSshCredential } from '../../../utils/encryption';
 import { normalizeSshPrivateKeyPem, privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { sshPool } from '../../../services/ssh-manager/SshPoolService';
 import { openDeviceConnection, executeCommand, buildFriendlyError } from '../../../services/ssh-manager/SshConnectionService';
@@ -457,12 +457,13 @@ export class DeviceController {
 
         let password: string;
         try {
-          password = decrypt(device.password);
-        } catch {
-          const msg = 'Erro ao descriptografar credenciais do device.';
+          password = decryptSshCredential(device.password, 'senha');
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Erro ao descriptografar credenciais do device.';
           logger.warn('DeviceController.testConnection: falha ao descriptografar credenciais', {
             deviceId,
             deviceName,
+            error: msg,
           });
           logSshAudit({
             action: 'AUTH_FAIL',
@@ -483,9 +484,28 @@ export class DeviceController {
         let privateKey: string | undefined;
         if (device.private_key) {
           try {
-            privateKey = privateKeyPemForSsh2(decrypt(device.private_key));
-          } catch {
-            privateKey = undefined;
+            privateKey = privateKeyPemForSsh2(decryptSshCredential(device.private_key, 'chave_privada'));
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Erro ao descriptografar chave privada.';
+            logger.warn('DeviceController.testConnection: falha ao descriptografar chave privada', {
+              deviceId,
+              deviceName,
+              error: msg,
+            });
+            logSshAudit({
+              action: 'AUTH_FAIL',
+              userId: getUserId(req),
+              deviceId,
+              deviceName,
+              success: false,
+              errorMessage: msg,
+              ip: getClientIp(req),
+            });
+            try {
+              await registrarAtualizacao(req as AuthenticatedRequest, 'SshDevice', 0, { entity_id_str: deviceId, name: deviceName }, { entity_id_str: deviceId, name: deviceName }, `Teste de conexão no equipamento (falha: ${msg})`, getEmpresaIdOrNull(req) ?? undefined);
+            } catch { /* não crítico */ }
+            sendSuccess(res, { success: false, latency: null, error: msg });
+            return;
           }
         }
         const useKey = !!privateKey?.length;

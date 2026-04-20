@@ -43,6 +43,48 @@ export function decrypt(encryptedText: string): string {
   return decrypted.toString('utf8');
 }
 
+/** Mensagem única para falha de descriptografia (OpenSSL / chave ou dado incompatível). */
+const MSG_SSH_DECRYPT_FAIL =
+  'Erro SSH: Não foi possível descriptografar a senha armazenada no sistema. Causas frequentes: a variável SSH_ENCRYPTION_KEY foi alterada depois de salvar a credencial, ou os dados no banco estão corrompidos. Edite o cadastro do equipamento e informe novamente a senha ou a chave privada. Observação: isso não indica senha incorreta no SSH do equipamento — a conexão ainda não foi tentada.';
+
+/** Campo de credencial SSH persistida (mensagens amigáveis em `decryptSshCredential`). */
+export type SshCredentialField = 'senha' | 'chave_privada';
+
+/**
+ * Descriptografa senha ou chave privada persistida para SSH.
+ * Converte erros criptográficos genéricos (ex.: OpenSSL "bad decrypt") em mensagens acionáveis.
+ * Não use para outros domínios — apenas credenciais de device SSH.
+ */
+export function decryptSshCredential(encryptedText: string, field: SshCredentialField): string {
+  try {
+    return decrypt(encryptedText);
+  } catch (err) {
+    const original = err instanceof Error ? err.message : String(err);
+    const label = field === 'senha' ? 'senha' : 'chave privada';
+
+    const missingKey =
+      original.includes('SSH_ENCRYPTION_KEY não configurada') ||
+      original.includes('menos de 32 caracteres');
+    if (missingKey) {
+      logger.error('SSH: SSH_ENCRYPTION_KEY ausente ou inválida', { field, originalError: original });
+      throw new Error(
+        'SSH_ENCRYPTION_KEY não configurada ou inválida. Defina uma string de 32 caracteres em .env.'
+      );
+    }
+
+    if (original.includes('Formato de texto criptografado inválido')) {
+      logger.warn('SSH: formato de credencial inválido', { field, originalError: original });
+      throw new Error(
+        `Credencial armazenada em formato inválido (${label}). Edite o equipamento e salve novamente a ${label}.`
+      );
+    }
+
+    // OpenSSL: bad decrypt — chave diferente da usada ao salvar, dado truncado/corrompido, etc.
+    logger.warn('SSH: falha ao descriptografar credencial armazenada', { field, originalError: original });
+    throw new Error(MSG_SSH_DECRYPT_FAIL);
+  }
+}
+
 /**
  * Tenta descriptografar; retorna null em caso de erro (ex.: dado legado não criptografado).
  */

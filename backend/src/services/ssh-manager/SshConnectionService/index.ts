@@ -1,7 +1,7 @@
 import { Client as SshClient, ConnectConfig } from 'ssh2';
 import { EventEmitter } from 'events';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
-import { decrypt } from '../../../utils/encryption';
+import { decryptSshCredential } from '../../../utils/encryption';
 import { privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { logger } from '../../../utils/logger';
 
@@ -83,8 +83,8 @@ function buildConnectConfig(
   encryptedPrivateKey: string | null,
   deviceType?: string | null
 ): ConnectConfig {
-  const password = decrypt(encryptedPassword);
-  const rawKey = encryptedPrivateKey ? decrypt(encryptedPrivateKey) : undefined;
+  const password = decryptSshCredential(encryptedPassword, 'senha');
+  const rawKey = encryptedPrivateKey ? decryptSshCredential(encryptedPrivateKey, 'chave_privada') : undefined;
   const privateKey = rawKey ? privateKeyPemForSsh2(rawKey) : '';
   const usePrivateKey = privateKey.length > 0;
 

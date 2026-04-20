@@ -7,7 +7,7 @@ import { executeCommand } from '../SshConnectionService';
 import { logSshAudit } from '../SshAuditService';
 import { logger } from '../../../utils/logger';
 import { resolveArquivosPath } from '../../../utils/pathUtils';
-import { decrypt } from '../../../utils/encryption';
+import { decryptSshCredential } from '../../../utils/encryption';
 import { privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { registerSshDeviceBackupRow } from '../SshDeviceBackupStorageService';
 import { recordSshDeviceBackupEvent } from '../SshDeviceBackupEventService';
@@ -131,10 +131,11 @@ async function runSwosHttpBackup(
 
   let passwordPlain: string;
   try {
-    passwordPlain = decrypt(device.password);
-  } catch {
-    logger.error('Backup SwOS: credenciais', { context: 'SshDeviceBackupRunner', deviceId: device.id });
-    return auditFail('Erro ao descriptografar credenciais do device.');
+    passwordPlain = decryptSshCredential(device.password, 'senha');
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error('Backup SwOS: credenciais', { context: 'SshDeviceBackupRunner', deviceId: device.id, error: msg });
+    return auditFail(msg);
   }
 
   if (device.agent_id) {
@@ -356,18 +357,20 @@ export async function runSshDeviceBackup(
 
       let password: string;
       try {
-        password = decrypt(device.password);
-      } catch {
-        logger.error('Backup SSH via agente: credenciais', { context: 'SshDeviceBackupRunner', deviceId });
-        return auditCommandFail(auditLabel, 'Erro ao descriptografar credenciais do device.');
+        password = decryptSshCredential(device.password, 'senha');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.error('Backup SSH via agente: credenciais', { context: 'SshDeviceBackupRunner', deviceId, error: msg });
+        return auditCommandFail(auditLabel, msg);
       }
 
       let privateKey: string | undefined;
       if (device.private_key) {
         try {
-          privateKey = privateKeyPemForSsh2(decrypt(device.private_key));
-        } catch {
-          privateKey = undefined;
+          privateKey = privateKeyPemForSsh2(decryptSshCredential(device.private_key, 'chave_privada'));
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return auditCommandFail(auditLabel, msg);
         }
       }
       const useKey = !!privateKey?.length;
