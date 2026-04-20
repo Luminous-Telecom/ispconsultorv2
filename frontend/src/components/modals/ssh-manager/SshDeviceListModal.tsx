@@ -289,7 +289,11 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
         queueManualBackupMutation.isPending,
       action: async (selectedItems: SshDevice[]) => {
         if (selectedItems.length !== 1) return;
-        await queueManualBackupMutation.mutateAsync(selectedItems[0].id);
+        try {
+          await queueManualBackupMutation.mutateAsync(selectedItems[0].id);
+        } catch {
+          // Erro já exibido pelo onError do useQueueManualSshDeviceBackup
+        }
       },
     },
   ], [t, handleTest, handleDelete, queryClient, canQueueManualBackup, queueManualBackupMutation, isSwos]);
