@@ -127,9 +127,15 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
   useEffect(() => {
     const newData = Array.isArray(data) ? data : [];
     setState(prev => {
-      // Só tamanho/ordem/ids — não usar `prev.data !== newData`: novo array a cada render do pai causava loop infinito.
-      const dataChanged = prev.data.length !== newData.length || 
-        newData.some((item, index) => !prev.data[index] || prev.data[index].id !== item.id);
+      // Tamanho, ordem/ids, ou mesma linha com objeto novo (ex.: refetch após PATCH sem mudar id).
+      // Não usar só `prev.data !== newData`: novo array a cada render do pai causava loop infinito;
+      // a comparação por índice evita isso e ainda pega updates de campos na mesma página.
+      const dataChanged =
+        prev.data.length !== newData.length ||
+        newData.some((item, index) => {
+          const p = prev.data[index];
+          return !p || p.id !== item.id || p !== item;
+        });
       
       if (dataChanged) {
         // Manter seleção por id, mas apontar para os objetos atuais de newData (evita stale após refetch)
