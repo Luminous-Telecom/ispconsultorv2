@@ -30,6 +30,18 @@ async function fkExists(q, table, constraintName) {
   return Array.isArray(rows) && rows.length > 0;
 }
 
+/** Nomes de FK na tabela que usam a coluna (ex.: InnoDB `…_ibfk_2` vs `adm_ssh_devices_agent_fk`). */
+async function fkNamesOnTableColumn(q, table, column) {
+  const [rows] = await q(
+    `SELECT CONSTRAINT_NAME AS cn FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column
+       AND REFERENCED_TABLE_NAME IS NOT NULL`,
+    { replacements: { table, column } },
+  );
+  const set = new Set((rows || []).map((r) => String(r.cn)));
+  return [...set];
+}
+
 async function indexExists(q, table, indexName) {
   const [rows] = await q(
     'SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=:table AND INDEX_NAME=:idx GROUP BY INDEX_NAME LIMIT 1',
@@ -54,7 +66,6 @@ module.exports = {
 
       // ── Drop FKs que criamos (se existirem) ─────────────────────────────
       for (const [tbl, cn] of [
-        ['adm_ssh_devices', 'adm_ssh_devices_agent_fk'],
         ['adm_ssh_device_backups', 'adm_ssh_device_backups_device_fk'],
         ['adm_ssh_device_backup_events', 'adm_ssh_device_backup_events_device_fk'],
         // Instalações antigas: Sequelize nomeava a FK de ssh_device_id como ibfk_1
@@ -62,6 +73,12 @@ module.exports = {
       ]) {
         if (await fkExists(q, tbl, cn)) {
           await step(`DROP FK ${cn}`, () => q(`ALTER TABLE \`${tbl}\` DROP FOREIGN KEY \`${cn}\``));
+        }
+      }
+      // adm_ssh_devices.agent_id: pode ser `adm_ssh_devices_agent_fk` ou `…_ibfk_N` (Sequelize/InnoDB)
+      for (const cn of await fkNamesOnTableColumn(q, 'adm_ssh_devices', 'agent_id')) {
+        if (await fkExists(q, 'adm_ssh_devices', cn)) {
+          await step(`DROP FK ${cn}`, () => q(`ALTER TABLE \`adm_ssh_devices\` DROP FOREIGN KEY \`${cn}\``));
         }
       }
 
