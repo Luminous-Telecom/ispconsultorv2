@@ -330,7 +330,7 @@ const CentralAssinante: React.FC = () => {
     const statusMap: Record<string, 'success' | 'danger' | 'warning' | 'secondary' | 'info'> = {
       ativo: 'success',
       inativo: 'secondary',
-      suspenso: 'warning',
+      suspenso: 'danger',
       pendente: 'warning',
       pago: 'success',
       vencido: 'danger',

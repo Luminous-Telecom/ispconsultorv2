@@ -33,10 +33,12 @@ const Dashboard: React.FC = () => {
     hiddenPagamentos,
     hiddenDistribuicao,
     hiddenContratos,
+    hiddenBackupStatus,
     toggleCliente,
     togglePagamento,
     toggleDistribuicao,
     toggleContratos,
+    toggleBackupStatus,
   } = useChartHiddenItems();
 
   const {
@@ -171,6 +173,8 @@ const Dashboard: React.FC = () => {
                 legendLabels={backupStatusLegendLabels}
                 emptyMessage={t('dashboard.backupStatusEmpty')}
                 onSegmentClick={handleBackupStatusSegmentClick}
+                hiddenKeys={hiddenBackupStatus}
+                onLegendToggle={(key) => toggleBackupStatus(key)}
               />
             </div>
           </div>

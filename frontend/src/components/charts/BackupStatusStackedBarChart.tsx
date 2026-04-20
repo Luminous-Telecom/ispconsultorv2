@@ -31,10 +31,13 @@ export interface BackupStatusStackedBarChartProps {
   legendLabels: Record<BackupStatusKey, string>;
   emptyMessage?: string;
   onSegmentClick?: (dataISO: string, status: BackupStatusKey) => void;
+  /** Chaves ocultas via legenda (mesmo padrão do ResponsivePieChart). */
+  hiddenKeys?: ReadonlySet<string>;
+  onLegendToggle?: (key: BackupStatusKey) => void;
 }
 
 const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = memo(
-  ({ days, title, legendLabels, emptyMessage, onSegmentClick }) => {
+  ({ days, title, legendLabels, emptyMessage, onSegmentClick, hiddenKeys, onLegendToggle }) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const wrapRef = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(400);
@@ -53,7 +56,12 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       [days]
     );
 
-    const maxTotal = useMemo(
+    const visibleKeys = useMemo(
+      () => STACK_KEYS.filter((k) => !hiddenKeys?.has(k)),
+      [hiddenKeys]
+    );
+
+    const maxTotalAll = useMemo(
       () =>
         chartData.length > 0
           ? Math.max(
@@ -65,6 +73,15 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
           : 0,
       [chartData]
     );
+
+    const maxTotal = useMemo(() => {
+      if (chartData.length === 0) return 0;
+      if (visibleKeys.length === 0) return maxTotalAll;
+      return Math.max(
+        1,
+        ...chartData.map((d) => visibleKeys.reduce((s, k) => s + (Number(d[k]) || 0), 0))
+      );
+    }, [chartData, visibleKeys, maxTotalAll]);
 
     const hasAny = useMemo(
       () =>
@@ -107,8 +124,11 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       const innerW = Math.max(1, width - margin.left - margin.right);
       const innerH = height - margin.top - margin.bottom;
 
-      const stack = d3.stack<typeof chartData[0]>().keys([...STACK_KEYS]);
-      const series = stack(chartData);
+      const stackKeys = visibleKeys.length > 0 ? visibleKeys : [];
+      const series =
+        stackKeys.length > 0
+          ? d3.stack<typeof chartData[0]>().keys([...stackKeys])(chartData)
+          : [];
 
       const x = d3
         .scaleBand<string>()
@@ -206,7 +226,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
 
       const padding = { x: 16, y: 12 };
 
-      const placeTooltip = (d: (typeof series)[0][0], statusKey: BackupStatusKey) => {
+      const placeTooltip = (d: d3.SeriesPoint<(typeof chartData)[0]>, statusKey: BackupStatusKey) => {
         const v = Number(d.data[statusKey]) || 0;
         const nome = legendLabels[statusKey] ?? statusKey;
         tooltipContent.select('.tooltip-label').text(d.data.label);
@@ -228,20 +248,20 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
         tooltipG.attr('transform', `translate(${tx},${ty})`);
       };
 
-      type StackPoint = (typeof series)[0][0];
+      type StackPoint = d3.SeriesPoint<(typeof chartData)[0]>;
 
       g.selectAll<SVGRectElement, StackPoint>('rect')
         .on('mouseenter', function (_event, d) {
           const h = y(d[0]) - y(d[1]);
           if (h < 0.5) return;
-          const statusKey = (this.getAttribute('data-status-key') as BackupStatusKey) || STACK_KEYS[0];
+          const statusKey = (this.getAttribute('data-status-key') as BackupStatusKey) || visibleKeys[0] || 'sucesso';
           placeTooltip(d, statusKey);
           tooltipG.transition().duration(180).ease(d3.easeCubicOut).style('opacity', 1);
         })
         .on('mouseleave', () => {
           tooltipG.transition().duration(150).ease(d3.easeCubicOut).style('opacity', 0);
         });
-    }, [chartData, width, maxTotal, hasAny, onSegmentClick, textMuted, legendLabels]);
+    }, [chartData, width, maxTotal, maxTotalAll, hasAny, onSegmentClick, textMuted, legendLabels, visibleKeys]);
 
     if (chartData.length === 0 || !hasAny) {
       return (
@@ -270,12 +290,45 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
           className="d-flex flex-wrap gap-2 justify-content-center list-unstyled mb-0 mt-1"
           style={{ fontSize: '0.65rem', rowGap: '4px' }}
         >
-          {STACK_KEYS.map((k) => (
-            <li key={k} className="d-flex align-items-center gap-1">
-              <span style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: STATUS_COLORS[k] }} />
-              <span style={{ color: 'var(--text-muted, #94a3b8)' }}>{legendLabels[k]}</span>
-            </li>
-          ))}
+          {STACK_KEYS.map((k) => {
+            const isHidden = hiddenKeys?.has(k) ?? false;
+            return (
+              <li
+                key={k}
+                className="d-flex align-items-center gap-1"
+                role={onLegendToggle ? 'button' : undefined}
+                tabIndex={onLegendToggle ? 0 : undefined}
+                onClick={
+                  onLegendToggle
+                    ? (e) => {
+                        e.stopPropagation();
+                        onLegendToggle(k);
+                      }
+                    : undefined
+                }
+                onKeyDown={
+                  onLegendToggle
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onLegendToggle(k);
+                        }
+                      }
+                    : undefined
+                }
+                style={{
+                  cursor: onLegendToggle ? 'pointer' : 'default',
+                  opacity: isHidden ? 0.5 : 1,
+                  textDecoration: isHidden ? 'line-through' : 'none',
+                  padding: onLegendToggle ? '2px 4px' : undefined,
+                  borderRadius: onLegendToggle ? 'var(--border-radius, 8px)' : undefined,
+                }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: STATUS_COLORS[k] }} />
+                <span style={{ color: 'var(--text-muted, #94a3b8)' }}>{legendLabels[k]}</span>
+              </li>
+            );
+          })}
         </ul>
       </div>
     );

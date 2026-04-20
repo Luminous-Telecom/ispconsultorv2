@@ -386,7 +386,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
             case 'inativo':
               return 'bg-danger';
             case 'suspenso':
-              return 'bg-warning text-dark';
+              return 'bg-danger';
             case 'cancelado':
               return 'bg-secondary';
             default:

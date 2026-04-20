@@ -10,6 +10,8 @@ export const useChartHiddenItems = () => {
   const [hiddenPagamentos, setHiddenPagamentos] = useState<Set<number>>(new Set());
   const [hiddenDistribuicao, setHiddenDistribuicao] = useState<Set<number>>(new Set());
   const [hiddenContratos, setHiddenContratos] = useState<Set<number>>(new Set());
+  /** Chaves do gráfico de status de backups (ex.: sucesso, falha) — mesma ideia da legenda dos pizzas. */
+  const [hiddenBackupStatus, setHiddenBackupStatus] = useState<Set<string>>(new Set());
 
   // Funções de toggle para cada gráfico (memoizadas)
   const toggleCliente = useCallback((index: number) => {
@@ -72,17 +74,28 @@ export const useChartHiddenItems = () => {
     });
   }, []);
 
+  const toggleBackupStatus = useCallback((key: string) => {
+    setHiddenBackupStatus((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
   return {
     hiddenClientes,
     hiddenPlanos,
     hiddenPagamentos,
     hiddenDistribuicao,
     hiddenContratos,
+    hiddenBackupStatus,
     toggleCliente,
     togglePlano,
     togglePagamento,
     toggleDistribuicao,
     toggleContratos,
+    toggleBackupStatus,
   };
 };
 

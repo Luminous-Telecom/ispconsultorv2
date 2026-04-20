@@ -1600,7 +1600,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         const statusColors: Record<string, string> = {
           ativo: 'success',
           inativo: 'secondary',
-          suspenso: 'warning'
+          suspenso: 'danger'
         };
         const color = statusColors[item.status] || 'secondary';
         return (

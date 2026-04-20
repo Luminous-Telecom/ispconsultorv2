@@ -54,7 +54,7 @@ export const useDashboardCharts = (
   const clientesChartData = useMemo(
     () => [
       { label: t('status.active'), value: stats.clientesAtivos, color: '#10b981', filterValue: true },
-      { label: t('status.inactive'), value: stats.clientesInativos, color: '#ef4444', filterValue: false },
+      { label: t('status.inactive'), value: stats.clientesInativos, color: '#94a3b8', filterValue: false },
     ],
     [stats.clientesAtivos, stats.clientesInativos, t]
   );
@@ -74,7 +74,7 @@ export const useDashboardCharts = (
         { label: t('status.paid'), value: m.pagos, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },
         { label: t('status.pending'), value: m.pendentes, color: '#0ea5e9', filterValue: 'pendente' },
         { label: t('status.overdue'), value: m.vencidos, color: '#f59e0b', filterValue: 'vencido' },
-        { label: t('status.cancelled'), value: m.cancelados, color: '#ef4444', filterValue: 'cancelado' },
+        { label: t('status.cancelled'), value: m.cancelados, color: '#94a3b8', filterValue: 'cancelado' },
       ].filter((item) => item.value > 0);
     }
     if (!titulosTodos.length) return [];
@@ -106,7 +106,7 @@ export const useDashboardCharts = (
       { label: t('status.paid'), value: counts.pagos, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },
       { label: t('status.pending'), value: counts.pendentes, color: '#0ea5e9', filterValue: 'pendente' },
       { label: t('status.overdue'), value: counts.vencidos, color: '#f59e0b', filterValue: 'vencido' },
-      { label: t('status.cancelled'), value: counts.cancelados, color: '#ef4444', filterValue: 'cancelado' },
+      { label: t('status.cancelled'), value: counts.cancelados, color: '#94a3b8', filterValue: 'cancelado' },
     ].filter((item) => item.value > 0);
   }, [sg, titulosTodos, t]);
 
@@ -139,7 +139,7 @@ export const useDashboardCharts = (
       { label: t('status.inactive'), value: stats.contratosInativos, color: '#94a3b8', filterValue: 'inativo' },
     ];
     if (!isSaas) {
-      items.push({ label: t('status.suspended'), value: stats.contratosSuspensos, color: '#f97316', filterValue: 'suspenso' });
+      items.push({ label: t('status.suspended'), value: stats.contratosSuspensos, color: '#ef4444', filterValue: 'suspenso' });
     }
     items.push({ label: t('status.exempt'), value: stats.contratosIsentos, color: '#64748b', filterValue: 'isento' });
     if ((stats.contratosBloqueados ?? 0) > 0) {
