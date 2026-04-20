@@ -109,7 +109,28 @@ export interface DashboardData {
     queueConcurrency: number;
   };
   statsGraficos?: DashboardStatsGraficos;
+  /** ERP: contagem diária por status de backup (persistido em adm_ssh_device_backup_events) */
+  backupStatusGrafico?: Array<{
+    label: string;
+    dataISO: string;
+    falha: number;
+    sucesso: number;
+    somente_local: number;
+    falha_envio: number;
+    verificado: number;
+  }>;
 }
+
+export type BackupStatusDetalheItem = {
+  id: string;
+  deviceId: string;
+  deviceName: string;
+  fileName: string | null;
+  sizeBytes: number | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  detail: string | null;
+};
 
 export interface DashboardFilters {
   startDate?: string;
@@ -132,4 +153,13 @@ export class DashboardService {
     }
   }
 
+  static async getBackupStatusDetalhe(dataISO: string, status: string): Promise<{ items: BackupStatusDetalheItem[] }> {
+    const response = await apiService.get<{ items: BackupStatusDetalheItem[] }>('/dashboard/backup-status-detalhe', {
+      params: { data: dataISO, status },
+    });
+    if (response.success && response.data && Array.isArray(response.data.items)) {
+      return { items: response.data.items };
+    }
+    return { items: [] };
+  }
 }

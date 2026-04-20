@@ -15,6 +15,10 @@ export class SshDeviceBackup extends Model<
   declare ssh_device_id: string;
   declare file_name: string;
   declare size_bytes: number;
+  /** Início da execução do backup (antes de comandos HTTP/SSH). */
+  declare started_at: Date;
+  /** Fim da execução (após gravar o arquivo). */
+  declare finished_at: Date;
   declare created_at: CreationOptional<Date>;
 }
 
@@ -38,6 +42,14 @@ SshDeviceBackup.init(
     },
     size_bytes: {
       type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    started_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    finished_at: {
+      type: DataTypes.DATE,
       allowNull: false,
     },
     created_at: {

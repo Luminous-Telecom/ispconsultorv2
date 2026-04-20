@@ -14,7 +14,6 @@ interface DashboardCharts {
   planosChartData: ChartDataItem[];
   statusPagamentoData: ChartDataItem[];
   distribuicaoPlanos: ChartDataItem[];
-  taxaPagamentoChartData: ChartDataItem[];
   contratosChartData: ChartDataItem[];
   ticketMedioChartData: ChartDataItem[];
   receitaMensalChartData: ChartDataItem[];
@@ -132,14 +131,6 @@ export const useDashboardCharts = (
         filterValue: item.tipo_servico,
       }));
   }, [clientesPorTipoPlano, t]);
-
-  const taxaPagamentoChartData = useMemo(() => {
-    const pendente = stats.totalTitulosTodos > 0 ? 100 - stats.taxaPagamento : 0;
-    return [
-      { label: t('status.paid'), value: stats.taxaPagamento, color: '#10b981', filterValue: 'pago,pago_atraso,parcial' },
-      { label: t('status.pending'), value: pendente, color: '#3b82f6', filterValue: 'pendente,vencido' },
-    ];
-  }, [stats.taxaPagamento, stats.totalTitulosTodos, t]);
 
   const contratosChartData = useMemo(() => {
     const isSaas = stats.contratosBloqueados !== undefined;
@@ -394,7 +385,6 @@ export const useDashboardCharts = (
     planosChartData,
     statusPagamentoData,
     distribuicaoPlanos,
-    taxaPagamentoChartData,
     contratosChartData,
     ticketMedioChartData,
     receitaMensalChartData,

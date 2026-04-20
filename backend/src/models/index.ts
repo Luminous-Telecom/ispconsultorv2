@@ -54,6 +54,7 @@ import { IpPermitidoBlockdomi } from './blockdomi/IpPermitidoBlockdomi';
 // SSH Manager
 import { SshDevice } from './ssh-manager/SshDevice';
 import { SshDeviceBackup } from './ssh-manager/SshDeviceBackup';
+import { SshDeviceBackupEvent } from './ssh-manager/SshDeviceBackupEvent';
 
 // Agent
 import { Agent } from './agent/Agent';
@@ -417,6 +418,16 @@ SshDeviceBackup.belongsTo(SshDevice, {
   as: 'ssh_device',
 });
 
+SshDevice.hasMany(SshDeviceBackupEvent, {
+  foreignKey: 'ssh_device_id',
+  as: 'ssh_device_backup_events',
+});
+
+SshDeviceBackupEvent.belongsTo(SshDevice, {
+  foreignKey: 'ssh_device_id',
+  as: 'ssh_device',
+});
+
 // Exportar todos os modelos
 export {
   Cliente,
@@ -466,5 +477,6 @@ export {
   SaasMensagemHistorico,
   SshDevice,
   SshDeviceBackup,
+  SshDeviceBackupEvent,
   Agent,
 };

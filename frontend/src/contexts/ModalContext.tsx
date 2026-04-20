@@ -65,6 +65,7 @@ export type ModalType =
   | 'saas-logs-acesso-sistema'
   // SSH Manager
   | 'ssh-devices'
+  | 'dashboard-backup-equipamentos'
   // Agents / Tunnels
   | 'agents'
   | null;

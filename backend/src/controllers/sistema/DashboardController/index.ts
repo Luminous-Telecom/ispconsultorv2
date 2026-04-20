@@ -63,7 +63,7 @@ export class DashboardController {
       fimPeriodo.setHours(23, 59, 59, 999);
 
       // Buscar todas as estatísticas e dados em paralelo (filtrados por empresa_id)
-      const [statsData, titulosRecentes, titulosVencidos, contratos, contratosAtivosTodos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos, aReceberPeriodo, recebidosPeriodo, resumoPeriodo, receitaUltimosMeses, contasPagarUltimosMeses, clientesPorTipoPlano] = await Promise.all([
+      const [statsData, titulosRecentes, titulosVencidos, contratos, contratosAtivosTodos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos, aReceberPeriodo, recebidosPeriodo, resumoPeriodo, receitaUltimosMeses, contasPagarUltimosMeses, clientesPorTipoPlano, backupStatusGrafico] = await Promise.all([
         DashboardService.getStatsData(inicioPeriodo, fimPeriodo, empresaId),
         DashboardService.getTitulosRecentesData(5, empresaId),
         DashboardService.getTitulosVencidosData(10, empresaId),
@@ -80,7 +80,8 @@ export class DashboardController {
         DashboardService.getResumoFinanceiroPeriodo(parsedStart, parsedEnd, empresaId),
         DashboardService.getReceitaUltimos12Meses(empresaId),
         DashboardService.getContasPagarUltimos12Meses(empresaId),
-        DashboardService.getClientesPorTipoPlano(empresaId)
+        DashboardService.getClientesPorTipoPlano(empresaId),
+        DashboardService.getBackupStatusGrafico(parsedStart, parsedEnd, empresaId),
       ]);
 
       const contratosAtrasoPeriodo = DashboardService.computeContratosAtrasoPeriodo(
@@ -156,6 +157,7 @@ export class DashboardController {
         contratosEmAtraso: contratosAtrasoPeriodo.contratosEmAtraso,
         contratosAtivosDashboard: contratosAtrasoPeriodo.contratosAtivosDashboard,
         statsGraficos,
+        backupStatusGrafico,
       };
 
 
@@ -168,6 +170,22 @@ export class DashboardController {
     }
   }
 
+  /** Equipamentos agregados por dia e status de backup (eventos persistidos, não logs ES). */
+  static async getBackupStatusDetalhe(req: Request, res: Response): Promise<void> {
+    try {
+      const empresaId = getEmpresaIdOrNull(req);
+      const { data, status } = req.query;
+      const dataStr = typeof data === 'string' ? data : '';
+      const statusStr = typeof status === 'string' ? status : '';
+      const items = await DashboardService.getBackupStatusDetalhe(dataStr, statusStr, empresaId);
+      sendSuccess(res, { items });
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar detalhe de backup', 500, true, {
+        context: 'DashboardController',
+        action: 'backupStatusDetalhe',
+      });
+    }
+  }
 
   // Obter estatísticas gerais do dashboard
   static async getStats(req: Request, res: Response): Promise<void> {

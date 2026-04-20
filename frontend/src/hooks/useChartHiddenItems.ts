@@ -9,7 +9,6 @@ export const useChartHiddenItems = () => {
   const [hiddenPlanos, setHiddenPlanos] = useState<Set<number>>(new Set());
   const [hiddenPagamentos, setHiddenPagamentos] = useState<Set<number>>(new Set());
   const [hiddenDistribuicao, setHiddenDistribuicao] = useState<Set<number>>(new Set());
-  const [hiddenTaxaPagamento, setHiddenTaxaPagamento] = useState<Set<number>>(new Set());
   const [hiddenContratos, setHiddenContratos] = useState<Set<number>>(new Set());
 
   // Funções de toggle para cada gráfico (memoizadas)
@@ -61,18 +60,6 @@ export const useChartHiddenItems = () => {
     });
   }, []);
 
-  const toggleTaxaPagamento = useCallback((index: number) => {
-    setHiddenTaxaPagamento(prev => {
-      const newHidden = new Set(prev);
-      if (newHidden.has(index)) {
-        newHidden.delete(index);
-      } else {
-        newHidden.add(index);
-      }
-      return newHidden;
-    });
-  }, []);
-
   const toggleContratos = useCallback((index: number) => {
     setHiddenContratos(prev => {
       const newHidden = new Set(prev);
@@ -90,13 +77,11 @@ export const useChartHiddenItems = () => {
     hiddenPlanos,
     hiddenPagamentos,
     hiddenDistribuicao,
-    hiddenTaxaPagamento,
     hiddenContratos,
     toggleCliente,
     togglePlano,
     togglePagamento,
     toggleDistribuicao,
-    toggleTaxaPagamento,
     toggleContratos,
   };
 };

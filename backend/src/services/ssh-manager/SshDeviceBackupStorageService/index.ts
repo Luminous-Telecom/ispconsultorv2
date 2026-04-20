@@ -16,12 +16,14 @@ function backupDir(): string {
 }
 
 /**
- * Registra no banco um arquivo já gravado em disco (metadados).
+ * Registra no banco um arquivo já gravado em disco (metadados + janela da execução).
  */
 export async function registerSshDeviceBackupRow(
   sshDeviceId: string,
   fileName: string,
-  sizeBytes: number
+  sizeBytes: number,
+  startedAt: Date,
+  finishedAt: Date
 ): Promise<void> {
   const base = path.basename(fileName);
   if (base !== fileName || base.includes('..')) {
@@ -33,6 +35,8 @@ export async function registerSshDeviceBackupRow(
       ssh_device_id: sshDeviceId,
       file_name: base,
       size_bytes: sizeBytes,
+      started_at: startedAt,
+      finished_at: finishedAt,
     });
   } catch (err) {
     logger.error('Falha ao registrar backup SSH no banco (arquivo já existe no disco)', {
@@ -51,21 +55,26 @@ type BackupRow = {
   file_name: string;
   size_bytes: number | bigint | string;
   created_at: Date | string;
+  finished_at?: Date | string | null;
   ssh_device_id?: string;
 };
+
+function rowToModifiedAtIso(r: BackupRow): string {
+  const ts = r.finished_at ?? r.created_at;
+  return ts instanceof Date ? ts.toISOString() : new Date(ts).toISOString();
+}
 
 export async function listBackupsForDevice(deviceId: string): Promise<SshDeviceBackupFileMeta[]> {
   const rows = (await SshDeviceBackup.findAll({
     where: { ssh_device_id: deviceId },
-    order: [['created_at', 'DESC']],
+    order: [['finished_at', 'DESC']],
     raw: true,
   })) as unknown as BackupRow[];
 
   return rows.map((r) => ({
     fileName: r.file_name,
     size: Number(r.size_bytes),
-    modifiedAt:
-      r.created_at instanceof Date ? r.created_at.toISOString() : new Date(r.created_at).toISOString(),
+    modifiedAt: rowToModifiedAtIso(r),
   }));
 }
 
@@ -85,15 +94,14 @@ export async function listBackupsForDeviceIds(
 
   const rows = (await SshDeviceBackup.findAll({
     where: { ssh_device_id: { [Op.in]: deviceIds } },
-    order: [['created_at', 'DESC']],
+    order: [['finished_at', 'DESC']],
     raw: true,
   })) as unknown as BackupRow[];
 
   return rows.map((r) => ({
     fileName: r.file_name,
     size: Number(r.size_bytes),
-    modifiedAt:
-      r.created_at instanceof Date ? r.created_at.toISOString() : new Date(r.created_at).toISOString(),
+    modifiedAt: rowToModifiedAtIso(r),
     device_id: r.ssh_device_id ?? '',
     device_name: deviceIdToName.get(r.ssh_device_id ?? '') ?? (r.ssh_device_id ?? ''),
   }));

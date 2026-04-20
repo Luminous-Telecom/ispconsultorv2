@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { formatCurrency, formatNumber } from 'utils/formatters';
 import { useDashboard } from 'hooks/useDashboard';
 import { useDashboardFilters } from 'contexts/DashboardFiltersContext';
@@ -6,29 +6,36 @@ import { useDashboardStats } from 'hooks/useDashboardStats';
 import { useDashboardCharts } from 'hooks/useDashboardCharts';
 import { useChartHiddenItems } from 'hooks/useChartHiddenItems';
 import { useDashboardChartClicks } from 'hooks/useDashboardChartClicks';
-import { BarChart, ValueChart, ResponsiveLineChart, DualLineChart, ResponsivePieChart } from 'components/charts';
+import {
+  BarChart,
+  ValueChart,
+  ResponsiveLineChart,
+  DualLineChart,
+  ResponsivePieChart,
+  BackupStatusStackedBarChart,
+  type BackupStatusKey,
+} from 'components/charts';
 import { Spinner } from 'components/ui';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import { useModal } from 'contexts/ModalContext';
 import { useI18n } from 'contexts/I18nContext';
+import { DashboardService } from 'services/dashboardService';
 import DashboardSearchResult from '../dashboard/DashboardSearchResult';
 
 const Dashboard: React.FC = () => {
   const { t } = useI18n();
   const { searchValue, searchField } = useTableHeader();
-  const { activeModal } = useModal();
+  const { activeModal, openModal } = useModal();
   const { startDate, endDate } = useDashboardFilters();
 
   const {
     hiddenClientes,
     hiddenPagamentos,
     hiddenDistribuicao,
-    hiddenTaxaPagamento,
     hiddenContratos,
     toggleCliente,
     togglePagamento,
     toggleDistribuicao,
-    toggleTaxaPagamento,
     toggleContratos,
   } = useChartHiddenItems();
 
@@ -56,6 +63,36 @@ const Dashboard: React.FC = () => {
 
   // Preparar dados dos gráficos usando hook customizado
   const charts = useDashboardCharts(dashboardData, stats, t);
+
+  const backupStatusLegendLabels = useMemo(
+    () => ({
+      falha: t('dashboard.backupStatusLegendFalha'),
+      sucesso: t('dashboard.backupStatusLegendSucesso'),
+      somente_local: t('dashboard.backupStatusLegendSomenteLocal'),
+      falha_envio: t('dashboard.backupStatusLegendFalhaEnvio'),
+      verificado: t('dashboard.backupStatusLegendVerificado'),
+    }),
+    [t]
+  );
+
+  const handleBackupStatusSegmentClick = useCallback(
+    async (dataISO: string, status: BackupStatusKey) => {
+      const { items } = await DashboardService.getBackupStatusDetalhe(dataISO, status);
+      openModal('dashboard-backup-equipamentos', {
+        items: items.map((row) => ({
+          id: row.id,
+          deviceId: row.deviceId,
+          deviceName: row.deviceName,
+          fileName: row.fileName,
+          sizeBytes: row.sizeBytes,
+          startedAt: row.startedAt,
+          finishedAt: row.finishedAt,
+          detail: row.detail,
+        })),
+      });
+    },
+    [openModal]
+  );
 
   if (loadingDashboard) {
     return (
@@ -120,12 +157,12 @@ const Dashboard: React.FC = () => {
 
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
             <div className="chart-card chart-card-pie">
-              <ResponsivePieChart
-                data={charts.taxaPagamentoChartData}
-                title={t('dashboard.paymentRate')}
-                hiddenItems={hiddenTaxaPagamento}
-                onToggleItem={toggleTaxaPagamento}
-                onSliceClick={handleStatusPagamentoSliceClick}
+              <BackupStatusStackedBarChart
+                days={dashboardData?.backupStatusGrafico ?? []}
+                title={t('dashboard.backupStatusTitle')}
+                legendLabels={backupStatusLegendLabels}
+                emptyMessage={t('dashboard.backupStatusEmpty')}
+                onSegmentClick={handleBackupStatusSegmentClick}
               />
             </div>
           </div>

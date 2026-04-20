@@ -5,6 +5,7 @@ const router = Router();
 
 // Rota principal do dashboard (combina todos os dados)
 router.get('/', DashboardController.getDashboardData);
+router.get('/backup-status-detalhe', DashboardController.getBackupStatusDetalhe);
 
 // Estatísticas gerais
 router.get('/stats', DashboardController.getStats);

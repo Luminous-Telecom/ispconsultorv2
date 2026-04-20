@@ -54,6 +54,9 @@ const LogsModal = lazy(() => import('../modals/logs/LogsModal'));
 
 // Agents / Tunnels
 const AgentListModal = lazy(() => import('../modals/agent').then(m => ({ default: m.AgentListModal })));
+const DashboardBackupEquipamentosModal = lazy(
+  () => import('../modals/dashboard/DashboardBackupEquipamentosModal')
+);
 
 interface ModalComponentProps {
   show: boolean;
@@ -100,6 +103,13 @@ const getModalConfigs = (): Record<string, ModalConfig> => ({
   'saas-backups': { component: BackupsModal, titleKey: 'modal.backups', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   // SSH Manager
   'ssh-devices': { component: SshDeviceListModal, titleKey: 'modal.sshDevices', loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
+  'dashboard-backup-equipamentos': {
+    component: DashboardBackupEquipamentosModal,
+    titleKey: 'modal.backupLogs',
+    loadingMessageKey: 'ui.loadingPage',
+    size: 'xl',
+    className: 'no-padding',
+  },
   // Agents / Tunnels
   'agents':       { component: AgentListModal,       titleKey: 'modal.agents',      loadingMessageKey: 'ui.loadingPage', size: 'xl', className: 'no-padding' },
   'blockdomi-dominios': { component: DominioListModal, titleKey: 'modal.domains', loadingMessageKey: 'ui.loadingPage', className: 'no-padding' },

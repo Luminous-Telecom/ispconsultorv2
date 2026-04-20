@@ -178,6 +178,26 @@ export interface TranslationKeys {
   'dashboard.newClients': string;
   'dashboard.receivablesVsPayables': string;
   'dashboard.clientsByPlan': string;
+  'dashboard.deviceBackups': string;
+  'dashboard.deviceBackupsSuccessSlice': string;
+  'dashboard.deviceBackupsFailureSlice': string;
+  'dashboard.deviceBackupsElasticsearchOff': string;
+  'dashboard.deviceBackupsNoEvents': string;
+  'dashboard.deviceBackupsPeriod': string;
+  'dashboard.deviceBackupsOccurrences': string;
+  'dashboard.deviceBackupsModalSuccessTitle': string;
+  'dashboard.deviceBackupsModalFailureTitle': string;
+  'dashboard.deviceBackupsModalEmpty': string;
+  'dashboard.backupStatusTitle': string;
+  'dashboard.backupStatusLegendFalha': string;
+  'dashboard.backupStatusLegendSucesso': string;
+  'dashboard.backupStatusLegendSomenteLocal': string;
+  'dashboard.backupStatusLegendFalhaEnvio': string;
+  'dashboard.backupStatusLegendVerificado': string;
+  'dashboard.backupStatusEmpty': string;
+  'dashboard.backupStatusDetailColumn': string;
+  'dashboard.backupLogStartAt': string;
+  'dashboard.backupLogEndAt': string;
 
   // Pagination
   'pagination.to': string;
@@ -251,6 +271,7 @@ export interface TranslationKeys {
   'modal.updates': string;
   'modal.taskScheduler': string;
   'modal.backups': string;
+  'modal.backupLogs': string;
   'modal.digitalSignature': string;
   'modal.auditLogs': string;
   'modal.domains': string;
@@ -1647,6 +1668,26 @@ const translations: Translations = {
     'dashboard.newClients': 'Novos Clientes',
     'dashboard.receivablesVsPayables': 'Contas a Receber vs Contas a Pagar',
     'dashboard.clientsByPlan': 'Clientes por Plano',
+    'dashboard.deviceBackups': 'Backups de equipamentos',
+    'dashboard.deviceBackupsSuccessSlice': 'Sucesso',
+    'dashboard.deviceBackupsFailureSlice': 'Falha',
+    'dashboard.deviceBackupsElasticsearchOff': 'Elasticsearch indisponível — configure o serviço para ver estatísticas de backup.',
+    'dashboard.deviceBackupsNoEvents': 'Nenhum backup de equipamento no período',
+    'dashboard.deviceBackupsPeriod': 'Período',
+    'dashboard.deviceBackupsOccurrences': 'Ocorrências',
+    'dashboard.deviceBackupsModalSuccessTitle': 'Backups com sucesso por equipamento',
+    'dashboard.deviceBackupsModalFailureTitle': 'Backups com falha por equipamento',
+    'dashboard.deviceBackupsModalEmpty': 'Nenhum equipamento nesta lista.',
+    'dashboard.backupStatusTitle': 'Status backup',
+    'dashboard.backupStatusLegendFalha': 'Falha',
+    'dashboard.backupStatusLegendSucesso': 'Sucesso',
+    'dashboard.backupStatusLegendSomenteLocal': 'Somente local',
+    'dashboard.backupStatusLegendFalhaEnvio': 'Falha de envio',
+    'dashboard.backupStatusLegendVerificado': 'Verificado',
+    'dashboard.backupStatusEmpty': 'Nenhum evento de backup no período',
+    'dashboard.backupStatusDetailColumn': 'Detalhe',
+    'dashboard.backupLogStartAt': 'Início do backup',
+    'dashboard.backupLogEndAt': 'Fim do backup',
     'dashboard.monthlyRevenueTitle': 'Faturamento Mensal',
 
     // Pagination
@@ -1721,6 +1762,7 @@ const translations: Translations = {
     'modal.updates': 'Atualizações',
     'modal.taskScheduler': 'Agendador de Tarefas',
     'modal.backups': 'Backup/Restauração',
+    'modal.backupLogs': 'Logs de backups',
     'modal.digitalSignature': 'Assinatura Digital',
     'modal.auditLogs': 'Logs de Auditoria',
     'modal.systemDocuments': 'Modelos de Documentos',
@@ -3114,6 +3156,26 @@ const translations: Translations = {
     'dashboard.newClients': 'New Clients',
     'dashboard.receivablesVsPayables': 'Receivables vs Payables',
     'dashboard.clientsByPlan': 'Clients by Plan',
+    'dashboard.deviceBackups': 'Device backups',
+    'dashboard.deviceBackupsSuccessSlice': 'Success',
+    'dashboard.deviceBackupsFailureSlice': 'Failure',
+    'dashboard.deviceBackupsElasticsearchOff': 'Elasticsearch unavailable — configure the service to see backup statistics.',
+    'dashboard.deviceBackupsNoEvents': 'No device backups in the period',
+    'dashboard.deviceBackupsPeriod': 'Period',
+    'dashboard.deviceBackupsOccurrences': 'Runs',
+    'dashboard.deviceBackupsModalSuccessTitle': 'Successful backups by device',
+    'dashboard.deviceBackupsModalFailureTitle': 'Failed backups by device',
+    'dashboard.deviceBackupsModalEmpty': 'No devices in this list.',
+    'dashboard.backupStatusTitle': 'Backup status',
+    'dashboard.backupStatusLegendFalha': 'Failure',
+    'dashboard.backupStatusLegendSucesso': 'Success',
+    'dashboard.backupStatusLegendSomenteLocal': 'Local only',
+    'dashboard.backupStatusLegendFalhaEnvio': 'Send failure',
+    'dashboard.backupStatusLegendVerificado': 'Verified',
+    'dashboard.backupStatusEmpty': 'No backup events in the period',
+    'dashboard.backupStatusDetailColumn': 'Detail',
+    'dashboard.backupLogStartAt': 'Backup started',
+    'dashboard.backupLogEndAt': 'Backup finished',
     'dashboard.monthlyRevenueTitle': 'Monthly Revenue',
 
     // Pagination
@@ -3188,6 +3250,7 @@ const translations: Translations = {
     'modal.updates': 'Updates',
     'modal.taskScheduler': 'Task Scheduler',
     'modal.backups': 'Backup/Restore',
+    'modal.backupLogs': 'Backup logs',
     'modal.digitalSignature': 'Digital Signature',
     'modal.auditLogs': 'Audit Logs',
     'modal.systemDocuments': 'Document Templates',
@@ -4581,6 +4644,26 @@ const translations: Translations = {
     'dashboard.newClients': 'Nuevos Clientes',
     'dashboard.receivablesVsPayables': 'Cuentas por Cobrar vs Cuentas por Pagar',
     'dashboard.clientsByPlan': 'Clientes por Plan',
+    'dashboard.deviceBackups': 'Copias de equipos',
+    'dashboard.deviceBackupsSuccessSlice': 'Éxito',
+    'dashboard.deviceBackupsFailureSlice': 'Fallo',
+    'dashboard.deviceBackupsElasticsearchOff': 'Elasticsearch no disponible — configure el servicio para ver estadísticas de copia.',
+    'dashboard.deviceBackupsNoEvents': 'Sin copias de equipos en el período',
+    'dashboard.deviceBackupsPeriod': 'Período',
+    'dashboard.deviceBackupsOccurrences': 'Ejecuciones',
+    'dashboard.deviceBackupsModalSuccessTitle': 'Copias exitosas por equipo',
+    'dashboard.deviceBackupsModalFailureTitle': 'Copias fallidas por equipo',
+    'dashboard.deviceBackupsModalEmpty': 'Ningún equipo en esta lista.',
+    'dashboard.backupStatusTitle': 'Estado de copias',
+    'dashboard.backupStatusLegendFalha': 'Fallo',
+    'dashboard.backupStatusLegendSucesso': 'Éxito',
+    'dashboard.backupStatusLegendSomenteLocal': 'Solo local',
+    'dashboard.backupStatusLegendFalhaEnvio': 'Fallo de envío',
+    'dashboard.backupStatusLegendVerificado': 'Verificado',
+    'dashboard.backupStatusEmpty': 'Sin eventos de copia en el período',
+    'dashboard.backupStatusDetailColumn': 'Detalle',
+    'dashboard.backupLogStartAt': 'Inicio de la copia',
+    'dashboard.backupLogEndAt': 'Fin de la copia',
     'dashboard.monthlyRevenueTitle': 'Ingresos Mensuales',
 
     // Pagination
@@ -4657,6 +4740,7 @@ const translations: Translations = {
     'modal.updates': 'Actualizaciones',
     'modal.taskScheduler': 'Programador de Tareas',
     'modal.backups': 'Copia de Seguridad/Restaurar',
+    'modal.backupLogs': 'Registros de copias',
     'modal.digitalSignature': 'Firma Digital',
     'modal.auditLogs': 'Registros de Auditoría',
     'modal.systemDocuments': 'Plantillas de Documentos',

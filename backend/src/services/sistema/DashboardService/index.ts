@@ -3,9 +3,32 @@ import { Plano } from '../../../models/cadastros/Plano';
 import { Titulo } from '../../../models/financeiro/Titulo';
 import { Contrato } from '../../../models/contratos/Contrato';
 import { ContaPagar } from '../../../models/financeiro/ContaPagar';
-import { Op } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import { sequelize } from '../../../config/database';
-import { formatDateISOForAPI } from '../../../utils/timezoneUtils';
+import { formatDateISOForAPI, formatDateOnly } from '../../../utils/timezoneUtils';
+export type BackupStatusGraficoDia = {
+  label: string;
+  dataISO: string;
+  falha: number;
+  sucesso: number;
+  somente_local: number;
+  falha_envio: number;
+  verificado: number;
+};
+
+export type BackupStatusDetalheItem = {
+  /** Identificador da linha (arquivo de backup ou evento) */
+  id: string;
+  deviceId: string;
+  deviceName: string;
+  fileName: string | null;
+  sizeBytes: number | null;
+  /** Início aproximado (evento sucesso antes do arquivo) ou instante do evento */
+  startedAt: string | null;
+  /** Fim: `created_at` do arquivo ou do evento */
+  finishedAt: string | null;
+  detail: string | null;
+};
 
 /** Resultado do gráfico de contratos (ERP): em atraso no período e ativos sem duplicar fatia “em atraso”. */
 export interface ContratosAtrasoPeriodoResult {
@@ -880,6 +903,214 @@ export class DashboardService {
       labels,
       data
     };
+  }
+
+  /** Sempre `YYYY-MM-DD`, alinhado ao `DATE()` do MySQL e ao filtro `DATE(created_at) = :dia`. */
+  private static normalizeDiaSQL(v: unknown): string {
+    if (v instanceof Date) {
+      return formatDateOnly(v) ?? v.toISOString().slice(0, 10);
+    }
+    if (typeof v === 'string') {
+      return v.slice(0, 10);
+    }
+    return String(v).slice(0, 10);
+  }
+
+  /**
+   * Série diária de status de backup (tabela adm_ssh_device_backup_events), para gráfico empilhado no dashboard.
+   */
+  static async getBackupStatusGrafico(
+    startDate: Date,
+    endDate: Date,
+    empresaId?: number | null
+  ): Promise<BackupStatusGraficoDia[]> {
+    const inicio = new Date(startDate);
+    inicio.setHours(0, 0, 0, 0);
+    const fim = new Date(endDate);
+    fim.setHours(23, 59, 59, 999);
+
+    const empresaClause = empresaId != null ? ' AND e.empresa_id = :empresaId' : '';
+    const replacements: Record<string, unknown> = { inicio, fim };
+    if (empresaId != null) {
+      replacements.empresaId = empresaId;
+    }
+
+    const rows = await sequelize.query<{ dia: unknown; status: string; total: string | number }>(
+      `SELECT DATE(e.created_at) AS dia, e.status, COUNT(*) AS total
+       FROM adm_ssh_device_backup_events e
+       WHERE e.created_at >= :inicio AND e.created_at <= :fim${empresaClause}
+       GROUP BY DATE(e.created_at), e.status`,
+      { replacements, type: QueryTypes.SELECT }
+    );
+
+    const countsByDiaStatus = new Map<string, Record<string, number>>();
+    for (const r of rows) {
+      const diaKey = DashboardService.normalizeDiaSQL(r.dia);
+      if (!diaKey) continue;
+      const st = String(r.status || '').trim();
+      const n = typeof r.total === 'string' ? parseInt(r.total, 10) : Number(r.total);
+      if (!Number.isFinite(n)) continue;
+      if (!countsByDiaStatus.has(diaKey)) {
+        countsByDiaStatus.set(diaKey, {
+          falha: 0,
+          sucesso: 0,
+          somente_local: 0,
+          falha_envio: 0,
+          verificado: 0,
+        });
+      }
+      const bucket = countsByDiaStatus.get(diaKey)!;
+      if (st === 'falha') bucket.falha += n;
+      else if (st === 'sucesso') bucket.sucesso += n;
+      else if (st === 'somente_local') bucket.somente_local += n;
+      else if (st === 'falha_envio') bucket.falha_envio += n;
+      else if (st === 'verificado') bucket.verificado += n;
+    }
+
+    const out: BackupStatusGraficoDia[] = [];
+    const cursor = new Date(inicio);
+    while (cursor <= fim) {
+      const dataISO = formatDateOnly(cursor) ?? cursor.toISOString().slice(0, 10);
+      const label = `${String(cursor.getDate()).padStart(2, '0')}/${String(cursor.getMonth() + 1).padStart(2, '0')}`;
+      const c = countsByDiaStatus.get(dataISO) ?? {
+        falha: 0,
+        sucesso: 0,
+        somente_local: 0,
+        falha_envio: 0,
+        verificado: 0,
+      };
+      out.push({
+        label,
+        dataISO,
+        falha: c.falha,
+        sucesso: c.sucesso,
+        somente_local: c.somente_local,
+        falha_envio: c.falha_envio,
+        verificado: c.verificado,
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return out;
+  }
+
+  private static toIsoOrNull(v: unknown): string | null {
+    if (v == null) return null;
+    if (v instanceof Date) {
+      return Number.isNaN(v.getTime()) ? null : v.toISOString();
+    }
+    if (typeof v === 'string' && v.trim()) {
+      const d = new Date(v);
+      return Number.isNaN(d.getTime()) ? v : d.toISOString();
+    }
+    return null;
+  }
+
+  private static parseSizeBytes(v: unknown): number | null {
+    if (v == null) return null;
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    if (typeof v === 'string') {
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) ? n : null;
+    }
+    if (typeof v === 'bigint') return Number(v);
+    return null;
+  }
+
+  static async getBackupStatusDetalhe(
+    dataISO: string,
+    status: string,
+    empresaId?: number | null
+  ): Promise<BackupStatusDetalheItem[]> {
+    const allowed = new Set(['falha', 'sucesso', 'somente_local', 'falha_envio', 'verificado']);
+    if (!allowed.has(status)) {
+      return [];
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataISO)) {
+      return [];
+    }
+
+    const replacements: Record<string, unknown> = { dia: dataISO, status };
+    if (empresaId != null) {
+      replacements.empresaId = empresaId;
+    }
+
+    if (status === 'sucesso') {
+      const empresaClauseD = empresaId != null ? ' AND d.empresa_id = :empresaId' : '';
+      const rows = await sequelize.query<{
+        id: string;
+        deviceId: string;
+        deviceName: string;
+        fileName: string;
+        sizeBytes: string | number | bigint;
+        startedAt: unknown;
+        finishedAt: unknown;
+      }>(
+        `SELECT CAST(b.id AS CHAR) AS id,
+          b.ssh_device_id AS deviceId,
+          d.name AS deviceName,
+          b.file_name AS fileName,
+          b.size_bytes AS sizeBytes,
+          b.started_at AS startedAt,
+          b.finished_at AS finishedAt
+         FROM adm_ssh_device_backups b
+         INNER JOIN adm_ssh_devices d ON d.id = b.ssh_device_id
+         WHERE DATE(b.finished_at) = :dia${empresaClauseD}
+         ORDER BY b.finished_at DESC, d.name, b.file_name`,
+        { replacements, type: QueryTypes.SELECT }
+      );
+
+      return rows.map((r) => {
+        const finishedAt = DashboardService.toIsoOrNull(r.finishedAt);
+        const startedRaw = DashboardService.toIsoOrNull(r.startedAt);
+        return {
+          id: String(r.id),
+          deviceId: String(r.deviceId),
+          deviceName: String(r.deviceName || r.deviceId || ''),
+          fileName: r.fileName != null ? String(r.fileName) : null,
+          sizeBytes: DashboardService.parseSizeBytes(r.sizeBytes),
+          startedAt: startedRaw,
+          finishedAt,
+          detail: null,
+        };
+      });
+    }
+
+    const empresaClauseE = empresaId != null ? ' AND e.empresa_id = :empresaId' : '';
+    const rows = await sequelize.query<{
+      id: string;
+      deviceId: string;
+      deviceName: string;
+      fileName: string | null;
+      sizeBytes: string | number | null;
+      startedAt: unknown;
+      finishedAt: unknown;
+      detail: string | null;
+    }>(
+      `SELECT CAST(e.id AS CHAR) AS id,
+        e.ssh_device_id AS deviceId,
+        d.name AS deviceName,
+        NULL AS fileName,
+        NULL AS sizeBytes,
+        e.created_at AS startedAt,
+        e.created_at AS finishedAt,
+        e.detail AS detail
+       FROM adm_ssh_device_backup_events e
+       INNER JOIN adm_ssh_devices d ON d.id = e.ssh_device_id
+       WHERE DATE(e.created_at) = :dia AND e.status = :status${empresaClauseE}
+       ORDER BY e.created_at DESC, d.name`,
+      { replacements, type: QueryTypes.SELECT }
+    );
+
+    return rows.map((r) => ({
+      id: String(r.id),
+      deviceId: String(r.deviceId),
+      deviceName: String(r.deviceName || r.deviceId || ''),
+      fileName: null,
+      sizeBytes: null,
+      startedAt: DashboardService.toIsoOrNull(r.startedAt),
+      finishedAt: DashboardService.toIsoOrNull(r.finishedAt),
+      detail: r.detail ?? null,
+    }));
   }
 }
 

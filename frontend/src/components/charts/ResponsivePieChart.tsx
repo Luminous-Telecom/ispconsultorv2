@@ -7,12 +7,7 @@ import { PieChartProps } from './types';
 import { ChartDataItem } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
 
-const formatPieValue = (value: number, title: string): string | number => {
-  if (title === 'Taxa de Pagamento') {
-    return `${value.toFixed(1)}%`;
-  }
-  return value.toLocaleString('pt-BR');
-};
+const formatPieValue = (value: number): string | number => value.toLocaleString('pt-BR');
 
 const getItemValue = (item: ChartDataItem): number =>
   Number(item.value ?? item.valor ?? 0) || 0;
@@ -274,7 +269,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         .style('fill', 'var(--text-primary, #212529)')
         .style('font-size', '0.625rem')
         .style('opacity', 0.9)
-        .text(`${formatPieValue(d.data.value, title)} (${d.data.percent}%)`);
+        .text(`${formatPieValue(d.data.value)} (${d.data.percent}%)`);
 
       if (onSliceClick) {
         labelGroup
@@ -417,7 +412,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
     >
       <h6 className="chart-title-pie" style={{ marginBottom: '2px' }}>
-        {title} ({formatPieValue(total, title)})
+        {title} ({formatPieValue(total)})
       </h6>
       <div style={{ flex: 1, display: 'flex', gap: '20px', minHeight: 120 }}>
         <ul
@@ -471,7 +466,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
                   }}
                 />
                 <span style={{ overflow: 'visible', whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                  {item.label || ''} {formatPieValue(value, title)}
+                  {item.label || ''} {formatPieValue(value)}
                 </span>
               </li>
             );

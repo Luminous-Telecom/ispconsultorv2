@@ -10,6 +10,7 @@ import { resolveArquivosPath } from '../../../utils/pathUtils';
 import { decrypt } from '../../../utils/encryption';
 import { privateKeyPemForSsh2 } from '../../../utils/sshPrivateKey';
 import { registerSshDeviceBackupRow } from '../SshDeviceBackupStorageService';
+import { recordSshDeviceBackupEvent } from '../SshDeviceBackupEventService';
 import { executeHttpFetchThroughAgent, executeSshCommandThroughAgent, isAgentOnline } from '../../agent/AgentService';
 import * as routeros from './models/routeros';
 import * as vrp from './models/vrp';
@@ -103,10 +104,17 @@ async function runSwosHttpBackup(
   const manual = context?.manual === true;
   const auditUserId = manual ? (context?.userId ?? 'user') : 'scheduler';
   const auditIp = context?.ip ?? '127.0.0.1';
+  const backupStartedAt = new Date();
   const started = Date.now();
   const auditLabel = `HTTP GET ${swosBackupUrl(device)}`;
 
   const auditFail = (errorMessage: string): RunSshDeviceBackupResult => {
+    void recordSshDeviceBackupEvent({
+      sshDeviceId: device.id,
+      empresaId: device.empresa_id ?? null,
+      status: 'falha',
+      detail: errorMessage,
+    });
     logSshAudit({
       action: 'COMMAND',
       userId: auditUserId,
@@ -155,7 +163,7 @@ async function runSwosHttpBackup(
 
   await fs.writeFile(filePath, got.body);
   const sizeBytes = got.body.length;
-  await registerSshDeviceBackupRow(device.id, fileName, sizeBytes);
+  await registerSshDeviceBackupRow(device.id, fileName, sizeBytes, backupStartedAt, new Date());
   const duration = Date.now() - started;
 
   logger.info('Backup SwOS concluído', {
@@ -175,6 +183,12 @@ async function runSwosHttpBackup(
     success: true,
     ip: auditIp,
     duration,
+  });
+  await recordSshDeviceBackupEvent({
+    sshDeviceId: device.id,
+    empresaId: device.empresa_id ?? null,
+    status: 'sucesso',
+    detail: null,
   });
   return { success: true, message: 'Backup concluído com sucesso.' };
 }
@@ -248,11 +262,23 @@ export async function runSshDeviceBackup(
 
   if (!device.is_active) {
     logger.warn('Backup SSH ignorado: device inativo', { context: 'SshDeviceBackupRunner', deviceId, name: device.name });
+    void recordSshDeviceBackupEvent({
+      sshDeviceId: device.id,
+      empresaId: device.empresa_id ?? null,
+      status: 'falha',
+      detail: 'Device inativo não pode receber backup.',
+    });
     return { success: false, message: 'Device inativo não pode receber backup.' };
   }
 
   if (!manual && !device.backup_enabled) {
     logger.warn('Backup SSH ignorado: backup_enabled off', { context: 'SshDeviceBackupRunner', deviceId, name: device.name });
+    void recordSshDeviceBackupEvent({
+      sshDeviceId: device.id,
+      empresaId: device.empresa_id ?? null,
+      status: 'falha',
+      detail: 'Backup desabilitado para este device.',
+    });
     return { success: false, message: 'Backup desabilitado para este device.' };
   }
 
@@ -266,6 +292,12 @@ export async function runSshDeviceBackup(
       context: 'SshDeviceBackupRunner',
       deviceId,
       device_type: device.device_type,
+    });
+    void recordSshDeviceBackupEvent({
+      sshDeviceId: device.id,
+      empresaId: device.empresa_id ?? null,
+      status: 'falha',
+      detail: 'Backup não suportado para este tipo de equipamento.',
     });
     return { success: false, message: 'Backup não suportado para este tipo de equipamento.' };
   }
@@ -282,10 +314,17 @@ export async function runSshDeviceBackup(
   const viaAgent = Boolean(device.agent_id);
   let usedPool = false;
 
+  const backupStartedAt = new Date();
   const started = Date.now();
   let commandAuditLabel = auditLabel;
 
   const auditCommandFail = (command: string, errorMessage: string): RunSshDeviceBackupResult => {
+    void recordSshDeviceBackupEvent({
+      sshDeviceId: device.id,
+      empresaId: device.empresa_id ?? null,
+      status: 'falha',
+      detail: errorMessage,
+    });
     logSshAudit({
       action: 'COMMAND',
       userId: auditUserId,
@@ -429,7 +468,7 @@ export async function runSshDeviceBackup(
 
     await fs.writeFile(filePath, output, 'utf8');
     const sizeBytes = Buffer.byteLength(output, 'utf8');
-    await registerSshDeviceBackupRow(device.id, fileName, sizeBytes);
+    await registerSshDeviceBackupRow(device.id, fileName, sizeBytes, backupStartedAt, new Date());
     const duration = Date.now() - started;
     logger.info('Backup SSH concluído', {
       context: 'SshDeviceBackupRunner',
@@ -451,6 +490,12 @@ export async function runSshDeviceBackup(
       ip: auditIp,
       duration,
     });
+    await recordSshDeviceBackupEvent({
+      sshDeviceId: device.id,
+      empresaId: device.empresa_id ?? null,
+      status: 'sucesso',
+      detail: null,
+    });
     return { success: true, message: 'Backup concluído com sucesso.' };
   } catch (err) {
     const duration = Date.now() - started;
@@ -471,6 +516,12 @@ export async function runSshDeviceBackup(
       errorMessage: msg,
       ip: auditIp,
       duration,
+    });
+    void recordSshDeviceBackupEvent({
+      sshDeviceId: device.id,
+      empresaId: device.empresa_id ?? null,
+      status: 'falha',
+      detail: msg,
     });
     return { success: false, message: `Falha no backup: ${msg}` };
   } finally {
