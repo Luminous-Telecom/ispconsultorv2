@@ -85,7 +85,7 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
     {
       key: 'numero_sei_anatel',
       label: t('blockdomi.numeroSeiAnatel'),
-      sortable: false,
+      sortable: true,
       width: '110px',
       render: (item: IPv4) => item.numero_sei_anatel?.trim() || '-'
     },
@@ -113,22 +113,25 @@ const IPv4ListModal: React.FC<IPv4ListModalProps> = ({
     {
       key: 'oficio_anatel',
       label: t('blockdomi.oficioAnatel'),
-      sortable: false,
+      sortable: true,
       width: '100px',
+      sortValue: (item: IPv4) => (item.link_oficio_anatel?.trim() ? 1 : 0),
       render: (item: IPv4) => item.link_oficio_anatel?.trim() ? t('ui.yes') : t('ui.no')
     },
     {
       key: 'oficio_justica',
       label: t('blockdomi.oficioJustica'),
-      sortable: false,
+      sortable: true,
       width: '100px',
+      sortValue: (item: IPv4) => (item.link_oficio_justica?.trim() ? 1 : 0),
       render: (item: IPv4) => item.link_oficio_justica?.trim() ? t('ui.yes') : t('ui.no')
     },
     {
       key: 'planilha_dominios',
       label: t('blockdomi.planilhaDominios'),
-      sortable: false,
+      sortable: true,
       width: '100px',
+      sortValue: (item: IPv4) => (item.link_planilha_dominios?.trim() ? 1 : 0),
       render: (item: IPv4) => item.link_planilha_dominios?.trim() ? t('ui.yes') : t('ui.no')
     },
     {

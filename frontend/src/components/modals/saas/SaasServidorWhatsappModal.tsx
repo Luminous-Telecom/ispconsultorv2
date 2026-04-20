@@ -60,7 +60,7 @@ const SaasServidorWhatsappModal: React.FC<Props> = ({ show, onClose, skipWrapper
   const columns: TableConfig<SaasServidorWhatsapp>['columns'] = useMemo(() => [
     { key: 'id', label: 'ID', sortable: true, width: '50px', render: i => <span>{i.id}</span> },
     { key: 'nome', label: 'Nome', sortable: true, render: i => <span>{i.nome}</span> },
-    { key: 'url_api', label: 'URL API', sortable: false, render: i => <span className="text-truncate" style={{ maxWidth: 200, display: 'block' }}>{i.url_api}</span> },
+    { key: 'url_api', label: 'URL API', sortable: true, render: i => <span className="text-truncate" style={{ maxWidth: 200, display: 'block' }}>{i.url_api}</span> },
     { key: 'numero', label: 'Número', sortable: true, width: '130px', render: i => <span>{i.numero || '—'}</span> },
     { key: 'status', label: 'Status', sortable: true, width: '90px', render: i => <span className={`badge bg-${STATUS_COLOR[i.status] || 'secondary'}`}>{i.status}</span> },
   ], []);

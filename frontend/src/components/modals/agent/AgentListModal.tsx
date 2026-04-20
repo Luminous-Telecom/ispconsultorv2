@@ -111,13 +111,15 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
     {
       key: 'id',
       label: 'ID',
-      sortable: false,
+      sortable: true,
       width: '70px',
       render: (item: Agent) => <span className="font-monospace small">{item.id}</span>,
     },
     {
       key: 'online',
       label: 'Status',
+      sortable: true,
+      sortValue: (item: Agent) => (item.online ? 1 : 0),
       width: '90px',
       render: (item: Agent) => (
         <span className={`badge ${item.online ? 'bg-success' : 'bg-secondary'}`}>
@@ -134,8 +136,12 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
     {
       key: 'cliente',
       label: 'Cliente',
-      sortable: false,
+      sortable: true,
       width: '160px',
+      sortValue: (item: Agent) => {
+        const c = item.cliente;
+        return c?.nome_fantasia?.trim() || c?.razao_social?.trim() || '';
+      },
       render: (item: Agent) => {
         const c = item.cliente;
         const label = c?.nome_fantasia?.trim() || c?.razao_social?.trim();
@@ -174,6 +180,8 @@ const AgentListModal: React.FC<AgentListModalProps> = ({
     {
       key: 'is_active',
       label: 'Ativo',
+      sortable: true,
+      sortValue: (item: Agent) => (item.is_active ? 1 : 0),
       width: '70px',
       render: (item: Agent) => (
         <span className={`badge ${item.is_active ? 'bg-success' : 'bg-secondary'}`}>

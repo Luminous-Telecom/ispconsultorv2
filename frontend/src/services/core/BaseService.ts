@@ -88,7 +88,8 @@ export abstract class BaseService<TEntity, TCreateData, TUpdateData, TFilters ex
       const innerData = response.data || response;
       let data: TEntity[] = [];
       let pagination: Record<string, string | number | boolean | null | undefined | object> = {};
-      
+      let fullListFromBareArray = false;
+
       if (innerData && typeof innerData === 'object') {
         // Se innerData tem 'data' e 'pagination', é PaginatedResponse
         if ('data' in innerData && 'pagination' in innerData) {
@@ -97,10 +98,11 @@ export abstract class BaseService<TEntity, TCreateData, TUpdateData, TFilters ex
           if (pag && typeof pag === 'object') {
             pagination = pag;
           }
-        } 
-        // Se innerData é um array, usar diretamente
+        }
+        // Se innerData é um array, usar diretamente (lista completa no payload — paginação/ordenação no front)
         else if (Array.isArray(innerData)) {
           data = innerData as TEntity[];
+          fullListFromBareArray = true;
         }
         // Se innerData tem propriedades que parecem dados e paginação
         else if ('data' in innerData && Array.isArray((innerData as { data?: TEntity[] }).data)) {
@@ -108,7 +110,25 @@ export abstract class BaseService<TEntity, TCreateData, TUpdateData, TFilters ex
           pagination = ('pagination' in innerData) ? (innerData as { pagination: Record<string, string | number | boolean | null | undefined | object> }).pagination : {};
         }
       }
-      
+
+      // APIs que devolvem só o array em `data` (ex.: GET /ssh-manager/devices) não enviam pagination;
+      // sem `total === rows`, o useTable não ordena em memória.
+      if (fullListFromBareArray) {
+        const f = (filters ?? {}) as TFilters;
+        const page = Math.max(1, Number(f.page) || 1);
+        const limit = Math.min(500, Math.max(1, Number(f.limit) || 15));
+        const total = data.length;
+        const lastPage = Math.max(1, Math.ceil(total / limit) || 1);
+        pagination = {
+          current_page: page,
+          per_page: limit,
+          total,
+          last_page: lastPage,
+          from: total > 0 ? (page - 1) * limit + 1 : 0,
+          to: Math.min(page * limit, total),
+        };
+      }
+
       // Transformar para formato PaginatedResponse garantido
       return ResponseTransformer.toPaginatedResponse<TEntity>({ data, pagination });
     } catch (error) {

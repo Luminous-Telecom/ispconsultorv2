@@ -84,7 +84,13 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, 
     { key: 'agencia', label: 'Agência', sortable: true, width: '90px', render: i => i.agencia || '—' },
     { key: 'conta', label: 'Conta', sortable: true, width: '110px', render: i => i.conta || '—' },
     { key: 'tipo_conta', label: t('form.type'), sortable: true, width: '100px', render: i => i.tipo_conta },
-    { key: 'pix_chave', label: 'PIX', sortable: false, render: i => i.pix_chave ? <span>{i.pix_tipo?.toUpperCase()}: {i.pix_chave}</span> : <span className="text-muted">—</span> },
+    {
+      key: 'pix_chave',
+      label: 'PIX',
+      sortable: true,
+      sortValue: (i) => (i.pix_chave ? `${i.pix_tipo ?? ''} ${i.pix_chave}` : ''),
+      render: i => i.pix_chave ? <span>{i.pix_tipo?.toUpperCase()}: {i.pix_chave}</span> : <span className="text-muted">—</span>,
+    },
     { key: 'ativo', label: t('table.status'), sortable: true, width: '80px', render: i => <span className={`badge bg-${i.ativo ? 'success' : 'secondary'}`}>{i.ativo ? t('status.active') : t('status.inactive')}</span> },
   ];
   }, [t]);

@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTableFilters } from 'hooks/useTableFilters';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { SshDeviceBackupService } from 'services/sshDeviceBackupService';
@@ -48,6 +49,11 @@ function getErrorMessage(err: unknown, fallback: string): string {
 const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }) => {
   const { t } = useI18n();
   const { error: showError } = useNotificationContext();
+  const tableFilters = useTableFilters({
+    initialSortColumn: 'modifiedAt',
+    initialSortDirection: 'desc',
+    resetPageOnFilterChange: false,
+  });
   const queryClient = useQueryClient();
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
@@ -140,7 +146,7 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
       {
         key: 'device_name',
         label: t('sshDevice.backupDeviceColumn'),
-        sortable: false,
+        sortable: true,
         searchable: true,
         width: '160px',
         render: (row) => <span className="small">{row.device_name}</span>,
@@ -148,14 +154,14 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
       {
         key: 'fileName',
         label: t('sshDevice.backupFileColumn'),
-        sortable: false,
+        sortable: true,
         searchable: true,
         render: (row) => <span className="small text-break">{row.fileName}</span>,
       },
       {
         key: 'size',
         label: t('sshDevice.backupSizeColumn'),
-        sortable: false,
+        sortable: true,
         searchable: false,
         align: 'right',
         headerAlign: 'right',
@@ -165,7 +171,7 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
       {
         key: 'modifiedAt',
         label: t('sshDevice.backupDateColumn'),
-        sortable: false,
+        sortable: true,
         searchable: false,
         width: '150px',
         render: (row) => (
@@ -276,7 +282,9 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
                   { key: 'size', label: t('sshDevice.backupSizeColumn') },
                   { key: 'modifiedAt', label: t('sshDevice.backupDateColumn') },
                 ],
-                sortable: false,
+                sortable: true,
+                sortColumn: tableFilters.sortColumn,
+                sortDirection: tableFilters.sortDirection,
                 striped: true,
                 hover: true,
                 responsive: true,
@@ -295,6 +303,7 @@ const ClienteSshBackupsTab: React.FC<ClienteSshBackupsTabProps> = ({ clienteId }
               syncWithHeader={false}
               onRefresh={refetch}
               onSelectionChange={setSelectedItems}
+              onSort={(col, dir) => tableFilters.setSort(col, dir)}
             />
           </div>
         </div>

@@ -4,6 +4,7 @@ import { AxiosError } from 'axios';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useModalSelect } from 'hooks/useModalSelect';
+import { useTableFilters } from 'hooks/useTableFilters';
 import { SshDeviceBackupService, type SshDeviceBackupFile } from 'services/sshDeviceBackupService';
 import Table from 'components/tables/Table';
 import TextPreviewModal from 'components/common/TextPreviewModal';
@@ -43,6 +44,11 @@ type PendingBackupAction = { kind: 'download' | 'delete'; fileName: string };
 const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId, variant = 'section' }) => {
   const { t } = useI18n();
   const { success, error: showError } = useNotificationContext();
+  const tableFilters = useTableFilters({
+    initialSortColumn: 'modifiedAt',
+    initialSortDirection: 'desc',
+    resetPageOnFilterChange: false,
+  });
   const queryClient = useQueryClient();
   const [pendingAction, setPendingAction] = useState<PendingBackupAction | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -137,14 +143,14 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
       {
         key: 'fileName',
         label: t('sshDevice.backupFileColumn'),
-        sortable: false,
+        sortable: true,
         searchable: true,
         render: (row) => <span className="small text-break">{row.fileName}</span>,
       },
       {
         key: 'size',
         label: t('sshDevice.backupSizeColumn'),
-        sortable: false,
+        sortable: true,
         searchable: false,
         align: 'right',
         headerAlign: 'right',
@@ -154,7 +160,7 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
       {
         key: 'modifiedAt',
         label: t('sshDevice.backupDateColumn'),
-        sortable: false,
+        sortable: true,
         searchable: false,
         width: '150px',
         render: (row) => (
@@ -230,7 +236,9 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
           { key: 'size', label: t('sshDevice.backupSizeColumn') },
           { key: 'modifiedAt', label: t('sshDevice.backupDateColumn') },
         ],
-        sortable: false,
+        sortable: true,
+        sortColumn: tableFilters.sortColumn,
+        sortDirection: tableFilters.sortDirection,
         striped: true,
         hover: true,
         responsive: true,
@@ -249,6 +257,7 @@ const SshDeviceBackupsPanel: React.FC<SshDeviceBackupsPanelProps> = ({ deviceId,
       syncWithHeader={false}
       onRefresh={refetch}
       onSelectionChange={(items) => handleSelectionChange(items)}
+      onSort={(col, dir) => tableFilters.setSort(col, dir)}
     />
   );
 

@@ -49,6 +49,8 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     initialLimit: 15,
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
+    initialSortColumn: 'name',
+    initialSortDirection: 'asc',
   });
 
   const { data, isLoading, refetch } = useSshDevices({
@@ -78,7 +80,24 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
       return val.toLowerCase().includes(term);
     });
   }, [rawData, tableFilters.search, tableFilters.searchField]);
-  const pagination = useMemo(() => data?.pagination, [data]);
+  /** Lista completa vem na resposta: total precisa bater com as linhas exibidas para o useTable ordenar (incl. filtro local). */
+  const pagination = useMemo(() => {
+    const pag = data?.pagination;
+    if (!pag) return undefined;
+    const perPage = pag.per_page ?? tableFilters.limit;
+    const total = modalData.length;
+    const lastPage = Math.max(1, Math.ceil(total / perPage));
+    const currentPage = Math.min(Math.max(1, pag.current_page ?? tableFilters.page), lastPage);
+    return {
+      ...pag,
+      current_page: currentPage,
+      per_page: perPage,
+      total,
+      last_page: lastPage,
+      from: total > 0 ? (currentPage - 1) * perPage + 1 : 0,
+      to: Math.min(currentPage * perPage, total),
+    };
+  }, [data?.pagination, modalData.length, tableFilters.limit, tableFilters.page]);
 
   const handleDelete = useCallback(async (device: SshDevice) => {
     try {
@@ -121,7 +140,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     {
       key: 'id',
       label: 'ID',
-      sortable: false,
+      sortable: true,
       width: '70px',
       render: (item: SshDevice) => <span className="font-monospace small">{item.id}</span>,
     },
@@ -135,8 +154,12 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     {
       key: 'cliente',
       label: 'Cliente',
-      sortable: false,
+      sortable: true,
       width: '160px',
+      sortValue: (item: SshDevice) => {
+        const c = item.cliente;
+        return c?.nome_fantasia?.trim() || c?.razao_social?.trim() || '';
+      },
       render: (item: SshDevice) => {
         const c = item.cliente;
         const label = c?.nome_fantasia?.trim() || c?.razao_social?.trim();
@@ -162,8 +185,9 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     {
       key: 'agent',
       label: 'Agente Túnel',
-      sortable: false,
+      sortable: true,
       width: '160px',
+      sortValue: (item: SshDevice) => item.agent?.name ?? '',
       render: (item: SshDevice) => {
         const agent = item.agent;
         if (!agent) return <span className="text-muted">-</span>;
@@ -202,7 +226,7 @@ const SshDeviceListModal: React.FC<SshDeviceListModalProps> = ({
     {
       key: 'description',
       label: 'Descrição',
-      sortable: false,
+      sortable: true,
       width: '180px',
       render: (item: SshDevice) => item.description ?? '-',
     },

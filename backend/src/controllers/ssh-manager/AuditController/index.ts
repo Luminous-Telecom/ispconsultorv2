@@ -158,7 +158,12 @@ export class SshAuditController {
         searchField,
         page,
         limit,
+        sortColumn,
+        sortDirection,
       } = req.query as Record<string, string | undefined>;
+
+      const sortDir: 'asc' | 'desc' = sortDirection === 'asc' ? 'asc' : 'desc';
+      const postEnrichSortCols = new Set(['clienteName', 'command', 'errorMessage']);
 
       const pageNum = Math.max(1, parseInt(page ?? '1', 10));
       const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '20', 10)));
@@ -190,11 +195,23 @@ export class SshAuditController {
         searchUserIds,
         page: pageNum,
         limit: limitNum,
+        sortColumn: sortColumn?.trim(),
+        sortDirection: sortDir,
       });
 
       let enrichedLogs = await enrichSshAuditLogsWithCliente(logs);
       enrichedLogs = await enrichAgentLogsWithCliente(enrichedLogs);
       enrichedLogs = await enrichSshAuditLogsWithUsuario(enrichedLogs);
+
+      const postCol = sortColumn?.trim();
+      if (postCol && postEnrichSortCols.has(postCol)) {
+        const d = sortDir === 'asc' ? 1 : -1;
+        enrichedLogs = [...enrichedLogs].sort((a, b) => {
+          const va = String(a[postCol] ?? '').toLowerCase();
+          const vb = String(b[postCol] ?? '').toLowerCase();
+          return va.localeCompare(vb, 'pt-BR', { numeric: true, sensitivity: 'base' }) * d;
+        });
+      }
 
       const lastPage = Math.ceil(total / limitNum);
 

@@ -110,6 +110,8 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 
     initialLimit: isSsh || isBlockdomiApi ? 15 : 20,
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
+    initialSortColumn: isSsh || isAuditoria ? 'timestamp' : 'created_at',
+    initialSortDirection: 'desc',
   });
 
   const [filterAction, setFilterAction] = useState('');
@@ -128,7 +130,19 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 
     action: filterAction || undefined,
     startDate: filterStartDate || undefined,
     endDate: filterEndDate || undefined,
-  }), [tableFilters.page, tableFilters.limit, tableFilters.debouncedSearch, tableFilters.searchField, filterAction, filterStartDate, filterEndDate]);
+    sortColumn: tableFilters.sortColumn,
+    sortDirection: tableFilters.sortDirection,
+  }), [
+    tableFilters.page,
+    tableFilters.limit,
+    tableFilters.debouncedSearch,
+    tableFilters.searchField,
+    tableFilters.sortColumn,
+    tableFilters.sortDirection,
+    filterAction,
+    filterStartDate,
+    filterEndDate,
+  ]);
 
   const auditoriaFilters: AuditoriaFilters = useMemo(() => ({
     page: tableFilters.page,
@@ -354,23 +368,30 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
 
   const sshColumns: TableConfig<SshAuditLog>['columns'] = useMemo(() => {
     const base = [
-      { key: 'timestamp' as const, label: t('audit.timestamp'), sortable: false, width: '155px', render: (i: SshAuditLog) => <span className="font-monospace small">{formatTimestamp(i.timestamp)}</span> },
-      { key: 'action' as const, label: t('table.action'), sortable: false, width: '130px', render: (i: SshAuditLog) => { const a = sshActionBadge[i.action] ?? { cls: 'bg-secondary', label: i.action }; return <span className={`badge ${a.cls}`}>{a.label}</span>; } },
-      { key: 'deviceName' as const, label: isEquipamentos ? t('sshDevice.backupDeviceColumn') : t('logs.agentColumn'), sortable: false, width: '120px', render: (i: SshAuditLog) => i.deviceName ?? '-' },
-      { key: 'clienteName' as const, label: t('table.client'), sortable: false, width: '150px', render: (i: SshAuditLog) => <span className="small">{i.clienteName?.trim() || '—'}</span> },
+      { key: 'timestamp' as const, label: t('audit.timestamp'), sortable: true, width: '155px', render: (i: SshAuditLog) => <span className="font-monospace small">{formatTimestamp(i.timestamp)}</span> },
+      { key: 'action' as const, label: t('table.action'), sortable: true, width: '130px', render: (i: SshAuditLog) => { const a = sshActionBadge[i.action] ?? { cls: 'bg-secondary', label: i.action }; return <span className={`badge ${a.cls}`}>{a.label}</span>; } },
+      { key: 'deviceName' as const, label: isEquipamentos ? t('sshDevice.backupDeviceColumn') : t('logs.agentColumn'), sortable: true, width: '120px', render: (i: SshAuditLog) => i.deviceName ?? '-' },
+      { key: 'clienteName' as const, label: t('table.client'), sortable: true, width: '150px', render: (i: SshAuditLog) => <span className="small">{i.clienteName?.trim() || '—'}</span> },
     ];
     if (isEquipamentos) {
       return [
         ...base,
-        { key: 'userId' as const, label: t('audit.user'), sortable: false, width: '120px', render: (i: SshAuditLog) => i.userName?.trim() || i.userId || '-' },
-        { key: 'success' as const, label: t('sshAudit.result'), sortable: false, width: '80px', render: (i: SshAuditLog) => <span className={`badge ${i.success ? 'bg-success' : 'bg-danger'}`}>{i.success ? 'OK' : 'ERRO'}</span> },
-        { key: 'command' as const, label: t('sshAudit.command'), sortable: false, width: '200px', render: (i: SshAuditLog) => i.command ? <span className="font-monospace small text-truncate d-inline-block" style={{ maxWidth: '190px' }} title={i.command}>{i.command}</span> : '-' },
-        { key: 'duration' as const, label: t('sshAudit.duration'), sortable: false, width: '80px', render: (i: SshAuditLog) => i.duration != null ? `${i.duration}ms` : '-' },
-        { key: 'errorMessage' as const, label: t('sshAudit.error'), sortable: false, width: '200px', render: (i: SshAuditLog) => i.errorMessage ? <span className="text-danger small text-truncate d-inline-block" style={{ maxWidth: '190px' }} title={i.errorMessage}>{i.errorMessage}</span> : '-' },
-        { key: 'ip' as const, label: t('audit.ip'), sortable: false, width: '110px', render: (i: SshAuditLog) => <span className="font-monospace small">{i.ip}</span> },
+        {
+          key: 'userId' as const,
+          label: t('audit.user'),
+          sortable: true,
+          width: '120px',
+          sortValue: (i: SshAuditLog) => i.userName?.trim() || i.userId || '',
+          render: (i: SshAuditLog) => i.userName?.trim() || i.userId || '-',
+        },
+        { key: 'success' as const, label: t('sshAudit.result'), sortable: true, width: '80px', render: (i: SshAuditLog) => <span className={`badge ${i.success ? 'bg-success' : 'bg-danger'}`}>{i.success ? 'OK' : 'ERRO'}</span> },
+        { key: 'command' as const, label: t('sshAudit.command'), sortable: true, width: '200px', render: (i: SshAuditLog) => i.command ? <span className="font-monospace small text-truncate d-inline-block" style={{ maxWidth: '190px' }} title={i.command}>{i.command}</span> : '-' },
+        { key: 'duration' as const, label: t('sshAudit.duration'), sortable: true, width: '80px', render: (i: SshAuditLog) => i.duration != null ? `${i.duration}ms` : '-' },
+        { key: 'errorMessage' as const, label: t('sshAudit.error'), sortable: true, width: '200px', render: (i: SshAuditLog) => i.errorMessage ? <span className="text-danger small text-truncate d-inline-block" style={{ maxWidth: '190px' }} title={i.errorMessage}>{i.errorMessage}</span> : '-' },
+        { key: 'ip' as const, label: t('audit.ip'), sortable: true, width: '110px', render: (i: SshAuditLog) => <span className="font-monospace small">{i.ip}</span> },
       ];
     }
-    return [...base, { key: 'ip' as const, label: t('audit.ip'), sortable: false, width: '120px', render: (i: SshAuditLog) => <span className="font-monospace small">{i.ip}</span> }];
+    return [...base, { key: 'ip' as const, label: t('audit.ip'), sortable: true, width: '120px', render: (i: SshAuditLog) => <span className="font-monospace small">{i.ip}</span> }];
   }, [t, formatTimestamp, isEquipamentos, sshActionBadge]);
 
   // --- Auditoria columns ---
@@ -394,7 +415,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     {
       key: 'mensagem_erro' as const,
       label: t('blockdomi.logsMensagemErro'),
-      sortable: false,
+      sortable: true,
       minWidth: '280px',
       render: (i) => (
         <span
@@ -416,10 +437,17 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     ...(isEmail ? [{ key: 'titulo' as const, label: t('history.subject'), sortable: true, width: '200px', render: (i: MensagemItem) => <div className="text-truncate" style={{ maxWidth: '250px' }} title={i.titulo}>{i.titulo || <span className="text-muted">-</span>}</div> }] : []),
     { key: 'cliente_nome' as const, label: t('history.client'), sortable: true, width: '150px', render: (i: MensagemItem) => <span className="text-nowrap">{i.cliente_nome || '-'}</span> },
     { key: 'destinatario' as const, label: isEmail ? t('history.recipient') : t('history.phone'), sortable: true, width: '130px', render: (i: MensagemItem) => <span className="text-nowrap">{i.destinatario}</span> },
-    { key: 'mensagem' as const, label: t('history.message'), sortable: false, width: '200px', render: (i: MensagemItem) => <div className="text-truncate" style={{ maxWidth: '300px' }} title={i.mensagem}>{i.mensagem.length > 50 ? `${i.mensagem.substring(0, 50)}...` : i.mensagem}</div> },
+    { key: 'mensagem' as const, label: t('history.message'), sortable: true, width: '200px', render: (i: MensagemItem) => <div className="text-truncate" style={{ maxWidth: '300px' }} title={i.mensagem}>{i.mensagem.length > 50 ? `${i.mensagem.substring(0, 50)}...` : i.mensagem}</div> },
     { key: 'status' as const, label: t('history.status'), sortable: true, render: (i: MensagemItem) => <Badge variant={i.status === 'enviada' ? 'success' : 'danger'}>{i.status === 'enviada' ? t('history.sent') : t('history.errorStatus')}</Badge> },
-    { key: 'erro_mensagem' as const, label: t('history.error'), sortable: false, width: '150px', render: (i: MensagemItem) => i.erro_mensagem ? <small className="text-danger text-truncate d-inline-block" style={{ maxWidth: '200px' }} title={i.erro_mensagem}>{i.erro_mensagem}</small> : <span className="text-muted">-</span> },
-    { key: 'usuario' as const, label: t('history.user'), sortable: false, width: '120px', render: (i: MensagemItem) => i.usuario ? <span title={i.usuario.email}>{i.usuario.nome}</span> : <span className="text-muted">{t('history.system')}</span> },
+    { key: 'erro_mensagem' as const, label: t('history.error'), sortable: true, width: '150px', render: (i: MensagemItem) => i.erro_mensagem ? <small className="text-danger text-truncate d-inline-block" style={{ maxWidth: '200px' }} title={i.erro_mensagem}>{i.erro_mensagem}</small> : <span className="text-muted">-</span> },
+    {
+      key: 'usuario' as const,
+      label: t('history.user'),
+      sortable: true,
+      width: '120px',
+      sortValue: (i: MensagemItem) => i.usuario?.nome ?? '',
+      render: (i: MensagemItem) => i.usuario ? <span title={i.usuario.email}>{i.usuario.nome}</span> : <span className="text-muted">{t('history.system')}</span>,
+    },
     { key: 'created_at' as const, label: t('history.dateTime'), sortable: true, width: '145px', render: (i: MensagemItem) => formatDateTime(i.created_at) },
   ], [t, isEmail]);
 
@@ -514,7 +542,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
             searchPlaceholder,
             searchField: tableFilters.searchField || defaultSearchField,
             searchFields,
-            sortable: !isSsh || isBlockdomiApi,
+            sortable: true,
             sortColumn: tableFilters.sortColumn,
             sortDirection: tableFilters.sortDirection,
             striped: true,

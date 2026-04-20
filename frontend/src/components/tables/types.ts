@@ -26,6 +26,8 @@ export interface TableColumn<T = Record<string, unknown>> {
   filterable?: boolean;
   filterOptions?: Array<{ value: FilterValue; label: string }>;
   tooltip?: string;
+  /** Valor usado só para ordenação quando `key` não reflete o dado exibido (ex.: objeto aninhado). */
+  sortValue?: (row: T) => unknown;
 }
 
 export interface TableAction<T = Record<string, unknown>> {

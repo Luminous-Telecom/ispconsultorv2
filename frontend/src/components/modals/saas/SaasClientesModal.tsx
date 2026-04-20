@@ -81,7 +81,7 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
     { key: 'razao_social', label: t('form.companyName'), sortable: true, render: i => <div><div className="fw-semibold">{i.razao_social}</div><small className="text-muted">{i.nome_fantasia || i.email}</small></div> },
     { key: 'cnpj', label: t('form.cnpj'), sortable: true, width: '130px', render: i => <span>{i.cnpj}</span> },
     { key: 'email', label: t('form.email'), sortable: true, render: i => <span>{i.email}</span> },
-    { key: 'total_usuarios', label: t('form.usersQuantity'), sortable: false, width: '80px', render: i => <span className="text-muted">{i.total_usuarios ?? '—'}</span> },
+    { key: 'total_usuarios', label: t('form.usersQuantity'), sortable: true, width: '80px', render: i => <span className="text-muted">{i.total_usuarios ?? '—'}</span> },
   ], [t]);
 
   const bulkActions = useMemo(() => [

@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { UseTableOptions, UseTableReturn, TableState, TableActions, SortDirection, TablePagination } from './types';
 import { FilterValue } from 'types/common';
+import { compareRowsForSort } from './tableSort';
 
 // Helper para normalizar paginação (aceita snake_case da API ou camelCase interno)
 const normalizePagination = (pagination: UseTableOptions<unknown>['pagination']): TablePagination | undefined => {
@@ -207,27 +208,60 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     return result;
   }, [state.data, state.searchTerm, state.filters, columns, searchable, pagination]);
 
-  // TODA ordenação deve ser feita no backend
-  // Se há sortColumn/sortDirection, o backend deve ordenar antes de retornar os dados
-  // Se não há sortColumn mas há paginação, o backend já ordena por padrão (id DESC)
-  const sortedData = useMemo(() => {
-    // Se há ordenação especificada (sortColumn) ou paginação, assumir que dados já vêm ordenados do backend
-    // Não ordenar localmente em nenhum caso - sempre usar ordenação do backend
-    return filteredData;
-  }, [filteredData]);
+  const sortCol = propSortColumn ?? state.sortColumn;
+  const sortDir = (propSortDirection ?? state.sortDirection) as SortDirection;
 
-  // Paginar dados
-  // Se há paginação do servidor, os dados já vêm paginados, não fazer slice local
+  /**
+   * Ordenação em memória: lista completa no front (sem paginação) ou total === itens carregados (ex.: abas do contrato).
+   * Quando total > quantidade de linhas, a página veio do servidor e a ordem é da API.
+   */
+  const shouldClientSort = useMemo(() => {
+    if (!_sortable || !sortCol) return false;
+    const col = columns.find((c) => c.key === sortCol);
+    if (col?.sortable === false) return false;
+    if (!normalizedPagination) return true;
+    const total = normalizedPagination.total ?? 0;
+    return total === filteredData.length && filteredData.length > 0;
+  }, [_sortable, sortCol, columns, normalizedPagination, filteredData.length]);
+
+  const sortedData = useMemo(() => {
+    if (!shouldClientSort) return filteredData;
+    const col = columns.find((c) => c.key === sortCol);
+    return [...filteredData].sort((a, b) =>
+      compareRowsForSort(
+        a as unknown as Record<string, unknown>,
+        b as unknown as Record<string, unknown>,
+        sortCol,
+        sortDir,
+        col?.sortValue
+          ? { sortValue: col.sortValue as (row: Record<string, unknown>) => unknown }
+          : undefined
+      )
+    );
+  }, [filteredData, shouldClientSort, sortCol, sortDir, columns]);
+
+  const isServerPagedSubset = useMemo(
+    () =>
+      !!normalizedPagination &&
+      (normalizedPagination.total ?? 0) > filteredData.length,
+    [normalizedPagination, filteredData.length]
+  );
+
+  // Paginar dados: servidor envia só a página atual; lista completa em memória faz slice local
   const paginatedData = useMemo(() => {
-    if (pagination) {
-      // Paginação do servidor: dados já vêm paginados do backend
+    const perPage = normalizedPagination?.perPage ?? state.pageSize;
+    const page = normalizedPagination?.currentPage ?? state.currentPage;
+
+    if (!normalizedPagination) {
+      const startIndex = (state.currentPage - 1) * state.pageSize;
+      return sortedData.slice(startIndex, startIndex + state.pageSize);
+    }
+    if (isServerPagedSubset) {
       return sortedData;
     }
-    // Paginação local: fazer slice dos dados
-    const startIndex = (state.currentPage - 1) * state.pageSize;
-    const endIndex = startIndex + state.pageSize;
-    return sortedData.slice(startIndex, endIndex);
-  }, [sortedData, state.currentPage, state.pageSize, pagination]);
+    const startIndex = (page - 1) * perPage;
+    return sortedData.slice(startIndex, startIndex + perPage);
+  }, [sortedData, normalizedPagination, isServerPagedSubset, state.currentPage, state.pageSize]);
 
   // Calcular total de páginas
   const totalPages = useMemo(() => {

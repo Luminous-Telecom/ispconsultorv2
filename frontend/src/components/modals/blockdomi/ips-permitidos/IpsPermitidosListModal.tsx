@@ -73,7 +73,7 @@ const IpsPermitidosListModal: React.FC<IpsPermitidosListModalProps> = ({
     {
       key: 'cliente_nome',
       label: t('blockdomi.cliente'),
-      sortable: false,
+      sortable: true,
       width: '220px',
       render: (item) => item.cliente_nome || '-'
     },

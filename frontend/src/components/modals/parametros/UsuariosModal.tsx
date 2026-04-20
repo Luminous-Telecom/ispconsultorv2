@@ -183,7 +183,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
     {
       key: 'webhook_secret',
       label: 'Webhook Secret',
-      sortable: false,
+      sortable: true,
+      sortValue: (item: Usuario) => (item.webhook_secret ? 1 : 0),
       searchable: false,
       render: (item: Usuario) => (
         <span className="small text-muted">

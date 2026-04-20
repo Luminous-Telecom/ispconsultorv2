@@ -267,10 +267,10 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
     columns: [
       { key: 'id', label: 'ID', sortable: true, render: (v) => String(v) },
       { key: 'razao_social', label: 'Razão Social', sortable: true, render: (v) => String(v) },
-      { key: 'nome_fantasia', label: 'Fantasia', sortable: false, render: (v) => String(v || '-') },
-      { key: 'cnpj', label: 'CNPJ', sortable: false, render: (v) => String(v) },
-      { key: 'email', label: 'E-mail', sortable: false, render: (v) => String(v) },
-      { key: 'cidade', label: 'Cidade', sortable: false, render: (v) => String(v || '-') },
+      { key: 'nome_fantasia', label: 'Fantasia', sortable: true, render: (v) => String(v || '-') },
+      { key: 'cnpj', label: 'CNPJ', sortable: true, render: (v) => String(v) },
+      { key: 'email', label: 'E-mail', sortable: true, render: (v) => String(v) },
+      { key: 'cidade', label: 'Cidade', sortable: true, render: (v) => String(v || '-') },
     ],
     actions: [
       { key: 'editar', label: 'Editar', variant: 'secondary', onClick: (e: Empresa) => handleOpenEdit(e) },

@@ -105,6 +105,18 @@ function escapeWildcard(s: string): string {
  */
 export type SshAuditLogType = 'equipamentos' | 'agentes';
 
+const POST_ENRICH_SORT_COLUMNS = new Set(['clienteName', 'command', 'errorMessage']);
+
+const ES_SORTABLE = new Set([
+  'timestamp',
+  'action',
+  'deviceName',
+  'userId',
+  'success',
+  'duration',
+  'ip',
+]);
+
 export async function searchSshAuditLogs(params: {
   deviceId?: string;
   userId?: string;
@@ -119,6 +131,8 @@ export async function searchSshAuditLogs(params: {
   searchUserIds?: string[];
   page?: number;
   limit?: number;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
 }): Promise<{ logs: Record<string, unknown>[]; total: number }> {
   const svc = getElasticsearchService();
   const client = svc.getClient();
@@ -203,11 +217,18 @@ export async function searchSshAuditLogs(params: {
   if (mustNot.length > 0) boolQuery.must_not = mustNot;
   const query = Object.keys(boolQuery).length > 0 ? { bool: boolQuery } : { match_all: {} };
 
+  const reqCol = params.sortColumn?.trim();
+  const reqDir = params.sortDirection === 'asc' ? 'asc' : 'desc';
+  const usePostEnrichSort = reqCol && POST_ENRICH_SORT_COLUMNS.has(reqCol);
+  const esField =
+    !usePostEnrichSort && reqCol && ES_SORTABLE.has(reqCol) ? reqCol : 'timestamp';
+  const esOrder = usePostEnrichSort ? 'desc' : reqDir;
+
   const response = await client.search({
     index: SSH_AUDIT_INDEX,
     from,
     size: limit,
-    sort: [{ timestamp: { order: 'desc' } }],
+    sort: [{ [esField]: { order: esOrder } }],
     query,
   });
 
