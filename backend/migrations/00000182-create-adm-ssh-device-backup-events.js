@@ -12,6 +12,9 @@
  *
  * ssh_device_id e empresa_id usam o mesmo tipo que adm_ssh_devices.id e adm_dados_empresa.id
  * (ex.: CHAR(36) antes da 00000185), evitando errno 150 na criação das FKs.
+ *
+ * Se a tabela já existir com tipos errados (tentativa anterior com INTEGER) mas estiver vazia,
+ * ela é descartada e recriada automaticamente; com dados, a migration falha para revisão manual.
  */
 
 const TBL = 'adm_ssh_device_backup_events';
@@ -124,15 +127,26 @@ module.exports = {
     if (await tableExists(q, TBL)) {
       const existingSsh = await columnMysqlType(q, TBL, 'ssh_device_id');
       const existingEmp = await columnMysqlType(q, TBL, 'empresa_id');
-      if (existingSsh && normColumnType(existingSsh) !== normColumnType(deviceIdCt)) {
-        throw new Error(
-          `00000182: ${TBL} já existe com ssh_device_id incompatível com adm_ssh_devices.id (tabela: ${existingSsh}, esperado: ${deviceIdCt}). Faça backup, DROP TABLE ${TBL} e rode db:migrate novamente.`,
-        );
-      }
-      if (existingEmp && normColumnType(existingEmp) !== normColumnType(empresaIdCt)) {
-        throw new Error(
-          `00000182: ${TBL} já existe com empresa_id incompatível com adm_dados_empresa.id (tabela: ${existingEmp}, esperado: ${empresaIdCt}). Faça backup, DROP TABLE ${TBL} e rode db:migrate novamente.`,
-        );
+      const sshMismatch =
+        existingSsh != null && normColumnType(existingSsh) !== normColumnType(deviceIdCt);
+      const empMismatch =
+        existingEmp != null && normColumnType(existingEmp) !== normColumnType(empresaIdCt);
+      if (sshMismatch || empMismatch) {
+        const [badTypeRows] = await q(`SELECT COUNT(*) AS c FROM \`${TBL}\``);
+        const badRows = Number(badTypeRows?.[0]?.c ?? 0);
+        if (badRows > 0) {
+          const partes = [];
+          if (sshMismatch) {
+            partes.push(`ssh_device_id (${existingSsh} vs esperado ${deviceIdCt})`);
+          }
+          if (empMismatch) {
+            partes.push(`empresa_id (${existingEmp} vs esperado ${empresaIdCt})`);
+          }
+          throw new Error(
+            `00000182: ${TBL} tem ${badRows} linha(s) e tipos incompatíveis: ${partes.join('; ')}. Faça backup, ajuste os dados ou DROP TABLE ${TBL} e rode db:migrate.`,
+          );
+        }
+        await queryInterface.dropTable(TBL);
       }
     }
 
