@@ -57,6 +57,8 @@ module.exports = {
         ['adm_ssh_devices', 'adm_ssh_devices_agent_fk'],
         ['adm_ssh_device_backups', 'adm_ssh_device_backups_device_fk'],
         ['adm_ssh_device_backup_events', 'adm_ssh_device_backup_events_device_fk'],
+        // Instalações antigas: Sequelize nomeava a FK de ssh_device_id como ibfk_1
+        ['adm_ssh_device_backup_events', 'adm_ssh_device_backup_events_ibfk_1'],
       ]) {
         if (await fkExists(q, tbl, cn)) {
           await step(`DROP FK ${cn}`, () => q(`ALTER TABLE \`${tbl}\` DROP FOREIGN KEY \`${cn}\``));

@@ -2,6 +2,10 @@
 
 /**
  * Histórico de execuções de backup por equipamento (métricas do dashboard, sem depender de logs ES).
+ *
+ * FKs são adicionadas com addConstraint após createTable (sem `references` inline),
+ * para evitar errno 150 "Foreign key constraint is incorrectly formed" em alguns
+ * ambientes MariaDB/MySQL com Sequelize ao embutir várias FKs no mesmo CREATE TABLE.
  */
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -15,16 +19,10 @@ module.exports = {
       ssh_device_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: 'adm_ssh_devices', key: 'id' },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
       },
       empresa_id: {
         type: Sequelize.INTEGER,
         allowNull: true,
-        references: { model: 'adm_dados_empresa', key: 'id' },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
       },
       status: {
         type: Sequelize.STRING(32),
@@ -47,6 +45,24 @@ module.exports = {
     await queryInterface.addIndex('adm_ssh_device_backup_events', ['empresa_id', 'created_at']);
     await queryInterface.addIndex('adm_ssh_device_backup_events', ['created_at']);
     await queryInterface.addIndex('adm_ssh_device_backup_events', ['status', 'created_at']);
+
+    await queryInterface.addConstraint('adm_ssh_device_backup_events', {
+      fields: ['ssh_device_id'],
+      type: 'foreign key',
+      name: 'adm_ssh_device_backup_events_device_fk',
+      references: { table: 'adm_ssh_devices', field: 'id' },
+      onUpdate: 'cascade',
+      onDelete: 'cascade',
+    });
+
+    await queryInterface.addConstraint('adm_ssh_device_backup_events', {
+      fields: ['empresa_id'],
+      type: 'foreign key',
+      name: 'adm_ssh_device_backup_events_empresa_fk',
+      references: { table: 'adm_dados_empresa', field: 'id' },
+      onUpdate: 'cascade',
+      onDelete: 'set null',
+    });
 
     // Backfill: cada arquivo de backup existente vira um evento "sucesso" na data do arquivo
     await queryInterface.sequelize.query(`
