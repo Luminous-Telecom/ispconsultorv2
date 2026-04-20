@@ -41,7 +41,9 @@ module.exports = {
       },
     });
 
-    await queryInterface.addIndex('adm_ssh_device_backup_events', ['ssh_device_id']);
+    // Não chamar addIndex em ssh_device_id aqui: addConstraint da FK cria o índice
+    // `adm_ssh_device_backup_events_ssh_device_id` e um segundo addIndex gera errno 1061
+    // (Duplicate key name) em produção.
     await queryInterface.addIndex('adm_ssh_device_backup_events', ['empresa_id', 'created_at']);
     await queryInterface.addIndex('adm_ssh_device_backup_events', ['created_at']);
     await queryInterface.addIndex('adm_ssh_device_backup_events', ['status', 'created_at']);
