@@ -68,7 +68,7 @@ const COMPARE_DEPOIS = [
   'NFS-e e assinatura digital automáticas',
   'Relatórios financeiros — inadimplentes, pagamentos em dia e contas a pagar/receber',
   'Auditoria completa de todas as operações na plataforma',
-  'Em breve: Calculadora IP e Teste de Portas — ferramentas de telecom integradas',
+  'Em breve: Calculadora IP, Teste de Portas e RPKI — ferramentas de telecom integradas',
 ];
 
 const INTEGRATIONS = [
@@ -87,6 +87,12 @@ const AUTOATENDIMENTO = [
 ];
 
 const FUTURE_FEATURES = [
+  {
+    icon: 'bi-shield-check',
+    title: 'RPKI',
+    description:
+      'Suporte à Infraestrutura de Chaves Públicas para recursos de Internet: validação de origem de rotas BGP e gestão alinhada a boas práticas de roteamento seguro.',
+  },
   {
     icon: 'bi-calculator',
     title: 'Calculadora IP',
