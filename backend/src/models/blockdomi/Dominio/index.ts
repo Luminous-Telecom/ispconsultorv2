@@ -22,7 +22,7 @@ export class Dominio extends Model<
   declare link_oficio_anatel: string | null;
   declare link_oficio_justica: string | null;
   declare link_planilha_dominios: string | null;
-  declare numero_sei_anatel: string | null;
+  declare numero_sei_anatel_id: number | null;
   declare ativo: boolean;
   declare versao_id: number | null;
   declare created_at: CreationOptional<Date>;
@@ -44,6 +44,8 @@ export class Dominio extends Model<
     json.created_at_formatada = this.getCreatedAtFormatada();
     const versaoRef = (this as unknown as { versaoRef?: { numero: string } }).versaoRef;
     json.versao = versaoRef?.numero ?? null;
+    const numeroSeiRef = (this as unknown as { numeroSeiRef?: { numero: string } }).numeroSeiRef;
+    json.numero_sei_anatel = numeroSeiRef?.numero ?? null;
     return json;
   }
 }
@@ -94,9 +96,12 @@ Dominio.init(
       type: DataTypes.TEXT,
       allowNull: true
     },
-    numero_sei_anatel: {
-      type: DataTypes.STRING(32),
-      allowNull: true
+    numero_sei_anatel_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: 'adm_numeros_sei_anatel_blockdomi', key: 'id' },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL'
     },
     ativo: {
       type: DataTypes.BOOLEAN,

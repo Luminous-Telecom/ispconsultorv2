@@ -1,5 +1,7 @@
 import { Dominio } from '../../../models/blockdomi/Dominio';
 import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
+import { NumeroSeiAnatelBlockdomi } from '../../../models/blockdomi/NumeroSeiAnatelBlockdomi';
+import { NumeroSeiAnatelBlockdomiService } from '../NumeroSeiAnatelBlockdomiService';
 import fs from 'fs/promises';
 import path from 'path';
 import { Op, WhereOptions, Order } from 'sequelize';
@@ -15,6 +17,11 @@ function emptyToNull<T>(v: T): T | null {
   if (v === '' || (typeof v === 'string' && v.trim() === '')) return null;
   return v;
 }
+
+const DOMINIO_LIST_INCLUDES = [
+  { model: VersaoBlockdomi, as: 'versaoRef' as const, attributes: ['numero'], required: false },
+  { model: NumeroSeiAnatelBlockdomi, as: 'numeroSeiRef' as const, attributes: ['numero'], required: false }
+];
 
 export interface ListDominiosFilters {
   page?: number;
@@ -130,10 +137,12 @@ export class DominioService {
     if (search) {
       const searchPattern = `%${search}%`;
       const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
-      const textFields = ['dominio', 'descricao', 'nome_oficio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios', 'numero_sei_anatel'];
+      const textFields = ['dominio', 'descricao', 'nome_oficio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'];
       let orConditions: Array<WhereOptions<Dominio>> = [];
       if (searchField === 'id') {
         orConditions = numExact !== null ? [{ id: numExact } as WhereOptions<Dominio>] : [{ id: { [Op.lt]: 0 } } as WhereOptions<Dominio>];
+      } else if (searchField === 'numero_sei_anatel') {
+        orConditions = [{ '$numeroSeiRef.numero$': { [Op.like]: searchPattern } } as WhereOptions<Dominio>];
       } else if (textFields.includes(searchField || '')) {
         orConditions = [{ [searchField!]: { [Op.like]: searchPattern } } as WhereOptions<Dominio>];
       } else {
@@ -144,7 +153,7 @@ export class DominioService {
           { link_oficio_anatel: { [Op.like]: searchPattern } },
           { link_oficio_justica: { [Op.like]: searchPattern } },
           { link_planilha_dominios: { [Op.like]: searchPattern } },
-          { numero_sei_anatel: { [Op.like]: searchPattern } }
+          { '$numeroSeiRef.numero$': { [Op.like]: searchPattern } } as WhereOptions<Dominio>
         ] as Array<WhereOptions<Dominio>>;
         if (numExact !== null) {
           orConditions.unshift({ id: numExact } as WhereOptions<Dominio>);
@@ -183,14 +192,19 @@ export class DominioService {
       }
     }
 
-    const count = await Dominio.count({ where });
-    
+    const count = await Dominio.count({
+      where,
+      include: DOMINIO_LIST_INCLUDES,
+      distinct: true,
+      col: 'id'
+    });
+
     const dominios = await Dominio.findAll({
       where,
       order,
       limit,
       offset,
-      include: [{ model: VersaoBlockdomi, as: 'versaoRef', attributes: ['numero'], required: false }],
+      include: DOMINIO_LIST_INCLUDES,
       raw: false
     });
 
@@ -216,7 +230,7 @@ export class DominioService {
    * Buscar domínio por ID
    */
   static async getById(id: string | number): Promise<Dominio | null> {
-    return await Dominio.findByPk(id);
+    return await Dominio.findByPk(id, { include: DOMINIO_LIST_INCLUDES });
   }
 
   /**
@@ -229,20 +243,29 @@ export class DominioService {
   /**
    * Criar domínio (individual). Atribui versão automaticamente.
    */
-  static async create(dadosDominio: Partial<Dominio>): Promise<Dominio> {
+  static async create(dadosDominio: Partial<Dominio> & { numero_sei_anatel?: string | null }): Promise<Dominio> {
     if (dadosDominio.descricao === undefined) {
       dadosDominio.descricao = null;
     }
     const empresaId = dadosDominio.empresa_id ?? null;
     const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio', undefined, empresaId);
-    const dados = { ...dadosDominio, versao_id: versaoId };
-    return await Dominio.create(dados as never);
+    const dados = { ...dadosDominio, versao_id: versaoId } as Record<string, unknown>;
+    if ('numero_sei_anatel' in dados) {
+      const raw = dados.numero_sei_anatel;
+      delete dados.numero_sei_anatel;
+      dados.numero_sei_anatel_id = await NumeroSeiAnatelBlockdomiService.obterOuCriarPorNumero(
+        raw as string | null | undefined
+      );
+    }
+    const row = await Dominio.create(dados as never);
+    await row.reload({ include: DOMINIO_LIST_INCLUDES });
+    return row;
   }
 
   /**
    * Atualizar domínio. Gera nova versão automaticamente.
    */
-  static async update(id: string | number, dadosDominio: Partial<Dominio>): Promise<Dominio> {
+  static async update(id: string | number, dadosDominio: Partial<Dominio> & { numero_sei_anatel?: string | null }): Promise<Dominio> {
     const existingDominio = await Dominio.findByPk(id);
     
     if (!existingDominio) {
@@ -258,10 +281,9 @@ export class DominioService {
       'link_oficio_anatel',
       'link_oficio_justica',
       'link_planilha_dominios',
-      'numero_sei_anatel',
       'ativo'
     ];
-    
+
     const updateData: Partial<Dominio> = {};
     Object.keys(dadosDominio).forEach(key => {
       if (allowedFields.includes(key as keyof Dominio)) {
@@ -272,12 +294,19 @@ export class DominioService {
       }
     });
 
+    const extDominio = dadosDominio as Partial<Dominio> & { numero_sei_anatel?: string | null };
+    if (extDominio.numero_sei_anatel !== undefined) {
+      updateData.numero_sei_anatel_id = await NumeroSeiAnatelBlockdomiService.obterOuCriarPorNumero(
+        extDominio.numero_sei_anatel
+      );
+    }
+
     const empresaId = (existingDominio as { empresa_id?: number | null }).empresa_id ?? null;
     const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('dominio', undefined, empresaId);
     updateData.versao_id = versaoId;
 
     await existingDominio.update(updateData);
-    await existingDominio.reload();
+    await existingDominio.reload({ include: DOMINIO_LIST_INCLUDES });
 
     return existingDominio;
   }
@@ -288,7 +317,7 @@ export class DominioService {
    */
   static async bulkUpdate(
     ids: (string | number)[],
-    dadosDominio: Partial<Dominio>
+    dadosDominio: Partial<Dominio> & { numero_sei_anatel?: string | null }
   ): Promise<{ updated: number }> {
     const idsNum = ids.map((id) => Number(id)).filter((n) => !Number.isNaN(n));
     if (idsNum.length === 0) {
@@ -308,7 +337,6 @@ export class DominioService {
       'link_oficio_anatel',
       'link_oficio_justica',
       'link_planilha_dominios',
-      'numero_sei_anatel',
       'ativo'
     ];
 
@@ -321,6 +349,12 @@ export class DominioService {
         }
       }
     });
+
+    if (dadosDominio.numero_sei_anatel !== undefined) {
+      updateData.numero_sei_anatel_id = await NumeroSeiAnatelBlockdomiService.obterOuCriarPorNumero(
+        dadosDominio.numero_sei_anatel
+      );
+    }
 
     if (Object.keys(updateData).length === 0) {
       return { updated: 0 };
@@ -363,8 +397,9 @@ export class DominioService {
     const unique = [...new Set(dominios)];
     const found = await Dominio.findAll({
       where: { dominio: { [Op.in]: unique } },
-      attributes: ['id', 'dominio', 'data_fim_bloqueio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios', 'numero_sei_anatel'],
-      raw: true
+      attributes: ['id', 'dominio', 'data_fim_bloqueio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'],
+      include: [{ model: NumeroSeiAnatelBlockdomi, as: 'numeroSeiRef', attributes: ['numero'], required: false }],
+      raw: false
     });
     const map = new Map<string, {
       id: number;
@@ -374,14 +409,15 @@ export class DominioService {
       link_planilha_dominios: string | null;
       numero_sei_anatel: string | null;
     }>();
-    for (const r of found) {
-      map.set(r.dominio as string, {
-        id: r.id as number,
-        data_fim_bloqueio: r.data_fim_bloqueio as string | null,
-        link_oficio_anatel: r.link_oficio_anatel as string | null,
-        link_oficio_justica: r.link_oficio_justica as string | null,
-        link_planilha_dominios: r.link_planilha_dominios as string | null,
-        numero_sei_anatel: r.numero_sei_anatel as string | null
+    for (const row of found) {
+      const sei = (row as unknown as { numeroSeiRef?: { numero: string } }).numeroSeiRef?.numero ?? null;
+      map.set(row.dominio as string, {
+        id: row.id as number,
+        data_fim_bloqueio: row.data_fim_bloqueio as string | null,
+        link_oficio_anatel: row.link_oficio_anatel as string | null,
+        link_oficio_justica: row.link_oficio_justica as string | null,
+        link_planilha_dominios: row.link_planilha_dominios as string | null,
+        numero_sei_anatel: sei
       });
     }
     return map;
@@ -413,6 +449,7 @@ export class DominioService {
     const errors: string[] = [];
     const seen = new Set<string>();
     const newDataFim = metadata.data_fim_bloqueio ?? null;
+    const seiIdNovo = await NumeroSeiAnatelBlockdomiService.obterOuCriarPorNumero(metadata.numero_sei_anatel ?? null);
 
     for (const raw of items) {
       const dominio = sanitizeDominio(raw);
@@ -445,7 +482,7 @@ export class DominioService {
         link_oficio_anatel: emptyToNull(metadata.link_oficio_anatel ?? null),
         link_oficio_justica: emptyToNull(metadata.link_oficio_justica ?? null),
         link_planilha_dominios: emptyToNull(metadata.link_planilha_dominios ?? null),
-        numero_sei_anatel: emptyToNull(metadata.numero_sei_anatel ?? null),
+        numero_sei_anatel_id: seiIdNovo,
         empresa_id: metadata.empresa_id ?? null,
         ativo: true
       });
@@ -515,7 +552,7 @@ export class DominioService {
           link_oficio_anatel: emptyToNull(metadata.link_oficio_anatel ?? null),
           link_oficio_justica: emptyToNull(metadata.link_oficio_justica ?? null),
           link_planilha_dominios: emptyToNull(metadata.link_planilha_dominios ?? null),
-          numero_sei_anatel: emptyToNull(metadata.numero_sei_anatel ?? null),
+          numero_sei_anatel_id: seiIdNovo,
           versao_id: versaoId
         },
         { where: { id: { [Op.in]: updatedIds } } }
@@ -604,14 +641,14 @@ export class DominioService {
       empresaId != null ? { empresa_id: empresaId } : ({} as WhereOptions<Dominio>);
 
     const rows = await Dominio.findAll({
-      attributes: ['id', 'link_oficio_anatel', 'numero_sei_anatel', 'empresa_id', 'nome_oficio', 'versao_id'],
+      attributes: ['id', 'link_oficio_anatel', 'numero_sei_anatel_id', 'empresa_id', 'nome_oficio', 'versao_id'],
       where: whereEmpresa
     });
 
     const candidatos = rows.filter((r) => {
       const link = (r.link_oficio_anatel ?? '').trim();
-      const sei = (r.numero_sei_anatel ?? '').trim();
-      return link.length > 0 && sei.length === 0;
+      const noSei = r.numero_sei_anatel_id == null;
+      return link.length > 0 && noSei;
     });
 
     const byUrl = new Map<string, number[]>();

@@ -229,7 +229,12 @@ export const DOMINIO_SORT_CONFIG: SortConfig = {
   tableName: 'dominios',
   virtualColumns: {},
   relationshipColumns: {
-    versao: { association: 'versaoRef', field: 'numero', description: 'Número da versão Blockdomi' }
+    versao: { association: 'versaoRef', field: 'numero', description: 'Número da versão Blockdomi' },
+    numero_sei_anatel: {
+      association: 'numeroSeiRef',
+      field: 'numero',
+      description: 'Número SEI Anatel'
+    }
   }
 };
 
@@ -241,7 +246,12 @@ export const IPV4_SORT_CONFIG: SortConfig = {
   tableName: 'ipv4',
   virtualColumns: {},
   relationshipColumns: {
-    versao: { association: 'versaoRef', field: 'numero', description: 'Número da versão Blockdomi' }
+    versao: { association: 'versaoRef', field: 'numero', description: 'Número da versão Blockdomi' },
+    numero_sei_anatel: {
+      association: 'numeroSeiRef',
+      field: 'numero',
+      description: 'Número SEI Anatel'
+    }
   }
 };
 
@@ -253,7 +263,12 @@ export const IPV6_SORT_CONFIG: SortConfig = {
   tableName: 'ipv6',
   virtualColumns: {},
   relationshipColumns: {
-    versao: { association: 'versaoRef', field: 'numero', description: 'Número da versão Blockdomi' }
+    versao: { association: 'versaoRef', field: 'numero', description: 'Número da versão Blockdomi' },
+    numero_sei_anatel: {
+      association: 'numeroSeiRef',
+      field: 'numero',
+      description: 'Número SEI Anatel'
+    }
   }
 };
 

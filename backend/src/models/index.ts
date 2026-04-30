@@ -49,6 +49,7 @@ import { Dominio } from './blockdomi/Dominio';
 import { IPv4 } from './blockdomi/IPv4';
 import { IPv6 } from './blockdomi/IPv6';
 import { VersaoBlockdomi } from './blockdomi/VersaoBlockdomi';
+import { NumeroSeiAnatelBlockdomi } from './blockdomi/NumeroSeiAnatelBlockdomi';
 import { IpPermitidoBlockdomi } from './blockdomi/IpPermitidoBlockdomi';
 
 // SSH Manager
@@ -229,6 +230,14 @@ VersaoBlockdomi.hasMany(IPv4, { foreignKey: 'versao_id' });
 IPv4.belongsTo(VersaoBlockdomi, { foreignKey: 'versao_id', as: 'versaoRef' });
 VersaoBlockdomi.hasMany(IPv6, { foreignKey: 'versao_id' });
 IPv6.belongsTo(VersaoBlockdomi, { foreignKey: 'versao_id', as: 'versaoRef' });
+
+// Blockdomi — Nº SEI Anatel (tabela única, FK como versao_id)
+NumeroSeiAnatelBlockdomi.hasMany(Dominio, { foreignKey: 'numero_sei_anatel_id' });
+Dominio.belongsTo(NumeroSeiAnatelBlockdomi, { foreignKey: 'numero_sei_anatel_id', as: 'numeroSeiRef' });
+NumeroSeiAnatelBlockdomi.hasMany(IPv4, { foreignKey: 'numero_sei_anatel_id' });
+IPv4.belongsTo(NumeroSeiAnatelBlockdomi, { foreignKey: 'numero_sei_anatel_id', as: 'numeroSeiRef' });
+NumeroSeiAnatelBlockdomi.hasMany(IPv6, { foreignKey: 'numero_sei_anatel_id' });
+IPv6.belongsTo(NumeroSeiAnatelBlockdomi, { foreignKey: 'numero_sei_anatel_id', as: 'numeroSeiRef' });
 
 // IpPermitidoBlockdomi
 Cliente.hasOne(IpPermitidoBlockdomi, { foreignKey: 'cliente_id', as: 'ipPermitido' });
@@ -458,6 +467,7 @@ export {
   IPv4,
   IPv6,
   VersaoBlockdomi,
+  NumeroSeiAnatelBlockdomi,
   IpPermitidoBlockdomi,
   MensagemWhatsApp,
   TemplateWhatsApp,

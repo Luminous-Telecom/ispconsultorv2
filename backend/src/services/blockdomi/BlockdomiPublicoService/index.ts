@@ -7,6 +7,7 @@ import { QueryTypes } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { Dominio } from '../../../models/blockdomi/Dominio';
 import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
+import { NumeroSeiAnatelBlockdomi } from '../../../models/blockdomi/NumeroSeiAnatelBlockdomi';
 import { IPv4 } from '../../../models/blockdomi/IPv4';
 import { IPv6 } from '../../../models/blockdomi/IPv6';
 
@@ -53,23 +54,27 @@ export class BlockdomiPublicoService {
       versaoIdParaNumero.set(v.id, v.numero ?? null);
     }
 
+    const oficioIncludes = [
+      { model: VersaoBlockdomi, as: 'versaoRef' as const, attributes: ['numero'], required: false },
+      { model: NumeroSeiAnatelBlockdomi, as: 'numeroSeiRef' as const, attributes: ['numero'], required: false }
+    ];
     const [dominios, ipv4s, ipv6s] = await Promise.all([
       Dominio.findAll({
         where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'numero_sei_anatel'],
-        include: [{ model: VersaoBlockdomi, as: 'versaoRef', attributes: ['numero'], required: false }],
+        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id'],
+        include: oficioIncludes,
         raw: false
       }),
       IPv4.findAll({
         where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'numero_sei_anatel'],
-        include: [{ model: VersaoBlockdomi, as: 'versaoRef', attributes: ['numero'], required: false }],
+        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id'],
+        include: oficioIncludes,
         raw: false
       }),
       IPv6.findAll({
         where: { ativo: true },
-        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id', 'numero_sei_anatel'],
-        include: [{ model: VersaoBlockdomi, as: 'versaoRef', attributes: ['numero'], required: false }],
+        attributes: ['nome_oficio', 'data_inicio_bloqueio', 'data_fim_bloqueio', 'versao_id'],
+        include: oficioIncludes,
         raw: false
       })
     ]);
@@ -93,34 +98,37 @@ export class BlockdomiPublicoService {
 
     const domPlain = dominios.map((d) => {
       const p = d.get({ plain: true }) as Record<string, unknown>;
+      const seiRef = p.numeroSeiRef as { numero?: string } | null | undefined;
       return {
         nome_oficio: p.nome_oficio as string | null,
         data_inicio_bloqueio: p.data_inicio_bloqueio,
         data_fim_bloqueio: p.data_fim_bloqueio,
         versao_id: p.versao_id as number | null,
-        numero_sei_anatel: p.numero_sei_anatel as string | null | undefined,
+        numero_sei_anatel: seiRef?.numero ?? null,
         versaoRef: p.versaoRef as { numero?: string } | undefined
       };
     });
     const ipv4Plain = ipv4s.map((d) => {
       const p = d.get({ plain: true }) as Record<string, unknown>;
+      const seiRef = p.numeroSeiRef as { numero?: string } | null | undefined;
       return {
         nome_oficio: p.nome_oficio as string | null,
         data_inicio_bloqueio: p.data_inicio_bloqueio,
         data_fim_bloqueio: p.data_fim_bloqueio,
         versao_id: p.versao_id as number | null,
-        numero_sei_anatel: p.numero_sei_anatel as string | null | undefined,
+        numero_sei_anatel: seiRef?.numero ?? null,
         versaoRef: p.versaoRef as { numero?: string } | undefined
       };
     });
     const ipv6Plain = ipv6s.map((d) => {
       const p = d.get({ plain: true }) as Record<string, unknown>;
+      const seiRef = p.numeroSeiRef as { numero?: string } | null | undefined;
       return {
         nome_oficio: p.nome_oficio as string | null,
         data_inicio_bloqueio: p.data_inicio_bloqueio,
         data_fim_bloqueio: p.data_fim_bloqueio,
         versao_id: p.versao_id as number | null,
-        numero_sei_anatel: p.numero_sei_anatel as string | null | undefined,
+        numero_sei_anatel: seiRef?.numero ?? null,
         versaoRef: p.versaoRef as { numero?: string } | undefined
       };
     });
@@ -249,12 +257,14 @@ export class BlockdomiPublicoService {
         numero_sei_anatel: string | null;
         cnt: string;
       }>(
-        `SELECT nome_oficio,
-         DATE_FORMAT(data_inicio_bloqueio, '%Y-%m-%d') as di,
-         DATE_FORMAT(data_fim_bloqueio, '%Y-%m-%d') as df,
-         versao_id, numero_sei_anatel, COUNT(*) as cnt
-         FROM adm_dominios WHERE ativo = true AND dominio NOT LIKE '%/%'
-         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id, numero_sei_anatel`,
+        `SELECT d.nome_oficio,
+         DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
+         DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
+         d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
+         FROM adm_dominios d
+         LEFT JOIN adm_numeros_sei_anatel_blockdomi s ON d.numero_sei_anatel_id = s.id
+         WHERE d.ativo = true AND d.dominio NOT LIKE '%/%'
+         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
         { type: QueryTypes.SELECT }
       ),
       sequelize.query<{
@@ -265,12 +275,14 @@ export class BlockdomiPublicoService {
         numero_sei_anatel: string | null;
         cnt: string;
       }>(
-        `SELECT nome_oficio,
-         DATE_FORMAT(data_inicio_bloqueio, '%Y-%m-%d') as di,
-         DATE_FORMAT(data_fim_bloqueio, '%Y-%m-%d') as df,
-         versao_id, numero_sei_anatel, COUNT(*) as cnt
-         FROM adm_dominios WHERE ativo = true AND dominio LIKE '%/%'
-         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id, numero_sei_anatel`,
+        `SELECT d.nome_oficio,
+         DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
+         DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
+         d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
+         FROM adm_dominios d
+         LEFT JOIN adm_numeros_sei_anatel_blockdomi s ON d.numero_sei_anatel_id = s.id
+         WHERE d.ativo = true AND d.dominio LIKE '%/%'
+         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
         { type: QueryTypes.SELECT }
       ),
       sequelize.query<{
@@ -281,12 +293,14 @@ export class BlockdomiPublicoService {
         numero_sei_anatel: string | null;
         cnt: string;
       }>(
-        `SELECT nome_oficio,
-         DATE_FORMAT(data_inicio_bloqueio, '%Y-%m-%d') as di,
-         DATE_FORMAT(data_fim_bloqueio, '%Y-%m-%d') as df,
-         versao_id, numero_sei_anatel, COUNT(*) as cnt
-         FROM adm_ipv4 WHERE ativo = true
-         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id, numero_sei_anatel`,
+        `SELECT d.nome_oficio,
+         DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
+         DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
+         d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
+         FROM adm_ipv4 d
+         LEFT JOIN adm_numeros_sei_anatel_blockdomi s ON d.numero_sei_anatel_id = s.id
+         WHERE d.ativo = true
+         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
         { type: QueryTypes.SELECT }
       ),
       sequelize.query<{
@@ -297,12 +311,14 @@ export class BlockdomiPublicoService {
         numero_sei_anatel: string | null;
         cnt: string;
       }>(
-        `SELECT nome_oficio,
-         DATE_FORMAT(data_inicio_bloqueio, '%Y-%m-%d') as di,
-         DATE_FORMAT(data_fim_bloqueio, '%Y-%m-%d') as df,
-         versao_id, numero_sei_anatel, COUNT(*) as cnt
-         FROM adm_ipv6 WHERE ativo = true
-         GROUP BY nome_oficio, data_inicio_bloqueio, data_fim_bloqueio, versao_id, numero_sei_anatel`,
+        `SELECT d.nome_oficio,
+         DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
+         DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
+         d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
+         FROM adm_ipv6 d
+         LEFT JOIN adm_numeros_sei_anatel_blockdomi s ON d.numero_sei_anatel_id = s.id
+         WHERE d.ativo = true
+         GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
         { type: QueryTypes.SELECT }
       )
     ]);

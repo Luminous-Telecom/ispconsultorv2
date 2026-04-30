@@ -1,11 +1,18 @@
 import { IPv4 } from '../../../models/blockdomi/IPv4';
 import { VersaoBlockdomi } from '../../../models/blockdomi/VersaoBlockdomi';
+import { NumeroSeiAnatelBlockdomi } from '../../../models/blockdomi/NumeroSeiAnatelBlockdomi';
+import { NumeroSeiAnatelBlockdomiService } from '../NumeroSeiAnatelBlockdomiService';
 import { Op, WhereOptions, Order } from 'sequelize';
 import { isValidIPv4 } from '../../../utils/sanitize';
 import { VersaoBlockdomiService } from '../VersaoBlockdomiService';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
 import { IPV4_SORT_CONFIG } from '../../../config/sortConfigs';
+
+const IPV4_LIST_INCLUDES = [
+  { model: VersaoBlockdomi, as: 'versaoRef' as const, attributes: ['numero'], required: false },
+  { model: NumeroSeiAnatelBlockdomi, as: 'numeroSeiRef' as const, attributes: ['numero'], required: false }
+];
 
 export interface ListIPv4Filters {
   page?: number;
@@ -43,10 +50,12 @@ export class IPv4Service {
     if (search) {
       const searchPattern = `%${search}%`;
       const numExact = /^\d+$/.test(search) ? parseInt(search, 10) : null;
-      const textFields = ['ip', 'descricao', 'nome_oficio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios', 'numero_sei_anatel'];
+      const textFields = ['ip', 'descricao', 'nome_oficio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'];
       let orConditions: Array<WhereOptions<IPv4>> = [];
       if (searchField === 'id') {
         orConditions = numExact !== null ? [{ id: numExact } as WhereOptions<IPv4>] : [{ id: { [Op.lt]: 0 } } as WhereOptions<IPv4>];
+      } else if (searchField === 'numero_sei_anatel') {
+        orConditions = [{ '$numeroSeiRef.numero$': { [Op.like]: searchPattern } } as WhereOptions<IPv4>];
       } else if (textFields.includes(searchField || '')) {
         orConditions = [{ [searchField!]: { [Op.like]: searchPattern } } as WhereOptions<IPv4>];
       } else {
@@ -57,7 +66,7 @@ export class IPv4Service {
           { link_oficio_anatel: { [Op.like]: searchPattern } },
           { link_oficio_justica: { [Op.like]: searchPattern } },
           { link_planilha_dominios: { [Op.like]: searchPattern } },
-          { numero_sei_anatel: { [Op.like]: searchPattern } }
+          { '$numeroSeiRef.numero$': { [Op.like]: searchPattern } } as WhereOptions<IPv4>
         ] as Array<WhereOptions<IPv4>>;
         if (numExact !== null) {
           orConditions.unshift({ id: numExact } as WhereOptions<IPv4>);
@@ -96,14 +105,19 @@ export class IPv4Service {
       }
     }
 
-    const count = await IPv4.count({ where });
-    
+    const count = await IPv4.count({
+      where,
+      include: IPV4_LIST_INCLUDES,
+      distinct: true,
+      col: 'id'
+    });
+
     const ipv4s = await IPv4.findAll({
       where,
       order,
       limit,
       offset,
-      include: [{ model: VersaoBlockdomi, as: 'versaoRef', attributes: ['numero'], required: false }],
+      include: IPV4_LIST_INCLUDES,
       raw: false
     });
 
@@ -129,7 +143,7 @@ export class IPv4Service {
    * Buscar IPv4 por ID
    */
   static async getById(id: string | number): Promise<IPv4 | null> {
-    return await IPv4.findByPk(id);
+    return await IPv4.findByPk(id, { include: IPV4_LIST_INCLUDES });
   }
 
   /**
@@ -168,8 +182,9 @@ export class IPv4Service {
     const unique = [...new Set(ips)];
     const found = await IPv4.findAll({
       where: { ip: { [Op.in]: unique } },
-      attributes: ['id', 'ip', 'data_fim_bloqueio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios', 'numero_sei_anatel'],
-      raw: true
+      attributes: ['id', 'ip', 'data_fim_bloqueio', 'link_oficio_anatel', 'link_oficio_justica', 'link_planilha_dominios'],
+      include: [{ model: NumeroSeiAnatelBlockdomi, as: 'numeroSeiRef', attributes: ['numero'], required: false }],
+      raw: false
     });
     const map = new Map<string, {
       id: number;
@@ -179,14 +194,15 @@ export class IPv4Service {
       link_planilha_dominios: string | null;
       numero_sei_anatel: string | null;
     }>();
-    for (const r of found) {
-      map.set(r.ip as string, {
-        id: r.id as number,
-        data_fim_bloqueio: r.data_fim_bloqueio as string | null,
-        link_oficio_anatel: r.link_oficio_anatel as string | null,
-        link_oficio_justica: r.link_oficio_justica as string | null,
-        link_planilha_dominios: r.link_planilha_dominios as string | null,
-        numero_sei_anatel: r.numero_sei_anatel as string | null
+    for (const row of found) {
+      const sei = (row as unknown as { numeroSeiRef?: { numero: string } }).numeroSeiRef?.numero ?? null;
+      map.set(row.ip as string, {
+        id: row.id as number,
+        data_fim_bloqueio: row.data_fim_bloqueio as string | null,
+        link_oficio_anatel: row.link_oficio_anatel as string | null,
+        link_oficio_justica: row.link_oficio_justica as string | null,
+        link_planilha_dominios: row.link_planilha_dominios as string | null,
+        numero_sei_anatel: sei
       });
     }
     return map;
@@ -218,6 +234,7 @@ export class IPv4Service {
     const errors: string[] = [];
     const seen = new Set<string>();
     const newDataFim = metadata.data_fim_bloqueio ?? null;
+    const seiIdNovo = await NumeroSeiAnatelBlockdomiService.obterOuCriarPorNumero(metadata.numero_sei_anatel ?? null);
 
     for (const ip of items) {
       if (!isValidIPv4(ip)) {
@@ -249,7 +266,7 @@ export class IPv4Service {
         link_oficio_anatel: metadata.link_oficio_anatel ?? null,
         link_oficio_justica: metadata.link_oficio_justica ?? null,
         link_planilha_dominios: metadata.link_planilha_dominios ?? null,
-        numero_sei_anatel: metadata.numero_sei_anatel ?? null,
+        numero_sei_anatel_id: seiIdNovo,
         empresa_id: metadata.empresa_id ?? null,
         ativo: true
       });
@@ -320,7 +337,7 @@ export class IPv4Service {
           link_oficio_anatel: metadata.link_oficio_anatel ?? null,
           link_oficio_justica: metadata.link_oficio_justica ?? null,
           link_planilha_dominios: metadata.link_planilha_dominios ?? null,
-          numero_sei_anatel: metadata.numero_sei_anatel ?? null,
+          numero_sei_anatel_id: seiIdNovo,
           versao_id: versaoId
         },
         { where: { id: { [Op.in]: updatedIds } } }
@@ -335,20 +352,29 @@ export class IPv4Service {
   /**
    * Criar IPv4 (individual). Atribui versão automaticamente.
    */
-  static async create(dadosIPv4: Partial<IPv4>): Promise<IPv4> {
+  static async create(dadosIPv4: Partial<IPv4> & { numero_sei_anatel?: string | null }): Promise<IPv4> {
     if (dadosIPv4.descricao === undefined) {
       dadosIPv4.descricao = null;
     }
     const empresaId = dadosIPv4.empresa_id ?? null;
     const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4', undefined, empresaId);
-    const dados = { ...dadosIPv4, versao_id: versaoId };
-    return await IPv4.create(dados as never);
+    const dados = { ...dadosIPv4, versao_id: versaoId } as Record<string, unknown>;
+    if ('numero_sei_anatel' in dados) {
+      const raw = dados.numero_sei_anatel;
+      delete dados.numero_sei_anatel;
+      dados.numero_sei_anatel_id = await NumeroSeiAnatelBlockdomiService.obterOuCriarPorNumero(
+        raw as string | null | undefined
+      );
+    }
+    const row = await IPv4.create(dados as never);
+    await row.reload({ include: IPV4_LIST_INCLUDES });
+    return row;
   }
 
   /**
    * Atualizar IPv4. Gera nova versão automaticamente.
    */
-  static async update(id: string | number, dadosIPv4: Partial<IPv4>): Promise<IPv4> {
+  static async update(id: string | number, dadosIPv4: Partial<IPv4> & { numero_sei_anatel?: string | null }): Promise<IPv4> {
     const existingIPv4 = await IPv4.findByPk(id);
     
     if (!existingIPv4) {
@@ -364,10 +390,9 @@ export class IPv4Service {
       'link_oficio_anatel',
       'link_oficio_justica',
       'link_planilha_dominios',
-      'numero_sei_anatel',
       'ativo'
     ];
-    
+
     const updateData: Partial<IPv4> = {};
     Object.keys(dadosIPv4).forEach(key => {
       if (allowedFields.includes(key as keyof IPv4)) {
@@ -378,12 +403,17 @@ export class IPv4Service {
       }
     });
 
+    const ext = dadosIPv4 as Partial<IPv4> & { numero_sei_anatel?: string | null };
+    if (ext.numero_sei_anatel !== undefined) {
+      updateData.numero_sei_anatel_id = await NumeroSeiAnatelBlockdomiService.obterOuCriarPorNumero(ext.numero_sei_anatel);
+    }
+
     const empresaId = (existingIPv4 as { empresa_id?: number | null }).empresa_id ?? null;
     const { id: versaoId } = await VersaoBlockdomiService.obterProximaVersao('ipv4', undefined, empresaId);
     updateData.versao_id = versaoId;
     
     await existingIPv4.update(updateData);
-    await existingIPv4.reload();
+    await existingIPv4.reload({ include: IPV4_LIST_INCLUDES });
 
     return existingIPv4;
   }
