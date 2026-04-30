@@ -30,6 +30,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24'
+          cache: 'npm'
 
       # ─────────────────────────────────────────────────────────────
       # 1. Detectar o que mudou
@@ -76,7 +77,11 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       - name: Instalar Dependências e Buildar Projeto
         run: |
-          npm ci
+          npm config set fetch-retries 5
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+
+          npm ci --no-audit --no-fund --prefer-offline
 
           # Determinar se precisa buildar
           if [ "${{ steps.changes.outputs.backend_changed }}"  == "true" ] || \
@@ -91,7 +96,7 @@ jobs:
           if [ "${SHOULD_BUILD}" == "true" ]; then
             # ── Frontend ──────────────────────────────────────────
             echo "=== Buildando frontend ==="
-            npm ci --prefix frontend
+            npm ci --prefix frontend --no-audit --no-fund --prefer-offline
             npm run build --prefix frontend
             [ -f "frontend/build/index.html" ] || { echo "ERRO: frontend build falhou!"; exit 1; }
             echo "✓ Frontend buildado"
@@ -168,7 +173,7 @@ jobs:
 
             # ── Backend ───────────────────────────────────────────
             echo "=== Buildando backend ==="
-            npm ci --prefix backend
+            npm ci --prefix backend --no-audit --no-fund --prefer-offline
             npm run build --prefix backend
             [ -d "backend/dist" ] || { echo "ERRO: backend build falhou!"; exit 1; }
             echo "✓ Backend buildado"
