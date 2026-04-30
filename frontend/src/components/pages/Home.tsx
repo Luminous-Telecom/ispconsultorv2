@@ -40,6 +40,16 @@ const FEATURES = [
     title: 'Auditoria',
     description: 'Registro de todas as operações realizadas na plataforma para rastreabilidade e conformidade.',
   },
+  {
+    icon: 'bi-terminal',
+    title: 'Acesso SSH',
+    description: 'Acesso via terminal SSH aos equipamentos do cliente, quando suportado pelo dispositivo.',
+  },
+  {
+    icon: 'bi-hdd-stack',
+    title: 'Backup na Rede',
+    description: 'Integração com a rede do cliente para backups automáticos dos equipamentos compatíveis.',
+  },
 ];
 
 /* Comparativo: quem ainda usa planilha/manual vs BackNet */
@@ -58,7 +68,7 @@ const COMPARE_DEPOIS = [
   'NFS-e e assinatura digital automáticas',
   'Relatórios financeiros — inadimplentes, pagamentos em dia e contas a pagar/receber',
   'Auditoria completa de todas as operações na plataforma',
-  'Em breve: Acesso SSH, Backup na Rede, Calculadora IP e Teste de Portas — ferramentas de telecom integradas',
+  'Em breve: Calculadora IP e Teste de Portas — ferramentas de telecom integradas',
 ];
 
 const INTEGRATIONS = [
@@ -77,16 +87,6 @@ const AUTOATENDIMENTO = [
 ];
 
 const FUTURE_FEATURES = [
-  {
-    icon: 'bi-terminal',
-    title: 'Acesso SSH',
-    description: 'Acesso via terminal SSH aos equipamentos do cliente, quando suportado pelo dispositivo.',
-  },
-  {
-    icon: 'bi-hdd-stack',
-    title: 'Backup na Rede',
-    description: 'Integração com a rede do cliente para backups automáticos dos equipamentos compatíveis.',
-  },
   {
     icon: 'bi-calculator',
     title: 'Calculadora IP',
