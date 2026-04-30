@@ -403,7 +403,8 @@ export class BackupService {
           scroll: '1m',
           size: 500,
           query: { match_all: {} },
-          sort: [{ timestamp: { order: 'asc' } }, { _id: { order: 'asc' } }]
+          // Para varredura com scroll, usar _doc evita fielddata em _id e é mais eficiente.
+          sort: [{ _doc: { order: 'asc' } }]
         }) as { _scroll_id?: string; hits: { hits: Array<{ _id: string; _source: unknown }> } };
         let scrollId = (response as { _scroll_id?: string })._scroll_id;
         let hits = ((response as { hits?: { hits?: unknown[] } }).hits?.hits ?? []) as Array<{ _id: string; _source: unknown }>;

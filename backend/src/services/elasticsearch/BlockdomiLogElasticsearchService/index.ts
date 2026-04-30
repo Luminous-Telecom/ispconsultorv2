@@ -134,6 +134,8 @@ export async function listarLogsBlockdomiElasticsearch(filters: ListBlockdomiLog
       });
     }
 
+    // Nunca ordenar por _id no Elasticsearch (fielddata em _id é bloqueado por padrão).
+    // "id" vindo do frontend representa apenas o id de retorno do hit e deve cair em timestamp.
     const sortField = ['ip', 'rota', 'metodo', 'status_http', 'sucesso', 'timestamp'].includes(sortColumn)
       ? sortColumn
       : 'timestamp';
@@ -152,15 +154,37 @@ export async function listarLogsBlockdomiElasticsearch(filters: ListBlockdomiLog
       queryBody = { match_all: {} };
     }
 
-    const result = await client.search({
-      index: ES_DATA_STREAM.BLOCKDOMI,
-      body: {
-        query: queryBody,
-        sort: [{ [sortField]: { order: sortOrder } }],
-        from,
-        size: limit
+    let result;
+    try {
+      result = await client.search({
+        index: ES_DATA_STREAM.BLOCKDOMI,
+        body: {
+          query: queryBody,
+          sort: [{ [sortField]: { order: sortOrder } }],
+          from,
+          size: limit
+        }
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.includes('Fielddata access on the _id field is disallowed')) {
+        throw err;
       }
-    });
+      logger.warn('Elasticsearch recusou ordenação por _id; aplicando fallback por timestamp', {
+        context: 'BlockdomiLogElasticsearchService',
+        sortColumn,
+        sortDirection
+      });
+      result = await client.search({
+        index: ES_DATA_STREAM.BLOCKDOMI,
+        body: {
+          query: queryBody,
+          sort: [{ timestamp: { order: sortOrder } }],
+          from,
+          size: limit
+        }
+      });
+    }
 
     const countResult = await client.count({
       index: ES_DATA_STREAM.BLOCKDOMI,
