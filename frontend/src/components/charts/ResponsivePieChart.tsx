@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo, memo, useState, useLayoutEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useMemo, memo, useState, useLayoutEffect, useCallback, useId } from 'react';
 import * as d3Selection from 'd3-selection';
 import * as d3Shape from 'd3-shape';
 import * as d3Ease from 'd3-ease';
@@ -27,6 +27,7 @@ const RADIUS_MAX_RATIO = 1;
 const HIDE_ANIMATION_MS = 400;
 
 const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenItems, onToggleItem, onSliceClick }) => {
+  const titleId = useId();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -289,22 +290,11 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       className="chart-container-pie chart-radial-style"
       style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
     >
-      <h6 className="chart-title-pie" style={{ marginBottom: '2px' }}>
+      <h6 id={titleId} className="chart-title-pie" style={{ marginBottom: '2px' }}>
         {title} ({formatPieValue(total)})
       </h6>
-      <div style={{ flex: 1, display: 'flex', gap: '20px', minHeight: 120 }}>
-        <ul
-          className="pie-sidebar-legend"
-          style={{
-            margin: 0,
-            padding: 0,
-            listStyle: 'none',
-            overflowY: 'auto',
-            flexShrink: 0,
-            maxWidth: '45%',
-            maxHeight: '100%'
-          }}
-        >
+      <div className="pie-chart-body" role="group" aria-labelledby={titleId}>
+        <ul className="pie-sidebar-legend">
           {legendData.map(({ item, index, value }) => {
             const isHidden = hiddenItems.has(index);
             return (
@@ -352,6 +342,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         </ul>
         <div
           ref={containerRef}
+          className="pie-chart-svg-wrap"
           style={{
             flex: 1,
             minWidth: 0,
