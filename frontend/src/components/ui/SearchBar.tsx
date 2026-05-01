@@ -158,7 +158,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         >
           {inputEl}
         </form>
-        <i className="bi bi-search navbar-search-icon" aria-hidden />
+        {!value.trim() && (
+          <i className="bi bi-search navbar-search-icon" aria-hidden />
+        )}
       </div>
     );
   }
