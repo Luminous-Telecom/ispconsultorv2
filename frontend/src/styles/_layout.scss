@@ -238,7 +238,7 @@
 .dashboard-container .row {
   margin-left: 0;
   margin-right: 0;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.5rem;
 }
 
 .dashboard-container .row:last-child {
@@ -246,8 +246,8 @@
 }
 
 .dashboard-container .row.g-3 {
-  --bs-gutter-x: 0.375rem;
-  --bs-gutter-y: 0.375rem;
+  --bs-gutter-x: 0.6875rem;
+  --bs-gutter-y: 0.6875rem;
   margin-left: calc(var(--bs-gutter-x) * -0.5);
   margin-right: calc(var(--bs-gutter-x) * -0.5);
 }
@@ -285,7 +285,7 @@
 
 /* Dashboard Filters Card */
 .dashboard-container .card.border-0.shadow-sm {
-  border-radius: var(--border-radius) !important;
+  border-radius: var(--dashboard-chart-radius, var(--border-radius)) !important;
   border: none !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
@@ -691,6 +691,9 @@ button.layout-user-dropdown__row:hover,
    SEARCH & FILTER - DESIGN ELEGANTE
    ============================================ */
 
+/* Cantos bem arredondados (pill) na barra de busca do header */
+$navbar-search-pill-radius: 999px;
+
 /* Container de busca elegante - sem contorno azul no focus */
 .navbar-search-container {
   position: relative;
@@ -698,7 +701,7 @@ button.layout-user-dropdown__row:hover,
   align-items: center;
   background: var(--bg-secondary);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: $navbar-search-pill-radius;
   overflow: hidden;
   flex: 1;
   height: 46px;
@@ -803,7 +806,7 @@ button.layout-user-dropdown__row:hover,
   align-items: center;
   gap: 0.375rem;
   background: var(--bg-secondary);
-  border-radius: var(--border-radius);
+  border-radius: $navbar-search-pill-radius;
   padding: 0 0.625rem;
   height: 36px;
   flex: 1;
@@ -866,7 +869,7 @@ button.layout-user-dropdown__row:hover,
   gap: 0.5rem;
   background: var(--bg-secondary);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: $navbar-search-pill-radius;
   overflow: hidden;
   /* Transições removidas para manter consistência visual */
 }

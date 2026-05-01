@@ -2,6 +2,11 @@
    DASHBOARD - Cards, gráficos e métricas
    ============================================ */
 
+/* Raio um pouco maior que o global (--border-radius 8px); herdado pelos cards da área */
+.dashboard-container {
+  --dashboard-chart-radius: 0.625rem;
+}
+
 /* Cards de Gráficos */
 .chart-card {
   background: var(--bg-secondary);
@@ -35,6 +40,11 @@
   background: var(--bg-secondary);
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-container .chart-card,
+.dashboard-container .chart-card-line {
+  border-radius: var(--dashboard-chart-radius, var(--border-radius));
 }
 
 @media (max-width: 767.98px) {
@@ -362,6 +372,10 @@
   max-width: 100%;
 }
 
+.dashboard-container .dashboard-search-card-list {
+  gap: 0.625rem !important;
+}
+
 .dashboard-search-client-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
@@ -370,6 +384,10 @@
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.dashboard-container .dashboard-search-client-card {
+  border-radius: var(--dashboard-chart-radius, var(--border-radius));
 }
 
 .dashboard-search-client-card:hover,
