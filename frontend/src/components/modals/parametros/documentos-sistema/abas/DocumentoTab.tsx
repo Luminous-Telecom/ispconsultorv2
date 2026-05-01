@@ -240,6 +240,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   return (
     <>
       <Table
+        syncWithHeader={false}
         key={`documentos-table-${tipo}`}
         title={getTipoLabel(tipo)}
         config={{

@@ -190,6 +190,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
           )}
           
           <Table
+            syncWithHeader={false}
             title={`Logs de Execução - ${routineName}`}
             config={{
               columns: [

@@ -79,6 +79,7 @@ function ListModal<T extends { id: number | string }>({
         style={{ flex: 1, overflow: 'auto', minHeight: 0 }}
       >
         <Table
+        syncWithHeader={false}
         title={title}
         config={{
           columns: tableColumns,

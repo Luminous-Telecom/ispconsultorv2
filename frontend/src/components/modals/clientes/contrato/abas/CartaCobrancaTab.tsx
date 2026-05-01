@@ -195,6 +195,7 @@ const CartaCobrancaTab: React.FC<CartaCobrancaTabProps> = ({ contratoId: _contra
           <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
             <Table
               key="carta-cobranca-tab-table"
+              syncWithHeader={false}
               title="Cartas de Cobrança"
               config={{
                 columns,

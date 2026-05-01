@@ -350,6 +350,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         {/* Tabela */}
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
+            syncWithHeader={false}
             title={t('audit.title')}
             config={{
               columns: tableColumns,

@@ -312,6 +312,7 @@ const EmpresasModal: React.FC<EmpresasModalProps> = ({ show, onClose, skipWrappe
       </div>
 
       <Table
+        syncWithHeader={false}
         config={tableConfig}
         onSort={(col, dir) => tableFilters.setSort(col, dir as SortDirection)}
         onSearch={(term, field) => { tableFilters.setSearch(term); if (field) tableFilters.setSearchField(field); }}

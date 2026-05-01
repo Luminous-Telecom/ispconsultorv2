@@ -111,6 +111,7 @@ const SaasBancosModal: React.FC<Props> = ({ show, onClose, skipWrapper = false, 
           bulkActions: bulkActions.map(a => ({ key: a.label.toLowerCase().replace(/\s+/g, '-'), label: a.label, onClick: (s: SaasBanco[]) => { const u = s.length > 0 ? s : (selectedItem ? [selectedItem] : []); a.action(u); }, disabled: a.disabled, variant: a.variant })),
           emptyMessage: 'Nenhum banco encontrado', pagination,
         }}
+          syncWithHeader={false}
           tableId="saas-bancos-list" onSelectionChange={handleSelectionChange}
           onRowDoubleClick={i => { if (onSelectBanco) handleSelect([i]); else { setSelectedId(i.id); setShowEdit(true); } }}
           onRefresh={refetch} onAudit={i => auditoria.handleAudit('SaasBanco', i.id)} auditEntity="SaasBanco"

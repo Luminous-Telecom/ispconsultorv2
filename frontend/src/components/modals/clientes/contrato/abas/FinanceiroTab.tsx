@@ -126,6 +126,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         <Table
             key="financeiro-tab-table"
+            syncWithHeader={false}
             title={t('tabs.financial')}
             config={{
               columns: columns,

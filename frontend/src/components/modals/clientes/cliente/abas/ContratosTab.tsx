@@ -43,6 +43,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         <Table
             key={`cliente-contratos-${clienteId || 'new'}`}
+            syncWithHeader={false}
             title={t('nav.contracts')}
             search=""
             config={{

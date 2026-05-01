@@ -141,6 +141,7 @@ const TemplateSelectModal: React.FC<TemplateSelectModalProps> = ({
         {!error && (
           <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
             <Table
+              syncWithHeader={false}
               title={defaultTitle}
               config={{
                 columns: tableColumns,

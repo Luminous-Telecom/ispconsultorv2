@@ -80,6 +80,7 @@ const SaasTipoCobrancaModal: React.FC<Props> = ({ show, onClose, skipWrapper = f
           bulkActions: bulkActions.map(a => ({ key: a.label.toLowerCase().replace(/\s+/g, '-'), label: a.label, onClick: (s: SaasTipoCobranca[]) => { const u = s.length > 0 ? s : (selectedItem ? [selectedItem] : []); a.action(u); }, disabled: a.disabled, variant: a.variant })),
           emptyMessage: t('messages.noData'), pagination,
         }}
+          syncWithHeader={false}
           tableId="saas-tipos-cobranca-list" onSelectionChange={handleSelectionChange}
           onRowDoubleClick={i => { setSelectedId(i.id); setShowEdit(true); }}
           onRefresh={refetch} onAudit={i => auditoria.handleAudit('SaasTipoCobranca', i.id)} auditEntity="SaasTipoCobranca"

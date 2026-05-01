@@ -78,6 +78,7 @@ const SaasServidorWhatsappModal: React.FC<Props> = ({ show, onClose, skipWrapper
           bulkActions: bulkActions.map(a => ({ key: a.label.toLowerCase(), label: a.label, onClick: (s: SaasServidorWhatsapp[]) => { const u = s.length > 0 ? s : (selectedItem ? [selectedItem] : []); a.action(u); }, disabled: a.disabled, variant: a.variant })),
           emptyMessage: 'Nenhum servidor cadastrado', pagination,
         }}
+          syncWithHeader={false}
           tableId="saas-servidores-whatsapp-list" onSelectionChange={handleSelectionChange}
           onRowDoubleClick={i => { setSelectedId(i.id); setShowEdit(true); }}
           onRefresh={refetch} onAudit={i => auditoria.handleAudit('SaasServidorWhatsapp', i.id)} auditEntity="SaasServidorWhatsapp"

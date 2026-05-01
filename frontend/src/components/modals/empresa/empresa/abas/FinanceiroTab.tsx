@@ -249,6 +249,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({ empresaId, tipo }) => {
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         <Table
           key={`dados-empresa-faturas-tab-${tipo}`}
+          syncWithHeader={false}
           title={tipo === 'abertas' ? t('tabs.faturasAbertas') : t('tabs.faturasPagas')}
           config={{
             columns,

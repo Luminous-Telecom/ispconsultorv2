@@ -369,6 +369,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
             <Table
+              syncWithHeader={false}
               title={t('scheduler.title')}
               config={{
                 columns: tableColumns,

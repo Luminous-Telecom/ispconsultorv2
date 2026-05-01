@@ -134,6 +134,7 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         <Table
             key={`financeiro-avulso-tab-table-${showCancelados}`}
+            syncWithHeader={false}
             title={t('tabs.financialMisc')}
             config={{
               columns: columns,

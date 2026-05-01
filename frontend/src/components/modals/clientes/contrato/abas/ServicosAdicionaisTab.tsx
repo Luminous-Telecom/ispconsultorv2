@@ -44,6 +44,7 @@ const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="servicos-adicionais-tab-table"
+            syncWithHeader={false}
             title={t('tabs.additionalServices')}
             config={{
             columns: columns,

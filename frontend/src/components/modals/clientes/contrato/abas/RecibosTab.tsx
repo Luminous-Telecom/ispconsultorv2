@@ -195,6 +195,7 @@ const RecibosTab: React.FC<RecibosTabProps> = ({ contratoId: _contratoId }) => {
           <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
             <Table
               key="recibos-tab-table"
+              syncWithHeader={false}
               title="Recibos"
               config={{
                 columns,

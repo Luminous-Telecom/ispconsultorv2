@@ -50,6 +50,7 @@ const TermosTab: React.FC<TermosTabProps> = ({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="termos-tab-table"
+            syncWithHeader={false}
             title={t('tabs.terms')}
             config={{
               columns: columns,

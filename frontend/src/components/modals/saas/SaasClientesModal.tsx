@@ -98,6 +98,7 @@ const SaasClientesModal: React.FC<Props> = ({ show, onClose, skipWrapper = false
           bulkActions: bulkActions.map(a => ({ key: a.label.toLowerCase().replace(/\s+/g, '-'), label: a.label, onClick: (s: SaasEmpresa[]) => { const u = s.length > 0 ? s : (selectedItem ? [selectedItem] : []); a.action(u); }, disabled: a.disabled, variant: a.variant })),
           emptyMessage: t('messages.noData'), pagination, className: 'no-padding',
         }}
+          syncWithHeader={false}
           tableId="saas-empresas-list" onSelectionChange={handleSelectionChange}
           onRowDoubleClick={i => { setSelectedId(i.id); setShowEdit(true); }}
           onRefresh={refetch} onAudit={i => auditoria.handleAudit('DadosEmpresa', i.id)} auditEntity="DadosEmpresa"

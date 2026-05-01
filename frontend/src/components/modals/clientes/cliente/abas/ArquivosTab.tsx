@@ -253,6 +253,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
             key="cliente-arquivos-tab-table"
+            syncWithHeader={false}
             title={t('tabs.files')}
             config={{ ...tableConfig, loading: isLoading }}
             onRefresh={refetch}
