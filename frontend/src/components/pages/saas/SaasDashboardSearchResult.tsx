@@ -17,10 +17,10 @@ const SaasDashboardSearchResult: React.FC<SaasDashboardSearchResultProps> = ({ s
   const tableFilters = useTableFilters({
     initialSearch: searchTerm,
     initialPage: 1,
-    initialLimit: 20,
+    initialLimit: 500,
     initialSortColumn: 'id',
     initialSortDirection: 'desc',
-    searchDebounceMs: 300,
+    immediateSearch: true,
     resetPageOnFilterChange: true,
   });
 
@@ -31,7 +31,7 @@ const SaasDashboardSearchResult: React.FC<SaasDashboardSearchResultProps> = ({ s
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
-  const { data: empresasResponse, isLoading, refetch } = useQuery({
+  const { data: empresasResponse, isLoading } = useQuery({
     queryKey: ['saas-empresas-search', tableFilters.debouncedSearch || searchTerm, tableFilters.page, tableFilters.limit, tableFilters.sortColumn, tableFilters.sortDirection],
     queryFn: () =>
       saasEmpresasService.list({
@@ -114,31 +114,12 @@ const SaasDashboardSearchResult: React.FC<SaasDashboardSearchResultProps> = ({ s
             columns,
             data: tableData,
             loading: isLoading,
-            pagination:
-              pagination && pagination.total > 0
-                ? {
-                    currentPage: pagination.page,
-                    lastPage: pagination.totalPages,
-                    perPage: pagination.limit,
-                    total: pagination.total,
-                    from: (pagination.page - 1) * pagination.limit + 1,
-                    to: Math.min(pagination.page * pagination.limit, pagination.total),
-                  }
-                : tableData.length > 0
-                  ? {
-                      currentPage: 1,
-                      lastPage: 1,
-                      perPage: tableData.length,
-                      total: tableData.length,
-                      from: 1,
-                      to: tableData.length,
-                    }
-                  : undefined,
             selectable: false,
             searchable: true,
-            searchPlaceholder: 'Refinar busca...',
+            showToolbar: false,
             searchField,
             searchFields: [
+              { key: 'todos', label: 'Todos' },
               { key: 'id', label: 'ID' },
               { key: 'cnpj', label: 'CNPJ' },
               { key: 'razao_social', label: 'Razão Social' },
@@ -151,7 +132,6 @@ const SaasDashboardSearchResult: React.FC<SaasDashboardSearchResultProps> = ({ s
             emptyMessage: 'Nenhum cliente tenant encontrado para esta busca.',
           }}
           onRowClick={handleRowClick}
-          onRefresh={refetch}
           onSort={(column: string, direction: 'asc' | 'desc') => {
             tableFilters.setSort(column, direction);
           }}

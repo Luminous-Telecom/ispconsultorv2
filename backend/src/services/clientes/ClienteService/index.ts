@@ -50,19 +50,48 @@ export class ClienteService {
     }
     
     if (search) {
+      const trimmed = String(search).trim();
       const searchPattern = `%${search}%`;
-      if (searchField) {
-        const allowedFields = ['id', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'whatsapp', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'];
-        if (allowedFields.includes(searchField)) {
-          if (searchField === 'id') {
-            const numExact = /^\d+$/.test(String(search).trim()) ? parseInt(String(search).trim(), 10) : null;
+      const field = searchField?.trim();
+
+      if (field === 'todos' || !field) {
+        const orConditions: WhereOptions[] = [
+          { cnpj: { [Op.like]: searchPattern } },
+          { razao_social: { [Op.like]: searchPattern } },
+          { nome_fantasia: { [Op.like]: searchPattern } },
+          { email: { [Op.like]: searchPattern } },
+          { telefone: { [Op.like]: searchPattern } },
+          { whatsapp: { [Op.like]: searchPattern } },
+          { endereco: { [Op.like]: searchPattern } },
+          { numero: { [Op.like]: searchPattern } },
+          { complemento: { [Op.like]: searchPattern } },
+          { bairro: { [Op.like]: searchPattern } },
+          { cidade: { [Op.like]: searchPattern } },
+          { estado: { [Op.like]: searchPattern } },
+        ];
+        const numExact = /^\d+$/.test(trimmed) ? parseInt(trimmed, 10) : null;
+        if (numExact !== null) {
+          orConditions.push({ id: numExact });
+        }
+        if (/^ativo$/i.test(trimmed)) {
+          orConditions.push({ ativo: true });
+        }
+        if (/^inativo$/i.test(trimmed)) {
+          orConditions.push({ ativo: false });
+        }
+        (where as WhereOptions & { [Op.or]?: WhereOptions[] })[Op.or] = orConditions;
+      } else {
+        const allowedFields = ['id', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'whatsapp', 'telefone', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'];
+        if (allowedFields.includes(field)) {
+          if (field === 'id') {
+            const numExact = /^\d+$/.test(trimmed) ? parseInt(trimmed, 10) : null;
             if (numExact !== null) {
               where.id = numExact;
             } else {
               where.id = { [Op.lt]: 0 };
             }
           } else {
-            where[searchField as keyof typeof where] = { [Op.like]: searchPattern };
+            where[field as keyof typeof where] = { [Op.like]: searchPattern };
           }
         }
       }

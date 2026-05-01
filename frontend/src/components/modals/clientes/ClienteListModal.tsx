@@ -207,6 +207,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const defaultTitle = (title || (onSelectClient ? t('ui.selectClient') : t('menu.clients'))) + filterTitleSuffix;
   
   const searchFields = [
+    { key: 'todos', label: t('table.searchAllFields') },
     { key: 'id', label: t('table.id') },
     { key: 'cnpj', label: t('form.cnpj') },
     { key: 'razao_social', label: t('form.companyName') },

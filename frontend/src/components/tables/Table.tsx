@@ -429,7 +429,10 @@ function Table<T extends { id: number | string }>({
     customFilters,
     searchField: configSearchField = '',
     searchFields: configSearchFields,
+    showToolbar: showToolbarFromConfig = true,
   } = config;
+
+  const showToolbar = showToolbarFromConfig !== false;
 
   // Valores padrão traduzidos
   const defaultSearchPlaceholder = searchPlaceholder || t('layout.searchPlaceholder');
@@ -439,6 +442,8 @@ function Table<T extends { id: number | string }>({
   // Padrão: 'id' quando disponível nos searchFields, senão primeiro da lista
   const [localSearchField, setLocalSearchField] = useState<string>(() => {
     if (!configSearchFields?.length) return configSearchField || '';
+    const hasTodos = configSearchFields.some((f: { key: string }) => f.key === 'todos');
+    if (hasTodos) return 'todos';
     const hasId = configSearchFields.some((f: { key: string }) => f.key === 'id');
     return hasId ? 'id' : (configSearchField || configSearchFields[0].key);
   });
@@ -732,6 +737,8 @@ function Table<T extends { id: number | string }>({
 
   // Ref para controlar se esta tabela deve sincronizar seu estado inicial com o header
   const initialSyncRef = useRef(false);
+  /** Evita espelhar estado vazio da tabela no header antes do primeiro pull do header → tabela (ex.: busca no dashboard). */
+  const tableSearchHydratedFromHeaderRef = useRef(false);
 
   // Registrar botões no contexto do header (não executar quando em modal)
   useEffect(() => {
@@ -740,7 +747,7 @@ function Table<T extends { id: number | string }>({
       // 1. Atualizar Provider primeiro (evita "Cannot update Table while rendering Provider")
       setHeaderTitle(title || 'Lista');
       setHeaderShowSearch(searchable || false);
-      setHeaderShowReload(true);
+      setHeaderShowReload(showToolbar);
       // Wrapper evita que React invoque o callback (setState trata função como updater)
       setHeaderOnSearchClick(() => handleHeaderSearchClick);
       setHeaderSearchPlaceholder(defaultSearchPlaceholder);
@@ -758,10 +765,17 @@ function Table<T extends { id: number | string }>({
           setHeaderAvailableSearchFields(fields);
         }
 
+        const parsedFieldKeys = new Set(parsedFields.map((f: { key: string }) => f.key));
         const hasId = parsedFields.some((f: { key: string }) => f.key === 'id');
-        const initialField = hasId ? 'id' : (configSearchField || parsedFields[0]?.key || '');
-        if (initialField && headerSearchField !== initialField) {
-          setHeaderSearchField(initialField);
+        const defaultField = parsedFieldKeys.has('todos')
+          ? 'todos'
+          : hasId
+            ? 'id'
+            : (configSearchField || parsedFields[0]?.key || '');
+        const headerFieldIsValid = Boolean(headerSearchField && parsedFieldKeys.has(headerSearchField));
+        // Só define o campo padrão se o header não tiver um campo válido para esta tabela (evita voltar para "id" ao digitar).
+        if (defaultField && !headerFieldIsValid) {
+          setHeaderSearchField(defaultField);
         }
       } else {
         const defaults = [
@@ -798,7 +812,7 @@ function Table<T extends { id: number | string }>({
       clearTimeout(timeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [syncWithHeader, title, searchable, stableSearchFields]);
+  }, [syncWithHeader, title, searchable, stableSearchFields, showToolbar]);
 
   // Limpar quando desmontar (apenas se sincronizou com header)
   useEffect(() => {
@@ -813,6 +827,13 @@ function Table<T extends { id: number | string }>({
   // Sincronizar busca: Header -> Table (apenas se search prop não foi passado e syncWithHeader)
   useEffect(() => {
     if (!syncWithHeader) return;
+    if (headerSearchValue === state.searchTerm) {
+      tableSearchHydratedFromHeaderRef.current = true;
+    }
+  }, [syncWithHeader, headerSearchValue, state.searchTerm]);
+
+  useEffect(() => {
+    if (!syncWithHeader) return;
     if (initialSyncRef.current && search === undefined && headerSearchValue !== state.searchTerm) {
       const timeoutId = setTimeout(() => {
         tableActions.setSearchTerm(headerSearchValue);
@@ -824,6 +845,35 @@ function Table<T extends { id: number | string }>({
   // Sincronizar busca: Table -> Header (quando usuário digita na tabela, manter header em dia para evitar overwrite)
   useEffect(() => {
     if (!syncWithHeader) return;
+    // Antes do header ser copiado para o estado da tabela, não enviar '' ao contexto (apaga o que o usuário digitou na navbar).
+    if (
+      !tableSearchHydratedFromHeaderRef.current &&
+      state.searchTerm === '' &&
+      headerSearchValue !== ''
+    ) {
+      return;
+    }
+    // Navbar já limpou; aguardar Header→Table alinhar o estado antes de recolocar o termo antigo no contexto.
+    if (headerSearchValue === '' && state.searchTerm !== '') {
+      return;
+    }
+    // Enquanto o header está à frente (digitação na navbar antes do efeito Header→Table), não sobrescrever com estado defasado.
+    const isHeaderAheadOfTable =
+      state.searchTerm !== '' &&
+      headerSearchValue.length > state.searchTerm.length &&
+      headerSearchValue.startsWith(state.searchTerm);
+    if (isHeaderAheadOfTable) {
+      return;
+    }
+    // Usuário apagou no header; estado da tabela ainda não refletiu o termo menor.
+    const isHeaderShrinkingWhileTableStale =
+      state.searchTerm !== '' &&
+      headerSearchValue !== '' &&
+      state.searchTerm.length > headerSearchValue.length &&
+      state.searchTerm.startsWith(headerSearchValue);
+    if (isHeaderShrinkingWhileTableStale) {
+      return;
+    }
     if (state.searchTerm !== headerSearchValue) {
       setHeaderSearchValue(state.searchTerm);
     }
@@ -1398,7 +1448,7 @@ function Table<T extends { id: number | string }>({
     >
       
       {/* Header com botões de ação e filtros - Oculto no mobile */}
-          {headerReady && !isMobile && (bulkActions.length > 0 || searchable || normalizedPagination || (!normalizedPagination && data.length > 0)) && (
+          {headerReady && !isMobile && showToolbar && (bulkActions.length > 0 || searchable || normalizedPagination || (!normalizedPagination && data.length > 0)) && (
         <div className="border-bottom table-header-custom">
           {/* Primeira linha: Botões de ação */}
           {(bulkActions.length > 0 || customControlsAfterActions) && (
@@ -1733,7 +1783,7 @@ function Table<T extends { id: number | string }>({
 
 
       {/* Paginação fixa na parte inferior (mobile) */}
-      {isMobile && (normalizedPagination || (!normalizedPagination && data.length > 0)) && (
+      {isMobile && showToolbar && (normalizedPagination || (!normalizedPagination && data.length > 0)) && (
         <div className="table-mobile-pagination">
           <div className="d-flex flex-column gap-2 w-100">
             {/* Informação da página */}

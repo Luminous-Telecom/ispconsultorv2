@@ -875,6 +875,7 @@ export interface TranslationKeys {
   'table.zipCodeShort': string;
   'table.streetShort': string;
   'table.id': string;
+  'table.searchAllFields': string;
   'table.contract': string;
   'table.status': string;
   'table.plan': string;
@@ -2356,6 +2357,7 @@ const translations: Translations = {
     'table.zipCodeShort': 'CEP',
     'table.streetShort': 'Logradouro',
     'table.id': 'ID',
+    'table.searchAllFields': 'Todos',
     'table.contract': 'Contrato',
     'table.status': 'Status',
     'table.plan': 'Plano',
@@ -3844,6 +3846,7 @@ const translations: Translations = {
     'table.zipCodeShort': 'Zip Code',
     'table.streetShort': 'Street',
     'table.id': 'ID',
+    'table.searchAllFields': 'All fields',
     'table.contract': 'Contract',
     'table.status': 'Status',
     'table.plan': 'Plan',
@@ -5334,6 +5337,7 @@ const translations: Translations = {
     'table.zipCodeShort': 'Código Postal',
     'table.streetShort': 'Calle',
     'table.id': 'ID',
+    'table.searchAllFields': 'Todos',
     'table.contract': 'Contrato',
     'table.status': 'Estado',
     'table.plan': 'Plan',

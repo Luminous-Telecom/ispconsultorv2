@@ -132,6 +132,8 @@ export interface TableConfig<T = Record<string, unknown>> {
   customControls?: React.ReactNode;
   customControlsAfterActions?: React.ReactNode;
   customFilters?: (data: T[]) => T[];
+  /** Se false, oculta a barra superior da tabela (busca inline, paginação e atualizar). Padrão: true */
+  showToolbar?: boolean;
 }
 
 export interface TableState<T = Record<string, unknown>> {

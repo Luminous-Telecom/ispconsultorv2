@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
+import { useDebouncedValue } from 'hooks/useDebouncedValue';
 import { formatCurrency, formatNumber } from 'utils/formatters';
 import { useDashboard } from 'hooks/useDashboard';
 import { useDashboardFilters } from 'contexts/DashboardFiltersContext';
@@ -22,9 +23,12 @@ import { useI18n } from 'contexts/I18nContext';
 import { DashboardService } from 'services/dashboardService';
 import DashboardSearchResult from '../dashboard/DashboardSearchResult';
 
+const DASHBOARD_SEARCH_DEBOUNCE_MS = 400;
+
 const Dashboard: React.FC = () => {
   const { t } = useI18n();
   const { searchValue, searchField } = useTableHeader();
+  const debouncedSearch = useDebouncedValue(searchValue.trim(), DASHBOARD_SEARCH_DEBOUNCE_MS);
   const { activeModal, openModal } = useModal();
   const { startDate, endDate } = useDashboardFilters();
 
@@ -121,11 +125,11 @@ const Dashboard: React.FC = () => {
   }
 
   // Se houver busca no header E não houver modal aberto, mostrar resultados da busca
-  if (searchValue && !activeModal) {
+  if (debouncedSearch && !activeModal) {
     return (
       <div className="dashboard-container">
         <div className="container-fluid px-0 px-md-0">
-          <DashboardSearchResult searchTerm={searchValue} searchField={searchField} />
+          <DashboardSearchResult searchTerm={debouncedSearch} searchField={searchField} />
         </div>
       </div>
     );

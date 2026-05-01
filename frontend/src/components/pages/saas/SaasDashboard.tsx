@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useDebouncedValue } from 'hooks/useDebouncedValue';
 import { formatCurrency, formatNumber } from 'utils/formatters';
 import { useSaasDashboard } from 'hooks/useSaasDashboard';
 import { useDashboardFilters } from 'contexts/DashboardFiltersContext';
@@ -13,7 +14,10 @@ import { useI18n } from 'contexts/I18nContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import SaasDashboardSearchResult from './SaasDashboardSearchResult';
 
+const SAAS_DASHBOARD_SEARCH_DEBOUNCE_MS = 400;
+
 const SAAS_SEARCH_FIELDS = [
+  { id: 'todos', label: 'Todos' },
   { id: 'id', label: 'ID' },
   { id: 'cnpj', label: 'CNPJ' },
   { id: 'razao_social', label: 'Razão Social' },
@@ -24,6 +28,7 @@ const SAAS_SEARCH_FIELDS = [
 const SaasDashboard: React.FC = () => {
   const { t } = useI18n();
   const { searchValue, searchField, setAvailableSearchFields, setSearchPlaceholder } = useTableHeader();
+  const debouncedSearch = useDebouncedValue(searchValue.trim(), SAAS_DASHBOARD_SEARCH_DEBOUNCE_MS);
   const { activeModal } = useModal();
   const { startDate, endDate } = useDashboardFilters();
 
@@ -70,11 +75,11 @@ const SaasDashboard: React.FC = () => {
     );
   }
 
-  if (searchValue && !activeModal) {
+  if (debouncedSearch && !activeModal) {
     return (
       <div className="dashboard-container">
         <div className="container-fluid px-0 px-md-0">
-          <SaasDashboardSearchResult searchTerm={searchValue} searchField={searchField} />
+          <SaasDashboardSearchResult searchTerm={debouncedSearch} searchField={searchField} />
         </div>
       </div>
     );

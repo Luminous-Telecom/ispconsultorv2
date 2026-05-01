@@ -1,10 +1,34 @@
-import React, { useCallback, useEffect } from 'react';
-import { Table } from '../tables';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useClientes } from 'hooks/useClientes';
-import { Cliente } from 'types';
-import { formatDateTime } from 'utils/formatters';
+import { Cliente, Contrato, Plano } from 'types';
 import { useModal } from 'contexts/ModalContext';
-import { useTableFilters } from 'hooks/useTableFilters';
+import { useTableHeader } from 'contexts/TableHeaderContext';
+import { Spinner } from 'components/ui';
+import { useI18n } from 'contexts/I18nContext';
+
+const DASHBOARD_SEARCH_HEADER_FIELDS = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'id', label: 'ID' },
+  { id: 'cnpj', label: 'CNPJ' },
+  { id: 'razao_social', label: 'Razão Social' },
+  { id: 'nome_fantasia', label: 'Nome Fantasia' },
+  { id: 'email', label: 'Email' },
+  { id: 'status', label: 'Status' },
+];
+
+function formatEndereco(c: Cliente): string {
+  const log = [c.endereco, c.numero].filter(Boolean).join(', ');
+  const cidadeUf = [c.bairro, c.cidade, c.estado].filter(Boolean).join(' — ');
+  const line = [log, cidadeUf].filter(Boolean).join(' · ');
+  return line || '—';
+}
+
+function collectTelefones(c: Cliente): string[] {
+  const raw = [c.telefone, c.whatsapp, c.celular].filter(
+    (v): v is string => typeof v === 'string' && v.trim().length > 0
+  );
+  return Array.from(new Set(raw.map((s) => s.trim())));
+}
 
 interface DashboardSearchResultProps {
   searchTerm: string;
@@ -12,179 +36,159 @@ interface DashboardSearchResultProps {
 }
 
 const DashboardSearchResult: React.FC<DashboardSearchResultProps> = ({ searchTerm, searchField }) => {
+  const { t } = useI18n();
   const { openModal } = useModal();
+  const { setAvailableSearchFields, setSearchPlaceholder } = useTableHeader();
 
-  // Hook unificado para filtros, busca, ordenação e paginação
-  const tableFilters = useTableFilters({
-    initialSearch: searchTerm,
-    initialPage: 1,
-    initialLimit: 20,
-    initialSortColumn: 'id',
-    initialSortDirection: 'desc',
-    searchDebounceMs: 300,
-    resetPageOnFilterChange: true,
-  });
-
-  // Atualizar search quando searchTerm mudar (vem do header)
   useEffect(() => {
-    if (searchTerm !== tableFilters.search) {
-      tableFilters.setSearch(searchTerm);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm]);
+    setAvailableSearchFields(DASHBOARD_SEARCH_HEADER_FIELDS);
+    setSearchPlaceholder('Buscar clientes...');
+  }, [setAvailableSearchFields, setSearchPlaceholder]);
 
-  // Buscar clientes baseado no termo do header e ordenação
-  const { data: clientesData, isLoading, refetch } = useClientes({
-    search: tableFilters.debouncedSearch || searchTerm,
-    searchField: searchField,
-    page: tableFilters.page,
-    limit: tableFilters.limit,
-    sortColumn: tableFilters.sortColumn,
-    sortDirection: tableFilters.sortDirection
+  const { data: clientesData, isLoading } = useClientes({
+    search: searchTerm,
+    searchField,
+    page: 1,
+    limit: 500,
+    sortColumn: 'id',
+    sortDirection: 'desc',
   });
 
-  const tableData = React.useMemo(() => clientesData?.data || [], [clientesData?.data]);
+  const clientes = useMemo(() => clientesData?.data ?? [], [clientesData?.data]);
+  const total = Math.max(clientesData?.pagination?.total ?? 0, clientes.length);
 
-  const columns = [
-    {
-      key: 'id',
-      label: 'ID',
-      sortable: true,
-      width: '42px',
-      render: (item: Cliente) => <span>{item.id}</span>
+  const handleOpenCliente = useCallback(
+    (clienteId: number) => {
+      openModal('cliente-modal', { clienteId });
     },
-    {
-      key: 'cnpj',
-      label: 'CNPJ',
-      sortable: true,
-      width: '130px',
-      render: (item: Cliente) => (
-        <span className="text-nowrap">{item.cnpj}</span>
-      )
-    },
-    {
-      key: 'razao_social',
-      label: 'Razão Social',
-      width: '200px',
-      sortable: true,
-      render: (item: Cliente) => (
-        item.razao_social
-      )
-    },
-    {
-      key: 'nome_fantasia',
-      label: 'Nome Fantasia',
-      sortable: true,
-      render: (item: Cliente) => (
-        <span className="text-muted">{item.nome_fantasia || '-'}</span>
-      )
-    },
-    {
-      key: 'email',
-      label: 'Email',
-      sortable: true,
-      render: (item: Cliente) => (
-        <span className="text-nowrap">{item.email}</span>
-      )
-    },
-    {
-      key: 'whatsapp',
-      label: 'WhatsApp',
-      sortable: false,
-      render: (item: Cliente) => (
-        <span className="text-nowrap">{item.whatsapp || '-'}</span>
-      )
-    },
-    {
-      key: 'ativo',
-      label: 'Status',
-      sortable: true,
-      width: '100px',
-      render: (item: Cliente) => (
-        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-          {item.ativo ? 'Ativo' : 'Inativo'}
-        </span>
-      )
-    },
-    {
-      key: 'created_at',
-      label: 'Criado em',
-      sortable: true,
-      render: (item: Cliente & { created_at?: string; created_at_formatada?: string | null }) => {
-        if (item.created_at_formatada) return item.created_at_formatada;
-        return item.created_at ? formatDateTime(item.created_at) : '-';
-      }
-    }
-  ];
-
-  const handleRowClick = useCallback((cliente: Cliente) => {
-    // Ao clicar no cliente, abrimos o modal de edição diretamente
-    // passando o clienteId como parâmetro para o ModalContext
-    openModal('cliente-modal', { clienteId: cliente.id });
-  }, [openModal]);
+    [openModal]
+  );
 
   return (
     <div className="dashboard-search-results animate__animated animate__fadeIn">
-      <div className="card border-0 shadow-sm p-3 mb-3 bg-custom-secondary">
-        <div className="d-flex align-items-center justify-content-between mb-3">
-          <h4 className="mb-0 text-custom-primary">
-            Resultados da busca por "{searchTerm}"
-          </h4>
-          <span className="badge bg-primary">
-            {Math.max(clientesData?.pagination?.total || 0, clientesData?.data?.length || 0)} encontrados
-          </span>
+      {total > 0 && (
+        <div className="dashboard-search-results-header d-flex justify-content-end mb-2">
+          <span className="badge bg-primary">{total} encontrados</span>
         </div>
-        
-        <Table
-          title="Resultados da Busca"
-          config={{
-            columns,
-            data: tableData,
-            loading: isLoading,
-            pagination: (clientesData?.pagination && clientesData.pagination.total > 0) ? {
-              currentPage: clientesData.pagination.current_page,
-              lastPage: clientesData.pagination.last_page,
-              perPage: clientesData.pagination.per_page,
-              total: clientesData.pagination.total,
-              from: clientesData.pagination.from,
-              to: clientesData.pagination.to
-            } : (clientesData?.data && clientesData.data.length > 0) ? {
-              currentPage: 1,
-              lastPage: 1,
-              perPage: clientesData.data.length,
-              total: clientesData.data.length,
-              from: 1,
-              to: clientesData.data.length
-            } : undefined,
-            selectable: false,
-            searchable: true, // Isso permitirá que a tabela se registre no header
-            searchPlaceholder: 'Refinar busca...',
-            searchField: searchField, // Manter o campo selecionado pelo usuário
-            searchFields: [
-              { key: 'id', label: 'ID' },
-              { key: 'cnpj', label: 'CNPJ' },
-              { key: 'razao_social', label: 'Razão Social' },
-              { key: 'nome_fantasia', label: 'Nome Fantasia' },
-              { key: 'email', label: 'Email' },
-              { key: 'status', label: 'Status' }
-            ],
-            sortable: true,
-            sortColumn: tableFilters.sortColumn,
-            sortDirection: tableFilters.sortDirection,
-            emptyMessage: 'Nenhum cliente encontrado para esta busca.',
-          }}
-          onRowClick={handleRowClick}
-          onRefresh={refetch}
-          onSort={(column: string, direction: 'asc' | 'desc') => {
-            tableFilters.setSort(column, direction);
-          }}
-          onSearch={(_term, _field) => {
-             // O header já atualiza o searchValue, o que causará o re-render deste componente
-             // e disparará o useClientes novamente.
-          }}
-        />
-      </div>
+      )}
+
+      {isLoading && clientes.length === 0 ? (
+        <div className="dashboard-search-loading py-5 text-center">
+          <Spinner size="md" variant="primary" aria-label={t('messages.loading')} />
+        </div>
+      ) : clientes.length === 0 ? (
+        <div className="dashboard-search-empty text-muted text-center py-5 rounded border border-secondary border-opacity-25">
+          Nenhum cliente encontrado para esta busca.
+        </div>
+      ) : (
+        <div className="dashboard-search-card-list d-flex flex-column gap-2">
+          {clientes.map((c) => (
+            <DashboardSearchClienteCard
+              key={c.id}
+              cliente={c}
+              onOpen={() => handleOpenCliente(c.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
+  );
+};
+
+interface DashboardSearchClienteCardProps {
+  cliente: Cliente;
+  onOpen: () => void;
+}
+
+const DashboardSearchClienteCard: React.FC<DashboardSearchClienteCardProps> = ({ cliente, onOpen }) => {
+  const telefones = collectTelefones(cliente);
+  const planos = cliente.planos ?? [];
+  const contratos = cliente.contratos ?? [];
+
+  const subRows: { key: string; ok: boolean; text: string }[] = [];
+  planos.forEach((p: Plano) => {
+    subRows.push({
+      key: `plano-${p.id}`,
+      ok: p.status === 'ativo',
+      text: `Plano: ${p.nome_plano ?? '—'} · ID: ${p.id}`,
+    });
+  });
+  contratos.forEach((ct: Contrato) => {
+    subRows.push({
+      key: `contrato-${ct.id}`,
+      ok: ct.status === 'ativo',
+      text: `Contrato #${ct.id} · Status: ${ct.status}`,
+    });
+  });
+
+  return (
+    <article
+      className={`dashboard-search-client-card ${cliente.ativo ? 'is-ativo' : 'is-inativo'}`}
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+    >
+      <div className="dashboard-search-client-card-main d-flex flex-column flex-md-row gap-3 gap-md-4 align-items-stretch">
+        <div className="dashboard-search-client-avatar flex-shrink-0 d-flex align-items-center justify-content-center">
+          <i
+            className={`bi bi-person-fill dashboard-search-client-avatar-icon ${cliente.ativo ? 'text-success' : 'text-danger'}`}
+            aria-hidden
+          />
+        </div>
+
+        <div className="dashboard-search-client-identity flex-grow-1 min-w-0">
+          <div className="dashboard-search-client-id text-muted small">#{cliente.id}</div>
+          <div className="dashboard-search-client-name fw-bold text-custom-primary text-uppercase text-break">
+            {cliente.razao_social}
+          </div>
+          <div className="dashboard-search-client-fantasia text-muted small text-break">
+            {cliente.nome_fantasia?.trim() || '—'}
+          </div>
+        </div>
+
+        <div className="dashboard-search-client-meta flex-grow-1 min-w-0 small">
+          <div className="text-nowrap text-truncate" title={cliente.cnpj}>
+            {cliente.cnpj}
+          </div>
+          <div className="text-nowrap text-truncate" title={cliente.email}>
+            {cliente.email}
+          </div>
+          <div className="text-break text-muted">{formatEndereco(cliente)}</div>
+        </div>
+
+        <div className="dashboard-search-client-phones flex-shrink-0 text-md-end small">
+          {telefones.length === 0 ? (
+            <span className="text-muted">—</span>
+          ) : (
+            telefones.map((tel) => (
+              <div key={tel} className="text-nowrap">
+                {tel}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {subRows.length > 0 && (
+        <div className="dashboard-search-client-subrows mt-2 pt-2 border-top border-secondary border-opacity-25">
+          {subRows.map((row) => (
+            <div key={row.key} className="dashboard-search-client-subrow d-flex align-items-center gap-2 small">
+              <i
+                className={`bi ${row.ok ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'} flex-shrink-0`}
+                aria-hidden
+              />
+              <span className="text-break text-muted">{row.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </article>
   );
 };
 

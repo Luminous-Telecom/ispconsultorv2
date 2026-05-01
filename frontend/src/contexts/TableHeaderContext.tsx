@@ -41,8 +41,9 @@ export const TableHeaderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [onReloadClick, setOnReloadClick] = useState<(() => void) | null>(null);
   const [searchPlaceholder, setSearchPlaceholder] = useState('Buscar...');
   const [searchValue, setSearchValue] = useState('');
-  const [searchField, setSearchField] = useState('id');
+  const [searchField, setSearchField] = useState('todos');
   const [availableSearchFields, setAvailableSearchFields] = useState<SearchField[]>([
+    { id: 'todos', label: 'Todos' },
     { id: 'id', label: 'ID' },
     { id: 'cnpj', label: 'CNPJ' },
     { id: 'razao_social', label: 'Razão Social' },
@@ -118,9 +119,10 @@ export const useTableHeader = () => {
       setSearchPlaceholder: () => {},
       searchValue: '',
       setSearchValue: () => {},
-      searchField: 'id',
+      searchField: 'todos',
       setSearchField: () => {},
       availableSearchFields: [
+        { id: 'todos', label: 'Todos' },
         { id: 'id', label: 'ID' },
         { id: 'cnpj', label: 'CNPJ' },
         { id: 'razao_social', label: 'Razão Social' },
