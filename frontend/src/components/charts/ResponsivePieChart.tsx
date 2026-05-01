@@ -22,8 +22,6 @@ interface PieDatum {
 }
 
 const HOVER_SCALE = 1.12;
-const LABEL_DISTANCE_BASE = 42;
-const LABEL_STAGGER = 18;
 const RADIUS_MIN_RATIO = 0.7;
 const RADIUS_MAX_RATIO = 1;
 const HIDE_ANIMATION_MS = 400;
@@ -31,6 +29,7 @@ const HIDE_ANIMATION_MS = 400;
 const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenItems, onToggleItem, onSliceClick }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 200, height: 150 });
   const [animatingOut, setAnimatingOut] = useState<Set<number>>(new Set());
   const [animatingIn, setAnimatingIn] = useState<Set<number>>(new Set());
@@ -127,15 +126,11 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
 
     const { width, height } = dimensions;
     const padding = 16;
-    const centerX = width * 0.38;
+    const centerX = width / 2;
     const centerY = height / 2;
     const minDim = Math.min(width, height) - padding * 2;
-    const outerRadius = minDim / 2 - 20;
+    const outerRadius = minDim / 2 - 12;
     const innerRadius = outerRadius * 0.45;
-    const labelMargin = 40;
-    const TEXT_MARGIN = 60;
-    const spaceRight = width - centerX - labelMargin - TEXT_MARGIN;
-    const maxLabelDistance = Math.max(outerRadius + 20, Math.min(outerRadius + 80, Math.max(0, spaceRight)));
 
     const pieData: PieDatum[] = visibleData.map(({ item, index }) => {
       const val = getItemValue(item);
@@ -171,14 +166,6 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
 
     const arcsBySize = [...arcs].sort((a, b) => b.data.value - a.data.value);
 
-    const arcsByAngle = [...arcs].sort((a, b) => {
-      const midA = (a.startAngle + a.endAngle) / 2;
-      const midB = (b.startAngle + b.endAngle) / 2;
-      return midA - midB;
-    });
-    const angleOrderMap = new Map<number, number>();
-    arcsByAngle.forEach((a, i) => angleOrderMap.set(a.data.index, i));
-
     const svg = d3Selection.select(svgRef.current);
     svg.selectAll('*').remove();
 
@@ -186,105 +173,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
 
     const g = svg.append('g').attr('transform', `translate(${centerX},${centerY})`);
 
-    const labelsG = svg.append('g').attr('class', 'pie-labels');
-    const linesG = g.append('g').attr('class', 'pie-lines');
     const arcsG = g.append('g').attr('class', 'pie-arcs');
-
-    const toPos = (angle: number, r: number) => ({
-      x: r * Math.sin(angle),
-      y: -r * Math.cos(angle)
-    });
-
-    arcs.forEach((d: d3Shape.PieArcDatum<PieDatum>) => {
-      const midAngle = (d.startAngle + d.endAngle) / 2;
-      const order = angleOrderMap.get(d.data.index) ?? 0;
-      const staggeredDistance = LABEL_DISTANCE_BASE + order * LABEL_STAGGER;
-      const labelRadius = Math.min(
-        Math.max(outerRadius + 12, staggeredDistance),
-        maxLabelDistance
-      );
-      const midR = (innerRadius + getOuterRadius(d)) / 2;
-      const start = toPos(midAngle, midR);
-      const end = toPos(midAngle, labelRadius);
-
-      const anchor = end.x >= 0 ? 'start' : 'end';
-      const dx = end.x >= 0 ? 8 : -8;
-
-      // Clamp label dentro dos limites do SVG para não sair do card
-      const rawLabelX = centerX + end.x;
-      const rawLabelY = centerY + end.y;
-      const labelX = anchor === 'start'
-        ? Math.min(width - TEXT_MARGIN, rawLabelX)
-        : Math.max(TEXT_MARGIN, rawLabelX);
-      const labelY = Math.max(10, Math.min(height - 10, rawLabelY));
-
-      // Linha aponta para a posição real do label (após clamping)
-      const lineEndX = labelX - centerX;
-      const lineEndY = labelY - centerY;
-
-      const isLineAnimatingIn = animatingIn.has(d.data.index);
-      linesG
-        .append('line')
-        .attr('data-index', d.data.index)
-        .attr('x1', start.x)
-        .attr('y1', start.y)
-        .attr('x2', lineEndX)
-        .attr('y2', lineEndY)
-        .attr('stroke', d.data.color)
-        .attr('stroke-width', 1)
-        .attr('stroke-linecap', 'round')
-        .style('opacity', isLineAnimatingIn ? 0 : 1);
-
-      const isLabelAnimatingIn = animatingIn.has(d.data.index);
-      const labelGroup = labelsG
-        .append('g')
-        .attr('transform', `translate(${labelX},${labelY})`)
-        .attr('class', 'pie-radial-label')
-        .attr('data-index', d.data.index)
-        .style('cursor', onSliceClick ? 'pointer' : 'default')
-        .style('pointer-events', 'all')
-        .style('opacity', isLabelAnimatingIn ? 0 : 1);
-
-      if (onSliceClick) {
-        labelGroup.attr('role', 'button').attr('tabindex', 0);
-      }
-
-      labelGroup
-        .append('text')
-        .attr('text-anchor', anchor)
-        .attr('dominant-baseline', 'middle')
-        .attr('dx', dx)
-        .attr('dy', -6)
-        .style('fill', 'var(--text-primary, #212529)')
-        .style('font-size', '0.625rem')
-        .style('font-weight', '400')
-        .text(d.data.label);
-
-      labelGroup
-        .append('text')
-        .attr('text-anchor', anchor)
-        .attr('dominant-baseline', 'middle')
-        .attr('dx', dx)
-        .attr('dy', 6)
-        .style('fill', 'var(--text-primary, #212529)')
-        .style('font-size', '0.625rem')
-        .style('opacity', 0.9)
-        .text(`${formatPieValue(d.data.value)} (${d.data.percent}%)`);
-
-      if (onSliceClick) {
-        labelGroup
-          .on('click', (e: Event) => {
-            e.stopPropagation();
-            onSliceClick(d.data.data, d.data.index);
-          })
-          .on('keydown', (e: KeyboardEvent) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onSliceClick(d.data.data, d.data.index);
-            }
-          });
-      }
-    });
 
     arcsBySize.forEach((d: d3Shape.PieArcDatum<PieDatum>) => {
       const sliceGroup = arcsG
@@ -308,10 +197,30 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       }
 
       sliceGroup
-        .on('mouseenter', function () {
+        .on('mouseenter', function (event: MouseEvent) {
+          const tooltip = tooltipRef.current;
+          if (tooltip) {
+            tooltip.textContent = `${d.data.label}: ${formatPieValue(d.data.value)}`;
+            tooltip.style.left = `${event.clientX + 10}px`;
+            tooltip.style.top = `${event.clientY + 10}px`;
+            tooltip.style.opacity = '1';
+            tooltip.style.visibility = 'visible';
+          }
           d3Selection.select(this).transition().duration(150).attr('transform', `scale(${HOVER_SCALE})`);
         })
+        .on('mousemove', function (event: MouseEvent) {
+          const tooltip = tooltipRef.current;
+          if (tooltip && event.clientX != null) {
+            tooltip.style.left = `${event.clientX + 10}px`;
+            tooltip.style.top = `${event.clientY + 10}px`;
+          }
+        })
         .on('mouseleave', function () {
+          const tooltip = tooltipRef.current;
+          if (tooltip) {
+            tooltip.style.opacity = '0';
+            tooltip.style.visibility = 'hidden';
+          }
           d3Selection.select(this).transition().duration(150).attr('transform', 'scale(1)');
         });
 
@@ -338,43 +247,12 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
               return next;
             });
           });
-        linesG
-          .select<SVGLineElement>(`line[data-index="${idx}"]`)
-          .transition()
-          .duration(HIDE_ANIMATION_MS)
-          .ease(d3Ease.easeCubicInOut)
-          .style('opacity', 1);
-        labelsG
-          .select<SVGGElement>(`g.pie-radial-label[data-index="${idx}"]`)
-          .transition()
-          .duration(HIDE_ANIMATION_MS)
-          .ease(d3Ease.easeCubicInOut)
-          .style('opacity', 1);
       }
     });
 
     animatingOut.forEach((idx) => {
       const arcDatum = arcs.find((a) => a.data.index === idx);
       if (!arcDatum) return;
-
-      g.select('.pie-lines')
-        .selectAll('line')
-        .filter(function () {
-          return parseInt(d3Selection.select(this).attr('data-index') ?? '', 10) === idx;
-        })
-        .transition()
-        .duration(HIDE_ANIMATION_MS)
-        .style('opacity', 0);
-
-      svg
-        .select('.pie-labels')
-        .selectAll('.pie-radial-label')
-        .filter(function () {
-          return parseInt(d3Selection.select(this).attr('data-index') ?? '', 10) === idx;
-        })
-        .transition()
-        .duration(HIDE_ANIMATION_MS)
-        .style('opacity', 0);
 
       arcsG
         .selectAll('.pie-slice')
@@ -486,6 +364,25 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
             width={dimensions.width}
             height={dimensions.height}
             style={{ display: 'block', overflow: 'visible', maxWidth: '100%', maxHeight: '100%' }}
+          />
+          <div
+            ref={tooltipRef}
+            style={{
+              position: 'fixed',
+              padding: '6px 10px',
+              background: 'var(--bg-tertiary, rgba(30, 32, 38, 0.95))',
+              color: 'var(--text-primary, #fff)',
+              border: '1px solid var(--border-color, rgba(255,255,255,0.12))',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: 500,
+              pointerEvents: 'none',
+              zIndex: 9999,
+              opacity: 0,
+              visibility: 'hidden',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.25)'
+            }}
           />
         </div>
       </div>
