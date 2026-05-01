@@ -274,39 +274,55 @@ const SaasLayout: React.FC = () => {
                 )}
               </div>
 
-              <div className="d-flex align-items-center justify-content-end">
-                <div className="dropdown text-end" ref={userMenuRef}>
+              <div className="layout-user-area d-flex align-items-center justify-content-end">
+                <div className="layout-user-menu text-end" ref={userMenuRef}>
                   <button
-                    className="d-block link-theme-toggle text-decoration-none dropdown-toggle bg-transparent border-0 p-0"
+                    type="button"
+                    className="layout-user-trigger"
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     aria-expanded={showUserMenu}
+                    aria-haspopup="true"
+                    title={currentUser?.nome || 'SaaS'}
                   >
-                    <div className="rounded-circle bg-warning d-flex align-items-center justify-content-center text-dark layout-user-avatar">
-                      <i className="bi bi-shield-lock"></i>
-                    </div>
+                    <span className="layout-user-trigger__avatar" aria-hidden>
+                      <i className="bi bi-person" />
+                    </span>
                   </button>
                   {showUserMenu && (
-                    <ul className="table-dropdown-menu table-dropdown-menu-right shadow position-absolute mt-2 layout-table-dropdown">
-                      <li className="px-3 py-2 border-bottom border-custom mb-1">
-                        <div className="fw-bold text-truncate text-custom-primary layout-user-name">
+                    <ul className="layout-user-dropdown layout-table-dropdown">
+                      <li className="layout-user-dropdown__header">
+                        <div className="layout-user-dropdown__name text-truncate">
                           {currentUser?.nome || 'Super Admin'}
                         </div>
-                        <small className="text-custom-secondary text-truncate d-block" style={{ maxWidth: '150px' }}>
-                          {currentUser?.email}
-                        </small>
-                        <small className="text-warning">{currentUser?.nivel_acesso?.toUpperCase()}</small>
+                        <small className="layout-user-dropdown__email text-truncate">{currentUser?.email}</small>
+                        {currentUser?.nivel_acesso && (
+                          <small className="d-block mt-1 text-warning text-uppercase" style={{ fontSize: '0.65rem' }}>
+                            {currentUser.nivel_acesso}
+                          </small>
+                        )}
                       </li>
-                      <li
-                        className="table-dropdown-item"
-                        onClick={(e) => { e.stopPropagation(); toggleTheme(); }}
-                      >
-                        <i className={`bi bi-${theme === 'light' ? 'moon' : 'sun'}`}></i>
-                        <span>{theme === 'light' ? 'Modo escuro' : 'Modo claro'}</span>
+                      <li>
+                        <button
+                          type="button"
+                          className="layout-user-dropdown__row"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleTheme();
+                          }}
+                        >
+                          <i className="bi bi-circle-half" aria-hidden />
+                          <span>{theme === 'light' ? t('layout.darkMode') : t('layout.lightMode')}</span>
+                        </button>
                       </li>
-                      <li><hr className="dropdown-divider" /></li>
-                      <li className="table-dropdown-item text-danger" onClick={handleLogout}>
-                        <i className="bi bi-box-arrow-right"></i>
-                        <span>Sair</span>
+                      <li>
+                        <button
+                          type="button"
+                          className="layout-user-dropdown__row layout-user-dropdown__row--danger layout-user-dropdown__row--last"
+                          onClick={handleLogout}
+                        >
+                          <i className="bi bi-box-arrow-right" aria-hidden />
+                          <span>{t('nav.logout')}</span>
+                        </button>
                       </li>
                     </ul>
                   )}

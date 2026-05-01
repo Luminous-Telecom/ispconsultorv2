@@ -1391,10 +1391,14 @@ button,
   z-index: 10001 !important;
   background: var(--bg-dropdown) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: var(--border-radius) !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35) !important;
   overflow: hidden !important;
-  padding: 0 !important;
+  padding: 0.25rem 0 !important;
+}
+
+.layout-language-dropdown-menu .layout-user-dropdown__subrow:last-child {
+  border-bottom: none;
 }
 
 /* mobile fix: P7 — bottom sheet evita problema de posicionamento com teclado virtual */

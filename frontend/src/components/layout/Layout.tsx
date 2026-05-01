@@ -34,7 +34,7 @@ const Layout: React.FC = () => {
   const [languageDropdownPosition, setLanguageDropdownPosition] = useState({ top: 0, left: 0 });
   const userMenuRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
-  const languageTriggerRef = useRef<HTMLDivElement>(null);
+  const languageTriggerRef = useRef<HTMLButtonElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   
@@ -738,79 +738,89 @@ const Layout: React.FC = () => {
               </div>
 
               {/* Direita: User Profile */}
-              <div className="d-flex align-items-center justify-content-end">
-                {/* User Dropdown */}
-                <div className="dropdown text-end" ref={userMenuRef}>
+              <div className="layout-user-area d-flex justify-content-end">
+                <div className="layout-user-menu text-end" ref={userMenuRef}>
                   <button
-                    className="d-block link-theme-toggle text-decoration-none dropdown-toggle bg-transparent border-0 p-0"
+                    type="button"
+                    className="layout-user-trigger"
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     aria-expanded={showUserMenu}
+                    aria-haspopup="true"
+                    title={currentUser?.nome || t('layout.user')}
                   >
-                    <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white layout-user-avatar">
-                      <i className="bi bi-person"></i>
-                    </div>
+                    <span className="layout-user-trigger__avatar" aria-hidden>
+                      <i className="bi bi-person" />
+                    </span>
                   </button>
                   {showUserMenu && (
-                    <ul className="table-dropdown-menu table-dropdown-menu-right shadow position-absolute mt-2 layout-table-dropdown">
-                      <li className="px-3 py-2 border-bottom border-custom mb-1">
-                        <div className="fw-bold text-truncate text-custom-primary layout-user-name">{currentUser?.nome || t('layout.user')}</div>
-                        <small className="text-custom-secondary text-truncate d-block" style={{ maxWidth: '150px' }}>{currentUser?.email}</small>
-                      </li>
-                      <li
-                        className="table-dropdown-item"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleTheme();
-                        }}
-                      >
-                        <i className={`bi bi-${theme === 'light' ? 'moon' : 'sun'}`}></i>
-                        <span>{theme === 'light' ? t('layout.darkMode') : t('layout.lightMode')}</span>
+                    <ul className="layout-user-dropdown layout-table-dropdown">
+                      <li className="layout-user-dropdown__header">
+                        <div className="layout-user-dropdown__name text-truncate">{currentUser?.nome || t('layout.user')}</div>
+                        <small className="layout-user-dropdown__email text-truncate">{currentUser?.email}</small>
                       </li>
                       <li>
-                        <div
+                        <button
+                          type="button"
+                          className="layout-user-dropdown__row"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleTheme();
+                          }}
+                        >
+                          <i className="bi bi-circle-half" aria-hidden />
+                          <span>{theme === 'light' ? t('layout.darkMode') : t('layout.lightMode')}</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
                           ref={languageTriggerRef}
-                          className="table-dropdown-item"
+                          className="layout-user-dropdown__row"
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowLanguageDropdown(!showLanguageDropdown);
                           }}
                         >
-                          <i className="bi bi-translate"></i>
+                          <i className="bi bi-translate" aria-hidden />
                           <span>{t('layout.language')}</span>
-                          <i className={`bi bi-chevron-${showLanguageDropdown ? 'up' : 'down'} ms-auto`} style={{ fontSize: '0.75rem', opacity: 0.6 }}></i>
-                        </div>
-                        {/* Mobile: idiomas inline dentro do menu */}
+                          <i
+                            className={`bi layout-user-dropdown__chevron ${showLanguageDropdown ? 'bi-chevron-down' : 'bi-chevron-right'}`}
+                            aria-hidden
+                          />
+                        </button>
                         {isMobile && showLanguageDropdown && (
                           <div ref={languageDropdownRef} data-language-dropdown>
                             {availableLanguages.map((lang) => (
                               <button
                                 key={lang.code}
-                                className={`table-dropdown-item d-flex align-items-center w-100 ps-4 ${language === lang.code ? 'active' : ''}`}
+                                type="button"
+                                className={`layout-user-dropdown__subrow ${language === lang.code ? 'active' : ''}`}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   if (language !== lang.code) setLanguage(lang.code);
                                   setShowLanguageDropdown(false);
                                 }}
-                                style={{ border: 'none', background: 'none' }}
                               >
                                 <span className="me-2">{lang.flag}</span>
                                 <span>{lang.name}</span>
                                 {language === lang.code && (
-                                  <i className="bi bi-check-lg ms-auto text-primary"></i>
+                                  <i className="bi bi-check-lg ms-auto text-primary" aria-hidden />
                                 )}
                               </button>
                             ))}
                           </div>
                         )}
                       </li>
-                      <li><hr className="dropdown-divider" /></li>
-                      <li
-                        className="table-dropdown-item text-danger"
-                        onClick={handleLogout}
-                      >
-                        <i className="bi bi-box-arrow-right"></i>
-                        <span>{t('nav.logout')}</span>
+                      <li>
+                        <button
+                          type="button"
+                          className="layout-user-dropdown__row layout-user-dropdown__row--danger layout-user-dropdown__row--last"
+                          onClick={handleLogout}
+                        >
+                          <i className="bi bi-box-arrow-right" aria-hidden />
+                          <span>{t('nav.logout')}</span>
+                        </button>
                       </li>
                     </ul>
                   )}
@@ -830,9 +840,8 @@ const Layout: React.FC = () => {
                       {availableLanguages.map((lang) => (
                         <div key={lang.code}>
                           <button
-                            className={`table-dropdown-item d-flex align-items-center w-100 ${
-                              language === lang.code ? 'active' : ''
-                            }`}
+                            type="button"
+                            className={`layout-user-dropdown__subrow ${language === lang.code ? 'active' : ''}`}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -841,7 +850,6 @@ const Layout: React.FC = () => {
                               }
                               setShowLanguageDropdown(false);
                             }}
-                            style={{ border: 'none', background: 'none' }}
                           >
                             <span className="me-2">{lang.flag}</span>
                             <span>{lang.name}</span>
