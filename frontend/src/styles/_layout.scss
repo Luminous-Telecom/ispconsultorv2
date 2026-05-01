@@ -551,6 +551,13 @@
   outline: none !important;
 }
 
+/* O input usa flex:1; o form precisa ser flex para o campo ocupar toda a largura (clique no meio foca). */
+.navbar-search-container > form[role="search"] {
+  display: flex;
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
 /* Efeitos de hover e focus removidos para manter consistência */
 
 /* Seletor de campo elegante */
