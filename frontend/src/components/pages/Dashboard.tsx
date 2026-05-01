@@ -147,6 +147,7 @@ const Dashboard: React.FC = () => {
                 hiddenItems={hiddenClientes}
                 onToggleItem={toggleCliente}
                 onSliceClick={handleClienteSliceClick}
+                centerHighlightFilterValue
               />
             </div>
           </div>
@@ -191,6 +192,7 @@ const Dashboard: React.FC = () => {
                 hiddenItems={hiddenContratos}
                 onToggleItem={toggleContratos}
                 onSliceClick={handleContratoSliceClick}
+                centerHighlightFilterValue="ativo"
               />
             </div>
           </div>
@@ -203,6 +205,7 @@ const Dashboard: React.FC = () => {
                 hiddenItems={hiddenPagamentos}
                 onToggleItem={togglePagamento}
                 onSliceClick={handleStatusPagamentoSliceClick}
+                centerHighlightFilterValue="pago,pago_atraso,parcial"
               />
             </div>
           </div>

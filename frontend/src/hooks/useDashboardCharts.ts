@@ -163,7 +163,7 @@ export const useDashboardCharts = (
   ]);
 
   const ticketMedioChartData = useMemo(
-    () => [{ label: 'Ticket Médio', value: stats.ticketMedio, color: '#8b5cf6' }],
+    () => [{ label: 'Ticket Médio', value: stats.ticketMedio }],
     [stats.ticketMedio]
   );
 

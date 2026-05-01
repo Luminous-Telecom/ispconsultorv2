@@ -26,7 +26,8 @@ const RADIUS_MIN_RATIO = 0.7;
 const RADIUS_MAX_RATIO = 1;
 const HIDE_ANIMATION_MS = 400;
 
-const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenItems, onToggleItem, onSliceClick }) => {
+const ResponsivePieChart: React.FC<PieChartProps> = memo(
+  ({ data, title, hiddenItems, onToggleItem, onSliceClick, centerHighlightFilterValue }) => {
   const titleId = useId();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -117,6 +118,21 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
         : [],
     [data]
   );
+
+  /** Texto e cor do % central (cor = mesma da fatia / legenda do destaque). */
+  const centerLabel = useMemo(() => {
+    if (centerHighlightFilterValue === undefined || !data?.length) return null;
+    const grandTotal = data.reduce((sum, item) => sum + getItemValue(item), 0);
+    if (grandTotal <= 0) return null;
+    const hit = data.find((item) => item.filterValue === centerHighlightFilterValue);
+    if (!hit) return null;
+    const v = getItemValue(hit);
+    const pct = Math.round((v / grandTotal) * 100);
+    return {
+      text: `${pct}%`,
+      color: hit.color || '#64748b',
+    };
+  }, [data, centerHighlightFilterValue]);
 
   useEffect(() => {
     if (!svgRef.current) return;
@@ -251,6 +267,23 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
       }
     });
 
+    if (centerLabel) {
+      const fontPx = Math.round(Math.max(10, Math.min(19, outerRadius * 0.3)));
+      g.append('g')
+        .attr('class', 'pie-center-label')
+        .append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'central')
+        .attr('y', 0)
+        .attr('fill', centerLabel.color)
+        .attr('font-weight', '500')
+        .attr('font-size', `${fontPx}px`)
+        .attr('font-family', 'system-ui, -apple-system, sans-serif')
+        .attr('letter-spacing', '0.02em')
+        .style('pointer-events', 'none')
+        .text(centerLabel.text);
+    }
+
     animatingOut.forEach((idx) => {
       const arcDatum = arcs.find((a) => a.data.index === idx);
       if (!arcDatum) return;
@@ -277,7 +310,19 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(({ data, title, hiddenI
           setAnimatingOut((prev) => new Set(Array.from(prev).filter((i) => i !== idx)));
         });
     });
-  }, [data, visibleData, total, hiddenItems, animatingOut, animatingIn, title, dimensions, onToggleItem, onSliceClick]);
+  }, [
+    data,
+    visibleData,
+    total,
+    hiddenItems,
+    animatingOut,
+    animatingIn,
+    title,
+    dimensions,
+    onToggleItem,
+    onSliceClick,
+    centerLabel,
+  ]);
 
   const hasNoData = !data || data.length === 0 || legendData.length === 0 ||
     legendData.every((d) => (d.value ?? 0) === 0);

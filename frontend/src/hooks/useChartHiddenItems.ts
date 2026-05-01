@@ -15,14 +15,11 @@ export const useChartHiddenItems = () => {
 
   // Funções de toggle para cada gráfico (memoizadas)
   const toggleCliente = useCallback((index: number) => {
-    setHiddenClientes(prev => {
-      const newHidden = new Set(prev);
-      if (newHidden.has(index)) {
-        newHidden.delete(index);
-      } else {
-        newHidden.add(index);
-      }
-      return newHidden;
+    setHiddenClientes((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
     });
   }, []);
 

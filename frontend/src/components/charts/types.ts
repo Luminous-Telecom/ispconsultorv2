@@ -13,6 +13,7 @@ export interface ChartDataItem {
   color?: string;
   mes?: string;
   name?: string;
+  filterValue?: string | boolean;
   // Propriedades adicionais permitidas para compatibilidade com diferentes formatos de dados
   [key: string]: string | number | boolean | undefined;
 }
@@ -32,5 +33,7 @@ export interface PieChartProps {
   hiddenItems: Set<number>;
   onToggleItem: (index: number) => void;
   onSliceClick?: (item: ChartDataItem, index: number) => void;
+  /** Ex.: `true` (clientes ativos), `'ativo'` (contratos), `'pago,...'` (pagamentos) — % no buraco do donut */
+  centerHighlightFilterValue?: string | boolean;
 }
 

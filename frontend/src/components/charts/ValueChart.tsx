@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { ChartDataItem, ChartFormat } from './types';
+import { ChartEmptyState } from './ChartEmptyState';
 
 interface ValueChartProps {
   data: ChartDataItem[];
@@ -9,7 +10,6 @@ interface ValueChartProps {
 
 export const ValueChart: React.FC<ValueChartProps> = ({ data, title, format = 'number' }) => {
   const value = useMemo(() => data[0]?.value ?? data[0]?.valor ?? 0, [data]);
-  const color = data[0]?.color || 'var(--btn-primary-color)';
 
   const formatValue = useCallback((val: number) => {
     switch (format) {
@@ -30,21 +30,13 @@ export const ValueChart: React.FC<ValueChartProps> = ({ data, title, format = 'n
   }, [format]);
 
   if (!data || data.length === 0) {
-    return (
-      <div className="kpi-card">
-        <p className="kpi-card__label">{title}</p>
-        <div className="chart-empty-state chart-empty-state--compact">
-          <p className="text-muted">Sem dados para exibir</p>
-        </div>
-      </div>
-    );
+    return <ChartEmptyState title={title} />;
   }
 
   return (
-    <div className="kpi-card">
-      <p className="kpi-card__label">{title}</p>
-      <div className="kpi-card__accent" style={{ background: color }} />
-      <p className="kpi-card__value" style={{ color }}>{formatValue(value)}</p>
+    <div className="chart-container chart-container--metric">
+      <h6 className="chart-title">{title}</h6>
+      <p className="chart-value-metric">{formatValue(value)}</p>
     </div>
   );
 };
