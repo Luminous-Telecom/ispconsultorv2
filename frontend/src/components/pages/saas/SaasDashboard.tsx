@@ -159,7 +159,7 @@ const SaasDashboard: React.FC = () => {
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.recebidosPeriodoChartData}
-                title={`${t('dashboard.received')}: ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
+                title={`${t('dashboard.received')}: ${formatCurrency(charts.totalRecebidosPeriodo || 0)} (${t('dashboard.chartCurrentMonth')})`}
                 format="currency"
                 onPointClick={handleRecebidosPeriodoPointClick}
               />
@@ -170,7 +170,7 @@ const SaasDashboard: React.FC = () => {
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.receberPeriodoChartData}
-                title={`${t('dashboard.toReceive')}: ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
+                title={`${t('dashboard.toReceive')}: ${formatCurrency(charts.totalReceberPeriodo || 0)} (${t('dashboard.chartCurrentMonth')})`}
                 format="currency"
                 onPointClick={handleReceberPeriodoPointClick}
               />

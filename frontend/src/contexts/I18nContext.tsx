@@ -175,6 +175,7 @@ export interface TranslationKeys {
   'dashboard.averageTicket': string;
   'dashboard.monthlyRevenueTitle': string;
   'dashboard.months12': string;
+  'dashboard.chartCurrentMonth': string;
   'dashboard.newClients': string;
   'dashboard.receivablesVsPayables': string;
   'dashboard.clientsByPlan': string;
@@ -1666,6 +1667,7 @@ const translations: Translations = {
     'dashboard.contractStatus': 'Status dos Contratos',
     'dashboard.averageTicket': 'Ticket Médio',
     'dashboard.months12': '12 meses',
+    'dashboard.chartCurrentMonth': 'mês atual',
     'dashboard.newClients': 'Novos Clientes',
     'dashboard.receivablesVsPayables': 'Contas a Receber vs Contas a Pagar',
     'dashboard.clientsByPlan': 'Clientes por Plano',
@@ -3155,6 +3157,7 @@ const translations: Translations = {
     'dashboard.contractStatus': 'Contract Status',
     'dashboard.averageTicket': 'Average Ticket',
     'dashboard.months12': '12 months',
+    'dashboard.chartCurrentMonth': 'current month',
     'dashboard.newClients': 'New Clients',
     'dashboard.receivablesVsPayables': 'Receivables vs Payables',
     'dashboard.clientsByPlan': 'Clients by Plan',
@@ -4644,6 +4647,7 @@ const translations: Translations = {
     'dashboard.contractStatus': 'Estado de los Contratos',
     'dashboard.averageTicket': 'Ticket Promedio',
     'dashboard.months12': '12 meses',
+    'dashboard.chartCurrentMonth': 'mes actual',
     'dashboard.newClients': 'Nuevos Clientes',
     'dashboard.receivablesVsPayables': 'Cuentas por Cobrar vs Cuentas por Pagar',
     'dashboard.clientsByPlan': 'Clientes por Plan',
