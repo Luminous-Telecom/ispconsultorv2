@@ -81,7 +81,7 @@ export class DashboardController {
         DashboardService.getReceitaUltimos12Meses(empresaId),
         DashboardService.getContasPagarUltimos12Meses(empresaId),
         DashboardService.getClientesPorTipoPlano(empresaId),
-        DashboardService.getBackupStatusGrafico(parsedStart, parsedEnd, empresaId),
+        DashboardService.getBackupStatusGrafico(...DashboardController.last7DaysRange(), empresaId),
       ]);
 
       const contratosAtrasoPeriodo = DashboardService.computeContratosAtrasoPeriodo(
@@ -491,6 +491,16 @@ export class DashboardController {
         query: req.query
       });
     }
+  }
+
+  /** Retorna [início, fim] dos últimos 7 dias corridos (hoje − 6 … hoje), horário local. */
+  private static last7DaysRange(): [Date, Date] {
+    const fim = new Date();
+    fim.setHours(23, 59, 59, 999);
+    const inicio = new Date(fim);
+    inicio.setDate(inicio.getDate() - 6);
+    inicio.setHours(0, 0, 0, 0);
+    return [inicio, fim];
   }
 
   private static parseStartDate(start?: string) {

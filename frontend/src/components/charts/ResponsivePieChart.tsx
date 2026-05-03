@@ -12,7 +12,16 @@ const formatPieValue = (value: number): string | number => value.toLocaleString(
 const getItemValue = (item: ChartDataItem): number =>
   Number(item.value ?? item.valor ?? 0) || 0;
 
-function MetricPieHeaderIcon({ variant }: { variant: 'contracts' | 'payments' | 'clients' }) {
+function MetricPieHeaderIcon({ variant }: { variant: 'contracts' | 'payments' | 'clients' | 'plans' }) {
+  if (variant === 'plans') {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <rect x="3" y="4" width="18" height="5" rx="1.5" stroke="#534AB7" strokeWidth="2" />
+        <rect x="5" y="10" width="14" height="5" rx="1.5" stroke="#534AB7" strokeWidth="2" />
+        <rect x="7" y="16" width="10" height="4" rx="1.5" stroke="#534AB7" strokeWidth="2" />
+      </svg>
+    );
+  }
   if (variant === 'clients') {
     return (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -422,7 +431,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
     .filter(Boolean)
     .join(' ');
   const bodyClass = ['pie-chart-body', chartLeading ? 'pie-chart-body--chart-first' : ''].filter(Boolean).join(' ');
-  const useMetricChromeHeader = Boolean(metricLayout && metricHeaderBadge);
+  const useMetricChromeHeader = Boolean(metricLayout);
 
   return (
     <div className={containerClass} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -434,7 +443,9 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
           <span id={titleId} className="pie-metric-header__title">
             {title}
           </span>
-          <span className="pie-metric-header__badge">{metricHeaderBadge}</span>
+          {metricHeaderBadge ? (
+            <span className="pie-metric-header__badge">{metricHeaderBadge}</span>
+          ) : null}
         </div>
       ) : (
         <h6 id={titleId} className="chart-title-pie" style={{ marginBottom: '2px' }}>

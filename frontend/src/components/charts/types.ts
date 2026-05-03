@@ -47,9 +47,9 @@ export interface PieChartProps {
   metricLayout?: boolean;
   footerLeft?: PieMetricFooter;
   footerRight?: PieMetricFooter;
-  /** Badge à direita (ex.: período do filtro), no padrão Clientes / Ticket médio */
+  /** Badge opcional à direita do título (ex.: alerta ou período) */
   metricHeaderBadge?: string;
-  /** Ícone do quadrado à esquerda do título (só com `metricHeaderBadge`) */
-  metricHeaderIcon?: 'contracts' | 'payments' | 'clients';
+  /** Ícone à esquerda do título (com `metricLayout`) */
+  metricHeaderIcon?: 'contracts' | 'payments' | 'clients' | 'plans';
 }
 

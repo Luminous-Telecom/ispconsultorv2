@@ -132,19 +132,34 @@ const Dashboard: React.FC = () => {
     [t]
   );
 
-  /**
-   * Gráfico no dashboard: até 7 barras, só em dias com evento de backup no período.
-   * Não usar slice(-7) no array completo: os eventos podem estar só no início do mês e os
-   * últimos 7 dias do calendário ficariam zerados → "Nenhum evento de backup no período".
-   */
-  const backupStatusGraficoUltimos7Dias = useMemo(() => {
-    const days = dashboardData?.backupStatusGrafico ?? [];
-    const comEvento = days.filter(
-      (d) =>
-        d.falha + d.sucesso + d.somente_local + d.falha_envio + d.verificado > 0
-    );
-    return comEvento.slice(-7);
-  }, [dashboardData?.backupStatusGrafico]);
+  const backupStatusGraficoUltimos7Dias = useMemo(
+    () => dashboardData?.backupStatusGrafico ?? [],
+    [dashboardData?.backupStatusGrafico]
+  );
+
+  const backupStatusPeriodoTemEventos = useMemo(
+    () => backupStatusGraficoUltimos7Dias.some(
+      (d) => d.falha + d.sucesso + d.somente_local + d.falha_envio + d.verificado > 0
+    ),
+    [backupStatusGraficoUltimos7Dias]
+  );
+
+  const backupStatusDashboardSummary = useMemo(() => {
+    let sucesso = 0;
+    let falha = 0;
+    for (const d of backupStatusGraficoUltimos7Dias) {
+      sucesso += d.sucesso;
+      falha += d.falha;
+    }
+    const total = sucesso + falha;
+    const failureBadgeText =
+      falha > 0
+        ? falha === 1
+          ? t('dashboard.backupStatusFailureBadgeOne', { count: falha })
+          : t('dashboard.backupStatusFailureBadgeMany', { count: falha })
+        : null;
+    return { total, sucesso, falha, failureBadgeText };
+  }, [backupStatusGraficoUltimos7Dias, t]);
 
   const ticketMedioCardData: TicketMedioData = useMemo(() => {
     const receitaSeries = charts.receitaMensalChartData;
@@ -186,12 +201,6 @@ const Dashboard: React.FC = () => {
       seriesMensal: last6,
     };
   }, [stats, charts.receitaMensalChartData, startDate, dashboardData?.titulosTodos]);
-
-  const dashboardHeaderPeriodBadge = useMemo(() => {
-    const MES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    const d = startDate ? new Date(startDate + 'T00:00:00') : new Date();
-    return `${MES_ABREV[d.getMonth()]} ${d.getFullYear()}`;
-  }, [startDate]);
 
   const clientesMetricFooter = useMemo(() => {
     const ativos = stats.clientesAtivos;
@@ -238,6 +247,39 @@ const Dashboard: React.FC = () => {
       },
     };
   }, [charts.statusPagamentoData, t]);
+
+  const distribuicaoPlanoMetric = useMemo(() => {
+    const rows = charts.distribuicaoPlanos;
+    if (!rows.length) {
+      return {
+        centerFv: undefined as string | undefined,
+        footerLeft: { label: t('dashboard.clientsTotalMetric'), value: 0 },
+        footerRight: {
+          label: t('dashboard.planDistributionTopShare'),
+          value: '0%',
+          accentColor: '#3b82f6',
+        },
+      };
+    }
+    const sum = rows.reduce((s, i) => s + (Number(i.value ?? i.valor) || 0), 0);
+    const top = rows.reduce((best, cur) => {
+      const cv = Number(cur.value ?? cur.valor) || 0;
+      const bv = Number(best.value ?? best.valor) || 0;
+      return cv > bv ? cur : best;
+    }, rows[0]);
+    const topV = Number(top.value ?? top.valor) || 0;
+    const pct = sum > 0 ? Math.round((topV / sum) * 100) : 0;
+    const fv = top.filterValue != null ? String(top.filterValue) : '';
+    return {
+      centerFv: fv || undefined,
+      footerLeft: { label: t('dashboard.clientsTotalMetric'), value: sum },
+      footerRight: {
+        label: t('dashboard.planDistributionTopShare'),
+        value: `${pct}%`,
+        accentColor: typeof top.color === 'string' && top.color ? top.color : '#3b82f6',
+      },
+    };
+  }, [charts.distribuicaoPlanos, t]);
 
   const handleBackupStatusSegmentClick = useCallback(
     async (dataISO: string, status: BackupStatusKey) => {
@@ -294,7 +336,6 @@ const Dashboard: React.FC = () => {
                 centerHighlightFilterValue
                 chartLeading
                 metricLayout
-                metricHeaderBadge={dashboardHeaderPeriodBadge}
                 metricHeaderIcon="clients"
                 footerLeft={clientesMetricFooter.left}
                 footerRight={clientesMetricFooter.right}
@@ -307,19 +348,25 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
-            <div className="chart-card chart-card-pie">
+            <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.distribuicaoPlanos}
                 title={t('dashboard.planDistribution')}
                 hiddenItems={hiddenDistribuicao}
                 onToggleItem={toggleDistribuicao}
                 onSliceClick={handleDistribuicaoPlanoSliceClick}
+                centerHighlightFilterValue={distribuicaoPlanoMetric.centerFv}
+                chartLeading
+                metricLayout
+                metricHeaderIcon="plans"
+                footerLeft={distribuicaoPlanoMetric.footerLeft}
+                footerRight={distribuicaoPlanoMetric.footerRight}
               />
             </div>
           </div>
 
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
-            <div className="chart-card chart-card-pie">
+            <div className="chart-card chart-card-pie chart-card-pie--metric">
               <BackupStatusStackedBarChart
                 days={backupStatusGraficoUltimos7Dias}
                 title={t('dashboard.backupStatusTitle')}
@@ -328,6 +375,12 @@ const Dashboard: React.FC = () => {
                 onSegmentClick={handleBackupStatusSegmentClick}
                 hiddenKeys={hiddenBackupStatus}
                 onLegendToggle={(key) => toggleBackupStatus(key)}
+                failureBadgeText={backupStatusDashboardSummary.failureBadgeText}
+                totalBackups={backupStatusDashboardSummary.total}
+                totalSucesso={backupStatusDashboardSummary.sucesso}
+                totalFalha={backupStatusDashboardSummary.falha}
+                totalBackupsLabel={t('dashboard.backupStatusTotalLabel')}
+                periodHasBackupEvents={backupStatusPeriodoTemEventos}
               />
             </div>
           </div>
@@ -343,7 +396,6 @@ const Dashboard: React.FC = () => {
                 centerHighlightFilterValue="ativo"
                 chartLeading
                 metricLayout
-                metricHeaderBadge={dashboardHeaderPeriodBadge}
                 metricHeaderIcon="contracts"
                 footerLeft={contratosMetricFooter.left}
                 footerRight={contratosMetricFooter.right}
@@ -362,7 +414,6 @@ const Dashboard: React.FC = () => {
                 centerHighlightFilterValue="pendente"
                 chartLeading
                 metricLayout
-                metricHeaderBadge={dashboardHeaderPeriodBadge}
                 metricHeaderIcon="payments"
                 footerLeft={pagamentosMetricFooter.left}
                 footerRight={pagamentosMetricFooter.right}

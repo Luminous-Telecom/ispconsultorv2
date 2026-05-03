@@ -65,12 +65,6 @@ const SaasDashboard: React.FC = () => {
   const stats = useDashboardStats(dashboardData);
   const charts = useDashboardCharts(dashboardData, stats, t);
 
-  const dashboardHeaderPeriodBadge = useMemo(() => {
-    const MES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    const d = startDate ? new Date(startDate + 'T00:00:00') : new Date();
-    return `${MES_ABREV[d.getMonth()]} ${d.getFullYear()}`;
-  }, [startDate]);
-
   const clientesMetricFooter = useMemo(() => {
     const ativos = stats.clientesAtivos;
     const inativos = stats.clientesInativos;
@@ -152,7 +146,6 @@ const SaasDashboard: React.FC = () => {
                 centerHighlightFilterValue
                 chartLeading
                 metricLayout
-                metricHeaderBadge={dashboardHeaderPeriodBadge}
                 metricHeaderIcon="clients"
                 footerLeft={clientesMetricFooter.left}
                 footerRight={clientesMetricFooter.right}
@@ -171,7 +164,6 @@ const SaasDashboard: React.FC = () => {
                 centerHighlightFilterValue="pendente"
                 chartLeading
                 metricLayout
-                metricHeaderBadge={dashboardHeaderPeriodBadge}
                 metricHeaderIcon="payments"
                 footerLeft={pagamentosMetricFooter.left}
                 footerRight={pagamentosMetricFooter.right}
@@ -190,7 +182,6 @@ const SaasDashboard: React.FC = () => {
                 centerHighlightFilterValue="ativo"
                 chartLeading
                 metricLayout
-                metricHeaderBadge={dashboardHeaderPeriodBadge}
                 metricHeaderIcon="contracts"
                 footerLeft={contratosMetricFooter.left}
                 footerRight={contratosMetricFooter.right}

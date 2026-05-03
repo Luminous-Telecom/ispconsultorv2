@@ -171,6 +171,7 @@ export interface TranslationKeys {
   'dashboard.planStatus': string;
   'dashboard.paymentStatus': string;
   'dashboard.planDistribution': string;
+  'dashboard.planDistributionTopShare': string;
   'dashboard.paymentRate': string;
   'dashboard.contractStatus': string;
   'dashboard.contractsTotalMetric': string;
@@ -201,6 +202,9 @@ export interface TranslationKeys {
   'dashboard.backupStatusLegendFalhaEnvio': string;
   'dashboard.backupStatusLegendVerificado': string;
   'dashboard.backupStatusEmpty': string;
+  'dashboard.backupStatusTotalLabel': string;
+  'dashboard.backupStatusFailureBadgeOne': string;
+  'dashboard.backupStatusFailureBadgeMany': string;
   'dashboard.backupStatusDetailColumn': string;
   'dashboard.backupLogStartAt': string;
   'dashboard.backupLogEndAt': string;
@@ -1669,6 +1673,7 @@ const translations: Translations = {
     'dashboard.planStatus': 'Status dos Planos',
     'dashboard.paymentStatus': 'Status dos Pagamentos',
     'dashboard.planDistribution': 'Distribuição por Tipo de Plano',
+    'dashboard.planDistributionTopShare': 'Participação principal',
     'dashboard.paymentRate': 'Taxa de Pagamento',
     'dashboard.contractStatus': 'Status dos Contratos',
     'dashboard.contractsTotalMetric': 'Total de contratos',
@@ -1698,6 +1703,9 @@ const translations: Translations = {
     'dashboard.backupStatusLegendFalhaEnvio': 'Falha de envio',
     'dashboard.backupStatusLegendVerificado': 'Verificado',
     'dashboard.backupStatusEmpty': 'Nenhum evento de backup no período',
+    'dashboard.backupStatusTotalLabel': 'Total de backups',
+    'dashboard.backupStatusFailureBadgeOne': '${count} falha detectada',
+    'dashboard.backupStatusFailureBadgeMany': '${count} falhas detectadas',
     'dashboard.backupStatusDetailColumn': 'Detalhe',
     'dashboard.backupLogStartAt': 'Início do backup',
     'dashboard.backupLogEndAt': 'Fim do backup',
@@ -3164,6 +3172,7 @@ const translations: Translations = {
     'dashboard.planStatus': 'Plan Status',
     'dashboard.paymentStatus': 'Payment Status',
     'dashboard.planDistribution': 'Plan Type Distribution',
+    'dashboard.planDistributionTopShare': 'Top segment share',
     'dashboard.paymentRate': 'Payment Rate',
     'dashboard.contractStatus': 'Contract Status',
     'dashboard.contractsTotalMetric': 'Total contracts',
@@ -3193,6 +3202,9 @@ const translations: Translations = {
     'dashboard.backupStatusLegendFalhaEnvio': 'Send failure',
     'dashboard.backupStatusLegendVerificado': 'Verified',
     'dashboard.backupStatusEmpty': 'No backup events in the period',
+    'dashboard.backupStatusTotalLabel': 'Total backups',
+    'dashboard.backupStatusFailureBadgeOne': '${count} failure detected',
+    'dashboard.backupStatusFailureBadgeMany': '${count} failures detected',
     'dashboard.backupStatusDetailColumn': 'Detail',
     'dashboard.backupLogStartAt': 'Backup started',
     'dashboard.backupLogEndAt': 'Backup finished',
@@ -4659,6 +4671,7 @@ const translations: Translations = {
     'dashboard.planStatus': 'Estado de los Planes',
     'dashboard.paymentStatus': 'Estado de los Pagos',
     'dashboard.planDistribution': 'Distribución por Tipo de Plan',
+    'dashboard.planDistributionTopShare': 'Participación principal',
     'dashboard.paymentRate': 'Tasa de Pago',
     'dashboard.contractStatus': 'Estado de los Contratos',
     'dashboard.contractsTotalMetric': 'Total de contratos',
@@ -4688,6 +4701,9 @@ const translations: Translations = {
     'dashboard.backupStatusLegendFalhaEnvio': 'Fallo de envío',
     'dashboard.backupStatusLegendVerificado': 'Verificado',
     'dashboard.backupStatusEmpty': 'Sin eventos de copia en el período',
+    'dashboard.backupStatusTotalLabel': 'Total de copias',
+    'dashboard.backupStatusFailureBadgeOne': '${count} fallo detectado',
+    'dashboard.backupStatusFailureBadgeMany': '${count} fallos detectados',
     'dashboard.backupStatusDetailColumn': 'Detalle',
     'dashboard.backupLogStartAt': 'Inicio de la copia',
     'dashboard.backupLogEndAt': 'Fin de la copia',

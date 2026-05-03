@@ -6,6 +6,7 @@ import { ContaPagar } from '../../../models/financeiro/ContaPagar';
 import { Op, QueryTypes } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { formatDateISOForAPI, formatDateOnly } from '../../../utils/timezoneUtils';
+import { logger } from '../../../utils/logger';
 export type BackupStatusGraficoDia = {
   label: string;
   dataISO: string;
@@ -929,21 +930,27 @@ export class DashboardService {
     const fim = new Date(endDate);
     fim.setHours(23, 59, 59, 999);
 
-    const empresaClause = empresaId != null ? ' AND e.empresa_id = :empresaId' : '';
+    /** Eventos podem ter `empresa_id` NULL (gravado a partir do device); o tenant do equipamento em `adm_ssh_devices` vale. */
+    const empresaClause =
+      empresaId != null
+        ? ' AND (e.empresa_id = :empresaId OR (e.empresa_id IS NULL AND d.empresa_id = :empresaId))'
+        : '';
     const replacements: Record<string, unknown> = { inicio, fim };
     if (empresaId != null) {
       replacements.empresaId = empresaId;
     }
 
     const rows = await sequelize.query<{ dia: unknown; status: string; total: string | number }>(
-      `SELECT DATE(e.created_at) AS dia, e.status, COUNT(*) AS total
+      `SELECT DATE_FORMAT(e.created_at, '%Y-%m-%d') AS dia, e.status, COUNT(*) AS total
        FROM adm_ssh_device_backup_events e
+       INNER JOIN adm_ssh_devices d ON d.id = e.ssh_device_id
        WHERE e.created_at >= :inicio AND e.created_at <= :fim${empresaClause}
-       GROUP BY DATE(e.created_at), e.status`,
+       GROUP BY DATE_FORMAT(e.created_at, '%Y-%m-%d'), e.status`,
       { replacements, type: QueryTypes.SELECT }
     );
 
     const countsByDiaStatus = new Map<string, Record<string, number>>();
+    const statusDesconhecido = new Map<string, number>();
     for (const r of rows) {
       const diaKey = DashboardService.normalizeDiaSQL(r.dia);
       if (!diaKey) continue;
@@ -965,6 +972,9 @@ export class DashboardService {
       else if (st === 'somente_local') bucket.somente_local += n;
       else if (st === 'falha_envio') bucket.falha_envio += n;
       else if (st === 'verificado') bucket.verificado += n;
+      else if (st) {
+        statusDesconhecido.set(st, (statusDesconhecido.get(st) ?? 0) + n);
+      }
     }
 
     const out: BackupStatusGraficoDia[] = [];
@@ -990,6 +1000,30 @@ export class DashboardService {
       });
       cursor.setDate(cursor.getDate() + 1);
     }
+
+    const diasComAlgumEvento = out.filter(
+      (d) =>
+        d.falha + d.sucesso + d.somente_local + d.falha_envio + d.verificado > 0
+    ).length;
+    const chavesAgregacao = [...countsByDiaStatus.keys()].sort();
+    const chavesSerie = new Set(out.map((d) => d.dataISO));
+    const chavesSohNaAgregacao = chavesAgregacao.filter((k) => !chavesSerie.has(k));
+
+    logger.debug('Dashboard backupStatusGrafico', {
+      context: 'DashboardService.getBackupStatusGrafico',
+      empresaId: empresaId ?? null,
+      inicio: inicio.toISOString(),
+      fim: fim.toISOString(),
+      linhasQuery: rows.length,
+      amostraLinhasQuery: rows.slice(0, 15),
+      diasDistintosNaAgregacao: countsByDiaStatus.size,
+      diasNaSerie: out.length,
+      diasComAlgumEvento,
+      statusDesconhecido: Object.fromEntries(statusDesconhecido),
+      chavesSohNaAgregacao: chavesSohNaAgregacao.slice(0, 10),
+      ultimos3DiasSerie: out.slice(-3),
+    });
+
     return out;
   }
 
@@ -1075,7 +1109,10 @@ export class DashboardService {
       });
     }
 
-    const empresaClauseE = empresaId != null ? ' AND e.empresa_id = :empresaId' : '';
+    const empresaClauseE =
+      empresaId != null
+        ? ' AND (e.empresa_id = :empresaId OR (e.empresa_id IS NULL AND d.empresa_id = :empresaId))'
+        : '';
     const rows = await sequelize.query<{
       id: string;
       deviceId: string;

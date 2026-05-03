@@ -25,6 +25,16 @@ const STATUS_COLORS: Record<BackupStatusKey, string> = {
   falha: '#ef4444',
 };
 
+function BackupStatusHeaderIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="4" y="4" width="16" height="6" rx="1.5" stroke="#534AB7" strokeWidth="2" />
+      <rect x="4" y="12" width="10" height="8" rx="1.5" stroke="#534AB7" strokeWidth="2" />
+      <path d="M16 14v6M13 17h6" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export interface BackupStatusStackedBarChartProps {
   days: BackupStatusDayDatum[];
   title: string;
@@ -34,10 +44,35 @@ export interface BackupStatusStackedBarChartProps {
   /** Chaves ocultas via legenda (mesmo padrão do ResponsivePieChart). */
   hiddenKeys?: ReadonlySet<string>;
   onLegendToggle?: (key: BackupStatusKey) => void;
+  /** Badge de período (ex.: mês) quando não há falhas para destacar. */
+  headerPeriodBadge?: string;
+  /** Texto do alerta de falhas (ex.: "2 falhas detectadas"); se ausente e sem período, sem badge. */
+  failureBadgeText?: string | null;
+  totalBackups: number;
+  totalSucesso: number;
+  totalFalha: number;
+  totalBackupsLabel: string;
+  /** True se existir backup em algum dia do período filtrado (evita vazio quando só a janela dos últimos 7 dias está zerada). */
+  periodHasBackupEvents: boolean;
 }
 
 const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = memo(
-  ({ days, title, legendLabels, emptyMessage, onSegmentClick, hiddenKeys, onLegendToggle }) => {
+  ({
+    days,
+    title,
+    legendLabels,
+    emptyMessage,
+    onSegmentClick,
+    hiddenKeys,
+    onLegendToggle,
+    headerPeriodBadge,
+    failureBadgeText,
+    totalBackups,
+    totalSucesso,
+    totalFalha,
+    totalBackupsLabel,
+    periodHasBackupEvents,
+  }) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const wrapRef = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(400);
@@ -83,7 +118,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       );
     }, [chartData, visibleKeys, maxTotalAll]);
 
-    const hasAny = useMemo(
+    const hasCountsInWindow = useMemo(
       () =>
         chartData.some(
           (d) =>
@@ -96,6 +131,9 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
         ),
       [chartData]
     );
+
+    const showChartBody =
+      chartData.length > 0 && (hasCountsInWindow || periodHasBackupEvents);
 
     useLayoutEffect(() => {
       const el = wrapRef.current;
@@ -117,7 +155,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
 
     useEffect(() => {
       const svg = svgRef.current;
-      if (!svg || chartData.length === 0 || !hasAny) return;
+      if (!svg || chartData.length === 0 || (!hasCountsInWindow && !periodHasBackupEvents)) return;
 
       const margin = { top: 8, right: 12, left: 36, bottom: 28 };
       const height = 200;
@@ -261,9 +299,20 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
         .on('mouseleave', () => {
           tooltipG.transition().duration(150).ease(d3.easeCubicOut).style('opacity', 0);
         });
-    }, [chartData, width, maxTotal, maxTotalAll, hasAny, onSegmentClick, textMuted, legendLabels, visibleKeys]);
+    }, [
+      chartData,
+      width,
+      maxTotal,
+      maxTotalAll,
+      hasCountsInWindow,
+      periodHasBackupEvents,
+      onSegmentClick,
+      textMuted,
+      legendLabels,
+      visibleKeys,
+    ]);
 
-    if (chartData.length === 0 || !hasAny) {
+    if (!showChartBody) {
       return (
         <ChartEmptyState
           title={title}
@@ -273,29 +322,65 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       );
     }
 
+    const headerBadge =
+      failureBadgeText != null && failureBadgeText !== ''
+        ? { className: 'backup-status-card__alert-badge', text: failureBadgeText }
+        : headerPeriodBadge
+          ? { className: 'pie-metric-header__badge', text: headerPeriodBadge }
+          : null;
+
     return (
       <div
         ref={wrapRef}
-        className="chart-container-pie chart-radial-style"
+        className="backup-status-card chart-radial-style"
         style={{ height: '100%', position: 'relative' }}
       >
-        <h6 className="chart-title-pie" style={{ marginBottom: 6 }}>
-          {title}
-        </h6>
+        <div className="pie-metric-header">
+          <div className="pie-metric-header__icon" aria-hidden>
+            <BackupStatusHeaderIcon />
+          </div>
+          <h6 className="pie-metric-header__title backup-status-card__title">{title}</h6>
+          {headerBadge ? (
+            <span className={headerBadge.className}>{headerBadge.text}</span>
+          ) : null}
+        </div>
+
+        <div className="backup-status-card__summary">
+          <div className="backup-status-card__summary-box">
+            <div className="backup-status-card__summary-label">{totalBackupsLabel}</div>
+            <div className="backup-status-card__summary-value">{totalBackups.toLocaleString('pt-BR')}</div>
+          </div>
+          <div className="backup-status-card__summary-box">
+            <div className="backup-status-card__summary-label">{legendLabels.sucesso}</div>
+            <div
+              className="backup-status-card__summary-value"
+              style={{ color: STATUS_COLORS.sucesso }}
+            >
+              {totalSucesso.toLocaleString('pt-BR')}
+            </div>
+          </div>
+          <div className="backup-status-card__summary-box">
+            <div className="backup-status-card__summary-label">{legendLabels.falha}</div>
+            <div
+              className="backup-status-card__summary-value"
+              style={{ color: STATUS_COLORS.falha }}
+            >
+              {totalFalha.toLocaleString('pt-BR')}
+            </div>
+          </div>
+        </div>
+
         <svg
           ref={svgRef}
-          style={{ display: 'block', maxWidth: '100%', overflow: 'visible' }}
+          style={{ display: 'block', maxWidth: '100%', overflow: 'visible', flex: '1 1 auto', minHeight: 0 }}
         />
-        <ul
-          className="d-flex flex-wrap gap-2 justify-content-center list-unstyled mb-0 mt-1"
-          style={{ fontSize: '0.65rem', rowGap: '4px' }}
-        >
+        <ul className="backup-status-card__legend">
           {STACK_KEYS.map((k) => {
             const isHidden = hiddenKeys?.has(k) ?? false;
             return (
               <li
                 key={k}
-                className="d-flex align-items-center gap-1"
+                className="backup-status-card__legend-item"
                 role={onLegendToggle ? 'button' : undefined}
                 tabIndex={onLegendToggle ? 0 : undefined}
                 onClick={
@@ -324,7 +409,10 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
                   borderRadius: onLegendToggle ? 'var(--border-radius, 8px)' : undefined,
                 }}
               >
-                <span style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: STATUS_COLORS[k] }} />
+                <span
+                  className="backup-status-card__legend-swatch"
+                  style={{ backgroundColor: STATUS_COLORS[k] }}
+                />
                 <span style={{ color: 'var(--text-muted, #94a3b8)' }}>{legendLabels[k]}</span>
               </li>
             );
