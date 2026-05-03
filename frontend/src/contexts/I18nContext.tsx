@@ -167,11 +167,16 @@ export interface TranslationKeys {
   'dashboard.received': string;
   'dashboard.toReceive': string;
   'dashboard.clientStatus': string;
+  'dashboard.clientsTotalMetric': string;
   'dashboard.planStatus': string;
   'dashboard.paymentStatus': string;
   'dashboard.planDistribution': string;
   'dashboard.paymentRate': string;
   'dashboard.contractStatus': string;
+  'dashboard.contractsTotalMetric': string;
+  'dashboard.contractsActivityMetric': string;
+  'dashboard.chargesTotalMetric': string;
+  'dashboard.chargesCancellationMetric': string;
   'dashboard.averageTicket': string;
   'dashboard.monthlyRevenueTitle': string;
   'dashboard.months12': string;
@@ -1659,12 +1664,17 @@ const translations: Translations = {
     'dashboard.inPeriod': 'no período',
     'dashboard.received': 'Recebidos',
     'dashboard.toReceive': 'A Receber',
-    'dashboard.clientStatus': 'Status dos Clientes',
+    'dashboard.clientStatus': 'Base de clientes',
+    'dashboard.clientsTotalMetric': 'Total de clientes',
     'dashboard.planStatus': 'Status dos Planos',
-    'dashboard.paymentStatus': 'Status dos Pagamentos (Mês Atual)',
+    'dashboard.paymentStatus': 'Status dos Pagamentos',
     'dashboard.planDistribution': 'Distribuição por Tipo de Plano',
     'dashboard.paymentRate': 'Taxa de Pagamento',
     'dashboard.contractStatus': 'Status dos Contratos',
+    'dashboard.contractsTotalMetric': 'Total de contratos',
+    'dashboard.contractsActivityMetric': 'Taxa de atividade',
+    'dashboard.chargesTotalMetric': 'Total de cobranças',
+    'dashboard.chargesCancellationMetric': 'Taxa de cancelamento',
     'dashboard.averageTicket': 'Ticket Médio',
     'dashboard.months12': '12 meses',
     'dashboard.chartCurrentMonth': 'mês atual',
@@ -3149,12 +3159,17 @@ const translations: Translations = {
     'dashboard.inPeriod': 'in period',
     'dashboard.received': 'Received',
     'dashboard.toReceive': 'To Receive',
-    'dashboard.clientStatus': 'Client Status',
+    'dashboard.clientStatus': 'Client base',
+    'dashboard.clientsTotalMetric': 'Total clients',
     'dashboard.planStatus': 'Plan Status',
-    'dashboard.paymentStatus': 'Payment Status (Current Month)',
+    'dashboard.paymentStatus': 'Payment Status',
     'dashboard.planDistribution': 'Plan Type Distribution',
     'dashboard.paymentRate': 'Payment Rate',
     'dashboard.contractStatus': 'Contract Status',
+    'dashboard.contractsTotalMetric': 'Total contracts',
+    'dashboard.contractsActivityMetric': 'Activity rate',
+    'dashboard.chargesTotalMetric': 'Total billings',
+    'dashboard.chargesCancellationMetric': 'Cancellation rate',
     'dashboard.averageTicket': 'Average Ticket',
     'dashboard.months12': '12 months',
     'dashboard.chartCurrentMonth': 'current month',
@@ -4639,12 +4654,17 @@ const translations: Translations = {
     'dashboard.inPeriod': 'en el período',
     'dashboard.received': 'Recibidos',
     'dashboard.toReceive': 'A Recibir',
-    'dashboard.clientStatus': 'Estado de los Clientes',
+    'dashboard.clientStatus': 'Base de clientes',
+    'dashboard.clientsTotalMetric': 'Total de clientes',
     'dashboard.planStatus': 'Estado de los Planes',
-    'dashboard.paymentStatus': 'Estado de los Pagos (Mes Actual)',
+    'dashboard.paymentStatus': 'Estado de los Pagos',
     'dashboard.planDistribution': 'Distribución por Tipo de Plan',
     'dashboard.paymentRate': 'Tasa de Pago',
     'dashboard.contractStatus': 'Estado de los Contratos',
+    'dashboard.contractsTotalMetric': 'Total de contratos',
+    'dashboard.contractsActivityMetric': 'Tasa de actividad',
+    'dashboard.chargesTotalMetric': 'Total de cobros',
+    'dashboard.chargesCancellationMetric': 'Tasa de cancelación',
     'dashboard.averageTicket': 'Ticket Promedio',
     'dashboard.months12': '12 meses',
     'dashboard.chartCurrentMonth': 'mes actual',

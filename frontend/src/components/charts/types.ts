@@ -27,13 +27,29 @@ export interface LineChartProps {
   onPointClick?: (item: ChartDataItem, index: number) => void;
 }
 
+export interface PieMetricFooter {
+  label: string;
+  value: string | number;
+  accentColor?: string;
+}
+
 export interface PieChartProps {
   data: ChartDataItem[];
   title: string;
   hiddenItems: Set<number>;
   onToggleItem: (index: number) => void;
   onSliceClick?: (item: ChartDataItem, index: number) => void;
-  /** Ex.: `true` (clientes ativos), `'ativo'` (contratos), `'pago,...'` (pagamentos) — % no buraco do donut */
+  /** Ex.: `true` (clientes ativos), `'ativo'` (contratos), `'pendente'` (pagamentos) — % no buraco do donut */
   centerHighlightFilterValue?: string | boolean;
+  /** Donut à esquerda, legenda à direita (layout tipo cards de métrica) */
+  chartLeading?: boolean;
+  /** Título em caixa alta e rodapé com duas métricas (quando `footerLeft` / `footerRight` forem passados) */
+  metricLayout?: boolean;
+  footerLeft?: PieMetricFooter;
+  footerRight?: PieMetricFooter;
+  /** Badge à direita (ex.: período do filtro), no padrão Clientes / Ticket médio */
+  metricHeaderBadge?: string;
+  /** Ícone do quadrado à esquerda do título (só com `metricHeaderBadge`) */
+  metricHeaderIcon?: 'contracts' | 'payments' | 'clients';
 }
 

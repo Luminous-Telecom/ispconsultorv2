@@ -264,6 +264,104 @@
   overflow: visible !important;
 }
 
+/* Pizza com rodapé de métricas (status contratos / pagamentos) — donut à esquerda */
+.pie-chart-body--chart-first {
+  flex-direction: row-reverse;
+
+  @media (max-width: 575.98px) {
+    flex-direction: column-reverse;
+  }
+}
+
+.chart-container-pie--metric {
+  gap: 0.25rem;
+}
+
+.pie-metric-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.pie-metric-header__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: #eeedfe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pie-metric-header__title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.pie-metric-header__badge {
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #eeedfe;
+  color: #3c3489;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.chart-card-pie--metric {
+  min-height: 0;
+  padding: 0.5rem 0.5rem 0.45rem;
+
+  @media (min-width: 768px) {
+    padding: 0.55rem 0.6rem 0.5rem;
+  }
+}
+
+.pie-metric-footer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+}
+
+.pie-metric-footer__box {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 0.45rem 0.5rem;
+}
+
+.pie-metric-footer__label {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.55));
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+}
+
+.pie-metric-footer__value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.pie-metric-footer__value--accent {
+  font-weight: 700;
+}
+
 /* Gráfico de Barras Duplas */
 .dual-bar-chart {
   display: flex;

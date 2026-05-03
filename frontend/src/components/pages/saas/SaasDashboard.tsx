@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useDebouncedValue } from 'hooks/useDebouncedValue';
 import { formatCurrency, formatNumber } from 'utils/formatters';
 import { useSaasDashboard } from 'hooks/useSaasDashboard';
@@ -65,6 +65,58 @@ const SaasDashboard: React.FC = () => {
   const stats = useDashboardStats(dashboardData);
   const charts = useDashboardCharts(dashboardData, stats, t);
 
+  const dashboardHeaderPeriodBadge = useMemo(() => {
+    const MES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const d = startDate ? new Date(startDate + 'T00:00:00') : new Date();
+    return `${MES_ABREV[d.getMonth()]} ${d.getFullYear()}`;
+  }, [startDate]);
+
+  const clientesMetricFooter = useMemo(() => {
+    const ativos = stats.clientesAtivos;
+    const inativos = stats.clientesInativos;
+    const total = ativos + inativos;
+    const pct = total > 0 ? Math.round((ativos / total) * 100) : 0;
+    return {
+      left: { label: t('dashboard.clientsTotalMetric'), value: total },
+      right: {
+        label: t('dashboard.contractsActivityMetric'),
+        value: `${pct}%`,
+        accentColor: '#10b981',
+      },
+    };
+  }, [stats.clientesAtivos, stats.clientesInativos, t]);
+
+  const contratosMetricFooter = useMemo(() => {
+    const rows = charts.contratosChartData;
+    const total = rows.reduce((s, item) => s + (Number(item.value ?? item.valor) || 0), 0);
+    const ativos = stats.contratosAtivos;
+    const pct = total > 0 ? Math.round((ativos / total) * 100) : 0;
+    return {
+      left: { label: t('dashboard.contractsTotalMetric'), value: total },
+      right: {
+        label: t('dashboard.contractsActivityMetric'),
+        value: `${pct}%`,
+        accentColor: '#10b981',
+      },
+    };
+  }, [charts.contratosChartData, stats.contratosAtivos, t]);
+
+  const pagamentosMetricFooter = useMemo(() => {
+    const rows = charts.statusPagamentoData;
+    const total = rows.reduce((s, item) => s + (Number(item.value ?? item.valor) || 0), 0);
+    const cancelItem = rows.find((item) => String(item.filterValue) === 'cancelado');
+    const cancelVal = cancelItem ? Number(cancelItem.value ?? cancelItem.valor) || 0 : 0;
+    const pct = total > 0 ? Math.round((cancelVal / total) * 100) : 0;
+    return {
+      left: { label: t('dashboard.chargesTotalMetric'), value: total },
+      right: {
+        label: t('dashboard.chargesCancellationMetric'),
+        value: `${pct}%`,
+        accentColor: '#fb923c',
+      },
+    };
+  }, [charts.statusPagamentoData, t]);
+
   if (loadingDashboard) {
     return (
       <div className="dashboard-container">
@@ -90,7 +142,7 @@ const SaasDashboard: React.FC = () => {
       <div className="container-fluid px-0 px-md-0">
         <div className="row g-3">
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
-            <div className="chart-card chart-card-pie">
+            <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.clientesChartData}
                 title={t('dashboard.clientStatus')}
@@ -98,25 +150,37 @@ const SaasDashboard: React.FC = () => {
                 onToggleItem={toggleCliente}
                 onSliceClick={handleClienteSliceClick}
                 centerHighlightFilterValue
+                chartLeading
+                metricLayout
+                metricHeaderBadge={dashboardHeaderPeriodBadge}
+                metricHeaderIcon="clients"
+                footerLeft={clientesMetricFooter.left}
+                footerRight={clientesMetricFooter.right}
               />
             </div>
           </div>
 
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
-            <div className="chart-card chart-card-pie">
+            <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.statusPagamentoData}
                 title={t('dashboard.paymentStatus')}
                 hiddenItems={hiddenPagamentos}
                 onToggleItem={togglePagamento}
                 onSliceClick={handleStatusPagamentoSliceClick}
-                centerHighlightFilterValue="pago,pago_atraso,parcial"
+                centerHighlightFilterValue="pendente"
+                chartLeading
+                metricLayout
+                metricHeaderBadge={dashboardHeaderPeriodBadge}
+                metricHeaderIcon="payments"
+                footerLeft={pagamentosMetricFooter.left}
+                footerRight={pagamentosMetricFooter.right}
               />
             </div>
           </div>
 
           <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
-            <div className="chart-card chart-card-pie">
+            <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.contratosChartData}
                 title={t('dashboard.contractStatus')}
@@ -124,6 +188,12 @@ const SaasDashboard: React.FC = () => {
                 onToggleItem={toggleContratos}
                 onSliceClick={handleContratoSliceClick}
                 centerHighlightFilterValue="ativo"
+                chartLeading
+                metricLayout
+                metricHeaderBadge={dashboardHeaderPeriodBadge}
+                metricHeaderIcon="contracts"
+                footerLeft={contratosMetricFooter.left}
+                footerRight={contratosMetricFooter.right}
               />
             </div>
           </div>

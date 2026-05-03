@@ -12,6 +12,81 @@ const formatPieValue = (value: number): string | number => value.toLocaleString(
 const getItemValue = (item: ChartDataItem): number =>
   Number(item.value ?? item.valor ?? 0) || 0;
 
+function MetricPieHeaderIcon({ variant }: { variant: 'contracts' | 'payments' | 'clients' }) {
+  if (variant === 'clients') {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+          stroke="#534AB7"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="9" cy="7" r="4" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M23 21v-2a4 4 0 0 0-3-3.87"
+          stroke="#534AB7"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M16 3.13a4 4 0 0 1 0 7.75"
+          stroke="#534AB7"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (variant === 'payments') {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <rect x="2" y="5" width="20" height="14" rx="2" stroke="#534AB7" strokeWidth="2" />
+        <path d="M2 10h20" stroke="#534AB7" strokeWidth="2" />
+        <path d="M7 15h.01M12 15h.01M17 15h.01" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
+        stroke="#534AB7"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M14 2v6h6M8 13h8M8 17h8M8 9h4" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function resolveHighlightItem(
+  data: ChartDataItem[],
+  centerHighlightFilterValue: string | boolean
+): ChartDataItem | null {
+  if (!data?.length) return null;
+  if (typeof centerHighlightFilterValue === 'boolean') {
+    return data.find((item) => item.filterValue === centerHighlightFilterValue) ?? null;
+  }
+  const raw = centerHighlightFilterValue.trim();
+  if (!raw) return null;
+  const keys = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return (
+    data.find((item) => {
+      const fv = String(item.filterValue ?? '');
+      if (fv === raw) return true;
+      return keys.some((k) => k === fv);
+    }) ?? null
+  );
+}
+
 interface PieDatum {
   index: number;
   label: string;
@@ -27,7 +102,20 @@ const RADIUS_MAX_RATIO = 1;
 const HIDE_ANIMATION_MS = 400;
 
 const ResponsivePieChart: React.FC<PieChartProps> = memo(
-  ({ data, title, hiddenItems, onToggleItem, onSliceClick, centerHighlightFilterValue }) => {
+  ({
+    data,
+    title,
+    hiddenItems,
+    onToggleItem,
+    onSliceClick,
+    centerHighlightFilterValue,
+    chartLeading = false,
+    metricLayout = false,
+    footerLeft,
+    footerRight,
+    metricHeaderBadge,
+    metricHeaderIcon = 'contracts',
+  }) => {
   const titleId = useId();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -124,7 +212,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
     if (centerHighlightFilterValue === undefined || !data?.length) return null;
     const grandTotal = data.reduce((sum, item) => sum + getItemValue(item), 0);
     if (grandTotal <= 0) return null;
-    const hit = data.find((item) => item.filterValue === centerHighlightFilterValue);
+    const hit = resolveHighlightItem(data, centerHighlightFilterValue);
     if (!hit) return null;
     const v = getItemValue(hit);
     const pct = Math.round((v / grandTotal) * 100);
@@ -330,15 +418,30 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
     return <ChartEmptyState title={title} containerClassName="chart-container-pie" />;
   }
 
+  const containerClass = ['chart-container-pie', 'chart-radial-style', metricLayout ? 'chart-container-pie--metric' : '']
+    .filter(Boolean)
+    .join(' ');
+  const bodyClass = ['pie-chart-body', chartLeading ? 'pie-chart-body--chart-first' : ''].filter(Boolean).join(' ');
+  const useMetricChromeHeader = Boolean(metricLayout && metricHeaderBadge);
+
   return (
-    <div
-      className="chart-container-pie chart-radial-style"
-      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-    >
-      <h6 id={titleId} className="chart-title-pie" style={{ marginBottom: '2px' }}>
-        {title} ({formatPieValue(total)})
-      </h6>
-      <div className="pie-chart-body" role="group" aria-labelledby={titleId}>
+    <div className={containerClass} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {useMetricChromeHeader ? (
+        <div className="pie-metric-header">
+          <div className="pie-metric-header__icon" aria-hidden>
+            <MetricPieHeaderIcon variant={metricHeaderIcon} />
+          </div>
+          <span id={titleId} className="pie-metric-header__title">
+            {title}
+          </span>
+          <span className="pie-metric-header__badge">{metricHeaderBadge}</span>
+        </div>
+      ) : (
+        <h6 id={titleId} className="chart-title-pie" style={{ marginBottom: '2px' }}>
+          {title} ({formatPieValue(total)})
+        </h6>
+      )}
+      <div className={bodyClass} role="group" aria-labelledby={titleId}>
         <ul className="pie-sidebar-legend">
           {legendData.map(({ item, index, value }) => {
             const isHidden = hiddenItems.has(index);
@@ -422,6 +525,26 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
           />
         </div>
       </div>
+
+      {metricLayout && footerLeft && footerRight && (
+        <div className="pie-metric-footer">
+          <div className="pie-metric-footer__box">
+            <div className="pie-metric-footer__label">{footerLeft.label}</div>
+            <div className="pie-metric-footer__value">
+              {typeof footerLeft.value === 'number' ? formatPieValue(footerLeft.value) : footerLeft.value}
+            </div>
+          </div>
+          <div className="pie-metric-footer__box">
+            <div className="pie-metric-footer__label">{footerRight.label}</div>
+            <div
+              className="pie-metric-footer__value pie-metric-footer__value--accent"
+              style={footerRight.accentColor ? { color: footerRight.accentColor } : undefined}
+            >
+              {typeof footerRight.value === 'number' ? formatPieValue(footerRight.value) : footerRight.value}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });
