@@ -589,9 +589,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
                   className="form-control form-control-sm table-pagination-filter"
                   value={dataVencimentoInicio}
                   onChange={(e) => {
-                    setTimeout(() => {
-                      setDataVencimentoInicio(e.target.value);
-                    }, 0);
+                    setDataVencimentoInicio(e.target.value);
                   }}
                 />
                 <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">{t('filter.endDate')}</label>
@@ -601,9 +599,7 @@ const ContasPagarListModal: React.FC<ContasPagarListModalProps> = ({
                   className="form-control form-control-sm table-pagination-filter"
                   value={dataVencimentoFim}
                   onChange={(e) => {
-                    setTimeout(() => {
-                      setDataVencimentoFim(e.target.value);
-                    }, 0);
+                    setDataVencimentoFim(e.target.value);
                   }}
                 />
               </div>
