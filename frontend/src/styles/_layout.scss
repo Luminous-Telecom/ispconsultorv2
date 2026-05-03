@@ -218,48 +218,28 @@
 .dashboard-container {
   padding: 0 0.5rem 0.5rem;
   animation: fadeIn 0.4s ease;
+  overflow-x: clip;
 }
 
-/* Mobile: sem padding (já vem do main-content) */
 @media (max-width: 767.98px) {
   .dashboard-container {
-    padding: 0 !important;
+    padding: 0 0 4px;
   }
 }
 
-/* Remover padding do container-fluid dentro do dashboard - o padding já está no dashboard-container */
+/* Remover padding do container-fluid dentro do dashboard */
 .dashboard-container .container-fluid {
   padding-left: 0;
   padding-right: 0;
-  margin-left: 0;
-  margin-right: 0;
 }
 
+/* Espaçamento entre linhas de cards */
 .dashboard-container .row {
-  margin-left: 0;
-  margin-right: 0;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .dashboard-container .row:last-child {
   margin-bottom: 0;
-}
-
-.dashboard-container .row.g-3 {
-  --bs-gutter-x: 0.6875rem;
-  --bs-gutter-y: 0.6875rem;
-  margin-left: calc(var(--bs-gutter-x) * -0.5);
-  margin-right: calc(var(--bs-gutter-x) * -0.5);
-}
-
-.dashboard-container .row.g-3 > [class*="col-"] {
-  padding-left: calc(var(--bs-gutter-x) * 0.5) !important;
-  padding-right: calc(var(--bs-gutter-x) * 0.5) !important;
-}
-
-.dashboard-container .row:not(.g-3) > [class*="col-"] {
-  padding-left: calc(var(--bs-gutter-x) * 0.5) !important;
-  padding-right: calc(var(--bs-gutter-x) * 0.5) !important;
 }
 
 /* Botão de tema */

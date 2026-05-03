@@ -314,7 +314,7 @@ const Dashboard: React.FC = () => {
   if (debouncedSearch && !activeModal) {
     return (
       <div className="dashboard-container">
-        <div className="container-fluid px-0 px-md-0">
+        <div className="container-fluid px-0">
           <DashboardSearchResult searchTerm={debouncedSearch} searchField={searchField} />
         </div>
       </div>
@@ -323,9 +323,9 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard-container">
-      <div className="container-fluid px-0 px-md-0">
-        <div className="row g-3">
-          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+      <div className="container-fluid px-0">
+        <div className="row g-2">
+          <div className="col-12 col-sm-6 col-md-4">
             <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.clientesChartData}
@@ -343,11 +343,11 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12" style={{ display: 'flex' }}>
+          <div className="col-12 col-sm-6 col-md-4 d-flex">
             <TicketMedioCard data={ticketMedioCardData} />
           </div>
 
-          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+          <div className="col-12 col-sm-6 col-md-4">
             <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.distribuicaoPlanos}
@@ -365,7 +365,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+          <div className="col-12 col-sm-6 col-md-4">
             <div className="chart-card chart-card-pie chart-card-pie--metric">
               <BackupStatusStackedBarChart
                 days={backupStatusGraficoUltimos7Dias}
@@ -376,16 +376,12 @@ const Dashboard: React.FC = () => {
                 hiddenKeys={hiddenBackupStatus}
                 onLegendToggle={(key) => toggleBackupStatus(key)}
                 failureBadgeText={backupStatusDashboardSummary.failureBadgeText}
-                totalBackups={backupStatusDashboardSummary.total}
-                totalSucesso={backupStatusDashboardSummary.sucesso}
-                totalFalha={backupStatusDashboardSummary.falha}
-                totalBackupsLabel={t('dashboard.backupStatusTotalLabel')}
                 periodHasBackupEvents={backupStatusPeriodoTemEventos}
               />
             </div>
           </div>
 
-          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+          <div className="col-12 col-sm-6 col-md-4">
             <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.contratosChartData}
@@ -403,7 +399,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+          <div className="col-12 col-sm-6 col-md-4">
             <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.statusPagamentoData}
@@ -422,8 +418,8 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="row g-3">
-          <div className="col-xl-6 col-lg-6">
+        <div className="row g-2">
+          <div className="col-12 col-md-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.recebidosPeriodoChartData}
@@ -434,7 +430,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-6 col-lg-6">
+          <div className="col-12 col-md-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.receberPeriodoChartData}
@@ -444,10 +440,8 @@ const Dashboard: React.FC = () => {
               />
             </div>
           </div>
-        </div>
 
-        <div className="row g-3">
-          <div className="col-xl-6 col-lg-6">
+          <div className="col-12 col-md-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.receitaMensalChartData}
@@ -458,7 +452,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-6 col-lg-6">
+          <div className="col-12 col-md-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.crescimentoClientes}
@@ -468,10 +462,8 @@ const Dashboard: React.FC = () => {
               />
             </div>
           </div>
-        </div>
 
-        <div className="row g-3">
-          <div className="col-xl-6 col-lg-6">
+          <div className="col-12 col-md-6">
             <div className="chart-card">
               <DualLineChart
                 data={charts.contasReceberPagarChartData}
@@ -482,7 +474,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-6 col-lg-6">
+          <div className="col-12 col-md-6">
             <div className="chart-card" style={{ height: 'auto', minHeight: 0 }}>
               <BarChart data={charts.clientesPorPlano} title={t('dashboard.clientsByPlan')} format="number" onBarClick={handleClientesPorPlanoBarClick} />
             </div>

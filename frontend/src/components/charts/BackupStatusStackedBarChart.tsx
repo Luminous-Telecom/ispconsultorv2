@@ -48,10 +48,6 @@ export interface BackupStatusStackedBarChartProps {
   headerPeriodBadge?: string;
   /** Texto do alerta de falhas (ex.: "2 falhas detectadas"); se ausente e sem período, sem badge. */
   failureBadgeText?: string | null;
-  totalBackups: number;
-  totalSucesso: number;
-  totalFalha: number;
-  totalBackupsLabel: string;
   /** True se existir backup em algum dia do período filtrado (evita vazio quando só a janela dos últimos 7 dias está zerada). */
   periodHasBackupEvents: boolean;
 }
@@ -67,10 +63,6 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
     onLegendToggle,
     headerPeriodBadge,
     failureBadgeText,
-    totalBackups,
-    totalSucesso,
-    totalFalha,
-    totalBackupsLabel,
     periodHasBackupEvents,
   }) => {
     const svgRef = useRef<SVGSVGElement>(null);
@@ -140,10 +132,10 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       if (!el) return;
       const ro = new ResizeObserver(() => {
         const w = el.getBoundingClientRect().width;
-        setWidth(Math.max(280, w || 400));
+        setWidth(Math.max(160, w || 300));
       });
       ro.observe(el);
-      setWidth(Math.max(280, el.getBoundingClientRect().width || 400));
+      setWidth(Math.max(160, el.getBoundingClientRect().width || 300));
       return () => ro.disconnect();
     }, []);
 
@@ -157,8 +149,14 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       const svg = svgRef.current;
       if (!svg || chartData.length === 0 || (!hasCountsInWindow && !periodHasBackupEvents)) return;
 
-      const margin = { top: 8, right: 12, left: 36, bottom: 28 };
-      const height = 200;
+      const isCompact = width < 300;
+      const margin = {
+        top: 6,
+        right: isCompact ? 4 : 12,
+        left: isCompact ? 22 : 36,
+        bottom: isCompact ? 20 : 28,
+      };
+      const height = isCompact ? 140 : 200;
       const innerW = Math.max(1, width - margin.left - margin.right);
       const innerH = height - margin.top - margin.bottom;
 
@@ -202,13 +200,15 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
       const g = svgSel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
       const axisColor = textMuted();
-      const gAxis = g.append('g').attr('class', 'y-axis').call(d3.axisLeft(y).ticks(4).tickSize(-innerW));
+      const axisFontSize = isCompact ? '8px' : '10px';
+
+      const gAxis = g.append('g').attr('class', 'y-axis').call(d3.axisLeft(y).ticks(isCompact ? 3 : 4).tickSize(-innerW));
       gAxis.selectAll('.tick line').attr('stroke', axisColor).attr('stroke-opacity', 0.35);
       gAxis.select('.domain').attr('stroke', axisColor);
-      gAxis.selectAll('.tick text').attr('fill', axisColor).attr('font-size', '10px');
+      gAxis.selectAll('.tick text').attr('fill', axisColor).attr('font-size', axisFontSize);
 
       const gx = g.append('g').attr('transform', `translate(0,${innerH})`).call(d3.axisBottom(x));
-      gx.selectAll('text').attr('fill', axisColor).attr('font-size', '10px');
+      gx.selectAll('text').attr('fill', axisColor).attr('font-size', axisFontSize);
       gx.select('.domain').attr('stroke', axisColor);
 
       series.forEach((serie) => {
@@ -343,31 +343,6 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
           {headerBadge ? (
             <span className={headerBadge.className}>{headerBadge.text}</span>
           ) : null}
-        </div>
-
-        <div className="backup-status-card__summary">
-          <div className="backup-status-card__summary-box">
-            <div className="backup-status-card__summary-label">{totalBackupsLabel}</div>
-            <div className="backup-status-card__summary-value">{totalBackups.toLocaleString('pt-BR')}</div>
-          </div>
-          <div className="backup-status-card__summary-box">
-            <div className="backup-status-card__summary-label">{legendLabels.sucesso}</div>
-            <div
-              className="backup-status-card__summary-value"
-              style={{ color: STATUS_COLORS.sucesso }}
-            >
-              {totalSucesso.toLocaleString('pt-BR')}
-            </div>
-          </div>
-          <div className="backup-status-card__summary-box">
-            <div className="backup-status-card__summary-label">{legendLabels.falha}</div>
-            <div
-              className="backup-status-card__summary-value"
-              style={{ color: STATUS_COLORS.falha }}
-            >
-              {totalFalha.toLocaleString('pt-BR')}
-            </div>
-          </div>
         </div>
 
         <svg
