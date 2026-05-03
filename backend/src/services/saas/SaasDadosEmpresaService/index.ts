@@ -86,7 +86,7 @@ export class SaasDadosEmpresaService {
     const countMap: Record<number, number> = {};
     if (empresaIds.length > 0) {
       const counts = await sequelize.query<{ empresa_id: number; total: string }>(
-        `SELECT empresa_id, COUNT(id) AS total FROM adm_usuarios WHERE empresa_id IN (:ids) GROUP BY empresa_id`,
+        `SELECT empresa_id, COUNT(id) AS total FROM adm_cadastros_usuarios WHERE empresa_id IN (:ids) GROUP BY empresa_id`,
         { replacements: { ids: empresaIds }, type: QueryTypes.SELECT }
       );
       for (const row of counts) {
@@ -129,7 +129,7 @@ export class SaasDadosEmpresaService {
   static async getDashboardStats() {
     const total = await DadosEmpresa.count();
     const [{ total: totalUsuarios }] = await sequelize.query<{ total: number }>(
-      `SELECT COUNT(id) AS total FROM adm_usuarios`,
+      `SELECT COUNT(id) AS total FROM adm_cadastros_usuarios`,
       { type: QueryTypes.SELECT }
     );
     return { total, totalUsuarios: Number(totalUsuarios) };

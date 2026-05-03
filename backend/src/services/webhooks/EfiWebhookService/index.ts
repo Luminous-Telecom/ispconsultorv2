@@ -196,7 +196,7 @@ export class EfiWebhookService {
         }
       }
       
-      // Fallback: tentar bancos EFI SaaS (saas_bancos) — exceto se já tentamos SaaS primeiro (isPathSaas)
+      // Fallback: tentar bancos EFI SaaS (saas_saas_bancos) — exceto se já tentamos SaaS primeiro (isPathSaas)
       if (!algumBancoAutorizado && !isPathSaas) {
         const { default: SaasBanco } = await import('../../../models/saas/SaasBanco');
         const bancosSaasEfi = await SaasBanco.findAll({

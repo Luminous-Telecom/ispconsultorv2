@@ -33,7 +33,7 @@ IpPermitidoBlockdomi.init(
     cliente_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: 'adm_clientes', key: 'id' },
+      references: { model: 'adm_clientes_clientes', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE'
     },
@@ -58,7 +58,7 @@ IpPermitidoBlockdomi.init(
   {
     sequelize,
     modelName: 'IpPermitidoBlockdomi',
-    tableName: 'adm_ips_permitidos_blockdomi',
+    tableName: 'adm_blockdomi_ips_permitidos',
     timestamps: true,
     underscored: true,
     indexes: [

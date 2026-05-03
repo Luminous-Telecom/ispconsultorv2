@@ -6,7 +6,7 @@ export class SaasParametrosService {
    * Obter parâmetros (sempre retorna o primeiro registro)
    */
   static async get(): Promise<SaasParametros> {
-    const cacheKey = 'saas_parametros:config';
+    const cacheKey = 'saas_saas_parametros:config';
     const cached = cache.get<SaasParametros>(cacheKey);
     if (cached) {
       return cached;
@@ -57,7 +57,7 @@ export class SaasParametrosService {
       await parametros.reload();
     }
 
-    cache.delete('saas_parametros:config');
+    cache.delete('saas_saas_parametros:config');
     return parametros;
   }
 }

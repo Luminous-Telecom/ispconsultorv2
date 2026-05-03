@@ -70,7 +70,7 @@ MensagemEmail.init({
   }
 }, {
   sequelize,
-  tableName: 'adm_mensagens_email',
+  tableName: 'adm_comunicacao_mensagens_email',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'

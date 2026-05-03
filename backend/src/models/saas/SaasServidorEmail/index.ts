@@ -32,7 +32,7 @@ SaasServidorEmail.init(
   },
   {
     sequelize,
-    tableName: 'saas_servidores_email',
+    tableName: 'saas_saas_servidores_email',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

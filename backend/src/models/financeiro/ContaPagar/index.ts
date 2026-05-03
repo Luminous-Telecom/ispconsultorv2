@@ -118,7 +118,7 @@ ContaPagar.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_fornecedores',
+        model: 'adm_financeiro_fornecedores',
         key: 'id'
       },
       onDelete: 'RESTRICT',
@@ -201,7 +201,7 @@ ContaPagar.init(
   {
     sequelize,
     modelName: 'ContaPagar',
-    tableName: 'adm_contas_pagar',
+    tableName: 'adm_financeiro_contas_pagar',
     timestamps: true,
     underscored: true,
     hooks: {

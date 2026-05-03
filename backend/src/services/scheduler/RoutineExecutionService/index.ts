@@ -500,7 +500,7 @@ export class RoutineExecutionService {
   }
 
   /**
-   * Executa a rotina de remessa bancária para SaaS (registra saas_titulos no banco)
+   * Executa a rotina de remessa bancária para SaaS (registra saas_saas_titulos no banco)
    */
   public async executeRemessaBancariaSaas(_routine: SaasScheduledRoutine): Promise<RemessaBancariaResult> {
     const { SaasTitulo } = await import('../../../models/saas/SaasTitulo');
@@ -556,7 +556,7 @@ export class RoutineExecutionService {
             plano: { ...planoData, nome_plano: planoData.nome ?? planoData.nome_plano },
           } as unknown as Parameters<typeof BancoApiService.gerarTitulo>[0];
 
-          const resultado = await BancoApiService.gerarTitulo(tituloLike, { bancoTable: 'saas_bancos' });
+          const resultado = await BancoApiService.gerarTitulo(tituloLike, { bancoTable: 'saas_saas_bancos' });
 
           if (resultado.success && resultado.data) {
             registrados++;
@@ -617,7 +617,7 @@ export class RoutineExecutionService {
   /**
    * Executa a rotina de envio de boletos
    * @param routine - Rotina com configurações
-   * @param saas - Se é rotina SaaS (usa saas_titulos e saas_dados_empresa)
+   * @param saas - Se é rotina SaaS (usa saas_saas_titulos e saas_saas_dados_empresa)
    * @returns Resultado do envio de boletos
    */
   public async executeEnvioBoletos(routine: AnyRoutine, saas = false): Promise<EnvioBoletosResult> {

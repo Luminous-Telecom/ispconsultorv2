@@ -103,7 +103,7 @@ SaasNFSeConfig.init(
   },
   {
     sequelize,
-    tableName: 'saas_nfse_config',
+    tableName: 'saas_saas_nfse_config',
     timestamps: true,
     underscored: true
   }

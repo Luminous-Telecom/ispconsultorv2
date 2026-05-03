@@ -569,7 +569,7 @@ Titulo.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_clientes',
+        model: 'adm_clientes_clientes',
         key: 'id'
       }
     },
@@ -577,7 +577,7 @@ Titulo.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_planos',
+        model: 'adm_cadastros_planos',
         key: 'id'
       }
     },
@@ -585,7 +585,7 @@ Titulo.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_bancos',
+        model: 'adm_cadastros_bancos',
         key: 'id'
       }
     },
@@ -716,7 +716,7 @@ Titulo.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'adm_notas_fiscais',
+        model: 'adm_nfse_notas_fiscais',
         key: 'id'
       },
       onDelete: 'SET NULL',
@@ -737,7 +737,7 @@ Titulo.init(
   {
     sequelize,
     modelName: 'Titulo',
-    tableName: 'adm_titulos',
+    tableName: 'adm_financeiro_titulos',
     timestamps: true,
     underscored: true,
     indexes: [

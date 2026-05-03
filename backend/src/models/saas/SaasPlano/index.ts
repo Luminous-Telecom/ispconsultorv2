@@ -38,7 +38,7 @@ SaasPlano.init(
   },
   {
     sequelize,
-    tableName: 'saas_planos',
+    tableName: 'saas_saas_planos',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

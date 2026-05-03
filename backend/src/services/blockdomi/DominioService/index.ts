@@ -50,7 +50,7 @@ export interface SincronizarSeiAnatelDominiosRow {
   quantidade_dominios: number;
   /** Nome do ofício (referência ao primeiro domínio do grupo com esse PDF) */
   nome_oficio?: string | null;
-  /** Número da versão Blockdomi (adm_versoes_blockdomi.numero), exibido como "serial" nos logs */
+  /** Número da versão Blockdomi (adm_blockdomi_versoes.numero), exibido como "serial" nos logs */
   versao_numero?: string | null;
   sei?: string;
   erro?: string;

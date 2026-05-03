@@ -49,7 +49,7 @@ ClienteArquivo.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_clientes',
+        model: 'adm_clientes_clientes',
         key: 'id'
       },
       onDelete: 'CASCADE'
@@ -106,7 +106,7 @@ ClienteArquivo.init(
   {
     sequelize,
     modelName: 'ClienteArquivo',
-    tableName: 'adm_cliente_arquivos',
+    tableName: 'adm_clientes_cliente_arquivos',
     timestamps: true,
     underscored: true,
     indexes: [

@@ -176,7 +176,7 @@ ScheduledRoutine.init({
   }
 }, {
   sequelize,
-  tableName: 'adm_scheduled_routines',
+  tableName: 'adm_sistema_scheduled_routines',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'

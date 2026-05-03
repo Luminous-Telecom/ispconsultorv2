@@ -27,7 +27,7 @@ export class VersaoBlockdomiService {
   ): Promise<number[]> {
     const prefix = data.toISOString().slice(0, 10).replace(/-/g, '');
     const rows = await sequelize.query<{ numero: string }>(
-      `SELECT numero FROM adm_versoes_blockdomi 
+      `SELECT numero FROM adm_blockdomi_versoes 
        WHERE numero LIKE :prefix 
        ORDER BY CAST(SUBSTRING(numero, 9) AS UNSIGNED) DESC 
        LIMIT 1 FOR UPDATE`,

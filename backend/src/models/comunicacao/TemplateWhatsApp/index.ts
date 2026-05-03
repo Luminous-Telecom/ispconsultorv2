@@ -70,7 +70,7 @@ TemplateWhatsApp.init({
   },
 }, {
   sequelize,
-  tableName: 'adm_templates_whatsapp',
+  tableName: 'adm_comunicacao_templates_whatsapp',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',

@@ -261,8 +261,8 @@ export class BlockdomiPublicoService {
          DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
          d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
-         FROM adm_dominios d
-         LEFT JOIN adm_numeros_sei_anatel_blockdomi s ON d.numero_sei_anatel_id = s.id
+         FROM adm_blockdomi_dominios d
+         LEFT JOIN adm_blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
          WHERE d.ativo = true AND d.dominio NOT LIKE '%/%'
          GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
         { type: QueryTypes.SELECT }
@@ -279,8 +279,8 @@ export class BlockdomiPublicoService {
          DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
          d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
-         FROM adm_dominios d
-         LEFT JOIN adm_numeros_sei_anatel_blockdomi s ON d.numero_sei_anatel_id = s.id
+         FROM adm_blockdomi_dominios d
+         LEFT JOIN adm_blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
          WHERE d.ativo = true AND d.dominio LIKE '%/%'
          GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
         { type: QueryTypes.SELECT }
@@ -297,8 +297,8 @@ export class BlockdomiPublicoService {
          DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
          d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
-         FROM adm_ipv4 d
-         LEFT JOIN adm_numeros_sei_anatel_blockdomi s ON d.numero_sei_anatel_id = s.id
+         FROM adm_blockdomi_ipv4 d
+         LEFT JOIN adm_blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
          WHERE d.ativo = true
          GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
         { type: QueryTypes.SELECT }
@@ -315,8 +315,8 @@ export class BlockdomiPublicoService {
          DATE_FORMAT(d.data_inicio_bloqueio, '%Y-%m-%d') as di,
          DATE_FORMAT(d.data_fim_bloqueio, '%Y-%m-%d') as df,
          d.versao_id, s.numero as numero_sei_anatel, COUNT(*) as cnt
-         FROM adm_ipv6 d
-         LEFT JOIN adm_numeros_sei_anatel_blockdomi s ON d.numero_sei_anatel_id = s.id
+         FROM adm_blockdomi_ipv6 d
+         LEFT JOIN adm_blockdomi_numeros_sei_anatel s ON d.numero_sei_anatel_id = s.id
          WHERE d.ativo = true
          GROUP BY d.nome_oficio, d.data_inicio_bloqueio, d.data_fim_bloqueio, d.versao_id, s.numero`,
         { type: QueryTypes.SELECT }

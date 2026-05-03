@@ -34,7 +34,7 @@ export interface ContextoErp {
 export type ContextoHistorico = ContextoSaas | ContextoErp;
 
 /**
- * Registra mensagem no histórico (adm_mensagens_historico ou saas_mensagens_historico)
+ * Registra mensagem no histórico (adm_comunicacao_mensagens_historico ou saas_saas_mensagens_historico)
  * Usa empresa_id do contexto para isolar por empresa (SaaS ou ERP).
  */
 export async function registrarMensagemHistorico(

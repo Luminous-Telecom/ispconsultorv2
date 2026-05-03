@@ -94,7 +94,7 @@ const upload = multer({
 // GET /api/dados-empresa/titulos-saas/boletos-pdf?ids=1,2,3&empresa_id=X - PDF de boletos (admin auth)
 router.get('/titulos-saas/boletos-pdf', DadosEmpresaController.getTitulosSaasBoletosPdf);
 
-// GET /api/dados-empresa/titulos-saas?empresa_id=X - Lista saas_titulos da empresa (admin auth)
+// GET /api/dados-empresa/titulos-saas?empresa_id=X - Lista saas_saas_titulos da empresa (admin auth)
 router.get('/titulos-saas', DadosEmpresaController.getTitulosSaas);
 
 // GET /api/dados-empresa - Buscar dados completos da empresa (exclusivo do sistema - requer autenticação)

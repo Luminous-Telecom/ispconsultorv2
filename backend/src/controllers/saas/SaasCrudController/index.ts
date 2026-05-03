@@ -115,7 +115,7 @@ const diasVencimentoSchema = Joi.object({
 });
 
 export class SaasDiasVencimentoController {
-  /** Config em saas_dias_vencimento (tabela dedicada, global para SaaS) */
+  /** Config em saas_saas_dias_vencimento (tabela dedicada, global para SaaS) */
   static async getConfig(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const rows = await SaasDiasVencimentoService.getConfig();
@@ -126,7 +126,7 @@ export class SaasDiasVencimentoController {
     } catch (err) { sendError(res, err, 'Erro ao buscar dias de vencimento', 500, true); }
   }
 
-  /** Config em saas_dias_vencimento (tabela dedicada, global) */
+  /** Config em saas_saas_dias_vencimento (tabela dedicada, global) */
   static async updateConfig(req: SaasAuthenticatedRequest, res: Response) {
     try {
       const { dias } = req.body;

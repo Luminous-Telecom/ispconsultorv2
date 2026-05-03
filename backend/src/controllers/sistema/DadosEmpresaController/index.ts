@@ -95,7 +95,7 @@ export class DadosEmpresaController {
   }
 
   /**
-   * Lista saas_titulos por empresa_id (adm_dados_empresa).
+   * Lista saas_saas_titulos por empresa_id (adm_sistema_dados_empresa).
    * Usa auth admin para permitir visualizar titulos SaaS da empresa no modal Dados Empresa.
    * Query: tipo=abertas (pendente,vencido) ou tipo=pagas (pago,pago_atraso,parcial). Default: abertas.
    */
@@ -125,7 +125,7 @@ export class DadosEmpresaController {
   }
 
   /**
-   * Gera PDF de boletos de saas_titulos (admin auth).
+   * Gera PDF de boletos de saas_saas_titulos (admin auth).
    * Requer ids e empresa_id para validar que os títulos pertencem à empresa.
    */
   static async getTitulosSaasBoletosPdf(req: Request, res: Response): Promise<void> {

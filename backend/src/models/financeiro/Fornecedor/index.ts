@@ -158,7 +158,7 @@ Fornecedor.init(
   {
     sequelize,
     modelName: 'Fornecedor',
-    tableName: 'adm_fornecedores',
+    tableName: 'adm_financeiro_fornecedores',
     timestamps: true,
     underscored: true,
     indexes: [

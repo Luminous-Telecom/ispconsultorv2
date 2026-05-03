@@ -102,7 +102,7 @@ SaasDadosEmpresa.init(
   },
   {
     sequelize,
-    tableName: 'saas_dados_empresa',
+    tableName: 'saas_saas_dados_empresa',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

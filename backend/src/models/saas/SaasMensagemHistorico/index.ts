@@ -125,7 +125,7 @@ SaasMensagemHistorico.init(
   },
   {
     sequelize,
-    tableName: 'saas_mensagens_historico',
+    tableName: 'saas_saas_mensagens_historico',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

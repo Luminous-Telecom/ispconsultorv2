@@ -82,7 +82,7 @@ TermoContrato.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_contratos',
+        model: 'adm_contratos_contratos',
         key: 'id'
       }
     },
@@ -90,7 +90,7 @@ TermoContrato.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'adm_modelo_documento',
+        model: 'adm_documentos_modelo_documento',
         key: 'id'
       }
     },
@@ -142,7 +142,7 @@ TermoContrato.init(
   {
     sequelize,
     modelName: 'TermoContrato',
-    tableName: 'adm_termos_contrato',
+    tableName: 'adm_contratos_termos_contrato',
     timestamps: true,
     underscored: true,
     indexes: [

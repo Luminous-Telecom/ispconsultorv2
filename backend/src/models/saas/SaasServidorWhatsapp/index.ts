@@ -30,7 +30,7 @@ SaasServidorWhatsapp.init(
   },
   {
     sequelize,
-    tableName: 'saas_servidores_whatsapp',
+    tableName: 'saas_saas_servidores_whatsapp',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

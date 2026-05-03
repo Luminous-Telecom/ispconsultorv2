@@ -83,7 +83,7 @@ ModeloDocumento.init(
     empresa_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: 'adm_dados_empresa', key: 'id' },
+      references: { model: 'adm_sistema_dados_empresa', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
     },
@@ -169,7 +169,7 @@ ModeloDocumento.init(
   },
   {
     sequelize,
-    tableName: 'adm_modelo_documento',
+    tableName: 'adm_documentos_modelo_documento',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

@@ -1,5 +1,5 @@
 /**
- * CRUD para saas_dados_empresa (tabela padrão de empresas cadastradas no SaaS)
+ * CRUD para saas_saas_dados_empresa (tabela padrão de empresas cadastradas no SaaS)
  */
 
 import { Op, WhereOptions } from 'sequelize';

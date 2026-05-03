@@ -114,7 +114,7 @@ NotaFiscal.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'adm_clientes',
+        model: 'adm_clientes_clientes',
         key: 'id'
       },
       onDelete: 'RESTRICT',
@@ -124,7 +124,7 @@ NotaFiscal.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'adm_titulos',
+        model: 'adm_financeiro_titulos',
         key: 'id'
       },
       onDelete: 'SET NULL',
@@ -283,7 +283,7 @@ NotaFiscal.init(
   {
     sequelize,
     modelName: 'NotaFiscal',
-    tableName: 'adm_notas_fiscais',
+    tableName: 'adm_nfse_notas_fiscais',
     timestamps: true,
     underscored: true,
     indexes: [

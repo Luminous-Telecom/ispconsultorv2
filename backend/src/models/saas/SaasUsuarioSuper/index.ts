@@ -44,7 +44,7 @@ SaasUsuarioSuper.init(
   },
   {
     sequelize,
-    tableName: 'saas_usuarios_super',
+    tableName: 'saas_saas_usuarios_super',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

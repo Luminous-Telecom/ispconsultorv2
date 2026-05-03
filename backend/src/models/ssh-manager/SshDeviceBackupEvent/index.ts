@@ -36,7 +36,7 @@ SshDeviceBackupEvent.init(
     ssh_device_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: 'adm_ssh_devices', key: 'id' },
+      references: { model: 'adm_ssh_manager_ssh_devices', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
@@ -64,7 +64,7 @@ SshDeviceBackupEvent.init(
   {
     sequelize,
     modelName: 'SshDeviceBackupEvent',
-    tableName: 'adm_ssh_device_backup_events',
+    tableName: 'adm_ssh_manager_ssh_device_backup_events',
     timestamps: false,
     underscored: true,
   }

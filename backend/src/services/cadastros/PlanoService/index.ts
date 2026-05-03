@@ -123,9 +123,9 @@ export class PlanoService {
       }
     } else if (isOrderingByQuantidadeClientes && sortDirection) {
       // Ordenação especial por quantidade_clientes usando subquery
-      // IMPORTANTE: Usar adm_planos (tabela) na subquery de ordenação
+      // IMPORTANTE: Usar adm_cadastros_planos (tabela) na subquery de ordenação
       const upperDirection = sortDirection.toUpperCase() as 'ASC' | 'DESC';
-      const subquerySql = `(SELECT COUNT(DISTINCT adm_contratos.cliente_id) FROM adm_contratos WHERE adm_contratos.plano_id = adm_planos.id AND adm_contratos.status = 'ativo')`;
+      const subquerySql = `(SELECT COUNT(DISTINCT adm_contratos_contratos.cliente_id) FROM adm_contratos_contratos WHERE adm_contratos_contratos.plano_id = adm_cadastros_planos.id AND adm_contratos_contratos.status = 'ativo')`;
       order = [[sequelize.literal(subquerySql), upperDirection]];
     }
 

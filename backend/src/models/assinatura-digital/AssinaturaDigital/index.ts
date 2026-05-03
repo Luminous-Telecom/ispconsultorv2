@@ -102,7 +102,7 @@ AssinaturaDigital.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'adm_termos_contrato',
+        model: 'adm_contratos_termos_contrato',
         key: 'id'
       },
       onDelete: 'SET NULL'
@@ -111,7 +111,7 @@ AssinaturaDigital.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'adm_clientes',
+        model: 'adm_clientes_clientes',
         key: 'id'
       },
       onDelete: 'SET NULL'
@@ -201,7 +201,7 @@ AssinaturaDigital.init(
   {
     sequelize,
     modelName: 'AssinaturaDigital',
-    tableName: 'adm_assinaturas_digital',
+    tableName: 'adm_assinatura_digital_assinaturas_digital',
     timestamps: true,
     underscored: true,
     indexes: [

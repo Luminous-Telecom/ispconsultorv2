@@ -5,8 +5,8 @@ import { SaasBanco } from '../../../models/saas/SaasBanco';
 import { BancoApiService } from '../../bancos/BancoApiService';
 
 /**
- * Gera boleto para SaasTitulo. Sacado vem de saas_dados_empresa (empresa/tenant).
- * Adapta SaasPlano.nome -> nome_plano e usa bancoTable='saas_bancos'.
+ * Gera boleto para SaasTitulo. Sacado vem de saas_saas_dados_empresa (empresa/tenant).
+ * Adapta SaasPlano.nome -> nome_plano e usa bancoTable='saas_saas_bancos'.
  */
 export class SaasTituloBoletoService {
   static async gerarBoleto(tituloId: number) {
@@ -68,7 +68,7 @@ export class SaasTituloBoletoService {
       plano: { ...planoData, nome_plano: planoData.nome ?? planoData.nome_plano },
     } as unknown as Parameters<typeof BancoApiService.gerarTitulo>[0];
 
-    const resultado = await BancoApiService.gerarTitulo(tituloLike, { bancoTable: 'saas_bancos' });
+    const resultado = await BancoApiService.gerarTitulo(tituloLike, { bancoTable: 'saas_saas_bancos' });
 
     if (resultado.success && resultado.data?.charge_id) {
       const d = resultado.data as Record<string, unknown>;

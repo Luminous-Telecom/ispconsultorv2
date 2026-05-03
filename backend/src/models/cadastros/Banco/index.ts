@@ -469,7 +469,7 @@ Banco.init(
   {
     sequelize,
     modelName: 'Banco',
-    tableName: 'adm_bancos',
+    tableName: 'adm_cadastros_bancos',
     timestamps: true,
     underscored: true,
     indexes: [
