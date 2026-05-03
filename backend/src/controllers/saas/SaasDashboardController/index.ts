@@ -13,4 +13,13 @@ export class SaasDashboardController {
       sendError(res, error, 'Erro ao obter dados do dashboard SaaS', 500, true);
     }
   }
+
+  static async getServerStats(_req: SaasAuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const data = await SaasDashboardService.getServerStats();
+      sendSuccess(res, data);
+    } catch (error) {
+      sendError(res, error, 'Erro ao obter estatísticas do servidor', 500, true);
+    }
+  }
 }

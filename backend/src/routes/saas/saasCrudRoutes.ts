@@ -15,6 +15,7 @@ router.use(saasAuthMiddleware);
 
 // Dashboard
 router.get('/dashboard', SaasDashboardController.getDashboardData);
+router.get('/server-stats', SaasDashboardController.getServerStats);
 
 // Auditoria (logs do painel SaaS — empresa_id opcional para ver todos)
 router.get('/auditoria/pdf', SaasAuditoriaController.generatePdf);

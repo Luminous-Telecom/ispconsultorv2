@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useDebouncedValue } from 'hooks/useDebouncedValue';
 import { formatCurrency, formatNumber } from 'utils/formatters';
 import { useSaasDashboard } from 'hooks/useSaasDashboard';
+import { useSaasServerStats } from 'hooks/useSaasServerStats';
 import { useDashboardFilters } from 'contexts/DashboardFiltersContext';
 import { useDashboardStats } from 'hooks/useDashboardStats';
 import { useDashboardCharts } from 'hooks/useDashboardCharts';
@@ -13,6 +14,27 @@ import { useModal } from 'contexts/ModalContext';
 import { useI18n } from 'contexts/I18nContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
 import SaasDashboardSearchResult from './SaasDashboardSearchResult';
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1_073_741_824) return `${(bytes / 1_073_741_824).toFixed(1)} GB`;
+  if (bytes >= 1_048_576) return `${(bytes / 1_048_576).toFixed(1)} MB`;
+  return `${(bytes / 1024).toFixed(1)} KB`;
+}
+
+function formatUptime(seconds: number): string {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function getUsageColor(percent: number): string {
+  if (percent >= 90) return '#ef4444';
+  if (percent >= 70) return '#f59e0b';
+  return '#10b981';
+}
 
 const SAAS_DASHBOARD_SEARCH_DEBOUNCE_MS = 400;
 
@@ -61,6 +83,8 @@ const SaasDashboard: React.FC = () => {
     startDate,
     endDate,
   });
+
+  const { data: serverStats } = useSaasServerStats();
 
   const stats = useDashboardStats(dashboardData);
   const charts = useDashboardCharts(dashboardData, stats, t);
@@ -124,7 +148,7 @@ const SaasDashboard: React.FC = () => {
   if (debouncedSearch && !activeModal) {
     return (
       <div className="dashboard-container">
-        <div className="container-fluid px-0 px-md-0">
+        <div className="container-fluid px-0">
           <SaasDashboardSearchResult searchTerm={debouncedSearch} searchField={searchField} />
         </div>
       </div>
@@ -133,9 +157,9 @@ const SaasDashboard: React.FC = () => {
 
   return (
     <div className="dashboard-container">
-      <div className="container-fluid px-0 px-md-0">
-        <div className="row g-3">
-          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+      <div className="container-fluid px-0">
+        <div className="row g-2">
+          <div className="col-12 col-sm-6 col-md-4">
             <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.clientesChartData}
@@ -153,7 +177,7 @@ const SaasDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+          <div className="col-12 col-sm-6 col-md-4">
             <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.statusPagamentoData}
@@ -171,7 +195,7 @@ const SaasDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+          <div className="col-12 col-sm-6 col-md-4">
             <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
                 data={charts.contratosChartData}
@@ -189,14 +213,14 @@ const SaasDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+          <div className="col-12 col-sm-6 col-md-4">
             <div className="chart-card">
               <ValueChart data={charts.ticketMedioChartData} title={t('dashboard.averageTicket')} format="currency" />
             </div>
           </div>
 
           {dashboardData?.queueStats != null && (
-            <div className="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12">
+            <div className="col-12 col-sm-6 col-md-4">
               <div className="chart-card">
                 <h6 className="chart-title mb-3">{t('scheduler.title')}</h6>
                 <div className="d-flex flex-column gap-2">
@@ -216,10 +240,108 @@ const SaasDashboard: React.FC = () => {
               </div>
             </div>
           )}
+
+          {serverStats && (
+            <>
+              <div className="col-12 col-sm-6 col-md-4">
+                <div className="chart-card">
+                  <h6 className="chart-title mb-3">Memória RAM</h6>
+                  <div className="d-flex flex-column gap-2">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span className="text-muted">Uso</span>
+                      <strong style={{ color: getUsageColor(serverStats.ram.usedPercent) }}>
+                        {serverStats.ram.usedPercent}%
+                      </strong>
+                    </div>
+                    <div className="progress" style={{ height: 8 }}>
+                      <div
+                        className="progress-bar"
+                        style={{
+                          width: `${serverStats.ram.usedPercent}%`,
+                          backgroundColor: getUsageColor(serverStats.ram.usedPercent),
+                        }}
+                      />
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">Usada</span>
+                      <strong>{formatBytes(serverStats.ram.used)}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">Livre</span>
+                      <strong>{formatBytes(serverStats.ram.free)}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">Total</span>
+                      <strong>{formatBytes(serverStats.ram.total)}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-sm-6 col-md-4">
+                <div className="chart-card">
+                  <h6 className="chart-title mb-3">Disco (HD)</h6>
+                  <div className="d-flex flex-column gap-2">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span className="text-muted">Uso</span>
+                      <strong style={{ color: getUsageColor(serverStats.disk.usedPercent) }}>
+                        {serverStats.disk.usedPercent}%
+                      </strong>
+                    </div>
+                    <div className="progress" style={{ height: 8 }}>
+                      <div
+                        className="progress-bar"
+                        style={{
+                          width: `${serverStats.disk.usedPercent}%`,
+                          backgroundColor: getUsageColor(serverStats.disk.usedPercent),
+                        }}
+                      />
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">Usado</span>
+                      <strong>{formatBytes(serverStats.disk.used)}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">Livre</span>
+                      <strong>{formatBytes(serverStats.disk.free)}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">Total</span>
+                      <strong>{formatBytes(serverStats.disk.total)}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-sm-6 col-md-4">
+                <div className="chart-card">
+                  <h6 className="chart-title mb-3">Servidor</h6>
+                  <div className="d-flex flex-column gap-2">
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">Uptime</span>
+                      <strong>{formatUptime(serverStats.uptime)}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">CPU (1 min)</span>
+                      <strong>{serverStats.cpuLoad[0].toFixed(2)}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">CPU (5 min)</span>
+                      <strong>{serverStats.cpuLoad[1].toFixed(2)}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">CPU (15 min)</span>
+                      <strong>{serverStats.cpuLoad[2].toFixed(2)}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
-        <div className="row g-3">
-          <div className="col-xl-6 col-lg-6">
+        <div className="row g-2">
+          <div className="col-12 col-md-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.recebidosPeriodoChartData}
@@ -230,7 +352,7 @@ const SaasDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-6 col-lg-6">
+          <div className="col-12 col-md-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.receberPeriodoChartData}
@@ -240,10 +362,8 @@ const SaasDashboard: React.FC = () => {
               />
             </div>
           </div>
-        </div>
 
-        <div className="row g-3">
-          <div className="col-xl-6 col-lg-6">
+          <div className="col-12 col-md-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.receitaMensalChartData}
@@ -254,7 +374,7 @@ const SaasDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-6 col-lg-6">
+          <div className="col-12 col-md-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart
                 data={charts.crescimentoClientes}
@@ -264,10 +384,8 @@ const SaasDashboard: React.FC = () => {
               />
             </div>
           </div>
-        </div>
 
-        <div className="row g-3">
-          <div className="col-xl-6 col-lg-6">
+          <div className="col-12 col-md-6">
             <div className="chart-card" style={{ height: 'auto', minHeight: 0 }}>
               <BarChart data={charts.clientesPorPlano} title={t('dashboard.clientsByPlan')} format="number" onBarClick={handleClientesPorPlanoBarClick} />
             </div>

@@ -124,6 +124,51 @@ export class SaasDashboardService {
     };
   }
 
+  static async getServerStats(): Promise<{
+    ram: { total: number; free: number; used: number; usedPercent: number };
+    disk: { total: number; free: number; used: number; usedPercent: number };
+    uptime: number;
+    cpuLoad: number[];
+  }> {
+    const os = await import('os');
+    const { execSync } = await import('child_process');
+
+    const totalRam = os.totalmem();
+    const freeRam = os.freemem();
+    const usedRam = totalRam - freeRam;
+
+    let diskTotal = 0;
+    let diskFree = 0;
+    let diskUsed = 0;
+    try {
+      const dfOutput = execSync('df -k /').toString();
+      const lines = dfOutput.trim().split('\n');
+      const parts = lines[1].trim().split(/\s+/);
+      diskTotal = parseInt(parts[1], 10) * 1024;
+      diskUsed = parseInt(parts[2], 10) * 1024;
+      diskFree = parseInt(parts[3], 10) * 1024;
+    } catch {
+      // ignora erro ao obter info de disco
+    }
+
+    return {
+      ram: {
+        total: totalRam,
+        free: freeRam,
+        used: usedRam,
+        usedPercent: Math.round((usedRam / totalRam) * 100),
+      },
+      disk: {
+        total: diskTotal,
+        free: diskFree,
+        used: diskUsed,
+        usedPercent: diskTotal > 0 ? Math.round((diskUsed / diskTotal) * 100) : 0,
+      },
+      uptime: os.uptime(),
+      cpuLoad: os.loadavg(),
+    };
+  }
+
   private static async getQueueStats(): Promise<{ queueSize: number; queueRunning: number; queueConcurrency: number }> {
     try {
       const { SchedulerService } = await import('../../scheduler/SchedulerService');

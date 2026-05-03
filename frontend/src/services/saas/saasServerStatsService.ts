@@ -1,0 +1,32 @@
+import { defaultApiClient } from '../core';
+
+export interface ServerRamStats {
+  total: number;
+  free: number;
+  used: number;
+  usedPercent: number;
+}
+
+export interface ServerDiskStats {
+  total: number;
+  free: number;
+  used: number;
+  usedPercent: number;
+}
+
+export interface ServerStats {
+  ram: ServerRamStats;
+  disk: ServerDiskStats;
+  uptime: number;
+  cpuLoad: number[];
+}
+
+export class SaasServerStatsService {
+  static async getServerStats(): Promise<ServerStats> {
+    const response = await defaultApiClient.get<ServerStats>('/saas/server-stats');
+    if (response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Erro ao carregar estatísticas do servidor');
+  }
+}
