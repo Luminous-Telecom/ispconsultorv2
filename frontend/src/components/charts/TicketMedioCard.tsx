@@ -68,15 +68,15 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
       style={{
         background: 'rgba(255,255,255,0.04)',
         borderRadius: 8,
-        padding: '10px 12px 8px',
-        marginTop: 10,
+        padding: '7px 10px 6px',
+        marginTop: 6,
         position: 'relative',
       }}
     >
-      <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-secondary, rgba(255,255,255,0.4))', letterSpacing: '0.06em', marginBottom: 10 }}>
+      <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-secondary, rgba(255,255,255,0.4))', letterSpacing: '0.06em', marginBottom: 6 }}>
         ÚLTIMOS {series.length} MESES
       </div>
-      <div style={{ display: 'flex', alignItems: 'stretch', gap: 5, height: 112 }}>
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: 4, height: 90 }}>
         {series.map((item, i) => {
           const heightPct = max > 0 ? (item.valor / max) * 100 : 12;
           const barHeightPct = Math.max(heightPct, 12);
@@ -190,15 +190,15 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: 12,
+        borderRadius: 10,
         border: '0.5px solid rgba(0,0,0,0.12)',
         background: 'var(--bg-secondary)',
-        padding: '12px',
+        padding: '9px 10px',
         boxSizing: 'border-box',
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
         <div
           style={{
             width: 28,
@@ -235,15 +235,15 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
       </div>
 
       {/* Valor principal */}
-      <div style={{ marginBottom: 8 }}>
+      <div style={{ marginBottom: 4 }}>
         <div
           style={{
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: 700,
             color: 'var(--text-primary)',
             letterSpacing: '-0.03em',
             lineHeight: 1.1,
-            marginBottom: 6,
+            marginBottom: 4,
           }}
         >
           {formatCurrency(data.ticketMedio)}
@@ -256,7 +256,7 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
             </span>
           )}
         </div>
-        {sinalTicket !== 0 && <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '10px 0 0' }} />}
+        {sinalTicket !== 0 && <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '6px 0 0' }} />}
       </div>
 
       {/* Gráfico de barras */}
