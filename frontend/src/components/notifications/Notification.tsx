@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NotificationState, NotificationAction } from './types';
 import Button from '../ui/Button';
+import { usePrefersRealHover } from '../../hooks/usePrefersRealHover';
 
 interface NotificationProps {
   notification: NotificationState;
@@ -23,6 +24,8 @@ const Notification: React.FC<NotificationProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
 
   const { config } = notification;
+  const prefersRealHover = usePrefersRealHover();
+  const shouldPauseOnHover = Boolean(config.pauseOnHover && prefersRealHover);
   const { onShown } = config;
 
   useEffect(() => {
@@ -35,13 +38,13 @@ const Notification: React.FC<NotificationProps> = ({
 
   // Handlers de mouse
   const handleMouseEnter = () => {
-    if (config.pauseOnHover) {
+    if (shouldPauseOnHover) {
       onPause(notification.id);
     }
   };
 
   const handleMouseLeave = () => {
-    if (config.pauseOnHover) {
+    if (shouldPauseOnHover) {
       onResume(notification.id);
     }
   };
