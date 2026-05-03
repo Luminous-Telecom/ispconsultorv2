@@ -329,13 +329,6 @@ export class RoutineScheduleService {
         usuario: usuario ?? undefined,
         ipAddress: ipAddress ?? undefined
       });
-
-      logger.info('Rotina SaaS executada', {
-        context: 'RoutineScheduleService',
-        rotinaId: routine.id,
-        tipo: routine.tipo,
-        success: statusFinal === 'sucesso'
-      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const endTime = new Date();

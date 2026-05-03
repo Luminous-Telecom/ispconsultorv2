@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import Joi from 'joi';
 import jwt, { JwtPayload, Secret, SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { logger } from '../../utils/logger';
 import { UsuarioService } from '../../services/cadastros/UsuarioService';
 import { registrarLogin, registrarLogout } from '../../services/sistema/AuditoriaService/index';
 import type { AuthenticatedRequest as AuthRequest } from '../../types/auth';
@@ -123,12 +122,6 @@ export class AuthController {
         sameSite: 'strict',
         path: '/',
         maxAge: jwtDurationToMs(jwtExpiresIn),
-      });
-
-      logger.info('Login realizado com sucesso', {
-        usuario_id: usuario.id,
-        email: usuario.email,
-        path: '/api/auth/login',
       });
 
       // Retornamos o token também no corpo para uso em Socket.IO (única exceção)
