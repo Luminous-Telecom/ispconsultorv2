@@ -66,17 +66,21 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
   return (
     <div
       style={{
+        flex: 1,
+        minHeight: 0,
         background: 'rgba(255,255,255,0.04)',
         borderRadius: 8,
         padding: '5px 8px 4px',
         marginTop: 4,
         position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-secondary, rgba(255,255,255,0.4))', letterSpacing: '0.06em', marginBottom: 4 }}>
+      <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-secondary, rgba(255,255,255,0.4))', letterSpacing: '0.06em', marginBottom: 4, flexShrink: 0 }}>
         ÚLTIMOS {series.length} MESES
       </div>
-      <div style={{ display: 'flex', alignItems: 'stretch', gap: 4, height: 58 }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'stretch', gap: 4 }}>
         {series.map((item, i) => {
           const heightPct = max > 0 ? (item.valor / max) * 100 : 12;
           const barHeightPct = Math.max(heightPct, 12);
@@ -195,6 +199,8 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
         background: 'var(--bg-secondary)',
         padding: '7px 8px',
         boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {/* Header */}
@@ -259,8 +265,12 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
         {sinalTicket !== 0 && <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '4px 0 0' }} />}
       </div>
 
-      {/* Gráfico de barras */}
-      {data.seriesMensal.length > 0 && <BarChart series={data.seriesMensal} />}
+      {/* Gráfico de barras — ocupa o espaço restante do card */}
+      {data.seriesMensal.length > 0 && (
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <BarChart series={data.seriesMensal} />
+        </div>
+      )}
     </div>
   );
 };
