@@ -52,8 +52,9 @@ function renderBackupAgendamentoHint(
   ag: BackupAgendamentoInfo | undefined,
   t: I18nTranslateFn
 ): React.ReactNode {
-  if (!ag?.configurado || !ag.hora_execucao) return null;
+  if (!ag?.configurado) return null;
   const f = ag.frequencia;
+  const horaDisp = ag.hora_execucao ?? '—';
   let freqLabel = '';
   if (f === 'diaria') freqLabel = t('sshDevice.freqDiaria');
   else if (f === 'semanal') freqLabel = t('sshDevice.freqSemanal');
@@ -62,7 +63,7 @@ function renderBackupAgendamentoHint(
   else if (f === 'personalizada') freqLabel = t('sshDevice.freqPersonalizada');
   else if (f) freqLabel = f;
   const text = t('sshDevice.backupScheduleAt')
-    .replace('{{hora}}', ag.hora_execucao)
+    .replace('{{hora}}', horaDisp)
     .replace('{{freq}}', freqLabel);
   return <span className="text-muted small ms-1">{text}</span>;
 }

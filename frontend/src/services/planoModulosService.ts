@@ -1,13 +1,6 @@
 import { defaultApiClient } from './core';
-
-export type PlanoModuloId =
-  | 'cadastros'
-  | 'financeiro'
-  | 'blockdomi'
-  | 'equipamentos'
-  | 'envio_notificacoes'
-  | 'assinatura_digital'
-  | 'nfse';
+import type { PlanoModuloId } from 'constants/planoModulos';
+export type { PlanoModuloId } from 'constants/planoModulos';
 
 export interface PlanoModulosResponse {
   modulos: PlanoModuloId[] | null;

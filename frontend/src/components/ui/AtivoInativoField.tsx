@@ -21,7 +21,8 @@ const AtivoInativoField: React.FC<AtivoInativoFieldProps> = ({
   className = '',
 }) => {
   const { t } = useI18n();
-  const fieldId = propId || `ativo-inativo-${Math.random().toString(36).slice(2, 9)}`;
+  const autoId = React.useId().replace(/:/g, '');
+  const fieldId = propId || `${name}-${autoId}`;
   const idSim = `${fieldId}-sim`;
   const idNao = `${fieldId}-nao`;
 
@@ -32,28 +33,36 @@ const AtivoInativoField: React.FC<AtivoInativoFieldProps> = ({
         {required && <span className="text-danger"> *</span>}
       </label>
       <div className="d-flex flex-wrap gap-3">
-        <label htmlFor={idSim} className="d-flex align-items-center gap-2 small">
+        <div className="form-check form-check-inline">
           <input
+            className="form-check-input"
             type="checkbox"
-            name={name}
             id={idSim}
             checked={value}
-            onChange={() => onChange(true)}
+            onChange={(e) => {
+              if (e.target.checked) onChange(true);
+            }}
             disabled={disabled}
           />
-          <span>{t('ui.yes')}</span>
-        </label>
-        <label htmlFor={idNao} className="d-flex align-items-center gap-2 small">
+          <label className="form-check-label" htmlFor={idSim}>
+            {t('ui.yes')}
+          </label>
+        </div>
+        <div className="form-check form-check-inline">
           <input
+            className="form-check-input"
             type="checkbox"
-            name={name}
             id={idNao}
             checked={!value}
-            onChange={() => onChange(false)}
+            onChange={(e) => {
+              if (e.target.checked) onChange(false);
+            }}
             disabled={disabled}
           />
-          <span>{t('ui.no')}</span>
-        </label>
+          <label className="form-check-label" htmlFor={idNao}>
+            {t('ui.no')}
+          </label>
+        </div>
       </div>
     </div>
   );

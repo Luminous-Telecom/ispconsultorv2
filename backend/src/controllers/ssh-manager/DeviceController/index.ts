@@ -893,7 +893,7 @@ export class DeviceController {
           ativo: true
         },
         order: [['id', 'ASC']],
-        attributes: ['hora_execucao', 'frequencia', 'proxima_execucao']
+        attributes: ['minuto', 'hora', 'proxima_execucao']
       });
 
       if (!routine) {
@@ -906,18 +906,21 @@ export class DeviceController {
         return;
       }
 
-      const raw = routine.getDataValue('hora_execucao') as unknown;
+      const minRaw = routine.getDataValue('minuto') as unknown;
+      const hourRaw = routine.getDataValue('hora') as unknown;
       let horaStr: string | null = null;
-      if (typeof raw === 'string') {
-        horaStr = raw.length >= 5 ? raw.slice(0, 5) : raw;
-      } else if (raw instanceof Date) {
-        horaStr = `${String(raw.getHours()).padStart(2, '0')}:${String(raw.getMinutes()).padStart(2, '0')}`;
+      const ms = typeof minRaw === 'string' ? minRaw.trim() : '';
+      const hs = typeof hourRaw === 'string' ? hourRaw.trim() : '';
+      if (/^\d+$/.test(ms) && /^\d+$/.test(hs)) {
+        const mm = Math.min(59, Math.max(0, parseInt(ms, 10)));
+        const hh = Math.min(23, Math.max(0, parseInt(hs, 10)));
+        horaStr = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
       }
 
       sendSuccess(res, {
         configurado: true,
         hora_execucao: horaStr,
-        frequencia: routine.frequencia,
+        frequencia: 'personalizada',
         proxima_execucao: routine.proxima_execucao
       });
     } catch (error) {

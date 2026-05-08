@@ -28,7 +28,7 @@ alwaysApply: true
 - Nunca use commits genéricos
 
 ## Botões (regra crítica)
-- SEM ícones nos botões
+- SEM ícones nos botões, exceto ações de `Copiar` (pode usar botão só com ícone)
 - Texto FIXO mesmo durante `isPending` — nunca mude o texto
 - Botão salvar: sempre "Salvar" | Criar: "Criar [Entidade]"
 - Mantém `disabled={isPending}` mas texto não muda
