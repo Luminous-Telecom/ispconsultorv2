@@ -1263,6 +1263,9 @@ export interface TranslationKeys {
   'scheduler.lastRun': string;
   'scheduler.executions': string;
   'scheduler.errors': string;
+  'scheduler.execTotal': string;
+  'scheduler.execSuccess': string;
+  'scheduler.execWithError': string;
   'scheduler.confirmExecute': string;
   'scheduler.executeRoutine': string;
   'scheduler.execute': string;
@@ -2791,6 +2794,9 @@ const translations: Translations = {
     'scheduler.lastRun': 'Última Execução',
     'scheduler.executions': 'Execuções',
     'scheduler.errors': 'Erros',
+    'scheduler.execTotal': 'Total',
+    'scheduler.execSuccess': 'Com sucesso',
+    'scheduler.execWithError': 'Execuções com erro',
     'scheduler.confirmExecute': 'Deseja executar a rotina agora?',
     'scheduler.executeRoutine': 'Executar rotina',
     'scheduler.execute': 'Executar',
@@ -4314,6 +4320,9 @@ const translations: Translations = {
     'scheduler.lastRun': 'Last Run',
     'scheduler.executions': 'Executions',
     'scheduler.errors': 'Errors',
+    'scheduler.execTotal': 'Total',
+    'scheduler.execSuccess': 'Successful',
+    'scheduler.execWithError': 'Failed runs',
     'scheduler.confirmExecute': 'Do you want to execute the routine now?',
     'scheduler.executeRoutine': 'Execute routine',
     'scheduler.execute': 'Execute',
@@ -5839,6 +5848,9 @@ const translations: Translations = {
     'scheduler.lastRun': 'Última Ejecución',
     'scheduler.executions': 'Ejecuciones',
     'scheduler.errors': 'Errores',
+    'scheduler.execTotal': 'Total',
+    'scheduler.execSuccess': 'Correctas',
+    'scheduler.execWithError': 'Ejecuciones con error',
     'scheduler.confirmExecute': '¿Desea ejecutar la rutina ahora?',
     'scheduler.executeRoutine': 'Ejecutar rutina',
     'scheduler.execute': 'Ejecutar',

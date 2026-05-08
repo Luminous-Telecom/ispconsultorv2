@@ -15,6 +15,13 @@ import ConfirmModal from 'components/modals/ConfirmModal';
 import { useI18n } from 'contexts/I18nContext';
 import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
 import { getCronDisplayFromRotina } from 'utils/schedulerCronDisplay';
+import { formatDateTime } from 'utils/formatters';
+
+function displayProximaUltima(iso: string | undefined): string {
+  if (iso == null || iso === '') return '—';
+  const d = formatDateTime(iso);
+  return d === '-' ? '—' : d;
+}
 
 const QUERY_KEY = 'saas-agendador-tarefas';
 const MODAL_ID = 'saas-agendador-tarefas-modal';
@@ -90,6 +97,53 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
         sortable: true,
         minWidth: 112,
         render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).diaSemana,
+      },
+      {
+        key: 'execucoes_com_erro',
+        label: t('scheduler.execWithError'),
+        sortable: true,
+        minWidth: 112,
+        render: (item: RotinaAgendada) => (
+          <span className="text-nowrap">{item.execucoes_com_erro ?? '—'}</span>
+        ),
+      },
+      {
+        key: 'total_execucoes',
+        label: t('scheduler.execTotal'),
+        sortable: true,
+        minWidth: 72,
+        render: (item: RotinaAgendada) => (
+          <span className="text-nowrap">{item.total_execucoes ?? '—'}</span>
+        ),
+      },
+      {
+        key: 'execucoes_com_sucesso',
+        label: t('scheduler.execSuccess'),
+        sortable: true,
+        minWidth: 96,
+        render: (item: RotinaAgendada) => (
+          <span className="text-nowrap">{item.execucoes_com_sucesso ?? '—'}</span>
+        ),
+      },
+      {
+        key: 'proxima_execucao',
+        label: t('scheduler.nextRun'),
+        sortable: true,
+        minWidth: 152,
+        render: (item: RotinaAgendada) => (
+          <span className="text-nowrap">{displayProximaUltima(item.proxima_execucao)}</span>
+        ),
+      },
+      {
+        key: 'ultima_execucao',
+        label: t('scheduler.lastRun'),
+        sortable: true,
+        minWidth: 152,
+        render: (item: RotinaAgendada) => (
+          <span className="text-nowrap">
+            {item.ultima_execucao_formatada ?? displayProximaUltima(item.ultima_execucao)}
+          </span>
+        ),
       },
       {
         key: 'ativo',
