@@ -235,7 +235,14 @@ export function sanitizeObject<T extends Record<string, unknown>>(
     'numero',
     'telefone',
     'whatsapp',
-    'observacoes'
+    'observacoes',
+    // RPKI - XMLs de provisioning (não remover tags)
+    'responsexml',
+    'parentresponsexml',
+    'parent_response_xml',
+    'parent_child_request_xml',
+    'repository_response_xml',
+    'repository_request_xml'
   ];
   
   // Campos que contêm HTML e devem ser preservados mesmo quando allowHtml=false

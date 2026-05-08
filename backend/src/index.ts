@@ -199,10 +199,18 @@ if (ENABLE_METRICS) {
 // Configuração via variáveis de ambiente ou valores padrão
 const ddosMaxProcessingTime = parseInt(process.env.DDOS_MAX_PROCESSING_TIME || '15000'); // 15 segundos
 const ddosMaxConcurrentRequests = parseInt(process.env.DDOS_MAX_CONCURRENT_REQUESTS || '100'); // 100 requisições concorrentes
+/** Análise RPKI + download/stream RIS (Krill-like) pode ultrapassar minutos em rede lenta */
+const ddosRpkiRoaAnalyzeMaxMs = parseInt(process.env.DDOS_RPKI_ROA_ANALYZE_MAX_MS || '600000', 10); // 10 minutos
 
 app.use(ddosProtectionMiddleware({
   maxProcessingTime: ddosMaxProcessingTime,
   maxConcurrentRequests: ddosMaxConcurrentRequests,
+  extendedTimeouts: [
+    {
+      test: (pathname) => /\/rpki\/cas\/[^/]+\/roas\/analyze\/?$/.test(pathname),
+      maxProcessingTime: Number.isFinite(ddosRpkiRoaAnalyzeMaxMs) ? ddosRpkiRoaAnalyzeMaxMs : 600_000,
+    },
+  ],
   skipRoutes: [
     '/health',
     '/api/health',
@@ -371,7 +379,7 @@ const startServer = async () => {
   }
 };
 
-const gracefulShutdown = async (signal: string, shouldExit: boolean = true) => {
+const gracefulShutdown = async (signal: string, shouldExit = true) => {
   logger.info(`Recebido sinal ${signal}, iniciando encerramento gracioso...`);
   
   if (server) {

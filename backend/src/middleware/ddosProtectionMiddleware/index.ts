@@ -11,6 +11,14 @@ interface DDoSProtectionConfig {
   maxConcurrentRequests: number;
   /** Rotas que devem ser ignoradas pelo middleware */
   skipRoutes?: string[];
+  /**
+   * Rotas com limite de tempo maior (ex.: análise RPKI + download RIS).
+   * O tempo efetivo é max(maxProcessingTime, maior regra que casar).
+   */
+  extendedTimeouts?: Array<{
+    test: (pathname: string) => boolean;
+    maxProcessingTime: number;
+  }>;
 }
 
 /**
@@ -32,12 +40,21 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
   const {
     maxProcessingTime = 15000, // 15 segundos
     maxConcurrentRequests = 100,
-    skipRoutes = []
+    skipRoutes = [],
+    extendedTimeouts = [],
   } = config || {};
 
   return (req: Request, res: Response, next: NextFunction): void => {
     // Usar pathname completo (originalUrl) para skip: em alguns proxies/mounts req.path pode vir só como "/upload".
     const pathname = (req.originalUrl || req.url || '').split('?')[0] || req.path || '';
+
+    let effectiveMaxProcessingTime = maxProcessingTime;
+    for (const rule of extendedTimeouts) {
+      if (rule.test(pathname)) {
+        effectiveMaxProcessingTime = Math.max(effectiveMaxProcessingTime, rule.maxProcessingTime);
+        break;
+      }
+    }
 
     const shouldSkip = skipRoutes.some(route => pathname.startsWith(route) || req.path.startsWith(route));
     if (shouldSkip) {
@@ -83,7 +100,7 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
       // Verificar se a resposta ainda não foi enviada
       if (!res.headersSent && !isDecremented) {
         logger.warn('Timeout de processamento excedido', {
-          maxProcessingTime,
+          effectiveMaxProcessingTime,
           path: req.path,
           originalUrl: req.originalUrl,
           method: req.method,
@@ -106,7 +123,7 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
           req.socket.destroy();
         }
       }
-    }, maxProcessingTime);
+    }, effectiveMaxProcessingTime);
 
     // Interceptar o método res.end para garantir que o timeout seja limpo
     const originalEnd = res.end.bind(res);

@@ -59,6 +59,17 @@ import { SshDeviceBackupEvent } from './ssh-manager/SshDeviceBackupEvent';
 
 // Agent
 import { Agent } from './agent/Agent';
+import {
+  RpkiRoa,
+  RpkiValidationLog,
+  RpkiAlert,
+  RpkiSyncSession,
+  RpkiCa,
+  RpkiCaParent,
+  RpkiRepository,
+  RpkiCaResource,
+  RpkiAspa,
+} from './rpki';
 
 // SaaS
 import { SaasPlano } from './saas/SaasPlano';
@@ -489,4 +500,13 @@ export {
   SshDeviceBackup,
   SshDeviceBackupEvent,
   Agent,
+  RpkiRoa,
+  RpkiValidationLog,
+  RpkiAlert,
+  RpkiSyncSession,
+  RpkiCa,
+  RpkiCaParent,
+  RpkiRepository,
+  RpkiCaResource,
+  RpkiAspa,
 };

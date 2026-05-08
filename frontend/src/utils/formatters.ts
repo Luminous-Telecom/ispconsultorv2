@@ -116,6 +116,38 @@ export const formatDateTime = (date: string | Date | null | undefined): string =
   }
 };
 
+/** YYYY-MM-DD extraídos do valor da API (ISO ou MySQL) para `<input type="date">` sem drift de timezone. */
+export function normalizeDateOnlyForInput(value: string | null | undefined): string {
+  if (!value?.trim()) return '';
+  const m = value.trim().match(/^(\d{4}-\d{2}-\d{2})/);
+  return m?.[1] ?? '';
+}
+
+/**
+ * Exibe validade de ROA/certificado RPKI: apenas calendário (DD/MM/AAAA) quando há só data ou meia-noite;
+ * data+hora exibe com `formatDateTime`.
+ */
+export function formatRpkiValidityDisplay(value: string | Date | null | undefined): string {
+  if (value == null || value === '') return '-';
+  if (value instanceof Date) {
+    if (isNaN(value.getTime())) return '-';
+    return formatDateTime(value);
+  }
+  const s = String(value).trim();
+  if (!s) return '-';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return formatDate(s);
+
+  const head = /^(\d{4}-\d{2}-\d{2})/.exec(s);
+  if (!head) return formatDateTime(s);
+  const datePart = head[1];
+  const rest = s.slice(10);
+  const isCalendarMidnightOnly =
+    rest === '' || /^[T ]\s*00:00:00(?:\.\d+)?(?:Z|[+-]00:00)?$/.test(rest);
+
+  if (isCalendarMidnightOnly) return formatDate(datePart);
+  return formatDateTime(s);
+}
+
 
 /**
  * Formata um CNPJ progressivamente durante a digitação

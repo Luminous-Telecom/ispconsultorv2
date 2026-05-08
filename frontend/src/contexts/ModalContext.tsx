@@ -37,6 +37,16 @@ export type ModalType =
   | 'logs-acesso-sistema'
   | 'logs-equipamentos'
   | 'logs-agentes'
+  // RPKI (ERP)
+  | 'rpki-cas'
+  | 'rpki-cas-pai'
+  | 'rpki-repositorios'
+  | 'rpki-aspas'
+  | 'rpki-roas'
+  | 'rpki-validar-rota'
+  | 'rpki-historico'
+  | 'rpki-alertas'
+  | 'rpki-sincronizacao'
   // SaaS Super Admin (rotas exclusivas /api/saas/*)
   | 'saas-planos'
   | 'saas-usuarios'

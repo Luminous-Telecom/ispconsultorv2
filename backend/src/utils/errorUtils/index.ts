@@ -80,3 +80,18 @@ export function getErrorName(error: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Erro de pré-requisito / validação em fluxos RPKI (HTTP 400, sem stack como falha de servidor).
+ */
+export class RpkiClientError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RpkiClientError';
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export function isRpkiClientError(error: unknown): error is RpkiClientError {
+  return error instanceof RpkiClientError;
+}
+

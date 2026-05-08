@@ -61,6 +61,7 @@ import saasBackupsRoutes from './saas/saasBackupsRoutes';
 import tenantRoutes from './tenantRoutes';
 import sshManagerRoutes from './sshManagerRoutes';
 import agentRoutes from './agentRoutes';
+import rpkiRoutes from './rpkiRoutes';
 
 const router = Router();
 
@@ -110,6 +111,7 @@ const routes = [
     { path: '/api/ips-permitidos', route: ipsPermitidosRoutes },
     { path: '/api/pdf-extract', route: pdfExtractRoutes },
     { path: '/api/agents', route: agentRoutes },
+    { path: '/api/rpki', route: rpkiRoutes },
     { path: '/api', route: centralAssinanteRoutes },
 
     // Rotas de webhook

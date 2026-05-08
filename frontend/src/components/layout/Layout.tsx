@@ -265,6 +265,38 @@ const Layout: React.FC = () => {
     { id: 'ips-permitidos', modalId: 'blockdomi-ips-permitidos', label: t('blockdomi.ipsPermitidos'), icon: 'bi-shield-check', onClick: () => handleOpenModal('blockdomi-ips-permitidos') },
   ].filter((item) => filterByModulo(item.modalId));
 
+  const rpkiFolderItems = [
+    {
+      id: 'rpki-cas',
+      label: 'CAs',
+      icon: 'bi-diagram-3',
+      onClick: () => handleOpenModal('rpki-cas'),
+    },
+    {
+      id: 'rpki-cas-pai',
+      label: 'CAs-pai',
+      icon: 'bi-diagram-2',
+      onClick: () => handleOpenModal('rpki-cas-pai'),
+    },
+    {
+      id: 'rpki-repositorios',
+      label: 'Repositórios',
+      icon: 'bi-hdd-network',
+      onClick: () => handleOpenModal('rpki-repositorios'),
+    },
+    { id: 'rpki-roas', label: 'ROAs', icon: 'bi-list-check', onClick: () => handleOpenModal('rpki-roas') },
+    {
+      id: 'rpki-aspas',
+      label: 'ASPAs',
+      icon: 'bi-shield-check',
+      onClick: () => handleOpenModal('rpki-aspas'),
+    },
+    { id: 'rpki-validar-rota', label: 'Validar Rota', icon: 'bi-search', onClick: () => handleOpenModal('rpki-validar-rota') },
+    { id: 'rpki-historico', label: 'Histórico', icon: 'bi-clock-history', onClick: () => handleOpenModal('rpki-historico') },
+    { id: 'rpki-alertas', label: 'Alertas', icon: 'bi-exclamation-triangle', onClick: () => handleOpenModal('rpki-alertas') },
+    { id: 'rpki-sincronizacao', label: 'Sincronização', icon: 'bi-arrow-repeat', onClick: () => handleOpenModal('rpki-sincronizacao') },
+  ];
+
   const logsFolderItems = [
     { id: 'logs-usuarios', modalId: 'logs-usuarios', label: t('logs.usuarios'), icon: 'bi-people-fill', onClick: () => handleOpenModal('logs-usuarios') },
     { id: 'logs-webhook', modalId: 'logs-webhook', label: t('logs.webhook'), icon: 'bi-link-45deg', onClick: () => handleOpenModal('logs-webhook') },
@@ -544,6 +576,61 @@ const Layout: React.FC = () => {
                 >
                   <div className="accordion-body p-0">
                     {blockdomiFolderItems.map((item) => (
+                      <button
+                        key={item.id}
+                        className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"
+                        onClick={() => {
+                          item.onClick();
+                          setSidebarOpen(false);
+                        }}
+                        type="button"
+                      >
+                        <i className={`bi ${item.icon} me-2`}></i>
+                        <span>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* Menu Pasta para RPKI usando Bootstrap Accordion */}
+            {rpkiFolderItems.length > 0 && (
+            <div className="accordion sidebar-accordion" id="rpkiAccordion">
+              <div className="accordion-item border-0 bg-transparent">
+                <h2 className="accordion-header">
+                  <button
+                    className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#rpkiCollapse"
+                    aria-expanded="false"
+                    aria-controls="rpkiCollapse"
+                    onClick={(e) => {
+                      const button = e.currentTarget;
+                      const folderIcon = button.querySelector('.folder-icon');
+                      setTimeout(() => {
+                        if (folderIcon && button.classList.contains('collapsed')) {
+                          folderIcon.className = 'bi bi-folder folder-icon me-2';
+                        } else if (folderIcon) {
+                          folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
+                        }
+                      }, 10);
+                    }}
+                  >
+                    <i className="bi bi-folder folder-icon me-2"></i>
+                    <span>RPKI</span>
+                  </button>
+                </h2>
+                <div
+                  id="rpkiCollapse"
+                  className="accordion-collapse collapse"
+                  aria-labelledby="rpkiHeading"
+                  data-bs-parent="#rpkiAccordion"
+                >
+                  <div className="accordion-body p-0">
+                    {rpkiFolderItems.map((item) => (
                       <button
                         key={item.id}
                         className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"

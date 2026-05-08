@@ -4,6 +4,7 @@ import { useI18n, TranslationKeys } from 'contexts/I18nContext';
 import Loading from './Loading';
 import DraggableModal from './DraggableModal';
 import { resolveLogsModal } from '../modals/logs/logsModalRegistry';
+import type { ModalType } from 'contexts/ModalContext';
 
 // Lazy load dos modais (code splitting)
 const EmpresasModal = lazy(() => import('../modals/empresas/EmpresasModal'));
@@ -57,6 +58,45 @@ const AgentListModal = lazy(() => import('../modals/agent').then(m => ({ default
 const DashboardBackupEquipamentosModal = lazy(
   () => import('../modals/dashboard/DashboardBackupEquipamentosModal')
 );
+const RpkiCaListModal = lazy(() => import('../modals/rpki/RpkiCaListModal'));
+const RpkiCaParentListModal = lazy(() => import('../modals/rpki/RpkiCaParentListModal'));
+const RpkiRepositoryListModal = lazy(() => import('../modals/rpki/RpkiRepositoryListModal'));
+const RpkiAspaListModal = lazy(() => import('../modals/rpki/RpkiAspaListModal'));
+const RpkiRoaListModal = lazy(() => import('../modals/rpki/RpkiRoaListModal'));
+const RpkiValidateRouteModal = lazy(() => import('../modals/rpki/RpkiValidateRouteModal'));
+const RpkiHistoryModal = lazy(() => import('../modals/rpki/RpkiHistoryModal'));
+const RpkiAlertsModal = lazy(() => import('../modals/rpki/RpkiAlertsModal'));
+const RpkiSyncModal = lazy(() => import('../modals/rpki/RpkiSyncModal'));
+
+interface ResolvedRpkiModal {
+  title: string;
+  component: React.LazyExoticComponent<React.ComponentType<ModalComponentProps>>;
+}
+
+const resolveRpkiModal = (active: ModalType): ResolvedRpkiModal | null => {
+  switch (active) {
+    case 'rpki-cas':
+      return { title: 'RPKI - CAs', component: RpkiCaListModal };
+    case 'rpki-cas-pai':
+      return { title: 'RPKI - CAs-pai', component: RpkiCaParentListModal };
+    case 'rpki-repositorios':
+      return { title: 'RPKI - Repositorios', component: RpkiRepositoryListModal };
+    case 'rpki-aspas':
+      return { title: 'RPKI - ASPAs', component: RpkiAspaListModal };
+    case 'rpki-roas':
+      return { title: 'RPKI - ROAs', component: RpkiRoaListModal };
+    case 'rpki-validar-rota':
+      return { title: 'RPKI - Validar Rota', component: RpkiValidateRouteModal };
+    case 'rpki-historico':
+      return { title: 'RPKI - Historico', component: RpkiHistoryModal };
+    case 'rpki-alertas':
+      return { title: 'RPKI - Alertas', component: RpkiAlertsModal };
+    case 'rpki-sincronizacao':
+      return { title: 'RPKI - Sincronizacao', component: RpkiSyncModal };
+    default:
+      return null;
+  }
+};
 
 interface ModalComponentProps {
   show: boolean;
@@ -175,6 +215,29 @@ const SingleModalWrapper: React.FC = () => {
             skipWrapper={true}
             logType={resolvedLogs.logType}
             variant={resolvedLogs.variant}
+            {...(modalData ?? {})}
+          />
+        </Suspense>
+      </DraggableModal>
+    );
+  }
+
+  const resolvedRpki = resolveRpkiModal(activeModal);
+  if (resolvedRpki) {
+    const loadingMessage = t('ui.loadingPage');
+    const RpkiComponent = resolvedRpki.component;
+    return (
+      <DraggableModal
+        show={true}
+        onClose={closeModal}
+        title={resolvedRpki.title}
+        size="lg"
+      >
+        <Suspense fallback={<Loading message={loadingMessage} />}>
+          <RpkiComponent
+            show={true}
+            onClose={closeModal}
+            skipWrapper={true}
             {...(modalData ?? {})}
           />
         </Suspense>
