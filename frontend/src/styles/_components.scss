@@ -5466,3 +5466,33 @@ input[type="week"]::-moz-calendar-picker-indicator {
   border-radius: 6px;
 }
 
+/* Título em pill + linha (blocos de formulário / cron) */
+.form-section-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 0.75rem;
+  min-height: 1.75rem;
+}
+
+.form-section-heading-pill {
+  flex-shrink: 0;
+  padding: 0.3rem 0.85rem;
+  border-radius: 9999px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm, 0.8125rem);
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  border: 1px solid var(--border-color);
+}
+
+.form-section-heading-line {
+  flex: 1 1 auto;
+  display: block;
+  height: 1px;
+  background-color: var(--border-color);
+  opacity: 0.75;
+  min-width: 1rem;
+}

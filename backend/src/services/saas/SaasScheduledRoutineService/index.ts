@@ -6,7 +6,8 @@ import {
 } from '../../../utils/createScheduledRoutineService';
 
 const service = createScheduledRoutineService<SaasScheduledRoutine>(SaasScheduledRoutine, {
-  searchFields: ['nome', 'tipo', 'descricao', 'alvo'],
+  searchFields: ['nome', 'tipo', 'alvo'],
+  additionalSortColumns: ['alvo', 'minuto', 'hora', 'dia_mes', 'mes', 'dia_semana'],
 });
 
 export type { ListScheduledRoutinesFilters };

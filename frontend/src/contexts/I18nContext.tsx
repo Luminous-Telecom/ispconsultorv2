@@ -1277,9 +1277,33 @@ export interface TranslationKeys {
   'scheduler.type': string;
   'scheduler.scope': string;
   'scheduler.routine': string;
+  'scheduler.task': string;
+  'scheduler.cronMinute': string;
+  'scheduler.cronHour': string;
+  'scheduler.cronDayOfMonth': string;
+  'scheduler.cronMonth': string;
+  'scheduler.cronDayOfWeek': string;
   'scheduler.queueWaiting': string;
   'scheduler.queueRunning': string;
   'scheduler.queueConcurrency': string;
+  'scheduler.formModalTitle': string;
+  'scheduler.formTabTask': string;
+  'scheduler.cronFormMinute': string;
+  'scheduler.cronFormHour': string;
+  'scheduler.cronFormDayMonth': string;
+  'scheduler.cronFormMonth': string;
+  'scheduler.cronFormDayWeek': string;
+  'scheduler.cronLabelTipo': string;
+  'scheduler.cronLabelValorField': string;
+  'scheduler.cronOptionAll': string;
+  'scheduler.cronOptionValue': string;
+  'scheduler.confirmDeleteRoutine': string;
+  'scheduler.executionTime': string;
+  'scheduler.freqDiaria': string;
+  'scheduler.freqSemanal': string;
+  'scheduler.freqMensal': string;
+  'scheduler.freqAnual': string;
+  'scheduler.freqPersonalizada': string;
 
   // Updates
   'updates.title': string;
@@ -2781,9 +2805,33 @@ const translations: Translations = {
     'scheduler.type': 'Tipo',
     'scheduler.scope': 'Escopo',
     'scheduler.routine': 'Rotina',
+    'scheduler.task': 'Tarefa',
+    'scheduler.cronMinute': 'Minuto',
+    'scheduler.cronHour': 'Hora',
+    'scheduler.cronDayOfMonth': 'Dia do mês',
+    'scheduler.cronMonth': 'Mês',
+    'scheduler.cronDayOfWeek': 'Dia da semana',
     'scheduler.queueWaiting': 'Na fila',
     'scheduler.queueRunning': 'Executando',
     'scheduler.queueConcurrency': 'Concorrência máx.',
+    'scheduler.formModalTitle': 'Tarefas Agendadas',
+    'scheduler.formTabTask': 'Tarefa',
+    'scheduler.cronFormMinute': 'Minuto (0-59)',
+    'scheduler.cronFormHour': 'Hora (0-23)',
+    'scheduler.cronFormDayMonth': 'Dia do mês (1-31)',
+    'scheduler.cronFormMonth': 'Mês (1-12)',
+    'scheduler.cronFormDayWeek': 'Dia da semana (0-6) 0=dom, 1=seg…',
+    'scheduler.cronLabelTipo': 'Tipo:',
+    'scheduler.cronLabelValorField': 'Valor:',
+    'scheduler.cronOptionAll': 'Todos',
+    'scheduler.cronOptionValue': 'Valor',
+    'scheduler.confirmDeleteRoutine': 'Tem certeza que deseja excluir esta rotina?',
+    'scheduler.executionTime': 'Horário de execução',
+    'scheduler.freqDiaria': 'Diária',
+    'scheduler.freqSemanal': 'Semanal',
+    'scheduler.freqMensal': 'Mensal',
+    'scheduler.freqAnual': 'Anual',
+    'scheduler.freqPersonalizada': 'Personalizada',
 
     // Updates
     'updates.title': 'Atualizações do Sistema',
@@ -4280,9 +4328,33 @@ const translations: Translations = {
     'scheduler.type': 'Type',
     'scheduler.scope': 'Scope',
     'scheduler.routine': 'Routine',
+    'scheduler.task': 'Task',
+    'scheduler.cronMinute': 'Minute',
+    'scheduler.cronHour': 'Hour',
+    'scheduler.cronDayOfMonth': 'Day of month',
+    'scheduler.cronMonth': 'Month',
+    'scheduler.cronDayOfWeek': 'Day of week',
     'scheduler.queueWaiting': 'Waiting',
     'scheduler.queueRunning': 'Running',
     'scheduler.queueConcurrency': 'Max concurrency',
+    'scheduler.formModalTitle': 'Scheduled tasks',
+    'scheduler.formTabTask': 'Task',
+    'scheduler.cronFormMinute': 'Minute (0-59)',
+    'scheduler.cronFormHour': 'Hour (0-23)',
+    'scheduler.cronFormDayMonth': 'Day of month (1-31)',
+    'scheduler.cronFormMonth': 'Month (1-12)',
+    'scheduler.cronFormDayWeek': 'Day of week (0-6) 0=Sun, 1=Mon…',
+    'scheduler.cronLabelTipo': 'Type:',
+    'scheduler.cronLabelValorField': 'Value:',
+    'scheduler.cronOptionAll': 'All',
+    'scheduler.cronOptionValue': 'Value',
+    'scheduler.confirmDeleteRoutine': 'Are you sure you want to delete this routine?',
+    'scheduler.executionTime': 'Execution time',
+    'scheduler.freqDiaria': 'Daily',
+    'scheduler.freqSemanal': 'Weekly',
+    'scheduler.freqMensal': 'Monthly',
+    'scheduler.freqAnual': 'Yearly',
+    'scheduler.freqPersonalizada': 'Custom',
 
     // Updates
     'updates.title': 'System Updates',
@@ -5781,9 +5853,33 @@ const translations: Translations = {
     'scheduler.type': 'Tipo',
     'scheduler.scope': 'Ámbito',
     'scheduler.routine': 'Rutina',
+    'scheduler.task': 'Tarea',
+    'scheduler.cronMinute': 'Minuto',
+    'scheduler.cronHour': 'Hora',
+    'scheduler.cronDayOfMonth': 'Día del mes',
+    'scheduler.cronMonth': 'Mes',
+    'scheduler.cronDayOfWeek': 'Día de la semana',
     'scheduler.queueWaiting': 'En cola',
     'scheduler.queueRunning': 'Ejecutando',
     'scheduler.queueConcurrency': 'Concurrencia máx.',
+    'scheduler.formModalTitle': 'Tareas programadas',
+    'scheduler.formTabTask': 'Tarea',
+    'scheduler.cronFormMinute': 'Minuto (0-59)',
+    'scheduler.cronFormHour': 'Hora (0-23)',
+    'scheduler.cronFormDayMonth': 'Día del mes (1-31)',
+    'scheduler.cronFormMonth': 'Mes (1-12)',
+    'scheduler.cronFormDayWeek': 'Día de la semana (0-6) 0=dom, 1=lun…',
+    'scheduler.cronLabelTipo': 'Tipo:',
+    'scheduler.cronLabelValorField': 'Valor:',
+    'scheduler.cronOptionAll': 'Todos',
+    'scheduler.cronOptionValue': 'Valor',
+    'scheduler.confirmDeleteRoutine': '¿Confirma que desea eliminar esta rutina?',
+    'scheduler.executionTime': 'Hora de ejecución',
+    'scheduler.freqDiaria': 'Diaria',
+    'scheduler.freqSemanal': 'Semanal',
+    'scheduler.freqMensal': 'Mensual',
+    'scheduler.freqAnual': 'Anual',
+    'scheduler.freqPersonalizada': 'Personalizada',
 
     // Updates
     'updates.title': 'Actualizaciones del Sistema',

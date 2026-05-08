@@ -6,28 +6,26 @@ export type { RotinaAgendada, RoutineExecutionLog };
 
 export interface CreateRotinaData {
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'bloquear_saas_atraso' | 'outros';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'bloquear_saas_atraso' | 'rpki_sync_parent_resources' | 'rpki_sync_repositories' | 'outros';
   /** Agendador SaaS: cobrança do produto vs rotinas do ERP para todos os clientes */
   alvo?: 'saas' | 'erp_global';
-  descricao?: string;
-  configuracao?: Record<string, unknown>;
-  frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
-  dia_execucao?: number;
-  hora_execucao: string;
-  dia_semana?: number;
-  cron_expression?: string;
+  dia_semana?: string | number;
+  minuto?: string;
+  hora?: string;
+  dia_mes?: string;
+  mes?: string;
+  ativo?: boolean;
 }
 
 export interface UpdateRotinaData {
   nome?: string;
+  tipo?: CreateRotinaData['tipo'];
   alvo?: 'saas' | 'erp_global';
-  descricao?: string;
-  configuracao?: Record<string, unknown>;
-  frequencia?: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
-  dia_execucao?: number;
-  hora_execucao?: string;
-  dia_semana?: number;
-  cron_expression?: string;
+  dia_semana?: string | number;
+  minuto?: string;
+  hora?: string;
+  dia_mes?: string;
+  mes?: string;
   ativo?: boolean;
 }
 

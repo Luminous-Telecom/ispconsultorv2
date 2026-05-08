@@ -7,7 +7,7 @@ export interface ScheduledRoutineAttributes {
   id: number;
   empresa_id?: number | null;
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'outros';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'rpki_sync_parent_resources' | 'rpki_sync_repositories' | 'outros';
   descricao?: string;
   configuracao: Record<string, JsonValue>;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
@@ -31,7 +31,7 @@ export class ScheduledRoutine extends Model<ScheduledRoutineAttributes, Schedule
   public id!: number;
   public empresa_id?: number | null;
   public nome!: string;
-  public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'outros';
+  public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'rpki_sync_parent_resources' | 'rpki_sync_repositories' | 'outros';
   public descricao?: string;
   public configuracao!: Record<string, JsonValue>;
   public frequencia!: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
@@ -97,6 +97,8 @@ ScheduledRoutine.init({
       'verificar_vencimentos',
       'desbloquear_blockdomi',
       'backup_equipamentos_ssh',
+      'rpki_sync_parent_resources',
+      'rpki_sync_repositories',
       'outros'
     ),
     allowNull: false

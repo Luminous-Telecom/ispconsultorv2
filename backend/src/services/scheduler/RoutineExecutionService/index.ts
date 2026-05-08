@@ -83,6 +83,14 @@ function isSaasRoutine(routine: AnyRoutine): routine is SaasScheduledRoutine {
   return routine instanceof SaasScheduledRoutine;
 }
 
+/** Rotinas SaaS não possuem coluna `configuracao`; ERP usa JSON na rotina. */
+function erpRotinaConfiguracao(routine: AnyRoutine): Record<string, JsonValue> {
+  if (routine instanceof ScheduledRoutine) {
+    return routine.configuracao ?? {};
+  }
+  return {};
+}
+
 function saasAlvo(routine: SaasScheduledRoutine): 'saas' | 'erp_global' {
   return routine.alvo === 'erp_global' ? 'erp_global' : 'saas';
 }
@@ -108,6 +116,8 @@ export class RoutineExecutionService {
         'verificar_vencimentos',
         'desbloquear_blockdomi',
         'backup_equipamentos_ssh',
+        'rpki_sync_parent_resources',
+        'rpki_sync_repositories',
         'outros'
       ] as const;
       const ok =
@@ -158,7 +168,7 @@ export class RoutineExecutionService {
         }
         const { VerificarVencimentosRoutine } = await import('../routines/VerificarVencimentosRoutine');
         const r = new VerificarVencimentosRoutine();
-        const cfg = (routine as ScheduledRoutine | SaasScheduledRoutine).configuracao || {};
+        const cfg = saas ? {} : ((routine as ScheduledRoutine).configuracao || {});
         return (await r.execute(cfg as Record<string, JsonValue>)) as RoutineExecutionResult;
       }
 
@@ -190,6 +200,18 @@ export class RoutineExecutionService {
           return { success: false, message: 'Bloquear por atraso só aplica ao alvo SaaS (cobrança do produto).' };
         }
         return await this.executeBloquearSaasAtraso();
+
+      case 'rpki_sync_parent_resources':
+        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+          return { success: false, message: 'Sincronização RPKI com CA-pai deve usar alvo ERP (todos os clientes).' };
+        }
+        return await this.executeRpkiSyncParentResources();
+
+      case 'rpki_sync_repositories':
+        if (saas && saasAlvo(routine as SaasScheduledRoutine) !== 'erp_global') {
+          return { success: false, message: 'Sincronização de repositórios RPKI deve usar alvo ERP (todos os clientes).' };
+        }
+        return await this.executeRpkiSyncRepositories();
 
       default:
         logger.warn('RoutineExecutionService.executeRoutine - Tipo de rotina não implementado', {
@@ -627,7 +649,7 @@ export class RoutineExecutionService {
       routineNome: routine.nome,
       routineTipo: routine.tipo,
       routineAtiva: routine.ativo,
-      rotinaConfiguracao: JSON.stringify(routine.configuracao)
+      rotinaConfiguracao: JSON.stringify(erpRotinaConfiguracao(routine))
     });
 
     try {
@@ -645,8 +667,8 @@ export class RoutineExecutionService {
 
       const envioBoletosRoutine = new EnvioBoletosRoutine();
 
-      // Ler configurações da rotina ou usar padrões
-      const config = routine.configuracao || {};
+      // Ler configurações da rotina ou usar padrões (SaaS: sem coluna configuracao)
+      const config = erpRotinaConfiguracao(routine);
 
       logger.info('RoutineExecutionService.executeEnvioBoletos - Executando rotina', {
         context: 'RoutineExecutionService',
@@ -680,7 +702,7 @@ export class RoutineExecutionService {
         routineNome: routine.nome,
         error: errorMessage,
         stack: errorStack,
-        routineConfiguracao: JSON.stringify(routine.configuracao)
+        routineConfiguracao: JSON.stringify(erpRotinaConfiguracao(routine))
       });
 
       return {
@@ -940,6 +962,62 @@ export class RoutineExecutionService {
         message: `Erro na rotina de bloqueio por atraso: ${errorMessage}`,
         empresasBloqueadas: 0,
         empresasDesbloqueadas: 0
+      };
+    }
+  }
+
+  public async executeRpkiSyncParentResources(): Promise<RoutineExecutionResult> {
+    try {
+      const { RpkiSchedulerRoutineService } = await import('../../rpki/RpkiSchedulerRoutineService');
+      const resultado = await RpkiSchedulerRoutineService.syncAllParentResources();
+      return {
+        success: resultado.success,
+        message: resultado.message,
+        total: resultado.total,
+        sucesso: resultado.sucesso,
+        erro: resultado.erro,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar rotina RPKI de sincronização de CA-pai', {
+        context: 'RoutineExecutionService',
+        action: 'executeRpkiSyncParentResources',
+        error: errorMessage,
+      });
+      return {
+        success: false,
+        message: `Erro ao sincronizar recursos RPKI com CAs-pai: ${errorMessage}`,
+        total: 0,
+        sucesso: 0,
+        erro: 0,
+      };
+    }
+  }
+
+  public async executeRpkiSyncRepositories(): Promise<RoutineExecutionResult> {
+    try {
+      const { RpkiSchedulerRoutineService } = await import('../../rpki/RpkiSchedulerRoutineService');
+      const resultado = await RpkiSchedulerRoutineService.syncAllRepositories();
+      return {
+        success: resultado.success,
+        message: resultado.message,
+        total: resultado.total,
+        sucesso: resultado.sucesso,
+        erro: resultado.erro,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar rotina RPKI de sincronização de repositórios', {
+        context: 'RoutineExecutionService',
+        action: 'executeRpkiSyncRepositories',
+        error: errorMessage,
+      });
+      return {
+        success: false,
+        message: `Erro ao sincronizar repositórios RPKI: ${errorMessage}`,
+        total: 0,
+        sucesso: 0,
+        erro: 0,
       };
     }
   }

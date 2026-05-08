@@ -6,7 +6,16 @@ import { useNotificationContext } from 'components/notifications/NotificationPro
 import { useIsMobile } from 'hooks/useMediaQuery';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import DraggableModal from 'components/common/DraggableModal';
-import { Button, Spinner, FormField, AtivoInativoField } from 'components/ui';
+import { Button, FormField } from 'components/ui';
+import CronFieldSection from './CronFieldSection';
+import { useI18n } from 'contexts/I18nContext';
+import {
+  defaultCronParts,
+  buildCreatePayloadWithCron,
+  cronPartsFromRotina,
+  validateCronPartsForSubmit,
+  type CronPartState,
+} from 'utils/cronFieldForm';
 
 const NOMES_POR_TIPO: Record<string, string> = {
   geracao_titulos: 'Geração de títulos',
@@ -16,6 +25,8 @@ const NOMES_POR_TIPO: Record<string, string> = {
   desbloquear_blockdomi: 'Desbloquear domínios (data fim)',
   bloquear_saas_atraso: 'Bloquear acesso por atraso',
   backup_equipamentos_ssh: 'Backup equipamentos SSH',
+  rpki_sync_parent_resources: 'RPKI: sincronizar recursos da CA-pai',
+  rpki_sync_repositories: 'RPKI: sincronizar repositórios',
   outros: 'Outros',
 };
 
@@ -35,6 +46,8 @@ function buildTipoOptionsSaaS(alvo: 'saas' | 'erp_global', hasBlockdomi: boolean
     { value: 'verificar_vencimentos', label: 'Verificar vencimentos' },
     { value: 'desbloquear_blockdomi', label: 'Desbloquear domínios (data fim)' },
     { value: 'backup_equipamentos_ssh', label: 'Backup equipamentos SSH (ERP — todos)' },
+    { value: 'rpki_sync_parent_resources', label: 'RPKI: sincronizar recursos da CA-pai' },
+    { value: 'rpki_sync_repositories', label: 'RPKI: sincronizar repositórios' },
     { value: 'outros', label: 'Outros' },
   ];
   if (!hasBlockdomi) return opts.filter((o) => o.value !== 'desbloquear_blockdomi');
@@ -53,7 +66,14 @@ interface RotinaAgendadaModalProps {
   onSuccess?: () => void;
 }
 
+const emptyForm = (): CreateRotinaData => ({
+  nome: NOMES_POR_TIPO.geracao_titulos,
+  tipo: 'geracao_titulos',
+  alvo: 'saas',
+});
+
 const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose, rotinaId = null, onSuccess }) => {
+  const { t } = useI18n();
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -62,25 +82,26 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
   const { hasModulo } = usePlanoModulos();
   const invalidateKey = 'saas-agendador-tarefas';
 
-  const [formData, setFormData] = useState<CreateRotinaData>({
-    nome: NOMES_POR_TIPO.geracao_titulos,
-    tipo: 'geracao_titulos',
-    alvo: 'saas',
-    descricao: '',
-    frequencia: 'diaria',
-    hora_execucao: '00:00',
-  });
-
-  const [ativo, setAtivo] = useState(true);
+  const [formData, setFormData] = useState<CreateRotinaData>(emptyForm);
+  const [cronParts, setCronParts] = useState<CronPartState[]>(() => defaultCronParts());
 
   const tipoOptions = useMemo(() => {
     const alvo = (formData.alvo ?? 'saas') as 'saas' | 'erp_global';
     return buildTipoOptionsSaaS(alvo, hasModulo('blockdomi'));
   }, [formData.alvo, hasModulo]);
 
+  const cronRowLabels = useMemo(
+    () => [
+      t('scheduler.cronFormMinute'),
+      t('scheduler.cronFormHour'),
+      t('scheduler.cronFormDayMonth'),
+      t('scheduler.cronFormMonth'),
+      t('scheduler.cronFormDayWeek'),
+    ],
+    [t]
+  );
+
   const formId = 'saas-rotina-agendada-form';
-  const descricaoId = 'saas_descricao';
-  const ativoId = 'saas_ativo';
 
   const { data: rotinaData, isLoading } = useQuery({
     queryKey: ['saas-rotina', rotinaId],
@@ -92,15 +113,8 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
   });
 
   const resetForm = useCallback(() => {
-    setFormData({
-      nome: NOMES_POR_TIPO.geracao_titulos,
-      tipo: 'geracao_titulos',
-      alvo: 'saas',
-      descricao: '',
-      frequencia: 'diaria',
-      hora_execucao: '00:00',
-    });
-    setAtivo(true);
+    setFormData(emptyForm());
+    setCronParts(defaultCronParts());
   }, []);
 
   useEffect(() => {
@@ -115,11 +129,8 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
         nome: rotinaData.nome || '',
         tipo: rotinaData.tipo || 'geracao_titulos',
         alvo: (rotinaData.alvo ?? 'saas') as 'saas' | 'erp_global',
-        descricao: rotinaData.descricao || '',
-        frequencia: rotinaData.frequencia || 'diaria',
-        hora_execucao: rotinaData.hora_execucao || '00:00',
       });
-      setAtivo(rotinaData.ativo);
+      setCronParts(cronPartsFromRotina(rotinaData));
     }
   }, [rotinaData, isEditMode]);
 
@@ -151,23 +162,57 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
     },
   });
 
-  const isSaving = createMutation.isPending || updateMutation.isPending;
+  const deleteMutation = useMutation({
+    mutationFn: () => SaasSchedulerService.deleteRotina(rotinaId!),
+    onSuccess: () => {
+      success('Rotina deletada com sucesso!');
+      queryClient.invalidateQueries({ queryKey: [invalidateKey] });
+      resetForm();
+      onClose();
+      onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      showError(axiosError?.response?.data?.message || 'Erro ao deletar rotina');
+    },
+  });
+
+  const isSaving =
+    createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+
+  const buildSubmitPayload = useCallback((): CreateRotinaData => {
+    return buildCreatePayloadWithCron(
+      {
+        nome: formData.nome,
+        tipo: formData.tipo,
+        alvo: formData.alvo ?? 'saas',
+      },
+      cronParts
+    );
+  }, [formData, cronParts]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isEditMode) {
-      updateMutation.mutate({
-        ...formData,
-        ativo,
-        alvo: formData.alvo ?? 'saas',
-      });
-    } else {
-      createMutation.mutate({
-        ...formData,
-        alvo: formData.alvo ?? 'saas',
-      });
+    const err = validateCronPartsForSubmit(cronParts);
+    if (err) {
+      showError(err);
+      return;
     }
+
+    const payload = buildSubmitPayload();
+
+    if (isEditMode) {
+      updateMutation.mutate(payload);
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const handleDelete = () => {
+    if (!rotinaId || !isEditMode) return;
+    if (!window.confirm(t('scheduler.confirmDeleteRoutine'))) return;
+    deleteMutation.mutate();
   };
 
   const handleClose = () => {
@@ -175,11 +220,17 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
     onClose();
   };
 
+  const handleNovo = () => {
+    resetForm();
+  };
+
   if (isLoading) {
     return (
-      <DraggableModal show={show} onClose={handleClose} title="Rotina">
-        <div className="text-center p-4">
-          <Spinner size="md" variant="primary" aria-label="Carregando..." />
+      <DraggableModal show={show} onClose={handleClose} title={t('scheduler.formModalTitle')} size="lg">
+        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Carregando...</span>
+          </div>
         </div>
       </DraggableModal>
     );
@@ -189,27 +240,44 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
     <DraggableModal
       show={show}
       onClose={handleClose}
-      title="Rotina"
+      title={t('scheduler.formModalTitle')}
       size="lg"
+      modalId="saas-rotina-agendada-form-modal"
       headerActions={
         <div className="d-flex gap-2 modal-header-actions">
           <Button type="button" variant="primary" size="sm" onClick={handleClose} disabled={isSaving}>
-            Cancelar
+            {t('buttons.cancel')}
           </Button>
           <Button type="submit" form={formId} variant="primary" size="sm" disabled={isSaving}>
-            Salvar
+            {t('buttons.save')}
           </Button>
+          {!isEditMode && (
+            <Button type="button" variant="primary" size="sm" onClick={handleNovo} disabled={isSaving}>
+              {t('actions.new')}
+            </Button>
+          )}
+          {isEditMode && (
+            <Button type="button" variant="primary" size="sm" onClick={handleDelete} disabled={isSaving}>
+              {t('buttons.delete')}
+            </Button>
+          )}
         </div>
       }
     >
-      <div style={{ padding: isMobile ? '0' : '16px' }}>
-        <form id={formId} onSubmit={handleSubmit}>
-          <div className="row g-0">
-            <div className="col-12">
+      <form
+        id={formId}
+        onSubmit={handleSubmit}
+        className="form-modal-simple"
+        style={{ padding: isMobile ? '0' : '16px', paddingBottom: isMobile ? 0 : 24 }}
+      >
+        <div className="d-flex flex-column gap-2">
+          <div className="row g-2">
+            <div className="col-12 col-md-6">
               <FormField
                 name="alvo"
-                label="Escopo"
+                label={t('scheduler.scope')}
                 type="select"
+                size="md"
                 value={formData.alvo ?? 'saas'}
                 onChange={(value) => {
                   const alvoVal = (value === 'erp_global' ? 'erp_global' : 'saas') as 'saas' | 'erp_global';
@@ -226,11 +294,12 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
                 options={ALVO_OPTIONS_SAAS}
               />
             </div>
-            <div className="col-12">
+            <div className="col-12 col-md-6">
               <FormField
                 name="tipo"
-                label="Tipo"
+                label={t('scheduler.type')}
                 type="select"
+                size="md"
                 value={formData.tipo}
                 onChange={(value) => {
                   const tipoValue = String(value ?? 'geracao_titulos') as CreateRotinaData['tipo'];
@@ -244,58 +313,43 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({ show, onClose
                 options={tipoOptions}
               />
             </div>
-
-            <div className="col-12">
-              <label htmlFor={descricaoId} className="form-label">
-                Descrição
-              </label>
-              <textarea
-                id={descricaoId}
-                className="form-control"
-                value={formData.descricao}
-                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                rows={3}
-              />
-            </div>
-
-            <div className="col-12">
-              <FormField
-                name="frequencia"
-                label="Frequência"
-                type="select"
-                value={formData.frequencia}
-                onChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    frequencia: String(value ?? 'diaria') as CreateRotinaData['frequencia'],
-                  })
-                }
-                required
-                options={[
-                  { value: 'diaria', label: 'Diária' },
-                  { value: 'semanal', label: 'Semanal' },
-                  { value: 'mensal', label: 'Mensal' },
-                ]}
-              />
-            </div>
-
-            <div className="col-12">
-              <FormField
-                name="hora_execucao"
-                label="Horário de Execução"
-                type="time"
-                value={formData.hora_execucao}
-                onChange={(value) => setFormData({ ...formData, hora_execucao: String(value ?? '00:00') })}
-                required
-              />
-            </div>
-
-            <div className="col-12">
-              <AtivoInativoField value={ativo} onChange={setAtivo} name={ativoId} />
-            </div>
           </div>
-        </form>
-      </div>
+          {cronRowLabels.map((label, idx) => (
+            <CronFieldSection
+              key={`cron-part-${idx}`}
+              idPrefix={`${formId}-cron-${idx}`}
+              label={label}
+              mode={cronParts[idx]?.mode ?? 'todos'}
+              valor={cronParts[idx]?.valor ?? ''}
+              onModeChange={(mode) => {
+                setCronParts((prev) => {
+                  const next = [...prev];
+                  const cur = prev[idx] ?? { mode: 'todos' as const, valor: '' };
+                  next[idx] = {
+                    ...cur,
+                    mode,
+                    valor: mode === 'todos' ? '' : cur.valor,
+                  };
+                  return next;
+                });
+              }}
+              onValorChange={(v) => {
+                setCronParts((prev) => {
+                  const next = [...prev];
+                  const cur = prev[idx] ?? { mode: 'todos' as const, valor: '' };
+                  next[idx] = { ...cur, valor: v };
+                  return next;
+                });
+              }}
+              disabled={isSaving}
+              labelTipo={t('scheduler.cronLabelTipo')}
+              labelValorField={t('scheduler.cronLabelValorField')}
+              labelTodos={t('scheduler.cronOptionAll')}
+              labelValor={t('scheduler.cronOptionValue')}
+            />
+          ))}
+        </div>
+      </form>
     </DraggableModal>
   );
 };

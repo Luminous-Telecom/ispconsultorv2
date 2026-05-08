@@ -5,7 +5,9 @@ import {
   type ListScheduledRoutinesResponse
 } from '../../../utils/createScheduledRoutineService';
 
-const service = createScheduledRoutineService<ScheduledRoutine>(ScheduledRoutine);
+const service = createScheduledRoutineService<ScheduledRoutine>(ScheduledRoutine, {
+  additionalSortColumns: ['cron_expression', 'descricao', 'frequencia', 'dia_execucao', 'empresa_id', 'hora_execucao'],
+});
 
 export type { ListScheduledRoutinesFilters, ListScheduledRoutinesResponse };
 

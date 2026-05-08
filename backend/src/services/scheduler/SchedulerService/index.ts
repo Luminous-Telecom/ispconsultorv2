@@ -1,4 +1,4 @@
-import { ScheduledRoutine } from '../../../models/sistema/ScheduledRoutine';
+import { ScheduledRoutine, type ScheduledRoutineCreationAttributes } from '../../../models/sistema/ScheduledRoutine';
 import SaasScheduledRoutine from '../../../models/saas/SaasScheduledRoutine';
 import { logger } from '../../../utils/logger';
 import { calculateNextExecution } from '../../../utils/SchedulerUtils';
@@ -14,6 +14,18 @@ import type {
   DetailedStats,
   CreateRoutineData
 } from '../../../types/scheduler';
+
+function diaSemanaErpFromCreateData(d: number | string | undefined): number | undefined {
+  if (d === undefined) return undefined;
+  if (typeof d === 'number') {
+    return d >= 0 && d <= 6 ? d : undefined;
+  }
+  if (/^\d+$/.test(d)) {
+    const n = parseInt(d, 10);
+    return n >= 0 && n <= 6 ? n : undefined;
+  }
+  return undefined;
+}
 
 /**
  * Serviço orquestrador responsável por coordenar os serviços especializados:
@@ -127,11 +139,20 @@ export class SchedulerService {
    * @returns Rotina criada
    */
   public async createRoutine(data: CreateRoutineData): Promise<ScheduledRoutine> {
-    const routine = await ScheduledRoutine.create({
-      ...data,
+    const { minuto: _minSaaS, hora: _horaSaaS, dia_mes: _dmSaaS, mes: _mesSaaS, dia_semana: rawDow, ...erpFields } = data;
+    void _minSaaS;
+    void _horaSaaS;
+    void _dmSaaS;
+    void _mesSaaS;
+
+    const createPayload: ScheduledRoutineCreationAttributes = {
+      ...erpFields,
+      dia_semana: diaSemanaErpFromCreateData(rawDow),
       ativo: true,
       proxima_execucao: calculateNextExecution(data)
-    });
+    };
+
+    const routine = await ScheduledRoutine.create(createPayload);
 
     // Se estiver ativa, agendar imediatamente
     if (routine.ativo) {

@@ -113,14 +113,18 @@ export interface DetailedStats {
  */
 export interface CreateRoutineData {
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'outros';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'desbloquear_blockdomi' | 'backup_equipamentos_ssh' | 'rpki_sync_parent_resources' | 'rpki_sync_repositories' | 'outros';
   descricao?: string;
   configuracao: Record<string, JsonValue>;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
   dia_execucao?: number;
   hora_execucao: string;
-  dia_semana?: number;
+  dia_semana?: number | string;
   cron_expression?: string;
+  minuto?: string;
+  hora?: string;
+  dia_mes?: string;
+  mes?: string;
 }
 
 /**

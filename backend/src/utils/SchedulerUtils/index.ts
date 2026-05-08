@@ -5,16 +5,26 @@ import type { CreateRoutineData, UpdateRoutineData } from '../../types/scheduler
 
 /** Interface comum para rotinas (ERP e SaaS) */
 export interface RoutineScheduleShape {
-  hora_execucao: string | Date;
-  frequencia: string;
-  dia_semana?: number;
+  /** Ausente nas rotinas SaaS após migration 00000209 — usar colunas `minuto`/`hora` ou `00:00` no cálculo legado. */
+  hora_execucao?: string | Date;
+  /** Ausente nas rotinas SaaS após migration 00000207 — assume-se agendamento por colunas cron. */
+  frequencia?: string;
+  dia_semana?: number | string;
   dia_execucao?: number;
   cron_expression?: string;
+  /** Colunas de expressão cron persistidas (SaaS — tabela saas_saas_scheduled_routines) */
+  minuto?: string | null;
+  hora?: string | null;
+  dia_mes?: string | null;
+  mes?: string | null;
 }
 
 /** Normaliza hora_execucao para HH:mm (compatível com Sequelize TIME) */
 export function normalizeHoraExecucao(routine: RoutineScheduleShape): string {
   const h = routine.hora_execucao;
+  if (h === undefined || h === null) {
+    return '00:00';
+  }
   if (typeof h === 'string') {
     const parts = h.split(':');
     return `${parts[0] ?? '00'}:${parts[1] ?? '00'}`;
@@ -29,15 +39,44 @@ export function normalizeHoraExecucao(routine: RoutineScheduleShape): string {
  * @returns Expressão CRON válida
  */
 export function buildCronExpression(routine: RoutineScheduleShape): string {
-  const [hours, minutes] = normalizeHoraExecucao(routine).split(':');
+  const tok = (v?: string | null) => {
+    const t = (v ?? '').trim();
+    return t === '' ? '*' : t;
+  };
 
-  switch (routine.frequencia) {
+  const rm = routine.minuto;
+  const rh = routine.hora;
+  const rdm = routine.dia_mes;
+  const rmonth = routine.mes;
+  const rds = routine.dia_semana;
+
+  if (
+    typeof rm === 'string' &&
+    typeof rh === 'string' &&
+    typeof rdm === 'string' &&
+    typeof rmonth === 'string' &&
+    (typeof rds === 'string' || typeof rds === 'number')
+  ) {
+    return `${tok(rm)} ${tok(rh)} ${tok(rdm)} ${tok(rmonth)} ${tok(typeof rds === 'number' ? String(rds) : rds)}`;
+  }
+
+  const [hours, minutes] = normalizeHoraExecucao(routine).split(':');
+  const freq = routine.frequencia ?? 'personalizada';
+
+  switch (freq) {
     case 'diaria':
       return `${minutes} ${hours} * * *`;
     
-    case 'semanal':
-      const dayOfWeek = routine.dia_semana || 0;
+    case 'semanal': {
+      const raw = routine.dia_semana;
+      const dayOfWeek =
+        typeof raw === 'number'
+          ? raw
+          : typeof raw === 'string' && /^[0-9]+$/.test(raw)
+            ? parseInt(raw, 10)
+            : 0;
       return `${minutes} ${hours} * * ${dayOfWeek}`;
+    }
     
     case 'mensal':
       const dayOfMonth = routine.dia_execucao || 1;
@@ -80,7 +119,8 @@ export function calculateNextExecution(
 
   // Se já passou hoje, agendar para o próximo período baseado na frequência
   if (nextExecution <= now) {
-    switch (routine.frequencia) {
+    const freq = routine.frequencia ?? 'personalizada';
+    switch (freq) {
       case 'diaria':
         nextExecution.setDate(nextExecution.getDate() + 1);
         break;
@@ -157,8 +197,14 @@ export function validateRoutineData(data: CreateRoutineData): RoutineValidationR
     }
   }
 
-  if (data.frequencia === 'semanal' && (data.dia_semana === undefined || data.dia_semana < 0 || data.dia_semana > 6)) {
-    errors.push('Dia da semana deve estar entre 0 (domingo) e 6 (sábado)');
+  if (data.frequencia === 'semanal') {
+    const d = data.dia_semana;
+    let n: number | undefined;
+    if (typeof d === 'number') n = d;
+    else if (typeof d === 'string' && /^[0-9]+$/.test(d)) n = parseInt(d, 10);
+    if (n === undefined || n < 0 || n > 6) {
+      errors.push('Dia da semana deve estar entre 0 (domingo) e 6 (sábado)');
+    }
   }
 
   if (data.frequencia === 'mensal' && (data.dia_execucao === undefined || data.dia_execucao < 1 || data.dia_execucao > 31)) {
@@ -170,10 +216,9 @@ export function validateRoutineData(data: CreateRoutineData): RoutineValidationR
   }
 
   if (data.frequencia === 'personalizada') {
-    if (!data.cron_expression) {
-      errors.push('Expressão CRON é obrigatória para frequência personalizada');
-    } else if (!validateCronExpression(data.cron_expression)) {
-      errors.push('Expressão CRON inválida');
+    const expr = buildCronExpression(data as RoutineScheduleShape);
+    if (!validateCronExpression(expr)) {
+      errors.push('Agendamento personalizado inválido (verifique minuto, hora, dia do mês, mês e dia da semana).');
     }
   }
 
@@ -198,8 +243,17 @@ export function validateRoutineUpdate(data: UpdateRoutineData): RoutineValidatio
     }
   }
 
-  if (data.dia_semana !== undefined && (data.dia_semana < 0 || data.dia_semana > 6)) {
-    errors.push('Dia da semana deve estar entre 0 (domingo) e 6 (sábado)');
+  if (data.dia_semana !== undefined) {
+    const d = data.dia_semana;
+    if (typeof d === 'number' && (d < 0 || d > 6)) {
+      errors.push('Dia da semana deve estar entre 0 (domingo) e 6 (sábado)');
+    }
+    if (typeof d === 'string' && /^[0-9]+$/.test(d)) {
+      const n = parseInt(d, 10);
+      if (n < 0 || n > 6) {
+        errors.push('Dia da semana deve estar entre 0 (domingo) e 6 (sábado)');
+      }
+    }
   }
 
   if (data.dia_execucao !== undefined && (data.dia_execucao < 1 || data.dia_execucao > 31)) {

@@ -1,6 +1,7 @@
 import { Op, WhereOptions } from 'sequelize';
 import type { ModelStatic, Model } from 'sequelize';
 import { buildSearchFilter } from './queryFilters';
+import { resolveScheduledRoutineOrder } from './scheduledRoutineSortOrder';
 
 export interface ListScheduledRoutinesFilters {
   page?: number;
@@ -34,6 +35,8 @@ const DEFAULT_SEARCH_FIELDS = ['nome', 'tipo', 'descricao'];
 export interface CreateScheduledRoutineServiceOptions {
   /** Campos em que a busca textual atua (ex.: SaaS inclui `alvo`). */
   searchFields?: string[];
+  /** Colunas extras permitidas em `ORDER BY` (ex.: SaaS `alvo`). */
+  additionalSortColumns?: string[];
 }
 
 export function createScheduledRoutineService<T extends Model>(
@@ -47,6 +50,7 @@ export function createScheduledRoutineService<T extends Model>(
   delete: (id: number) => Promise<T>;
 } {
   const searchFieldsList = options.searchFields?.length ? options.searchFields : DEFAULT_SEARCH_FIELDS;
+  const additionalSortColumns = options.additionalSortColumns;
 
   return {
     async list(filters: ListScheduledRoutinesFilters) {
@@ -67,13 +71,15 @@ export function createScheduledRoutineService<T extends Model>(
       if (searchWhere) conditions.push(searchWhere);
       const where: WhereOptions = conditions.length > 1 ? { [Op.and]: conditions } : (conditions[0] || {});
 
+      const order = resolveScheduledRoutineOrder(sort, direction, additionalSortColumns);
+
       const result = await (Model as unknown as {
         findAndCountAll: (opts: object) => Promise<{ count: number; rows: T[] }>;
       }).findAndCountAll({
         where,
         limit: Number(limit),
         offset,
-        order: [[sort as string, direction]]
+        order
       });
       const count = result.count;
       const rows = result.rows;

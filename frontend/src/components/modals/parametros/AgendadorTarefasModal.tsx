@@ -4,7 +4,6 @@ import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { SaasSchedulerService, type RotinaAgendada } from 'services/saas/saasSchedulerService';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
-import { formatDateTime } from 'utils/formatters';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
@@ -15,22 +14,7 @@ import { useConfirmModal } from 'hooks/useConfirmModal';
 import ConfirmModal from 'components/modals/ConfirmModal';
 import { useI18n } from 'contexts/I18nContext';
 import { extractApiErrorMessageSync } from 'utils/apiErrorHelper';
-
-const TIPO_LABELS: Record<string, string> = {
-  geracao_titulos: 'Geração de títulos',
-  envio_boletos: 'Envio de boletos',
-  remessa_bancaria: 'Remessa bancária',
-  verificar_vencimentos: 'Verificar vencimentos',
-  desbloquear_blockdomi: 'Desbloquear domínios',
-  bloquear_saas_atraso: 'Bloquear acesso por atraso',
-  backup_equipamentos_ssh: 'Backup equipamentos SSH',
-  outros: 'Outros',
-};
-
-const ALVO_LABELS_SAAS: Record<string, string> = {
-  saas: 'Cobrança SaaS',
-  erp_global: 'ERP (todos)',
-};
+import { getCronDisplayFromRotina } from 'utils/schedulerCronDisplay';
 
 const QUERY_KEY = 'saas-agendador-tarefas';
 const MODAL_ID = 'saas-agendador-tarefas-modal';
@@ -63,58 +47,49 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
 
   const { selectedItem, handleSelectionChange, clearSelection } = useModalSelect<RotinaAgendada>();
 
-  const tableColumns: TableConfig<RotinaAgendada & { ultima_execucao_formatada?: string | null; created_at?: string; created_at_formatada?: string | null }>['columns'] = useMemo(
+  const tableColumns: TableConfig<RotinaAgendada>['columns'] = useMemo(
     () => [
       {
-        key: 'id',
-        label: t('table.id'),
+        key: 'nome',
+        label: t('scheduler.task'),
         sortable: true,
-        width: '42px',
-        render: (item: RotinaAgendada) => <span>{item.id}</span>,
+        minWidth: 220,
+        render: (item: RotinaAgendada) => <span title={item.nome}>{item.nome}</span>,
       },
       {
-        key: 'tipo',
-        label: t('scheduler.type'),
+        key: 'cron_minuto',
+        label: t('scheduler.cronMinute'),
         sortable: true,
-        render: (item: RotinaAgendada) => (
-          <span className="badge bg-info">{TIPO_LABELS[item.tipo] ?? item.tipo.replace(/_/g, ' ')}</span>
-        ),
+        minWidth: 96,
+        render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).minuto,
       },
       {
-        key: 'alvo',
-        label: t('scheduler.scope'),
+        key: 'cron_hora',
+        label: t('scheduler.cronHour'),
         sortable: true,
-        render: (item: RotinaAgendada) => (
-          <span className="badge bg-secondary">
-            {ALVO_LABELS_SAAS[item.alvo ?? 'saas'] ?? (item.alvo === 'erp_global' ? 'ERP (todos)' : 'Cobrança SaaS')}
-          </span>
-        ),
+        minWidth: 88,
+        render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).hora,
       },
       {
-        key: 'frequencia',
-        label: t('scheduler.frequency'),
+        key: 'cron_dia_mes',
+        label: t('scheduler.cronDayOfMonth'),
         sortable: true,
-        render: (item: RotinaAgendada) => item.frequencia,
+        minWidth: 100,
+        render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).diaMes,
       },
       {
-        key: 'hora_execucao',
-        label: t('scheduler.schedule'),
+        key: 'cron_mes',
+        label: t('scheduler.cronMonth'),
         sortable: true,
-        render: (item: RotinaAgendada) => item.hora_execucao || '-',
+        minWidth: 88,
+        render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).mes,
       },
       {
-        key: 'proxima_execucao',
-        label: t('scheduler.nextRun'),
-        render: (item: RotinaAgendada) => (item.proxima_execucao ? formatDateTime(item.proxima_execucao) : '-'),
-      },
-      {
-        key: 'ultima_execucao',
-        label: t('scheduler.lastRun'),
+        key: 'cron_dia_semana',
+        label: t('scheduler.cronDayOfWeek'),
         sortable: true,
-        render: (item: RotinaAgendada & { ultima_execucao_formatada?: string | null }) => {
-          if (item.ultima_execucao_formatada) return item.ultima_execucao_formatada;
-          return item.ultima_execucao ? formatDateTime(item.ultima_execucao) : '-';
-        },
+        minWidth: 112,
+        render: (item: RotinaAgendada) => getCronDisplayFromRotina(item).diaSemana,
       },
       {
         key: 'ativo',
@@ -127,27 +102,6 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
           </span>
         ),
       },
-      {
-        key: 'total_execucoes',
-        label: t('scheduler.executions'),
-        sortable: true,
-        render: (item: RotinaAgendada) => item.total_execucoes,
-      },
-      {
-        key: 'execucoes_com_erro',
-        label: t('scheduler.errors'),
-        sortable: true,
-        render: (item: RotinaAgendada) => item.execucoes_com_erro,
-      },
-      {
-        key: 'created_at',
-        label: t('table.createdAt'),
-        sortable: true,
-        render: (item: RotinaAgendada & { created_at?: string; created_at_formatada?: string | null }) => {
-          if (item.created_at_formatada) return item.created_at_formatada;
-          return item.created_at ? formatDateTime(item.created_at) : '-';
-        },
-      },
     ],
     [t]
   );
@@ -156,9 +110,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
     { key: 'id', label: t('table.id') },
     { key: 'tipo', label: t('scheduler.type') },
     { key: 'alvo', label: t('scheduler.scope') },
-    { key: 'descricao', label: t('table.description') },
-    { key: 'frequencia', label: t('scheduler.frequency') },
-    { key: 'hora_execucao', label: t('scheduler.schedule') },
+    { key: 'minuto', label: t('scheduler.cronMinute') },
   ];
 
   const { data: rotinasData, isLoading, refetch } = useQuery({
@@ -376,7 +328,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
                 data: paginatedRotinas,
                 loading: isLoading,
                 searchable: true,
-                searchPlaceholder: '',
+                searchPlaceholder: t('layout.searchPlaceholder'),
                 searchFields,
                 sortable: true,
                 sortColumn: tableFilters.sortColumn,
@@ -386,6 +338,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
                 responsive: true,
                 selectable: true,
                 multiSelect: false,
+                filters: [],
                 bulkActions: bulkActions.map((action) => ({
                   key: action.key ?? action.label.toLowerCase().replace(/\s+/g, '-'),
                   label: action.label,
@@ -395,7 +348,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
                   ...(action.dropdown ? { dropdown: action.dropdown } : {}),
                   ...(action.requiresSelection === false ? { requiresSelection: false } : {}),
                 })),
-                emptyMessage: 'Nenhuma rotina encontrada',
+                emptyMessage: t('messages.noData'),
                 pagination,
               }}
               tableId={TABLE_ID}
@@ -413,6 +366,9 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onC
                 setTimeout(() => tableFilters.setSort(column, direction), 0);
               }}
               onSearch={(search, field) => handleSearchChange(search, field)}
+              onSearchFieldChange={(field) => {
+                setTimeout(() => tableFilters.setSearchField(field), 0);
+              }}
               search={tableFilters.search}
             />
           </div>

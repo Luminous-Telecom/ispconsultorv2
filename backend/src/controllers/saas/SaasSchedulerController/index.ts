@@ -4,6 +4,7 @@ import { SchedulerService } from '../../../services/scheduler/SchedulerService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
 import { calculateNextExecution } from '../../../utils/SchedulerUtils';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
+import { saasRoutineBodyFromRequest, syntheticHoraExecucaoFromSaasBody } from '../../../utils/saasScheduledRoutineCronPayload';
 
 const TIPOS_ALVO_SAAS = ['geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'bloquear_saas_atraso'] as const;
 const TIPOS_ALVO_ERP_GLOBAL = [
@@ -13,8 +14,27 @@ const TIPOS_ALVO_ERP_GLOBAL = [
   'verificar_vencimentos',
   'desbloquear_blockdomi',
   'backup_equipamentos_ssh',
+  'rpki_sync_parent_resources',
+  'rpki_sync_repositories',
   'outros'
 ] as const;
+
+function proximaExecucaoDateParaSaasStore(routineData: Record<string, unknown>): Date {
+  const p = routineData.proxima_execucao;
+  if (p instanceof Date && !Number.isNaN(p.getTime())) {
+    return p;
+  }
+  if (typeof p === 'string') {
+    const d = new Date(p);
+    if (!Number.isNaN(d.getTime())) {
+      return d;
+    }
+  }
+  return calculateNextExecution({
+    hora_execucao: syntheticHoraExecucaoFromSaasBody(routineData),
+    frequencia: 'personalizada'
+  });
+}
 
 function mensagemValidacaoAlvoTipo(body: { tipo?: string; alvo?: string }): string | null {
   const alvo = body.alvo === 'erp_global' ? 'erp_global' : 'saas';
@@ -25,7 +45,7 @@ function mensagemValidacaoAlvoTipo(body: { tipo?: string; alvo?: string }): stri
       return 'No alvo Cobrança SaaS, use geração/envio/remessa do produto ou bloquear por atraso.';
     }
   } else if (!(TIPOS_ALVO_ERP_GLOBAL as readonly string[]).includes(tipo)) {
-    return 'No alvo ERP (todos os clientes), use faturamento ERP, verificar vencimentos ou desbloquear domínios.';
+    return 'No alvo ERP (todos os clientes), use faturamento ERP, verificar vencimentos, desbloquear domínios ou rotinas RPKI.';
   }
   return null;
 }
@@ -75,10 +95,10 @@ export class SaasSchedulerController {
 
   async store(req: Request, res: Response): Promise<void> {
     try {
-      const routineData = req.body;
+      const routineData = saasRoutineBodyFromRequest(req.body);
 
-      if (!routineData.nome || !routineData.tipo || !routineData.frequencia || !routineData.hora_execucao) {
-        sendValidationError(res, 'Campos obrigatórios: nome, tipo, frequencia, hora_execucao');
+      if (!routineData.nome || !routineData.tipo) {
+        sendValidationError(res, 'Campos obrigatórios: nome, tipo');
         return;
       }
 
@@ -88,14 +108,13 @@ export class SaasSchedulerController {
         return;
       }
 
+      const alvo: 'saas' | 'erp_global' =
+        routineData.alvo === 'erp_global' ? 'erp_global' : 'saas';
       const dadosComProximaExecucao = {
         ...routineData,
-        alvo: routineData.alvo === 'erp_global' ? 'erp_global' : 'saas',
-        proxima_execucao: routineData.proxima_execucao ?? calculateNextExecution({
-          hora_execucao: routineData.hora_execucao,
-          frequencia: routineData.frequencia
-        })
-      };
+        alvo,
+        proxima_execucao: proximaExecucaoDateParaSaasStore(routineData)
+      } as Parameters<typeof SaasScheduledRoutineService.create>[0];
 
       const routine = await SaasScheduledRoutineService.create(dadosComProximaExecucao);
       await registrarCriacao(req as any, 'SaasScheduledRoutine', routine.id, routine.toJSON ? routine.toJSON() as Record<string, unknown> : routine as unknown as Record<string, unknown>);
@@ -115,12 +134,16 @@ export class SaasSchedulerController {
   async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const updateData = req.body;
+      const updateData = saasRoutineBodyFromRequest(req.body);
 
       const routineAntiga = await SaasScheduledRoutineService.getById(Number(id));
+      const tipoParaValidacao =
+        typeof updateData.tipo === 'string' ? updateData.tipo : routineAntiga?.tipo;
+      const alvoParaValidacao =
+        typeof updateData.alvo === 'string' ? updateData.alvo : routineAntiga?.alvo;
       const msgAlvo = mensagemValidacaoAlvoTipo({
-        tipo: updateData.tipo ?? (routineAntiga as { tipo?: string } | null)?.tipo,
-        alvo: updateData.alvo ?? (routineAntiga as { alvo?: string } | null)?.alvo
+        tipo: tipoParaValidacao,
+        alvo: alvoParaValidacao
       });
       if (msgAlvo) {
         sendValidationError(res, msgAlvo);
