@@ -13,6 +13,7 @@ import SingleModalWrapper from 'components/common/SingleModalWrapper';
 import { useModal, type ModalType } from 'contexts/ModalContext';
 import { useI18n } from 'contexts/I18nContext';
 import { useTableHeader } from 'contexts/TableHeaderContext';
+import SidebarFolderItemBullet from 'components/layout/SidebarFolderItemBullet';
 
 const SaasLayout: React.FC = () => {
   const { t } = useI18n();
@@ -213,7 +214,7 @@ const SaasLayout: React.FC = () => {
                             setSidebarOpen(false);
                           }}
                         >
-                          <i className={`bi ${item.icon} me-2`}></i>
+                          <SidebarFolderItemBullet />
                           <span>{item.label}</span>
                         </button>
                       ))}

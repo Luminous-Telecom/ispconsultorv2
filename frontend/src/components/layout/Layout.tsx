@@ -19,6 +19,7 @@ import BloqueioAtrasoOverlayComponent from '../common/BloqueioAtrasoOverlay';
 import { DadosEmpresaService } from 'services/dadosEmpresaService';
 import { usePlanoModulos } from 'hooks/usePlanoModulos';
 import { MODAL_MODULO_MAP } from 'constants/planoModulos';
+import SidebarFolderItemBullet from './SidebarFolderItemBullet';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -292,9 +293,6 @@ const Layout: React.FC = () => {
       onClick: () => handleOpenModal('rpki-aspas'),
     },
     { id: 'rpki-validar-rota', label: 'Validar Rota', icon: 'bi-search', onClick: () => handleOpenModal('rpki-validar-rota') },
-    { id: 'rpki-historico', label: 'Histórico', icon: 'bi-clock-history', onClick: () => handleOpenModal('rpki-historico') },
-    { id: 'rpki-alertas', label: 'Alertas', icon: 'bi-exclamation-triangle', onClick: () => handleOpenModal('rpki-alertas') },
-    { id: 'rpki-sincronizacao', label: 'Sincronização', icon: 'bi-arrow-repeat', onClick: () => handleOpenModal('rpki-sincronizacao') },
   ];
 
   const logsFolderItems = [
@@ -307,6 +305,12 @@ const Layout: React.FC = () => {
     { id: 'logs-equipamentos', modalId: 'logs-equipamentos', label: t('logs.equipamentos'), icon: 'bi-journal-code', onClick: () => handleOpenModal('logs-equipamentos') },
     { id: 'logs-agentes', modalId: 'logs-agentes', label: t('logs.agentes'), icon: 'bi-plugin', onClick: () => handleOpenModal('logs-agentes') },
     { id: 'logs-blockdomi-api', modalId: 'logs-blockdomi-api', label: t('blockdomi.logsApi'), icon: 'bi-journal-text', onClick: () => handleOpenModal('logs-blockdomi-api') },
+  ].filter((item) => filterByModulo(item.modalId));
+
+  const logsRpkiFolderItems = [
+    { id: 'rpki-logs-validacao', modalId: 'rpki-logs-validacao', label: t('logs.rpkiSincronizacao'), icon: 'bi-journal-text', onClick: () => handleOpenModal('rpki-logs-validacao') },
+    { id: 'rpki-logs-ca-pai', modalId: 'rpki-logs-ca-pai', label: t('logs.rpkiCaPai'), icon: 'bi-cloud-arrow-up', onClick: () => handleOpenModal('rpki-logs-ca-pai') },
+    { id: 'rpki-logs-repositorios', modalId: 'rpki-logs-repositorios', label: t('logs.rpkiRepositorios'), icon: 'bi-hdd-rack', onClick: () => handleOpenModal('rpki-logs-repositorios') },
   ].filter((item) => filterByModulo(item.modalId));
 
   if (isServerUnavailable) {
@@ -420,7 +424,7 @@ const Layout: React.FC = () => {
                         }}
                         type="button"
                       >
-                        <i className={`bi ${item.icon} me-2`}></i>
+                        <SidebarFolderItemBullet />
                         <span>{item.label}</span>
                       </button>
                     ))}
@@ -475,7 +479,7 @@ const Layout: React.FC = () => {
                         }}
                         type="button"
                       >
-                        <i className={`bi ${item.icon} me-2`}></i>
+                        <SidebarFolderItemBullet />
                         <span>{item.label}</span>
                       </button>
                     ))}
@@ -530,7 +534,7 @@ const Layout: React.FC = () => {
                         }}
                         type="button"
                       >
-                        <i className={`bi ${item.icon} me-2`}></i>
+                        <SidebarFolderItemBullet />
                         <span>{item.label}</span>
                       </button>
                     ))}
@@ -585,7 +589,7 @@ const Layout: React.FC = () => {
                         }}
                         type="button"
                       >
-                        <i className={`bi ${item.icon} me-2`}></i>
+                        <SidebarFolderItemBullet />
                         <span>{item.label}</span>
                       </button>
                     ))}
@@ -640,7 +644,7 @@ const Layout: React.FC = () => {
                         }}
                         type="button"
                       >
-                        <i className={`bi ${item.icon} me-2`}></i>
+                        <SidebarFolderItemBullet />
                         <span>{item.label}</span>
                       </button>
                     ))}
@@ -694,10 +698,63 @@ const Layout: React.FC = () => {
                         }}
                         type="button"
                       >
-                        <i className={`bi ${item.icon} me-2`}></i>
+                        <SidebarFolderItemBullet />
                         <span>{item.label}</span>
                       </button>
                     ))}
+                    {logsRpkiFolderItems.length > 0 && (
+                      <div className="accordion sidebar-accordion border-0" id="logsRpkiAccordion">
+                        <div className="accordion-item border-0 bg-transparent">
+                          <h2 className="accordion-header" id="logsRpkiHeading">
+                            <button
+                              className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#logsRpkiCollapse"
+                              aria-expanded="false"
+                              aria-controls="logsRpkiCollapse"
+                              onClick={(e) => {
+                                const button = e.currentTarget;
+                                const folderIcon = button.querySelector('.folder-icon');
+                                setTimeout(() => {
+                                  if (folderIcon && button.classList.contains('collapsed')) {
+                                    folderIcon.className = 'bi bi-folder folder-icon me-2';
+                                  } else if (folderIcon) {
+                                    folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
+                                  }
+                                }, 10);
+                              }}
+                            >
+                              <i className="bi bi-folder folder-icon me-2"></i>
+                              <span>{t('layout.folderLogsRpki')}</span>
+                            </button>
+                          </h2>
+                          <div
+                            id="logsRpkiCollapse"
+                            className="accordion-collapse collapse"
+                            aria-labelledby="logsRpkiHeading"
+                            data-bs-parent="#logsRpkiAccordion"
+                          >
+                            <div className="accordion-body p-0">
+                              {logsRpkiFolderItems.map((item) => (
+                                <button
+                                  key={item.id}
+                                  className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"
+                                  onClick={() => {
+                                    item.onClick();
+                                    setSidebarOpen(false);
+                                  }}
+                                  type="button"
+                                >
+                                  <SidebarFolderItemBullet />
+                                  <span>{item.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -747,7 +804,7 @@ const Layout: React.FC = () => {
                         }}
                         type="button"
                       >
-                        {item.icon && <i className={`bi ${item.icon} me-2`}></i>}
+                        <SidebarFolderItemBullet />
                         <span>{item.label}</span>
                       </button>
                     ))}

@@ -45,6 +45,8 @@
   --sidebar-text: #E8EDF2;
   --sidebar-hover: #3D4E5C;
   --sidebar-active: #3D5A7A;
+  /* Barra vertical ao lado do título da pasta aberta (referência visual “pro”) */
+  --sidebar-section-accent: #7eb3e8;
   --navbar-bg: #2e3c47;
   --navbar-text: #ffffff;
   --navbar-border: #5A6D7E;
@@ -111,6 +113,7 @@
   --sidebar-text: #f8fafc;
   --sidebar-hover: #3a3a3a;
   --sidebar-active: #6366f1;
+  --sidebar-section-accent: #60a5fa;
   
   /* Navbar - Modo escuro */
   --navbar-bg: var(--bg-primary);

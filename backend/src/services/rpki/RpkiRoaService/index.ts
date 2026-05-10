@@ -4,6 +4,7 @@ import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
 import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiValidationLog } from '../../../models/rpki/RpkiValidationLog';
+import { RpkiActivityLog } from '../../../models/rpki/RpkiActivityLog';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { RpkiCaService } from '../RpkiCaService';
 import { collectRisWhoisSuggestedRoas } from '../RpkiBgpRisWhoisService';
@@ -178,6 +179,15 @@ export class RpkiRoaService {
       revoked_at: null,
     });
 
+    RpkiActivityLog.create({
+      empresa_id: input.empresaId,
+      ca_id: input.caId,
+      object_type: 'roa',
+      object_id: row.id,
+      action: 'create',
+      details: JSON.stringify({ prefix: row.prefix, asn: row.asn, max_length: row.max_length }),
+    }).catch(() => undefined);
+
     await this.syncRepositoriesForCa(input.caId);
     return row;
   }
@@ -256,17 +266,35 @@ export class RpkiRoaService {
       status: 'revoked',
       revoked_at: new Date(),
     });
+
+    RpkiActivityLog.create({
+      empresa_id: row.empresa_id,
+      ca_id: caId,
+      object_type: 'roa',
+      object_id: roaId,
+      action: 'revoke',
+      details: JSON.stringify({ prefix: row.prefix, asn: row.asn, max_length: row.max_length }),
+    }).catch(() => undefined);
+
     await this.syncRepositoriesForCa(caId);
     return row;
   }
 
   static async delete(caId: number, roaId: number): Promise<void> {
-    const deleted = await RpkiRoa.destroy({
-      where: { id: roaId, ca_id: caId },
-    });
-    if (!deleted) {
-      throw new RpkiClientError('ROA não encontrado para exclusão.');
-    }
+    const row = await RpkiRoa.findOne({ where: { id: roaId, ca_id: caId } });
+    if (!row) throw new RpkiClientError('ROA não encontrado para exclusão.');
+
+    await RpkiRoa.destroy({ where: { id: roaId, ca_id: caId } });
+
+    RpkiActivityLog.create({
+      empresa_id: row.empresa_id,
+      ca_id: caId,
+      object_type: 'roa',
+      object_id: roaId,
+      action: 'delete',
+      details: JSON.stringify({ prefix: row.prefix, asn: row.asn, max_length: row.max_length }),
+    }).catch(() => undefined);
+
     await this.syncRepositoriesForCa(caId);
   }
 
@@ -566,7 +594,7 @@ export class RpkiRoaService {
       attributes: ['id'],
     });
     for (const repository of repositories) {
-      await RpkiCaService.syncRepository(caId, repository.id);
+      await RpkiCaService.syncRepository(caId, repository.id, 'roa');
     }
   }
 }

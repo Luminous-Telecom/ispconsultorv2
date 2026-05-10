@@ -828,7 +828,17 @@ async function fetchResourcesViaUpDown(params: {
     const isXmlLike =
       responseContentType.includes('xml') || responseBody.toString('utf8', 0, 32).includes('<?xml');
     const xml = isXmlLike ? responseBody.toString('utf8') : await runOpenSslCmsExtractContent(responseBody);
-    return parseUpDownListResponseXml(xml);
+    const result = parseUpDownListResponseXml(xml);
+    const { RpkiSyncLog } = await import('../../../models/rpki/RpkiSyncLog');
+    RpkiSyncLog.create({
+      empresa_id: params.ca.empresa_id,
+      ca_id: params.ca.id,
+      type: 'provisioning',
+      status: 'success',
+      remote_host: params.parent.service_uri,
+      message: `Sincronização RFC 6492 (list) concluída. Recursos recebidos: ${result.classes.length} classe(s).`,
+    }).catch(() => {});
+    return result;
   }
 
   const preview = formatRpkiHttpErrorPreview(responseBody);
@@ -846,7 +856,17 @@ async function fetchResourcesViaUpDown(params: {
     cert_serial_hex: getCertSerialHexFromPem(params.ca.ca_cert_pem),
   });
 
-  throw new Error(`Falha up-down no parent (HTTP ${status}, Content-Type=${contentType}, profile=rfc6492-default, body=${preview})`);
+  const errMsg = `Falha up-down no parent (HTTP ${status}, Content-Type=${contentType}, profile=rfc6492-default, body=${preview})`;
+  const { RpkiSyncLog } = await import('../../../models/rpki/RpkiSyncLog');
+  RpkiSyncLog.create({
+    empresa_id: params.ca.empresa_id,
+    ca_id: params.ca.id,
+    type: 'provisioning',
+    status: 'failed',
+    remote_host: params.parent.service_uri,
+    message: errMsg,
+  }).catch(() => {});
+  throw new Error(errMsg);
 }
 
 function generateSafePositiveSerialHex(): string {
@@ -1401,7 +1421,17 @@ export class RpkiProvisioningService {
 
     if (status < 200 || status >= 400) {
       const preview = formatRpkiHttpErrorPreview(responseBody);
-      throw new Error(`Parent rejeitou RFC 6492 request (HTTP ${status}): ${preview}`);
+      const errMsg = `Parent rejeitou RFC 6492 request (HTTP ${status}): ${preview}`;
+      const { RpkiSyncLog } = await import('../../../models/rpki/RpkiSyncLog');
+      RpkiSyncLog.create({
+        empresa_id: ca.empresa_id,
+        ca_id: ca.id,
+        type: 'provisioning',
+        status: 'failed',
+        remote_host: parent.service_uri,
+        message: errMsg,
+      }).catch(() => {});
+      throw new Error(errMsg);
     }
 
     // 5. Extrai XML da resposta CMS
@@ -1433,6 +1463,16 @@ export class RpkiProvisioningService {
       className: issued.className,
       certUrl: issued.certUrl,
     });
+
+    const { RpkiSyncLog } = await import('../../../models/rpki/RpkiSyncLog');
+    RpkiSyncLog.create({
+      empresa_id: ca.empresa_id,
+      ca_id: ca.id,
+      type: 'provisioning',
+      status: 'success',
+      remote_host: parent.service_uri,
+      message: `Certificado de recurso emitido via RFC 6492. Classe: ${issued.className}.`,
+    }).catch(() => {});
   }
 
   static async generateChildRequest(ca: RpkiCa): Promise<{ xml: string; ca: RpkiCa }> {

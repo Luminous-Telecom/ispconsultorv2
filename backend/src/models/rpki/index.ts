@@ -8,6 +8,8 @@ import { RpkiRepository } from './RpkiRepository';
 import { RpkiCaResource } from './RpkiCaResource';
 import { RpkiAspa } from './RpkiAspa';
 import { RpkiPublishedObject } from './RpkiPublishedObject';
+import { RpkiSyncLog } from './RpkiSyncLog';
+import { RpkiActivityLog } from './RpkiActivityLog';
 
 RpkiRoa.hasMany(RpkiValidationLog, {
   foreignKey: 'matched_roa_id',
@@ -110,5 +112,7 @@ export {
   RpkiCaResource,
   RpkiAspa,
   RpkiPublishedObject,
+  RpkiSyncLog,
+  RpkiActivityLog,
 };
 

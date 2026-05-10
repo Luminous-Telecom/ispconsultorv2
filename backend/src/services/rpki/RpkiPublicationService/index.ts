@@ -15,6 +15,7 @@ import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiPublishedObject } from '../../../models/rpki/RpkiPublishedObject';
 import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
+import { RpkiSyncLog } from '../../../models/rpki/RpkiSyncLog';
 import { logger } from '../../../utils/logger';
 import {
   buildCrlDer,
@@ -53,6 +54,7 @@ export class RpkiPublicationService {
     ca: RpkiCa;
     repository: RpkiRepository;
     empresaId: number | null;
+    triggerType?: 'roa' | 'aspa' | 'manual' | null;
   }): Promise<void> {
     const { ca, repository } = params;
 
@@ -252,13 +254,49 @@ export class RpkiPublicationService {
 
     // 8. Envia para o servidor de publicação RFC 8181
     if (toPublish.length > 0 || toWithdraw.length > 0) {
-      await Rfc8181PublicationService.sendObjects({
-        serviceUri: repository.publication_service_uri,
-        bpkiCertPem: ca.ca_cert_pem,
-        bpkiKeyPem: ca.private_key_pem,
-        publish: toPublish,
-        withdraw: toWithdraw,
-      });
+      try {
+        await Rfc8181PublicationService.sendObjects({
+          serviceUri: repository.publication_service_uri,
+          bpkiCertPem: ca.ca_cert_pem,
+          bpkiKeyPem: ca.private_key_pem,
+          publish: toPublish,
+          withdraw: toWithdraw,
+        });
+        const msg = `Publicados: ${toPublish.length} objetos, retirados: ${toWithdraw.length} objetos. (ROAs: ${activeRoas.length}, ASPAs: ${activeAspas.length})`;
+        RpkiSyncLog.create({
+          empresa_id: params.empresaId,
+          ca_id: ca.id,
+          type: 'publication',
+          trigger_type: params.triggerType ?? null,
+          status: 'success',
+          remote_host: repository.publication_service_uri,
+          message: msg,
+        }).catch(() => {});
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        RpkiSyncLog.create({
+          empresa_id: params.empresaId,
+          ca_id: ca.id,
+          type: 'publication',
+          trigger_type: params.triggerType ?? null,
+          status: 'failed',
+          remote_host: repository.publication_service_uri,
+          message: errMsg,
+        }).catch(() => {});
+        throw err;
+      }
+    } else {
+      // Sem diff — loga como informação mesmo assim para rastreabilidade
+      const msg = `Sem alterações a publicar. (ROAs: ${activeRoas.length}, ASPAs: ${activeAspas.length}, objetos já publicados: ${currentlyPublished.length})`;
+      RpkiSyncLog.create({
+        empresa_id: params.empresaId,
+        ca_id: ca.id,
+        type: 'publication',
+        trigger_type: params.triggerType ?? null,
+        status: 'success',
+        remote_host: repository.publication_service_uri,
+        message: msg,
+      }).catch(() => {});
     }
 
     // 9. Atualiza rpki_published_objects no banco

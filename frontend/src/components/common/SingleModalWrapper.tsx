@@ -64,13 +64,15 @@ const RpkiRepositoryListModal = lazy(() => import('../modals/rpki/RpkiRepository
 const RpkiAspaListModal = lazy(() => import('../modals/rpki/RpkiAspaListModal'));
 const RpkiRoaListModal = lazy(() => import('../modals/rpki/RpkiRoaListModal'));
 const RpkiValidateRouteModal = lazy(() => import('../modals/rpki/RpkiValidateRouteModal'));
-const RpkiHistoryModal = lazy(() => import('../modals/rpki/RpkiHistoryModal'));
-const RpkiAlertsModal = lazy(() => import('../modals/rpki/RpkiAlertsModal'));
-const RpkiSyncModal = lazy(() => import('../modals/rpki/RpkiSyncModal'));
+const RpkiValidationLogsModal = lazy(() => import('../modals/logs/RpkiValidationLogsModal'));
+const RpkiCaPaiLogsModal = lazy(() => import('../modals/logs/rpki/RpkiCaPaiLogsModal'));
+const RpkiRepositorioLogsModal = lazy(() => import('../modals/logs/rpki/RpkiRepositorioLogsModal'));
 
 interface ResolvedRpkiModal {
   title: string;
   component: React.LazyExoticComponent<React.ComponentType<ModalComponentProps>>;
+  size?: 'sm' | 'lg' | 'xl';
+  className?: string;
 }
 
 const resolveRpkiModal = (active: ModalType): ResolvedRpkiModal | null => {
@@ -87,12 +89,12 @@ const resolveRpkiModal = (active: ModalType): ResolvedRpkiModal | null => {
       return { title: 'RPKI - ROAs', component: RpkiRoaListModal };
     case 'rpki-validar-rota':
       return { title: 'RPKI - Validar Rota', component: RpkiValidateRouteModal };
-    case 'rpki-historico':
-      return { title: 'RPKI - Historico', component: RpkiHistoryModal };
-    case 'rpki-alertas':
-      return { title: 'RPKI - Alertas', component: RpkiAlertsModal };
-    case 'rpki-sincronizacao':
-      return { title: 'RPKI - Sincronizacao', component: RpkiSyncModal };
+    case 'rpki-logs-validacao':
+      return { title: 'RPKI - Logs de Sincronização', component: RpkiValidationLogsModal, size: 'xl', className: 'no-padding' };
+    case 'rpki-logs-ca-pai':
+      return { title: 'RPKI - Logs CA-pai', component: RpkiCaPaiLogsModal, size: 'xl', className: 'no-padding' };
+    case 'rpki-logs-repositorios':
+      return { title: 'RPKI - Logs Repositórios', component: RpkiRepositorioLogsModal, size: 'xl', className: 'no-padding' };
     default:
       return null;
   }
@@ -231,7 +233,8 @@ const SingleModalWrapper: React.FC = () => {
         show={true}
         onClose={closeModal}
         title={resolvedRpki.title}
-        size="lg"
+        size={resolvedRpki.size ?? 'lg'}
+        className={resolvedRpki.className ?? ''}
       >
         <Suspense fallback={<Loading message={loadingMessage} />}>
           <RpkiComponent

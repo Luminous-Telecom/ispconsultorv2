@@ -44,9 +44,9 @@ export type ModalType =
   | 'rpki-aspas'
   | 'rpki-roas'
   | 'rpki-validar-rota'
-  | 'rpki-historico'
-  | 'rpki-alertas'
-  | 'rpki-sincronizacao'
+  | 'rpki-logs-validacao'
+  | 'rpki-logs-ca-pai'
+  | 'rpki-logs-repositorios'
   // SaaS Super Admin (rotas exclusivas /api/saas/*)
   | 'saas-planos'
   | 'saas-usuarios'

@@ -6,6 +6,8 @@ import { RpkiAspaService } from '../../../services/rpki/RpkiAspaService';
 import { RpkiRouteValidationService } from '../../../services/rpki/RpkiRouteValidationService';
 import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
+import { RpkiSyncLog } from '../../../models/rpki/RpkiSyncLog';
+import { Op } from 'sequelize';
 import { sendError, sendNotFound, sendSuccess, sendValidationError } from '../../../utils/responseUtils';
 import { isRpkiClientError } from '../../../utils/errorUtils';
 import {
@@ -842,6 +844,209 @@ export class RpkiCaController {
       sendError(res, error, 'Erro ao validar rota', 500, true, {
         context: 'RpkiCaController',
         action: 'validateRoute',
+      });
+    }
+  }
+
+  static async listCaPaiLogs(req: Request, res: Response): Promise<void> {
+    try {
+      const empresaId = getEmpresaIdOrNull(req);
+      const isAdmin = isAdminRequest(req);
+      const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? '20'), 10) || 20));
+      const offset = (page - 1) * limit;
+      const search = String(req.query.search ?? '').trim();
+      const status = String(req.query.status ?? '').trim();
+
+      const where: Record<string, unknown> = { type: 'provisioning' };
+      if (!isAdmin && empresaId != null) where.empresa_id = empresaId;
+      if (status && ['success', 'failed'].includes(status)) where.status = status;
+      if (search) {
+        where[Op.or as unknown as string] = [
+          { remote_host: { [Op.like]: `%${search}%` } },
+          { message: { [Op.like]: `%${search}%` } },
+        ];
+      }
+
+      const { count, rows } = await RpkiSyncLog.findAndCountAll({
+        where,
+        order: [['created_at', 'DESC']],
+        limit,
+        offset,
+      });
+
+      sendSuccess(res, {
+        data: rows,
+        pagination: {
+          total: count,
+          per_page: limit,
+          current_page: page,
+          last_page: Math.max(1, Math.ceil(count / limit)),
+          from: offset + 1,
+          to: Math.min(offset + limit, count),
+        },
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar logs de CA-pai', 500, true, {
+        context: 'RpkiCaController',
+        action: 'listCaPaiLogs',
+      });
+    }
+  }
+
+  static async listRepositorioLogs(req: Request, res: Response): Promise<void> {
+    try {
+      const empresaId = getEmpresaIdOrNull(req);
+      const isAdmin = isAdminRequest(req);
+      const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? '20'), 10) || 20));
+      const offset = (page - 1) * limit;
+      const search = String(req.query.search ?? '').trim();
+      const status = String(req.query.status ?? '').trim();
+
+      const where: Record<string, unknown> = { type: 'publication' };
+      if (!isAdmin && empresaId != null) where.empresa_id = empresaId;
+      if (status && ['success', 'failed'].includes(status)) where.status = status;
+      if (search) {
+        where[Op.or as unknown as string] = [
+          { remote_host: { [Op.like]: `%${search}%` } },
+          { message: { [Op.like]: `%${search}%` } },
+        ];
+      }
+
+      const { count, rows } = await RpkiSyncLog.findAndCountAll({
+        where,
+        order: [['created_at', 'DESC']],
+        limit,
+        offset,
+      });
+
+      sendSuccess(res, {
+        data: rows,
+        pagination: {
+          total: count,
+          per_page: limit,
+          current_page: page,
+          last_page: Math.max(1, Math.ceil(count / limit)),
+          from: offset + 1,
+          to: Math.min(offset + limit, count),
+        },
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar logs de repositório', 500, true, {
+        context: 'RpkiCaController',
+        action: 'listRepositorioLogs',
+      });
+    }
+  }
+
+  private static async listPublicationLogsByTrigger(
+    req: Request,
+    res: Response,
+    triggerType: 'roa' | 'aspa'
+  ): Promise<void> {
+    const empresaId = getEmpresaIdOrNull(req);
+    const isAdmin = isAdminRequest(req);
+    const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? '20'), 10) || 20));
+    const offset = (page - 1) * limit;
+    const search = String(req.query.search ?? '').trim();
+    const status = String(req.query.status ?? '').trim();
+
+    const where: Record<string, unknown> = { type: 'publication', trigger_type: triggerType };
+    if (!isAdmin && empresaId != null) where.empresa_id = empresaId;
+    if (status && ['success', 'failed'].includes(status)) where.status = status;
+    if (search) {
+      where[Op.or as unknown as string] = [
+        { remote_host: { [Op.like]: `%${search}%` } },
+        { message: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    const { count, rows } = await RpkiSyncLog.findAndCountAll({
+      where,
+      order: [['created_at', 'DESC']],
+      limit,
+      offset,
+    });
+
+    sendSuccess(res, {
+      data: rows,
+      pagination: {
+        total: count,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.max(1, Math.ceil(count / limit)),
+        from: offset + 1,
+        to: Math.min(offset + limit, count),
+      },
+    });
+  }
+
+  static async listRoaLogs(req: Request, res: Response): Promise<void> {
+    try {
+      await RpkiCaController.listPublicationLogsByTrigger(req, res, 'roa');
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar logs de ROA', 500, true, {
+        context: 'RpkiCaController',
+        action: 'listRoaLogs',
+      });
+    }
+  }
+
+  static async listAspaLogs(req: Request, res: Response): Promise<void> {
+    try {
+      await RpkiCaController.listPublicationLogsByTrigger(req, res, 'aspa');
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar logs de ASPA', 500, true, {
+        context: 'RpkiCaController',
+        action: 'listAspaLogs',
+      });
+    }
+  }
+
+  static async listValidationLogs(req: Request, res: Response): Promise<void> {
+    try {
+      const empresaId = getEmpresaIdOrNull(req);
+      const isAdmin = isAdminRequest(req);
+      const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? '20'), 10) || 20));
+      const offset = (page - 1) * limit;
+      const search = String(req.query.search ?? '').trim();
+      const status = String(req.query.status ?? '').trim();
+
+      const where: Record<string, unknown> = {};
+      if (!isAdmin && empresaId != null) where.empresa_id = empresaId;
+      if (status && ['success', 'failed'].includes(status)) where.status = status;
+      if (search) {
+        where[Op.or as unknown as string] = [
+          { remote_host: { [Op.like]: `%${search}%` } },
+          { message: { [Op.like]: `%${search}%` } },
+        ];
+      }
+
+      const { count, rows } = await RpkiSyncLog.findAndCountAll({
+        where,
+        order: [['created_at', 'DESC']],
+        limit,
+        offset,
+      });
+
+      sendSuccess(res, {
+        data: rows,
+        pagination: {
+          total: count,
+          per_page: limit,
+          current_page: page,
+          last_page: Math.max(1, Math.ceil(count / limit)),
+          from: offset + 1,
+          to: Math.min(offset + limit, count),
+        },
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar logs de sincronização', 500, true, {
+        context: 'RpkiCaController',
+        action: 'listValidationLogs',
       });
     }
   }

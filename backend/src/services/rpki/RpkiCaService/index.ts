@@ -134,7 +134,7 @@ export class RpkiCaService {
     }
   }
 
-  static async syncRepository(ca_id: number, repository_id: number): Promise<RpkiRepository> {
+  static async syncRepository(ca_id: number, repository_id: number, triggerType?: 'roa' | 'aspa' | 'manual' | null): Promise<RpkiRepository> {
     const repository = await RpkiRepository.findOne({
       where: { id: repository_id, ca_id },
     });
@@ -166,6 +166,7 @@ export class RpkiCaService {
       ca,
       repository,
       empresaId: ca.empresa_id,
+      triggerType: triggerType ?? null,
     });
 
     await repository.reload();

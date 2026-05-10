@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
 import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
+import { RpkiActivityLog } from '../../../models/rpki/RpkiActivityLog';
 import { RpkiClientError } from '../../../utils/errorUtils';
 import { RpkiCaService } from '../RpkiCaService';
 
@@ -71,6 +72,15 @@ export class RpkiAspaService {
       revoked_at: null,
     });
 
+    RpkiActivityLog.create({
+      empresa_id: input.empresaId,
+      ca_id: input.caId,
+      object_type: 'aspa',
+      object_id: row.id,
+      action: 'create',
+      details: JSON.stringify({ customer_asn: row.customer_asn, providers: providersJson }),
+    }).catch(() => undefined);
+
     await this.syncRepositoriesForCa(input.caId);
     return row;
   }
@@ -81,13 +91,35 @@ export class RpkiAspaService {
     if (row.status === 'revoked') return row;
 
     await row.update({ status: 'revoked', revoked_at: new Date() });
+
+    RpkiActivityLog.create({
+      empresa_id: row.empresa_id,
+      ca_id: caId,
+      object_type: 'aspa',
+      object_id: aspaId,
+      action: 'revoke',
+      details: JSON.stringify({ customer_asn: row.customer_asn }),
+    }).catch(() => undefined);
+
     await this.syncRepositoriesForCa(caId);
     return row;
   }
 
   static async delete(caId: number, aspaId: number): Promise<void> {
-    const deleted = await RpkiAspa.destroy({ where: { id: aspaId, ca_id: caId } });
-    if (!deleted) throw new RpkiClientError('ASPA não encontrado para exclusão.');
+    const row = await RpkiAspa.findOne({ where: { id: aspaId, ca_id: caId } });
+    if (!row) throw new RpkiClientError('ASPA não encontrado para exclusão.');
+
+    await RpkiAspa.destroy({ where: { id: aspaId, ca_id: caId } });
+
+    RpkiActivityLog.create({
+      empresa_id: row.empresa_id,
+      ca_id: caId,
+      object_type: 'aspa',
+      object_id: aspaId,
+      action: 'delete',
+      details: JSON.stringify({ customer_asn: row.customer_asn }),
+    }).catch(() => undefined);
+
     await this.syncRepositoriesForCa(caId);
   }
 
@@ -97,7 +129,7 @@ export class RpkiAspaService {
       attributes: ['id'],
     });
     for (const repository of repositories) {
-      await RpkiCaService.syncRepository(caId, repository.id);
+      await RpkiCaService.syncRepository(caId, repository.id, 'aspa');
     }
   }
 }

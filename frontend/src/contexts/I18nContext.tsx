@@ -227,6 +227,7 @@ export interface TranslationKeys {
   'layout.folderCadastros': string;
   'layout.folderFinanceiro': string;
   'layout.folderLogs': string;
+  'layout.folderLogsRpki': string;
   'layout.folderLogsErp': string;
   'layout.folderLogsSaas': string;
 
@@ -241,6 +242,9 @@ export interface TranslationKeys {
   'logs.acessoSistema': string;
   'logs.equipamentos': string;
   'logs.agentes': string;
+  'logs.rpkiSincronizacao': string;
+  'logs.rpkiCaPai': string;
+  'logs.rpkiRepositorios': string;
   'logs.agentesEmpty': string;
   'logs.agentColumn': string;
   'logs.comingSoon': string;
@@ -1756,6 +1760,7 @@ const translations: Translations = {
     'layout.folderCadastros': 'Cadastros',
     'layout.folderFinanceiro': 'Financeiro',
     'layout.folderLogs': 'Logs',
+    'layout.folderLogsRpki': 'RPKI',
     'layout.folderLogsErp': 'Logs ERP',
     'layout.folderLogsSaas': 'Logs SaaS',
 
@@ -1770,6 +1775,9 @@ const translations: Translations = {
     'logs.acessoSistema': 'Logs de Acesso ao Sistema',
     'logs.equipamentos': 'Logs Equipamentos',
     'logs.agentes': 'Logs Agentes',
+    'logs.rpkiSincronizacao': 'Logs de sincronização',
+    'logs.rpkiCaPai': 'Logs CA-pai',
+    'logs.rpkiRepositorios': 'Logs repositórios',
     'logs.agentesEmpty': 'Nenhum log de agente encontrado',
     'logs.agentColumn': 'Agente',
     'logs.comingSoon': 'Funcionalidade em desenvolvimento.',
@@ -3282,6 +3290,7 @@ const translations: Translations = {
     'layout.folderCadastros': 'Registers',
     'layout.folderFinanceiro': 'Financial',
     'layout.folderLogs': 'Logs',
+    'layout.folderLogsRpki': 'RPKI',
     'layout.folderLogsErp': 'ERP logs',
     'layout.folderLogsSaas': 'SaaS logs',
 
@@ -3296,6 +3305,9 @@ const translations: Translations = {
     'logs.acessoSistema': 'System Access Logs',
     'logs.equipamentos': 'Equipment Logs',
     'logs.agentes': 'Agent Logs',
+    'logs.rpkiSincronizacao': 'Sync logs',
+    'logs.rpkiCaPai': 'Parent CA logs',
+    'logs.rpkiRepositorios': 'Repository logs',
     'logs.agentesEmpty': 'No agent log found',
     'logs.agentColumn': 'Agent',
     'logs.comingSoon': 'Feature coming soon.',
@@ -4808,6 +4820,7 @@ const translations: Translations = {
     'layout.folderCadastros': 'Registros',
     'layout.folderFinanceiro': 'Financiero',
     'layout.folderLogs': 'Logs',
+    'layout.folderLogsRpki': 'RPKI',
     'layout.folderLogsErp': 'Logs ERP',
     'layout.folderLogsSaas': 'Logs SaaS',
     'layout.logoutSuccess': 'Cerrado de sesión exitoso',
@@ -4823,6 +4836,9 @@ const translations: Translations = {
     'logs.acessoSistema': 'Registros de Acceso al Sistema',
     'logs.equipamentos': 'Registros de Equipos',
     'logs.agentes': 'Registros de Agentes',
+    'logs.rpkiSincronizacao': 'Registros de sincronización',
+    'logs.rpkiCaPai': 'Registros CA padre',
+    'logs.rpkiRepositorios': 'Registros de repositorios',
     'logs.agentesEmpty': 'No se encontró registro de agente',
     'logs.agentColumn': 'Agente',
     'logs.comingSoon': 'Funcionalidad en desarrollo.',

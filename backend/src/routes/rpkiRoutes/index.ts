@@ -33,5 +33,11 @@ router.post('/cas/:id/aspas', RpkiCaController.createAspa);
 router.post('/cas/:id/aspas/:aspaId/revoke', RpkiCaController.revokeAspa);
 router.delete('/cas/:id/aspas/:aspaId', RpkiCaController.deleteAspa);
 
+router.get('/validation-logs', RpkiCaController.listValidationLogs);
+router.get('/logs/ca-pai', RpkiCaController.listCaPaiLogs);
+router.get('/logs/repositorios', RpkiCaController.listRepositorioLogs);
+router.get('/logs/roas', RpkiCaController.listRoaLogs);
+router.get('/logs/aspas', RpkiCaController.listAspaLogs);
+
 export default router;
 
