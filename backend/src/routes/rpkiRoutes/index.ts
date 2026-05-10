@@ -26,5 +26,10 @@ router.delete('/cas/:id/roas/:roaId', RpkiCaController.deleteRoa);
 router.get('/cas/:id/roas/analyze', RpkiCaController.analyzeRoas);
 router.post('/cas/:id/roas/analyze/apply', RpkiCaController.applyRoaSuggestions);
 
+router.get('/cas/:id/aspas', RpkiCaController.listAspas);
+router.post('/cas/:id/aspas', RpkiCaController.createAspa);
+router.post('/cas/:id/aspas/:aspaId/revoke', RpkiCaController.revokeAspa);
+router.delete('/cas/:id/aspas/:aspaId', RpkiCaController.deleteAspa);
+
 export default router;
 

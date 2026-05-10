@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { RpkiCaService } from '../../../services/rpki/RpkiCaService';
 import { RpkiProvisioningService } from '../../../services/rpki/RpkiProvisioningService';
 import { RpkiRoaService } from '../../../services/rpki/RpkiRoaService';
+import { RpkiAspaService } from '../../../services/rpki/RpkiAspaService';
 import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
 import { sendError, sendNotFound, sendSuccess, sendValidationError } from '../../../utils/responseUtils';
@@ -741,6 +742,76 @@ export class RpkiCaController {
         context: 'RpkiCaController',
         action: 'applyRoaSuggestions',
       });
+    }
+  }
+
+  // ─── ASPAs ────────────────────────────────────────────────────────────────
+
+  static async listAspas(req: Request, res: Response): Promise<void> {
+    try {
+      const caId = Number(req.params.id);
+      if (!Number.isFinite(caId) || caId <= 0) { sendValidationError(res, 'ID da CA inválido'); return; }
+      const ca = await RpkiCaController.getByIdForTenant(req, caId);
+      if (!ca) { sendNotFound(res, 'CA não encontrada'); return; }
+      const data = await RpkiAspaService.listByCa(caId);
+      sendSuccess(res, data);
+    } catch (error) {
+      sendError(res, error, 'Erro ao listar ASPAs', 500, true, { context: 'RpkiCaController', action: 'listAspas' });
+    }
+  }
+
+  static async createAspa(req: Request, res: Response): Promise<void> {
+    try {
+      const caId = Number(req.params.id);
+      if (!Number.isFinite(caId) || caId <= 0) { sendValidationError(res, 'ID da CA inválido'); return; }
+      const ca = await RpkiCaController.getByIdForTenant(req, caId);
+      if (!ca) { sendNotFound(res, 'CA não encontrada'); return; }
+
+      const customerAsn = String(req.body?.customerAsn ?? '').trim();
+      const providers = String(req.body?.providers ?? '').trim();
+      if (!customerAsn) { sendValidationError(res, 'customerAsn é obrigatório'); return; }
+      if (!providers) { sendValidationError(res, 'providers é obrigatório'); return; }
+
+      const data = await RpkiAspaService.create({
+        caId,
+        empresaId: ca.empresa_id,
+        customerAsn,
+        providers,
+      });
+      sendSuccess(res, data, 'ASPA criado com sucesso', 201);
+    } catch (error) {
+      if (isRpkiClientError(error)) { sendValidationError(res, (error as Error).message); return; }
+      sendError(res, error, 'Erro ao criar ASPA', 500, true, { context: 'RpkiCaController', action: 'createAspa' });
+    }
+  }
+
+  static async revokeAspa(req: Request, res: Response): Promise<void> {
+    try {
+      const caId = Number(req.params.id);
+      const aspaId = Number(req.params.aspaId);
+      if (!Number.isFinite(caId) || !Number.isFinite(aspaId)) { sendValidationError(res, 'IDs inválidos'); return; }
+      const ca = await RpkiCaController.getByIdForTenant(req, caId);
+      if (!ca) { sendNotFound(res, 'CA não encontrada'); return; }
+      const data = await RpkiAspaService.revoke(caId, aspaId);
+      sendSuccess(res, data, 'ASPA revogado com sucesso');
+    } catch (error) {
+      if (isRpkiClientError(error)) { sendValidationError(res, (error as Error).message); return; }
+      sendError(res, error, 'Erro ao revogar ASPA', 500, true, { context: 'RpkiCaController', action: 'revokeAspa' });
+    }
+  }
+
+  static async deleteAspa(req: Request, res: Response): Promise<void> {
+    try {
+      const caId = Number(req.params.id);
+      const aspaId = Number(req.params.aspaId);
+      if (!Number.isFinite(caId) || !Number.isFinite(aspaId)) { sendValidationError(res, 'IDs inválidos'); return; }
+      const ca = await RpkiCaController.getByIdForTenant(req, caId);
+      if (!ca) { sendNotFound(res, 'CA não encontrada'); return; }
+      await RpkiAspaService.delete(caId, aspaId);
+      sendSuccess(res, null, 'ASPA excluído com sucesso');
+    } catch (error) {
+      if (isRpkiClientError(error)) { sendValidationError(res, (error as Error).message); return; }
+      sendError(res, error, 'Erro ao excluir ASPA', 500, true, { context: 'RpkiCaController', action: 'deleteAspa' });
     }
   }
 }

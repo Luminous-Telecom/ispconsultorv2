@@ -14,13 +14,16 @@ import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
 import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiPublishedObject } from '../../../models/rpki/RpkiPublishedObject';
 import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
+import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
 import { logger } from '../../../utils/logger';
 import {
   buildCrlDer,
   buildRoaCmsObject,
+  buildAspaCmsObject,
   buildManifestCmsObject,
   type ManifestFile,
   type RoaEntry,
+  type AspaEntry,
 } from '../RpkiObjectBuilderService';
 import { Rfc8181PublicationService, type PublishObject, type WithdrawObject } from '../Rfc8181PublicationService';
 import { RpkiProvisioningService } from '../RpkiProvisioningService';
@@ -35,6 +38,10 @@ function sha256HexOfBuffer(buf: Buffer): string {
 
 function roaFilename(sha256Hex: string): string {
   return `${sha256Hex.slice(0, 32)}.roa`;
+}
+
+function aspaFilename(sha256Hex: string): string {
+  return `${sha256Hex.slice(0, 32)}.asa`;
 }
 
 export class RpkiPublicationService {
@@ -134,10 +141,46 @@ export class RpkiPublicationService {
       });
     }
 
-    // 5. Constrói Manifest (listando CRL + ROAs)
+    // 5. Constrói ASPAs
+    const activeAspas = await RpkiAspa.findAll({
+      where: { ca_id: ca.id, status: 'active' },
+    });
+
+    interface BuiltAspa {
+      aspaId: number;
+      derBuffer: Buffer;
+      sha256Hex: string;
+      filename: string;
+      uri: string;
+    }
+
+    const builtAspas: BuiltAspa[] = [];
+    for (const aspa of activeAspas) {
+      const customerAsn = parseInt(String(aspa.customer_asn), 10);
+      const providers = (aspa.providers_json as string[]).map((p) => {
+        const providerAsn = parseInt(p, 10);
+        const afi = aspa.afi === 'both' ? undefined : aspa.afi;
+        return { providerAsn, afi } as AspaEntry['providers'][number];
+      });
+      const entry: AspaEntry = { customerAsn, providers };
+      const built = await buildAspaCmsObject({
+        entry,
+        resourceCaCertPem: ca.resource_cert_pem!,
+        resourceCaKeyPem: ca.resource_key_pem!,
+        resourceCertUrl: ca.resource_cert_url!,
+        crlUri,
+        objectUri: `${siaBase}${aspaFilename(sha256HexOfBuffer(Buffer.from([customerAsn])))}`,
+      });
+      const filename = aspaFilename(built.sha256Hex);
+      const uri = `${siaBase}${filename}`;
+      builtAspas.push({ aspaId: aspa.id, derBuffer: built.derBuffer, sha256Hex: built.sha256Hex, filename, uri });
+    }
+
+    // 6. Constrói Manifest (listando CRL + ROAs + ASPAs)
     const manifestFiles: ManifestFile[] = [
       { filename: crlFilename, sha256Hex: crl.sha256Hex },
       ...builtRoas.map((r) => ({ filename: r.filename, sha256Hex: r.sha256Hex })),
+      ...builtAspas.map((a) => ({ filename: a.filename, sha256Hex: a.sha256Hex })),
     ];
 
     const mft = await buildManifestCmsObject({
@@ -152,7 +195,7 @@ export class RpkiPublicationService {
       mftUri,
     });
 
-    // 6. Calcula diff com o que está publicado
+    // 7. Calcula diff com o que está publicado
     const currentlyPublished = await RpkiPublishedObject.findAll({
       where: { ca_id: ca.id, repository_id: repository.id },
     });
@@ -165,19 +208,21 @@ export class RpkiPublicationService {
       uri: string;
       sha256Hex: string;
       derBuffer: Buffer;
-      objectType: 'roa' | 'mft' | 'crl';
+      objectType: 'roa' | 'mft' | 'crl' | 'aspa';
       roaId: number | null;
+      aspaId: number | null;
     }
 
     const newObjects: NewObject[] = [
-      { uri: crlUri, sha256Hex: crl.sha256Hex, derBuffer: crl.derBuffer, objectType: 'crl', roaId: null },
-      { uri: mftUri, sha256Hex: mft.sha256Hex, derBuffer: mft.derBuffer, objectType: 'mft', roaId: null },
+      { uri: crlUri, sha256Hex: crl.sha256Hex, derBuffer: crl.derBuffer, objectType: 'crl', roaId: null, aspaId: null },
+      { uri: mftUri, sha256Hex: mft.sha256Hex, derBuffer: mft.derBuffer, objectType: 'mft', roaId: null, aspaId: null },
       ...builtRoas.map((r) => ({
-        uri: r.uri,
-        sha256Hex: r.sha256Hex,
-        derBuffer: r.derBuffer,
-        objectType: 'roa' as const,
-        roaId: r.roaId,
+        uri: r.uri, sha256Hex: r.sha256Hex, derBuffer: r.derBuffer,
+        objectType: 'roa' as const, roaId: r.roaId, aspaId: null,
+      })),
+      ...builtAspas.map((a) => ({
+        uri: a.uri, sha256Hex: a.sha256Hex, derBuffer: a.derBuffer,
+        objectType: 'aspa' as const, roaId: null, aspaId: a.aspaId,
       })),
     ];
 
@@ -201,7 +246,7 @@ export class RpkiPublicationService {
       }
     }
 
-    // 7. Envia para o servidor de publicação RFC 8181
+    // 8. Envia para o servidor de publicação RFC 8181
     if (toPublish.length > 0 || toWithdraw.length > 0) {
       await Rfc8181PublicationService.sendObjects({
         serviceUri: repository.publication_service_uri,
@@ -212,7 +257,7 @@ export class RpkiPublicationService {
       });
     }
 
-    // 8. Atualiza rpki_published_objects no banco
+    // 9. Atualiza rpki_published_objects no banco
     // Remove os que foram retirados
     const urisToRemove = toWithdraw.map((w) => w.uri);
     if (urisToRemove.length > 0) {
@@ -232,6 +277,7 @@ export class RpkiPublicationService {
           hash_sha256_hex: obj.sha256Hex,
           object_der_b64: obj.derBuffer.toString('base64'),
           roa_id: obj.roaId,
+          aspa_id: obj.aspaId,
         });
       } else {
         await RpkiPublishedObject.create({
@@ -242,11 +288,12 @@ export class RpkiPublicationService {
           object_type: obj.objectType,
           object_der_b64: obj.derBuffer.toString('base64'),
           roa_id: obj.roaId,
+          aspa_id: obj.aspaId,
         });
       }
     }
 
-    // 9. Atualiza contadores na CA e status do repositório
+    // 10. Atualiza contadores na CA e status do repositório
     await ca.update({
       crl_number: newCrlNumber,
       manifest_number: newManifestNumber,

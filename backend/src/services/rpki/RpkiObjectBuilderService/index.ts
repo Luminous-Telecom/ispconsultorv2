@@ -22,8 +22,9 @@ import crypto from 'crypto';
 const execFileAsync = promisify(execFile);
 
 // ─── OIDs usados em objetos RPKI ─────────────────────────────────────────────
-const OID_ROA_CONTENT_TYPE = '1.2.840.113549.1.9.16.1.24';
-const OID_MFT_CONTENT_TYPE = '1.2.840.113549.1.9.16.1.26';
+const OID_ROA_CONTENT_TYPE  = '1.2.840.113549.1.9.16.1.24';
+const OID_MFT_CONTENT_TYPE  = '1.2.840.113549.1.9.16.1.26';
+const OID_ASPA_CONTENT_TYPE = '1.2.840.113549.1.9.16.1.49';
 const OID_SHA256 = '2.16.840.1.101.3.4.2.1';
 // id-pe-ipAddrBlocks / id-pe-autonomousSysNum
 const OID_IP_ADDR_BLOCKS = '1.3.6.1.5.5.7.1.7';
@@ -442,6 +443,59 @@ export async function buildRoaCmsObject(params: {
   const derBuffer = await signRpkiCms({
     contentDer: roaContent,
     contentOid: OID_ROA_CONTENT_TYPE,
+    eeCertPem: certPem,
+    eeKeyPem: keyPem,
+  });
+  const sha256Hex = crypto.createHash('sha256').update(derBuffer).digest('hex');
+  return { derBuffer, sha256Hex };
+}
+
+// ─── ASPA content (RFC 9582) ─────────────────────────────────────────────────
+
+export interface AspaEntry {
+  customerAsn: number;
+  /** ASNs provedores e, opcionalmente, restrição de AFI por provedor */
+  providers: Array<{ providerAsn: number; afi?: 'ipv4' | 'ipv6' }>;
+}
+
+/**
+ * Constrói o DER interno do ASProviderAttestation (RFC 9582).
+ * ASProviderAttestation ::= SEQUENCE { customerASID ASID, providers ProviderASSet }
+ * ProviderAS            ::= SEQUENCE { providerASID ASID, afiLimit AFI OPTIONAL }
+ * AFI                   ::= OCTET STRING (SIZE (2)) — 0x0001=IPv4, 0x0002=IPv6
+ */
+export function buildAspaContent(entry: AspaEntry): Buffer {
+  const providerDers = entry.providers.map((p) => {
+    const asnDer = derIntegerUInt(p.providerAsn);
+    if (!p.afi) return SEQ(asnDer);
+    const afiBuf = p.afi === 'ipv4' ? Buffer.from([0x00, 0x01]) : Buffer.from([0x00, 0x02]);
+    return SEQ(Buffer.concat([asnDer, OCTET(afiBuf)]));
+  });
+  return SEQ(Buffer.concat([derIntegerUInt(entry.customerAsn), SEQ(Buffer.concat(providerDers))]));
+}
+
+// ─── ASPA completo (DER conteúdo + EE cert + CMS assinado) ──────────────────
+
+export async function buildAspaCmsObject(params: {
+  entry: AspaEntry;
+  resourceCaCertPem: string;
+  resourceCaKeyPem: string;
+  resourceCertUrl: string;
+  crlUri: string;
+  objectUri: string;
+}): Promise<{ derBuffer: Buffer; sha256Hex: string }> {
+  const aspaContent = buildAspaContent(params.entry);
+  const { certPem, keyPem } = await issueRpkiEeCert({
+    resourceCaCertPem: params.resourceCaCertPem,
+    resourceCaKeyPem: params.resourceCaKeyPem,
+    resourceCertUrl: params.resourceCertUrl,
+    crlUri: params.crlUri,
+    objectUri: params.objectUri,
+    validHours: 24,
+  });
+  const derBuffer = await signRpkiCms({
+    contentDer: aspaContent,
+    contentOid: OID_ASPA_CONTENT_TYPE,
     eeCertPem: certPem,
     eeKeyPem: keyPem,
   });

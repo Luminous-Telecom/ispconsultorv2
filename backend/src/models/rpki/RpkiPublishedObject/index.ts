@@ -7,7 +7,7 @@ import {
 } from 'sequelize';
 import { sequelize } from '../../../config/database';
 
-export type RpkiPublishedObjectType = 'roa' | 'mft' | 'crl' | 'cer';
+export type RpkiPublishedObjectType = 'roa' | 'mft' | 'crl' | 'cer' | 'aspa';
 
 export class RpkiPublishedObject extends Model<
   InferAttributes<RpkiPublishedObject>,
@@ -21,6 +21,7 @@ export class RpkiPublishedObject extends Model<
   declare object_type: RpkiPublishedObjectType;
   declare object_der_b64: string;
   declare roa_id: number | null;
+  declare aspa_id: number | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -56,7 +57,7 @@ RpkiPublishedObject.init(
       allowNull: false,
     },
     object_type: {
-      type: DataTypes.ENUM('roa', 'mft', 'crl', 'cer'),
+      type: DataTypes.ENUM('roa', 'mft', 'crl', 'cer', 'aspa'),
       allowNull: false,
     },
     object_der_b64: {
@@ -67,6 +68,13 @@ RpkiPublishedObject.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: { model: 'rpki_roas', key: 'id' },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
+    },
+    aspa_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: 'rpki_aspas', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
     },

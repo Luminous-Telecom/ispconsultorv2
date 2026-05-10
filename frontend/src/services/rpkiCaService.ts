@@ -49,6 +49,21 @@ export interface RpkiCaResource {
   max_length: number | null;
 }
 
+export interface RpkiAspa {
+  id: number;
+  ca_id: number;
+  empresa_id: number | null;
+  customer_asn: string;
+  providers_json: string[];
+  afi: 'ipv4' | 'ipv6' | 'both';
+  status: 'active' | 'revoked' | 'expired';
+  not_before: string;
+  not_after: string;
+  revoked_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface RpkiRoa {
   id: number;
   ca_id: number | null;
@@ -324,6 +339,36 @@ export class RpkiCaService {
     );
     if (!response.data) throw new Error(response.message || 'Falha ao aplicar sugestões de ROA');
     return response.data;
+  }
+
+  // ─── ASPAs ────────────────────────────────────────────────────────────────
+
+  static async listAspas(caId: number): Promise<RpkiAspa[]> {
+    const response = await defaultApiClient.get<RpkiAspa[]>(`/rpki/cas/${caId}/aspas`);
+    return response.data ?? [];
+  }
+
+  static async createAspa(payload: {
+    caId: number;
+    customerAsn: string;
+    providers: string;
+  }): Promise<RpkiAspa> {
+    const response = await defaultApiClient.post<RpkiAspa>(
+      `/rpki/cas/${payload.caId}/aspas`,
+      { customerAsn: payload.customerAsn, providers: payload.providers }
+    );
+    if (!response.data) throw new Error(response.message || 'Falha ao criar ASPA');
+    return response.data;
+  }
+
+  static async revokeAspa(caId: number, aspaId: number): Promise<void> {
+    const response = await defaultApiClient.post(`/rpki/cas/${caId}/aspas/${aspaId}/revoke`, {});
+    if (!response.success) throw new Error(response.message || 'Falha ao revogar ASPA');
+  }
+
+  static async deleteAspa(caId: number, aspaId: number): Promise<void> {
+    const response = await defaultApiClient.delete(`/rpki/cas/${caId}/aspas/${aspaId}`);
+    if (!response.success) throw new Error(response.message || 'Falha ao excluir ASPA');
   }
 }
 
