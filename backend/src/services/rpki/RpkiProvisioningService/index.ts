@@ -628,7 +628,7 @@ default_crl_days = 30
  * A assinatura não é afetada porque crls fica fora dos SignedAttributes.
  */
 export function injectRpkiCrlFieldIntoSignedDataCms(cmsDer: Buffer, crlDer: Buffer): Buffer {
-  // Lê comprimento DER (short ou long form), retorna { value, size }
+  // Lê comprimento DER (forma curta ou longa), retorna { value, size }
   const readLen = (off: number): { value: number; size: number } => {
     const b = cmsDer[off];
     if (b < 0x80) return { value: b, size: 1 };
@@ -637,7 +637,7 @@ export function injectRpkiCrlFieldIntoSignedDataCms(cmsDer: Buffer, crlDer: Buff
     for (let i = 1; i <= n; i++) v = (v << 8) | cmsDer[off + i];
     return { value: v, size: 1 + n };
   };
-  // Tamanho total de um TLV a partir de 'off' (tag + length + content)
+  // Tamanho total de um TLV a partir de 'off' (tag + comprimento + conteúdo)
   const tlvSize = (off: number): number => {
     const len = readLen(off + 1);
     return 1 + len.size + len.value;
@@ -648,9 +648,9 @@ export function injectRpkiCrlFieldIntoSignedDataCms(cmsDer: Buffer, crlDer: Buff
   const ciLen = readLen(ciLenOff);
   let p = 1 + ciLen.size;
 
-  p += tlvSize(p); // Skip OID (contentType)
+  p += tlvSize(p); // pula OID contentType
 
-  // [0] EXPLICIT (SignedData) → entra no conteúdo
+  // [0] EXPLICIT (conteúdo do SignedData) → entra no conteúdo
   const expLenOff = p + 1;
   const expLen = readLen(expLenOff);
   p += 1 + expLen.size;
@@ -660,10 +660,10 @@ export function injectRpkiCrlFieldIntoSignedDataCms(cmsDer: Buffer, crlDer: Buff
   const sdLen = readLen(sdLenOff);
   p += 1 + sdLen.size;
 
-  p += tlvSize(p); // version INTEGER
-  p += tlvSize(p); // digestAlgorithms SET
-  p += tlvSize(p); // encapContentInfo SEQUENCE
-  if (cmsDer[p] === 0xa0) p += tlvSize(p); // certificates [0] opcional
+  p += tlvSize(p); // pula version INTEGER
+  p += tlvSize(p); // pula digestAlgorithms SET
+  p += tlvSize(p); // pula encapContentInfo SEQUENCE
+  if (cmsDer[p] === 0xa0) p += tlvSize(p); // pula certificates [0] opcional
   if (cmsDer[p] === 0xa1) return cmsDer;   // crls [1] já presente → nada a fazer
 
   // p aponta para signerInfos SET (tag 0x31); injeta CRL antes dele
@@ -673,7 +673,7 @@ export function injectRpkiCrlFieldIntoSignedDataCms(cmsDer: Buffer, crlDer: Buff
 
   const result = Buffer.concat([cmsDer.subarray(0, insertAt), crlField, cmsDer.subarray(insertAt)]);
 
-  // Atualiza ContentInfo, [0] EXPLICIT e SignedData SEQUENCE (todos antes de insertAt)
+  // Atualiza comprimentos de ContentInfo, [0] EXPLICIT e SignedData SEQUENCE (todos antes de insertAt)
   const patchLen = (lenOff: number, old: { value: number; size: number }): void => {
     let newVal = old.value + delta;
     for (let i = old.size - 1; i >= 1; i--) {
@@ -1270,6 +1270,7 @@ export class RpkiProvisioningService {
           resource_cert_pem: certPem,
           resource_cert_url: cls.certUrl,
           resource_class_name: cls.className,
+          status: 'active',
         });
         await params.ca.reload();
         break;
@@ -1421,6 +1422,7 @@ export class RpkiProvisioningService {
       resource_key_pem: resourceKeyPem,
       resource_cert_url: issued.certUrl,
       resource_class_name: issued.className,
+      status: 'active',
     });
 
     logger.info('RpkiProvisioningService: certificado de recurso obtido via RFC 6492 request/issue', {
