@@ -70,10 +70,21 @@ interface RepositoryResponseData {
   rrdpNotificationUri: string | null;
 }
 
+interface UpDownListResponseClass {
+  className: string;
+  certUrl: string;
+  resourceSetAs: string;
+  resourceSetIpv4: string;
+  resourceSetIpv6: string;
+  /** Certificado de recurso já emitido pelo parent para esta classe (DER base64). */
+  issuedCertBase64: string | null;
+}
+
 interface UpDownListResponseData {
   asnResources: string[];
   ipv4Resources: string[];
   ipv6Resources: string[];
+  classes: UpDownListResponseClass[];
 }
 
 function decodeXmlEntities(input: string): string {
@@ -251,19 +262,52 @@ function parseUpDownListResponseXml(xml: string): UpDownListResponseData {
   const asnResources: string[] = [];
   const ipv4Resources: string[] = [];
   const ipv6Resources: string[] = [];
+  const classes: UpDownListResponseClass[] = [];
 
-  const classMatches = Array.from(normalized.matchAll(/<class\b([^>]*)>/gi));
-  for (const match of classMatches) {
-    const attrs = String(match[1] ?? '');
-    asnResources.push(...splitResourceSet(extractAttr(attrs, 'resource_set_as')));
-    ipv4Resources.push(...splitResourceSet(extractAttr(attrs, 'resource_set_ipv4')));
-    ipv6Resources.push(...splitResourceSet(extractAttr(attrs, 'resource_set_ipv6')));
+  // Percorre cada <class ...>...</class>
+  const classOpenRe = /<class\b([^>]*)>/gi;
+  const classCloseRe = /<\/class\s*>/gi;
+  let classMatch: RegExpExecArray | null;
+  classOpenRe.lastIndex = 0;
+
+  while ((classMatch = classOpenRe.exec(normalized)) !== null) {
+    const attrs = String(classMatch[1] ?? '');
+    const className = extractAttr(attrs, 'class_name');
+    const certUrl = extractAttr(attrs, 'cert_url');
+    const resourceSetAs = extractAttr(attrs, 'resource_set_as');
+    const resourceSetIpv4 = extractAttr(attrs, 'resource_set_ipv4');
+    const resourceSetIpv6 = extractAttr(attrs, 'resource_set_ipv6');
+
+    asnResources.push(...splitResourceSet(resourceSetAs));
+    ipv4Resources.push(...splitResourceSet(resourceSetIpv4));
+    ipv6Resources.push(...splitResourceSet(resourceSetIpv6));
+
+    // Extrai certificado já emitido (<certificate ...>BASE64</certificate>) dentro desta classe
+    classCloseRe.lastIndex = classMatch.index;
+    const closeMatch = classCloseRe.exec(normalized);
+    const classBody = closeMatch
+      ? normalized.slice(classMatch.index + classMatch[0].length, closeMatch.index)
+      : '';
+    const certBodyMatch = classBody.match(/<certificate\b[^>]*>([\s\S]*?)<\/certificate>/i);
+    const issuedCertBase64 = certBodyMatch
+      ? certBodyMatch[1].replace(/\s+/g, '').trim() || null
+      : null;
+
+    classes.push({
+      className: className || 'Default',
+      certUrl: certUrl || '',
+      resourceSetAs,
+      resourceSetIpv4,
+      resourceSetIpv6,
+      issuedCertBase64,
+    });
   }
 
   return {
     asnResources: Array.from(new Set(asnResources)),
     ipv4Resources: Array.from(new Set(ipv4Resources)),
     ipv6Resources: Array.from(new Set(ipv6Resources)),
+    classes,
   };
 }
 
@@ -512,76 +556,6 @@ async function syncResourcesFromParentResponse(params: {
   }
 }
 
-interface Asn1ParseNode {
-  offset: number;
-  depth: number;
-  hl: number;
-  l: number;
-  kind: 'prim' | 'cons';
-  rest: string;
-}
-
-function parseOpenSslAsn1ParseOutput(output: string): Asn1ParseNode[] {
-  const nodes: Asn1ParseNode[] = [];
-  const lineRe = /^\s*(\d+):d=(\d+)\s+hl=(\d+)\s+l=\s*(\d+)\s+(prim|cons):\s*(.+)$/;
-  for (const line of output.split('\n')) {
-    const m = line.match(lineRe);
-    if (!m) continue;
-    nodes.push({
-      offset: Number(m[1]),
-      depth: Number(m[2]),
-      hl: Number(m[3]),
-      l: Number(m[4]),
-      kind: m[5] as 'prim' | 'cons',
-      rest: m[6].trim(),
-    });
-  }
-  return nodes;
-}
-
-function readDerLengthFields(buf: Buffer, offset: number): { lengthFieldOffset: number; lengthFieldSize: number; contentLength: number } {
-  const lenByte = buf[offset];
-  if (lenByte === undefined) {
-    throw new Error('CMS DER truncado ao ler comprimento');
-  }
-  if (lenByte < 0x80) {
-    return { lengthFieldOffset: offset, lengthFieldSize: 1, contentLength: lenByte };
-  }
-  const numBytes = lenByte & 0x7f;
-  let contentLength = 0;
-  for (let i = 0; i < numBytes; i += 1) {
-    const b = buf[offset + 1 + i];
-    if (b === undefined) {
-      throw new Error('CMS DER truncado no comprimento longo');
-    }
-    contentLength = (contentLength << 8) | b;
-  }
-  return { lengthFieldOffset: offset, lengthFieldSize: 1 + numBytes, contentLength };
-}
-
-function writeDerLengthPreservingWidth(
-  buf: Buffer,
-  lengthFieldOffset: number,
-  lengthFieldSize: number,
-  newContentLength: number
-): void {
-  if (lengthFieldSize === 1) {
-    if (newContentLength >= 0x80) {
-      throw new Error('CMS: expansão DER de comprimento não suportada');
-    }
-    buf[lengthFieldOffset] = newContentLength;
-    return;
-  }
-  if (lengthFieldSize === 3 && buf[lengthFieldOffset] === 0x82) {
-    if (newContentLength > 0xffff) {
-      throw new Error('CMS: conteúdo excede 65535 bytes');
-    }
-    buf[lengthFieldOffset + 1] = (newContentLength >> 8) & 0xff;
-    buf[lengthFieldOffset + 2] = newContentLength & 0xff;
-    return;
-  }
-  throw new Error('CMS: formato DER de comprimento inesperado');
-}
 
 function encodeDerContentLength(length: number): Buffer {
   if (length < 0x80) {
@@ -597,14 +571,14 @@ function encodeDerContentLength(length: number): Buffer {
 }
 
 /** RFC6492: campo `crls` [1] IMPLICIT = corpo SET OF; um CRL → `A1` + len + CRL DER. */
-function encodeCmsSignedDataCrlsField(crlDer: Buffer): Buffer {
+export function encodeCmsSignedDataCrlsField(crlDer: Buffer): Buffer {
   if (!crlDer.length || crlDer[0] !== 0x30) {
     throw new Error('CMS: CRL DER inválida (esperado CertificateList SEQUENCE)');
   }
   return Buffer.concat([Buffer.from([0xa1]), encodeDerContentLength(crlDer.length), crlDer]);
 }
 
-async function generateBpkiCrlDer(certPem: string, keyPem: string): Promise<Buffer> {
+export async function generateBpkiCrlDer(certPem: string, keyPem: string): Promise<Buffer> {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-bpki-crl-'));
   try {
     const demoCaDir = path.join(tempDir, 'demoCA');
@@ -648,107 +622,72 @@ default_crl_days = 30
   }
 }
 
-/** OpenSSL não inclui `crls` no SignedData; injeta antes de signerInfos (RFC6492). */
-async function injectRpkiCrlFieldIntoSignedDataCms(cmsDer: Buffer, crlDer: Buffer): Promise<Buffer> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-updown-crlinj-'));
-  const derPath = path.join(tempDir, 'cms.der');
-  try {
-    await fs.writeFile(derPath, cmsDer);
-    const { stdout } = await execFileAsync('openssl', ['asn1parse', '-inform', 'DER', '-in', derPath]);
-    const nodes = parseOpenSslAsn1ParseOutput(stdout);
+/**
+ * Injeta CRL no campo crls [1] IMPLICIT do SignedData CMS via walker DER puro.
+ * OpenSSL não inclui crls; este campo é exigido pelo Krill (RFC 6488 / RFC 6492 / RFC 8181).
+ * A assinatura não é afetada porque crls fica fora dos SignedAttributes.
+ */
+export function injectRpkiCrlFieldIntoSignedDataCms(cmsDer: Buffer, crlDer: Buffer): Buffer {
+  // Lê comprimento DER (short ou long form), retorna { value, size }
+  const readLen = (off: number): { value: number; size: number } => {
+    const b = cmsDer[off];
+    if (b < 0x80) return { value: b, size: 1 };
+    const n = b & 0x7f;
+    let v = 0;
+    for (let i = 1; i <= n; i++) v = (v << 8) | cmsDer[off + i];
+    return { value: v, size: 1 + n };
+  };
+  // Tamanho total de um TLV a partir de 'off' (tag + length + content)
+  const tlvSize = (off: number): number => {
+    const len = readLen(off + 1);
+    return 1 + len.size + len.value;
+  };
 
-    const rootSeq = nodes.find((n) => n.depth === 0 && n.kind === 'cons' && n.rest.startsWith('SEQUENCE'));
-    if (!rootSeq || rootSeq.offset !== 0) {
-      throw new Error('CMS: SEQUENCE raiz não encontrada');
+  // ContentInfo SEQUENCE → entra no conteúdo
+  const ciLenOff = 1;
+  const ciLen = readLen(ciLenOff);
+  let p = 1 + ciLen.size;
+
+  p += tlvSize(p); // Skip OID (contentType)
+
+  // [0] EXPLICIT (SignedData) → entra no conteúdo
+  const expLenOff = p + 1;
+  const expLen = readLen(expLenOff);
+  p += 1 + expLen.size;
+
+  // SignedData SEQUENCE → entra no conteúdo
+  const sdLenOff = p + 1;
+  const sdLen = readLen(sdLenOff);
+  p += 1 + sdLen.size;
+
+  p += tlvSize(p); // version INTEGER
+  p += tlvSize(p); // digestAlgorithms SET
+  p += tlvSize(p); // encapContentInfo SEQUENCE
+  if (cmsDer[p] === 0xa0) p += tlvSize(p); // certificates [0] opcional
+  if (cmsDer[p] === 0xa1) return cmsDer;   // crls [1] já presente → nada a fazer
+
+  // p aponta para signerInfos SET (tag 0x31); injeta CRL antes dele
+  const insertAt = p;
+  const crlField = encodeCmsSignedDataCrlsField(crlDer);
+  const delta = crlField.length;
+
+  const result = Buffer.concat([cmsDer.subarray(0, insertAt), crlField, cmsDer.subarray(insertAt)]);
+
+  // Atualiza ContentInfo, [0] EXPLICIT e SignedData SEQUENCE (todos antes de insertAt)
+  const patchLen = (lenOff: number, old: { value: number; size: number }): void => {
+    let newVal = old.value + delta;
+    for (let i = old.size - 1; i >= 1; i--) {
+      result[lenOff + i] = newVal & 0xff;
+      newVal >>= 8;
     }
+    if (old.size === 1) result[lenOff] = old.value + delta;
+  };
 
-    const depth1Sorted = nodes.filter((n) => n.depth === 1).sort((a, b) => a.offset - b.offset);
-    if (depth1Sorted.length < 2) {
-      throw new Error('CMS: ContentInfo inválido');
-    }
-    const explicitWrapper = depth1Sorted[1];
-    if (explicitWrapper.kind !== 'cons') {
-      throw new Error('CMS: ContentInfo inválido (SignedData)');
-    }
+  patchLen(ciLenOff, ciLen);
+  patchLen(expLenOff, expLen);
+  patchLen(sdLenOff, sdLen);
 
-    const explicitInnerStart = explicitWrapper.offset + explicitWrapper.hl;
-    const explicitInnerEnd = explicitInnerStart + explicitWrapper.l;
-    const signedDataCandidates = nodes
-      .filter(
-        (n) =>
-          n.depth === 2 &&
-          n.kind === 'cons' &&
-          n.rest.trim().startsWith('SEQUENCE') &&
-          n.offset >= explicitInnerStart &&
-          n.offset < explicitInnerEnd
-      )
-      .sort((a, b) => a.offset - b.offset);
-    const signedDataSeq = signedDataCandidates[0];
-    if (!signedDataSeq) {
-      throw new Error('CMS: SEQUENCE SignedData não encontrado dentro do ContentInfo');
-    }
-
-    const signedBodyStart = signedDataSeq.offset + signedDataSeq.hl;
-    const signedBodyEnd = signedBodyStart + signedDataSeq.l;
-
-    const hasCrls = nodes.some(
-      (n) =>
-        n.depth === 3 &&
-        n.kind === 'cons' &&
-        /\[\s*1\s*\]/.test(n.rest) &&
-        n.offset >= signedBodyStart &&
-        n.offset < signedBodyEnd
-    );
-    if (hasCrls) {
-      return cmsDer;
-    }
-
-    const setNodesInSignedData = nodes.filter(
-      (n) =>
-        n.depth === 3 &&
-        n.kind === 'cons' &&
-        n.rest.trim().startsWith('SET') &&
-        n.offset >= signedBodyStart &&
-        n.offset < signedBodyEnd
-    );
-    if (setNodesInSignedData.length < 1) {
-      throw new Error('CMS: não foi possível localizar signerInfos (SET) no SignedData para injetar CRL');
-    }
-    const signerInfosNode = setNodesInSignedData.reduce((a, b) => (a.offset > b.offset ? a : b));
-
-    const crlsFieldDer = encodeCmsSignedDataCrlsField(crlDer);
-    const insertAt = signerInfosNode.offset;
-
-    const patched = Buffer.concat([cmsDer.subarray(0, insertAt), crlsFieldDer, cmsDer.subarray(insertAt)]);
-
-    const signedDataLenInfo = readDerLengthFields(patched, signedDataSeq.offset + 1);
-    writeDerLengthPreservingWidth(
-      patched,
-      signedDataLenInfo.lengthFieldOffset,
-      signedDataLenInfo.lengthFieldSize,
-      signedDataSeq.l + crlsFieldDer.length
-    );
-
-    const explicitLenInfo = readDerLengthFields(patched, explicitWrapper.offset + 1);
-    writeDerLengthPreservingWidth(
-      patched,
-      explicitLenInfo.lengthFieldOffset,
-      explicitLenInfo.lengthFieldSize,
-      explicitWrapper.l + crlsFieldDer.length
-    );
-
-    const rootLenInfo = readDerLengthFields(patched, rootSeq.offset + 1);
-    writeDerLengthPreservingWidth(
-      patched,
-      rootLenInfo.lengthFieldOffset,
-      rootLenInfo.lengthFieldSize,
-      rootSeq.l + crlsFieldDer.length
-    );
-
-    return patched;
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
+  return result;
 }
 
 async function runOpenSslCmsSign(xml: string, certPem: string, keyPem: string): Promise<Buffer> {
@@ -792,8 +731,7 @@ async function runOpenSslCmsSign(xml: string, certPem: string, keyPem: string): 
     try {
       // Alguns pais (ex.: NIC.br) exigem o campo SignedData.crls no CMS RFC6492.
       const crlDer = await generateBpkiCrlDer(certPem, keyPem);
-      const cmsWithCrl = await injectRpkiCrlFieldIntoSignedDataCms(raw, crlDer);
-      finalCms = Buffer.from(cmsWithCrl);
+      finalCms = Buffer.from(injectRpkiCrlFieldIntoSignedDataCms(raw, crlDer));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.warn('RPKI up-down: não foi possível injetar CRL no CMS, usando assinatura padrão', {
@@ -1103,6 +1041,208 @@ async function ensureBpkiEeMaterialForCa(ca: RpkiCa): Promise<void> {
   await ca.reload();
 }
 
+// ─── Helpers para RFC 6492 request/issue ─────────────────────────────────────
+
+function derBase64ToPem(base64: string): string {
+  const compact = base64.replace(/\s+/g, '');
+  const lines = compact.match(/.{1,64}/g) ?? [compact];
+  return `-----BEGIN CERTIFICATE-----\n${lines.join('\n')}\n-----END CERTIFICATE-----\n`;
+}
+
+/**
+ * Constrói o DER da extensão SubjectInfoAccess (SIA) para um CA RPKI.
+ * OID id-ad-caRepository = 1.3.6.1.5.5.7.48.5
+ * OID id-ad-rpkiManifest = 1.3.6.1.5.5.7.48.10
+ * Retorna o hex DER para embedding em config OpenSSL.
+ */
+function buildRpkiSiaDerHex(caRepository: string, manifestUri: string): string {
+  // Primitivas DER mínimas sem dependência de biblioteca
+  function derLen(n: number): Buffer {
+    if (n < 128) return Buffer.from([n]);
+    const bytes: number[] = [];
+    let v = n;
+    while (v > 0) { bytes.unshift(v & 0xff); v >>= 8; }
+    return Buffer.from([0x80 | bytes.length, ...bytes]);
+  }
+  function tlv(tag: number, content: Buffer): Buffer {
+    return Buffer.concat([Buffer.from([tag]), derLen(content.length), content]);
+  }
+  function oid(dotted: string): Buffer {
+    const parts = dotted.split('.').map(Number);
+    const bytes: number[] = [40 * parts[0] + parts[1]];
+    for (let i = 2; i < parts.length; i++) {
+      let v = parts[i];
+      const chunk: number[] = [v & 0x7f];
+      v >>= 7;
+      while (v > 0) { chunk.unshift((v & 0x7f) | 0x80); v >>= 7; }
+      bytes.push(...chunk);
+    }
+    return tlv(0x06, Buffer.from(bytes));
+  }
+  function uri(u: string): Buffer { return tlv(0x86, Buffer.from(u, 'ascii')); }
+  function seq(content: Buffer): Buffer { return tlv(0x30, content); }
+
+  const accessDesc = (oidStr: string, u: string) =>
+    seq(Buffer.concat([oid(oidStr), uri(u)]));
+
+  const siaValue = seq(Buffer.concat([
+    accessDesc('1.3.6.1.5.5.7.48.5', caRepository),
+    accessDesc('1.3.6.1.5.5.7.48.10', manifestUri),
+  ]));
+  return siaValue.toString('hex').toUpperCase();
+}
+
+/**
+ * Gera um CSR RPKI com as extensões obrigatórias exigidas pelo Krill/bcder (RFC 6492):
+ *   - BasicConstraints: CA:TRUE (critical)
+ *   - KeyUsage: keyCertSign + cRLSign (critical)
+ *   - SubjectInfoAccess: caRepository + rpkiManifest (not critical)
+ *
+ * Usa OpenSSL para garantir DER canônico (boolean TRUE = 0xff, exigido pelo bcder).
+ * node-forge codifica boolean como 0x01 (não-canônico), o que o Krill rejeita.
+ */
+async function generateRpkiCsrForCa(params: {
+  childHandle: string;
+  rsyncBaseUri: string;
+}): Promise<{ keyPem: string; csrBase64: string; manifestUri: string }> {
+  const caRepository = params.rsyncBaseUri.endsWith('/')
+    ? params.rsyncBaseUri
+    : `${params.rsyncBaseUri}/`;
+  const manifestUri = `${caRepository}${params.childHandle}.mft`;
+
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rpki-rkey-'));
+  try {
+    const keyPath = path.join(tempDir, 'resource_key.pem');
+    const csrPemPath = path.join(tempDir, 'resource_csr.pem');
+    const csrDerPath = path.join(tempDir, 'resource_csr.der');
+    const configPath = path.join(tempDir, 'csr.cnf');
+
+    await execFileAsync('openssl', ['genrsa', '-out', keyPath, '2048']);
+
+    const siaDerHex = buildRpkiSiaDerHex(caRepository, manifestUri);
+
+    // Config OpenSSL: OpenSSL garante DER canônico (boolean TRUE = 0xff)
+    const config = [
+      '[req]',
+      'prompt = no',
+      'distinguished_name = dn',
+      'req_extensions = rpki_ext',
+      '',
+      '[dn]',
+      '',
+      '[rpki_ext]',
+      'basicConstraints = critical, CA:TRUE',
+      'keyUsage = critical, keyCertSign, cRLSign',
+      `1.3.6.1.5.5.7.1.11 = DER:${siaDerHex}`,
+    ].join('\n');
+    await fs.writeFile(configPath, config, 'utf8');
+
+    // -subj "/" gera subject vazio (recomendado pelo RFC 6487 para CAs RPKI)
+    await execFileAsync('openssl', [
+      'req', '-new',
+      '-key', keyPath,
+      '-subj', '/',
+      '-config', configPath,
+      '-out', csrPemPath,
+    ]);
+    await execFileAsync('openssl', [
+      'req', '-in', csrPemPath,
+      '-outform', 'DER',
+      '-out', csrDerPath,
+    ]);
+
+    const [keyPem, csrDer] = await Promise.all([
+      fs.readFile(keyPath, 'utf8'),
+      fs.readFile(csrDerPath),
+    ]);
+    return { keyPem, csrBase64: csrDer.toString('base64'), manifestUri };
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+function escapeUpDownXmlAttr(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function buildUpDownRequestXml(params: {
+  senderHandle: string;
+  recipientHandle: string;
+  className: string;
+  resourceSetAs: string;
+  resourceSetIpv4: string;
+  resourceSetIpv6: string;
+  csrBase64: string;
+}): string {
+  const e = escapeUpDownXmlAttr;
+  const asAttr = params.resourceSetAs ? ` req_resource_set_as="${e(params.resourceSetAs)}"` : '';
+  const ipv4Attr = params.resourceSetIpv4 ? ` req_resource_set_ipv4="${e(params.resourceSetIpv4)}"` : '';
+  const ipv6Attr = params.resourceSetIpv6 ? ` req_resource_set_ipv6="${e(params.resourceSetIpv6)}"` : '';
+
+  // RFC 6492 §3.4.1: o type do <message> deve ser "issue" (não "request")!
+  // O Krill converte o atributo type via PayloadType::from_str e rejeita
+  // qualquer valor desconhecido com XmlError::Malformed.
+  // O elemento filho continua sendo <request> conforme o RFC.
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<message xmlns="http://www.apnic.net/specs/rescerts/up-down/"
+         version="1"
+         sender="${e(params.senderHandle)}"
+         recipient="${e(params.recipientHandle)}"
+         type="issue">
+  <request class_name="${e(params.className)}"${asAttr}${ipv4Attr}${ipv6Attr}>
+${params.csrBase64}
+  </request>
+</message>`;
+}
+
+interface UpDownIssueResponseData {
+  className: string;
+  certUrl: string;
+  certBase64: string;
+}
+
+function parseUpDownIssueResponseXml(xml: string): UpDownIssueResponseData {
+  const normalized = normalizeIncomingXml(xml);
+  const type = extractAttr(normalized, 'type').toLowerCase();
+
+  if (type === 'error_response') {
+    const descMatch = normalized.match(/<description[^>]*>([\s\S]*?)<\/description>/i);
+    const desc = descMatch ? descMatch[1].trim() : 'erro desconhecido do parent';
+    throw new Error(`RFC 6492 error_response: ${desc}`);
+  }
+
+  // RFC 6492 §3.4.2: resposta à emissão tem type="issue_response".
+  // O conteúdo é idêntico ao list_response: um elemento <class> com
+  // exatamente um elemento <certificate> (o novo certificado emitido).
+  if (type !== 'issue_response') {
+    throw new Error(`RFC 6492: resposta inesperada ao request (type=${type})`);
+  }
+
+  // Extrai o <class> com class_name e cert_url (URL do certificado emissor)
+  const classMatch = normalized.match(/<class\b([^>]*)>/i);
+  if (!classMatch) {
+    throw new Error('RFC 6492 issue_response: elemento <class> não encontrado');
+  }
+  const classAttrs = String(classMatch[1] ?? '');
+  const className = extractAttr(classAttrs, 'class_name') || 'Default';
+
+  // Extrai o <certificate cert_url="...">base64</certificate>
+  // Esse é o certificado de recurso emitido pelo parent para esta CA
+  const certElMatch = normalized.match(/<certificate\b([^>]*)>([\s\S]*?)<\/certificate>/i);
+  if (!certElMatch) {
+    throw new Error('RFC 6492 issue_response: elemento <certificate> não encontrado');
+  }
+  const certAttrs = String(certElMatch[1] ?? '');
+  const certUrl = extractAttr(certAttrs, 'cert_url') || '';
+  const certBase64 = certElMatch[2].replace(/\s+/g, '').trim();
+
+  if (!certBase64) {
+    throw new Error('RFC 6492 issue_response: certificado de recurso ausente');
+  }
+
+  return { className, certUrl, certBase64 };
+}
+
 export class RpkiProvisioningService {
   static async syncParentResources(params: {
     ca: RpkiCa;
@@ -1122,6 +1262,20 @@ export class RpkiProvisioningService {
       ipv6Resources: upDownResources.ipv6Resources,
     });
 
+    // Se o parent já emitiu um certificado de recurso em alguma classe, armazena.
+    for (const cls of upDownResources.classes) {
+      if (cls.issuedCertBase64 && cls.certUrl) {
+        const certPem = derBase64ToPem(cls.issuedCertBase64);
+        await params.ca.update({
+          resource_cert_pem: certPem,
+          resource_cert_url: cls.certUrl,
+          resource_class_name: cls.className,
+        });
+        await params.ca.reload();
+        break;
+      }
+    }
+
     await params.parent.update({
       provisioning_status: 'active',
       last_sync_at: new Date(),
@@ -1129,6 +1283,154 @@ export class RpkiProvisioningService {
     });
 
     return upDownResources;
+  }
+
+  /**
+   * Solicita certificado de recurso ao parent via RFC 6492 request/issue.
+   * Gera par de chaves RSA para o resource cert (separado do BPKI).
+   * Armazena resource_cert_pem, resource_key_pem, resource_cert_url na CA.
+   */
+  static async requestResourceCert(params: {
+    ca: RpkiCa;
+    parent: RpkiCaParent;
+  }): Promise<void> {
+    const { ca, parent } = params;
+
+    if (!ca.ca_cert_pem || !ca.private_key_pem) {
+      throw new Error('CA sem material BPKI para assinar request up-down');
+    }
+    if (!parent.child_handle || !parent.parent_handle || !parent.service_uri) {
+      throw new Error('Dados de parent incompletos para RFC 6492 request');
+    }
+
+    await ensureBpkiEeMaterialForCa(ca);
+
+    // 1. Obtém as classes disponíveis via list
+    const listData = await fetchResourcesViaUpDown({ ca, parent });
+    if (listData.classes.length === 0) {
+      throw new Error('Parent não retornou classes de recursos no list_response');
+    }
+
+    // Usa a primeira classe (ou a que já foi usada anteriormente)
+    const targetClass =
+      listData.classes.find((c) => c.className === ca.resource_class_name) ??
+      listData.classes[0];
+
+    // Se a classe já tem um certificado emitido, só armazena
+    if (targetClass.issuedCertBase64 && targetClass.certUrl) {
+      const certPem = derBase64ToPem(targetClass.issuedCertBase64);
+      if (!ca.resource_key_pem) {
+        // Sem chave não conseguimos usar o cert — precisa re-emitir
+        logger.warn('RpkiProvisioningService: parent já emitiu cert mas CA não tem resource_key_pem; re-emitindo', {
+          context: 'RpkiProvisioningService',
+          action: 'requestResourceCert',
+          caId: ca.id,
+        });
+      } else {
+        await ca.update({
+          resource_cert_pem: certPem,
+          resource_cert_url: targetClass.certUrl,
+          resource_class_name: targetClass.className,
+        });
+        return;
+      }
+    }
+
+    // 2. Localiza o repositório RPKI desta CA para obter rsync_base_uri (necessário para SIA no CSR)
+    const repository = await RpkiRepository.findOne({ where: { ca_id: ca.id } });
+    if (!repository?.rsync_base_uri) {
+      throw new Error(
+        'CA não possui repositório RPKI com rsync_base_uri configurado. ' +
+        'Importe o repository_response antes de solicitar o certificado de recurso.'
+      );
+    }
+
+    // 3. Gera par de chaves RSA + CSR RPKI com BasicConstraints/KeyUsage/SIA
+    const { keyPem: resourceKeyPem, csrBase64, manifestUri } = await generateRpkiCsrForCa({
+      childHandle: parent.child_handle,
+      rsyncBaseUri: repository.rsync_base_uri,
+    });
+
+    logger.info('RpkiProvisioningService: CSR RPKI gerado com extensões', {
+      context: 'RpkiProvisioningService',
+      action: 'requestResourceCert',
+      caId: ca.id,
+      caRepository: repository.rsync_base_uri,
+      manifestUri,
+    });
+
+    // 4. Monta a mensagem RFC 6492 type="request"
+    const requestXml = buildUpDownRequestXml({
+      senderHandle: parent.child_handle,
+      recipientHandle: parent.parent_handle,
+      className: targetClass.className,
+      resourceSetAs: targetClass.resourceSetAs,
+      resourceSetIpv4: targetClass.resourceSetIpv4,
+      resourceSetIpv6: targetClass.resourceSetIpv6,
+      csrBase64,
+    });
+
+    // 4. Assina com BPKI e envia
+    logger.info('RpkiProvisioningService: RFC 6492 request XML gerado', {
+      context: 'RpkiProvisioningService',
+      action: 'requestResourceCert',
+      caId: ca.id,
+      parentId: parent.id,
+      className: targetClass.className,
+      request_xml_preview: requestXml.slice(0, 800),
+    });
+    const cmsDer = await runOpenSslCmsSign(requestXml, ca.ca_cert_pem, ca.private_key_pem);
+
+    const contentType = 'application/rpki-updown';
+    const response = await axios.post<ArrayBuffer>(parent.service_uri, cmsDer, {
+      headers: {
+        'Content-Type': contentType,
+        Accept: 'application/rpki-updown, application/octet-stream, */*',
+        'Content-Length': String(cmsDer.byteLength),
+        ...rpkiHttpExtraHeaders(),
+      },
+      transformRequest: [(data) => data],
+      responseType: 'arraybuffer',
+      timeout: 25000,
+      validateStatus: () => true,
+    });
+
+    const responseBody = Buffer.from(response.data ?? []);
+    const status = response.status;
+
+    if (status < 200 || status >= 400) {
+      const preview = formatRpkiHttpErrorPreview(responseBody);
+      throw new Error(`Parent rejeitou RFC 6492 request (HTTP ${status}): ${preview}`);
+    }
+
+    // 5. Extrai XML da resposta CMS
+    const responseContentType = String(response.headers['content-type'] ?? '').toLowerCase();
+    const isXmlLike =
+      responseContentType.includes('xml') || responseBody.toString('utf8', 0, 32).includes('<?xml');
+    const responseXml = isXmlLike
+      ? responseBody.toString('utf8')
+      : await runOpenSslCmsExtractContent(responseBody);
+
+    // 6. Parseia a resposta (type="issue_response")
+    const issued = parseUpDownIssueResponseXml(responseXml);
+
+    const resourceCertPem = derBase64ToPem(issued.certBase64);
+
+    await ca.update({
+      resource_cert_pem: resourceCertPem,
+      resource_key_pem: resourceKeyPem,
+      resource_cert_url: issued.certUrl,
+      resource_class_name: issued.className,
+    });
+
+    logger.info('RpkiProvisioningService: certificado de recurso obtido via RFC 6492 request/issue', {
+      context: 'RpkiProvisioningService',
+      action: 'requestResourceCert',
+      caId: ca.id,
+      parentId: parent.id,
+      className: issued.className,
+      certUrl: issued.certUrl,
+    });
   }
 
   static async generateChildRequest(ca: RpkiCa): Promise<{ xml: string; ca: RpkiCa }> {

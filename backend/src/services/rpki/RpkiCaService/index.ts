@@ -4,6 +4,8 @@ import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
 import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
 import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiClientError } from '../../../utils/errorUtils';
+import { RpkiPublicationService } from '../RpkiPublicationService';
+import { logger } from '../../../utils/logger';
 
 export interface ListRpkiCaFilters {
   empresa_id: number | null;
@@ -134,21 +136,39 @@ export class RpkiCaService {
 
   static async syncRepository(ca_id: number, repository_id: number): Promise<RpkiRepository> {
     const repository = await RpkiRepository.findOne({
-      where: {
-        id: repository_id,
-        ca_id,
-      },
+      where: { id: repository_id, ca_id },
     });
     if (!repository) {
       throw new RpkiClientError('Repositório não encontrado para atualização');
     }
 
-    await repository.update({
-      publication_status: 'active',
-      last_publish_at: new Date(),
-      last_error: null,
+    const ca = await RpkiCa.findByPk(ca_id);
+    if (!ca) {
+      throw new RpkiClientError('CA não encontrada');
+    }
+
+    if (!repository.publication_service_uri) {
+      logger.warn('RpkiCaService.syncRepository: repositório sem publication_service_uri; marcando ativo sem publicar', {
+        context: 'RpkiCaService',
+        action: 'syncRepository',
+        caId: ca_id,
+        repositoryId: repository_id,
+      });
+      await repository.update({
+        publication_status: 'active',
+        last_publish_at: new Date(),
+        last_error: null,
+      });
+      return repository;
+    }
+
+    await RpkiPublicationService.publishAll({
+      ca,
+      repository,
+      empresaId: ca.empresa_id,
     });
 
+    await repository.reload();
     return repository;
   }
 

@@ -7,6 +7,7 @@ import { RpkiCaParent } from './RpkiCaParent';
 import { RpkiRepository } from './RpkiRepository';
 import { RpkiCaResource } from './RpkiCaResource';
 import { RpkiAspa } from './RpkiAspa';
+import { RpkiPublishedObject } from './RpkiPublishedObject';
 
 RpkiRoa.hasMany(RpkiValidationLog, {
   foreignKey: 'matched_roa_id',
@@ -78,6 +79,26 @@ RpkiAspa.belongsTo(RpkiCa, {
   as: 'ca',
 });
 
+RpkiCa.hasMany(RpkiPublishedObject, {
+  foreignKey: 'ca_id',
+  as: 'published_objects',
+});
+
+RpkiPublishedObject.belongsTo(RpkiCa, {
+  foreignKey: 'ca_id',
+  as: 'ca',
+});
+
+RpkiRepository.hasMany(RpkiPublishedObject, {
+  foreignKey: 'repository_id',
+  as: 'published_objects',
+});
+
+RpkiPublishedObject.belongsTo(RpkiRepository, {
+  foreignKey: 'repository_id',
+  as: 'repository',
+});
+
 export {
   RpkiRoa,
   RpkiValidationLog,
@@ -88,5 +109,6 @@ export {
   RpkiRepository,
   RpkiCaResource,
   RpkiAspa,
+  RpkiPublishedObject,
 };
 
