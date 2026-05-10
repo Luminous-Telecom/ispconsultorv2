@@ -157,7 +157,11 @@ export class RpkiPublicationService {
     const builtAspas: BuiltAspa[] = [];
     for (const aspa of activeAspas) {
       const customerAsn = parseInt(String(aspa.customer_asn), 10);
-      const providers = (aspa.providers_json as string[]).map((p) => {
+      const rawProviders = aspa.providers_json;
+      const providersList: string[] = Array.isArray(rawProviders)
+        ? rawProviders
+        : JSON.parse(String(rawProviders));
+      const providers = providersList.map((p) => {
         const providerAsn = parseInt(p, 10);
         const afi = aspa.afi === 'both' ? undefined : aspa.afi;
         return { providerAsn, afi } as AspaEntry['providers'][number];

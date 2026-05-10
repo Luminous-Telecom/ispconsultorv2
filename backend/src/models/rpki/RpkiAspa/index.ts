@@ -61,6 +61,14 @@ RpkiAspa.init(
     providers_json: {
       type: DataTypes.JSON,
       allowNull: false,
+      get() {
+        const value = this.getDataValue('providers_json');
+        if (Array.isArray(value)) return value;
+        if (typeof value === 'string') {
+          try { return JSON.parse(value); } catch { return []; }
+        }
+        return value ?? [];
+      },
     },
     afi: {
       type: DataTypes.ENUM('ipv4', 'ipv6', 'both'),

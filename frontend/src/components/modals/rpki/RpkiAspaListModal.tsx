@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
+import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { useI18n } from 'contexts/I18nContext';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { RpkiCaService, type RpkiAspa } from 'services/rpkiCaService';
@@ -13,20 +14,12 @@ interface RpkiAspaListModalProps {
   skipWrapper?: boolean;
 }
 
-function getSortableValue(row: RpkiAspa, sortKey: string): string {
-  switch (sortKey) {
-    case 'id':          return String(row.id);
-    case 'ca_id':       return String(row.ca_id);
-    case 'customer_asn': return row.customer_asn;
-    case 'providers':   return (row.providers_json ?? []).join(', ');
-    case 'status':      return row.status;
-    default:            return '';
-  }
-}
+const statusLabels: Record<string, string> = { active: 'Ativo', revoked: 'Revogado', expired: 'Expirado' };
 
 const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
   const { t } = useI18n();
-  const queryClient = useQueryClient();
+  const { error: showError, success } = useNotificationContext();
+  const [aspas, setAspas] = useState<RpkiAspa[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const tableFilters = useTableFilters({
@@ -44,38 +37,18 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
     queryFn: () => RpkiCaService.list(),
   });
 
-  const { data: aspas = [], isLoading, refetch } = useQuery({
-    queryKey: ['rpki-aspas'],
+  const { isLoading, refetch } = useQuery({
+    queryKey: ['rpki-aspas', cas.map((c) => c.id)],
     queryFn: async () => {
       const all: RpkiAspa[] = [];
       for (const ca of cas) {
         const items = await RpkiCaService.listAspas(ca.id);
         all.push(...items);
       }
+      setAspas(all);
       return all;
     },
     enabled: cas.length > 0,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (payload: { caId: number; customerAsn: string; providers: string }) =>
-      RpkiCaService.createAspa(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rpki-aspas'] });
-      setShowCreateModal(false);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: ({ caId, aspaId }: { caId: number; aspaId: number }) =>
-      RpkiCaService.deleteAspa(caId, aspaId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rpki-aspas'] }),
-  });
-
-  const revokeMutation = useMutation({
-    mutationFn: ({ caId, aspaId }: { caId: number; aspaId: number }) =>
-      RpkiCaService.revokeAspa(caId, aspaId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rpki-aspas'] }),
   });
 
   const caNomeById = useMemo(() => new Map(cas.map((ca) => [ca.id, ca.nome])), [cas]);
@@ -95,8 +68,8 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
     const sortKey = tableFilters.sortColumn || 'id';
     const direction = tableFilters.sortDirection === 'asc' ? 1 : -1;
     return [...rows].sort((a, b) => {
-      const va = getSortableValue(a, sortKey).toLowerCase();
-      const vb = getSortableValue(b, sortKey).toLowerCase();
+      const va = String((a as unknown as Record<string, unknown>)[sortKey] ?? '').toLowerCase();
+      const vb = String((b as unknown as Record<string, unknown>)[sortKey] ?? '').toLowerCase();
       if (va < vb) return -1 * direction;
       if (va > vb) return 1 * direction;
       return 0;
@@ -111,13 +84,11 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
   const to = total === 0 ? 0 : Math.min(safePage * perPage, total);
   const pagedRows = filtered.slice(from > 0 ? from - 1 : 0, to);
 
-  const statusLabels: Record<string, string> = { active: 'Ativo', revoked: 'Revogado', expired: 'Expirado' };
-
   const columns: TableConfig<RpkiAspa>['columns'] = [
     { key: 'id', label: 'ID', sortable: true, width: '60px', render: (item) => item.id },
     { key: 'ca_id', label: 'CA', sortable: true, width: '180px', render: (item) => caNomeById.get(item.ca_id) ?? `#${item.ca_id}` },
     { key: 'customer_asn', label: 'Customer ASN', sortable: true, width: '150px', render: (item) => `AS${item.customer_asn}` },
-    { key: 'providers', label: 'Providers', sortable: false, render: (item) => (item.providers_json ?? []).map((p) => `AS${p}`).join(', ') || '-' },
+    { key: 'providers_json', label: 'Providers', sortable: false, render: (item) => (item.providers_json ?? []).map((p) => `AS${p}`).join(', ') || '-' },
     {
       key: 'status', label: 'Status', sortable: true, width: '110px',
       render: (item) => {
@@ -125,32 +96,47 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
         return <span className={`badge ${cor}`}>{statusLabels[item.status] ?? item.status}</span>;
       },
     },
+  ];
+
+  const bulkActions = [
     {
-      key: 'acoes', label: 'Ações', sortable: false, width: '130px',
-      render: (item) => (
-        <div className="d-flex gap-1">
-          {item.status === 'active' && (
-            <button
-              className="btn btn-warning btn-sm"
-              disabled={revokeMutation.isPending}
-              onClick={() => {
-                if (window.confirm('Revogar este ASPA?')) revokeMutation.mutate({ caId: item.ca_id, aspaId: item.id });
-              }}
-            >
-              Revogar
-            </button>
-          )}
-          <button
-            className="btn btn-danger btn-sm"
-            disabled={deleteMutation.isPending}
-            onClick={() => {
-              if (window.confirm('Excluir este ASPA?')) deleteMutation.mutate({ caId: item.ca_id, aspaId: item.id });
-            }}
-          >
-            Excluir
-          </button>
-        </div>
-      ),
+      key: 'novo-aspa',
+      label: t('actions.new'),
+      variant: 'primary' as const,
+      requiresSelection: false,
+      onClick: () => setShowCreateModal(true),
+    },
+    {
+      key: 'revogar',
+      label: 'Revogar',
+      variant: 'primary' as const,
+      onClick: (selectedItems: RpkiAspa[]) => {
+        const selected = selectedItems[0];
+        if (!selected) return;
+        if (!window.confirm('Tem certeza que deseja revogar este ASPA?')) return;
+        RpkiCaService.revokeAspa(selected.ca_id, selected.id)
+          .then(() => {
+            setAspas((prev) => prev.map((a) => a.id === selected.id ? { ...a, status: 'revoked' as const, revoked_at: new Date().toISOString() } : a));
+            success('ASPA revogado com sucesso');
+          })
+          .catch((err) => showError(err instanceof Error ? err.message : 'Erro ao revogar ASPA'));
+      },
+    },
+    {
+      key: 'excluir',
+      label: 'Excluir',
+      variant: 'primary' as const,
+      onClick: (selectedItems: RpkiAspa[]) => {
+        const selected = selectedItems[0];
+        if (!selected) return;
+        if (!window.confirm('Deseja excluir este ASPA permanentemente?')) return;
+        RpkiCaService.deleteAspa(selected.ca_id, selected.id)
+          .then(() => {
+            setAspas((prev) => prev.filter((a) => a.id !== selected.id));
+            success('ASPA excluído com sucesso');
+          })
+          .catch((err) => showError(err instanceof Error ? err.message : 'Erro ao excluir ASPA'));
+      },
     },
   ];
 
@@ -163,13 +149,13 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
             config={{
               columns,
               data: pagedRows,
-              loading: isLoading || createMutation.isPending || deleteMutation.isPending,
+              loading: isLoading,
               searchable: true,
               searchPlaceholder: 'Buscar...',
               searchFields: [
                 { key: 'id', label: 'ID' },
                 { key: 'customer_asn', label: 'Customer ASN' },
-                { key: 'providers', label: 'Providers' },
+                { key: 'providers_json', label: 'Providers' },
               ],
               sortable: true,
               sortColumn: tableFilters.sortColumn,
@@ -177,18 +163,11 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
               striped: true,
               hover: true,
               responsive: true,
-              selectable: false,
+              selectable: true,
+              multiSelect: false,
               emptyMessage: 'Nenhum ASPA encontrado',
               pagination: { current_page: safePage, last_page: lastPage, per_page: perPage, total, from, to },
-              bulkActions: [
-                {
-                  key: 'novo-aspa',
-                  label: t('actions.new'),
-                  variant: 'primary',
-                  requiresSelection: false,
-                  onClick: () => setShowCreateModal(true),
-                },
-              ],
+              bulkActions,
             }}
             tableId="rpki-aspas-list-modal"
             syncWithHeader={false}
@@ -205,8 +184,15 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
       <RpkiAspaCreateModal
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSave={(payload) => createMutation.mutate(payload)}
-        isPending={createMutation.isPending}
+        onSave={(payload) => {
+          RpkiCaService.createAspa(payload)
+            .then((created) => {
+              setAspas((prev) => [created, ...prev]);
+              setShowCreateModal(false);
+              success('ASPA criado com sucesso');
+            })
+            .catch((err) => showError(err instanceof Error ? err.message : 'Erro ao criar ASPA'));
+        }}
       />
     </>
   );

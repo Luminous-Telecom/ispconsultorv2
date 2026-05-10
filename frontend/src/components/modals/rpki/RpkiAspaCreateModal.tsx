@@ -14,10 +14,9 @@ interface RpkiAspaCreateModalProps {
   show: boolean;
   onClose: () => void;
   onSave: (payload: RpkiAspaCreatePayload) => void;
-  isPending?: boolean;
 }
 
-const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({ show, onClose, onSave, isPending = false }) => {
+const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({ show, onClose, onSave }) => {
   const [caId, setCaId] = useState('');
   const [customerAsn, setCustomerAsn] = useState('');
   const [providers, setProviders] = useState('');
@@ -72,7 +71,7 @@ const RpkiAspaCreateModal: React.FC<RpkiAspaCreateModalProps> = ({ show, onClose
             type="button"
             variant="primary"
             size="sm"
-            disabled={isPending || !caId.trim() || !customerAsn.trim() || !providers.trim()}
+            disabled={!caId.trim() || !customerAsn.trim() || !providers.trim()}
             onClick={() =>
               onSave({
                 caId: Number(caId),
