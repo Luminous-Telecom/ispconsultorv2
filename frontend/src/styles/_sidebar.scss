@@ -319,10 +319,14 @@
   background: transparent;
 }
 
-/* Pasta aberta: cor no ::before (full bleed); fluxo do botão/corpo inalterado */
+/* Pasta aberta/colapsando: fundo transparente; sem transição de altura no .collapsing (evita overflow:hidden recortando o hover). */
 .sidebar .sidebar-accordion .accordion-collapse.show,
 .sidebar .sidebar-accordion .accordion-collapse.collapsing {
   background-color: transparent !important;
+}
+
+.sidebar .sidebar-accordion .accordion-collapse.collapsing {
+  transition: none !important;
 }
 
 .sidebar .sidebar-accordion .accordion-collapse.show > .accordion-body,
@@ -337,10 +341,7 @@
   transition: none;
 }
 
-/*
- * 1º nível: faixa de fundo no .accordion-item (não no .collapsing — Bootstrap usa overflow:hidden
- * no collapse e recorta ::before até o fim da animação).
- */
+/* Faixa de fundo do painel no .accordion-item (1º nível) */
 .sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion > .accordion-item:has(> .accordion-collapse.show),
 .sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion > .accordion-item:has(> .accordion-collapse.collapsing) {
   position: relative;
@@ -404,7 +405,7 @@
   border-left: none;
 }
 
-/* Subpasta (RPKI): faixa um pouco mais escura que a pasta pai — evita overflow:hidden do .collapsing */
+/* Subpasta aninhada: faixa de fundo no .accordion-item */
 .sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion .accordion-body .sidebar-accordion > .accordion-item:has(> .accordion-collapse.show),
 .sidebar-nav-scrollable .sidebar-nav > .sidebar-accordion .accordion-body .sidebar-accordion > .accordion-item:has(> .accordion-collapse.collapsing) {
   position: relative;
@@ -459,7 +460,7 @@
 /* Itens dentro da subpasta: leve indentação sob o título da pasta (sem somar ao margin do pai) */
 .sidebar .sidebar-accordion .accordion-body .sidebar-accordion .accordion-body .sidebar-folder-item {
   margin-left: 0.65rem;
-  width: calc(100% - 0.65rem);
+  width: calc(100% - 0.65rem) !important;
 }
 
 .sidebar .sidebar-accordion > .accordion-item > .accordion-header .accordion-button:not(.collapsed) {
@@ -551,7 +552,7 @@
   font-weight: 400;
   border-radius: var(--border-radius-sm);
   display: block !important;
-  width: calc(100% - 1.35rem);
+  width: calc(100% - 1.35rem) !important; /* acima do w-100 + margin-left */
   text-align: left;
   background: transparent !important;
   border: none !important;

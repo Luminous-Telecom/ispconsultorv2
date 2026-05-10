@@ -172,7 +172,7 @@ const Layout: React.FC = () => {
       };
     }
   }, [isMobile, sidebarOpen]);
-  
+
   // Carregar usuário atual da API
   useEffect(() => {
     const loadCurrentUser = async () => {
