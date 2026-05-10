@@ -324,7 +324,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       <div className="container-fluid px-0">
-        <div className="row g-2">
+        <div className="row g-2 align-items-stretch">
           <div className="col-12 col-sm-6 col-md-4">
             <div className="chart-card chart-card-pie chart-card-pie--metric">
               <ResponsivePieChart
@@ -343,8 +343,10 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-12 col-sm-6 col-md-4 d-flex">
-            <TicketMedioCard data={ticketMedioCardData} />
+          <div className="col-12 col-sm-6 col-md-4">
+            <div className="chart-card chart-card-pie chart-card-pie--metric">
+              <TicketMedioCard data={ticketMedioCardData} />
+            </div>
           </div>
 
           <div className="col-12 col-sm-6 col-md-4">
@@ -418,7 +420,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="row g-2">
+        <div className="row g-2 align-items-stretch">
           <div className="col-12 col-md-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart

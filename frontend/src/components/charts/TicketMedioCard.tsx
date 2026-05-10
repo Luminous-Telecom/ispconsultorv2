@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { formatCurrency } from 'utils/formatters';
+import { useI18n } from 'contexts/I18nContext';
 
 export interface TicketMedioMes {
   mes: string;
@@ -58,6 +59,9 @@ const VariacaoBadge: React.FC<{ variacao?: string; sufixo?: string }> = ({ varia
   );
 };
 
+/** Altura mínima da área das barras — evita colapso a 0 quando o pai está em altura indefinida (resize / flex wrap). */
+const BAR_ZONE_MIN_HEIGHT_PX = 80;
+
 const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
   const max = Math.max(...series.map((s) => s.valor), 1);
   const last = series.length - 1;
@@ -66,8 +70,8 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
   return (
     <div
       style={{
-        flex: 1,
-        minHeight: 0,
+        flex: '1 1 auto',
+        minHeight: BAR_ZONE_MIN_HEIGHT_PX,
         background: 'rgba(255,255,255,0.04)',
         borderRadius: 8,
         padding: '5px 8px 4px',
@@ -80,7 +84,15 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
       <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-secondary, rgba(255,255,255,0.4))', letterSpacing: '0.06em', marginBottom: 4, flexShrink: 0 }}>
         ÚLTIMOS {series.length} MESES
       </div>
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'stretch', gap: 4 }}>
+      <div
+        style={{
+          flex: '1 1 auto',
+          minHeight: BAR_ZONE_MIN_HEIGHT_PX - 28,
+          display: 'flex',
+          alignItems: 'stretch',
+          gap: 4,
+        }}
+      >
         {series.map((item, i) => {
           const heightPct = max > 0 ? (item.valor / max) * 100 : 12;
           const barHeightPct = Math.max(heightPct, 12);
@@ -120,7 +132,7 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
               <div
                 style={{
                   flex: 1,
-                  minHeight: 0,
+                  minHeight: 36,
                   width: '100%',
                   position: 'relative',
                 }}
@@ -187,57 +199,23 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
 };
 
 const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
+  const { t } = useI18n();
   const { sinal: sinalTicket } = parseVariacao(data.variacaoTicket);
 
   return (
     <div
-      style={{
-        width: '100%',
-        height: '100%',
-        borderRadius: 10,
-        border: '0.5px solid rgba(0,0,0,0.12)',
-        background: 'var(--bg-secondary)',
-        padding: '7px 8px',
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
+      className="ticket-medio-card"
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}
     >
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 7,
-            background: '#EEEDFE',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
+      <div className="pie-metric-header">
+        <div className="pie-metric-header__icon" aria-hidden>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <rect x="2" y="5" width="20" height="14" rx="2" stroke="#534AB7" strokeWidth="2" />
             <path d="M2 10h20" stroke="#534AB7" strokeWidth="2" />
           </svg>
         </div>
-        <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-          Ticket médio
-        </span>
-        <span
-          style={{
-            padding: '2px 8px',
-            borderRadius: 20,
-            background: '#EEEDFE',
-            color: '#3C3489',
-            fontSize: 11,
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {data.periodo}
-        </span>
+        <span className="pie-metric-header__title">{t('dashboard.averageTicket')}</span>
+        <span className="pie-metric-header__badge">{data.periodo}</span>
       </div>
 
       {/* Valor principal */}
@@ -267,7 +245,7 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
 
       {/* Gráfico de barras — ocupa o espaço restante do card */}
       {data.seriesMensal.length > 0 && (
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '1 1 auto', minHeight: BAR_ZONE_MIN_HEIGHT_PX, display: 'flex', flexDirection: 'column' }}>
           <BarChart series={data.seriesMensal} />
         </div>
       )}
