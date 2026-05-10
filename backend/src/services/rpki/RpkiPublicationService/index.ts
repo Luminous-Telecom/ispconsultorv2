@@ -258,17 +258,6 @@ export class RpkiPublicationService {
       last_error: null,
     });
 
-    logger.info('RpkiPublicationService: publicação concluída', {
-      context: 'RpkiPublicationService',
-      action: 'publishAll',
-      caId: ca.id,
-      repositoryId: repository.id,
-      published: toPublish.length,
-      withdrawn: toWithdraw.length,
-      roas: builtRoas.length,
-      manifestNumber: newManifestNumber,
-      crlNumber: newCrlNumber,
-    });
   }
 
   /**

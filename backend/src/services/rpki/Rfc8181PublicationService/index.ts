@@ -258,13 +258,6 @@ export class Rfc8181PublicationService {
       );
     }
 
-    logger.info('RFC 8181: publicação concluída', {
-      context: 'Rfc8181PublicationService',
-      action: 'sendObjects',
-      serviceUri: params.serviceUri,
-      published: publishList.length,
-      withdrawn: withdrawList.length,
-    });
   }
 
   /**
