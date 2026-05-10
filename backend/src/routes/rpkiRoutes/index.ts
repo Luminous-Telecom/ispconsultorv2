@@ -3,6 +3,8 @@ import { RpkiCaController } from '../../controllers/rpki/RpkiCaController';
 
 const router = Router();
 
+router.post('/validate-route', RpkiCaController.validateRoute);
+
 router.get('/cas', RpkiCaController.list);
 router.post('/cas', RpkiCaController.create);
 router.delete('/cas/:id', RpkiCaController.delete);

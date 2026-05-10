@@ -64,6 +64,44 @@ export interface RpkiAspa {
   updated_at: string;
 }
 
+export interface RpkiValidatingRoa {
+  prefix: string;
+  max_length: number;
+  asn: number;
+  validity: string;
+  validity_reason: string;
+  asn_match: boolean;
+  length_ok: boolean;
+}
+
+export interface RpkiBgpOrigin {
+  asn: number;
+  holder: string | null;
+}
+
+export interface RpkiBgpStatus {
+  announced: boolean;
+  visibility_peers: number | null;
+  total_peers: number | null;
+  visibility_pct: number | null;
+  first_seen: string | null;
+  last_seen: string | null;
+  covering_prefix: string | null;
+  origins: RpkiBgpOrigin[];
+}
+
+export interface RpkiValidateRouteResult {
+  state: 'valid' | 'invalid' | 'not-found';
+  message: string;
+  reason: string;
+  announcementCidr: string;
+  announcementLength: number;
+  asn: string;
+  validatingRoas: RpkiValidatingRoa[];
+  bgp: RpkiBgpStatus | null;
+  source: 'ripe-stat';
+}
+
 export interface RpkiRoa {
   id: number;
   ca_id: number | null;
@@ -369,6 +407,15 @@ export class RpkiCaService {
   static async deleteAspa(caId: number, aspaId: number): Promise<void> {
     const response = await defaultApiClient.delete(`/rpki/cas/${caId}/aspas/${aspaId}`);
     if (!response.success) throw new Error(response.message || 'Falha ao excluir ASPA');
+  }
+
+  static async validateRoute(payload: {
+    prefix: string;
+    asn: string;
+  }): Promise<RpkiValidateRouteResult> {
+    const response = await defaultApiClient.post<RpkiValidateRouteResult>('/rpki/validate-route', payload);
+    if (!response.data) throw new Error(response.message || 'Falha ao validar rota');
+    return response.data;
   }
 }
 

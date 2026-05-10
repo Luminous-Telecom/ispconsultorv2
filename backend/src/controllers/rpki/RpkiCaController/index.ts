@@ -3,6 +3,7 @@ import { RpkiCaService } from '../../../services/rpki/RpkiCaService';
 import { RpkiProvisioningService } from '../../../services/rpki/RpkiProvisioningService';
 import { RpkiRoaService } from '../../../services/rpki/RpkiRoaService';
 import { RpkiAspaService } from '../../../services/rpki/RpkiAspaService';
+import { RpkiRouteValidationService } from '../../../services/rpki/RpkiRouteValidationService';
 import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
 import { sendError, sendNotFound, sendSuccess, sendValidationError } from '../../../utils/responseUtils';
@@ -812,6 +813,36 @@ export class RpkiCaController {
     } catch (error) {
       if (isRpkiClientError(error)) { sendValidationError(res, (error as Error).message); return; }
       sendError(res, error, 'Erro ao excluir ASPA', 500, true, { context: 'RpkiCaController', action: 'deleteAspa' });
+    }
+  }
+
+  static async validateRoute(req: Request, res: Response): Promise<void> {
+    try {
+      const prefix = String(req.body?.prefix ?? '').trim();
+      const asnRaw = String(req.body?.asn ?? '').trim();
+
+      if (!prefix) {
+        sendValidationError(res, 'Informe o prefixo.');
+        return;
+      }
+
+      const data = await RpkiRouteValidationService.validate({
+        prefix,
+        asn: asnRaw || undefined,
+        empresaId: getEmpresaIdOrNull(req),
+        requestIp: req.socket?.remoteAddress ?? req.ip ?? null,
+      });
+
+      sendSuccess(res, data);
+    } catch (error) {
+      if (isRpkiClientError(error)) {
+        sendValidationError(res, (error as Error).message);
+        return;
+      }
+      sendError(res, error, 'Erro ao validar rota', 500, true, {
+        context: 'RpkiCaController',
+        action: 'validateRoute',
+      });
     }
   }
 }
