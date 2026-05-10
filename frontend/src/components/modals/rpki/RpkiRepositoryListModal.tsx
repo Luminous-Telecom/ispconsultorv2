@@ -184,7 +184,11 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
       label: 'Status',
       sortable: true,
       badgeLabels: ['pending', 'active', 'error'],
-      render: (item) => <span className="badge bg-secondary">{item.publication_status}</span>,
+      render: (item) => {
+        const labels: Record<string, string> = { pending: 'Pendente', active: 'Ativo', error: 'Erro' };
+        const cor = item.publication_status === 'active' ? 'bg-success' : item.publication_status === 'error' ? 'bg-danger' : 'bg-secondary';
+        return <span className={`badge ${cor}`}>{labels[item.publication_status] ?? item.publication_status}</span>;
+      },
     },
   ];
 

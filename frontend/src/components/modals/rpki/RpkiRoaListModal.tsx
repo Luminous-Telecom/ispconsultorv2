@@ -133,10 +133,9 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
       badgeLabels: ['active', 'revoked', 'expired'],
       render: (item) => {
         const status = String(item.status ?? 'active');
-        const className =
-          status === 'active' ? 'bg-success' :
-          status === 'revoked' ? 'bg-warning' : 'bg-secondary';
-        return <span className={`badge ${className}`}>{status}</span>;
+        const labels: Record<string, string> = { active: 'Ativo', revoked: 'Revogado', expired: 'Expirado' };
+        const cor = status === 'active' ? 'bg-success' : status === 'revoked' ? 'bg-warning' : 'bg-secondary';
+        return <span className={`badge ${cor}`}>{labels[status] ?? status}</span>;
       },
     },
   ], []);

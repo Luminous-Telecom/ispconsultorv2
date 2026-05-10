@@ -149,7 +149,11 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = () => {
       label: 'Status',
       sortable: true,
       badgeLabels: ['pending', 'active', 'error', 'disabled'],
-      render: (item) => <span className="badge bg-secondary">{item.status}</span>,
+      render: (item) => {
+        const labels: Record<string, string> = { pending: 'Pendente', active: 'Ativo', error: 'Erro', disabled: 'Desabilitado' };
+        const cor = item.status === 'active' ? 'bg-success' : item.status === 'error' ? 'bg-danger' : 'bg-secondary';
+        return <span className={`badge ${cor}`}>{labels[item.status] ?? item.status}</span>;
+      },
     },
   ];
 

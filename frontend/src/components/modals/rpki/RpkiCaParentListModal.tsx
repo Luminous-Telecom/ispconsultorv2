@@ -244,7 +244,11 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
       label: 'Status',
       sortable: true,
       badgeLabels: ['pending', 'active', 'error'],
-      render: (item) => <span className="badge bg-secondary">{item.provisioning_status}</span>,
+      render: (item) => {
+        const labels: Record<string, string> = { pending: 'Pendente', active: 'Ativo', error: 'Erro' };
+        const cor = item.provisioning_status === 'active' ? 'bg-success' : item.provisioning_status === 'error' ? 'bg-danger' : 'bg-secondary';
+        return <span className={`badge ${cor}`}>{labels[item.provisioning_status] ?? item.provisioning_status}</span>;
+      },
     },
   ];
 
