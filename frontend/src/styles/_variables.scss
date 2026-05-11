@@ -81,63 +81,48 @@
   }
 }
 
-/* Tema escuro */
+/* Tema escuro — Azul-petróleo */
 [data-theme="dark"] {
-  /* Cores de fundo - Paleta preta/cinza */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #1a1a1a;
-  --bg-tertiary: #2d2d2d;
-  /* Modais: levemente mais claro que cards para hierarquia */
-  --bg-modal: #2d2d2d;
-  /* Dropdowns: mais claro que o fundo para destacar */
-  --bg-dropdown: #313131;
-  --bg-dropdown-hover: #3d3d3d;
-  /* Bordas: cinza médio com contraste visível */
-  --border-color: #404040;
+  --bg-primary: #0d1320;
+  --bg-secondary: #121b2a;
+  --bg-tertiary: #1a2434;
+  --bg-modal: #1a2434;
+  --bg-dropdown: #1e2938;
+  --bg-dropdown-hover: #243246;
+  --border-color: #2e3a4d;
   --btn-close-filter: invert(1);
-  
-  /* Cores de texto */
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  /* Bordas leves: cinza médio mais claro */
-  --border-light: #4a4a4a;
-  
-  /* Sombras para modo escuro */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
-  
-  /* Sidebar - Modo escuro harmonizado */
-  --sidebar-bg: #1a1a1a;
-  --sidebar-text: #f8fafc;
-  --sidebar-hover: #3a3a3a;
-  --sidebar-active: #6366f1;
-  --sidebar-section-accent: #60a5fa;
-  
-  /* Navbar - Modo escuro */
+
+  --text-primary: #eef2f8;
+  --text-secondary: #c5ced9;
+  --text-muted: #8b97a8;
+  --border-light: #3d4a5e;
+
+  --shadow-sm: 0 1px 2px 0 rgba(5, 10, 20, 0.45);
+  --shadow: 0 4px 6px -1px rgba(5, 10, 20, 0.5), 0 2px 4px -1px rgba(5, 10, 20, 0.35);
+  --shadow-lg: 0 10px 15px -3px rgba(5, 10, 20, 0.55), 0 4px 6px -2px rgba(5, 10, 20, 0.3);
+
+  --sidebar-bg: #121b2a;
+  --sidebar-text: #eef2f8;
+  --sidebar-hover: rgba(107, 155, 209, 0.14);
+  --sidebar-active: #6b9bd1;
+  --sidebar-section-accent: #7eb3e8;
+
   --navbar-bg: var(--bg-primary);
-  --navbar-text: #f8fafc;
+  --navbar-text: #eef2f8;
   --navbar-border: var(--border-color);
-  --navbar-input-bg: rgba(255, 255, 255, 0.05);
+  --navbar-input-bg: rgba(255, 255, 255, 0.06);
   --navbar-input-text: #ffffff;
 
-  /* Ajustes de cores primárias para melhor contraste no escuro */
-  --primary-color: #6366f1;
-  --primary-hover: #4f46e5;
-  --btn-primary-color: #6366f1;
-  --btn-primary-hover: #4f46e5;
+  --primary-color: #6b9bd1;
+  --primary-hover: #5a8bc1;
+  --btn-primary-color: #6b9bd1;
+  --btn-primary-hover: #5a8bc1;
   --success-color: #25cff2;
   --danger-color: #ea868f;
   --warning-color: #ffda6a;
   --info-color: #6edff6;
-  
-  /* Cores de borda para cards por seção - modo escuro */
-  --card-border-primary: #6366f1;
-  --card-border-info: #6366f1;
-  
-  /* Sidebar - Modo escuro */
-  --sidebar-active: #6366f1;
-  --sidebar-hover: rgba(99, 102, 241, 0.15);
-  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f8fafc' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+
+  --card-border-primary: #4a6d8f;
+  --card-border-info: #4a6d8f;
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23eef2f8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
