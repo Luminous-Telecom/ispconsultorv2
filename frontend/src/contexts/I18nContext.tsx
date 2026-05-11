@@ -227,6 +227,8 @@ export interface TranslationKeys {
   'layout.folderCadastros': string;
   'layout.folderFinanceiro': string;
   'layout.folderLogs': string;
+  'layout.folderLogsEquipamentos': string;
+  'layout.folderLogsComunicacao': string;
   'layout.folderLogsRpki': string;
   'layout.folderLogsErp': string;
   'layout.folderLogsSaas': string;
@@ -1760,6 +1762,8 @@ const translations: Translations = {
     'layout.folderCadastros': 'Cadastros',
     'layout.folderFinanceiro': 'Financeiro',
     'layout.folderLogs': 'Logs',
+    'layout.folderLogsEquipamentos': 'Equipamentos',
+    'layout.folderLogsComunicacao': 'Comunicação',
     'layout.folderLogsRpki': 'RPKI',
     'layout.folderLogsErp': 'Logs ERP',
     'layout.folderLogsSaas': 'Logs SaaS',
@@ -3290,6 +3294,8 @@ const translations: Translations = {
     'layout.folderCadastros': 'Registers',
     'layout.folderFinanceiro': 'Financial',
     'layout.folderLogs': 'Logs',
+    'layout.folderLogsEquipamentos': 'Equipment',
+    'layout.folderLogsComunicacao': 'Communication',
     'layout.folderLogsRpki': 'RPKI',
     'layout.folderLogsErp': 'ERP logs',
     'layout.folderLogsSaas': 'SaaS logs',
@@ -4820,6 +4826,8 @@ const translations: Translations = {
     'layout.folderCadastros': 'Registros',
     'layout.folderFinanceiro': 'Financiero',
     'layout.folderLogs': 'Logs',
+    'layout.folderLogsEquipamentos': 'Equipos',
+    'layout.folderLogsComunicacao': 'Comunicación',
     'layout.folderLogsRpki': 'RPKI',
     'layout.folderLogsErp': 'Logs ERP',
     'layout.folderLogsSaas': 'Logs SaaS',

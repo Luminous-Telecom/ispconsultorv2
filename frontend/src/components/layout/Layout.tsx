@@ -298,13 +298,19 @@ const Layout: React.FC = () => {
   const logsFolderItems = [
     { id: 'logs-usuarios', modalId: 'logs-usuarios', label: t('logs.usuarios'), icon: 'bi-people-fill', onClick: () => handleOpenModal('logs-usuarios') },
     { id: 'logs-webhook', modalId: 'logs-webhook', label: t('logs.webhook'), icon: 'bi-link-45deg', onClick: () => handleOpenModal('logs-webhook') },
-    { id: 'logs-email', modalId: 'logs-email', label: t('logs.email'), icon: 'bi-envelope', onClick: () => handleOpenModal('logs-email') },
-    { id: 'logs-whatsapp', modalId: 'logs-whatsapp', label: t('logs.whatsapp'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('logs-whatsapp') },
     { id: 'logs-assinatura-digital', modalId: 'logs-assinatura-digital', label: t('logs.assinaturaDigital'), icon: 'bi-pen', onClick: () => handleOpenModal('logs-assinatura-digital') },
     { id: 'logs-acesso-sistema', modalId: 'logs-acesso-sistema', label: t('logs.acessoSistema'), icon: 'bi-door-open', onClick: () => handleOpenModal('logs-acesso-sistema') },
+    { id: 'logs-blockdomi-api', modalId: 'logs-blockdomi-api', label: t('blockdomi.logsApi'), icon: 'bi-journal-text', onClick: () => handleOpenModal('logs-blockdomi-api') },
+  ].filter((item) => filterByModulo(item.modalId));
+
+  const logsComunicacaoFolderItems = [
+    { id: 'logs-whatsapp', modalId: 'logs-whatsapp', label: t('logs.whatsapp'), icon: 'bi-whatsapp', onClick: () => handleOpenModal('logs-whatsapp') },
+    { id: 'logs-email', modalId: 'logs-email', label: t('logs.email'), icon: 'bi-envelope', onClick: () => handleOpenModal('logs-email') },
+  ].filter((item) => filterByModulo(item.modalId));
+
+  const logsEquipamentosFolderItems = [
     { id: 'logs-equipamentos', modalId: 'logs-equipamentos', label: t('logs.equipamentos'), icon: 'bi-journal-code', onClick: () => handleOpenModal('logs-equipamentos') },
     { id: 'logs-agentes', modalId: 'logs-agentes', label: t('logs.agentes'), icon: 'bi-plugin', onClick: () => handleOpenModal('logs-agentes') },
-    { id: 'logs-blockdomi-api', modalId: 'logs-blockdomi-api', label: t('blockdomi.logsApi'), icon: 'bi-journal-text', onClick: () => handleOpenModal('logs-blockdomi-api') },
   ].filter((item) => filterByModulo(item.modalId));
 
   const logsRpkiFolderItems = [
@@ -702,6 +708,112 @@ const Layout: React.FC = () => {
                         <span>{item.label}</span>
                       </button>
                     ))}
+                    {logsComunicacaoFolderItems.length > 0 && (
+                      <div className="accordion sidebar-accordion border-0" id="logsComunicacaoAccordion">
+                        <div className="accordion-item border-0 bg-transparent">
+                          <h2 className="accordion-header" id="logsComunicacaoHeading">
+                            <button
+                              className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#logsComunicacaoCollapse"
+                              aria-expanded="false"
+                              aria-controls="logsComunicacaoCollapse"
+                              onClick={(e) => {
+                                const button = e.currentTarget;
+                                const folderIcon = button.querySelector('.folder-icon');
+                                setTimeout(() => {
+                                  if (folderIcon && button.classList.contains('collapsed')) {
+                                    folderIcon.className = 'bi bi-folder folder-icon me-2';
+                                  } else if (folderIcon) {
+                                    folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
+                                  }
+                                }, 10);
+                              }}
+                            >
+                              <i className="bi bi-folder folder-icon me-2"></i>
+                              <span>{t('layout.folderLogsComunicacao')}</span>
+                            </button>
+                          </h2>
+                          <div
+                            id="logsComunicacaoCollapse"
+                            className="accordion-collapse collapse"
+                            aria-labelledby="logsComunicacaoHeading"
+                            data-bs-parent="#logsComunicacaoAccordion"
+                          >
+                            <div className="accordion-body p-0">
+                              {logsComunicacaoFolderItems.map((item) => (
+                                <button
+                                  key={item.id}
+                                  className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"
+                                  onClick={() => {
+                                    item.onClick();
+                                    setSidebarOpen(false);
+                                  }}
+                                  type="button"
+                                >
+                                  <SidebarFolderItemBullet />
+                                  <span>{item.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {logsEquipamentosFolderItems.length > 0 && (
+                      <div className="accordion sidebar-accordion border-0" id="logsEquipamentosAccordion">
+                        <div className="accordion-item border-0 bg-transparent">
+                          <h2 className="accordion-header" id="logsEquipamentosHeading">
+                            <button
+                              className="accordion-button collapsed nav-link text-start w-100 d-flex align-items-center"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#logsEquipamentosCollapse"
+                              aria-expanded="false"
+                              aria-controls="logsEquipamentosCollapse"
+                              onClick={(e) => {
+                                const button = e.currentTarget;
+                                const folderIcon = button.querySelector('.folder-icon');
+                                setTimeout(() => {
+                                  if (folderIcon && button.classList.contains('collapsed')) {
+                                    folderIcon.className = 'bi bi-folder folder-icon me-2';
+                                  } else if (folderIcon) {
+                                    folderIcon.className = 'bi bi-folder2-open folder-icon me-2';
+                                  }
+                                }, 10);
+                              }}
+                            >
+                              <i className="bi bi-folder folder-icon me-2"></i>
+                              <span>{t('layout.folderLogsEquipamentos')}</span>
+                            </button>
+                          </h2>
+                          <div
+                            id="logsEquipamentosCollapse"
+                            className="accordion-collapse collapse"
+                            aria-labelledby="logsEquipamentosHeading"
+                            data-bs-parent="#logsEquipamentosAccordion"
+                          >
+                            <div className="accordion-body p-0">
+                              {logsEquipamentosFolderItems.map((item) => (
+                                <button
+                                  key={item.id}
+                                  className="nav-link text-start w-100 sidebar-folder-item d-flex align-items-center"
+                                  onClick={() => {
+                                    item.onClick();
+                                    setSidebarOpen(false);
+                                  }}
+                                  type="button"
+                                >
+                                  <SidebarFolderItemBullet />
+                                  <span>{item.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {logsRpkiFolderItems.length > 0 && (
                       <div className="accordion sidebar-accordion border-0" id="logsRpkiAccordion">
                         <div className="accordion-item border-0 bg-transparent">
