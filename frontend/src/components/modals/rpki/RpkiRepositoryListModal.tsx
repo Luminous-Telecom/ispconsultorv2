@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
@@ -8,6 +8,10 @@ import { useTableFilters } from 'hooks/useTableFilters';
 import { ClienteService } from 'services/clienteService';
 import { RpkiCaRepository, RpkiCaService } from 'services/rpkiCaService';
 import RpkiRepositoryCreateModal from './RpkiRepositoryCreateModal';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModalBase from 'components/common/ImprimirModal';
+
+const AuditPdfModal = ImprimirModalBase;
 
 type RepositoryRow = RpkiCaRepository & {
   ca_nome?: string;
@@ -50,6 +54,13 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
+  const auditoria = useAuditoria();
+  const handleAuditRepository = useCallback(
+    (item: RepositoryRow) => {
+      void auditoria.handleAudit('RpkiRepository', item.id);
+    },
+    [auditoria]
+  );
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedRow, setSelectedRow] = useState<RepositoryRow | null>(null);
 
@@ -263,6 +274,8 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
             syncWithHeader={false}
             onSelectionChange={(items) => setSelectedRow(items[0] ?? null)}
             onRefresh={refetch}
+            onAudit={handleAuditRepository}
+            auditEntity="RpkiRepository"
             onPageChange={tableFilters.setPage}
             onPageSizeChange={tableFilters.setLimit}
             onSort={(column, direction) => tableFilters.setSort(column, direction)}
@@ -273,6 +286,15 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
       </div>
 
       <RpkiRepositoryCreateModal show={showCreateModal} onClose={() => setShowCreateModal(false)} />
+
+      <AuditPdfModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
+        title={t('modal.auditLogs')}
+        modalId="auditoria-rpki-repository-modal"
+      />
     </>
   );
 };

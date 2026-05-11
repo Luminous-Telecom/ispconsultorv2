@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
@@ -8,6 +8,8 @@ import { useI18n } from 'contexts/I18nContext';
 import { RpkiCa, RpkiCaService } from 'services/rpkiCaService';
 import { ClienteService } from 'services/clienteService';
 import RpkiCaCreateModal from './RpkiCaCreateModal';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModal from 'components/common/ImprimirModal';
 
 interface RpkiCaListModalProps {
   show: boolean;
@@ -40,6 +42,13 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = () => {
   const [selectedCa, setSelectedCa] = useState<RpkiCa | null>(null);
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
+  const auditoria = useAuditoria();
+  const handleAuditCa = useCallback(
+    (item: RpkiCa) => {
+      void auditoria.handleAudit('RpkiCa', item.id);
+    },
+    [auditoria]
+  );
 
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -228,6 +237,8 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = () => {
             syncWithHeader={false}
             onSelectionChange={(items) => setSelectedCa(items[0] ?? null)}
             onRefresh={refetch}
+            onAudit={handleAuditCa}
+            auditEntity="RpkiCa"
             onPageChange={tableFilters.setPage}
             onPageSizeChange={tableFilters.setLimit}
             onSort={(column, direction) => tableFilters.setSort(column, direction)}
@@ -238,6 +249,15 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = () => {
       </div>
 
       <RpkiCaCreateModal show={showCreateModal} onClose={() => setShowCreateModal(false)} />
+
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
+        title={t('modal.auditLogs')}
+        modalId="auditoria-rpki-ca-modal"
+      />
     </>
   );
 };

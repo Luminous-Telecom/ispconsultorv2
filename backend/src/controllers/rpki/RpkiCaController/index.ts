@@ -6,6 +6,10 @@ import { RpkiAspaService } from '../../../services/rpki/RpkiAspaService';
 import { RpkiRouteValidationService } from '../../../services/rpki/RpkiRouteValidationService';
 import { RpkiCa } from '../../../models/rpki/RpkiCa';
 import { RpkiCaParent } from '../../../models/rpki/RpkiCaParent';
+import { RpkiCaResource } from '../../../models/rpki/RpkiCaResource';
+import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
+import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
+import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
 import { RpkiSyncLog } from '../../../models/rpki/RpkiSyncLog';
 import { Op } from 'sequelize';
 import { sendError, sendNotFound, sendSuccess, sendValidationError } from '../../../utils/responseUtils';
@@ -16,6 +20,28 @@ import {
   parseEmpresaIdQuery,
   resolveEmpresaScopeForList,
 } from '../../../utils/tenantUtils';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService';
+import { registrarAuditoriaElasticsearch } from '../../../services/elasticsearch/ElasticsearchAuditService';
+
+function empresaIdAuditoria(req: Request, fallback: number | null): number | null {
+  return getEmpresaIdOrNull(req) ?? fallback ?? null;
+}
+
+async function auditarRpki(exec: () => Promise<void>): Promise<void> {
+  try {
+    await exec();
+  } catch {
+    /* auditoria não deve falhar a requisição */
+  }
+}
+
+function rpkiJsonParaAuditoria(model: { toJSON: () => Record<string, unknown> }): Record<string, unknown> {
+  const j = { ...model.toJSON() };
+  if (typeof j.parent_response_xml === 'string' && j.parent_response_xml.length > 400) {
+    j.parent_response_xml = `[omitido: ${j.parent_response_xml.length} caracteres]`;
+  }
+  return j;
+}
 
 export class RpkiCaController {
   static async getByIdForTenant(req: Request, caId: number): Promise<RpkiCa | null> {
@@ -64,6 +90,16 @@ export class RpkiCaController {
 
       const empresa_id = getEmpresaIdOrNull(req) ?? null;
       const data = await RpkiCaService.create({ empresa_id, nome, cliente_id });
+      await auditarRpki(async () => {
+        await registrarCriacao(
+          req,
+          'RpkiCa',
+          data.id,
+          data.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAuditoria(req, data.empresa_id)
+        );
+      });
       sendSuccess(res, data, 'CA criada com sucesso', 201);
     } catch (error) {
       sendError(res, error, 'Erro ao criar CA RPKI', 500, true, {
@@ -87,7 +123,13 @@ export class RpkiCaController {
         return;
       }
 
-      await RpkiCaService.delete(ca.id);
+      const snapshotCa = ca.toJSON() as Record<string, unknown>;
+      const caIdAuditoria = ca.id;
+      const empresaAuditoria = empresaIdAuditoria(req, ca.empresa_id);
+      await RpkiCaService.delete(caIdAuditoria);
+      await auditarRpki(async () => {
+        await registrarExclusao(req, 'RpkiCa', caIdAuditoria, snapshotCa, undefined, empresaAuditoria);
+      });
       sendSuccess(res, null, 'CA removida com sucesso');
     } catch (error) {
       if (isRpkiClientError(error)) {
@@ -159,6 +201,16 @@ export class RpkiCaController {
         empresaId,
       });
 
+      await auditarRpki(async () => {
+        await registrarCriacao(
+          req,
+          'RpkiCaParent',
+          parent.id,
+          rpkiJsonParaAuditoria(parent),
+          'Importação resposta CA-pai',
+          empresaIdAuditoria(req, parent.empresa_id)
+        );
+      });
       sendSuccess(res, parent, 'CA-pai vinculada com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao importar resposta da CA-pai', 400, true, {
@@ -208,7 +260,25 @@ export class RpkiCaController {
         return;
       }
 
+      const parentRow = await RpkiCaParent.findOne({
+        where: { id: parentId, ca_id: ca.id },
+      });
+      if (!parentRow) {
+        sendNotFound(res, 'CA-pai não encontrada');
+        return;
+      }
+
       await RpkiCaService.deleteParent(ca.id, parentId);
+      await auditarRpki(async () => {
+        await registrarExclusao(
+          req,
+          'RpkiCaParent',
+          parentId,
+          rpkiJsonParaAuditoria(parentRow),
+          undefined,
+          empresaIdAuditoria(req, parentRow.empresa_id ?? ca.empresa_id)
+        );
+      });
       sendSuccess(res, null, 'CA-pai removida com sucesso');
     } catch (error) {
       if (isRpkiClientError(error)) {
@@ -260,7 +330,19 @@ export class RpkiCaController {
         return;
       }
 
+      const resourceCount = await RpkiCaResource.count({ where: { ca_id: ca.id } });
       const removed = await RpkiCaService.clearResources(ca.id);
+      await auditarRpki(async () => {
+        await registrarAtualizacao(
+          req,
+          'RpkiCa',
+          ca.id,
+          { rpki_ca_resources_count: resourceCount },
+          { rpki_ca_resources_count: 0, removed_count: removed },
+          'Limpeza de recursos delegados da CA',
+          empresaIdAuditoria(req, ca.empresa_id)
+        );
+      });
       sendSuccess(res, { removed }, 'Recursos da CA removidos com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao remover recursos da CA', 500, true, {
@@ -301,6 +383,27 @@ export class RpkiCaController {
         ca,
         parent,
         empresaId,
+      });
+
+      await auditarRpki(async () => {
+        await registrarAtualizacao(
+          req,
+          'RpkiCa',
+          ca.id,
+          {},
+          {
+            syncParentResources: {
+              parentId: parent.id,
+              synced: {
+                asn: result.asnResources.length,
+                ipv4: result.ipv4Resources.length,
+                ipv6: result.ipv6Resources.length,
+              },
+            },
+          },
+          'Sincronização de recursos com CA-pai (RFC 6492)',
+          empresaIdAuditoria(req, ca.empresa_id)
+        );
       });
 
       sendSuccess(
@@ -362,7 +465,25 @@ export class RpkiCaController {
         return;
       }
 
+      const repoRow = await RpkiRepository.findOne({
+        where: { id: repositoryId, ca_id: ca.id },
+      });
+      if (!repoRow) {
+        sendNotFound(res, 'Repositório não encontrado');
+        return;
+      }
+
       await RpkiCaService.deleteRepository(ca.id, repositoryId);
+      await auditarRpki(async () => {
+        await registrarExclusao(
+          req,
+          'RpkiRepository',
+          repositoryId,
+          repoRow.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAuditoria(req, repoRow.empresa_id ?? ca.empresa_id)
+        );
+      });
       sendSuccess(res, null, 'Repositório removido com sucesso');
     } catch (error) {
       if (isRpkiClientError(error)) {
@@ -391,7 +512,26 @@ export class RpkiCaController {
         return;
       }
 
+      const repoBefore = await RpkiRepository.findOne({
+        where: { id: repositoryId, ca_id: ca.id },
+      });
+      if (!repoBefore) {
+        sendNotFound(res, 'Repositório não encontrado');
+        return;
+      }
+
       const repository = await RpkiCaService.syncRepository(ca.id, repositoryId);
+      await auditarRpki(async () => {
+        await registrarAtualizacao(
+          req,
+          'RpkiRepository',
+          repository.id,
+          repoBefore.toJSON() as Record<string, unknown>,
+          repository.toJSON() as Record<string, unknown>,
+          'Publicação/sincronização com repositório (RFC 8181)',
+          empresaIdAuditoria(req, repository.empresa_id ?? ca.empresa_id)
+        );
+      });
       sendSuccess(res, repository, 'Repositório atualizado com sucesso');
     } catch (error) {
       if (isRpkiClientError(error)) {
@@ -482,6 +622,16 @@ export class RpkiCaController {
         empresaId,
       });
 
+      await auditarRpki(async () => {
+        await registrarCriacao(
+          req,
+          'RpkiRepository',
+          row.id,
+          row.toJSON() as Record<string, unknown>,
+          'Vínculo repositório (repository_response)',
+          empresaIdAuditoria(req, row.empresa_id ?? ca.empresa_id)
+        );
+      });
       sendSuccess(res, row, 'Repositório vinculado com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao importar repository_response', 400, true, {
@@ -554,6 +704,16 @@ export class RpkiCaController {
         notBefore,
         notAfter,
       });
+      await auditarRpki(async () => {
+        await registrarCriacao(
+          req,
+          'RpkiRoa',
+          row.id,
+          row.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAuditoria(req, row.empresa_id ?? ca.empresa_id)
+        );
+      });
       sendSuccess(res, row, 'ROA criada com sucesso', 201);
     } catch (error) {
       if (isRpkiClientError(error)) {
@@ -604,7 +764,26 @@ export class RpkiCaController {
         return;
       }
 
+      const roaAntes = await RpkiRoa.findOne({
+        where: { id: roaId, ca_id: ca.id },
+      });
+      if (!roaAntes) {
+        sendNotFound(res, 'ROA não encontrado');
+        return;
+      }
+
       const row = await RpkiRoaService.update(ca.id, roaId, payload);
+      await auditarRpki(async () => {
+        await registrarAtualizacao(
+          req,
+          'RpkiRoa',
+          roaId,
+          roaAntes.toJSON() as Record<string, unknown>,
+          row.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAuditoria(req, ca.empresa_id)
+        );
+      });
       sendSuccess(res, row, 'ROA atualizada com sucesso');
     } catch (error) {
       if (isRpkiClientError(error)) {
@@ -631,7 +810,25 @@ export class RpkiCaController {
         sendNotFound(res, 'CA não encontrada');
         return;
       }
+      const roaAntes = await RpkiRoa.findOne({
+        where: { id: roaId, ca_id: ca.id },
+      });
+      if (!roaAntes) {
+        sendNotFound(res, 'ROA não encontrado');
+        return;
+      }
       const row = await RpkiRoaService.revoke(ca.id, roaId);
+      await auditarRpki(async () => {
+        await registrarAtualizacao(
+          req,
+          'RpkiRoa',
+          roaId,
+          roaAntes.toJSON() as Record<string, unknown>,
+          row.toJSON() as Record<string, unknown>,
+          'Revogação de ROA',
+          empresaIdAuditoria(req, ca.empresa_id)
+        );
+      });
       sendSuccess(res, row, 'ROA revogada com sucesso');
     } catch (error) {
       if (isRpkiClientError(error)) {
@@ -658,7 +855,24 @@ export class RpkiCaController {
         sendNotFound(res, 'CA não encontrada');
         return;
       }
+      const roaAntes = await RpkiRoa.findOne({
+        where: { id: roaId, ca_id: ca.id },
+      });
+      if (!roaAntes) {
+        sendNotFound(res, 'ROA não encontrado');
+        return;
+      }
       await RpkiRoaService.delete(ca.id, roaId);
+      await auditarRpki(async () => {
+        await registrarExclusao(
+          req,
+          'RpkiRoa',
+          roaId,
+          roaAntes.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAuditoria(req, ca.empresa_id)
+        );
+      });
       sendSuccess(res, null, 'ROA removida com sucesso');
     } catch (error) {
       if (isRpkiClientError(error)) {
@@ -735,6 +949,20 @@ export class RpkiCaController {
       }
 
       const result = await RpkiRoaService.applySuggestions(ca.id, ca.empresa_id, suggestions);
+      await auditarRpki(async () => {
+        await registrarAuditoriaElasticsearch(req, {
+          acao: 'update',
+          entidade: 'RpkiCa',
+          entidade_id: ca.id,
+          dados_anteriores: null,
+          dados_novos: {
+            applyRoaSuggestions: result,
+            suggestionsCount: suggestions.length,
+          },
+          observacoes: 'Aplicação em lote de sugestões de ROA',
+          empresa_id: empresaIdAuditoria(req, ca.empresa_id),
+        });
+      });
       sendSuccess(res, result, 'Sugestões de ROA aplicadas com sucesso');
     } catch (error) {
       if (isRpkiClientError(error)) {
@@ -781,6 +1009,16 @@ export class RpkiCaController {
         customerAsn,
         providers,
       });
+      await auditarRpki(async () => {
+        await registrarCriacao(
+          req,
+          'RpkiAspa',
+          data.id,
+          data.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAuditoria(req, data.empresa_id ?? ca.empresa_id)
+        );
+      });
       sendSuccess(res, data, 'ASPA criado com sucesso', 201);
     } catch (error) {
       if (isRpkiClientError(error)) { sendValidationError(res, (error as Error).message); return; }
@@ -795,7 +1033,20 @@ export class RpkiCaController {
       if (!Number.isFinite(caId) || !Number.isFinite(aspaId)) { sendValidationError(res, 'IDs inválidos'); return; }
       const ca = await RpkiCaController.getByIdForTenant(req, caId);
       if (!ca) { sendNotFound(res, 'CA não encontrada'); return; }
+      const aspaAntes = await RpkiAspa.findOne({ where: { id: aspaId, ca_id: caId } });
+      if (!aspaAntes) { sendNotFound(res, 'ASPA não encontrado'); return; }
       const data = await RpkiAspaService.revoke(caId, aspaId);
+      await auditarRpki(async () => {
+        await registrarAtualizacao(
+          req,
+          'RpkiAspa',
+          aspaId,
+          aspaAntes.toJSON() as Record<string, unknown>,
+          data.toJSON() as Record<string, unknown>,
+          'Revogação de ASPA',
+          empresaIdAuditoria(req, ca.empresa_id)
+        );
+      });
       sendSuccess(res, data, 'ASPA revogado com sucesso');
     } catch (error) {
       if (isRpkiClientError(error)) { sendValidationError(res, (error as Error).message); return; }
@@ -810,7 +1061,19 @@ export class RpkiCaController {
       if (!Number.isFinite(caId) || !Number.isFinite(aspaId)) { sendValidationError(res, 'IDs inválidos'); return; }
       const ca = await RpkiCaController.getByIdForTenant(req, caId);
       if (!ca) { sendNotFound(res, 'CA não encontrada'); return; }
+      const aspaAntes = await RpkiAspa.findOne({ where: { id: aspaId, ca_id: caId } });
+      if (!aspaAntes) { sendNotFound(res, 'ASPA não encontrado'); return; }
       await RpkiAspaService.delete(caId, aspaId);
+      await auditarRpki(async () => {
+        await registrarExclusao(
+          req,
+          'RpkiAspa',
+          aspaId,
+          aspaAntes.toJSON() as Record<string, unknown>,
+          undefined,
+          empresaIdAuditoria(req, ca.empresa_id)
+        );
+      });
       sendSuccess(res, null, 'ASPA excluído com sucesso');
     } catch (error) {
       if (isRpkiClientError(error)) { sendValidationError(res, (error as Error).message); return; }

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
@@ -7,6 +7,11 @@ import { RpkiCaService } from 'services/rpkiCaService';
 import RpkiRoaCreateEditModal from './RpkiRoaCreateEditModal';
 import RpkiRoaAnalysisModal from './RpkiRoaAnalysisModal';
 import { formatDateTime, formatRpkiValidityDisplay } from 'utils/formatters';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModalBase from 'components/common/ImprimirModal';
+import { useI18n } from 'contexts/I18nContext';
+
+const AuditPdfModal = ImprimirModalBase;
 
 interface RpkiRoaRow {
   id: number | string;
@@ -29,7 +34,18 @@ interface RpkiRoaListModalProps {
 }
 
 const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
+  const { t } = useI18n();
   const { error: showError, success } = useNotificationContext();
+  const auditoria = useAuditoria();
+  const handleAuditRoa = useCallback(
+    (item: RpkiRoaRow) => {
+      const id = Number(item.id);
+      if (!Number.isFinite(id)) return;
+      void auditoria.handleAudit('RpkiRoa', id);
+    },
+    [auditoria]
+  );
+  const auditLogsTitle = t('modal.auditLogs');
   const [roas, setRoas] = useState<RpkiRoaRow[]>([]);
 
   const [showFormModal, setShowFormModal] = useState(false);
@@ -329,6 +345,8 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
             tableId="rpki-roas-list-modal"
             syncWithHeader={false}
             onRefresh={() => {}}
+            onAudit={handleAuditRoa}
+            auditEntity="RpkiRoa"
           />
         </div>
       </div>
@@ -431,6 +449,15 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
               showError(msg);
             });
         }}
+      />
+
+      <AuditPdfModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
+        title={auditLogsTitle}
+        modalId="auditoria-rpki-roa-modal"
       />
     </>
   );

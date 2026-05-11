@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
@@ -7,6 +7,8 @@ import { useI18n } from 'contexts/I18nContext';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { RpkiCaService, type RpkiAspa } from 'services/rpkiCaService';
 import RpkiAspaCreateModal from './RpkiAspaCreateModal';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModal from 'components/common/ImprimirModal';
 
 interface RpkiAspaListModalProps {
   show: boolean;
@@ -19,6 +21,13 @@ const statusLabels: Record<string, string> = { active: 'Ativo', revoked: 'Revoga
 const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
   const { t } = useI18n();
   const { error: showError, success } = useNotificationContext();
+  const auditoria = useAuditoria();
+  const handleAuditAspa = useCallback(
+    (item: RpkiAspa) => {
+      void auditoria.handleAudit('RpkiAspa', item.id);
+    },
+    [auditoria]
+  );
   const [aspas, setAspas] = useState<RpkiAspa[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -172,6 +181,8 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
             tableId="rpki-aspas-list-modal"
             syncWithHeader={false}
             onRefresh={() => refetch()}
+            onAudit={handleAuditAspa}
+            auditEntity="RpkiAspa"
             onPageChange={tableFilters.setPage}
             onPageSizeChange={tableFilters.setLimit}
             onSort={(column, direction) => tableFilters.setSort(column, direction)}
@@ -193,6 +204,15 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
             })
             .catch((err) => showError(err instanceof Error ? err.message : 'Erro ao criar ASPA'));
         }}
+      />
+
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
+        title={t('modal.auditLogs')}
+        modalId="auditoria-rpki-aspa-modal"
       />
     </>
   );

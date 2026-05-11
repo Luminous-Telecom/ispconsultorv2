@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
@@ -8,6 +8,8 @@ import { ClienteService } from 'services/clienteService';
 import { useI18n } from 'contexts/I18nContext';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import RpkiCaParentCreateModal from './RpkiCaParentCreateModal';
+import { useAuditoria } from 'hooks/useAuditoria';
+import ImprimirModal from 'components/common/ImprimirModal';
 
 interface RpkiCaParentListModalProps {
   show: boolean;
@@ -38,6 +40,13 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
+  const auditoria = useAuditoria();
+  const handleAuditParent = useCallback(
+    (item: RpkiCaParent) => {
+      void auditoria.handleAudit('RpkiCaParent', item.id);
+    },
+    [auditoria]
+  );
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedParent, setSelectedParent] = useState<RpkiCaParent | null>(null);
 
@@ -325,6 +334,8 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
             syncWithHeader={false}
             onSelectionChange={(items) => setSelectedParent(items[0] ?? null)}
             onRefresh={refetch}
+            onAudit={handleAuditParent}
+            auditEntity="RpkiCaParent"
             onPageChange={tableFilters.setPage}
             onPageSizeChange={tableFilters.setLimit}
             onSort={(column, direction) => tableFilters.setSort(column, direction)}
@@ -338,6 +349,15 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         initialCaId={null}
+      />
+
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        isGenerating={auditoria.isGeneratingPdf}
+        title={t('modal.auditLogs')}
+        modalId="auditoria-rpki-ca-parent-modal"
       />
     </>
   );
