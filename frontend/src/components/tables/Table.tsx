@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { TableConfig, TableAction, BulkAction, SortDirection, TablePagination } from './types';
 import { FilterValue } from 'types/common';
@@ -121,13 +121,11 @@ function Table<T extends { id: number | string }>({
   // Detectar mobile
   const isMobile = useIsMobile();
 
-  // Em modais (syncWithHeader=false), esperar 1 paint para evitar que o header (com busca) não apareça na primeira abertura
+  // Em modais (syncWithHeader=false), o toolbar local precisa existir no mesmo ciclo de commit do portal.
+  // useEffect + requestAnimationFrame rodava depois da pintura: ao trocar de aba a tabela remontava e
+  // havia um frame sem busca/ações — sensação de modal "piscando". useLayoutEffect atualiza antes da pintura.
   const [headerReady, setHeaderReady] = useState(syncWithHeader);
-  useEffect(() => {
-    if (!syncWithHeader) {
-      const id = requestAnimationFrame(() => requestAnimationFrame(() => setHeaderReady(true)));
-      return () => cancelAnimationFrame(id);
-    }
+  useLayoutEffect(() => {
     setHeaderReady(true);
   }, [syncWithHeader]);
   
