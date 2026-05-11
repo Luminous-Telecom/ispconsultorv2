@@ -1740,46 +1740,36 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       size="xl"
       modalId="contrato-modal"
       headerActions={
-        // Mostrar headerActions apenas quando não estiver carregando
-        !isLoading ? (
-          <div className="contrato-header-unified">
-            {/* Botões à direita */}
-            <div className="contrato-header-buttons modal-header-actions">
-              {isEditMode && (
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleImprimirContrato();
-                  }}
-                >
-                  {t('buttons.print')}
-                </Button>
-              )}
+        <div className="contrato-header-unified">
+          <div className="contrato-header-buttons modal-header-actions d-flex gap-2 flex-wrap">
+            {isEditMode && (
               <Button
                 type="button"
                 variant="primary"
                 size="sm"
-                onClick={onClose}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleImprimirContrato();
+                }}
               >
-                Cancelar
+                {t('buttons.print')}
               </Button>
-              <Button
-                type="submit"
-                form="contrato-form"
-                variant="primary"
-                size="sm"
-                disabled={formHook.isSubmitting}
-              >
-                Salvar
-              </Button>
-            </div>
-
-            {/* Abas na parte inferior do header */}
-            <div className="contrato-header-tabs">
+            )}
+            <Button type="button" variant="primary" size="sm" onClick={onClose}>
+              {t('buttons.cancel')}
+            </Button>
+            <Button
+              type="submit"
+              form="contrato-form"
+              variant="primary"
+              size="sm"
+              disabled={formHook.isSubmitting}
+            >
+              {t('buttons.save')}
+            </Button>
+          </div>
+          <div className="contrato-header-tabs">
               <ul
                 className={`nav nav-tabs contrato-tabs-unified ${isMobile ? 'contrato-tabs-mobile' : ''}`}
                 id="contratoTab"
@@ -1868,7 +1858,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               </ul>
             </div>
           </div>
-        ) : undefined
       }
     >
       <form id="contrato-form" onSubmit={handleSubmit}>

@@ -140,12 +140,14 @@ export const useContratoForm = ({
 
   // Buscar dados do contrato (se estiver editando ou após criação)
   const contratoIdToFetch = contratoId || createdContratoId;
-  const { data: contrato, isPending: isLoadingContrato } = useQuery({
+  const { data: contrato, isPending: isContratoQueryPending } = useQuery({
     queryKey: ['contrato', contratoIdToFetch],
     queryFn: () => ContratoService.getById(contratoIdToFetch!),
     enabled: !!contratoIdToFetch,
     staleTime: 60 * 1000,
   });
+  // Com enabled: false, o React Query v5 pode manter isPending true — não tratar como "carregando contrato"
+  const isLoadingContrato = Boolean(contratoIdToFetch) && isContratoQueryPending;
 
   // Dados customizados do contrato (quando editando)
   const customFormData = useMemo(() => {
