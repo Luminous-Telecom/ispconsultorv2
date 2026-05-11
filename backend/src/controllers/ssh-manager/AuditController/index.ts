@@ -6,6 +6,7 @@ import { Agent } from '../../../models/agent/Agent';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
 import { Cliente } from '../../../models/clientes/Cliente';
 import { Usuario } from '../../../models/cadastros/Usuario';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 
 function clienteDisplayName(c: {
   razao_social?: string | null;
@@ -18,22 +19,42 @@ function clienteDisplayName(c: {
   return rs || null;
 }
 
+const AGENT_ACTIONS: readonly SshAuditAction[] = ['AGENT_CONNECT', 'AGENT_DISCONNECT'] as const;
+
+function isAgentAction(a: unknown): a is SshAuditAction {
+  return typeof a === 'string' && (AGENT_ACTIONS as readonly string[]).includes(a);
+}
+
+/** Elasticsearch pode devolver deviceId como string ou número */
+function deviceIdKey(raw: unknown): string {
+  if (raw === null || raw === undefined) return '';
+  if (typeof raw === 'number' && Number.isFinite(raw)) return String(Math.trunc(raw));
+  const s = String(raw).trim();
+  return s;
+}
+
 async function enrichSshAuditLogsWithCliente(
   logs: Record<string, unknown>[]
 ): Promise<Record<string, unknown>[]> {
+  const equipLogs = logs.filter((l) => !isAgentAction(l.action));
   const deviceIds = [
     ...new Set(
-      logs
-        .map((l) => l.deviceId)
-        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      equipLogs
+        .map((l) => deviceIdKey(l.deviceId))
+        .filter((id) => id.length > 0)
     ),
   ];
-  if (deviceIds.length === 0) {
-    return logs.map((log) => ({ ...log, clienteId: null, clienteName: null }));
+  const deviceIdNums = deviceIds.map((id) => parseInt(id, 10)).filter((n) => Number.isFinite(n) && n > 0);
+  if (deviceIdNums.length === 0) {
+    return logs.map((log) =>
+      isAgentAction(log.action)
+        ? { ...log }
+        : { ...log, clienteId: null, clienteName: null }
+    );
   }
 
   const devices = await SshDevice.findAll({
-    where: { id: { [Op.in]: deviceIds } },
+    where: { id: { [Op.in]: deviceIdNums } },
     attributes: ['id', 'cliente_id'],
     include: [
       {
@@ -54,7 +75,10 @@ async function enrichSshAuditLogsWithCliente(
   }
 
   return logs.map((log) => {
-    const sid = typeof log.deviceId === 'string' ? log.deviceId : '';
+    if (isAgentAction(log.action)) {
+      return { ...log };
+    }
+    const sid = deviceIdKey(log.deviceId);
     const info = sid ? map.get(sid) : undefined;
     return {
       ...log,
@@ -62,12 +86,6 @@ async function enrichSshAuditLogsWithCliente(
       clienteName: info?.clienteName ?? null,
     };
   });
-}
-
-const AGENT_ACTIONS: readonly SshAuditAction[] = ['AGENT_CONNECT', 'AGENT_DISCONNECT'] as const;
-
-function isAgentAction(a: unknown): a is SshAuditAction {
-  return typeof a === 'string' && (AGENT_ACTIONS as readonly string[]).includes(a);
 }
 
 async function enrichAgentLogsWithCliente(
@@ -79,13 +97,16 @@ async function enrichAgentLogsWithCliente(
   const agentIds = [
     ...new Set(
       agentLogs
-        .map((l) => l.deviceId)
-        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+        .map((l) => deviceIdKey(l.deviceId))
+        .filter((id) => id.length > 0)
     ),
   ];
 
+  const agentIdNums = agentIds.map((id) => parseInt(id, 10)).filter((n) => Number.isFinite(n) && n > 0);
+  if (agentIdNums.length === 0) return logs;
+
   const agents = await Agent.findAll({
-    where: { id: { [Op.in]: agentIds } },
+    where: { id: { [Op.in]: agentIdNums } },
     attributes: ['id', 'cliente_id'],
     include: [
       { model: Cliente, as: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia'], required: false },
@@ -102,12 +123,94 @@ async function enrichAgentLogsWithCliente(
 
   return logs.map((log) => {
     if (!isAgentAction(log.action)) return log;
-    const agentId = typeof log.deviceId === 'string' ? log.deviceId : '';
+    const agentId = deviceIdKey(log.deviceId);
     const info = agentId ? agentClienteMap.get(agentId) : undefined;
     return {
       ...log,
       clienteId: info?.clienteId ?? log.clienteId ?? null,
       clienteName: info?.clienteName ?? log.clienteName ?? null,
+    };
+  });
+}
+
+async function enrichSshAuditLogsWithEmpresa(
+  logs: Record<string, unknown>[]
+): Promise<Record<string, unknown>[]> {
+  const deviceLogs = logs.filter((l) => !isAgentAction(l.action));
+  const agentLogs = logs.filter((l) => isAgentAction(l.action));
+
+  const deviceIds = [
+    ...new Set(
+      deviceLogs
+        .map((l) => deviceIdKey(l.deviceId))
+        .filter((id) => id.length > 0)
+    ),
+  ];
+  const agentIds = [
+    ...new Set(
+      agentLogs
+        .map((l) => deviceIdKey(l.deviceId))
+        .filter((id) => id.length > 0)
+    ),
+  ];
+
+  const empresaIdByDevice = new Map<string, number | null>();
+  const empresaIdByAgent = new Map<string, number | null>();
+
+  const deviceIdNums = deviceIds.map((id) => parseInt(id, 10)).filter((n) => Number.isFinite(n) && n > 0);
+  if (deviceIdNums.length > 0) {
+    const devices = await SshDevice.findAll({
+      where: { id: { [Op.in]: deviceIdNums } },
+      attributes: ['id', 'empresa_id'],
+    });
+    for (const d of devices) {
+      empresaIdByDevice.set(String(d.id), d.empresa_id ?? null);
+    }
+  }
+  const agentIdNums = agentIds.map((id) => parseInt(id, 10)).filter((n) => Number.isFinite(n) && n > 0);
+  if (agentIdNums.length > 0) {
+    const agents = await Agent.findAll({
+      where: { id: { [Op.in]: agentIdNums } },
+      attributes: ['id', 'empresa_id'],
+    });
+    for (const a of agents) {
+      empresaIdByAgent.set(String(a.id), a.empresa_id ?? null);
+    }
+  }
+
+  const allEids = new Set<number>();
+  for (const id of empresaIdByDevice.values()) {
+    if (id != null && id > 0) allEids.add(id);
+  }
+  for (const id of empresaIdByAgent.values()) {
+    if (id != null && id > 0) allEids.add(id);
+  }
+
+  const nameMap = new Map<number, string>();
+  if (allEids.size > 0) {
+    const empresas = await DadosEmpresa.findAll({
+      where: { id: { [Op.in]: [...allEids] } },
+      attributes: ['id', 'razao_social', 'nome_fantasia'],
+    });
+    for (const e of empresas) {
+      const label = (e.razao_social?.trim() || e.nome_fantasia?.trim() || `Empresa ${e.id}`).trim();
+      nameMap.set(e.id, label);
+    }
+  }
+
+  return logs.map((log) => {
+    const key = deviceIdKey(log.deviceId);
+    let eid: number | null = null;
+    if (isAgentAction(log.action)) {
+      eid = key ? empresaIdByAgent.get(key) ?? null : null;
+    } else {
+      eid = key ? empresaIdByDevice.get(key) ?? null : null;
+    }
+    const nome = eid != null && eid > 0 ? nameMap.get(eid) ?? null : null;
+    return {
+      ...log,
+      empresa_id: eid,
+      empresa_nome: nome,
     };
   });
 }
@@ -202,6 +305,7 @@ export class SshAuditController {
       let enrichedLogs = await enrichSshAuditLogsWithCliente(logs);
       enrichedLogs = await enrichAgentLogsWithCliente(enrichedLogs);
       enrichedLogs = await enrichSshAuditLogsWithUsuario(enrichedLogs);
+      enrichedLogs = await enrichSshAuditLogsWithEmpresa(enrichedLogs);
 
       const postCol = sortColumn?.trim();
       if (postCol && postEnrichSortCols.has(postCol)) {

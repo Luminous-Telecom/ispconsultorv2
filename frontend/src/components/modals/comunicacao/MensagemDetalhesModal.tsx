@@ -42,6 +42,11 @@ interface MensagemDetalhesModalProps {
     cliente_nome?: string;
     cliente_email?: string;
     cliente_telefone?: string;
+    empresa?: {
+      razao_social?: string | null;
+      nome_fantasia?: string | null;
+      nome_empresa?: string | null;
+    } | null;
     usuario?: { id: number; nome: string; email: string };
     created_at: string;
   } | null;
@@ -63,6 +68,11 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
   const usuarioText = mensagem.usuario
     ? `${mensagem.usuario.nome} (${mensagem.usuario.email})`
     : t('history.system');
+  const empresaText = (() => {
+    const e = mensagem.empresa;
+    const nome = (e?.razao_social || e?.nome_fantasia || e?.nome_empresa || '').trim();
+    return nome || '';
+  })();
 
   return (
     <DraggableModal
@@ -120,6 +130,17 @@ const MensagemDetalhesModal: React.FC<MensagemDetalhesModalProps> = ({
                 readOnly
               />
             </div>
+            {empresaText ? (
+              <div className="col-md-6">
+                <label className="form-label small text-muted mb-1">{t('company.title')}</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm bg-secondary bg-opacity-10"
+                  value={empresaText}
+                  readOnly
+                />
+              </div>
+            ) : null}
             <div className="col-md-6">
               <label className="form-label small text-muted mb-1">{t('history.recipient')}</label>
               <input

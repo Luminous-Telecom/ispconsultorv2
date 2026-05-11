@@ -12,6 +12,8 @@ export interface BlockdomiLogAcessoItem {
   user_agent: string | null;
   created_at?: string;
   created_at_formatada?: string;
+  empresa_id?: number | null;
+  empresa_nome?: string | null;
 }
 
 export interface BlockdomiLogAcessoFilters {

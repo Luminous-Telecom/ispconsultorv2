@@ -39,6 +39,8 @@ export interface RegistroBlockdomiLogPayload {
   sucesso?: boolean;
   mensagem_erro?: string | null;
   user_agent?: string | null;
+  /** Tenant ERP (DadosEmpresa) quando o evento é originado de ação autenticada */
+  empresa_id?: number | null;
 }
 
 export interface ListBlockdomiLogFilters {
@@ -72,6 +74,7 @@ export async function registrarLogBlockdomiElasticsearch(payload: RegistroBlockd
         sucesso,
         mensagem_erro: payload.mensagem_erro ?? null,
         user_agent: payload.user_agent ?? null,
+        ...(payload.empresa_id != null && payload.empresa_id > 0 ? { empresa_id: payload.empresa_id } : {}),
         ...elasticsearchEventTimestamps(new Date())
       };
 

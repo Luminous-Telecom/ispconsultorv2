@@ -9,6 +9,8 @@ export interface AuditoriaLog {
   usuario_email: string | null;
   empresa_id: number | null;
   empresa_nome: string | null;
+  /** Preenchido no list /saas/auditoria após enriquecimento */
+  cliente_nome?: string | null;
   acao: 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import' | 'executar';
   entidade: string;
   entidade_id: number | null;
@@ -195,6 +197,10 @@ class AuditoriaService {
     if (filters.data_fim) params.append('data_fim', filters.data_fim);
     if (filters.sortColumn) params.append('sortColumn', filters.sortColumn);
     if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
+    if (filters.comUsuarioObrigatorio) params.append('com_usuario_obrigatorio', 'true');
+    if (filters.semUsuarioObrigatorio) params.append('sem_usuario_obrigatorio', 'true');
+    if (filters.origemAuditoria) params.append('origem_auditoria', filters.origemAuditoria);
+    if (filters.moduloBlockdomi) params.append('modulo_blockdomi', 'true');
 
     const url = `/saas/auditoria?${params.toString()}`;
     const response = await defaultApiClient.get<PaginatedResponse<AuditoriaLog>>(url);
@@ -229,6 +235,10 @@ class AuditoriaService {
     if (filters.data_fim) params.append('data_fim', filters.data_fim);
     if (filters.sortColumn) params.append('sortColumn', filters.sortColumn);
     if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
+    if (filters.comUsuarioObrigatorio) params.append('com_usuario_obrigatorio', 'true');
+    if (filters.semUsuarioObrigatorio) params.append('sem_usuario_obrigatorio', 'true');
+    if (filters.origemAuditoria) params.append('origem_auditoria', filters.origemAuditoria);
+    if (filters.moduloBlockdomi) params.append('modulo_blockdomi', 'true');
 
     const url = `/saas/auditoria?${params.toString()}`;
     const response = await defaultApiClient.get<PaginatedResponse<AuditoriaLog>>(url);

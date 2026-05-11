@@ -39,19 +39,40 @@ export class DesbloquearBlockdomiRoutine implements IRoutine {
         const dadosAnteriores = record.get({ plain: true }) as Record<string, unknown>;
         await record.update({ ativo: false });
         const dadosNovos = { ...dadosAnteriores, ativo: false };
-        await registrarAtualizacaoSistema('Dominio', record.id, dadosAnteriores, dadosNovos, observacao);
+        await registrarAtualizacaoSistema(
+          'Dominio',
+          record.id,
+          dadosAnteriores,
+          dadosNovos,
+          observacao,
+          record.empresa_id ?? null
+        );
       }
       for (const record of ipv4List) {
         const dadosAnteriores = record.get({ plain: true }) as Record<string, unknown>;
         await record.update({ ativo: false });
         const dadosNovos = { ...dadosAnteriores, ativo: false };
-        await registrarAtualizacaoSistema('IPv4', record.id, dadosAnteriores, dadosNovos, observacao);
+        await registrarAtualizacaoSistema(
+          'IPv4',
+          record.id,
+          dadosAnteriores,
+          dadosNovos,
+          observacao,
+          record.empresa_id ?? null
+        );
       }
       for (const record of ipv6List) {
         const dadosAnteriores = record.get({ plain: true }) as Record<string, unknown>;
         await record.update({ ativo: false });
         const dadosNovos = { ...dadosAnteriores, ativo: false };
-        await registrarAtualizacaoSistema('IPv6', record.id, dadosAnteriores, dadosNovos, observacao);
+        await registrarAtualizacaoSistema(
+          'IPv6',
+          record.id,
+          dadosAnteriores,
+          dadosNovos,
+          observacao,
+          record.empresa_id ?? null
+        );
       }
 
       const countDominios = dominios.length;

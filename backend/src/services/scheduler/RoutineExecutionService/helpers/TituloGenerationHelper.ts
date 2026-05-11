@@ -312,13 +312,15 @@ export class TituloGenerationHelper {
       try {
         const tituloData = titulo.toJSON() as Record<string, unknown>;
 
+        const empId = titulo.empresa_id ?? null;
+
         await registrarCriacao(
           reqSimulado,
           'Titulo',
           titulo.id,
           tituloData,
           'Título gerado automaticamente pelo agendador de tarefas',
-          undefined,
+          empId,
           'agendador'
         );
 
@@ -328,7 +330,7 @@ export class TituloGenerationHelper {
           titulo.id,
           tituloData,
           'Título gerado automaticamente pelo agendador de tarefas',
-          undefined,
+          empId,
           'agendador'
         );
       } catch (error) {

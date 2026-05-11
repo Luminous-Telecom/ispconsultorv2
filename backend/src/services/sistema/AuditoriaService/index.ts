@@ -94,9 +94,17 @@ export async function registrarAtualizacaoSistema(
   entidadeId: number,
   dadosAnteriores: Record<string, unknown>,
   dadosNovos: Record<string, unknown>,
-  observacoes?: string
+  observacoes?: string,
+  empresa_id?: number | null
 ): Promise<void> {
-  await registrarAtualizacaoElasticsearchSistema(entidade, entidadeId, dadosAnteriores, dadosNovos, observacoes);
+  await registrarAtualizacaoElasticsearchSistema(
+    entidade,
+    entidadeId,
+    dadosAnteriores,
+    dadosNovos,
+    observacoes,
+    empresa_id
+  );
 }
 
 /**

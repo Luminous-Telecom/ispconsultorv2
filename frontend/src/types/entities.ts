@@ -874,6 +874,9 @@ export interface SshAuditLog {
   deviceName?: string | null;
   clienteId?: number | null;
   clienteName?: string | null;
+  /** Preenchido na listagem (equipamento ou agente → DadosEmpresa) */
+  empresa_id?: number | null;
+  empresa_nome?: string | null;
   command?: string | null;
   output?: string | null;
   success: boolean;

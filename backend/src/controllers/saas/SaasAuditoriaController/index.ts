@@ -43,6 +43,13 @@ export class SaasAuditoriaController {
       const dataFim = req.query.data_fim as string;
       const sortColumn = req.query.sortColumn as string;
       const sortDirection = req.query.sortDirection as string;
+      const comUsuarioObrigatorio =
+        req.query.com_usuario_obrigatorio === 'true' || req.query.comUsuarioObrigatorio === 'true';
+      const semUsuarioObrigatorio =
+        req.query.sem_usuario_obrigatorio === 'true' || req.query.semUsuarioObrigatorio === 'true';
+      const origemAuditoria = req.query.origem_auditoria as string | undefined;
+      const moduloBlockdomi =
+        req.query.modulo_blockdomi === 'true' || req.query.moduloBlockdomi === 'true';
 
       const maxResultWindow = 10000;
       const maxLastPage = Math.max(1, Math.floor(maxResultWindow / limit));
@@ -54,7 +61,8 @@ export class SaasAuditoriaController {
         search,
         searchField,
         acao,
-        entidade,
+        entidade: moduloBlockdomi ? undefined : entidade,
+        moduloBlockdomi: moduloBlockdomi || undefined,
         usuario_id,
         dataInicio,
         dataFim,
@@ -62,12 +70,17 @@ export class SaasAuditoriaController {
         sortDirection,
         empresaId,
         excludeSaasEntities: false,
-        filterSaasOnly: false
+        filterSaasOnly: false,
+        comUsuarioObrigatorio,
+        semUsuarioObrigatorio,
+        origemAuditoria
       });
 
       const lastPage = Math.min(Math.ceil(total / limit), maxLastPage);
 
-      await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs as Record<string, unknown>[], true, true);
+      const rawLogs = logs as Record<string, unknown>[];
+      await AuditoriaQueryService.enrichLogsWithEmpresaNome(rawLogs, true, true);
+      await AuditoriaQueryService.enrichLogsWithClienteNome(rawLogs);
 
       sendSuccess(res, {
         data: logs,

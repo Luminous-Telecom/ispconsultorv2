@@ -3,6 +3,7 @@
  * Conteúdo e dados variam conforme logType.
  */
 import React, { useState, useMemo, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
@@ -78,8 +79,23 @@ interface MensagemItem {
   entidade_tipo?: string;
   entidade_id?: number;
   cliente_nome?: string;
+  empresa_id?: number;
+  empresa?: {
+    id?: number;
+    razao_social?: string | null;
+    nome_fantasia?: string | null;
+    nome_empresa?: string | null;
+  } | null;
   usuario?: { id: number; nome: string; email: string };
   created_at: string;
+}
+
+function formatMensagemEmpresaNome(i: MensagemItem & { empresa_nome?: string | null }): string {
+  const flat = (i.empresa_nome ?? '').trim();
+  if (flat) return flat;
+  const e = i.empresa;
+  const nome = (e?.razao_social || e?.nome_fantasia || e?.nome_empresa || '').trim();
+  return nome || '—';
 }
 
 interface LogsModalProps {
@@ -248,7 +264,11 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 
 
 const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType = 'usuarios', variant = 'erp' }) => {
   const { t } = useI18n();
-  const ctx = useLogsContent(logType, show, variant);
+  const { pathname } = useLocation();
+  /** SuperAdmin em /saas: modais `logs-*` do registry vêm como erp, mas devem usar APIs agregadas (`/saas/*`). */
+  const effectiveVariant = variant === 'erp' && pathname.startsWith('/saas') ? 'saas' : variant;
+  const showEmpresaColumn = pathname.startsWith('/saas');
+  const ctx = useLogsContent(logType, show, effectiveVariant);
   const [showBlockdomiLogsReal, setShowBlockdomiLogsReal] = useState(false);
   const [whoisIp, setWhoisIp] = useState<string | null>(null);
 
@@ -367,11 +387,24 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     : (['AGENT_CONNECT', 'AGENT_DISCONNECT'] as const);
 
   const sshColumns: TableConfig<SshAuditLog>['columns'] = useMemo(() => {
+    const empresaCol: TableConfig<SshAuditLog>['columns'] = showEmpresaColumn
+      ? [{
+          key: 'empresa_nome' as const,
+          label: t('company.title'),
+          sortable: false,
+          width: '160px',
+          render: (i: SshAuditLog) => {
+            const nome = (i.empresa_nome ?? '').trim();
+            return <span className="small text-truncate d-inline-block" style={{ maxWidth: '150px' }} title={nome || undefined}>{nome || '—'}</span>;
+          },
+        }]
+      : [];
     const base = [
       { key: 'timestamp' as const, label: t('audit.timestamp'), sortable: true, width: '155px', render: (i: SshAuditLog) => <span className="font-monospace small">{formatTimestamp(i.timestamp)}</span> },
       { key: 'action' as const, label: t('table.action'), sortable: true, width: '130px', render: (i: SshAuditLog) => { const a = sshActionBadge[i.action] ?? { cls: 'bg-secondary', label: i.action }; return <span className={`badge ${a.cls}`}>{a.label}</span>; } },
       { key: 'deviceName' as const, label: isEquipamentos ? t('sshDevice.backupDeviceColumn') : t('logs.agentColumn'), sortable: true, width: '120px', render: (i: SshAuditLog) => i.deviceName ?? '-' },
       { key: 'clienteName' as const, label: t('table.client'), sortable: true, width: '150px', render: (i: SshAuditLog) => <span className="small">{i.clienteName?.trim() || '—'}</span> },
+      ...empresaCol,
     ];
     if (isEquipamentos) {
       return [
@@ -392,22 +425,54 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
       ];
     }
     return [...base, { key: 'ip' as const, label: t('audit.ip'), sortable: true, width: '120px', render: (i: SshAuditLog) => <span className="font-monospace small">{i.ip}</span> }];
-  }, [t, formatTimestamp, isEquipamentos, sshActionBadge]);
+  }, [t, formatTimestamp, isEquipamentos, sshActionBadge, showEmpresaColumn]);
 
   // --- Auditoria columns ---
   const auditoriaColumns = useMemo(() => [
     ...(showIdColumn ? [{ key: 'id' as const, label: t('table.id'), sortable: true, width: '42px', render: (log: AuditoriaLog) => <span className="text-muted small">{String(log.id).substring(0, 8)}...</span> }] : []),
     { key: 'timestamp' as const, label: t('audit.timestamp'), sortable: true, width: '150px', render: (log: AuditoriaLog) => <span className="small">{formatTimestamp(log.timestamp)}</span> },
+    ...(showEmpresaColumn
+      ? [{
+          key: 'empresa_nome' as const,
+          label: t('company.title'),
+          sortable: true,
+          width: '168px',
+          sortValue: (log: AuditoriaLog) => log.empresa_nome?.trim() ?? '',
+          render: (log: AuditoriaLog) => <span className="small text-truncate d-inline-block" style={{ maxWidth: '160px' }} title={log.empresa_nome ?? undefined}>{log.empresa_nome?.trim() || '—'}</span>,
+        },
+        {
+          key: 'cliente_nome' as const,
+          label: t('table.client'),
+          sortable: false,
+          width: '160px',
+          render: (log: AuditoriaLog) => {
+            const cn = (log.cliente_nome ?? '').trim();
+            return <span className="small text-truncate d-inline-block" style={{ maxWidth: '150px' }} title={cn || undefined}>{cn || '—'}</span>;
+          },
+        }]
+      : []),
     { key: 'usuario_nome' as const, label: t('table.name'), sortable: true, width: '150px', render: (log: AuditoriaLog) => <span className="small">{log.usuario_nome || '-'}</span> },
     { key: 'usuario_email' as const, label: t('audit.user'), sortable: true, width: '180px', render: (log: AuditoriaLog) => <span className="small">{log.usuario_email || '-'}</span> },
     { key: 'ip_address' as const, label: t('audit.ip'), sortable: true, width: '120px', render: (log: AuditoriaLog) => <span className="small text-muted">{log.ip_address || '-'}</span> },
     { key: 'acao' as const, label: t('table.action'), sortable: true, render: (log: AuditoriaLog) => <span className={`badge bg-${getAcaoBadgeClass(log.acao)}`}>{formatAcao(log.acao)}</span> },
     { key: 'entidade' as const, label: t('audit.entity'), sortable: true, width: '120px', render: (log: AuditoriaLog) => <span className="small">{log.entidade}</span> },
-  ], [t, formatTimestamp, formatAcao, getAcaoBadgeClass, showIdColumn]);
+  ], [t, formatTimestamp, formatAcao, getAcaoBadgeClass, showIdColumn, showEmpresaColumn]);
 
   // --- Blockdomi columns ---
   const blockdomiColumns: TableConfig<BlockdomiLogAcessoItem>['columns'] = useMemo(() => [
     { key: 'ip' as const, label: t('blockdomi.logsIp'), sortable: true, width: '140px', render: (i) => i.ip ?? '-' },
+    ...(showEmpresaColumn
+      ? [{
+          key: 'empresa_nome' as const,
+          label: t('company.title'),
+          sortable: false,
+          width: '160px',
+          render: (i: BlockdomiLogAcessoItem) => {
+            const nome = (i.empresa_nome ?? '').trim();
+            return <span className="small text-truncate d-inline-block" style={{ maxWidth: '150px' }} title={nome || undefined}>{nome || '—'}</span>;
+          },
+        }]
+      : []),
     { key: 'rota' as const, label: t('blockdomi.logsRota'), sortable: true, width: '120px', render: (i) => i.rota },
     { key: 'metodo' as const, label: t('blockdomi.logsMetodo'), sortable: true, width: '70px', render: (i) => i.metodo },
     { key: 'status_http' as const, label: t('blockdomi.logsStatus'), sortable: true, width: '80px', render: (i) => i.status_http ?? '-' },
@@ -428,11 +493,23 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
       )
     },
     { key: 'created_at' as const, label: t('table.createdAt'), sortable: true, width: '150px', render: (i) => (i.created_at_formatada ?? i.created_at ?? '-') },
-  ], [t]);
+  ], [t, showEmpresaColumn]);
 
   // --- Mensagem columns ---
   const mensagemColumns: TableConfig<MensagemItem>['columns'] = useMemo(() => [
     { key: 'id' as const, label: t('table.id'), sortable: true, width: '42px', render: (i: MensagemItem) => <span>{i.id}</span> },
+    ...(showEmpresaColumn
+      ? [{
+          key: 'empresa_id' as const,
+          label: t('company.title'),
+          sortable: false,
+          width: '168px',
+          render: (i: MensagemItem) => {
+            const text = formatMensagemEmpresaNome(i);
+            return <span className="small text-truncate d-inline-block" style={{ maxWidth: '160px' }} title={text === '—' ? undefined : text}>{text}</span>;
+          },
+        }]
+      : []),
     { key: 'tipo' as const, label: t('history.type'), sortable: true, render: (_i: MensagemItem) => <Badge variant={isEmail ? 'primary' : 'success'}>{isEmail ? t('history.email') : t('history.whatsapp')}</Badge> },
     ...(isEmail ? [{ key: 'titulo' as const, label: t('history.subject'), sortable: true, width: '200px', render: (i: MensagemItem) => <div className="text-truncate" style={{ maxWidth: '250px' }} title={i.titulo}>{i.titulo || <span className="text-muted">-</span>}</div> }] : []),
     { key: 'cliente_nome' as const, label: t('history.client'), sortable: true, width: '150px', render: (i: MensagemItem) => <span className="text-nowrap">{i.cliente_nome || '-'}</span> },
@@ -449,7 +526,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
       render: (i: MensagemItem) => i.usuario ? <span title={i.usuario.email}>{i.usuario.nome}</span> : <span className="text-muted">{t('history.system')}</span>,
     },
     { key: 'created_at' as const, label: t('history.dateTime'), sortable: true, width: '145px', render: (i: MensagemItem) => formatDateTime(i.created_at) },
-  ], [t, isEmail]);
+  ], [t, isEmail, showEmpresaColumn]);
 
   const modalData = useMemo((): { id: number | string }[] => {
     const d = (data as { data?: unknown[] })?.data ?? [];
@@ -521,10 +598,24 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
   const searchFields = isSsh
     ? (isEquipamentos ? [{ key: 'command', label: t('sshAudit.command') }, { key: 'deviceName', label: t('sshDevice.backupDeviceColumn') }, { key: 'userId', label: t('audit.user') }, { key: 'errorMessage', label: t('sshAudit.error') }] : [{ key: 'deviceName', label: t('logs.agentColumn') }, { key: 'ip', label: t('audit.ip') }])
     : isAuditoria
-      ? [...(showIdColumn ? [{ key: 'id' as const, label: t('table.id') }] : []), { key: 'timestamp', label: t('audit.timestamp') }, { key: 'usuario_nome', label: t('table.name') }, { key: 'usuario_email', label: t('audit.user') }, { key: 'ip_address', label: t('audit.ip') }, { key: 'acao', label: t('table.action') }, { key: 'entidade', label: t('audit.entity') }]
+      ? [
+          ...(showIdColumn ? [{ key: 'id' as const, label: t('table.id') }] : []),
+          { key: 'timestamp', label: t('audit.timestamp') },
+          { key: 'usuario_nome', label: t('table.name') },
+          { key: 'usuario_email', label: t('audit.user') },
+          { key: 'ip_address', label: t('audit.ip') },
+          { key: 'acao', label: t('table.action') },
+          { key: 'entidade', label: t('audit.entity') },
+        ]
       : isBlockdomiApi
         ? [{ key: 'ip', label: t('blockdomi.logsIp') }, { key: 'rota', label: t('blockdomi.logsRota') }, { key: 'mensagem_erro', label: t('blockdomi.logsMensagemErro') }]
-        : [{ key: 'id', label: t('table.id') }, { key: 'cliente_nome', label: t('history.client') }, { key: 'destinatario', label: isEmail ? t('history.recipient') : t('history.phone') }, { key: 'mensagem', label: t('history.message') }, { key: 'status', label: t('history.status') }];
+        : [
+            { key: 'id', label: t('table.id') },
+            { key: 'cliente_nome', label: t('history.client') },
+            { key: 'destinatario', label: isEmail ? t('history.recipient') : t('history.phone') },
+            { key: 'mensagem', label: t('history.message') },
+            { key: 'status', label: t('history.status') },
+          ];
 
   const defaultSearchField = isSsh ? (isEquipamentos ? 'command' : 'deviceName') : isBlockdomiApi ? 'ip' : isAuditoria ? 'timestamp' : 'destinatario';
   const searchPlaceholder = isSsh ? t('layout.searchPlaceholder') : (isBlockdomiApi ? t('layout.searchPlaceholder') : (isEmail ? t('history.searchEmail') : t('history.searchPhone')));
@@ -562,7 +653,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
             emptyMessage,
             pagination,
           }}
-          tableId={`logs-table-${variant}-${logType}`}
+          tableId={`logs-table-${effectiveVariant}-${logType}`}
           syncWithHeader={false}
           onSelectionChange={(items) => handleSelectionChange(items as { id: number | string }[])}
           onRefresh={() => refetch()}
@@ -588,6 +679,9 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
               <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.action')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={a.label} readOnly /></div>
               <div className="col-md-6"><label className="form-label small text-muted mb-1">{isEquipamentos ? t('sshDevice.backupDeviceColumn') : t('logs.agentColumn')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedSsh.deviceName || '-'} readOnly /></div>
               <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.client')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedSsh.clienteName?.trim() || '-'} readOnly /></div>
+              {showEmpresaColumn && (
+                <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('company.title')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={(selectedSsh.empresa_nome ?? '').trim() || '—'} readOnly /></div>
+              )}
               <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.ip')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedSsh.ip || '-'} readOnly /></div>
               {isEquipamentos && (
                 <>
@@ -612,6 +706,12 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
               <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.action')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={formatAcao(selectedAuditoria.acao)} readOnly /></div>
               <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.entity')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedAuditoria.entidade} readOnly /></div>
               <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.timestamp')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={formatTimestamp(selectedAuditoria.timestamp)} readOnly /></div>
+              {showEmpresaColumn && (
+                <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('company.title')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedAuditoria.empresa_nome?.trim() || '—'} readOnly /></div>
+              )}
+              {showEmpresaColumn && (
+                <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.client')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={(selectedAuditoria.cliente_nome ?? '').trim() || '—'} readOnly /></div>
+              )}
               <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.user')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedAuditoria.usuario_email || 'N/A'} readOnly /></div>
               <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.name')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedAuditoria.usuario_nome || '-'} readOnly /></div>
               <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.ip')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedAuditoria.ip_address || 'N/A'} readOnly /></div>

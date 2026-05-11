@@ -464,7 +464,8 @@ export class DominioController {
           status_http: 200,
           sucesso: false,
           mensagem_erro: mensagemErro.slice(0, 32000),
-          user_agent: (req.headers['user-agent'] as string | undefined) ?? null
+          user_agent: (req.headers['user-agent'] as string | undefined) ?? null,
+          ...(empresaIdAudit != null && empresaIdAudit > 0 ? { empresa_id: empresaIdAudit } : {}),
         });
         const obsFalha = `[Falha] ${mensagemErro}`;
         void registrarAuditoriaElasticsearch(req, {

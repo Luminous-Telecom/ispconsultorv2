@@ -4,6 +4,14 @@ import { getElasticsearchService } from '../../elasticsearch/ElasticsearchServic
 import { ES_DATA_STREAM } from '../../elasticsearch/dataStreams';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
+import { Cliente } from '../../../models/clientes/Cliente';
+
+function clienteNomeDisplay(c: { razao_social?: string | null; nome_fantasia?: string | null }): string | null {
+  const nf = c.nome_fantasia?.trim();
+  if (nf) return nf;
+  const rs = c.razao_social?.trim();
+  return rs || null;
+}
 
 export class AuditoriaQueryService {
   /**
@@ -389,6 +397,12 @@ export class AuditoriaQueryService {
     return collected;
   }
 
+  /** Documentos ES podem ter saas como boolean, string ou número */
+  private static isAuditDocSaas(log: Record<string, unknown>): boolean {
+    const s = log.saas;
+    return s === true || s === 'true' || s === 1;
+  }
+
   /**
    * Enriquece logs com empresa_nome (tenant) para exibição
    * @param isSaas - true para painel SaaS (usa SaasDadosEmpresa), false para ERP (usa DadosEmpresa)
@@ -400,7 +414,7 @@ export class AuditoriaQueryService {
       const eid = log.empresa_id as number | null | undefined;
       if (eid == null || eid <= 0) continue;
       if (mixed) {
-        (log.saas ? idsBySaas.saas : idsBySaas.erp).add(eid);
+        (this.isAuditDocSaas(log) ? idsBySaas.saas : idsBySaas.erp).add(eid);
       } else {
         (isSaas ? idsBySaas.saas : idsBySaas.erp).add(eid);
       }
@@ -433,8 +447,55 @@ export class AuditoriaQueryService {
         log.empresa_nome = null;
         continue;
       }
-      const map = (mixed && log.saas) || (!mixed && isSaas) ? saasMap : erpMap;
+      const map =
+        mixed ? (this.isAuditDocSaas(log) ? saasMap : erpMap) : isSaas ? saasMap : erpMap;
       log.empresa_nome = map.get(eid) ?? `#${eid}`;
+    }
+  }
+
+  /**
+   * Preenche cliente_nome a partir de dados_novos/dados_anteriores (ex.: Titulo.cliente_id).
+   */
+  static async enrichLogsWithClienteNome(logs: Record<string, unknown>[]): Promise<void> {
+    const extractClienteId = (d: unknown): number | null => {
+      if (!d || typeof d !== 'object') return null;
+      const o = d as Record<string, unknown>;
+      const cid = o.cliente_id;
+      if (typeof cid === 'number' && cid > 0) return cid;
+      if (typeof cid === 'string') {
+        const n = parseInt(cid, 10);
+        return Number.isFinite(n) && n > 0 ? n : null;
+      }
+      return null;
+    };
+
+    const ids = new Set<number>();
+    for (const log of logs) {
+      const id =
+        extractClienteId(log.dados_novos) ?? extractClienteId(log.dados_anteriores);
+      if (id != null) ids.add(id);
+    }
+
+    if (ids.size === 0) {
+      for (const log of logs) {
+        log.cliente_nome = null;
+      }
+      return;
+    }
+
+    const rows = await Cliente.findAll({
+      where: { id: { [Op.in]: [...ids] } },
+      attributes: ['id', 'razao_social', 'nome_fantasia'],
+    });
+    const map = new Map<number, string>();
+    for (const c of rows) {
+      map.set(c.id, clienteNomeDisplay(c) ?? `Cliente ${c.id}`);
+    }
+
+    for (const log of logs) {
+      const cid =
+        extractClienteId(log.dados_novos) ?? extractClienteId(log.dados_anteriores);
+      log.cliente_nome = cid != null ? map.get(cid) ?? null : null;
     }
   }
 }

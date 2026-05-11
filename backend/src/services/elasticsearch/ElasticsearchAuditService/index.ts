@@ -475,7 +475,8 @@ export async function registrarAtualizacaoElasticsearchSistema(
   entidadeId: number,
   dadosAnteriores: Record<string, unknown>,
   dadosNovos: Record<string, unknown>,
-  observacoes?: string
+  observacoes?: string,
+  empresa_id?: number | null
 ): Promise<void> {
   try {
     const elasticsearchService = getElasticsearchService();
@@ -517,7 +518,8 @@ export async function registrarAtualizacaoElasticsearchSistema(
       metodo_http: null,
       observacoes: observacoes || null,
       ...elasticsearchEventTimestamps(new Date()),
-      origem_auditoria: 'agendador' as const
+      origem_auditoria: 'agendador' as const,
+      empresa_id: empresa_id != null && empresa_id > 0 ? empresa_id : null
     };
     if (relatedIds.length > 0) {
       document.related_entity_ids = relatedIds;
