@@ -6,6 +6,7 @@ import * as d3Interpolate from 'd3-interpolate';
 import { PieChartProps } from './types';
 import { ChartDataItem } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
+import { InfoHelpIcon } from 'components/ui/InfoHelpIcon';
 
 const formatPieValue = (value: number): string | number => value.toLocaleString('pt-BR');
 
@@ -124,6 +125,7 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
     footerRight,
     metricHeaderBadge,
     metricHeaderIcon = 'contracts',
+    metricHeaderInfo,
   }) => {
   const titleId = useId();
   const svgRef = useRef<SVGSVGElement>(null);
@@ -440,9 +442,18 @@ const ResponsivePieChart: React.FC<PieChartProps> = memo(
           <div className="pie-metric-header__icon" aria-hidden>
             <MetricPieHeaderIcon variant={metricHeaderIcon} />
           </div>
-          <span id={titleId} className="pie-metric-header__title">
-            {title}
-          </span>
+          {metricHeaderInfo ? (
+            <div className="pie-metric-header__title-with-help">
+              <span id={titleId} className="pie-metric-header__title">
+                {title}
+              </span>
+              <InfoHelpIcon text={metricHeaderInfo} className="ms-1" />
+            </div>
+          ) : (
+            <span id={titleId} className="pie-metric-header__title">
+              {title}
+            </span>
+          )}
           {metricHeaderBadge ? (
             <span className="pie-metric-header__badge">{metricHeaderBadge}</span>
           ) : null}

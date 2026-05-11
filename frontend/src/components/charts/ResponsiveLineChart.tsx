@@ -2,8 +2,9 @@ import React, { useRef, useLayoutEffect, useEffect, useCallback, useMemo, memo, 
 import * as d3 from 'd3';
 import { LineChartProps } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
+import { ChartTitleWithInfo } from './ChartTitleWithInfo';
 
-const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, format = 'number', onPointClick }) => {
+const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, titleInfo, format = 'number', onPointClick }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
@@ -342,7 +343,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
 
   return (
     <div className="chart-container">
-      <h6 className="chart-title">{title}</h6>
+      <ChartTitleWithInfo title={title} titleInfo={titleInfo} />
       <div
         ref={containerRef}
         style={{

@@ -180,6 +180,7 @@ export interface TranslationKeys {
   'dashboard.chargesCancellationMetric': string;
   'dashboard.averageTicket': string;
   'dashboard.averageTicketInfo': string;
+  'dashboard.averageTicketInfoSingle': string;
   'dashboard.monthlyRevenueTitle': string;
   'dashboard.months12': string;
   'dashboard.chartCurrentMonth': string;
@@ -207,6 +208,17 @@ export interface TranslationKeys {
   'dashboard.backupStatusFailureBadgeOne': string;
   'dashboard.backupStatusFailureBadgeMany': string;
   'dashboard.backupStatusDetailColumn': string;
+  'dashboard.clientStatusInfo': string;
+  'dashboard.planDistributionInfo': string;
+  'dashboard.contractStatusInfo': string;
+  'dashboard.paymentStatusInfo': string;
+  'dashboard.backupStatusInfo': string;
+  'dashboard.chartReceivedInfo': string;
+  'dashboard.chartToReceiveInfo': string;
+  'dashboard.chartMonthlyRevenueInfo': string;
+  'dashboard.chartNewClientsInfo': string;
+  'dashboard.chartReceivablesPayablesInfo': string;
+  'dashboard.chartClientsByPlanInfo': string;
   'dashboard.backupLogStartAt': string;
   'dashboard.backupLogEndAt': string;
 
@@ -1717,6 +1729,8 @@ const translations: Translations = {
     'dashboard.averageTicket': 'Ticket Médio',
     'dashboard.averageTicketInfo':
       'Valor em destaque: média da mensalidade dos contratos ativos por cliente com plano. Gráfico (últimos meses): em cada mês, média do valor por título com vencimento naquele mês. Por isso os valores podem ser diferentes.',
+    'dashboard.averageTicketInfoSingle':
+      'Média da mensalidade dos contratos ativos por cliente com plano, conforme o resumo do período.',
     'dashboard.months12': '12 meses',
     'dashboard.chartCurrentMonth': 'mês atual',
     'dashboard.newClients': 'Novos Clientes',
@@ -1743,6 +1757,28 @@ const translations: Translations = {
     'dashboard.backupStatusFailureBadgeOne': '${count} falha detectada',
     'dashboard.backupStatusFailureBadgeMany': '${count} falhas detectadas',
     'dashboard.backupStatusDetailColumn': 'Detalhe',
+    'dashboard.clientStatusInfo':
+      'Fatias: clientes ativos e inativos cadastrados. Rodapé: total de clientes e percentual de ativos sobre o total. Clique na fatia para filtrar.',
+    'dashboard.planDistributionInfo':
+      'Clientes por tipo de serviço do plano. Participação principal: percentual do tipo com maior quantidade sobre o total do gráfico. Clique na fatia para filtrar.',
+    'dashboard.contractStatusInfo':
+      'Contratos por status (ativo, inativo, suspenso, isento, bloqueado, em atraso). Rodapé: soma das quantidades exibidas e percentual de ativos sobre essa soma. Clique na fatia para filtrar.',
+    'dashboard.paymentStatusInfo':
+      'Cobranças por status. Com dados locais, considera títulos com vencimento no mês corrente; com totais do servidor, usa o agregado enviado. Rodapé: total de cobranças e percentual de canceladas.',
+    'dashboard.backupStatusInfo':
+      'Janela recente: por dia, barras empilham sucesso e falha nos eventos de backup. Use a legenda para ocultar fatias. Clique em um segmento para listar equipamentos.',
+    'dashboard.chartReceivedInfo':
+      'Valores recebidos por intervalo conforme o período filtrado no dashboard. O valor no título destaca o ponto de referência da série (ex.: mês atual). Clique no ponto para detalhar.',
+    'dashboard.chartToReceiveInfo':
+      'Valores ainda a receber por intervalo no período filtrado. O valor no título destaca o ponto de referência da série. Clique no ponto para detalhar.',
+    'dashboard.chartMonthlyRevenueInfo':
+      'Receita por mês na série (últimos 12 meses ou dados retornados pelo servidor). Clique no ponto para detalhar.',
+    'dashboard.chartNewClientsInfo':
+      'Novos clientes cadastrados por mês (data de criação do cadastro). Série de 12 meses. Clique no ponto para detalhar.',
+    'dashboard.chartReceivablesPayablesInfo':
+      'Por mês: total a receber e total a pagar. Clique no ponto para abrir o detalhe da linha correspondente.',
+    'dashboard.chartClientsByPlanInfo':
+      'Quantidade de clientes distintos com contrato ativo em cada plano. Clique na barra para filtrar.',
     'dashboard.backupLogStartAt': 'Início do backup',
     'dashboard.backupLogEndAt': 'Fim do backup',
     'dashboard.monthlyRevenueTitle': 'Faturamento Mensal',
@@ -3251,6 +3287,8 @@ const translations: Translations = {
     'dashboard.averageTicket': 'Average Ticket',
     'dashboard.averageTicketInfo':
       'Highlighted value: average active-contract monthly fee per client with a plan. Chart (recent months): each bar is the average amount per billing title due in that month. Values may therefore differ.',
+    'dashboard.averageTicketInfoSingle':
+      'Average active-contract monthly fee per client with a plan, from the period summary.',
     'dashboard.months12': '12 months',
     'dashboard.chartCurrentMonth': 'current month',
     'dashboard.newClients': 'New Clients',
@@ -3277,6 +3315,28 @@ const translations: Translations = {
     'dashboard.backupStatusFailureBadgeOne': '${count} failure detected',
     'dashboard.backupStatusFailureBadgeMany': '${count} failures detected',
     'dashboard.backupStatusDetailColumn': 'Detail',
+    'dashboard.clientStatusInfo':
+      'Slices: active vs inactive clients. Footer: total clients and active share. Click a slice to filter.',
+    'dashboard.planDistributionInfo':
+      'Clients by plan service type. Top share: largest segment as a percent of the chart total. Click a slice to filter.',
+    'dashboard.contractStatusInfo':
+      'Contracts by status (active, inactive, suspended, exempt, blocked, in arrears). Footer: sum shown and active percent of that sum. Click a slice to filter.',
+    'dashboard.paymentStatusInfo':
+      'Charges by status. Uses title due dates in the current month when server totals are unavailable. Footer: total charges and cancelled share.',
+    'dashboard.backupStatusInfo':
+      'Recent window: stacked success vs failure per day. Toggle segments in the legend. Click a segment to list devices.',
+    'dashboard.chartReceivedInfo':
+      'Received amounts per interval for the dashboard date filter. The title highlights the reference point (e.g. current month). Click a point for details.',
+    'dashboard.chartToReceiveInfo':
+      'Still to receive per interval for the filter. The title highlights the reference point. Click a point for details.',
+    'dashboard.chartMonthlyRevenueInfo':
+      'Revenue per month in the series (last 12 months or server data). Click a point for details.',
+    'dashboard.chartNewClientsInfo':
+      'New sign-ups per month (created_at). 12-month series. Click a point for details.',
+    'dashboard.chartReceivablesPayablesInfo':
+      'Per month: receivables vs payables. Click a point to drill down by line.',
+    'dashboard.chartClientsByPlanInfo':
+      'Distinct clients with an active contract per plan. Click a bar to filter.',
     'dashboard.backupLogStartAt': 'Backup started',
     'dashboard.backupLogEndAt': 'Backup finished',
     'dashboard.monthlyRevenueTitle': 'Monthly Revenue',
@@ -4785,6 +4845,8 @@ const translations: Translations = {
     'dashboard.averageTicket': 'Ticket Promedio',
     'dashboard.averageTicketInfo':
       'Valor destacado: promedio de la mensualidad de contratos activos por cliente con plan. Gráfico (últimos meses): en cada mes, promedio por título con vencimiento en ese mes. Por eso los importes pueden diferir.',
+    'dashboard.averageTicketInfoSingle':
+      'Promedio de la mensualidad de contratos activos por cliente con plan, según el resumen del período.',
     'dashboard.months12': '12 meses',
     'dashboard.chartCurrentMonth': 'mes actual',
     'dashboard.newClients': 'Nuevos Clientes',
@@ -4811,6 +4873,28 @@ const translations: Translations = {
     'dashboard.backupStatusFailureBadgeOne': '${count} fallo detectado',
     'dashboard.backupStatusFailureBadgeMany': '${count} fallos detectados',
     'dashboard.backupStatusDetailColumn': 'Detalle',
+    'dashboard.clientStatusInfo':
+      'Porciones: clientes activos e inactivos. Parte inferior: total de clientes y porcentaje de activos. Pulse la porción para filtrar.',
+    'dashboard.planDistributionInfo':
+      'Clientes por tipo de servicio del plan. Participación principal: mayor segmento sobre el total del gráfico. Pulse la porción para filtrar.',
+    'dashboard.contractStatusInfo':
+      'Contratos por estado. Parte inferior: suma mostrada y porcentaje de activos sobre esa suma. Pulse la porción para filtrar.',
+    'dashboard.paymentStatusInfo':
+      'Cobros por estado. Puede usar el mes en curso por vencimiento o totales del servidor. Parte inferior: total de cobros y porcentaje cancelados.',
+    'dashboard.backupStatusInfo':
+      'Ventana reciente: por día, barras apilan éxito y fallo. Use la leyenda. Pulse un segmento para listar equipos.',
+    'dashboard.chartReceivedInfo':
+      'Importes cobrados por intervalo según el filtro de fechas. El título destaca el punto de referencia. Pulse el punto para detallar.',
+    'dashboard.chartToReceiveInfo':
+      'Importes pendientes de cobro por intervalo según el filtro. Pulse el punto para detallar.',
+    'dashboard.chartMonthlyRevenueInfo':
+      'Ingresos por mes en la serie (12 meses o datos del servidor). Pulse el punto para detallar.',
+    'dashboard.chartNewClientsInfo':
+      'Altas de clientes por mes (fecha de creación). Serie de 12 meses. Pulse el punto para detallar.',
+    'dashboard.chartReceivablesPayablesInfo':
+      'Por mes: total por cobrar y total por pagar. Pulse el punto para detallar la línea.',
+    'dashboard.chartClientsByPlanInfo':
+      'Clientes distintos con contrato activo por plano. Pulse la barra para filtrar.',
     'dashboard.backupLogStartAt': 'Inicio de la copia',
     'dashboard.backupLogEndAt': 'Fin de la copia',
     'dashboard.monthlyRevenueTitle': 'Ingresos Mensuales',

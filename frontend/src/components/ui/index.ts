@@ -16,6 +16,8 @@ export type { DateRangeFilterProps } from './DateRangeFilter';
 export type { BadgeProps, BadgeVariant } from './Badge';
 export { default as Spinner } from './Spinner';
 export type { SpinnerProps, SpinnerSize, SpinnerVariant } from './Spinner';
+export { InfoHelpIcon } from './InfoHelpIcon';
+export type { InfoHelpIconProps } from './InfoHelpIcon';
 
 // Exportar tipos
 export * from './types';

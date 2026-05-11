@@ -1,6 +1,7 @@
 import React, { useRef, useLayoutEffect, useEffect, useState, useMemo, memo, useCallback } from 'react';
 import * as d3 from 'd3';
 import { ChartEmptyState } from './ChartEmptyState';
+import { InfoHelpIcon } from 'components/ui/InfoHelpIcon';
 
 export type BackupStatusKey = 'sucesso' | 'somente_local' | 'falha_envio' | 'verificado' | 'falha';
 
@@ -50,6 +51,8 @@ export interface BackupStatusStackedBarChartProps {
   failureBadgeText?: string | null;
   /** True se existir backup em algum dia do período filtrado (evita vazio quando só a janela dos últimos 7 dias está zerada). */
   periodHasBackupEvents: boolean;
+  /** Texto do tooltip do ícone de informação ao lado do título */
+  headerInfo?: string;
 }
 
 const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = memo(
@@ -64,6 +67,7 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
     headerPeriodBadge,
     failureBadgeText,
     periodHasBackupEvents,
+    headerInfo,
   }) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const wrapRef = useRef<HTMLDivElement>(null);
@@ -339,7 +343,14 @@ const BackupStatusStackedBarChart: React.FC<BackupStatusStackedBarChartProps> = 
           <div className="pie-metric-header__icon" aria-hidden>
             <BackupStatusHeaderIcon />
           </div>
-          <h6 className="pie-metric-header__title backup-status-card__title">{title}</h6>
+          {headerInfo ? (
+            <div className="pie-metric-header__title-with-help">
+              <h6 className="pie-metric-header__title backup-status-card__title">{title}</h6>
+              <InfoHelpIcon text={headerInfo} className="ms-1" />
+            </div>
+          ) : (
+            <h6 className="pie-metric-header__title backup-status-card__title">{title}</h6>
+          )}
           {headerBadge ? (
             <span className={headerBadge.className}>{headerBadge.text}</span>
           ) : null}

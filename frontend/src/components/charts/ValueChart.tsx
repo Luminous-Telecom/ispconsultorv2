@@ -1,14 +1,16 @@
 import React, { useMemo, useCallback } from 'react';
 import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
+import { ChartTitleWithInfo } from './ChartTitleWithInfo';
 
 interface ValueChartProps {
   data: ChartDataItem[];
   title: string;
+  titleInfo?: string;
   format?: ChartFormat;
 }
 
-export const ValueChart: React.FC<ValueChartProps> = ({ data, title, format = 'number' }) => {
+export const ValueChart: React.FC<ValueChartProps> = ({ data, title, titleInfo, format = 'number' }) => {
   const value = useMemo(() => data[0]?.value ?? data[0]?.valor ?? 0, [data]);
 
   const formatValue = useCallback((val: number) => {
@@ -35,7 +37,7 @@ export const ValueChart: React.FC<ValueChartProps> = ({ data, title, format = 'n
 
   return (
     <div className="chart-container chart-container--metric">
-      <h6 className="chart-title">{title}</h6>
+      <ChartTitleWithInfo title={title} titleInfo={titleInfo} />
       <p className="chart-value-metric">{formatValue(value)}</p>
     </div>
   );

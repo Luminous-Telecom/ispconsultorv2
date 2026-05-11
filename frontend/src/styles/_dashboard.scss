@@ -101,12 +101,33 @@
   text-align: center;
 }
 
+.chart-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+
+  .chart-title--inline {
+    margin-bottom: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+  }
+}
+
 /* ValueChart (ex.: ticket médio) — mesmo shell que BarChart: chart-container + chart-title */
 .chart-container--metric {
   height: 100%;
   min-height: 0;
 
   .chart-title {
+    margin-bottom: 0.375rem;
+  }
+
+  .chart-title-row {
     margin-bottom: 0.375rem;
   }
 }
@@ -327,6 +348,7 @@
   .pie-metric-header__title {
     flex: 1;
     min-width: 0;
+    margin: 0;
   }
 }
 

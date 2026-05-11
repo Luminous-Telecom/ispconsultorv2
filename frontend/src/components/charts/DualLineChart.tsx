@@ -2,6 +2,7 @@ import React, { useRef, useLayoutEffect, useEffect, useCallback, useMemo, memo, 
 import * as d3 from 'd3';
 import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
+import { ChartTitleWithInfo } from './ChartTitleWithInfo';
 import { useI18n } from 'contexts/I18nContext';
 
 interface DualChartDataItem extends ChartDataItem {
@@ -14,11 +15,12 @@ export type DualLineChartLineType = 'receber' | 'pagar';
 interface DualLineChartProps {
   data: DualChartDataItem[];
   title: string;
+  titleInfo?: string;
   format?: ChartFormat;
   onPointClick?: (item: DualChartDataItem, index: number, lineType: DualLineChartLineType) => void;
 }
 
-const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, format = 'currency', onPointClick }) => {
+const DualLineChart: React.FC<DualLineChartProps> = memo(({ data, title, titleInfo, format = 'currency', onPointClick }) => {
   const { t } = useI18n();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -432,7 +434,7 @@ d3
 
   return (
     <div className="chart-container">
-      <h6 className="chart-title">{title}</h6>
+      <ChartTitleWithInfo title={title} titleInfo={titleInfo} />
       <div
         ref={containerRef}
         style={{

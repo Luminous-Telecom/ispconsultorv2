@@ -337,6 +337,7 @@ const Dashboard: React.FC = () => {
                 chartLeading
                 metricLayout
                 metricHeaderIcon="clients"
+                metricHeaderInfo={t('dashboard.clientStatusInfo')}
                 footerLeft={clientesMetricFooter.left}
                 footerRight={clientesMetricFooter.right}
               />
@@ -361,6 +362,7 @@ const Dashboard: React.FC = () => {
                 chartLeading
                 metricLayout
                 metricHeaderIcon="plans"
+                metricHeaderInfo={t('dashboard.planDistributionInfo')}
                 footerLeft={distribuicaoPlanoMetric.footerLeft}
                 footerRight={distribuicaoPlanoMetric.footerRight}
               />
@@ -379,6 +381,7 @@ const Dashboard: React.FC = () => {
                 onLegendToggle={(key) => toggleBackupStatus(key)}
                 failureBadgeText={backupStatusDashboardSummary.failureBadgeText}
                 periodHasBackupEvents={backupStatusPeriodoTemEventos}
+                headerInfo={t('dashboard.backupStatusInfo')}
               />
             </div>
           </div>
@@ -395,6 +398,7 @@ const Dashboard: React.FC = () => {
                 chartLeading
                 metricLayout
                 metricHeaderIcon="contracts"
+                metricHeaderInfo={t('dashboard.contractStatusInfo')}
                 footerLeft={contratosMetricFooter.left}
                 footerRight={contratosMetricFooter.right}
               />
@@ -413,6 +417,7 @@ const Dashboard: React.FC = () => {
                 chartLeading
                 metricLayout
                 metricHeaderIcon="payments"
+                metricHeaderInfo={t('dashboard.paymentStatusInfo')}
                 footerLeft={pagamentosMetricFooter.left}
                 footerRight={pagamentosMetricFooter.right}
               />
@@ -426,6 +431,7 @@ const Dashboard: React.FC = () => {
               <ResponsiveLineChart
                 data={charts.recebidosPeriodoChartData}
                 title={`${t('dashboard.received')} (${t('dashboard.chartCurrentMonth')}): ${formatCurrency(charts.totalRecebidosPeriodo || 0)}`}
+                titleInfo={t('dashboard.chartReceivedInfo')}
                 format="currency"
                 onPointClick={handleRecebidosPeriodoPointClick}
               />
@@ -437,6 +443,7 @@ const Dashboard: React.FC = () => {
               <ResponsiveLineChart
                 data={charts.receberPeriodoChartData}
                 title={`${t('dashboard.toReceive')} (${t('dashboard.chartCurrentMonth')}): ${formatCurrency(charts.totalReceberPeriodo || 0)}`}
+                titleInfo={t('dashboard.chartToReceiveInfo')}
                 format="currency"
                 onPointClick={handleReceberPeriodoPointClick}
               />
@@ -448,6 +455,7 @@ const Dashboard: React.FC = () => {
               <ResponsiveLineChart
                 data={charts.receitaMensalChartData}
                 title={`${t('dashboard.monthlyRevenueTitle')}: ${formatCurrency(charts.totalReceitaMensal || 0)} (${t('dashboard.months12')})`}
+                titleInfo={t('dashboard.chartMonthlyRevenueInfo')}
                 format="currency"
                 onPointClick={handleReceitaMensalPointClick}
               />
@@ -459,6 +467,7 @@ const Dashboard: React.FC = () => {
               <ResponsiveLineChart
                 data={charts.crescimentoClientes}
                 title={`${t('dashboard.newClients')}: ${formatNumber(charts.totalNovosClientes || 0)} (${t('dashboard.months12')})`}
+                titleInfo={t('dashboard.chartNewClientsInfo')}
                 format="number"
                 onPointClick={handleCrescimentoClientesPointClick}
               />
@@ -470,6 +479,7 @@ const Dashboard: React.FC = () => {
               <DualLineChart
                 data={charts.contasReceberPagarChartData}
                 title={`${t('dashboard.receivablesVsPayables')} (${t('dashboard.months12')})`}
+                titleInfo={t('dashboard.chartReceivablesPayablesInfo')}
                 format="currency"
                 onPointClick={handleDualLineChartPointClick}
               />
@@ -478,7 +488,13 @@ const Dashboard: React.FC = () => {
 
           <div className="col-12 col-md-6">
             <div className="chart-card" style={{ height: 'auto', minHeight: 0 }}>
-              <BarChart data={charts.clientesPorPlano} title={t('dashboard.clientsByPlan')} format="number" onBarClick={handleClientesPorPlanoBarClick} />
+              <BarChart
+                data={charts.clientesPorPlano}
+                title={t('dashboard.clientsByPlan')}
+                titleInfo={t('dashboard.chartClientsByPlanInfo')}
+                format="number"
+                onBarClick={handleClientesPorPlanoBarClick}
+              />
             </div>
           </div>
         </div>

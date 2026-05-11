@@ -2,17 +2,19 @@ import React, { useRef, useLayoutEffect, useEffect, useCallback, useMemo, memo, 
 import * as d3 from 'd3';
 import { ChartDataItem, ChartFormat } from './types';
 import { ChartEmptyState } from './ChartEmptyState';
+import { ChartTitleWithInfo } from './ChartTitleWithInfo';
 
 interface BarChartProps {
   data: ChartDataItem[];
   title: string;
+  titleInfo?: string;
   format?: ChartFormat;
   onBarClick?: (item: ChartDataItem, index: number) => void;
 }
 
 const CHART_COLORS = ['#6B9BD1', '#8FB369', '#E8B44C', '#D97373', '#9B7FD9', '#5DA6CC'];
 
-const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number', onBarClick }) => {
+const BarChart: React.FC<BarChartProps> = memo(({ data, title, titleInfo, format = 'number', onBarClick }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number }>({ width: 0 });
@@ -216,7 +218,7 @@ const BarChart: React.FC<BarChartProps> = memo(({ data, title, format = 'number'
 
   return (
     <div className="chart-container">
-      <h6 className="chart-title">{title}</h6>
+      <ChartTitleWithInfo title={title} titleInfo={titleInfo} />
       <div
         ref={containerRef}
         style={{ width: '100%', minWidth: '140px', position: 'relative', overflow: 'visible' }}

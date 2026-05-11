@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { formatCurrency } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
+import { InfoHelpIcon } from 'components/ui/InfoHelpIcon';
 
 export interface TicketMedioMes {
   mes: string;
@@ -217,13 +218,7 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
         </div>
         <div className="pie-metric-header__title-with-help">
           <span className="pie-metric-header__title">{t('dashboard.averageTicket')}</span>
-          <i
-            className="bi bi-info-circle text-muted ms-1 flex-shrink-0"
-            style={{ cursor: 'help', fontSize: '0.85rem' }}
-            title={ticketInfoText}
-            role="img"
-            aria-label={ticketInfoText}
-          />
+          <InfoHelpIcon text={ticketInfoText} className="ms-1" />
         </div>
         <span className="pie-metric-header__badge">{data.periodo}</span>
       </div>

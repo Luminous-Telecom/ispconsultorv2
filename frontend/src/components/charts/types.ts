@@ -23,6 +23,8 @@ export type ChartFormat = 'currency' | 'number' | 'percentage';
 export interface LineChartProps {
   data: ChartDataItem[];
   title: string;
+  /** Texto do tooltip do ícone de informação ao lado do título */
+  titleInfo?: string;
   format?: 'currency' | 'number';
   onPointClick?: (item: ChartDataItem, index: number) => void;
 }
@@ -51,5 +53,7 @@ export interface PieChartProps {
   metricHeaderBadge?: string;
   /** Ícone à esquerda do título (com `metricLayout`) */
   metricHeaderIcon?: 'contracts' | 'payments' | 'clients' | 'plans';
+  /** Tooltip do ícone de informação ao lado do título (layout métrico) */
+  metricHeaderInfo?: string;
 }
 
