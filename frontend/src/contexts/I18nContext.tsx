@@ -179,6 +179,7 @@ export interface TranslationKeys {
   'dashboard.chargesTotalMetric': string;
   'dashboard.chargesCancellationMetric': string;
   'dashboard.averageTicket': string;
+  'dashboard.averageTicketInfo': string;
   'dashboard.monthlyRevenueTitle': string;
   'dashboard.months12': string;
   'dashboard.chartCurrentMonth': string;
@@ -1714,6 +1715,8 @@ const translations: Translations = {
     'dashboard.chargesTotalMetric': 'Total de cobranças',
     'dashboard.chargesCancellationMetric': 'Taxa de cancelamento',
     'dashboard.averageTicket': 'Ticket Médio',
+    'dashboard.averageTicketInfo':
+      'Valor em destaque: média da mensalidade dos contratos ativos por cliente com plano. Gráfico (últimos meses): em cada mês, média do valor por título com vencimento naquele mês. Por isso os valores podem ser diferentes.',
     'dashboard.months12': '12 meses',
     'dashboard.chartCurrentMonth': 'mês atual',
     'dashboard.newClients': 'Novos Clientes',
@@ -3246,6 +3249,8 @@ const translations: Translations = {
     'dashboard.chargesTotalMetric': 'Total billings',
     'dashboard.chargesCancellationMetric': 'Cancellation rate',
     'dashboard.averageTicket': 'Average Ticket',
+    'dashboard.averageTicketInfo':
+      'Highlighted value: average active-contract monthly fee per client with a plan. Chart (recent months): each bar is the average amount per billing title due in that month. Values may therefore differ.',
     'dashboard.months12': '12 months',
     'dashboard.chartCurrentMonth': 'current month',
     'dashboard.newClients': 'New Clients',
@@ -4778,6 +4783,8 @@ const translations: Translations = {
     'dashboard.chargesTotalMetric': 'Total de cobros',
     'dashboard.chargesCancellationMetric': 'Tasa de cancelación',
     'dashboard.averageTicket': 'Ticket Promedio',
+    'dashboard.averageTicketInfo':
+      'Valor destacado: promedio de la mensualidad de contratos activos por cliente con plan. Gráfico (últimos meses): en cada mes, promedio por título con vencimiento en ese mes. Por eso los importes pueden diferir.',
     'dashboard.months12': '12 meses',
     'dashboard.chartCurrentMonth': 'mes actual',
     'dashboard.newClients': 'Nuevos Clientes',

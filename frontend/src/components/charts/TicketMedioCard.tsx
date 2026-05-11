@@ -201,6 +201,7 @@ const BarChart: React.FC<{ series: TicketMedioMes[] }> = ({ series }) => {
 const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
   const { t } = useI18n();
   const { sinal: sinalTicket } = parseVariacao(data.variacaoTicket);
+  const ticketInfoText = t('dashboard.averageTicketInfo');
 
   return (
     <div
@@ -214,7 +215,16 @@ const TicketMedioCard: React.FC<TicketMedioCardProps> = ({ data }) => {
             <path d="M2 10h20" stroke="#534AB7" strokeWidth="2" />
           </svg>
         </div>
-        <span className="pie-metric-header__title">{t('dashboard.averageTicket')}</span>
+        <div className="pie-metric-header__title-with-help">
+          <span className="pie-metric-header__title">{t('dashboard.averageTicket')}</span>
+          <i
+            className="bi bi-info-circle text-muted ms-1 flex-shrink-0"
+            style={{ cursor: 'help', fontSize: '0.85rem' }}
+            title={ticketInfoText}
+            role="img"
+            aria-label={ticketInfoText}
+          />
+        </div>
         <span className="pie-metric-header__badge">{data.periodo}</span>
       </div>
 

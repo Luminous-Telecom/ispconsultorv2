@@ -317,6 +317,19 @@
   flex-shrink: 0;
 }
 
+.pie-metric-header__title-with-help {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+
+  .pie-metric-header__title {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
 .pie-metric-header__title {
   flex: 1;
   font-size: 12px;
