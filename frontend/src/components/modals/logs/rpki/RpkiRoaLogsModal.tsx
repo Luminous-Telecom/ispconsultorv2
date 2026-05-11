@@ -15,6 +15,7 @@ interface SyncLogRow {
   type: string;
   trigger_type: string | null;
   status: 'success' | 'failed';
+  empresa_saas?: string | null;
   remote_host: string | null;
   message: string | null;
   created_at: string;
@@ -102,6 +103,21 @@ const RpkiRoaLogsModal: React.FC<RpkiRoaLogsModalProps> = ({ show }) => {
         <Badge variant={item.status === 'success' ? 'success' : 'danger'} pill>
           {item.status === 'success' ? 'Sucesso' : 'Falha'}
         </Badge>
+      ),
+    },
+    {
+      key: 'empresa_saas',
+      label: 'Empresa SaaS',
+      sortable: false,
+      width: '200px',
+      render: (item) => (
+        <span
+          className="small text-truncate d-inline-block"
+          style={{ maxWidth: 190 }}
+          title={item.empresa_saas ?? undefined}
+        >
+          {item.empresa_saas ?? '—'}
+        </span>
       ),
     },
     {
@@ -205,6 +221,15 @@ const RpkiRoaLogsModal: React.FC<RpkiRoaLogsModalProps> = ({ show }) => {
                   type="text"
                   className={`form-control form-control-sm bg-secondary bg-opacity-10 ${selectedLog.status === 'failed' ? 'text-danger' : 'text-success'}`}
                   value={selectedLog.status === 'success' ? 'Sucesso' : 'Falha'}
+                  readOnly
+                />
+              </div>
+              <div className="col-12">
+                <label className="form-label small text-muted mb-1">Empresa SaaS</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm bg-secondary bg-opacity-10"
+                  value={selectedLog.empresa_saas ?? '—'}
                   readOnly
                 />
               </div>

@@ -70,6 +70,8 @@ const SSH_AGENT_ACTIONS: Record<string, { cls: string; label: string }> = {
 
 interface MensagemItem {
   id: number;
+  /** Id real no banco (lista SaaS mescla ERP + SaaS com id deslocado em ERP) */
+  historico_id_real?: number;
   tipo: 'email' | 'whatsapp';
   titulo?: string;
   destinatario: string;
@@ -80,6 +82,7 @@ interface MensagemItem {
   entidade_id?: number;
   cliente_nome?: string;
   empresa_id?: number;
+  empresa_nome?: string | null;
   empresa?: {
     id?: number;
     razao_social?: string | null;
@@ -497,7 +500,14 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
 
   // --- Mensagem columns ---
   const mensagemColumns: TableConfig<MensagemItem>['columns'] = useMemo(() => [
-    { key: 'id' as const, label: t('table.id'), sortable: true, width: '42px', render: (i: MensagemItem) => <span>{i.id}</span> },
+    {
+      key: 'id' as const,
+      label: t('table.id'),
+      sortable: true,
+      width: '42px',
+      sortValue: (i: MensagemItem) => i.historico_id_real ?? i.id,
+      render: (i: MensagemItem) => <span>{i.historico_id_real ?? i.id}</span>,
+    },
     ...(showEmpresaColumn
       ? [{
           key: 'empresa_id' as const,

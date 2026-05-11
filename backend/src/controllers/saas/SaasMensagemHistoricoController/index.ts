@@ -3,9 +3,15 @@ import { Op } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { SaasMensagemHistorico } from '../../../models/saas/SaasMensagemHistorico';
 import { SaasDadosEmpresa } from '../../../models/saas/SaasDadosEmpresa';
+import { MensagemHistorico } from '../../../models/comunicacao/MensagemHistorico';
+import { Usuario } from '../../../models/cadastros/Usuario';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddleware';
+
+/** Evita colisão de `id` na UI ao mesclar duas tabelas com auto increment independente (resposta JSON apenas). */
+const ERP_HISTORICO_ID_BIAS = 5_000_000_000;
 
 export class SaasMensagemHistoricoController {
   /**
@@ -85,46 +91,126 @@ export class SaasMensagemHistoricoController {
         where.created_at = createdAt;
       }
 
-      const order: [string, string][] = [];
-      const validSortColumns = ['id', 'tipo', 'destinatario', 'titulo', 'status', 'created_at', 'updated_at', 'empresa_id', 'cliente_nome', 'mensagem'];
-      const validSortDirections = ['asc', 'desc'];
       const sortDirectionStr = Array.isArray(sortDirection) ? sortDirection[0] : sortDirection;
       const sortDirectionValue = typeof sortDirectionStr === 'string' ? sortDirectionStr : 'desc';
+      const sortAsc = String(sortDirectionValue).toLowerCase() === 'asc';
 
-      if (validSortColumns.includes(sortColumn as string) && validSortDirections.includes(sortDirectionValue)) {
-        order.push([sortColumn as string, sortDirectionValue.toUpperCase()]);
-      } else {
-        order.push(['created_at', 'DESC']);
-      }
+      const [miniSaas, miniErp] = await Promise.all([
+        SaasMensagemHistorico.findAll({
+          where,
+          attributes: ['id', 'created_at'],
+          raw: true,
+        }),
+        MensagemHistorico.findAll({
+          where,
+          attributes: ['id', 'created_at'],
+          raw: true,
+        }),
+      ]);
 
-      const { count, rows } = await SaasMensagemHistorico.findAndCountAll({
-        where,
-        include: [
-          {
-            model: SaasDadosEmpresa,
-            as: 'empresa',
-            attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa'],
-            required: false,
-          },
-        ],
-        limit: Number(limit),
-        offset,
-        order,
-        distinct: true,
+      type Mini = { id: number; created_at: Date | string; src: 'saas' | 'erp' };
+      const mergedMini: Mini[] = [
+        ...miniSaas.map((r) => ({ ...r, src: 'saas' as const })),
+        ...miniErp.map((r) => ({ ...r, src: 'erp' as const })),
+      ].sort((a, b) => {
+        const ta = new Date(a.created_at).getTime();
+        const tb = new Date(b.created_at).getTime();
+        return sortAsc ? ta - tb : tb - ta;
       });
 
-      const totalPages = Math.ceil(count / Number(limit));
-      const pageNum = Number(page);
+      const total = mergedMini.length;
+      const pageSlice = mergedMini.slice(offset, offset + Number(limit));
+
+      const saasIds = pageSlice.filter((x) => x.src === 'saas').map((x) => x.id);
+      const erpIds = pageSlice.filter((x) => x.src === 'erp').map((x) => x.id);
+
+      const [fullSaas, fullErp] = await Promise.all([
+        saasIds.length
+          ? SaasMensagemHistorico.findAll({
+              where: { id: saasIds },
+              include: [
+                {
+                  model: SaasDadosEmpresa,
+                  as: 'empresa',
+                  attributes: ['id', 'razao_social', 'nome_fantasia', 'nome_empresa'],
+                  required: false,
+                },
+              ],
+            })
+          : [],
+        erpIds.length
+          ? MensagemHistorico.findAll({
+              where: { id: erpIds },
+              include: [
+                {
+                  model: Usuario,
+                  as: 'usuario',
+                  attributes: ['id', 'nome', 'email'],
+                  required: false,
+                },
+              ],
+            })
+          : [],
+      ]);
+
+      const mapS = new Map(fullSaas.map((r) => [r.id, r]));
+      const mapE = new Map(fullErp.map((r) => [r.id, r]));
+
+      const erpEmpresaIds = [
+        ...new Set(
+          pageSlice
+            .filter((s) => s.src === 'erp')
+            .map((s) => mapE.get(s.id)?.getDataValue('empresa_id') as number | null | undefined)
+            .filter((x): x is number => x != null && Number(x) > 0)
+        ),
+      ];
+      const nomeEmpresaErp = new Map<number, string>();
+      if (erpEmpresaIds.length > 0) {
+        const empresas = await DadosEmpresa.findAll({
+          where: { id: erpEmpresaIds },
+          attributes: ['id', 'razao_social', 'nome_fantasia'],
+        });
+        for (const e of empresas) {
+          const nome =
+            e.nome_fantasia && String(e.nome_fantasia).trim() !== ''
+              ? String(e.nome_fantasia).trim()
+              : e.razao_social;
+          nomeEmpresaErp.set(e.id, nome);
+        }
+      }
+
+      const rowsPlain = pageSlice
+        .map(({ id, src }) => {
+          const row = src === 'saas' ? mapS.get(id) : mapE.get(id);
+          if (!row) return null;
+          const plain = row.get({ plain: true }) as unknown as Record<string, unknown>;
+          if (src === 'erp') {
+            const eid = plain.empresa_id as number | null | undefined;
+            if (eid != null && nomeEmpresaErp.has(Number(eid))) {
+              plain.empresa_nome = nomeEmpresaErp.get(Number(eid)) ?? null;
+            }
+            plain.historico_origem = 'erp';
+            plain.historico_id_real = plain.id;
+            plain.id = Number(plain.id) + ERP_HISTORICO_ID_BIAS;
+          } else {
+            plain.historico_origem = 'saas';
+          }
+          return plain;
+        })
+        .filter(Boolean) as Record<string, unknown>[];
+
       const limitNum = Number(limit);
-      const from = count > 0 ? offset + 1 : 0;
-      const to = count > 0 ? Math.min(offset + limitNum, count) : 0;
+      const totalPages = Math.ceil(total / limitNum);
+      const pageNum = Number(page);
+      const from = total > 0 ? offset + 1 : 0;
+      const to = total > 0 ? Math.min(offset + limitNum, total) : 0;
 
       const result = {
-        data: rows,
+        data: rowsPlain,
         pagination: {
           page: pageNum,
           limit: limitNum,
-          total: count,
+          total,
           totalPages,
           hasNext: pageNum < totalPages,
           hasPrev: pageNum > 1,
@@ -150,9 +236,46 @@ export class SaasMensagemHistoricoController {
    */
   static async show(req: SaasAuthenticatedRequest, res: ExpressResponse): Promise<void> {
     try {
-      const { id } = req.params;
+      const idNum = Number(req.params.id);
+      const fromErpList = Number.isFinite(idNum) && idNum >= ERP_HISTORICO_ID_BIAS;
+      const pk = fromErpList ? idNum - ERP_HISTORICO_ID_BIAS : idNum;
 
-      const mensagem = await SaasMensagemHistorico.findByPk(id, {
+      if (fromErpList) {
+        const mensagem = await MensagemHistorico.findByPk(pk, {
+          include: [
+            {
+              model: Usuario,
+              as: 'usuario',
+              attributes: ['id', 'nome', 'email'],
+              required: false,
+            },
+          ],
+        });
+        if (!mensagem) {
+          sendError(res, null, 'Mensagem não encontrada', 404);
+          return;
+        }
+        const plain = mensagem.get({ plain: true }) as unknown as Record<string, unknown>;
+        plain.historico_origem = 'erp';
+        plain.historico_id_real = plain.id;
+        plain.id = idNum;
+        const eid = plain.empresa_id as number | null | undefined;
+        if (eid != null && Number(eid) > 0) {
+          const emp = await DadosEmpresa.findByPk(eid, {
+            attributes: ['id', 'razao_social', 'nome_fantasia'],
+          });
+          if (emp) {
+            plain.empresa_nome =
+              emp.nome_fantasia && String(emp.nome_fantasia).trim() !== ''
+                ? String(emp.nome_fantasia).trim()
+                : emp.razao_social;
+          }
+        }
+        sendSuccess(res, plain, 'Mensagem encontrada');
+        return;
+      }
+
+      const mensagem = await SaasMensagemHistorico.findByPk(pk, {
         include: [
           {
             model: SaasDadosEmpresa,

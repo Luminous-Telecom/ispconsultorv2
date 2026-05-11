@@ -11,6 +11,7 @@ import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
 import { RpkiSyncLog } from '../../../models/rpki/RpkiSyncLog';
+import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { Op } from 'sequelize';
 import { sendError, sendNotFound, sendSuccess, sendValidationError } from '../../../utils/responseUtils';
 import { isRpkiClientError } from '../../../utils/errorUtils';
@@ -33,6 +34,33 @@ async function auditarRpki(exec: () => Promise<void>): Promise<void> {
   } catch {
     /* auditoria não deve falhar a requisição */
   }
+}
+
+async function enrichRpkiSyncLogsWithEmpresaSaas(rows: RpkiSyncLog[]): Promise<Record<string, unknown>[]> {
+  const empresaIds = [
+    ...new Set(rows.map((r) => r.empresa_id).filter((id): id is number => id != null && Number(id) > 0)),
+  ];
+  const nomeById = new Map<number, string>();
+  if (empresaIds.length > 0) {
+    const empresas = await DadosEmpresa.findAll({
+      where: { id: empresaIds },
+      attributes: ['id', 'razao_social', 'nome_fantasia'],
+    });
+    for (const e of empresas) {
+      const nome =
+        e.nome_fantasia && String(e.nome_fantasia).trim() !== ''
+          ? String(e.nome_fantasia).trim()
+          : e.razao_social;
+      nomeById.set(e.id, nome);
+    }
+  }
+  return rows.map((row) => {
+    const plain = row.get({ plain: true }) as Record<string, unknown>;
+    const eid = row.empresa_id;
+    plain.empresa_saas =
+      eid != null && Number(eid) > 0 ? nomeById.get(Number(eid)) ?? null : null;
+    return plain;
+  });
 }
 
 function rpkiJsonParaAuditoria(model: { toJSON: () => Record<string, unknown> }): Record<string, unknown> {
@@ -1138,8 +1166,10 @@ export class RpkiCaController {
         offset,
       });
 
+      const data = await enrichRpkiSyncLogsWithEmpresaSaas(rows);
+
       sendSuccess(res, {
-        data: rows,
+        data,
         pagination: {
           total: count,
           per_page: limit,
@@ -1184,8 +1214,10 @@ export class RpkiCaController {
         offset,
       });
 
+      const data = await enrichRpkiSyncLogsWithEmpresaSaas(rows);
+
       sendSuccess(res, {
-        data: rows,
+        data,
         pagination: {
           total: count,
           per_page: limit,
@@ -1233,8 +1265,10 @@ export class RpkiCaController {
       offset,
     });
 
+    const data = await enrichRpkiSyncLogsWithEmpresaSaas(rows);
+
     sendSuccess(res, {
-      data: rows,
+      data,
       pagination: {
         total: count,
         per_page: limit,
@@ -1295,8 +1329,10 @@ export class RpkiCaController {
         offset,
       });
 
+      const data = await enrichRpkiSyncLogsWithEmpresaSaas(rows);
+
       sendSuccess(res, {
-        data: rows,
+        data,
         pagination: {
           total: count,
           per_page: limit,
