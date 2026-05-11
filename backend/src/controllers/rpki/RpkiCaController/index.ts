@@ -11,6 +11,7 @@ import { RpkiRepository } from '../../../models/rpki/RpkiRepository';
 import { RpkiRoa } from '../../../models/rpki/RpkiRoa';
 import { RpkiAspa } from '../../../models/rpki/RpkiAspa';
 import { RpkiSyncLog } from '../../../models/rpki/RpkiSyncLog';
+import { Cliente } from '../../../models/clientes/Cliente';
 import { DadosEmpresa } from '../../../models/sistema/DadosEmpresa';
 import { Op } from 'sequelize';
 import { sendError, sendNotFound, sendSuccess, sendValidationError } from '../../../utils/responseUtils';
@@ -54,11 +55,57 @@ async function enrichRpkiSyncLogsWithEmpresaSaas(rows: RpkiSyncLog[]): Promise<R
       nomeById.set(e.id, nome);
     }
   }
+
+  const caIds = [
+    ...new Set(rows.map((r) => r.ca_id).filter((id): id is number => id != null && Number(id) > 0)),
+  ];
+  const caNomeById = new Map<number, string>();
+  const clienteIdByCaId = new Map<number, number | null>();
+  const clienteNomeById = new Map<number, string>();
+  if (caIds.length > 0) {
+    const cas = await RpkiCa.findAll({
+      where: { id: caIds },
+      attributes: ['id', 'nome', 'cliente_id'],
+    });
+    const clienteIds = new Set<number>();
+    for (const c of cas) {
+      caNomeById.set(c.id, c.nome);
+      clienteIdByCaId.set(c.id, c.cliente_id);
+      if (c.cliente_id != null && Number(c.cliente_id) > 0) {
+        clienteIds.add(Number(c.cliente_id));
+      }
+    }
+    if (clienteIds.size > 0) {
+      const clientes = await Cliente.findAll({
+        where: { id: [...clienteIds] },
+        attributes: ['id', 'razao_social', 'nome_fantasia'],
+      });
+      for (const cl of clientes) {
+        const nome =
+          cl.nome_fantasia && String(cl.nome_fantasia).trim() !== ''
+            ? String(cl.nome_fantasia).trim()
+            : cl.razao_social;
+        clienteNomeById.set(cl.id, nome);
+      }
+    }
+  }
+
   return rows.map((row) => {
     const plain = row.get({ plain: true }) as Record<string, unknown>;
     const eid = row.empresa_id;
     plain.empresa_saas =
       eid != null && Number(eid) > 0 ? nomeById.get(Number(eid)) ?? null : null;
+
+    const caId = row.ca_id;
+    if (caId != null && Number(caId) > 0) {
+      plain.ca_nome = caNomeById.get(Number(caId)) ?? null;
+      const cid = clienteIdByCaId.get(Number(caId));
+      plain.cliente_nome =
+        cid != null && Number(cid) > 0 ? clienteNomeById.get(Number(cid)) ?? null : null;
+    } else {
+      plain.ca_nome = null;
+      plain.cliente_nome = null;
+    }
     return plain;
   });
 }

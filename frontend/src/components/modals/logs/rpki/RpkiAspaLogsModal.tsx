@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSaasPortalPath } from 'hooks/useSaasPortalPath';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { Badge } from 'components/ui';
@@ -16,10 +17,14 @@ interface SyncLogRow {
   trigger_type: string | null;
   status: 'success' | 'failed';
   empresa_saas?: string | null;
+  ca_nome?: string | null;
+  cliente_nome?: string | null;
   remote_host: string | null;
   message: string | null;
   created_at: string;
 }
+
+type RpkiAspaLogColumns = TableConfig<SyncLogRow>['columns'];
 
 interface RpkiAspaLogsModalProps {
   show: boolean;
@@ -28,6 +33,7 @@ interface RpkiAspaLogsModalProps {
 }
 
 const RpkiAspaLogsModal: React.FC<RpkiAspaLogsModalProps> = ({ show }) => {
+  const isSaasPortal = useSaasPortalPath();
   const tableFilters = useTableFilters({
     initialSearch: '',
     initialPage: 1,
@@ -84,72 +90,111 @@ const RpkiAspaLogsModal: React.FC<RpkiAspaLogsModalProps> = ({ show }) => {
     if (item) setSelectedLog(item as SyncLogRow);
   }, [selectedItem]);
 
-  const columns: TableConfig<SyncLogRow>['columns'] = useMemo(() => [
-    {
-      key: 'created_at',
-      label: 'Data',
-      sortable: true,
-      width: '155px',
-      render: (item) => (
-        <span className="small font-monospace">{formatDateTime(item.created_at)}</span>
-      ),
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true,
-      width: '110px',
-      render: (item) => (
-        <Badge variant={item.status === 'success' ? 'success' : 'danger'} pill>
-          {item.status === 'success' ? 'Sucesso' : 'Falha'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'empresa_saas',
-      label: 'Empresa SaaS',
-      sortable: false,
-      width: '200px',
-      render: (item) => (
-        <span
-          className="small text-truncate d-inline-block"
-          style={{ maxWidth: 190 }}
-          title={item.empresa_saas ?? undefined}
-        >
-          {item.empresa_saas ?? '—'}
-        </span>
-      ),
-    },
-    {
-      key: 'remote_host',
-      label: 'Repositório',
-      sortable: true,
-      width: '240px',
-      render: (item) => (
-        <span
-          className="small font-monospace text-muted text-truncate d-inline-block"
-          style={{ maxWidth: 230 }}
-          title={item.remote_host ?? undefined}
-        >
-          {item.remote_host ?? '—'}
-        </span>
-      ),
-    },
-    {
-      key: 'message',
-      label: 'Mensagem',
-      sortable: false,
-      render: (item) => (
-        <span
-          className={`small text-truncate d-inline-block ${item.status === 'failed' ? 'text-danger' : 'text-muted'}`}
-          style={{ maxWidth: 400 }}
-          title={item.message ?? undefined}
-        >
-          {item.message ?? '—'}
-        </span>
-      ),
-    },
-  ], []);
+  const columns = useMemo((): RpkiAspaLogColumns => {
+    const scopeCols: RpkiAspaLogColumns = isSaasPortal
+      ? [
+          {
+            key: 'empresa_saas',
+            label: 'Empresa SaaS',
+            sortable: false,
+            width: '200px',
+            render: (item) => (
+              <span
+                className="small text-truncate d-inline-block"
+                style={{ maxWidth: 190 }}
+                title={item.empresa_saas ?? undefined}
+              >
+                {item.empresa_saas ?? '—'}
+              </span>
+            ),
+          },
+        ]
+      : [
+          {
+            key: 'ca_nome',
+            label: 'CA',
+            sortable: false,
+            width: '160px',
+            render: (item) => (
+              <span
+                className="small text-truncate d-inline-block"
+                style={{ maxWidth: 150 }}
+                title={item.ca_nome ?? undefined}
+              >
+                {item.ca_nome ?? '—'}
+              </span>
+            ),
+          },
+          {
+            key: 'cliente_nome',
+            label: 'Cliente',
+            sortable: false,
+            width: '200px',
+            render: (item) => (
+              <span
+                className="small text-truncate d-inline-block"
+                style={{ maxWidth: 190 }}
+                title={item.cliente_nome ?? undefined}
+              >
+                {item.cliente_nome ?? '—'}
+              </span>
+            ),
+          },
+        ];
+
+    return [
+      {
+        key: 'created_at',
+        label: 'Data',
+        sortable: true,
+        width: '155px',
+        render: (item) => (
+          <span className="small font-monospace">{formatDateTime(item.created_at)}</span>
+        ),
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        sortable: true,
+        width: '110px',
+        render: (item) => (
+          <Badge variant={item.status === 'success' ? 'success' : 'danger'} pill>
+            {item.status === 'success' ? 'Sucesso' : 'Falha'}
+          </Badge>
+        ),
+      },
+      ...scopeCols,
+      {
+        key: 'remote_host',
+        label: 'Repositório',
+        sortable: true,
+        width: '240px',
+        render: (item) => (
+          <span
+            className="small font-monospace text-muted text-truncate d-inline-block"
+            style={{ maxWidth: 230 }}
+            title={item.remote_host ?? undefined}
+          >
+            {item.remote_host ?? '—'}
+          </span>
+        ),
+      },
+      {
+        key: 'message',
+        label: 'Mensagem',
+        sortable: false,
+        render: (item) => (
+          <span
+            className={`small text-truncate d-inline-block ${item.status === 'failed' ? 'text-danger' : 'text-muted'}`}
+            style={{ maxWidth: 400 }}
+            title={item.message ?? undefined}
+          >
+            {item.message ?? '—'}
+          </span>
+        ),
+      },
+    ];
+  }, [isSaasPortal]);
 
   return (
     <>
@@ -224,15 +269,38 @@ const RpkiAspaLogsModal: React.FC<RpkiAspaLogsModalProps> = ({ show }) => {
                   readOnly
                 />
               </div>
-              <div className="col-12">
-                <label className="form-label small text-muted mb-1">Empresa SaaS</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm bg-secondary bg-opacity-10"
-                  value={selectedLog.empresa_saas ?? '—'}
-                  readOnly
-                />
-              </div>
+              {isSaasPortal ? (
+                <div className="col-12">
+                  <label className="form-label small text-muted mb-1">Empresa SaaS</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm bg-secondary bg-opacity-10"
+                    value={selectedLog.empresa_saas ?? '—'}
+                    readOnly
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="col-md-6">
+                    <label className="form-label small text-muted mb-1">CA</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm bg-secondary bg-opacity-10"
+                      value={selectedLog.ca_nome ?? '—'}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small text-muted mb-1">Cliente</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm bg-secondary bg-opacity-10"
+                      value={selectedLog.cliente_nome ?? '—'}
+                      readOnly
+                    />
+                  </div>
+                </>
+              )}
               <div className="col-12">
                 <label className="form-label small text-muted mb-1">Repositório</label>
                 <input
