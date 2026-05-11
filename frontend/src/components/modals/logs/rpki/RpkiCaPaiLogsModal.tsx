@@ -25,6 +25,16 @@ interface RpkiCaPaiLogsModalProps {
   skipWrapper?: boolean;
 }
 
+const TYPE_LABEL: Record<string, string> = {
+  provisioning: 'Provisionamento',
+  publication: 'Publicação',
+};
+
+const TYPE_TIP: Record<string, string> = {
+  provisioning: 'RFC 6492 — solicitação de certificado de recurso ao parent (ex.: Registro.br)',
+  publication: 'RFC 8181 — publicação de objetos RPKI no servidor de repositório',
+};
+
 const RpkiCaPaiLogsModal: React.FC<RpkiCaPaiLogsModalProps> = ({ show }) => {
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -87,9 +97,22 @@ const RpkiCaPaiLogsModal: React.FC<RpkiCaPaiLogsModalProps> = ({ show }) => {
       key: 'created_at',
       label: 'Data',
       sortable: true,
-      width: '155px',
+      width: '150px',
       render: (item) => (
         <span className="small font-monospace">{formatDateTime(item.created_at)}</span>
+      ),
+    },
+    {
+      key: 'type',
+      label: 'Tipo',
+      sortable: true,
+      width: '150px',
+      render: (item) => (
+        <span title={TYPE_TIP[item.type]}>
+          <Badge variant={item.type === 'provisioning' ? 'primary' : 'info'} pill>
+            {TYPE_LABEL[item.type] ?? item.type}
+          </Badge>
+        </span>
       ),
     },
     {
@@ -107,11 +130,11 @@ const RpkiCaPaiLogsModal: React.FC<RpkiCaPaiLogsModalProps> = ({ show }) => {
       key: 'remote_host',
       label: 'Servidor remoto',
       sortable: true,
-      width: '240px',
+      width: '220px',
       render: (item) => (
         <span
           className="small font-monospace text-muted text-truncate d-inline-block"
-          style={{ maxWidth: 230 }}
+          style={{ maxWidth: 210 }}
           title={item.remote_host ?? undefined}
         >
           {item.remote_host ?? '—'}
@@ -125,7 +148,7 @@ const RpkiCaPaiLogsModal: React.FC<RpkiCaPaiLogsModalProps> = ({ show }) => {
       render: (item) => (
         <span
           className={`small text-truncate d-inline-block ${item.status === 'failed' ? 'text-danger' : 'text-muted'}`}
-          style={{ maxWidth: 400 }}
+          style={{ maxWidth: 380 }}
           title={item.message ?? undefined}
         >
           {item.message ?? '—'}
@@ -134,18 +157,24 @@ const RpkiCaPaiLogsModal: React.FC<RpkiCaPaiLogsModalProps> = ({ show }) => {
     },
   ], []);
 
+  const searchFields = [
+    { key: 'remote_host', label: 'Servidor' },
+    { key: 'message', label: 'Mensagem' },
+  ];
+
   return (
     <>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table<SyncLogRow>
-            title="Logs de CA Pai (Provisionamento RFC 6492)"
+            title="Logs de CA-pai (RFC 6492)"
             config={{
               columns,
               data: rows,
               loading: isLoading,
               searchable: true,
               searchPlaceholder: 'Buscar por servidor ou mensagem...',
+              searchFields,
               sortable: true,
               sortColumn: tableFilters.sortColumn,
               sortDirection: tableFilters.sortDirection,
@@ -173,7 +202,10 @@ const RpkiCaPaiLogsModal: React.FC<RpkiCaPaiLogsModalProps> = ({ show }) => {
             onPageChange={(p) => setTimeout(() => tableFilters.setPage(p), 0)}
             onPageSizeChange={(l) => setTimeout(() => tableFilters.setLimit(l), 0)}
             onSort={(col, dir) => setTimeout(() => tableFilters.setSort(col, dir), 0)}
-            onSearch={(s) => tableFilters.setSearch(s)}
+            onSearch={(search, field) => {
+              tableFilters.setSearch(search);
+              if (field) tableFilters.setSearchField(field);
+            }}
             search={tableFilters.search}
           />
         </div>
@@ -189,7 +221,7 @@ const RpkiCaPaiLogsModal: React.FC<RpkiCaPaiLogsModalProps> = ({ show }) => {
         >
           <div className="p-3">
             <div className="row g-2">
-              <div className="col-md-8">
+              <div className="col-md-6">
                 <label className="form-label small text-muted mb-1">Data</label>
                 <input
                   type="text"
@@ -198,7 +230,16 @@ const RpkiCaPaiLogsModal: React.FC<RpkiCaPaiLogsModalProps> = ({ show }) => {
                   readOnly
                 />
               </div>
-              <div className="col-md-4">
+              <div className="col-md-3">
+                <label className="form-label small text-muted mb-1">Tipo</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm bg-secondary bg-opacity-10"
+                  value={TYPE_LABEL[selectedLog.type] ?? selectedLog.type}
+                  readOnly
+                />
+              </div>
+              <div className="col-md-3">
                 <label className="form-label small text-muted mb-1">Status</label>
                 <input
                   type="text"

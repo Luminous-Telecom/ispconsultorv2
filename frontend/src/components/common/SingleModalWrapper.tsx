@@ -69,7 +69,9 @@ const RpkiCaPaiLogsModal = lazy(() => import('../modals/logs/rpki/RpkiCaPaiLogsM
 const RpkiRepositorioLogsModal = lazy(() => import('../modals/logs/rpki/RpkiRepositorioLogsModal'));
 
 interface ResolvedRpkiModal {
-  title: string;
+  /** Título fixo (listas RPKI). Preferir titleKey para modais de logs (igual ao menu). */
+  title?: string;
+  titleKey?: keyof TranslationKeys;
   component: React.LazyExoticComponent<React.ComponentType<ModalComponentProps>>;
   size?: 'sm' | 'lg' | 'xl';
   className?: string;
@@ -90,11 +92,11 @@ const resolveRpkiModal = (active: ModalType): ResolvedRpkiModal | null => {
     case 'rpki-validar-rota':
       return { title: 'RPKI - Validar Rota', component: RpkiValidateRouteModal };
     case 'rpki-logs-validacao':
-      return { title: 'RPKI - Logs de Sincronização', component: RpkiValidationLogsModal, size: 'xl', className: 'no-padding' };
+      return { titleKey: 'logs.rpkiSincronizacao', component: RpkiValidationLogsModal, size: 'xl', className: 'no-padding' };
     case 'rpki-logs-ca-pai':
-      return { title: 'RPKI - Logs CA-pai', component: RpkiCaPaiLogsModal, size: 'xl', className: 'no-padding' };
+      return { titleKey: 'logs.rpkiCaPai', component: RpkiCaPaiLogsModal, size: 'xl', className: 'no-padding' };
     case 'rpki-logs-repositorios':
-      return { title: 'RPKI - Logs Repositórios', component: RpkiRepositorioLogsModal, size: 'xl', className: 'no-padding' };
+      return { titleKey: 'logs.rpkiRepositorios', component: RpkiRepositorioLogsModal, size: 'xl', className: 'no-padding' };
     default:
       return null;
   }
@@ -228,11 +230,12 @@ const SingleModalWrapper: React.FC = () => {
   if (resolvedRpki) {
     const loadingMessage = t('ui.loadingPage');
     const RpkiComponent = resolvedRpki.component;
+    const rpkiTitle = resolvedRpki.titleKey != null ? t(resolvedRpki.titleKey) : (resolvedRpki.title ?? '');
     return (
       <DraggableModal
         show={true}
         onClose={closeModal}
-        title={resolvedRpki.title}
+        title={rpkiTitle}
         size={resolvedRpki.size ?? 'lg'}
         className={resolvedRpki.className ?? ''}
       >
