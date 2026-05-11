@@ -82,7 +82,20 @@ export class RpkiSchedulerRoutineService {
    *      solicita renovação via RFC 6492 (request/issue) — igual ao Krill.
    */
   static async syncAllParentResources(): Promise<SchedulerResult> {
+    const empresaRpkiAtivoCache = new Map<number, boolean>();
+    const canEmpresaExecRpki = async (empresaId: number): Promise<boolean> => {
+      const cached = empresaRpkiAtivoCache.get(empresaId);
+      if (cached !== undefined) return cached;
+
+      const { getModulosDoPlano, tenantTemModulo } = await import('../../saas/PlanoModulosService');
+      const modulos = await getModulosDoPlano(empresaId);
+      const enabled = tenantTemModulo(modulos, 'rpki');
+      empresaRpkiAtivoCache.set(empresaId, enabled);
+      return enabled;
+    };
+
     let total = 0;
+    let skipped = 0;
     let sucesso = 0;
     let erro = 0;
 
@@ -91,8 +104,6 @@ export class RpkiSchedulerRoutineService {
       include: [{ model: RpkiCa, as: 'ca' }],
     });
 
-    total = parents.length;
-
     const { RpkiProvisioningService } = await import('../RpkiProvisioningService');
 
     for (const parent of parents) {
@@ -100,6 +111,13 @@ export class RpkiSchedulerRoutineService {
       if (!ca) continue;
 
       try {
+        if (ca.empresa_id != null && !(await canEmpresaExecRpki(ca.empresa_id))) {
+          skipped++;
+          continue;
+        }
+
+        total++;
+
         await RpkiProvisioningService.syncParentResources({
           ca,
           parent,
@@ -129,7 +147,7 @@ export class RpkiSchedulerRoutineService {
 
     return {
       success: erro === 0,
-      message: `RPKI CA-pai: ${sucesso}/${total} sincronizadas${erro > 0 ? `, ${erro} com erro` : ''}`,
+      message: `RPKI CA-pai: ${sucesso}/${total} sincronizadas${erro > 0 ? `, ${erro} com erro` : ''}${skipped > 0 ? `, ${skipped} ignoradas (módulo rpki ausente)` : ''}`,
       total,
       sucesso,
       erro,
@@ -141,7 +159,20 @@ export class RpkiSchedulerRoutineService {
    * em seus repositórios via RFC 8181 — equivalente ao Krill republishing all objects.
    */
   static async syncAllRepositories(): Promise<SchedulerResult> {
+    const empresaRpkiAtivoCache = new Map<number, boolean>();
+    const canEmpresaExecRpki = async (empresaId: number): Promise<boolean> => {
+      const cached = empresaRpkiAtivoCache.get(empresaId);
+      if (cached !== undefined) return cached;
+
+      const { getModulosDoPlano, tenantTemModulo } = await import('../../saas/PlanoModulosService');
+      const modulos = await getModulosDoPlano(empresaId);
+      const enabled = tenantTemModulo(modulos, 'rpki');
+      empresaRpkiAtivoCache.set(empresaId, enabled);
+      return enabled;
+    };
+
     let total = 0;
+    let skipped = 0;
     let sucesso = 0;
     let erro = 0;
 
@@ -152,8 +183,6 @@ export class RpkiSchedulerRoutineService {
       include: [{ model: RpkiCa, as: 'ca' }],
     });
 
-    total = repositories.length;
-
     const { RpkiCaService } = await import('../RpkiCaService');
 
     for (const repo of repositories) {
@@ -161,6 +190,13 @@ export class RpkiSchedulerRoutineService {
       if (!ca) continue;
 
       try {
+        if (ca.empresa_id != null && !(await canEmpresaExecRpki(ca.empresa_id))) {
+          skipped++;
+          continue;
+        }
+
+        total++;
+
         await RpkiCaService.syncRepository(ca.id, repo.id, 'manual');
         sucesso++;
       } catch (err) {
@@ -177,7 +213,7 @@ export class RpkiSchedulerRoutineService {
 
     return {
       success: erro === 0,
-      message: `RPKI repositórios: ${sucesso}/${total} sincronizados${erro > 0 ? `, ${erro} com erro` : ''}`,
+      message: `RPKI repositórios: ${sucesso}/${total} sincronizados${erro > 0 ? `, ${erro} com erro` : ''}${skipped > 0 ? `, ${skipped} ignorados (módulo rpki ausente)` : ''}`,
       total,
       sucesso,
       erro,

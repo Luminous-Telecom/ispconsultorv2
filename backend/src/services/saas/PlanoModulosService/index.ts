@@ -50,6 +50,7 @@ function extrairModulosDoPlano(plano: SaasPlano): PlanoModuloId[] {
   if (recursos.financeiro === true) validos.push('financeiro');
   if (recursos.blockdomi === true) validos.push('blockdomi');
   if (recursos.equipamentos === true) validos.push('equipamentos');
+  if (recursos.rpki === true) validos.push('rpki');
   if (recursos.whatsapp === true) validos.push('envio_notificacoes');
   if (recursos.nfse === true) validos.push('nfse');
   validos.push('assinatura_digital');

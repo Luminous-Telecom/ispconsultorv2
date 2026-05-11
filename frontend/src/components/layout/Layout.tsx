@@ -269,31 +269,47 @@ const Layout: React.FC = () => {
   const rpkiFolderItems = [
     {
       id: 'rpki-cas',
+      modalId: 'rpki-cas',
       label: 'CAs',
       icon: 'bi-diagram-3',
       onClick: () => handleOpenModal('rpki-cas'),
     },
     {
       id: 'rpki-cas-pai',
+      modalId: 'rpki-cas-pai',
       label: 'CAs-pai',
       icon: 'bi-diagram-2',
       onClick: () => handleOpenModal('rpki-cas-pai'),
     },
     {
       id: 'rpki-repositorios',
+      modalId: 'rpki-repositorios',
       label: 'Repositórios',
       icon: 'bi-hdd-network',
       onClick: () => handleOpenModal('rpki-repositorios'),
     },
-    { id: 'rpki-roas', label: 'ROAs', icon: 'bi-list-check', onClick: () => handleOpenModal('rpki-roas') },
+    {
+      id: 'rpki-roas',
+      modalId: 'rpki-roas',
+      label: 'ROAs',
+      icon: 'bi-list-check',
+      onClick: () => handleOpenModal('rpki-roas'),
+    },
     {
       id: 'rpki-aspas',
+      modalId: 'rpki-aspas',
       label: 'ASPAs',
       icon: 'bi-shield-check',
       onClick: () => handleOpenModal('rpki-aspas'),
     },
-    { id: 'rpki-validar-rota', label: 'Validar Rota', icon: 'bi-search', onClick: () => handleOpenModal('rpki-validar-rota') },
-  ];
+    {
+      id: 'rpki-validar-rota',
+      modalId: 'rpki-validar-rota',
+      label: 'Validar Rota',
+      icon: 'bi-search',
+      onClick: () => handleOpenModal('rpki-validar-rota'),
+    },
+  ].filter((item) => filterByModulo(item.modalId));
 
   const logsFolderItems = [
     { id: 'logs-usuarios', modalId: 'logs-usuarios', label: t('logs.usuarios'), icon: 'bi-people-fill', onClick: () => handleOpenModal('logs-usuarios') },
