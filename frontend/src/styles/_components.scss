@@ -1820,9 +1820,9 @@ textarea:focus {
 }
 
 .contrato-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
   background-color: var(--bg-primary) !important;
-  border-color: var(--btn-primary-color) !important;
+  border-color: var(--border-color) !important;
   border-bottom-color: var(--bg-primary) !important;
 }
 
@@ -1838,9 +1838,9 @@ textarea:focus {
 }
 
 .contrato-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
   background-color: var(--bg-primary) !important;
-  border-color: var(--btn-primary-color) !important;
+  border-color: var(--border-color) !important;
 }
 
 /* Estilos para abas no modo escuro */
@@ -1856,9 +1856,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .contrato-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .contrato-tabs-mobile .nav-link {
@@ -1873,9 +1873,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .contrato-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .contrato-tab-content {
@@ -1957,8 +1957,8 @@ textarea:focus {
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
   }
 
@@ -2050,9 +2050,9 @@ textarea:focus {
 }
 
 .plano-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
   background-color: var(--bg-primary) !important;
-  border-color: var(--btn-primary-color) !important;
+  border-color: var(--border-color) !important;
   border-bottom-color: var(--bg-primary) !important;
 }
 
@@ -2068,9 +2068,9 @@ textarea:focus {
 }
 
 .plano-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
   background-color: var(--bg-primary) !important;
-  border-color: var(--btn-primary-color) !important;
+  border-color: var(--border-color) !important;
 }
 
 /* Estilos para abas no modo escuro */
@@ -2086,9 +2086,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .plano-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .plano-tabs-mobile .nav-link {
@@ -2103,9 +2103,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .plano-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .plano-tab-content {
@@ -2166,8 +2166,8 @@ textarea:focus {
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
   }
 
@@ -2280,9 +2280,9 @@ textarea:focus {
 .email-tabs .nav-link.active,
 .sistema-tabs .nav-link.active,
 .cliente-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
   background-color: var(--bg-primary) !important;
-  border-color: var(--btn-primary-color) !important;
+  border-color: var(--border-color) !important;
   border-bottom-color: var(--bg-primary) !important;
 }
 
@@ -2319,9 +2319,9 @@ textarea:focus {
 .email-tabs-mobile .nav-link.active,
 .sistema-tabs-mobile .nav-link.active,
 .cliente-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
   background-color: var(--bg-primary) !important;
-  border-color: var(--btn-primary-color) !important;
+  border-color: var(--border-color) !important;
 }
 
 /* Estilos para abas no modo escuro */
@@ -2337,9 +2337,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .fornecedor-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .fornecedor-tabs-mobile .nav-link {
@@ -2354,9 +2354,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .fornecedor-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .fornecedor-tab-content {
@@ -2417,8 +2417,8 @@ textarea:focus {
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
   }
 
@@ -2508,9 +2508,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .banco-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .banco-tabs-mobile .nav-link {
@@ -2525,9 +2525,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .banco-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .banco-tab-content {
@@ -2588,8 +2588,8 @@ textarea:focus {
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
   }
 
@@ -2679,9 +2679,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .documento-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .documento-tabs-mobile .nav-link {
@@ -2696,9 +2696,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .documento-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .documento-tab-content {
@@ -2759,8 +2759,8 @@ textarea:focus {
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
   }
 
@@ -2850,9 +2850,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .empresa-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .empresa-tabs-mobile .nav-link {
@@ -2867,9 +2867,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .empresa-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .empresa-tab-content {
@@ -2938,8 +2938,8 @@ textarea:focus {
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
   }
 
@@ -3029,9 +3029,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .whatsapp-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .whatsapp-tabs-mobile .nav-link {
@@ -3046,9 +3046,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .whatsapp-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .whatsapp-tab-content {
@@ -3109,8 +3109,8 @@ textarea:focus {
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
   }
 
@@ -3200,9 +3200,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .email-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .email-tabs-mobile .nav-link {
@@ -3217,9 +3217,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .email-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .email-tab-content {
@@ -3280,8 +3280,8 @@ textarea:focus {
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
   }
 
@@ -3371,9 +3371,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .sistema-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .sistema-tabs-mobile .nav-link {
@@ -3388,9 +3388,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .sistema-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .sistema-tab-content {
@@ -3451,8 +3451,8 @@ textarea:focus {
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
   }
 
@@ -3542,9 +3542,9 @@ textarea:focus {
 }
 
 [data-theme="dark"] .cliente-tabs .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .cliente-tabs-mobile .nav-link {
@@ -3559,9 +3559,22 @@ textarea:focus {
 }
 
 [data-theme="dark"] .cliente-tabs-mobile .nav-link.active {
-  color: var(--btn-primary-color) !important;
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--btn-primary-color) !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .contrato-tabs .nav-link.active,
+[data-theme="dark"] .plano-tabs .nav-link.active,
+[data-theme="dark"] .fornecedor-tabs .nav-link.active,
+[data-theme="dark"] .banco-tabs .nav-link.active,
+[data-theme="dark"] .documento-tabs .nav-link.active,
+[data-theme="dark"] .empresa-tabs .nav-link.active,
+[data-theme="dark"] .whatsapp-tabs .nav-link.active,
+[data-theme="dark"] .email-tabs .nav-link.active,
+[data-theme="dark"] .sistema-tabs .nav-link.active,
+[data-theme="dark"] .cliente-tabs .nav-link.active {
+  border-bottom-color: var(--bg-primary) !important;
 }
 
 .cliente-tab-content {
@@ -3628,8 +3641,8 @@ textarea:focus {
 
   .nav-link.active {
     background-color: var(--bg-primary) !important;
-    color: var(--btn-primary-color) !important;
-    border: 1px solid var(--btn-primary-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     border-bottom-color: var(--bg-primary) !important;
   }
 
@@ -3661,13 +3674,11 @@ textarea:focus {
   }
 }
 
-/* Hover unificado para abas de modais */
+/* Hover unificado para abas de modais: só cor, sem movimento nem sombra */
 .modal-tab-hover:hover {
-  background-color: rgba(255, 255, 255, 0.15) !important;
+  background-color: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
   cursor: pointer !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* FinanceiroModal - Layout principal */
