@@ -108,8 +108,8 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
     () =>
       roas.map((r) => {
         const ca = caById.get(Number(r.ca_id ?? 0));
-        const cliente_nome = ca != null ? clienteNomeForCa(ca) : '—';
-        return { ...r, cliente_nome };
+        const clienteNome = ca != null ? clienteNomeForCa(ca) : '—';
+        return { ...r, cliente_nome: clienteNome };
       }),
     [roas, caById, clienteNomeForCa]
   );
