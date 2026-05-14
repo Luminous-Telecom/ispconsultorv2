@@ -74,32 +74,21 @@ export interface RpkiValidatingRoa {
   length_ok: boolean;
 }
 
-export interface RpkiBgpOrigin {
-  asn: number;
-  holder: string | null;
-}
-
-export interface RpkiBgpStatus {
-  announced: boolean;
-  visibility_peers: number | null;
-  total_peers: number | null;
-  visibility_pct: number | null;
-  first_seen: string | null;
-  last_seen: string | null;
-  covering_prefix: string | null;
-  origins: RpkiBgpOrigin[];
+export interface RpkiRoutinatorValidateMeta {
+  generatedTime: string | null;
 }
 
 export interface RpkiValidateRouteResult {
-  state: 'valid' | 'invalid' | 'not-found';
+  state: 'valid' | 'invalid' | 'not-found' | 'prefix-only';
   message: string;
   reason: string;
   announcementCidr: string;
   announcementLength: number;
   asn: string;
   validatingRoas: RpkiValidatingRoa[];
-  bgp: RpkiBgpStatus | null;
-  source: 'ripe-stat';
+  /** Sempre null; validação usa apenas Routinator. */
+  bgp: null;
+  routinator: RpkiRoutinatorValidateMeta;
 }
 
 export interface RpkiRoa {
@@ -411,7 +400,7 @@ export class RpkiCaService {
 
   static async validateRoute(payload: {
     prefix: string;
-    asn: string;
+    asn?: string;
   }): Promise<RpkiValidateRouteResult> {
     const response = await defaultApiClient.post<RpkiValidateRouteResult>('/rpki/validate-route', payload);
     if (!response.data) throw new Error(response.message || 'Falha ao validar rota');
