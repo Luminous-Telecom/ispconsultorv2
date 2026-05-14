@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, FormField, Badge } from 'components/ui';
+import { Button, Input, Badge, type ChangeEvent } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { RpkiCaService, type RpkiValidateRouteResult, type RpkiValidatingRoa } from 'services/rpkiCaService';
 
@@ -91,37 +91,53 @@ const RpkiValidateRouteModal: React.FC<RpkiValidateRouteModalProps> = ({ show, o
 
   return (
     <div className="p-3">
-      <div className="row g-2 align-items-end mb-3">
-        <div className="col-md-5">
-          <FormField
-            name="rpki_validate_prefix"
-            label="Prefixo (CIDR)"
-            size="sm"
-            value={prefix}
-            placeholder="203.0.113.0/24"
-            onChange={(v) => setPrefix(String(v ?? ''))}
-          />
+      <div className="mb-3">
+        <div className="row g-2">
+          <div className="col-md-5">
+            <label htmlFor="rpki_validate_prefix" className="form-label">
+              Prefixo (CIDR)
+            </label>
+          </div>
+          <div className="col-md-4">
+            <label htmlFor="rpki_validate_asn" className="form-label">
+              ASN de origem (opcional)
+            </label>
+          </div>
+          <div className="col-md-3 d-none d-md-block" aria-hidden />
         </div>
-        <div className="col-md-4">
-          <FormField
-            name="rpki_validate_asn"
-            label="ASN de origem (opcional)"
-            size="sm"
-            value={asn}
-            placeholder="64512"
-            onChange={(v) => setAsn(String(v ?? ''))}
-          />
-        </div>
-        <div className="col-md-3 d-flex align-items-end pb-1">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            disabled={isPending || !prefix.trim()}
-            onClick={handleValidate}
-          >
-            Validar
-          </Button>
+        <div className="row g-2 align-items-end">
+          <div className="col-md-5">
+            <Input
+              id="rpki_validate_prefix"
+              name="rpki_validate_prefix"
+              size="sm"
+              value={prefix}
+              placeholder="203.0.113.0/24"
+              onChange={(e: ChangeEvent) => setPrefix(String(e.value ?? ''))}
+            />
+          </div>
+          <div className="col-md-4">
+            <Input
+              id="rpki_validate_asn"
+              name="rpki_validate_asn"
+              size="sm"
+              value={asn}
+              placeholder="64512"
+              onChange={(e: ChangeEvent) => setAsn(String(e.value ?? ''))}
+            />
+          </div>
+          <div className="col-md-3">
+            <Button
+              id="rpki_validate_submit"
+              type="button"
+              variant="primary"
+              size="sm"
+              disabled={isPending || !prefix.trim()}
+              onClick={handleValidate}
+            >
+              Validar
+            </Button>
+          </div>
         </div>
       </div>
 
