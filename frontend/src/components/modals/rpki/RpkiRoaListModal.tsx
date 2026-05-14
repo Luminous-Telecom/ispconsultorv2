@@ -19,7 +19,7 @@ interface RpkiRoaRow {
   id: number | string;
   ca_id?: number | null;
   ca_nome?: string;
-  cliente_nome?: string;
+  clienteNome?: string;
   prefix?: string;
   asn?: string;
   max_length?: number;
@@ -111,7 +111,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
       roas.map((r) => {
         const ca = caById.get(Number(r.ca_id ?? 0));
         const clienteNome = ca != null ? clienteNomeForCa(ca) : '—';
-        return { ...r, cliente_nome: clienteNome };
+        return { ...r, clienteNome };
       }),
     [roas, caById, clienteNomeForCa]
   );
@@ -157,11 +157,11 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
     { key: 'id', label: 'ID', sortable: true, width: '42px', render: (item) => String(item.id ?? '-') },
     { key: 'ca_nome', label: 'CA', sortable: true, width: '180px', render: (item) => String(item.ca_nome ?? '-') },
     {
-      key: 'cliente_nome',
+      key: 'clienteNome',
       label: 'Cliente',
       sortable: true,
       width: '220px',
-      render: (item) => String(item.cliente_nome ?? '—'),
+      render: (item) => String(item.clienteNome ?? '—'),
     },
     { key: 'prefix', label: 'Prefixo', sortable: true, width: '170px', render: (item) => String(item.prefix ?? '-') },
     { key: 'asn', label: 'ASN', sortable: true, width: '110px', render: (item) => String(item.asn ?? '-') },
@@ -204,7 +204,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
   const searchFields = [
     { key: 'id', label: 'ID' },
     { key: 'ca_nome', label: 'CA' },
-    { key: 'cliente_nome', label: 'Cliente' },
+    { key: 'clienteNome', label: 'Cliente' },
     { key: 'prefix', label: 'Prefixo' },
     { key: 'asn', label: 'ASN' },
     { key: 'status', label: 'Status' },
@@ -493,7 +493,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
                     id: row.id,
                     ca_id: row.ca_id,
                     ca_nome: ca.nome,
-                    cliente_nome: clienteNomeForCa(ca),
+                    clienteNome: clienteNomeForCa(ca),
                     prefix: row.prefix,
                     asn: row.asn,
                     max_length: row.max_length,
