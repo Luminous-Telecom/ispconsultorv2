@@ -94,6 +94,9 @@ export interface AsaasPaymentPayload {
     status?: string;
     dateCreated?: string;
     paymentDate?: string;
+    customerPaymentDate?: string;
+    creditDate?: string;
+    confirmedDate?: string;
     effectiveDate?: string;
     value?: number;
     netValue?: number;

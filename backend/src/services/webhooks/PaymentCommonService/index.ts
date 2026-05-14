@@ -33,6 +33,45 @@ export class PaymentCommonService {
   }
 
   /**
+   * Payload EFI: priorizar data efetiva de pagamento; created_at costuma ser cobrança/evento.
+   */
+  static pickEfiWebhookPaymentDateRaw(item: {
+    paid_at?: string;
+    payment_date?: string;
+    confirmed_at?: string;
+    created_at?: string;
+  }): string | undefined {
+    return item.paid_at || item.payment_date || item.confirmed_at || item.created_at;
+  }
+
+  /**
+   * Webhook Asaas: `dateCreated` do envelope é data do evento (ex.: cancelamento de boleto em 2026),
+   * não a data do recebimento. Preferir campos do objeto `payment`.
+   */
+  static pickAsaasWebhookPaymentDateRaw(
+    payment: {
+      paymentDate?: string;
+      customerPaymentDate?: string;
+      creditDate?: string;
+      confirmedDate?: string;
+      effectiveDate?: string;
+      dateCreated?: string;
+    },
+    rootWebhookDateCreated?: string
+  ): string | undefined {
+    const pick = (s?: string) => (typeof s === 'string' && s.trim() ? s : undefined);
+    return (
+      pick(payment.paymentDate) ||
+      pick(payment.customerPaymentDate) ||
+      pick(payment.creditDate) ||
+      pick(payment.confirmedDate) ||
+      pick(payment.effectiveDate) ||
+      pick(payment.dateCreated) ||
+      pick(rootWebhookDateCreated)
+    );
+  }
+
+  /**
    * Normaliza data de pagamento preservando hora exatamente como vem do banco
    * Sempre interpreta como hora local, ignorando qualquer timezone na string
    */

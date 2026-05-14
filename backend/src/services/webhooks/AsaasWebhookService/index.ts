@@ -63,11 +63,13 @@ export class AsaasWebhookService {
         updates.status = novoStatus;
       }
 
-      const paymentDate = typeof rootPayload?.dateCreated === 'string' ? rootPayload.dateCreated : undefined;
-
       if (novoStatus === 'pago') {
-        const dataPagamentoNormalizada = paymentDate
-          ? PaymentCommonService.normalizePaymentDate(paymentDate)
+        const dataPagamentoRaw = PaymentCommonService.pickAsaasWebhookPaymentDateRaw(
+          payment,
+          rootPayload?.dateCreated
+        );
+        const dataPagamentoNormalizada = dataPagamentoRaw
+          ? PaymentCommonService.normalizePaymentDate(dataPagamentoRaw)
           : new Date();
         const valorPago = typeof payment.value === 'number' ? Number(payment.value) :
           typeof payment.netValue === 'number' ? Number(payment.netValue) : Number(titulo.valor);

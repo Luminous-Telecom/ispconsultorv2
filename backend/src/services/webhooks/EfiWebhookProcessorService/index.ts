@@ -186,7 +186,7 @@ export class EfiWebhookProcessorService {
       const isPago = ['pago', 'liquidado'].includes(novoStatus);
 
       if (isPago && !titulo.pago) {
-        const dataPagamentoWebhook = dadosCompletos?.created_at || dadosCompletos?.paid_at || dadosCompletos?.confirmed_at || dadosCompletos?.payment_date;
+        const dataPagamentoWebhook = PaymentCommonService.pickEfiWebhookPaymentDateRaw(dadosCompletos ?? {});
         const dataPagamentoNormalizada = dataPagamentoWebhook ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook) : new Date();
         await applyPagoWebhook(resolved, Number(titulo.valor), dataPagamentoNormalizada || new Date());
       }
@@ -254,7 +254,7 @@ export class EfiWebhookProcessorService {
 
       if (isPago && !titulo.pago) {
         const notif = notification as { created_at?: string; paid_at?: string; confirmed_at?: string; payment_date?: string };
-        const dataPagamentoWebhook = notif.created_at || notif.paid_at || notif.confirmed_at || notif.payment_date;
+        const dataPagamentoWebhook = PaymentCommonService.pickEfiWebhookPaymentDateRaw(notif);
         const dataPagamentoNormalizada = dataPagamentoWebhook ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook) : new Date();
         await applyPagoWebhook(resolved, Number(titulo.valor), dataPagamentoNormalizada || new Date());
       }
