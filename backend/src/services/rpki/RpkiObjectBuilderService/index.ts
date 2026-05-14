@@ -382,7 +382,11 @@ export async function buildCrlDer(params: {
     await fs.writeFile(caKeyPath, params.resourceCaKeyPem, 'utf8');
     await fs.writeFile(caCertPath, params.resourceCaCertPem, 'utf8');
     await fs.writeFile(indexPath, '', 'utf8');
-    const crlNumHex = params.crlNumber.toString(16).padStart(2, '0').toUpperCase();
+    // OpenSSL exige quantidade par de dígitos hex no arquivo crlnumber (ASN.1 INTEGER).
+    let crlNumHex = params.crlNumber.toString(16).toUpperCase();
+    if (crlNumHex.length % 2 === 1) {
+      crlNumHex = `0${crlNumHex}`;
+    }
     await fs.writeFile(crlNumPath, crlNumHex + '\n', 'utf8');
 
     const validDays = Math.max(1, Math.ceil((params.validHours ?? 24) / 24));
