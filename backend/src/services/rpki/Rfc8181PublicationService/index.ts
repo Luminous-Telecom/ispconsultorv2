@@ -280,6 +280,13 @@ export class Rfc8181PublicationService {
       responseXml = await extractPublicationCmsContent(responseBody);
     }
 
+    const replyCheck = parsePublicationReply(responseXml);
+    if (!replyCheck.success) {
+      throw new Error(
+        `Servidor de publicação (list) retornou erros RFC 8181: ${replyCheck.errors.join('; ')}`
+      );
+    }
+
     return parseListReply(responseXml);
   }
 }

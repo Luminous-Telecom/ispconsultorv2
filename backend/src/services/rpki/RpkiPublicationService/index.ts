@@ -202,9 +202,15 @@ export class RpkiPublicationService {
     });
 
     // 7. Calcula diff com o que está publicado
-    const currentlyPublished = await RpkiPublishedObject.findAll({
+    let currentlyPublished = await RpkiPublishedObject.findAll({
       where: { ca_id: ca.id, repository_id: repository.id },
     });
+    if (currentlyPublished.length > 0) {
+      await RpkiPublicationService.reconcilePublicationStateFromRemote(ca, repository);
+      currentlyPublished = await RpkiPublishedObject.findAll({
+        where: { ca_id: ca.id, repository_id: repository.id },
+      });
+    }
     const publishedByUri = new Map(currentlyPublished.map((p) => [p.uri, p]));
 
     const toPublish: PublishObject[] = [];
@@ -237,7 +243,7 @@ export class RpkiPublicationService {
     // Retira URIs que não existem mais
     for (const [uri, pub] of publishedByUri.entries()) {
       if (!newUris.has(uri)) {
-        toWithdraw.push({ uri, hashHex: pub.hash_sha256_hex });
+        toWithdraw.push({ uri, hashHex: pub.hash_sha256_hex.toLowerCase() });
       }
     }
 
@@ -247,8 +253,12 @@ export class RpkiPublicationService {
       const derBase64 = obj.derBuffer.toString('base64');
       if (!existing) {
         toPublish.push({ uri: obj.uri, derBase64 });
-      } else if (existing.hash_sha256_hex !== obj.sha256Hex) {
-        toPublish.push({ uri: obj.uri, derBase64, previousHashHex: existing.hash_sha256_hex });
+      } else if (existing.hash_sha256_hex.toLowerCase() !== obj.sha256Hex.toLowerCase()) {
+        toPublish.push({
+          uri: obj.uri,
+          derBase64,
+          previousHashHex: existing.hash_sha256_hex.toLowerCase(),
+        });
       }
     }
 
@@ -347,6 +357,65 @@ export class RpkiPublicationService {
       last_error: null,
     });
 
+  }
+
+  /**
+   * Alinha `rpki_published_objects` com o que o servidor expõe no PDU list (RFC 8181).
+   * Evita `no_object_present` / `no_object_matching_hash` quando o banco ficou dessincronizado
+   * (reinício do Krill, reset do publication server, etc.).
+   */
+  private static async reconcilePublicationStateFromRemote(
+    ca: RpkiCa,
+    repository: RpkiRepository
+  ): Promise<void> {
+    const serviceUri = repository.publication_service_uri;
+    const bpkiCertPem = ca.ca_cert_pem;
+    const bpkiKeyPem = ca.private_key_pem;
+    if (!serviceUri || !bpkiCertPem || !bpkiKeyPem) {
+      return;
+    }
+
+    try {
+      const listed = await Rfc8181PublicationService.listPublished({
+        serviceUri,
+        bpkiCertPem,
+        bpkiKeyPem,
+      });
+      const remoteByUri = new Map(
+        listed.map((o) => [o.uri, o.hashHex.toLowerCase()])
+      );
+
+      const rows = await RpkiPublishedObject.findAll({
+        where: { ca_id: ca.id, repository_id: repository.id },
+      });
+
+      const idsToDelete: number[] = [];
+      for (const row of rows) {
+        const remoteHash = remoteByUri.get(row.uri);
+        const localHash = row.hash_sha256_hex.toLowerCase();
+        if (remoteHash === undefined) {
+          idsToDelete.push(row.id);
+        } else if (remoteHash !== localHash) {
+          await row.update({ hash_sha256_hex: remoteHash });
+        }
+      }
+
+      if (idsToDelete.length > 0) {
+        await RpkiPublishedObject.destroy({ where: { id: idsToDelete } });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.warn(
+        'RpkiPublicationService: reconciliação RFC 8181 (list) falhou; seguindo estado local do banco',
+        {
+          context: 'RpkiPublicationService',
+          action: 'reconcilePublicationStateFromRemote',
+          caId: ca.id,
+          repositoryId: repository.id,
+          error: msg,
+        }
+      );
+    }
   }
 
   /**
