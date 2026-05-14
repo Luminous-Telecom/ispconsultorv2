@@ -81,10 +81,12 @@ async function enrichRpkiSyncLogsWithEmpresaSaas(rows: RpkiSyncLog[]): Promise<R
         attributes: ['id', 'razao_social', 'nome_fantasia'],
       });
       for (const cl of clientes) {
-        const nome =
-          cl.nome_fantasia && String(cl.nome_fantasia).trim() !== ''
+        const razao = cl.razao_social != null ? String(cl.razao_social).trim() : '';
+        const fantasia =
+          cl.nome_fantasia != null && String(cl.nome_fantasia).trim() !== ''
             ? String(cl.nome_fantasia).trim()
-            : cl.razao_social;
+            : '';
+        const nome = razao !== '' ? razao : fantasia;
         clienteNomeById.set(cl.id, nome);
       }
     }

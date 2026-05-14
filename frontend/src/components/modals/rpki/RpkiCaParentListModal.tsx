@@ -132,7 +132,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
   const clienteNomeById = useMemo(() => {
     const map = new Map<number, string>();
     for (const cliente of clientes) {
-      map.set(cliente.id, cliente.nome_fantasia || cliente.razao_social);
+      map.set(cliente.id, cliente.razao_social || cliente.nome_fantasia || '');
     }
     return map;
   }, [clientes]);

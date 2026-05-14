@@ -4,6 +4,7 @@ import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { RpkiCaService } from 'services/rpkiCaService';
+import { ClienteService } from 'services/clienteService';
 import RpkiRoaCreateEditModal from './RpkiRoaCreateEditModal';
 import RpkiRoaAnalysisModal from './RpkiRoaAnalysisModal';
 import { formatDateTime, formatRpkiValidityDisplay } from 'utils/formatters';
@@ -78,6 +79,41 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
     enabled: show,
   });
 
+  const { data: clientes = [] } = useQuery({
+    queryKey: ['clientes-rpki'],
+    queryFn: async () => {
+      const response = await ClienteService.list({ limit: 1000 });
+      return response.data ?? [];
+    },
+    enabled: show,
+  });
+
+  const clienteNomeById = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const cliente of clientes) {
+      map.set(cliente.id, cliente.razao_social || cliente.nome_fantasia || '');
+    }
+    return map;
+  }, [clientes]);
+
+  const clienteNomeForCa = useCallback(
+    (ca: { cliente_id: number | null }) =>
+      ca.cliente_id != null ? clienteNomeById.get(ca.cliente_id) ?? '—' : '—',
+    [clienteNomeById]
+  );
+
+  const caById = useMemo(() => new Map(cas.map((c) => [c.id, c])), [cas]);
+
+  const roasForTable = useMemo(
+    () =>
+      roas.map((r) => {
+        const ca = caById.get(Number(r.ca_id ?? 0));
+        const cliente_nome = ca != null ? clienteNomeForCa(ca) : '—';
+        return { ...r, cliente_nome };
+      }),
+    [roas, caById, clienteNomeForCa]
+  );
+
   useEffect(() => {
     if (!show || cas.length === 0) return;
     let cancelled = false;
@@ -118,6 +154,13 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
   const tableColumns: TableConfig<RpkiRoaRow>['columns'] = useMemo(() => [
     { key: 'id', label: 'ID', sortable: true, width: '42px', render: (item) => String(item.id ?? '-') },
     { key: 'ca_nome', label: 'CA', sortable: true, width: '180px', render: (item) => String(item.ca_nome ?? '-') },
+    {
+      key: 'cliente_nome',
+      label: 'Cliente',
+      sortable: true,
+      width: '220px',
+      render: (item) => String(item.cliente_nome ?? '—'),
+    },
     { key: 'prefix', label: 'Prefixo', sortable: true, width: '170px', render: (item) => String(item.prefix ?? '-') },
     { key: 'asn', label: 'ASN', sortable: true, width: '110px', render: (item) => String(item.asn ?? '-') },
     { key: 'max_length', label: 'Max Length', sortable: true, width: '110px', render: (item) => String(item.max_length ?? '-') },
@@ -159,6 +202,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
   const searchFields = [
     { key: 'id', label: 'ID' },
     { key: 'ca_nome', label: 'CA' },
+    { key: 'cliente_nome', label: 'Cliente' },
     { key: 'prefix', label: 'Prefixo' },
     { key: 'asn', label: 'ASN' },
     { key: 'status', label: 'Status' },
@@ -321,7 +365,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
             title="ROAs"
             config={{
               columns: tableColumns,
-              data: roas,
+              data: roasForTable,
               loading: false,
               searchable: true,
               searchPlaceholder: 'Buscar...',
@@ -429,6 +473,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
                     id: row.id,
                     ca_id: row.ca_id,
                     ca_nome: ca.nome,
+                    cliente_nome: clienteNomeForCa(ca),
                     prefix: row.prefix,
                     asn: row.asn,
                     max_length: row.max_length,

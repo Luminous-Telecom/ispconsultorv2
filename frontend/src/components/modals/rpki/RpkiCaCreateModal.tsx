@@ -62,7 +62,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose }) 
                 ? [
                     {
                       id: selectedCliente.id,
-                      nome: selectedCliente.nome_fantasia || selectedCliente.razao_social,
+                      nome: selectedCliente.razao_social || selectedCliente.nome_fantasia || '',
                     },
                   ]
                 : []

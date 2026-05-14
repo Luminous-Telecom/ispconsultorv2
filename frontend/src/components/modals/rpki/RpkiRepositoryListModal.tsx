@@ -101,7 +101,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
   }, [cas]);
   const clienteNomeById = useMemo(() => {
     const map = new Map<number, string>();
-    clientes.forEach((cliente) => map.set(cliente.id, cliente.nome_fantasia || cliente.razao_social));
+    clientes.forEach((cliente) => map.set(cliente.id, cliente.razao_social || cliente.nome_fantasia || ''));
     return map;
   }, [clientes]);
 
