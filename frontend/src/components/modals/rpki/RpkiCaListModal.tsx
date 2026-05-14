@@ -204,7 +204,7 @@ const RpkiCaListModal: React.FC<RpkiCaListModalProps> = () => {
               bulkActions: [
                 {
                   key: 'criar-ca',
-                  label: t('actions.new'),
+                  label: 'Criar CA',
                   variant: 'primary',
                   requiresSelection: false,
                   onClick: () => setShowCreateModal(true),

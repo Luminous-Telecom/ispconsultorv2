@@ -300,7 +300,7 @@ const RpkiCaParentListModal: React.FC<RpkiCaParentListModalProps> = () => {
               bulkActions: [
                 {
                   key: 'novo-ca-pai',
-                  label: t('actions.new'),
+                  label: 'Criar CA-pai',
                   variant: 'primary',
                   requiresSelection: false,
                   onClick: () => setShowCreateModal(true),

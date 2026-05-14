@@ -203,8 +203,8 @@ const RpkiRoaCreateEditModal: React.FC<RpkiRoaCreateEditModalProps> = ({
     }
   };
 
-  const title = isEditing ? 'Editar' : 'Novo ROA';
-  const saveLabel = isEditing ? 'Salvar' : 'Novo ROA';
+  const title = isEditing ? 'Editar' : 'Criar ROA';
+  const saveLabel = isEditing ? 'Salvar' : 'Criar ROA';
 
   return (
     <DraggableModal

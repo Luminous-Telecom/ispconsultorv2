@@ -274,7 +274,7 @@ const RpkiKrillConfigModal: React.FC<RpkiKrillConfigModalProps> = ({ initialSect
                   createCaMutation.mutate({ nome: caNome.trim() });
                 }}
               >
-                Nova CA
+                Criar CA
               </Button>
             </div>
           </div>

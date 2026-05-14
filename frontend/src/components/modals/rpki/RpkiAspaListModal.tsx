@@ -110,7 +110,7 @@ const RpkiAspaListModal: React.FC<RpkiAspaListModalProps> = () => {
   const bulkActions = [
     {
       key: 'novo-aspa',
-      label: t('actions.new'),
+      label: 'Criar ASPA',
       variant: 'primary' as const,
       requiresSelection: false,
       onClick: () => setShowCreateModal(true),

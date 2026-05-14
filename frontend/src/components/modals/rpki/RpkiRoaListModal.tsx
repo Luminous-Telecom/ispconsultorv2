@@ -11,6 +11,7 @@ import { formatDateTime, formatRpkiValidityDisplay } from 'utils/formatters';
 import { useAuditoria } from 'hooks/useAuditoria';
 import ImprimirModalBase from 'components/common/ImprimirModal';
 import { useI18n } from 'contexts/I18nContext';
+import { useModal } from 'contexts/ModalContext';
 
 const AuditPdfModal = ImprimirModalBase;
 
@@ -36,6 +37,7 @@ interface RpkiRoaListModalProps {
 
 const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
   const { t } = useI18n();
+  const { openModal } = useModal();
   const { error: showError, success } = useNotificationContext();
   const auditoria = useAuditoria();
   const handleAuditRoa = useCallback(
@@ -210,7 +212,7 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
 
   const bulkActions = useMemo(() => [
     {
-      label: 'Novo ROA',
+      label: 'Criar ROA',
       variant: 'primary' as const,
       requiresSelection: false,
       action: (_selectedItems: RpkiRoaRow[]) => {
@@ -229,33 +231,6 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
         setFormMode('edit');
         setEditingRoaId(selected.id);
         setShowFormModal(true);
-      },
-    },
-    {
-      label: 'Revogar',
-      variant: 'primary' as const,
-      disabled: false,
-      action: (selectedItems: RpkiRoaRow[]) => {
-        const selected = selectedItems[0];
-        if (!selected) return;
-
-        const confirmed = window.confirm('Tem certeza que deseja revogar este ROA?');
-        if (!confirmed) return;
-
-        const caId = Number(selected.ca_id ?? 0);
-        const roaId = Number(selected.id);
-        if (!Number.isFinite(caId) || caId <= 0 || !Number.isFinite(roaId) || roaId <= 0) return;
-        RpkiCaService.revokeRoa({ caId, roaId })
-          .then((updated) => {
-            setRoas((prev) =>
-              prev.map((r) => (r.id === selected.id ? { ...r, status: updated.status, revoked_at: updated.revoked_at ?? undefined } : r))
-            );
-            success('ROA revogada com sucesso');
-          })
-          .catch((err) => {
-            const msg = err instanceof Error ? err.message : 'Erro ao revogar ROA';
-            showError(msg);
-          });
       },
     },
     {
@@ -281,6 +256,33 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
           })
           .catch((err) => {
             const msg = err instanceof Error ? err.message : 'Erro ao excluir ROA';
+            showError(msg);
+          });
+      },
+    },
+    {
+      label: 'Revogar',
+      variant: 'primary' as const,
+      disabled: false,
+      action: (selectedItems: RpkiRoaRow[]) => {
+        const selected = selectedItems[0];
+        if (!selected) return;
+
+        const confirmed = window.confirm('Tem certeza que deseja revogar este ROA?');
+        if (!confirmed) return;
+
+        const caId = Number(selected.ca_id ?? 0);
+        const roaId = Number(selected.id);
+        if (!Number.isFinite(caId) || caId <= 0 || !Number.isFinite(roaId) || roaId <= 0) return;
+        RpkiCaService.revokeRoa({ caId, roaId })
+          .then((updated) => {
+            setRoas((prev) =>
+              prev.map((r) => (r.id === selected.id ? { ...r, status: updated.status, revoked_at: updated.revoked_at ?? undefined } : r))
+            );
+            success('ROA revogada com sucesso');
+          })
+          .catch((err) => {
+            const msg = err instanceof Error ? err.message : 'Erro ao revogar ROA';
             showError(msg);
           });
       },
@@ -348,7 +350,25 @@ const RpkiRoaListModal: React.FC<RpkiRoaListModalProps> = ({ show }) => {
           });
       },
     },
-  ], [cas, roas, showError, success]);
+    {
+      label: 'Validar rota',
+      variant: 'primary' as const,
+      requiresSelection: true,
+      disabled: false,
+      action: (selectedItems: RpkiRoaRow[]) => {
+        const selected = selectedItems[0];
+        if (!selected) return;
+        const pref = String(selected.prefix ?? '').trim();
+        if (!pref) {
+          window.alert('O ROA selecionado não tem prefixo para validar.');
+          return;
+        }
+        const asnRaw = String(selected.asn ?? '').trim();
+        const asn = asnRaw.replace(/^AS/i, '').trim();
+        openModal('rpki-validar-rota', { initialPrefix: pref, initialAsn: asn });
+      },
+    },
+  ], [cas, openModal, roas, showError, success]);
 
   useEffect(() => {
     if (!show) {

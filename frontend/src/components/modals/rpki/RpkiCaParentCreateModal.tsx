@@ -84,7 +84,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({ show,
   });
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Nova CA-pai" size="lg" modalId="rpki-ca-parent-create-modal">
+    <DraggableModal show={show} onClose={onClose} title="Criar CA-pai" size="lg" modalId="rpki-ca-parent-create-modal">
       <div className="p-2">
         <div className="row g-2">
           <div className="col-md-4">
@@ -168,7 +168,7 @@ const RpkiCaParentCreateModal: React.FC<RpkiCaParentCreateModalProps> = ({ show,
               })
             }
           >
-            Salvar
+            Criar CA-pai
           </Button>
         </div>
       </div>

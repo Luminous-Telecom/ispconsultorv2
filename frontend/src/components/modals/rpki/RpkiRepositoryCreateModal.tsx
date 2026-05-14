@@ -104,7 +104,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({ s
   });
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Novo Repositório" size="lg" modalId="rpki-repository-create-modal">
+    <DraggableModal show={show} onClose={onClose} title="Criar Repositório" size="lg" modalId="rpki-repository-create-modal">
       <div className="p-2">
         <div className="row g-2">
           <div className="col-md-4">
@@ -193,7 +193,7 @@ const RpkiRepositoryCreateModal: React.FC<RpkiRepositoryCreateModalProps> = ({ s
               })
             }
           >
-            Salvar
+            Criar repositório
           </Button>
         </div>
       </div>

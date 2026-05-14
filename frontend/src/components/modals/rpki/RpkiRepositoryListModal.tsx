@@ -242,7 +242,7 @@ const RpkiRepositoryListModal: React.FC<RpkiRepositoryListModalProps> = () => {
               bulkActions: [
                 {
                   key: 'novo-repositorio',
-                  label: t('actions.new'),
+                  label: 'Criar repositório',
                   variant: 'primary',
                   requiresSelection: false,
                   onClick: () => setShowCreateModal(true),

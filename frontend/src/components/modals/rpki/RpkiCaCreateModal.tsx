@@ -41,7 +41,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose }) 
   });
 
   return (
-    <DraggableModal show={show} onClose={onClose} title="Nova CA" size="sm" modalId="rpki-ca-create-modal">
+    <DraggableModal show={show} onClose={onClose} title="Criar CA" size="sm" modalId="rpki-ca-create-modal">
       <div className="p-2">
         <FormField
           name="rpki_ca_nome"
@@ -98,7 +98,7 @@ const RpkiCaCreateModal: React.FC<RpkiCaCreateModalProps> = ({ show, onClose }) 
               })
             }
           >
-            Salvar
+            Criar CA
           </Button>
         </div>
       </div>

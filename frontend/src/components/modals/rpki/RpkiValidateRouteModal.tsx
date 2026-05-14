@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Input, Badge, type ChangeEvent } from 'components/ui';
 import { useNotificationContext } from 'components/notifications/NotificationProvider';
 import { RpkiCaService, type RpkiValidateRouteResult, type RpkiValidatingRoa } from 'services/rpkiCaService';
@@ -7,6 +7,9 @@ interface RpkiValidateRouteModalProps {
   show: boolean;
   onClose: () => void;
   skipWrapper?: boolean;
+  /** Preenchimento ao abrir (ex.: a partir de um ROA selecionado). */
+  initialPrefix?: string;
+  initialAsn?: string;
 }
 
 const VALIDITY_BADGE: Record<string, { variant: 'success' | 'danger' | 'warning' | 'secondary'; label: string }> = {
@@ -66,27 +69,61 @@ function ValidatingRoasTable({ rows }: { rows: RpkiValidatingRoa[] }) {
   );
 }
 
-const RpkiValidateRouteModal: React.FC<RpkiValidateRouteModalProps> = ({ show, onClose: _onClose, skipWrapper: _skipWrapper }) => {
+const RpkiValidateRouteModal: React.FC<RpkiValidateRouteModalProps> = ({
+  show,
+  onClose: _onClose,
+  skipWrapper: _skipWrapper,
+  initialPrefix,
+  initialAsn,
+}) => {
   const { error: showError } = useNotificationContext();
   const [prefix, setPrefix] = useState('');
   const [asn, setAsn] = useState('');
   const [result, setResult] = useState<RpkiValidateRouteResult | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const validateSeqRef = useRef(0);
+  const showErrorRef = useRef(showError);
+  showErrorRef.current = showError;
+
+  const runValidate = useCallback((prefixValue: string, asnValue: string): void => {
+    const trimmedPrefix = prefixValue.trim();
+    if (!trimmedPrefix) return;
+    const trimmedAsn = asnValue.replace(/^AS/i, '').trim();
+    const seq = ++validateSeqRef.current;
+    setIsPending(true);
+    setResult(null);
+    RpkiCaService.validateRoute({
+      prefix: trimmedPrefix,
+      asn: trimmedAsn || undefined,
+    })
+      .then((data) => {
+        if (validateSeqRef.current === seq) setResult(data);
+      })
+      .catch((err) => {
+        if (validateSeqRef.current === seq) {
+          showErrorRef.current(err instanceof Error ? err.message : 'Erro ao validar rota');
+        }
+      })
+      .finally(() => {
+        if (validateSeqRef.current === seq) setIsPending(false);
+      });
+  }, []);
 
   useEffect(() => {
     if (!show) return;
-    setPrefix('');
-    setAsn('');
+    const nextPrefix = typeof initialPrefix === 'string' ? initialPrefix.trim() : '';
+    const nextAsnRaw = typeof initialAsn === 'string' ? initialAsn.trim() : '';
+    const nextAsn = nextAsnRaw.replace(/^AS/i, '').trim();
+    setPrefix(nextPrefix);
+    setAsn(nextAsn);
     setResult(null);
-  }, [show]);
+
+    if (!nextPrefix) return;
+    runValidate(nextPrefix, nextAsnRaw);
+  }, [show, initialPrefix, initialAsn, runValidate]);
 
   const handleValidate = (): void => {
-    setIsPending(true);
-    setResult(null);
-    RpkiCaService.validateRoute({ prefix: prefix.trim(), asn: asn.trim() || undefined })
-      .then((data) => setResult(data))
-      .catch((err) => showError(err instanceof Error ? err.message : 'Erro ao validar rota'))
-      .finally(() => setIsPending(false));
+    runValidate(prefix, asn);
   };
 
   return (
@@ -141,7 +178,7 @@ const RpkiValidateRouteModal: React.FC<RpkiValidateRouteModalProps> = ({ show, o
         </div>
       </div>
 
-      {!result && (
+      {!result && !isPending && (
         <div className="alert alert-info py-2 small mb-0">
           Prefixo em CIDR. Com ASN, valida o anúncio; sem ASN, lista ROAs do Routinator público (NLnet Labs).
         </div>
