@@ -51,6 +51,11 @@ export interface AuditoriaFilters {
   origemAuditoria?: string;
   /** Apenas entidades do módulo Blockdomi (Dominio, IPv4, IPv6, IP permitido, versão) */
   moduloBlockdomi?: boolean;
+  /**
+   * Lista operacional dos modais da pasta "Logs SaaS" (SuperAdmin) — escopo cobrança/plataforma,
+   * comunicação (auditoria), assinatura, acesso; exclui infra ERP irrelevante.
+   */
+  painelSaas?: boolean;
 }
 
 export interface AuditoriaStats {
@@ -82,6 +87,7 @@ class AuditoriaService {
     if (filters.semUsuarioObrigatorio) params.append('sem_usuario_obrigatorio', 'true');
     if (filters.origemAuditoria) params.append('origem_auditoria', filters.origemAuditoria);
     if (filters.moduloBlockdomi) params.append('modulo_blockdomi', 'true');
+    if (filters.painelSaas) params.append('painel_saas', 'true');
   }
 
   private parseOperacionalListResponse(

@@ -8,6 +8,7 @@ import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/auditoriaService';
 import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
+import AuditoriaDetalhesModal from 'components/modals/auditoria/AuditoriaDetalhesModal';
 import { formatAuditoriaListId, formatDateTime } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
 
@@ -430,122 +431,28 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
     </div>
   );
 
+  const auditoriaDetalhesModal = (
+    <AuditoriaDetalhesModal
+      show={showDetailsModal}
+      onClose={() => {
+        setShowDetailsModal(false);
+        setSelectedLog(null);
+      }}
+      detalhe={auditoriaExibirDetalhe}
+      modalId={variant === 'saas' ? 'saas-auditoria-detalhes' : 'auditoria-detalhes'}
+      showEmpresaColumn={variant === 'saas'}
+      showClienteColumn={variant === 'saas'}
+      esLoading={auditoriaDetalheEsLoading}
+      esIndisponivel={auditoriaEsIndisponivel}
+      temVinculoEs={auditoriaTemVinculoEs}
+    />
+  );
+
   if (skipWrapper) {
     return (
       <>
         {modalContent}
-        {/* Modal de Detalhes */}
-        {auditoriaExibirDetalhe && (
-          <DraggableModal
-            show={showDetailsModal}
-            onClose={() => {
-              setShowDetailsModal(false);
-              setSelectedLog(null);
-            }}
-            title={t('audit.detailsTitle')}
-            size="lg"
-          >
-            <div style={{ padding: '16px' }}>
-              {auditoriaDetalheEsLoading && (
-                <div className="small text-muted mb-2">Carregando detalhe da auditoria…</div>
-              )}
-              {auditoriaEsIndisponivel && (
-                <div className="small text-warning mb-2">Detalhe completo no Elasticsearch indisponível; exibindo dados do banco.</div>
-              )}
-              {!auditoriaTemVinculoEs && (
-                <div className="small text-warning mb-2">Este registro não possui vínculo com o Elasticsearch; exibindo apenas dados do banco.</div>
-              )}
-              <div className="mb-1">
-                <h6 className="mb-1">{t('audit.generalInfo')}</h6>
-                <div className="row g-1">
-                  <div className="col-md-6">
-                    <small className="text-muted">{t('table.action')}:</small><br />
-                    <span className={`badge bg-${getAcaoBadgeClass(auditoriaExibirDetalhe.acao)}`}>
-                      {formatAcao(auditoriaExibirDetalhe.acao)}
-                    </span>
-                  </div>
-                  <div className="col-md-6">
-                    <small className="text-muted">{t('audit.entity')}:</small><br />
-                    <span>{auditoriaExibirDetalhe.entidade}</span>
-                  </div>
-                  <div className="col-md-6">
-                    <small className="text-muted">{t('audit.entityId')}:</small><br />
-                    <span>{auditoriaExibirDetalhe.entidade_id || 'N/A'}</span>
-                  </div>
-                  <div className="col-md-6">
-                    <small className="text-muted">{t('audit.timestamp')}:</small><br />
-                    <span>{formatTimestamp(auditoriaExibirDetalhe.timestamp)}</span>
-                  </div>
-                  <div className="col-md-6">
-                    <small className="text-muted">{t('audit.user')}:</small><br />
-                    <span>{auditoriaExibirDetalhe.usuario_email || 'N/A'}</span>
-                    {auditoriaExibirDetalhe.usuario_nome && (
-                      <div className="text-muted small">{auditoriaExibirDetalhe.usuario_nome}</div>
-                    )}
-                  </div>
-                  <div className="col-md-6">
-                    <small className="text-muted">{t('audit.ip')}:</small><br />
-                    <span>{auditoriaExibirDetalhe.ip_address || 'N/A'}</span>
-                  </div>
-                  <div className="col-md-6">
-                    <small className="text-muted">{t('audit.tenant')}:</small><br />
-                    <span>{auditoriaExibirDetalhe.empresa_nome || '-'}</span>
-                  </div>
-                  {auditoriaExibirDetalhe.rota && (
-                    <div className="col-md-12">
-                      <small className="text-muted">{t('audit.route')}:</small><br />
-                      <code>{auditoriaExibirDetalhe.metodo_http || 'N/A'} {auditoriaExibirDetalhe.rota}</code>
-                    </div>
-                  )}
-                  {auditoriaExibirDetalhe.user_agent && (
-                    <div className="col-md-12">
-                      <small className="text-muted">{t('audit.userAgent')}:</small><br />
-                      <span className="small">{auditoriaExibirDetalhe.user_agent}</span>
-                    </div>
-                  )}
-                  {auditoriaExibirDetalhe.observacoes && (
-                    <div className="col-md-12">
-                      <small className="text-muted">{t('table.observations')}:</small><br />
-                      <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{auditoriaExibirDetalhe.observacoes}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {(auditoriaExibirDetalhe.dados_anteriores || auditoriaExibirDetalhe.dados_novos) && (
-                <div className="mb-1">
-                  <h6 className="mb-1">{t('audit.data')}</h6>
-                  <div className="card">
-                    <div className="card-body" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                      <pre 
-                        className="mb-0" 
-                        style={{ 
-                          fontSize: '0.875rem', 
-                          maxHeight: '400px', 
-                          overflow: 'auto',
-                          backgroundColor: 'var(--bg-secondary)',
-                          color: 'var(--text-primary)',
-                          padding: '1rem',
-                          borderRadius: '0.25rem',
-                          border: '1px solid var(--border-color)',
-                          margin: 0
-                        }}
-                      >
-                        {JSON.stringify(
-                          auditoriaExibirDetalhe.dados_anteriores && auditoriaExibirDetalhe.dados_novos
-                            ? { anterior: auditoriaExibirDetalhe.dados_anteriores, novo: auditoriaExibirDetalhe.dados_novos }
-                            : auditoriaExibirDetalhe.dados_novos || auditoriaExibirDetalhe.dados_anteriores,
-                          null,
-                          2
-                        )}
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </DraggableModal>
-        )}
+        {auditoriaDetalhesModal}
       </>
     );
   }
@@ -564,118 +471,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
         {modalContent}
       </DraggableModal>
 
-      {/* Modal de Detalhes */}
-      {auditoriaExibirDetalhe && (
-        <DraggableModal
-          show={showDetailsModal}
-          onClose={() => {
-            setShowDetailsModal(false);
-            setSelectedLog(null);
-          }}
-          title={t('audit.detailsTitle')}
-          size="lg"
-        >
-          <div style={{ padding: '16px' }}>
-            {auditoriaDetalheEsLoading && (
-              <div className="small text-muted mb-2">Carregando detalhe da auditoria…</div>
-            )}
-            {auditoriaEsIndisponivel && (
-              <div className="small text-warning mb-2">Detalhe completo no Elasticsearch indisponível; exibindo dados do banco.</div>
-            )}
-            {!auditoriaTemVinculoEs && (
-              <div className="small text-warning mb-2">Este registro não possui vínculo com o Elasticsearch; exibindo apenas dados do banco.</div>
-            )}
-            <div className="mb-1">
-              <h6 className="mb-1">{t('audit.generalInfo')}</h6>
-              <div className="row g-1">
-                <div className="col-md-6">
-                  <small className="text-muted">{t('table.action')}:</small><br />
-                  <span className={`badge bg-${getAcaoBadgeClass(auditoriaExibirDetalhe.acao)}`}>
-                    {formatAcao(auditoriaExibirDetalhe.acao)}
-                  </span>
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.entity')}:</small><br />
-                  <span>{auditoriaExibirDetalhe.entidade}</span>
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.entityId')}:</small><br />
-                  <span>{auditoriaExibirDetalhe.entidade_id || 'N/A'}</span>
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.timestamp')}:</small><br />
-                  <span>{formatTimestamp(auditoriaExibirDetalhe.timestamp)}</span>
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.user')}:</small><br />
-                  <span>{auditoriaExibirDetalhe.usuario_email || 'N/A'}</span>
-                  {auditoriaExibirDetalhe.usuario_nome && (
-                    <div className="text-muted small">{auditoriaExibirDetalhe.usuario_nome}</div>
-                  )}
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.ip')}:</small><br />
-                  <span>{auditoriaExibirDetalhe.ip_address || 'N/A'}</span>
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.tenant')}:</small><br />
-                  <span>{auditoriaExibirDetalhe.empresa_nome || '-'}</span>
-                </div>
-                {auditoriaExibirDetalhe.rota && (
-                  <div className="col-md-12">
-                    <small className="text-muted">{t('audit.route')}:</small><br />
-                    <code>{auditoriaExibirDetalhe.metodo_http || 'N/A'} {auditoriaExibirDetalhe.rota}</code>
-                  </div>
-                )}
-                {auditoriaExibirDetalhe.user_agent && (
-                  <div className="col-md-12">
-                    <small className="text-muted">{t('audit.userAgent')}:</small><br />
-                    <span className="small">{auditoriaExibirDetalhe.user_agent}</span>
-                  </div>
-                )}
-                {auditoriaExibirDetalhe.observacoes && (
-                  <div className="col-md-12">
-                    <small className="text-muted">{t('table.observations')}:</small><br />
-                    <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{auditoriaExibirDetalhe.observacoes}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {(auditoriaExibirDetalhe.dados_anteriores || auditoriaExibirDetalhe.dados_novos) && (
-              <div className="mb-1">
-                <h6 className="mb-1">{t('audit.data')}</h6>
-                <div className="card">
-                  <div className="card-body" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                    <pre 
-                      className="mb-0" 
-                      style={{ 
-                        fontSize: '0.875rem', 
-                        maxHeight: '400px', 
-                        overflow: 'auto',
-                        backgroundColor: 'var(--bg-secondary)',
-                        color: 'var(--text-primary)',
-                        padding: '1rem',
-                        borderRadius: '0.25rem',
-                        border: '1px solid var(--border-color)',
-                        margin: 0
-                      }}
-                    >
-                      {JSON.stringify(
-                        auditoriaExibirDetalhe.dados_anteriores && auditoriaExibirDetalhe.dados_novos
-                          ? { anterior: auditoriaExibirDetalhe.dados_anteriores, novo: auditoriaExibirDetalhe.dados_novos }
-                          : auditoriaExibirDetalhe.dados_novos || auditoriaExibirDetalhe.dados_anteriores,
-                        null,
-                        2
-                      )}
-                    </pre>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </DraggableModal>
-      )}
+      {auditoriaDetalhesModal}
     </>
   );
 };

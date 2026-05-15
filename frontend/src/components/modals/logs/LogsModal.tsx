@@ -13,11 +13,11 @@ import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/audit
 import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
 import { getMensagemHistoricoService } from 'services/mensagemHistoricoService';
 import { Badge } from 'components/ui';
-import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
 import { DateRangeFilter } from 'components/ui';
 import { TableConfig } from 'components/tables/types';
 import MensagemDetalhesModal from 'components/modals/comunicacao/MensagemDetalhesModal';
+import AuditoriaDetalhesModal from 'components/modals/auditoria/AuditoriaDetalhesModal';
 import BlockdomiLogsRealModal from 'components/modals/blockdomi/BlockdomiLogsRealModal';
 import WhoisModal from 'components/modals/blockdomi/WhoisModal';
 import { useBlockdomiLogs } from 'hooks/useBlockdomiLogs';
@@ -138,8 +138,13 @@ interface LogsModalProps {
   variant?: 'erp' | 'saas';
 }
 
-function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 'saas') {
-  const isSaas = variant === 'saas';
+function useLogsContent(
+  logType: LogsModalType,
+  show: boolean,
+  apiVariant: 'erp' | 'saas',
+  painelSaasLogs: boolean
+) {
+  const isSaas = apiVariant === 'saas';
   const mensagemService = getMensagemHistoricoService(isSaas);
 
   const isEquipamentosOuAgentes = logType === 'equipamentos' || logType === 'agentes';
@@ -205,11 +210,12 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 
   );
 
   const auditoriaQuery = useQuery({
-    queryKey: ['auditoria-operacional-logs', variant, logType, auditoriaFilters],
+    queryKey: ['auditoria-operacional-logs', apiVariant, painelSaasLogs, logType, auditoriaFilters],
     queryFn: async () => {
+      const filtersSaas = painelSaasLogs ? { ...auditoriaFilters, painelSaas: true as const } : auditoriaFilters;
       const r =
-        variant === 'saas'
-          ? await auditoriaService.listOperacionalSaas(auditoriaFilters)
+        apiVariant === 'saas'
+          ? await auditoriaService.listOperacionalSaas(filtersSaas)
           : await auditoriaService.listOperacional(auditoriaFilters);
       if (!r.success) throw new Error(r.message);
       return r.data;
@@ -239,7 +245,7 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 
 
   const blockdomiQuery = useBlockdomiLogs(blockdomiFilters, {
     enabled: show && isBlockdomiApi,
-    scope: variant,
+    scope: apiVariant,
   });
 
   const data = isAuditoria ? auditoriaQuery.data : isBlockdomiApi ? blockdomiQuery.data : mensagemQuery.data;
@@ -275,7 +281,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
   /** SuperAdmin em /saas: modais `logs-*` do registry vêm como erp, mas devem usar APIs agregadas (`/saas/*`). */
   const effectiveVariant = variant === 'erp' && pathname.startsWith('/saas') ? 'saas' : variant;
   const showEmpresaColumn = pathname.startsWith('/saas');
-  const ctx = useLogsContent(logType, show, effectiveVariant);
+  const ctx = useLogsContent(logType, show, effectiveVariant, variant === 'saas');
   const [showBlockdomiLogsReal, setShowBlockdomiLogsReal] = useState(false);
   const [whoisIp, setWhoisIp] = useState<string | null>(null);
 
@@ -673,57 +679,18 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
 
   const detailsModal = (() => {
     if (auditoriaExibirDetalhe) {
-      const d = auditoriaExibirDetalhe;
       return (
-        <DraggableModal show={showDetailsModal} onClose={() => { setShowDetailsModal(false); setSelectedAuditoria(null); }} title={t('audit.detailsTitle')} size="lg" modalId="logs-auditoria-details">
-          <div className="p-3 logs-auditoria-details">
-            {auditoriaEsIndisponivel && (
-              <div className="small text-warning mb-2">Detalhe completo no Elasticsearch indisponível; exibindo dados do banco.</div>
-            )}
-            {!auditoriaTemVinculoEs && (
-              <div className="small text-warning mb-2">Este registro não possui vínculo com o Elasticsearch; exibindo apenas dados do banco.</div>
-            )}
-            <div className="row g-2">
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.action')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={formatAcao(d.acao)} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.entity')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={d.entidade} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.timestamp')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={formatTimestamp(d.timestamp)} readOnly /></div>
-              {showEmpresaColumn && (
-                <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('company.title')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={d.empresa_nome?.trim() || '—'} readOnly /></div>
-              )}
-              {showEmpresaColumn && (
-                <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.client')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={(d.cliente_nome ?? '').trim() || '—'} readOnly /></div>
-              )}
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.user')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={d.usuario_email || 'N/A'} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.name')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={d.usuario_nome || '-'} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.ip')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={d.ip_address || 'N/A'} readOnly /></div>
-              {d.rota && <div className="col-12"><label className="form-label small text-muted mb-1">{t('audit.route')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace" value={`${d.metodo_http || 'N/A'} ${d.rota}`} readOnly /></div>}
-              {d.user_agent && <div className="col-12"><label className="form-label small text-muted mb-1">{t('audit.userAgent')}</label><textarea className="form-control form-control-sm bg-secondary bg-opacity-10 small" value={d.user_agent} readOnly rows={2} /></div>}
-              {d.observacoes && (
-                <div className="col-12">
-                  <label className="form-label small text-muted mb-1">{t('table.observations')}</label>
-                  <textarea
-                    className="form-control form-control-sm bg-secondary bg-opacity-10 small"
-                    value={d.observacoes}
-                    readOnly
-                    rows={Math.min(18, Math.max(4, d.observacoes.split('\n').length + 1))}
-                    style={{ resize: 'vertical', minHeight: '5rem' }}
-                  />
-                </div>
-              )}
-            </div>
-            {(d.dados_anteriores || d.dados_novos || auditoriaDetalheEsLoading || auditoriaTemVinculoEs) && (
-              <div className="mt-3">
-                <h6 className="mb-2">{t('audit.data')}</h6>
-                {auditoriaDetalheEsLoading && (
-                  <div className="small text-muted mb-2">Carregando detalhe da auditoria…</div>
-                )}
-                {(d.dados_anteriores || d.dados_novos) && (
-                  <textarea className="form-control font-monospace small bg-secondary bg-opacity-10" value={JSON.stringify(d.dados_anteriores && d.dados_novos ? { anterior: d.dados_anteriores, novo: d.dados_novos } : d.dados_novos || d.dados_anteriores, null, 2)} readOnly rows={12} style={{ resize: 'none' }} />
-                )}
-              </div>
-            )}
-          </div>
-        </DraggableModal>
+        <AuditoriaDetalhesModal
+          show={showDetailsModal}
+          onClose={() => { setShowDetailsModal(false); setSelectedAuditoria(null); }}
+          detalhe={auditoriaExibirDetalhe}
+          modalId="logs-auditoria-details"
+          showEmpresaColumn={showEmpresaColumn}
+          showClienteColumn={showEmpresaColumn}
+          esLoading={auditoriaDetalheEsLoading}
+          esIndisponivel={auditoriaEsIndisponivel}
+          temVinculoEs={auditoriaTemVinculoEs}
+        />
       );
     }
     if (selectedMensagem) {

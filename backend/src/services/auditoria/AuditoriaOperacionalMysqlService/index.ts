@@ -35,6 +35,8 @@ export interface ListOperacionalMysqlParams {
   empresaId?: number | null;
   excludeSaasEntities?: boolean;
   filterSaasOnly?: boolean;
+  /** Lista agregada dos modais "Logs SaaS" — restringe `recurso` a {@link AuditoriaQueryService.ENTIDADES_PAINEL_LOGS_SAAS} */
+  filterPainelLogsSaasOnly?: boolean;
   comUsuarioObrigatorio?: boolean;
   semUsuarioObrigatorio?: boolean;
   origemAuditoria?: string;
@@ -169,6 +171,9 @@ export class AuditoriaOperacionalMysqlService {
     }
     if (params.filterSaasOnly) {
       and.push({ recurso: { [Op.in]: [...AuditoriaQueryService.ENTIDADES_SAAS] } });
+    }
+    if (params.filterPainelLogsSaasOnly) {
+      and.push({ recurso: { [Op.in]: [...AuditoriaQueryService.ENTIDADES_PAINEL_LOGS_SAAS] } });
     }
 
     if (params.usuario_id != null && params.usuario_id > 0) {

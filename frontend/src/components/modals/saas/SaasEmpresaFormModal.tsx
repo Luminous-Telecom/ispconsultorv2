@@ -26,6 +26,7 @@ import SaasReceberModal from './SaasReceberModal';
 import { formatAuditoriaListId, formatCurrency, formatDate, formatDateTime } from 'utils/formatters';
 import { auditoriaService, type AuditoriaLog } from 'services/auditoriaService';
 import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
+import AuditoriaDetalhesModal from 'components/modals/auditoria/AuditoriaDetalhesModal';
 import type { FormValue } from 'types/common';
 import type { ApiResponse } from 'types';
 
@@ -144,14 +145,6 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     else setSelectedTitulos([]);
   }, [show]);
 
-  const formatLogAcao = useCallback((acao: string) => {
-    const acoes: Record<string, string> = { create: t('audit.actions.create'), update: t('audit.actions.update'), delete: t('audit.actions.delete'), login: t('audit.actions.login'), logout: t('audit.actions.logout'), export: t('audit.actions.export'), import: t('audit.actions.import') };
-    return acoes[acao] || acao;
-  }, [t]);
-  const getLogAcaoBadgeClass = useCallback((acao: string) => {
-    const classes: Record<string, string> = { create: 'success', update: 'primary', delete: 'danger', login: 'info', logout: 'secondary', export: 'warning', import: 'warning' };
-    return classes[acao] || 'secondary';
-  }, []);
   const handleViewLog = useCallback((log: AuditoriaLog) => {
     setSelectedLog(log);
     setShowLogDetailsModal(true);
@@ -1115,89 +1108,15 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
         empresaNome={form.nome_fantasia || form.razao_social}
         onSuccess={() => { setShowReceberModal(false); setTituloReceber(null); refetchTitulos(); refetchContratos(); }}
       />
-      {logExibirDetalhe && (
-        <DraggableModal
-          show={showLogDetailsModal}
-          onClose={() => { setShowLogDetailsModal(false); setSelectedLog(null); }}
-          title={t('audit.detailsTitle')}
-          size="lg"
-          modalId="saas-log-details-modal"
-        >
-          <div style={{ padding: '16px' }}>
-            {auditoriaDetalheEsLoading && (
-              <div className="small text-muted mb-2">Carregando detalhe da auditoria…</div>
-            )}
-            {auditoriaEsIndisponivel && (
-              <div className="small text-warning mb-2">Detalhe completo no Elasticsearch indisponível; exibindo dados do banco.</div>
-            )}
-            {!auditoriaTemVinculoEs && (
-              <div className="small text-warning mb-2">Este registro não possui vínculo com o Elasticsearch; exibindo apenas dados do banco.</div>
-            )}
-            <div className="mb-3">
-              <h6 className="mb-2">{t('audit.generalInfo')}</h6>
-              <div className="row g-2">
-                <div className="col-md-6">
-                  <small className="text-muted">{t('table.action')}:</small><br />
-                  <span className={`badge bg-${getLogAcaoBadgeClass(logExibirDetalhe.acao)}`}>
-                    {formatLogAcao(logExibirDetalhe.acao)}
-                  </span>
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.entity')}:</small><br />
-                  <span>{logExibirDetalhe.entidade}</span>
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.entityId')}:</small><br />
-                  <span>{logExibirDetalhe.entidade_id ?? 'N/A'}</span>
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.timestamp')}:</small><br />
-                  <span>{formatDateTime(logExibirDetalhe.timestamp)}</span>
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.user')}:</small><br />
-                  <span>{logExibirDetalhe.usuario_email ?? 'N/A'}</span>
-                  {logExibirDetalhe.usuario_nome && <div className="text-muted small">{logExibirDetalhe.usuario_nome}</div>}
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.ip')}:</small><br />
-                  <span>{logExibirDetalhe.ip_address ?? 'N/A'}</span>
-                </div>
-                <div className="col-md-6">
-                  <small className="text-muted">{t('audit.tenant')}:</small><br />
-                  <span>{logExibirDetalhe.empresa_nome ?? '-'}</span>
-                </div>
-                {logExibirDetalhe.rota && (
-                  <div className="col-12">
-                    <small className="text-muted">{t('audit.route')}:</small><br />
-                    <code>{logExibirDetalhe.metodo_http ?? 'N/A'} {logExibirDetalhe.rota}</code>
-                  </div>
-                )}
-                {logExibirDetalhe.observacoes && (
-                  <div className="col-12">
-                    <small className="text-muted">{t('table.observations')}:</small><br />
-                    <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{logExibirDetalhe.observacoes}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            {(logExibirDetalhe.dados_anteriores || logExibirDetalhe.dados_novos) && (
-              <div>
-                <h6 className="mb-2">{t('audit.data')}</h6>
-                <pre className="p-3 bg-light rounded small mb-0" style={{ maxHeight: '300px', overflow: 'auto' }}>
-                  {JSON.stringify(
-                    logExibirDetalhe.dados_anteriores && logExibirDetalhe.dados_novos
-                      ? { anterior: logExibirDetalhe.dados_anteriores, novo: logExibirDetalhe.dados_novos }
-                      : logExibirDetalhe.dados_novos ?? logExibirDetalhe.dados_anteriores,
-                    null,
-                    2
-                  )}
-                </pre>
-              </div>
-            )}
-          </div>
-        </DraggableModal>
-      )}
+      <AuditoriaDetalhesModal
+        show={showLogDetailsModal}
+        onClose={() => { setShowLogDetailsModal(false); setSelectedLog(null); }}
+        detalhe={logExibirDetalhe}
+        modalId="saas-log-details-modal"
+        esLoading={auditoriaDetalheEsLoading}
+        esIndisponivel={auditoriaEsIndisponivel}
+        temVinculoEs={auditoriaTemVinculoEs}
+      />
     </DraggableModal>
   );
 };

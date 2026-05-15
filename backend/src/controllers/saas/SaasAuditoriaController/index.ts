@@ -131,6 +131,9 @@ export class SaasAuditoriaController {
       const origemAuditoria = req.query.origem_auditoria as string | undefined;
       const moduloBlockdomi =
         req.query.modulo_blockdomi === 'true' || req.query.moduloBlockdomi === 'true';
+      const painelSaasLogs =
+        req.query.painel_saas === 'true' ||
+        req.query.painelSaas === 'true';
 
       const { logs, total } = await AuditoriaOperacionalMysqlService.list({
         page,
@@ -148,6 +151,7 @@ export class SaasAuditoriaController {
         empresaId: empresaId ?? null,
         excludeSaasEntities: false,
         filterSaasOnly: false,
+        filterPainelLogsSaasOnly: Boolean(painelSaasLogs && (empresaId == null || empresaId <= 0)),
         comUsuarioObrigatorio,
         semUsuarioObrigatorio,
         origemAuditoria,
