@@ -70,28 +70,14 @@ export class AtualizacoesController {
       const headers: Record<string, string> = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'BackNet' };
       if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
 
-      const githubApiTimeoutMs = parseInt(process.env.GITHUB_API_TIMEOUT_MS || '110000', 10);
-      const abortController = new AbortController();
-      const abortGithub = (): void => {
-        abortController.abort();
-      };
-      res.once('close', abortGithub);
-      req.once('close', abortGithub);
-
-      let response;
-      try {
-        response = await axios.get<GitHubRelease[]>(
-          `https://api.github.com/repos/${githubRepo}/releases`,
-          {
-            headers,
-            timeout: Number.isFinite(githubApiTimeoutMs) ? githubApiTimeoutMs : 110_000,
-            signal: abortController.signal,
-          }
-        );
-      } finally {
-        res.removeListener('close', abortGithub);
-        req.removeListener('close', abortGithub);
-      }
+      const githubTimeoutMs = parseInt(process.env.GITHUB_API_TIMEOUT_MS || '110000', 10);
+      const response = await axios.get<GitHubRelease[]>(
+        `https://api.github.com/repos/${githubRepo}/releases`,
+        {
+          headers,
+          timeout: Number.isFinite(githubTimeoutMs) ? githubTimeoutMs : 110_000,
+        }
+      );
 
       if (!response.data || response.data.length === 0) {
         sendSuccess(res, { data: [], versao_atual: 'N/A' });
@@ -147,18 +133,11 @@ export class AtualizacoesController {
           sendForbidden(res, 'Acesso negado ao repositório. Verifique o GITHUB_TOKEN se o repositório for privado.');
           return;
         }
-        const isNetwork =
-          error.response == null &&
-          (error.code === 'ETIMEDOUT' ||
-            error.code === 'ECONNABORTED' ||
-            error.code === 'ECONNRESET' ||
-            error.code === 'ENOTFOUND' ||
-            error.code === 'EAI_AGAIN');
-        if (isNetwork) {
+        if (error.response == null) {
           sendError(
             res,
             error,
-            'Não foi possível contatar o GitHub (rede ou firewall). Verifique conectividade do servidor até api.github.com.',
+            'Não foi possível obter dados do GitHub. Verifique rede/firewall até api.github.com e GITHUB_API_TIMEOUT_MS se necessário.',
             502,
             true
           );

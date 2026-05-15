@@ -30,6 +30,8 @@ interface AtualizacoesModalProps {
   onHeaderActionsReady?: (actions: React.ReactNode) => void;
 }
 
+const listarAtualizacoesTimeoutMs = 130_000;
+
 const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, onHeaderActionsReady }) => {
   const { t } = useI18n();
   const isMobile = useIsMobile();
@@ -46,7 +48,9 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose, on
     queryFn: async (): Promise<Atualizacao[]> => {
 
       try {
-        const response = await apiService.get('/saas/atualizacoes') as ApiResponseWithVersao;
+        const response = await apiService.get('/saas/atualizacoes', {
+          timeout: listarAtualizacoesTimeoutMs,
+        }) as ApiResponseWithVersao;
 
 
         if (response.success && response.data) {
