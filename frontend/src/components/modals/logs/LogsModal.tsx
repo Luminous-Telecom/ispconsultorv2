@@ -29,7 +29,6 @@ export type LogsModalType =
   | 'agentes'
   | 'usuarios'
   | 'agenda-tarefas'
-  | 'webhook'
   | 'email'
   | 'whatsapp'
   | 'assinatura-digital'
@@ -48,7 +47,6 @@ const LOGS_AUDITORIA_CONFIG: Record<
 > = {
   usuarios: { comUsuarioObrigatorio: true },
   'agenda-tarefas': { origemAuditoria: 'agendador' },
-  webhook: { origemAuditoria: 'webhook' },
   'assinatura-digital': { entidade: 'AssinaturaDigital' },
   'acesso-sistema': { acao: 'login,logout' }
 };
@@ -115,7 +113,7 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 
   const mensagemService = getMensagemHistoricoService(isSaas);
 
   const isSsh = logType === 'equipamentos' || logType === 'agentes';
-  const isAuditoria = ['usuarios', 'agenda-tarefas', 'webhook', 'assinatura-digital', 'acesso-sistema'].includes(
+  const isAuditoria = ['usuarios', 'agenda-tarefas', 'assinatura-digital', 'acesso-sistema'].includes(
     logType
   );
   const isEmail = logType === 'email';

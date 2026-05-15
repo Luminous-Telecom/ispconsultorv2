@@ -78,7 +78,6 @@ const SaasLayout: React.FC = () => {
 
   const logsErpRootItems = [
     { id: 'logs-usuarios', label: t('logs.usuarios'), onClick: () => handleOpenModal('logs-usuarios') },
-    { id: 'logs-webhook', label: t('logs.webhook'), onClick: () => handleOpenModal('logs-webhook') },
     { id: 'logs-assinatura-digital', label: t('logs.assinaturaDigital'), onClick: () => handleOpenModal('logs-assinatura-digital') },
     { id: 'logs-acesso-sistema', label: t('logs.acessoSistema'), onClick: () => handleOpenModal('logs-acesso-sistema') },
     { id: 'logs-blockdomi-api', label: t('blockdomi.logsApi'), onClick: () => handleOpenModal('logs-blockdomi-api') },
@@ -127,7 +126,6 @@ const SaasLayout: React.FC = () => {
       items: [
         { id: 'saas-logs-usuarios', label: t('logs.usuarios'), onClick: () => handleOpenModal('saas-logs-usuarios') },
         { id: 'saas-logs-agenda-tarefas', label: t('logs.agendaTarefas'), onClick: () => handleOpenModal('saas-logs-agenda-tarefas') },
-        { id: 'saas-logs-webhook', label: t('logs.webhook'), onClick: () => handleOpenModal('saas-logs-webhook') },
         { id: 'saas-logs-email', label: t('logs.email'), onClick: () => handleOpenModal('saas-logs-email') },
         { id: 'saas-logs-whatsapp', label: t('logs.whatsapp'), onClick: () => handleOpenModal('saas-logs-whatsapp') },
         { id: 'saas-logs-assinatura-digital', label: t('logs.assinaturaDigital'), onClick: () => handleOpenModal('saas-logs-assinatura-digital') },

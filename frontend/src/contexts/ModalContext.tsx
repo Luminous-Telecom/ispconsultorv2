@@ -30,7 +30,6 @@ export type ModalType =
   | 'logs-blockdomi-api'
   // Logs
   | 'logs-usuarios'
-  | 'logs-webhook'
   | 'logs-email'
   | 'logs-whatsapp'
   | 'logs-assinatura-digital'
@@ -68,7 +67,6 @@ export type ModalType =
   | 'saas-backups'
   | 'saas-logs-usuarios'
   | 'saas-logs-agenda-tarefas'
-  | 'saas-logs-webhook'
   | 'saas-logs-email'
   | 'saas-logs-whatsapp'
   | 'saas-logs-assinatura-digital'

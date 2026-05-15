@@ -250,7 +250,6 @@ export interface TranslationKeys {
   'logs.title': string;
   'logs.usuarios': string;
   'logs.agendaTarefas': string;
-  'logs.webhook': string;
   'logs.email': string;
   'logs.whatsapp': string;
   'logs.assinaturaDigital': string;
@@ -1811,7 +1810,6 @@ const translations: Translations = {
     'logs.title': 'Logs',
     'logs.usuarios': 'Logs de Usuários',
     'logs.agendaTarefas': 'Logs de Agenda de Tarefas',
-    'logs.webhook': 'Logs de Webhook',
     'logs.email': 'Logs de Email',
     'logs.whatsapp': 'Logs de WhatsApp',
     'logs.assinaturaDigital': 'Logs de Assinatura Digital',
@@ -3369,7 +3367,6 @@ const translations: Translations = {
     'logs.title': 'Logs',
     'logs.usuarios': 'User Logs',
     'logs.agendaTarefas': 'Task Scheduler Logs',
-    'logs.webhook': 'Webhook Logs',
     'logs.email': 'Email Logs',
     'logs.whatsapp': 'WhatsApp Logs',
     'logs.assinaturaDigital': 'Digital Signature Logs',
@@ -4928,7 +4925,6 @@ const translations: Translations = {
     'logs.title': 'Registros',
     'logs.usuarios': 'Registros de Usuarios',
     'logs.agendaTarefas': 'Registros de Agenda de Tareas',
-    'logs.webhook': 'Registros de Webhook',
     'logs.email': 'Registros de Email',
     'logs.whatsapp': 'Registros de WhatsApp',
     'logs.assinaturaDigital': 'Registros de Firma Digital',

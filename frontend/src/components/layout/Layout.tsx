@@ -313,7 +313,6 @@ const Layout: React.FC = () => {
 
   const logsFolderItems = [
     { id: 'logs-usuarios', modalId: 'logs-usuarios', label: t('logs.usuarios'), icon: 'bi-people-fill', onClick: () => handleOpenModal('logs-usuarios') },
-    { id: 'logs-webhook', modalId: 'logs-webhook', label: t('logs.webhook'), icon: 'bi-link-45deg', onClick: () => handleOpenModal('logs-webhook') },
     { id: 'logs-assinatura-digital', modalId: 'logs-assinatura-digital', label: t('logs.assinaturaDigital'), icon: 'bi-pen', onClick: () => handleOpenModal('logs-assinatura-digital') },
     { id: 'logs-acesso-sistema', modalId: 'logs-acesso-sistema', label: t('logs.acessoSistema'), icon: 'bi-door-open', onClick: () => handleOpenModal('logs-acesso-sistema') },
     { id: 'logs-blockdomi-api', modalId: 'logs-blockdomi-api', label: t('blockdomi.logsApi'), icon: 'bi-journal-text', onClick: () => handleOpenModal('logs-blockdomi-api') },

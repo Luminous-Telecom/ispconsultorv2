@@ -16,7 +16,6 @@ type ModalId = Exclude<ModalType, null>;
 const LOG_MODAL_BY_ID: Partial<Record<ModalId, ResolvedLogsModal>> = {
   // ERP
   'logs-usuarios': { titleKey: 'logs.usuarios', logType: 'usuarios', variant: 'erp' },
-  'logs-webhook': { titleKey: 'logs.webhook', logType: 'webhook', variant: 'erp' },
   'logs-email': { titleKey: 'logs.email', logType: 'email', variant: 'erp' },
   'logs-whatsapp': { titleKey: 'logs.whatsapp', logType: 'whatsapp', variant: 'erp' },
   'logs-assinatura-digital': { titleKey: 'logs.assinaturaDigital', logType: 'assinatura-digital', variant: 'erp' },
@@ -27,7 +26,6 @@ const LOG_MODAL_BY_ID: Partial<Record<ModalId, ResolvedLogsModal>> = {
   // SaaS (SuperAdmin)
   'saas-logs-usuarios': { titleKey: 'logs.usuarios', logType: 'usuarios', variant: 'saas' },
   'saas-logs-agenda-tarefas': { titleKey: 'logs.agendaTarefas', logType: 'agenda-tarefas', variant: 'saas' },
-  'saas-logs-webhook': { titleKey: 'logs.webhook', logType: 'webhook', variant: 'saas' },
   'saas-logs-email': { titleKey: 'logs.email', logType: 'email', variant: 'saas' },
   'saas-logs-whatsapp': { titleKey: 'logs.whatsapp', logType: 'whatsapp', variant: 'saas' },
   'saas-logs-assinatura-digital': { titleKey: 'logs.assinaturaDigital', logType: 'assinatura-digital', variant: 'saas' },
