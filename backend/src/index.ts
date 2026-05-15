@@ -201,6 +201,8 @@ const ddosMaxProcessingTime = parseInt(process.env.DDOS_MAX_PROCESSING_TIME || '
 const ddosMaxConcurrentRequests = parseInt(process.env.DDOS_MAX_CONCURRENT_REQUESTS || '100'); // 100 requisições concorrentes
 /** Análise RPKI + download/stream RIS (Krill-like) pode ultrapassar minutos em rede lenta */
 const ddosRpkiRoaAnalyzeMaxMs = parseInt(process.env.DDOS_RPKI_ROA_ANALYZE_MAX_MS || '600000', 10); // 10 minutos
+/** Lista de releases no GitHub pode ultrapassar 15s (rede lenta, rate limit, repositório grande) */
+const ddosSaasAtualizacoesMaxMs = parseInt(process.env.DDOS_SAAS_ATUALIZACOES_MAX_MS || '120000', 10); // 2 minutos
 
 app.use(ddosProtectionMiddleware({
   maxProcessingTime: ddosMaxProcessingTime,
@@ -209,6 +211,10 @@ app.use(ddosProtectionMiddleware({
     {
       test: (pathname) => /\/rpki\/cas\/[^/]+\/roas\/analyze\/?$/.test(pathname),
       maxProcessingTime: Number.isFinite(ddosRpkiRoaAnalyzeMaxMs) ? ddosRpkiRoaAnalyzeMaxMs : 600_000,
+    },
+    {
+      test: (pathname) => /^\/api\/saas\/atualizacoes\/?$/.test(pathname),
+      maxProcessingTime: Number.isFinite(ddosSaasAtualizacoesMaxMs) ? ddosSaasAtualizacoesMaxMs : 120_000,
     },
   ],
   skipRoutes: [
@@ -221,6 +227,7 @@ app.use(ddosProtectionMiddleware({
     '/api/saas/titulos/boletos-multiplos-pdf', // Idem para SaaS
     '/api/auditoria/pdf', // Geração de PDF de auditoria pode demorar mais que 15s
     '/api/atualizacoes/update', // Atualização pode levar vários minutos (git pull, npm install, build, migrations, pm2 reload)
+    '/api/saas/atualizacoes/update-stream', // SSE: git pull, build, pm2 — ultrapassa qualquer limite curto
     '/api/pdf-extract', // Upload de PDF pode demorar (arquivo grande); processamento é assíncrono
     '/api/saas/backups' // Importação/upload e backup manual podem ultrapassar 15s (arquivos grandes)
   ]
