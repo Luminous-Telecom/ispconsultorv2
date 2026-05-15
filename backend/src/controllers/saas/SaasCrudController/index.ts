@@ -285,10 +285,11 @@ export class SaasTituloController {
       }
 
       await SaasTituloService.update(Number(req.params.id), value);
-      if (antigo) {
+      const novo = await SaasTituloService.getById(Number(req.params.id));
+      if (antigo && novo) {
         await registrarAtualizacao(req as any, 'SaasTitulo', Number(req.params.id),
           antigo.toJSON() as Record<string, unknown>,
-          { ...antigo.toJSON(), ...value } as Record<string, unknown>,
+          novo.toJSON() as Record<string, unknown>,
           undefined, null);
       }
       sendSuccess(res, null, 'Título atualizado com sucesso');
@@ -357,12 +358,13 @@ export class SaasTituloController {
       };
       if (observacoes !== undefined) updateData.observacoes = observacoes;
       await titulo.update(updateData);
-      await registrarAtualizacao(req as any, 'SaasTitulo', titulo.id, dadosAnteriores, titulo.toJSON() as Record<string, unknown>, undefined, null);
-      const empresaId = titulo.empresa_id;
+      const tituloAtualizado = (await SaasTituloService.getById(titulo.id)) ?? titulo;
+      await registrarAtualizacao(req as any, 'SaasTitulo', titulo.id, dadosAnteriores, tituloAtualizado.toJSON() as Record<string, unknown>, undefined, null);
+      const empresaId = tituloAtualizado.empresa_id;
       if (empresaId) {
         await desbloquearSeSemAtraso(empresaId);
       }
-      sendSuccess(res, titulo, 'Título marcado como pago');
+      sendSuccess(res, tituloAtualizado, 'Título marcado como pago');
     } catch (err) {
       sendError(res, err, 'Erro ao marcar título como pago', 500, true);
     }

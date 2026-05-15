@@ -11,6 +11,7 @@ interface TerminalSession {
   deviceConn: SshClient;
   deviceId: number;
   deviceName: string;
+  empresaId: number | null;
   userId: string;
   ip: string;
   openedAt: Date;
@@ -54,6 +55,7 @@ export async function createTerminalSession(
         deviceConn,
         deviceId: device.id,
         deviceName: device.name,
+        empresaId: device.empresa_id ?? null,
         userId,
         ip,
         openedAt: new Date(),
@@ -89,6 +91,7 @@ export async function createTerminalSession(
         logSshAudit({
           action: 'TERMINAL_CLOSE',
           userId,
+          empresaId: session.empresaId,
           deviceId: device.id,
           deviceName: device.name,
           success: true,
@@ -111,11 +114,12 @@ export async function createTerminalSession(
       logSshAudit({
         action: 'TERMINAL_OPEN',
         userId,
-          deviceId: device.id,
-          deviceName: device.name,
-          success: true,
-          ip,
-        });
+        empresaId: device.empresa_id ?? null,
+        deviceId: device.id,
+        deviceName: device.name,
+        success: true,
+        ip,
+      });
 
       logger.info('SSH terminal: sessão aberta', { sessionId, device: device.name, userId });
       resolve(sessionId);
@@ -158,6 +162,7 @@ export function writeToTerminal(sessionId: string, data: string): void {
       logSshAudit({
         action: 'TERMINAL_COMMAND',
         userId: session.userId,
+        empresaId: session.empresaId,
         deviceId: session.deviceId,
         deviceName: session.deviceName,
         command: cmd,

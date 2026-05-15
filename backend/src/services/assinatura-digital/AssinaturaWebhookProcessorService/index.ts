@@ -34,7 +34,7 @@ export class AssinaturaWebhookProcessorService {
     if (signingUrl && !assinatura.url_assinatura) {
       const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
       await AssinaturaDigitalService.updateById(assinatura.id, { url_assinatura: signingUrl });
-      await assinatura.reload();
+      await AssinaturaDigitalService.reloadComRelacoes(assinatura);
       const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
       
       if (req) {
@@ -99,7 +99,7 @@ export class AssinaturaWebhookProcessorService {
     const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
     assinatura.status = 'cancelado';
     await assinatura.save();
-    await assinatura.reload();
+    await AssinaturaDigitalService.reloadComRelacoes(assinatura);
     const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
     
     if (req) {
@@ -187,7 +187,7 @@ export class AssinaturaWebhookProcessorService {
 
     const dadosAnteriores = assinatura.toJSON() as Record<string, unknown>;
     await AssinaturaDigitalService.updateById(assinatura.id, dadosParaAtualizar);
-    await assinatura.reload();
+    await AssinaturaDigitalService.reloadComRelacoes(assinatura);
     const dadosNovos = assinatura.toJSON() as Record<string, unknown>;
     
     if (req) {

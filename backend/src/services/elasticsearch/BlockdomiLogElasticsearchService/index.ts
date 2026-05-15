@@ -52,6 +52,8 @@ export interface ListBlockdomiLogFilters {
   sucesso?: boolean;
   /** `api_txt` = só acessos às listas TXT; `sistema` = demais registros do índice (ex.: sync SEI). */
   origem?: 'api_txt' | 'sistema';
+  /** Filtra logs do tenant (ERP). Omitir apenas para super admin SaaS sem empresa no token. */
+  empresa_id?: number;
 }
 
 export async function registrarLogBlockdomiElasticsearch(payload: RegistroBlockdomiLogPayload): Promise<void> {
@@ -111,7 +113,8 @@ export async function listarLogsBlockdomiElasticsearch(filters: ListBlockdomiLog
       sortColumn = 'timestamp',
       sortDirection = 'DESC',
       sucesso,
-      origem
+      origem,
+      empresa_id: empresaIdFilter,
     } = filters;
     const from = (page - 1) * limit;
     const sortOrder = sortDirection?.toUpperCase() === 'ASC' ? 'asc' : 'desc';
@@ -127,6 +130,9 @@ export async function listarLogsBlockdomiElasticsearch(filters: ListBlockdomiLog
 
     if (typeof sucesso === 'boolean') {
       must.push({ term: { sucesso } });
+    }
+    if (empresaIdFilter != null && empresaIdFilter > 0) {
+      must.push({ term: { empresa_id: empresaIdFilter } });
     }
     if (search?.trim()) {
       must.push({

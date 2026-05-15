@@ -1,7 +1,13 @@
 import { ContratoPlanoAdicional } from '../../../models/contratos/ContratoPlanoAdicional';
-import { Plano } from '../../../models/cadastros/Plano';
 
 export class ContratoPlanoAdicionalService {
+  private static getPlanoInclude() {
+    return {
+      association: 'plano' as const,
+      attributes: ['id', 'nome_plano', 'descricao', 'tipo_servico', 'valor_mensal', 'status'],
+    };
+  }
+
   /**
    * Listar planos adicionais por contrato
    */
@@ -21,13 +27,8 @@ export class ContratoPlanoAdicionalService {
   /**
    * Buscar plano adicional por ID
    */
-  static async getById(id: string | number, includePlano = false): Promise<ContratoPlanoAdicional | null> {
-    const include = includePlano ? [
-      {
-        association: 'plano',
-        attributes: ['id', 'nome_plano', 'descricao', 'tipo_servico', 'valor_mensal', 'status']
-      }
-    ] : [];
+  static async getById(id: string | number, includePlano = true): Promise<ContratoPlanoAdicional | null> {
+    const include = includePlano ? [ContratoPlanoAdicionalService.getPlanoInclude()] : [];
 
     return await ContratoPlanoAdicional.findByPk(id, {
       include
@@ -61,8 +62,8 @@ export class ContratoPlanoAdicionalService {
     }
     
     await servico.update(dados);
-    await servico.reload();
-    
+    await servico.reload({ include: [ContratoPlanoAdicionalService.getPlanoInclude()] });
+
     return servico;
   }
 

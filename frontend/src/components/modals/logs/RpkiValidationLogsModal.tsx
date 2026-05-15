@@ -153,6 +153,13 @@ const RpkiValidationLogsModal: React.FC<RpkiValidationLogsModalProps> = ({ show 
 
     return [
       {
+        key: 'id',
+        label: 'ID',
+        sortable: true,
+        width: '42px',
+        render: (item) => <span className="small">{item.id}</span>,
+      },
+      {
         key: 'created_at',
         label: 'Data',
         sortable: true,
@@ -219,6 +226,7 @@ const RpkiValidationLogsModal: React.FC<RpkiValidationLogsModalProps> = ({ show 
   }, [isSaasPortal]);
 
   const searchFields = [
+    { key: 'id', label: 'ID' },
     { key: 'remote_host', label: 'Servidor' },
     { key: 'message', label: 'Mensagem' },
   ];

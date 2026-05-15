@@ -146,6 +146,7 @@ function registerTerminalNamespace(ns: Namespace): void {
         logSshAudit({
           action: 'CONNECT',
           userId,
+          empresaId: device.empresa_id ?? null,
           deviceId: device.id,
           deviceName: device.name,
           success: true,

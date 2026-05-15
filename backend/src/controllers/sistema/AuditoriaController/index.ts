@@ -4,6 +4,7 @@ import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
 import { getElasticsearchService } from '../../../services/elasticsearch/ElasticsearchService';
 import { ES_DATA_STREAM } from '../../../services/elasticsearch/dataStreams';
 import { AuditoriaQueryService } from '../../../services/auditoria/AuditoriaQueryService';
+import { AuditoriaOperacionalMysqlService } from '../../../services/auditoria/AuditoriaOperacionalMysqlService';
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendNotFound, sendForbidden } from '../../../utils/responseUtils';
@@ -97,6 +98,81 @@ export class AuditoriaController {
         context: 'AuditoriaController',
         action: 'list',
         elasticsearchError: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  /**
+   * Lista logs operacionais (MySQL `adm_sistema_logs_operacionais`) para modais de auditoria.
+   * Detalhe completo (dados antes/depois): {@link AuditoriaController.getById} no Elasticsearch.
+   */
+  static async listOperacional(req: Request, res: Response): Promise<void> {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 15;
+      const search = req.query.search as string;
+      const searchField = req.query.searchField as string;
+      const acao = req.query.acao as string;
+      const entidade = req.query.entidade as string;
+      const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
+      const dataInicio = req.query.data_inicio as string;
+      const dataFim = req.query.data_fim as string;
+      const sortColumn = req.query.sortColumn as string;
+      const sortDirection = req.query.sortDirection as string;
+      const comUsuarioObrigatorio = req.query.com_usuario_obrigatorio === 'true' || req.query.comUsuarioObrigatorio === 'true';
+      const semUsuarioObrigatorio = req.query.sem_usuario_obrigatorio === 'true' || req.query.semUsuarioObrigatorio === 'true';
+      const origemAuditoria = req.query.origem_auditoria as string | undefined;
+      const moduloBlockdomi =
+        req.query.modulo_blockdomi === 'true' || req.query.moduloBlockdomi === 'true';
+      const authEmpresaId = getEmpresaIdOrNull(req);
+      const queryEmpresaId = req.query.empresa_id ? parseInt(req.query.empresa_id as string) : undefined;
+      if (queryEmpresaId != null && authEmpresaId != null) {
+        sendForbidden(res, 'Acesso negado: não é permitido filtrar por outra empresa');
+        return;
+      }
+      const empresaId = queryEmpresaId ?? authEmpresaId;
+
+      const { logs, total } = await AuditoriaOperacionalMysqlService.list({
+        page,
+        limit,
+        search,
+        searchField,
+        acao,
+        entidade,
+        moduloBlockdomi: moduloBlockdomi || undefined,
+        usuario_id,
+        dataInicio,
+        dataFim,
+        sortColumn,
+        sortDirection,
+        empresaId: empresaId ?? null,
+        excludeSaasEntities: authEmpresaId != null,
+        filterSaasOnly: false,
+        comUsuarioObrigatorio,
+        semUsuarioObrigatorio,
+        origemAuditoria,
+      });
+
+      const lastPage = Math.max(1, Math.ceil(total / limit));
+
+      await AuditoriaQueryService.enrichLogsWithEmpresaNome(logs, false, empresaId == null);
+      await AuditoriaQueryService.enrichLogsWithClienteNome(logs);
+
+      sendSuccess(res, {
+        data: logs,
+        pagination: {
+          current_page: page,
+          last_page: lastPage,
+          per_page: limit,
+          total,
+          from: total > 0 ? (page - 1) * limit + 1 : 0,
+          to: Math.min(page * limit, total),
+        },
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao buscar logs operacionais', 500, true, {
+        context: 'AuditoriaController',
+        action: 'listOperacional',
       });
     }
   }

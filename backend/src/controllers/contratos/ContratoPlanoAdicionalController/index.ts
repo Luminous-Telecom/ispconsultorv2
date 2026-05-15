@@ -177,7 +177,7 @@ export class ContratoPlanoAdicionalController {
       const empresaId = getEmpresaIdOrNull(req);
       const value = await ContratoPlanoAdicionalController.updateSchema.validateAsync(req.body);
 
-      const servico = await ContratoPlanoAdicionalService.getById(id);
+      const servico = await ContratoPlanoAdicionalService.getById(id, true);
 
       if (!servico) {
         sendNotFound(res, 'Serviço adicional não encontrado');

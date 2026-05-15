@@ -1,12 +1,20 @@
-import { PaymentCommonService } from '../PaymentCommonService';
 import { ReciboPagamentoService } from '../../comunicacao/ReciboPagamentoService';
 import { logger } from '../../../utils/logger';
 import { registrarAtualizacaoElasticsearch } from '../../elasticsearch/ElasticsearchAuditService';
 import { desbloquearSeSemAtraso } from '../../saas/BloqueioAtrasoService';
 import type { Request } from 'express';
 import type { ResolvedTitulo } from '../TituloWebhookResolver';
+import { TituloService } from '../../financeiro/TituloService';
+import { SaasTituloService } from '../../saas/SaasCrudService';
 
 type TituloLike = { id: number; empresa_id?: number; valor: number; pago: boolean; status: string; update: (data: Record<string, unknown>) => Promise<unknown>; reload: () => Promise<unknown>; toJSON: () => Record<string, unknown>; marcarComoPago?: (valor: number, data?: Date, skipLiquidacao?: boolean) => Promise<void> };
+
+/** Recarrega `resolved.titulo` com o mesmo shape de `getById` (antes ou depois das alterações). */
+export async function refetchResolvedTitulo(resolved: ResolvedTitulo): Promise<void> {
+  const id = (resolved.titulo as { id: number }).id;
+  const full = resolved.saas ? await SaasTituloService.getById(id) : await TituloService.getById(id);
+  if (full) resolved.titulo = full;
+}
 
 /**
  * Aplica atualização de pagamento via webhook em título (admin ou SaaS)

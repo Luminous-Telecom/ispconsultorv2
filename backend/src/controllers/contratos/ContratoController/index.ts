@@ -13,6 +13,7 @@ import { ContratoPlanoAdicionalService } from '../../../services/contratos/Contr
 import { Transaction } from 'sequelize';
 import * as Joi from 'joi';
 import { logger } from '../../../utils/logger';
+import { divergenciasUpdateNoOp } from '../../../services/sistema/SistemaLogOperacionalService';
 import { withTransaction } from '../../../utils/transaction';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../../services/sistema/AuditoriaService/index';
 import { setAuditData } from '../../../middleware/auditMiddleware';
@@ -44,6 +45,21 @@ export class ContratoController {
     }
     
     return null;
+  }
+
+  /** Compara desconto/valor vindo do body vs instância (DECIMAL/string/number; null ≈ 0) */
+  private static valoresMonetariosOuDecimaisEquivalentes(a: unknown, b: unknown): boolean {
+    const norm = (x: unknown): number | null => {
+      if (x === null || x === undefined || x === '') return 0;
+      const n = Number(String(x).trim().replace(',', '.'));
+      return Number.isFinite(n) ? n : null;
+    };
+    const na = norm(a);
+    const nb = norm(b);
+    if (na === null || nb === null) {
+      return String(a ?? '').trim() === String(b ?? '').trim();
+    }
+    return Math.abs(na - nb) < 1e-6;
   }
 
   // Schema de validação para criação
@@ -457,15 +473,42 @@ export class ContratoController {
         delete value.data_validade_desconto;
       }
 
-      // Normalizar datas para evitar problemas de timezone
-      value.data_inicio = ContratoController.normalizeDate(value.data_inicio);
-      value.data_fim = ContratoController.normalizeDate(value.data_fim);
-      value.data_validade_desconto = ContratoController.normalizeDate(value.data_validade_desconto);
+      // Normalizar só datas enviadas (campos omitidos não viram null no update)
+      if ('data_inicio' in value) {
+        value.data_inicio = ContratoController.normalizeDate(
+          value.data_inicio as string | Date | null | undefined
+        );
+      }
+      if ('data_fim' in value) {
+        value.data_fim = ContratoController.normalizeDate(
+          value.data_fim as string | Date | null | undefined
+        );
+      }
+      if ('data_validade_desconto' in value) {
+        value.data_validade_desconto = ContratoController.normalizeDate(
+          value.data_validade_desconto as string | Date | null | undefined
+        );
+      }
 
       let contratoAtualizado = await ContratoService.update(id, value);
 
-      // Recalcular valor_final se plano ou descontos mudaram
-      if (value.plano_id !== undefined || value.desconto_percentual !== undefined || value.desconto_valor !== undefined) {
+      const planoIdMudou =
+        value.plano_id !== undefined && Number(value.plano_id) !== Number(contrato.plano_id);
+      const descontoPctMudou =
+        value.desconto_percentual !== undefined &&
+        !ContratoController.valoresMonetariosOuDecimaisEquivalentes(
+          value.desconto_percentual,
+          contrato.desconto_percentual
+        );
+      const descontoValorMudou =
+        value.desconto_valor !== undefined &&
+        !ContratoController.valoresMonetariosOuDecimaisEquivalentes(
+          value.desconto_valor,
+          contrato.desconto_valor
+        );
+
+      // Recalcular valor_final só se plano ou descontos mudaram de fato
+      if (planoIdMudou || descontoPctMudou || descontoValorMudou) {
         // Recalcular baseado no plano e descontos
         const plano = await contratoAtualizado.getPlano();
         let novoValorFinal = parseFloat(plano.valor_mensal.toString());
@@ -488,7 +531,24 @@ export class ContratoController {
       
       // Registrar auditoria
       const dadosNovos = contratoAtualizado.toJSON() as Record<string, unknown>;
-      
+
+      const auditoriaLogUpdateDiff =
+        process.env.AUDITORIA_LOG_UPDATE_DIFF === '1' ||
+        process.env.AUDITORIA_LOG_UPDATE_DIFF === 'true';
+      if (auditoriaLogUpdateDiff) {
+        logger.info({
+          message: 'AUDITORIA_UPDATE: Contrato — estado antes de registrarAtualizacao',
+          context: 'ContratoController',
+          action: 'update',
+          contratoId: contrato.id,
+          planoIdMudou,
+          descontoPctMudou,
+          descontoValorMudou,
+          bodyKeys: Object.keys(value),
+          divergencias: divergenciasUpdateNoOp(dadosAnteriores, dadosNovos, { max: 35, maxDepth: 8 }),
+        });
+      }
+
       // Disponibilizar dados para o middleware
       setAuditData(req, dadosAnteriores, dadosNovos);
       
@@ -507,7 +567,7 @@ export class ContratoController {
         // Não interromper o fluxo
       }
 
-      sendSuccess(res, contrato, 'Contrato atualizado com sucesso');
+      sendSuccess(res, contratoAtualizado, 'Contrato atualizado com sucesso');
     } catch (error) {
       sendError(res, error, 'Erro ao atualizar contrato', 500, true, {
         context: 'ContratoController',

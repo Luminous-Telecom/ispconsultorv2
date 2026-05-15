@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { BlockdomiLogAcessoService } from '../../../services/blockdomi/BlockdomiLogAcessoService';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
+import { resolveListEmpresaId } from '../../../utils/tenantUtils';
 
 export class BlockdomiLogAcessoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -16,6 +17,15 @@ export class BlockdomiLogAcessoController {
       const origem =
         origemRaw === 'api_txt' || origemRaw === 'sistema' ? (origemRaw as 'api_txt' | 'sistema') : undefined;
 
+      const listEmpresaId = resolveListEmpresaId(req);
+      if (listEmpresaId === false) {
+        sendSuccess(res, {
+          data: [],
+          pagination: { current_page: page, per_page: limit, total: 0, last_page: 1, from: 0, to: 0 },
+        });
+        return;
+      }
+
       const result = await BlockdomiLogAcessoService.list({
         page,
         limit,
@@ -23,7 +33,8 @@ export class BlockdomiLogAcessoController {
         sortColumn,
         sortDirection,
         sucesso,
-        origem
+        origem,
+        ...(listEmpresaId != null ? { empresa_id: listEmpresaId } : {}),
       });
 
       sendSuccess(res, result);

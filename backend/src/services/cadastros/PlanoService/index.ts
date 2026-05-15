@@ -32,6 +32,16 @@ export interface ListPlanosResponse {
 }
 
 export class PlanoService {
+  private static getDefaultIncludes() {
+    return [
+      {
+        association: 'clientes' as const,
+        attributes: ['id', 'razao_social', 'nome_fantasia'],
+        through: { attributes: ['desconto_percentual', 'desconto_valor', 'valor_final', 'status'] },
+      },
+    ];
+  }
+
   /**
    * Listar planos com filtros e paginação
    */
@@ -244,14 +254,8 @@ export class PlanoService {
    */
   static async getById(id: string | number, transaction?: any): Promise<Plano | null> {
     const plano = await Plano.findByPk(id, {
-      include: [
-        { 
-          association: 'clientes', 
-          attributes: ['id', 'razao_social', 'nome_fantasia'],
-          through: { attributes: ['desconto_percentual', 'desconto_valor', 'valor_final', 'status'] }
-        }
-      ],
-      transaction
+      include: PlanoService.getDefaultIncludes(),
+      transaction,
     });
 
     return plano;
@@ -368,8 +372,8 @@ export class PlanoService {
       where: { id }
     });
 
-    const plano = await Plano.findByPk(id);
-    
+    const plano = await PlanoService.getById(id);
+
     if (!plano) {
       throw new Error('Plano não encontrado após atualização');
     }
@@ -425,7 +429,11 @@ export class PlanoService {
     // Invalidar cache
     cache.deletePattern('planos:list:.*');
     
-    return plano;
+    const atualizado = await PlanoService.getById(id);
+    if (!atualizado) {
+      throw new Error('Plano não encontrado');
+    }
+    return atualizado;
   }
 }
 

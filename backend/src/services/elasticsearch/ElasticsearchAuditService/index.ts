@@ -20,7 +20,8 @@ import { ES_DATA_STREAM } from '../dataStreams';
 import { elasticsearchEventTimestamps } from '../elasticsearchTimestamps';
 import { collectRelatedEntityIds } from '../relatedEntityIds';
 import { logger } from '../../../utils/logger';
-import { safeFormatDateISOLocal } from '../../../utils/timezoneUtils';
+import { normalizarSnapshotAuditoria } from '../../auditoria/normalizarSnapshotAuditoria';
+import { SistemaLogOperacionalService, houveAlteracaoEfetivaEmUpdate } from '../../sistema/SistemaLogOperacionalService';
 
 export type AcaoAuditoria = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'import' | 'executar';
 
@@ -116,8 +117,38 @@ export async function registrarAuditoriaElasticsearch(
   const metodoHttp = dados.metodo_http ?? req.method ?? null;
   const userAgent = getUserAgent(req);
 
+  const dadosAnterioresNorm = normalizarSnapshotAuditoria(dados.dados_anteriores ?? null);
+  const dadosNovosNorm = normalizarSnapshotAuditoria(dados.dados_novos ?? null);
+
+  if (dados.acao === 'update' && !houveAlteracaoEfetivaEmUpdate(dadosAnterioresNorm, dadosNovosNorm)) {
+    return;
+  }
+
+  const snapshotBase = {
+    acao: dados.acao,
+    entidade: dados.entidade,
+    entidadeId: dados.entidade_id ?? null,
+    observacoes: dados.observacoes ?? null,
+    empresaId,
+    usuarioId: userData.id,
+    ipAddress,
+    userAgent,
+    rota,
+    metodoHttp,
+    origemAuditoria: (dados.origem_auditoria ?? 'usuario') as OrigemAuditoria,
+    dadosNovos: dadosNovosNorm,
+    dadosAnteriores: dadosAnterioresNorm,
+  };
+
   setImmediate(async () => {
-      try {
+    const persistOperacional = (elasticsearchLogId: string | null) => {
+      SistemaLogOperacionalService.registrarFromAuditoriaSnapshot({
+        ...snapshotBase,
+        elasticsearchLogId,
+      });
+    };
+
+    try {
         const elasticsearchService = getElasticsearchService();
         const client = elasticsearchService.getClient();
 
@@ -128,6 +159,7 @@ export async function registrarAuditoriaElasticsearch(
             acao: dados.acao,
             entidade: dados.entidade
           });
+          persistOperacional(null);
           return;
         }
 
@@ -139,154 +171,12 @@ export async function registrarAuditoriaElasticsearch(
             acao: dados.acao,
             entidade: dados.entidade
           });
+          persistOperacional(null);
           return;
         }
 
-      // Limpar dados removendo apenas campos internos do Sequelize e campos muito grandes
-      const limparDados = (dados: Record<string, unknown> | null): Record<string, unknown> | null => {
-        if (!dados || typeof dados !== 'object') return null;
-        
-        const limpo: Record<string, unknown> = {};
-        const camposExcluir = [
-          'dataValues', '_changed', '_options', 'isNewRecord', '_previousDataValues', 
-          '$modelOptions', 'Model', 'sequelize', 'tableName',
-          'xml', 'pdf_base64', 'pdf_url', 'danfe_url',
-          'pagamentos', 'arquivos', 'saldo_devedor', 'vencida'
-        ];
-        
-        // Campos de relacionamento que devem ser convertidos para arrays de IDs
-        const relacionamentosArray = ['planos', 'titulos', 'contratos', 'termos', 'mensagens', 'notas_fiscais', 'parcelas', 'documentos', 'anexos'];
-        
-        for (const [key, value] of Object.entries(dados)) {
-          // Ignorar campos internos do Sequelize e campos muito grandes
-          if (key.startsWith('_') || key.startsWith('$') || camposExcluir.includes(key)) {
-            continue;
-          }
-          
-          // Ignorar valores null para evitar conflitos de mapeamento no Elasticsearch
-          if (value === null || value === undefined) {
-            continue;
-          }
-          
-          // Tratar relacionamentos que são arrays (planos, titulos, contratos, etc.)
-          if (relacionamentosArray.includes(key)) {
-            if (Array.isArray(value)) {
-              // Extrair apenas IDs dos objetos do relacionamento que estão ativos
-              const ids = value
-                .slice(0, 10) // Limitar a 10 itens para não sobrecarregar
-                .map((item: any) => {
-                  if (item && typeof item === 'object' && item.id !== undefined) {
-                    // Verificar se o item está ativo baseado no tipo de relacionamento
-                    let isAtivo = true; // Por padrão, incluir se não tiver campo de status
-                    
-                    // Para contratos: status === 'ativo'
-                    if (key === 'contratos' && item.status) {
-                      isAtivo = String(item.status).toLowerCase() === 'ativo';
-                    }
-                    // Para títulos: status !== 'cancelado'
-                    else if (key === 'titulos' && item.status) {
-                      isAtivo = String(item.status).toLowerCase() !== 'cancelado';
-                    }
-                    // Para outros relacionamentos: verificar campo ativo ou status
-                    else if (item.ativo !== undefined) {
-                      isAtivo = item.ativo === true || item.ativo === 1;
-                    } else if (item.status !== undefined) {
-                      const statusLower = String(item.status).toLowerCase();
-                      isAtivo = !['cancelado', 'inativo', 'excluido', 'deleted', 'suspenso'].includes(statusLower);
-                    }
-                    
-                    return isAtivo ? item.id : null;
-                  }
-                  return null;
-                })
-                .filter((id: any) => id !== null);
-              
-              if (ids.length > 0) {
-                limpo[`${key}_ids`] = ids; // Usar sufixo _ids para indicar que é array de IDs
-              }
-            } else if (value && typeof value === 'object' && (value as any).id !== undefined) {
-              // Se for um único objeto, verificar se está ativo antes de incluir
-              const item = value as any;
-              let isAtivo = true; // Por padrão, incluir se não tiver campo de status
-              
-              // Para contratos: status === 'ativo'
-              if (key === 'contratos' && item.status) {
-                isAtivo = String(item.status).toLowerCase() === 'ativo';
-              }
-              // Para títulos: status !== 'cancelado'
-              else if (key === 'titulos' && item.status) {
-                isAtivo = String(item.status).toLowerCase() !== 'cancelado';
-              }
-              // Para outros relacionamentos: verificar campo ativo ou status
-              else if (item.ativo !== undefined) {
-                isAtivo = item.ativo === true || item.ativo === 1;
-              } else if (item.status !== undefined) {
-                const statusLower = String(item.status).toLowerCase();
-                isAtivo = !['cancelado', 'inativo', 'excluido', 'deleted', 'suspenso'].includes(statusLower);
-              }
-              
-              if (isAtivo) {
-                limpo[`${key}_id`] = item.id;
-              }
-            }
-            continue;
-          }
-          
-          // Incluir created_at_formatada e outros campos formatados como strings
-          if (key === 'created_at_formatada' || key.endsWith('_formatada')) {
-            if (typeof value === 'string') {
-              limpo[key] = value;
-            }
-            continue;
-          }
-          
-          // Para relacionamentos (objetos aninhados), manter apenas ID
-          if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
-            const relObj = value as any;
-            if (relObj.id !== undefined) {
-              limpo[`${key}_id`] = relObj.id;
-            }
-            continue;
-          }
-          
-          // Manter valores primitivos (exceto null que já foi tratado)
-          if (value instanceof Date || typeof value !== 'object') {
-            if (value instanceof Date) {
-              limpo[key] = safeFormatDateISOLocal(value);
-            } else {
-              limpo[key] = value;
-            }
-            continue;
-          }
-          
-          // Para arrays genéricos, converter para array de IDs ou valores primitivos
-          if (Array.isArray(value)) {
-            // Se array vazio, não incluir para evitar conflitos de mapeamento
-            if (value.length === 0) {
-              continue;
-            }
-            
-            const arrLimpo = value.slice(0, 5).map((item: any) => {
-              if (item && typeof item === 'object' && item.id !== undefined) {
-                return item.id;
-              }
-              return typeof item === 'object' ? null : item;
-            }).filter((item: any) => item !== null);
-            
-            // Só incluir se tiver itens válidos
-            if (arrLimpo.length > 0) {
-              limpo[key] = arrLimpo;
-            }
-            continue;
-          }
-        }
-        
-        return Object.keys(limpo).length > 0 ? limpo : null;
-      };
-
-      // Limpar dados antes de criar o documento
-      const dadosAnterioresLimpos = limparDados(dados.dados_anteriores || null);
-      const dadosNovosLimpos = limparDados(dados.dados_novos || null);
+      const dadosAnterioresLimpos = dadosAnterioresNorm;
+      const dadosNovosLimpos = dadosNovosNorm;
 
       const reqAny = req as AuthenticatedRequest & { saasUser?: unknown };
       const isSaas = !!reqAny.saasUser;
@@ -339,13 +229,16 @@ export async function registrarAuditoriaElasticsearch(
       }
 
       // Indexar documento no Elasticsearch
-      await client.index({
+      const indexResult = await client.index({
         index: ES_DATA_STREAM.AUDITORIA,
         document,
         refresh: isAgent ? 'wait_for' : false
       });
-
-      // Log removido para evitar poluição do console
+      const esDocId =
+        (indexResult as { _id?: string })._id ??
+        (indexResult as { body?: { _id?: string } }).body?._id ??
+        null;
+      persistOperacional(esDocId);
     } catch (error) {
       // Não lançar erro para não interromper o fluxo principal
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -413,6 +306,7 @@ export async function registrarAuditoriaElasticsearch(
       if (isAgent) {
         logger.info('ElasticsearchAuditService: Agent - ERRO capturado no catch', { error: errorMessage });
       }
+      persistOperacional(null);
     }
   });
 }
@@ -478,27 +372,49 @@ export async function registrarAtualizacaoElasticsearchSistema(
   observacoes?: string,
   empresa_id?: number | null
 ): Promise<void> {
+  const da = normalizarSnapshotAuditoria(dadosAnteriores);
+  const dn = normalizarSnapshotAuditoria(dadosNovos);
+
+  if (!houveAlteracaoEfetivaEmUpdate(da, dn)) {
+    return;
+  }
+
+  const persistOperacional = (elasticsearchLogId: string | null) => {
+    SistemaLogOperacionalService.registrarFromAuditoriaSnapshot({
+      acao: 'update',
+      entidade,
+      entidadeId,
+      observacoes: observacoes ?? null,
+      empresaId: empresa_id ?? null,
+      usuarioId: null,
+      ipAddress: null,
+      userAgent: 'Rotina agendada',
+      rota: null,
+      metodoHttp: null,
+      origemAuditoria: 'agendador',
+      dadosNovos: dn,
+      dadosAnteriores: da,
+      elasticsearchLogId,
+    });
+  };
+
   try {
     const elasticsearchService = getElasticsearchService();
     const client = elasticsearchService.getClient();
-    if (!client) return;
+    if (!client) {
+      persistOperacional(null);
+      return;
+    }
     const isConnected = await elasticsearchService.checkConnection();
-    if (!isConnected) return;
-    const limpar = (d: Record<string, unknown> | null): Record<string, unknown> | null => {
-      if (!d || typeof d !== 'object') return null;
-      try {
-        return JSON.parse(JSON.stringify(d)) as Record<string, unknown>;
-      } catch {
-        return d;
-      }
-    };
+    if (!isConnected) {
+      persistOperacional(null);
+      return;
+    }
 
-    const da = limpar(dadosAnteriores);
-    const dn = limpar(dadosNovos);
     const relatedIds = collectRelatedEntityIds({
       entidadeId,
       dadosNovos: dn,
-      dadosAnteriores: da
+      dadosAnteriores: da,
     });
 
     const document: Record<string, unknown> = {
@@ -525,10 +441,15 @@ export async function registrarAtualizacaoElasticsearchSistema(
       document.related_entity_ids = relatedIds;
     }
 
-    await client.index({
+    const indexResult = await client.index({
         index: ES_DATA_STREAM.AUDITORIA,
         document
       });
+    const esDocId =
+      (indexResult as { _id?: string })._id ??
+      (indexResult as { body?: { _id?: string } }).body?._id ??
+      null;
+    persistOperacional(esDocId);
   } catch (error) {
     logger.warn('Falha ao registrar auditoria (Sistema) no Elasticsearch', {
       context: 'ElasticsearchAuditService',
@@ -537,6 +458,7 @@ export async function registrarAtualizacaoElasticsearchSistema(
       entidade_id: entidadeId,
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
+    persistOperacional(null);
   }
 }
 
@@ -603,6 +525,20 @@ export async function registrarExecucaoRotinaAuditoria(params: {
     await client.index({
       index: ES_DATA_STREAM.AUDITORIA,
       document
+    });
+
+    SistemaLogOperacionalService.registrarRotinaExecucao({
+      origem: saas ? 'saas' : 'erp',
+      empresaId: empresaId ?? null,
+      usuarioId: usuario?.id ?? null,
+      routineId,
+      routineNome,
+      routineTipo,
+      status,
+      duracaoMs,
+      resultado: resultado ?? null,
+      erro: erro ?? null,
+      ipAddress: usuario && ipAddress ? ipAddress : null,
     });
   } catch (error) {
     logger.warn('Falha ao registrar execução de rotina na auditoria', {

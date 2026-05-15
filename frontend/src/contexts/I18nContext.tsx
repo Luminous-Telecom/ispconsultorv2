@@ -1189,6 +1189,8 @@ export interface TranslationKeys {
   'audit.viewDetails': string;
   'audit.method': string;
   'audit.entity': string;
+  /** Coluna na lista operacional: JSON do payload (MySQL) */
+  'audit.operacionalCampos': string;
   'audit.timestamp': string;
   'audit.entities.all': string;
   'audit.actions.all': string;
@@ -2751,6 +2753,7 @@ const translations: Translations = {
     'audit.viewDetails': 'Ver Detalhes',
     'audit.method': 'Método',
     'audit.entity': 'Entidade',
+    'audit.operacionalCampos': 'Campos',
     'audit.timestamp': 'Data/Hora',
     'audit.entities.all': 'Todas',
     'audit.actions.all': 'Todas',
@@ -4308,6 +4311,7 @@ const translations: Translations = {
     'audit.viewDetails': 'View Details',
     'audit.method': 'Method',
     'audit.entity': 'Entity',
+    'audit.operacionalCampos': 'Fields',
     'audit.timestamp': 'Date/Time',
     'audit.entities.all': 'All',
     'audit.actions.all': 'All',
@@ -5867,6 +5871,7 @@ const translations: Translations = {
     'audit.viewDetails': 'Ver Detalles',
     'audit.method': 'Método',
     'audit.entity': 'Entidad',
+    'audit.operacionalCampos': 'Campos',
     'audit.timestamp': 'Fecha/Hora',
     'audit.entities.all': 'Todas',
     'audit.actions.all': 'Todas',

@@ -36,6 +36,7 @@ import { TipoCobrancaContrato } from './cadastros/TipoCobrancaContrato';
 import { DadosEmpresa } from './sistema/DadosEmpresa';
 import { ScheduledRoutine } from './sistema/ScheduledRoutine';
 import Parametros from './sistema/Parametros';
+import { SistemaLogOperacional } from './sistema/SistemaLogOperacional';
 
 // Comunicação
 import { ServidorEmail } from './comunicacao/ServidorEmail';
@@ -318,6 +319,9 @@ MensagemHistorico.belongsTo(Usuario, {
   as: 'usuario'
 });
 
+SistemaLogOperacional.belongsTo(DadosEmpresa, { foreignKey: 'empresa_id', as: 'empresa' });
+SistemaLogOperacional.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
+
 // SaaS
 SaasPlano.hasMany(SaasDadosEmpresa, { foreignKey: 'plano_id', as: 'empresas' });
 SaasDadosEmpresa.belongsTo(SaasPlano, { foreignKey: 'plano_id', as: 'plano' });
@@ -469,6 +473,7 @@ export {
   ClienteArquivo,
   AssinaturaDigitalProvider,
   Parametros,
+  SistemaLogOperacional,
   Fornecedor,
   ContaPagar,
   ContaPagarPagamento,

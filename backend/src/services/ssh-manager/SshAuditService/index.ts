@@ -20,6 +20,8 @@ export interface SshAuditData {
   userId: string;
   deviceId?: number | null;
   deviceName?: string | null;
+  /** Tenant (DadosEmpresa); obrigatório para isolamento na listagem */
+  empresaId?: number | null;
   command?: string | null;
   output?: string | null;
   success: boolean;
@@ -50,6 +52,7 @@ async function ensureSshIndex(): Promise<void> {
           errorMessage: { type: 'text' },
           ip: { type: 'ip' },
           duration: { type: 'long' },
+          empresa_id: { type: 'long' },
         },
       },
     });
@@ -75,6 +78,7 @@ export function logSshAudit(data: SshAuditData): void {
         timestamp: safeFormatDateISOLocal(new Date()) || new Date().toISOString(),
         action: data.action,
         userId: data.userId,
+        empresa_id: data.empresaId != null && data.empresaId > 0 ? data.empresaId : null,
         deviceId: data.deviceId != null ? String(data.deviceId) : null,
         deviceName: data.deviceName ?? null,
         command: data.command ?? null,
@@ -133,6 +137,8 @@ export async function searchSshAuditLogs(params: {
   limit?: number;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
+  /** Quando informado, restringe aos eventos da empresa (listagem multi-tenant) */
+  empresaId?: number;
 }): Promise<{ logs: Record<string, unknown>[]; total: number }> {
   const svc = getElasticsearchService();
   const client = svc.getClient();
@@ -158,6 +164,10 @@ export async function searchSshAuditLogs(params: {
     mustNot.push({ terms: { action: ['AGENT_CONNECT', 'AGENT_DISCONNECT'] } });
   } else if (params.logType === 'agentes') {
     must.push({ terms: { action: ['AGENT_CONNECT', 'AGENT_DISCONNECT'] } });
+  }
+
+  if (params.empresaId != null && params.empresaId > 0) {
+    must.push({ term: { empresa_id: params.empresaId } });
   }
 
   if (params.deviceId) must.push({ term: { deviceId: params.deviceId } });

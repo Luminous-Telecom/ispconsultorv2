@@ -2,6 +2,7 @@ import { ContaPagar } from '../../../models/financeiro/ContaPagar';
 import { ContaPagarPagamento } from '../../../models/financeiro/ContaPagarPagamento';
 import { Fornecedor } from '../../../models/financeiro/Fornecedor';
 import { Op, WhereOptions, Transaction } from 'sequelize';
+import type { Order } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { normalizeDateForDb } from '../../../utils/dateUtils';
 import { buildDateFilter, buildNumericSearchFilter, buildDateSearchFilter, combineFilters } from '../../../utils/queryFilters';
@@ -38,6 +39,13 @@ export interface ListContasPagarResponse {
 }
 
 export class ContaPagarService {
+  private static getDefaultIncludes() {
+    return [
+      { association: 'fornecedor' as const, required: false },
+      { association: 'pagamentos' as const, required: false, order: [['created_at', 'DESC']] as Order },
+    ];
+  }
+
   /**
    * Listar contas a pagar com filtros e paginação
    */
@@ -228,11 +236,8 @@ export class ContaPagarService {
    */
   static async getById(id: string | number, transaction?: Transaction): Promise<ContaPagar | null> {
     return await ContaPagar.findByPk(id, {
-      include: [
-        { association: 'fornecedor', required: false },
-        { association: 'pagamentos', required: false, order: [['created_at', 'DESC']] }
-      ],
-      transaction
+      include: ContaPagarService.getDefaultIncludes(),
+      transaction,
     });
   }
 
@@ -254,8 +259,8 @@ export class ContaPagarService {
     }
     
     await contaPagar.update(dadosContaPagar);
-    await contaPagar.reload();
-    
+    await contaPagar.reload({ include: ContaPagarService.getDefaultIncludes() });
+
     return contaPagar;
   }
 
@@ -301,7 +306,7 @@ export class ContaPagarService {
     transaction?: Transaction
   ): Promise<ContaPagar> {
     await conta.update(dados, { transaction });
-    await conta.reload({ transaction });
+    await conta.reload({ transaction, include: ContaPagarService.getDefaultIncludes() });
     return conta;
   }
 

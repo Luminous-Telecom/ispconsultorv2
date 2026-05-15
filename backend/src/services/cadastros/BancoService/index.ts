@@ -32,6 +32,10 @@ export interface ListBancosResponse {
 }
 
 export class BancoService {
+  private static getDefaultIncludes() {
+    return [{ association: 'titulos' as const }];
+  }
+
   /**
    * Buscar bancos ativos
    */
@@ -177,9 +181,7 @@ export class BancoService {
    */
   static async getById(id: string | number): Promise<Banco | null> {
     return await Banco.findByPk(id, {
-      include: [
-        { association: 'titulos' }
-      ]
+      include: BancoService.getDefaultIncludes(),
     });
   }
 
@@ -225,8 +227,8 @@ export class BancoService {
     }
     
     await banco.update(dadosBanco);
-    await banco.reload();
-    
+    await banco.reload({ include: BancoService.getDefaultIncludes() });
+
     // Invalidar cache se status mudou
     if (dadosBanco.ativo !== undefined) {
       cache.delete('bancos:ativos');

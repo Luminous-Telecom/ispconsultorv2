@@ -48,7 +48,7 @@ export class TituloBoletoController {
         : undefined;
 
       await titulo.marcarComoPago(valor_pago, dataPagamentoNormalizada);
-      await titulo.reload();
+      await TituloService.reloadTituloComRelacoes(titulo);
 
       const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
       await registrarAtualizacao(
@@ -88,7 +88,7 @@ export class TituloBoletoController {
 
       const dadosAnteriores = titulo.toJSON();
       await titulo.desmarcarPago();
-      await titulo.reload();
+      await TituloService.reloadTituloComRelacoes(titulo);
 
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
@@ -147,7 +147,7 @@ export class TituloBoletoController {
             : new Date();
 
           await titulo.marcarComoPago(Number(valorPago), dataPagamento);
-          await titulo.reload();
+          await TituloService.reloadTituloComRelacoes(titulo);
 
           try {
             const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;
@@ -198,7 +198,7 @@ export class TituloBoletoController {
 
       const dadosAnteriores = titulo.toJSON();
       await titulo.desmarcarPago();
-      await titulo.reload();
+      await TituloService.reloadTituloComRelacoes(titulo);
 
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? titulo.empresa_id ?? null;

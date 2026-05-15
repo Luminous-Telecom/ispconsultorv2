@@ -6,7 +6,7 @@ import { Usuario } from '../../../models/cadastros/Usuario';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
 import type { AuthenticatedRequest } from '../../../types/auth';
-import { getEmpresaIdOrNull } from '../../../utils/tenantUtils';
+import { getEmpresaIdOrNull, resolveListEmpresaId } from '../../../utils/tenantUtils';
 
 interface MensagemHistoricoFilters {
   tipo?: 'email' | 'whatsapp';
@@ -43,12 +43,13 @@ export class MensagemHistoricoController {
       } = req.query;
 
       const offset = (Number(page) - 1) * Number(limit);
-      const empresaId = getEmpresaIdOrNull(req) ?? undefined;
+      const listEmpresaId = resolveListEmpresaId(req);
+      if (listEmpresaId === false) {
+        sendSuccess(res, { data: [], pagination: { page: Number(page), limit: Number(limit), total: 0, totalPages: 0 } });
+        return;
+      }
 
-      // Construir filtros
-      const where: Record<string, unknown> = empresaId != null
-        ? { [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
-        : {};
+      const where: Record<string, unknown> = listEmpresaId != null ? { empresa_id: listEmpresaId } : {};
 
       if (tipo) {
         where.tipo = tipo;

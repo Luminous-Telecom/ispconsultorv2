@@ -26,6 +26,7 @@ export interface ListLogAcessoFilters {
   sortDirection?: string;
   sucesso?: boolean;
   origem?: 'api_txt' | 'sistema';
+  empresa_id?: number;
 }
 
 export interface ListLogAcessoResponse {

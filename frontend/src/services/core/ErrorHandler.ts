@@ -118,9 +118,12 @@ export class ErrorHandler {
           
           // Rotas que não devem ser tratadas como erro de autenticação (404 = recurso não encontrado)
           const optionalRoutes = [
-            'consultar', 'mensagens-', 'servidores-', 'servidor-', 
+            'consultar', 'mensagens-', 'servidores-', 'servidor-',
             'modelos-', 'modelo-', '/parametros', 'buscar-cep',
-            'dominios', 'domain/version', 'assinatura-digital'
+            'dominios', 'domain/version', 'assinatura-digital',
+            // 404 em detalhe de auditoria (ES) ou auth sem cookie não deve deslogar o ERP
+            '/auditoria/',
+            'saas/auditoria/',
           ];
           
           const isOptionalRoute = optionalRoutes.some(route => 

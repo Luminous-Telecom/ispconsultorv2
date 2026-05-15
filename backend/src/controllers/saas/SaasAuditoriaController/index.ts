@@ -3,6 +3,7 @@ import type { SaasAuthenticatedRequest } from '../../../middleware/saasAuthMiddl
 import { getElasticsearchService } from '../../../services/elasticsearch/ElasticsearchService';
 import { ES_DATA_STREAM } from '../../../services/elasticsearch/dataStreams';
 import { AuditoriaQueryService } from '../../../services/auditoria/AuditoriaQueryService';
+import { AuditoriaOperacionalMysqlService } from '../../../services/auditoria/AuditoriaOperacionalMysqlService';
 import { AuditoriaPDFService } from '../../../services/auditoria/AuditoriaPDFService';
 import { logger } from '../../../utils/logger';
 import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../../../utils/responseUtils';
@@ -98,6 +99,117 @@ export class SaasAuditoriaController {
         context: 'SaasAuditoriaController',
         action: 'listByTenant',
         elasticsearchError: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  /**
+   * Lista logs operacionais (MySQL) para modais SaaS — detalhe completo via Elasticsearch getById.
+   */
+  static async listOperacional(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const queryEmpresaId = req.query.empresa_id as string | undefined;
+      const empresaId = queryEmpresaId && !isNaN(parseInt(queryEmpresaId, 10))
+        ? parseInt(queryEmpresaId, 10)
+        : undefined;
+
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const search = req.query.search as string;
+      const searchField = req.query.searchField as string;
+      const acao = req.query.acao as string;
+      const entidade = req.query.entidade as string;
+      const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
+      const dataInicio = req.query.data_inicio as string;
+      const dataFim = req.query.data_fim as string;
+      const sortColumn = req.query.sortColumn as string;
+      const sortDirection = req.query.sortDirection as string;
+      const comUsuarioObrigatorio =
+        req.query.com_usuario_obrigatorio === 'true' || req.query.comUsuarioObrigatorio === 'true';
+      const semUsuarioObrigatorio =
+        req.query.sem_usuario_obrigatorio === 'true' || req.query.semUsuarioObrigatorio === 'true';
+      const origemAuditoria = req.query.origem_auditoria as string | undefined;
+      const moduloBlockdomi =
+        req.query.modulo_blockdomi === 'true' || req.query.moduloBlockdomi === 'true';
+
+      const { logs, total } = await AuditoriaOperacionalMysqlService.list({
+        page,
+        limit,
+        search,
+        searchField,
+        acao,
+        entidade,
+        moduloBlockdomi: moduloBlockdomi || undefined,
+        usuario_id,
+        dataInicio,
+        dataFim,
+        sortColumn,
+        sortDirection,
+        empresaId: empresaId ?? null,
+        excludeSaasEntities: false,
+        filterSaasOnly: false,
+        comUsuarioObrigatorio,
+        semUsuarioObrigatorio,
+        origemAuditoria,
+      });
+
+      const lastPage = Math.max(1, Math.ceil(total / limit));
+      const rawLogs = logs as Record<string, unknown>[];
+      await AuditoriaQueryService.enrichLogsWithEmpresaNome(rawLogs, true, true);
+      await AuditoriaQueryService.enrichLogsWithClienteNome(rawLogs);
+
+      sendSuccess(res, {
+        data: logs,
+        pagination: {
+          current_page: page,
+          last_page: lastPage,
+          per_page: limit,
+          total,
+          from: total > 0 ? (page - 1) * limit + 1 : 0,
+          to: Math.min(page * limit, total),
+        },
+      });
+    } catch (error) {
+      sendError(res, error, 'Erro ao buscar logs operacionais', 500, true, {
+        context: 'SaasAuditoriaController',
+        action: 'listOperacional',
+      });
+    }
+  }
+
+  /**
+   * Detalhe de um documento de auditoria no Elasticsearch (mesmo índice do ERP; autenticação SaaS).
+   */
+  static async getById(req: SaasAuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const elasticsearchService = getElasticsearchService();
+      const client = elasticsearchService.getClient();
+
+      if (!client) {
+        sendError(res, new Error('Elasticsearch não está configurado'), 'Elasticsearch não está configurado', 503, false);
+        return;
+      }
+
+      const result = await client.get({
+        index: ES_DATA_STREAM.AUDITORIA,
+        id,
+      });
+
+      sendSuccess(res, {
+        id: result._id,
+        ...(result._source as Record<string, unknown>),
+      });
+    } catch (error: unknown) {
+      const statusCode = (error as { statusCode?: number })?.statusCode;
+      if (statusCode === 404) {
+        sendNotFound(res, 'Log de auditoria não encontrado');
+        return;
+      }
+
+      sendError(res, error, 'Erro ao buscar log de auditoria', 500, true, {
+        context: 'SaasAuditoriaController',
+        action: 'getById',
       });
     }
   }

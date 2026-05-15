@@ -4,7 +4,7 @@ import { Titulo } from '../../../models/financeiro/Titulo';
 import { BarcodeService } from '../../bancos/BarcodeService';
 import { PaymentCommonService } from '../PaymentCommonService';
 import { TituloWebhookResolver } from '../TituloWebhookResolver';
-import { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook } from '../WebhookTituloUpdater';
+import { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook, refetchResolvedTitulo } from '../WebhookTituloUpdater';
 import { logger } from '../../../utils/logger';
 import { JsonValue } from '../../../types/index';
 import { AsaasPaymentPayload } from '../../../types/webhooks';
@@ -44,6 +44,7 @@ export class AsaasWebhookService {
         };
       }
 
+      await refetchResolvedTitulo(resolved);
       const { titulo } = resolved;
       const updates: Record<string, JsonValue> = {};
       const pagamentoStatusRaw = payment.status;
@@ -61,19 +62,6 @@ export class AsaasWebhookService {
 
       if (novoStatus && titulo.status !== 'cancelado' && novoStatus !== titulo.status) {
         updates.status = novoStatus;
-      }
-
-      if (novoStatus === 'pago') {
-        const dataPagamentoRaw = PaymentCommonService.pickAsaasWebhookPaymentDateRaw(
-          payment,
-          rootPayload?.dateCreated
-        );
-        const dataPagamentoNormalizada = dataPagamentoRaw
-          ? PaymentCommonService.normalizePaymentDate(dataPagamentoRaw)
-          : new Date();
-        const valorPago = typeof payment.value === 'number' ? Number(payment.value) :
-          typeof payment.netValue === 'number' ? Number(payment.netValue) : Number(titulo.valor);
-        await applyPagoWebhook(resolved, valorPago, dataPagamentoNormalizada || new Date());
       }
 
       if (typeof payment.nossoNumero === 'string') updates.nosso_numero = payment.nossoNumero;
@@ -98,15 +86,29 @@ export class AsaasWebhookService {
       }
 
       const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+
+      if (novoStatus === 'pago') {
+        const dataPagamentoRaw = PaymentCommonService.pickAsaasWebhookPaymentDateRaw(
+          payment,
+          rootPayload?.dateCreated
+        );
+        const dataPagamentoNormalizada = dataPagamentoRaw
+          ? PaymentCommonService.normalizePaymentDate(dataPagamentoRaw)
+          : new Date();
+        const valorPago = typeof payment.value === 'number' ? Number(payment.value) :
+          typeof payment.netValue === 'number' ? Number(payment.netValue) : Number(titulo.valor);
+        await applyPagoWebhook(resolved, valorPago, dataPagamentoNormalizada || new Date());
+      }
+
       if (titulo.status === 'cancelado' && updates.status) delete updates.status;
       if (Object.keys(updates).length > 0) {
         await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update(updates);
       }
-      await (titulo as { reload: () => Promise<unknown> }).reload();
+      await refetchResolvedTitulo(resolved);
 
       enviarReciboSeAdmin(resolved);
 
-      const dadosNovos = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
       await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook Asaas - Status: ${paymentStatus}`);
 
       return {

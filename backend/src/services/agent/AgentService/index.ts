@@ -26,6 +26,8 @@ export interface AgentShellSession {
   deviceId?: number;
   /** deviceName quando isProxy */
   deviceName?: string;
+  /** tenant para auditoria Elasticsearch */
+  empresaId?: number | null;
 }
 
 export interface AgentFileTransfer {
@@ -116,12 +118,24 @@ export function createShellSession(
   agentId: number,
   frontendSocketId: string,
   isProxy = false,
-  deviceInfo?: { deviceId: number; deviceName: string }
+  deviceInfo?: { deviceId: number; deviceName: string; empresaId?: number | null },
+  /** tenant quando terminal direto no agente (não proxy) */
+  agentEmpresaId?: number | null
 ): void {
-  const sess: AgentShellSession = { sessionId, agentId, frontendSocketId, openedAt: new Date(), isProxy };
+  const sess: AgentShellSession = {
+    sessionId,
+    agentId,
+    frontendSocketId,
+    openedAt: new Date(),
+    isProxy,
+    empresaId: agentEmpresaId ?? null,
+  };
   if (deviceInfo) {
     sess.deviceId = deviceInfo.deviceId;
     sess.deviceName = deviceInfo.deviceName;
+    if (deviceInfo.empresaId !== undefined) {
+      sess.empresaId = deviceInfo.empresaId ?? null;
+    }
   }
   shellSessions.set(sessionId, sess);
 }

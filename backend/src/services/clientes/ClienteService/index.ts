@@ -36,6 +36,27 @@ export interface ListClientesResponse {
 }
 
 export class ClienteService {
+  /** Includes padrão do cliente — mesmo em `getById` e após `update`/`reload` (auditoria / toJSON coerentes) */
+  private static getDefaultIncludes() {
+    return [
+      {
+        association: 'planos',
+        include: [{ association: 'clientes', attributes: ['id', 'razao_social'] }],
+      },
+      {
+        association: 'titulos',
+        include: [
+          { association: 'plano', attributes: ['id', 'nome_plano'] },
+          {
+            association: 'banco',
+            attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao'],
+          },
+        ],
+      },
+      { association: 'contratos' },
+    ];
+  }
+
   /**
    * Listar clientes com filtros e paginação
    */
@@ -183,23 +204,7 @@ export class ClienteService {
    */
   static async getById(id: string | number): Promise<Cliente | null> {
     return await Cliente.findByPk(id, {
-      include: [
-        { 
-          association: 'planos',
-          include: [{ association: 'clientes', attributes: ['id', 'razao_social'] }]
-        },
-        { 
-          association: 'titulos',
-          include: [
-            { association: 'plano', attributes: ['id', 'nome_plano'] },
-            { 
-              association: 'banco', 
-              attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao'] 
-            }
-          ]
-        },
-        { association: 'contratos' }
-      ]
+      include: ClienteService.getDefaultIncludes(),
     });
   }
 
@@ -259,8 +264,8 @@ export class ClienteService {
     }
     
     await cliente.update(dadosParaSalvar);
-    await cliente.reload();
-    
+    await cliente.reload({ include: ClienteService.getDefaultIncludes() });
+
     return cliente;
   }
 

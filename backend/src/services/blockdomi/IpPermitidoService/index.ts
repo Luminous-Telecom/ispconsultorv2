@@ -23,6 +23,10 @@ export interface ListIpPermitidoResponse {
 }
 
 export class IpPermitidoService {
+  private static getDefaultIncludes() {
+    return [{ association: 'cliente' as const, attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj'] }];
+  }
+
   static async list(filters: ListIpPermitidoFilters): Promise<ListIpPermitidoResponse> {
     const { page = 1, limit = 15, search, searchField, sortColumn = 'id', sortDirection = 'DESC' } = filters;
     const offset = (page - 1) * limit;
@@ -106,7 +110,7 @@ export class IpPermitidoService {
 
   static async getById(id: string | number): Promise<IpPermitidoBlockdomi | null> {
     return IpPermitidoBlockdomi.findByPk(id, {
-      include: [{ association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj'] }]
+      include: IpPermitidoService.getDefaultIncludes(),
     });
   }
 
@@ -138,7 +142,7 @@ export class IpPermitidoService {
       if (!faixaNormalizada) throw new Error('Faixa de IPs é obrigatória');
       await row.update({ faixa_ips: faixaNormalizada });
     }
-    return row.reload();
+    return row.reload({ include: IpPermitidoService.getDefaultIncludes() });
   }
 
   static async delete(id: string | number): Promise<void> {

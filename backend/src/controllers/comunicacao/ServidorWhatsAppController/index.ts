@@ -561,7 +561,12 @@ export class ServidorWhatsAppController {
    */
   static async getTemplates(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const servidor = await ServidorWhatsAppService.findOne({ ativo: true });
+      const empresaId = getEmpresaIdOrNull(req);
+      const where =
+        empresaId != null
+          ? { ativo: true, [Op.or]: [{ empresa_id: empresaId }, { empresa_id: null }] }
+          : { ativo: true };
+      const servidor = await ServidorWhatsAppService.findOne(where);
 
       if (!servidor) {
         logger.warn('Tentativa de buscar templates sem servidor ativo');

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { searchSshAuditLogs, SshAuditAction } from '../../../services/ssh-manager/SshAuditService';
 import { sendSuccess, sendError } from '../../../utils/responseUtils';
+import { resolveListEmpresaId } from '../../../utils/tenantUtils';
 import { Agent } from '../../../models/agent/Agent';
 import { SshDevice } from '../../../models/ssh-manager/SshDevice';
 import { Cliente } from '../../../models/clientes/Cliente';
@@ -271,6 +272,23 @@ export class SshAuditController {
       const pageNum = Math.max(1, parseInt(page ?? '1', 10));
       const limitNum = Math.min(100, Math.max(1, parseInt(limit ?? '20', 10)));
 
+      const listEmpresaId = resolveListEmpresaId(req);
+      if (listEmpresaId === false) {
+        sendSuccess(res, {
+          data: [],
+          pagination: {
+            current_page: pageNum,
+            last_page: 1,
+            per_page: limitNum,
+            total: 0,
+            from: 0,
+            to: 0,
+          },
+        });
+        return;
+      }
+      const empresaIdFilter = listEmpresaId ?? undefined;
+
       let searchUserIds: string[] | undefined;
       if (searchField === 'userId' && search?.trim()) {
         const term = search.trim();
@@ -300,6 +318,7 @@ export class SshAuditController {
         limit: limitNum,
         sortColumn: sortColumn?.trim(),
         sortDirection: sortDir,
+        empresaId: empresaIdFilter,
       });
 
       let enrichedLogs = await enrichSshAuditLogsWithCliente(logs);

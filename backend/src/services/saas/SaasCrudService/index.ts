@@ -121,7 +121,8 @@ const tituloEmpresaInclude = {
   attributes: ['id', 'nome_empresa', 'razao_social', 'nome_fantasia'],
 };
 
-const tituloIncludes = [
+/** Mesmo shape de `getById` / list — usado em reload pós-update e auditoria. */
+export const SAAS_TITULO_AUDITORIA_INCLUDES = [
   tituloEmpresaInclude,
   { model: SaasPlano, as: 'plano', attributes: ['id', 'nome', 'valor_mensal'] },
   { model: SaasBanco, as: 'banco', attributes: ['id', 'nome', 'banco', 'tipo_banco', 'ativo'] },
@@ -172,7 +173,7 @@ export class SaasTituloService {
     try {
       const { count, rows } = await SaasTitulo.findAndCountAll({
         where,
-        include: tituloIncludes,
+        include: SAAS_TITULO_AUDITORIA_INCLUDES,
         order: [[col, (sortDirection || 'desc').toUpperCase()]],
         limit,
         offset,
@@ -190,7 +191,7 @@ export class SaasTituloService {
   }
 
   static async getById(id: number) {
-    return SaasTitulo.findByPk(id, { include: tituloIncludes });
+    return SaasTitulo.findByPk(id, { include: SAAS_TITULO_AUDITORIA_INCLUDES });
   }
 
   static async create(data: Partial<SaasTitulo>) {

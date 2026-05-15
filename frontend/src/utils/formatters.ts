@@ -280,3 +280,20 @@ export const formatLinhaDigitavel = (linha: string): string => {
          `${digitos.substring(32, 33)} ` +
          `${digitos.substring(33)}`;
 };
+
+/** ID exibido na listagem de logs de auditoria (MySQL operacional ou Elasticsearch). */
+export function formatAuditoriaListId(log: {
+  id: string | number;
+  operacional_id?: string | null;
+}): { display: string; title: string } {
+  const op = log.operacional_id?.trim();
+  if (op) {
+    return { display: op, title: String(log.id) };
+  }
+  const idStr = String(log.id);
+  if (idStr.startsWith('op:')) {
+    const num = idStr.slice(3);
+    return { display: num, title: idStr };
+  }
+  return { display: idStr, title: idStr };
+}

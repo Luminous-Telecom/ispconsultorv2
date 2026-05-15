@@ -12,6 +12,29 @@ export interface ListAssinaturasFilters {
 }
 
 export class AssinaturaDigitalService {
+  /** Includes alinhados a `getById` — usar em `reload` após mutações para auditoria coerente */
+  static getDefaultIncludes() {
+    return [
+      {
+        model: TermoContrato,
+        as: 'termoContrato',
+        required: false,
+      },
+      {
+        model: Cliente,
+        as: 'cliente',
+        required: false,
+      },
+    ];
+  }
+
+  /**
+   * Recarrega instância com os mesmos relacionamentos de `getById` (webhooks / updates parciais).
+   */
+  static async reloadComRelacoes(assinatura: AssinaturaDigital): Promise<void> {
+    await assinatura.reload({ include: AssinaturaDigitalService.getDefaultIncludes() });
+  }
+
   /**
    * Listar assinaturas com filtros (filtra por empresa_id quando informado)
    */
@@ -56,18 +79,7 @@ export class AssinaturaDigitalService {
    */
   static async getById(id: string | number, empresaId?: number | null): Promise<AssinaturaDigital | null> {
     const assinatura = await AssinaturaDigital.findByPk(id, {
-      include: [
-        {
-          model: TermoContrato,
-          as: 'termoContrato',
-          required: false
-        },
-        {
-          model: Cliente,
-          as: 'cliente',
-          required: false
-        }
-      ]
+      include: AssinaturaDigitalService.getDefaultIncludes(),
     });
     if (assinatura && empresaId != null && assinatura.empresa_id !== empresaId) {
       return null;
@@ -145,14 +157,16 @@ export class AssinaturaDigitalService {
    * Atualizar assinatura
    */
   static async update(id: string | number, dados: Partial<AssinaturaDigital>): Promise<AssinaturaDigital> {
-    const assinatura = await AssinaturaDigital.findByPk(id);
+    const assinatura = await AssinaturaDigital.findByPk(id, {
+      include: AssinaturaDigitalService.getDefaultIncludes(),
+    });
     
     if (!assinatura) {
       throw new Error('Assinatura não encontrada');
     }
     
     await assinatura.update(dados);
-    await assinatura.reload();
+    await AssinaturaDigitalService.reloadComRelacoes(assinatura);
     
     return assinatura;
   }

@@ -1,9 +1,8 @@
 import { Request } from 'express';
 import { Banco } from '../../../models/cadastros/Banco';
-import { Titulo } from '../../../models/financeiro/Titulo';
 import { PaymentCommonService } from '../PaymentCommonService';
 import { TituloWebhookResolver } from '../TituloWebhookResolver';
-import { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook } from '../WebhookTituloUpdater';
+import { applyPagoWebhook, enviarReciboSeAdmin, registrarAuditoriaWebhook, refetchResolvedTitulo } from '../WebhookTituloUpdater';
 import { logger } from '../../../utils/logger';
 import {
   WebhookResponse,
@@ -180,16 +179,11 @@ export class EfiWebhookProcessorService {
       const bancoRelacionado = resolved.banco ?? banco;
       await EfiWebhookValidatorService.validateSecret(bancoRelacionado, receivedSecret);
 
+      await refetchResolvedTitulo(resolved);
       const { titulo } = resolved;
       const statusString = status || 'pendente';
       const novoStatus = this.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
       const isPago = ['pago', 'liquidado'].includes(novoStatus);
-
-      if (isPago && !titulo.pago) {
-        const dataPagamentoWebhook = PaymentCommonService.pickEfiWebhookPaymentDateRaw(dadosCompletos ?? {});
-        const dataPagamentoNormalizada = dataPagamentoWebhook ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook) : new Date();
-        await applyPagoWebhook(resolved, Number(titulo.valor), dataPagamentoNormalizada || new Date());
-      }
 
       const updateData: Record<string, unknown> = { status: novoStatus, pago: isPago };
       if (!isPago && titulo.pago) {
@@ -205,9 +199,16 @@ export class EfiWebhookProcessorService {
       }
 
       const dadosAnteriores = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+
+      if (isPago && !titulo.pago) {
+        const dataPagamentoWebhook = PaymentCommonService.pickEfiWebhookPaymentDateRaw(dadosCompletos ?? {});
+        const dataPagamentoNormalizada = dataPagamentoWebhook ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook) : new Date();
+        await applyPagoWebhook(resolved, Number(titulo.valor), dataPagamentoNormalizada || new Date());
+      }
+
       await (titulo as { update: (d: Record<string, unknown>) => Promise<unknown> }).update(updateData);
-      await (titulo as { reload: () => Promise<unknown> }).reload();
-      const dadosNovos = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      await refetchResolvedTitulo(resolved);
+      const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
 
       enviarReciboSeAdmin(resolved);
       await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook EFI - Status: ${statusString}`);
@@ -247,6 +248,7 @@ export class EfiWebhookProcessorService {
         await EfiWebhookValidatorService.validateSecret(bancoRelacionado, receivedSecret);
       }
 
+      await refetchResolvedTitulo(resolved);
       const { titulo } = resolved;
       const statusLocal = this.mapEfiStatus(status || 'pendente') as 'pendente' | 'pago' | 'vencido' | 'cancelado';
       const isPago = ['pago', 'liquidado'].includes(statusLocal);
@@ -263,8 +265,8 @@ export class EfiWebhookProcessorService {
         status: statusLocal,
         pago: isPago
       });
-      await (titulo as { reload: () => Promise<unknown> }).reload();
-      const dadosNovos = (titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
+      await refetchResolvedTitulo(resolved);
+      const dadosNovos = (resolved.titulo as { toJSON: () => Record<string, unknown> }).toJSON() as Record<string, unknown>;
 
       enviarReciboSeAdmin(resolved);
       await registrarAuditoriaWebhook(req, resolved, dadosAnteriores, dadosNovos, `Atualização via webhook EFI (charge notification) - Status: ${status}`);

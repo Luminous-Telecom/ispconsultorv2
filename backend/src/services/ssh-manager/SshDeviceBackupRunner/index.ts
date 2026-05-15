@@ -118,6 +118,7 @@ async function runSwosHttpBackup(
     logSshAudit({
       action: 'COMMAND',
       userId: auditUserId,
+      empresaId: device.empresa_id ?? null,
       deviceId: device.id,
       deviceName: device.name,
       command: auditLabel,
@@ -177,6 +178,7 @@ async function runSwosHttpBackup(
   logSshAudit({
     action: 'COMMAND',
     userId: auditUserId,
+    empresaId: device.empresa_id ?? null,
     deviceId: device.id,
     deviceName: device.name,
     command: auditLabel,
@@ -329,6 +331,7 @@ export async function runSshDeviceBackup(
     logSshAudit({
       action: 'COMMAND',
       userId: auditUserId,
+      empresaId: device.empresa_id ?? null,
       deviceId: device.id,
       deviceName: device.name,
       command,
@@ -485,6 +488,7 @@ export async function runSshDeviceBackup(
     logSshAudit({
       action: 'COMMAND',
       userId: auditUserId,
+      empresaId: device.empresa_id ?? null,
       deviceId: device.id,
       deviceName: device.name,
       command: commandAuditLabel,
@@ -512,6 +516,7 @@ export async function runSshDeviceBackup(
     logSshAudit({
       action: 'COMMAND',
       userId: auditUserId,
+      empresaId: device.empresa_id ?? null,
       deviceId: device.id,
       deviceName: device.name,
       command: commandAuditLabel,

@@ -19,6 +19,8 @@ router.get('/server-stats', SaasDashboardController.getServerStats);
 
 // Auditoria (logs do painel SaaS — empresa_id opcional para ver todos)
 router.get('/auditoria/pdf', SaasAuditoriaController.generatePdf);
+router.get('/auditoria/operacional-list', SaasAuditoriaController.listOperacional);
+router.get('/auditoria/:id', SaasAuditoriaController.getById);
 router.get('/auditoria', SaasAuditoriaController.listByTenant);
 
 // Tipos de Cobrança

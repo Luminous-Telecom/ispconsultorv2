@@ -1,6 +1,5 @@
 import { MensagemWhatsApp } from '../../../models/comunicacao/MensagemWhatsApp';
 import { TemplateWhatsApp } from '../../../models/comunicacao/TemplateWhatsApp';
-import { logger } from '../../../utils/logger';
 
 export interface MensagemWhatsAppData {
   tipo: string;
@@ -16,13 +15,17 @@ export interface MensagemWhatsAppData {
 }
 
 export class MensagemWhatsAppService {
+  private static getDefaultIncludes() {
+    return [{ model: TemplateWhatsApp, as: 'template', required: false }];
+  }
+
   /**
    * Buscar mensagem por tipo (com template incluído)
    */
   static async findByTipo(tipo: string): Promise<MensagemWhatsApp | null> {
     return await MensagemWhatsApp.findOne({
       where: { tipo },
-      include: [{ model: TemplateWhatsApp, as: 'template', required: false }],
+      include: MensagemWhatsAppService.getDefaultIncludes(),
     });
   }
 
@@ -34,7 +37,7 @@ export class MensagemWhatsAppService {
 
     if (mensagemExistente) {
       await mensagemExistente.update(dadosMensagem as any);
-      await mensagemExistente.reload();
+      await mensagemExistente.reload({ include: MensagemWhatsAppService.getDefaultIncludes() });
       return mensagemExistente;
     } else {
       return await MensagemWhatsApp.create(dadosMensagem as any);
@@ -52,14 +55,16 @@ export class MensagemWhatsAppService {
    * Atualizar mensagem
    */
   static async update(id: number, dadosMensagem: Partial<MensagemWhatsAppData>): Promise<MensagemWhatsApp> {
-    const mensagem = await MensagemWhatsApp.findByPk(id);
+    const mensagem = await MensagemWhatsApp.findByPk(id, {
+      include: MensagemWhatsAppService.getDefaultIncludes(),
+    });
     
     if (!mensagem) {
       throw new Error('Mensagem não encontrada');
     }
 
     await mensagem.update(dadosMensagem as any);
-    await mensagem.reload();
+    await mensagem.reload({ include: MensagemWhatsAppService.getDefaultIncludes() });
     
     return mensagem;
   }

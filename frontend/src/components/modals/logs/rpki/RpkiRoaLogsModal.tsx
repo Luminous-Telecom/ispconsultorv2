@@ -144,6 +144,13 @@ const RpkiRoaLogsModal: React.FC<RpkiRoaLogsModalProps> = ({ show }) => {
 
     return [
       {
+        key: 'id',
+        label: 'ID',
+        sortable: true,
+        width: '42px',
+        render: (item) => <span className="small">{item.id}</span>,
+      },
+      {
         key: 'created_at',
         label: 'Data',
         sortable: true,

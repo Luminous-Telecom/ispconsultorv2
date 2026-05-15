@@ -51,9 +51,10 @@ export function registerAgentNamespace(io: SocketIOServer): void {
       const hash = hashToken(token);
       const agent = await Agent.findOne({ where: { token_hash: hash, is_active: true } });
       if (!agent) return next(new Error('unauthorized'));
-      (socket as Socket & { data: { agentId: number; agentName: string } }).data = {
+      (socket as Socket & { data: { agentId: number; agentName: string; agentEmpresaId: number | null } }).data = {
         agentId: agent.id,
         agentName: agent.name,
+        agentEmpresaId: agent.empresa_id ?? null,
       };
       next();
     } catch (err) {
@@ -63,7 +64,7 @@ export function registerAgentNamespace(io: SocketIOServer): void {
   });
 
   ns.on('connection', (socket: Socket) => {
-    const { agentId, agentName } = (socket as Socket & { data: { agentId: number; agentName: string } }).data;
+    const { agentId, agentName, agentEmpresaId } = (socket as Socket & { data: { agentId: number; agentName: string; agentEmpresaId: number | null } }).data;
     const ip = getAgentIp(socket);
 
 
@@ -76,6 +77,7 @@ export function registerAgentNamespace(io: SocketIOServer): void {
       logSshAudit({
         action: 'AGENT_CONNECT',
         userId: 'sistema',
+        empresaId: agentEmpresaId,
         deviceId: agentId,
         deviceName: agentName,
         success: true,
@@ -235,6 +237,7 @@ export function registerAgentNamespace(io: SocketIOServer): void {
       logSshAudit({
         action: 'AGENT_DISCONNECT',
         userId: 'sistema',
+        empresaId: agentEmpresaId,
         deviceId: agentId,
         deviceName: agentName,
         success: true,
@@ -332,6 +335,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
         logSshAudit({
           action: 'AUTH_FAIL',
           userId,
+          empresaId: agent.empresa_id ?? null,
           deviceId: agentId,
           deviceName: `Agente: ${agent.name}`,
           success: false,
@@ -343,7 +347,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       }
 
       const sessionId = randomUUID();
-      createShellSession(sessionId, agentId, socket.id, false);
+      createShellSession(sessionId, agentId, socket.id, false, undefined, agent.empresa_id ?? null);
 
       const sent = sendToAgent(agentId, 'shell:open', { sessionId, cols: c, rows: r });
       if (!sent) {
@@ -404,6 +408,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
         logSshAudit({
           action: 'AUTH_FAIL',
           userId,
+          empresaId: device.empresa_id ?? null,
           deviceId: device.id,
           deviceName: device.name,
           success: false,
@@ -415,7 +420,11 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
       }
 
       const sessionId = randomUUID();
-      createShellSession(sessionId, device.agent_id, socket.id, true, { deviceId: device.id, deviceName: device.name });
+      createShellSession(sessionId, device.agent_id, socket.id, true, {
+        deviceId: device.id,
+        deviceName: device.name,
+        empresaId: device.empresa_id ?? null,
+      });
 
 
       let password: string;
@@ -497,6 +506,7 @@ export function registerAgentTerminalNamespace(io: SocketIOServer): void {
                 logSshAudit({
                   action: 'TERMINAL_COMMAND',
                   userId,
+                  empresaId: session.empresaId ?? null,
                   deviceId: session.deviceId,
                   deviceName: session.deviceName,
                   command: cmd,

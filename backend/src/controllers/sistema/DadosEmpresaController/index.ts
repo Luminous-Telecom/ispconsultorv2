@@ -260,7 +260,6 @@ export class DadosEmpresaController {
         }
       } else {
         dadosEmpresa = await DadosEmpresaService.update(dadosAtualizados, empresaId ?? undefined);
-        await dadosEmpresa.reload();
         try {
           const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
           await registrarAtualizacao(
@@ -366,7 +365,6 @@ export class DadosEmpresaController {
         }
         const dadosAnteriores = dadosEmpresa.toJSON();
         dadosEmpresa = await DadosEmpresaService.update({ logo: filePath }, empresaId ?? undefined);
-        await dadosEmpresa.reload();
         
         try {
           const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
@@ -486,7 +484,6 @@ export class DadosEmpresaController {
         }
         const dadosAnteriores = dadosEmpresa.toJSON();
         dadosEmpresa = await DadosEmpresaService.update({ responsavel_assinatura: filePath }, empresaId ?? undefined);
-        await dadosEmpresa.reload();
         try {
           const empresaIdAudit = empresaId ?? dadosEmpresa.id ?? null;
           await registrarAtualizacao(

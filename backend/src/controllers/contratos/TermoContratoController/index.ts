@@ -194,7 +194,7 @@ export class TermoContratoController {
       if (assinado !== undefined) termo.assinado = assinado;
 
       await termo.save();
-      await termo.reload();
+      await termo.reload({ include: TermoContratoService.getDefaultIncludes() });
 
       const dadosNovos = termo.toJSON() as Record<string, unknown>;
       
@@ -247,7 +247,7 @@ export class TermoContratoController {
 
       const dadosAnteriores = termo.toJSON() as Record<string, unknown>;
       await termo.marcarComoAceito(aceito_por);
-      await termo.reload();
+      await termo.reload({ include: TermoContratoService.getDefaultIncludes() });
 
       try {
         const empresaIdAudit = getEmpresaIdOrNull(req) ?? termo.empresa_id ?? null;

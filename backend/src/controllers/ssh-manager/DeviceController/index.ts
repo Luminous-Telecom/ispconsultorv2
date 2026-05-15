@@ -418,6 +418,7 @@ export class DeviceController {
           logSshAudit({
             action: 'AUTH_FAIL',
             userId: getUserId(req),
+            empresaId: device.empresa_id ?? null,
             deviceId,
             deviceName,
             success: false,
@@ -442,6 +443,7 @@ export class DeviceController {
           logSshAudit({
             action: 'AUTH_FAIL',
             userId: getUserId(req),
+            empresaId: device.empresa_id ?? null,
             deviceId,
             deviceName,
             success: false,
@@ -468,6 +470,7 @@ export class DeviceController {
           logSshAudit({
             action: 'AUTH_FAIL',
             userId: getUserId(req),
+            empresaId: device.empresa_id ?? null,
             deviceId,
             deviceName,
             success: false,
@@ -495,6 +498,7 @@ export class DeviceController {
             logSshAudit({
               action: 'AUTH_FAIL',
               userId: getUserId(req),
+              empresaId: device.empresa_id ?? null,
               deviceId,
               deviceName,
               success: false,
@@ -528,6 +532,7 @@ export class DeviceController {
           logSshAudit({
             action: 'CONNECT',
             userId: getUserId(req),
+            empresaId: device.empresa_id ?? null,
             deviceId,
             deviceName,
             success: true,
@@ -557,6 +562,7 @@ export class DeviceController {
         logSshAudit({
           action: 'AUTH_FAIL',
           userId: getUserId(req),
+          empresaId: device.empresa_id ?? null,
           deviceId,
           deviceName,
           success: false,
@@ -580,6 +586,7 @@ export class DeviceController {
       logSshAudit({
         action: 'CONNECT',
         userId: getUserId(req),
+        empresaId: device.empresa_id ?? null,
         deviceId,
         deviceName,
         success: true,
@@ -594,6 +601,7 @@ export class DeviceController {
       sendSuccess(res, { success: true, latency, error: null });
     } catch (err) {
       const errorMsg = buildFriendlyError(err instanceof Error ? err : new Error(String(err)));
+      const deviceForAudit = await SshDevice.findByPk(deviceId).catch(() => null);
 
       logger.warn('DeviceController.testConnection: exceção', {
         deviceId,
@@ -605,6 +613,7 @@ export class DeviceController {
       logSshAudit({
         action: 'AUTH_FAIL',
         userId: getUserId(req),
+        empresaId: deviceForAudit?.empresa_id ?? null,
         deviceId,
         deviceName,
         success: false,
@@ -649,6 +658,7 @@ export class DeviceController {
       logSshAudit({
         action: 'COMMAND',
         userId: getUserId(req),
+        empresaId: device.empresa_id ?? null,
         deviceId: device.id,
         deviceName: device.name,
         command: command.trim(),
@@ -666,6 +676,7 @@ export class DeviceController {
       logSshAudit({
         action: 'COMMAND',
         userId: getUserId(req),
+        empresaId: device?.empresa_id ?? null,
         deviceId,
         deviceName: device?.name ?? 'unknown',
         command: (req.body as { command?: string }).command ?? null,

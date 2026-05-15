@@ -1,5 +1,6 @@
 import { Fornecedor } from '../../../models/financeiro/Fornecedor';
 import { Op, WhereOptions } from 'sequelize';
+import type { Order } from 'sequelize';
 import { sequelize } from '../../../config/database';
 import { logger } from '../../../utils/logger';
 import { SortHelper } from '../../../utils/sortHelper';
@@ -31,6 +32,18 @@ export interface ListFornecedoresResponse {
 }
 
 export class FornecedorService {
+  private static getDefaultIncludes() {
+    return [
+      {
+        association: 'contasPagar' as const,
+        required: false,
+        include: [
+          { association: 'pagamentos' as const, required: false, limit: 10, order: [['created_at', 'DESC']] as Order },
+        ],
+      },
+    ];
+  }
+
   /**
    * Listar fornecedores com filtros e paginação
    */
@@ -138,15 +151,7 @@ export class FornecedorService {
   static async getById(id: string | number, includeAssociations = true): Promise<Fornecedor | null> {
     if (includeAssociations) {
       return await Fornecedor.findByPk(id, {
-        include: [
-          {
-            association: 'contasPagar',
-            required: false,
-            include: [
-              { association: 'pagamentos', required: false, limit: 10, order: [['created_at', 'DESC']] }
-            ]
-          }
-        ]
+        include: FornecedorService.getDefaultIncludes(),
       });
     }
     return await Fornecedor.findByPk(id);
@@ -184,8 +189,8 @@ export class FornecedorService {
     }
     
     await fornecedor.update(dadosFornecedor);
-    await fornecedor.reload();
-    
+    await fornecedor.reload({ include: FornecedorService.getDefaultIncludes() });
+
     return fornecedor;
   }
 

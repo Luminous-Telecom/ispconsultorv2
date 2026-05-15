@@ -23,8 +23,9 @@ import SaasContratoFormModal from './SaasContratoFormModal';
 import SaasTenantUsuarioFormModal from './SaasTenantUsuarioFormModal';
 import SaasTituloFormModal from './SaasTituloFormModal';
 import SaasReceberModal from './SaasReceberModal';
-import { formatCurrency, formatDate, formatDateTime } from 'utils/formatters';
+import { formatAuditoriaListId, formatCurrency, formatDate, formatDateTime } from 'utils/formatters';
 import { auditoriaService, type AuditoriaLog } from 'services/auditoriaService';
+import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
 import type { FormValue } from 'types/common';
 import type { ApiResponse } from 'types';
 
@@ -319,13 +320,25 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
     empresa_id: empresaId ?? undefined,
   }), [logsTf.page, logsTf.limit, logsTf.debouncedSearch, logsTf.searchField, logsTf.sortColumn, logsTf.sortDirection, empresaId]);
   const { data: logsData, refetch: refetchLogs } = useQuery({
-    queryKey: ['auditoria', 'tenant', empresaId, logsFilters],
+    queryKey: ['auditoria-operacional', 'tenant', empresaId, logsFilters],
     queryFn: async () => {
-      const res = await auditoriaService.listByTenant({ ...logsFilters, empresa_id: empresaId! });
+      const res = await auditoriaService.listOperacionalByTenant({ ...logsFilters, empresa_id: empresaId! });
       if (!res.success) throw new Error(res.message || 'Erro ao carregar logs');
       return res.data;
     },
     enabled: !!empresaId && (activeTab === 'logs'),
+  });
+
+  const {
+    exibirDetalhe: logExibirDetalhe,
+    showEsLoading: auditoriaDetalheEsLoading,
+    esIndisponivel: auditoriaEsIndisponivel,
+    temVinculoEs: auditoriaTemVinculoEs,
+  } = useAuditoriaDetalheEs({
+    selected: selectedLog,
+    showDetails: showLogDetailsModal,
+    saas: true,
+    queryKeyPrefix: 'saas-empresa-log-detalhe-es',
   });
 
   const titulosRaw: SaasTitulo[] = useMemo(() => {
@@ -982,6 +995,17 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                   syncWithHeader={false}
                   config={{
                     columns: [
+                      {
+                        key: 'id',
+                        label: t('table.id'),
+                        sortable: true,
+                        width: 56,
+                        sortValue: (log: AuditoriaLog) => log.operacional_id ?? String(log.id),
+                        render: (log: AuditoriaLog) => {
+                          const { display, title } = formatAuditoriaListId(log);
+                          return <span className="small text-muted" title={title}>{display}</span>;
+                        },
+                      },
                       { key: 'timestamp', label: t('audit.timestamp'), sortable: true, width: 130, render: (log: AuditoriaLog) => <span className="small">{formatDateTime(log.timestamp)}</span> },
                       { key: 'acao', label: t('table.action'), sortable: true, width: 90, render: (log: AuditoriaLog) => {
                         const acoes: Record<string, string> = { create: t('audit.actions.create'), update: t('audit.actions.update'), delete: t('audit.actions.delete'), login: t('audit.actions.login'), logout: t('audit.actions.logout'), export: t('audit.actions.export'), import: t('audit.actions.import') };
@@ -1004,6 +1028,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
                     searchPlaceholder: '',
                     searchField: logsTf.searchField || 'timestamp',
                     searchFields: [
+                      { key: 'id', label: t('table.id') },
                       { key: 'timestamp', label: t('audit.timestamp') },
                       { key: 'acao', label: t('table.action') },
                       { key: 'entidade', label: t('audit.entity') },
@@ -1085,7 +1110,7 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
         empresaNome={form.nome_fantasia || form.razao_social}
         onSuccess={() => { setShowReceberModal(false); setTituloReceber(null); refetchTitulos(); refetchContratos(); }}
       />
-      {selectedLog && (
+      {logExibirDetalhe && (
         <DraggableModal
           show={showLogDetailsModal}
           onClose={() => { setShowLogDetailsModal(false); setSelectedLog(null); }}
@@ -1094,62 +1119,71 @@ const SaasEmpresaFormModal: React.FC<Props> = ({ show, onClose, onSuccess, itemI
           modalId="saas-log-details-modal"
         >
           <div style={{ padding: '16px' }}>
+            {auditoriaDetalheEsLoading && (
+              <div className="small text-muted mb-2">Carregando detalhe da auditoria…</div>
+            )}
+            {auditoriaEsIndisponivel && (
+              <div className="small text-warning mb-2">Detalhe completo no Elasticsearch indisponível; exibindo dados do banco.</div>
+            )}
+            {!auditoriaTemVinculoEs && (
+              <div className="small text-warning mb-2">Este registro não possui vínculo com o Elasticsearch; exibindo apenas dados do banco.</div>
+            )}
             <div className="mb-3">
               <h6 className="mb-2">{t('audit.generalInfo')}</h6>
               <div className="row g-2">
                 <div className="col-md-6">
                   <small className="text-muted">{t('table.action')}:</small><br />
-                  <span className={`badge bg-${getLogAcaoBadgeClass(selectedLog.acao)}`}>
-                    {formatLogAcao(selectedLog.acao)}
+                  <span className={`badge bg-${getLogAcaoBadgeClass(logExibirDetalhe.acao)}`}>
+                    {formatLogAcao(logExibirDetalhe.acao)}
                   </span>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.entity')}:</small><br />
-                  <span>{selectedLog.entidade}</span>
+                  <span>{logExibirDetalhe.entidade}</span>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.entityId')}:</small><br />
-                  <span>{selectedLog.entidade_id ?? 'N/A'}</span>
+                  <span>{logExibirDetalhe.entidade_id ?? 'N/A'}</span>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.timestamp')}:</small><br />
-                  <span>{formatDateTime(selectedLog.timestamp)}</span>
+                  <span>{formatDateTime(logExibirDetalhe.timestamp)}</span>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.user')}:</small><br />
-                  <span>{selectedLog.usuario_email ?? 'N/A'}</span>
-                  {selectedLog.usuario_nome && <div className="text-muted small">{selectedLog.usuario_nome}</div>}
+                  <span>{logExibirDetalhe.usuario_email ?? 'N/A'}</span>
+                  {logExibirDetalhe.usuario_nome && <div className="text-muted small">{logExibirDetalhe.usuario_nome}</div>}
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.ip')}:</small><br />
-                  <span>{selectedLog.ip_address ?? 'N/A'}</span>
+                  <span>{logExibirDetalhe.ip_address ?? 'N/A'}</span>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.tenant')}:</small><br />
-                  <span>{selectedLog.empresa_nome ?? '-'}</span>
+                  <span>{logExibirDetalhe.empresa_nome ?? '-'}</span>
                 </div>
-                {selectedLog.rota && (
+                {logExibirDetalhe.rota && (
                   <div className="col-12">
                     <small className="text-muted">{t('audit.route')}:</small><br />
-                    <code>{selectedLog.metodo_http ?? 'N/A'} {selectedLog.rota}</code>
+                    <code>{logExibirDetalhe.metodo_http ?? 'N/A'} {logExibirDetalhe.rota}</code>
                   </div>
                 )}
-                {selectedLog.observacoes && (
+                {logExibirDetalhe.observacoes && (
                   <div className="col-12">
                     <small className="text-muted">{t('table.observations')}:</small><br />
-                    <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedLog.observacoes}</span>
+                    <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{logExibirDetalhe.observacoes}</span>
                   </div>
                 )}
               </div>
             </div>
-            {(selectedLog.dados_anteriores || selectedLog.dados_novos) && (
+            {(logExibirDetalhe.dados_anteriores || logExibirDetalhe.dados_novos) && (
               <div>
                 <h6 className="mb-2">{t('audit.data')}</h6>
                 <pre className="p-3 bg-light rounded small mb-0" style={{ maxHeight: '300px', overflow: 'auto' }}>
                   {JSON.stringify(
-                    selectedLog.dados_anteriores && selectedLog.dados_novos
-                      ? { anterior: selectedLog.dados_anteriores, novo: selectedLog.dados_novos }
-                      : selectedLog.dados_novos ?? selectedLog.dados_anteriores,
+                    logExibirDetalhe.dados_anteriores && logExibirDetalhe.dados_novos
+                      ? { anterior: logExibirDetalhe.dados_anteriores, novo: logExibirDetalhe.dados_novos }
+                      : logExibirDetalhe.dados_novos ?? logExibirDetalhe.dados_anteriores,
                     null,
                     2
                   )}

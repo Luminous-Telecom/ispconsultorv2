@@ -66,6 +66,7 @@ export class TemplateWhatsAppService {
     }
 
     await template.update(data as any);
+    await template.reload();
     return template;
   }
 

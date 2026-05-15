@@ -51,6 +51,13 @@ export function resolveEmpresaScopeForList(req: Request, queryEmpresaId: number 
   return jwtEmpresaId;
 }
 
+/** Tenant para filtro em listagens; `null` = sem filtro (super admin); `false` = sem acesso. */
+export function resolveListEmpresaId(req: Request): number | null | false {
+  const id = resolveEmpresaScopeForList(req, parseEmpresaIdQuery(req.query.empresa_id));
+  if (id != null) return id;
+  return isAdminRequest(req) ? null : false;
+}
+
 /**
  * Criação: admin pode enviar empresa_id no body; demais usam empresa do JWT.
  */

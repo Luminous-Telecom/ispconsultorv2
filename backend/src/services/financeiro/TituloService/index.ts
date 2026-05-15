@@ -40,6 +40,45 @@ export interface ListTitulosResponse {
 }
 
 export class TituloService {
+  /** Includes alinhados a `getById` — usar em `reload` após `update` para auditoria coerente */
+  static getDefaultIncludes() {
+    return [
+      { association: 'cliente', required: false },
+      {
+        association: 'contrato',
+        required: false,
+        include: [
+          {
+            association: 'bancoBoleto',
+            required: false,
+            attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'],
+          },
+        ],
+      },
+      { association: 'plano', required: false },
+      {
+        association: 'banco',
+        required: false,
+        attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'],
+      },
+      { association: 'nota_fiscal', required: false },
+    ];
+  }
+
+  /** Se o título não tem banco mas o contrato tem banco de boleto, espelhar (cancelamento etc.) */
+  private static aplicarBancoFallbackTitulo(titulo: Titulo | null): void {
+    if (!titulo) return;
+    const tituloAny = titulo as Titulo & {
+      banco?: Banco | null;
+      banco_id?: number | null;
+      contrato?: { bancoBoleto?: Banco | null } | null;
+    };
+    if (!tituloAny.banco && tituloAny.contrato?.bancoBoleto) {
+      tituloAny.banco = tituloAny.contrato.bancoBoleto;
+      tituloAny.banco_id = tituloAny.contrato.bancoBoleto.id;
+    }
+  }
+
   /**
    * Buscar IDs de clientes que têm títulos com status específicos
    * Usado para filtros em webhooks
@@ -278,41 +317,12 @@ export class TituloService {
    */
   static async getById(id: string | number, transaction?: Transaction): Promise<Titulo | null> {
     try {
-      const { NotaFiscal } = await import('../../../models/nfse/NotaFiscal');
-      
       const titulo = await Titulo.findByPk(id, {
-        include: [
-          { association: 'cliente', required: false },
-          { 
-            association: 'contrato', 
-            required: false,
-            include: [
-              { 
-                association: 'bancoBoleto', 
-                required: false,
-                attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'] // Incluir api_key para cancelamento
-              }
-            ]
-          },
-          { association: 'plano', required: false },
-          { 
-            association: 'banco', 
-            required: false,
-            attributes: ['id', 'nome', 'tipo_banco', 'logo', 'codigo', 'api_key', 'sandbox'] // Incluir api_key para cancelamento
-          },
-          { association: 'nota_fiscal', required: false }
-        ],
-        transaction
+        include: TituloService.getDefaultIncludes(),
+        transaction,
       });
 
-      // Se o título não tem banco_id mas tem contrato com banco, usar o banco do contrato
-      if (titulo) {
-        const tituloAny = titulo as any;
-        if (!tituloAny.banco && tituloAny.contrato && tituloAny.contrato.bancoBoleto) {
-          tituloAny.banco = tituloAny.contrato.bancoBoleto;
-          tituloAny.banco_id = tituloAny.contrato.bancoBoleto.id;
-        }
-      }
+      TituloService.aplicarBancoFallbackTitulo(titulo);
 
       return titulo;
     } catch (error) {
@@ -423,6 +433,14 @@ export class TituloService {
   }
 
   /**
+   * Recarrega instância após mutação direta no modelo (ex.: marcar como pago) com os mesmos includes de `getById`.
+   */
+  static async reloadTituloComRelacoes(titulo: Titulo, transaction?: Transaction): Promise<void> {
+    await titulo.reload({ include: TituloService.getDefaultIncludes(), transaction });
+    TituloService.aplicarBancoFallbackTitulo(titulo);
+  }
+
+  /**
    * Criar título
    */
   static async create(dadosTitulo: Partial<Titulo>, transaction?: Transaction): Promise<Titulo> {
@@ -440,8 +458,9 @@ export class TituloService {
     }
     
     await titulo.update(dadosTitulo);
-    await titulo.reload();
-    
+    await titulo.reload({ include: TituloService.getDefaultIncludes() });
+    TituloService.aplicarBancoFallbackTitulo(titulo);
+
     return titulo;
   }
 

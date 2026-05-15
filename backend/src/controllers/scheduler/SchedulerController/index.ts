@@ -376,6 +376,17 @@ export class SchedulerController {
         return;
       }
 
+      const empresaId = getEmpresaIdOrNull(req);
+      if (empresaId == null) {
+        sendNotFound(res, 'Rotina não encontrada');
+        return;
+      }
+      const routine = await ScheduledRoutineService.getById(routineId, empresaId);
+      if (!routine) {
+        sendNotFound(res, 'Rotina não encontrada');
+        return;
+      }
+
       const logs = await this.schedulerService.getExecutionLogs(routineId);
 
       sendSuccess(res, logs);
@@ -392,7 +403,21 @@ export class SchedulerController {
   // Obter todos os logs de execução
   public async getAllLogs(req: Request, res: Response): Promise<void> {
     try {
-      const logs = await this.schedulerService.getRecentExecutionLogs(50);
+      const empresaId = getEmpresaIdOrNull(req);
+      if (empresaId == null) {
+        sendSuccess(res, []);
+        return;
+      }
+
+      const { data: routines } = await ScheduledRoutineService.list({
+        page: 1,
+        limit: 500,
+        empresa_id: empresaId,
+      });
+      const allowed = new Set(routines.map((r) => Number((r as ScheduledRoutine).id)));
+      const logs = (await this.schedulerService.getRecentExecutionLogs(50)).filter((log) =>
+        allowed.has(Number(log.routine_id))
+      );
 
       sendSuccess(res, logs);
     } catch (error: unknown) {

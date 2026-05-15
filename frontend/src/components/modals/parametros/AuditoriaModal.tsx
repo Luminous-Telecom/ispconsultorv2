@@ -7,7 +7,8 @@ import SearchBar from 'components/ui/SearchBar';
 import Table from 'components/tables/Table';
 import { TableConfig } from 'components/tables/types';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/auditoriaService';
-import { formatDateTime } from 'utils/formatters';
+import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
+import { formatAuditoriaListId, formatDateTime } from 'utils/formatters';
 import { useI18n } from 'contexts/I18nContext';
 
 interface AuditoriaModalProps {
@@ -64,17 +65,29 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
   }), [tableFilters.page, tableFilters.limit, tableFilters.search, searchField, acaoFilter, entidadeFilter, tableFilters.sortColumn, tableFilters.sortDirection]);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['auditoria', variant, filters],
+    queryKey: ['auditoria-operacional', variant, filters],
     queryFn: async () => {
       const response = variant === 'saas'
-        ? await auditoriaService.listSaasAll(filters)
-        : await auditoriaService.list(filters);
+        ? await auditoriaService.listOperacionalSaas(filters)
+        : await auditoriaService.listOperacional(filters);
       if (!response.success) {
         throw new Error(response.message || 'Erro ao carregar logs de auditoria');
       }
       return response.data;
     },
     retry: 1
+  });
+
+  const {
+    exibirDetalhe: auditoriaExibirDetalhe,
+    showEsLoading: auditoriaDetalheEsLoading,
+    esIndisponivel: auditoriaEsIndisponivel,
+    temVinculoEs: auditoriaTemVinculoEs,
+  } = useAuditoriaDetalheEs({
+    selected: selectedLog,
+    showDetails: showDetailsModal,
+    saas: variant === 'saas',
+    queryKeyPrefix: 'auditoria-detalhe-es-modal',
   });
 
   // Usar hook customizado para gerenciar seleção
@@ -121,6 +134,21 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
   }, []);
 
   const tableColumns: TableConfig<AuditoriaLog>['columns'] = useMemo(() => [
+      {
+        key: 'id',
+        label: t('table.id'),
+        sortable: true,
+        width: '56px',
+        sortValue: (log: AuditoriaLog) => log.operacional_id ?? String(log.id),
+        render: (log: AuditoriaLog) => {
+          const { display, title } = formatAuditoriaListId(log);
+          return (
+            <span className="small text-muted" title={title}>
+              {display}
+            </span>
+          );
+        },
+      },
       {
         key: 'timestamp',
         label: t('audit.timestamp'),
@@ -273,6 +301,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
           placeholder={t('buttons.search')}
           searchField={searchField || 'usuario_email'}
           searchFields={[
+            { key: 'id', label: t('table.id') },
             { key: 'usuario_email', label: t('emailServer.userEmail') },
             { key: 'usuario_nome', label: t('audit.user') },
             { key: 'acao', label: t('table.action') },
@@ -406,7 +435,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
       <>
         {modalContent}
         {/* Modal de Detalhes */}
-        {selectedLog && (
+        {auditoriaExibirDetalhe && (
           <DraggableModal
             show={showDetailsModal}
             onClose={() => {
@@ -417,64 +446,73 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
             size="lg"
           >
             <div style={{ padding: '16px' }}>
+              {auditoriaDetalheEsLoading && (
+                <div className="small text-muted mb-2">Carregando detalhe da auditoria…</div>
+              )}
+              {auditoriaEsIndisponivel && (
+                <div className="small text-warning mb-2">Detalhe completo no Elasticsearch indisponível; exibindo dados do banco.</div>
+              )}
+              {!auditoriaTemVinculoEs && (
+                <div className="small text-warning mb-2">Este registro não possui vínculo com o Elasticsearch; exibindo apenas dados do banco.</div>
+              )}
               <div className="mb-1">
                 <h6 className="mb-1">{t('audit.generalInfo')}</h6>
                 <div className="row g-1">
                   <div className="col-md-6">
                     <small className="text-muted">{t('table.action')}:</small><br />
-                    <span className={`badge bg-${getAcaoBadgeClass(selectedLog.acao)}`}>
-                      {formatAcao(selectedLog.acao)}
+                    <span className={`badge bg-${getAcaoBadgeClass(auditoriaExibirDetalhe.acao)}`}>
+                      {formatAcao(auditoriaExibirDetalhe.acao)}
                     </span>
                   </div>
                   <div className="col-md-6">
                     <small className="text-muted">{t('audit.entity')}:</small><br />
-                    <span>{selectedLog.entidade}</span>
+                    <span>{auditoriaExibirDetalhe.entidade}</span>
                   </div>
                   <div className="col-md-6">
                     <small className="text-muted">{t('audit.entityId')}:</small><br />
-                    <span>{selectedLog.entidade_id || 'N/A'}</span>
+                    <span>{auditoriaExibirDetalhe.entidade_id || 'N/A'}</span>
                   </div>
                   <div className="col-md-6">
                     <small className="text-muted">{t('audit.timestamp')}:</small><br />
-                    <span>{formatTimestamp(selectedLog.timestamp)}</span>
+                    <span>{formatTimestamp(auditoriaExibirDetalhe.timestamp)}</span>
                   </div>
                   <div className="col-md-6">
                     <small className="text-muted">{t('audit.user')}:</small><br />
-                    <span>{selectedLog.usuario_email || 'N/A'}</span>
-                    {selectedLog.usuario_nome && (
-                      <div className="text-muted small">{selectedLog.usuario_nome}</div>
+                    <span>{auditoriaExibirDetalhe.usuario_email || 'N/A'}</span>
+                    {auditoriaExibirDetalhe.usuario_nome && (
+                      <div className="text-muted small">{auditoriaExibirDetalhe.usuario_nome}</div>
                     )}
                   </div>
                   <div className="col-md-6">
                     <small className="text-muted">{t('audit.ip')}:</small><br />
-                    <span>{selectedLog.ip_address || 'N/A'}</span>
+                    <span>{auditoriaExibirDetalhe.ip_address || 'N/A'}</span>
                   </div>
                   <div className="col-md-6">
                     <small className="text-muted">{t('audit.tenant')}:</small><br />
-                    <span>{selectedLog.empresa_nome || '-'}</span>
+                    <span>{auditoriaExibirDetalhe.empresa_nome || '-'}</span>
                   </div>
-                  {selectedLog.rota && (
+                  {auditoriaExibirDetalhe.rota && (
                     <div className="col-md-12">
                       <small className="text-muted">{t('audit.route')}:</small><br />
-                      <code>{selectedLog.metodo_http || 'N/A'} {selectedLog.rota}</code>
+                      <code>{auditoriaExibirDetalhe.metodo_http || 'N/A'} {auditoriaExibirDetalhe.rota}</code>
                     </div>
                   )}
-                  {selectedLog.user_agent && (
+                  {auditoriaExibirDetalhe.user_agent && (
                     <div className="col-md-12">
                       <small className="text-muted">{t('audit.userAgent')}:</small><br />
-                      <span className="small">{selectedLog.user_agent}</span>
+                      <span className="small">{auditoriaExibirDetalhe.user_agent}</span>
                     </div>
                   )}
-                  {selectedLog.observacoes && (
+                  {auditoriaExibirDetalhe.observacoes && (
                     <div className="col-md-12">
                       <small className="text-muted">{t('table.observations')}:</small><br />
-                      <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedLog.observacoes}</span>
+                      <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{auditoriaExibirDetalhe.observacoes}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {(selectedLog.dados_anteriores || selectedLog.dados_novos) && (
+              {(auditoriaExibirDetalhe.dados_anteriores || auditoriaExibirDetalhe.dados_novos) && (
                 <div className="mb-1">
                   <h6 className="mb-1">{t('audit.data')}</h6>
                   <div className="card">
@@ -494,9 +532,9 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
                         }}
                       >
                         {JSON.stringify(
-                          selectedLog.dados_anteriores && selectedLog.dados_novos
-                            ? { anterior: selectedLog.dados_anteriores, novo: selectedLog.dados_novos }
-                            : selectedLog.dados_novos || selectedLog.dados_anteriores,
+                          auditoriaExibirDetalhe.dados_anteriores && auditoriaExibirDetalhe.dados_novos
+                            ? { anterior: auditoriaExibirDetalhe.dados_anteriores, novo: auditoriaExibirDetalhe.dados_novos }
+                            : auditoriaExibirDetalhe.dados_novos || auditoriaExibirDetalhe.dados_anteriores,
                           null,
                           2
                         )}
@@ -527,7 +565,7 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
       </DraggableModal>
 
       {/* Modal de Detalhes */}
-      {selectedLog && (
+      {auditoriaExibirDetalhe && (
         <DraggableModal
           show={showDetailsModal}
           onClose={() => {
@@ -538,64 +576,73 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
           size="lg"
         >
           <div style={{ padding: '16px' }}>
+            {auditoriaDetalheEsLoading && (
+              <div className="small text-muted mb-2">Carregando detalhe da auditoria…</div>
+            )}
+            {auditoriaEsIndisponivel && (
+              <div className="small text-warning mb-2">Detalhe completo no Elasticsearch indisponível; exibindo dados do banco.</div>
+            )}
+            {!auditoriaTemVinculoEs && (
+              <div className="small text-warning mb-2">Este registro não possui vínculo com o Elasticsearch; exibindo apenas dados do banco.</div>
+            )}
             <div className="mb-1">
               <h6 className="mb-1">{t('audit.generalInfo')}</h6>
               <div className="row g-1">
                 <div className="col-md-6">
                   <small className="text-muted">{t('table.action')}:</small><br />
-                  <span className={`badge bg-${getAcaoBadgeClass(selectedLog.acao)}`}>
-                    {formatAcao(selectedLog.acao)}
+                  <span className={`badge bg-${getAcaoBadgeClass(auditoriaExibirDetalhe.acao)}`}>
+                    {formatAcao(auditoriaExibirDetalhe.acao)}
                   </span>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.entity')}:</small><br />
-                  <span>{selectedLog.entidade}</span>
+                  <span>{auditoriaExibirDetalhe.entidade}</span>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.entityId')}:</small><br />
-                  <span>{selectedLog.entidade_id || 'N/A'}</span>
+                  <span>{auditoriaExibirDetalhe.entidade_id || 'N/A'}</span>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.timestamp')}:</small><br />
-                  <span>{formatTimestamp(selectedLog.timestamp)}</span>
+                  <span>{formatTimestamp(auditoriaExibirDetalhe.timestamp)}</span>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.user')}:</small><br />
-                  <span>{selectedLog.usuario_email || 'N/A'}</span>
-                  {selectedLog.usuario_nome && (
-                    <div className="text-muted small">{selectedLog.usuario_nome}</div>
+                  <span>{auditoriaExibirDetalhe.usuario_email || 'N/A'}</span>
+                  {auditoriaExibirDetalhe.usuario_nome && (
+                    <div className="text-muted small">{auditoriaExibirDetalhe.usuario_nome}</div>
                   )}
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.ip')}:</small><br />
-                  <span>{selectedLog.ip_address || 'N/A'}</span>
+                  <span>{auditoriaExibirDetalhe.ip_address || 'N/A'}</span>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">{t('audit.tenant')}:</small><br />
-                  <span>{selectedLog.empresa_nome || '-'}</span>
+                  <span>{auditoriaExibirDetalhe.empresa_nome || '-'}</span>
                 </div>
-                {selectedLog.rota && (
+                {auditoriaExibirDetalhe.rota && (
                   <div className="col-md-12">
                     <small className="text-muted">{t('audit.route')}:</small><br />
-                    <code>{selectedLog.metodo_http || 'N/A'} {selectedLog.rota}</code>
+                    <code>{auditoriaExibirDetalhe.metodo_http || 'N/A'} {auditoriaExibirDetalhe.rota}</code>
                   </div>
                 )}
-                {selectedLog.user_agent && (
+                {auditoriaExibirDetalhe.user_agent && (
                   <div className="col-md-12">
                     <small className="text-muted">{t('audit.userAgent')}:</small><br />
-                    <span className="small">{selectedLog.user_agent}</span>
+                    <span className="small">{auditoriaExibirDetalhe.user_agent}</span>
                   </div>
                 )}
-                {selectedLog.observacoes && (
+                {auditoriaExibirDetalhe.observacoes && (
                   <div className="col-md-12">
                     <small className="text-muted">{t('table.observations')}:</small><br />
-                    <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{selectedLog.observacoes}</span>
+                    <span className="small d-block" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{auditoriaExibirDetalhe.observacoes}</span>
                   </div>
                 )}
               </div>
             </div>
 
-            {(selectedLog.dados_anteriores || selectedLog.dados_novos) && (
+            {(auditoriaExibirDetalhe.dados_anteriores || auditoriaExibirDetalhe.dados_novos) && (
               <div className="mb-1">
                 <h6 className="mb-1">{t('audit.data')}</h6>
                 <div className="card">
@@ -615,9 +662,9 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose, skipWrap
                       }}
                     >
                       {JSON.stringify(
-                        selectedLog.dados_anteriores && selectedLog.dados_novos
-                          ? { anterior: selectedLog.dados_anteriores, novo: selectedLog.dados_novos }
-                          : selectedLog.dados_novos || selectedLog.dados_anteriores,
+                        auditoriaExibirDetalhe.dados_anteriores && auditoriaExibirDetalhe.dados_novos
+                          ? { anterior: auditoriaExibirDetalhe.dados_anteriores, novo: auditoriaExibirDetalhe.dados_novos }
+                          : auditoriaExibirDetalhe.dados_novos || auditoriaExibirDetalhe.dados_anteriores,
                         null,
                         2
                       )}

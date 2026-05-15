@@ -9,6 +9,17 @@ export interface GetByContratoOptions {
 }
 
 export class TermoContratoService {
+  /** Includes para `getById` / `reload` alinhados à listagem com contrato (auditoria) */
+  static getDefaultIncludes() {
+    return [
+      { association: 'modeloDocumento' as const, attributes: ['id', 'nome', 'tipo'] },
+      {
+        association: 'contrato' as const,
+        include: [{ association: 'cliente' as const }, { association: 'plano' as const }],
+      },
+    ];
+  }
+
   /**
    * Buscar termos por contrato com ordenação
    */
@@ -51,7 +62,9 @@ export class TermoContratoService {
    * Buscar termo por ID
    */
   static async getById(id: string | number): Promise<TermoContrato | null> {
-    return await TermoContrato.findByPk(id);
+    return await TermoContrato.findByPk(id, {
+      include: TermoContratoService.getDefaultIncludes(),
+    });
   }
 
   /**
@@ -96,7 +109,7 @@ export class TermoContratoService {
     }
     
     await termo.update(dados);
-    await termo.reload();
+    await termo.reload({ include: TermoContratoService.getDefaultIncludes() });
     
     return termo;
   }

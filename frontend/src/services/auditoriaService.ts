@@ -4,6 +4,10 @@ import { extractApiErrorMessage } from '../utils/apiErrorHelper';
 
 export interface AuditoriaLog {
   id: string;
+  /** Id do documento no Elasticsearch (detalhe completo via getById) */
+  elasticsearch_audit_id?: string | null;
+  /** Id na tabela adm_sistema_logs_operacionais */
+  operacional_id?: string;
   usuario_id: number | null;
   usuario_nome: string | null;
   usuario_email: string | null;
@@ -22,6 +26,8 @@ export interface AuditoriaLog {
   metodo_http: string | null;
   observacoes: string | null;
   timestamp: string;
+  /** Corpo JSON gravado no operacional (lista); detalhe completo ainda via ES quando houver id */
+  payload?: Record<string, unknown> | string | null;
 }
 
 export interface AuditoriaFilters {
@@ -58,6 +64,77 @@ const ENTIDADES_SAAS = ['SaasPlano', 'SaasContrato', 'SaasDadosEmpresa', 'SaasDa
 
 class AuditoriaService {
   private baseEndpoint = '/auditoria';
+
+  private appendOperacionalListParams(params: URLSearchParams, filters: AuditoriaFilters): void {
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.search) params.append('search', filters.search);
+    if (filters.searchField) params.append('searchField', filters.searchField);
+    if (filters.acao) params.append('acao', filters.acao);
+    if (filters.entidade) params.append('entidade', filters.entidade);
+    if (filters.usuario_id) params.append('usuario_id', filters.usuario_id.toString());
+    if (filters.empresa_id) params.append('empresa_id', filters.empresa_id.toString());
+    if (filters.data_inicio) params.append('data_inicio', filters.data_inicio);
+    if (filters.data_fim) params.append('data_fim', filters.data_fim);
+    if (filters.sortColumn) params.append('sortColumn', filters.sortColumn);
+    if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
+    if (filters.comUsuarioObrigatorio) params.append('com_usuario_obrigatorio', 'true');
+    if (filters.semUsuarioObrigatorio) params.append('sem_usuario_obrigatorio', 'true');
+    if (filters.origemAuditoria) params.append('origem_auditoria', filters.origemAuditoria);
+    if (filters.moduloBlockdomi) params.append('modulo_blockdomi', 'true');
+  }
+
+  private parseOperacionalListResponse(
+    response: Awaited<ReturnType<typeof defaultApiClient.get<PaginatedResponse<AuditoriaLog>>>>
+  ): ApiResponse<PaginatedResponse<AuditoriaLog>> {
+    if (response.success && response.data) {
+      const rd = response.data as unknown as Record<string, unknown>;
+      if (rd && 'data' in rd && 'pagination' in rd) {
+        return { success: true, data: rd as unknown as PaginatedResponse<AuditoriaLog> };
+      }
+    }
+    const emptyPagination = { current_page: 1, last_page: 1, per_page: 20, total: 0, from: 0, to: 0 };
+    return {
+      success: response.success ?? false,
+      message: (response as { message?: string }).message,
+      data: { success: true, data: [], pagination: emptyPagination },
+    };
+  }
+
+  /**
+   * Listar logs operacionais (MySQL) — modais ERP; detalhe em getById (Elasticsearch).
+   */
+  async listOperacional(filters: AuditoriaFilters = {}): Promise<ApiResponse<PaginatedResponse<AuditoriaLog>>> {
+    const params = new URLSearchParams();
+    this.appendOperacionalListParams(params, filters);
+    const url = `${this.baseEndpoint}/operacional-list?${params.toString()}`;
+    const response = await defaultApiClient.get<PaginatedResponse<AuditoriaLog>>(url);
+    return this.parseOperacionalListResponse(response);
+  }
+
+  /**
+   * Listar logs operacionais (MySQL) — modais SaaS agregados.
+   */
+  async listOperacionalSaas(filters: AuditoriaFilters = {}): Promise<ApiResponse<PaginatedResponse<AuditoriaLog>>> {
+    const params = new URLSearchParams();
+    this.appendOperacionalListParams(params, filters);
+    const url = `/saas/auditoria/operacional-list?${params.toString()}`;
+    const response = await defaultApiClient.get<PaginatedResponse<AuditoriaLog>>(url);
+    return this.parseOperacionalListResponse(response);
+  }
+
+  /**
+   * Listar logs operacionais (MySQL) por tenant SaaS.
+   */
+  async listOperacionalByTenant(
+    filters: AuditoriaFilters & { empresa_id: number }
+  ): Promise<ApiResponse<PaginatedResponse<AuditoriaLog>>> {
+    const params = new URLSearchParams();
+    this.appendOperacionalListParams(params, filters);
+    const url = `/saas/auditoria/operacional-list?${params.toString()}`;
+    const response = await defaultApiClient.get<PaginatedResponse<AuditoriaLog>>(url);
+    return this.parseOperacionalListResponse(response);
+  }
 
   /**
    * Listar logs de auditoria
@@ -257,10 +334,13 @@ class AuditoriaService {
   }
 
   /**
-   * Buscar log específico por ID
+   * Buscar log específico por ID (Elasticsearch).
+   * No painel SaaS use `saas: true` — `/api/auditoria/:id` exige sessão ERP.
    */
-  async getById(id: string): Promise<ApiResponse<AuditoriaLog>> {
-    return defaultApiClient.get<AuditoriaLog>(`${this.baseEndpoint}/${id}`);
+  async getById(id: string, opts?: { saas?: boolean }): Promise<ApiResponse<AuditoriaLog>> {
+    const encoded = encodeURIComponent(id);
+    const url = opts?.saas ? `/saas/auditoria/${encoded}` : `${this.baseEndpoint}/${encoded}`;
+    return defaultApiClient.get<AuditoriaLog>(url);
   }
 
   /**

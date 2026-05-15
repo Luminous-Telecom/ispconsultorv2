@@ -43,6 +43,16 @@ export interface ListContratosResponse {
 }
 
 export class ContratoService {
+  /** Includes padrão do contrato — deve ser o mesmo em getById e após update/reload para auditoria/toJSON coerentes */
+  private static getDefaultIncludes() {
+    return [
+      { model: Cliente, as: 'cliente' },
+      { model: Plano, as: 'plano' },
+      { model: Banco, as: 'bancoBoleto' },
+      { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', required: false },
+    ];
+  }
+
   /**
    * Normalizar data (evitar problemas de timezone)
    */
@@ -298,12 +308,7 @@ export class ContratoService {
    */
   static async getById(id: string | number): Promise<Contrato | null> {
     return await Contrato.findByPk(id, {
-      include: [
-        { model: Cliente, as: 'cliente' },
-        { model: Plano, as: 'plano' },
-        { model: Banco, as: 'bancoBoleto' },
-        { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', required: false }
-      ]
+      include: ContratoService.getDefaultIncludes(),
     });
   }
 
@@ -314,12 +319,7 @@ export class ContratoService {
     return await Contrato.findOne({
       where: { cliente_id: clienteId, status: 'ativo' },
       order: [['id', 'DESC']],
-      include: [
-        { model: Cliente, as: 'cliente' },
-        { model: Plano, as: 'plano' },
-        { model: Banco, as: 'bancoBoleto' },
-        { model: TipoCobrancaContrato, as: 'tipoCobrancaContrato', required: false }
-      ]
+      include: ContratoService.getDefaultIncludes(),
     });
   }
 
@@ -363,8 +363,11 @@ export class ContratoService {
     }
 
     await contrato.update(dadosContrato, { transaction });
-    await contrato.reload({ transaction });
-    
+    await contrato.reload({
+      transaction,
+      include: ContratoService.getDefaultIncludes(),
+    });
+
     return contrato;
   }
 

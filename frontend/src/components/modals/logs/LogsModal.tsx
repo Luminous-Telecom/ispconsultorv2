@@ -8,11 +8,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useModalSelect } from 'hooks/useModalSelect';
 import { useTableFilters } from 'hooks/useTableFilters';
 import { useI18n } from 'contexts/I18nContext';
-import { formatDateTime } from 'utils/formatters';
-import { SshAuditService } from 'services/sshAuditService';
+import { formatAuditoriaListId, formatDateTime } from 'utils/formatters';
 import { auditoriaService, AuditoriaLog, AuditoriaFilters } from 'services/auditoriaService';
+import { useAuditoriaDetalheEs } from 'hooks/useAuditoriaDetalheEs';
 import { getMensagemHistoricoService } from 'services/mensagemHistoricoService';
-import { SshAuditLog, SshAuditAction } from 'types';
 import { Badge } from 'components/ui';
 import DraggableModal from 'components/common/DraggableModal';
 import Table from 'components/tables/Table';
@@ -48,22 +47,10 @@ const LOGS_AUDITORIA_CONFIG: Record<
   usuarios: { comUsuarioObrigatorio: true },
   'agenda-tarefas': { origemAuditoria: 'agendador' },
   'assinatura-digital': { entidade: 'AssinaturaDigital' },
-  'acesso-sistema': { acao: 'login,logout' }
-};
-
-const SSH_EQUIP_ACTIONS: Record<string, { cls: string; label: string }> = {
-  CONNECT: { cls: 'bg-success', label: 'Conectado' },
-  DISCONNECT: { cls: 'bg-secondary', label: 'Desconectado' },
-  COMMAND: { cls: 'bg-primary', label: 'Comando' },
-  TERMINAL_COMMAND: { cls: 'bg-primary', label: 'Comando Terminal' },
-  AUTH_FAIL: { cls: 'bg-danger', label: 'Falha de Auth' },
-  TERMINAL_OPEN: { cls: 'bg-info text-dark', label: 'Terminal Aberto' },
-  TERMINAL_CLOSE: { cls: 'bg-secondary', label: 'Terminal Fechado' },
-};
-
-const SSH_AGENT_ACTIONS: Record<string, { cls: string; label: string }> = {
-  AGENT_CONNECT: { cls: 'bg-success', label: 'Conectado' },
-  AGENT_DISCONNECT: { cls: 'bg-warning text-dark', label: 'Desconectado' },
+  'acesso-sistema': { acao: 'login,logout' },
+  /** Auditoria CRUD/espelhada no operacional (detalhe completo no ES quando houver id). */
+  equipamentos: { entidade: 'SshDevice,SshDeviceBackup' },
+  agentes: { entidade: 'Agent' },
 };
 
 interface MensagemItem {
@@ -99,6 +86,49 @@ function formatMensagemEmpresaNome(i: MensagemItem & { empresa_nome?: string | n
   return nome || '—';
 }
 
+function formatOperacionalPayloadPreview(
+  payload: Record<string, unknown> | string | null | undefined,
+  fallbackText?: string | null
+): { display: string; title: string } {
+  let obj: Record<string, unknown> | null = null;
+  if (payload != null && typeof payload === 'string') {
+    const t = payload.trim();
+    if (t) {
+      try {
+        const p = JSON.parse(t) as unknown;
+        if (p != null && typeof p === 'object' && !Array.isArray(p)) obj = p as Record<string, unknown>;
+      } catch {
+        obj = { _valor_texto: t.slice(0, 2000) };
+      }
+    }
+  } else if (payload != null && typeof payload === 'object' && !Array.isArray(payload)) {
+    obj = payload as Record<string, unknown>;
+  }
+
+  if (!obj || Object.keys(obj).length === 0) {
+    const fb = (fallbackText ?? '').trim();
+    if (fb) {
+      const max = 140;
+      const display = fb.length > max ? `${fb.slice(0, max)}…` : fb;
+      const titleMax = 8000;
+      const title = fb.length > titleMax ? `${fb.slice(0, titleMax)}…` : fb;
+      return { display, title };
+    }
+    return { display: '—', title: '' };
+  }
+  let s: string;
+  try {
+    s = JSON.stringify(obj);
+  } catch {
+    return { display: '—', title: '' };
+  }
+  const max = 140;
+  const display = s.length > max ? `${s.slice(0, max)}…` : s;
+  const titleMax = 8000;
+  const title = s.length > titleMax ? `${s.slice(0, titleMax)}…` : s;
+  return { display, title };
+}
+
 interface LogsModalProps {
   show: boolean;
   onClose: () => void;
@@ -112,10 +142,15 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 
   const isSaas = variant === 'saas';
   const mensagemService = getMensagemHistoricoService(isSaas);
 
-  const isSsh = logType === 'equipamentos' || logType === 'agentes';
-  const isAuditoria = ['usuarios', 'agenda-tarefas', 'assinatura-digital', 'acesso-sistema'].includes(
-    logType
-  );
+  const isEquipamentosOuAgentes = logType === 'equipamentos' || logType === 'agentes';
+  const isAuditoria = [
+    'usuarios',
+    'agenda-tarefas',
+    'assinatura-digital',
+    'acesso-sistema',
+    'equipamentos',
+    'agentes',
+  ].includes(logType);
   const isEmail = logType === 'email';
   const isWhatsapp = logType === 'whatsapp';
   const isBlockdomiApi = logType === 'blockdomi-api';
@@ -124,82 +159,58 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 
   const tableFilters = useTableFilters({
     initialSearch: '',
     initialPage: 1,
-    initialLimit: isSsh || isBlockdomiApi ? 15 : 20,
+    initialLimit: isEquipamentosOuAgentes || isBlockdomiApi ? 15 : 20,
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
-    initialSortColumn: isSsh || isAuditoria ? 'timestamp' : 'created_at',
+    initialSortColumn: isAuditoria ? 'timestamp' : 'created_at',
     initialSortDirection: 'desc',
   });
 
-  const [filterAction, setFilterAction] = useState('');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedSsh, setSelectedSsh] = useState<SshAuditLog | null>(null);
   const [selectedAuditoria, setSelectedAuditoria] = useState<AuditoriaLog | null>(null);
   const [selectedMensagem, setSelectedMensagem] = useState<MensagemItem | null>(null);
 
-  const sshFilters = useMemo(() => ({
-    page: tableFilters.page,
-    limit: tableFilters.limit,
-    search: tableFilters.debouncedSearch || undefined,
-    searchField: tableFilters.searchField || undefined,
-    action: filterAction || undefined,
-    startDate: filterStartDate || undefined,
-    endDate: filterEndDate || undefined,
-    sortColumn: tableFilters.sortColumn,
-    sortDirection: tableFilters.sortDirection,
-  }), [
-    tableFilters.page,
-    tableFilters.limit,
-    tableFilters.debouncedSearch,
-    tableFilters.searchField,
-    tableFilters.sortColumn,
-    tableFilters.sortDirection,
-    filterAction,
-    filterStartDate,
-    filterEndDate,
-  ]);
+  const auditoriaFilters: AuditoriaFilters = useMemo(
+    () => ({
+      page: tableFilters.page,
+      limit: tableFilters.limit,
+      search: tableFilters.search || undefined,
+      searchField: tableFilters.searchField || undefined,
+      acao: preset.acao,
+      entidade: preset.entidade,
+      moduloBlockdomi: preset.moduloBlockdomi,
+      comUsuarioObrigatorio: preset.comUsuarioObrigatorio,
+      origemAuditoria: preset.origemAuditoria,
+      data_inicio: isEquipamentosOuAgentes ? filterStartDate || undefined : undefined,
+      data_fim: isEquipamentosOuAgentes ? filterEndDate || undefined : undefined,
+      sortColumn: tableFilters.sortColumn,
+      sortDirection: tableFilters.sortDirection,
+    }),
+    [tableFilters, preset, isEquipamentosOuAgentes, filterStartDate, filterEndDate]
+  );
 
-  const auditoriaFilters: AuditoriaFilters = useMemo(() => ({
-    page: tableFilters.page,
-    limit: tableFilters.limit,
-    search: tableFilters.search || undefined,
-    searchField: tableFilters.searchField || undefined,
-    acao: preset.acao,
-    entidade: preset.entidade,
-    moduloBlockdomi: preset.moduloBlockdomi,
-    comUsuarioObrigatorio: preset.comUsuarioObrigatorio,
-    origemAuditoria: preset.origemAuditoria,
-    sortColumn: tableFilters.sortColumn,
-    sortDirection: tableFilters.sortDirection,
-  }), [tableFilters, preset]);
-
-  const mensagemFilters = useMemo(() => ({
-    ...(isEmail ? { tipo: 'email' as const } : { tipo: 'whatsapp' as const }),
-    page: tableFilters.page,
-    limit: tableFilters.limit,
-    search: tableFilters.debouncedSearch || undefined,
-    searchField: tableFilters.searchField || (tableFilters.debouncedSearch ? 'destinatario' : undefined),
-    sortColumn: tableFilters.sortColumn,
-    sortDirection: tableFilters.sortDirection,
-  }), [tableFilters, isEmail]);
-
-  const sshQuery = useQuery({
-    queryKey: ['logs-ssh', variant, logType, sshFilters],
-    queryFn: () => SshAuditService.list({ logType: logType as 'equipamentos' | 'agentes', ...sshFilters }),
-    enabled: show && isSsh,
-    staleTime: 15_000,
-    refetchOnWindowFocus: false,
-  });
+  const mensagemFilters = useMemo(
+    () => ({
+      ...(isEmail ? { tipo: 'email' as const } : { tipo: 'whatsapp' as const }),
+      page: tableFilters.page,
+      limit: tableFilters.limit,
+      search: tableFilters.debouncedSearch || undefined,
+      searchField: tableFilters.searchField || (tableFilters.debouncedSearch ? 'destinatario' : undefined),
+      sortColumn: tableFilters.sortColumn,
+      sortDirection: tableFilters.sortDirection,
+    }),
+    [tableFilters, isEmail]
+  );
 
   const auditoriaQuery = useQuery({
-    queryKey: ['auditoria-logs', variant, logType, auditoriaFilters],
+    queryKey: ['auditoria-operacional-logs', variant, logType, auditoriaFilters],
     queryFn: async () => {
       const r =
         variant === 'saas'
-          ? await auditoriaService.listSaasAll(auditoriaFilters)
-          : await auditoriaService.list(auditoriaFilters);
+          ? await auditoriaService.listOperacionalSaas(auditoriaFilters)
+          : await auditoriaService.listOperacional(auditoriaFilters);
       if (!r.success) throw new Error(r.message);
       return r.data;
     },
@@ -231,22 +242,18 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 
     scope: variant,
   });
 
-  const data = isSsh ? sshQuery.data : isAuditoria ? auditoriaQuery.data : isBlockdomiApi ? blockdomiQuery.data : mensagemQuery.data;
-  const isLoading = isSsh ? sshQuery.isLoading : isAuditoria ? auditoriaQuery.isLoading : isBlockdomiApi ? blockdomiQuery.isLoading : mensagemQuery.isLoading;
-  const refetch = isSsh ? sshQuery.refetch : isAuditoria ? auditoriaQuery.refetch : isBlockdomiApi ? blockdomiQuery.refetch : mensagemQuery.refetch;
+  const data = isAuditoria ? auditoriaQuery.data : isBlockdomiApi ? blockdomiQuery.data : mensagemQuery.data;
+  const isLoading = isAuditoria ? auditoriaQuery.isLoading : isBlockdomiApi ? blockdomiQuery.isLoading : mensagemQuery.isLoading;
+  const refetch = isAuditoria ? auditoriaQuery.refetch : isBlockdomiApi ? blockdomiQuery.refetch : mensagemQuery.refetch;
 
   return {
     tableFilters,
-    filterAction,
-    setFilterAction,
     filterStartDate,
     filterEndDate,
     setFilterStartDate,
     setFilterEndDate,
     showDetailsModal,
     setShowDetailsModal,
-    selectedSsh,
-    setSelectedSsh,
     selectedAuditoria,
     setSelectedAuditoria,
     selectedMensagem,
@@ -254,12 +261,11 @@ function useLogsContent(logType: LogsModalType, show: boolean, variant: 'erp' | 
     data,
     isLoading,
     refetch,
-    isSsh,
+    isEquipamentosOuAgentes,
     isEquipamentos: logType === 'equipamentos',
     isAuditoria,
     isEmail,
     isBlockdomiApi,
-    showIdColumn: logType === 'email' || logType === 'whatsapp',
   };
 }
 
@@ -275,16 +281,12 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
 
   const {
     tableFilters,
-    filterAction,
-    setFilterAction,
     filterStartDate,
     filterEndDate,
     setFilterStartDate,
     setFilterEndDate,
     showDetailsModal,
     setShowDetailsModal,
-    selectedSsh,
-    setSelectedSsh,
     selectedAuditoria,
     setSelectedAuditoria,
     selectedMensagem,
@@ -292,13 +294,24 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     data,
     isLoading,
     refetch,
-    isSsh,
+    isEquipamentosOuAgentes,
     isEquipamentos,
     isAuditoria,
     isEmail,
     isBlockdomiApi,
-    showIdColumn,
   } = ctx;
+
+  const {
+    exibirDetalhe: auditoriaExibirDetalhe,
+    showEsLoading: auditoriaDetalheEsLoading,
+    esIndisponivel: auditoriaEsIndisponivel,
+    temVinculoEs: auditoriaTemVinculoEs,
+  } = useAuditoriaDetalheEs({
+    selected: isAuditoria ? selectedAuditoria : null,
+    showDetails: showDetailsModal && isAuditoria,
+    saas: effectiveVariant === 'saas',
+    queryKeyPrefix: 'auditoria-detalhe-es-logs',
+  });
 
   const { selectedItem, handleSelectionChange } = useModalSelect<{ id: number | string }>();
 
@@ -353,12 +366,11 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     setTimeout(() => {
       tableFilters.setSearch('');
       tableFilters.setSearchField('');
-      setFilterAction('');
       setFilterStartDate('');
       setFilterEndDate('');
       tableFilters.setPage(1);
     }, 0);
-  }, [tableFilters, setFilterAction, setFilterStartDate, setFilterEndDate]);
+  }, [tableFilters, setFilterStartDate, setFilterEndDate]);
 
   const pagination = useMemo(() => {
     const pag = (data as { pagination?: { total?: number; per_page?: number; current_page?: number; last_page?: number; from?: number; to?: number } })?.pagination;
@@ -381,56 +393,23 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     };
   }, [data, tableFilters.limit]);
 
-  // --- SSH columns ---
-  const sshActionBadge = isEquipamentos ? SSH_EQUIP_ACTIONS : SSH_AGENT_ACTIONS;
-  const sshActions = isEquipamentos
-    ? (['CONNECT', 'DISCONNECT', 'COMMAND', 'TERMINAL_COMMAND', 'AUTH_FAIL', 'TERMINAL_OPEN', 'TERMINAL_CLOSE'] as SshAuditAction[])
-    : (['AGENT_CONNECT', 'AGENT_DISCONNECT'] as const);
-
-  const sshColumns: TableConfig<SshAuditLog>['columns'] = useMemo(() => {
-    const empresaCol: TableConfig<SshAuditLog>['columns'] = showEmpresaColumn
-      ? [{
-          key: 'empresa_nome' as const,
-          label: t('company.title'),
-          sortable: false,
-          width: '160px',
-          render: (i: SshAuditLog) => {
-            const nome = (i.empresa_nome ?? '').trim();
-            return <span className="small text-truncate d-inline-block" style={{ maxWidth: '150px' }} title={nome || undefined}>{nome || '—'}</span>;
-          },
-        }]
-      : [];
-    const base = [
-      { key: 'timestamp' as const, label: t('audit.timestamp'), sortable: true, width: '155px', render: (i: SshAuditLog) => <span className="font-monospace small">{formatTimestamp(i.timestamp)}</span> },
-      { key: 'action' as const, label: t('table.action'), sortable: true, width: '130px', render: (i: SshAuditLog) => { const a = sshActionBadge[i.action] ?? { cls: 'bg-secondary', label: i.action }; return <span className={`badge ${a.cls}`}>{a.label}</span>; } },
-      { key: 'deviceName' as const, label: isEquipamentos ? t('sshDevice.backupDeviceColumn') : t('logs.agentColumn'), sortable: true, width: '120px', render: (i: SshAuditLog) => i.deviceName ?? '-' },
-      { key: 'clienteName' as const, label: t('table.client'), sortable: true, width: '150px', render: (i: SshAuditLog) => <span className="small">{i.clienteName?.trim() || '—'}</span> },
-      ...empresaCol,
-    ];
-    if (isEquipamentos) {
-      return [
-        ...base,
-        {
-          key: 'userId' as const,
-          label: t('audit.user'),
-          sortable: true,
-          width: '120px',
-          sortValue: (i: SshAuditLog) => i.userName?.trim() || i.userId || '',
-          render: (i: SshAuditLog) => i.userName?.trim() || i.userId || '-',
-        },
-        { key: 'success' as const, label: t('sshAudit.result'), sortable: true, width: '80px', render: (i: SshAuditLog) => <span className={`badge ${i.success ? 'bg-success' : 'bg-danger'}`}>{i.success ? 'OK' : 'ERRO'}</span> },
-        { key: 'command' as const, label: t('sshAudit.command'), sortable: true, width: '200px', render: (i: SshAuditLog) => i.command ? <span className="font-monospace small text-truncate d-inline-block" style={{ maxWidth: '190px' }} title={i.command}>{i.command}</span> : '-' },
-        { key: 'duration' as const, label: t('sshAudit.duration'), sortable: true, width: '80px', render: (i: SshAuditLog) => i.duration != null ? `${i.duration}ms` : '-' },
-        { key: 'errorMessage' as const, label: t('sshAudit.error'), sortable: true, width: '200px', render: (i: SshAuditLog) => i.errorMessage ? <span className="text-danger small text-truncate d-inline-block" style={{ maxWidth: '190px' }} title={i.errorMessage}>{i.errorMessage}</span> : '-' },
-        { key: 'ip' as const, label: t('audit.ip'), sortable: true, width: '110px', render: (i: SshAuditLog) => <span className="font-monospace small">{i.ip}</span> },
-      ];
-    }
-    return [...base, { key: 'ip' as const, label: t('audit.ip'), sortable: true, width: '120px', render: (i: SshAuditLog) => <span className="font-monospace small">{i.ip}</span> }];
-  }, [t, formatTimestamp, isEquipamentos, sshActionBadge, showEmpresaColumn]);
-
   // --- Auditoria columns ---
   const auditoriaColumns = useMemo(() => [
-    ...(showIdColumn ? [{ key: 'id' as const, label: t('table.id'), sortable: true, width: '42px', render: (log: AuditoriaLog) => <span className="text-muted small">{String(log.id).substring(0, 8)}...</span> }] : []),
+    {
+      key: 'id' as const,
+      label: t('table.id'),
+      sortable: true,
+      width: '56px',
+      sortValue: (log: AuditoriaLog) => log.operacional_id ?? String(log.id),
+      render: (log: AuditoriaLog) => {
+        const { display, title } = formatAuditoriaListId(log);
+        return (
+          <span className="text-muted small" title={title}>
+            {display}
+          </span>
+        );
+      },
+    },
     { key: 'timestamp' as const, label: t('audit.timestamp'), sortable: true, width: '150px', render: (log: AuditoriaLog) => <span className="small">{formatTimestamp(log.timestamp)}</span> },
     ...(showEmpresaColumn
       ? [{
@@ -457,10 +436,31 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
     { key: 'ip_address' as const, label: t('audit.ip'), sortable: true, width: '120px', render: (log: AuditoriaLog) => <span className="small text-muted">{log.ip_address || '-'}</span> },
     { key: 'acao' as const, label: t('table.action'), sortable: true, render: (log: AuditoriaLog) => <span className={`badge bg-${getAcaoBadgeClass(log.acao)}`}>{formatAcao(log.acao)}</span> },
     { key: 'entidade' as const, label: t('audit.entity'), sortable: true, width: '120px', render: (log: AuditoriaLog) => <span className="small">{log.entidade}</span> },
-  ], [t, formatTimestamp, formatAcao, getAcaoBadgeClass, showIdColumn, showEmpresaColumn]);
+    ...(logType === 'usuarios'
+      ? [{
+          key: 'payload' as const,
+          label: t('audit.operacionalCampos'),
+          sortable: false,
+          width: '240px',
+          render: (log: AuditoriaLog) => {
+            const { display, title } = formatOperacionalPayloadPreview(log.payload, log.observacoes);
+            return (
+              <span
+                className="small font-monospace text-muted text-truncate d-inline-block"
+                style={{ maxWidth: 232 }}
+                title={title || undefined}
+              >
+                {display}
+              </span>
+            );
+          },
+        }]
+      : []),
+  ], [t, formatTimestamp, formatAcao, getAcaoBadgeClass, showEmpresaColumn, logType]);
 
   // --- Blockdomi columns ---
   const blockdomiColumns: TableConfig<BlockdomiLogAcessoItem>['columns'] = useMemo(() => [
+    { key: 'id' as const, label: t('table.id'), sortable: true, width: '42px', render: (i) => <span className="small">{i.id}</span> },
     { key: 'ip' as const, label: t('blockdomi.logsIp'), sortable: true, width: '140px', render: (i) => i.ip ?? '-' },
     ...(showEmpresaColumn
       ? [{
@@ -538,20 +538,21 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
 
   const modalData = useMemo((): { id: number | string }[] => {
     const d = (data as { data?: unknown[] })?.data ?? [];
-    if (isSsh) {
-      return (d as (SshAuditLog & { id?: string })[]).map((item, idx) => ({ ...item, id: item.id ?? `audit-${idx}` }));
-    }
     if (isBlockdomiApi) {
       return (d as BlockdomiLogAcessoItem[]) as { id: number | string }[];
     }
     return d as { id: number | string }[];
-  }, [data, isSsh, isBlockdomiApi]);
+  }, [data, isBlockdomiApi]);
 
   const handleViewDetails = useCallback((item: unknown) => {
-    if (isSsh) { setSelectedSsh(item as SshAuditLog); setShowDetailsModal(true); }
-    else if (isAuditoria) { setSelectedAuditoria(item as AuditoriaLog); setShowDetailsModal(true); }
-    else { setSelectedMensagem(item as MensagemItem); setShowDetailsModal(true); }
-  }, [isSsh, isAuditoria, setSelectedSsh, setSelectedAuditoria, setSelectedMensagem, setShowDetailsModal]);
+    if (isAuditoria) {
+      setSelectedAuditoria(item as AuditoriaLog);
+      setShowDetailsModal(true);
+    } else {
+      setSelectedMensagem(item as MensagemItem);
+      setShowDetailsModal(true);
+    }
+  }, [isAuditoria, setSelectedAuditoria, setSelectedMensagem, setShowDetailsModal]);
 
   const bulkActions = useMemo(() => {
     if (isBlockdomiApi) {
@@ -561,31 +562,22 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
       ];
     }
     return [{
-      label: isAuditoria || isSsh ? t('audit.viewDetails') : t('history.view'),
+      label: isAuditoria ? t('audit.viewDetails') : t('history.view'),
       variant: 'primary' as const,
       disabled: (items: unknown[]) => items.length === 0 && !selectedItem,
       requiresSelection: true,
       action: (items: unknown[]) => { const it = items.length > 0 ? items[0] : selectedItem; if (it) handleViewDetails(it); },
     }];
-  }, [t, selectedItem, handleViewDetails, isAuditoria, isSsh, isBlockdomiApi]);
+  }, [t, selectedItem, handleViewDetails, isAuditoria, isBlockdomiApi]);
 
-  const sshFilterControls = isSsh && (
+  const equipamentosAgentesDateControls = isEquipamentosOuAgentes && (
     <div className="d-flex flex-nowrap align-items-center justify-content-center small filter-compact" style={{ gap: 2 }}>
-      <div className="d-flex align-items-center" style={{ gap: 2 }}>
-        <span className="text-muted" style={{ fontSize: '0.65rem' }}>{t('table.action')}:</span>
-        <select className="form-select form-select-sm" value={filterAction} onChange={(e) => { setFilterAction(e.target.value); tableFilters.setPage(1); }} style={{ width: 'auto', fontSize: '0.65rem', height: '1.25rem' }}>
-          <option value="">{t('audit.actions.all')}</option>
-          {sshActions.map((a) => (
-            <option key={a} value={a}>{(sshActionBadge as Record<string, { label: string }>)[a]?.label ?? a}</option>
-          ))}
-        </select>
-      </div>
       <DateRangeFilter startDate={filterStartDate} endDate={filterEndDate} onStartDateChange={(v) => { setFilterStartDate(v); tableFilters.setPage(1); }} onEndDateChange={(v) => { setFilterEndDate(v); tableFilters.setPage(1); }} />
       <button type="button" className="btn btn-sm btn-outline-primary" style={{ fontSize: '0.65rem', height: '1.25rem' }} onClick={handleClearFilters}>{t('buttons.clear')}</button>
     </div>
   );
 
-  const title = isSsh
+  const title = isEquipamentosOuAgentes
     ? (isEquipamentos ? t('logs.equipamentos') : t('logs.agentes'))
     : isAuditoria
       ? t('audit.title')
@@ -594,39 +586,42 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
         : isEmail
           ? t('history.emailTitle')
           : t('history.whatsappTitle');
-  const emptyMessage = isSsh
-    ? (isEquipamentos ? t('sshAudit.emptyMessage') : t('logs.agentesEmpty'))
+  const emptyMessage = isEquipamentosOuAgentes
+    ? 'Nenhum log encontrado'
     : isBlockdomiApi
       ? t('blockdomi.logsEmpty')
       : isAuditoria
         ? 'Nenhum log encontrado'
         : t('history.noMessages');
 
-  const columns = isSsh ? sshColumns : isAuditoria ? auditoriaColumns : isBlockdomiApi ? blockdomiColumns : mensagemColumns;
-  const searchFields = isSsh
-    ? (isEquipamentos ? [{ key: 'command', label: t('sshAudit.command') }, { key: 'deviceName', label: t('sshDevice.backupDeviceColumn') }, { key: 'userId', label: t('audit.user') }, { key: 'errorMessage', label: t('sshAudit.error') }] : [{ key: 'deviceName', label: t('logs.agentColumn') }, { key: 'ip', label: t('audit.ip') }])
-    : isAuditoria
+  const columns = isAuditoria ? auditoriaColumns : isBlockdomiApi ? blockdomiColumns : mensagemColumns;
+  const searchFields = isAuditoria
+    ? [
+        { key: 'id' as const, label: t('table.id') },
+        { key: 'timestamp', label: t('audit.timestamp') },
+        { key: 'usuario_nome', label: t('table.name') },
+        { key: 'usuario_email', label: t('audit.user') },
+        { key: 'ip_address', label: t('audit.ip') },
+        { key: 'acao', label: t('table.action') },
+        { key: 'entidade', label: t('audit.entity') },
+      ]
+    : isBlockdomiApi
       ? [
-          ...(showIdColumn ? [{ key: 'id' as const, label: t('table.id') }] : []),
-          { key: 'timestamp', label: t('audit.timestamp') },
-          { key: 'usuario_nome', label: t('table.name') },
-          { key: 'usuario_email', label: t('audit.user') },
-          { key: 'ip_address', label: t('audit.ip') },
-          { key: 'acao', label: t('table.action') },
-          { key: 'entidade', label: t('audit.entity') },
+          { key: 'id', label: t('table.id') },
+          { key: 'ip', label: t('blockdomi.logsIp') },
+          { key: 'rota', label: t('blockdomi.logsRota') },
+          { key: 'mensagem_erro', label: t('blockdomi.logsMensagemErro') },
         ]
-      : isBlockdomiApi
-        ? [{ key: 'ip', label: t('blockdomi.logsIp') }, { key: 'rota', label: t('blockdomi.logsRota') }, { key: 'mensagem_erro', label: t('blockdomi.logsMensagemErro') }]
-        : [
-            { key: 'id', label: t('table.id') },
-            { key: 'cliente_nome', label: t('history.client') },
-            { key: 'destinatario', label: isEmail ? t('history.recipient') : t('history.phone') },
-            { key: 'mensagem', label: t('history.message') },
-            { key: 'status', label: t('history.status') },
-          ];
+      : [
+          { key: 'id', label: t('table.id') },
+          { key: 'cliente_nome', label: t('history.client') },
+          { key: 'destinatario', label: isEmail ? t('history.recipient') : t('history.phone') },
+          { key: 'mensagem', label: t('history.message') },
+          { key: 'status', label: t('history.status') },
+        ];
 
-  const defaultSearchField = isSsh ? (isEquipamentos ? 'command' : 'deviceName') : isBlockdomiApi ? 'ip' : isAuditoria ? 'timestamp' : 'destinatario';
-  const searchPlaceholder = isSsh ? t('layout.searchPlaceholder') : (isBlockdomiApi ? t('layout.searchPlaceholder') : (isEmail ? t('history.searchEmail') : t('history.searchPhone')));
+  const defaultSearchField = isBlockdomiApi ? 'ip' : isAuditoria ? 'timestamp' : 'destinatario';
+  const searchPlaceholder = isBlockdomiApi || isAuditoria ? t('layout.searchPlaceholder') : (isEmail ? t('history.searchEmail') : t('history.searchPhone'));
 
   const tableContent = (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -649,7 +644,7 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
             responsive: true,
             selectable: true,
             multiSelect: false,
-            customControls: isSsh ? sshFilterControls : undefined,
+            customControls: equipamentosAgentesDateControls || undefined,
             bulkActions: bulkActions.map((a) => ({
               key: a.label.toLowerCase().replace(/\s+/g, '-'),
               label: a.label,
@@ -677,71 +672,54 @@ const LogsModal: React.FC<LogsModalProps> = ({ show, onClose: _onClose, logType 
   );
 
   const detailsModal = (() => {
-    if (selectedSsh) {
-      const a = sshActionBadge[selectedSsh.action] ?? { label: selectedSsh.action };
-      return (
-        <DraggableModal show={showDetailsModal} onClose={() => { setShowDetailsModal(false); setSelectedSsh(null); }} title={t('audit.detailsTitle')} size={isEquipamentos ? 'lg' : 'md'} modalId={`logs-details-${logType}`}>
-          <div className="p-3">
-            <div className="row g-2">
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.timestamp')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={formatTimestamp(selectedSsh.timestamp)} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.action')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={a.label} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{isEquipamentos ? t('sshDevice.backupDeviceColumn') : t('logs.agentColumn')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedSsh.deviceName || '-'} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.client')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedSsh.clienteName?.trim() || '-'} readOnly /></div>
-              {showEmpresaColumn && (
-                <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('company.title')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={(selectedSsh.empresa_nome ?? '').trim() || '—'} readOnly /></div>
-              )}
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.ip')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedSsh.ip || '-'} readOnly /></div>
-              {isEquipamentos && (
-                <>
-                  <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.user')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedSsh.userName?.trim() || selectedSsh.userId || 'N/A'} readOnly /></div>
-                  <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('sshAudit.result')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedSsh.success ? 'OK' : 'ERRO'} readOnly /></div>
-                  <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('sshAudit.duration')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedSsh.duration != null ? `${selectedSsh.duration}ms` : '-'} readOnly /></div>
-                  {selectedSsh.command && <div className="col-12"><label className="form-label small text-muted mb-1">{t('sshAudit.command')}</label><textarea className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace small" value={selectedSsh.command} readOnly rows={3} /></div>}
-                  {selectedSsh.errorMessage && <div className="col-12"><label className="form-label small text-muted mb-1">{t('sshAudit.error')}</label><textarea className="form-control form-control-sm bg-secondary bg-opacity-10 text-danger small" value={selectedSsh.errorMessage} readOnly rows={2} /></div>}
-                  {selectedSsh.output && <div className="col-12"><label className="form-label small text-muted mb-1">{t('audit.data')}</label><textarea className="form-control font-monospace small bg-secondary bg-opacity-10" value={selectedSsh.output} readOnly rows={12} style={{ resize: 'none' }} /></div>}
-                </>
-              )}
-            </div>
-          </div>
-        </DraggableModal>
-      );
-    }
-    if (selectedAuditoria) {
+    if (auditoriaExibirDetalhe) {
+      const d = auditoriaExibirDetalhe;
       return (
         <DraggableModal show={showDetailsModal} onClose={() => { setShowDetailsModal(false); setSelectedAuditoria(null); }} title={t('audit.detailsTitle')} size="lg" modalId="logs-auditoria-details">
           <div className="p-3 logs-auditoria-details">
+            {auditoriaEsIndisponivel && (
+              <div className="small text-warning mb-2">Detalhe completo no Elasticsearch indisponível; exibindo dados do banco.</div>
+            )}
+            {!auditoriaTemVinculoEs && (
+              <div className="small text-warning mb-2">Este registro não possui vínculo com o Elasticsearch; exibindo apenas dados do banco.</div>
+            )}
             <div className="row g-2">
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.action')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={formatAcao(selectedAuditoria.acao)} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.entity')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedAuditoria.entidade} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.timestamp')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={formatTimestamp(selectedAuditoria.timestamp)} readOnly /></div>
+              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.action')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={formatAcao(d.acao)} readOnly /></div>
+              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.entity')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={d.entidade} readOnly /></div>
+              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.timestamp')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={formatTimestamp(d.timestamp)} readOnly /></div>
               {showEmpresaColumn && (
-                <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('company.title')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedAuditoria.empresa_nome?.trim() || '—'} readOnly /></div>
+                <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('company.title')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={d.empresa_nome?.trim() || '—'} readOnly /></div>
               )}
               {showEmpresaColumn && (
-                <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.client')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={(selectedAuditoria.cliente_nome ?? '').trim() || '—'} readOnly /></div>
+                <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.client')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={(d.cliente_nome ?? '').trim() || '—'} readOnly /></div>
               )}
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.user')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedAuditoria.usuario_email || 'N/A'} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.name')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedAuditoria.usuario_nome || '-'} readOnly /></div>
-              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.ip')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={selectedAuditoria.ip_address || 'N/A'} readOnly /></div>
-              {selectedAuditoria.rota && <div className="col-12"><label className="form-label small text-muted mb-1">{t('audit.route')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace" value={`${selectedAuditoria.metodo_http || 'N/A'} ${selectedAuditoria.rota}`} readOnly /></div>}
-              {selectedAuditoria.user_agent && <div className="col-12"><label className="form-label small text-muted mb-1">{t('audit.userAgent')}</label><textarea className="form-control form-control-sm bg-secondary bg-opacity-10 small" value={selectedAuditoria.user_agent} readOnly rows={2} /></div>}
-              {selectedAuditoria.observacoes && (
+              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.user')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={d.usuario_email || 'N/A'} readOnly /></div>
+              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('table.name')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={d.usuario_nome || '-'} readOnly /></div>
+              <div className="col-md-6"><label className="form-label small text-muted mb-1">{t('audit.ip')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10" value={d.ip_address || 'N/A'} readOnly /></div>
+              {d.rota && <div className="col-12"><label className="form-label small text-muted mb-1">{t('audit.route')}</label><input type="text" className="form-control form-control-sm bg-secondary bg-opacity-10 font-monospace" value={`${d.metodo_http || 'N/A'} ${d.rota}`} readOnly /></div>}
+              {d.user_agent && <div className="col-12"><label className="form-label small text-muted mb-1">{t('audit.userAgent')}</label><textarea className="form-control form-control-sm bg-secondary bg-opacity-10 small" value={d.user_agent} readOnly rows={2} /></div>}
+              {d.observacoes && (
                 <div className="col-12">
                   <label className="form-label small text-muted mb-1">{t('table.observations')}</label>
                   <textarea
                     className="form-control form-control-sm bg-secondary bg-opacity-10 small"
-                    value={selectedAuditoria.observacoes}
+                    value={d.observacoes}
                     readOnly
-                    rows={Math.min(18, Math.max(4, selectedAuditoria.observacoes.split('\n').length + 1))}
+                    rows={Math.min(18, Math.max(4, d.observacoes.split('\n').length + 1))}
                     style={{ resize: 'vertical', minHeight: '5rem' }}
                   />
                 </div>
               )}
             </div>
-            {(selectedAuditoria.dados_anteriores || selectedAuditoria.dados_novos) && (
+            {(d.dados_anteriores || d.dados_novos || auditoriaDetalheEsLoading || auditoriaTemVinculoEs) && (
               <div className="mt-3">
                 <h6 className="mb-2">{t('audit.data')}</h6>
-                <textarea className="form-control font-monospace small bg-secondary bg-opacity-10" value={JSON.stringify(selectedAuditoria.dados_anteriores && selectedAuditoria.dados_novos ? { anterior: selectedAuditoria.dados_anteriores, novo: selectedAuditoria.dados_novos } : selectedAuditoria.dados_novos || selectedAuditoria.dados_anteriores, null, 2)} readOnly rows={12} style={{ resize: 'none' }} />
+                {auditoriaDetalheEsLoading && (
+                  <div className="small text-muted mb-2">Carregando detalhe da auditoria…</div>
+                )}
+                {(d.dados_anteriores || d.dados_novos) && (
+                  <textarea className="form-control font-monospace small bg-secondary bg-opacity-10" value={JSON.stringify(d.dados_anteriores && d.dados_novos ? { anterior: d.dados_anteriores, novo: d.dados_novos } : d.dados_novos || d.dados_anteriores, null, 2)} readOnly rows={12} style={{ resize: 'none' }} />
+                )}
               </div>
             )}
           </div>

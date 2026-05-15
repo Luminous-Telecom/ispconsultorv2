@@ -144,6 +144,13 @@ const RpkiAspaLogsModal: React.FC<RpkiAspaLogsModalProps> = ({ show }) => {
 
     return [
       {
+        key: 'id',
+        label: 'ID',
+        sortable: true,
+        width: '42px',
+        render: (item) => <span className="small">{item.id}</span>,
+      },
+      {
         key: 'created_at',
         label: 'Data',
         sortable: true,
