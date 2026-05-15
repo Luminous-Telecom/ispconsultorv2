@@ -13,7 +13,7 @@ interface DDoSProtectionConfig {
   skipRoutes?: string[];
   /**
    * Rotas com limite de tempo maior (ex.: análise RPKI + download RIS).
-   * O tempo efetivo é max(maxProcessingTime, maior regra que casar).
+   * O tempo efetivo é max(maxProcessingTime, max entre todas as regras que casarem).
    */
   extendedTimeouts?: Array<{
     test: (pathname: string) => boolean;
@@ -52,7 +52,6 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
     for (const rule of extendedTimeouts) {
       if (rule.test(pathname)) {
         effectiveMaxProcessingTime = Math.max(effectiveMaxProcessingTime, rule.maxProcessingTime);
-        break;
       }
     }
 

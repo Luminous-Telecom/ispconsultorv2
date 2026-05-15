@@ -213,7 +213,10 @@ app.use(ddosProtectionMiddleware({
       maxProcessingTime: Number.isFinite(ddosRpkiRoaAnalyzeMaxMs) ? ddosRpkiRoaAnalyzeMaxMs : 600_000,
     },
     {
-      test: (pathname) => /^\/api\/saas\/atualizacoes\/?$/.test(pathname),
+      /** Permite prefixo de proxy (ex. /app/api/...) e exclui update-stream */
+      test: (pathname) =>
+        /(^|\/)api\/saas\/atualizacoes\/?$/.test(pathname) &&
+        !/(^|\/)api\/saas\/atualizacoes\/update-stream/.test(pathname),
       maxProcessingTime: Number.isFinite(ddosSaasAtualizacoesMaxMs) ? ddosSaasAtualizacoesMaxMs : 120_000,
     },
   ],

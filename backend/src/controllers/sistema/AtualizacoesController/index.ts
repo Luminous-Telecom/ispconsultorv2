@@ -71,13 +71,27 @@ export class AtualizacoesController {
       if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
 
       const githubApiTimeoutMs = parseInt(process.env.GITHUB_API_TIMEOUT_MS || '110000', 10);
-      const response = await axios.get<GitHubRelease[]>(
-        `https://api.github.com/repos/${githubRepo}/releases`,
-        {
-          headers,
-          timeout: Number.isFinite(githubApiTimeoutMs) ? githubApiTimeoutMs : 110_000,
-        }
-      );
+      const abortController = new AbortController();
+      const abortGithub = (): void => {
+        abortController.abort();
+      };
+      res.once('close', abortGithub);
+      req.once('close', abortGithub);
+
+      let response;
+      try {
+        response = await axios.get<GitHubRelease[]>(
+          `https://api.github.com/repos/${githubRepo}/releases`,
+          {
+            headers,
+            timeout: Number.isFinite(githubApiTimeoutMs) ? githubApiTimeoutMs : 110_000,
+            signal: abortController.signal,
+          }
+        );
+      } finally {
+        res.removeListener('close', abortGithub);
+        req.removeListener('close', abortGithub);
+      }
 
       if (!response.data || response.data.length === 0) {
         sendSuccess(res, { data: [], versao_atual: 'N/A' });
@@ -117,15 +131,41 @@ export class AtualizacoesController {
 
       sendSuccess(res, { data: atualizacoes, versao_atual: versaoAtual });
     } catch (error) {
-      const axiosError = error as { response?: { status?: number; statusText?: string } };
-      if (axiosError.response?.status === 404) {
-        sendNotFound(res, 'Repositório não encontrado ou sem releases. Verifique a configuração GITHUB_REPO.');
+      if (res.headersSent) {
         return;
       }
-      if (axiosError.response?.status === 403) {
-        sendForbidden(res, 'Acesso negado ao repositório. Verifique o GITHUB_TOKEN se o repositório for privado.');
-        return;
+
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ERR_CANCELED' || error.name === 'CanceledError') {
+          return;
+        }
+        if (error.response?.status === 404) {
+          sendNotFound(res, 'Repositório não encontrado ou sem releases. Verifique a configuração GITHUB_REPO.');
+          return;
+        }
+        if (error.response?.status === 403) {
+          sendForbidden(res, 'Acesso negado ao repositório. Verifique o GITHUB_TOKEN se o repositório for privado.');
+          return;
+        }
+        const isNetwork =
+          error.response == null &&
+          (error.code === 'ETIMEDOUT' ||
+            error.code === 'ECONNABORTED' ||
+            error.code === 'ECONNRESET' ||
+            error.code === 'ENOTFOUND' ||
+            error.code === 'EAI_AGAIN');
+        if (isNetwork) {
+          sendError(
+            res,
+            error,
+            'Não foi possível contatar o GitHub (rede ou firewall). Verifique conectividade do servidor até api.github.com.',
+            502,
+            true
+          );
+          return;
+        }
       }
+
       sendError(res, error, 'Erro ao buscar atualizações do GitHub', 500, true);
     }
   }

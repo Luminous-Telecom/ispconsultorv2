@@ -33,6 +33,10 @@ export function sendSuccess<T>(
   message?: string,
   statusCode = 200
 ): void {
+  if (res.headersSent) {
+    return;
+  }
+
   const response: SuccessResponse<T> = {
     success: true,
     ...(data !== undefined && { data }),
@@ -80,6 +84,10 @@ export function sendError(
     });
   }
 
+  if (res.headersSent) {
+    return;
+  }
+
   const response: ErrorResponse = {
     success: false,
     message: finalMessage,
@@ -100,6 +108,9 @@ export function sendValidationError(
   message: string,
   errors?: Record<string, string[]>
 ): void {
+  if (res.headersSent) {
+    return;
+  }
   res.status(400).json({
     success: false,
     message,
@@ -116,6 +127,9 @@ export function sendNotFound(
   res: Response,
   message = 'Recurso não encontrado'
 ): void {
+  if (res.headersSent) {
+    return;
+  }
   res.status(404).json({
     success: false,
     message
@@ -131,6 +145,9 @@ export function sendForbidden(
   res: Response,
   message = 'Acesso negado'
 ): void {
+  if (res.headersSent) {
+    return;
+  }
   res.status(403).json({
     success: false,
     message
@@ -146,6 +163,9 @@ export function sendUnauthorized(
   res: Response,
   message = 'Não autorizado'
 ): void {
+  if (res.headersSent) {
+    return;
+  }
   res.status(401).json({
     success: false,
     message
